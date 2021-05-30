@@ -1,9 +1,10 @@
 # NEXT-SASS
 
-Why would I use this, Jim?
+Why would I use this?
 
-* You have a really simple website you need to build and you don't want minimal dependencies and a small package.json
-* Maybe you're tired of using CSS-in-JS.
+* Quickly start a project with TypeScript, SASS, and NextJS.
+* You got tired of using CSS-in-JS.
+* You want to run a quick website.
 
 ### Setup (MacOS)
 

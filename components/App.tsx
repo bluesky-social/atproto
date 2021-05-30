@@ -1,5 +1,4 @@
-import styles from "~/components/App.module.scss";
-import pkg from "~/package.json";
+import styles from "@components/App.module.scss";
 
 import * as React from "react";
 

@@ -1,18 +1,21 @@
 {
   "name": "next-sass",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "dev": "next -p 3005",
     "build": "next build",
     "start": "next start"
   },
   "dependencies": {
-    "babel-plugin-module-resolver": "^4.1.0",
     "cors": "^2.8.5",
-    "next": "latest",
-    "react": "^16.7.0",
-    "react-dom": "^16.7.0",
-    "sass": "1.26.3"
+    "next": "10.2.3",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "sass": "1.34.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^17.0.8",
+    "typescript": "^4.3.2"
+  }
 }

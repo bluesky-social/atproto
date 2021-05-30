@@ -1,12 +1,12 @@
-import styles from "~/components/App.module.scss";
+import styles from "@components/App.module.scss";
 
 import * as React from "react";
+import * as Requests from "@common/requests";
+import * as Utilities from "@common/utilities";
 
-import App from "~/components/App";
+import App from "@components/App";
 
 function Home(props) {
-  // NOTE(jim): just like componentDidMount, but since the second argument is an empty array
-  // it won't fire again.
   React.useEffect(() => {
     async function fetchData() {
       const response = await fetch("/api");

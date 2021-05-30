@@ -1,4 +1,4 @@
-import "~/global.scss";
+import "@root/global.scss";
 
 import * as React from "react";
 

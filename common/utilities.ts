@@ -1,11 +1,4 @@
-const MINUTE = 60;
-const HOUR = MINUTE * 60;
-const DAY = HOUR * 24;
-const WEEK = DAY * 7;
-const MONTH = (DAY * 365) / 12;
-const YEAR = DAY * 365;
-
-export const toDateISOString = (data) => {
+export const toDateISOString = (data: string): string => {
   const date = new Date(data);
   return date.toLocaleDateString("en-US", {
     weekday: "long",
@@ -19,7 +12,7 @@ export const toDateISOString = (data) => {
   });
 };
 
-export const bytesToSize = (bytes, decimals = 2) => {
+export const bytesToSize = (bytes: number, decimals: number = 2): string => {
   if (bytes === 0) return "0 Bytes";
 
   const k = 1024;
@@ -31,30 +24,32 @@ export const bytesToSize = (bytes, decimals = 2) => {
   return `${(bytes / Math.pow(k, i)).toFixed(dm)} ${sizes[i]}`;
 };
 
-export const isEmpty = (string) => {
+export const isEmpty = (text: any): boolean => {
   // NOTE(jim): If a number gets passed in, it isn't considered empty for zero.
-  if (string === 0) {
+  if (text === 0) {
     return false;
   }
 
-  if (!string) {
+  if (!text) {
     return true;
   }
 
-  if (typeof string === "object") {
+  if (typeof text === "object") {
     return true;
   }
 
-  if (string.length === 0) {
+  if (text.length === 0) {
     return true;
   }
 
-  string = string.toString();
+  text = text.toString();
 
-  return !string.trim();
+  return Boolean(!text.trim());
 };
 
-export function classNames() {
+const hasOwn = {}.hasOwnProperty;
+
+export function classNames(): string {
   var classes = [];
 
   for (var i = 0; i < arguments.length; i++) {
