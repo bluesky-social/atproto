@@ -3,26 +3,163 @@ import styles from "@components/App.module.scss";
 import * as React from "react";
 import * as Requests from "@common/requests";
 import * as Utilities from "@common/utilities";
+import * as Block from 'multiformats/block'
+
+import { create, load } from 'ipld-hashmap'
+import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
+import * as blockCodec from '@ipld/dag-cbor'
 
 import App from "@components/App";
 
-function Home(props) {
+
+function PostList(props) {
+
+  let [posts, setPosts] = React.useState([]);
+
+  let [curRoot, setRoot] = React.useState("");
+
   React.useEffect(() => {
-    async function fetchData() {
-      const response = await fetch("/api");
-      const json = await response.json();
-      console.log(json);
+    async function loadPosts() {
+      let root = props.root;
+      let store = props.store;
+      let ipld = props.ipld;
+
+      if (!store) {
+        console.log("store not yet configured")
+        return;
+      }
+
+      console.log("store is: ", store)
+
+      console.log("root: ", root, !root);
+      if (!root) {
+        return;
+      }
+
+      const user = await ipld.get(root);
+
+      const map = await load(store, user.postsRoot, { blockHasher, blockCodec });
+
+      let p = []
+      console.log("loading posts")
+      for await (const [key, value] of map.entries()) {
+        console.log(`[${key}]:`, value);
+        p.push(value);
+      }
+
+      setRoot(props.root.toString());
+      setPosts(p);
+      return;
     }
 
-    fetchData();
+    console.log("props root: ", props.root)
+    if (props.root && props.root.toString() != curRoot) {
+      loadPosts();
+    }
+  });
+
+  console.log(posts);
+
+  return (
+    <ul>
+      {posts.map((post) => {     
+        console.log("post is", post);                 
+        return (<p> {post} </p>) ;
+      })}
+    </ul>
+  );
+}
+
+function Home(props) {
+  const [db, setDB] = React.useState(null);
+
+  const [root, setRoot] = React.useState(null);
+
+
+  const [ipldstore, setIpldStore] = React.useState(null);
+
+  React.useEffect(() => {
+    async function setupPostsMap() {
+      const store = {
+        map: new Map(),
+        get (k) { return store.map.get(k.toString()) },
+        put (k, v) { store.map.set(k.toString(), v) }
+      }
+
+      const ipldStore = {
+        async get (c) {
+          let b = store.get(c)
+          console.log("get: ", c, b)
+          let block = await Block.create({ bytes: b, cid: c, codec: blockCodec, hasher: blockHasher })
+          return block.value
+        },
+        async put (v) {
+          let block = await Block.encode({ value: v, codec: blockCodec, hasher: blockHasher })
+          await store.put(block.cid, block.bytes)
+          return block.cid
+        },
+      }
+      setIpldStore(ipldStore)
+
+      setDB(store)
+
+      const map = await create(store, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec })
+
+      await map.set(0, 'bar')
+      await map.set(1, 'boop')
+
+      console.log(map.cid)
+
+      let user = {
+        name: 'why',
+        postsRoot: map.cid,
+        nextPost: 2,
+      }
+
+      let userRoot = await ipldStore.put(user)
+      console.log("userroot: ", userRoot.toString())
+
+      let userOut = await ipldStore.get(userRoot)
+      console.log("user out: ", userOut)
+
+      setRoot(userRoot)
+    }
+
+    setupPostsMap();
   }, []);
+
+
+  async function addPost(p) {
+    const user = await ipldstore.get(root);
+
+    const posts = await load(db, user.postsRoot, { blockHasher, blockCodec });
+
+    await posts.set(user.nextPost, p);
+
+    user.nextPost++;
+
+    user.postsRoot = posts.cid;
+
+    let userRoot = await ipldstore.put(user);
+
+    setRoot(userRoot);
+  }
+
+  function handleAddPostButton() {
+    let elem = document.getElementById("tweetbox")
+    console.log("addpost", elem.value)
+    addPost(elem.value);
+  }
 
   return (
     <App>
       <div className={styles.center}>
+        <input type="text" id="tweetbox" />
+        <input type="button" onClick={handleAddPostButton} />
         <p className={styles.paragraph}>From here, you can start any project you like.</p>
-      </div>
-    </App>
+    {db ? <PostList root={root} store={db} ipld={ipldstore}/> : null}
+  </div>
+</App>
   );
 }
 
