@@ -40,13 +40,20 @@ function PostList(props) {
 
       const map = await load(store, user.postsRoot, { blockHasher, blockCodec });
 
-      let p = []
-      console.log("loading posts")
+      console.log("loading posts");
+      let entries = await map.entries();
+      console.log("the entries", entries[1]);
+      let vals = {};
+      // TODO: understand how to not have to read every single time...
       for await (const [key, value] of map.entries()) {
         console.log(`[${key}]:`, value);
-        p.push(value);
+        vals[key] = value;
       }
 
+      let p = [];
+      for (let i = 0; i < user.nextPost; i++) {
+        p.push(vals[i])
+      }
       setRoot(props.root.toString());
       setPosts(p);
       return;
