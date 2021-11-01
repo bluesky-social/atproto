@@ -71,7 +71,12 @@ function PostList(props) {
     <ul>
       {posts.map((post) => {
         console.log("post is", post);
-        return (<p className={styles.post}> {post} </p>) ;
+        return (
+          <div className={styles.post}>
+            <p className={styles.postUser}>{post.user}</p>
+            <p> {post.text} </p>
+          </div>
+        ) ;
       })}
     </ul>
   );
@@ -112,8 +117,16 @@ function Home(props) {
 
       const map = await create(store, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec })
 
-      await map.set(0, 'bar')
-      await map.set(1, 'boop')
+      var testObj = {
+        user: 'why',
+        text: 'boop'
+      }
+      var testObj2 = {
+        user: 'why',
+        text: 'boopdoop'
+      }
+      await map.set(0, testObj)
+      await map.set(1, testObj2)
 
       console.log(map.cid)
 
@@ -155,7 +168,11 @@ function Home(props) {
   function handleAddPostButton() {
     let elem = document.getElementById("tweetbox")
     console.log("addpost", elem.value)
-    addPost(elem.value);
+    let post = {
+      user: 'anon',
+      text: elem.value
+    }
+    addPost(post);
   }
 
   return (
