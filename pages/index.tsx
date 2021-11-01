@@ -69,9 +69,9 @@ function PostList(props) {
 
   return (
     <ul>
-      {posts.map((post) => {     
-        console.log("post is", post);                 
-        return (<p> {post} </p>) ;
+      {posts.map((post) => {
+        console.log("post is", post);
+        return (<p className={styles.post}> {post} </p>) ;
       })}
     </ul>
   );
@@ -161,11 +161,17 @@ function Home(props) {
   return (
     <App>
       <div className={styles.center}>
-        <input type="text" id="tweetbox" />
-        <input type="button" onClick={handleAddPostButton} />
-        <p className={styles.paragraph}>From here, you can start any project you like.</p>
-    {db ? <PostList root={root} store={db} ipld={ipldstore}/> : null}
-  </div>
+        <div className={styles.header}>
+          <p className={styles.paragraph}>Putting posts in IPFS.</p>
+          <textarea id="tweetbox" className={styles.tweetBox}/>
+          <br/>
+          <button className={styles.button} onClick={handleAddPostButton} >Post</button>
+        </div>
+        <div className={styles.tweets}>
+          {db ? <PostList root={root} store={db} ipld={ipldstore}/> : null}
+        </div>
+      </div>
+
 </App>
   );
 }

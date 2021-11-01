@@ -4,6 +4,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
 }
 
 .paragraph {
@@ -14,4 +15,33 @@
   width: 100%;
   max-width: 288px;
   text-align: center;
+}
+
+.button {
+  border-radius: 5px;
+  padding: 4px 8px;
+  float: right;
+}
+
+.tweetBox {
+  padding: 3px 8px;
+  width: 300px;
+  border: 1px solid grey;
+  border-radius: 5px;
+}
+
+.post {
+  padding: 10px;
+  white-space: pre-line;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.header {
+  display: block;
+  padding-bottom: 40px;
+}
+
+.tweets {
+  display: block;
+  width: 400px;
 }
