@@ -7,6 +7,7 @@ import * as blockCodec from '@ipld/dag-cbor'
 
 import * as hashmap from 'ipld-hashmap'
 import { User, Post } from "./types"
+import { CarWriter } from '@ipld/car'
 
 export default class UserStore {
 
@@ -71,4 +72,13 @@ export default class UserStore {
     this.posts = posts
     return posts
   }
+
+  getCarStream(): AsyncIterable<Uint8Array> {
+    return this.db.getCarStream(this.root)
+  }
+
+  async getCarFile(): Promise<Uint8Array> {
+    return this.db.getCarFile(this.root)
+  }
+
 }

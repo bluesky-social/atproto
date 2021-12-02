@@ -2,6 +2,8 @@ import styles from "@components/App.module.scss";
 
 import * as React from "react";
 
+import axios from 'axios'
+
 import App from "@components/App"
 import UserStore from "@root/common/user-store";
 import { Post } from "@root/common/types";
@@ -13,6 +15,8 @@ function Home(props: {}) {
   const addPost = async (post: Post) => {
     await store.addPost(post)
     setPosts([...posts, post])
+    const car = await store.getCarFile()
+    await axios.post('http://localhost:1337/update', car, { headers: { 'Content-Type': 'application/octet-stream' }})
   }
 
   const setupPostsMap = async () => {
