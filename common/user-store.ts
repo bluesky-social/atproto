@@ -7,7 +7,7 @@ import * as blockCodec from '@ipld/dag-cbor'
 
 import * as hashmap from 'ipld-hashmap'
 import { User, Post } from "./types"
-import { CarWriter } from '@ipld/car'
+import { CarReader } from '@ipld/car'
 
 export default class UserStore {
 
@@ -41,6 +41,28 @@ export default class UserStore {
   static async get(root: CID, db: MemoryDB) {
     const ipldStore = new IpldStore(db)
     const user = await ipldStore.get(root)
+    const postMap = await hashmap.load(db, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
+    const posts = await UserStore.postsListFromMap(postMap)
+    return new UserStore(db, ipldStore, postMap, root, posts)
+  }
+
+  static async fromCarFile(buf: Uint8Array) {
+    const car = await CarReader.fromBytes(buf)
+
+    const roots = await car.getRoots()
+    if(roots.length !== 1) {
+      throw new Error(`Expected one root, got ${roots.length}`)
+    }
+    const root = roots[0]
+
+    const db = new MemoryDB()
+    for await (const block of car.blocks()) {
+      await db.put(block.cid, block.bytes)
+    }
+
+    const ipldStore = new IpldStore(db)
+    const user = await ipldStore.get(root)
+
     const postMap = await hashmap.load(db, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     const posts = await UserStore.postsListFromMap(postMap)
     return new UserStore(db, ipldStore, postMap, root, posts)

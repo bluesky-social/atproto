@@ -19,7 +19,20 @@ function Home(props: {}) {
     await axios.post('http://localhost:2583/update', car, { headers: { 'Content-Type': 'application/octet-stream' }})
   }
 
-  const setupPostsMap = async () => {
+  const loadPosts = async () => {
+    let userStore: UserStore
+    try {
+      const res = await axios.get('http://localhost:2583/user/why', { responseType: 'arraybuffer' })
+      const car = new Uint8Array(res.data)
+      userStore = await UserStore.fromCarFile(car)
+    } catch (_err) {
+      userStore = await createNewStore()
+    }
+    setStore(userStore)
+    setPosts(userStore.posts)
+  }
+
+  const createNewStore = async (): Promise<UserStore> => {
     const userStore = await UserStore.create('why')
 
     if(userStore.posts.length === 0) {
@@ -30,12 +43,11 @@ function Home(props: {}) {
       await userStore.addPost(testPost)
     } 
 
-    setStore(userStore)
-    setPosts(userStore.posts)
+    return userStore
   }
 
   React.useEffect(() => {
-    setupPostsMap();
+    loadPosts();
   }, []);
 
   const handleAddPostButton = () => {

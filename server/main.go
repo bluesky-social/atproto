@@ -191,12 +191,13 @@ func (s *Server) getUser(id string) (cid.Cid, error) {
 func (s *Server) handleGetUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	ucid, err := s.getUser(c.Param(":id"))
+	ucid, err := s.getUser(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
 	ds := merkledag.NewDAGService(bserv.New(s.Blockstore, nil))
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEOctetStream)
 	return car.WriteCar(ctx, ds, []cid.Cid{ucid}, c.Response().Writer)
 }
 
