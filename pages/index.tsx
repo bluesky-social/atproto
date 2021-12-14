@@ -3,6 +3,7 @@ import styles from "@components/App.module.scss";
 import * as React from "react";
 
 import axios from 'axios'
+import * as ucan from 'ucans'
 
 import App from "@components/App"
 import UserStore from "@root/common/user-store";
@@ -46,6 +47,18 @@ function Home(props: {}) {
     return userStore
   }
 
+  const register = async () => {
+    const username = 'dholms'
+    const audience = 'did:key:z6Mkmi4eUvWtRAP6PNB7MnGfUFdLkGe255ftW9sGo28uv44g'
+    const keypair = await ucan.EdKeypair.create()
+    const token = await ucan.build({
+      audience,
+      issuer: keypair
+    })
+    const encoded = ucan.encode(token)
+    await axios.post('http://localhost:2583/register', username, { headers: { "authorization": `Bearer ${encoded}` }})
+  }
+
   React.useEffect(() => {
     loadPosts();
   }, []);
@@ -82,6 +95,7 @@ function Home(props: {}) {
             })}
           </ul>
         </div>
+        <button onClick={register}>Register</button>
       </div>
   </App>
   );

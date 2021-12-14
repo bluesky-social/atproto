@@ -5,6 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"sync"
 
 	blocks "github.com/ipfs/go-block-format"
@@ -17,6 +20,9 @@ import (
 	car "github.com/ipld/go-car"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	ucan "github.com/dholms/ucan"
+	didkey "github.com/qri-io/ucan/didkey"
 	"github.com/whyrusleeping/bluesky/types"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
@@ -24,22 +30,27 @@ import (
 
 type Server struct {
 	Blockstore blockstore.Blockstore
+	UcanStore  ucan.TokenStore
 
-	ulk   sync.Mutex
-	Users map[string]cid.Cid
+	ulk       sync.Mutex
+	UserRoots map[string]cid.Cid
+	UserDids  map[string]didkey.ID
 }
 
 func main() {
 	ds := syncds.MutexWrap(datastore.NewMapDatastore())
 	bs := blockstore.NewBlockstore(ds)
 	s := &Server{
-		Users:      make(map[string]cid.Cid),
+		UserRoots:  make(map[string]cid.Cid),
+		UserDids:   make(map[string]didkey.ID),
 		Blockstore: bs,
+		UcanStore:  ucan.NewMemTokenStore(),
 	}
 
 	e := echo.New()
 	e.Use(middleware.CORS())
 	e.POST("/update", s.handleUserUpdate)
+	e.POST("/register", s.handleRegister)
 	e.GET("/user/:id", s.handleGetUser)
 	panic(e.Start(":2583"))
 }
@@ -172,7 +183,7 @@ func (s *Server) updateUser(u *types.User, rcid cid.Cid) error {
 	defer s.ulk.Unlock()
 
 	// TODO: do something better okay
-	s.Users[u.Name] = rcid
+	s.UserRoots[u.Name] = rcid
 	return nil
 }
 
@@ -180,7 +191,7 @@ func (s *Server) getUser(id string) (cid.Cid, error) {
 	s.ulk.Lock()
 	defer s.ulk.Unlock()
 
-	c, ok := s.Users[id]
+	c, ok := s.UserRoots[id]
 	if !ok {
 		return cid.Undef, fmt.Errorf("no such user")
 	}
@@ -219,5 +230,36 @@ func Copy(ctx context.Context, from, to blockstore.Blockstore) error {
 	}
 
 	return nil
+}
 
+func (s *Server) handleRegister(c echo.Context) error {
+	ctx := c.Request().Context()
+	encoded := getBearer(c.Request())
+
+	// don't bother with attenuations
+	ac := func(m map[string]interface{}) (ucan.Attenuation, error) {
+		return ucan.Attenuation{}, nil
+	}
+
+	p := ucan.NewTokenParser(ac, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	token, err := p.ParseAndVerify(ctx, encoded)
+	if err != nil {
+		return err
+	}
+
+	bytes, err := ioutil.ReadAll(c.Request().Body)
+	if err != nil {
+		return err
+	}
+	username := string(bytes)
+
+	s.UserDids[username] = token.Issuer
+
+	return nil
+}
+
+func getBearer(req *http.Request) string {
+	reqToken := req.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	return splitToken[1]
 }
