@@ -34,7 +34,7 @@ type Server struct {
 
 	ulk       sync.Mutex
 	UserRoots map[string]cid.Cid
-	UserDids  map[string]didkey.ID
+	UserDids  map[string]*didkey.ID
 }
 
 func main() {
@@ -42,7 +42,7 @@ func main() {
 	bs := blockstore.NewBlockstore(ds)
 	s := &Server{
 		UserRoots:  make(map[string]cid.Cid),
-		UserDids:   make(map[string]didkey.ID),
+		UserDids:   make(map[string]*didkey.ID),
 		Blockstore: bs,
 		UcanStore:  ucan.NewMemTokenStore(),
 	}
@@ -253,7 +253,11 @@ func (s *Server) handleRegister(c echo.Context) error {
 	}
 	username := string(bytes)
 
-	s.UserDids[username] = token.Issuer
+	if s.UserDids[username] != nil {
+		return fmt.Errorf("Username already taken")
+	}
+
+	s.UserDids[username] = &token.Issuer
 
 	return nil
 }
