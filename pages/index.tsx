@@ -16,7 +16,7 @@ function Home(props: {}) {
     await store.addPost(post)
     setPosts([...posts, post])
     const car = await store.getCarFile()
-    await axios.post('http://localhost:1337/update', car, { headers: { 'Content-Type': 'application/octet-stream' }})
+    await axios.post('http://localhost:2583/update', car, { headers: { 'Content-Type': 'application/octet-stream' }})
   }
 
   const setupPostsMap = async () => {

@@ -16,6 +16,7 @@ import (
 	"github.com/ipfs/go-merkledag"
 	car "github.com/ipld/go-car"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/whyrusleeping/bluesky/types"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
@@ -37,6 +38,7 @@ func main() {
 	}
 
 	e := echo.New()
+	e.Use(middleware.CORS())
 	e.POST("/update", s.handleUserUpdate)
 	e.GET("/user/:id", s.handleGetUser)
 	panic(e.Start(":2583"))
@@ -118,6 +120,10 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 			}
 		}
 
+		if blk == nil {
+			break
+		}
+
 		if err := tmpbs.Put(blk); err != nil {
 			return err
 		}
@@ -128,18 +134,19 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 		return err
 	}
 
-	var sroot types.SignedRoot
-	if err := sroot.UnmarshalCBOR(bytes.NewReader(rblk.RawData())); err != nil {
-		return err
-	}
+	// TODO: accept signed root & Verify signature
+	// var sroot types.SignedRoot
+	// if err := sroot.UnmarshalCBOR(bytes.NewReader(rblk.RawData())); err != nil {
+	// 	return err
+	// }
 
-	ublk, err := tmpbs.Get(sroot.User)
-	if err != nil {
-		return err
-	}
+	// ublk, err := tmpbs.Get(sroot.User)
+	// if err != nil {
+	// 	return err
+	// }
 
 	var user types.User
-	if err := user.UnmarshalCBOR(bytes.NewReader(ublk.RawData())); err != nil {
+	if err := user.UnmarshalCBOR(bytes.NewReader(rblk.RawData())); err != nil {
 		return err
 	}
 
@@ -148,8 +155,6 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 	if err := s.ensureGraphWalkability(ctx, &user, tmpbs); err != nil {
 		return err
 	}
-
-	// TODO: verify signature
 
 	if err := Copy(ctx, tmpbs, s.Blockstore); err != nil {
 		return err
