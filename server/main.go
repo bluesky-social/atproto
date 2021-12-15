@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
 
 	blocks "github.com/ipfs/go-block-format"
@@ -27,6 +28,10 @@ import (
 	"golang.org/x/xerrors"
 )
 
+var twitterCaps = ucan.NewNestedCapabilities("POST")
+
+const TwitterDid = "did:key:z6Mkmi4eUvWtRAP6PNB7MnGfUFdLkGe255ftW9sGo28uv44g"
+
 type Server struct {
 	Blockstore blockstore.Blockstore
 	UcanStore  ucan.TokenStore
@@ -35,8 +40,6 @@ type Server struct {
 	UserRoots map[string]cid.Cid
 	UserDids  map[string]*didkey.ID
 }
-
-var twitterCaps = ucan.NewNestedCapabilities("POST")
 
 func main() {
 	ds := syncds.MutexWrap(datastore.NewMapDatastore())
@@ -108,16 +111,20 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 	ctx := e.Request().Context()
 
 	// check ucan permission
-	encoded := GetBearer(e.Request())
-	p := ucan.NewTokenParser(TwitterAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	encoded := getBearer(e.Request())
+	p := ucan.NewTokenParser(twitterAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
 	token, err := p.ParseAndVerify(ctx, encoded)
 	if err != nil {
 		return err
 	}
 
+	if token.Audience.String() != TwitterDid {
+		return fmt.Errorf("Ucan not directed to twitter server")
+	}
+
 	checkUser := func(user string) bool {
 		att := ucan.Attenuation{
-			Rsc: NewAccountResource("twitter", "dholms"),
+			Rsc: newAccountResource("twitter", "dholms"),
 			Cap: twitterCaps.Cap("POST"),
 		}
 
@@ -269,12 +276,16 @@ func Copy(ctx context.Context, from, to blockstore.Blockstore) error {
 
 func (s *Server) handleRegister(e echo.Context) error {
 	ctx := e.Request().Context()
-	encoded := GetBearer(e.Request())
+	encoded := getBearer(e.Request())
 
-	p := ucan.NewTokenParser(EmptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	p := ucan.NewTokenParser(emptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
 	token, err := p.ParseAndVerify(ctx, encoded)
 	if err != nil {
 		return err
+	}
+
+	if token.Audience.String() != TwitterDid {
+		return fmt.Errorf("Ucan not directed to twitter server")
 	}
 
 	bytes, err := ioutil.ReadAll(e.Request().Body)
@@ -290,4 +301,64 @@ func (s *Server) handleRegister(e echo.Context) error {
 	s.UserDids[username] = &token.Issuer
 
 	return nil
+}
+
+func getBearer(req *http.Request) string {
+	reqToken := req.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	return splitToken[1]
+}
+
+func twitterAC(m map[string]interface{}) (ucan.Attenuation, error) {
+	var (
+		cap string
+		rsc ucan.Resource
+	)
+	for key, vali := range m {
+		val, ok := vali.(string)
+		if !ok {
+			return ucan.Attenuation{}, fmt.Errorf(`expected attenuation value to be a string`)
+		}
+
+		if key == ucan.CapKey {
+			cap = val
+		} else {
+			rsc = newAccountResource(key, val)
+		}
+	}
+
+	return ucan.Attenuation{
+		Rsc: rsc,
+		Cap: twitterCaps.Cap(cap),
+	}, nil
+}
+
+func emptyAC(m map[string]interface{}) (ucan.Attenuation, error) {
+	return ucan.Attenuation{}, nil
+}
+
+type accountRsc struct {
+	t string
+	v string
+}
+
+// NewStringLengthResource is a silly implementation of resource to use while
+// I figure out what an OR filter on strings is. Don't use this.
+func newAccountResource(typ, val string) ucan.Resource {
+	return accountRsc{
+		t: typ,
+		v: val,
+	}
+}
+
+func (r accountRsc) Type() string {
+	return r.t
+}
+
+func (r accountRsc) Value() string {
+	return r.v
+}
+
+func (r accountRsc) Contains(b ucan.Resource) bool {
+	return r.Type() == b.Type() && r.Value() <= b.Value()
 }

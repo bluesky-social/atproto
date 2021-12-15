@@ -19,7 +19,6 @@ function Home(props: {}) {
 
   const addPost = async (post: Post) => {
     await store.addPost(post)
-    setPosts(store.posts)
     const car = await store.getCarFile()
     const token = await ucan.build({
       audience: TWITTER_DID,
@@ -35,6 +34,7 @@ function Home(props: {}) {
         'Authorization': `Bearer ${ucan.encode(token)}`
       }
     })
+    setPosts(store.posts)
   }
 
   const loadPosts = async () => {
