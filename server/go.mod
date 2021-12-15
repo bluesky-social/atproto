@@ -3,7 +3,7 @@ module github.com/whyrusleeping/bluesky
 go 1.16
 
 require (
-	github.com/dholms/ucan v0.0.0-20211211010509-cfa887687214
+	github.com/dholms/ucan v0.0.0-20211215024958-695903849632
 	github.com/ipfs/go-block-format v0.0.3
 	github.com/ipfs/go-blockservice v0.1.0
 	github.com/ipfs/go-cid v0.0.7
