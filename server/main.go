@@ -37,6 +37,8 @@ type Server struct {
 	UserDids  map[string]*didkey.ID
 }
 
+var twitterCaps = ucan.NewNestedCapabilities("POST")
+
 func main() {
 	ds := syncds.MutexWrap(datastore.NewMapDatastore())
 	bs := blockstore.NewBlockstore(ds)
@@ -106,9 +108,39 @@ func (s *Server) graphWalkRec(ctx context.Context, c cid.Cid, bs blockstore.Bloc
 func (s *Server) handleUserUpdate(e echo.Context) error {
 	ctx := e.Request().Context()
 
-	// The body of the request should be a car file containing any *changed* blocks
+	// check ucan permission
+	encoded := getBearer(e.Request())
+	p := ucan.NewTokenParser(twitterAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	token, err := p.ParseAndVerify(ctx, encoded)
+	if err != nil {
+		return err
+	}
 
-	cr, err := car.NewCarReader(e.Request().Body)
+	checkUser := func(user string) bool {
+		att := ucan.Attenuation{
+			Rsc: NewAccountResource("twitter", "dholms"),
+			Cap: twitterCaps.Cap("POST"),
+		}
+
+		isGood := token.Attenuations.Contains(ucan.Attenuations{att})
+
+		if !isGood {
+			return false
+		}
+
+		if token.Issuer.String() != s.UserDids[user].String() {
+			return false
+		}
+
+		return true
+	}
+
+	return s.updateUser(ctx, e.Request(), checkUser)
+}
+
+func (s *Server) updateUser(ctx context.Context, req *http.Request, checkUser func(user string) bool) error {
+	// The body of the request should be a car file containing any *changed* blocks
+	cr, err := car.NewCarReader(req.Body)
 	if err != nil {
 		return err
 	}
@@ -161,6 +193,10 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 		return err
 	}
 
+	if !checkUser(user.Name) {
+		return fmt.Errorf("Ucan does not properly permission user")
+	}
+
 	fmt.Println("user update: ", user.Name, user.NextPost, user.PostsRoot)
 
 	if err := s.ensureGraphWalkability(ctx, &user, tmpbs); err != nil {
@@ -171,14 +207,14 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 		return err
 	}
 
-	if err := s.updateUser(&user, roots[0]); err != nil {
+	if err := s.updateUserRoot(&user, roots[0]); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *Server) updateUser(u *types.User, rcid cid.Cid) error {
+func (s *Server) updateUserRoot(u *types.User, rcid cid.Cid) error {
 	s.ulk.Lock()
 	defer s.ulk.Unlock()
 
@@ -232,22 +268,22 @@ func Copy(ctx context.Context, from, to blockstore.Blockstore) error {
 	return nil
 }
 
-func (s *Server) handleRegister(c echo.Context) error {
-	ctx := c.Request().Context()
-	encoded := getBearer(c.Request())
+func (s *Server) handleRegister(e echo.Context) error {
+	ctx := e.Request().Context()
+	encoded := getBearer(e.Request())
 
 	// don't bother with attenuations
-	ac := func(m map[string]interface{}) (ucan.Attenuation, error) {
-		return ucan.Attenuation{}, nil
-	}
+	// ac := func(m map[string]interface{}) (ucan.Attenuation, error) {
+	// 	return ucan.Attenuation{}, nil
+	// }
 
-	p := ucan.NewTokenParser(ac, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	p := ucan.NewTokenParser(emptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
 	token, err := p.ParseAndVerify(ctx, encoded)
 	if err != nil {
 		return err
 	}
 
-	bytes, err := ioutil.ReadAll(c.Request().Body)
+	bytes, err := ioutil.ReadAll(e.Request().Body)
 	if err != nil {
 		return err
 	}
@@ -266,4 +302,59 @@ func getBearer(req *http.Request) string {
 	reqToken := req.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer ")
 	return splitToken[1]
+}
+
+func twitterAC(m map[string]interface{}) (ucan.Attenuation, error) {
+
+	var (
+		cap string
+		rsc ucan.Resource
+	)
+	for key, vali := range m {
+		val, ok := vali.(string)
+		if !ok {
+			return ucan.Attenuation{}, fmt.Errorf(`expected attenuation value to be a string`)
+		}
+
+		if key == ucan.CapKey {
+			cap = val
+		} else {
+			rsc = NewAccountResource(key, val)
+		}
+	}
+
+	return ucan.Attenuation{
+		Rsc: rsc,
+		Cap: twitterCaps.Cap(cap),
+	}, nil
+}
+
+func emptyAC(m map[string]interface{}) (ucan.Attenuation, error) {
+	return ucan.Attenuation{}, nil
+}
+
+type accountRsc struct {
+	t string
+	v string
+}
+
+// NewStringLengthResource is a silly implementation of resource to use while
+// I figure out what an OR filter on strings is. Don't use this.
+func NewAccountResource(typ, val string) ucan.Resource {
+	return accountRsc{
+		t: typ,
+		v: val,
+	}
+}
+
+func (r accountRsc) Type() string {
+	return r.t
+}
+
+func (r accountRsc) Value() string {
+	return r.v
+}
+
+func (r accountRsc) Contains(b ucan.Resource) bool {
+	return r.Type() == b.Type() && r.Value() <= b.Value()
 }

@@ -86,7 +86,7 @@ export default class UserStore {
     user.nextPost++
     user.postsRoot = this.postMap.cid
     this.root = await this.ipldStore.put(user)
-    this.posts.push(post)
+    this.posts = [post, ...this.posts]
   }
 
   async refreshPosts(): Promise<Post[]> {

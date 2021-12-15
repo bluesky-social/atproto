@@ -6,24 +6,42 @@ import axios from 'axios'
 import * as ucan from 'ucans'
 
 import App from "@components/App"
+import Register from "@components/Register"
 import UserStore from "@root/common/user-store";
-import { Post } from "@root/common/types";
+import { LocalUser, Post } from "@root/common/types";
+import { TWITTER_DID } from "@root/common/const";
 
 function Home(props: {}) {
+  const [localUser, setLocalUser] = React.useState<LocalUser | null>(null);
   const [store, setStore] = React.useState<UserStore | null>(null);
   const [posts, setPosts] = React.useState<Post[]>([]);
+  const [tweet, setTweet] = React.useState<string>('')
 
   const addPost = async (post: Post) => {
     await store.addPost(post)
-    setPosts([...posts, post])
+    setPosts(store.posts)
     const car = await store.getCarFile()
-    await axios.post('http://localhost:2583/update', car, { headers: { 'Content-Type': 'application/octet-stream' }})
+    const token = await ucan.build({
+      audience: TWITTER_DID,
+      issuer: localUser.keypair,
+      capabilities: [{
+        'twitter': localUser.username,
+        'cap': 'POST'
+      }]
+    })
+    await axios.post('http://localhost:2583/update', car, { 
+      headers: { 
+        'Content-Type': 'application/octet-stream',
+        'Authorization': `Bearer ${ucan.encode(token)}`
+      }
+    })
   }
 
   const loadPosts = async () => {
+    if(localUser === null) return 
     let userStore: UserStore
     try {
-      const res = await axios.get('http://localhost:2583/user/why', { responseType: 'arraybuffer' })
+      const res = await axios.get(`http://localhost:2583/user/${localUser.username}`, { responseType: 'arraybuffer' })
       const car = new Uint8Array(res.data)
       userStore = await UserStore.fromCarFile(car)
     } catch (_err) {
@@ -34,11 +52,11 @@ function Home(props: {}) {
   }
 
   const createNewStore = async (): Promise<UserStore> => {
-    const userStore = await UserStore.create('why')
+    const userStore = await UserStore.create(localUser.username)
 
     if(userStore.posts.length === 0) {
       const testPost = {
-        user: 'why',
+        user: localUser.username,
         text: 'hello world!'
       }
       await userStore.addPost(testPost)
@@ -47,55 +65,66 @@ function Home(props: {}) {
     return userStore
   }
 
-  const register = async () => {
-    const username = 'dholms'
-    const audience = 'did:key:z6Mkmi4eUvWtRAP6PNB7MnGfUFdLkGe255ftW9sGo28uv44g'
-    const keypair = await ucan.EdKeypair.create()
-    const token = await ucan.build({
-      audience,
-      issuer: keypair
-    })
-    const encoded = ucan.encode(token)
-    await axios.post('http://localhost:2583/register', username, { headers: { "authorization": `Bearer ${encoded}` }})
+  const updateTweet = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTweet(e.target.value)
+  }
+
+  const loadLocalUser = () => {
+    const username =  localStorage.getItem('username')
+    const secretKey = localStorage.getItem('secretKey')
+    if(!username || !secretKey) return
+
+    const keypair = ucan.EdKeypair.fromSecretKey(secretKey, { format: 'base64pad' })
+    setLocalUser({ username, keypair })
+  }
+
+  const postTweet = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    addPost({
+      user: localUser.username,
+      text: tweet
+    });
   }
 
   React.useEffect(() => {
+    loadLocalUser()
+  }, [])
+
+  React.useEffect(() => {
     loadPosts();
-  }, []);
+  }, [localUser]);
 
-  const handleAddPostButton = () => {
-    let elem = document.getElementById("tweetbox") as HTMLTextAreaElement
-    console.log("addpost", elem.value)
-    let post = {
-      user: 'anon',
-      text: elem.value
-    }
-    addPost(post);
+  if (localUser === null) {
+    return (
+      <App>
+        <Register onRegister={setLocalUser} />
+      </App>
+    )
   }
-
 
   return (
     <App>
-      <div className={styles.center}>
-        <div className={styles.header}>
-          <p className={styles.paragraph}>Putting posts in IPFS.</p>
-          <textarea id="tweetbox" className={styles.tweetBox}/>
+      <div className={styles.header}>
+        <p className={styles.paragraph}>Logged in as <strong>{localUser.username}</strong></p>
+        <p className={styles.paragraph}>Putting posts in IPFS.</p>
+        <form onSubmit={postTweet}>
+          <textarea onChange={updateTweet} className={styles.tweetBox}/>
           <br/>
-          <button className={styles.button} onClick={handleAddPostButton} >Post</button>
-        </div>
-        <div className={styles.tweets}>
-          <ul>
-            {posts.map((post, i) => {
-              return (
-                <div className={styles.post} key={i}>
-                  <p className={styles.postUser}>{post.user}</p>
-                  <p> {post.text} </p>
-                </div>
-              ) ;
-            })}
-          </ul>
-        </div>
-        <button onClick={register}>Register</button>
+          <button className={styles.button} type='submit'>Post</button>
+        </form>
+        <br/>
+      </div>
+      <div className={styles.tweets}>
+        <ul>
+          {posts.map((post, i) => {
+            return (
+              <div className={styles.post} key={i}>
+                <p className={styles.postUser}>{post.user}</p>
+                <p> {post.text} </p>
+              </div>
+            ) ;
+          })}
+        </ul>
       </div>
   </App>
   );
