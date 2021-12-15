@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"sync"
 
 	blocks "github.com/ipfs/go-block-format"
@@ -109,8 +108,8 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 	ctx := e.Request().Context()
 
 	// check ucan permission
-	encoded := getBearer(e.Request())
-	p := ucan.NewTokenParser(twitterAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	encoded := GetBearer(e.Request())
+	p := ucan.NewTokenParser(TwitterAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
 	token, err := p.ParseAndVerify(ctx, encoded)
 	if err != nil {
 		return err
@@ -270,14 +269,9 @@ func Copy(ctx context.Context, from, to blockstore.Blockstore) error {
 
 func (s *Server) handleRegister(e echo.Context) error {
 	ctx := e.Request().Context()
-	encoded := getBearer(e.Request())
+	encoded := GetBearer(e.Request())
 
-	// don't bother with attenuations
-	// ac := func(m map[string]interface{}) (ucan.Attenuation, error) {
-	// 	return ucan.Attenuation{}, nil
-	// }
-
-	p := ucan.NewTokenParser(emptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	p := ucan.NewTokenParser(EmptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
 	token, err := p.ParseAndVerify(ctx, encoded)
 	if err != nil {
 		return err
@@ -296,65 +290,4 @@ func (s *Server) handleRegister(e echo.Context) error {
 	s.UserDids[username] = &token.Issuer
 
 	return nil
-}
-
-func getBearer(req *http.Request) string {
-	reqToken := req.Header.Get("Authorization")
-	splitToken := strings.Split(reqToken, "Bearer ")
-	return splitToken[1]
-}
-
-func twitterAC(m map[string]interface{}) (ucan.Attenuation, error) {
-
-	var (
-		cap string
-		rsc ucan.Resource
-	)
-	for key, vali := range m {
-		val, ok := vali.(string)
-		if !ok {
-			return ucan.Attenuation{}, fmt.Errorf(`expected attenuation value to be a string`)
-		}
-
-		if key == ucan.CapKey {
-			cap = val
-		} else {
-			rsc = NewAccountResource(key, val)
-		}
-	}
-
-	return ucan.Attenuation{
-		Rsc: rsc,
-		Cap: twitterCaps.Cap(cap),
-	}, nil
-}
-
-func emptyAC(m map[string]interface{}) (ucan.Attenuation, error) {
-	return ucan.Attenuation{}, nil
-}
-
-type accountRsc struct {
-	t string
-	v string
-}
-
-// NewStringLengthResource is a silly implementation of resource to use while
-// I figure out what an OR filter on strings is. Don't use this.
-func NewAccountResource(typ, val string) ucan.Resource {
-	return accountRsc{
-		t: typ,
-		v: val,
-	}
-}
-
-func (r accountRsc) Type() string {
-	return r.t
-}
-
-func (r accountRsc) Value() string {
-	return r.v
-}
-
-func (r accountRsc) Contains(b ucan.Resource) bool {
-	return r.Type() == b.Type() && r.Value() <= b.Value()
 }
