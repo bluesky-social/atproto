@@ -5,6 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"sync"
 
 	blocks "github.com/ipfs/go-block-format"
@@ -16,29 +19,44 @@ import (
 	"github.com/ipfs/go-merkledag"
 	car "github.com/ipld/go-car"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+
+	ucan "github.com/dholms/ucan"
+	didkey "github.com/qri-io/ucan/didkey"
 	"github.com/whyrusleeping/bluesky/types"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
 )
 
+var twitterCaps = ucan.NewNestedCapabilities("POST")
+
+const TwitterDid = "did:key:z6Mkmi4eUvWtRAP6PNB7MnGfUFdLkGe255ftW9sGo28uv44g"
+
 type Server struct {
 	Blockstore blockstore.Blockstore
+	UcanStore  ucan.TokenStore
 
-	ulk   sync.Mutex
-	Users map[string]cid.Cid
+	ulk       sync.Mutex
+	UserRoots map[string]cid.Cid
+	UserDids  map[string]*didkey.ID
 }
 
 func main() {
 	ds := syncds.MutexWrap(datastore.NewMapDatastore())
 	bs := blockstore.NewBlockstore(ds)
 	s := &Server{
-		Users:      make(map[string]cid.Cid),
+		UserRoots:  make(map[string]cid.Cid),
+		UserDids:   make(map[string]*didkey.ID),
 		Blockstore: bs,
+		UcanStore:  ucan.NewMemTokenStore(),
 	}
 
 	e := echo.New()
+	e.Use(middleware.CORS())
 	e.POST("/update", s.handleUserUpdate)
+	e.POST("/register", s.handleRegister)
 	e.GET("/user/:id", s.handleGetUser)
+	e.GET("/.well-known/did.json", s.handleGetDid)
 	panic(e.Start(":2583"))
 }
 
@@ -93,9 +111,43 @@ func (s *Server) graphWalkRec(ctx context.Context, c cid.Cid, bs blockstore.Bloc
 func (s *Server) handleUserUpdate(e echo.Context) error {
 	ctx := e.Request().Context()
 
-	// The body of the request should be a car file containing any *changed* blocks
+	// check ucan permission
+	encoded := getBearer(e.Request())
+	p := ucan.NewTokenParser(twitterAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	token, err := p.ParseAndVerify(ctx, encoded)
+	if err != nil {
+		return err
+	}
 
-	cr, err := car.NewCarReader(e.Request().Body)
+	if token.Audience.String() != TwitterDid {
+		return fmt.Errorf("Ucan not directed to twitter server")
+	}
+
+	checkUser := func(user string) bool {
+		att := ucan.Attenuation{
+			Rsc: newAccountResource("twitter", "dholms"),
+			Cap: twitterCaps.Cap("POST"),
+		}
+
+		isGood := token.Attenuations.Contains(ucan.Attenuations{att})
+
+		if !isGood {
+			return false
+		}
+
+		if token.Issuer.String() != s.UserDids[user].String() {
+			return false
+		}
+
+		return true
+	}
+
+	return s.updateUser(ctx, e.Request(), checkUser)
+}
+
+func (s *Server) updateUser(ctx context.Context, req *http.Request, checkUser func(user string) bool) error {
+	// The body of the request should be a car file containing any *changed* blocks
+	cr, err := car.NewCarReader(req.Body)
 	if err != nil {
 		return err
 	}
@@ -118,6 +170,10 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 			}
 		}
 
+		if blk == nil {
+			break
+		}
+
 		if err := tmpbs.Put(blk); err != nil {
 			return err
 		}
@@ -128,19 +184,24 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 		return err
 	}
 
-	var sroot types.SignedRoot
-	if err := sroot.UnmarshalCBOR(bytes.NewReader(rblk.RawData())); err != nil {
-		return err
-	}
+	// TODO: accept signed root & Verify signature
+	// var sroot types.SignedRoot
+	// if err := sroot.UnmarshalCBOR(bytes.NewReader(rblk.RawData())); err != nil {
+	// 	return err
+	// }
 
-	ublk, err := tmpbs.Get(sroot.User)
-	if err != nil {
-		return err
-	}
+	// ublk, err := tmpbs.Get(sroot.User)
+	// if err != nil {
+	// 	return err
+	// }
 
 	var user types.User
-	if err := user.UnmarshalCBOR(bytes.NewReader(ublk.RawData())); err != nil {
+	if err := user.UnmarshalCBOR(bytes.NewReader(rblk.RawData())); err != nil {
 		return err
+	}
+
+	if !checkUser(user.Name) {
+		return fmt.Errorf("Ucan does not properly permission user")
 	}
 
 	fmt.Println("user update: ", user.Name, user.NextPost, user.PostsRoot)
@@ -149,25 +210,23 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 		return err
 	}
 
-	// TODO: verify signature
-
 	if err := Copy(ctx, tmpbs, s.Blockstore); err != nil {
 		return err
 	}
 
-	if err := s.updateUser(&user, roots[0]); err != nil {
+	if err := s.updateUserRoot(&user, roots[0]); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *Server) updateUser(u *types.User, rcid cid.Cid) error {
+func (s *Server) updateUserRoot(u *types.User, rcid cid.Cid) error {
 	s.ulk.Lock()
 	defer s.ulk.Unlock()
 
 	// TODO: do something better okay
-	s.Users[u.Name] = rcid
+	s.UserRoots[u.Name] = rcid
 	return nil
 }
 
@@ -175,7 +234,7 @@ func (s *Server) getUser(id string) (cid.Cid, error) {
 	s.ulk.Lock()
 	defer s.ulk.Unlock()
 
-	c, ok := s.Users[id]
+	c, ok := s.UserRoots[id]
 	if !ok {
 		return cid.Undef, fmt.Errorf("no such user")
 	}
@@ -186,12 +245,13 @@ func (s *Server) getUser(id string) (cid.Cid, error) {
 func (s *Server) handleGetUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	ucid, err := s.getUser(c.Param(":id"))
+	ucid, err := s.getUser(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
 	ds := merkledag.NewDAGService(bserv.New(s.Blockstore, nil))
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEOctetStream)
 	return car.WriteCar(ctx, ds, []cid.Cid{ucid}, c.Response().Writer)
 }
 
@@ -213,5 +273,102 @@ func Copy(ctx context.Context, from, to blockstore.Blockstore) error {
 	}
 
 	return nil
+}
 
+func (s *Server) handleRegister(e echo.Context) error {
+	ctx := e.Request().Context()
+	encoded := getBearer(e.Request())
+
+	p := ucan.NewTokenParser(emptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	token, err := p.ParseAndVerify(ctx, encoded)
+	if err != nil {
+		return err
+	}
+
+	if token.Audience.String() != TwitterDid {
+		return fmt.Errorf("Ucan not directed to twitter server")
+	}
+
+	bytes, err := ioutil.ReadAll(e.Request().Body)
+	if err != nil {
+		return err
+	}
+	username := string(bytes)
+
+	if s.UserDids[username] != nil {
+		return fmt.Errorf("Username already taken")
+	}
+
+	s.UserDids[username] = &token.Issuer
+
+	return nil
+}
+
+type serverDid struct {
+	Id string `json:"id"`
+}
+
+func (s *Server) handleGetDid(e echo.Context) error {
+	e.JSON(http.StatusOK, serverDid{Id: TwitterDid})
+	return nil
+}
+
+func getBearer(req *http.Request) string {
+	reqToken := req.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	return splitToken[1]
+}
+
+func twitterAC(m map[string]interface{}) (ucan.Attenuation, error) {
+	var (
+		cap string
+		rsc ucan.Resource
+	)
+	for key, vali := range m {
+		val, ok := vali.(string)
+		if !ok {
+			return ucan.Attenuation{}, fmt.Errorf(`expected attenuation value to be a string`)
+		}
+
+		if key == ucan.CapKey {
+			cap = val
+		} else {
+			rsc = newAccountResource(key, val)
+		}
+	}
+
+	return ucan.Attenuation{
+		Rsc: rsc,
+		Cap: twitterCaps.Cap(cap),
+	}, nil
+}
+
+func emptyAC(m map[string]interface{}) (ucan.Attenuation, error) {
+	return ucan.Attenuation{}, nil
+}
+
+type accountRsc struct {
+	t string
+	v string
+}
+
+// NewStringLengthResource is a silly implementation of resource to use while
+// I figure out what an OR filter on strings is. Don't use this.
+func newAccountResource(typ, val string) ucan.Resource {
+	return accountRsc{
+		t: typ,
+		v: val,
+	}
+}
+
+func (r accountRsc) Type() string {
+	return r.t
+}
+
+func (r accountRsc) Value() string {
+	return r.v
+}
+
+func (r accountRsc) Contains(b ucan.Resource) bool {
+	return r.Type() == b.Type() && r.Value() <= b.Value()
 }
