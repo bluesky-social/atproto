@@ -20,7 +20,6 @@ function Home(props: {}) {
     await store.addPost(post)
     const car = await store.getCarFile()
     const twitterDid = await service.getServerDid()
-    console.log('DID: ', twitterDid)
     const token = await ucan.build({
       audience: twitterDid,
       issuer: localUser.keypair,

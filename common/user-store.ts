@@ -70,10 +70,11 @@ export default class UserStore {
 
   static async postsListFromMap(postMap: hashmap.HashMap<Post>) {
     const posts = []
-    for await (const [_, val] of postMap.entries()) {
-      posts.push(val)
+    const postsSize = await postMap.size()
+    for await (const [i, val] of postMap.entries()) {
+      posts[i] = val
     }
-    return posts
+    return posts.reverse()
   }
 
   async getUser(): Promise<User> {
