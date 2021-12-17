@@ -2,14 +2,13 @@ import styles from "@components/App.module.scss";
 
 import * as React from "react";
 
-import axios from 'axios'
+import * as service from '@common/service'
 import * as ucan from 'ucans'
 
 import App from "@components/App"
 import Register from "@components/Register"
 import UserStore from "@root/common/user-store";
 import { LocalUser, Post } from "@root/common/types";
-import { TWITTER_DID } from "@root/common/const";
 
 function Home(props: {}) {
   const [localUser, setLocalUser] = React.useState<LocalUser | null>(null);
@@ -20,20 +19,17 @@ function Home(props: {}) {
   const addPost = async (post: Post) => {
     await store.addPost(post)
     const car = await store.getCarFile()
+    const twitterDid = await service.getServerDid()
+    console.log('DID: ', twitterDid)
     const token = await ucan.build({
-      audience: TWITTER_DID,
+      audience: twitterDid,
       issuer: localUser.keypair,
       capabilities: [{
         'twitter': localUser.username,
         'cap': 'POST'
       }]
     })
-    await axios.post('http://localhost:2583/update', car, { 
-      headers: { 
-        'Content-Type': 'application/octet-stream',
-        'Authorization': `Bearer ${ucan.encode(token)}`
-      }
-    })
+    await service.updateUser(car, ucan.encode(token))
     setPosts(store.posts)
   }
 
@@ -41,8 +37,7 @@ function Home(props: {}) {
     if(localUser === null) return 
     let userStore: UserStore
     try {
-      const res = await axios.get(`http://localhost:2583/user/${localUser.username}`, { responseType: 'arraybuffer' })
-      const car = new Uint8Array(res.data)
+      const car = await service.fetchUser(localUser.username)
       userStore = await UserStore.fromCarFile(car)
     } catch (_err) {
       userStore = await createNewStore()

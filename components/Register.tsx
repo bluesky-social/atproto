@@ -2,10 +2,10 @@ import styles from "@components/App.module.scss";
 
 import React, { ChangeEvent, FormEvent } from 'react'
 
-import axios from 'axios'
+import * as service from '@common/service'
 import * as ucan from 'ucans'
+
 import { LocalUser } from '@root/common/types'
-import { TWITTER_DID } from "@root/common/const";
 
 interface Props {
   onRegister: (user: LocalUser) => void
@@ -22,12 +22,12 @@ function Register(props: Props) {
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const keypair = await ucan.EdKeypair.create({ exportable: true })
+    const twitterDid = await service.getServerDid()
     const token = await ucan.build({
-      audience: TWITTER_DID,
+      audience: twitterDid,
       issuer: keypair
     })
-    const encoded = ucan.encode(token)
-    await axios.post('http://localhost:2583/register', username, { headers: { "authorization": `Bearer ${encoded}` }})
+    await service.register(username, ucan.encode(token))
     localStorage.setItem('secretKey', await keypair.export('base64pad'))
     localStorage.setItem('username', username)
     props.onRegister({ username, keypair })

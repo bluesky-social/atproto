@@ -56,6 +56,7 @@ func main() {
 	e.POST("/update", s.handleUserUpdate)
 	e.POST("/register", s.handleRegister)
 	e.GET("/user/:id", s.handleGetUser)
+	e.GET("/.well-known/did.json", s.handleGetDid)
 	panic(e.Start(":2583"))
 }
 
@@ -300,6 +301,15 @@ func (s *Server) handleRegister(e echo.Context) error {
 
 	s.UserDids[username] = &token.Issuer
 
+	return nil
+}
+
+type serverDid struct {
+	Id string `json:"id"`
+}
+
+func (s *Server) handleGetDid(e echo.Context) error {
+	e.JSON(http.StatusOK, serverDid{Id: TwitterDid})
 	return nil
 }
 
