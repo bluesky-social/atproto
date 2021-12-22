@@ -2,8 +2,8 @@ import axios from 'axios'
 
 const SERVER_URL = 'http://localhost:2583'
 
-export const register = async (username: string, authToken: string): Promise<void> => {
-  await axios.post(`${SERVER_URL}/register`, username, { 
+export const register = async (name: string, authToken: string): Promise<void> => {
+  await axios.post(`${SERVER_URL}/register`, { name }, { 
     headers: { 
       'Authorization': `Bearer ${authToken}`
     }
@@ -19,8 +19,8 @@ export const updateUser = async (car: Uint8Array, authToken: string): Promise<vo
   })
 }
 
-export const fetchUser = async (username: string): Promise<Uint8Array> => {
-  const res = await axios.get(`${SERVER_URL}/user/${username}`, { responseType: 'arraybuffer' })
+export const fetchUser = async (did: string): Promise<Uint8Array> => {
+  const res = await axios.get(`${SERVER_URL}/user/${did}`, { responseType: 'arraybuffer' })
   return new Uint8Array(res.data)
 }
 

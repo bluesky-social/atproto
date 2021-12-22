@@ -25,14 +25,16 @@ export default class UserStore {
     this.posts = posts
   }
 
-  static async create(username: string) {
+  static async create(username: string, did: string) {
     const db = new MemoryDB()
     const posts = await hashmap.create(db, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     const ipldStore = new IpldStore(db)
     const user = {
+      did,
       name: username,
       nextPost: 0,
-      postsRoot: posts.cid
+      postsRoot: posts.cid,
+      follows: []
     }
     const root = await ipldStore.put(user)
     return new UserStore(db, ipldStore, posts, root, [])

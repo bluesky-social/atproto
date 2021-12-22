@@ -142,6 +142,12 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 			return false
 		}
 
+		// user not registerd
+		if s.UserDids[user] == nil {
+			return false
+		}
+
+		// ucan issuer does not match user's DID
 		if token.Issuer.String() != s.UserDids[user].String() {
 			return false
 		}
@@ -298,7 +304,7 @@ func (s *Server) handleRegisterUserAlt(c echo.Context) error {
 }
 
 type userRegisterBody struct {
-	Name string
+	Name string `json:"name"`
 }
 
 func (s *Server) handleRegister(e echo.Context) error {
