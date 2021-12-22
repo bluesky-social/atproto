@@ -4,8 +4,7 @@
   "scripts": {
     "dev": "next -p 3005",
     "build": "next build",
-    "start": "next start",
-    "server": "nodemon --skip-project ts-server/index.ts"
+    "start": "next start"
   },
   "dependencies": {
     "@ipld/car": "^3.2.0",

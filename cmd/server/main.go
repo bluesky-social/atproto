@@ -5,23 +5,25 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
 
+	"github.com/filecoin-project/go-hamt-ipld"
 	blocks "github.com/ipfs/go-block-format"
 	bserv "github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	syncds "github.com/ipfs/go-datastore/sync"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
+	cbor "github.com/ipfs/go-ipld-cbor"
 	"github.com/ipfs/go-merkledag"
 	car "github.com/ipld/go-car"
+	_ "github.com/ipld/go-ipld-prime/codec/dagcbor"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	ucan "github.com/dholms/ucan"
+	ucan "github.com/qri-io/ucan"
 	didkey "github.com/qri-io/ucan/didkey"
 	"github.com/whyrusleeping/bluesky/types"
 	cbg "github.com/whyrusleeping/cbor-gen"
@@ -42,6 +44,7 @@ type Server struct {
 }
 
 func main() {
+
 	ds := syncds.MutexWrap(datastore.NewMapDatastore())
 	bs := blockstore.NewBlockstore(ds)
 	s := &Server{
@@ -52,9 +55,12 @@ func main() {
 	}
 
 	e := echo.New()
+	e.Use(middleware.Logger())
 	e.Use(middleware.CORS())
-	e.POST("/update", s.handleUserUpdate)
+
 	e.POST("/register", s.handleRegister)
+
+	e.POST("/update", s.handleUserUpdate)
 	e.GET("/user/:id", s.handleGetUser)
 	e.GET("/.well-known/did.json", s.handleGetDid)
 	panic(e.Start(":2583"))
@@ -70,7 +76,7 @@ func (s *Server) ensureGraphWalkability(ctx context.Context, u *types.User, bs b
 
 func (s *Server) graphWalkRec(ctx context.Context, c cid.Cid, bs blockstore.Blockstore) error {
 	eitherGet := func(cc cid.Cid) (blocks.Block, error) {
-		baseHas, err := s.Blockstore.Has(cc)
+		baseHas, err := s.Blockstore.Has(ctx, cc)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +86,7 @@ func (s *Server) graphWalkRec(ctx context.Context, c cid.Cid, bs blockstore.Bloc
 			return nil, nil
 		}
 
-		return bs.Get(cc)
+		return bs.Get(ctx, cc)
 	}
 
 	b, err := eitherGet(c)
@@ -108,6 +114,7 @@ func (s *Server) graphWalkRec(ctx context.Context, c cid.Cid, bs blockstore.Bloc
 	return nil
 }
 
+// TODO: we probably want this to be a compare-and-swap
 func (s *Server) handleUserUpdate(e echo.Context) error {
 	ctx := e.Request().Context()
 
@@ -135,6 +142,12 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 			return false
 		}
 
+		// user not registerd
+		if s.UserDids[user] == nil {
+			return false
+		}
+
+		// ucan issuer does not match user's DID
 		if token.Issuer.String() != s.UserDids[user].String() {
 			return false
 		}
@@ -168,18 +181,15 @@ func (s *Server) updateUser(ctx context.Context, req *http.Request, checkUser fu
 			if !xerrors.Is(err, io.EOF) {
 				return err
 			}
-		}
-
-		if blk == nil {
 			break
 		}
 
-		if err := tmpbs.Put(blk); err != nil {
+		if err := tmpbs.Put(ctx, blk); err != nil {
 			return err
 		}
 	}
 
-	rblk, err := tmpbs.Get(roots[0])
+	rblk, err := tmpbs.Get(ctx, roots[0])
 	if err != nil {
 		return err
 	}
@@ -214,19 +224,18 @@ func (s *Server) updateUser(ctx context.Context, req *http.Request, checkUser fu
 		return err
 	}
 
-	if err := s.updateUserRoot(&user, roots[0]); err != nil {
+	if err := s.updateUserRoot(user.DID, roots[0]); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *Server) updateUserRoot(u *types.User, rcid cid.Cid) error {
+func (s *Server) updateUserRoot(did string, rcid cid.Cid) error {
 	s.ulk.Lock()
 	defer s.ulk.Unlock()
 
-	// TODO: do something better okay
-	s.UserRoots[u.Name] = rcid
+	s.UserRoots[did] = rcid
 	return nil
 }
 
@@ -255,29 +264,57 @@ func (s *Server) handleGetUser(c echo.Context) error {
 	return car.WriteCar(ctx, ds, []cid.Cid{ucid}, c.Response().Writer)
 }
 
-func Copy(ctx context.Context, from, to blockstore.Blockstore) error {
-	ch, err := from.AllKeysChan(ctx)
-	if err != nil {
+// TODO: this is the register method I wrote for working with the CLI tool, the
+// interesting thing here is that it constructs the beginning of the user data
+// object on behalf of the user, registers that information locally, and sends
+// it all back to the user
+// We need to decide if we like this approach, or if we instead want to have
+// the user just send us their graph with/after registration.
+func (s *Server) handleRegisterUserAlt(c echo.Context) error {
+	ctx := c.Request().Context()
+	var body userRegisterBody
+	if err := c.Bind(&body); err != nil {
 		return err
 	}
 
-	for k := range ch {
-		blk, err := from.Get(k)
-		if err != nil {
-			return err
-		}
+	cst := cbor.NewCborStore(s.Blockstore)
 
-		if err := to.Put(blk); err != nil {
-			return err
-		}
+	u := new(types.User)
+	//u.DID = body.DID
+	u.Name = body.Name
+
+	rcid, err := s.getEmptyPostsRoot(ctx, cst)
+	if err != nil {
+		return fmt.Errorf("failed to get empty posts root: %w", err)
+	}
+	u.PostsRoot = rcid
+
+	cc, err := cst.Put(ctx, u)
+	if err != nil {
+		return fmt.Errorf("failed to write user to blockstore: %w", err)
 	}
 
+	s.updateUserRoot(u.DID, cc)
+
+	ds := merkledag.NewDAGService(bserv.New(s.Blockstore, nil))
+	if err := car.WriteCar(ctx, ds, []cid.Cid{cc}, c.Response().Writer); err != nil {
+		return fmt.Errorf("failed to write car: %w", err)
+	}
 	return nil
+}
+
+type userRegisterBody struct {
+	Name string `json:"name"`
 }
 
 func (s *Server) handleRegister(e echo.Context) error {
 	ctx := e.Request().Context()
 	encoded := getBearer(e.Request())
+
+	var body userRegisterBody
+	if err := e.Bind(&body); err != nil {
+		return err
+	}
 
 	p := ucan.NewTokenParser(emptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
 	token, err := p.ParseAndVerify(ctx, encoded)
@@ -289,17 +326,32 @@ func (s *Server) handleRegister(e echo.Context) error {
 		return fmt.Errorf("Ucan not directed to twitter server")
 	}
 
-	bytes, err := ioutil.ReadAll(e.Request().Body)
-	if err != nil {
-		return err
-	}
-	username := string(bytes)
-
-	if s.UserDids[username] != nil {
+	// TODO: this needs a lock
+	if s.UserDids[body.Name] != nil {
 		return fmt.Errorf("Username already taken")
 	}
 
-	s.UserDids[username] = &token.Issuer
+	s.UserDids[body.Name] = &token.Issuer
+
+	return nil
+}
+
+func Copy(ctx context.Context, from, to blockstore.Blockstore) error {
+	ch, err := from.AllKeysChan(ctx)
+	if err != nil {
+		return err
+	}
+
+	for k := range ch {
+		blk, err := from.Get(ctx, k)
+		if err != nil {
+			return err
+		}
+
+		if err := to.Put(ctx, blk); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -316,6 +368,7 @@ func (s *Server) handleGetDid(e echo.Context) error {
 func getBearer(req *http.Request) string {
 	reqToken := req.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer ")
+	// TODO: check that we didnt get a malformed authorization header, otherwise the next line will panic
 	return splitToken[1]
 }
 
@@ -371,4 +424,9 @@ func (r accountRsc) Value() string {
 
 func (r accountRsc) Contains(b ucan.Resource) bool {
 	return r.Type() == b.Type() && r.Value() <= b.Value()
+}
+
+func (s *Server) getEmptyPostsRoot(ctx context.Context, cst cbor.IpldStore) (cid.Cid, error) {
+	n := hamt.NewNode(cst)
+	return cst.Put(ctx, n)
 }

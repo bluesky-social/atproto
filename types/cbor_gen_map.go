@@ -153,11 +153,34 @@ func (t *User) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write([]byte{163}); err != nil {
+	if _, err := w.Write([]byte{164}); err != nil {
 		return err
 	}
 
 	scratch := make([]byte, 9)
+
+	// t.DID (string) (string)
+	if len("did") > cbg.MaxLength {
+		return xerrors.Errorf("Value in field \"did\" was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajTextString, uint64(len("did"))); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, string("did")); err != nil {
+		return err
+	}
+
+	if len(t.DID) > cbg.MaxLength {
+		return xerrors.Errorf("Value in field t.DID was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajTextString, uint64(len(t.DID))); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, string(t.DID)); err != nil {
+		return err
+	}
 
 	// t.Name (string) (string)
 	if len("name") > cbg.MaxLength {
@@ -255,7 +278,18 @@ func (t *User) UnmarshalCBOR(r io.Reader) error {
 		}
 
 		switch name {
-		// t.Name (string) (string)
+		// t.DID (string) (string)
+		case "did":
+
+			{
+				sval, err := cbg.ReadStringBuf(br, scratch)
+				if err != nil {
+					return err
+				}
+
+				t.DID = string(sval)
+			}
+			// t.Name (string) (string)
 		case "name":
 
 			{
@@ -304,6 +338,129 @@ func (t *User) UnmarshalCBOR(r io.Reader) error {
 				}
 
 				t.NextPost = int64(extraI)
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			cbg.ScanForLinks(r, func(cid.Cid) {})
+		}
+	}
+
+	return nil
+}
+func (t *Post) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write([]byte{162}); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Timestamp (string) (string)
+	if len("timestamp") > cbg.MaxLength {
+		return xerrors.Errorf("Value in field \"timestamp\" was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajTextString, uint64(len("timestamp"))); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, string("timestamp")); err != nil {
+		return err
+	}
+
+	if len(t.Timestamp) > cbg.MaxLength {
+		return xerrors.Errorf("Value in field t.Timestamp was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajTextString, uint64(len(t.Timestamp))); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, string(t.Timestamp)); err != nil {
+		return err
+	}
+
+	// t.Body (string) (string)
+	if len("body") > cbg.MaxLength {
+		return xerrors.Errorf("Value in field \"body\" was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajTextString, uint64(len("body"))); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, string("body")); err != nil {
+		return err
+	}
+
+	if len(t.Body) > cbg.MaxLength {
+		return xerrors.Errorf("Value in field t.Body was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajTextString, uint64(len(t.Body))); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, string(t.Body)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *Post) UnmarshalCBOR(r io.Reader) error {
+	*t = Post{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("Post: map struct too large (%d)", extra)
+	}
+
+	var name string
+	n := extra
+
+	for i := uint64(0); i < n; i++ {
+
+		{
+			sval, err := cbg.ReadStringBuf(br, scratch)
+			if err != nil {
+				return err
+			}
+
+			name = string(sval)
+		}
+
+		switch name {
+		// t.Timestamp (string) (string)
+		case "timestamp":
+
+			{
+				sval, err := cbg.ReadStringBuf(br, scratch)
+				if err != nil {
+					return err
+				}
+
+				t.Timestamp = string(sval)
+			}
+			// t.Body (string) (string)
+		case "body":
+
+			{
+				sval, err := cbg.ReadStringBuf(br, scratch)
+				if err != nil {
+					return err
+				}
+
+				t.Body = string(sval)
 			}
 
 		default:

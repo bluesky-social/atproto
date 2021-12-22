@@ -36,7 +36,7 @@ function Home(props: {}) {
     if(localUser === null) return 
     let userStore: UserStore
     try {
-      const car = await service.fetchUser(localUser.username)
+      const car = await service.fetchUser(localUser.keypair.did())
       userStore = await UserStore.fromCarFile(car)
     } catch (_err) {
       userStore = await createNewStore()
@@ -46,7 +46,7 @@ function Home(props: {}) {
   }
 
   const createNewStore = async (): Promise<UserStore> => {
-    const userStore = await UserStore.create(localUser.username)
+    const userStore = await UserStore.create(localUser.username, localUser.keypair.did())
 
     if(userStore.posts.length === 0) {
       const testPost = {
