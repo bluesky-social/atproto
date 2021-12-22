@@ -14,7 +14,8 @@ function Home(props: {}) {
   const [localUser, setLocalUser] = React.useState<LocalUser | null>(null);
   const [store, setStore] = React.useState<UserStore | null>(null);
   const [posts, setPosts] = React.useState<Post[]>([]);
-  const [tweet, setTweet] = React.useState<string>('')
+  const [tweet, setTweet] = React.useState<string>('');
+  const [loading, setLoading] = React.useState<boolean>(true);
 
   const addPost = async (post: Post) => {
     await store.addPost(post)
@@ -63,12 +64,24 @@ function Home(props: {}) {
     setTweet(e.target.value)
   }
 
-  const loadLocalUser = () => {
+  const loadLocalUser = async () => {
     const username =  localStorage.getItem('username')
     const secretKey = localStorage.getItem('secretKey')
-    if(!username || !secretKey) return
+    if(!username || !secretKey) {
+      setLoading(false)
+    }
 
     const keypair = ucan.EdKeypair.fromSecretKey(secretKey, { format: 'base64pad' })
+    const registeredDid = await service.fetchUserDid(username)
+
+    // check if server has been reset & frontend cache is out of date
+    if(!registeredDid || keypair.did() !== registeredDid) {
+      localStorage.clear()
+      setLoading(false)
+      return
+    }
+
+    setLoading(false)
     setLocalUser({ username, keypair })
   }
 
@@ -87,6 +100,10 @@ function Home(props: {}) {
   React.useEffect(() => {
     loadPosts();
   }, [localUser]);
+
+  if (loading) {
+    return null
+  }
 
   if (localUser === null) {
     return (

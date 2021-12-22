@@ -63,6 +63,7 @@ func main() {
 	e.POST("/update", s.handleUserUpdate)
 	e.GET("/user/:id", s.handleGetUser)
 	e.GET("/.well-known/did.json", s.handleGetDid)
+	e.GET("/.well-known/webfinger", s.handleWebfinger)
 	panic(e.Start(":2583"))
 }
 
@@ -356,12 +357,27 @@ func Copy(ctx context.Context, from, to blockstore.Blockstore) error {
 	return nil
 }
 
-type serverDid struct {
+type wrappedDid struct {
 	Id string `json:"id"`
 }
 
 func (s *Server) handleGetDid(e echo.Context) error {
-	e.JSON(http.StatusOK, serverDid{Id: TwitterDid})
+	e.JSON(http.StatusOK, wrappedDid{Id: TwitterDid})
+	return nil
+}
+
+func (s *Server) handleWebfinger(e echo.Context) error {
+	resource := e.QueryParam("resource")
+	if resource == "" {
+		return fmt.Errorf("No resource provided")
+	}
+
+	userDid := s.UserDids[resource]
+	if userDid == nil {
+		return fmt.Errorf("User not found")
+	}
+
+	e.JSON(http.StatusOK, wrappedDid{Id: userDid.String()})
 	return nil
 }
 

@@ -34,3 +34,12 @@ export const getServerDid = async (): Promise<string> => {
   localStorage.setItem('serverDid', did)
   return did
 }
+
+export const fetchUserDid = async (username: string): Promise<string | null> => {
+  try {
+    const res = await axios.get(`${SERVER_URL}/.well-known/webfinger?resource=${username}`)
+    return res.data.id
+  } catch (_err) {
+    return null
+  }
+}
