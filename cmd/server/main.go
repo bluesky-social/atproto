@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
@@ -59,7 +58,6 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.CORS())
 
-	e.POST("/register", s.handleRegisterUser)
 	e.POST("/register", s.handleRegister)
 
 	e.POST("/update", s.handleUserUpdate)
@@ -260,12 +258,13 @@ func (s *Server) handleGetUser(c echo.Context) error {
 	return car.WriteCar(ctx, ds, []cid.Cid{ucid}, c.Response().Writer)
 }
 
-type userRegisterBody struct {
-	DID  string
-	Name string
-}
-
-func (s *Server) handleRegisterUser(c echo.Context) error {
+// TODO: this is the register method I wrote for working with the CLI tool, the
+// interesting thing here is that it constructs the beginning of the user data
+// object on behalf of the user, registers that information locally, and sends
+// it all back to the user
+// We need to decide if we like this approach, or if we instead want to have
+// the user just send us their graph with/after registration.
+func (s *Server) handleRegisterUserAlt(c echo.Context) error {
 	ctx := c.Request().Context()
 	var body userRegisterBody
 	if err := c.Bind(&body); err != nil {
@@ -275,7 +274,7 @@ func (s *Server) handleRegisterUser(c echo.Context) error {
 	cst := cbor.NewCborStore(s.Blockstore)
 
 	u := new(types.User)
-	u.DID = body.DID
+	//u.DID = body.DID
 	u.Name = body.Name
 
 	rcid, err := s.getEmptyPostsRoot(ctx, cst)
@@ -295,6 +294,39 @@ func (s *Server) handleRegisterUser(c echo.Context) error {
 	if err := car.WriteCar(ctx, ds, []cid.Cid{cc}, c.Response().Writer); err != nil {
 		return fmt.Errorf("failed to write car: %w", err)
 	}
+	return nil
+}
+
+type userRegisterBody struct {
+	Name string
+}
+
+func (s *Server) handleRegister(e echo.Context) error {
+	ctx := e.Request().Context()
+	encoded := getBearer(e.Request())
+
+	var body userRegisterBody
+	if err := e.Bind(&body); err != nil {
+		return err
+	}
+
+	p := ucan.NewTokenParser(emptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	token, err := p.ParseAndVerify(ctx, encoded)
+	if err != nil {
+		return err
+	}
+
+	if token.Audience.String() != TwitterDid {
+		return fmt.Errorf("Ucan not directed to twitter server")
+	}
+
+	// TODO: this needs a lock
+	if s.UserDids[body.Name] != nil {
+		return fmt.Errorf("Username already taken")
+	}
+
+	s.UserDids[body.Name] = &token.Issuer
+
 	return nil
 }
 
@@ -318,35 +350,6 @@ func Copy(ctx context.Context, from, to blockstore.Blockstore) error {
 	return nil
 }
 
-func (s *Server) handleRegister(e echo.Context) error {
-	ctx := e.Request().Context()
-	encoded := getBearer(e.Request())
-
-	p := ucan.NewTokenParser(emptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
-	token, err := p.ParseAndVerify(ctx, encoded)
-	if err != nil {
-		return err
-	}
-
-	if token.Audience.String() != TwitterDid {
-		return fmt.Errorf("Ucan not directed to twitter server")
-	}
-
-	bytes, err := ioutil.ReadAll(e.Request().Body)
-	if err != nil {
-		return err
-	}
-	username := string(bytes)
-
-	if s.UserDids[username] != nil {
-		return fmt.Errorf("Username already taken")
-	}
-
-	s.UserDids[username] = &token.Issuer
-
-	return nil
-}
-
 type serverDid struct {
 	Id string `json:"id"`
 }
@@ -359,6 +362,7 @@ func (s *Server) handleGetDid(e echo.Context) error {
 func getBearer(req *http.Request) string {
 	reqToken := req.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer ")
+	// TODO: check that we didnt get a malformed authorization header, otherwise the next line will panic
 	return splitToken[1]
 }
 
