@@ -26,3 +26,5 @@ require (
 	gorm.io/driver/sqlite v1.2.6
 	gorm.io/gorm v1.22.4
 )
+
+replace github.com/qri-io/ucan => github.com/dholms/ucan v0.0.0-20211215024958-695903849632
