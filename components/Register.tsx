@@ -28,6 +28,8 @@ function Register(props: Props) {
       issuer: keypair
     })
     await service.register(username, ucan.encode(token))
+
+    // LOCAL STORAGE IS NOTE SAFE. DO NOT DO THIS IN PRODUCTION
     localStorage.setItem('secretKey', await keypair.export('base64pad'))
     localStorage.setItem('username', username)
     props.onRegister({ username, keypair })
