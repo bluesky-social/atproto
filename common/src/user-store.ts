@@ -11,7 +11,7 @@ import * as hashmap from 'ipld-hashmap'
 import { User, Post } from "./types"
 import { CarReader } from '@ipld/car'
 
-export default class UserStore {
+export class UserStore {
 
   db: MemoryDB
   ipldStore: IpldStore
@@ -124,3 +124,5 @@ export default class UserStore {
   }
 
 }
+
+export default UserStore

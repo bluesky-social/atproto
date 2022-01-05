@@ -1,31 +1,13 @@
 {
-  "name": "next-sass",
-  "version": "0.0.2",
-  "scripts": {
-    "dev": "next -p 3005",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "@ipld/car": "3.2.2",
-    "@ipld/dag-cbor": "^6.0.12",
-    "axios": "^0.24.0",
-    "cors": "^2.8.5",
-    "express": "^4.17.1",
-    "ipld-hashmap": "^2.1.7",
-    "next": "11.1.2",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "sass": "1.39.0",
-    "ucans": "0.9.0-alpha"
-  },
+  "name": "bluesky-demo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:bluesky-social/bluesky-hack.git",
+  "author": "Daniel Holmgren <dtholmgren@gmail.com>",
   "license": "MIT",
-  "devDependencies": {
-    "@types/cors": "^2.8.12",
-    "@types/express": "^4.17.13",
-    "@types/react": "^17.0.20",
-    "nodemon": "^2.0.15",
-    "ts-node": "^10.4.0",
-    "typescript": "^4.4.2"
-  }
+  "private": true,
+  "workspaces": [
+    "common",
+    "frontend"
+  ]
 }

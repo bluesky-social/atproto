@@ -2,11 +2,8 @@ import styles from "@components/App.module.scss";
 
 import React, { ChangeEvent, FormEvent } from 'react'
 
-import * as service from '@common/service'
+import { service, LocalUser, UserStore } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
-
-import { LocalUser } from '@root/common/types'
-import UserStore from "@root/common/user-store";
 
 interface Props {
   onRegister: (user: LocalUser) => void

@@ -2,13 +2,11 @@ import styles from "@components/App.module.scss";
 
 import * as React from "react";
 
-import * as service from '@common/service'
+import { service, UserStore, LocalUser, Post } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
 
 import App from "@components/App"
 import Register from "@components/Register"
-import UserStore from "@root/common/user-store";
-import { LocalUser, Post } from "@root/common/types";
 
 function Home(props: {}) {
   const [localUser, setLocalUser] = React.useState<LocalUser | null>(null);
