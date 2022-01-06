@@ -131,41 +131,41 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 		return fmt.Errorf("Ucan not directed to twitter server")
 	}
 
-	checkUser := func(user string) bool {
+	checkUser := func(u *types.User) error {
 		att := ucan.Attenuation{
-			Rsc: newAccountResource("twitter", "dholms"),
+			Rsc: newAccountResource("twitter", u.Name),
 			Cap: twitterCaps.Cap("POST"),
 		}
 
 		isGood := token.Attenuations.Contains(ucan.Attenuations{att})
 
 		if !isGood {
-			return false
+			return fmt.Errorf("Ucan attenuation check failed")
 		}
 
 		// user not registerd
-		if s.UserDids[user] == nil {
-			return false
+		if s.UserDids[u.Name] == nil {
+			return fmt.Errorf("user not registered")
 		}
 
 		// ucan issuer does not match user's DID
-		if token.Issuer.String() != s.UserDids[user].String() {
-			return false
+		if token.Issuer.String() != s.UserDids[u.Name].String() {
+			return fmt.Errorf("issuer does not match users DID")
 		}
 
-		return true
+		return nil
 	}
 
-	return s.updateUser(ctx, e.Request(), checkUser)
-}
-
-func (s *Server) updateUser(ctx context.Context, req *http.Request, checkUser func(user string) bool) error {
-	// The body of the request should be a car file containing any *changed* blocks
-	cr, err := car.NewCarReader(req.Body)
+	carr, err := car.NewCarReader(e.Request().Body)
 	if err != nil {
 		return err
 	}
 
+	return s.updateUser(ctx, carr, checkUser)
+}
+
+func (s *Server) updateUser(ctx context.Context, cr *car.CarReader, authCheck func(u *types.User) error) error {
+	// The body of the request should be a car file containing any *changed* blocks
 	roots := cr.Header.Roots
 
 	if len(roots) != 1 {
@@ -192,41 +192,42 @@ func (s *Server) updateUser(ctx context.Context, req *http.Request, checkUser fu
 
 	rblk, err := tmpbs.Get(ctx, roots[0])
 	if err != nil {
+		return fmt.Errorf("getting root: %w", err)
+	}
+
+	var sroot types.SignedRoot
+	if err := sroot.UnmarshalCBOR(bytes.NewReader(rblk.RawData())); err != nil {
 		return err
 	}
 
-	// TODO: accept signed root & Verify signature
-	// var sroot types.SignedRoot
-	// if err := sroot.UnmarshalCBOR(bytes.NewReader(rblk.RawData())); err != nil {
-	// 	return err
-	// }
+	// TODO: check signature
 
-	// ublk, err := tmpbs.Get(sroot.User)
-	// if err != nil {
-	// 	return err
-	// }
+	ublk, err := tmpbs.Get(ctx, sroot.User)
+	if err != nil {
+		return fmt.Errorf("reading user object under signed root: %w", err)
+	}
 
 	var user types.User
-	if err := user.UnmarshalCBOR(bytes.NewReader(rblk.RawData())); err != nil {
+	if err := user.UnmarshalCBOR(bytes.NewReader(ublk.RawData())); err != nil {
 		return err
 	}
 
-	if !checkUser(user.Name) {
-		return fmt.Errorf("Ucan does not properly permission user")
+	if err := s.ensureGraphWalkability(ctx, &user, tmpbs); err != nil {
+		return fmt.Errorf("checking graph walkability failed: %w", err)
+	}
+
+	if err := authCheck(&user); err != nil {
+		return fmt.Errorf("auth check failed: %w", err)
 	}
 
 	fmt.Println("user update: ", user.Name, user.NextPost, user.PostsRoot)
 
-	if err := s.ensureGraphWalkability(ctx, &user, tmpbs); err != nil {
-		return err
-	}
-
 	if err := Copy(ctx, tmpbs, s.Blockstore); err != nil {
-		return err
+		return fmt.Errorf("copy from temp blockstore failed: %w", err)
 	}
 
 	if err := s.updateUserRoot(user.DID, roots[0]); err != nil {
-		return err
+		return fmt.Errorf("failed to update user: %w", err)
 	}
 
 	return nil
@@ -265,76 +266,53 @@ func (s *Server) handleGetUser(c echo.Context) error {
 	return car.WriteCar(ctx, ds, []cid.Cid{ucid}, c.Response().Writer)
 }
 
-// TODO: this is the register method I wrote for working with the CLI tool, the
-// interesting thing here is that it constructs the beginning of the user data
-// object on behalf of the user, registers that information locally, and sends
-// it all back to the user
-// We need to decide if we like this approach, or if we instead want to have
-// the user just send us their graph with/after registration.
-func (s *Server) handleRegisterUserAlt(c echo.Context) error {
-	ctx := c.Request().Context()
-	var body userRegisterBody
-	if err := c.Bind(&body); err != nil {
-		return err
-	}
-
-	cst := cbor.NewCborStore(s.Blockstore)
-
-	u := new(types.User)
-	//u.DID = body.DID
-	u.Name = body.Name
-
-	rcid, err := s.getEmptyPostsRoot(ctx, cst)
-	if err != nil {
-		return fmt.Errorf("failed to get empty posts root: %w", err)
-	}
-	u.PostsRoot = rcid
-
-	cc, err := cst.Put(ctx, u)
-	if err != nil {
-		return fmt.Errorf("failed to write user to blockstore: %w", err)
-	}
-
-	s.updateUserRoot(u.DID, cc)
-
-	ds := merkledag.NewDAGService(bserv.New(s.Blockstore, nil))
-	if err := car.WriteCar(ctx, ds, []cid.Cid{cc}, c.Response().Writer); err != nil {
-		return fmt.Errorf("failed to write car: %w", err)
-	}
-	return nil
-}
-
-type userRegisterBody struct {
-	Name string `json:"name"`
+type registerResponse struct {
+	OK bool
 }
 
 func (s *Server) handleRegister(e echo.Context) error {
 	ctx := e.Request().Context()
 	encoded := getBearer(e.Request())
 
-	var body userRegisterBody
-	if err := e.Bind(&body); err != nil {
-		return err
-	}
-
+	// TODO: understand why this DID stuff works the way it does
 	p := ucan.NewTokenParser(emptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
 	token, err := p.ParseAndVerify(ctx, encoded)
 	if err != nil {
-		return err
+		return fmt.Errorf("parsing ucan auth token: %w", err)
 	}
 
+	// 'TwitterDid' here is really just the DID of this server instance
 	if token.Audience.String() != TwitterDid {
 		return fmt.Errorf("Ucan not directed to twitter server")
 	}
 
-	// TODO: this needs a lock
-	if s.UserDids[body.Name] != nil {
-		return fmt.Errorf("Username already taken")
+	limr := io.LimitReader(e.Request().Body, 1<<20)
+
+	carr, err := car.NewCarReader(limr)
+	if err != nil {
+		return fmt.Errorf("reading register body data: %w", err)
 	}
 
-	s.UserDids[body.Name] = &token.Issuer
+	checkUser := func(u *types.User) error {
+		// TODO: this needs a lock
+		_, ok := s.UserDids[u.Name]
+		if ok {
+			return fmt.Errorf("username already registered")
+		}
+		// TODO: register user info in a real database
 
-	return nil
+		s.UserDids[u.Name] = &token.Issuer
+
+		return nil
+	}
+
+	if err := s.updateUser(ctx, carr, checkUser); err != nil {
+		return err
+	}
+
+	return e.JSON(200, &registerResponse{
+		OK: true,
+	})
 }
 
 func Copy(ctx context.Context, from, to blockstore.Blockstore) error {

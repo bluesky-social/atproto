@@ -6,6 +6,7 @@ import * as service from '@common/service'
 import * as ucan from 'ucans'
 
 import { LocalUser } from '@root/common/types'
+import UserStore from "@root/common/user-store";
 
 interface Props {
   onRegister: (user: LocalUser) => void
@@ -19,6 +20,7 @@ function Register(props: Props) {
     setUsername(e.target.value)
   }
 
+
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const keypair = await ucan.EdKeypair.create({ exportable: true })
@@ -27,9 +29,10 @@ function Register(props: Props) {
       audience: twitterDid,
       issuer: keypair
     })
-    await service.register(username, ucan.encode(token))
+    const userStore = await UserStore.create(username, keypair)
+    await service.register(await userStore.getCarFile(), ucan.encode(token))
 
-    // LOCAL STORAGE IS NOTE SAFE. DO NOT DO THIS IN PRODUCTION
+    // LOCAL STORAGE IS NOT SAFE. DO NOT DO THIS IN PRODUCTION
     localStorage.setItem('secretKey', await keypair.export('base64pad'))
     localStorage.setItem('username', username)
     props.onRegister({ username, keypair })

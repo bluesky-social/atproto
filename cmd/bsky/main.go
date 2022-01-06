@@ -34,6 +34,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const TwitterDid = "did:key:z6Mkmi4eUvWtRAP6PNB7MnGfUFdLkGe255ftW9sGo28uv44g"
+
 func main() {
 
 	app := cli.NewApp()
@@ -247,6 +249,7 @@ func (p *Posts) Get(ctx context.Context, id int64) (*types.Post, error) {
 var registerCmd = &cli.Command{
 	Name: "register",
 	Action: func(cctx *cli.Context) error {
+		ctx := cctx.Context
 		bskyd, err := homedir.Expand(cctx.String("repo"))
 		if err != nil {
 			return err
@@ -257,18 +260,35 @@ var registerCmd = &cli.Command{
 			return err
 		}
 
-		b, err := json.Marshal(map[string]interface{}{
-			"DID": r.Account.DID,
-		})
+		userCid, err := createInitialUser(ctx, r.Blockstore, r.Account.DID, r.Account.Name)
 		if err != nil {
 			return err
 		}
 
-		req, err := http.NewRequest("POST", r.Account.Server+"/register", bytes.NewReader(b))
+		dserv := merkledag.NewDAGService(blockservice.New(r.Blockstore, nil))
+
+		sroot := &types.SignedRoot{
+			User: userCid,
+		}
+		cst := cbor.NewCborStore(r.Blockstore)
+		rootcid, err := cst.Put(ctx, sroot)
 		if err != nil {
 			return err
 		}
-		req.Header.Set("Content-Type", "application/json")
+
+		buf := new(bytes.Buffer)
+		if err := car.WriteCar(ctx, dserv, []cid.Cid{rootcid}, buf); err != nil {
+			return err
+		}
+
+		req, err := http.NewRequest("POST", r.Account.Server+"/register", buf)
+		if err != nil {
+			return err
+		}
+
+		if err := addUcanAuthToRequest(req, r.Account); err != nil {
+			return err
+		}
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -276,26 +296,42 @@ var registerCmd = &cli.Command{
 		}
 		defer resp.Body.Close()
 
-		u, root, err := readUserCar(context.TODO(), resp.Body, r.Blockstore)
-		if err != nil {
-			return fmt.Errorf("reading car response: %w", err)
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("got bad status code back: %d", resp.StatusCode)
 		}
 
-		r.Account.Root = root
+		r.Account.Root = userCid
 		if err := r.SaveAccount(r.Account); err != nil {
 			return err
 		}
 
-		ub, err := json.Marshal(u)
-		if err != nil {
-			return err
-		}
-
 		fmt.Println("registration complete")
-		fmt.Println(string(ub))
 
 		return nil
 	},
+}
+
+func createInitialUser(ctx context.Context, bs blockstore.Blockstore, did string, name string) (cid.Cid, error) {
+	cst := cbor.NewCborStore(bs)
+
+	n := hamt.NewNode(cst)
+	proot, err := cst.Put(ctx, n)
+	if err != nil {
+		return cid.Undef, err
+	}
+
+	u := &types.User{
+		DID:       did,
+		Name:      name,
+		PostsRoot: proot,
+	}
+
+	uroot, err := cst.Put(ctx, u)
+	if err != nil {
+		return cid.Undef, err
+	}
+
+	return uroot, nil
 }
 
 var postCmd = &cli.Command{
@@ -360,6 +396,10 @@ func PushUpdate(ctx context.Context, acc *Account, oldroot cid.Cid, bs blockstor
 		return err
 	}
 
+	if err := addUcanAuthToRequest(req, acc); err != nil {
+		return err
+	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -369,6 +409,28 @@ func PushUpdate(ctx context.Context, acc *Account, oldroot cid.Cid, bs blockstor
 		return fmt.Errorf("bad status code back from update: %d", resp.StatusCode)
 	}
 
+	return nil
+}
+
+func addUcanAuthToRequest(req *http.Request, acc *Account) error {
+	src, err := ucan.NewPrivKeySource(acc.Key)
+	if err != nil {
+		return err
+	}
+
+	caps := ucan.NewNestedCapabilities("POST")
+	att := ucan.Attenuations{
+		{caps.Cap("POST"), ucan.NewStringLengthResource("twitter", acc.Name)},
+	}
+
+	// TwitterDid is the DID of the service we are registering with
+	tok, err := src.NewOriginToken(TwitterDid, att, nil, time.Now(), time.Now().Add(time.Hour*24*365))
+	if err != nil {
+		return err
+	}
+	fmt.Println("TOKEN: ", tok.Raw)
+
+	req.Header.Set("Authorization", "Bearer "+tok.Raw)
 	return nil
 }
 
