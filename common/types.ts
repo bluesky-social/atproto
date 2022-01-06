@@ -18,3 +18,8 @@ export type Post = {
   user: string
   text: string
 }
+
+export type SignedRoot = {
+  user: CID
+  sig: Uint8Array
+}

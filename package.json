@@ -7,7 +7,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@ipld/car": "^3.2.0",
+    "@ipld/car": "3.2.2",
     "@ipld/dag-cbor": "^6.0.12",
     "axios": "^0.24.0",
     "cors": "^2.8.5",

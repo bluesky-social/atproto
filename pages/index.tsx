@@ -38,7 +38,7 @@ function Home(props: {}) {
     let userStore: UserStore
     try {
       const car = await service.fetchUser(localUser.keypair.did())
-      userStore = await UserStore.fromCarFile(car)
+      userStore = await UserStore.fromCarFile(car, localUser.keypair)
     } catch (_err) {
       userStore = await createNewStore()
     }
@@ -47,7 +47,7 @@ function Home(props: {}) {
   }
 
   const createNewStore = async (): Promise<UserStore> => {
-    const userStore = await UserStore.create(localUser.username, localUser.keypair.did())
+    const userStore = await UserStore.create(localUser.username, localUser.keypair)
 
     if(userStore.posts.length === 0) {
       const testPost = {
@@ -69,6 +69,7 @@ function Home(props: {}) {
     const secretKey = localStorage.getItem('secretKey')
     if(!username || !secretKey) {
       setLoading(false)
+      return
     }
 
     const keypair = ucan.EdKeypair.fromSecretKey(secretKey, { format: 'base64pad' })

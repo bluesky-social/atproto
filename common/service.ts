@@ -2,9 +2,10 @@ import axios from 'axios'
 
 const SERVER_URL = 'http://localhost:2583'
 
-export const register = async (name: string, authToken: string): Promise<void> => {
-  await axios.post(`${SERVER_URL}/register`, { name }, { 
+export const register = async (car: Uint8Array, authToken: string): Promise<void> => {
+  await axios.post(`${SERVER_URL}/register`, car, { 
     headers: { 
+      'Content-Type': 'application/octet-stream',
       'Authorization': `Bearer ${authToken}`
     }
   })

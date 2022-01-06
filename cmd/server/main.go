@@ -133,7 +133,7 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 
 	checkUser := func(u *types.User) error {
 		att := ucan.Attenuation{
-			Rsc: newAccountResource("twitter", "dholms"),
+			Rsc: newAccountResource("twitter", u.Name),
 			Cap: twitterCaps.Cap("POST"),
 		}
 
@@ -294,19 +294,6 @@ func (s *Server) handleRegister(e echo.Context) error {
 	}
 
 	checkUser := func(u *types.User) error {
-		/*
-				att := ucan.Attenuation{
-					Rsc: newAccountResource("twitter", "dholms"), // ?????
-					Cap: twitterCaps.Cap("POST"),
-				}
-
-				isGood := token.Attenuations.Contains(ucan.Attenuations{att})
-
-			if !isGood {
-				return false
-			}
-		*/
-
 		// TODO: this needs a lock
 		_, ok := s.UserDids[u.Name]
 		if ok {
@@ -315,13 +302,6 @@ func (s *Server) handleRegister(e echo.Context) error {
 		// TODO: register user info in a real database
 
 		s.UserDids[u.Name] = &token.Issuer
-
-		/*
-			// ucan issuer does not match user's DID
-			if token.Issuer.String() != s.UserDids[user].String() {
-				return false
-			}
-		*/
 
 		return nil
 	}

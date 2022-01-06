@@ -1,3 +1,4 @@
+import * as car from '@ipld/car'
 import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
@@ -19,7 +20,7 @@ export default class MemoryDB {
     this.map.set(k.toString(), v)
   }
 
-  getCarStream(roots: CID): AsyncIterable<Uint8Array> {
+  getCarStream(root: CID): AsyncIterable<Uint8Array> {
     const writeDB = async (car: BlockWriter) => {
       for await (const [cid, bytes] of this.map.entries()) {
         car.put({ cid: CID.parse(cid), bytes })
@@ -27,14 +28,14 @@ export default class MemoryDB {
       car.close()
     }
 
-    const { writer, out } = CarWriter.create(roots)
+    const { writer, out } = CarWriter.create([root])
     writeDB(writer)
     return out
   }
 
-  async getCarFile(roots: CID): Promise<Uint8Array> {
+  async getCarFile(root: CID): Promise<Uint8Array> {
     const arrays = []
-    for await (const chunk of this.getCarStream(roots)) {
+    for await (const chunk of this.getCarStream(root)) {
       arrays.push(chunk)
     }
     return flattenUint8Arrays(arrays)
