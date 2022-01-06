@@ -15,20 +15,21 @@ _Note: the server currently holds the state in memory, meaning it will lose all 
 Run the go server
 
 ```sh
-cd cmd/server
-go run main.go
+cd server
+go run cmd/server/main.go
 ```
 
 Server will be running at `http://localhost:2583`
 
 ### Node server/frontend
-_Requires Node>=15_
+_Requires Node>=15, and yarn_
 
 In another console tab, run the node server
 
 ```sh
-npm install
-npm run dev
+yarn 
+cd frontend
+yarn dev
 ```
 
 Go to `http://localhost:3005` to try the demo.
