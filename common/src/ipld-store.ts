@@ -8,7 +8,7 @@ import * as blockCodec from '@ipld/dag-cbor'
 import { SignedRoot, User } from "./types"
 import * as check from './type-check'
 
-export default class IpldStore {
+export class IpldStore {
 
   db: MemoryDB
 
@@ -44,3 +44,5 @@ export default class IpldStore {
     return block.cid
   }
 }
+
+export default IpldStore 

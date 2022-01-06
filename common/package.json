@@ -1,0 +1,13 @@
+{
+  "name": "@bluesky-demo/common",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "dependencies": {
+    "@ipld/car": "^3.2.3",
+    "@ipld/dag-cbor": "^7.0.0",
+    "axios": "^0.24.0",
+    "multiformats": "^9.5.6",
+    "ucans": "^0.8.0"
+  }
+}

@@ -4,7 +4,7 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
 import { flattenUint8Arrays } from './util'
 
-export default class MemoryDB {
+export class MemoryDB {
 
   map: Map<string, any>
 
@@ -42,3 +42,5 @@ export default class MemoryDB {
   }
 
 }
+
+export default MemoryDB
