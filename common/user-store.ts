@@ -44,7 +44,7 @@ export default class UserStore {
     const userCid = await ipldStore.put(user)
     const signedRoot = {
       user: userCid,
-      sig: new Uint8Array([0,1,2,3])
+      sig: await keypair.sign(userCid.bytes)
     }
 
     const root = await ipldStore.put(signedRoot)
@@ -106,7 +106,7 @@ export default class UserStore {
     const userCid = await this.ipldStore.put(user)
     const signedRoot = {
       user: userCid,
-      sig: new Uint8Array([0,1,2,3])
+      sig: await this.keypair.sign(userCid.bytes)
     }
     
     this.root = await this.ipldStore.put(signedRoot)
