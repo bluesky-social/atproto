@@ -16,3 +16,7 @@ analytics.txt
 /**/*/node_modules
 /**/*/.next
 /**/*/.data
+
+server/bluesky
+server/bsky
+server/server
