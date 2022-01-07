@@ -13,14 +13,13 @@
   line-height: 1.5;
   padding: 24px;
   width: 100%;
-  max-width: 288px;
+  max-width: 388px;
   text-align: center;
 }
 
 .button {
   border-radius: 5px;
   padding: 4px 8px;
-  float: right;
 }
 
 .tweetBox {
@@ -38,7 +37,7 @@
 
 .postUser {
   font-weight: bold;
-  margin-bottom: 4px; 
+  margin-bottom: 4px;
 }
 
 .header {
@@ -49,4 +48,34 @@
 .tweets {
   display: block;
   width: 400px;
+}
+
+// .layoutContainer {
+//   display: grid;
+//   grid-template-columns: auto 25%;
+//   /*grid-template-columns: auto 300px;*/
+//   grid-column-gap: 0px;
+// }
+.layoutContainer {
+  display: flex;
+}
+.main {
+  flex: 3;
+}
+.aside {
+  flex: 1;
+  padding-left: 40px;
+}
+.userBox {
+  min-width: 250px;
+  max-width: 250px;
+  font-size: 12px;
+  padding: 10px 0;
+}
+.divider {
+  min-width: 250px;
+  max-width: 250px;
+  height: 100%;
+  border-left: 1px solid #B1D4E0;
+  padding: 10px;
 }

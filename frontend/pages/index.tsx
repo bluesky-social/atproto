@@ -15,6 +15,7 @@ function Home(props: {}) {
   const [tweet, setTweet] = React.useState<string>('');
   const [loading, setLoading] = React.useState<boolean>(true);
   const [users, setAllUsers] = React.useState<User[]>([]);
+  const [showUsers, setShowUsers] = React.useState<boolean>(false);
 
   const addPost = async (post: Post) => {
     await store.addPost(post)
@@ -101,6 +102,11 @@ function Home(props: {}) {
     });
   }
 
+  const toggleUsers = e => {
+    e.preventDefault()
+    setShowUsers(!showUsers)
+  }
+
   React.useEffect(() => {
     loadLocalUser()
   }, [])
@@ -125,36 +131,57 @@ function Home(props: {}) {
     )
   }
 
-  return (
-    <App>
-      <div className={styles.header}>
-        <ul>Users: {users.map((user, i) => {
+  let userDiv;
+  if (showUsers) {
+    userDiv = (
+      <div className={styles.userBox}>
+        <ul>{users.map((user, i) => {
           return(
             <div key={i}>
               <p>{user}</p>
             </div>
           )
         })}</ul>
-        <p className={styles.paragraph}>Logged in as <strong>{localUser.username}</strong></p>
-        <p className={styles.paragraph}>Putting posts in IPFS.</p>
-        <form onSubmit={postTweet}>
-          <textarea onChange={updateTweet} className={styles.tweetBox}/>
-          <br/>
-          <button className={styles.button} type='submit'>Post</button>
-        </form>
-        <br/>
       </div>
-      <div className={styles.tweets}>
-        <ul>
-          {posts.map((post, i) => {
-            return (
-              <div className={styles.post} key={i}>
-                <p className={styles.postUser}>{post.user}</p>
-                <p> {post.text} </p>
-              </div>
-            ) ;
-          })}
-        </ul>
+    )
+  } else {
+    userDiv = <div className={styles.userBox}></div>
+  }
+
+  return (
+    <App>
+      <div className={styles.layoutContainer}>
+        <div className={styles.main}>
+          <div className={styles.header}>
+            <p className={styles.paragraph}>Logged in as <strong>{localUser.username}</strong></p>
+            <p className={styles.paragraph}>Putting posts in IPLD.</p>
+            <form onSubmit={postTweet}>
+              <textarea onChange={updateTweet} className={styles.tweetBox}/>
+              <br/>
+              <button className={styles.button} type='submit'>Post</button>
+            </form>
+            <br/>
+          </div>
+          <div className={styles.tweets}>
+            <ul>
+              {posts.map((post, i) => {
+                return (
+                  <div className={styles.post} key={i}>
+                    <p className={styles.postUser}>{post.user}</p>
+                    <p> {post.text} </p>
+                  </div>
+                ) ;
+              })}
+            </ul>
+          </div>
+        </div>
+        <div className={styles.aside}>
+          <div className={styles.divider}>
+            <button className={styles.button} onClick={toggleUsers}>Show all users</button>
+            <br/>
+            {userDiv}
+          </div>
+        </div>
       </div>
   </App>
   );
