@@ -1,10 +1,8 @@
 import express from 'express'
 import cors from 'cors'
-import axios from 'axios'
 import * as ucan from 'ucans'
 import * as check from './ucan-checks'
-import { service } from '@bluesky-demo/common'
-// import { ID_PROVIDER, THIRD_PARTY_PORT, TWITTER } from '../common/consts'
+import { service, UserStore } from '@bluesky-demo/common'
 
 // WARNING: For demo only, do not actually store secret keys in plaintext.
 const SECRET_KEY = 'I0HyDksQcCRdJBGVuE78Ts34SzyF7+xNprEQw/IRa51OuFZQc5ugqfgjeWRMehyfr7A1vXICRoUD5kqVadsRHA=='
@@ -47,14 +45,18 @@ app.post('/message', async (req, res) => {
     audience: twitterDid,
     issuer: SERVER_KEY,
     capabilities: u.payload.att,
-    proofs: [ucan.encode(u)]
+    proof: ucan.encode(u)
+  })
+  const encoded = ucan.encode(extendUcan)
+
+  const car = await service.fetchUser(userDid)
+  const userStore = await UserStore.fromCarFile(car, SERVER_KEY)
+  await userStore.addPost({
+    user: username,
+    text: `Hey there! I'm posting on ${username}'s behalf`
   })
 
-  // Ask twitter to post a message on user's behalf
-  const encoded = ucan.encode(extendUcan)
-  const message = `Hey there! I'm posting on ${username}'s behalf`
-  // await axios.post(`${TWITTER}/tweet/new`, { message, username }, { headers: { authorization: `Bearer ${encoded}` }})
-
+  await service.updateUser(await userStore.getCarFile(), encoded)
   res.status(200).send()
 })
 
