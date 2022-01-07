@@ -112,11 +112,8 @@ function Home(props: {}) {
   }, [])
 
   React.useEffect(() => {
+    loadPosts()
     loadAllUsers()
-  }, [])
-
-  React.useEffect(() => {
-    loadPosts();
   }, [localUser]);
 
   if (loading) {
