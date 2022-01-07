@@ -8,6 +8,7 @@
   "private": true,
   "workspaces": [
     "common",
-    "frontend"
+    "frontend",
+    "third-party"
   ]
 }
