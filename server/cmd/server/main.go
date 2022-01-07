@@ -62,7 +62,7 @@ func main() {
 
 	e.POST("/update", s.handleUserUpdate)
 	e.GET("/user/:id", s.handleGetUser)
-	e.GET("/users", s.handleGetAllUsers) // For demo server
+	e.GET("/users", s.handleGetAllUsers)
 	e.GET("/.well-known/did.json", s.handleGetDid)
 	e.GET("/.well-known/webfinger", s.handleWebfinger)
 	panic(e.Start(":2583"))
@@ -270,7 +270,7 @@ func (s *Server) handleGetUser(c echo.Context) error {
 func (s *Server) getAllUsers() ([]string, error) {
 	s.ulk.Lock()
 	defer s.ulk.Unlock()
-	// iterate over s.UserRoots[ids]
+
 	names := []string{}
 	for n, _ := range s.UserRoots {
 		fmt.Println("username", n)

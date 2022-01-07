@@ -247,7 +247,7 @@ var listUsersCmd = &cli.Command{
 		}
 
     if resp.StatusCode != 200 {
-			return fmt.Errorf("got non-200 status code: %d", resp.StatusCode)
+			return fmt.Errorf("Error: Non-200 status code: %d", resp.StatusCode)
 		}
 
 		var names []string
@@ -256,7 +256,6 @@ var listUsersCmd = &cli.Command{
 			return err
 		}
 
-		// Print to cmd line
 		fmt.Println("Users on server", names)
 
 		return nil
