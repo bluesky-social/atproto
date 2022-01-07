@@ -10,12 +10,12 @@ export const isUser = (obj: any): obj is User => {
     && typeof obj.name === 'string'
     && typeof obj.did === 'string'
     && typeof obj.nextPost === 'number'
-    && CID.asCID(obj.postsRoot)
+    && !!CID.asCID(obj.postsRoot)
     && Array.isArray(obj.follows)
 }
 
 export const isSignedRoot = (obj: any): obj is SignedRoot => {
   return isObject(obj)
-    && CID.asCID(obj.user)
+    && !!CID.asCID(obj.user)
     && ArrayBuffer.isView(obj.sig)
 }

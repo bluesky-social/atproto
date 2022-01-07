@@ -4,11 +4,13 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon src/index.ts"
+    "dev": "esr src/index.ts",
+    "build": "esbuild src/index.ts --outfile=dist/index.js"
   },
   "devDependencies": {
     "@bluesky-demo/common": "*",
-    "nodemon": "^2.0.15"
+    "esbuild": "^0.14.10",
+    "esbuild-runner": "^2.2.1"
   },
   "dependencies": {
     "axios": "^0.24.0",

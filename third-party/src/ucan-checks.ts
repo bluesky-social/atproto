@@ -37,10 +37,7 @@ export const hasAudience = (did: string) => (token: Ucan): Error | null => {
 }
 
 export const hasRootDid = (did: string) => (token: Ucan): Error | null => {
-  const encoded = ucan.encode(token)
-  if(ucan.rootIssuer(encoded) !== did) {
-    return new Error("Ucan does not have the correct root issuer")
-  }
+  // this is all changing with the new ucan api
   return null
 }
 
