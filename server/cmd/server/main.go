@@ -148,9 +148,13 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 			return fmt.Errorf("user not registered")
 		}
 
-		// ucan issuer does not match user's DID
-		if token.Issuer.String() != s.UserDids[u.Name].String() {
-			return fmt.Errorf("issuer does not match users DID")
+		// ucan's root issuer does not match user's DID
+		rootIss, err := s.rootIssuer(ctx, token)
+		if err != nil {
+			return err
+		}
+		if rootIss.String() != s.UserDids[u.Name].String() {
+			return fmt.Errorf("root issuer does not match users DID")
 		}
 
 		return nil
@@ -423,4 +427,17 @@ func (r accountRsc) Contains(b ucan.Resource) bool {
 func (s *Server) getEmptyPostsRoot(ctx context.Context, cst cbor.IpldStore) (cid.Cid, error) {
 	n := hamt.NewNode(cst)
 	return cst.Put(ctx, n)
+}
+
+// naive implementation that does not take into account ucans with multiple proofs
+func (s *Server) rootIssuer(ctx context.Context, u *ucan.Token) (didkey.ID, error) {
+	if len(u.Proofs) == 0 {
+		return u.Issuer, nil
+	}
+	p := ucan.NewTokenParser(twitterAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
+	proof, err := p.ParseAndVerify(ctx, string(u.Proofs[0]))
+	if err != nil {
+		return didkey.ID{}, err
+	}
+	return s.rootIssuer(ctx, proof)
 }

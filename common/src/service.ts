@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 const SERVER_URL = 'http://localhost:2583'
+const THIRD_PARTY_URL = 'http://localhost:2584'
 
 export const register = async (car: Uint8Array, authToken: string): Promise<void> => {
   await axios.post(`${SERVER_URL}/register`, car, { 
@@ -26,14 +27,8 @@ export const fetchUser = async (did: string): Promise<Uint8Array> => {
 }
 
 export const getServerDid = async (): Promise<string> => {
-  const cached = localStorage.getItem('serverDid')
-  if (cached && cached.length > 0) {
-    return cached
-  }
   const res = await axios.get(`${SERVER_URL}/.well-known/did.json`)
-  const did = res.data.id
-  localStorage.setItem('serverDid', did)
-  return did
+  return res.data.id
 }
 
 export const fetchUserDid = async (username: string): Promise<string | null> => {
@@ -43,4 +38,17 @@ export const fetchUserDid = async (username: string): Promise<string | null> => 
   } catch (_err) {
     return null
   }
+}
+
+export const getThirdPartyDid = async (): Promise<string> => {
+  const res = await axios.get(`${THIRD_PARTY_URL}/.well-known/did.json`)
+  return res.data.id
+}
+
+export const thirdPartyPost = async (username: string, authToken: string): Promise<void> => {
+  await axios.post(`${THIRD_PARTY_URL}/post`, { username }, {
+    headers: {
+      'Authorization': `Bearer ${authToken}`
+    }
+  })
 }

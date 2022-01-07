@@ -58,6 +58,20 @@ function Home(props: {}) {
     return userStore
   }
 
+  const thirdPartyPost = async () => {
+    const audience = await service.getThirdPartyDid()
+    const token = await ucan.build({
+      audience,
+      issuer: localUser.keypair,
+      capabilities: [{
+        'twitter': localUser.username,
+        'cap': 'POST'
+      }]
+    })
+    await service.thirdPartyPost(localUser.username, ucan.encode(token))
+    loadPosts()
+  }
+
   const updateTweet = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTweet(e.target.value)
   }
@@ -122,7 +136,10 @@ function Home(props: {}) {
           <br/>
           <button className={styles.button} type='submit'>Post</button>
         </form>
-        <br/>
+        <br/><br/>
+        <hr/>
+        <p className={styles.paragraph}>Or delegate permission to another server to post for you.</p>
+        <button className={styles.button} onClick={thirdPartyPost}>Third Party Post</button>
       </div>
       <div className={styles.tweets}>
         <ul>
