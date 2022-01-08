@@ -84,10 +84,9 @@ export class UserStore {
   }
 
   static async postsListFromMap(postMap: hashmap.HashMap<Post>) {
-    const posts = []
-    const postsSize = await postMap.size()
-    for await (const [i, val] of postMap.entries()) {
-      posts[i] = val
+    const posts: Post[] = []
+    for await (const [_, val] of postMap.entries()) {
+      posts.push(val)
     }
     return posts.reverse()
   }
