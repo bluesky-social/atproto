@@ -36,8 +36,8 @@ export const hasAudience = (did: string) => (token: Ucan): Error | null => {
   return null
 }
 
+// @@TODO: Fix this, since it is changing with the new ucan api
 export const hasRootDid = (did: string) => (token: Ucan): Error | null => {
-  // this is all changing with the new ucan api
   return null
 }
 
