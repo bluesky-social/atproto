@@ -32,9 +32,9 @@ app.post('/post', async (req, res) => {
   }
 
   // Check that it's a valid ucan, that it's meant for this server, and that it has permission to post for the given username
-  let u: ucan.Ucan
+  let u: ucan.Chained
   try {
-    u = await check.checkUcan(req, check.hasAudience(SERVER_DID), check.hasPostingPermission(username), check.hasRootDid(userDid))
+    u = await check.checkUcan(req, check.hasAudience(SERVER_DID), check.hasPostingPermission(username, userDid))
   } catch (err) {
     return res.status(401).send(err)
   }
@@ -44,8 +44,8 @@ app.post('/post', async (req, res) => {
   const extendUcan = await ucan.build({
     audience: twitterDid,
     issuer: SERVER_KEY,
-    capabilities: u.payload.att,
-    proofs: [ucan.encode(u)]
+    capabilities: u.attenuation(),
+    proofs: [u.encoded()]
   })
   const encoded = ucan.encode(extendUcan)
 
