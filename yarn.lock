@@ -3113,10 +3113,10 @@ typescript@^4.4.2:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.5.4.tgz#a17d3a0263bf5c8723b9c52f43c5084edf13c2e8"
   integrity sha512-VgYs2A2QIRuGphtzFV7aQJduJ2gyfTljngLzjpfW9FoYZF6xuw1W0vW9ghCKLfcWrCFxK81CSGRAvS1pn4fIUg==
 
-ucans@0.9.0-alpha, ucans@^0.9.0-alpha:
-  version "0.9.0-alpha"
-  resolved "https://registry.yarnpkg.com/ucans/-/ucans-0.9.0-alpha.tgz#029e28722799f5e424dce62ddfa92da6e74286ba"
-  integrity sha512-tS1dM4Rbt25gw1Wc+ff7weXCV0MKpWiH7bIavVSAvk4AG8U2Hsx5W4neCSUmquynPAtTZRGF8rR2+GYUs+2BHQ==
+ucans@0.9.0-alpha3, ucans@^0.9.0-alpha3:
+  version "0.9.0-alpha3"
+  resolved "https://registry.yarnpkg.com/ucans/-/ucans-0.9.0-alpha3.tgz#1665b0ecf4f68ee77ba41dcb5f37f9064c9dbd4b"
+  integrity sha512-52eLo/YnrGf4o7T6Bv2vjPkvq0nSsvxZhkh8EOXwQKMC1hXvVrHArLPgDIyARPynoGw5ZAguzo4A/xibPdHM8Q==
   dependencies:
     one-webcrypto "^1.0.1"
     tweetnacl "^1.0.3"
