@@ -121,7 +121,11 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 	ctx := e.Request().Context()
 
 	// check ucan permission
-	encoded := getBearer(e.Request())
+	encoded, err := getBearer(e.Request())
+	if err != nil {
+		return err
+	}
+
 	p := ucan.NewTokenParser(twitterAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
 	token, err := p.ParseAndVerify(ctx, encoded)
 	if err != nil {
@@ -298,7 +302,10 @@ type registerResponse struct {
 
 func (s *Server) handleRegister(e echo.Context) error {
 	ctx := e.Request().Context()
-	encoded := getBearer(e.Request())
+	encoded, err := getBearer(e.Request())
+	if err != nil {
+		return err
+	}
 
 	// TODO: understand why this DID stuff works the way it does
 	p := ucan.NewTokenParser(emptyAC, ucan.StringDIDPubKeyResolver{}, s.UcanStore.(ucan.CIDBytesResolver))
@@ -320,9 +327,8 @@ func (s *Server) handleRegister(e echo.Context) error {
 	}
 
 	checkUser := func(u *types.User) error {
-		// TODO: this needs a lock
-		_, ok := s.UserDids[u.Name]
-		if ok {
+		_, err := s.getUserDid(u.Name)
+		if err == nil {
 			return fmt.Errorf("username already registered")
 		}
 		// TODO: register user info in a real database
@@ -385,11 +391,13 @@ func (s *Server) handleWebfinger(e echo.Context) error {
 	return nil
 }
 
-func getBearer(req *http.Request) string {
+func getBearer(req *http.Request) (string, error) {
 	reqToken := req.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer ")
-	// TODO: check that we didnt get a malformed authorization header, otherwise the next line will panic
-	return splitToken[1]
+	if len(splitToken) < 2 {
+		return "", fmt.Errorf("Could not parse a valid bearer token")
+	}
+	return splitToken[1], nil
 }
 
 func twitterAC(m map[string]interface{}) (ucan.Attenuation, error) {
