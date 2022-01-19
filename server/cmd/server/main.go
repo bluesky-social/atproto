@@ -271,13 +271,13 @@ func (s *Server) getAllUsers() ([]string, error) {
 	s.ulk.Lock()
 	defer s.ulk.Unlock()
 
-	names := []string{}
-	for n, _ := range s.UserRoots {
-		fmt.Println("username", n)
-		names = append(names, n)
+	dids := []string{}
+	for d, _ := range s.UserRoots {
+		fmt.Println("dids", n)
+		dids = append(dids, n)
 	}
 
-	return names, nil
+	return dids, nil
 }
 
 func (s *Server) handleGetAllUsers(c echo.Context) error {
