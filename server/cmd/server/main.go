@@ -39,8 +39,9 @@ type Server struct {
 	UcanStore  ucan.TokenStore
 
 	ulk       sync.Mutex
+	dlk       sync.Mutex
 	UserRoots map[string]cid.Cid
-	UserDids  map[string]*didkey.ID
+	UserDids  map[string]didkey.ID
 }
 
 func main() {
@@ -49,7 +50,7 @@ func main() {
 	bs := blockstore.NewBlockstore(ds)
 	s := &Server{
 		UserRoots:  make(map[string]cid.Cid),
-		UserDids:   make(map[string]*didkey.ID),
+		UserDids:   make(map[string]didkey.ID),
 		Blockstore: bs,
 		UcanStore:  ucan.NewMemTokenStore(),
 	}
@@ -144,8 +145,9 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 		}
 
 		// user not registerd
-		if s.UserDids[u.Name] == nil {
-			return fmt.Errorf("user not registered")
+		userDid, err := s.getUserDid(u.Name)
+		if err != nil {
+			return err
 		}
 
 		// ucan's root issuer does not match user's DID
@@ -153,7 +155,7 @@ func (s *Server) handleUserUpdate(e echo.Context) error {
 		if err != nil {
 			return err
 		}
-		if rootIss.String() != s.UserDids[u.Name].String() {
+		if rootIss.String() != userDid.String() {
 			return fmt.Errorf("root issuer does not match users DID")
 		}
 
@@ -257,6 +259,26 @@ func (s *Server) getUser(id string) (cid.Cid, error) {
 	return c, nil
 }
 
+func (s *Server) updateUserDid(name string, did didkey.ID) error {
+	s.dlk.Lock()
+	defer s.dlk.Unlock()
+
+	s.UserDids[name] = did
+	return nil
+}
+
+func (s *Server) getUserDid(name string) (didkey.ID, error) {
+	s.dlk.Lock()
+	defer s.dlk.Unlock()
+
+	d, ok := s.UserDids[name]
+	if !ok {
+		return didkey.ID{}, fmt.Errorf("no such user")
+	}
+
+	return d, nil
+}
+
 func (s *Server) handleGetUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -305,9 +327,9 @@ func (s *Server) handleRegister(e echo.Context) error {
 		}
 		// TODO: register user info in a real database
 
-		s.UserDids[u.Name] = &token.Issuer
+		err = s.updateUserDid(u.Name, token.Issuer)
 
-		return nil
+		return err
 	}
 
 	if err := s.updateUser(ctx, carr, checkUser); err != nil {
@@ -354,9 +376,9 @@ func (s *Server) handleWebfinger(e echo.Context) error {
 		return fmt.Errorf("No resource provided")
 	}
 
-	userDid := s.UserDids[resource]
-	if userDid == nil {
-		return fmt.Errorf("User not found")
+	userDid, err := s.getUserDid(resource)
+	if err != nil {
+		return err
 	}
 
 	e.JSON(http.StatusOK, wrappedDid{Id: userDid.String()})
