@@ -18,7 +18,7 @@ app.get('/.well-known/did.json', (_req, res) => {
   res.send({ id: SERVER_DID })
 })
 
-app.post('/message', async (req, res) => {
+app.post('/post', async (req, res) => {
   // Verify req params
   const { username } = req.body
   if (typeof username !== 'string') {
@@ -45,7 +45,7 @@ app.post('/message', async (req, res) => {
     audience: twitterDid,
     issuer: SERVER_KEY,
     capabilities: u.payload.att,
-    proof: ucan.encode(u)
+    proofs: [ucan.encode(u)]
   })
   const encoded = ucan.encode(extendUcan)
 

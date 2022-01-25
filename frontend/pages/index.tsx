@@ -14,7 +14,7 @@ function Home(props: {}) {
   const [posts, setPosts] = React.useState<Post[]>([]);
   const [tweet, setTweet] = React.useState<string>('');
   const [loading, setLoading] = React.useState<boolean>(true);
-  const [users, setAllUsers] = React.useState<User[]>([]);
+  const [users, setAllUsers] = React.useState<string[]>([]);
   const [showUsers, setShowUsers] = React.useState<boolean>(false);
 
   const addPost = async (post: Post) => {
@@ -58,6 +58,20 @@ function Home(props: {}) {
     }
 
     return userStore
+  }
+
+  const thirdPartyPost = async () => {
+    const audience = await service.getThirdPartyDid()
+    const token = await ucan.build({
+      audience,
+      issuer: localUser.keypair,
+      capabilities: [{
+        'twitter': localUser.username,
+        'cap': 'POST'
+      }]
+    })
+    await service.thirdPartyPost(localUser.username, ucan.encode(token))
+    loadPosts()
   }
 
   const updateTweet = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -157,7 +171,10 @@ function Home(props: {}) {
               <br/>
               <button className={styles.button} type='submit'>Post</button>
             </form>
-            <br/>
+            <br/><br/>
+            <hr/>
+            <p className={styles.paragraph}>Or delegate permission to another server to post for you.</p>
+            <button className={styles.button} onClick={thirdPartyPost}>Third Party Post</button>
           </div>
           <div className={styles.tweets}>
             <ul>
