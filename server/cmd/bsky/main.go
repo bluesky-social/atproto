@@ -50,6 +50,7 @@ func main() {
 		registerCmd,
 		postCmd,
 		listCmd,
+		listUsersCmd,
 		pullCmd,
 	}
 
@@ -218,6 +219,45 @@ var listCmd = &cli.Command{
 
 			fmt.Printf("%s: %s\n", ts.Format(time.Stamp), p.Body)
 		}
+		return nil
+	},
+}
+
+var listUsersCmd = &cli.Command{
+	Name: "listUsers",
+	Action: func(cctx *cli.Context) error {
+		bskyd, err := homedir.Expand(cctx.String("repo"))
+		if err != nil {
+			return err
+		}
+		// which server being used is configured in user repo
+		r, err := openRepo(bskyd)
+		if err != nil {
+			return err
+		}
+
+		req, err := http.NewRequest("GET", r.Account.Server+"/users", nil)
+		if err != nil {
+			return err
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return err
+		}
+
+    if resp.StatusCode != 200 {
+			return fmt.Errorf("Error: Non-200 status code: %d", resp.StatusCode)
+		}
+
+		var names []string
+		err = json.NewDecoder(resp.Body).Decode(&names)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Users on server", names)
+
 		return nil
 	},
 }

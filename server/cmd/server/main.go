@@ -63,6 +63,7 @@ func main() {
 
 	e.POST("/update", s.handleUserUpdate)
 	e.GET("/user/:id", s.handleGetUser)
+	e.GET("/users", s.handleGetAllUsers)
 	e.GET("/.well-known/did.json", s.handleGetDid)
 	e.GET("/.well-known/webfinger", s.handleWebfinger)
 	panic(e.Start(":2583"))
@@ -294,6 +295,28 @@ func (s *Server) handleGetUser(c echo.Context) error {
 	ds := merkledag.NewDAGService(bserv.New(s.Blockstore, nil))
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEOctetStream)
 	return car.WriteCar(ctx, ds, []cid.Cid{ucid}, c.Response().Writer)
+}
+
+func (s *Server) getAllUsers() ([]string, error) {
+	s.ulk.Lock()
+	defer s.ulk.Unlock()
+
+	dids := []string{}
+	for d, _ := range s.UserRoots {
+		fmt.Println("dids", d)
+		dids = append(dids, d)
+	}
+
+	return dids, nil
+}
+
+func (s *Server) handleGetAllUsers(c echo.Context) error {
+	names, err := s.getAllUsers()
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, names)
 }
 
 type registerResponse struct {

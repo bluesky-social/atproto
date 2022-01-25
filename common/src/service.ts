@@ -4,8 +4,8 @@ const SERVER_URL = 'http://localhost:2583'
 const THIRD_PARTY_URL = 'http://localhost:2584'
 
 export const register = async (car: Uint8Array, authToken: string): Promise<void> => {
-  await axios.post(`${SERVER_URL}/register`, car, { 
-    headers: { 
+  await axios.post(`${SERVER_URL}/register`, car, {
+    headers: {
       'Content-Type': 'application/octet-stream',
       'Authorization': `Bearer ${authToken}`
     }
@@ -13,8 +13,8 @@ export const register = async (car: Uint8Array, authToken: string): Promise<void
 }
 
 export const updateUser = async (car: Uint8Array, authToken: string): Promise<void> => {
-  await axios.post(`${SERVER_URL}/update`, car, { 
-    headers: { 
+  await axios.post(`${SERVER_URL}/update`, car, {
+    headers: {
       'Content-Type': 'application/octet-stream',
       'Authorization': `Bearer ${authToken}`
     }
@@ -24,6 +24,11 @@ export const updateUser = async (car: Uint8Array, authToken: string): Promise<vo
 export const fetchUser = async (did: string): Promise<Uint8Array> => {
   const res = await axios.get(`${SERVER_URL}/user/${did}`, { responseType: 'arraybuffer' })
   return new Uint8Array(res.data)
+}
+
+export const fetchUsers = async (): Promise<string[]> => {
+  const res = await axios.get(`${SERVER_URL}/users`)
+  return res.data
 }
 
 export const getServerDid = async (): Promise<string> => {
