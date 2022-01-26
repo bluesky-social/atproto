@@ -20,12 +20,12 @@ function Home(props: {}) {
   const addPost = async (post: Post) => {
     await store.addPost(post)
     const car = await store.getCarFile()
-    const twitterDid = await service.getServerDid()
+    const blueskyDid = await service.getServerDid()
     const token = await ucan.build({
-      audience: twitterDid,
+      audience: blueskyDid,
       issuer: localUser.keypair,
       capabilities: [{
-        'twitter': localUser.username,
+        'bluesky': localUser.username,
         'cap': 'POST'
       }]
     })
@@ -67,7 +67,7 @@ function Home(props: {}) {
       audience,
       issuer: localUser.keypair,
       capabilities: [{
-        'twitter': localUser.username,
+        'bluesky': localUser.username,
         'cap': 'POST'
       }]
     })

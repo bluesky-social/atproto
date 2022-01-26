@@ -24,7 +24,7 @@ app.post('/post', async (req, res) => {
     return res.status(400).send("Bad param: 'username' should be a string")
   }
 
-  // Get the user's root DID from twitter
+  // Get the user's root DID from bluesky
   const userDid = await service.fetchUserDid(username)
   if (!userDid) {
     return res.status(401).send("User DID not found")
@@ -42,10 +42,10 @@ app.post('/post', async (req, res) => {
     return res.status(401).send(err)
   }
 
-  // Create a new Ucan to send to twitter using the user's Ucan as proof that we have permission to post on their behalf
-  const twitterDid = await service.getServerDid()
+  // Create a new Ucan to send to bluesky using the user's Ucan as proof that we have permission to post on their behalf
+  const blueskyDid = await service.getServerDid()
   const extendUcan = await ucan.build({
-    audience: twitterDid,
+    audience: blueskyDid,
     issuer: SERVER_KEY,
     capabilities: u.attenuation(),
     proofs: [u.encoded()]

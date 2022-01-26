@@ -120,7 +120,7 @@ Binary [CAR file](https://github.com/ipld/go-car) representing a valid user stor
 A valid Ucan with attenuation for the following resource:
 ```
 {
-  'twitter': '${USERNAME}'
+  'bluesky': '${USERNAME}'
   'cap': 'POST'
 }
 ```

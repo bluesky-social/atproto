@@ -25,6 +25,13 @@ export const checkUcan = async (req: Request, ...checks: Check[]): Promise<Chain
   return decoded
 }
 
+export const isRoot = () => (token: Chained): Error | null => {
+  if (token.proofs && token.proofs.length > 0) {
+    throw new Error("Ucan is an attenuation and not the root")
+  }
+  return null
+}
+
 export const hasAudience = (did: string) => (token: Chained): Error | null => {
   if(token.audience() !== did) {
     return new Error("Ucan audience does not match server Did")

@@ -14,7 +14,8 @@ router.post('/register', async (req, res) => {
   try {
     u = await ucanCheck.checkUcan(
       req,
-      ucanCheck.hasAudience(SERVER_DID)
+      ucanCheck.hasAudience(SERVER_DID),
+      ucanCheck.isRoot()
     )
   } catch(err) {
     res.status(401).send(err)
@@ -40,11 +41,17 @@ router.post('/register', async (req, res) => {
 })
 
 router.post('/update', async (req, res) => {
+  const bytes = await readReqBytes(req)
+  const userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
+  const user = await userStore.getUser()
+  const userDid = await UserDids.get(user.name)
+
   let u: ucan.Chained
   try {
     u = await ucanCheck.checkUcan(
       req,
-      ucanCheck.hasAudience(SERVER_DID)
+      ucanCheck.hasAudience(SERVER_DID),
+      ucanCheck.hasPostingPermission(user.name, userDid)
     )
   } catch(err) {
     res.status(401).send(err)
@@ -52,9 +59,7 @@ router.post('/update', async (req, res) => {
 
   // @@TODO: Verify UserStore
 
-  const bytes = await readReqBytes(req)
-  const userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
-  await UserRoots.set(u.issuer(), userStore.root)
+  await UserRoots.set(userDid, userStore.root)
 
   return res.sendStatus(200)
 })
