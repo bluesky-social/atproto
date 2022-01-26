@@ -1,4 +1,3 @@
-import * as car from '@ipld/car'
 import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
