@@ -50,9 +50,10 @@ router.post('/update', async (req, res) => {
     res.status(401).send(err)
   }
 
+  // @@TODO: Verify UserStore
+
   const bytes = await readReqBytes(req)
   const userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
-  console.log('udpating root: ', userStore.root)
   await UserRoots.set(u.issuer(), userStore.root)
 
   return res.sendStatus(200)
@@ -62,12 +63,11 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params
 
   const userRoot = await UserRoots.get(id)
-  console.log('getting root: ', userRoot)
 
   const userStore = await UserStore.get(userRoot, MemoryDB.getGlobal(), SERVER_KEY)
 
   const bytes = await userStore.getCarFile()
-  res.status(200).send(bytes)
+  res.status(200).send(Buffer.from(bytes))
 })
 
 export default router

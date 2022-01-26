@@ -38,12 +38,9 @@ function Home(props: {}) {
     let userStore: UserStore
     try {
       const car = await service.fetchUser(localUser.keypair.did())
-      console.log("CAR: ", car)
       userStore = await UserStore.fromCarFile(car, MemoryDB.getGlobal(), localUser.keypair)
-      console.log('userstore: ', userStore)
-      console.log(userStore.posts)
     } catch (_err) {
-      console.log("HRE: ", _err)
+      // @@TODO: show error instead of an empty store
       userStore = await createNewStore()
     }
     setStore(userStore)
@@ -106,9 +103,7 @@ function Home(props: {}) {
 
   // Going to display all users on a server to follow
   const loadAllUsers = async () => {
-    console.log("In loadAllUsers")
     let users = await service.fetchUsers()
-    console.log("All users fetched from server:", users)
     setAllUsers(users)
   }
 
