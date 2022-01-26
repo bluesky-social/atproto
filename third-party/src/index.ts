@@ -1,8 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import * as ucan from 'ucans'
-import * as check from './ucan-checks'
-import { service, UserStore } from '@bluesky-demo/common'
+import { service, UserStore, ucanCheck } from '@bluesky-demo/common'
 
 // WARNING: For demo only, do not actually store secret keys in plaintext.
 const SECRET_KEY = 'I0HyDksQcCRdJBGVuE78Ts34SzyF7+xNprEQw/IRa51OuFZQc5ugqfgjeWRMehyfr7A1vXICRoUD5kqVadsRHA=='
@@ -34,7 +33,11 @@ app.post('/post', async (req, res) => {
   // Check that it's a valid ucan, that it's meant for this server, and that it has permission to post for the given username
   let u: ucan.Chained
   try {
-    u = await check.checkUcan(req, check.hasAudience(SERVER_DID), check.hasPostingPermission(username, userDid))
+    u = await ucanCheck.checkUcan(
+      req,
+      ucanCheck.hasAudience(SERVER_DID),
+      ucanCheck.hasPostingPermission(username, userDid)
+    )
   } catch (err) {
     return res.status(401).send(err)
   }

@@ -4,7 +4,7 @@ const SERVER_URL = 'http://localhost:2583'
 const THIRD_PARTY_URL = 'http://localhost:2584'
 
 export const register = async (car: Uint8Array, authToken: string): Promise<void> => {
-  await axios.post(`${SERVER_URL}/register`, car, {
+  await axios.post(`${SERVER_URL}/user/register`, car, {
     headers: {
       'Content-Type': 'application/octet-stream',
       'Authorization': `Bearer ${authToken}`
@@ -13,7 +13,7 @@ export const register = async (car: Uint8Array, authToken: string): Promise<void
 }
 
 export const updateUser = async (car: Uint8Array, authToken: string): Promise<void> => {
-  await axios.post(`${SERVER_URL}/update`, car, {
+  await axios.post(`${SERVER_URL}/user/update`, car, {
     headers: {
       'Content-Type': 'application/octet-stream',
       'Authorization': `Bearer ${authToken}`
