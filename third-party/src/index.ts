@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import * as ucan from 'ucans'
-import { service, UserStore, ucanCheck } from '@bluesky-demo/common'
+import { service, UserStore, MemoryDB, ucanCheck } from '@bluesky-demo/common'
 
 // WARNING: For demo only, do not actually store secret keys in plaintext.
 const SECRET_KEY = 'I0HyDksQcCRdJBGVuE78Ts34SzyF7+xNprEQw/IRa51OuFZQc5ugqfgjeWRMehyfr7A1vXICRoUD5kqVadsRHA=='
@@ -53,7 +53,7 @@ app.post('/post', async (req, res) => {
   const encoded = ucan.encode(extendUcan)
 
   const car = await service.fetchUser(userDid)
-  const userStore = await UserStore.fromCarFile(car, SERVER_KEY)
+  const userStore = await UserStore.fromCarFile(car, MemoryDB.getGlobal(), SERVER_KEY)
   await userStore.addPost({
     user: username,
     text: `Hey there! I'm posting on ${username}'s behalf`

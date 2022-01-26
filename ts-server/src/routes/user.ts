@@ -1,6 +1,6 @@
 import express from 'express'
 import * as ucan from 'ucans'
-import { ucanCheck, UserStore } from '@bluesky-demo/common'
+import { ucanCheck, UserStore, MemoryDB } from '@bluesky-demo/common'
 import * as UserDids from '../user-dids'
 import * as UserRoots from '../user-roots'
 import { readReqBytes } from '../util'
@@ -21,7 +21,7 @@ router.post('/register', async (req, res) => {
   }
 
   const bytes = await readReqBytes(req)
-  const userStore = await UserStore.fromCarFile(bytes, SERVER_KEY)
+  const userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
   const user = await userStore.getUser()
 
   // @@TODO: Verify UserStore
@@ -40,9 +40,34 @@ router.post('/register', async (req, res) => {
 })
 
 router.post('/update', async (req, res) => {
+  let u: ucan.Chained
+  try {
+    u = await ucanCheck.checkUcan(
+      req,
+      ucanCheck.hasAudience(SERVER_DID)
+    )
+  } catch(err) {
+    res.status(401).send(err)
+  }
+
+  const bytes = await readReqBytes(req)
+  const userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
+  console.log('udpating root: ', userStore.root)
+  await UserRoots.set(u.issuer(), userStore.root)
+
+  return res.sendStatus(200)
 })
 
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
+  const { id } = req.params
+
+  const userRoot = await UserRoots.get(id)
+  console.log('getting root: ', userRoot)
+
+  const userStore = await UserStore.get(userRoot, MemoryDB.getGlobal(), SERVER_KEY)
+
+  const bytes = await userStore.getCarFile()
+  res.status(200).send(bytes)
 })
 
 export default router

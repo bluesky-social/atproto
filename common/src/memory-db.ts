@@ -1,8 +1,9 @@
 import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
-import { flattenUint8Arrays } from './util'
+import { streamToFile } from './util'
 
+let globalDB: MemoryDB | null = null
 export class MemoryDB {
 
   map: Map<string, any>
@@ -11,11 +12,18 @@ export class MemoryDB {
     this.map = new Map()
   }
 
-  async get(k: CID) {
+  static getGlobal(): MemoryDB {
+    if (globalDB === null) {
+      globalDB = new MemoryDB()
+    }
+    return globalDB
+  }
+
+  async get(k: CID): Promise<Uint8Array> {
     return this.map.get(k.toString())
   }
 
-  async put(k: CID, v: Uint8Array) {
+  async put(k: CID, v: Uint8Array): Promise<void> {
     this.map.set(k.toString(), v)
   }
 
@@ -33,11 +41,7 @@ export class MemoryDB {
   }
 
   async getCarFile(root: CID): Promise<Uint8Array> {
-    const arrays = []
-    for await (const chunk of this.getCarStream(root)) {
-      arrays.push(chunk)
-    }
-    return flattenUint8Arrays(arrays)
+    return streamToFile(this.getCarStream(root))
   }
 
 }

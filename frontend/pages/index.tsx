@@ -2,7 +2,7 @@ import styles from "@components/App.module.scss";
 
 import * as React from "react";
 
-import { service, UserStore, LocalUser, Post } from '@bluesky-demo/common'
+import { service, UserStore, MemoryDB, LocalUser, Post } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
 
 import App from "@components/App"
@@ -38,8 +38,12 @@ function Home(props: {}) {
     let userStore: UserStore
     try {
       const car = await service.fetchUser(localUser.keypair.did())
-      userStore = await UserStore.fromCarFile(car, localUser.keypair)
+      console.log("CAR: ", car)
+      userStore = await UserStore.fromCarFile(car, MemoryDB.getGlobal(), localUser.keypair)
+      console.log('userstore: ', userStore)
+      console.log(userStore.posts)
     } catch (_err) {
+      console.log("HRE: ", _err)
       userStore = await createNewStore()
     }
     setStore(userStore)
