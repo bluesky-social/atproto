@@ -25,8 +25,6 @@ router.post('/register', async (req, res) => {
   const userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
   const user = await userStore.getUser()
 
-  // @@TODO: Verify UserStore
-
   const currDid = await UserDids.get(user.name)
   if (currDid !== null) {
     return res.status(409).send(`Username ${user.name} already taken.`)
@@ -57,7 +55,7 @@ router.post('/update', async (req, res) => {
     res.status(401).send(err)
   }
 
-  // @@TODO: Verify UserStore
+  // @@TODO: verify signature on data structure
 
   await UserRoots.set(userDid, userStore.root)
 

@@ -246,7 +246,7 @@ var listUsersCmd = &cli.Command{
 			return err
 		}
 
-    if resp.StatusCode != 200 {
+		if resp.StatusCode != 200 {
 			return fmt.Errorf("Error: Non-200 status code: %d", resp.StatusCode)
 		}
 
@@ -321,7 +321,7 @@ var registerCmd = &cli.Command{
 			return err
 		}
 
-		req, err := http.NewRequest("POST", r.Account.Server+"/register", buf)
+		req, err := http.NewRequest("POST", r.Account.Server+"/user/register", buf)
 		if err != nil {
 			return err
 		}
@@ -431,7 +431,7 @@ func PushUpdate(ctx context.Context, acc *Account, oldroot cid.Cid, bs blockstor
 		return err
 	}
 
-	req, err := http.NewRequest("POST", acc.Server+"/update", buf)
+	req, err := http.NewRequest("POST", acc.Server+"/user/update", buf)
 	if err != nil {
 		return err
 	}
