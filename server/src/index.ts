@@ -8,9 +8,6 @@ app.use(cors())
 
 app.use('/', Routes)
 
-app.get('/users', async (req, res) => {
-})
-
 const PORT = 2583
 app.listen(PORT, () => {
   console.log(`🐦 Bluesky server is running at http://localhost:${PORT}`)

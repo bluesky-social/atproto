@@ -1,7 +1,7 @@
 import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
-import { streamToFile } from './util'
+import { streamToArray } from './util'
 
 let globalDB: MemoryDB | null = null
 export class MemoryDB {
@@ -41,7 +41,7 @@ export class MemoryDB {
   }
 
   async getCarFile(root: CID): Promise<Uint8Array> {
-    return streamToFile(this.getCarStream(root))
+    return streamToArray(this.getCarStream(root))
   }
 
 }

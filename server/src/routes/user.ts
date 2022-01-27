@@ -10,6 +10,7 @@ import { SERVER_KEY, SERVER_DID } from '../server-identity'
 const router = express.Router()
 
 router.post('/register', async (req, res) => {
+  // We look for a simple Ucan with no capabilities as proof the user is in possession of the given key
   let u: ucan.Chained
   try {
     u = await ucanCheck.checkUcan(

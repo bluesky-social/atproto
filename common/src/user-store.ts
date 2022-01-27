@@ -12,7 +12,7 @@ import * as hashmap from 'ipld-hashmap'
 import { Didable, Keypair } from "ucans"
 
 import { User, Post } from "./types"
-import { streamToFile } from './util'
+import { streamToArray } from './util'
 
 export class UserStore {
 
@@ -140,7 +140,7 @@ export class UserStore {
   }
 
   async getCarFile(): Promise<Uint8Array> {
-    return streamToFile(this.getCarStream())
+    return streamToArray(this.getCarStream())
   }
 }
 
