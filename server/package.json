@@ -1,5 +1,5 @@
 {
-  "name": "@bluesky-demo/ts-server",
+  "name": "@bluesky-demo/server",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
