@@ -21,10 +21,15 @@ router.post('/register', async (req, res) => {
     res.status(401).send(err)
   }
 
-  const bytes = await readReqBytes(req)
-  const userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
-  const user = await userStore.getUser()
+  let userStore: UserStore
+  try {
+    const bytes = await readReqBytes(req)
+    userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
+  }catch(err) {
+    return res.status(400).send("Could not parse UserStore from CAR File")
+  }
 
+  const user = await userStore.getUser()
   const currDid = await UserDids.get(user.name)
   if (currDid !== null) {
     return res.status(409).send(`Username ${user.name} already taken.`)
@@ -39,8 +44,14 @@ router.post('/register', async (req, res) => {
 })
 
 router.post('/update', async (req, res) => {
-  const bytes = await readReqBytes(req)
-  const userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
+  let userStore: UserStore
+  try {
+    const bytes = await readReqBytes(req)
+    userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
+  }catch(err) {
+    return res.status(400).send("Could not parse UserStore from CAR File")
+  }
+
   const user = await userStore.getUser()
   const userDid = await UserDids.get(user.name)
 
