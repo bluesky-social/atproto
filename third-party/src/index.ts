@@ -1,13 +1,12 @@
 import express from 'express'
 import cors from 'cors'
 import * as ucan from 'ucans'
-import * as check from './ucan-checks'
-import { service, UserStore } from '@bluesky-demo/common'
+import { service, UserStore, MemoryDB, ucanCheck } from '@bluesky-demo/common'
 
 // WARNING: For demo only, do not actually store secret keys in plaintext.
 const SECRET_KEY = 'I0HyDksQcCRdJBGVuE78Ts34SzyF7+xNprEQw/IRa51OuFZQc5ugqfgjeWRMehyfr7A1vXICRoUD5kqVadsRHA=='
-const SERVER_KEY = ucan.EdKeypair.fromSecretKey(SECRET_KEY)
-const SERVER_DID = SERVER_KEY.did()
+const SERVER_KEYPAIR = ucan.EdKeypair.fromSecretKey(SECRET_KEY)
+const SERVER_DID = SERVER_KEYPAIR.did()
 
 const app = express()
 app.use(express.json())
@@ -25,7 +24,7 @@ app.post('/post', async (req, res) => {
     return res.status(400).send("Bad param: 'username' should be a string")
   }
 
-  // Get the user's root DID from twitter
+  // Get the user's root DID from bluesky
   const userDid = await service.fetchUserDid(username)
   if (!userDid) {
     return res.status(401).send("User DID not found")
@@ -34,23 +33,27 @@ app.post('/post', async (req, res) => {
   // Check that it's a valid ucan, that it's meant for this server, and that it has permission to post for the given username
   let u: ucan.Chained
   try {
-    u = await check.checkUcan(req, check.hasAudience(SERVER_DID), check.hasPostingPermission(username, userDid))
+    u = await ucanCheck.checkUcan(
+      req,
+      ucanCheck.hasAudience(SERVER_DID),
+      ucanCheck.hasPostingPermission(username, userDid)
+    )
   } catch (err) {
     return res.status(401).send(err)
   }
 
-  // Create a new Ucan to send to twitter using the user's Ucan as proof that we have permission to post on their behalf
-  const twitterDid = await service.getServerDid()
+  // Create a new Ucan to send to bluesky using the user's Ucan as proof that we have permission to post on their behalf
+  const blueskyDid = await service.getServerDid()
   const extendUcan = await ucan.build({
-    audience: twitterDid,
-    issuer: SERVER_KEY,
+    audience: blueskyDid,
+    issuer: SERVER_KEYPAIR,
     capabilities: u.attenuation(),
     proofs: [u.encoded()]
   })
   const encoded = ucan.encode(extendUcan)
 
   const car = await service.fetchUser(userDid)
-  const userStore = await UserStore.fromCarFile(car, SERVER_KEY)
+  const userStore = await UserStore.fromCarFile(car, MemoryDB.getGlobal(), SERVER_KEYPAIR)
   await userStore.addPost({
     user: username,
     text: `Hey there! I'm posting on ${username}'s behalf`

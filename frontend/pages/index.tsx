@@ -2,7 +2,7 @@ import styles from "@components/App.module.scss";
 
 import * as React from "react";
 
-import { service, UserStore, LocalUser, Post } from '@bluesky-demo/common'
+import { service, UserStore, MemoryDB, LocalUser, Post } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
 
 import App from "@components/App"
@@ -20,12 +20,12 @@ function Home(props: {}) {
   const addPost = async (post: Post) => {
     await store.addPost(post)
     const car = await store.getCarFile()
-    const twitterDid = await service.getServerDid()
+    const blueskyDid = await service.getServerDid()
     const token = await ucan.build({
-      audience: twitterDid,
+      audience: blueskyDid,
       issuer: localUser.keypair,
       capabilities: [{
-        'twitter': localUser.username,
+        'bluesky': localUser.username,
         'cap': 'POST'
       }]
     })
@@ -38,8 +38,9 @@ function Home(props: {}) {
     let userStore: UserStore
     try {
       const car = await service.fetchUser(localUser.keypair.did())
-      userStore = await UserStore.fromCarFile(car, localUser.keypair)
+      userStore = await UserStore.fromCarFile(car, MemoryDB.getGlobal(), localUser.keypair)
     } catch (_err) {
+      // @TODO: show error instead of an empty store
       userStore = await createNewStore()
     }
     setStore(userStore)
@@ -66,7 +67,7 @@ function Home(props: {}) {
       audience,
       issuer: localUser.keypair,
       capabilities: [{
-        'twitter': localUser.username,
+        'bluesky': localUser.username,
         'cap': 'POST'
       }]
     })
@@ -102,9 +103,7 @@ function Home(props: {}) {
 
   // Going to display all users on a server to follow
   const loadAllUsers = async () => {
-    console.log("In loadAllUsers")
     let users = await service.fetchUsers()
-    console.log("All users fetched from server:", users)
     setAllUsers(users)
   }
 

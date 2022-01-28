@@ -21,9 +21,9 @@ function Register(props: Props) {
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const keypair = await ucan.EdKeypair.create({ exportable: true })
-    const twitterDid = await service.getServerDid()
+    const blueskyDid = await service.getServerDid()
     const token = await ucan.build({
-      audience: twitterDid,
+      audience: blueskyDid,
       issuer: keypair
     })
     const userStore = await UserStore.create(username, keypair)

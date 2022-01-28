@@ -9,6 +9,7 @@
   "workspaces": [
     "common",
     "frontend",
-    "third-party"
+    "third-party",
+    "server"
   ]
 }

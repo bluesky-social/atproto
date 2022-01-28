@@ -3,13 +3,16 @@ import IpldStore from "./ipld-store"
 
 import { CID } from 'multiformats/cid'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
+
 import * as blockCodec from '@ipld/dag-cbor'
+import { CarReader, CarWriter } from '@ipld/car'
+import { BlockWriter } from '@ipld/car/lib/writer-browser'
+import * as hashmap from 'ipld-hashmap'
 
 import { Didable, Keypair } from "ucans"
 
-import * as hashmap from 'ipld-hashmap'
 import { User, Post } from "./types"
-import { CarReader } from '@ipld/car'
+import { streamToArray } from './util'
 
 export class UserStore {
 
@@ -61,7 +64,7 @@ export class UserStore {
     return new UserStore(db, ipldStore, postMap, root, posts, keypair)
   }
 
-  static async fromCarFile(buf: Uint8Array, keypair: Keypair) {
+  static async fromCarFile(buf: Uint8Array, db: MemoryDB, keypair: Keypair) {
     const car = await CarReader.fromBytes(buf)
 
     const roots = await car.getRoots()
@@ -70,7 +73,6 @@ export class UserStore {
     }
     const root = roots[0]
 
-    const db = new MemoryDB()
     for await (const block of car.blocks()) {
       await db.put(block.cid, block.bytes)
     }
@@ -118,10 +120,28 @@ export class UserStore {
     return posts
   }
 
-  async getCarFile(): Promise<Uint8Array> {
-    return this.db.getCarFile(this.root)
+  getCarStream(): AsyncIterable<Uint8Array> {
+    const writeDB = async (car: BlockWriter) => {
+      const addCid = async (cid: CID) => {
+        car.put({ cid, bytes: await this.db.get(cid) })
+      }
+      await addCid(this.root)
+      const rootObj = await this.ipldStore.getSignedRoot(this.root)
+      await addCid(rootObj.user)
+      for await (const cid of this.postMap.cids()) {
+        await addCid(cid)
+      }
+      car.close()
+    }
+
+    const { writer, out } = CarWriter.create([this.root])
+    writeDB(writer)
+    return out
   }
 
+  async getCarFile(): Promise<Uint8Array> {
+    return streamToArray(this.getCarStream())
+  }
 }
 
 export default UserStore

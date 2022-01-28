@@ -7,7 +7,7 @@
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
     "axios": "^0.24.0",
-    "multiformats": "^9.5.6",
+    "multiformats": "^9.6.2",
     "ucans": "^0.9.0-alpha3"
   }
 }
