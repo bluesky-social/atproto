@@ -2,7 +2,7 @@ import styles from "@components/App.module.scss";
 
 import * as React from "react";
 
-import { service, UserStore, MemoryDB, LocalUser, Post } from '@bluesky-demo/common'
+import { service, UserStore, Blockstore, LocalUser, Post } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
 
 import App from "@components/App"
@@ -38,7 +38,7 @@ function Home(props: {}) {
     let userStore: UserStore
     try {
       const car = await service.fetchUser(localUser.keypair.did())
-      userStore = await UserStore.fromCarFile(car, MemoryDB.getGlobal(), localUser.keypair)
+      userStore = await UserStore.fromCarFile(car, Blockstore.getGlobal(), localUser.keypair)
     } catch (_err) {
       // @@TODO: show error instead of an empty store
       userStore = await createNewStore()
@@ -48,7 +48,7 @@ function Home(props: {}) {
   }
 
   const createNewStore = async (): Promise<UserStore> => {
-    const userStore = await UserStore.create(localUser.username, localUser.keypair)
+    const userStore = await UserStore.create(localUser.username, Blockstore.getGlobal(), localUser.keypair)
 
     if(userStore.posts.length === 0) {
       const testPost = {

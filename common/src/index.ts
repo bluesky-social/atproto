@@ -1,5 +1,6 @@
 export * from './ipld-store'
-export * from './memory-db'
+export * from './memory-blockstore'
+export * from './blockstore'
 export * from './user-store'
 export * from './types'
 export * as check from './type-check'

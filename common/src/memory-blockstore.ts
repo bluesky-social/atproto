@@ -1,10 +1,11 @@
 import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
+import { BlockstoreI } from './types'
 import { streamToArray } from './util'
 
-let globalDB: MemoryDB | null = null
-export class MemoryDB {
+let globalDB: MemoryBlockstore | null = null
+export class MemoryBlockstore implements BlockstoreI {
 
   map: Map<string, any>
 
@@ -12,9 +13,9 @@ export class MemoryDB {
     this.map = new Map()
   }
 
-  static getGlobal(): MemoryDB {
+  static getGlobal(): MemoryBlockstore {
     if (globalDB === null) {
-      globalDB = new MemoryDB()
+      globalDB = new MemoryBlockstore()
     }
     return globalDB
   }
@@ -46,4 +47,4 @@ export class MemoryDB {
 
 }
 
-export default MemoryDB
+export default MemoryBlockstore

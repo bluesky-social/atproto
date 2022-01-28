@@ -1,6 +1,6 @@
 import express from 'express'
 import * as ucan from 'ucans'
-import { ucanCheck, UserStore, MemoryDB } from '@bluesky-demo/common'
+import { ucanCheck, UserStore, Blockstore } from '@bluesky-demo/common'
 import * as UserDids from '../user-dids'
 import * as UserRoots from '../user-roots'
 import { readReqBytes } from '../util'
@@ -25,7 +25,7 @@ router.post('/register', async (req, res) => {
   let userStore: UserStore
   try {
     const bytes = await readReqBytes(req)
-    userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
+    userStore = await UserStore.fromCarFile(bytes, Blockstore.getGlobal(), SERVER_KEY)
   }catch(err) {
     return res.status(400).send("Could not parse UserStore from CAR File")
   }
@@ -48,7 +48,7 @@ router.post('/update', async (req, res) => {
   let userStore: UserStore
   try {
     const bytes = await readReqBytes(req)
-    userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEY)
+    userStore = await UserStore.fromCarFile(bytes, Blockstore.getGlobal(), SERVER_KEY)
   }catch(err) {
     return res.status(400).send("Could not parse UserStore from CAR File")
   }
@@ -79,7 +79,7 @@ router.get('/:id', async (req, res) => {
 
   const userRoot = await UserRoots.get(id)
 
-  const userStore = await UserStore.get(userRoot, MemoryDB.getGlobal(), SERVER_KEY)
+  const userStore = await UserStore.get(userRoot, Blockstore.getGlobal(), SERVER_KEY)
 
   const bytes = await userStore.getCarFile()
   res.status(200).send(Buffer.from(bytes))
