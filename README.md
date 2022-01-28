@@ -9,30 +9,46 @@ The demo revolves around two main concepts:
 **User-controlled Keys & Auth:** Users register a public key to their account and sign updates & authorization tokens in the form of [ucans](https://github.com/ucan-wg/ts-ucan/) 
 
 ## Running the Demo
-_Note: the server currently holds the state in memory, meaning it will lose all accounts and posts when it is reset_
-### Go Server
+_Requires Node>=15, and yarn_
 
-Run the go server
+There are three components to the demo:
+- a "bluesky" server (federated data & identity management)
+- the frontend (simple micro-bloggin application)
+- a third-party server that a user can delegate permission to to post on it's behalf (think [Buffer](https://buffer.com/))
+
+This project is setup in a yarn workspace. To install dependencies for all sub-projects, just run `yarn` from the project root.
+
+### Bluesky Server
+
+Run the main bluesky server
 
 ```sh
 cd server
-go run cmd/server/main.go
+yarn dev
 ```
 
 Server will be running at `http://localhost:2583`
 
-### Node server/frontend
-_Requires Node>=15, and yarn_
+### Frontend
 
-In another console tab, run the node server
+In another console tab, run the frontend
 
 ```sh
-yarn 
 cd frontend
 yarn dev
 ```
 
 Go to `http://localhost:3005` to try the demo.
+
+
+### Third-party server (optional)
+To enable third-party posting, run the third-party server as well in another console
+```sh
+cd third-party
+yarn dev
+```
+
+Server will be running on `http://localhost:2584`
 
 ## What's going on here?
 ### Building blocks
@@ -82,7 +98,7 @@ type User = {
   did: string
   nextPost: number
   postsRoot: CID
-  follows: string[]
+  follows: Follow[]
 }
 
 // stored in HAMT
@@ -90,9 +106,25 @@ type Post = {
   user: string
   text: string
 }
+
+type Follow = {
+  username: string
+  did: string
+}
 ```
 
-The CID of the IPLD-encoded "User" block serves as the root of the datastructure.
+The CID of the IPLD-encoded "User" block is then signed by the user and added to to an "SignedRoot" IPLD object:
+```ts
+type SignedRoot = {
+  user: CID
+  sig: Uint8Array
+}
+```
+
+The CID of the SignedRoot serves as the root of the datastructure.
+
+## Persistence
+User data is persisted in [Level](https://github.com/Level/level) which is a simple key-value store. This **Blockstore** is a mapping of `CID -> Bytes` and represents the consituent blocks that make up the UserStore.
 
 ## Server API
 The server uses [Ucans](https://github.com/ucan-wg/ts-ucan/) for authorization.
@@ -123,6 +155,21 @@ A valid Ucan with attenuation for the following resource:
   'bluesky': '${USERNAME}'
   'cap': 'POST'
 }
+```
+
+### `GET /users`
+
+**Params:**
+- `id`: User's DID
+
+**Returns:**
+An array of all user DIDs
+```
+[
+  did:key:abcdef.....,
+  did:key:123456....,
+  ...
+]
 ```
 
 ### `GET /user/:id`
