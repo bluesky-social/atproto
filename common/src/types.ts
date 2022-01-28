@@ -25,6 +25,6 @@ export type SignedRoot = {
 }
 
 export interface BlockstoreI {
-  get(cid: CID): Promise<Uint8Array>
+  get(cid: CID): Promise<Uint8Array | null>
   put(cid: CID, bytes: Uint8Array)
 }

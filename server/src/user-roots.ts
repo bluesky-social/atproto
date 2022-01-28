@@ -9,6 +9,10 @@ export const set = async (did: string, cid: CID): Promise<void> => {
 }
 
 export const get = async (did: string): Promise<CID | null> => {
-  const got = await store.get(did)
-  return CID.asCID(got) || null
+  try {
+    const got = await store.get(did)
+    return CID.parse(got) || null
+  } catch(_) {
+    return null
+  }
 }

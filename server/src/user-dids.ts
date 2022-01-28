@@ -7,8 +7,12 @@ export const set = async (username: string, did: string): Promise<void> => {
 }
 
 export const get = async (username: string): Promise<string | null> => {
-  const got = await store.get(username)
-  return got || null
+  try {
+    const got = await store.get(username)
+    return got || null
+  } catch(_) {
+    return null
+  }
 }
 
 // @@TODO: we shouldn't ever iterate over our entire user store

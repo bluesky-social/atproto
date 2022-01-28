@@ -22,7 +22,7 @@ export class Blockstore implements BlockstoreI {
     return globalBlockstore
   }
 
-  async get(cid: CID): Promise<Uint8Array> {
+  async get(cid: CID): Promise<Uint8Array | null> {
     return this.store.get(cid.toString())
   }
 

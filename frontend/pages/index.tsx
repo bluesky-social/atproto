@@ -41,6 +41,7 @@ function Home(props: {}) {
       userStore = await UserStore.fromCarFile(car, Blockstore.getGlobal(), localUser.keypair)
     } catch (_err) {
       // @@TODO: show error instead of an empty store
+      console.log("Could not load user store: ", _err)
       userStore = await createNewStore()
     }
     setStore(userStore)

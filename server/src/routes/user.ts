@@ -55,6 +55,9 @@ router.post('/update', async (req, res) => {
 
   const user = await userStore.getUser()
   const userDid = await UserDids.get(user.name)
+  if (userDid === null) {
+    return res.status(404).send("User not found")
+  }
 
   let u: ucan.Chained
   try {
@@ -78,6 +81,9 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params
 
   const userRoot = await UserRoots.get(id)
+  if (userRoot === null) {
+    return res.status(404).send("User not found")
+  }
 
   const userStore = await UserStore.get(userRoot, Blockstore.getGlobal(), SERVER_KEY)
 

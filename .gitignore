@@ -17,6 +17,6 @@ analytics.txt
 /**/*/.next
 /**/*/.data
 
-server/bluesky
-server/bsky
-server/server
+go/bluesky
+go/bsky
+go/server
