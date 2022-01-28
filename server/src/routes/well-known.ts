@@ -7,7 +7,7 @@ const router = express.Router()
 
 // Return the server's did
 router.get('/did.json', (_req, res) => {
-  res.send({ id: SERVER_DID })}
+  return res.send({ id: SERVER_DID })}
 )
 
 // Retrieve a user's DID by their username
@@ -21,7 +21,8 @@ router.get('/webfinger', async (req, res) => {
   if (!did) {
     return res.status(404).send("User DID not found")
   }
-  res.status(200).send({ id: did })
+  // @TODO: sketch out more of a webfinger doc
+  return res.status(200).send({ id: did })
 })
 
 export default router
