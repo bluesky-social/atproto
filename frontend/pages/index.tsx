@@ -40,7 +40,7 @@ function Home(props: {}) {
       const car = await service.fetchUser(localUser.keypair.did())
       userStore = await UserStore.fromCarFile(car, MemoryDB.getGlobal(), localUser.keypair)
     } catch (_err) {
-      // @@TODO: show error instead of an empty store
+      // @TODO: show error instead of an empty store
       userStore = await createNewStore()
     }
     setStore(userStore)
