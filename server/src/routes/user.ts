@@ -4,7 +4,7 @@ import { ucanCheck, UserStore, Blockstore } from '@bluesky-demo/common'
 import * as UserDids from '../user-dids'
 import * as UserRoots from '../user-roots'
 import { readReqBytes } from '../util'
-import { SERVER_KEY, SERVER_DID } from '../server-identity'
+import { SERVER_KEYPAIR, SERVER_DID } from '../server-identity'
 
 
 const router = express.Router()
@@ -19,13 +19,13 @@ router.post('/register', async (req, res) => {
       ucanCheck.isRoot()
     )
   } catch(err) {
-    res.status(401).send(err)
+    return res.status(401).send(`Invalid Ucan: ${err.toString()}`)
   }
 
   let userStore: UserStore
   try {
     const bytes = await readReqBytes(req)
-    userStore = await UserStore.fromCarFile(bytes, Blockstore.getGlobal(), SERVER_KEY)
+    userStore = await UserStore.fromCarFile(bytes, Blockstore.getGlobal(), SERVER_KEYPAIR)
   }catch(err) {
     return res.status(400).send("Could not parse UserStore from CAR File")
   }
@@ -48,7 +48,7 @@ router.post('/update', async (req, res) => {
   let userStore: UserStore
   try {
     const bytes = await readReqBytes(req)
-    userStore = await UserStore.fromCarFile(bytes, Blockstore.getGlobal(), SERVER_KEY)
+    userStore = await UserStore.fromCarFile(bytes, Blockstore.getGlobal(), SERVER_KEYPAIR)
   }catch(err) {
     return res.status(400).send("Could not parse UserStore from CAR File")
   }
@@ -67,10 +67,10 @@ router.post('/update', async (req, res) => {
       ucanCheck.hasPostingPermission(user.name, userDid)
     )
   } catch(err) {
-    res.status(401).send(err)
+    return res.status(401).send(err)
   }
 
-  // @@TODO: verify signature on data structure
+  // @TODO: verify signature on data structure
 
   await UserRoots.set(userDid, userStore.root)
 
@@ -85,10 +85,10 @@ router.get('/:id', async (req, res) => {
     return res.status(404).send("User not found")
   }
 
-  const userStore = await UserStore.get(userRoot, Blockstore.getGlobal(), SERVER_KEY)
+  const userStore = await UserStore.get(userRoot, Blockstore.getGlobal(), SERVER_KEYPAIR)
 
   const bytes = await userStore.getCarFile()
-  res.status(200).send(Buffer.from(bytes))
+  return res.status(200).send(Buffer.from(bytes))
 })
 
 export default router

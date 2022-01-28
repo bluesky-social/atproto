@@ -5,8 +5,8 @@ import { service, UserStore, Blockstore, ucanCheck } from '@bluesky-demo/common'
 
 // WARNING: For demo only, do not actually store secret keys in plaintext.
 const SECRET_KEY = 'I0HyDksQcCRdJBGVuE78Ts34SzyF7+xNprEQw/IRa51OuFZQc5ugqfgjeWRMehyfr7A1vXICRoUD5kqVadsRHA=='
-const SERVER_KEY = ucan.EdKeypair.fromSecretKey(SECRET_KEY)
-const SERVER_DID = SERVER_KEY.did()
+const SERVER_KEYPAIR = ucan.EdKeypair.fromSecretKey(SECRET_KEY)
+const SERVER_DID = SERVER_KEYPAIR.did()
 
 const app = express()
 app.use(express.json())
@@ -46,14 +46,14 @@ app.post('/post', async (req, res) => {
   const blueskyDid = await service.getServerDid()
   const extendUcan = await ucan.build({
     audience: blueskyDid,
-    issuer: SERVER_KEY,
+    issuer: SERVER_KEYPAIR,
     capabilities: u.attenuation(),
     proofs: [u.encoded()]
   })
   const encoded = ucan.encode(extendUcan)
 
   const car = await service.fetchUser(userDid)
-  const userStore = await UserStore.fromCarFile(car, Blockstore.getGlobal(), SERVER_KEY)
+  const userStore = await UserStore.fromCarFile(car, Blockstore.getGlobal(), SERVER_KEYPAIR)
   await userStore.addPost({
     user: username,
     text: `Hey there! I'm posting on ${username}'s behalf`
