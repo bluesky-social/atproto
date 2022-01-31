@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { service, UserStore, MemoryDB, LocalUser, Post } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
+import * as localStore from '@common/localstore'
 
 import App from "@components/App"
 import Register from "@components/Register"
@@ -129,6 +130,11 @@ function Home(props: {}) {
     loadAllUsers()
   }, [localUser]);
 
+  const logout = () => {
+    localStore.clearUser()
+    location.reload() // reload to fully clear state
+  }
+
   if (loading) {
     return null
   }
@@ -163,7 +169,9 @@ function Home(props: {}) {
       <div className={styles.layoutContainer}>
         <div className={styles.main}>
           <div className={styles.header}>
-            <p className={styles.paragraph}>Logged in as <strong>{localUser.username}</strong></p>
+            <p className={styles.paragraph}>
+              Logged in as <strong>{localUser.username}</strong>. <button className={styles.button} onClick={logout}>Logout</button>
+            </p>
             <p className={styles.paragraph}>Putting posts in IPLD.</p>
             <form onSubmit={postTweet}>
               <textarea onChange={updateTweet} className={styles.tweetBox}/>

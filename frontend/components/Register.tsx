@@ -4,6 +4,7 @@ import React, { ChangeEvent, FormEvent } from 'react'
 
 import { service, LocalUser, UserStore } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
+import * as localStore from '@common/localstore'
 
 interface Props {
   onRegister: (user: LocalUser) => void
@@ -30,8 +31,7 @@ function Register(props: Props) {
     await service.register(await userStore.getCarFile(), ucan.encode(token))
 
     // LOCAL STORAGE IS NOT SAFE. DO NOT DO THIS IN PRODUCTION
-    localStorage.setItem('secretKey', await keypair.export('base64pad'))
-    localStorage.setItem('username', username)
+    localStore.setUser(username, await keypair.export('base64pad'))
     props.onRegister({ username, keypair })
   }
 
