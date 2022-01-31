@@ -4,20 +4,12 @@ import { CID } from 'multiformats/cid'
 import { BlockstoreI } from './types'
 import { streamToArray } from './util'
 
-let globalDB: MemoryBlockstore | null = null
 export class MemoryBlockstore implements BlockstoreI {
 
   map: Map<string, any>
 
   constructor() {
     this.map = new Map()
-  }
-
-  static getGlobal(): MemoryBlockstore {
-    if (globalDB === null) {
-      globalDB = new MemoryBlockstore()
-    }
-    return globalDB
   }
 
   async get(k: CID): Promise<Uint8Array> {

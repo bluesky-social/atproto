@@ -25,7 +25,7 @@ router.post('/register', async (req, res) => {
   let userStore: UserStore
   try {
     const bytes = await readReqBytes(req)
-    userStore = await UserStore.fromCarFile(bytes, Blockstore.getGlobal(), SERVER_KEYPAIR)
+    userStore = await UserStore.fromCarFile(bytes, res.locals.blockstore, SERVER_KEYPAIR)
   }catch(err) {
     return res.status(400).send("Could not parse UserStore from CAR File")
   }
@@ -48,7 +48,7 @@ router.post('/update', async (req, res) => {
   let userStore: UserStore
   try {
     const bytes = await readReqBytes(req)
-    userStore = await UserStore.fromCarFile(bytes, Blockstore.getGlobal(), SERVER_KEYPAIR)
+    userStore = await UserStore.fromCarFile(bytes, res.locals.blockstore, SERVER_KEYPAIR)
   }catch(err) {
     return res.status(400).send("Could not parse UserStore from CAR File")
   }
@@ -85,7 +85,7 @@ router.get('/:id', async (req, res) => {
     return res.status(404).send("User not found")
   }
 
-  const userStore = await UserStore.get(userRoot, Blockstore.getGlobal(), SERVER_KEYPAIR)
+  const userStore = await UserStore.get(userRoot, res.locals.blockstore, SERVER_KEYPAIR)
 
   const bytes = await userStore.getCarFile()
   return res.status(200).send(Buffer.from(bytes))

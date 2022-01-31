@@ -10,8 +10,11 @@ export const get = async (username: string): Promise<string | null> => {
   try {
     const got = await store.get(username)
     return got || null
-  } catch(_) {
-    return null
+  } catch(err) {
+    if (err.notFound) {
+      return null
+    }
+    throw err
   }
 }
 

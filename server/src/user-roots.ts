@@ -12,7 +12,10 @@ export const get = async (did: string): Promise<CID | null> => {
   try {
     const got = await store.get(did)
     return CID.parse(got) || null
-  } catch(_) {
-    return null
+  } catch(err) {
+    if (err.notFound) {
+      return null
+    }
+    throw err
   }
 }
