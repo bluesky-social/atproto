@@ -43,6 +43,13 @@ export class IpldStore {
     await this.db.put(block.cid, block.bytes)
     return block.cid
   }
+
+  putUser (value: Object): Promise<CID> {
+    if (!check.isUser(value)) {
+      throw new Error(`Not a valid user object`)
+    }
+    return this.put(value)
+  }
 }
 
 export default IpldStore 

@@ -44,7 +44,7 @@ export class UserStore {
       follows: []
     }
   
-    const userCid = await ipldStore.put(user)
+    const userCid = await ipldStore.putUser(user)
     const signedRoot = {
       user: userCid,
       sig: await keypair.sign(userCid.bytes)
@@ -104,7 +104,7 @@ export class UserStore {
     user.nextPost++
     user.postsRoot = this.postMap.cid
 
-    const userCid = await this.ipldStore.put(user)
+    const userCid = await this.ipldStore.putUser(user)
     const signedRoot = {
       user: userCid,
       sig: await this.keypair.sign(userCid.bytes)

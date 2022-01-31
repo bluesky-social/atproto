@@ -5,9 +5,17 @@ export const isObject = (obj: any): obj is Object => {
   return obj && typeof obj === 'object'
 }
 
+export const isString = (str: any): str is string => {
+  return typeof str === 'string'
+}
+
+export const isUsername = (str: any): str is string => {
+  return isString(str) && /(.+)@(.+)/.test(str)
+}
+
 export const isUser = (obj: any): obj is User => {
   return isObject(obj)
-    && typeof obj.name === 'string'
+    && isUsername(obj.name)
     && typeof obj.did === 'string'
     && typeof obj.nextPost === 'number'
     && !!CID.asCID(obj.postsRoot)
