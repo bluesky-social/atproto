@@ -12,6 +12,13 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
+// attach blockstore instance
+const blockstore = new Blockstore()
+app.use((req, res, next) => {
+  res.locals.blockstore = blockstore
+  next()
+})
+
 // Return the server's did
 app.get('/.well-known/did.json', (_req, res) => {
   res.send({ id: SERVER_DID })
@@ -53,7 +60,7 @@ app.post('/post', async (req, res) => {
   const encoded = ucan.encode(extendUcan)
 
   const car = await service.fetchUser(userDid)
-  const userStore = await UserStore.fromCarFile(car, Blockstore.getGlobal(), SERVER_KEYPAIR)
+  const userStore = await UserStore.fromCarFile(car, res.locals.blockstore, SERVER_KEYPAIR)
   await userStore.addPost({
     user: username,
     text: `Hey there! I'm posting on ${username}'s behalf`
