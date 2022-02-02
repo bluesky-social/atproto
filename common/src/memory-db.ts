@@ -1,7 +1,7 @@
 import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
-import { streamToArray } from './util'
+import { streamToArray } from './util.js'
 
 let globalDB: MemoryDB | null = null
 export class MemoryDB {

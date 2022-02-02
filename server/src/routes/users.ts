@@ -1,5 +1,5 @@
 import express from 'express'
-import * as UserDids from '../user-dids'
+import * as UserDids from '../user-dids.js'
 
 const router = express.Router()
 

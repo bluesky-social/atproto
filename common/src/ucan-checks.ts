@@ -1,7 +1,7 @@
 import { Request } from "express"
 import * as ucan from "ucans"
 import { Chained, isCapabilityEscalation } from "ucans"
-import { blueskyCapabilities }from './bluesky-capability'
+import { blueskyCapabilities }from './bluesky-capability.js'
 
 
 type Check = (ucan: Chained) => Error | null

@@ -1,12 +1,12 @@
-import MemoryDB from "./memory-db"
+import MemoryDB from "./memory-db.js"
 
 import * as Block from 'multiformats/block'
 import { CID } from 'multiformats/cid'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
 
-import { SignedRoot, User } from "./types"
-import * as check from './type-check'
+import { SignedRoot, User } from "./types.js"
+import * as check from './type-check.js'
 
 export class IpldStore {
 

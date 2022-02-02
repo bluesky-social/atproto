@@ -1,5 +1,5 @@
-import MemoryDB from "./memory-db"
-import IpldStore from "./ipld-store"
+import MemoryDB from "./memory-db.js"
+import IpldStore from "./ipld-store.js"
 
 import { CID } from 'multiformats/cid'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
@@ -11,8 +11,8 @@ import * as hashmap from 'ipld-hashmap'
 
 import { Didable, Keypair } from "ucans"
 
-import { User, Post } from "./types"
-import { streamToArray } from './util'
+import { User, Post } from "./types.js"
+import { streamToArray } from './util.js'
 
 export class UserStore {
 

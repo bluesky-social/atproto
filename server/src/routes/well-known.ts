@@ -1,7 +1,6 @@
 import express from 'express'
-import { SERVER_DID } from '../server-identity'
-import * as UserDids from '../user-dids'
-
+import { SERVER_DID } from '../server-identity.js'
+import * as UserDids from '../user-dids.js'
 
 const router = express.Router()
 

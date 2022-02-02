@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { SignedRoot, User } from './types'
+import { SignedRoot, User } from './types.js'
 
 export const isObject = (obj: any): obj is Object => {
   return obj && typeof obj === 'object'
