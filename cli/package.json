@@ -1,0 +1,19 @@
+{
+  "name": "@bluesky-demo/cli",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "minimist": "^1.2.5",
+    "chalk": "^5.0.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@bluesky-demo/common": "*",
+    "@types/node": "^17.0.14",
+    "@types/minimist": "^1.2.2",
+    "typescript": "^4.3.5"
+  }
+}
