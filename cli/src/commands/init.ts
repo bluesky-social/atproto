@@ -1,6 +1,6 @@
 import prompt from 'prompt'
-import path from 'path'
 import { promises as fsp } from 'fs'
+import { writeNewRepo } from '../lib/repo.js'
 import { service, UserStore } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
 import cmd from '../lib/command.js'
@@ -64,28 +64,31 @@ export default cmd({
     console.log('Generating keys...')
     const keypair = await ucan.EdKeypair.create({exportable: true})
     const userDID = keypair.did()
-    const blueskyDid = await service.getServerDid() // TODO - service needs to use `server`
-    const token = await ucan.build({
-      audience: blueskyDid,
-      issuer: keypair
-    })
     const userStore = await UserStore.create(username, keypair)
     const carFileBuf = await userStore.getCarFile()
 
-    // TODO is this section correct? probably should be in common somewhere?
     console.log('Writing repo...')
-    await fsp.writeFile(path.join(REPO_PATH, 'scdp.key'), await keypair.export(), 'utf-8')
-    await fsp.writeFile(path.join(REPO_PATH, 'blocks.car'), carFileBuf)
-    await fsp.writeFile(path.join(REPO_PATH, 'account.json'), JSON.stringify({
-      name: username,
-      server,
-      did: userDID
-    }, null, 2), 'utf-8')
+    await writeNewRepo(
+      REPO_PATH,
+      await keypair.export(),
+      carFileBuf,
+      {
+        name: username,
+        server,
+        did: userDID
+      }
+    )
 
     if (register) {
       console.log('Registering with server...')
       try {
-        await service.register(await userStore.getCarFile(), ucan.encode(token))
+        // TODO - service needs to use `server`
+        const blueskyDid = await service.getServerDid()
+        const token = await ucan.build({
+          audience: blueskyDid,
+          issuer: keypair
+        })
+        await service.register(carFileBuf, ucan.encode(token))
       } catch (e: any) {
         console.error(`Failed to register with server`)
         console.error(e.toString())
