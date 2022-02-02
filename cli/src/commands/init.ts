@@ -1,0 +1,101 @@
+import prompt from 'prompt'
+import path from 'path'
+import { promises as fsp } from 'fs'
+import { service, UserStore } from '@bluesky-demo/common'
+import * as ucan from 'ucans'
+import cmd from '../lib/command.js'
+import { REPO_PATH } from '../lib/env.js'
+
+prompt.colors = false
+prompt.message = ''
+
+export default cmd({
+  name: 'init',
+  category: 'setup',
+  help: 'Create a new scdb repo.',
+  opts: [
+    {name: 'server', type: 'string', default: ''},
+    {name: 'username', type: 'string', default: ''},
+    {name: 'register', type: 'boolean', default: false}
+  ],
+  async command (args) {
+    let {username, server, register} = args
+
+    console.log(` .___   .___ ___.  ___.
+/ ___| / ___|  _ \\|  _ \\ 
+\\___ \\| |   | | | | |_) |
+ ___) | |___| |_| |  __/ 
+|____/ \\____|____/|_|`)
+
+    if (!username || !server) {
+      console.log(`This utility will initialize your scdp repo.`)
+      console.log(`Press ^C at any time to quit.`)
+      prompt.start()
+      username = (await prompt.get({
+        description: 'Username',
+        type: 'string',
+        pattern: /^[a-z0-9\-]+$/i,
+        message: 'Name must be only letters, numbers, or dashes',
+        required: true,
+        default: username || ''
+      })).question
+      server = (await prompt.get({
+        description: 'Server',
+        type: 'string',
+        required: true,
+        default: server || ''
+      })).question
+      register = (await prompt.get({
+        description: 'Register with the server?',
+        type: 'boolean',
+        required: true,
+        default: true
+      })).question
+    }
+
+    try {
+      await fsp.mkdir(REPO_PATH, {recursive: true})
+    } catch (e: any) {
+      console.error(`Failed to create repo at ${REPO_PATH}`)
+      console.error(e.toString())
+      process.exit(1)
+    }
+
+    console.log('Generating keys...')
+    const keypair = await ucan.EdKeypair.create({exportable: true})
+    const userDID = keypair.did()
+    const blueskyDid = await service.getServerDid() // TODO - service needs to use `server`
+    const token = await ucan.build({
+      audience: blueskyDid,
+      issuer: keypair
+    })
+    const userStore = await UserStore.create(username, keypair)
+    const carFileBuf = await userStore.getCarFile()
+
+    // TODO is this section correct? probably should be in common somewhere?
+    console.log('Writing repo...')
+    await fsp.writeFile(path.join(REPO_PATH, 'scdp.key'), await keypair.export(), 'utf-8')
+    await fsp.writeFile(path.join(REPO_PATH, 'blocks.car'), carFileBuf)
+    await fsp.writeFile(path.join(REPO_PATH, 'account.json'), JSON.stringify({
+      name: username,
+      server,
+      did: userDID
+    }, null, 2), 'utf-8')
+
+    if (register) {
+      console.log('Registering with server...')
+      try {
+        await service.register(await userStore.getCarFile(), ucan.encode(token))
+      } catch (e: any) {
+        console.error(`Failed to register with server`)
+        console.error(e.toString())
+      }
+    } else {
+      console.log('Skipping registration')
+    }
+
+    console.log('')
+    console.log(`Repo created at ${REPO_PATH}`)
+    console.log(`DID: ${userDID}`)
+  }
+})

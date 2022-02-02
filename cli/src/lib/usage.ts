@@ -7,7 +7,7 @@ export function usage (err: any) {
   } else {
     console.log('')
   }
-  console.log(`Usage: ${chalk.bold(`bsky`)} <command> ${chalk.gray(`[opts...]`)}`)
+  console.log(`Usage: ${chalk.bold(`scdb`)} <command> ${chalk.gray(`[opts...]`)}`)
   categoryUsage('setup')
   categoryUsage('net')
   categoryUsage('social')
@@ -18,7 +18,7 @@ export function usage (err: any) {
 }
 
 export function commandUsage (cmd: RegisteredCmd) {
-  console.log(`${chalk.bold(`bsky ${cmd.name}`)}${cmdArgs(cmd)}${cmdHelp(cmd)}`)
+  console.log(`${chalk.bold(`scdb ${cmd.name}`)}${cmdArgs(cmd)}${cmdHelp(cmd)}`)
   if (cmd.opts?.length) {
     console.log('')
     for (const opt of cmd.opts) {
