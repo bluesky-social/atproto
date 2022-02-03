@@ -1,7 +1,7 @@
 import { service } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
 import cmd from '../../lib/command.js'
-import { readRepo, writeRepo } from '../../lib/repo.js'
+import { Repo } from '../../lib/repo.js'
 import { REPO_PATH } from '../../lib/env.js'
 
 export default cmd({
@@ -16,15 +16,18 @@ export default cmd({
       process.exit(1)
     }
 
-    const repo = await readRepo(REPO_PATH)
+    const repo = await Repo.load(REPO_PATH)
+    const store = await repo.getLocalUserStore()
 
-    await repo.store.addPost({
+    console.log('Creating post...')
+    await store.addPost({
       user: repo.account.name,
       text
     })
+    await repo.rootCidFile.put(store.root)
 
-    console.log('Posting to server...')
-    const car = await repo.store.getCarFile()
+    console.log('Uploading to server...')
+    const car = await store.getCarFile()
     const blueskyDid = await service.getServerDid()
     const token = await ucan.build({
       audience: blueskyDid,
@@ -35,8 +38,5 @@ export default cmd({
       }]
     })
     await service.updateUser(car, ucan.encode(token))
-
-    console.log('Updating local store...')
-    await writeRepo(REPO_PATH, repo)
   }
 })

@@ -1,7 +1,6 @@
 import prompt from 'prompt'
-import { promises as fsp } from 'fs'
-import { writeNewRepo } from '../../lib/repo.js'
-import { service, UserStore } from '@bluesky-demo/common'
+import { Repo } from '../../lib/repo.js'
+import { service } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
 import cmd from '../../lib/command.js'
 import { REPO_PATH } from '../../lib/env.js'
@@ -53,42 +52,20 @@ export default cmd({
       })).question
     }
 
-    try {
-      await fsp.mkdir(REPO_PATH, {recursive: true})
-    } catch (e: any) {
-      console.error(`Failed to create repo at ${REPO_PATH}`)
-      console.error(e.toString())
-      process.exit(1)
-    }
-
-    console.log('Generating keys...')
-    const keypair = await ucan.EdKeypair.create({exportable: true})
-    const userDID = keypair.did()
-    const userStore = await UserStore.create(username, keypair)
-    const carFileBuf = await userStore.getCarFile()
-
-    console.log('Writing repo...')
-    await writeNewRepo(
-      REPO_PATH,
-      await keypair.export(),
-      carFileBuf,
-      {
-        name: username,
-        server,
-        did: userDID
-      }
-    )
+    console.log('Generating repo...')
+    const repo = await Repo.createNew(REPO_PATH, username, server)
 
     if (register) {
       console.log('Registering with server...')
       try {
         // TODO - service needs to use `server`
+        const userStore = await repo.getLocalUserStore()
         const blueskyDid = await service.getServerDid()
         const token = await ucan.build({
           audience: blueskyDid,
-          issuer: keypair
+          issuer: repo.keypair
         })
-        await service.register(carFileBuf, ucan.encode(token))
+        await service.register(await userStore.getCarFile(), ucan.encode(token))
       } catch (e: any) {
         console.error(`Failed to register with server`)
         console.error(e.toString())
@@ -99,6 +76,6 @@ export default cmd({
 
     console.log('')
     console.log(`Repo created at ${REPO_PATH}`)
-    console.log(`DID: ${userDID}`)
+    console.log(`DID: ${repo.account.did}`)
   }
 })

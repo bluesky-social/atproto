@@ -1,6 +1,7 @@
 import path from 'path'
 import { promises as fsp } from 'fs'
-import { UserStore, MemoryDB } from '@bluesky-demo/common'
+import { UserStore, Blockstore } from '@bluesky-demo/common'
+import { CID } from 'multiformats/cid'
 import * as ucan from 'ucans'
 
 export interface AccountJson {
@@ -9,32 +10,79 @@ export interface AccountJson {
   did: string
 }
 
-export interface Repo {
-  keypair: ucan.EdKeypair
-  account: AccountJson
-  store: UserStore
+export class Repo {
+  constructor(
+    public keypair: ucan.EdKeypair,
+    public account: AccountJson,
+    public blockstore: Blockstore,
+    public rootCidFile: RootCidFile
+  ) {}
+
+  static async createNew (repoPath: string, name: string, server: string): Promise<Repo> {
+    try {
+      await fsp.mkdir(repoPath, {recursive: true})
+    } catch (e: any) {
+      console.error(`Failed to create repo at ${repoPath}`)
+      console.error(e.toString())
+      process.exit(1)
+    }
+  
+    const keypair = await ucan.EdKeypair.create({exportable: true})
+    const userDID = keypair.did()
+    const account: AccountJson = {
+      name,
+      server,
+      did: userDID
+    }
+    
+    const blockstore = new Blockstore(path.join(repoPath, 'blockstore'))
+    await fsp.writeFile(path.join(repoPath, 'scdp.key'), await keypair.export(), 'utf-8')
+    await fsp.writeFile(path.join(repoPath, 'account.json'), JSON.stringify(account, null, 2), 'utf-8')
+    const rootCidFile = new RootCidFile(path.join(repoPath, 'root.cid'))
+  
+    const localUserStore = await UserStore.create(name, blockstore, keypair)
+    await rootCidFile.put(localUserStore.root)
+  
+    return new Repo(
+      keypair,
+      account,
+      blockstore,
+      rootCidFile
+    )
+  }
+
+  static async load (repoPath: string): Promise<Repo> {
+    const secretKeyStr = await readFile(repoPath, 'scdp.key', 'utf-8') as string
+    const account = await readAccountFile(repoPath, 'account.json')
+    const blockstore = new Blockstore(path.join(repoPath, 'blockstore'))
+    const keypair = ucan.EdKeypair.fromSecretKey(secretKeyStr)
+    const rootCidFile = new RootCidFile(path.join(repoPath, 'root.cid'))
+    return new Repo(
+      keypair,
+      account,
+      blockstore,
+      rootCidFile
+    )
+  }
+
+  async getLocalUserStore (): Promise<UserStore> {
+    return this.getUserStore(await this.rootCidFile.get())
+  }
+
+  async getUserStore (cid: CID): Promise<UserStore> {
+    return UserStore.get(cid, this.blockstore, this.keypair) // TODO !!!! only pass in keypair if this is the local user! (waiting on PR to make keypair optional)
+  }
 }
 
-export async function writeNewRepo (repoPath: string, secretKeyStr: string, carFileBuf: Uint8Array, accountJson: AccountJson) {
-  // TODO- correct?
-  await fsp.writeFile(path.join(repoPath, 'scdp.key'), secretKeyStr, 'utf-8')
-  await fsp.writeFile(path.join(repoPath, 'blocks.car'), carFileBuf)
-  await fsp.writeFile(path.join(repoPath, 'account.json'), JSON.stringify(accountJson, null, 2), 'utf-8')
-}
-
-export async function writeRepo (repoPath: string, repo: Repo) {
-  await fsp.writeFile(path.join(repoPath, 'blocks.car'), await repo.store.getCarFile())
-}
-
-export async function readRepo (repoPath: string): Promise<Repo> {
-  const secretKeyStr = await readFile(repoPath, 'scdp.key', 'utf-8') as string
-  const carFileBuf = await readFile(repoPath, 'blocks.car') as Uint8Array
-  const account = await readAccountFile(repoPath, 'account.json')
-  const keypair = ucan.EdKeypair.fromSecretKey(secretKeyStr)
-  return {
-    keypair,
-    account,
-    store: await UserStore.fromCarFile(carFileBuf, MemoryDB.getGlobal(), keypair)
+class RootCidFile {
+  constructor (public path: string) {}
+  async get () {
+    const str = await fsp.readFile(this.path, 'utf-8')
+    if (!str) throw new Error(`No root.cid file found`)
+    return CID.parse(str)
+  }
+  async put (cid: CID) {
+    await fsp.writeFile(this.path, cid.toString(), 'utf-8')
   }
 }
 
