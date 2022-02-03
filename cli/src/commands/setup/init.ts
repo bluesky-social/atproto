@@ -1,10 +1,10 @@
 import prompt from 'prompt'
 import { promises as fsp } from 'fs'
-import { writeNewRepo } from '../lib/repo.js'
+import { writeNewRepo } from '../../lib/repo.js'
 import { service, UserStore } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
-import cmd from '../lib/command.js'
-import { REPO_PATH } from '../lib/env.js'
+import cmd from '../../lib/command.js'
+import { REPO_PATH } from '../../lib/env.js'
 
 prompt.colors = false
 prompt.message = ''

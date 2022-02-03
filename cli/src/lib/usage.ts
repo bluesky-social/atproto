@@ -8,12 +8,32 @@ export function usage (err: any) {
     console.log('')
   }
   console.log(`Usage: ${chalk.bold(`scdb`)} <command> ${chalk.gray(`[opts...]`)}`)
-  categoryUsage('setup')
-  categoryUsage('net')
-  categoryUsage('social')
-  categoryUsage('posts')
-  categoryUsage('interactions')
-  categoryUsage('advanced')
+
+  let lhsLength = 0
+  const cats: any[] = []
+  function addcat (category: keyof typeof CATEGORIES) {
+    const lhs = []
+    const rhs = []
+    for (const cmd of registeredCommands.filter(cmd => cmd.category === category)) {
+      const l = `  ${cmd.name}${cmdArgs(cmd)}`
+      lhsLength = Math.max(l.length, lhsLength)
+      lhs.push(l)
+      rhs.push(cmdHelp(cmd))
+    }
+    cats.push({label: CATEGORIES[category], lhs, rhs})
+  }
+  addcat('setup')
+  addcat('net')
+  addcat('social')
+  addcat('posts')
+  addcat('interactions')
+  addcat('advanced')
+  for (const cat of cats) {
+    console.log(`\n${chalk.bold(cat.label)}:\n`)
+    for (let i = 0; i < cat.lhs.length; i++) {
+      console.log(`${cat.lhs[i].padEnd(lhsLength)}  ${cat.rhs[i]}`)
+    }
+  }
   process.exit(err ? 1 : 0)
 }
 
@@ -22,15 +42,8 @@ export function commandUsage (cmd: RegisteredCmd) {
   if (cmd.opts?.length) {
     console.log('')
     for (const opt of cmd.opts) {
-      console.log(`  ${cmdOptString(opt, true)}`)
+      console.log(`  ${cmdOpt(opt, true)}`)
     }
-  }
-}
-
-function categoryUsage (category: keyof typeof CATEGORIES) {
-  console.log(`\n${chalk.bold(CATEGORIES[category])}:\n`)
-  for (const cmd of registeredCommands.filter(cmd => cmd.category === category)) {
-    console.log(`  ${cmd.name}${cmdArgs(cmd)}${cmdOpts(cmd)}${cmdHelp(cmd)}`)
   }
 }
 
@@ -43,13 +56,7 @@ function cmdArgs (cmd: RegisteredCmd) {
   return ` ${argStrings.join(' ')}`
 }
 
-function cmdOpts (cmd: RegisteredCmd) {
-  if (!cmd.opts?.length) return ''
-  const optStrings = cmd.opts.map(opt => cmdOptString(opt))
-  return ` ${chalk.gray(optStrings.join(' '))}`
-}
-
-function cmdOptString (opt: CmdOpt, extended = false) {
+function cmdOpt (opt: CmdOpt, extended = false) {
   let str = ''
   if (opt.abbr) str += `-${opt.abbr}|`
   str += `--${opt.name}`

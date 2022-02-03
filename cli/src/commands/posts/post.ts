@@ -1,12 +1,12 @@
 import { service } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
-import cmd from '../lib/command.js'
-import { readRepo, writeRepo } from '../lib/repo.js'
-import { REPO_PATH } from '../lib/env.js'
+import cmd from '../../lib/command.js'
+import { readRepo, writeRepo } from '../../lib/repo.js'
+import { REPO_PATH } from '../../lib/env.js'
 
 export default cmd({
   name: 'post',
-  category: 'social',
+  category: 'posts',
   help: 'Create a new post.',
   args: [{name: 'text'}],
   async command (args) {

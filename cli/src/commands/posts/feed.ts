@@ -1,12 +1,12 @@
 import { service } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
-import cmd from '../lib/command.js'
-import { readRepo, writeRepo } from '../lib/repo.js'
-import { REPO_PATH } from '../lib/env.js'
+import cmd from '../../lib/command.js'
+import { readRepo, writeRepo } from '../../lib/repo.js'
+import { REPO_PATH } from '../../lib/env.js'
 
 export default cmd({
   name: 'feed',
-  category: 'social',
+  category: 'posts',
   help: 'List all the posts in your feed, or the posts of the given user.',
   args: [{name: 'user', optional: true}],
   async command (args) {
