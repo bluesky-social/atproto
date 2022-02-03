@@ -12,5 +12,11 @@
     "frontend",
     "third-party",
     "server"
-  ]
+  ],
+  "scripts": {
+    "wipe-db": "rimraf server/blockstore && rimraf server/user_dids && rimraf server/user_roots && rimraf third-party/blockstore"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2"
+  }
 }

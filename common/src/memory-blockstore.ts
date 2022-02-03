@@ -1,10 +1,10 @@
 import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
+import { BlockstoreI } from './types.js'
 import { streamToArray } from './util.js'
 
-let globalDB: MemoryDB | null = null
-export class MemoryDB {
+export class MemoryBlockstore implements BlockstoreI {
 
   map: Map<string, any>
 
@@ -12,15 +12,10 @@ export class MemoryDB {
     this.map = new Map()
   }
 
-  static getGlobal(): MemoryDB {
-    if (globalDB === null) {
-      globalDB = new MemoryDB()
-    }
-    return globalDB
-  }
-
   async get(k: CID): Promise<Uint8Array> {
-    return this.map.get(k.toString())
+    const v = this.map.get(k.toString())
+    if (!v) throw new Error(`Not found: ${k.toString()}`)
+    return v
   }
 
   async put(k: CID, v: Uint8Array): Promise<void> {
@@ -46,4 +41,4 @@ export class MemoryDB {
 
 }
 
-export default MemoryDB
+export default MemoryBlockstore

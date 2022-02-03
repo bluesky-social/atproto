@@ -1,5 +1,6 @@
 export * from './ipld-store.js'
-export * from './memory-db.js'
+export * from './memory-blockstore.js'
+export * from './blockstore.js'
 export * from './user-store.js'
 export * from './types.js'
 export * as check from './type-check.js'
