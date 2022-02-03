@@ -2,7 +2,7 @@ import styles from "@components/App.module.scss";
 
 import * as React from "react";
 
-import { service, UserStore, MemoryDB, LocalUser, Post } from '@bluesky-demo/common'
+import { service, UserStore, Blockstore, LocalUser, Post } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
 
 import App from "@components/App"
@@ -16,6 +16,7 @@ function Home(props: {}) {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [users, setAllUsers] = React.useState<string[]>([]);
   const [showUsers, setShowUsers] = React.useState<boolean>(false);
+  const [blockstore, setBlockstore] = React.useState<Blockstore | null>(null);
 
   const addPost = async (post: Post) => {
     await store.addPost(post)
@@ -38,9 +39,10 @@ function Home(props: {}) {
     let userStore: UserStore
     try {
       const car = await service.fetchUser(localUser.keypair.did())
-      userStore = await UserStore.fromCarFile(car, MemoryDB.getGlobal(), localUser.keypair)
+      userStore = await UserStore.fromCarFile(car, getBlockstore(), localUser.keypair)
     } catch (_err) {
-      // @TODO: show error instead of an empty store
+      // @@TODO: show error instead of an empty store
+      console.log("Could not load user store: ", _err)
       userStore = await createNewStore()
     }
     setStore(userStore)
@@ -48,7 +50,7 @@ function Home(props: {}) {
   }
 
   const createNewStore = async (): Promise<UserStore> => {
-    const userStore = await UserStore.create(localUser.username, localUser.keypair)
+    const userStore = await UserStore.create(localUser.username, getBlockstore(), localUser.keypair)
 
     if(userStore.posts.length === 0) {
       const testPost = {
@@ -59,6 +61,15 @@ function Home(props: {}) {
     }
 
     return userStore
+  }
+
+  const getBlockstore = (): Blockstore => {
+    if (blockstore !== null) {
+      return blockstore
+    }
+    const bs = new Blockstore()
+    setBlockstore(bs)
+    return bs
   }
 
   const thirdPartyPost = async () => {
@@ -136,7 +147,7 @@ function Home(props: {}) {
   if (localUser === null) {
     return (
       <App>
-        <Register onRegister={setLocalUser} />
+        <Register blockstore={getBlockstore()} onRegister={setLocalUser} />
       </App>
     )
   }

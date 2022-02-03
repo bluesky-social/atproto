@@ -1,6 +1,6 @@
 import express from 'express'
 import * as ucan from 'ucans'
-import { ucanCheck, UserStore, MemoryDB } from '@bluesky-demo/common'
+import { ucanCheck, UserStore, Blockstore } from '@bluesky-demo/common'
 import * as UserDids from '../user-dids'
 import * as UserRoots from '../user-roots'
 import { readReqBytes } from '../util'
@@ -25,8 +25,7 @@ router.post('/register', async (req, res) => {
   let userStore: UserStore
   try {
     const bytes = await readReqBytes(req)
-    // @TODO: make a read-only vesion of user store that doesn't require keypair
-    userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEYPAIR)
+    userStore = await UserStore.fromCarFile(bytes, res.locals.blockstore, SERVER_KEYPAIR)
   }catch(err) {
     return res.status(400).send("Could not parse UserStore from CAR File")
   }
@@ -49,13 +48,16 @@ router.post('/update', async (req, res) => {
   let userStore: UserStore
   try {
     const bytes = await readReqBytes(req)
-    userStore = await UserStore.fromCarFile(bytes, MemoryDB.getGlobal(), SERVER_KEYPAIR)
+    userStore = await UserStore.fromCarFile(bytes, res.locals.blockstore, SERVER_KEYPAIR)
   }catch(err) {
     return res.status(400).send("Could not parse UserStore from CAR File")
   }
 
   const user = await userStore.getUser()
   const userDid = await UserDids.get(user.name)
+  if (userDid === null) {
+    return res.status(404).send("User not found")
+  }
 
   let u: ucan.Chained
   try {
@@ -79,8 +81,11 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params
 
   const userRoot = await UserRoots.get(id)
+  if (userRoot === null) {
+    return res.status(404).send("User not found")
+  }
 
-  const userStore = await UserStore.get(userRoot, MemoryDB.getGlobal(), SERVER_KEYPAIR)
+  const userStore = await UserStore.get(userRoot, res.locals.blockstore, SERVER_KEYPAIR)
 
   const bytes = await userStore.getCarFile()
   return res.status(200).send(Buffer.from(bytes))

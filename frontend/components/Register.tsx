@@ -2,10 +2,11 @@ import styles from "@components/App.module.scss";
 
 import React, { ChangeEvent, FormEvent } from 'react'
 
-import { service, LocalUser, UserStore } from '@bluesky-demo/common'
+import { service, LocalUser, UserStore, Blockstore } from '@bluesky-demo/common'
 import * as ucan from 'ucans'
 
 interface Props {
+  blockstore: Blockstore
   onRegister: (user: LocalUser) => void
 }
 
@@ -26,7 +27,7 @@ function Register(props: Props) {
       audience: blueskyDid,
       issuer: keypair
     })
-    const userStore = await UserStore.create(username, keypair)
+    const userStore = await UserStore.create(username, props.blockstore, keypair)
     await service.register(await userStore.getCarFile(), ucan.encode(token))
 
     // LOCAL STORAGE IS NOT SAFE. DO NOT DO THIS IN PRODUCTION

@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import * as ucan from 'ucans'
-import { service, UserStore, MemoryDB, ucanCheck } from '@bluesky-demo/common'
+import { service, UserStore, Blockstore, ucanCheck } from '@bluesky-demo/common'
 
 // WARNING: For demo only, do not actually store secret keys in plaintext.
 const SECRET_KEY = 'I0HyDksQcCRdJBGVuE78Ts34SzyF7+xNprEQw/IRa51OuFZQc5ugqfgjeWRMehyfr7A1vXICRoUD5kqVadsRHA=='
@@ -11,6 +11,13 @@ const SERVER_DID = SERVER_KEYPAIR.did()
 const app = express()
 app.use(express.json())
 app.use(cors())
+
+// attach blockstore instance
+const blockstore = new Blockstore()
+app.use((req, res, next) => {
+  res.locals.blockstore = blockstore
+  next()
+})
 
 // Return the server's did
 app.get('/.well-known/did.json', (_req, res) => {
@@ -53,7 +60,7 @@ app.post('/post', async (req, res) => {
   const encoded = ucan.encode(extendUcan)
 
   const car = await service.fetchUser(userDid)
-  const userStore = await UserStore.fromCarFile(car, MemoryDB.getGlobal(), SERVER_KEYPAIR)
+  const userStore = await UserStore.fromCarFile(car, res.locals.blockstore, SERVER_KEYPAIR)
   await userStore.addPost({
     user: username,
     text: `Hey there! I'm posting on ${username}'s behalf`
