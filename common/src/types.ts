@@ -11,7 +11,12 @@ export type User = {
   did: string
   nextPost: number
   postsRoot: CID
-  follows: string[]
+  follows: Follow[]
+}
+
+export type Follow = {
+  username: string
+  did: string
 }
 
 export type Post = {

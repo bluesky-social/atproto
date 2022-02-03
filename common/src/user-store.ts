@@ -10,7 +10,7 @@ import * as hashmap from 'ipld-hashmap'
 
 import { Didable, Keypair } from "ucans"
 
-import { User, Post, BlockstoreI } from "./types.js"
+import { User, Post, BlockstoreI, Follow } from "./types.js"
 import { streamToArray } from './util.js'
 
 export class UserStore {
@@ -20,25 +20,35 @@ export class UserStore {
   postMap: hashmap.HashMap<Post>
   root: CID
   posts: Post[]
+  follows: Follow[]
   keypair: Keypair
 
-  constructor(blockstore: BlockstoreI, ipldStore: IpldStore, postMap: hashmap.HashMap<Post>, root: CID, posts: Post[], keypair: Keypair) {
-    this.blockstore = blockstore
-    this.ipldStore = ipldStore
-    this.postMap = postMap
-    this.root = root
-    this.posts = posts
-    this.keypair = keypair
+  constructor(params: {
+    blockstore: BlockstoreI, 
+    ipldStore: IpldStore, 
+    postMap: hashmap.HashMap<Post>, 
+    root: CID, 
+    posts: Post[], 
+    follows: Follow[], 
+    keypair: Keypair
+  }) {
+    this.blockstore = params.blockstore
+    this.ipldStore = params.ipldStore
+    this.postMap = params.postMap
+    this.root = params.root
+    this.posts = params.posts
+    this.follows = params.follows
+    this.keypair = params.keypair
   }
 
   static async create(username: string, blockstore: BlockstoreI, keypair: Keypair & Didable) {
-    const posts = await hashmap.create(blockstore, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
+    const postMap = await hashmap.create(blockstore, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     const ipldStore = new IpldStore(blockstore)
     const user = {
       did: await keypair.did(),
       name: username,
       nextPost: 0,
-      postsRoot: posts.cid,
+      postsRoot: postMap.cid,
       follows: []
     }
   
@@ -50,7 +60,15 @@ export class UserStore {
 
     const root = await ipldStore.put(signedRoot)
 
-    return new UserStore(blockstore, ipldStore, posts, root, [], keypair)
+    return new UserStore({
+      blockstore, 
+      ipldStore, 
+      postMap, 
+      root, 
+      posts: [], 
+      follows: [], 
+      keypair
+    })
   }
 
   static async get(root: CID, blockstore: BlockstoreI, keypair: Keypair) {
@@ -59,7 +77,16 @@ export class UserStore {
     const user = await ipldStore.getUser(rootObj.user)
     const postMap = await hashmap.load(blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     const posts = await UserStore.postsListFromMap(postMap)
-    return new UserStore(blockstore, ipldStore, postMap, root, posts, keypair)
+    const follows = user.follows
+    return new UserStore({
+      blockstore,
+      ipldStore,
+      postMap,
+      root,
+      posts,
+      follows,
+      keypair
+    })
   }
 
   static async fromCarFile(buf: Uint8Array, blockstore: BlockstoreI, keypair: Keypair) {
@@ -80,7 +107,16 @@ export class UserStore {
     const user = await ipldStore.getUser(rootObj.user)
     const postMap = await hashmap.load(blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     const posts = await UserStore.postsListFromMap(postMap)
-    return new UserStore(blockstore, ipldStore, postMap, root, posts, keypair)
+    const follows = user.follows
+    return new UserStore({
+      blockstore,
+      ipldStore,
+      postMap,
+      root,
+      posts,
+      follows,
+      keypair
+    })
   }
 
   static async postsListFromMap(postMap: hashmap.HashMap<Post>) {
@@ -102,13 +138,7 @@ export class UserStore {
     user.nextPost++
     user.postsRoot = this.postMap.cid
 
-    const userCid = await this.ipldStore.put(user)
-    const signedRoot = {
-      user: userCid,
-      sig: await this.keypair.sign(userCid.bytes)
-    }
-    
-    this.root = await this.ipldStore.put(signedRoot)
+    await this.updateUserRoot(user)
     this.posts = [post, ...this.posts]
   }
 
@@ -116,6 +146,29 @@ export class UserStore {
     const posts = await UserStore.postsListFromMap(this.postMap)
     this.posts = posts
     return posts
+  }
+
+  async followUser(username: string, did: string): Promise<void> {
+    const user = await this.getUser()
+    if (user.follows.some(u => u.username === username)) {
+      throw new Error(`User with username ${username} already exists.`)
+
+    } else if (user.follows.some(u => u.did === did)) {
+      throw new Error(`User with did ${did} already exists.`)
+    }
+    user.follows.push({ username, did })
+    await this.updateUserRoot(user)
+    this.follows.push({ username, did })
+  }
+
+  async updateUserRoot(user: User) {
+    const userCid = await this.ipldStore.put(user)
+    const signedRoot = {
+      user: userCid,
+      sig: await this.keypair.sign(userCid.bytes)
+    }
+    
+    this.root = await this.ipldStore.put(signedRoot)
   }
 
   getCarStream(): AsyncIterable<Uint8Array> {
