@@ -41,17 +41,17 @@ export interface UserStoreI {
   addPost(text: string): Promise<string>
   editPost(id: string, text: string): Promise<void>
   deletePost(id: string): Promise<void>
-  listPosts(count: number, from?: number): Promise<Post[]>
+  listPosts(): Promise<Post[]>
 
   reply(id: string, text: string): Promise<void>
-
-  like(id: string): Promise<void>
-  unlike(id: string): Promise<void>
-  listLikes(): Promise<void>
 
   followUser(username: string, did: string): Promise<void>
   unfollowUser(did:string): Promise<void>
   listFollows(): Promise<Follow[]>
+
+  like(id: string): Promise<void>
+  unlike(id: string): Promise<void>
+  listLikes(): Promise<void>
 
   getCarStream(): AsyncIterable<Uint8Array>
   getCarFile(): Promise<Uint8Array>
