@@ -3,8 +3,8 @@ import { CID } from 'multiformats/cid'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
 
-import { BlockstoreI, SignedRoot, User } from "./types"
-import * as check from './type-check'
+import { BlockstoreI, SignedRoot, User } from "./types.js"
+import * as check from './type-check.js'
 
 export class IpldStore {
 

@@ -1,7 +1,7 @@
 import express from 'express'
-import WellKnown from './well-known'
-import User from './user'
-import Users from './users'
+import WellKnown from './well-known.js'
+import User from './user.js'
+import Users from './users.js'
 
 const router = express.Router()
 

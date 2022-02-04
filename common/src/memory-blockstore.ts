@@ -1,8 +1,8 @@
 import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
-import { BlockstoreI } from './types'
-import { streamToArray } from './util'
+import { BlockstoreI } from './types.js'
+import { streamToArray } from './util.js'
 
 export class MemoryBlockstore implements BlockstoreI {
 
@@ -13,7 +13,9 @@ export class MemoryBlockstore implements BlockstoreI {
   }
 
   async get(k: CID): Promise<Uint8Array> {
-    return this.map.get(k.toString())
+    const v = this.map.get(k.toString())
+    if (!v) throw new Error(`Not found: ${k.toString()}`)
+    return v
   }
 
   async put(k: CID, v: Uint8Array): Promise<void> {

@@ -1,6 +1,6 @@
 import level from 'level'
 import { CID } from 'multiformats/cid'
-import { BlockstoreI } from './types'
+import { BlockstoreI } from './types.js'
 
 export class Blockstore implements BlockstoreI {
 
@@ -13,7 +13,7 @@ export class Blockstore implements BlockstoreI {
     })
   }
 
-  async get(cid: CID): Promise<Uint8Array | null> {
+  async get(cid: CID): Promise<Uint8Array> {
     return this.store.get(cid.toString())
   }
 

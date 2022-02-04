@@ -1,4 +1,4 @@
-import IpldStore from "./ipld-store"
+import IpldStore from "./ipld-store.js"
 
 import { CID } from 'multiformats/cid'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
@@ -10,8 +10,8 @@ import * as hashmap from 'ipld-hashmap'
 
 import { Didable, Keypair } from "ucans"
 
-import { User, Post, BlockstoreI, Follow } from "./types"
-import { streamToArray } from './util'
+import { User, Post, BlockstoreI, Follow } from "./types.js"
+import { streamToArray } from './util.js'
 
 export class UserStore {
 

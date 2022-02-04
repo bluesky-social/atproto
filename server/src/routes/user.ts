@@ -1,10 +1,10 @@
 import express from 'express'
 import * as ucan from 'ucans'
 import { ucanCheck, UserStore, Blockstore } from '@bluesky-demo/common'
-import * as UserDids from '../user-dids'
-import * as UserRoots from '../user-roots'
-import { readReqBytes } from '../util'
-import { SERVER_KEYPAIR, SERVER_DID } from '../server-identity'
+import * as UserDids from '../user-dids.js'
+import * as UserRoots from '../user-roots.js'
+import { readReqBytes } from '../util.js'
+import { SERVER_KEYPAIR, SERVER_DID } from '../server-identity.js'
 
 
 const router = express.Router()
@@ -18,7 +18,7 @@ router.post('/register', async (req, res) => {
       ucanCheck.hasAudience(SERVER_DID),
       ucanCheck.isRoot()
     )
-  } catch(err) {
+  } catch(err: any) {
     return res.status(401).send(`Invalid Ucan: ${err.toString()}`)
   }
 
@@ -61,11 +61,15 @@ router.post('/update', async (req, res) => {
 
   let u: ucan.Chained
   try {
-    u = await ucanCheck.checkUcan(
-      req,
-      ucanCheck.hasAudience(SERVER_DID),
-      ucanCheck.hasPostingPermission(user.name, userDid)
-    )
+    if (userDid) {
+      u = await ucanCheck.checkUcan(
+        req,
+        ucanCheck.hasAudience(SERVER_DID),
+        ucanCheck.hasPostingPermission(user.name, userDid)
+      )
+    } else {
+      throw new Error(`User not found: ${user.name}`)
+    }
   } catch(err) {
     return res.status(401).send(err)
   }
@@ -83,6 +87,10 @@ router.get('/:id', async (req, res) => {
   const userRoot = await UserRoots.get(id)
   if (userRoot === null) {
     return res.status(404).send("User not found")
+  }
+
+  if (!userRoot) {
+    return res.status(404).end()
   }
 
   const userStore = await UserStore.get(userRoot, res.locals.blockstore, SERVER_KEYPAIR)
