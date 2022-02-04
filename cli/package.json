@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "cli": "node dist/bin.js",
     "build": "(cd ../common && yarn build) && tsc --project tsconfig.json"
   },
   "dependencies": {
