@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsc -w --project tsconfig.json & nodemon -q -w dist dist/index.js",
-    "build": "tsc --project tsconfig.json"
+    "build": "(cd ../common && yarn build) && tsc --project tsconfig.json"
   },
   "devDependencies": {
     "@bluesky-demo/common": "*",
