@@ -5,8 +5,8 @@ export default cmd({
   category: 'setup',
   help: 'Get/set the value for the config key.',
   args: [
-    {name: 'key', type: 'string'},
-    {name: 'value', type: 'string', optional: true}
+    {name: 'key'},
+    {name: 'value', optional: true}
   ],
   opts: [],
   async command (args) {

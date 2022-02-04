@@ -5,7 +5,7 @@ export default cmd({
   category: 'posts',
   help: 'Delete an existing post.',
   args: [
-    {name: 'id', type: 'string'}
+    {name: 'id'}
   ],
   opts: [],
   async command (args) {

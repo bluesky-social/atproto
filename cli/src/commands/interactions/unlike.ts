@@ -5,7 +5,7 @@ export default cmd({
   category: 'interactions',
   help: 'Unlike a post.',
   args: [
-    {name: 'id', type: 'string'}
+    {name: 'id'}
   ],
   opts: [],
   async command (args) {

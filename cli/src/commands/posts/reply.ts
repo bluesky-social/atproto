@@ -5,8 +5,8 @@ export default cmd({
   category: 'posts',
   help: 'Create a new reply post.',
   args: [
-    {name: 'id', type: 'string'},
-    {name: 'text', type: 'string'}
+    {name: 'id'},
+    {name: 'text'}
   ],
   opts: [],
   async command (args) {
