@@ -26,7 +26,7 @@ export const fetchUser = async (did: string): Promise<Uint8Array> => {
   return new Uint8Array(res.data)
 }
 
-export const fetchUsers = async (): Promise<string[]> => {
+export const fetchUsers = async (): Promise<{name: string, did: string}[]> => {
   const res = await axios.get(`${SERVER_URL}/users`)
   return res.data
 }

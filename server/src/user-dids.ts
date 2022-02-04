@@ -20,11 +20,11 @@ export const get = async (username: string): Promise<string | null> => {
 
 // @@TODO: we shouldn't ever iterate over our entire user store
 // this is a stand in until we have social graphs
-export const listDids = async (): Promise<string[]> => {
+export const listDids = async (): Promise<{name: string, did: string}[]> => {
   const dids = []
   // @ts-ignore we're pretty sure that's actually an iterator, not sure how to make typescript happy -prf
-  for await (const [_, did] of store.iterator()) {
-    dids.push(did)
+  for await (const [name, did] of store.iterator()) {
+    dids.push({name, did})
   }
   return dids
 }
