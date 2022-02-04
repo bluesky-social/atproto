@@ -74,7 +74,7 @@ export function matchCommand (args: MinimistParsedArgs) {
 
 export function runCommand (cmd: RegisteredCmd, argv: string[]) {
   const args = minimist(argv, getMinimistArgs(cmd))
-  coerceArgTypes(cmd, args)
+  validateAndCoerceParams(cmd, args)
   return cmd.command(args)
 }
 
@@ -104,9 +104,26 @@ function getMinimistArgs (cmd: RegisteredCmd) {
   return minArgs
 }
 
-function coerceArgTypes (cmd: RegisteredCmd, args: MinimistParsedArgs) {
+function validateAndCoerceParams (cmd: RegisteredCmd, args: MinimistParsedArgs) {
+  if (cmd.args?.length) {
+    for (let i = 0; i < cmd.args.length; i++) {
+      if (typeof args._[i] === 'undefined') {
+        if (!cmd.args[i].optional) {
+          throw new Error(`${cmd.args[i].name} (argument ${i + 1}) is required`)
+        }
+      }
+    }
+  }
   if (cmd.opts?.length) {
     for (const opt of cmd.opts) {
+      if (typeof args[opt.name] === 'undefined') {
+        if (typeof opt.default === 'undefined') {
+          throw new Error(`--${opt.name}${opt.abbr ? `|-${opt.abbr}` : ''} is required`)
+        } else {
+          args[opt.name] = opt.default
+          if (opt.abbr) args[opt.abbr] = opt.default
+        }
+      }
       if (opt.type === 'number') {
         if (opt.name in args) args[opt.name] = Number(args[opt.name])
         if (opt.abbr && opt.abbr in args) args[opt.abbr] = Number(args[opt.abbr])
