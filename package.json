@@ -7,16 +7,18 @@
   "license": "MIT",
   "private": true,
   "workspaces": [
-    "cli",
     "common",
+    "cli",
     "frontend",
     "third-party",
     "server"
   ],
   "scripts": {
+    "build": "wsrun -c \"build\"",
     "wipe-db": "rimraf server/blockstore && rimraf server/user_dids && rimraf server/user_roots && rimraf third-party/blockstore"
   },
   "devDependencies": {
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "wsrun": "^5.2.4"
   }
 }
