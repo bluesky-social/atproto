@@ -16,7 +16,7 @@ There are three components to the demo:
 - the frontend (simple micro-bloggin application)
 - a third-party server that a user can delegate permission to to post on it's behalf (think [Buffer](https://buffer.com/))
 
-This project is setup in a yarn workspace. To install dependencies for all sub-projects, just run `yarn` from the project root.
+This project is setup in a yarn workspace. To install dependencies for all sub-projects, just run `yarn` from the project root. To build all sub-projects, run `yarn build` from the project root.
 
 ### Bluesky Server
 
