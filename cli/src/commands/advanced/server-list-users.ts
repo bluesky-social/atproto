@@ -1,4 +1,5 @@
 import cmd from '../../lib/command.js'
+import { service } from '@bluesky-demo/common'
 
 export default cmd({
   name: 'server list users',
@@ -7,6 +8,10 @@ export default cmd({
   args: [],
   opts: [],
   async command (args) {
-    throw new Error('TODO')
+    const users = await service.fetchUsers()
+    console.log(`${users.length} users`)
+    for (const user of users) {
+      console.log(`${user.name.padEnd(10)} ${user.did}`)
+    }
   }
 })
