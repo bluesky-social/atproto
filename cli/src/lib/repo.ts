@@ -12,10 +12,10 @@ export interface AccountJson {
 
 export class Repo {
   constructor(
+    public path: string,
     public keypair: ucan.EdKeypair,
     public account: AccountJson,
-    public blockstore: Blockstore,
-    public rootCidFile: RootCidFile
+    public blockstore: Blockstore
   ) {}
 
   static async createNew (repoPath: string, name: string, server: string): Promise<Repo> {
@@ -38,17 +38,16 @@ export class Repo {
     const blockstore = new Blockstore(path.join(repoPath, 'blockstore'))
     await fsp.writeFile(path.join(repoPath, 'scdp.key'), await keypair.export(), 'utf-8')
     await fsp.writeFile(path.join(repoPath, 'account.json'), JSON.stringify(account, null, 2), 'utf-8')
-    const rootCidFile = new RootCidFile(path.join(repoPath, 'root.cid'))
   
     const localUserStore = await UserStore.create(name, blockstore, keypair)
-    await rootCidFile.put(localUserStore.root)
-  
-    return new Repo(
+    const repo = new Repo(
+      repoPath,
       keypair,
       account,
-      blockstore,
-      rootCidFile
+      blockstore
     )
+    await repo.putRootCid(localUserStore.root)
+    return repo
   }
 
   static async load (repoPath: string): Promise<Repo> {
@@ -56,33 +55,37 @@ export class Repo {
     const account = await readAccountFile(repoPath, 'account.json')
     const blockstore = new Blockstore(path.join(repoPath, 'blockstore'))
     const keypair = ucan.EdKeypair.fromSecretKey(secretKeyStr)
-    const rootCidFile = new RootCidFile(path.join(repoPath, 'root.cid'))
     return new Repo(
+      repoPath,
       keypair,
       account,
-      blockstore,
-      rootCidFile
+      blockstore
     )
   }
 
   async getLocalUserStore (): Promise<UserStore> {
-    return this.getUserStore(await this.rootCidFile.get())
+    return this.getUserStore(await this.getRootCid())
   }
 
   async getUserStore (cid: CID): Promise<UserStore> {
-    return UserStore.get(cid, this.blockstore, this.keypair) // TODO !!!! only pass in keypair if this is the local user! (waiting on PR to make keypair optional)
+    return UserStore.get(cid, this.blockstore, this.keypair) // @TODO !!!! only pass in keypair if this is the local user! (waiting on PR to make keypair optional)
   }
-}
 
-class RootCidFile {
-  constructor (public path: string) {}
-  async get () {
-    const str = await fsp.readFile(this.path, 'utf-8')
+  async getRootCid () {
+    const str = await fsp.readFile(path.join(this.path, 'root.cid'), 'utf-8')
     if (!str) throw new Error(`No root.cid file found`)
     return CID.parse(str)
   }
-  async put (cid: CID) {
-    await fsp.writeFile(this.path, cid.toString(), 'utf-8')
+
+  async putRootCid (cid: CID) {
+    await fsp.writeFile(path.join(this.path, 'root.cid'), cid.toString(), 'utf-8')
+  }
+
+  async transact<T> (fn: (store: UserStore) => Promise<T>): Promise<T> {
+    const store = await this.getLocalUserStore()
+    const res = await fn(store)
+    await this.putRootCid(store.root)
+    return res
   }
 }
 

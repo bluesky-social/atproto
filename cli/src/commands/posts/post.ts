@@ -17,17 +17,16 @@ export default cmd({
     }
 
     const repo = await Repo.load(REPO_PATH)
-    const store = await repo.getLocalUserStore()
-
-    console.log('Creating post...')
-    await store.addPost({
-      user: repo.account.name,
-      text
+    const carFile = await repo.transact(async store => {
+      console.log('Creating post...')
+      await store.addPost({
+        user: repo.account.name,
+        text
+      })
+      return await store.getCarFile()
     })
-    await repo.rootCidFile.put(store.root)
 
     console.log('Uploading to server...')
-    const car = await store.getCarFile()
     const blueskyDid = await service.getServerDid()
     const token = await ucan.build({
       audience: blueskyDid,
@@ -37,6 +36,6 @@ export default cmd({
         'cap': 'POST'
       }]
     })
-    await service.updateUser(car, ucan.encode(token))
+    await service.updateUser(carFile, ucan.encode(token))
   }
 })
