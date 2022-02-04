@@ -1,5 +1,3 @@
-import { service } from '@bluesky-demo/common'
-import * as ucan from 'ucans'
 import cmd from '../../lib/command.js'
 import { Repo } from '../../lib/repo.js'
 import { REPO_PATH } from '../../lib/env.js'
