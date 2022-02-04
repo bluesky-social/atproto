@@ -5,7 +5,7 @@ export default cmd({
   category: 'social',
   help: 'List the followers for the given user (default to self).',
   args: [
-    {name: 'id', type: 'string', optional: true}
+    {name: 'id', optional: true}
   ],
   opts: [],
   async command (args) {

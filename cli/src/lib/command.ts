@@ -36,7 +36,6 @@ export interface CmdHandler {
 
 export interface CmdArg {
   name: string
-  type?: 'boolean'|'string'|'number'
   optional?: boolean
 }
 

@@ -5,8 +5,8 @@ export default cmd({
   category: 'posts',
   help: 'Edit an existing post.',
   args: [
-    {name: 'id', type: 'string'},
-    {name: 'text', type: 'string'}
+    {name: 'id'},
+    {name: 'text'}
   ],
   opts: [],
   async command (args) {

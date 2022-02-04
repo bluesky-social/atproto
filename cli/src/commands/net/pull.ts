@@ -5,7 +5,7 @@ export default cmd({
   category: 'net',
   help: 'Pull the latest data for all followed users or for a given user.',
   args: [
-    {name: 'id', type: 'string', optional: true}
+    {name: 'id', optional: true}
   ],
   opts: [],
   async command (args) {

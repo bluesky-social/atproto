@@ -5,7 +5,7 @@ export default cmd({
   category: 'social',
   help: 'Display the profile of the given user.',
   args: [
-    {name: 'id', type: 'string'}
+    {name: 'id'}
   ],
   opts: [],
   async command (args) {
