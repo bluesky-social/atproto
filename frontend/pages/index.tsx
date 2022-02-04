@@ -116,7 +116,7 @@ function Home(props: {}) {
   // Going to display all users on a server to follow
   const loadAllUsers = async () => {
     let users = await service.fetchUsers()
-    setAllUsers(users)
+    setAllUsers(users.map(u => u.did))
   }
 
   const postTweet = (e: React.FormEvent<HTMLFormElement>) => {
