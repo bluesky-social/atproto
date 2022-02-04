@@ -1,4 +1,7 @@
+import { service } from '@bluesky-demo/common'
 import cmd from '../../lib/command.js'
+import { Repo } from '../../lib/repo.js'
+import { REPO_PATH } from '../../lib/env.js'
 
 export default cmd({
   name: 'list follows',
@@ -9,6 +12,12 @@ export default cmd({
   ],
   opts: [],
   async command (args) {
-    throw new Error('TODO')
+    const id = args._[0]
+    const repo = await Repo.load(REPO_PATH)
+    const store = id ? await repo.getUserStore(id) : await repo.getLocalUserStore()
+    console.log(`${store.follows.length} followed`)
+    for (const follow of store.follows) {
+      console.log(`${follow.username.padEnd(10)} ${follow.did}`)
+    }
   }
 })

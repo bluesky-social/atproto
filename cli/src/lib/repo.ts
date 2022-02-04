@@ -64,11 +64,17 @@ export class Repo {
   }
 
   async getLocalUserStore (): Promise<UserStore> {
-    return this.getUserStore(await this.getRootCid())
+    return UserStore.get(await this.getRootCid(), this.blockstore, this.keypair)
   }
 
-  async getUserStore (cid: CID): Promise<UserStore> {
-    return UserStore.get(cid, this.blockstore, this.keypair) // @TODO !!!! only pass in keypair if this is the local user! (waiting on PR to make keypair optional)
+  async getUserStore (id: string): Promise<UserStore> {
+    const did = id.startsWith('did:') ? id : await service.fetchUserDid(id)
+    if (did) {
+      const carFile = await service.fetchUser(did)
+      return UserStore.fromCarFile(carFile, this.blockstore, this.keypair) // @TODO !!!! only pass in keypair if this is the local user! (waiting on PR to make keypair optional)
+    } else {
+      throw new Error(`User "${id}" not found`)
+    }
   }
 
   async getRootCid () {
