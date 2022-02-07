@@ -17,7 +17,7 @@ export class IpldStore {
   async get (cid: CID): Promise<Object> {
     const bytes = await this.blockstore.get(cid)
     const block = await Block.create({ bytes, cid, codec: blockCodec, hasher: blockHasher })
-    return block.value as User
+    return block.value
   }
 
   async getUser (cid: CID): Promise<User> {
