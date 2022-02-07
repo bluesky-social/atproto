@@ -124,13 +124,15 @@ export class UserStore implements UserStoreI {
 
   async addPost (text: string): Promise<string> {
     const user = await this.getUser()
+    const id = user.nextPost.toString()
+
     const post = {
+      id,
       text,
       author: user.did,
       time: (new Date()).toISOString()
     }
 
-    const id = user.nextPost.toString()
     await this.postMap.set(id, post)
 
     user.nextPost++
@@ -143,6 +145,7 @@ export class UserStore implements UserStoreI {
   async editPost(id: string, text: string): Promise<void> {
     const user = await this.getUser()
     const post = {
+      id,
       text,
       author: user.did,
       time: (new Date()).toISOString()
