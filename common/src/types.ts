@@ -38,11 +38,7 @@ export type SSTableData = {
 export interface BlockstoreI {
   get(cid: CID): Promise<Uint8Array>
   put(cid: CID, bytes: Uint8Array): Promise<void>
-}
-
-export interface IpldStore extends BlockstoreI {
-  putIpld(value: Object): Promise<CID>
-  getIpld<T>(cid: CID, checkFn: (obj: any) => T): Promise<T>
+  destroy(): Promise<void>
 }
 
 export interface UserStoreI {

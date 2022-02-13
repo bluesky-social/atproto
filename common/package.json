@@ -4,7 +4,8 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc --project tsconfig.json"
+    "build": "tsc --project tsconfig.json",
+    "dev": "tsc -w --project tsconfig.json"
   },
   "license": "MIT",
   "dependencies": {

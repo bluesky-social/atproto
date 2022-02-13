@@ -1,5 +1,3 @@
-import IpldStore from "./ipld-store.js"
-
 import { CID } from 'multiformats/cid'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 
@@ -10,34 +8,32 @@ import * as hashmap from 'ipld-hashmap'
 
 import { Didable, Keypair } from "ucans"
 
-import { User, Post, BlockstoreI, Follow, UserStoreI } from "./types.js"
+import { User, Post, Follow, UserStoreI } from "./types.js"
+import * as check from './type-check.js'
+import IpldStore from './ipld-store.js'
 import { streamToArray } from './util.js'
 
 export class UserStore implements UserStoreI {
 
-  blockstore: BlockstoreI
-  ipldStore: IpldStore
+  ipld: IpldStore
   postMap: hashmap.HashMap<Post>
   root: CID
   keypair: Keypair | null
 
   constructor(params: {
-    blockstore: BlockstoreI, 
-    ipldStore: IpldStore, 
+    ipld: IpldStore, 
     postMap: hashmap.HashMap<Post>, 
     root: CID, 
     keypair?: Keypair
   }) {
-    this.blockstore = params.blockstore
-    this.ipldStore = params.ipldStore
+    this.ipld = params.ipld
     this.postMap = params.postMap
     this.root = params.root
     this.keypair = params.keypair || null
   }
 
-  static async create(username: string, blockstore: BlockstoreI, keypair: Keypair & Didable) {
-    const postMap = await hashmap.create(blockstore, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
-    const ipldStore = new IpldStore(blockstore)
+  static async create(username: string, ipld: IpldStore, keypair: Keypair & Didable) {
+    const postMap = await hashmap.create(ipld.blockstore, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     const user = {
       did: await keypair.did(),
       name: username,
@@ -46,38 +42,35 @@ export class UserStore implements UserStoreI {
       follows: []
     }
   
-    const userCid = await ipldStore.put(user)
+    const userCid = await ipld.put(user)
     const signedRoot = {
       user: userCid,
       sig: await keypair.sign(userCid.bytes)
     }
 
-    const root = await ipldStore.put(signedRoot)
+    const root = await ipld.put(signedRoot)
 
     return new UserStore({
-      blockstore, 
-      ipldStore, 
+      ipld, 
       postMap, 
       root, 
       keypair
     })
   }
 
-  static async get(root: CID, blockstore: BlockstoreI, keypair?: Keypair) {
-    const ipldStore = new IpldStore(blockstore)
-    const rootObj = await ipldStore.getSignedRoot(root)
-    const user = await ipldStore.getUser(rootObj.user)
-    const postMap = await hashmap.load(blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
+  static async get(root: CID, ipld: IpldStore, keypair?: Keypair) {
+    const rootObj = await ipld.get(root, check.assureSignedRoot)
+    const user = await ipld.get(rootObj.user, check.assureUser)
+    const postMap = await hashmap.load(ipld.blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     return new UserStore({
-      blockstore,
-      ipldStore,
+      ipld,
       postMap,
       root,
       keypair
     })
   }
 
-  static async fromCarFile(buf: Uint8Array, blockstore: BlockstoreI, keypair?: Keypair) {
+  static async fromCarFile(buf: Uint8Array, ipld: IpldStore, keypair?: Keypair) {
     const car = await CarReader.fromBytes(buf)
 
     const roots = await car.getRoots()
@@ -87,16 +80,14 @@ export class UserStore implements UserStoreI {
     const root = roots[0]
 
     for await (const block of car.blocks()) {
-      await blockstore.put(block.cid, block.bytes)
+      await ipld.putBytes(block.cid, block.bytes)
     }
 
-    const ipldStore = new IpldStore(blockstore)
-    const rootObj = await ipldStore.getSignedRoot(root)
-    const user = await ipldStore.getUser(rootObj.user)
-    const postMap = await hashmap.load(blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
+    const rootObj = await ipld.get(root, check.assureSignedRoot)
+    const user = await ipld.get(rootObj.user, check.assureUser)
+    const postMap = await hashmap.load(ipld.blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     return new UserStore({
-      blockstore,
-      ipldStore,
+      ipld,
       postMap,
       root,
       keypair
@@ -107,19 +98,19 @@ export class UserStore implements UserStoreI {
     if (this.keypair === null) {
       throw new Error("No keypair provided. UserStore is read-only.")
     }
-    const userCid = await this.ipldStore.put(user)
+    const userCid = await this.ipld.put(user)
     const signedRoot = {
       user: userCid,
       sig: await this.keypair.sign(userCid.bytes)
     }
     
-    this.root = await this.ipldStore.put(signedRoot)
+    this.root = await this.ipld.put(signedRoot)
     return this.root
   }
 
   async getUser(): Promise<User> {
-    const rootObj = await this.ipldStore.getSignedRoot(this.root)
-    return this.ipldStore.getUser(rootObj.user)
+    const rootObj = await this.ipld.get(this.root, check.assureSignedRoot)
+    return this.ipld.get(rootObj.user, check.assureUser)
   }
 
   async addPost (text: string): Promise<string> {
@@ -215,10 +206,10 @@ export class UserStore implements UserStoreI {
   getCarStream(): AsyncIterable<Uint8Array> {
     const writeblockstore = async (car: BlockWriter) => {
       const addCid = async (cid: CID) => {
-        car.put({ cid, bytes: await this.blockstore.get(cid) })
+        car.put({ cid, bytes: await this.ipld.getBytes(cid) })
       }
       await addCid(this.root)
-      const rootObj = await this.ipldStore.getSignedRoot(this.root)
+      const rootObj = await this.ipld.get(this.root, check.assureSignedRoot)
       await addCid(rootObj.user)
       for await (const cid of this.postMap.cids()) {
         await addCid(cid)

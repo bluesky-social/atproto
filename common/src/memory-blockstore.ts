@@ -1,8 +1,5 @@
-import { CarWriter } from '@ipld/car'
-import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CID } from 'multiformats/cid'
 import { BlockstoreI } from './types.js'
-import { streamToArray } from './util.js'
 
 export class MemoryBlockstore implements BlockstoreI {
 
@@ -22,23 +19,9 @@ export class MemoryBlockstore implements BlockstoreI {
     this.map.set(k.toString(), v)
   }
 
-  getCarStream(root: CID): AsyncIterable<Uint8Array> {
-    const writeDB = async (car: BlockWriter) => {
-      for await (const [cid, bytes] of this.map.entries()) {
-        car.put({ cid: CID.parse(cid), bytes })
-      }
-      car.close()
-    }
-
-    const { writer, out } = CarWriter.create([root])
-    writeDB(writer)
-    return out
+  async destroy(): Promise<void> {
+    this.map.clear()
   }
-
-  async getCarFile(root: CID): Promise<Uint8Array> {
-    return streamToArray(this.getCarStream(root))
-  }
-
 }
 
 export default MemoryBlockstore

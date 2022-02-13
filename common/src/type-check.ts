@@ -29,6 +29,13 @@ export const isSignedRoot = (obj: any): obj is SignedRoot => {
     && ArrayBuffer.isView(obj.sig)
 }
 
+export const assureSignedRoot = (obj: any): SignedRoot => {
+  if(isSignedRoot(obj)) return obj
+  throw new Error("Not a signed root")
+}
+
+
+
 export const isSSTableData = (obj: any): obj is SSTableData => {
   return isObject(obj) 
     && Object.values(obj).every(isCID)
