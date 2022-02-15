@@ -123,15 +123,15 @@ type Follow = {
 }
 ```
 
-The CID of the IPLD-encoded "User" block is then signed by the user and added to to an "SignedRoot" IPLD object:
+The CID of the IPLD-encoded "User" block is then signed by the user and added to to an "Commit" IPLD object:
 ```ts
-type SignedRoot = {
+type Commit = {
   user: CID
   sig: Uint8Array
 }
 ```
 
-The CID of the SignedRoot serves as the root of the datastructure.
+The CID of the Commit serves as the root of the datastructure.
 
 ## Persistence
 User data is persisted in [Level](https://github.com/Level/level) which is a simple key-value store. This **Blockstore** is a mapping of `CID -> Bytes` and represents the consituent blocks that make up the UserStore.

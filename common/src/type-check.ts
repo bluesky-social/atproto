@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { SignedRoot, User } from './types.js'
+import { Commit, User } from './types.js'
 
 export const isObject = (obj: any): obj is Object => {
   return obj && typeof obj === 'object'
@@ -14,7 +14,7 @@ export const isUser = (obj: any): obj is User => {
     && Array.isArray(obj.follows)
 }
 
-export const isSignedRoot = (obj: any): obj is SignedRoot => {
+export const isCommit = (obj: any): obj is Commit => {
   return isObject(obj)
     && !!CID.asCID(obj.user)
     && ArrayBuffer.isView(obj.sig)

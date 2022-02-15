@@ -3,7 +3,7 @@ import { CID } from 'multiformats/cid'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
 
-import { BlockstoreI, SignedRoot, User } from "./types.js"
+import { BlockstoreI, Commit, User } from "./types.js"
 import * as check from './type-check.js'
 
 export class IpldStore {
@@ -28,9 +28,9 @@ export class IpldStore {
     return obj
   }
 
-  async getSignedRoot (cid: CID): Promise<SignedRoot> {
+  async getCommit (cid: CID): Promise<Commit> {
     const obj = await this.get(cid)
-    if (!check.isSignedRoot(obj)) {
+    if (!check.isCommit(obj)) {
       throw new Error(`Could not find a signed root at ${cid.toString()}`)
     }
     return obj
