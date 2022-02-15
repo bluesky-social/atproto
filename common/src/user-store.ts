@@ -47,12 +47,12 @@ export class UserStore implements UserStoreI {
     }
   
     const userCid = await ipldStore.put(user)
-    const signedRoot = {
+    const commit = {
       user: userCid,
       sig: await keypair.sign(userCid.bytes)
     }
 
-    const root = await ipldStore.put(signedRoot)
+    const root = await ipldStore.put(commit)
 
     return new UserStore({
       blockstore, 
@@ -65,7 +65,7 @@ export class UserStore implements UserStoreI {
 
   static async get(root: CID, blockstore: BlockstoreI, keypair?: Keypair) {
     const ipldStore = new IpldStore(blockstore)
-    const rootObj = await ipldStore.getSignedRoot(root)
+    const rootObj = await ipldStore.getCommit(root)
     const user = await ipldStore.getUser(rootObj.user)
     const postMap = await hashmap.load(blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     return new UserStore({
@@ -91,7 +91,7 @@ export class UserStore implements UserStoreI {
     }
 
     const ipldStore = new IpldStore(blockstore)
-    const rootObj = await ipldStore.getSignedRoot(root)
+    const rootObj = await ipldStore.getCommit(root)
     const user = await ipldStore.getUser(rootObj.user)
     const postMap = await hashmap.load(blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
     return new UserStore({
@@ -108,17 +108,17 @@ export class UserStore implements UserStoreI {
       throw new Error("No keypair provided. UserStore is read-only.")
     }
     const userCid = await this.ipldStore.put(user)
-    const signedRoot = {
+    const commit = {
       user: userCid,
       sig: await this.keypair.sign(userCid.bytes)
     }
     
-    this.root = await this.ipldStore.put(signedRoot)
+    this.root = await this.ipldStore.put(commit)
     return this.root
   }
 
   async getUser(): Promise<User> {
-    const rootObj = await this.ipldStore.getSignedRoot(this.root)
+    const rootObj = await this.ipldStore.getCommit(this.root)
     return this.ipldStore.getUser(rootObj.user)
   }
 
@@ -218,7 +218,7 @@ export class UserStore implements UserStoreI {
         car.put({ cid, bytes: await this.blockstore.get(cid) })
       }
       await addCid(this.root)
-      const rootObj = await this.ipldStore.getSignedRoot(this.root)
+      const rootObj = await this.ipldStore.getCommit(this.root)
       await addCid(rootObj.user)
       for await (const cid of this.postMap.cids()) {
         await addCid(cid)
