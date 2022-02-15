@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import Timestamp from './timestamp.js'
-import { SignedRoot, IdMapping, User } from './types.js'
+import { Commit, IdMapping, User } from './types.js'
 
 export const assure = <T>(obj: any, name: string, check: (obj: any) => obj is T): T => {
   if(check(obj)) return obj
@@ -29,14 +29,14 @@ export const assureUser = (obj: any): User => {
   return assure(obj, "User", isUser)
 }
 
-export const isSignedRoot = (obj: any): obj is SignedRoot => {
+export const isCommit = (obj: any): obj is Commit => {
   return isObject(obj)
     && isCID(obj.user)
     && ArrayBuffer.isView(obj.sig)
 }
 
-export const assureSignedRoot = (obj: any): SignedRoot => {
-  return assure(obj, "SignedRoot", isSignedRoot)
+export const assureCommit = (obj: any): Commit => {
+  return assure(obj, "Commit", isCommit)
 }
 
 export const isIdMapping = (obj: any): obj is IdMapping => {

@@ -11,12 +11,13 @@ The demo revolves around two main concepts:
 ## Running the Demo
 _Requires Node>=15, and yarn_
 
-There are three components to the demo:
+There are four components to the demo:
 - a "bluesky" server (federated data & identity management)
-- the frontend (simple micro-bloggin application)
+- the frontend (simple micro-blogging application)
+- the command-line (simple micro-blogging CLI)
 - a third-party server that a user can delegate permission to to post on it's behalf (think [Buffer](https://buffer.com/))
 
-This project is setup in a yarn workspace. To install dependencies for all sub-projects, just run `yarn` from the project root.
+This project is setup in a yarn workspace. To install dependencies for all sub-projects, just run `yarn` from the project root. To build all sub-projects, run `yarn build` from the project root.
 
 ### Bluesky Server
 
@@ -40,6 +41,15 @@ yarn dev
 
 Go to `http://localhost:3005` to try the demo.
 
+### Command-line
+
+In another console tab, run the CLI
+
+```sh
+cd cli
+# build, if needed, with `yarn build`
+yarn cli
+```
 
 ### Third-party server (optional)
 To enable third-party posting, run the third-party server as well in another console
@@ -113,15 +123,15 @@ type Follow = {
 }
 ```
 
-The CID of the IPLD-encoded "User" block is then signed by the user and added to to an "SignedRoot" IPLD object:
+The CID of the IPLD-encoded "User" block is then signed by the user and added to to an "Commit" IPLD object:
 ```ts
-type SignedRoot = {
+type Commit = {
   user: CID
   sig: Uint8Array
 }
 ```
 
-The CID of the SignedRoot serves as the root of the datastructure.
+The CID of the Commit serves as the root of the datastructure.
 
 ## Persistence
 User data is persisted in [Level](https://github.com/Level/level) which is a simple key-value store. This **Blockstore** is a mapping of `CID -> Bytes` and represents the consituent blocks that make up the UserStore.

@@ -26,7 +26,7 @@ export type Post = {
   time: string // ISO 8601
 }
 
-export type SignedRoot = {
+export type Commit = {
   user: CID
   sig: Uint8Array
 }
