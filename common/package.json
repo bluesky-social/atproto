@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "dev": "tsc -w --project tsconfig.json"
+    "dev": "tsc -w --project tsconfig.json",
+    "test": "ava -s test/*.ts"
   },
   "license": "MIT",
   "dependencies": {
@@ -18,6 +19,19 @@
   },
   "devDependencies": {
     "@types/level": "^6.0.0",
+    "ava": "^3.15.0",
+    "ts-node": "^10.2.1",
     "typescript": "^4.3.5"
+  },
+  "ava": {
+    "extensions": {
+      "ts": "module"
+    },
+    "nonSemVerExperiments": {
+      "configurableModuleFormat": true
+    },
+    "nodeArguments": [
+      "--loader=ts-node/esm"
+    ]
   }
 }
