@@ -31,7 +31,7 @@ export type SignedRoot = {
   sig: Uint8Array
 }
 
-export type SSTableData = {
+export type IdMapping = {
   [id: string]: CID
 }
 

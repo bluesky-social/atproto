@@ -1,40 +1,42 @@
 import { CID } from "multiformats"
 import * as check from "./type-check.js"
-import { SSTableData } from "./types.js"
+import { IdMapping } from "./types.js"
 import IpldStore from "./ipld-store.js"
 
 export type TableSize = 100 | 400 | 1600 | 6400
 
 export class SSTable {
 
-  ipld: IpldStore
+  store: IpldStore
   cid: CID
   size: TableSize
-  data: SSTableData
+  currSize: number
+  data: IdMapping
 
-  constructor(ipld: IpldStore, cid: CID, size: TableSize, data: SSTableData) {
-    this.ipld = ipld
+  constructor(store: IpldStore, cid: CID, size: TableSize, currSize: number, data: IdMapping) {
+    this.store = store
     this.cid = cid
     this.size = size
+    this.currSize = currSize
     this.data = data
   }
 
-  static async create(ipld: IpldStore, size: TableSize): Promise<SSTable> {
-    const cid = await ipld.put({})
-    return new SSTable(ipld, cid, size, {})
+  static async create(store: IpldStore, size: TableSize): Promise<SSTable> {
+    const cid = await store.put({})
+    return new SSTable(store, cid, size, 0, {})
   }
 
-  static async get(ipld: IpldStore, cid: CID): Promise<SSTable> {
-    const data = await ipld.get(cid, check.assureSSTableData)
+  static async get(store: IpldStore, cid: CID): Promise<SSTable> {
+    const data = await store.get(cid, check.assureIdMapping)
     // @TODO fix size here
-    return new SSTable(ipld, cid, 100, data)
+    return new SSTable(store, cid, 100, Object.keys(data).length, data)
   }
 
   static async merge(tables: SSTable[]): Promise<SSTable> {
     if(tables.length < 1) {
       throw new Error("Must provide at least one table")
     } 
-    const ipld = tables[0].ipld
+    const store = tables[0].store
     // @TODO check size & ordering & merge conflicts
     const data = tables
       .map(t => t.data)
@@ -43,9 +45,13 @@ export class SSTable {
           ...acc,
           ...cur
         }
-      }, {} as SSTableData)
-    const cid = await ipld.put(data)
-    return new SSTable(ipld, cid, 100, data) 
+      }, {} as IdMapping)
+    const cid = await store.put(data)
+    return new SSTable(store, cid, 100, Object.keys(data).length, data) 
+  }
+
+  async getEntry(id: string): Promise<CID> {
+    return this.data[id]
   }
 
   async addEntry(id: string, cid: CID): Promise<void> {
@@ -53,7 +59,7 @@ export class SSTable {
       throw new Error(`Entry already exists for id ${id}`)
     }
     this.data[id] = cid
-    this.cid = await this.ipld.put(this.data)
+    this.cid = await this.store.put(this.data)
   }
 
   async editEntry(id: string, cid: CID): Promise<void> {
@@ -61,7 +67,7 @@ export class SSTable {
       throw new Error(`Entry does not exist for id ${id}`)
     }
     this.data[id] = cid
-    this.cid = await this.ipld.put(this.data)
+    this.cid = await this.store.put(this.data)
   }
 
   async removeEntry(id: string): Promise<void> {
@@ -69,7 +75,7 @@ export class SSTable {
       throw new Error(`Entry does not exist for id ${id}`)
     }
     delete this.data[id]
-    this.cid = await this.ipld.put(this.data)
+    this.cid = await this.store.put(this.data)
   }
 
 }
