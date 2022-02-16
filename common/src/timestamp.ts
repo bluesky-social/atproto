@@ -9,15 +9,13 @@ export class Timestamp {
   }
 
   static parse(str: string): Timestamp {
-    // @TODO: make this base32
-    const time = parseInt(str.slice(0,-4))
-    const clockid = parseInt(str.slice(-4))
+    const time = parseInt(str.slice(0,-2), 32)
+    const clockid = parseInt(str.slice(-2), 32)
     return new Timestamp(time, clockid)
   }
 
   toString(): string {
-    // @TODO: make this base32
-    return `${this.time}${this.clockid}`
+    return `${this.time.toString(32).padStart(9, '0')}${this.clockid.toString(32).padStart(2, '0')}`
   }
 } 
 

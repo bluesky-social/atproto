@@ -31,9 +31,7 @@ export type Commit = {
   sig: Uint8Array
 }
 
-export type IdMapping = {
-  [id: string]: CID
-}
+export type IdMapping = Record<string, CID>
 
 export interface BlockstoreI {
   get(cid: CID): Promise<Uint8Array>

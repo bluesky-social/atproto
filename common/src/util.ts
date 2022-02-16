@@ -1,3 +1,7 @@
+export const wait = (ms: number) => {
+  return new Promise(res => setTimeout(res, ms))
+}
+
 export const flattenUint8Arrays = (arrs: Uint8Array[]): Uint8Array => {
   const length = arrs.reduce((acc, cur) => {
     return acc + cur.length
