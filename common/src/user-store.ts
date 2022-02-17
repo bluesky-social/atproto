@@ -1,44 +1,42 @@
 import { CID } from 'multiformats/cid'
-import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
-
-import * as blockCodec from '@ipld/dag-cbor'
 import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
-import * as hashmap from 'ipld-hashmap'
 
 import { Didable, Keypair } from "ucans"
 
 import { User, Post, Follow, UserStoreI } from "./types.js"
 import * as check from './type-check.js'
 import IpldStore from './ipld-store.js'
+import Branch from './branch.js'
 import { streamToArray } from './util.js'
+import Timestamp from './timestamp.js'
 
 export class UserStore implements UserStoreI {
 
   ipld: IpldStore
-  postMap: hashmap.HashMap<Post>
+  postBranch: Branch
   root: CID
   keypair: Keypair | null
 
   constructor(params: {
     ipld: IpldStore, 
-    postMap: hashmap.HashMap<Post>, 
+    postBranch: Branch
     root: CID, 
     keypair?: Keypair
   }) {
     this.ipld = params.ipld
-    this.postMap = params.postMap
+    this.postBranch = params.postBranch
     this.root = params.root
     this.keypair = params.keypair || null
   }
 
   static async create(username: string, ipld: IpldStore, keypair: Keypair & Didable) {
-    const postMap = await hashmap.create(ipld.blockstore, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
+    const postBranch = await Branch.create(ipld)
     const user = {
       did: await keypair.did(),
       name: username,
       nextPost: 0,
-      postsRoot: postMap.cid,
+      postsRoot: postBranch.cid,
       follows: []
     }
   
@@ -52,7 +50,7 @@ export class UserStore implements UserStoreI {
 
     return new UserStore({
       ipld, 
-      postMap, 
+      postBranch, 
       root, 
       keypair
     })
@@ -61,10 +59,10 @@ export class UserStore implements UserStoreI {
   static async get(root: CID, ipld: IpldStore, keypair?: Keypair) {
     const commit = await ipld.get(root, check.assureCommit)
     const user = await ipld.get(commit.user, check.assureUser)
-    const postMap = await hashmap.load(ipld.blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
+    const postBranch = await Branch.get(ipld, user.postsRoot)
     return new UserStore({
       ipld,
-      postMap,
+      postBranch,
       root,
       keypair
     })
@@ -85,10 +83,10 @@ export class UserStore implements UserStoreI {
 
     const commit = await ipld.get(root, check.assureCommit)
     const user = await ipld.get(commit.user, check.assureUser)
-    const postMap = await hashmap.load(ipld.blockstore, user.postsRoot, { bitWidth: 4, bucketSize: 2, blockHasher, blockCodec }) as hashmap.HashMap<Post>
+    const postBranch = await Branch.get(ipld, user.postsRoot)
     return new UserStore({
       ipld,
-      postMap,
+      postBranch,
       root,
       keypair
     })
@@ -113,27 +111,28 @@ export class UserStore implements UserStoreI {
     return this.ipld.get(commit.user, check.assureUser)
   }
 
-  async addPost (text: string): Promise<string> {
+  async addPost (text: string): Promise<Timestamp> {
     const user = await this.getUser()
-    const id = user.nextPost.toString()
+    const timestamp = new Timestamp
 
     const post = {
-      id,
+      id: timestamp.toString(),
       text,
       author: user.did,
       time: (new Date()).toISOString()
     }
+    const postCid = await this.ipld.put(post)
 
-    await this.postMap.set(id, post)
+    await this.postBranch.addEntry(timestamp, postCid)
 
     user.nextPost++
-    user.postsRoot = this.postMap.cid
+    user.postsRoot = this.postBranch.cid
 
     await this.updateUserRoot(user)
-    return id
+    return timestamp
   }
 
-  async editPost(id: string, text: string): Promise<void> {
+  async editPost(id: Timestamp, text: string): Promise<void> {
     const user = await this.getUser()
     const post = {
       id,
@@ -141,26 +140,24 @@ export class UserStore implements UserStoreI {
       author: user.did,
       time: (new Date()).toISOString()
     }
+    const postCid = await this.ipld.put(post)
 
-    await this.postMap.set(id, post)
-    user.postsRoot = this.postMap.cid
+    await this.postBranch.editEntry(id, postCid)
+    user.postsRoot = this.postBranch.cid
 
     await this.updateUserRoot(user)
   }
 
-  async deletePost(id: string): Promise<void> {
+  async deletePost(id: Timestamp): Promise<void> {
     const user = await this.getUser()
-    await this.postMap.delete(id)
-    user.postsRoot = this.postMap.cid
+    await this.postBranch.removeEntry(id)
+    user.postsRoot = this.postBranch.cid
     await this.updateUserRoot(user)
   }
 
   async listPosts(): Promise<Post[]> {
-    const posts: Post[] = []
-    for await (const [_, val] of this.postMap.entries()) {
-      posts.push(val)
-    }
-    return posts.reverse()
+    // @TODO: implement with pagination
+    return []
   }
 
   async reply(id: string, text: string): Promise<void> {
@@ -211,9 +208,11 @@ export class UserStore implements UserStoreI {
       await addCid(this.root)
       const commit = await this.ipld.get(this.root, check.assureCommit)
       await addCid(commit.user)
-      for await (const cid of this.postMap.cids()) {
-        await addCid(cid)
-      }
+
+      const postBranchCids = await this.postBranch.nestedCids()
+      await Promise.all(
+        postBranchCids.map(cid => addCid(cid))
+      )
       car.close()
     }
 

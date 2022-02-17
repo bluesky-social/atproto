@@ -104,12 +104,31 @@ export class Branch {
     await this.updateRoot()
   }
 
+  async editEntry(timestamp: Timestamp, cid: CID): Promise<void> {
+    // @TODO implement
+  }
+
+  async removeEntry(timestamp: Timestamp): Promise<void> {
+    // @TODO implement
+  }
+
   keys(): Timestamp[] {
     return Object.keys(this.data).sort().reverse().map(k => Timestamp.parse(k))
   }
 
   cids(): CID[] {
     return Object.values(this.data).sort().reverse()
+  }
+
+  async nestedCids(): Promise<CID[]> {
+    const cids = this.cids()
+    const tableCids = await Promise.all(
+      this.cids().map(async c => {
+        const table = await SSTable.get(this.store, c)
+        return table.cids()
+      })
+    )
+    return [...cids, ...tableCids.flat()]
   }
 }
 

@@ -1,5 +1,6 @@
 import * as ucan from 'ucans'
 import { CID } from 'multiformats/cid'
+import Timestamp from './timestamp'
 
 export type LocalUser = {
   username: string
@@ -42,9 +43,9 @@ export interface BlockstoreI {
 export interface UserStoreI {
   getUser(): Promise<User>
 
-  addPost(text: string): Promise<string>
-  editPost(id: string, text: string): Promise<void>
-  deletePost(id: string): Promise<void>
+  addPost(text: string): Promise<Timestamp>
+  editPost(id: Timestamp, text: string): Promise<void>
+  deletePost(id: Timestamp): Promise<void>
   listPosts(): Promise<Post[]>
 
   reply(id: string, text: string): Promise<void>
