@@ -1,8 +1,8 @@
 import { CID } from "multiformats"
-import * as check from "./type-check.js"
-import { IdMapping } from "./types.js"
-import IpldStore from "./ipld-store.js"
-import Timestamp from "./timestamp.js"
+import * as check from "../type-check.js"
+import { IdMapping } from "../types.js"
+import IpldStore from "../blockstore/ipld-store.js"
+import Timestamp from "../timestamp.js"
 
 export enum TableSize {
   sm = 'sm',

@@ -1,7 +1,7 @@
 import level from 'level'
 import { CID } from 'multiformats/cid'
 
-import { BlockstoreI } from './types.js'
+import { BlockstoreI } from '../types.js'
 
 export class PersistentBlockstore implements BlockstoreI {
 

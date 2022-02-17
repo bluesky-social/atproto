@@ -1,10 +1,10 @@
 import { CID } from "multiformats"
-import * as check from "./type-check.js"
+import * as check from "../type-check.js"
 
-import IpldStore from "./ipld-store.js"
-import { IdMapping } from "./types.js"
+import IpldStore from "../blockstore/ipld-store.js"
+import { IdMapping } from "../types.js"
 import SSTable, { TableSize } from "./ss-table.js"
-import Timestamp from "./timestamp.js"
+import Timestamp from "../timestamp.js"
 
 export class Branch {
 

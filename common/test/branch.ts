@@ -1,8 +1,8 @@
 import test from 'ava'
 import { CID } from 'multiformats'
 
-import Branch from '../src/branch.js'
-import IpldStore from '../src/ipld-store.js'
+import Branch from '../src/user-store/branch.js'
+import IpldStore from '../src/blockstore/ipld-store.js'
 import Timestamp from '../src/timestamp.js'
 import { wait } from '../src/util.js'
 

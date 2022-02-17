@@ -4,12 +4,12 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from "ucans"
 
-import { User, Post, Follow, UserStoreI } from "./types.js"
-import * as check from './type-check.js'
-import IpldStore from './ipld-store.js'
+import { User, Post, Follow, UserStoreI } from "../types.js"
+import * as check from '../type-check.js'
+import IpldStore from '../blockstore/ipld-store.js'
 import Branch from './branch.js'
-import { streamToArray } from './util.js'
-import Timestamp from './timestamp.js'
+import { streamToArray } from '../util.js'
+import Timestamp from '../timestamp.js'
 
 export class UserStore implements UserStoreI {
 
