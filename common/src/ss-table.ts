@@ -42,15 +42,18 @@ export class SSTable {
       throw new Error("Must provide at least one table")
     } 
     const store = tables[0].store
-    // @TODO check size & ordering & merge conflicts
     const data = tables
       .map(t => t.data)
       .reduce((acc, cur) => {
-        return {
-          ...acc,
-          ...cur
-        }
+        Object.entries(cur).forEach(([key, val]) => {
+          if(acc[key] !== undefined) {
+            throw new Error(`Merge conflict on key: ${key}`)
+          }
+          acc[key] = val
+        })
+        return acc
       }, {} as IdMapping)
+
     const cid = await store.put(data)
     return new SSTable(store, cid, data) 
   }
@@ -100,16 +103,12 @@ export class SSTable {
     this.cid = await this.store.put(this.data)
   }
 
-  keys(): string[] {
-    return Object.keys(this.data).sort().reverse()
+  keys(): Timestamp[] {
+    return Object.keys(this.data).sort().reverse().map(k => Timestamp.parse(k))
   }
 
   cids(): CID[] {
     return Object.values(this.data).sort().reverse()
-  }
-
-  entries(): [string, CID][] {
-    return Object.entries(this.data).sort().reverse()
   }
 
   maxSize(): number {
