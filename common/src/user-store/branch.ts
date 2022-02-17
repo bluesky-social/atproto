@@ -77,12 +77,16 @@ export class Branch {
     if (keys.length < 1) return
     const mostRecent = await this.getTable(keys[0])
     if (mostRecent === null) return 
-    delete this.data[keys[0].toString()]
-    await this.compressCascade(mostRecent, keys.slice(1), keys[0])
+    const compressed = await this.compressCascade(mostRecent, keys.slice(1))
+    const tableName = compressed.oldestKey()
+    if (tableName && tableName.compare(keys[0]) !== 0 ) {
+      delete this.data[keys[0].toString()]
+      this.data[tableName.toString()] = compressed.cid
+    }
     await this.updateRoot()
   }
 
-  private async compressCascade(mostRecent: SSTable, nextKeys: Timestamp[], tableName: Timestamp): Promise<void> {
+  private async compressCascade(mostRecent: SSTable, nextKeys: Timestamp[]): Promise<SSTable> {
     const size = mostRecent.size
     const keys = nextKeys.slice(0,3)
     const tables = await Promise.all(
@@ -92,18 +96,22 @@ export class Branch {
     // need 4 tables to merge down a level
     if (filtered.length < 3 || size === TableSize.xl) {
       // if no merge at this level, we just write the previous level & bail
-      this.data[tableName.toString()] = mostRecent.cid
-      return
+      return mostRecent
     }
 
     keys.forEach(k => delete this.data[k.toString()])
     
     const merged = await SSTable.merge([mostRecent, ...filtered])
-    await this.compressCascade(merged, nextKeys.slice(3), keys[2])
+    return await this.compressCascade(merged, nextKeys.slice(3))
   }
 
   async addEntry(timestamp: Timestamp, cid: CID): Promise<void> {
     const curr = await this.getOrCreateCurrTable()
+    const oldestKey = curr.table.oldestKey()
+    if (oldestKey && timestamp.compare(oldestKey) < 0) {
+      // @TODO handle this more gracefully
+      throw new Error("Attempting to add an id that is too old for the table")
+    }
     await curr.table.addEntry(timestamp, cid)
     const name = curr.name?.toString() || timestamp.toString()
     this.data[name] = curr.table.cid

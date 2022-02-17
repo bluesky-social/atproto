@@ -103,6 +103,11 @@ export class SSTable {
     this.cid = await this.store.put(this.data)
   }
 
+  oldestKey(): Timestamp | null {
+    const str = Object.keys(this.data).sort()[0]
+    return str ? Timestamp.parse(str) : null
+  }
+
   keys(): Timestamp[] {
     return Object.keys(this.data).sort().reverse().map(k => Timestamp.parse(k))
   }
