@@ -62,6 +62,12 @@ export class Branch {
     return SSTable.get(this.store, cid)
   }
 
+  async findTableForKey(timestamp: Timestamp): Promise<SSTable | null> {
+    const key = this.keys().find(k => timestamp.compare(k) >= 0)
+    if (!key) return null
+    return this.getTable(key)
+  }
+
   async updateRoot(): Promise<void> {
     this.cid = await this.store.put(this.data)
   }
@@ -105,11 +111,15 @@ export class Branch {
   }
 
   async editEntry(timestamp: Timestamp, cid: CID): Promise<void> {
-    // @TODO implement
+    const table = await this.findTableForKey(timestamp)
+    if (!table) throw new Error(`Could not find entry with id: ${timestamp}`)
+    return table.editEntry(timestamp, cid)
   }
 
   async removeEntry(timestamp: Timestamp): Promise<void> {
-    // @TODO implement
+    const table = await this.findTableForKey(timestamp)
+    if (!table) throw new Error(`Could not find entry with id: ${timestamp}`)
+    return table.removeEntry(timestamp)
   }
 
   keys(): Timestamp[] {

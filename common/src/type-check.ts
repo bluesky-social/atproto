@@ -47,12 +47,3 @@ export const isIdMapping = (obj: any): obj is IdMapping => {
 export const assureIdMapping = (obj: any): IdMapping => {
   return assure(obj, "IdMapping", isIdMapping)
 }
-
-export const isTimestamp = (obj: any): obj is Timestamp => {
-  // @@TODO: make fix check
-  return typeof obj === 'string'
-}
-
-export const assureTimestamp = (obj: any): Timestamp => {
-  return assure(obj, "Timestamp", isTimestamp)
-}
