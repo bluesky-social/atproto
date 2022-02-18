@@ -1,37 +1,116 @@
 import test from 'ava'
 
-import SSTable from '../src/user-store/ss-table.js'
+import SSTable, { TableSize } from '../src/user-store/ss-table.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import Timestamp from '../src/timestamp.js'
 
 import { wait } from '../src/util.js'
+import * as util from './_util.js'
 import { CID } from 'multiformats'
 
 type Context = {
   store: IpldStore
+  table: SSTable
+  table2: SSTable
   cid: CID
+  cid2: CID
 }
 
 test.beforeEach(async t => {
   const store = IpldStore.createInMemory()
+  const table = await SSTable.create(store)
+  const table2 = await SSTable.create(store)
   const cid = await store.put({ test: 123 })
-  t.context = { store, cid }
+  const cid2 = await store.put({ test: 456 })
+  t.context = { store, table, table2, cid, cid2 }
   t.pass('Context setup')
 })
 
+test('basic operations', async t => {
+  const { table, cid, cid2 } = t.context as Context
+  const id = Timestamp.now()
 
-test('sort keys', async t => {
-  // const store = IpldStore.createInMemory()
-  // const table = await SSTable.create(store)
-  // const cid = await store.put({ test: 123 })
+  await table.addEntry(id, cid)
+  t.pass('adds data')
+  t.is(await table.getEntry(id), cid, 'retrieves correct data')
 
-  // for(let i = 0; i < 100; i++) {
-  //   await table.addEntry(new Timestamp(), cid)
-  //   await wait(1)
-  // }
+  await table.editEntry(id, cid2)
+  t.is(await table.getEntry(id), cid2, 'edits data')
 
-  // const got = await SSTable.get(store, table.cid)
-  // const keys = got.keys()
-  // console.log("KEYS: ", keys)
-  t.pass('pass')
+  await table.deleteEntry(id)
+  t.is(await table.getEntry(id), null, 'deletes data')
+})
+
+test('enforces uniqueness', async t=> {
+  const { table, cid, cid2 } = t.context as Context
+  const id = Timestamp.now()
+  await table.addEntry(id, cid)
+  await t.throwsAsync(
+    table.addEntry(id, cid),
+    { instanceOf: Error },
+    "throw when adding non-unique key"
+  )
+})
+
+test('bulk adds data', async t => {
+  const { table, cid } = t.context as Context
+  const bulkIds = util.generateBulkIdMapping(50, cid)
+  await table.addEntries(bulkIds)
+
+  const ids = util.keysFromMapping(bulkIds)
+  const allIncluded = util.checkInclusionInTable(ids, table)
+  t.true(allIncluded, 'contains all added entries')
+})
+
+test('returns oldest id', async t => {
+  const { table, cid } = t.context as Context
+  const bulkIds = util.generateBulkIds(50)
+  await Promise.all(
+    bulkIds.map(id => table.addEntry(id, cid))
+  )
+  t.is(table.oldestId()?.toString(), bulkIds[0].toString(), 'returns oldest id')
+})
+
+test('enforces max size', async t => {
+  const { table, cid } = t.context as Context
+  const bulkIds = util.generateBulkIdMapping(100, cid)
+  await table.addEntries(bulkIds)
+  t.pass('does not throw at max size')
+  await t.throwsAsync(
+    table.addEntry(Timestamp.now(), cid),
+    { message: 'Table is full' },
+    'throws when exceeding max size'
+  )
+})
+
+test('merges tables', async t => {
+  const { table, table2, cid } = t.context as Context
+  const bulkIds = util.generateBulkIdMapping(100, cid, Date.now() - 1000)
+  const bulkIds2 = util.generateBulkIdMapping(100, cid)
+  await table.addEntries(bulkIds)
+  await table2.addEntries(bulkIds2)
+
+  const merged = await SSTable.merge([table, table2])
+
+  const allIds = util.keysFromMappings([bulkIds, bulkIds2])
+  const allIncluded = util.checkInclusionInTable(allIds, merged)
+  t.true(allIncluded, 'contains all added entries')
+  t.is(merged.size, TableSize.md, 'correctly upgrades size of table')
+})
+
+test('enforces uniqueness on merge', async t => {
+  const { table, table2, cid } = t.context as Context
+  const bulkIds = util.generateBulkIdMapping(99, cid, Date.now() - 1000)
+  const bulkIds2 = util.generateBulkIdMapping(99, cid)
+  const common = Timestamp.now()
+  bulkIds[common.toString()] = cid
+  bulkIds2[common.toString()] = cid
+  await table.addEntries(bulkIds)
+  await table2.addEntries(bulkIds2)
+
+  await t.throwsAsync(
+    SSTable.merge([table, table2]),
+    { instanceOf: Error },
+    "throw when merge conflict on non-unique key"
+  )
 })

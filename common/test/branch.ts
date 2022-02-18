@@ -22,7 +22,7 @@ test.beforeEach(async t => {
 })
 
 test("splitting tables", async t => {
-  const {  branch, cid } = t.context as Context
+  const { branch, cid } = t.context as Context
   for(let i=0; i < 100; i++) {
     await branch.addEntry(Timestamp.now(), cid)
     await wait(1)
@@ -34,7 +34,7 @@ test("splitting tables", async t => {
 })
 
 test("compressing tables", async t => {
-  const {  branch, cid } = t.context as Context
+  const { branch, cid } = t.context as Context
 
   for (let i=0; i < 400; i++) {
     await branch.addEntry(Timestamp.now(), cid)

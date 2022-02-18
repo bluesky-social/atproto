@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "dev": "tsc -w --project tsconfig.json",
-    "test": "ava -s test/*.ts"
+    "test": "ava test/*.ts"
   },
   "license": "MIT",
   "dependencies": {

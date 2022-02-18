@@ -9,15 +9,13 @@ export class SSTable {
   store: IpldStore
   cid: CID
   size: TableSize
-  currSize: number
   data: IdMapping
 
   constructor(store: IpldStore, cid: CID, data: IdMapping) {
     this.store = store
     this.cid = cid
     this.data = data
-    this.currSize = Object.keys(data).length
-    this.size = nameForSize(this.currSize)
+    this.size = nameForSize(Object.keys(data).length)
   }
 
   static async create(store: IpldStore): Promise<SSTable> {
@@ -51,20 +49,23 @@ export class SSTable {
     return new SSTable(store, cid, data) 
   }
 
-  async getEntry(id: Timestamp): Promise<CID> {
-    return this.data[id.toString()]
+  getEntry(id: Timestamp): CID | null {
+    return this.data[id.toString()] || null
+  }
+
+  hasEntry(id: Timestamp): boolean {
+    return this.getEntry(id) !== null
   }
 
   async addEntry(id: Timestamp, cid: CID): Promise<void> {
     // @TODO allow some leeway room?
-    if (this.currSize >= this.maxSize()) {
+    if (this.isFull()) {
       throw new Error("Table is full")
     }
-    const idStr = id.toString()
-    if(this.data[idStr]) {
-      throw new Error(`Entry already exists for id ${idStr}`)
+    if(this.hasEntry(id)) {
+      throw new Error(`Entry already exists for id ${id}`)
     }
-    this.data[idStr] = cid
+    this.data[id.toString()] = cid
     this.cid = await this.store.put(this.data)
   }
 
@@ -87,7 +88,7 @@ export class SSTable {
     this.cid = await this.store.put(this.data)
   }
 
-  async removeEntry(id: Timestamp): Promise<void> {
+  async deleteEntry(id: Timestamp): Promise<void> {
     const idStr = id.toString()
     if(!this.data[idStr]) {
       throw new Error(`Entry does not exist for id ${idStr}`)
@@ -111,12 +112,16 @@ export class SSTable {
     return Object.values(this.data)
   }
 
+  currSize(): number {
+    return Object.keys(this.data).length
+  }
+
   maxSize(): number {
     return sizeForName(this.size)
   }
 
   isFull(): boolean {
-    return this.currSize >= this.maxSize()
+    return this.currSize() >= this.maxSize()
   }
 }
 

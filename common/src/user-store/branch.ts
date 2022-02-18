@@ -116,10 +116,10 @@ export class Branch {
     return table.editEntry(id, cid)
   }
 
-  async removeEntry(id: Timestamp): Promise<void> {
+  async deleteEntry(id: Timestamp): Promise<void> {
     const table = await this.findTableForId(id)
     if (!table) throw new Error(`Could not find entry with id: ${id}`)
-    return table.removeEntry(id)
+    return table.deleteEntry(id)
   }
 
   tableNames(newestFirst = false): Timestamp[] {
