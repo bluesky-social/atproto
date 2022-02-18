@@ -4,13 +4,6 @@ import { IdMapping } from "../types.js"
 import IpldStore from "../blockstore/ipld-store.js"
 import Timestamp from "../timestamp.js"
 
-export enum TableSize {
-  sm = 'sm',
-  md = 'md',
-  lg = 'lg',
-  xl = 'xl',
-}
-
 export class SSTable {
 
   store: IpldStore
@@ -108,12 +101,14 @@ export class SSTable {
     return str ? Timestamp.parse(str) : null
   }
 
-  ids(): Timestamp[] {
-    return Object.keys(this.data).sort().reverse().map(k => Timestamp.parse(k))
+  ids(newestFirst = false): Timestamp[] {
+    const sorted = Object.keys(this.data).sort()
+    const ordered= newestFirst ? sorted : sorted.reverse()
+    return ordered.map(k => Timestamp.parse(k))
   }
 
   cids(): CID[] {
-    return Object.values(this.data).sort().reverse()
+    return Object.values(this.data)
   }
 
   maxSize(): number {
@@ -123,6 +118,14 @@ export class SSTable {
   isFull(): boolean {
     return this.currSize >= this.maxSize()
   }
+}
+
+
+export enum TableSize {
+  sm = 'sm',
+  md = 'md',
+  lg = 'lg',
+  xl = 'xl',
 }
 
 const sizeForName = (size: TableSize): number => {

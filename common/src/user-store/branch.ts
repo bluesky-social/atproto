@@ -42,9 +42,9 @@ export class Branch {
   }
 
   async getCurrTable(): Promise<SSTable | null> {
-    const key = this.keys()[0]
-    if (key === undefined) return null
-    return this.getTable(key)
+    const name = this.tableNames()[0]
+    if (name === undefined) return null
+    return this.getTable(name)
   }
 
   async getTable(name: Timestamp): Promise<SSTable | null> {
@@ -55,9 +55,9 @@ export class Branch {
   }
 
   async findTableForId(id: Timestamp): Promise<SSTable | null> {
-    const key = this.keys().find(k => id.compare(k) >= 0)
-    if (!key) return null
-    return this.getTable(key)
+    const name = this.tableNames().find(n => id.compare(n) >= 0)
+    if (!name) return null
+    return this.getTable(name)
   }
 
   async updateRoot(): Promise<void> {
@@ -65,14 +65,14 @@ export class Branch {
   }
 
   async compressTables(): Promise<void> {
-    const keys = this.keys()
-    if (keys.length < 1) return
-    const mostRecent = await this.getTable(keys[0])
+    const tableNames = this.tableNames()
+    if (tableNames.length < 1) return
+    const mostRecent = await this.getTable(tableNames[0])
     if (mostRecent === null) return 
-    const compressed = await this.compressCascade(mostRecent, keys.slice(1))
+    const compressed = await this.compressCascade(mostRecent, tableNames.slice(1))
     const tableName = compressed.oldestId()
-    if (tableName && tableName.compare(keys[0]) !== 0 ) {
-      delete this.data[keys[0].toString()]
+    if (tableName && tableName.compare(tableNames[0]) !== 0 ) {
+      delete this.data[tableNames[0].toString()]
       this.data[tableName.toString()] = compressed.cid
     }
     await this.updateRoot()
@@ -87,7 +87,7 @@ export class Branch {
     const filtered = tables.filter(t => t?.size === size) as SSTable[]
     // need 4 tables to merge down a level
     if (filtered.length < 3 || size === TableSize.xl) {
-      // if no merge at this level, we just write the previous level & bail
+      // if no merge at this level, we just return the p;revious level
       return mostRecent
     }
 
@@ -122,8 +122,10 @@ export class Branch {
     return table.removeEntry(id)
   }
 
-  keys(): Timestamp[] {
-    return Object.keys(this.data).sort().reverse().map(k => Timestamp.parse(k))
+  tableNames(newestFirst = false): Timestamp[] {
+    const sorted = Object.keys(this.data).sort()
+    const ordered= newestFirst ? sorted : sorted.reverse()
+    return ordered.map(k => Timestamp.parse(k))
   }
 
   cids(): CID[] {

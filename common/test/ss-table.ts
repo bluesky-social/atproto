@@ -5,6 +5,20 @@ import IpldStore from '../src/blockstore/ipld-store.js'
 import Timestamp from '../src/timestamp.js'
 
 import { wait } from '../src/util.js'
+import { CID } from 'multiformats'
+
+type Context = {
+  store: IpldStore
+  cid: CID
+}
+
+test.beforeEach(async t => {
+  const store = IpldStore.createInMemory()
+  const cid = await store.put({ test: 123 })
+  t.context = { store, cid }
+  t.pass('Context setup')
+})
+
 
 test('sort keys', async t => {
   // const store = IpldStore.createInMemory()
