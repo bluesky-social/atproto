@@ -3,9 +3,14 @@ export class Timestamp {
   time: number
   clockid: number
 
-  constructor(time?: number, clockid?: number) {
-    this.time = time || Date.now()
-    this.clockid = clockid || Math.floor(Math.random() * 1024)
+  constructor(time: number, clockid: number) {
+    this.time = time
+    this.clockid = clockid
+  }
+
+  static now(): Timestamp {
+    const clockid = Math.floor(Math.random() * 1024)
+    return new Timestamp(Date.now(), clockid)
   }
 
   static parse(str: string): Timestamp {

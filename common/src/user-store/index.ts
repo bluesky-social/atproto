@@ -113,7 +113,7 @@ export class UserStore implements UserStoreI {
 
   async addPost (text: string): Promise<Timestamp> {
     const user = await this.getUser()
-    const timestamp = new Timestamp
+    const timestamp = Timestamp.now()
 
     const post = {
       id: timestamp.toString(),
