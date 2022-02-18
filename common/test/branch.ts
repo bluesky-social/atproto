@@ -6,6 +6,7 @@ import IpldStore from '../src/blockstore/ipld-store.js'
 import Timestamp from '../src/timestamp.js'
 import { wait } from '../src/util.js'
 
+
 type Context = {
   store: IpldStore
   branch: Branch
@@ -17,6 +18,7 @@ test.beforeEach(async t => {
   const branch = await Branch.create(store)
   const cid = await store.put({ test: 123 })
   t.context = { store, branch, cid }
+  t.pass('Context setup')
 })
 
 test("splitting tables", async t => {

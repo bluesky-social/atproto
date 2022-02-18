@@ -28,42 +28,34 @@ export class Branch {
     return new Branch(store, cid, data)
   }
 
-  async getOrCreateCurrTable(): Promise<{ table: SSTable, name: Timestamp | null}> {
-    const curr = await this.getCurrTable()
-    if (curr) {
-      if (!curr.table.isFull()) {
-        return curr
-      } else {
-        await this.compressTables()
-      }
-    } 
-
-    return {
-      table: await SSTable.create(this.store),
-      name: null
+  async getOrCreateCurrTable(): Promise<SSTable> {
+    const table = await this.getCurrTable()
+    if (table === null) {
+      return SSTable.create(this.store)
+    }
+    if (table.isFull()) {
+      await this.compressTables()
+      return SSTable.create(this.store)
+    } else {
+      return table
     }
   }
 
-  async getCurrTable(): Promise<{ table: SSTable, name: Timestamp} | null> {
+  async getCurrTable(): Promise<SSTable | null> {
     const key = this.keys()[0]
     if (key === undefined) return null
-    const table = await this.getTable(key)
-    if (table === null) return null
-    return {
-      table: table,
-      name: key
-    }
+    return this.getTable(key)
   }
 
-  async getTable(timestamp: Timestamp): Promise<SSTable | null> {
-    if (!timestamp) return null
-    const cid = this.data[timestamp.toString()]
+  async getTable(name: Timestamp): Promise<SSTable | null> {
+    if (!name) return null
+    const cid = this.data[name.toString()]
     if (cid === undefined) return null
     return SSTable.get(this.store, cid)
   }
 
-  async findTableForKey(timestamp: Timestamp): Promise<SSTable | null> {
-    const key = this.keys().find(k => timestamp.compare(k) >= 0)
+  async findTableForId(id: Timestamp): Promise<SSTable | null> {
+    const key = this.keys().find(k => id.compare(k) >= 0)
     if (!key) return null
     return this.getTable(key)
   }
@@ -78,7 +70,7 @@ export class Branch {
     const mostRecent = await this.getTable(keys[0])
     if (mostRecent === null) return 
     const compressed = await this.compressCascade(mostRecent, keys.slice(1))
-    const tableName = compressed.oldestKey()
+    const tableName = compressed.oldestId()
     if (tableName && tableName.compare(keys[0]) !== 0 ) {
       delete this.data[keys[0].toString()]
       this.data[tableName.toString()] = compressed.cid
@@ -106,28 +98,28 @@ export class Branch {
   }
 
   async addEntry(timestamp: Timestamp, cid: CID): Promise<void> {
-    const curr = await this.getOrCreateCurrTable()
-    const oldestKey = curr.table.oldestKey()
+    const table = await this.getOrCreateCurrTable()
+    const oldestKey = table.oldestId()
     if (oldestKey && timestamp.compare(oldestKey) < 0) {
       // @TODO handle this more gracefully
       throw new Error("Attempting to add an id that is too old for the table")
     }
-    await curr.table.addEntry(timestamp, cid)
-    const name = curr.name?.toString() || timestamp.toString()
-    this.data[name] = curr.table.cid
+    await table.addEntry(timestamp, cid)
+    const tableName = oldestKey?.toString() || timestamp.toString()
+    this.data[tableName] = table.cid
     await this.updateRoot()
   }
 
-  async editEntry(timestamp: Timestamp, cid: CID): Promise<void> {
-    const table = await this.findTableForKey(timestamp)
-    if (!table) throw new Error(`Could not find entry with id: ${timestamp}`)
-    return table.editEntry(timestamp, cid)
+  async editEntry(id: Timestamp, cid: CID): Promise<void> {
+    const table = await this.findTableForId(id)
+    if (!table) throw new Error(`Could not find entry with id: ${id}`)
+    return table.editEntry(id, cid)
   }
 
-  async removeEntry(timestamp: Timestamp): Promise<void> {
-    const table = await this.findTableForKey(timestamp)
-    if (!table) throw new Error(`Could not find entry with id: ${timestamp}`)
-    return table.removeEntry(timestamp)
+  async removeEntry(id: Timestamp): Promise<void> {
+    const table = await this.findTableForId(id)
+    if (!table) throw new Error(`Could not find entry with id: ${id}`)
+    return table.removeEntry(id)
   }
 
   keys(): Timestamp[] {
@@ -138,15 +130,15 @@ export class Branch {
     return Object.values(this.data).sort().reverse()
   }
 
-  async nestedCids(): Promise<CID[]> {
+  async nestedCids(): Promise<CID[]>{
+    const all = []
     const cids = this.cids()
-    const tableCids = await Promise.all(
-      this.cids().map(async c => {
-        const table = await SSTable.get(this.store, c)
-        return table.cids()
-      })
-    )
-    return [...cids, ...tableCids.flat()]
+    for(const cid of cids) {
+      all.push(cid)
+      const table = await SSTable.get(this.store, cid)
+      table.cids().forEach(c => all.push(c))
+    }
+    return all
   }
 }
 

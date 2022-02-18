@@ -58,20 +58,20 @@ export class SSTable {
     return new SSTable(store, cid, data) 
   }
 
-  async getEntry(timestamp: Timestamp): Promise<CID> {
-    return this.data[timestamp.toString()]
+  async getEntry(id: Timestamp): Promise<CID> {
+    return this.data[id.toString()]
   }
 
-  async addEntry(timestamp: Timestamp, cid: CID): Promise<void> {
+  async addEntry(id: Timestamp, cid: CID): Promise<void> {
     // @TODO allow some leeway room?
     if (this.currSize >= this.maxSize()) {
       throw new Error("Table is full")
     }
-    const id = timestamp.toString()
-    if(this.data[id]) {
-      throw new Error(`Entry already exists for id ${id}`)
+    const idStr = id.toString()
+    if(this.data[idStr]) {
+      throw new Error(`Entry already exists for id ${idStr}`)
     }
-    this.data[id] = cid
+    this.data[idStr] = cid
     this.cid = await this.store.put(this.data)
   }
 
@@ -85,30 +85,30 @@ export class SSTable {
     this.cid = await this.store.put(this.data)
   }
 
-  async editEntry(timestamp: Timestamp, cid: CID): Promise<void> {
-    const id = timestamp.toString()
-    if(!this.data[id]) {
-      throw new Error(`Entry does not exist for id ${id}`)
+  async editEntry(id: Timestamp, cid: CID): Promise<void> {
+    const idStr = id.toString()
+    if(!this.data[idStr]) {
+      throw new Error(`Entry does not exist for id ${idStr}`)
     }
-    this.data[id] = cid
+    this.data[idStr] = cid
     this.cid = await this.store.put(this.data)
   }
 
-  async removeEntry(timestamp: Timestamp): Promise<void> {
-    const id = timestamp.toString()
-    if(!this.data[id]) {
-      throw new Error(`Entry does not exist for id ${id}`)
+  async removeEntry(id: Timestamp): Promise<void> {
+    const idStr = id.toString()
+    if(!this.data[idStr]) {
+      throw new Error(`Entry does not exist for id ${idStr}`)
     }
-    delete this.data[id]
+    delete this.data[idStr]
     this.cid = await this.store.put(this.data)
   }
 
-  oldestKey(): Timestamp | null {
+  oldestId(): Timestamp | null {
     const str = Object.keys(this.data).sort()[0]
     return str ? Timestamp.parse(str) : null
   }
 
-  keys(): Timestamp[] {
+  ids(): Timestamp[] {
     return Object.keys(this.data).sort().reverse().map(k => Timestamp.parse(k))
   }
 

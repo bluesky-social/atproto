@@ -209,9 +209,9 @@ export class UserStore implements UserStoreI {
       const commit = await this.ipld.get(this.root, check.assureCommit)
       await addCid(commit.user)
 
-      const postBranchCids = await this.postBranch.nestedCids()
+      const postCids = await this.postBranch.nestedCids()
       await Promise.all(
-        postBranchCids.map(cid => addCid(cid))
+        postCids.map(c => addCid(c))
       )
       car.close()
     }
