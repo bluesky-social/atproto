@@ -67,7 +67,18 @@ test('returns oldest id', async t => {
   await Promise.all(
     bulkIds.map(id => table.addEntry(id, cid))
   )
-  t.is(table.oldestId()?.toString(), bulkIds[0].toString(), 'returns oldest id')
+  t.deepEqual(table.oldestId(), bulkIds[0], 'returns oldest id')
+})
+
+test('loads from blockstore', async t => {
+  const { store, table } = t.context as Context
+  const bulkIds = await util.generateBulkIdMapping(50)
+  await table.addEntries(bulkIds)
+
+  const fromBS = await SSTable.get(store, table.cid)
+  for (const id of Object.keys(bulkIds)) {
+    t.deepEqual(fromBS.getEntry(Timestamp.parse(id)), bulkIds[id], `Matching content for id: ${id}`)
+  }
 })
 
 test('enforces max size', async t => {

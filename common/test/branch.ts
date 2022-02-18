@@ -5,6 +5,7 @@ import Branch from '../src/user-store/branch.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import Timestamp from '../src/timestamp.js'
 import * as util from './_util.js'
+import { IdMapping } from '../src/types.js'
 
 
 type Context = {
@@ -29,19 +30,34 @@ test('basic operations', async t => {
 
   await branch.addEntry(id, cid)
   t.pass('adds data')
-  let got = await branch.getEntry(id)
-  t.is(got?.toString(), cid.toString(), 'retrieves correct data')
+  t.deepEqual(await branch.getEntry(id), cid, 'retrieves correct data')
 
   await branch.editEntry(id, cid2)
-  got = await branch.getEntry(id)
-  t.is(got?.toString(), cid2.toString(), 'edits data')
+  t.deepEqual(await branch.getEntry(id), cid2, 'edits data')
 
   await branch.deleteEntry(id)
   t.is(await branch.getEntry(id), null, 'deletes data')
 })
 
-test("splitting tables", async t => {
-  const { branch, store, cid } = t.context as Context
+test('loads from blockstore', async t => {
+  const { store, branch } = t.context as Context
+  const bulkIds = util.generateBulkIds(450)
+  const actual = {} as IdMapping
+  for (const id of bulkIds) {
+    const cid = await util.randomCid()
+    await branch.addEntry(id, cid)
+    actual[id.toString()] = cid
+  }
+
+  const fromBS = await Branch.get(store, branch.cid)
+  for (const id of bulkIds) {
+    const got = await fromBS.getEntry(id)
+    t.deepEqual(got, actual[id.toString()], `Matching content for id: ${id}`)
+  }
+})
+
+test("splits tables", async t => {
+  const { branch, cid } = t.context as Context
   const ids = util.generateBulkIds(100)
   for (const id of ids) {
     await branch.addEntry(id, cid)
@@ -52,7 +68,7 @@ test("splitting tables", async t => {
   t.is(branch.tableCount(), 2, "Does split at 101 entries")
 })
 
-test("compressing tables", async t => {
+test("compresses tables", async t => {
   const { branch, cid } = t.context as Context
 
   const ids = util.generateBulkIds(6401)
