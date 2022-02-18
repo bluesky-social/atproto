@@ -29,7 +29,6 @@ test('basic operations', async t => {
   const id = Timestamp.now()
 
   await branch.addEntry(id, cid)
-  t.pass('adds data')
   t.deepEqual(await branch.getEntry(id), cid, 'retrieves correct data')
 
   await branch.editEntry(id, cid2)

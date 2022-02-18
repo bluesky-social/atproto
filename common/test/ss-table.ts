@@ -30,7 +30,6 @@ test('basic operations', async t => {
   const id = Timestamp.now()
 
   await table.addEntry(id, cid)
-  t.pass('adds data')
   t.is(await table.getEntry(id), cid, 'retrieves correct data')
 
   await table.editEntry(id, cid2)
