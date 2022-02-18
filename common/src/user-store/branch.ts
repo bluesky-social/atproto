@@ -54,8 +54,12 @@ export class Branch {
     return SSTable.get(this.store, cid)
   }
 
-  async findTableForId(id: Timestamp): Promise<SSTable | null> {
-    const name = this.tableNames().find(n => id.compare(n) >= 0)
+  getTableNameForId(id: Timestamp): Timestamp | null {
+    return this.tableNames().find(n => id.compare(n) >= 0) || null
+  }
+
+  async getTableForId(id: Timestamp): Promise<SSTable | null> {
+    const name = this.getTableNameForId(id)
     if (!name) return null
     return this.getTable(name)
   }
@@ -97,35 +101,55 @@ export class Branch {
     return await this.compressCascade(merged, nextKeys.slice(3))
   }
 
-  async addEntry(timestamp: Timestamp, cid: CID): Promise<void> {
+  async getEntry(id: Timestamp): Promise<CID | null> {
+    const table = await this.getTableForId(id)
+    if (!table) return null
+    return table.getEntry(id)
+  }
+
+  async addEntry(id: Timestamp, cid: CID): Promise<void> {
     const table = await this.getOrCreateCurrTable()
     const oldestKey = table.oldestId()
-    if (oldestKey && timestamp.compare(oldestKey) < 0) {
+    if (oldestKey && id.compare(oldestKey) < 0) {
       // @TODO handle this more gracefully
       throw new Error("Attempting to add an id that is too old for the table")
     }
-    await table.addEntry(timestamp, cid)
-    const tableName = oldestKey?.toString() || timestamp.toString()
+    await table.addEntry(id, cid)
+    const tableName = oldestKey?.toString() || id.toString()
     this.data[tableName] = table.cid
     await this.updateRoot()
   }
 
-  async editEntry(id: Timestamp, cid: CID): Promise<void> {
-    const table = await this.findTableForId(id)
+  async editTableForId(id: Timestamp, fn: (table: SSTable) => Promise<void>): Promise<void> {
+    const tableName = this.getTableNameForId(id)
+    if (!tableName) throw new Error(`Could not find entry with id: ${id}`)
+    const table = await this.getTable(tableName)
     if (!table) throw new Error(`Could not find entry with id: ${id}`)
-    return table.editEntry(id, cid)
+    await fn(table)
+    this.data[tableName.toString()] = table.cid
+    await this.updateRoot()
+  }
+
+  async editEntry(id: Timestamp, cid: CID): Promise<void> {
+    await this.editTableForId(id, async (table) => {
+      await table.editEntry(id, cid) 
+    })
   }
 
   async deleteEntry(id: Timestamp): Promise<void> {
-    const table = await this.findTableForId(id)
-    if (!table) throw new Error(`Could not find entry with id: ${id}`)
-    return table.deleteEntry(id)
+    await this.editTableForId(id, async (table) => {
+      await table.deleteEntry(id) 
+    })
   }
 
   tableNames(newestFirst = false): Timestamp[] {
     const sorted = Object.keys(this.data).sort()
     const ordered= newestFirst ? sorted : sorted.reverse()
     return ordered.map(k => Timestamp.parse(k))
+  }
+
+  tableCount(): number {
+    return Object.keys(this.data).length
   }
 
   cids(): CID[] {

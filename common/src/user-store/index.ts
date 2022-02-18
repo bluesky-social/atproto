@@ -150,7 +150,7 @@ export class UserStore implements UserStoreI {
 
   async deletePost(id: Timestamp): Promise<void> {
     const user = await this.getUser()
-    await this.postBranch.removeEntry(id)
+    await this.postBranch.deleteEntry(id)
     user.postsRoot = this.postBranch.cid
     await this.updateUserRoot(user)
   }

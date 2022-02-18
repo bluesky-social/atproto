@@ -1,7 +1,15 @@
 import { CID } from "multiformats"
+import IpldStore from "../src/blockstore/ipld-store.js"
 import Timestamp from "../src/timestamp.js"
 import { IdMapping } from "../src/types.js"
 import SSTable from "../src/user-store/ss-table.js"
+
+const fakeStore = IpldStore.createInMemory()
+
+export const randomCid = async (): Promise<CID> => {
+  const content = Math.floor(Math.random() * 1000000)
+  return fakeStore.put({ test: content })
+}
 
 export const generateBulkIds = (count: number, startAt?: number): Timestamp[] => {
   const ids = []
@@ -12,15 +20,13 @@ export const generateBulkIds = (count: number, startAt?: number): Timestamp[] =>
   return ids.reverse()
 }
 
-export const generateBulkIdMapping = (count: number, cid: CID, startAt?: number): IdMapping => {
-  return generateBulkIds(count, startAt)
-    .reduce((acc, cur) => {
-      return  {
-        ...acc,
-        [cur.toString()]: cid
-      }
-
-    }, {} as IdMapping)
+export const generateBulkIdMapping = async (count: number, startAt?: number): Promise<IdMapping> => {
+  const ids = generateBulkIds(count, startAt)
+  const obj = {} as IdMapping
+  for (const id of ids) {
+    obj[id.toString()] = await randomCid()
+  }
+  return obj
 }
 
 export const keysFromMapping = (mapping: IdMapping): Timestamp[] => {

@@ -4,7 +4,6 @@ import SSTable, { TableSize } from '../src/user-store/ss-table.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import Timestamp from '../src/timestamp.js'
 
-import { wait } from '../src/util.js'
 import * as util from './_util.js'
 import { CID } from 'multiformats'
 
@@ -20,9 +19,9 @@ test.beforeEach(async t => {
   const store = IpldStore.createInMemory()
   const table = await SSTable.create(store)
   const table2 = await SSTable.create(store)
-  const cid = await store.put({ test: 123 })
-  const cid2 = await store.put({ test: 456 })
-  t.context = { store, table, table2, cid, cid2 }
+  const cid = await util.randomCid()
+  const cid2 = await util.randomCid()
+  t.context = { store, table, table2, cid, cid2 } as Context
   t.pass('Context setup')
 })
 
@@ -53,8 +52,8 @@ test('enforces uniqueness', async t=> {
 })
 
 test('bulk adds data', async t => {
-  const { table, cid } = t.context as Context
-  const bulkIds = util.generateBulkIdMapping(50, cid)
+  const { table } = t.context as Context
+  const bulkIds = await util.generateBulkIdMapping(50)
   await table.addEntries(bulkIds)
 
   const ids = util.keysFromMapping(bulkIds)
@@ -73,7 +72,7 @@ test('returns oldest id', async t => {
 
 test('enforces max size', async t => {
   const { table, cid } = t.context as Context
-  const bulkIds = util.generateBulkIdMapping(100, cid)
+  const bulkIds = await util.generateBulkIdMapping(100)
   await table.addEntries(bulkIds)
   t.pass('does not throw at max size')
   await t.throwsAsync(
@@ -84,9 +83,9 @@ test('enforces max size', async t => {
 })
 
 test('merges tables', async t => {
-  const { table, table2, cid } = t.context as Context
-  const bulkIds = util.generateBulkIdMapping(100, cid, Date.now() - 1000)
-  const bulkIds2 = util.generateBulkIdMapping(100, cid)
+  const { table, table2 } = t.context as Context
+  const bulkIds = await util.generateBulkIdMapping(100, Date.now() - 1000)
+  const bulkIds2 = await util.generateBulkIdMapping(100)
   await table.addEntries(bulkIds)
   await table2.addEntries(bulkIds2)
 
@@ -100,8 +99,8 @@ test('merges tables', async t => {
 
 test('enforces uniqueness on merge', async t => {
   const { table, table2, cid } = t.context as Context
-  const bulkIds = util.generateBulkIdMapping(99, cid, Date.now() - 1000)
-  const bulkIds2 = util.generateBulkIdMapping(99, cid)
+  const bulkIds = await util.generateBulkIdMapping(99, Date.now() - 1000)
+  const bulkIds2 = await util.generateBulkIdMapping(99)
   const common = Timestamp.now()
   bulkIds[common.toString()] = cid
   bulkIds2[common.toString()] = cid
