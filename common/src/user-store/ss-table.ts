@@ -1,6 +1,6 @@
 import { CID } from "multiformats"
 import * as check from "../type-check.js"
-import { IdMapping } from "../types.js"
+import { Entry, IdMapping } from "../types.js"
 import IpldStore from "../blockstore/ipld-store.js"
 import Timestamp from "../timestamp.js"
 
@@ -98,18 +98,24 @@ export class SSTable {
   }
 
   oldestId(): Timestamp | null {
-    const str = Object.keys(this.data).sort()[0]
-    return str ? Timestamp.parse(str) : null
+    return this.ids(true)[0] || null
   }
 
-  ids(newestFirst = false): Timestamp[] {
-    const sorted = Object.keys(this.data).sort()
-    const ordered= newestFirst ? sorted : sorted.reverse()
-    return ordered.map(k => Timestamp.parse(k))
+  ids(oldestFirst = false): Timestamp[] {
+    const ids = Object.keys(this.data).map(k => Timestamp.parse(k))
+    return oldestFirst 
+      ? ids.sort(Timestamp.oldestFirst)
+      : ids.sort(Timestamp.newestFirst)
   }
 
   cids(): CID[] {
     return Object.values(this.data)
+  }
+
+  entries(): Entry[] {
+    return Object.entries(this.data)
+      .map(([id, cid]) => ({ id: Timestamp.parse(id), cid }))
+      .sort((a, b)=> Timestamp.newestFirst(a.id, b.id))
   }
 
   currSize(): number {

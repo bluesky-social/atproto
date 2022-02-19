@@ -55,7 +55,7 @@ export class Branch {
   }
 
   getTableNameForId(id: Timestamp): Timestamp | null {
-    return this.tableNames().find(n => id.compare(n) >= 0) || null
+    return this.tableNames().find(n => !id.olderThan(n)) || null
   }
 
   async getTableForId(id: Timestamp): Promise<SSTable | null> {
@@ -75,7 +75,7 @@ export class Branch {
     if (mostRecent === null) return 
     const compressed = await this.compressCascade(mostRecent, tableNames.slice(1))
     const tableName = compressed.oldestId()
-    if (tableName && tableName.compare(tableNames[0]) !== 0 ) {
+    if (tableName && !tableName.equals(tableNames[0])) {
       delete this.data[tableNames[0].toString()]
       this.data[tableName.toString()] = compressed.cid
     }
@@ -110,7 +110,7 @@ export class Branch {
   async addEntry(id: Timestamp, cid: CID): Promise<void> {
     const table = await this.getOrCreateCurrTable()
     const oldestKey = table.oldestId()
-    if (oldestKey && id.compare(oldestKey) < 0) {
+    if (oldestKey && id.olderThan(oldestKey)) {
       // @TODO handle this more gracefully
       throw new Error("Attempting to add an id that is too old for the table")
     }
@@ -142,10 +142,11 @@ export class Branch {
     })
   }
 
-  tableNames(newestFirst = false): Timestamp[] {
-    const sorted = Object.keys(this.data).sort()
-    const ordered= newestFirst ? sorted : sorted.reverse()
-    return ordered.map(k => Timestamp.parse(k))
+  tableNames(oldestFirst = false): Timestamp[] {
+    const ids = Object.keys(this.data).map(k => Timestamp.parse(k))
+    return oldestFirst 
+      ? ids.sort(Timestamp.oldestFirst)
+      : ids.sort(Timestamp.newestFirst)
   }
 
   tableCount(): number {

@@ -26,16 +26,21 @@ test.beforeEach(async t => {
 
 test('basic operations', async t => {
   const { branch, cid, cid2 } = t.context as Context
-  const id = Timestamp.now()
 
-  await branch.addEntry(id, cid)
-  t.deepEqual(await branch.getEntry(id), cid, 'retrieves correct data')
+  // do basic operations in a branch that has at least 3 tables
+  const ids = util.generateBulkIds(250)
+  const mid = ids[125]
+  for (const id of ids) {
+    await branch.addEntry(id, cid)
+  }
 
-  await branch.editEntry(id, cid2)
-  t.deepEqual(await branch.getEntry(id), cid2, 'edits data')
+  t.deepEqual(await branch.getEntry(mid), cid, 'retrieves correct data')
 
-  await branch.deleteEntry(id)
-  t.is(await branch.getEntry(id), null, 'deletes data')
+  await branch.editEntry(mid, cid2)
+  t.deepEqual(await branch.getEntry(mid), cid2, 'edits data')
+
+  await branch.deleteEntry(mid)
+  t.is(await branch.getEntry(mid), null, 'deletes data')
 })
 
 test('loads from blockstore', async t => {
