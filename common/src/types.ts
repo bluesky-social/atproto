@@ -7,6 +7,10 @@ export type LocalUser = {
   keypair: ucan.Keypair & ucan.Didable
 }
 
+export type Root = {
+
+}
+
 export type User = {
   name: string
   did: string

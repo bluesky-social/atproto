@@ -14,18 +14,24 @@ import Timestamp from '../timestamp.js'
 export class UserStore implements UserStoreI {
 
   ipld: IpldStore
-  postBranch: Branch
+  post: Branch
+  interactions: Branch
+  relationships: Branch
   root: CID
   keypair: Keypair | null
 
   constructor(params: {
     ipld: IpldStore, 
-    postBranch: Branch
+    post: Branch
+    interactions: Branch
+    relationships: Branch
     root: CID, 
     keypair?: Keypair
   }) {
     this.ipld = params.ipld
-    this.postBranch = params.postBranch
+    this.post = params.post
+    this.interactions = params.interactions
+    this.relationships = params.relationships
     this.root = params.root
     this.keypair = params.keypair || null
   }
