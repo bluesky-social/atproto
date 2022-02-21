@@ -7,10 +7,6 @@ export type LocalUser = {
   keypair: ucan.Keypair & ucan.Didable
 }
 
-export type Root = {
-
-}
-
 export type User = {
   name: string
   did: string
@@ -60,7 +56,7 @@ export interface UserStoreI {
   reply(id: string, text: string): Promise<void>
 
   followUser(username: string, did: string): Promise<void>
-  unfollowUser(did:string): Promise<void>
+  unfollowUser(did: string): Promise<void>
   listFollows(): Promise<Follow[]>
 
   like(id: string): Promise<void>

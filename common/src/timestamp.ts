@@ -1,5 +1,4 @@
 export class Timestamp {
-
   time: number
   clockid: number
 
@@ -14,12 +13,12 @@ export class Timestamp {
   }
 
   static parse(str: string): Timestamp {
-    const time = parseInt(str.slice(0,-2), 32)
+    const time = parseInt(str.slice(0, -2), 32)
     const clockid = parseInt(str.slice(-2), 32)
     return new Timestamp(time, clockid)
   }
 
-  static newestFirst(a: Timestamp, b:Timestamp): number {
+  static newestFirst(a: Timestamp, b: Timestamp): number {
     return a.compareTo(b) * -1
   }
 
@@ -28,7 +27,9 @@ export class Timestamp {
   }
 
   toString(): string {
-    return `${this.time.toString(32).padStart(9, '0')}${this.clockid.toString(32).padStart(2, '0')}`
+    return `${this.time.toString(32).padStart(9, '0')}${this.clockid
+      .toString(32)
+      .padStart(2, '0')}`
   }
 
   // newer > older
@@ -51,6 +52,6 @@ export class Timestamp {
   olderThan(other: Timestamp): boolean {
     return this.compareTo(other) < 0
   }
-} 
+}
 
 export default Timestamp

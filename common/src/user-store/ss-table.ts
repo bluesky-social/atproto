@@ -1,11 +1,10 @@
-import { CID } from "multiformats"
-import * as check from "../type-check.js"
-import { Entry, IdMapping } from "../types.js"
-import IpldStore from "../blockstore/ipld-store.js"
-import Timestamp from "../timestamp.js"
+import { CID } from 'multiformats'
+import * as check from '../type-check.js'
+import { Entry, IdMapping } from '../types.js'
+import IpldStore from '../blockstore/ipld-store.js'
+import Timestamp from '../timestamp.js'
 
 export class SSTable {
-
   store: IpldStore
   cid: CID
   size: TableSize
@@ -29,15 +28,15 @@ export class SSTable {
   }
 
   static async merge(tables: SSTable[]): Promise<SSTable> {
-    if(tables.length < 1) {
-      throw new Error("Must provide at least one table")
-    } 
+    if (tables.length < 1) {
+      throw new Error('Must provide at least one table')
+    }
     const store = tables[0].store
     const data = tables
-      .map(t => t.data)
+      .map((t) => t.data)
       .reduce((acc, cur) => {
         Object.entries(cur).forEach(([key, val]) => {
-          if(acc[key] !== undefined) {
+          if (acc[key] !== undefined) {
             throw new Error(`Merge conflict on key: ${key}`)
           }
           acc[key] = val
@@ -46,7 +45,7 @@ export class SSTable {
       }, {} as IdMapping)
 
     const cid = await store.put(data)
-    return new SSTable(store, cid, data) 
+    return new SSTable(store, cid, data)
   }
 
   getEntry(id: Timestamp): CID | null {
@@ -60,9 +59,9 @@ export class SSTable {
   async addEntry(id: Timestamp, cid: CID): Promise<void> {
     // @TODO allow some leeway room?
     if (this.isFull()) {
-      throw new Error("Table is full")
+      throw new Error('Table is full')
     }
-    if(this.hasEntry(id)) {
+    if (this.hasEntry(id)) {
       throw new Error(`Entry already exists for id ${id}`)
     }
     this.data[id.toString()] = cid
@@ -71,7 +70,7 @@ export class SSTable {
 
   async addEntries(ids: IdMapping): Promise<void> {
     Object.entries(ids).forEach(([id, cid]) => {
-      if(this.data[id]) {
+      if (this.data[id]) {
         throw new Error(`Entry already exists for id ${id}`)
       }
       this.data[id] = cid
@@ -81,7 +80,7 @@ export class SSTable {
 
   async editEntry(id: Timestamp, cid: CID): Promise<void> {
     const idStr = id.toString()
-    if(!this.data[idStr]) {
+    if (!this.data[idStr]) {
       throw new Error(`Entry does not exist for id ${idStr}`)
     }
     this.data[idStr] = cid
@@ -90,7 +89,7 @@ export class SSTable {
 
   async deleteEntry(id: Timestamp): Promise<void> {
     const idStr = id.toString()
-    if(!this.data[idStr]) {
+    if (!this.data[idStr]) {
       throw new Error(`Entry does not exist for id ${idStr}`)
     }
     delete this.data[idStr]
@@ -102,8 +101,8 @@ export class SSTable {
   }
 
   ids(oldestFirst = false): Timestamp[] {
-    const ids = Object.keys(this.data).map(k => Timestamp.parse(k))
-    return oldestFirst 
+    const ids = Object.keys(this.data).map((k) => Timestamp.parse(k))
+    return oldestFirst
       ? ids.sort(Timestamp.oldestFirst)
       : ids.sort(Timestamp.newestFirst)
   }
@@ -115,7 +114,7 @@ export class SSTable {
   entries(): Entry[] {
     return Object.entries(this.data)
       .map(([id, cid]) => ({ id: Timestamp.parse(id), cid }))
-      .sort((a, b)=> Timestamp.newestFirst(a.id, b.id))
+      .sort((a, b) => Timestamp.newestFirst(a.id, b.id))
   }
 
   currSize(): number {
@@ -131,7 +130,6 @@ export class SSTable {
   }
 }
 
-
 export enum TableSize {
   sm = 'sm',
   md = 'md',
@@ -141,10 +139,14 @@ export enum TableSize {
 
 const sizeForName = (size: TableSize): number => {
   switch (size) {
-    case TableSize.sm: return 100
-    case TableSize.md: return 400
-    case TableSize.lg: return 1600
-    case TableSize.xl: return 6400
+    case TableSize.sm:
+      return 100
+    case TableSize.md:
+      return 400
+    case TableSize.lg:
+      return 1600
+    case TableSize.xl:
+      return 6400
   }
 }
 
@@ -157,7 +159,7 @@ const nameForSize = (size: number): TableSize => {
     return TableSize.lg
   } else {
     return TableSize.xl
-  } 
+  }
 }
 
 export default SSTable

@@ -15,7 +15,7 @@ type Context = {
   cid2: CID
 }
 
-test.beforeEach(async t => {
+test.beforeEach(async (t) => {
   const store = IpldStore.createInMemory()
   const table = await SSTable.create(store)
   const table2 = await SSTable.create(store)
@@ -25,7 +25,7 @@ test.beforeEach(async t => {
   t.pass('Context setup')
 })
 
-test('basic operations', async t => {
+test('basic operations', async (t) => {
   const { table, cid, cid2 } = t.context as Context
   const id = Timestamp.now()
 
@@ -39,18 +39,18 @@ test('basic operations', async t => {
   t.is(await table.getEntry(id), null, 'deletes data')
 })
 
-test('enforces uniqueness', async t=> {
+test('enforces uniqueness', async (t) => {
   const { table, cid, cid2 } = t.context as Context
   const id = Timestamp.now()
   await table.addEntry(id, cid)
   await t.throwsAsync(
     table.addEntry(id, cid),
     { instanceOf: Error },
-    "throw when adding non-unique key"
+    'throw when adding non-unique key',
   )
 })
 
-test('bulk adds data', async t => {
+test('bulk adds data', async (t) => {
   const { table } = t.context as Context
   const bulkIds = await util.generateBulkIdMapping(50)
   await table.addEntries(bulkIds)
@@ -60,27 +60,29 @@ test('bulk adds data', async t => {
   t.true(allIncluded, 'contains all added entries')
 })
 
-test('returns oldest id', async t => {
+test('returns oldest id', async (t) => {
   const { table, cid } = t.context as Context
   const bulkIds = util.generateBulkIds(50)
-  await Promise.all(
-    bulkIds.map(id => table.addEntry(id, cid))
-  )
+  await Promise.all(bulkIds.map((id) => table.addEntry(id, cid)))
   t.deepEqual(table.oldestId(), bulkIds[0], 'returns oldest id')
 })
 
-test('loads from blockstore', async t => {
+test('loads from blockstore', async (t) => {
   const { store, table } = t.context as Context
   const bulkIds = await util.generateBulkIdMapping(50)
   await table.addEntries(bulkIds)
 
   const fromBS = await SSTable.get(store, table.cid)
   for (const id of Object.keys(bulkIds)) {
-    t.deepEqual(fromBS.getEntry(Timestamp.parse(id)), bulkIds[id], `Matching content for id: ${id}`)
+    t.deepEqual(
+      fromBS.getEntry(Timestamp.parse(id)),
+      bulkIds[id],
+      `Matching content for id: ${id}`,
+    )
   }
 })
 
-test('enforces max size', async t => {
+test('enforces max size', async (t) => {
   const { table, cid } = t.context as Context
   const bulkIds = await util.generateBulkIdMapping(100)
   await table.addEntries(bulkIds)
@@ -88,11 +90,11 @@ test('enforces max size', async t => {
   await t.throwsAsync(
     table.addEntry(Timestamp.now(), cid),
     { message: 'Table is full' },
-    'throws when exceeding max size'
+    'throws when exceeding max size',
   )
 })
 
-test('merges tables', async t => {
+test('merges tables', async (t) => {
   const { table, table2 } = t.context as Context
   const bulkIds = await util.generateBulkIdMapping(100, Date.now() - 1000)
   const bulkIds2 = await util.generateBulkIdMapping(100)
@@ -107,7 +109,7 @@ test('merges tables', async t => {
   t.is(merged.size, TableSize.md, 'correctly upgrades size of table')
 })
 
-test('enforces uniqueness on merge', async t => {
+test('enforces uniqueness on merge', async (t) => {
   const { table, table2, cid } = t.context as Context
   const bulkIds = await util.generateBulkIdMapping(99, Date.now() - 1000)
   const bulkIds2 = await util.generateBulkIdMapping(99)
@@ -120,6 +122,6 @@ test('enforces uniqueness on merge', async t => {
   await t.throwsAsync(
     SSTable.merge([table, table2]),
     { instanceOf: Error },
-    "throw when merge conflict on non-unique key"
+    'throw when merge conflict on non-unique key',
   )
 })
