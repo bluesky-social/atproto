@@ -40,7 +40,7 @@ test('basic operations', async (t) => {
 })
 
 test('enforces uniqueness', async (t) => {
-  const { table, cid, cid2 } = t.context as Context
+  const { table, cid } = t.context as Context
   const id = Timestamp.now()
   await table.addEntry(id, cid)
   await t.throwsAsync(

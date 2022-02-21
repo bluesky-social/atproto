@@ -22,7 +22,7 @@ export class IpldStore {
     return new IpldStore(new PersistentBlockstore(location))
   }
 
-  async put(value: Object): Promise<CID> {
+  async put(value: Record<string, unknown>): Promise<CID> {
     const block = await Block.encode({
       value,
       codec: blockCodec,

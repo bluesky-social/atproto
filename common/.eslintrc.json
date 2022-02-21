@@ -13,6 +13,7 @@
     "prettier"
   ],
   "rules": {
-    "no-var": "error"
+    "no-var": "error",
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }

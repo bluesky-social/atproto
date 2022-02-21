@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import Timestamp from './timestamp.js'
 import { Commit, IdMapping, User } from './types.js'
 
 export const assure = <T>(
@@ -11,10 +10,6 @@ export const assure = <T>(
   throw new Error(`Not a ${name}`)
 }
 
-export const isObject = (obj: any): obj is Object => {
-  return obj && typeof obj === 'object'
-}
-
 export const isCID = (obj: any): obj is CID => {
   return !!CID.asCID(obj)
 }
@@ -22,7 +17,7 @@ export const isCID = (obj: any): obj is CID => {
 // @TODO: maybe split these out as static methods on their classes?
 export const isUser = (obj: any): obj is User => {
   return (
-    isObject(obj) &&
+    obj &&
     typeof obj.name === 'string' &&
     typeof obj.did === 'string' &&
     typeof obj.nextPost === 'number' &&
@@ -36,7 +31,7 @@ export const assureUser = (obj: any): User => {
 }
 
 export const isCommit = (obj: any): obj is Commit => {
-  return isObject(obj) && isCID(obj.user) && ArrayBuffer.isView(obj.sig)
+  return obj && isCID(obj.user) && ArrayBuffer.isView(obj.sig)
 }
 
 export const assureCommit = (obj: any): Commit => {
@@ -44,7 +39,7 @@ export const assureCommit = (obj: any): Commit => {
 }
 
 export const isIdMapping = (obj: any): obj is IdMapping => {
-  return isObject(obj) && Object.values(obj).every(isCID)
+  return obj && Object.values(obj).every(isCID)
 }
 
 export const assureIdMapping = (obj: any): IdMapping => {
