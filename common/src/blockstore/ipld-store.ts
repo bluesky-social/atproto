@@ -44,9 +44,9 @@ export class IpldStore {
       try {
         const verified = checkFn(block.value)
         return verified
-      } catch (err: any) {
+      } catch (err) {
         throw new Error(
-          `Did not find expected object at ${cid.toString()}: ${err.toString()}`,
+          `Did not find expected object at ${cid.toString()}: ${err}`,
         )
       }
     }
