@@ -1,4 +1,5 @@
 {
+  "root": true,
   // parse TypeScript files
   // https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/parser
   "parser": "@typescript-eslint/parser",
