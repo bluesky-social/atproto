@@ -60,6 +60,27 @@ test('loads from blockstore', async t => {
   }
 })
 
+test('paginates gets', async t => {
+  const { branch, cid } = t.context as Context
+  const bulkIds = util.generateBulkIds(250)
+  for (const id of bulkIds) {
+    await branch.addEntry(id, cid)
+  }
+  const reversed = bulkIds.reverse()
+
+  const fromStart = await branch.getEntries(75)
+  t.deepEqual(fromStart.map(e => e.id), reversed.slice(0,75), 'returns a slice from start of branch')
+
+  const middleSlice = await branch.getEntries(75, reversed[100])
+  t.deepEqual(middleSlice.map(e => e.id), reversed.slice(101,176), 'returns a slice from middle of branch')
+
+  const onEdge = await branch.getEntries(100, reversed[50])
+  t.deepEqual(onEdge.map(e => e.id), reversed.slice(51,151), 'returns a slice that falls on table edge')
+
+  const all = await branch.getEntries(300)
+  t.deepEqual(all.map(e => e.id), reversed, 'returns the whole listing ')
+})
+
 test("splits tables", async t => {
   const { branch, cid } = t.context as Context
   const ids = util.generateBulkIds(100)

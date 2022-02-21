@@ -2,7 +2,7 @@ import { CID } from "multiformats"
 import * as check from "../type-check.js"
 
 import IpldStore from "../blockstore/ipld-store.js"
-import { IdMapping } from "../types.js"
+import { Entry, IdMapping } from "../types.js"
 import SSTable, { TableSize } from "./ss-table.js"
 import Timestamp from "../timestamp.js"
 
@@ -105,6 +105,37 @@ export class Branch {
     const table = await this.getTableForId(id)
     if (!table) return null
     return table.getEntry(id)
+  }
+
+  async getEntries(count: number, from?: Timestamp): Promise<Entry[]> {
+    const names = this.tableNames()
+    const index = from !== undefined
+      ? names.findIndex(n => !from.olderThan(n))
+      : 0
+    
+    if (index === -1) return []
+
+    let entries: Entry[] = []
+
+    for (let i = index; i < names.length; i++) {
+      const table = await this.getTable(names[i])
+      if (table === null) {
+        throw new Error(`Could not read table: ${names[i]}`)
+      }
+      const tableEntries = table.entries()
+      // for first table we only want entries older than `from`, otherwise start from beginning
+      const tableStartIndex = 
+        from !== undefined && i === index
+        ? tableEntries.findIndex(e => e.id.olderThan(from))
+        : 0
+
+      const tableEndIndex = tableStartIndex + (count - entries.length)
+      const tableSlice = tableEntries.slice(tableStartIndex, tableEndIndex)
+
+      entries = entries.concat(tableSlice)
+    }
+
+    return entries
   }
 
   async addEntry(id: Timestamp, cid: CID): Promise<void> {
