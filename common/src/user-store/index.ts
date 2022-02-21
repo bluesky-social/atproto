@@ -1,208 +1,233 @@
-import { CID } from 'multiformats'
-import * as check from '../type-check.js'
+import { CID } from 'multiformats/cid'
+import { CarReader, CarWriter } from '@ipld/car'
+import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
+import { Didable, Keypair } from 'ucans'
+
+import { User, Post, Follow, UserStoreI } from '../types.js'
+import * as check from '../type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping } from '../types.js'
-import SSTable, { TableSize } from './ss-table.js'
+import Branch from './branch.js'
+import { streamToArray } from '../util.js'
 import Timestamp from '../timestamp.js'
 
-export class Branch {
-  store: IpldStore
-  cid: CID
-  data: IdMapping
+export class UserStore implements UserStoreI {
+  ipld: IpldStore
+  postBranch: Branch
+  root: CID
+  keypair: Keypair | null
 
-  constructor(store: IpldStore, cid: CID, data: IdMapping) {
-    this.store = store
-    this.cid = cid
-    this.data = data
+  constructor(params: {
+    ipld: IpldStore
+    postBranch: Branch
+    root: CID
+    keypair?: Keypair
+  }) {
+    this.ipld = params.ipld
+    this.postBranch = params.postBranch
+    this.root = params.root
+    this.keypair = params.keypair || null
   }
 
-  static async create(store: IpldStore): Promise<Branch> {
-    const cid = await store.put({})
-    return new Branch(store, cid, {})
-  }
-
-  static async get(store: IpldStore, cid: CID): Promise<Branch> {
-    const data = await store.get(cid, check.assureIdMapping)
-    return new Branch(store, cid, data)
-  }
-
-  async getOrCreateCurrTable(): Promise<SSTable> {
-    const table = await this.getCurrTable()
-    if (table === null) {
-      return SSTable.create(this.store)
-    }
-    if (table.isFull()) {
-      await this.compressTables()
-      return SSTable.create(this.store)
-    } else {
-      return table
-    }
-  }
-
-  async getCurrTable(): Promise<SSTable | null> {
-    const name = this.tableNames()[0]
-    if (name === undefined) return null
-    return this.getTable(name)
-  }
-
-  async getTable(name: Timestamp): Promise<SSTable | null> {
-    if (!name) return null
-    const cid = this.data[name.toString()]
-    if (cid === undefined) return null
-    return SSTable.get(this.store, cid)
-  }
-
-  getTableNameForId(id: Timestamp): Timestamp | null {
-    return this.tableNames().find((n) => !id.olderThan(n)) || null
-  }
-
-  async getTableForId(id: Timestamp): Promise<SSTable | null> {
-    const name = this.getTableNameForId(id)
-    if (!name) return null
-    return this.getTable(name)
-  }
-
-  async updateRoot(): Promise<void> {
-    this.cid = await this.store.put(this.data)
-  }
-
-  async compressTables(): Promise<void> {
-    const tableNames = this.tableNames()
-    if (tableNames.length < 1) return
-    const mostRecent = await this.getTable(tableNames[0])
-    if (mostRecent === null) return
-    const compressed = await this.compressCascade(
-      mostRecent,
-      tableNames.slice(1),
-    )
-    const tableName = compressed.oldestId()
-    if (tableName && !tableName.equals(tableNames[0])) {
-      delete this.data[tableNames[0].toString()]
-      this.data[tableName.toString()] = compressed.cid
-    }
-    await this.updateRoot()
-  }
-
-  private async compressCascade(
-    mostRecent: SSTable,
-    nextKeys: Timestamp[],
-  ): Promise<SSTable> {
-    const size = mostRecent.size
-    const keys = nextKeys.slice(0, 3)
-    const tables = await Promise.all(keys.map((k) => this.getTable(k)))
-    const filtered = tables.filter((t) => t?.size === size) as SSTable[]
-    // need 4 tables to merge down a level
-    if (filtered.length < 3 || size === TableSize.xl) {
-      // if no merge at this level, we just return the p;revious level
-      return mostRecent
+  static async create(
+    username: string,
+    ipld: IpldStore,
+    keypair: Keypair & Didable,
+  ) {
+    const postBranch = await Branch.create(ipld)
+    const user = {
+      did: await keypair.did(),
+      name: username,
+      nextPost: 0,
+      postsRoot: postBranch.cid,
+      follows: [],
     }
 
-    keys.forEach((k) => delete this.data[k.toString()])
+    const userCid = await ipld.put(user)
+    const commit = {
+      user: userCid,
+      sig: await keypair.sign(userCid.bytes),
+    }
 
-    const merged = await SSTable.merge([mostRecent, ...filtered])
-    return await this.compressCascade(merged, nextKeys.slice(3))
+    const root = await ipld.put(commit)
+
+    return new UserStore({
+      ipld,
+      postBranch,
+      root,
+      keypair,
+    })
   }
 
-  async getEntry(id: Timestamp): Promise<CID | null> {
-    const table = await this.getTableForId(id)
-    if (!table) return null
-    return table.getEntry(id)
+  static async get(root: CID, ipld: IpldStore, keypair?: Keypair) {
+    const commit = await ipld.get(root, check.assureCommit)
+    const user = await ipld.get(commit.user, check.assureUser)
+    const postBranch = await Branch.get(ipld, user.postsRoot)
+    return new UserStore({
+      ipld,
+      postBranch,
+      root,
+      keypair,
+    })
   }
 
-  async getEntries(count: number, from?: Timestamp): Promise<Entry[]> {
-    const names = this.tableNames()
-    const index =
-      from !== undefined ? names.findIndex((n) => !from.olderThan(n)) : 0
+  static async fromCarFile(
+    buf: Uint8Array,
+    ipld: IpldStore,
+    keypair?: Keypair,
+  ) {
+    const car = await CarReader.fromBytes(buf)
 
-    if (index === -1) return []
+    const roots = await car.getRoots()
+    if (roots.length !== 1) {
+      throw new Error(`Expected one root, got ${roots.length}`)
+    }
+    const root = roots[0]
 
-    let entries: Entry[] = []
+    for await (const block of car.blocks()) {
+      await ipld.putBytes(block.cid, block.bytes)
+    }
 
-    for (let i = index; i < names.length; i++) {
-      const table = await this.getTable(names[i])
-      if (table === null) {
-        throw new Error(`Could not read table: ${names[i]}`)
+    const commit = await ipld.get(root, check.assureCommit)
+    const user = await ipld.get(commit.user, check.assureUser)
+    const postBranch = await Branch.get(ipld, user.postsRoot)
+    return new UserStore({
+      ipld,
+      postBranch,
+      root,
+      keypair,
+    })
+  }
+
+  async updateUserRoot(user: User): Promise<CID> {
+    if (this.keypair === null) {
+      throw new Error('No keypair provided. UserStore is read-only.')
+    }
+    const userCid = await this.ipld.put(user)
+    const commit = {
+      user: userCid,
+      sig: await this.keypair.sign(userCid.bytes),
+    }
+
+    this.root = await this.ipld.put(commit)
+    return this.root
+  }
+
+  async getUser(): Promise<User> {
+    const commit = await this.ipld.get(this.root, check.assureCommit)
+    return this.ipld.get(commit.user, check.assureUser)
+  }
+
+  async addPost(text: string): Promise<Timestamp> {
+    const user = await this.getUser()
+    const timestamp = Timestamp.now()
+
+    const post = {
+      id: timestamp.toString(),
+      text,
+      author: user.did,
+      time: new Date().toISOString(),
+    }
+    const postCid = await this.ipld.put(post)
+
+    await this.postBranch.addEntry(timestamp, postCid)
+
+    user.nextPost++
+    user.postsRoot = this.postBranch.cid
+
+    await this.updateUserRoot(user)
+    return timestamp
+  }
+
+  async editPost(id: Timestamp, text: string): Promise<void> {
+    const user = await this.getUser()
+    const post = {
+      id,
+      text,
+      author: user.did,
+      time: new Date().toISOString(),
+    }
+    const postCid = await this.ipld.put(post)
+
+    await this.postBranch.editEntry(id, postCid)
+    user.postsRoot = this.postBranch.cid
+
+    await this.updateUserRoot(user)
+  }
+
+  async deletePost(id: Timestamp): Promise<void> {
+    const user = await this.getUser()
+    await this.postBranch.deleteEntry(id)
+    user.postsRoot = this.postBranch.cid
+    await this.updateUserRoot(user)
+  }
+
+  async listPosts(): Promise<Post[]> {
+    // @TODO: implement with pagination
+    return []
+  }
+
+  async reply(id: string, text: string): Promise<void> {
+    throw new Error('Reply not implemented yet')
+  }
+
+  async followUser(username: string, did: string): Promise<void> {
+    const user = await this.getUser()
+    if (user.follows.some((u) => u.username === username)) {
+      throw new Error(`User with username ${username} already exists.`)
+    } else if (user.follows.some((u) => u.did === did)) {
+      throw new Error(`User with did ${did} already exists.`)
+    }
+    user.follows.push({ username, did })
+    await this.updateUserRoot(user)
+  }
+
+  async unfollowUser(did: string): Promise<void> {
+    const user = await this.getUser()
+    const i = user.follows.findIndex((f) => f.did === did)
+    user.follows = user.follows.splice(i, 1)
+    await this.updateUserRoot(user)
+  }
+
+  async listFollows(): Promise<Follow[]> {
+    const user = await this.getUser()
+    return user.follows
+  }
+
+  async like(id: string): Promise<void> {
+    throw new Error('Like not implemented yet')
+  }
+
+  async unlike(id: string): Promise<void> {
+    throw new Error('Unlike not implemented yet')
+  }
+
+  async listLikes(): Promise<void> {
+    throw new Error('list likes not implemented yet')
+  }
+
+  getCarStream(): AsyncIterable<Uint8Array> {
+    const writeblockstore = async (car: BlockWriter) => {
+      const addCid = async (cid: CID) => {
+        car.put({ cid, bytes: await this.ipld.getBytes(cid) })
       }
-      const tableEntries = table.entries()
-      // for first table we only want entries older than `from`, otherwise start from beginning
-      const tableStartIndex =
-        from !== undefined && i === index
-          ? tableEntries.findIndex((e) => e.id.olderThan(from))
-          : 0
+      await addCid(this.root)
+      const commit = await this.ipld.get(this.root, check.assureCommit)
+      await addCid(commit.user)
 
-      const tableEndIndex = tableStartIndex + (count - entries.length)
-      const tableSlice = tableEntries.slice(tableStartIndex, tableEndIndex)
-
-      entries = entries.concat(tableSlice)
+      const postCids = await this.postBranch.nestedCids()
+      await Promise.all(postCids.map((c) => addCid(c)))
+      car.close()
     }
 
-    return entries
+    const { writer, out } = CarWriter.create([this.root])
+    writeblockstore(writer)
+    return out
   }
 
-  async addEntry(id: Timestamp, cid: CID): Promise<void> {
-    const table = await this.getOrCreateCurrTable()
-    const oldestKey = table.oldestId()
-    if (oldestKey && id.olderThan(oldestKey)) {
-      // @TODO handle this more gracefully
-      throw new Error('Attempting to add an id that is too old for the table')
-    }
-    await table.addEntry(id, cid)
-    const tableName = oldestKey?.toString() || id.toString()
-    this.data[tableName] = table.cid
-    await this.updateRoot()
-  }
-
-  async editTableForId(
-    id: Timestamp,
-    fn: (table: SSTable) => Promise<void>,
-  ): Promise<void> {
-    const tableName = this.getTableNameForId(id)
-    if (!tableName) throw new Error(`Could not find entry with id: ${id}`)
-    const table = await this.getTable(tableName)
-    if (!table) throw new Error(`Could not find entry with id: ${id}`)
-    await fn(table)
-    this.data[tableName.toString()] = table.cid
-    await this.updateRoot()
-  }
-
-  async editEntry(id: Timestamp, cid: CID): Promise<void> {
-    await this.editTableForId(id, async (table) => {
-      await table.editEntry(id, cid)
-    })
-  }
-
-  async deleteEntry(id: Timestamp): Promise<void> {
-    await this.editTableForId(id, async (table) => {
-      await table.deleteEntry(id)
-    })
-  }
-
-  tableNames(oldestFirst = false): Timestamp[] {
-    const ids = Object.keys(this.data).map((k) => Timestamp.parse(k))
-    return oldestFirst
-      ? ids.sort(Timestamp.oldestFirst)
-      : ids.sort(Timestamp.newestFirst)
-  }
-
-  tableCount(): number {
-    return Object.keys(this.data).length
-  }
-
-  cids(): CID[] {
-    return Object.values(this.data).sort().reverse()
-  }
-
-  async nestedCids(): Promise<CID[]> {
-    const all = []
-    const cids = this.cids()
-    for (const cid of cids) {
-      all.push(cid)
-      const table = await SSTable.get(this.store, cid)
-      table.cids().forEach((c) => all.push(c))
-    }
-    return all
+  async getCarFile(): Promise<Uint8Array> {
+    return streamToArray(this.getCarStream())
   }
 }
 
-export default Branch
+export default UserStore
