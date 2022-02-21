@@ -4,7 +4,7 @@ import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
 
 import MemoryBlockstore from './memory-blockstore.js'
-import { BlockstoreI } from '../types.js'
+import { BlockstoreI } from './types.js'
 import { PersistentBlockstore } from './persistent-blockstore.js'
 
 export class IpldStore {

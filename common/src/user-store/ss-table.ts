@@ -1,8 +1,7 @@
 import { CID } from 'multiformats'
-import * as check from '../type-check.js'
-import { Entry, IdMapping } from '../types.js'
+import { Entry, IdMapping, check } from './types/index.js'
 import IpldStore from '../blockstore/ipld-store.js'
-import Timestamp from '../timestamp.js'
+import Timestamp from './timestamp.js'
 
 export class SSTable {
   store: IpldStore

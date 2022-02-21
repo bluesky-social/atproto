@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { BlockstoreI } from '../types.js'
+import { BlockstoreI } from './types.js'
 
 export class MemoryBlockstore implements BlockstoreI {
   map: Map<string, Uint8Array>
