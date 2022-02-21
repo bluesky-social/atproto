@@ -1,27 +1,26 @@
 import { isCID, assure } from '../../common/types/check'
-import { Commit, IdMapping } from './index.js'
+import { Commit, Root, IdMapping } from './index.js'
 
-// export const isUser = (obj: unknown): obj is User => {
-//   return (
-//     isObject(obj) &&
-//     typeof obj.name === 'string' &&
-//     typeof obj.did === 'string' &&
-//     typeof obj.nextPost === 'number' &&
-//     !!CID.asCID(obj.postsRoot) &&
-//     Array.isArray(obj.follows)
-//   )
-// }
+export const isRoot = (obj: unknown): obj is Root => {
+  return (
+    isObject(obj) &&
+    typeof obj.did === 'string' &&
+    isCID(obj.posts) &&
+    isCID(obj.relationships) &&
+    isCID(obj.interactions)
+  )
+}
 
-// export const assureUser = (obj: unknown): User => {
-//   return assure(obj, 'User', isUser)
-// }
+export const assureRoot = (obj: unknown): Root => {
+  return assure(obj, 'Root', isRoot)
+}
 
 export const isObject = (obj: unknown): obj is Record<string, unknown> => {
   return typeof obj === 'object' && obj !== null
 }
 
 export const isCommit = (obj: unknown): obj is Commit => {
-  return isObject(obj) && isCID(obj.user) && ArrayBuffer.isView(obj.sig)
+  return isObject(obj) && isCID(obj.root) && ArrayBuffer.isView(obj.sig)
 }
 
 export const assureCommit = (obj: unknown): Commit => {

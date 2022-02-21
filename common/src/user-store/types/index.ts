@@ -4,13 +4,14 @@ import Timestamp from '../timestamp'
 export * as check from './check'
 
 export type Root = {
+  did: string
   posts: CID
   relationships: CID
   interactions: CID
 }
 
 export type Commit = {
-  user: CID
+  root: CID
   sig: Uint8Array
 }
 
@@ -21,24 +22,36 @@ export type Entry = {
   cid: CID
 }
 
-// export interface UserStoreI {
-//   // getUser(): Promise<User>
+export type Follow = {
+  username: string
+  did: string
+}
 
-//   addPost(text: string): Promise<Timestamp>
-//   editPost(id: Timestamp, text: string): Promise<void>
-//   deletePost(id: Timestamp): Promise<void>
-//   // listPosts(): Promise<Post[]>
+export type Post = {
+  id: string
+  author: string
+  text: string
+  time: string // ISO 8601
+}
 
-//   reply(id: string, text: string): Promise<void>
+export interface UserStoreI {
+  // getUser(): Promise<User>
 
-//   followUser(username: string, did: string): Promise<void>
-//   unfollowUser(did: string): Promise<void>
-//   // listFollows(): Promise<Follow[]>
+  addPost(text: string): Promise<Timestamp>
+  editPost(id: Timestamp, text: string): Promise<void>
+  deletePost(id: Timestamp): Promise<void>
+  listPosts(): Promise<Post[]>
 
-//   like(id: string): Promise<void>
-//   unlike(id: string): Promise<void>
-//   listLikes(): Promise<void>
+  reply(id: string, text: string): Promise<void>
 
-//   getCarStream(): AsyncIterable<Uint8Array>
-//   getCarFile(): Promise<Uint8Array>
-// }
+  followUser(username: string, did: string): Promise<void>
+  unfollowUser(did: string): Promise<void>
+  listFollows(): Promise<Follow[]>
+
+  like(id: string): Promise<void>
+  unlike(id: string): Promise<void>
+  listLikes(): Promise<void>
+
+  getCarStream(): AsyncIterable<Uint8Array>
+  getCarFile(): Promise<Uint8Array>
+}

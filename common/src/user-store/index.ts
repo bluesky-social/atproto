@@ -4,8 +4,7 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-// import { User, Post, Follow, UserStoreI, check } from './types/index.js'
-import { check } from './types/index.js'
+import { Post, Follow, UserStoreI, check, Root } from './types/index.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import Branch from './branch.js'
 import { streamToArray } from '../common/util.js'
@@ -13,18 +12,24 @@ import Timestamp from './timestamp.js'
 
 export class UserStore implements UserStoreI {
   ipld: IpldStore
-  postBranch: Branch
+  posts: Branch
+  interactions: Branch
+  relationships: Branch
   root: CID
   keypair: Keypair | null
 
   constructor(params: {
     ipld: IpldStore
-    postBranch: Branch
+    posts: Branch
+    interactions: Branch
+    relationships: Branch
     root: CID
     keypair?: Keypair
   }) {
     this.ipld = params.ipld
-    this.postBranch = params.postBranch
+    this.posts = params.posts
+    this.interactions = params.interactions
+    this.relationships = params.relationships
     this.root = params.root
     this.keypair = params.keypair || null
   }
@@ -34,26 +39,30 @@ export class UserStore implements UserStoreI {
     ipld: IpldStore,
     keypair: Keypair & Didable,
   ) {
-    const postBranch = await Branch.create(ipld)
-    const user = {
+    const posts = await Branch.create(ipld)
+    const interactions = await Branch.create(ipld)
+    const relationships = await Branch.create(ipld)
+
+    const rootObj = {
       did: await keypair.did(),
-      name: username,
-      nextPost: 0,
-      postsRoot: postBranch.cid,
-      follows: [],
+      posts: posts.cid,
+      interactions: interactions.cid,
+      relationships: relationships.cid,
     }
 
-    const userCid = await ipld.put(user)
+    const rootCid = await ipld.put(rootObj)
     const commit = {
-      user: userCid,
-      sig: await keypair.sign(userCid.bytes),
+      root: rootCid,
+      sig: await keypair.sign(rootCid.bytes),
     }
 
     const root = await ipld.put(commit)
 
     return new UserStore({
       ipld,
-      postBranch,
+      posts,
+      interactions,
+      relationships,
       root,
       keypair,
     })
@@ -61,11 +70,15 @@ export class UserStore implements UserStoreI {
 
   static async get(root: CID, ipld: IpldStore, keypair?: Keypair) {
     const commit = await ipld.get(root, check.assureCommit)
-    const user = await ipld.get(commit.user, check.assureUser)
-    const postBranch = await Branch.get(ipld, user.postsRoot)
+    const rootObj = await ipld.get(commit.root, check.assureRoot)
+    const posts = await Branch.get(ipld, rootObj.posts)
+    const interactions = await Branch.get(ipld, rootObj.interactions)
+    const relationships = await Branch.get(ipld, rootObj.relationships)
     return new UserStore({
       ipld,
-      postBranch,
+      posts,
+      interactions,
+      relationships,
       root,
       keypair,
     })
@@ -88,22 +101,14 @@ export class UserStore implements UserStoreI {
       await ipld.putBytes(block.cid, block.bytes)
     }
 
-    const commit = await ipld.get(root, check.assureCommit)
-    const user = await ipld.get(commit.user, check.assureUser)
-    const postBranch = await Branch.get(ipld, user.postsRoot)
-    return new UserStore({
-      ipld,
-      postBranch,
-      root,
-      keypair,
-    })
+    return UserStore.get(root, ipld, keypair)
   }
 
-  async updateUserRoot(user: User): Promise<CID> {
+  async updateRoot(root: Root): Promise<CID> {
     if (this.keypair === null) {
       throw new Error('No keypair provided. UserStore is read-only.')
     }
-    const userCid = await this.ipld.put(user)
+    const userCid = await this.ipld.put(root)
     const commit = {
       user: userCid,
       sig: await this.keypair.sign(userCid.bytes),
@@ -113,53 +118,52 @@ export class UserStore implements UserStoreI {
     return this.root
   }
 
-  async getUser(): Promise<User> {
+  async getRoot(): Promise<Root> {
     const commit = await this.ipld.get(this.root, check.assureCommit)
-    return this.ipld.get(commit.user, check.assureUser)
+    return this.ipld.get(commit.root, check.assureRoot)
   }
 
   async addPost(text: string): Promise<Timestamp> {
-    const user = await this.getUser()
+    const root = await this.getRoot()
     const timestamp = Timestamp.now()
 
     const post = {
       id: timestamp.toString(),
       text,
-      author: user.did,
+      author: root.did,
       time: new Date().toISOString(),
     }
     const postCid = await this.ipld.put(post)
 
-    await this.postBranch.addEntry(timestamp, postCid)
+    await this.posts.addEntry(timestamp, postCid)
 
-    user.nextPost++
-    user.postsRoot = this.postBranch.cid
+    root.posts = this.posts.cid
 
-    await this.updateUserRoot(user)
+    await this.updateRoot(root)
     return timestamp
   }
 
   async editPost(id: Timestamp, text: string): Promise<void> {
-    const user = await this.getUser()
+    const root = await this.getRoot()
     const post = {
       id,
       text,
-      author: user.did,
+      author: root.did,
       time: new Date().toISOString(),
     }
     const postCid = await this.ipld.put(post)
 
-    await this.postBranch.editEntry(id, postCid)
-    user.postsRoot = this.postBranch.cid
+    await this.posts.editEntry(id, postCid)
+    root.posts = this.posts.cid
 
-    await this.updateUserRoot(user)
+    await this.updateRoot(root)
   }
 
   async deletePost(id: Timestamp): Promise<void> {
-    const user = await this.getUser()
-    await this.postBranch.deleteEntry(id)
-    user.postsRoot = this.postBranch.cid
-    await this.updateUserRoot(user)
+    const root = await this.getRoot()
+    await this.posts.deleteEntry(id)
+    root.posts = this.posts.cid
+    await this.updateRoot(root)
   }
 
   async listPosts(): Promise<Post[]> {
