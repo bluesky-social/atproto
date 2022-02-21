@@ -28,25 +28,6 @@ export class Branch {
     return new Branch(store, cid, data)
   }
 
-  async getOrCreateCurrTable(): Promise<SSTable> {
-    const table = await this.getCurrTable()
-    if (table === null) {
-      return SSTable.create(this.store)
-    }
-    if (table.isFull()) {
-      await this.compressTables()
-      return SSTable.create(this.store)
-    } else {
-      return table
-    }
-  }
-
-  async getCurrTable(): Promise<SSTable | null> {
-    const name = this.tableNames()[0]
-    if (name === undefined) return null
-    return this.getTable(name)
-  }
-
   async getTable(name: Timestamp): Promise<SSTable | null> {
     if (!name) return null
     const cid = this.data[name.toString()]
@@ -136,6 +117,21 @@ export class Branch {
     }
 
     return entries
+  }
+
+  // helper method to return table instance to write to, but leaves responsibility of adding table to `data` to the caller
+  private async getOrCreateCurrTable(): Promise<SSTable> {
+    const name = this.tableNames()[0]
+    const table = name ? await this.getTable(name) : null
+    if (table === null) {
+      return SSTable.create(this.store)
+    }
+    if (table.isFull()) {
+      await this.compressTables()
+      return SSTable.create(this.store)
+    } else {
+      return table
+    }
   }
 
   async addEntry(id: Timestamp, cid: CID): Promise<void> {
