@@ -3,6 +3,9 @@ import Timestamp from '../timestamp'
 
 export * as check from './check'
 
+// @TODO: improve this
+export type DID = string
+
 export type Root = {
   did: string
   posts: CID
@@ -32,6 +35,14 @@ export type Post = {
   author: string
   text: string
   time: string // ISO 8601
+}
+
+export interface Collection<T> {
+  getEntry(id: T): Promise<CID | null>
+  addEntry(id: T, cid: CID): Promise<void>
+  editEntry(id: T, cid: CID): Promise<void>
+  deleteEntry(id: T): Promise<void>
+  cids(): Promise<CID[]>
 }
 
 export interface UserStoreI {

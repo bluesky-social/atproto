@@ -78,20 +78,18 @@ export class SSTable {
   }
 
   async editEntry(id: Timestamp, cid: CID): Promise<void> {
-    const idStr = id.toString()
-    if (!this.data[idStr]) {
-      throw new Error(`Entry does not exist for id ${idStr}`)
+    if (!this.hasEntry(id)) {
+      throw new Error(`Entry does not exist for id ${id}`)
     }
-    this.data[idStr] = cid
+    this.data[id.toString()] = cid
     this.cid = await this.store.put(this.data)
   }
 
   async deleteEntry(id: Timestamp): Promise<void> {
-    const idStr = id.toString()
-    if (!this.data[idStr]) {
-      throw new Error(`Entry does not exist for id ${idStr}`)
+    if (!this.hasEntry(id)) {
+      throw new Error(`Entry does not exist for id ${id}`)
     }
-    delete this.data[idStr]
+    delete this.data[id.toString()]
     this.cid = await this.store.put(this.data)
   }
 

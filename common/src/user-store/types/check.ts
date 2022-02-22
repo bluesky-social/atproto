@@ -1,5 +1,5 @@
-import { isCID, assure } from '../../common/types/check'
-import { Commit, Root, IdMapping } from './index.js'
+import { isCID, assure, isObject, isString } from '../../common/types/check'
+import { Commit, Root, IdMapping, Post } from './index.js'
 
 export const isRoot = (obj: unknown): obj is Root => {
   return (
@@ -13,10 +13,6 @@ export const isRoot = (obj: unknown): obj is Root => {
 
 export const assureRoot = (obj: unknown): Root => {
   return assure(obj, 'Root', isRoot)
-}
-
-export const isObject = (obj: unknown): obj is Record<string, unknown> => {
-  return typeof obj === 'object' && obj !== null
 }
 
 export const isCommit = (obj: unknown): obj is Commit => {
@@ -33,4 +29,18 @@ export const isIdMapping = (obj: unknown): obj is IdMapping => {
 
 export const assureIdMapping = (obj: unknown): IdMapping => {
   return assure(obj, 'IdMapping', isIdMapping)
+}
+
+export const isPost = (obj: unknown): obj is Post => {
+  return (
+    isObject(obj) &&
+    isString(obj.id) &&
+    isString(obj.author) &&
+    isString(obj.text) &&
+    isString(obj.time)
+  )
+}
+
+export const assurePost = (obj: unknown): Post => {
+  return assure(obj, 'Post', isPost)
 }

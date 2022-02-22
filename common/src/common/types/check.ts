@@ -12,3 +12,11 @@ export const assure = <T>(
 export const isCID = (obj: unknown): obj is CID => {
   return !!CID.asCID(obj)
 }
+
+export const isObject = (obj: unknown): obj is Record<string, unknown> => {
+  return typeof obj === 'object' && obj !== null
+}
+
+export const isString = (obj: unknown): obj is string => {
+  return typeof obj === 'string'
+}

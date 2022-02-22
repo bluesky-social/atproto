@@ -6,23 +6,24 @@ import { Didable, Keypair } from 'ucans'
 
 import { Post, Follow, UserStoreI, check, Root } from './types/index.js'
 import IpldStore from '../blockstore/ipld-store.js'
-import Branch from './branch.js'
+import TablesCollection from './tables-collection.js'
+import TreeCollection from './tree-collection.js'
 import { streamToArray } from '../common/util.js'
 import Timestamp from './timestamp.js'
 
 export class UserStore implements UserStoreI {
   ipld: IpldStore
-  posts: Branch
-  interactions: Branch
-  relationships: Branch
+  posts: TablesCollection
+  interactions: TablesCollection
+  relationships: TreeCollection
   root: CID
   keypair: Keypair | null
 
   constructor(params: {
     ipld: IpldStore
-    posts: Branch
-    interactions: Branch
-    relationships: Branch
+    posts: TablesCollection
+    interactions: TablesCollection
+    relationships: TreeCollection
     root: CID
     keypair?: Keypair
   }) {
@@ -39,9 +40,9 @@ export class UserStore implements UserStoreI {
     ipld: IpldStore,
     keypair: Keypair & Didable,
   ) {
-    const posts = await Branch.create(ipld)
-    const interactions = await Branch.create(ipld)
-    const relationships = await Branch.create(ipld)
+    const posts = await TablesCollection.create(ipld)
+    const interactions = await TablesCollection.create(ipld)
+    const relationships = await TreeCollection.create(ipld)
 
     const rootObj = {
       did: await keypair.did(),
@@ -71,9 +72,9 @@ export class UserStore implements UserStoreI {
   static async get(root: CID, ipld: IpldStore, keypair?: Keypair) {
     const commit = await ipld.get(root, check.assureCommit)
     const rootObj = await ipld.get(commit.root, check.assureRoot)
-    const posts = await Branch.get(ipld, rootObj.posts)
-    const interactions = await Branch.get(ipld, rootObj.interactions)
-    const relationships = await Branch.get(ipld, rootObj.relationships)
+    const posts = await TablesCollection.get(ipld, rootObj.posts)
+    const interactions = await TablesCollection.get(ipld, rootObj.interactions)
+    const relationships = await TreeCollection.get(ipld, rootObj.relationships)
     return new UserStore({
       ipld,
       posts,
@@ -121,6 +122,13 @@ export class UserStore implements UserStoreI {
   async getRoot(): Promise<Root> {
     const commit = await this.ipld.get(this.root, check.assureCommit)
     return this.ipld.get(commit.root, check.assureRoot)
+  }
+
+  async getPost(id: Timestamp): Promise<Post | null> {
+    const postCid = await this.posts.getEntry(id)
+    if (postCid === null) return null
+    const post = await this.ipld.get(postCid, check.assurePost)
+    return post
   }
 
   async addPost(text: string): Promise<Timestamp> {

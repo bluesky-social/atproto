@@ -1,11 +1,11 @@
 import { CID } from 'multiformats'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping, check } from './types/index.js'
+import { Entry, IdMapping, check, Collection } from './types/index.js'
 import SSTable, { TableSize } from './ss-table.js'
 import Timestamp from './timestamp.js'
 
-export class Branch {
+export class TablesCollection implements Collection<Timestamp> {
   store: IpldStore
   cid: CID
   data: IdMapping
@@ -16,14 +16,14 @@ export class Branch {
     this.data = data
   }
 
-  static async create(store: IpldStore): Promise<Branch> {
+  static async create(store: IpldStore): Promise<TablesCollection> {
     const cid = await store.put({})
-    return new Branch(store, cid, {})
+    return new TablesCollection(store, cid, {})
   }
 
-  static async get(store: IpldStore, cid: CID): Promise<Branch> {
+  static async get(store: IpldStore, cid: CID): Promise<TablesCollection> {
     const data = await store.get(cid, check.assureIdMapping)
-    return new Branch(store, cid, data)
+    return new TablesCollection(store, cid, data)
   }
 
   async getTable(name: Timestamp): Promise<SSTable | null> {
@@ -148,7 +148,7 @@ export class Branch {
     await this.updateRoot()
   }
 
-  async editTableForId(
+  private async editTableForId(
     id: Timestamp,
     fn: (table: SSTable) => Promise<void>,
   ): Promise<void> {
@@ -184,13 +184,13 @@ export class Branch {
     return Object.keys(this.data).length
   }
 
-  cids(): CID[] {
-    return Object.values(this.data).sort().reverse()
+  shallowCids(): CID[] {
+    return Object.values(this.data)
   }
 
-  async nestedCids(): Promise<CID[]> {
+  async cids(): Promise<CID[]> {
     const all = []
-    const cids = this.cids()
+    const cids = this.shallowCids()
     for (const cid of cids) {
       all.push(cid)
       const table = await SSTable.get(this.store, cid)
@@ -200,4 +200,4 @@ export class Branch {
   }
 }
 
-export default Branch
+export default TablesCollection
