@@ -17,6 +17,7 @@ export class UserStore implements UserStoreI {
   interactions: TablesCollection
   relationships: TreeCollection
   root: CID
+  did: DID
   keypair: Keypair | null
 
   constructor(params: {
@@ -25,6 +26,7 @@ export class UserStore implements UserStoreI {
     interactions: TablesCollection
     relationships: TreeCollection
     root: CID
+    did: DID
     keypair?: Keypair
   }) {
     this.ipld = params.ipld
@@ -32,20 +34,18 @@ export class UserStore implements UserStoreI {
     this.interactions = params.interactions
     this.relationships = params.relationships
     this.root = params.root
+    this.did = params.did
     this.keypair = params.keypair || null
   }
 
-  static async create(
-    username: string,
-    ipld: IpldStore,
-    keypair: Keypair & Didable,
-  ) {
+  static async create(ipld: IpldStore, keypair: Keypair & Didable) {
     const posts = await TablesCollection.create(ipld)
     const interactions = await TablesCollection.create(ipld)
     const relationships = await TreeCollection.create(ipld)
+    const did = await keypair.did()
 
     const rootObj = {
-      did: await keypair.did(),
+      did: did,
       posts: posts.cid,
       interactions: interactions.cid,
       relationships: relationships.cid,
@@ -65,6 +65,7 @@ export class UserStore implements UserStoreI {
       interactions,
       relationships,
       root,
+      did,
       keypair,
     })
   }
@@ -75,12 +76,14 @@ export class UserStore implements UserStoreI {
     const posts = await TablesCollection.get(ipld, rootObj.posts)
     const interactions = await TablesCollection.get(ipld, rootObj.interactions)
     const relationships = await TreeCollection.get(ipld, rootObj.relationships)
+    const did = rootObj.did
     return new UserStore({
       ipld,
       posts,
       interactions,
       relationships,
       root,
+      did,
       keypair,
     })
   }
@@ -105,11 +108,16 @@ export class UserStore implements UserStoreI {
     return UserStore.get(root, ipld, keypair)
   }
 
-  async updateRoot(root: Root): Promise<CID> {
+  async updateRoot(): Promise<CID> {
     if (this.keypair === null) {
       throw new Error('No keypair provided. UserStore is read-only.')
     }
-    const userCid = await this.ipld.put(root)
+    const userCid = await this.ipld.put({
+      did: this.did,
+      posts: this.posts.cid,
+      relationships: this.relationships.cid,
+      interactions: this.interactions.cid,
+    })
     const commit = {
       user: userCid,
       sig: await this.keypair.sign(userCid.bytes),
@@ -132,46 +140,38 @@ export class UserStore implements UserStoreI {
   }
 
   async addPost(text: string): Promise<Timestamp> {
-    const root = await this.getRoot()
     const timestamp = Timestamp.now()
 
     const post = {
       id: timestamp.toString(),
       text,
-      author: root.did,
+      author: this.did,
       time: new Date().toISOString(),
     }
     const postCid = await this.ipld.put(post)
 
     await this.posts.addEntry(timestamp, postCid)
 
-    root.posts = this.posts.cid
-
-    await this.updateRoot(root)
+    await this.updateRoot()
     return timestamp
   }
 
   async editPost(id: Timestamp, text: string): Promise<void> {
-    const root = await this.getRoot()
     const post = {
       id,
       text,
-      author: root.did,
+      author: this.did,
       time: new Date().toISOString(),
     }
     const postCid = await this.ipld.put(post)
 
     await this.posts.editEntry(id, postCid)
-    root.posts = this.posts.cid
-
-    await this.updateRoot(root)
+    await this.updateRoot()
   }
 
   async deletePost(id: Timestamp): Promise<void> {
-    const root = await this.getRoot()
     await this.posts.deleteEntry(id)
-    root.posts = this.posts.cid
-    await this.updateRoot(root)
+    await this.updateRoot()
   }
 
   async listPosts(count: number, from?: Timestamp): Promise<Post[]> {
@@ -200,16 +200,12 @@ export class UserStore implements UserStoreI {
     const follow = { username, did }
     const cid = await this.ipld.put(follow)
     await this.relationships.addEntry(did, cid)
-    const root = await this.getRoot()
-    root.relationships = this.relationships.cid
-    await this.updateRoot(root)
+    await this.updateRoot()
   }
 
   async unfollowUser(did: string): Promise<void> {
     await this.relationships.deleteEntry(did)
-    const root = await this.getRoot()
-    root.relationships = this.relationships.cid
-    await this.updateRoot(root)
+    await this.updateRoot()
   }
 
   async listFollows(): Promise<Follow[]> {
