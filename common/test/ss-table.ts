@@ -2,7 +2,7 @@ import test from 'ava'
 
 import SSTable, { TableSize } from '../src/user-store/ss-table.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import Timestamp from '../src/timestamp.js'
+import Timestamp from '../src/user-store/timestamp.js'
 
 import * as util from './_util.js'
 import { CID } from 'multiformats'

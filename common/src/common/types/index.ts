@@ -1,1 +1,1 @@
-export * as check from './check'
+export * as check from './check.js'

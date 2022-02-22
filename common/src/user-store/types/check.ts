@@ -1,4 +1,4 @@
-import { isCID, assure, isObject, isString } from '../../common/types/check'
+import { isCID, assure, isObject, isString } from '../../common/types/check.js'
 import { Commit, Root, IdMapping, Post, Follow } from './index.js'
 
 export const isRoot = (obj: unknown): obj is Root => {

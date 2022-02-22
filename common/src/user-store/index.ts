@@ -174,9 +174,12 @@ export class UserStore implements UserStoreI {
     await this.updateRoot(root)
   }
 
-  async listPosts(): Promise<Post[]> {
-    // @TODO: implement with pagination
-    return []
+  async listPosts(count: number, from?: Timestamp): Promise<Post[]> {
+    const entries = await this.posts.getEntries(count, from)
+    const posts = await Promise.all(
+      entries.map((entry) => this.ipld.get(entry.cid, check.assurePost)),
+    )
+    return posts
   }
 
   async reply(id: string, text: string): Promise<void> {
@@ -229,7 +232,7 @@ export class UserStore implements UserStoreI {
     throw new Error('list likes not implemented yet')
   }
 
-  // @TODO: split those out onto each branch & SSTable
+  // @TODO: split this out onto each collection
   getCarStream(): AsyncIterable<Uint8Array> {
     const writeblockstore = async (car: BlockWriter) => {
       const addCid = async (cid: CID) => {

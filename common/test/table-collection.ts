@@ -1,58 +1,58 @@
 import test from 'ava'
 import { CID } from 'multiformats'
 
-import Branch from '../src/user-store/branch.js'
+import TableCollection from '../src/user-store/tables-collection.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import Timestamp from '../src/timestamp.js'
+import Timestamp from '../src/user-store/timestamp.js'
 import * as util from './_util.js'
-import { IdMapping } from '../src/types.js'
+import { IdMapping } from '../src/user-store/types/index.js'
 
 type Context = {
   store: IpldStore
-  branch: Branch
+  collection: TableCollection
   cid: CID
   cid2: CID
 }
 
 test.beforeEach(async (t) => {
   const store = IpldStore.createInMemory()
-  const branch = await Branch.create(store)
+  const collection = await TableCollection.create(store)
   const cid = await util.randomCid()
   const cid2 = await util.randomCid()
-  t.context = { store, branch, cid, cid2 } as Context
+  t.context = { store, collection, cid, cid2 } as Context
   t.pass('Context setup')
 })
 
 test('basic operations', async (t) => {
-  const { branch, cid, cid2 } = t.context as Context
+  const { collection, cid, cid2 } = t.context as Context
 
-  // do basic operations in a branch that has at least 3 tables
+  // do basic operations in a collection that has at least 3 tables
   const ids = util.generateBulkIds(250)
   const mid = ids[125]
   for (const id of ids) {
-    await branch.addEntry(id, cid)
+    await collection.addEntry(id, cid)
   }
 
-  t.deepEqual(await branch.getEntry(mid), cid, 'retrieves correct data')
+  t.deepEqual(await collection.getEntry(mid), cid, 'retrieves correct data')
 
-  await branch.editEntry(mid, cid2)
-  t.deepEqual(await branch.getEntry(mid), cid2, 'edits data')
+  await collection.editEntry(mid, cid2)
+  t.deepEqual(await collection.getEntry(mid), cid2, 'edits data')
 
-  await branch.deleteEntry(mid)
-  t.is(await branch.getEntry(mid), null, 'deletes data')
+  await collection.deleteEntry(mid)
+  t.is(await collection.getEntry(mid), null, 'deletes data')
 })
 
 test('loads from blockstore', async (t) => {
-  const { store, branch } = t.context as Context
+  const { store, collection } = t.context as Context
   const bulkIds = util.generateBulkIds(450)
   const actual = {} as IdMapping
   for (const id of bulkIds) {
     const cid = await util.randomCid()
-    await branch.addEntry(id, cid)
+    await collection.addEntry(id, cid)
     actual[id.toString()] = cid
   }
 
-  const fromBS = await Branch.get(store, branch.cid)
+  const fromBS = await TableCollection.get(store, collection.cid)
   for (const id of bulkIds) {
     const got = await fromBS.getEntry(id)
     t.deepEqual(got, actual[id.toString()], `Matching content for id: ${id}`)
@@ -60,35 +60,35 @@ test('loads from blockstore', async (t) => {
 })
 
 test('paginates gets', async (t) => {
-  const { branch, cid } = t.context as Context
+  const { collection, cid } = t.context as Context
   const bulkIds = util.generateBulkIds(250)
   for (const id of bulkIds) {
-    await branch.addEntry(id, cid)
+    await collection.addEntry(id, cid)
   }
   const reversed = bulkIds.reverse()
 
-  const fromStart = await branch.getEntries(75)
+  const fromStart = await collection.getEntries(75)
   t.deepEqual(
     fromStart.map((e) => e.id),
     reversed.slice(0, 75),
-    'returns a slice from start of branch',
+    'returns a slice from start of collection',
   )
 
-  const middleSlice = await branch.getEntries(75, reversed[100])
+  const middleSlice = await collection.getEntries(75, reversed[100])
   t.deepEqual(
     middleSlice.map((e) => e.id),
     reversed.slice(101, 176),
-    'returns a slice from middle of branch',
+    'returns a slice from middle of collection',
   )
 
-  const onEdge = await branch.getEntries(100, reversed[50])
+  const onEdge = await collection.getEntries(100, reversed[50])
   t.deepEqual(
     onEdge.map((e) => e.id),
     reversed.slice(51, 151),
     'returns a slice that falls on table edge',
   )
 
-  const all = await branch.getEntries(300)
+  const all = await collection.getEntries(300)
   t.deepEqual(
     all.map((e) => e.id),
     reversed,
@@ -97,19 +97,19 @@ test('paginates gets', async (t) => {
 })
 
 test('splits tables', async (t) => {
-  const { branch, cid } = t.context as Context
+  const { collection, cid } = t.context as Context
   const ids = util.generateBulkIds(100)
   for (const id of ids) {
-    await branch.addEntry(id, cid)
+    await collection.addEntry(id, cid)
   }
-  t.is(branch.tableCount(), 1, 'Does not split at 100 entries')
+  t.is(collection.tableCount(), 1, 'Does not split at 100 entries')
 
-  await branch.addEntry(Timestamp.now(), cid)
-  t.is(branch.tableCount(), 2, 'Does split at 101 entries')
+  await collection.addEntry(Timestamp.now(), cid)
+  t.is(collection.tableCount(), 2, 'Does split at 101 entries')
 })
 
 test('compresses tables', async (t) => {
-  const { branch, cid } = t.context as Context
+  const { collection, cid } = t.context as Context
 
   const ids = util.generateBulkIds(6401)
   const firstBatch = ids.slice(0, 400)
@@ -117,29 +117,29 @@ test('compresses tables', async (t) => {
   const secondBatch = ids.slice(401, 6400)
   const final = ids[6400]
   for (const id of firstBatch) {
-    await branch.addEntry(id, cid)
+    await collection.addEntry(id, cid)
   }
-  t.is(branch.tableCount(), 4, 'Does not compress at 4 tables')
+  t.is(collection.tableCount(), 4, 'Does not compress at 4 tables')
 
-  await branch.addEntry(threshold, cid)
+  await collection.addEntry(threshold, cid)
   t.is(
-    branch.tableCount(),
+    collection.tableCount(),
     2,
     'Compresses oldest 4 tables once there are 5 tables',
   )
 
   for (const id of secondBatch) {
-    await branch.addEntry(id, cid)
+    await collection.addEntry(id, cid)
   }
   t.is(
-    branch.tableCount(),
+    collection.tableCount(),
     10,
     'Does not compress at any level until necessary',
   )
 
-  await branch.addEntry(final, cid)
+  await collection.addEntry(final, cid)
   t.is(
-    branch.tableCount(),
+    collection.tableCount(),
     2,
     'Cascades compression of all tables to an xl table',
   )

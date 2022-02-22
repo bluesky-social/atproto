@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
-import Timestamp from '../timestamp'
+import Timestamp from '../timestamp.js'
 
-export * as check from './check'
+export * as check from './check.js'
 
 // @TODO: improve this
 export type DID = string
@@ -37,6 +37,12 @@ export type Post = {
   time: string // ISO 8601
 }
 
+export type Like = {
+  author: string
+  text: string
+  time: string // ISO 8601
+}
+
 export interface Collection<T> {
   getEntry(id: T): Promise<CID | null>
   addEntry(id: T, cid: CID): Promise<void>
@@ -51,7 +57,7 @@ export interface UserStoreI {
   addPost(text: string): Promise<Timestamp>
   editPost(id: Timestamp, text: string): Promise<void>
   deletePost(id: Timestamp): Promise<void>
-  listPosts(): Promise<Post[]>
+  listPosts(count: number, from?: Timestamp): Promise<Post[]>
 
   reply(id: string, text: string): Promise<void>
 
