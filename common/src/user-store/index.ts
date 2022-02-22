@@ -210,6 +210,7 @@ export class UserStore implements UserStoreI {
     throw new Error('list likes not implemented yet')
   }
 
+  // @TODO: split those out onto each branch & SSTable
   getCarStream(): AsyncIterable<Uint8Array> {
     const writeblockstore = async (car: BlockWriter) => {
       const addCid = async (cid: CID) => {
