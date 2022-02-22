@@ -4,7 +4,7 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import { Post, Follow, UserStoreI, check, Root } from './types/index.js'
+import { Post, Follow, UserStoreI, check, Root, DID } from './types/index.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TablesCollection from './tables-collection.js'
 import TreeCollection from './tree-collection.js'
@@ -183,27 +183,38 @@ export class UserStore implements UserStoreI {
     throw new Error('Reply not implemented yet')
   }
 
+  async getFollow(did: DID): Promise<Follow | null> {
+    const cid = await this.relationships.getEntry(did)
+    if (cid === null) return null
+    return this.ipld.get(cid, check.assureFollow)
+  }
+
+  async isFollowing(did: DID): Promise<boolean> {
+    return this.relationships.hasEntry(did)
+  }
+
   async followUser(username: string, did: string): Promise<void> {
-    const user = await this.getUser()
-    if (user.follows.some((u) => u.username === username)) {
-      throw new Error(`User with username ${username} already exists.`)
-    } else if (user.follows.some((u) => u.did === did)) {
-      throw new Error(`User with did ${did} already exists.`)
-    }
-    user.follows.push({ username, did })
-    await this.updateUserRoot(user)
+    const follow = { username, did }
+    const cid = await this.ipld.put(follow)
+    await this.relationships.addEntry(did, cid)
+    const root = await this.getRoot()
+    root.relationships = this.relationships.cid
+    await this.updateRoot(root)
   }
 
   async unfollowUser(did: string): Promise<void> {
-    const user = await this.getUser()
-    const i = user.follows.findIndex((f) => f.did === did)
-    user.follows = user.follows.splice(i, 1)
-    await this.updateUserRoot(user)
+    await this.relationships.deleteEntry(did)
+    const root = await this.getRoot()
+    root.relationships = this.relationships.cid
+    await this.updateRoot(root)
   }
 
   async listFollows(): Promise<Follow[]> {
-    const user = await this.getUser()
-    return user.follows
+    const cids = await this.relationships.getEntries()
+    const follows = await Promise.all(
+      cids.map((c) => this.ipld.get(c, check.assureFollow)),
+    )
+    return follows
   }
 
   async like(id: string): Promise<void> {
@@ -229,9 +240,9 @@ export class UserStore implements UserStoreI {
       await addCid(commit.root)
 
       const [postCids, interactionCids, relationshipCids] = await Promise.all([
-        this.posts.nestedCids(),
-        this.interactions.nestedCids(),
-        this.relationships.nestedCids(),
+        this.posts.cids(),
+        this.interactions.cids(),
+        this.relationships.cids(),
       ])
       const branchCids = postCids
         .concat(interactionCids)

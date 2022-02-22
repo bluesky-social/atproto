@@ -70,12 +70,21 @@ export class TreeCollection implements Collection<DID> {
     this.cid = this.hamt.cid
   }
 
-  async cids(): Promise<CID[]> {
+  async getEntries(): Promise<CID[]> {
     const cids: CID[] = []
-    for await (const cid of this.hamt.cids()) {
-      cids.push(cid)
+    for await (const entry of this.hamt.entries()) {
+      cids.push(entry[1])
     }
     return cids
+  }
+
+  async cids(): Promise<CID[]> {
+    const structure: CID[] = []
+    for await (const cid of this.hamt.cids()) {
+      structure.push(cid)
+    }
+    const entries = await this.getEntries()
+    return structure.concat(entries)
   }
 }
 

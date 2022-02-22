@@ -1,5 +1,5 @@
 import { isCID, assure, isObject, isString } from '../../common/types/check'
-import { Commit, Root, IdMapping, Post } from './index.js'
+import { Commit, Root, IdMapping, Post, Follow } from './index.js'
 
 export const isRoot = (obj: unknown): obj is Root => {
   return (
@@ -43,4 +43,12 @@ export const isPost = (obj: unknown): obj is Post => {
 
 export const assurePost = (obj: unknown): Post => {
   return assure(obj, 'Post', isPost)
+}
+
+export const isFollow = (obj: unknown): obj is Follow => {
+  return isObject(obj) && isString(obj.username) && isString(obj.did)
+}
+
+export const assureFollow = (obj: unknown): Follow => {
+  return assure(obj, 'Follow', isFollow)
 }
