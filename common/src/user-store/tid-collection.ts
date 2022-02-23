@@ -76,7 +76,7 @@ export class TidCollection implements Collection<Timestamp>, CarStreamable {
     const filtered = tables.filter((t) => t?.size === size) as SSTable[]
     // need 4 tables to merge down a level
     if (filtered.length < 3 || size === TableSize.xl) {
-      // if no merge at this level, we just return the p;revious level
+      // if no merge at this level, we just return the previous level
       return mostRecent
     }
 
@@ -96,11 +96,9 @@ export class TidCollection implements Collection<Timestamp>, CarStreamable {
     const names = this.tableNames()
     const index =
       from !== undefined ? names.findIndex((n) => !from.olderThan(n)) : 0
-
     if (index === -1) return []
 
     let entries: Entry[] = []
-
     for (let i = index; i < names.length; i++) {
       const table = await this.getTable(names[i])
       if (table === null) {
@@ -115,7 +113,6 @@ export class TidCollection implements Collection<Timestamp>, CarStreamable {
 
       const tableEndIndex = tableStartIndex + (count - entries.length)
       const tableSlice = tableEntries.slice(tableStartIndex, tableEndIndex)
-
       entries = entries.concat(tableSlice)
     }
 

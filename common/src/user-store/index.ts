@@ -131,7 +131,6 @@ export class UserStore implements UserStoreI, CarStreamable {
       user: userCid,
       sig: await this.keypair.sign(userCid.bytes),
     }
-
     this.root = await this.store.put(commit)
     return this.root
   }
@@ -150,7 +149,6 @@ export class UserStore implements UserStoreI, CarStreamable {
 
   async addPost(text: string): Promise<Timestamp> {
     const tid = Timestamp.now()
-
     const post = {
       id: tid.toString(),
       text,
@@ -158,9 +156,7 @@ export class UserStore implements UserStoreI, CarStreamable {
       time: new Date().toISOString(),
     }
     const postCid = await this.store.put(post)
-
     await this.posts.addEntry(tid, postCid)
-
     await this.updateRoot()
     return tid
   }
@@ -173,7 +169,6 @@ export class UserStore implements UserStoreI, CarStreamable {
       time: new Date().toISOString(),
     }
     const postCid = await this.store.put(post)
-
     await this.posts.editEntry(tid, postCid)
     await this.updateRoot()
   }
@@ -229,11 +224,8 @@ export class UserStore implements UserStoreI, CarStreamable {
       author: this.did,
       time: new Date().toISOString(),
     }
-
     const likeCid = await this.store.put(like)
-
     await this.interactions.addEntry(tid, likeCid)
-
     await this.updateRoot()
     return tid
   }
