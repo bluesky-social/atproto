@@ -21,7 +21,7 @@ import { streamToArray } from '../common/util.js'
 import Timestamp from './timestamp.js'
 
 export class UserStore implements UserStoreI, CarStreamable {
-  ipld: IpldStore
+  store: IpldStore
   posts: TidCollection
   interactions: TidCollection
   relationships: DidCollection
@@ -30,7 +30,7 @@ export class UserStore implements UserStoreI, CarStreamable {
   keypair: Keypair | null
 
   constructor(params: {
-    ipld: IpldStore
+    store: IpldStore
     posts: TidCollection
     interactions: TidCollection
     relationships: DidCollection
@@ -38,7 +38,7 @@ export class UserStore implements UserStoreI, CarStreamable {
     did: DID
     keypair?: Keypair
   }) {
-    this.ipld = params.ipld
+    this.store = params.store
     this.posts = params.posts
     this.interactions = params.interactions
     this.relationships = params.relationships
@@ -47,10 +47,10 @@ export class UserStore implements UserStoreI, CarStreamable {
     this.keypair = params.keypair || null
   }
 
-  static async create(ipld: IpldStore, keypair: Keypair & Didable) {
-    const posts = await TidCollection.create(ipld)
-    const interactions = await TidCollection.create(ipld)
-    const relationships = await DidCollection.create(ipld)
+  static async create(store: IpldStore, keypair: Keypair & Didable) {
+    const posts = await TidCollection.create(store)
+    const interactions = await TidCollection.create(store)
+    const relationships = await DidCollection.create(store)
     const did = await keypair.did()
 
     const rootObj = {
@@ -60,16 +60,16 @@ export class UserStore implements UserStoreI, CarStreamable {
       relationships: relationships.cid,
     }
 
-    const rootCid = await ipld.put(rootObj)
+    const rootCid = await store.put(rootObj)
     const commit = {
       root: rootCid,
       sig: await keypair.sign(rootCid.bytes),
     }
 
-    const root = await ipld.put(commit)
+    const root = await store.put(commit)
 
     return new UserStore({
-      ipld,
+      store,
       posts,
       interactions,
       relationships,
@@ -79,15 +79,15 @@ export class UserStore implements UserStoreI, CarStreamable {
     })
   }
 
-  static async load(root: CID, ipld: IpldStore, keypair?: Keypair) {
-    const commit = await ipld.get(root, check.assureCommit)
-    const rootObj = await ipld.get(commit.root, check.assureRoot)
-    const posts = await TidCollection.load(ipld, rootObj.posts)
-    const interactions = await TidCollection.load(ipld, rootObj.interactions)
-    const relationships = await DidCollection.load(ipld, rootObj.relationships)
+  static async load(root: CID, store: IpldStore, keypair?: Keypair) {
+    const commit = await store.get(root, check.assureCommit)
+    const rootObj = await store.get(commit.root, check.assureRoot)
+    const posts = await TidCollection.load(store, rootObj.posts)
+    const interactions = await TidCollection.load(store, rootObj.interactions)
+    const relationships = await DidCollection.load(store, rootObj.relationships)
     const did = rootObj.did
     return new UserStore({
-      ipld,
+      store,
       posts,
       interactions,
       relationships,
@@ -99,7 +99,7 @@ export class UserStore implements UserStoreI, CarStreamable {
 
   static async fromCarFile(
     buf: Uint8Array,
-    ipld: IpldStore,
+    store: IpldStore,
     keypair?: Keypair,
   ) {
     const car = await CarReader.fromBytes(buf)
@@ -111,17 +111,17 @@ export class UserStore implements UserStoreI, CarStreamable {
     const root = roots[0]
 
     for await (const block of car.blocks()) {
-      await ipld.putBytes(block.cid, block.bytes)
+      await store.putBytes(block.cid, block.bytes)
     }
 
-    return UserStore.load(root, ipld, keypair)
+    return UserStore.load(root, store, keypair)
   }
 
   async updateRoot(): Promise<CID> {
     if (this.keypair === null) {
       throw new Error('No keypair provided. UserStore is read-only.')
     }
-    const userCid = await this.ipld.put({
+    const userCid = await this.store.put({
       did: this.did,
       posts: this.posts.cid,
       relationships: this.relationships.cid,
@@ -132,19 +132,19 @@ export class UserStore implements UserStoreI, CarStreamable {
       sig: await this.keypair.sign(userCid.bytes),
     }
 
-    this.root = await this.ipld.put(commit)
+    this.root = await this.store.put(commit)
     return this.root
   }
 
   async getRoot(): Promise<Root> {
-    const commit = await this.ipld.get(this.root, check.assureCommit)
-    return this.ipld.get(commit.root, check.assureRoot)
+    const commit = await this.store.get(this.root, check.assureCommit)
+    return this.store.get(commit.root, check.assureRoot)
   }
 
   async getPost(id: Timestamp): Promise<Post | null> {
     const postCid = await this.posts.getEntry(id)
     if (postCid === null) return null
-    const post = await this.ipld.get(postCid, check.assurePost)
+    const post = await this.store.get(postCid, check.assurePost)
     return post
   }
 
@@ -157,7 +157,7 @@ export class UserStore implements UserStoreI, CarStreamable {
       author: this.did,
       time: new Date().toISOString(),
     }
-    const postCid = await this.ipld.put(post)
+    const postCid = await this.store.put(post)
 
     await this.posts.addEntry(tid, postCid)
 
@@ -172,7 +172,7 @@ export class UserStore implements UserStoreI, CarStreamable {
       author: this.did,
       time: new Date().toISOString(),
     }
-    const postCid = await this.ipld.put(post)
+    const postCid = await this.store.put(post)
 
     await this.posts.editEntry(tid, postCid)
     await this.updateRoot()
@@ -186,7 +186,7 @@ export class UserStore implements UserStoreI, CarStreamable {
   async listPosts(count: number, from?: Timestamp): Promise<Post[]> {
     const entries = await this.posts.getEntries(count, from)
     const posts = await Promise.all(
-      entries.map((entry) => this.ipld.get(entry.cid, check.assurePost)),
+      entries.map((entry) => this.store.get(entry.cid, check.assurePost)),
     )
     return posts
   }
@@ -194,7 +194,7 @@ export class UserStore implements UserStoreI, CarStreamable {
   async getFollow(did: DID): Promise<Follow | null> {
     const cid = await this.relationships.getEntry(did)
     if (cid === null) return null
-    return this.ipld.get(cid, check.assureFollow)
+    return this.store.get(cid, check.assureFollow)
   }
 
   async isFollowing(did: DID): Promise<boolean> {
@@ -203,7 +203,7 @@ export class UserStore implements UserStoreI, CarStreamable {
 
   async followUser(username: string, did: string): Promise<void> {
     const follow = { username, did }
-    const cid = await this.ipld.put(follow)
+    const cid = await this.store.put(follow)
     await this.relationships.addEntry(did, cid)
     await this.updateRoot()
   }
@@ -216,7 +216,7 @@ export class UserStore implements UserStoreI, CarStreamable {
   async listFollows(): Promise<Follow[]> {
     const cids = await this.relationships.getEntries()
     const follows = await Promise.all(
-      cids.map((c) => this.ipld.get(c, check.assureFollow)),
+      cids.map((c) => this.store.get(c, check.assureFollow)),
     )
     return follows
   }
@@ -230,7 +230,7 @@ export class UserStore implements UserStoreI, CarStreamable {
       time: new Date().toISOString(),
     }
 
-    const likeCid = await this.ipld.put(like)
+    const likeCid = await this.store.put(like)
 
     await this.interactions.addEntry(tid, likeCid)
 
@@ -246,15 +246,15 @@ export class UserStore implements UserStoreI, CarStreamable {
   async listLikes(count: number, from?: Timestamp): Promise<Like[]> {
     const entries = await this.interactions.getEntries(count, from)
     const likes = await Promise.all(
-      entries.map((entry) => this.ipld.get(entry.cid, check.assureLike)),
+      entries.map((entry) => this.store.get(entry.cid, check.assureLike)),
     )
     return likes
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
-    await this.ipld.addToCar(car, this.root)
-    const commit = await this.ipld.get(this.root, check.assureCommit)
-    await this.ipld.addToCar(car, commit.root)
+    await this.store.addToCar(car, this.root)
+    const commit = await this.store.get(this.root, check.assureCommit)
+    await this.store.addToCar(car, commit.root)
     await Promise.all([
       this.posts.writeToCarStream(car),
       this.interactions.writeToCarStream(car),
