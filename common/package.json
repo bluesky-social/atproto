@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "test": "ava -s test/*.ts"
+    "dev": "tsc -w --project tsconfig.json",
+    "test": "ava -v test/*.ts"
   },
   "license": "MIT",
   "dependencies": {

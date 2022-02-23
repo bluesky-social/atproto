@@ -1,5 +1,6 @@
 import * as ucan from 'ucans'
 import { CID } from 'multiformats/cid'
+import Timestamp from './timestamp'
 
 export type LocalUser = {
   username: string
@@ -31,17 +32,25 @@ export type Commit = {
   sig: Uint8Array
 }
 
+export type IdMapping = Record<string, CID>
+
+export type Entry = {
+  id: Timestamp
+  cid: CID
+}
+
 export interface BlockstoreI {
   get(cid: CID): Promise<Uint8Array>
   put(cid: CID, bytes: Uint8Array): Promise<void>
+  destroy(): Promise<void>
 }
 
 export interface UserStoreI {
   getUser(): Promise<User>
 
-  addPost(text: string): Promise<string>
-  editPost(id: string, text: string): Promise<void>
-  deletePost(id: string): Promise<void>
+  addPost(text: string): Promise<Timestamp>
+  editPost(id: Timestamp, text: string): Promise<void>
+  deletePost(id: Timestamp): Promise<void>
   listPosts(): Promise<Post[]>
 
   reply(id: string, text: string): Promise<void>

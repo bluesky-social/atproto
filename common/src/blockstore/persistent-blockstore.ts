@@ -1,8 +1,9 @@
 import level from 'level'
 import { CID } from 'multiformats/cid'
-import { BlockstoreI } from './types.js'
 
-export class Blockstore implements BlockstoreI {
+import { BlockstoreI } from '../types.js'
+
+export class PersistentBlockstore implements BlockstoreI {
 
   store: level.LevelDB
 
@@ -28,4 +29,4 @@ export class Blockstore implements BlockstoreI {
 
 }
 
-export default Blockstore
+export default PersistentBlockstore
