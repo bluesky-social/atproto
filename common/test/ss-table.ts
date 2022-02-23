@@ -72,7 +72,7 @@ test('loads from blockstore', async (t) => {
   const bulkIds = await util.generateBulkIdMapping(50)
   await table.addEntries(bulkIds)
 
-  const fromBS = await SSTable.get(store, table.cid)
+  const fromBS = await SSTable.load(store, table.cid)
   for (const id of Object.keys(bulkIds)) {
     t.deepEqual(
       fromBS.getEntry(Timestamp.parse(id)),

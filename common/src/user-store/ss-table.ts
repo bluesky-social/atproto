@@ -22,7 +22,7 @@ export class SSTable {
     return new SSTable(store, cid, {})
   }
 
-  static async get(store: IpldStore, cid: CID): Promise<SSTable> {
+  static async load(store: IpldStore, cid: CID): Promise<SSTable> {
     const data = await store.get(cid, check.assureIdMapping)
     return new SSTable(store, cid, data)
   }

@@ -22,7 +22,7 @@ export class Branch {
     return new Branch(store, cid, {})
   }
 
-  static async get(store: IpldStore, cid: CID): Promise<Branch> {
+  static async load(store: IpldStore, cid: CID): Promise<Branch> {
     const data = await store.get(cid, check.assureIdMapping)
     return new Branch(store, cid, data)
   }
@@ -31,7 +31,7 @@ export class Branch {
     if (!name) return null
     const cid = this.data[name.toString()]
     if (cid === undefined) return null
-    return SSTable.get(this.store, cid)
+    return SSTable.load(this.store, cid)
   }
 
   getTableNameForId(id: Timestamp): Timestamp | null {
@@ -194,7 +194,7 @@ export class Branch {
     const cids = this.cids()
     for (const cid of cids) {
       all.push(cid)
-      const table = await SSTable.get(this.store, cid)
+      const table = await SSTable.load(this.store, cid)
       table.cids().forEach((c) => all.push(c))
     }
     return all
