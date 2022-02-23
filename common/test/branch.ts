@@ -7,7 +7,6 @@ import Timestamp from '../src/timestamp.js'
 import * as util from './_util.js'
 import { IdMapping } from '../src/types.js'
 
-
 type Context = {
   store: IpldStore
   branch: Branch
@@ -15,7 +14,7 @@ type Context = {
   cid2: CID
 }
 
-test.beforeEach(async t => {
+test.beforeEach(async (t) => {
   const store = IpldStore.createInMemory()
   const branch = await Branch.create(store)
   const cid = await util.randomCid()
@@ -24,7 +23,7 @@ test.beforeEach(async t => {
   t.pass('Context setup')
 })
 
-test('basic operations', async t => {
+test('basic operations', async (t) => {
   const { branch, cid, cid2 } = t.context as Context
 
   // do basic operations in a branch that has at least 3 tables
@@ -43,7 +42,7 @@ test('basic operations', async t => {
   t.is(await branch.getEntry(mid), null, 'deletes data')
 })
 
-test('loads from blockstore', async t => {
+test('loads from blockstore', async (t) => {
   const { store, branch } = t.context as Context
   const bulkIds = util.generateBulkIds(450)
   const actual = {} as IdMapping
@@ -60,7 +59,7 @@ test('loads from blockstore', async t => {
   }
 })
 
-test('paginates gets', async t => {
+test('paginates gets', async (t) => {
   const { branch, cid } = t.context as Context
   const bulkIds = util.generateBulkIds(250)
   for (const id of bulkIds) {
@@ -69,51 +68,79 @@ test('paginates gets', async t => {
   const reversed = bulkIds.reverse()
 
   const fromStart = await branch.getEntries(75)
-  t.deepEqual(fromStart.map(e => e.id), reversed.slice(0,75), 'returns a slice from start of branch')
+  t.deepEqual(
+    fromStart.map((e) => e.id),
+    reversed.slice(0, 75),
+    'returns a slice from start of branch',
+  )
 
   const middleSlice = await branch.getEntries(75, reversed[100])
-  t.deepEqual(middleSlice.map(e => e.id), reversed.slice(101,176), 'returns a slice from middle of branch')
+  t.deepEqual(
+    middleSlice.map((e) => e.id),
+    reversed.slice(101, 176),
+    'returns a slice from middle of branch',
+  )
 
   const onEdge = await branch.getEntries(100, reversed[50])
-  t.deepEqual(onEdge.map(e => e.id), reversed.slice(51,151), 'returns a slice that falls on table edge')
+  t.deepEqual(
+    onEdge.map((e) => e.id),
+    reversed.slice(51, 151),
+    'returns a slice that falls on table edge',
+  )
 
   const all = await branch.getEntries(300)
-  t.deepEqual(all.map(e => e.id), reversed, 'returns the whole listing ')
+  t.deepEqual(
+    all.map((e) => e.id),
+    reversed,
+    'returns the whole listing ',
+  )
 })
 
-test("splits tables", async t => {
+test('splits tables', async (t) => {
   const { branch, cid } = t.context as Context
   const ids = util.generateBulkIds(100)
   for (const id of ids) {
     await branch.addEntry(id, cid)
   }
-  t.is(branch.tableCount(), 1, "Does not split at 100 entries")
+  t.is(branch.tableCount(), 1, 'Does not split at 100 entries')
 
   await branch.addEntry(Timestamp.now(), cid)
-  t.is(branch.tableCount(), 2, "Does split at 101 entries")
+  t.is(branch.tableCount(), 2, 'Does split at 101 entries')
 })
 
-test("compresses tables", async t => {
+test('compresses tables', async (t) => {
   const { branch, cid } = t.context as Context
 
   const ids = util.generateBulkIds(6401)
-  const firstBatch = ids.slice(0,400)
+  const firstBatch = ids.slice(0, 400)
   const threshold = ids[400]
   const secondBatch = ids.slice(401, 6400)
   const final = ids[6400]
   for (const id of firstBatch) {
     await branch.addEntry(id, cid)
   }
-  t.is(branch.tableCount(), 4, "Does not compress at 4 tables")
+  t.is(branch.tableCount(), 4, 'Does not compress at 4 tables')
 
   await branch.addEntry(threshold, cid)
-  t.is(branch.tableCount(), 2, "Compresses oldest 4 tables once there are 5 tables")
+  t.is(
+    branch.tableCount(),
+    2,
+    'Compresses oldest 4 tables once there are 5 tables',
+  )
 
   for (const id of secondBatch) {
     await branch.addEntry(id, cid)
   }
-  t.is(branch.tableCount(), 10, 'Does not compress at any level until necessary')
+  t.is(
+    branch.tableCount(),
+    10,
+    'Does not compress at any level until necessary',
+  )
 
   await branch.addEntry(final, cid)
-  t.is(branch.tableCount(), 2, "Cascades compression of all tables to an xl table")
+  t.is(
+    branch.tableCount(),
+    2,
+    'Cascades compression of all tables to an xl table',
+  )
 })

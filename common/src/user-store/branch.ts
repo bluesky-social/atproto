@@ -1,13 +1,12 @@
-import { CID } from "multiformats"
-import * as check from "../type-check.js"
+import { CID } from 'multiformats'
+import * as check from '../type-check.js'
 
-import IpldStore from "../blockstore/ipld-store.js"
-import { Entry, IdMapping } from "../types.js"
-import SSTable, { TableSize } from "./ss-table.js"
-import Timestamp from "../timestamp.js"
+import IpldStore from '../blockstore/ipld-store.js'
+import { Entry, IdMapping } from '../types.js'
+import SSTable, { TableSize } from './ss-table.js'
+import Timestamp from '../timestamp.js'
 
 export class Branch {
-
   store: IpldStore
   cid: CID
   data: IdMapping
@@ -36,7 +35,7 @@ export class Branch {
   }
 
   getTableNameForId(id: Timestamp): Timestamp | null {
-    return this.tableNames().find(n => !id.olderThan(n)) || null
+    return this.tableNames().find((n) => !id.olderThan(n)) || null
   }
 
   async getTableForId(id: Timestamp): Promise<SSTable | null> {
@@ -53,8 +52,11 @@ export class Branch {
     const tableNames = this.tableNames()
     if (tableNames.length < 1) return
     const mostRecent = await this.getTable(tableNames[0])
-    if (mostRecent === null) return 
-    const compressed = await this.compressCascade(mostRecent, tableNames.slice(1))
+    if (mostRecent === null) return
+    const compressed = await this.compressCascade(
+      mostRecent,
+      tableNames.slice(1),
+    )
     const tableName = compressed.oldestId()
     if (tableName && !tableName.equals(tableNames[0])) {
       delete this.data[tableNames[0].toString()]
@@ -63,21 +65,22 @@ export class Branch {
     await this.updateRoot()
   }
 
-  private async compressCascade(mostRecent: SSTable, nextKeys: Timestamp[]): Promise<SSTable> {
+  private async compressCascade(
+    mostRecent: SSTable,
+    nextKeys: Timestamp[],
+  ): Promise<SSTable> {
     const size = mostRecent.size
-    const keys = nextKeys.slice(0,3)
-    const tables = await Promise.all(
-      keys.map(k => this.getTable(k))
-    )
-    const filtered = tables.filter(t => t?.size === size) as SSTable[]
+    const keys = nextKeys.slice(0, 3)
+    const tables = await Promise.all(keys.map((k) => this.getTable(k)))
+    const filtered = tables.filter((t) => t?.size === size) as SSTable[]
     // need 4 tables to merge down a level
     if (filtered.length < 3 || size === TableSize.xl) {
       // if no merge at this level, we just return the p;revious level
       return mostRecent
     }
 
-    keys.forEach(k => delete this.data[k.toString()])
-    
+    keys.forEach((k) => delete this.data[k.toString()])
+
     const merged = await SSTable.merge([mostRecent, ...filtered])
     return await this.compressCascade(merged, nextKeys.slice(3))
   }
@@ -90,10 +93,9 @@ export class Branch {
 
   async getEntries(count: number, from?: Timestamp): Promise<Entry[]> {
     const names = this.tableNames()
-    const index = from !== undefined
-      ? names.findIndex(n => !from.olderThan(n))
-      : 0
-    
+    const index =
+      from !== undefined ? names.findIndex((n) => !from.olderThan(n)) : 0
+
     if (index === -1) return []
 
     let entries: Entry[] = []
@@ -105,10 +107,10 @@ export class Branch {
       }
       const tableEntries = table.entries()
       // for first table we only want entries older than `from`, otherwise start from beginning
-      const tableStartIndex = 
+      const tableStartIndex =
         from !== undefined && i === index
-        ? tableEntries.findIndex(e => e.id.olderThan(from))
-        : 0
+          ? tableEntries.findIndex((e) => e.id.olderThan(from))
+          : 0
 
       const tableEndIndex = tableStartIndex + (count - entries.length)
       const tableSlice = tableEntries.slice(tableStartIndex, tableEndIndex)
@@ -139,7 +141,7 @@ export class Branch {
     const oldestKey = table.oldestId()
     if (oldestKey && id.olderThan(oldestKey)) {
       // @TODO handle this more gracefully
-      throw new Error("Attempting to add an id that is too old for the table")
+      throw new Error('Attempting to add an id that is too old for the table')
     }
     await table.addEntry(id, cid)
     const tableName = oldestKey?.toString() || id.toString()
@@ -147,7 +149,10 @@ export class Branch {
     await this.updateRoot()
   }
 
-  async editTableForId(id: Timestamp, fn: (table: SSTable) => Promise<void>): Promise<void> {
+  async editTableForId(
+    id: Timestamp,
+    fn: (table: SSTable) => Promise<void>,
+  ): Promise<void> {
     const tableName = this.getTableNameForId(id)
     if (!tableName) throw new Error(`Could not find entry with id: ${id}`)
     const table = await this.getTable(tableName)
@@ -159,19 +164,19 @@ export class Branch {
 
   async editEntry(id: Timestamp, cid: CID): Promise<void> {
     await this.editTableForId(id, async (table) => {
-      await table.editEntry(id, cid) 
+      await table.editEntry(id, cid)
     })
   }
 
   async deleteEntry(id: Timestamp): Promise<void> {
     await this.editTableForId(id, async (table) => {
-      await table.deleteEntry(id) 
+      await table.deleteEntry(id)
     })
   }
 
   tableNames(oldestFirst = false): Timestamp[] {
-    const ids = Object.keys(this.data).map(k => Timestamp.parse(k))
-    return oldestFirst 
+    const ids = Object.keys(this.data).map((k) => Timestamp.parse(k))
+    return oldestFirst
       ? ids.sort(Timestamp.oldestFirst)
       : ids.sort(Timestamp.newestFirst)
   }
@@ -184,13 +189,13 @@ export class Branch {
     return Object.values(this.data).sort().reverse()
   }
 
-  async nestedCids(): Promise<CID[]>{
+  async nestedCids(): Promise<CID[]> {
     const all = []
     const cids = this.cids()
-    for(const cid of cids) {
+    for (const cid of cids) {
       all.push(cid)
       const table = await SSTable.load(this.store, cid)
-      table.cids().forEach(c => all.push(c))
+      table.cids().forEach((c) => all.push(c))
     }
     return all
   }

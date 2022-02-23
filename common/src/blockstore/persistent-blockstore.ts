@@ -4,13 +4,12 @@ import { CID } from 'multiformats/cid'
 import { BlockstoreI } from '../types.js'
 
 export class PersistentBlockstore implements BlockstoreI {
-
   store: level.LevelDB
 
   constructor(location = 'blockstore') {
-    this.store = level(location, { 
+    this.store = level(location, {
       valueEncoding: 'binary',
-      compression: false
+      compression: false,
     })
   }
 
@@ -26,7 +25,6 @@ export class PersistentBlockstore implements BlockstoreI {
     await this.store.clear()
     await this.store.close()
   }
-
 }
 
 export default PersistentBlockstore

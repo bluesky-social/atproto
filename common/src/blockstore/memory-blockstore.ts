@@ -2,8 +2,7 @@ import { CID } from 'multiformats/cid'
 import { BlockstoreI } from '../types.js'
 
 export class MemoryBlockstore implements BlockstoreI {
-
-  map: Map<string, any>
+  map: Map<string, Uint8Array>
 
   constructor() {
     this.map = new Map()
