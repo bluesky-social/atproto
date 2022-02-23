@@ -18,7 +18,7 @@ import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
 import DidCollection from './did-collection.js'
 import { streamToArray } from '../common/util.js'
-import Timestamp from './timestamp.js'
+import TID from './tid.js'
 
 export class UserStore implements UserStoreI, CarStreamable {
   store: IpldStore
@@ -140,15 +140,15 @@ export class UserStore implements UserStoreI, CarStreamable {
     return this.store.get(commit.root, check.assureRoot)
   }
 
-  async getPost(id: Timestamp): Promise<Post | null> {
+  async getPost(id: TID): Promise<Post | null> {
     const postCid = await this.posts.getEntry(id)
     if (postCid === null) return null
     const post = await this.store.get(postCid, check.assurePost)
     return post
   }
 
-  async addPost(text: string): Promise<Timestamp> {
-    const tid = Timestamp.now()
+  async addPost(text: string): Promise<TID> {
+    const tid = TID.now()
     const post = {
       id: tid.toString(),
       text,
@@ -161,7 +161,7 @@ export class UserStore implements UserStoreI, CarStreamable {
     return tid
   }
 
-  async editPost(tid: Timestamp, text: string): Promise<void> {
+  async editPost(tid: TID, text: string): Promise<void> {
     const post = {
       id: tid,
       text,
@@ -173,12 +173,12 @@ export class UserStore implements UserStoreI, CarStreamable {
     await this.updateRoot()
   }
 
-  async deletePost(tid: Timestamp): Promise<void> {
+  async deletePost(tid: TID): Promise<void> {
     await this.posts.deleteEntry(tid)
     await this.updateRoot()
   }
 
-  async listPosts(count: number, from?: Timestamp): Promise<Post[]> {
+  async listPosts(count: number, from?: TID): Promise<Post[]> {
     const entries = await this.posts.getEntries(count, from)
     const posts = await Promise.all(
       entries.map((entry) => this.store.get(entry.cid, check.assurePost)),
@@ -216,8 +216,8 @@ export class UserStore implements UserStoreI, CarStreamable {
     return follows
   }
 
-  async likePost(postTid: Timestamp): Promise<Timestamp> {
-    const tid = Timestamp.now()
+  async likePost(postTid: TID): Promise<TID> {
+    const tid = TID.now()
     const like = {
       id: tid.toString(),
       post_id: postTid.toString(),
@@ -230,12 +230,12 @@ export class UserStore implements UserStoreI, CarStreamable {
     return tid
   }
 
-  async unlikePost(tid: Timestamp): Promise<void> {
+  async unlikePost(tid: TID): Promise<void> {
     await this.interactions.deleteEntry(tid)
     await this.updateRoot()
   }
 
-  async listLikes(count: number, from?: Timestamp): Promise<Like[]> {
+  async listLikes(count: number, from?: TID): Promise<Like[]> {
     const entries = await this.interactions.getEntries(count, from)
     const likes = await Promise.all(
       entries.map((entry) => this.store.get(entry.cid, check.assureLike)),

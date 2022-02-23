@@ -3,7 +3,7 @@ import { CID } from 'multiformats'
 
 import TidCollection from '../src/user-store/tid-collection.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import Timestamp from '../src/user-store/timestamp.js'
+import TID from '../src/user-store/tid.js'
 import * as util from './_util.js'
 import { IdMapping } from '../src/user-store/types.js'
 
@@ -104,7 +104,7 @@ test('splits tables', async (t) => {
   }
   t.is(collection.tableCount(), 1, 'Does not split at 100 entries')
 
-  await collection.addEntry(Timestamp.now(), cid)
+  await collection.addEntry(TID.now(), cid)
   t.is(collection.tableCount(), 2, 'Does split at 101 entries')
 })
 

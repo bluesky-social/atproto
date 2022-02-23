@@ -5,9 +5,9 @@ import IpldStore from '../blockstore/ipld-store.js'
 import { Entry, IdMapping, Collection, CarStreamable } from './types.js'
 import * as check from './type-check.js'
 import SSTable, { TableSize } from './ss-table.js'
-import Timestamp from './timestamp.js'
+import TID from './tid.js'
 
-export class TidCollection implements Collection<Timestamp>, CarStreamable {
+export class TidCollection implements Collection<TID>, CarStreamable {
   store: IpldStore
   cid: CID
   data: IdMapping
@@ -28,18 +28,18 @@ export class TidCollection implements Collection<Timestamp>, CarStreamable {
     return new TidCollection(store, cid, data)
   }
 
-  async getTable(name: Timestamp): Promise<SSTable | null> {
+  async getTable(name: TID): Promise<SSTable | null> {
     if (!name) return null
     const cid = this.data[name.toString()]
     if (cid === undefined) return null
     return SSTable.load(this.store, cid)
   }
 
-  getTableNameForTid(tid: Timestamp): Timestamp | null {
+  getTableNameForTid(tid: TID): TID | null {
     return this.tableNames().find((n) => !tid.olderThan(n)) || null
   }
 
-  async getTableForId(tid: Timestamp): Promise<SSTable | null> {
+  async getTableForId(tid: TID): Promise<SSTable | null> {
     const name = this.getTableNameForTid(tid)
     if (!name) return null
     return this.getTable(name)
@@ -68,7 +68,7 @@ export class TidCollection implements Collection<Timestamp>, CarStreamable {
 
   private async compressCascade(
     mostRecent: SSTable,
-    nextKeys: Timestamp[],
+    nextKeys: TID[],
   ): Promise<SSTable> {
     const size = mostRecent.size
     const keys = nextKeys.slice(0, 3)
@@ -86,13 +86,13 @@ export class TidCollection implements Collection<Timestamp>, CarStreamable {
     return await this.compressCascade(merged, nextKeys.slice(3))
   }
 
-  async getEntry(tid: Timestamp): Promise<CID | null> {
+  async getEntry(tid: TID): Promise<CID | null> {
     const table = await this.getTableForId(tid)
     if (!table) return null
     return table.getEntry(tid)
   }
 
-  async getEntries(count: number, from?: Timestamp): Promise<Entry[]> {
+  async getEntries(count: number, from?: TID): Promise<Entry[]> {
     const names = this.tableNames()
     const index =
       from !== undefined ? names.findIndex((n) => !from.olderThan(n)) : 0
@@ -134,7 +134,7 @@ export class TidCollection implements Collection<Timestamp>, CarStreamable {
     }
   }
 
-  async addEntry(tid: Timestamp, cid: CID): Promise<void> {
+  async addEntry(tid: TID, cid: CID): Promise<void> {
     const table = await this.getOrCreateCurrTable()
     const oldestKey = table.oldestTid()
     if (oldestKey && tid.olderThan(oldestKey)) {
@@ -148,7 +148,7 @@ export class TidCollection implements Collection<Timestamp>, CarStreamable {
   }
 
   private async editTableForTid(
-    tid: Timestamp,
+    tid: TID,
     fn: (table: SSTable) => Promise<void>,
   ): Promise<void> {
     const tableName = this.getTableNameForTid(tid)
@@ -160,23 +160,21 @@ export class TidCollection implements Collection<Timestamp>, CarStreamable {
     await this.updateRoot()
   }
 
-  async editEntry(tid: Timestamp, cid: CID): Promise<void> {
+  async editEntry(tid: TID, cid: CID): Promise<void> {
     await this.editTableForTid(tid, async (table) => {
       await table.editEntry(tid, cid)
     })
   }
 
-  async deleteEntry(tid: Timestamp): Promise<void> {
+  async deleteEntry(tid: TID): Promise<void> {
     await this.editTableForTid(tid, async (table) => {
       await table.deleteEntry(tid)
     })
   }
 
-  tableNames(oldestFirst = false): Timestamp[] {
-    const tids = Object.keys(this.data).map((k) => Timestamp.parse(k))
-    return oldestFirst
-      ? tids.sort(Timestamp.oldestFirst)
-      : tids.sort(Timestamp.newestFirst)
+  tableNames(oldestFirst = false): TID[] {
+    const tids = Object.keys(this.data).map((k) => TID.parse(k))
+    return oldestFirst ? tids.sort(TID.oldestFirst) : tids.sort(TID.newestFirst)
   }
 
   tableCount(): number {

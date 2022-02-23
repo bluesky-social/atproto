@@ -1,4 +1,4 @@
-export class Timestamp {
+export class TID {
   time: number
   clockid: number
 
@@ -7,22 +7,22 @@ export class Timestamp {
     this.clockid = clockid
   }
 
-  static now(): Timestamp {
+  static now(): TID {
     const clockid = Math.floor(Math.random() * 1024)
-    return new Timestamp(Date.now(), clockid)
+    return new TID(Date.now(), clockid)
   }
 
-  static parse(str: string): Timestamp {
+  static parse(str: string): TID {
     const time = parseInt(str.slice(0, -2), 32)
     const clockid = parseInt(str.slice(-2), 32)
-    return new Timestamp(time, clockid)
+    return new TID(time, clockid)
   }
 
-  static newestFirst(a: Timestamp, b: Timestamp): number {
+  static newestFirst(a: TID, b: TID): number {
     return a.compareTo(b) * -1
   }
 
-  static oldestFirst(a: Timestamp, b: Timestamp): number {
+  static oldestFirst(a: TID, b: TID): number {
     return a.compareTo(b)
   }
 
@@ -33,7 +33,7 @@ export class Timestamp {
   }
 
   // newer > older
-  compareTo(other: Timestamp): number {
+  compareTo(other: TID): number {
     if (this.time > other.time) return 1
     if (this.time < other.time) return -1
     if (this.clockid > other.clockid) return 1
@@ -41,17 +41,17 @@ export class Timestamp {
     return 0
   }
 
-  equals(other: Timestamp): boolean {
+  equals(other: TID): boolean {
     return this.compareTo(other) === 0
   }
 
-  newerThan(other: Timestamp): boolean {
+  newerThan(other: TID): boolean {
     return this.compareTo(other) > 0
   }
 
-  olderThan(other: Timestamp): boolean {
+  olderThan(other: TID): boolean {
     return this.compareTo(other) < 0
   }
 }
 
-export default Timestamp
+export default TID

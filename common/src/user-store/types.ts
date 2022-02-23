@@ -1,6 +1,6 @@
 import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
-import Timestamp from './timestamp.js'
+import TID from './tid.js'
 
 // @TODO: improve this
 export type DID = string
@@ -20,7 +20,7 @@ export type Commit = {
 export type IdMapping = Record<string, CID>
 
 export type Entry = {
-  tid: Timestamp
+  tid: TID
   cid: CID
 }
 
@@ -56,18 +56,18 @@ export interface Collection<T> {
 }
 
 export interface UserStoreI {
-  addPost(text: string): Promise<Timestamp>
-  editPost(id: Timestamp, text: string): Promise<void>
-  deletePost(id: Timestamp): Promise<void>
-  listPosts(count: number, from?: Timestamp): Promise<Post[]>
+  addPost(text: string): Promise<TID>
+  editPost(id: TID, text: string): Promise<void>
+  deletePost(id: TID): Promise<void>
+  listPosts(count: number, from?: TID): Promise<Post[]>
 
   followUser(username: string, did: string): Promise<void>
   unfollowUser(did: string): Promise<void>
   listFollows(): Promise<Follow[]>
 
-  likePost(postTid: Timestamp): Promise<Timestamp>
-  unlikePost(tid: Timestamp): Promise<void>
-  listLikes(count: number, from?: Timestamp): Promise<Like[]>
+  likePost(postTid: TID): Promise<TID>
+  unlikePost(tid: TID): Promise<void>
+  listLikes(count: number, from?: TID): Promise<Like[]>
 
   getCarFile(): Promise<Uint8Array>
 }
