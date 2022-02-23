@@ -1,7 +1,7 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import Timestamp from '../src/user-store/timestamp.js'
-import { IdMapping } from '../src/user-store/types/index.js'
+import { DID, IdMapping } from '../src/user-store/types/index.js'
 import SSTable from '../src/user-store/ss-table.js'
 
 const fakeStore = IpldStore.createInMemory()
@@ -28,7 +28,7 @@ export const generateBulkTidMapping = async (
   startAt?: number,
 ): Promise<IdMapping> => {
   const ids = generateBulkTids(count, startAt)
-  const obj = {} as IdMapping
+  const obj: IdMapping = {}
   for (const id of ids) {
     obj[id.toString()] = await randomCid()
   }
@@ -48,4 +48,22 @@ export const checkInclusionInTable = (
   table: SSTable,
 ): boolean => {
   return tids.map((tid) => table.hasEntry(tid)).every((has) => has === true)
+}
+
+export const fakeDid = (): DID => {
+  let result = ''
+  const CHARS = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+  const LENGTH = 48
+  for (let i = 0; i < LENGTH; i++) {
+    result += CHARS.charAt(Math.floor(Math.random() * CHARS.length))
+  }
+  return `did:key:${result}`
+}
+
+export const generateBulkDids = (count: number): DID[] => {
+  const dids = []
+  for (let i = 0; i < count; i++) {
+    dids.push(fakeDid())
+  }
+  return dids
 }
