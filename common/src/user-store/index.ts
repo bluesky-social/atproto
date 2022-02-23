@@ -56,10 +56,10 @@ export class UserStore implements UserStoreI {
     })
   }
 
-  static async get(root: CID, ipld: IpldStore, keypair?: Keypair) {
+  static async load(root: CID, ipld: IpldStore, keypair?: Keypair) {
     const commit = await ipld.get(root, check.assureCommit)
     const user = await ipld.get(commit.user, check.assureUser)
-    const postBranch = await Branch.get(ipld, user.postsRoot)
+    const postBranch = await Branch.load(ipld, user.postsRoot)
     return new UserStore({
       ipld,
       postBranch,
@@ -83,7 +83,7 @@ export class UserStore implements UserStoreI {
 
     const commit = await ipld.get(root, check.assureCommit)
     const user = await ipld.get(commit.user, check.assureUser)
-    const postBranch = await Branch.get(ipld, user.postsRoot)
+    const postBranch = await Branch.load(ipld, user.postsRoot)
     return new UserStore({
       ipld,
       postBranch,
