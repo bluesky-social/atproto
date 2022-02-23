@@ -4,7 +4,15 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import { Post, Follow, UserStoreI, check, Root, DID } from './types/index.js'
+import {
+  Post,
+  Follow,
+  UserStoreI,
+  check,
+  Root,
+  DID,
+  Like,
+} from './types/index.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TablesCollection from './tables-collection.js'
 import TreeCollection from './tree-collection.js'
@@ -140,20 +148,20 @@ export class UserStore implements UserStoreI {
   }
 
   async addPost(text: string): Promise<Timestamp> {
-    const timestamp = Timestamp.now()
+    const tid = Timestamp.now()
 
     const post = {
-      id: timestamp.toString(),
+      id: tid.toString(),
       text,
       author: this.did,
       time: new Date().toISOString(),
     }
     const postCid = await this.ipld.put(post)
 
-    await this.posts.addEntry(timestamp, postCid)
+    await this.posts.addEntry(tid, postCid)
 
     await this.updateRoot()
-    return timestamp
+    return tid
   }
 
   async editPost(tid: Timestamp, text: string): Promise<void> {
@@ -180,10 +188,6 @@ export class UserStore implements UserStoreI {
       entries.map((entry) => this.ipld.get(entry.cid, check.assurePost)),
     )
     return posts
-  }
-
-  async reply(id: string, text: string): Promise<void> {
-    throw new Error('Reply not implemented yet')
   }
 
   async getFollow(did: DID): Promise<Follow | null> {
@@ -216,16 +220,34 @@ export class UserStore implements UserStoreI {
     return follows
   }
 
-  async like(id: string): Promise<void> {
-    throw new Error('Like not implemented yet')
+  async likePost(postTid: Timestamp): Promise<Timestamp> {
+    const tid = Timestamp.now()
+    const like = {
+      id: tid.toString(),
+      post_id: postTid.toString(),
+      author: this.did,
+      time: new Date().toISOString(),
+    }
+
+    const likeCid = await this.ipld.put(like)
+
+    await this.interactions.addEntry(tid, likeCid)
+
+    await this.updateRoot()
+    return tid
   }
 
-  async unlike(id: string): Promise<void> {
-    throw new Error('Unlike not implemented yet')
+  async unlikePost(tid: Timestamp): Promise<void> {
+    await this.interactions.deleteEntry(tid)
+    await this.updateRoot()
   }
 
-  async listLikes(): Promise<void> {
-    throw new Error('list likes not implemented yet')
+  async listLikes(count: number, from?: Timestamp): Promise<Like[]> {
+    const entries = await this.interactions.getEntries(count, from)
+    const likes = await Promise.all(
+      entries.map((entry) => this.ipld.get(entry.cid, check.assureLike)),
+    )
+    return likes
   }
 
   // @TODO: split this out onto each collection

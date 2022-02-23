@@ -1,5 +1,5 @@
 import { isCID, assure, isObject, isString } from '../../common/types/check.js'
-import { Commit, Root, IdMapping, Post, Follow } from './index.js'
+import { Commit, Root, IdMapping, Post, Follow, Like } from './index.js'
 
 export const isRoot = (obj: unknown): obj is Root => {
   return (
@@ -51,4 +51,18 @@ export const isFollow = (obj: unknown): obj is Follow => {
 
 export const assureFollow = (obj: unknown): Follow => {
   return assure(obj, 'Follow', isFollow)
+}
+
+export const isLike = (obj: unknown): obj is Like => {
+  return (
+    isObject(obj) &&
+    isString(obj.id) &&
+    isString(obj.post_id) &&
+    isString(obj.author) &&
+    isString(obj.time)
+  )
+}
+
+export const assureLike = (obj: unknown): Like => {
+  return assure(obj, 'Like', isLike)
 }

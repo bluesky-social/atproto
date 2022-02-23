@@ -38,8 +38,9 @@ export type Post = {
 }
 
 export type Like = {
+  id: string
+  post_id: string
   author: string
-  text: string
   time: string // ISO 8601
 }
 
@@ -52,22 +53,18 @@ export interface Collection<T> {
 }
 
 export interface UserStoreI {
-  // getUser(): Promise<User>
-
   addPost(text: string): Promise<Timestamp>
   editPost(id: Timestamp, text: string): Promise<void>
   deletePost(id: Timestamp): Promise<void>
   listPosts(count: number, from?: Timestamp): Promise<Post[]>
 
-  reply(id: string, text: string): Promise<void>
-
   followUser(username: string, did: string): Promise<void>
   unfollowUser(did: string): Promise<void>
   listFollows(): Promise<Follow[]>
 
-  like(id: string): Promise<void>
-  unlike(id: string): Promise<void>
-  listLikes(): Promise<void>
+  likePost(postTid: Timestamp): Promise<Timestamp>
+  unlikePost(tid: Timestamp): Promise<void>
+  listLikes(count: number, from?: Timestamp): Promise<Like[]>
 
   getCarStream(): AsyncIterable<Uint8Array>
   getCarFile(): Promise<Uint8Array>
