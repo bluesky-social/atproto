@@ -1,11 +1,12 @@
 import { CID } from 'multiformats'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping, check, Collection } from './types/index.js'
+import { Entry, IdMapping, Collection } from './types.js'
+import * as check from './type-check.js'
 import SSTable, { TableSize } from './ss-table.js'
 import Timestamp from './timestamp.js'
 
-export class TablesCollection implements Collection<Timestamp> {
+export class TidCollection implements Collection<Timestamp> {
   store: IpldStore
   cid: CID
   data: IdMapping
@@ -16,14 +17,14 @@ export class TablesCollection implements Collection<Timestamp> {
     this.data = data
   }
 
-  static async create(store: IpldStore): Promise<TablesCollection> {
+  static async create(store: IpldStore): Promise<TidCollection> {
     const cid = await store.put({})
-    return new TablesCollection(store, cid, {})
+    return new TidCollection(store, cid, {})
   }
 
-  static async load(store: IpldStore, cid: CID): Promise<TablesCollection> {
+  static async load(store: IpldStore, cid: CID): Promise<TidCollection> {
     const data = await store.get(cid, check.assureIdMapping)
-    return new TablesCollection(store, cid, data)
+    return new TidCollection(store, cid, data)
   }
 
   async getTable(name: Timestamp): Promise<SSTable | null> {
@@ -200,4 +201,4 @@ export class TablesCollection implements Collection<Timestamp> {
   }
 }
 
-export default TablesCollection
+export default TidCollection

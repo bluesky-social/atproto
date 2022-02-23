@@ -1,5 +1,6 @@
 import { CID } from 'multiformats'
-import { Entry, IdMapping, check } from './types/index.js'
+import { Entry, IdMapping } from './types.js'
+import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import Timestamp from './timestamp.js'
 

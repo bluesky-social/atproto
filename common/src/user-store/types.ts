@@ -1,7 +1,5 @@
 import { CID } from 'multiformats/cid'
-import Timestamp from '../timestamp.js'
-
-export * as check from './check.js'
+import Timestamp from './timestamp.js'
 
 // @TODO: improve this
 export type DID = string

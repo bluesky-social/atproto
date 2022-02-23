@@ -1,22 +1,21 @@
 import test from 'ava'
 
-import TreeCollection from '../src/user-store/tree-collection.js'
+import DidCollection from '../src/user-store/did-collection.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import Timestamp from '../src/user-store/timestamp.js'
 import * as util from './_util.js'
-import { DID, IdMapping } from '../src/user-store/types/index.js'
+import { IdMapping } from '../src/user-store/types.js'
 import { CID } from 'multiformats'
 
 type Context = {
   store: IpldStore
-  collection: TreeCollection
+  collection: DidCollection
   cid: CID
   cid2: CID
 }
 
 test.beforeEach(async (t) => {
   const store = IpldStore.createInMemory()
-  const collection = await TreeCollection.create(store)
+  const collection = await DidCollection.create(store)
   const cid = await util.randomCid()
   const cid2 = await util.randomCid()
   t.context = { store, collection, cid, cid2 } as Context
@@ -52,7 +51,7 @@ test('loads from blockstore', async (t) => {
     await collection.addEntry(did, cid)
     actual[did.toString()] = cid
   }
-  const fromBS = await TreeCollection.load(store, collection.cid)
+  const fromBS = await DidCollection.load(store, collection.cid)
   for (const did of bulkDids) {
     const got = await fromBS.getEntry(did)
     t.deepEqual(got, actual[did.toString()], `Matching content for did: ${did}`)
@@ -71,7 +70,7 @@ test('enforces uniqueness on keys', async (t) => {
 })
 
 test('lists entries', async (t) => {
-  const { collection, cid } = t.context as Context
+  const { collection } = t.context as Context
   const dids = util.generateBulkDids(50)
   const cids = []
   for (const did of dids) {

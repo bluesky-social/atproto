@@ -1,5 +1,5 @@
-import { isCID, assure, isObject, isString } from '../../common/types/check.js'
-import { Commit, Root, IdMapping, Post, Follow, Like } from './index.js'
+import { isCID, assure, isObject, isString } from '../common/type-check.js'
+import { Commit, Root, IdMapping, Post, Follow, Like } from './types.js'
 
 export const isRoot = (obj: unknown): obj is Root => {
   return (

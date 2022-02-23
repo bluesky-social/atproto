@@ -6,7 +6,7 @@ import * as blockCodec from '@ipld/dag-cbor'
 import IpldStore from '../blockstore/ipld-store'
 import { Collection, DID } from './types'
 
-export class TreeCollection implements Collection<DID> {
+export class DidCollection implements Collection<DID> {
   store: IpldStore
   cid: CID
   hamt: HAMT.HashMap<CID>
@@ -17,21 +17,21 @@ export class TreeCollection implements Collection<DID> {
     this.hamt = hamt
   }
 
-  static async create(store: IpldStore): Promise<TreeCollection> {
+  static async create(store: IpldStore): Promise<DidCollection> {
     const hamt = (await HAMT.create(
       store.blockstore,
       HAMT_OPTS,
     )) as HAMT.HashMap<CID>
-    return new TreeCollection(store, hamt.cid, hamt)
+    return new DidCollection(store, hamt.cid, hamt)
   }
 
-  static async load(store: IpldStore, cid: CID): Promise<TreeCollection> {
+  static async load(store: IpldStore, cid: CID): Promise<DidCollection> {
     const hamt = (await HAMT.load(
       store.blockstore,
       cid,
       HAMT_OPTS,
     )) as HAMT.HashMap<CID>
-    return new TreeCollection(store, hamt.cid, hamt)
+    return new DidCollection(store, hamt.cid, hamt)
   }
 
   async getEntry(did: DID): Promise<CID | null> {
@@ -95,4 +95,4 @@ const HAMT_OPTS = {
   blockCodec,
 }
 
-export default TreeCollection
+export default DidCollection

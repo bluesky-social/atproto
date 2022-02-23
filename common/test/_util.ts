@@ -1,7 +1,7 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import Timestamp from '../src/user-store/timestamp.js'
-import { DID, IdMapping } from '../src/user-store/types/index.js'
+import { DID, IdMapping } from '../src/user-store/types.js'
 import SSTable from '../src/user-store/ss-table.js'
 
 const fakeStore = IpldStore.createInMemory()

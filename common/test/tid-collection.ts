@@ -1,22 +1,22 @@
 import test from 'ava'
 import { CID } from 'multiformats'
 
-import TableCollection from '../src/user-store/tables-collection.js'
+import TidCollection from '../src/user-store/tid-collection.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import Timestamp from '../src/user-store/timestamp.js'
 import * as util from './_util.js'
-import { IdMapping } from '../src/user-store/types/index.js'
+import { IdMapping } from '../src/user-store/types.js'
 
 type Context = {
   store: IpldStore
-  collection: TableCollection
+  collection: TidCollection
   cid: CID
   cid2: CID
 }
 
 test.beforeEach(async (t) => {
   const store = IpldStore.createInMemory()
-  const collection = await TableCollection.create(store)
+  const collection = await TidCollection.create(store)
   const cid = await util.randomCid()
   const cid2 = await util.randomCid()
   t.context = { store, collection, cid, cid2 } as Context
@@ -52,7 +52,7 @@ test('loads from blockstore', async (t) => {
     actual[tid.toString()] = cid
   }
 
-  const fromBS = await TableCollection.load(store, collection.cid)
+  const fromBS = await TidCollection.load(store, collection.cid)
   for (const tid of bulkTids) {
     const got = await fromBS.getEntry(tid)
     t.deepEqual(got, actual[tid.toString()], `Matching content for tid: ${tid}`)

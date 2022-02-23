@@ -4,35 +4,28 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import {
-  Post,
-  Follow,
-  UserStoreI,
-  check,
-  Root,
-  DID,
-  Like,
-} from './types/index.js'
+import { Post, Follow, UserStoreI, Root, DID, Like } from './types.js'
+import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
-import TablesCollection from './tables-collection.js'
-import TreeCollection from './tree-collection.js'
+import TidCollection from './tid-collection.js'
+import DidCollection from './did-collection.js'
 import { streamToArray } from '../common/util.js'
 import Timestamp from './timestamp.js'
 
 export class UserStore implements UserStoreI {
   ipld: IpldStore
-  posts: TablesCollection
-  interactions: TablesCollection
-  relationships: TreeCollection
+  posts: TidCollection
+  interactions: TidCollection
+  relationships: DidCollection
   root: CID
   did: DID
   keypair: Keypair | null
 
   constructor(params: {
     ipld: IpldStore
-    posts: TablesCollection
-    interactions: TablesCollection
-    relationships: TreeCollection
+    posts: TidCollection
+    interactions: TidCollection
+    relationships: DidCollection
     root: CID
     did: DID
     keypair?: Keypair
@@ -47,9 +40,9 @@ export class UserStore implements UserStoreI {
   }
 
   static async create(ipld: IpldStore, keypair: Keypair & Didable) {
-    const posts = await TablesCollection.create(ipld)
-    const interactions = await TablesCollection.create(ipld)
-    const relationships = await TreeCollection.create(ipld)
+    const posts = await TidCollection.create(ipld)
+    const interactions = await TidCollection.create(ipld)
+    const relationships = await DidCollection.create(ipld)
     const did = await keypair.did()
 
     const rootObj = {
@@ -81,9 +74,9 @@ export class UserStore implements UserStoreI {
   static async load(root: CID, ipld: IpldStore, keypair?: Keypair) {
     const commit = await ipld.get(root, check.assureCommit)
     const rootObj = await ipld.get(commit.root, check.assureRoot)
-    const posts = await TablesCollection.load(ipld, rootObj.posts)
-    const interactions = await TablesCollection.load(ipld, rootObj.interactions)
-    const relationships = await TreeCollection.load(ipld, rootObj.relationships)
+    const posts = await TidCollection.load(ipld, rootObj.posts)
+    const interactions = await TidCollection.load(ipld, rootObj.interactions)
+    const relationships = await DidCollection.load(ipld, rootObj.relationships)
     const did = rootObj.did
     return new UserStore({
       ipld,
