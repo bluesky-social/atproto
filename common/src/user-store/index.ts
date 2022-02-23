@@ -70,12 +70,12 @@ export class UserStore implements UserStoreI {
     })
   }
 
-  static async get(root: CID, ipld: IpldStore, keypair?: Keypair) {
+  static async load(root: CID, ipld: IpldStore, keypair?: Keypair) {
     const commit = await ipld.get(root, check.assureCommit)
     const rootObj = await ipld.get(commit.root, check.assureRoot)
-    const posts = await TablesCollection.get(ipld, rootObj.posts)
-    const interactions = await TablesCollection.get(ipld, rootObj.interactions)
-    const relationships = await TreeCollection.get(ipld, rootObj.relationships)
+    const posts = await TablesCollection.load(ipld, rootObj.posts)
+    const interactions = await TablesCollection.load(ipld, rootObj.interactions)
+    const relationships = await TreeCollection.load(ipld, rootObj.relationships)
     const did = rootObj.did
     return new UserStore({
       ipld,
@@ -105,7 +105,7 @@ export class UserStore implements UserStoreI {
       await ipld.putBytes(block.cid, block.bytes)
     }
 
-    return UserStore.get(root, ipld, keypair)
+    return UserStore.load(root, ipld, keypair)
   }
 
   async updateRoot(): Promise<CID> {

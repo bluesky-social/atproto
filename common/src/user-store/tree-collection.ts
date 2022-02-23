@@ -25,7 +25,7 @@ export class TreeCollection implements Collection<DID> {
     return new TreeCollection(store, hamt.cid, hamt)
   }
 
-  static async get(store: IpldStore, cid: CID): Promise<TreeCollection> {
+  static async load(store: IpldStore, cid: CID): Promise<TreeCollection> {
     const hamt = (await HAMT.load(
       store.blockstore,
       cid,

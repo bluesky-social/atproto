@@ -21,7 +21,7 @@ export class TablesCollection implements Collection<Timestamp> {
     return new TablesCollection(store, cid, {})
   }
 
-  static async get(store: IpldStore, cid: CID): Promise<TablesCollection> {
+  static async load(store: IpldStore, cid: CID): Promise<TablesCollection> {
     const data = await store.get(cid, check.assureIdMapping)
     return new TablesCollection(store, cid, data)
   }
@@ -30,7 +30,7 @@ export class TablesCollection implements Collection<Timestamp> {
     if (!name) return null
     const cid = this.data[name.toString()]
     if (cid === undefined) return null
-    return SSTable.get(this.store, cid)
+    return SSTable.load(this.store, cid)
   }
 
   getTableNameForId(id: Timestamp): Timestamp | null {
@@ -193,7 +193,7 @@ export class TablesCollection implements Collection<Timestamp> {
     const cids = this.shallowCids()
     for (const cid of cids) {
       all.push(cid)
-      const table = await SSTable.get(this.store, cid)
+      const table = await SSTable.load(this.store, cid)
       table.cids().forEach((c) => all.push(c))
     }
     return all
