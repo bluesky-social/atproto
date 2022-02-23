@@ -2,6 +2,7 @@ import * as Block from 'multiformats/block'
 import { CID } from 'multiformats/cid'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
+import { BlockWriter } from '@ipld/car/writer'
 
 import MemoryBlockstore from './memory-blockstore.js'
 import { BlockstoreI } from './types.js'
@@ -62,6 +63,10 @@ export class IpldStore {
 
   async destroy(): Promise<void> {
     return this.blockstore.destroy()
+  }
+
+  async addToCar(car: BlockWriter, cid: CID) {
+    car.put({ cid, bytes: await this.getBytes(cid) })
   }
 }
 

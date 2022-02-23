@@ -1,3 +1,4 @@
+import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
 import Timestamp from './timestamp.js'
 
@@ -42,6 +43,10 @@ export type Like = {
   time: string // ISO 8601
 }
 
+export interface CarStreamable {
+  writeToCarStream(car: BlockWriter): Promise<void>
+}
+
 export interface Collection<T> {
   getEntry(id: T): Promise<CID | null>
   addEntry(id: T, cid: CID): Promise<void>
@@ -64,6 +69,5 @@ export interface UserStoreI {
   unlikePost(tid: Timestamp): Promise<void>
   listLikes(count: number, from?: Timestamp): Promise<Like[]>
 
-  getCarStream(): AsyncIterable<Uint8Array>
   getCarFile(): Promise<Uint8Array>
 }

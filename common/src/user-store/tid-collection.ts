@@ -1,12 +1,13 @@
 import { CID } from 'multiformats'
+import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping, Collection } from './types.js'
+import { Entry, IdMapping, Collection, CarStreamable } from './types.js'
 import * as check from './type-check.js'
 import SSTable, { TableSize } from './ss-table.js'
 import Timestamp from './timestamp.js'
 
-export class TidCollection implements Collection<Timestamp> {
+export class TidCollection implements Collection<Timestamp>, CarStreamable {
   store: IpldStore
   cid: CID
   data: IdMapping
@@ -198,6 +199,14 @@ export class TidCollection implements Collection<Timestamp> {
       table.cids().forEach((c) => all.push(c))
     }
     return all
+  }
+
+  async writeToCarStream(car: BlockWriter): Promise<void> {
+    const cids = this.shallowCids()
+    for (const cid of cids) {
+      const table = await SSTable.load(this.store, cid)
+      await table.writeToCarStream(car)
+    }
   }
 }
 

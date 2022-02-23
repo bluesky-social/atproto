@@ -4,7 +4,15 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import { Post, Follow, UserStoreI, Root, DID, Like } from './types.js'
+import {
+  Post,
+  Follow,
+  UserStoreI,
+  Root,
+  DID,
+  Like,
+  CarStreamable,
+} from './types.js'
 import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
@@ -12,7 +20,7 @@ import DidCollection from './did-collection.js'
 import { streamToArray } from '../common/util.js'
 import Timestamp from './timestamp.js'
 
-export class UserStore implements UserStoreI {
+export class UserStore implements UserStoreI, CarStreamable {
   ipld: IpldStore
   posts: TidCollection
   interactions: TidCollection
@@ -243,35 +251,22 @@ export class UserStore implements UserStoreI {
     return likes
   }
 
-  // @TODO: split this out onto each collection
-  getCarStream(): AsyncIterable<Uint8Array> {
-    const writeblockstore = async (car: BlockWriter) => {
-      const addCid = async (cid: CID) => {
-        car.put({ cid, bytes: await this.ipld.getBytes(cid) })
-      }
-      await addCid(this.root)
-      const commit = await this.ipld.get(this.root, check.assureCommit)
-      await addCid(commit.root)
-
-      const [postCids, interactionCids, relationshipCids] = await Promise.all([
-        this.posts.cids(),
-        this.interactions.cids(),
-        this.relationships.cids(),
-      ])
-      const branchCids = postCids
-        .concat(interactionCids)
-        .concat(relationshipCids)
-      await Promise.all(branchCids.map((c) => addCid(c)))
-      car.close()
-    }
-
-    const { writer, out } = CarWriter.create([this.root])
-    writeblockstore(writer)
-    return out
+  async writeToCarStream(car: BlockWriter): Promise<void> {
+    await this.ipld.addToCar(car, this.root)
+    const commit = await this.ipld.get(this.root, check.assureCommit)
+    await this.ipld.addToCar(car, commit.root)
+    await Promise.all([
+      this.posts.writeToCarStream(car),
+      this.interactions.writeToCarStream(car),
+      this.relationships.writeToCarStream(car),
+    ])
   }
 
   async getCarFile(): Promise<Uint8Array> {
-    return streamToArray(this.getCarStream())
+    const { writer, out } = CarWriter.create([this.root])
+    await this.writeToCarStream(writer)
+    writer.close()
+    return streamToArray(out)
   }
 }
 

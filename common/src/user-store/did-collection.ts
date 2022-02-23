@@ -1,12 +1,13 @@
 import { CID } from 'multiformats'
-import * as HAMT from 'ipld-hashmap'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
+import * as HAMT from 'ipld-hashmap'
+import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store'
-import { Collection, DID } from './types'
+import { CarStreamable, Collection, DID } from './types'
 
-export class DidCollection implements Collection<DID> {
+export class DidCollection implements Collection<DID>, CarStreamable {
   store: IpldStore
   cid: CID
   hamt: HAMT.HashMap<CID>
@@ -86,8 +87,18 @@ export class DidCollection implements Collection<DID> {
     const entries = await this.getEntries()
     return structure.concat(entries)
   }
+
+  async writeToCarStream(car: BlockWriter): Promise<void> {
+    for await (const cid of this.hamt.cids()) {
+      await this.store.addToCar(car, cid)
+    }
+    for await (const entry of this.hamt.entries()) {
+      await this.store.addToCar(car, entry[1])
+    }
+  }
 }
 
+// bitWidth of 5 means 32-wide trees
 const HAMT_OPTS = {
   bitWidth: 5,
   bucketSize: 3,

@@ -1,10 +1,12 @@
 import { CID } from 'multiformats'
-import { Entry, IdMapping } from './types.js'
+import { BlockWriter } from '@ipld/car/lib/writer-browser'
+
+import { CarStreamable, Entry, IdMapping } from './types.js'
 import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import Timestamp from './timestamp.js'
 
-export class SSTable {
+export class SSTable implements CarStreamable {
   store: IpldStore
   cid: CID
   size: TableSize
@@ -125,6 +127,13 @@ export class SSTable {
 
   isFull(): boolean {
     return this.currSize() >= this.maxSize()
+  }
+
+  async writeToCarStream(car: BlockWriter): Promise<void> {
+    for (const cid of this.cids()) {
+      await this.store.addToCar(car, cid)
+    }
+    await this.store.addToCar(car, this.cid)
   }
 }
 
