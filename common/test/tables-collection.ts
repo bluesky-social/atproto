@@ -27,10 +27,10 @@ test('basic operations', async (t) => {
   const { collection, cid, cid2 } = t.context as Context
 
   // do basic operations in a collection that has at least 3 tables
-  const ids = util.generateBulkIds(250)
-  const mid = ids[125]
-  for (const id of ids) {
-    await collection.addEntry(id, cid)
+  const tids = util.generateBulkTids(250)
+  const mid = tids[125]
+  for (const tid of tids) {
+    await collection.addEntry(tid, cid)
   }
 
   t.deepEqual(await collection.getEntry(mid), cid, 'retrieves correct data')
@@ -44,53 +44,53 @@ test('basic operations', async (t) => {
 
 test('loads from blockstore', async (t) => {
   const { store, collection } = t.context as Context
-  const bulkIds = util.generateBulkIds(450)
+  const bulkTids = util.generateBulkTids(450)
   const actual = {} as IdMapping
-  for (const id of bulkIds) {
+  for (const tid of bulkTids) {
     const cid = await util.randomCid()
-    await collection.addEntry(id, cid)
-    actual[id.toString()] = cid
+    await collection.addEntry(tid, cid)
+    actual[tid.toString()] = cid
   }
 
   const fromBS = await TableCollection.load(store, collection.cid)
-  for (const id of bulkIds) {
-    const got = await fromBS.getEntry(id)
-    t.deepEqual(got, actual[id.toString()], `Matching content for id: ${id}`)
+  for (const tid of bulkTids) {
+    const got = await fromBS.getEntry(tid)
+    t.deepEqual(got, actual[tid.toString()], `Matching content for tid: ${tid}`)
   }
 })
 
 test('paginates gets', async (t) => {
   const { collection, cid } = t.context as Context
-  const bulkIds = util.generateBulkIds(250)
-  for (const id of bulkIds) {
-    await collection.addEntry(id, cid)
+  const bulkTids = util.generateBulkTids(250)
+  for (const tid of bulkTids) {
+    await collection.addEntry(tid, cid)
   }
-  const reversed = bulkIds.reverse()
+  const reversed = bulkTids.reverse()
 
   const fromStart = await collection.getEntries(75)
   t.deepEqual(
-    fromStart.map((e) => e.id),
+    fromStart.map((e) => e.tid),
     reversed.slice(0, 75),
     'returns a slice from start of collection',
   )
 
   const middleSlice = await collection.getEntries(75, reversed[100])
   t.deepEqual(
-    middleSlice.map((e) => e.id),
+    middleSlice.map((e) => e.tid),
     reversed.slice(101, 176),
     'returns a slice from middle of collection',
   )
 
   const onEdge = await collection.getEntries(100, reversed[50])
   t.deepEqual(
-    onEdge.map((e) => e.id),
+    onEdge.map((e) => e.tid),
     reversed.slice(51, 151),
     'returns a slice that falls on table edge',
   )
 
   const all = await collection.getEntries(300)
   t.deepEqual(
-    all.map((e) => e.id),
+    all.map((e) => e.tid),
     reversed,
     'returns the whole listing ',
   )
@@ -98,9 +98,9 @@ test('paginates gets', async (t) => {
 
 test('splits tables', async (t) => {
   const { collection, cid } = t.context as Context
-  const ids = util.generateBulkIds(100)
-  for (const id of ids) {
-    await collection.addEntry(id, cid)
+  const tids = util.generateBulkTids(100)
+  for (const tid of tids) {
+    await collection.addEntry(tid, cid)
   }
   t.is(collection.tableCount(), 1, 'Does not split at 100 entries')
 
@@ -111,13 +111,13 @@ test('splits tables', async (t) => {
 test('compresses tables', async (t) => {
   const { collection, cid } = t.context as Context
 
-  const ids = util.generateBulkIds(6401)
-  const firstBatch = ids.slice(0, 400)
-  const threshold = ids[400]
-  const secondBatch = ids.slice(401, 6400)
-  const final = ids[6400]
-  for (const id of firstBatch) {
-    await collection.addEntry(id, cid)
+  const tids = util.generateBulkTids(6401)
+  const firstBatch = tids.slice(0, 400)
+  const threshold = tids[400]
+  const secondBatch = tids.slice(401, 6400)
+  const final = tids[6400]
+  for (const tid of firstBatch) {
+    await collection.addEntry(tid, cid)
   }
   t.is(collection.tableCount(), 4, 'Does not compress at 4 tables')
 
@@ -128,8 +128,8 @@ test('compresses tables', async (t) => {
     'Compresses oldest 4 tables once there are 5 tables',
   )
 
-  for (const id of secondBatch) {
-    await collection.addEntry(id, cid)
+  for (const tid of secondBatch) {
+    await collection.addEntry(tid, cid)
   }
   t.is(
     collection.tableCount(),

@@ -156,21 +156,21 @@ export class UserStore implements UserStoreI {
     return timestamp
   }
 
-  async editPost(id: Timestamp, text: string): Promise<void> {
+  async editPost(tid: Timestamp, text: string): Promise<void> {
     const post = {
-      id,
+      id: tid,
       text,
       author: this.did,
       time: new Date().toISOString(),
     }
     const postCid = await this.ipld.put(post)
 
-    await this.posts.editEntry(id, postCid)
+    await this.posts.editEntry(tid, postCid)
     await this.updateRoot()
   }
 
-  async deletePost(id: Timestamp): Promise<void> {
-    await this.posts.deleteEntry(id)
+  async deletePost(tid: Timestamp): Promise<void> {
+    await this.posts.deleteEntry(tid)
     await this.updateRoot()
   }
 

@@ -11,7 +11,7 @@ export const randomCid = async (): Promise<CID> => {
   return fakeStore.put({ test: content })
 }
 
-export const generateBulkIds = (
+export const generateBulkTids = (
   count: number,
   startAt?: number,
 ): Timestamp[] => {
@@ -23,11 +23,11 @@ export const generateBulkIds = (
   return ids.reverse()
 }
 
-export const generateBulkIdMapping = async (
+export const generateBulkTidMapping = async (
   count: number,
   startAt?: number,
 ): Promise<IdMapping> => {
-  const ids = generateBulkIds(count, startAt)
+  const ids = generateBulkTids(count, startAt)
   const obj = {} as IdMapping
   for (const id of ids) {
     obj[id.toString()] = await randomCid()
@@ -44,8 +44,8 @@ export const keysFromMappings = (mappings: IdMapping[]): Timestamp[] => {
 }
 
 export const checkInclusionInTable = (
-  ids: Timestamp[],
+  tids: Timestamp[],
   table: SSTable,
 ): boolean => {
-  return ids.map((id) => table.hasEntry(id)).every((has) => has === true)
+  return tids.map((tid) => table.hasEntry(tid)).every((has) => has === true)
 }

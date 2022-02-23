@@ -34,39 +34,39 @@ export class TreeCollection implements Collection<DID> {
     return new TreeCollection(store, hamt.cid, hamt)
   }
 
-  async getEntry(id: DID): Promise<CID | null> {
-    const got = await this.hamt.get(id)
+  async getEntry(did: DID): Promise<CID | null> {
+    const got = await this.hamt.get(did)
     return got || null
   }
 
-  async hasEntry(id: DID): Promise<boolean> {
-    return this.hamt.has(id)
+  async hasEntry(did: DID): Promise<boolean> {
+    return this.hamt.has(did)
   }
 
-  async addEntry(id: DID, cid: CID): Promise<void> {
-    const exists = await this.hasEntry(id)
+  async addEntry(did: DID, cid: CID): Promise<void> {
+    const exists = await this.hasEntry(did)
     if (exists) {
-      throw new Error(`Entry already exists for id ${id}`)
+      throw new Error(`Entry already exists for did ${did}`)
     }
-    await this.hamt.set(id, cid)
+    await this.hamt.set(did, cid)
     this.cid = this.hamt.cid
   }
 
-  async editEntry(id: DID, cid: CID): Promise<void> {
-    const exists = await this.hasEntry(id)
+  async editEntry(did: DID, cid: CID): Promise<void> {
+    const exists = await this.hasEntry(did)
     if (!exists) {
-      throw new Error(`Entry does not exist for id ${id}`)
+      throw new Error(`Entry does not exist for did ${did}`)
     }
-    await this.hamt.set(id, cid)
+    await this.hamt.set(did, cid)
     this.cid = this.hamt.cid
   }
 
-  async deleteEntry(id: DID): Promise<void> {
-    const exists = await this.hasEntry(id)
+  async deleteEntry(did: DID): Promise<void> {
+    const exists = await this.hasEntry(did)
     if (!exists) {
-      throw new Error(`Entry does not exist for id ${id}`)
+      throw new Error(`Entry does not exist for did ${did}`)
     }
-    await this.hamt.delete(id)
+    await this.hamt.delete(did)
     this.cid = this.hamt.cid
   }
 

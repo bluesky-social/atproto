@@ -21,7 +21,7 @@ export type Commit = {
 export type IdMapping = Record<string, CID>
 
 export type Entry = {
-  id: Timestamp
+  tid: Timestamp
   cid: CID
 }
 
@@ -31,7 +31,7 @@ export type Follow = {
 }
 
 export type Post = {
-  id: string
+  id: string // @TODO `tid`?
   author: string
   text: string
   time: string // ISO 8601

@@ -33,12 +33,12 @@ export class TablesCollection implements Collection<Timestamp> {
     return SSTable.load(this.store, cid)
   }
 
-  getTableNameForId(id: Timestamp): Timestamp | null {
-    return this.tableNames().find((n) => !id.olderThan(n)) || null
+  getTableNameForTid(tid: Timestamp): Timestamp | null {
+    return this.tableNames().find((n) => !tid.olderThan(n)) || null
   }
 
-  async getTableForId(id: Timestamp): Promise<SSTable | null> {
-    const name = this.getTableNameForId(id)
+  async getTableForId(tid: Timestamp): Promise<SSTable | null> {
+    const name = this.getTableNameForTid(tid)
     if (!name) return null
     return this.getTable(name)
   }
@@ -56,7 +56,7 @@ export class TablesCollection implements Collection<Timestamp> {
       mostRecent,
       tableNames.slice(1),
     )
-    const tableName = compressed.oldestId()
+    const tableName = compressed.oldestTid()
     if (tableName && !tableName.equals(tableNames[0])) {
       delete this.data[tableNames[0].toString()]
       this.data[tableName.toString()] = compressed.cid
@@ -84,10 +84,10 @@ export class TablesCollection implements Collection<Timestamp> {
     return await this.compressCascade(merged, nextKeys.slice(3))
   }
 
-  async getEntry(id: Timestamp): Promise<CID | null> {
-    const table = await this.getTableForId(id)
+  async getEntry(tid: Timestamp): Promise<CID | null> {
+    const table = await this.getTableForId(tid)
     if (!table) return null
-    return table.getEntry(id)
+    return table.getEntry(tid)
   }
 
   async getEntries(count: number, from?: Timestamp): Promise<Entry[]> {
@@ -108,7 +108,7 @@ export class TablesCollection implements Collection<Timestamp> {
       // for first table we only want entries older than `from`, otherwise start from beginning
       const tableStartIndex =
         from !== undefined && i === index
-          ? tableEntries.findIndex((e) => e.id.olderThan(from))
+          ? tableEntries.findIndex((e) => e.tid.olderThan(from))
           : 0
 
       const tableEndIndex = tableStartIndex + (count - entries.length)
@@ -135,49 +135,49 @@ export class TablesCollection implements Collection<Timestamp> {
     }
   }
 
-  async addEntry(id: Timestamp, cid: CID): Promise<void> {
+  async addEntry(tid: Timestamp, cid: CID): Promise<void> {
     const table = await this.getOrCreateCurrTable()
-    const oldestKey = table.oldestId()
-    if (oldestKey && id.olderThan(oldestKey)) {
+    const oldestKey = table.oldestTid()
+    if (oldestKey && tid.olderThan(oldestKey)) {
       // @TODO handle this more gracefully
       throw new Error('Attempting to add an id that is too old for the table')
     }
-    await table.addEntry(id, cid)
-    const tableName = oldestKey?.toString() || id.toString()
+    await table.addEntry(tid, cid)
+    const tableName = oldestKey?.toString() || tid.toString()
     this.data[tableName] = table.cid
     await this.updateRoot()
   }
 
-  private async editTableForId(
-    id: Timestamp,
+  private async editTableForTid(
+    tid: Timestamp,
     fn: (table: SSTable) => Promise<void>,
   ): Promise<void> {
-    const tableName = this.getTableNameForId(id)
-    if (!tableName) throw new Error(`Could not find entry with id: ${id}`)
+    const tableName = this.getTableNameForTid(tid)
+    if (!tableName) throw new Error(`Could not find entry with tid: ${tid}`)
     const table = await this.getTable(tableName)
-    if (!table) throw new Error(`Could not find entry with id: ${id}`)
+    if (!table) throw new Error(`Could not find entry with tid: ${tid}`)
     await fn(table)
     this.data[tableName.toString()] = table.cid
     await this.updateRoot()
   }
 
-  async editEntry(id: Timestamp, cid: CID): Promise<void> {
-    await this.editTableForId(id, async (table) => {
-      await table.editEntry(id, cid)
+  async editEntry(tid: Timestamp, cid: CID): Promise<void> {
+    await this.editTableForTid(tid, async (table) => {
+      await table.editEntry(tid, cid)
     })
   }
 
-  async deleteEntry(id: Timestamp): Promise<void> {
-    await this.editTableForId(id, async (table) => {
-      await table.deleteEntry(id)
+  async deleteEntry(tid: Timestamp): Promise<void> {
+    await this.editTableForTid(tid, async (table) => {
+      await table.deleteEntry(tid)
     })
   }
 
   tableNames(oldestFirst = false): Timestamp[] {
-    const ids = Object.keys(this.data).map((k) => Timestamp.parse(k))
+    const tids = Object.keys(this.data).map((k) => Timestamp.parse(k))
     return oldestFirst
-      ? ids.sort(Timestamp.oldestFirst)
-      : ids.sort(Timestamp.newestFirst)
+      ? tids.sort(Timestamp.oldestFirst)
+      : tids.sort(Timestamp.newestFirst)
   }
 
   tableCount(): number {
