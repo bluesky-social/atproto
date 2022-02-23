@@ -50,7 +50,7 @@ export const checkInclusionInTable = (
   return tids.map((tid) => table.hasEntry(tid)).every((has) => has === true)
 }
 
-export const fakeDid = (): DID => {
+export const randomDid = (): DID => {
   let result = ''
   const CHARS = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
   const LENGTH = 48
@@ -63,7 +63,7 @@ export const fakeDid = (): DID => {
 export const generateBulkDids = (count: number): DID[] => {
   const dids = []
   for (let i = 0; i < count; i++) {
-    dids.push(fakeDid())
+    dids.push(randomDid())
   }
   return dids
 }

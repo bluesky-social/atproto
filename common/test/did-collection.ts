@@ -30,7 +30,7 @@ test('basic operations', async (t) => {
   for (const did of dids) {
     await collection.addEntry(did, await util.randomCid())
   }
-  const did = util.fakeDid()
+  const did = util.randomDid()
   await collection.addEntry(did, cid)
 
   t.deepEqual(await collection.getEntry(did), cid, 'retrieves correct data')
@@ -60,7 +60,7 @@ test('loads from blockstore', async (t) => {
 
 test('enforces uniqueness on keys', async (t) => {
   const { collection, cid } = t.context as Context
-  const did = util.fakeDid()
+  const did = util.randomDid()
   await collection.addEntry(did, cid)
   await t.throwsAsync(
     collection.addEntry(did, cid),
