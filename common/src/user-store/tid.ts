@@ -19,7 +19,8 @@ export class TID {
     }
     lastTimestamp = time
     const timestamp = time * 1000 + timestampCount
-    const clockid = Math.floor(Math.random() * 32) // the bottom 32 clock ids are not guaranteed to be collision resistant
+    // the bottom 32 clock ids can be randomized & are not guaranteed to be collision resistant
+    const clockid = Math.floor(Math.random() * 32)
     return new TID(timestamp, clockid)
   }
 
