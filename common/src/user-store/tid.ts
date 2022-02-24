@@ -60,7 +60,7 @@ export class TID {
     if (this.time > other.time) return 1
     if (this.time < other.time) return -1
     if (this.clockid > other.clockid) return 1
-    if (this.clockid < other.clockid) return 1
+    if (this.clockid < other.clockid) return -1
     return 0
   }
 
