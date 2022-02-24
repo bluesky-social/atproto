@@ -5,7 +5,7 @@ test('Creates new TID', (t) => {
   const tid = TID.now()
   const str = tid.toString()
   t.is(typeof str, 'string', 'Is a string')
-  t.is(str.toString().length, 11, 'Is the proper length')
+  t.is(str.toString().length, 13, 'Is the proper length')
 })
 
 test('Can parse a TID', (t) => {

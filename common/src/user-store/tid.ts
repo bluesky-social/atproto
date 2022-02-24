@@ -1,3 +1,6 @@
+let lastTimestamp = 0
+let timestampCount = 0
+
 export class TID {
   time: number
   clockid: number
@@ -8,13 +11,24 @@ export class TID {
   }
 
   static now(): TID {
-    const clockid = Math.floor(Math.random() * 1024)
-    return new TID(Date.now(), clockid)
+    // javascript does not have microsecond precision
+    // instead, we append a counter to the timestamp to indicate if multiple timestamps were created within the same millisecond
+    const time = Date.now()
+    if (time === lastTimestamp) {
+      timestampCount++
+    }
+    lastTimestamp = time
+    const timestamp = time * 1000 + timestampCount
+    const clockid = Math.floor(Math.random() * 32) // the bottom 32 clock ids are not guaranteed to be collision resistant
+    return new TID(timestamp, clockid)
   }
 
   static parse(str: string): TID {
     const time = parseInt(str.slice(0, -2), 32)
     const clockid = parseInt(str.slice(-2), 32)
+    if (isNaN(time) || isNaN(clockid)) {
+      throw new Error('Not a valid TID')
+    }
     return new TID(time, clockid)
   }
 
@@ -26,8 +40,16 @@ export class TID {
     return a.compareTo(b)
   }
 
+  formatted(): string {
+    const str = this.toString()
+    return `${str.slice(0, 4)}-${str.slice(4, 7)}-${str.slice(
+      7,
+      11,
+    )}-${str.slice(11, 13)}`
+  }
+
   toString(): string {
-    return `${this.time.toString(32).padStart(9, '0')}${this.clockid
+    return `${this.time.toString(32)}${this.clockid
       .toString(32)
       .padStart(2, '0')}`
   }
