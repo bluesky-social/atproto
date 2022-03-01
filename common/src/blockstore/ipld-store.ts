@@ -34,22 +34,20 @@ export class IpldStore {
   }
 
   async get<T>(cid: CID, checkFn: (obj: unknown) => T): Promise<T> {
-    {
-      const bytes = await this.getBytes(cid)
-      const block = await Block.create({
-        bytes,
-        cid,
-        codec: blockCodec,
-        hasher: blockHasher,
-      })
-      try {
-        const verified = checkFn(block.value)
-        return verified
-      } catch (err) {
-        throw new Error(
-          `Did not find expected object at ${cid.toString()}: ${err}`,
-        )
-      }
+    const bytes = await this.getBytes(cid)
+    const block = await Block.create({
+      bytes,
+      cid,
+      codec: blockCodec,
+      hasher: blockHasher,
+    })
+    try {
+      const verified = checkFn(block.value)
+      return verified
+    } catch (err) {
+      throw new Error(
+        `Did not find expected object at ${cid.toString()}: ${err}`,
+      )
     }
   }
 

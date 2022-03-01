@@ -1,15 +1,15 @@
 import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
+import { DID } from '../common/types.js'
 import TID from './tid.js'
 
-// @TODO: improve this
-export type DID = string
+export type UserRoot = Record<string, CID> & { did: DID }
 
-export type Root = {
-  did: string
+export type SchemaRoot = {
   posts: CID
   relationships: CID
   interactions: CID
+  profile: CID | null
 }
 
 export type Commit = {
