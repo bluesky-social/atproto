@@ -114,11 +114,25 @@ export class UserStore implements CarStreamable {
   }
 
   async createSchemaStore(name: string): Promise<SchemaStore> {
-    if (this.schemas[name] !== undefined) {
+    if (this.schemaCids[name] !== undefined) {
       throw new Error(`Schema store already exists for schema: ${name}`)
     }
     const schemaStore = await SchemaStore.create(this.store)
     this.schemaCids[name] = schemaStore.cid
+    this.schemas[name] = schemaStore
+    return schemaStore
+  }
+
+  async loadOrCreateSchemaStore(name: string): Promise<SchemaStore> {
+    if (this.schemas[name]) {
+      return this.schemas[name]
+    }
+    const cid = this.schemaCids[name]
+    if (!cid) {
+      return this.createSchemaStore(name)
+    }
+    const schemaStore = await SchemaStore.load(cid, this.store)
+    this.schemas[name] = schemaStore
     return schemaStore
   }
 
@@ -127,20 +141,12 @@ export class UserStore implements CarStreamable {
     fn: (store: SchemaStore) => Promise<T>,
   ): Promise<T> {
     const cid = this.schemaCids[schemaName]
-    const store = cid
-      ? await SchemaStore.load(cid, this.store)
-      : await this.createSchemaStore(schemaName)
+    const store = await this.loadOrCreateSchemaStore(schemaName)
     const res = await fn(store)
     if (store.cid.toString() !== cid.toString()) {
       await this.updateRoot()
     }
     return res
-  }
-
-  async loadSchemaStore(name: string): Promise<SchemaStore | null> {
-    const cid = this.schemaCids[name]
-    if (!cid) return null
-    return SchemaStore.load(cid, this.store)
   }
 
   async put(value: Record<string, unknown>): Promise<CID> {
