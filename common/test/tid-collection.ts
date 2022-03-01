@@ -104,7 +104,7 @@ test('splits tables', async (t) => {
   }
   t.is(collection.tableCount(), 1, 'Does not split at 100 entries')
 
-  await collection.addEntry(TID.now(), cid)
+  await collection.addEntry(TID.next(), cid)
   t.is(collection.tableCount(), 2, 'Does split at 101 entries')
 })
 

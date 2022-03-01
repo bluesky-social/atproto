@@ -173,7 +173,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   }
 
   tableNames(oldestFirst = false): TID[] {
-    const tids = Object.keys(this.data).map((k) => TID.parse(k))
+    const tids = Object.keys(this.data).map((k) => TID.fromStr(k))
     return oldestFirst ? tids.sort(TID.oldestFirst) : tids.sort(TID.newestFirst)
   }
 

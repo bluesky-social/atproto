@@ -148,7 +148,7 @@ export class UserStore implements UserStoreI, CarStreamable {
   }
 
   async addPost(text: string): Promise<TID> {
-    const tid = TID.now()
+    const tid = TID.next()
     const post = {
       id: tid.toString(),
       text,
@@ -217,7 +217,7 @@ export class UserStore implements UserStoreI, CarStreamable {
   }
 
   async likePost(postTid: TID): Promise<TID> {
-    const tid = TID.now()
+    const tid = TID.next()
     const like = {
       id: tid.toString(),
       post_id: postTid.toString(),

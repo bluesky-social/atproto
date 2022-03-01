@@ -101,7 +101,7 @@ export class SSTable implements CarStreamable {
   }
 
   tids(oldestFirst = false): TID[] {
-    const tids = Object.keys(this.data).map((k) => TID.parse(k))
+    const tids = Object.keys(this.data).map((k) => TID.fromStr(k))
     return oldestFirst ? tids.sort(TID.oldestFirst) : tids.sort(TID.newestFirst)
   }
 
@@ -111,7 +111,7 @@ export class SSTable implements CarStreamable {
 
   entries(): Entry[] {
     return Object.entries(this.data)
-      .map(([tid, cid]) => ({ tid: TID.parse(tid), cid }))
+      .map(([tid, cid]) => ({ tid: TID.fromStr(tid), cid }))
       .sort((a, b) => TID.newestFirst(a.tid, b.tid))
   }
 

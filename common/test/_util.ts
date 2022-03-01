@@ -11,20 +11,18 @@ export const randomCid = async (): Promise<CID> => {
   return fakeStore.put({ test: content })
 }
 
-export const generateBulkTids = (count: number, startAt?: number): TID[] => {
+export const generateBulkTids = (count: number): TID[] => {
   const ids = []
-  const start = startAt || Date.now()
   for (let i = 0; i < count; i++) {
-    ids.push(new TID(start - i, 1))
+    ids.push(TID.next())
   }
-  return ids.reverse()
+  return ids
 }
 
 export const generateBulkTidMapping = async (
   count: number,
-  startAt?: number,
 ): Promise<IdMapping> => {
-  const ids = generateBulkTids(count, startAt)
+  const ids = generateBulkTids(count)
   const obj: IdMapping = {}
   for (const id of ids) {
     obj[id.toString()] = await randomCid()
@@ -33,7 +31,7 @@ export const generateBulkTidMapping = async (
 }
 
 export const keysFromMapping = (mapping: IdMapping): TID[] => {
-  return Object.keys(mapping).map((id) => TID.parse(id))
+  return Object.keys(mapping).map((id) => TID.fromStr(id))
 }
 
 export const keysFromMappings = (mappings: IdMapping[]): TID[] => {
