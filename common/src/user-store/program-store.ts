@@ -6,7 +6,7 @@ import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
 import DidCollection from './did-collection.js'
 
-export class SchemaStore {
+export class ProgramStore {
   store: IpldStore
   posts: TidCollection
   interactions: TidCollection
@@ -47,7 +47,7 @@ export class SchemaStore {
 
     const cid = await store.put(rootObj)
 
-    return new SchemaStore({
+    return new ProgramStore({
       store,
       posts,
       interactions,
@@ -58,11 +58,11 @@ export class SchemaStore {
   }
 
   static async load(cid: CID, store: IpldStore) {
-    const rootObj = await store.get(cid, check.assureSchemaRoot)
+    const rootObj = await store.get(cid, check.assureProgramRoot)
     const posts = await TidCollection.load(store, rootObj.posts)
     const interactions = await TidCollection.load(store, rootObj.interactions)
     const relationships = await DidCollection.load(store, rootObj.relationships)
-    return new SchemaStore({
+    return new ProgramStore({
       store,
       posts,
       interactions,
@@ -99,4 +99,4 @@ export class SchemaStore {
   }
 }
 
-export default SchemaStore
+export default ProgramStore

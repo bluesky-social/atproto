@@ -9,26 +9,26 @@ import { DID } from '../common/types.js'
 import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
-import SchemaStore from './schema-store.js'
+import ProgramStore from './program-store.js'
 
 export class UserStore implements CarStreamable {
   store: IpldStore
-  schemaCids: IdMapping
-  schemas: { [name: string]: SchemaStore }
+  programCids: IdMapping
+  programs: { [name: string]: ProgramStore }
   cid: CID
   did: DID
   keypair: Keypair | null
 
   constructor(params: {
     store: IpldStore
-    schemaCids: IdMapping
+    programCids: IdMapping
     cid: CID
     did: DID
     keypair?: Keypair
   }) {
     this.store = params.store
-    this.schemaCids = params.schemaCids
-    this.schemas = {}
+    this.programCids = params.programCids
+    this.programs = {}
     this.cid = params.cid
     this.did = params.did
     this.keypair = params.keypair || null
@@ -48,12 +48,11 @@ export class UserStore implements CarStreamable {
     }
 
     const cid = await store.put(commit)
-    const schemaCids: IdMapping = {}
-    const schemas = {}
+    const programCids: IdMapping = {}
 
     return new UserStore({
       store,
-      schemaCids,
+      programCids,
       cid,
       did,
       keypair,
@@ -63,10 +62,10 @@ export class UserStore implements CarStreamable {
   static async load(cid: CID, store: IpldStore, keypair?: Keypair) {
     const commit = await store.get(cid, check.assureCommit)
     const rootObj = await store.get(commit.root, check.assureUserRoot)
-    const { did, ...schemaCids } = rootObj
+    const { did, ...programCids } = rootObj
     return new UserStore({
       store,
-      schemaCids,
+      programCids,
       cid,
       did,
       keypair,
@@ -99,7 +98,7 @@ export class UserStore implements CarStreamable {
     }
     const userCid = await this.store.put({
       did: this.did,
-      ...this.schemas,
+      ...this.programs,
     })
     const commit = {
       user: userCid,
@@ -113,35 +112,35 @@ export class UserStore implements CarStreamable {
     return this.store.get(commit.root, check.assureUserRoot)
   }
 
-  async createSchemaStore(name: string): Promise<SchemaStore> {
-    if (this.schemaCids[name] !== undefined) {
-      throw new Error(`Schema store already exists for schema: ${name}`)
+  async createProgramStore(name: string): Promise<ProgramStore> {
+    if (this.programCids[name] !== undefined) {
+      throw new Error(`Program store already exists for program: ${name}`)
     }
-    const schemaStore = await SchemaStore.create(this.store)
-    this.schemaCids[name] = schemaStore.cid
-    this.schemas[name] = schemaStore
-    return schemaStore
+    const programStore = await ProgramStore.create(this.store)
+    this.programCids[name] = programStore.cid
+    this.programs[name] = programStore
+    return programStore
   }
 
-  async loadOrCreateSchemaStore(name: string): Promise<SchemaStore> {
-    if (this.schemas[name]) {
-      return this.schemas[name]
+  async loadOrCreateProgramStore(name: string): Promise<ProgramStore> {
+    if (this.programs[name]) {
+      return this.programs[name]
     }
-    const cid = this.schemaCids[name]
+    const cid = this.programCids[name]
     if (!cid) {
-      return this.createSchemaStore(name)
+      return this.createProgramStore(name)
     }
-    const schemaStore = await SchemaStore.load(cid, this.store)
-    this.schemas[name] = schemaStore
-    return schemaStore
+    const programStore = await ProgramStore.load(cid, this.store)
+    this.programs[name] = programStore
+    return programStore
   }
 
-  async runOnSchema<T>(
-    schemaName: string,
-    fn: (store: SchemaStore) => Promise<T>,
+  async runOnProgram<T>(
+    programName: string,
+    fn: (store: ProgramStore) => Promise<T>,
   ): Promise<T> {
-    const cid = this.schemaCids[schemaName]
-    const store = await this.loadOrCreateSchemaStore(schemaName)
+    const cid = this.programCids[programName]
+    const store = await this.loadOrCreateProgramStore(programName)
     const res = await fn(store)
     if (store.cid.toString() !== cid.toString()) {
       await this.updateRoot()
@@ -162,9 +161,9 @@ export class UserStore implements CarStreamable {
     const commit = await this.store.get(this.cid, check.assureCommit)
     await this.store.addToCar(car, commit.root)
     await Promise.all(
-      Object.values(this.schemaCids).map(async (cid) => {
-        const schemaStore = await SchemaStore.load(cid, this.store)
-        await schemaStore.writeToCarStream(car)
+      Object.values(this.programCids).map(async (cid) => {
+        const programStore = await ProgramStore.load(cid, this.store)
+        await programStore.writeToCarStream(car)
       }),
     )
   }

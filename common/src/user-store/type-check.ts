@@ -1,5 +1,5 @@
 import { isCID, assure, isObject } from '../common/type-check.js'
-import { Commit, UserRoot, SchemaRoot, IdMapping } from './types.js'
+import { Commit, UserRoot, ProgramRoot, IdMapping } from './types.js'
 
 export const isUserRoot = (obj: unknown): obj is UserRoot => {
   return isObject(obj) && typeof obj.did === 'string'
@@ -17,7 +17,7 @@ export const assureCommit = (obj: unknown): Commit => {
   return assure(obj, 'Commit', isCommit)
 }
 
-export const isSchemaRoot = (obj: unknown): obj is SchemaRoot => {
+export const isProgramRoot = (obj: unknown): obj is ProgramRoot => {
   return (
     isObject(obj) &&
     isCID(obj.posts) &&
@@ -27,8 +27,8 @@ export const isSchemaRoot = (obj: unknown): obj is SchemaRoot => {
   )
 }
 
-export const assureSchemaRoot = (obj: unknown): SchemaRoot => {
-  return assure(obj, 'SchemaRoot', isSchemaRoot)
+export const assureProgramRoot = (obj: unknown): ProgramRoot => {
+  return assure(obj, 'ProgramRoot', isProgramRoot)
 }
 
 export const isIdMapping = (obj: unknown): obj is IdMapping => {
