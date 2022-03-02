@@ -1,36 +1,46 @@
+import { s32encode, s32decode } from '../common/util.js'
 let lastTimestamp = 0
 let timestampCount = 0
+let clockid: number | null = null
 
 export class TID {
-  time: number
-  clockid: number
+  str: string
 
-  constructor(time: number, clockid: number) {
-    this.time = time
-    this.clockid = clockid
+  constructor(str: string) {
+    const noDashes = str.replace(/-/g, '')
+    if (noDashes.length !== 13) {
+      throw new Error(`Poorly formatted TID: ${noDashes.length} length`)
+    }
+    this.str = str
   }
 
-  static now(): TID {
+  static next(): TID {
     // javascript does not have microsecond precision
     // instead, we append a counter to the timestamp to indicate if multiple timestamps were created within the same millisecond
-    const time = Date.now()
+    // take max of current time & last timestamp to prevent tids moving backwards if system clock drifts backwards
+    const time = Math.max(Date.now(), lastTimestamp)
     if (time === lastTimestamp) {
       timestampCount++
     }
     lastTimestamp = time
     const timestamp = time * 1000 + timestampCount
     // the bottom 32 clock ids can be randomized & are not guaranteed to be collision resistant
-    const clockid = Math.floor(Math.random() * 32)
-    return new TID(timestamp, clockid)
+    // we use the same clockid for all tids coming from this machine
+    if (clockid === null) {
+      clockid = Math.floor(Math.random() * 32)
+    }
+    return TID.fromTime(timestamp, clockid)
   }
 
-  static parse(str: string): TID {
-    const time = parseInt(str.slice(0, -2), 32)
-    const clockid = parseInt(str.slice(-2), 32)
-    if (isNaN(time) || isNaN(clockid)) {
-      throw new Error('Not a valid TID')
-    }
-    return new TID(time, clockid)
+  static fromTime(timestamp: number, clockid: number): TID {
+    // base32 encode with encoding variant sort (s32)
+    // format such as: 3hgb-r7t-ngir-01
+    const str = `${s32encode(timestamp)}${s32encode(clockid).padStart(2, '2')}`
+    return new TID(str)
+  }
+
+  static fromStr(str: string): TID {
+    return new TID(str)
   }
 
   static newestFirst(a: TID, b: TID): number {
@@ -39,6 +49,16 @@ export class TID {
 
   static oldestFirst(a: TID, b: TID): number {
     return a.compareTo(b)
+  }
+
+  timestamp(): number {
+    const substr = this.str.slice(0, 11)
+    return s32decode(substr)
+  }
+
+  clockid(): number {
+    const substr = this.str.slice(11, 13)
+    return s32decode(substr)
   }
 
   formatted(): string {
@@ -50,17 +70,13 @@ export class TID {
   }
 
   toString(): string {
-    return `${this.time.toString(32)}${this.clockid
-      .toString(32)
-      .padStart(2, '0')}`
+    return this.str
   }
 
   // newer > older
   compareTo(other: TID): number {
-    if (this.time > other.time) return 1
-    if (this.time < other.time) return -1
-    if (this.clockid > other.clockid) return 1
-    if (this.clockid < other.clockid) return 1
+    if (this.str > other.str) return 1
+    if (this.str < other.str) return -1
     return 0
   }
 
