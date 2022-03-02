@@ -34,7 +34,6 @@ export class TID {
 
   static fromTime(timestamp: number, clockid: number): TID {
     // base32 encode with encoding variant sort (s32)
-    // format such as: 3hgb-r7t-ngir-01
     const str = `${s32encode(timestamp)}${s32encode(clockid).padStart(2, '2')}`
     return new TID(str)
   }
