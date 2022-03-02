@@ -59,7 +59,7 @@ export class UserStore implements CarStreamable {
     })
   }
 
-  static async load(cid: CID, store: IpldStore, keypair?: Keypair) {
+  static async load(store: IpldStore, cid: CID, keypair?: Keypair) {
     const commit = await store.get(cid, check.assureCommit)
     const rootObj = await store.get(commit.root, check.assureUserRoot)
     const { did, ...programCids } = rootObj
@@ -89,7 +89,7 @@ export class UserStore implements CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    return UserStore.load(root, store, keypair)
+    return UserStore.load(store, root, keypair)
   }
 
   async updateRoot(): Promise<void> {
@@ -130,7 +130,7 @@ export class UserStore implements CarStreamable {
     if (!cid) {
       return this.createProgramStore(name)
     }
-    const programStore = await ProgramStore.load(cid, this.store)
+    const programStore = await ProgramStore.load(this.store, cid)
     this.programs[name] = programStore
     return programStore
   }
@@ -162,7 +162,7 @@ export class UserStore implements CarStreamable {
     await this.store.addToCar(car, commit.root)
     await Promise.all(
       Object.values(this.programCids).map(async (cid) => {
-        const programStore = await ProgramStore.load(cid, this.store)
+        const programStore = await ProgramStore.load(this.store, cid)
         await programStore.writeToCarStream(car)
       }),
     )

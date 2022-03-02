@@ -29,9 +29,9 @@ export class ProgramStore {
     this.profile = params.profile
     this.cid = params.cid
 
-    this.posts.onUpdate = this.updateRoot
-    this.interactions.onUpdate = this.updateRoot
-    this.relationships.onUpdate = this.updateRoot
+    this.posts.onUpdate = () => this.updateRoot()
+    this.interactions.onUpdate = () => this.updateRoot()
+    this.relationships.onUpdate = () => this.updateRoot()
   }
 
   static async create(store: IpldStore) {
@@ -57,7 +57,7 @@ export class ProgramStore {
     })
   }
 
-  static async load(cid: CID, store: IpldStore) {
+  static async load(store: IpldStore, cid: CID) {
     const rootObj = await store.get(cid, check.assureProgramRoot)
     const posts = await TidCollection.load(store, rootObj.posts)
     const interactions = await TidCollection.load(store, rootObj.interactions)
@@ -72,6 +72,7 @@ export class ProgramStore {
     })
   }
 
+  // arrow fn to preserve scope
   async updateRoot(): Promise<void> {
     this.cid = await this.store.put({
       posts: this.posts.cid,
