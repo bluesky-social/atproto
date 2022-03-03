@@ -5,6 +5,7 @@ import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
 import DidCollection from './did-collection.js'
+import { ProgramRoot } from './types.js'
 
 export class ProgramStore {
   store: IpldStore
@@ -39,10 +40,11 @@ export class ProgramStore {
     const interactions = await TidCollection.create(store)
     const relationships = await DidCollection.create(store)
 
-    const rootObj = {
+    const rootObj: ProgramRoot = {
       posts: posts.cid,
       interactions: interactions.cid,
       relationships: relationships.cid,
+      profile: null,
     }
 
     const cid = await store.put(rootObj)

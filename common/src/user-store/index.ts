@@ -4,7 +4,7 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import { UserRoot, CarStreamable, IdMapping } from './types.js'
+import { UserRoot, CarStreamable, IdMapping, Commit } from './types.js'
 import { DID } from '../common/types.js'
 import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
@@ -98,17 +98,21 @@ export class UserStore implements CarStreamable {
     }
     const userCid = await this.store.put({
       did: this.did,
-      ...this.programs,
+      ...this.programCids,
     })
-    const commit = {
-      user: userCid,
+    const commit: Commit = {
+      root: userCid,
       sig: await this.keypair.sign(userCid.bytes),
     }
     this.cid = await this.store.put(commit)
   }
 
+  async getCommit(): Promise<Commit> {
+    return this.store.get(this.cid, check.assureCommit)
+  }
+
   async getRoot(): Promise<UserRoot> {
-    const commit = await this.store.get(this.cid, check.assureCommit)
+    const commit = await this.getCommit()
     return this.store.get(commit.root, check.assureUserRoot)
   }
 
@@ -139,10 +143,11 @@ export class UserStore implements CarStreamable {
     programName: string,
     fn: (store: ProgramStore) => Promise<T>,
   ): Promise<T> {
-    const cid = this.programCids[programName]
-    const store = await this.loadOrCreateProgramStore(programName)
-    const res = await fn(store)
-    if (store.cid.toString() !== cid.toString()) {
+    const program = await this.loadOrCreateProgramStore(programName)
+    const res = await fn(program)
+    // if mutated, update root
+    if (program.cid.toString() !== this.programCids[programName]?.toString()) {
+      this.programCids[programName] = program.cid
       await this.updateRoot()
     }
     return res
