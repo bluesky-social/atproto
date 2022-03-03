@@ -1,6 +1,6 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import Timestamp from '../src/user-store/timestamp.js'
+import TID from '../src/user-store/tid.js'
 import { DID, IdMapping } from '../src/user-store/types.js'
 import SSTable from '../src/user-store/ss-table.js'
 
@@ -11,23 +11,18 @@ export const randomCid = async (): Promise<CID> => {
   return fakeStore.put({ test: content })
 }
 
-export const generateBulkTids = (
-  count: number,
-  startAt?: number,
-): Timestamp[] => {
+export const generateBulkTids = (count: number): TID[] => {
   const ids = []
-  const start = startAt || Date.now()
   for (let i = 0; i < count; i++) {
-    ids.push(new Timestamp(start - i, 1))
+    ids.push(TID.next())
   }
-  return ids.reverse()
+  return ids
 }
 
 export const generateBulkTidMapping = async (
   count: number,
-  startAt?: number,
 ): Promise<IdMapping> => {
-  const ids = generateBulkTids(count, startAt)
+  const ids = generateBulkTids(count)
   const obj: IdMapping = {}
   for (const id of ids) {
     obj[id.toString()] = await randomCid()
@@ -35,18 +30,15 @@ export const generateBulkTidMapping = async (
   return obj
 }
 
-export const keysFromMapping = (mapping: IdMapping): Timestamp[] => {
-  return Object.keys(mapping).map((id) => Timestamp.parse(id))
+export const keysFromMapping = (mapping: IdMapping): TID[] => {
+  return Object.keys(mapping).map((id) => TID.fromStr(id))
 }
 
-export const keysFromMappings = (mappings: IdMapping[]): Timestamp[] => {
+export const keysFromMappings = (mappings: IdMapping[]): TID[] => {
   return mappings.map(keysFromMapping).flat()
 }
 
-export const checkInclusionInTable = (
-  tids: Timestamp[],
-  table: SSTable,
-): boolean => {
+export const checkInclusionInTable = (tids: TID[], table: SSTable): boolean => {
   return tids.map((tid) => table.hasEntry(tid)).every((has) => has === true)
 }
 

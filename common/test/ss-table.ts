@@ -2,7 +2,7 @@ import test from 'ava'
 
 import SSTable, { TableSize } from '../src/user-store/ss-table.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import Timestamp from '../src/user-store/timestamp.js'
+import TID from '../src/user-store/tid.js'
 
 import * as util from './_util.js'
 import { CID } from 'multiformats'
@@ -27,7 +27,7 @@ test.beforeEach(async (t) => {
 
 test('basic operations', async (t) => {
   const { table, cid, cid2 } = t.context as Context
-  const tid = Timestamp.now()
+  const tid = TID.next()
 
   await table.addEntry(tid, cid)
   t.is(await table.getEntry(tid), cid, 'retrieves correct data')
@@ -41,7 +41,7 @@ test('basic operations', async (t) => {
 
 test('enforces uniqueness', async (t) => {
   const { table, cid } = t.context as Context
-  const tid = Timestamp.now()
+  const tid = TID.next()
   await table.addEntry(tid, cid)
   await t.throwsAsync(
     table.addEntry(tid, cid),
@@ -75,7 +75,7 @@ test('loads from blockstore', async (t) => {
   const fromBS = await SSTable.load(store, table.cid)
   for (const tid of Object.keys(bulkTids)) {
     t.deepEqual(
-      fromBS.getEntry(Timestamp.parse(tid)),
+      fromBS.getEntry(TID.fromStr(tid)),
       bulkTids[tid],
       `Matching content for id: ${tid}`,
     )
@@ -88,7 +88,7 @@ test('enforces max size', async (t) => {
   await table.addEntries(bulkTids)
   t.pass('does not throw at max size')
   await t.throwsAsync(
-    table.addEntry(Timestamp.now(), cid),
+    table.addEntry(TID.next(), cid),
     { message: 'Table is full' },
     'throws when exceeding max size',
   )
@@ -96,7 +96,7 @@ test('enforces max size', async (t) => {
 
 test('merges tables', async (t) => {
   const { table, table2 } = t.context as Context
-  const bulkTids = await util.generateBulkTidMapping(100, Date.now() - 1000)
+  const bulkTids = await util.generateBulkTidMapping(100)
   const bulkTids2 = await util.generateBulkTidMapping(100)
   await table.addEntries(bulkTids)
   await table2.addEntries(bulkTids2)
@@ -111,9 +111,9 @@ test('merges tables', async (t) => {
 
 test('enforces uniqueness on merge', async (t) => {
   const { table, table2, cid } = t.context as Context
-  const bulkTids = await util.generateBulkTidMapping(99, Date.now() - 1000)
+  const bulkTids = await util.generateBulkTidMapping(99)
   const bulkTids2 = await util.generateBulkTidMapping(99)
-  const common = Timestamp.now()
+  const common = TID.next()
   bulkTids[common.toString()] = cid
   bulkTids2[common.toString()] = cid
   await table.addEntries(bulkTids)

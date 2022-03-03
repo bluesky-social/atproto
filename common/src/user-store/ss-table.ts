@@ -4,7 +4,7 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CarStreamable, Entry, IdMapping } from './types.js'
 import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
-import Timestamp from './timestamp.js'
+import TID from './tid.js'
 
 export class SSTable implements CarStreamable {
   store: IpldStore
@@ -50,15 +50,15 @@ export class SSTable implements CarStreamable {
     return new SSTable(store, cid, data)
   }
 
-  getEntry(tid: Timestamp): CID | null {
+  getEntry(tid: TID): CID | null {
     return this.data[tid.toString()] || null
   }
 
-  hasEntry(tid: Timestamp): boolean {
+  hasEntry(tid: TID): boolean {
     return this.getEntry(tid) !== null
   }
 
-  async addEntry(tid: Timestamp, cid: CID): Promise<void> {
+  async addEntry(tid: TID, cid: CID): Promise<void> {
     // @TODO allow some leeway room?
     if (this.isFull()) {
       throw new Error('Table is full')
@@ -80,7 +80,7 @@ export class SSTable implements CarStreamable {
     this.cid = await this.store.put(this.data)
   }
 
-  async editEntry(tid: Timestamp, cid: CID): Promise<void> {
+  async editEntry(tid: TID, cid: CID): Promise<void> {
     if (!this.hasEntry(tid)) {
       throw new Error(`Entry does not exist for tid ${tid}`)
     }
@@ -88,7 +88,7 @@ export class SSTable implements CarStreamable {
     this.cid = await this.store.put(this.data)
   }
 
-  async deleteEntry(tid: Timestamp): Promise<void> {
+  async deleteEntry(tid: TID): Promise<void> {
     if (!this.hasEntry(tid)) {
       throw new Error(`Entry does not exist for tid ${tid}`)
     }
@@ -96,15 +96,13 @@ export class SSTable implements CarStreamable {
     this.cid = await this.store.put(this.data)
   }
 
-  oldestTid(): Timestamp | null {
+  oldestTid(): TID | null {
     return this.tids(true)[0] || null
   }
 
-  tids(oldestFirst = false): Timestamp[] {
-    const tids = Object.keys(this.data).map((k) => Timestamp.parse(k))
-    return oldestFirst
-      ? tids.sort(Timestamp.oldestFirst)
-      : tids.sort(Timestamp.newestFirst)
+  tids(oldestFirst = false): TID[] {
+    const tids = Object.keys(this.data).map((k) => TID.fromStr(k))
+    return oldestFirst ? tids.sort(TID.oldestFirst) : tids.sort(TID.newestFirst)
   }
 
   cids(): CID[] {
@@ -113,8 +111,8 @@ export class SSTable implements CarStreamable {
 
   entries(): Entry[] {
     return Object.entries(this.data)
-      .map(([tid, cid]) => ({ tid: Timestamp.parse(tid), cid }))
-      .sort((a, b) => Timestamp.newestFirst(a.tid, b.tid))
+      .map(([tid, cid]) => ({ tid: TID.fromStr(tid), cid }))
+      .sort((a, b) => TID.newestFirst(a.tid, b.tid))
   }
 
   currSize(): number {
