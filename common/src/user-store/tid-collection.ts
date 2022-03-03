@@ -11,11 +11,13 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   store: IpldStore
   cid: CID
   data: IdMapping
+  onUpdate: (() => Promise<void>) | null
 
   constructor(store: IpldStore, cid: CID, data: IdMapping) {
     this.store = store
     this.cid = cid
     this.data = data
+    this.onUpdate = null
   }
 
   static async create(store: IpldStore): Promise<TidCollection> {
@@ -47,6 +49,9 @@ export class TidCollection implements Collection<TID>, CarStreamable {
 
   async updateRoot(): Promise<void> {
     this.cid = await this.store.put(this.data)
+    if (this.onUpdate) {
+      await this.onUpdate()
+    }
   }
 
   async compressTables(): Promise<void> {

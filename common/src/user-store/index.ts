@@ -4,60 +4,41 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import {
-  Post,
-  Follow,
-  UserStoreI,
-  Root,
-  DID,
-  Like,
-  CarStreamable,
-} from './types.js'
+import { UserRoot, CarStreamable, IdMapping, Commit } from './types.js'
+import { DID } from '../common/types.js'
 import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
-import TidCollection from './tid-collection.js'
-import DidCollection from './did-collection.js'
 import { streamToArray } from '../common/util.js'
-import TID from './tid.js'
+import ProgramStore from './program-store.js'
 
-export class UserStore implements UserStoreI, CarStreamable {
+export class UserStore implements CarStreamable {
   store: IpldStore
-  posts: TidCollection
-  interactions: TidCollection
-  relationships: DidCollection
-  root: CID
+  programCids: IdMapping
+  programs: { [name: string]: ProgramStore }
+  cid: CID
   did: DID
   keypair: Keypair | null
 
   constructor(params: {
     store: IpldStore
-    posts: TidCollection
-    interactions: TidCollection
-    relationships: DidCollection
-    root: CID
+    programCids: IdMapping
+    cid: CID
     did: DID
     keypair?: Keypair
   }) {
     this.store = params.store
-    this.posts = params.posts
-    this.interactions = params.interactions
-    this.relationships = params.relationships
-    this.root = params.root
+    this.programCids = params.programCids
+    this.programs = {}
+    this.cid = params.cid
     this.did = params.did
     this.keypair = params.keypair || null
   }
 
   static async create(store: IpldStore, keypair: Keypair & Didable) {
-    const posts = await TidCollection.create(store)
-    const interactions = await TidCollection.create(store)
-    const relationships = await DidCollection.create(store)
     const did = await keypair.did()
 
     const rootObj = {
       did: did,
-      posts: posts.cid,
-      interactions: interactions.cid,
-      relationships: relationships.cid,
     }
 
     const rootCid = await store.put(rootObj)
@@ -66,32 +47,26 @@ export class UserStore implements UserStoreI, CarStreamable {
       sig: await keypair.sign(rootCid.bytes),
     }
 
-    const root = await store.put(commit)
+    const cid = await store.put(commit)
+    const programCids: IdMapping = {}
 
     return new UserStore({
       store,
-      posts,
-      interactions,
-      relationships,
-      root,
+      programCids,
+      cid,
       did,
       keypair,
     })
   }
 
-  static async load(root: CID, store: IpldStore, keypair?: Keypair) {
-    const commit = await store.get(root, check.assureCommit)
-    const rootObj = await store.get(commit.root, check.assureRoot)
-    const posts = await TidCollection.load(store, rootObj.posts)
-    const interactions = await TidCollection.load(store, rootObj.interactions)
-    const relationships = await DidCollection.load(store, rootObj.relationships)
-    const did = rootObj.did
+  static async load(store: IpldStore, cid: CID, keypair?: Keypair) {
+    const commit = await store.get(cid, check.assureCommit)
+    const rootObj = await store.get(commit.root, check.assureUserRoot)
+    const { did, ...programCids } = rootObj
     return new UserStore({
       store,
-      posts,
-      interactions,
-      relationships,
-      root,
+      programCids,
+      cid,
       did,
       keypair,
     })
@@ -114,148 +89,92 @@ export class UserStore implements UserStoreI, CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    return UserStore.load(root, store, keypair)
+    return UserStore.load(store, root, keypair)
   }
 
-  async updateRoot(): Promise<CID> {
+  async updateRoot(): Promise<void> {
     if (this.keypair === null) {
       throw new Error('No keypair provided. UserStore is read-only.')
     }
     const userCid = await this.store.put({
       did: this.did,
-      posts: this.posts.cid,
-      relationships: this.relationships.cid,
-      interactions: this.interactions.cid,
+      ...this.programCids,
     })
-    const commit = {
-      user: userCid,
+    const commit: Commit = {
+      root: userCid,
       sig: await this.keypair.sign(userCid.bytes),
     }
-    this.root = await this.store.put(commit)
-    return this.root
+    this.cid = await this.store.put(commit)
   }
 
-  async getRoot(): Promise<Root> {
-    const commit = await this.store.get(this.root, check.assureCommit)
-    return this.store.get(commit.root, check.assureRoot)
+  async getCommit(): Promise<Commit> {
+    return this.store.get(this.cid, check.assureCommit)
   }
 
-  async getPost(id: TID): Promise<Post | null> {
-    const postCid = await this.posts.getEntry(id)
-    if (postCid === null) return null
-    const post = await this.store.get(postCid, check.assurePost)
-    return post
+  async getRoot(): Promise<UserRoot> {
+    const commit = await this.getCommit()
+    return this.store.get(commit.root, check.assureUserRoot)
   }
 
-  async addPost(text: string): Promise<TID> {
-    const tid = TID.next()
-    const post = {
-      id: tid.toString(),
-      text,
-      author: this.did,
-      time: new Date().toISOString(),
+  async createProgramStore(name: string): Promise<ProgramStore> {
+    if (this.programCids[name] !== undefined) {
+      throw new Error(`Program store already exists for program: ${name}`)
     }
-    const postCid = await this.store.put(post)
-    await this.posts.addEntry(tid, postCid)
-    await this.updateRoot()
-    return tid
+    const programStore = await ProgramStore.create(this.store)
+    this.programCids[name] = programStore.cid
+    this.programs[name] = programStore
+    return programStore
   }
 
-  async editPost(tid: TID, text: string): Promise<void> {
-    const post = {
-      id: tid,
-      text,
-      author: this.did,
-      time: new Date().toISOString(),
+  async loadOrCreateProgramStore(name: string): Promise<ProgramStore> {
+    if (this.programs[name]) {
+      return this.programs[name]
     }
-    const postCid = await this.store.put(post)
-    await this.posts.editEntry(tid, postCid)
-    await this.updateRoot()
-  }
-
-  async deletePost(tid: TID): Promise<void> {
-    await this.posts.deleteEntry(tid)
-    await this.updateRoot()
-  }
-
-  async listPosts(count: number, from?: TID): Promise<Post[]> {
-    const entries = await this.posts.getEntries(count, from)
-    const posts = await Promise.all(
-      entries.map((entry) => this.store.get(entry.cid, check.assurePost)),
-    )
-    return posts
-  }
-
-  async getFollow(did: DID): Promise<Follow | null> {
-    const cid = await this.relationships.getEntry(did)
-    if (cid === null) return null
-    return this.store.get(cid, check.assureFollow)
-  }
-
-  async isFollowing(did: DID): Promise<boolean> {
-    return this.relationships.hasEntry(did)
-  }
-
-  async followUser(username: string, did: string): Promise<void> {
-    const follow = { username, did }
-    const cid = await this.store.put(follow)
-    await this.relationships.addEntry(did, cid)
-    await this.updateRoot()
-  }
-
-  async unfollowUser(did: string): Promise<void> {
-    await this.relationships.deleteEntry(did)
-    await this.updateRoot()
-  }
-
-  async listFollows(): Promise<Follow[]> {
-    const cids = await this.relationships.getEntries()
-    const follows = await Promise.all(
-      cids.map((c) => this.store.get(c, check.assureFollow)),
-    )
-    return follows
-  }
-
-  async likePost(postTid: TID): Promise<TID> {
-    const tid = TID.next()
-    const like = {
-      id: tid.toString(),
-      post_id: postTid.toString(),
-      author: this.did,
-      time: new Date().toISOString(),
+    const cid = this.programCids[name]
+    if (!cid) {
+      return this.createProgramStore(name)
     }
-    const likeCid = await this.store.put(like)
-    await this.interactions.addEntry(tid, likeCid)
-    await this.updateRoot()
-    return tid
+    const programStore = await ProgramStore.load(this.store, cid)
+    this.programs[name] = programStore
+    return programStore
   }
 
-  async unlikePost(tid: TID): Promise<void> {
-    await this.interactions.deleteEntry(tid)
-    await this.updateRoot()
+  async runOnProgram<T>(
+    programName: string,
+    fn: (store: ProgramStore) => Promise<T>,
+  ): Promise<T> {
+    const program = await this.loadOrCreateProgramStore(programName)
+    const res = await fn(program)
+    // if mutated, update root
+    if (program.cid.toString() !== this.programCids[programName]?.toString()) {
+      this.programCids[programName] = program.cid
+      await this.updateRoot()
+    }
+    return res
   }
 
-  async listLikes(count: number, from?: TID): Promise<Like[]> {
-    const entries = await this.interactions.getEntries(count, from)
-    const likes = await Promise.all(
-      entries.map((entry) => this.store.get(entry.cid, check.assureLike)),
-    )
-    return likes
+  async put(value: Record<string, unknown>): Promise<CID> {
+    return this.store.put(value)
+  }
+
+  async get<T>(cid: CID, checkFn: (obj: unknown) => T): Promise<T> {
+    return this.store.get(cid, checkFn)
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
-    await this.store.addToCar(car, this.root)
-    const commit = await this.store.get(this.root, check.assureCommit)
+    await this.store.addToCar(car, this.cid)
+    const commit = await this.store.get(this.cid, check.assureCommit)
     await this.store.addToCar(car, commit.root)
-    await Promise.all([
-      this.posts.writeToCarStream(car),
-      this.interactions.writeToCarStream(car),
-      this.relationships.writeToCarStream(car),
-    ])
+    await Promise.all(
+      Object.values(this.programCids).map(async (cid) => {
+        const programStore = await ProgramStore.load(this.store, cid)
+        await programStore.writeToCarStream(car)
+      }),
+    )
   }
 
   async getCarFile(): Promise<Uint8Array> {
-    const { writer, out } = CarWriter.create([this.root])
+    const { writer, out } = CarWriter.create([this.cid])
     await this.writeToCarStream(writer)
     writer.close()
     return streamToArray(out)

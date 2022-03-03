@@ -4,18 +4,21 @@ import * as blockCodec from '@ipld/dag-cbor'
 import * as HAMT from 'ipld-hashmap'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-import IpldStore from '../blockstore/ipld-store'
-import { CarStreamable, Collection, DID } from './types'
+import IpldStore from '../blockstore/ipld-store.js'
+import { CarStreamable, Collection } from './types.js'
+import { DID } from '../common/types.js'
 
 export class DidCollection implements Collection<DID>, CarStreamable {
   store: IpldStore
   cid: CID
   hamt: HAMT.HashMap<CID>
+  onUpdate: (() => Promise<void>) | null
 
   constructor(store: IpldStore, cid: CID, hamt: HAMT.HashMap<CID>) {
     this.store = store
     this.cid = cid
     this.hamt = hamt
+    this.onUpdate = null
   }
 
   static async create(store: IpldStore): Promise<DidCollection> {
@@ -35,6 +38,13 @@ export class DidCollection implements Collection<DID>, CarStreamable {
     return new DidCollection(store, hamt.cid, hamt)
   }
 
+  async updateRoot(): Promise<void> {
+    this.cid = this.hamt.cid
+    if (this.onUpdate) {
+      await this.onUpdate()
+    }
+  }
+
   async getEntry(did: DID): Promise<CID | null> {
     const got = await this.hamt.get(did)
     return got || null
@@ -50,7 +60,7 @@ export class DidCollection implements Collection<DID>, CarStreamable {
       throw new Error(`Entry already exists for did ${did}`)
     }
     await this.hamt.set(did, cid)
-    this.cid = this.hamt.cid
+    await this.updateRoot()
   }
 
   async editEntry(did: DID, cid: CID): Promise<void> {
@@ -59,7 +69,7 @@ export class DidCollection implements Collection<DID>, CarStreamable {
       throw new Error(`Entry does not exist for did ${did}`)
     }
     await this.hamt.set(did, cid)
-    this.cid = this.hamt.cid
+    await this.updateRoot()
   }
 
   async deleteEntry(did: DID): Promise<void> {
@@ -68,7 +78,7 @@ export class DidCollection implements Collection<DID>, CarStreamable {
       throw new Error(`Entry does not exist for did ${did}`)
     }
     await this.hamt.delete(did)
-    this.cid = this.hamt.cid
+    await this.updateRoot()
   }
 
   async getEntries(): Promise<CID[]> {

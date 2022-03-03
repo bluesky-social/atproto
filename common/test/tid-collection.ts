@@ -52,9 +52,9 @@ test('loads from blockstore', async (t) => {
     actual[tid.toString()] = cid
   }
 
-  const fromBS = await TidCollection.load(store, collection.cid)
+  const loaded = await TidCollection.load(store, collection.cid)
   for (const tid of bulkTids) {
-    const got = await fromBS.getEntry(tid)
+    const got = await loaded.getEntry(tid)
     t.deepEqual(got, actual[tid.toString()], `Matching content for tid: ${tid}`)
   }
 })
