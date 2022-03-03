@@ -1,0 +1,73 @@
+import test from 'ava'
+
+import * as ucan from 'ucans'
+
+import Microblog from '../src/microblog/index.js'
+import UserStore from '../src/user-store/index.js'
+import IpldStore from '../src/blockstore/ipld-store.js'
+
+import * as util from './_util.js'
+import TID from '../src/user-store/tid.js'
+
+type Context = {
+  ipld: IpldStore
+  keypair: ucan.EdKeypair
+  store: UserStore
+  microblog: Microblog
+}
+
+test.beforeEach(async (t) => {
+  const ipld = IpldStore.createInMemory()
+  const keypair = await ucan.EdKeypair.create()
+  const store = await UserStore.create(ipld, keypair)
+  const microblog = new Microblog(store)
+  t.context = { ipld, keypair, store, microblog } as Context
+  t.pass('Context setup')
+})
+
+test('basic post operations', async (t) => {
+  const { microblog } = t.context as Context
+  const tid = await microblog.addPost('hello world')
+  const post = await microblog.getPost(tid)
+  t.is(post?.text, 'hello world', 'retrieves correct post')
+
+  await microblog.editPost(tid, 'edit')
+  const edited = await microblog.getPost(tid)
+  t.is(edited?.text, 'edit', 'edits posts')
+
+  await microblog.deletePost(tid)
+  const deleted = await microblog.getPost(tid)
+  t.is(deleted, null, 'deletes post')
+})
+
+test('basic like operations', async (t) => {
+  const { microblog } = t.context as Context
+  const postTid = TID.next()
+  const likeTid = await microblog.likePost(postTid)
+  let likes = await microblog.listLikes(1)
+  t.is(likes.length, 1, 'correct number of likes')
+  t.is(likes[0]?.id, likeTid.toString(), 'correct id on like')
+  t.is(likes[0]?.post_id, postTid.toString(), 'correct post_id on like')
+
+  await microblog.unlikePost(likeTid)
+  likes = await microblog.listLikes(1)
+  t.is(likes.length, 0, 'deletes likes')
+})
+
+test('basic follow operations', async (t) => {
+  const { microblog } = t.context as Context
+  const userDid = util.randomDid()
+  const username = 'alice'
+  await microblog.followUser(username, userDid)
+
+  let follow = await microblog.getFollow(userDid)
+  t.is(follow?.did, userDid, 'correct did on follow')
+  t.is(follow?.username, username, 'correct username on follow')
+
+  const isFollowing = await microblog.isFollowing(userDid)
+  t.true(isFollowing, 'correctly reports isFollowing DID')
+
+  await microblog.unfollowUser(userDid)
+  follow = await microblog.getFollow(userDid)
+  t.is(follow, null, 'deletes follows')
+})

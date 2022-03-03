@@ -22,7 +22,7 @@ export class Microblog extends Program {
 
   async addPost(text: string): Promise<TID> {
     const tid = TID.next()
-    const post = {
+    const post: Post = {
       id: tid.toString(),
       text,
       author: this.store.did,
@@ -36,8 +36,8 @@ export class Microblog extends Program {
   }
 
   async editPost(tid: TID, text: string): Promise<void> {
-    const post = {
-      id: tid,
+    const post: Post = {
+      id: tid.toString(),
       text,
       author: this.store.did,
       time: new Date().toISOString(),
