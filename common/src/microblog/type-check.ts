@@ -1,11 +1,12 @@
-import { assure, isObject, isString } from '../common/type-check.js'
+import { assure, isCID, isObject, isString } from '../common/type-check.js'
 import { Post, Follow, Like } from './types.js'
 
 export const isPost = (obj: unknown): obj is Post => {
   return (
     isObject(obj) &&
-    isString(obj.id) &&
+    isString(obj.tid) &&
     isString(obj.author) &&
+    isString(obj.program) &&
     isString(obj.text) &&
     isString(obj.time)
   )
@@ -26,10 +27,14 @@ export const assureFollow = (obj: unknown): Follow => {
 export const isLike = (obj: unknown): obj is Like => {
   return (
     isObject(obj) &&
-    isString(obj.id) &&
-    isString(obj.post_id) &&
+    isString(obj.tid) &&
+    isString(obj.program) &&
     isString(obj.author) &&
-    isString(obj.time)
+    isString(obj.time) &&
+    isString(obj.post_tid) &&
+    isString(obj.post_author) &&
+    isString(obj.post_program) &&
+    isCID(obj.post_cid)
   )
 }
 

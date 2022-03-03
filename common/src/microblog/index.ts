@@ -20,24 +20,27 @@ export class Microblog extends Program {
     return post
   }
 
-  async addPost(text: string): Promise<TID> {
+  async addPost(text: string): Promise<Post> {
     const tid = TID.next()
     const post: Post = {
-      id: tid.toString(),
+      tid: tid.toString(),
+      program: this.name,
       text,
       author: this.store.did,
       time: new Date().toISOString(),
     }
+    // @TODO: different way to get post CID?
     const postCid = await this.store.store.put(post)
     await this.runOnProgram(async (program) => {
       await program.posts.addEntry(tid, postCid)
     })
-    return tid
+    return post
   }
 
   async editPost(tid: TID, text: string): Promise<void> {
     const post: Post = {
-      id: tid.toString(),
+      tid: tid.toString(),
+      program: this.name,
       text,
       author: this.store.did,
       time: new Date().toISOString(),
@@ -79,7 +82,7 @@ export class Microblog extends Program {
   }
 
   async followUser(username: string, did: string): Promise<void> {
-    const follow = { username, did }
+    const follow: Follow = { username, did }
     const cid = await this.store.put(follow)
     await this.runOnProgram(async (program) => {
       await program.relationships.addEntry(did, cid)
@@ -102,13 +105,18 @@ export class Microblog extends Program {
     return follows
   }
 
-  async likePost(postTid: TID): Promise<TID> {
+  async likePost(post: Post): Promise<TID> {
+    const postCid = await this.store.put(post)
     const tid = TID.next()
-    const like = {
-      id: tid.toString(),
-      post_id: postTid.toString(),
+    const like: Like = {
+      tid: tid.toString(),
+      program: this.name,
       author: this.store.did,
       time: new Date().toISOString(),
+      post_tid: post.tid,
+      post_author: post.author,
+      post_program: post.program,
+      post_cid: postCid,
     }
     const likeCid = await this.store.put(like)
     await this.runOnProgram(async (program) => {

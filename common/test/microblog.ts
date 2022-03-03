@@ -27,7 +27,8 @@ test.beforeEach(async (t) => {
 
 test('basic post operations', async (t) => {
   const { microblog } = t.context as Context
-  const tid = await microblog.addPost('hello world')
+  const created = await microblog.addPost('hello world')
+  const tid = TID.fromStr(created.tid)
   const post = await microblog.getPost(tid)
   t.is(post?.text, 'hello world', 'retrieves correct post')
 
@@ -42,12 +43,12 @@ test('basic post operations', async (t) => {
 
 test('basic like operations', async (t) => {
   const { microblog } = t.context as Context
-  const postTid = TID.next()
-  const likeTid = await microblog.likePost(postTid)
+  const post = await microblog.addPost('hello world')
+  const likeTid = await microblog.likePost(post)
   let likes = await microblog.listLikes(1)
   t.is(likes.length, 1, 'correct number of likes')
-  t.is(likes[0]?.id, likeTid.toString(), 'correct id on like')
-  t.is(likes[0]?.post_id, postTid.toString(), 'correct post_id on like')
+  t.is(likes[0]?.tid, likeTid.toString(), 'correct id on like')
+  t.is(likes[0]?.post_tid, post.tid, 'correct post_id on like')
 
   await microblog.unlikePost(likeTid)
   likes = await microblog.listLikes(1)
