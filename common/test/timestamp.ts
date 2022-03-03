@@ -1,5 +1,5 @@
 import test from 'ava'
-import Timestamp from '../src/timestamp.js'
+import Timestamp from '../src/user-store/timestamp.js'
 
 test('Creates new timestamp', (t) => {
   const timestamp = Timestamp.now()

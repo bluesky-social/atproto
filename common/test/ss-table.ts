@@ -2,7 +2,7 @@ import test from 'ava'
 
 import SSTable, { TableSize } from '../src/user-store/ss-table.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import Timestamp from '../src/timestamp.js'
+import Timestamp from '../src/user-store/timestamp.js'
 
 import * as util from './_util.js'
 import { CID } from 'multiformats'
@@ -27,24 +27,24 @@ test.beforeEach(async (t) => {
 
 test('basic operations', async (t) => {
   const { table, cid, cid2 } = t.context as Context
-  const id = Timestamp.now()
+  const tid = Timestamp.now()
 
-  await table.addEntry(id, cid)
-  t.is(await table.getEntry(id), cid, 'retrieves correct data')
+  await table.addEntry(tid, cid)
+  t.is(await table.getEntry(tid), cid, 'retrieves correct data')
 
-  await table.editEntry(id, cid2)
-  t.is(await table.getEntry(id), cid2, 'edits data')
+  await table.editEntry(tid, cid2)
+  t.is(await table.getEntry(tid), cid2, 'edits data')
 
-  await table.deleteEntry(id)
-  t.is(await table.getEntry(id), null, 'deletes data')
+  await table.deleteEntry(tid)
+  t.is(await table.getEntry(tid), null, 'deletes data')
 })
 
 test('enforces uniqueness', async (t) => {
   const { table, cid } = t.context as Context
-  const id = Timestamp.now()
-  await table.addEntry(id, cid)
+  const tid = Timestamp.now()
+  await table.addEntry(tid, cid)
   await t.throwsAsync(
-    table.addEntry(id, cid),
+    table.addEntry(tid, cid),
     { instanceOf: Error },
     'throw when adding non-unique key',
   )
@@ -52,40 +52,40 @@ test('enforces uniqueness', async (t) => {
 
 test('bulk adds data', async (t) => {
   const { table } = t.context as Context
-  const bulkIds = await util.generateBulkIdMapping(50)
-  await table.addEntries(bulkIds)
+  const bulkTids = await util.generateBulkTidMapping(50)
+  await table.addEntries(bulkTids)
 
-  const ids = util.keysFromMapping(bulkIds)
-  const allIncluded = util.checkInclusionInTable(ids, table)
+  const tids = util.keysFromMapping(bulkTids)
+  const allIncluded = util.checkInclusionInTable(tids, table)
   t.true(allIncluded, 'contains all added entries')
 })
 
 test('returns oldest id', async (t) => {
   const { table, cid } = t.context as Context
-  const bulkIds = util.generateBulkIds(50)
-  await Promise.all(bulkIds.map((id) => table.addEntry(id, cid)))
-  t.deepEqual(table.oldestId(), bulkIds[0], 'returns oldest id')
+  const bulkTids = util.generateBulkTids(50)
+  await Promise.all(bulkTids.map((tid) => table.addEntry(tid, cid)))
+  t.deepEqual(table.oldestTid(), bulkTids[0], 'returns oldest tid')
 })
 
 test('loads from blockstore', async (t) => {
   const { store, table } = t.context as Context
-  const bulkIds = await util.generateBulkIdMapping(50)
-  await table.addEntries(bulkIds)
+  const bulkTids = await util.generateBulkTidMapping(50)
+  await table.addEntries(bulkTids)
 
   const fromBS = await SSTable.load(store, table.cid)
-  for (const id of Object.keys(bulkIds)) {
+  for (const tid of Object.keys(bulkTids)) {
     t.deepEqual(
-      fromBS.getEntry(Timestamp.parse(id)),
-      bulkIds[id],
-      `Matching content for id: ${id}`,
+      fromBS.getEntry(Timestamp.parse(tid)),
+      bulkTids[tid],
+      `Matching content for id: ${tid}`,
     )
   }
 })
 
 test('enforces max size', async (t) => {
   const { table, cid } = t.context as Context
-  const bulkIds = await util.generateBulkIdMapping(100)
-  await table.addEntries(bulkIds)
+  const bulkTids = await util.generateBulkTidMapping(100)
+  await table.addEntries(bulkTids)
   t.pass('does not throw at max size')
   await t.throwsAsync(
     table.addEntry(Timestamp.now(), cid),
@@ -96,28 +96,28 @@ test('enforces max size', async (t) => {
 
 test('merges tables', async (t) => {
   const { table, table2 } = t.context as Context
-  const bulkIds = await util.generateBulkIdMapping(100, Date.now() - 1000)
-  const bulkIds2 = await util.generateBulkIdMapping(100)
-  await table.addEntries(bulkIds)
-  await table2.addEntries(bulkIds2)
+  const bulkTids = await util.generateBulkTidMapping(100, Date.now() - 1000)
+  const bulkTids2 = await util.generateBulkTidMapping(100)
+  await table.addEntries(bulkTids)
+  await table2.addEntries(bulkTids2)
 
   const merged = await SSTable.merge([table, table2])
 
-  const allIds = util.keysFromMappings([bulkIds, bulkIds2])
-  const allIncluded = util.checkInclusionInTable(allIds, merged)
+  const allTids = util.keysFromMappings([bulkTids, bulkTids2])
+  const allIncluded = util.checkInclusionInTable(allTids, merged)
   t.true(allIncluded, 'contains all added entries')
   t.is(merged.size, TableSize.md, 'correctly upgrades size of table')
 })
 
 test('enforces uniqueness on merge', async (t) => {
   const { table, table2, cid } = t.context as Context
-  const bulkIds = await util.generateBulkIdMapping(99, Date.now() - 1000)
-  const bulkIds2 = await util.generateBulkIdMapping(99)
+  const bulkTids = await util.generateBulkTidMapping(99, Date.now() - 1000)
+  const bulkTids2 = await util.generateBulkTidMapping(99)
   const common = Timestamp.now()
-  bulkIds[common.toString()] = cid
-  bulkIds2[common.toString()] = cid
-  await table.addEntries(bulkIds)
-  await table2.addEntries(bulkIds2)
+  bulkTids[common.toString()] = cid
+  bulkTids2[common.toString()] = cid
+  await table.addEntries(bulkTids)
+  await table2.addEntries(bulkTids2)
 
   await t.throwsAsync(
     SSTable.merge([table, table2]),

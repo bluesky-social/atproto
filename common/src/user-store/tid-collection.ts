@@ -1,12 +1,13 @@
 import { CID } from 'multiformats'
-import * as check from '../type-check.js'
+import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping } from '../types.js'
+import { Entry, IdMapping, Collection, CarStreamable } from './types.js'
+import * as check from './type-check.js'
 import SSTable, { TableSize } from './ss-table.js'
-import Timestamp from '../timestamp.js'
+import Timestamp from './timestamp.js'
 
-export class Branch {
+export class TidCollection implements Collection<Timestamp>, CarStreamable {
   store: IpldStore
   cid: CID
   data: IdMapping
@@ -17,14 +18,14 @@ export class Branch {
     this.data = data
   }
 
-  static async create(store: IpldStore): Promise<Branch> {
+  static async create(store: IpldStore): Promise<TidCollection> {
     const cid = await store.put({})
-    return new Branch(store, cid, {})
+    return new TidCollection(store, cid, {})
   }
 
-  static async load(store: IpldStore, cid: CID): Promise<Branch> {
+  static async load(store: IpldStore, cid: CID): Promise<TidCollection> {
     const data = await store.get(cid, check.assureIdMapping)
-    return new Branch(store, cid, data)
+    return new TidCollection(store, cid, data)
   }
 
   async getTable(name: Timestamp): Promise<SSTable | null> {
@@ -34,12 +35,12 @@ export class Branch {
     return SSTable.load(this.store, cid)
   }
 
-  getTableNameForId(id: Timestamp): Timestamp | null {
-    return this.tableNames().find((n) => !id.olderThan(n)) || null
+  getTableNameForTid(tid: Timestamp): Timestamp | null {
+    return this.tableNames().find((n) => !tid.olderThan(n)) || null
   }
 
-  async getTableForId(id: Timestamp): Promise<SSTable | null> {
-    const name = this.getTableNameForId(id)
+  async getTableForId(tid: Timestamp): Promise<SSTable | null> {
+    const name = this.getTableNameForTid(tid)
     if (!name) return null
     return this.getTable(name)
   }
@@ -57,7 +58,7 @@ export class Branch {
       mostRecent,
       tableNames.slice(1),
     )
-    const tableName = compressed.oldestId()
+    const tableName = compressed.oldestTid()
     if (tableName && !tableName.equals(tableNames[0])) {
       delete this.data[tableNames[0].toString()]
       this.data[tableName.toString()] = compressed.cid
@@ -75,7 +76,7 @@ export class Branch {
     const filtered = tables.filter((t) => t?.size === size) as SSTable[]
     // need 4 tables to merge down a level
     if (filtered.length < 3 || size === TableSize.xl) {
-      // if no merge at this level, we just return the p;revious level
+      // if no merge at this level, we just return the previous level
       return mostRecent
     }
 
@@ -85,21 +86,19 @@ export class Branch {
     return await this.compressCascade(merged, nextKeys.slice(3))
   }
 
-  async getEntry(id: Timestamp): Promise<CID | null> {
-    const table = await this.getTableForId(id)
+  async getEntry(tid: Timestamp): Promise<CID | null> {
+    const table = await this.getTableForId(tid)
     if (!table) return null
-    return table.getEntry(id)
+    return table.getEntry(tid)
   }
 
   async getEntries(count: number, from?: Timestamp): Promise<Entry[]> {
     const names = this.tableNames()
     const index =
       from !== undefined ? names.findIndex((n) => !from.olderThan(n)) : 0
-
     if (index === -1) return []
 
     let entries: Entry[] = []
-
     for (let i = index; i < names.length; i++) {
       const table = await this.getTable(names[i])
       if (table === null) {
@@ -109,12 +108,11 @@ export class Branch {
       // for first table we only want entries older than `from`, otherwise start from beginning
       const tableStartIndex =
         from !== undefined && i === index
-          ? tableEntries.findIndex((e) => e.id.olderThan(from))
+          ? tableEntries.findIndex((e) => e.tid.olderThan(from))
           : 0
 
       const tableEndIndex = tableStartIndex + (count - entries.length)
       const tableSlice = tableEntries.slice(tableStartIndex, tableEndIndex)
-
       entries = entries.concat(tableSlice)
     }
 
@@ -136,62 +134,62 @@ export class Branch {
     }
   }
 
-  async addEntry(id: Timestamp, cid: CID): Promise<void> {
+  async addEntry(tid: Timestamp, cid: CID): Promise<void> {
     const table = await this.getOrCreateCurrTable()
-    const oldestKey = table.oldestId()
-    if (oldestKey && id.olderThan(oldestKey)) {
+    const oldestKey = table.oldestTid()
+    if (oldestKey && tid.olderThan(oldestKey)) {
       // @TODO handle this more gracefully
       throw new Error('Attempting to add an id that is too old for the table')
     }
-    await table.addEntry(id, cid)
-    const tableName = oldestKey?.toString() || id.toString()
+    await table.addEntry(tid, cid)
+    const tableName = oldestKey?.toString() || tid.toString()
     this.data[tableName] = table.cid
     await this.updateRoot()
   }
 
-  async editTableForId(
-    id: Timestamp,
+  private async editTableForTid(
+    tid: Timestamp,
     fn: (table: SSTable) => Promise<void>,
   ): Promise<void> {
-    const tableName = this.getTableNameForId(id)
-    if (!tableName) throw new Error(`Could not find entry with id: ${id}`)
+    const tableName = this.getTableNameForTid(tid)
+    if (!tableName) throw new Error(`Could not find entry with tid: ${tid}`)
     const table = await this.getTable(tableName)
-    if (!table) throw new Error(`Could not find entry with id: ${id}`)
+    if (!table) throw new Error(`Could not find entry with tid: ${tid}`)
     await fn(table)
     this.data[tableName.toString()] = table.cid
     await this.updateRoot()
   }
 
-  async editEntry(id: Timestamp, cid: CID): Promise<void> {
-    await this.editTableForId(id, async (table) => {
-      await table.editEntry(id, cid)
+  async editEntry(tid: Timestamp, cid: CID): Promise<void> {
+    await this.editTableForTid(tid, async (table) => {
+      await table.editEntry(tid, cid)
     })
   }
 
-  async deleteEntry(id: Timestamp): Promise<void> {
-    await this.editTableForId(id, async (table) => {
-      await table.deleteEntry(id)
+  async deleteEntry(tid: Timestamp): Promise<void> {
+    await this.editTableForTid(tid, async (table) => {
+      await table.deleteEntry(tid)
     })
   }
 
   tableNames(oldestFirst = false): Timestamp[] {
-    const ids = Object.keys(this.data).map((k) => Timestamp.parse(k))
+    const tids = Object.keys(this.data).map((k) => Timestamp.parse(k))
     return oldestFirst
-      ? ids.sort(Timestamp.oldestFirst)
-      : ids.sort(Timestamp.newestFirst)
+      ? tids.sort(Timestamp.oldestFirst)
+      : tids.sort(Timestamp.newestFirst)
   }
 
   tableCount(): number {
     return Object.keys(this.data).length
   }
 
-  cids(): CID[] {
-    return Object.values(this.data).sort().reverse()
+  shallowCids(): CID[] {
+    return Object.values(this.data)
   }
 
-  async nestedCids(): Promise<CID[]> {
+  async cids(): Promise<CID[]> {
     const all = []
-    const cids = this.cids()
+    const cids = this.shallowCids()
     for (const cid of cids) {
       all.push(cid)
       const table = await SSTable.load(this.store, cid)
@@ -199,6 +197,14 @@ export class Branch {
     }
     return all
   }
+
+  async writeToCarStream(car: BlockWriter): Promise<void> {
+    const cids = this.shallowCids()
+    for (const cid of cids) {
+      const table = await SSTable.load(this.store, cid)
+      await table.writeToCarStream(car)
+    }
+  }
 }
 
-export default Branch
+export default TidCollection

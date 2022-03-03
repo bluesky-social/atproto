@@ -1,7 +1,7 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import Timestamp from '../src/timestamp.js'
-import { IdMapping } from '../src/types.js'
+import Timestamp from '../src/user-store/timestamp.js'
+import { DID, IdMapping } from '../src/user-store/types.js'
 import SSTable from '../src/user-store/ss-table.js'
 
 const fakeStore = IpldStore.createInMemory()
@@ -11,7 +11,7 @@ export const randomCid = async (): Promise<CID> => {
   return fakeStore.put({ test: content })
 }
 
-export const generateBulkIds = (
+export const generateBulkTids = (
   count: number,
   startAt?: number,
 ): Timestamp[] => {
@@ -23,12 +23,12 @@ export const generateBulkIds = (
   return ids.reverse()
 }
 
-export const generateBulkIdMapping = async (
+export const generateBulkTidMapping = async (
   count: number,
   startAt?: number,
 ): Promise<IdMapping> => {
-  const ids = generateBulkIds(count, startAt)
-  const obj = {} as IdMapping
+  const ids = generateBulkTids(count, startAt)
+  const obj: IdMapping = {}
   for (const id of ids) {
     obj[id.toString()] = await randomCid()
   }
@@ -44,8 +44,26 @@ export const keysFromMappings = (mappings: IdMapping[]): Timestamp[] => {
 }
 
 export const checkInclusionInTable = (
-  ids: Timestamp[],
+  tids: Timestamp[],
   table: SSTable,
 ): boolean => {
-  return ids.map((id) => table.hasEntry(id)).every((has) => has === true)
+  return tids.map((tid) => table.hasEntry(tid)).every((has) => has === true)
+}
+
+export const randomDid = (): DID => {
+  let result = ''
+  const CHARS = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+  const LENGTH = 48
+  for (let i = 0; i < LENGTH; i++) {
+    result += CHARS.charAt(Math.floor(Math.random() * CHARS.length))
+  }
+  return `did:key:${result}`
+}
+
+export const generateBulkDids = (count: number): DID[] => {
+  const dids = []
+  for (let i = 0; i < count; i++) {
+    dids.push(randomDid())
+  }
+  return dids
 }

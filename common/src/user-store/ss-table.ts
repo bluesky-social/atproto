@@ -1,10 +1,12 @@
 import { CID } from 'multiformats'
-import * as check from '../type-check.js'
-import { Entry, IdMapping } from '../types.js'
-import IpldStore from '../blockstore/ipld-store.js'
-import Timestamp from '../timestamp.js'
+import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-export class SSTable {
+import { CarStreamable, Entry, IdMapping } from './types.js'
+import * as check from './type-check.js'
+import IpldStore from '../blockstore/ipld-store.js'
+import Timestamp from './timestamp.js'
+
+export class SSTable implements CarStreamable {
   store: IpldStore
   cid: CID
   size: TableSize
@@ -48,63 +50,61 @@ export class SSTable {
     return new SSTable(store, cid, data)
   }
 
-  getEntry(id: Timestamp): CID | null {
-    return this.data[id.toString()] || null
+  getEntry(tid: Timestamp): CID | null {
+    return this.data[tid.toString()] || null
   }
 
-  hasEntry(id: Timestamp): boolean {
-    return this.getEntry(id) !== null
+  hasEntry(tid: Timestamp): boolean {
+    return this.getEntry(tid) !== null
   }
 
-  async addEntry(id: Timestamp, cid: CID): Promise<void> {
+  async addEntry(tid: Timestamp, cid: CID): Promise<void> {
     // @TODO allow some leeway room?
     if (this.isFull()) {
       throw new Error('Table is full')
     }
-    if (this.hasEntry(id)) {
-      throw new Error(`Entry already exists for id ${id}`)
+    if (this.hasEntry(tid)) {
+      throw new Error(`Entry already exists for tid ${tid}`)
     }
-    this.data[id.toString()] = cid
+    this.data[tid.toString()] = cid
     this.cid = await this.store.put(this.data)
   }
 
-  async addEntries(ids: IdMapping): Promise<void> {
-    Object.entries(ids).forEach(([id, cid]) => {
-      if (this.data[id]) {
-        throw new Error(`Entry already exists for id ${id}`)
+  async addEntries(tids: IdMapping): Promise<void> {
+    Object.entries(tids).forEach(([tid, cid]) => {
+      if (this.data[tid]) {
+        throw new Error(`Entry already exists for tid ${tid}`)
       }
-      this.data[id] = cid
+      this.data[tid] = cid
     })
     this.cid = await this.store.put(this.data)
   }
 
-  async editEntry(id: Timestamp, cid: CID): Promise<void> {
-    const idStr = id.toString()
-    if (!this.data[idStr]) {
-      throw new Error(`Entry does not exist for id ${idStr}`)
+  async editEntry(tid: Timestamp, cid: CID): Promise<void> {
+    if (!this.hasEntry(tid)) {
+      throw new Error(`Entry does not exist for tid ${tid}`)
     }
-    this.data[idStr] = cid
+    this.data[tid.toString()] = cid
     this.cid = await this.store.put(this.data)
   }
 
-  async deleteEntry(id: Timestamp): Promise<void> {
-    const idStr = id.toString()
-    if (!this.data[idStr]) {
-      throw new Error(`Entry does not exist for id ${idStr}`)
+  async deleteEntry(tid: Timestamp): Promise<void> {
+    if (!this.hasEntry(tid)) {
+      throw new Error(`Entry does not exist for tid ${tid}`)
     }
-    delete this.data[idStr]
+    delete this.data[tid.toString()]
     this.cid = await this.store.put(this.data)
   }
 
-  oldestId(): Timestamp | null {
-    return this.ids(true)[0] || null
+  oldestTid(): Timestamp | null {
+    return this.tids(true)[0] || null
   }
 
-  ids(oldestFirst = false): Timestamp[] {
-    const ids = Object.keys(this.data).map((k) => Timestamp.parse(k))
+  tids(oldestFirst = false): Timestamp[] {
+    const tids = Object.keys(this.data).map((k) => Timestamp.parse(k))
     return oldestFirst
-      ? ids.sort(Timestamp.oldestFirst)
-      : ids.sort(Timestamp.newestFirst)
+      ? tids.sort(Timestamp.oldestFirst)
+      : tids.sort(Timestamp.newestFirst)
   }
 
   cids(): CID[] {
@@ -113,8 +113,8 @@ export class SSTable {
 
   entries(): Entry[] {
     return Object.entries(this.data)
-      .map(([id, cid]) => ({ id: Timestamp.parse(id), cid }))
-      .sort((a, b) => Timestamp.newestFirst(a.id, b.id))
+      .map(([tid, cid]) => ({ tid: Timestamp.parse(tid), cid }))
+      .sort((a, b) => Timestamp.newestFirst(a.tid, b.tid))
   }
 
   currSize(): number {
@@ -127,6 +127,13 @@ export class SSTable {
 
   isFull(): boolean {
     return this.currSize() >= this.maxSize()
+  }
+
+  async writeToCarStream(car: BlockWriter): Promise<void> {
+    for (const cid of this.cids()) {
+      await this.store.addToCar(car, cid)
+    }
+    await this.store.addToCar(car, this.cid)
   }
 }
 
