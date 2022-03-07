@@ -5,7 +5,7 @@ import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
 import DidCollection from './did-collection.js'
-import { ProgramRoot } from './types.js'
+import { NewCids, ProgramRoot } from './types.js'
 
 export class ProgramStore {
   store: IpldStore
@@ -14,6 +14,7 @@ export class ProgramStore {
   relationships: DidCollection
   profile: CID | null
   cid: CID
+  onUpdate: ((newCids: NewCids) => Promise<void>) | null
 
   constructor(params: {
     store: IpldStore
@@ -29,10 +30,11 @@ export class ProgramStore {
     this.relationships = params.relationships
     this.profile = params.profile
     this.cid = params.cid
+    this.onUpdate = null
 
-    this.posts.onUpdate = () => this.updateRoot()
-    this.interactions.onUpdate = () => this.updateRoot()
-    this.relationships.onUpdate = () => this.updateRoot()
+    this.posts.onUpdate = this.updateRoot
+    this.interactions.onUpdate = this.updateRoot
+    this.relationships.onUpdate = this.updateRoot
   }
 
   static async create(store: IpldStore) {
@@ -75,18 +77,22 @@ export class ProgramStore {
   }
 
   // arrow fn to preserve scope
-  async updateRoot(): Promise<void> {
+  updateRoot = async (newCids: NewCids): Promise<void> => {
     this.cid = await this.store.put({
       posts: this.posts.cid,
       relationships: this.relationships.cid,
       interactions: this.interactions.cid,
       profile: this.profile,
     })
+    if (this.onUpdate) {
+      this.onUpdate([this.cid, ...newCids])
+    }
   }
 
   async setProfile(cid: CID | null): Promise<void> {
     this.profile = cid
-    await this.updateRoot()
+    const newCids = cid === null ? [] : [cid]
+    await this.updateRoot(newCids)
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {

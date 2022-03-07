@@ -4,7 +4,7 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import { UserRoot, CarStreamable, IdMapping, Commit } from './types.js'
+import { UserRoot, CarStreamable, IdMapping, Commit, NewCids } from './types.js'
 import { DID } from '../common/types.js'
 import * as check from './type-check.js'
 import IpldStore from '../blockstore/ipld-store.js'
@@ -92,7 +92,8 @@ export class UserStore implements CarStreamable {
     return UserStore.load(store, root, keypair)
   }
 
-  async updateRoot(): Promise<void> {
+  // arrow fn to preserve scope
+  updateRoot = async (newCids: NewCids): Promise<void> => {
     if (this.keypair === null) {
       throw new Error('No keypair provided. UserStore is read-only.')
     }
@@ -121,6 +122,7 @@ export class UserStore implements CarStreamable {
       throw new Error(`Program store already exists for program: ${name}`)
     }
     const programStore = await ProgramStore.create(this.store)
+    programStore.onUpdate = this.updateRoot
     this.programCids[name] = programStore.cid
     this.programs[name] = programStore
     return programStore
@@ -135,6 +137,7 @@ export class UserStore implements CarStreamable {
       return this.createProgramStore(name)
     }
     const programStore = await ProgramStore.load(this.store, cid)
+    programStore.onUpdate = this.updateRoot
     this.programs[name] = programStore
     return programStore
   }
@@ -144,13 +147,7 @@ export class UserStore implements CarStreamable {
     fn: (store: ProgramStore) => Promise<T>,
   ): Promise<T> {
     const program = await this.loadOrCreateProgramStore(programName)
-    const res = await fn(program)
-    // if mutated, update root
-    if (program.cid.toString() !== this.programCids[programName]?.toString()) {
-      this.programCids[programName] = program.cid
-      await this.updateRoot()
-    }
-    return res
+    return fn(program)
   }
 
   async put(value: Record<string, unknown>): Promise<CID> {
