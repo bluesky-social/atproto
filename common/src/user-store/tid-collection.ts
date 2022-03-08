@@ -222,6 +222,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
       const table = await SSTable.load(this.store, cid)
       await table.writeToCarStream(car)
     }
+    await this.store.addToCar(car, this.cid)
   }
 }
 

@@ -187,7 +187,9 @@ export class UserStore implements CarStreamable {
   }
 
   async getCarFile(): Promise<Uint8Array> {
-    return this.openCar(this.writeToCarStream)
+    return this.openCar((car: BlockWriter) => {
+      return this.writeToCarStream(car)
+    })
   }
 
   async writeCommitsToCarStream(
@@ -205,7 +207,7 @@ export class UserStore implements CarStreamable {
   }
 
   async getDiffCar(to: CID): Promise<Uint8Array> {
-    return this.openCar(async (car: BlockWriter) => {
+    return this.openCar((car: BlockWriter) => {
       return this.writeCommitsToCarStream(car, this.cid, to)
     })
   }

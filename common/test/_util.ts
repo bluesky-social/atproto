@@ -4,6 +4,9 @@ import TID from '../src/user-store/tid.js'
 import { IdMapping } from '../src/user-store/types.js'
 import { DID } from '../src/common/types.js'
 import SSTable from '../src/user-store/ss-table.js'
+import UserStore from '../src/user-store/index.js'
+import * as check from '../src/common/type-check.js'
+import { ExecutionContext } from 'ava'
 
 const fakeStore = IpldStore.createInMemory()
 
@@ -43,13 +46,17 @@ export const checkInclusionInTable = (tids: TID[], table: SSTable): boolean => {
   return tids.map((tid) => table.hasEntry(tid)).every((has) => has === true)
 }
 
-export const randomDid = (): DID => {
+export const randomStr = (len: number): string => {
   let result = ''
   const CHARS = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-  const LENGTH = 48
-  for (let i = 0; i < LENGTH; i++) {
+  for (let i = 0; i < len; i++) {
     result += CHARS.charAt(Math.floor(Math.random() * CHARS.length))
   }
+  return result
+}
+
+export const randomDid = (): DID => {
+  const result = randomStr(48)
   return `did:key:${result}`
 }
 
@@ -93,4 +100,32 @@ export const fillUserStore = async (
     }
   })
   return data
+}
+
+export const checkUserStore = async (
+  t: ExecutionContext<unknown>,
+  store: UserStore,
+  programName: string,
+  data: UserStoreData,
+): Promise<void> => {
+  await store.runOnProgram(programName, async (program) => {
+    for (const tid of Object.keys(data.posts)) {
+      const cid = await program.posts.getEntry(TID.fromStr(tid))
+      const actual = cid ? await store.get(cid, check.assureString) : null
+      t.deepEqual(
+        actual,
+        data.posts[tid],
+        `Matching post content for tid: ${tid}`,
+      )
+    }
+    for (const tid of Object.keys(data.interactions)) {
+      const cid = await program.interactions.getEntry(TID.fromStr(tid))
+      const actual = cid ? await store.get(cid, check.assureString) : null
+      t.deepEqual(
+        actual,
+        data.interactions[tid],
+        `Matching post content for tid: ${tid}`,
+      )
+    }
+  })
 }
