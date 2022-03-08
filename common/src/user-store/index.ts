@@ -109,7 +109,7 @@ export class UserStore implements CarStreamable {
       const commit: Commit = {
         root: userCid,
         prev: this.cid,
-        added: newCids,
+        added: [userCid, ...newCids],
         sig: await this.keypair.sign(userCid.bytes),
       }
       this.cid = await this.store.put(commit)
@@ -157,7 +157,7 @@ export class UserStore implements CarStreamable {
     return fn(program)
   }
 
-  async put(value: Record<string, unknown>): Promise<CID> {
+  async put(value: Record<string, unknown> | string): Promise<CID> {
     return this.store.put(value)
   }
 
@@ -208,6 +208,24 @@ export class UserStore implements CarStreamable {
     return this.openCar(async (car: BlockWriter) => {
       return this.writeCommitsToCarStream(car, this.cid, to)
     })
+  }
+
+  async loadCar(buf: Uint8Array): Promise<void> {
+    const car = await CarReader.fromBytes(buf)
+    const roots = await car.getRoots()
+    if (roots.length !== 1) {
+      throw new Error(`Expected one root, got ${roots.length}`)
+    }
+    const rootCid = roots[0]
+    for await (const block of car.blocks()) {
+      // console.log('loaded: ', block.cid.toString())
+      await this.store.putBytes(block.cid, block.bytes)
+    }
+    this.cid = rootCid
+    const root = await this.getRoot()
+    this.did = root.did
+    this.programCids = root.programs
+    this.programs = {}
   }
 }
 

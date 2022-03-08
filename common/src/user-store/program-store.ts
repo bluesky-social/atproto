@@ -65,7 +65,9 @@ export class ProgramStore {
     const rootObj = await store.get(cid, check.assureProgramRoot)
     const posts = await TidCollection.load(store, rootObj.posts)
     const interactions = await TidCollection.load(store, rootObj.interactions)
-    const relationships = await DidCollection.load(store, rootObj.relationships)
+    // @TODO: faking this right now because we are planning to remove relationships
+    // const relationships = await DidCollection.load(store, rootObj.relationships)
+    const relationships = await DidCollection.create(store)
     return new ProgramStore({
       store,
       posts,

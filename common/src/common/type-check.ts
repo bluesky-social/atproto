@@ -29,6 +29,10 @@ export const isString = (obj: unknown): obj is string => {
   return typeof obj === 'string'
 }
 
+export const assureString = (obj: unknown): string => {
+  return assure(obj, 'String', isString)
+}
+
 export const isDID = (obj: unknown): obj is DID => {
   return isString(obj)
 }

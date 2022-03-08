@@ -60,3 +60,37 @@ export const generateBulkDids = (count: number): DID[] => {
   }
   return dids
 }
+
+type UserStoreData = {
+  posts: Record<string, string>
+  interactions: Record<string, string>
+}
+
+export const fillUserStore = async (
+  store: UserStore,
+  programName: string,
+  postsCount: number,
+  interCount: number,
+): Promise<UserStoreData> => {
+  const data: UserStoreData = {
+    posts: {},
+    interactions: {},
+  }
+  await store.runOnProgram(programName, async (program) => {
+    for (let i = 0; i < postsCount; i++) {
+      const tid = await TID.next()
+      const content = randomStr(10)
+      const cid = await store.put(content)
+      await program.posts.addEntry(tid, cid)
+      data.posts[tid.toString()] = content
+    }
+    for (let i = 0; i < interCount; i++) {
+      const tid = await TID.next()
+      const content = randomStr(10)
+      const cid = await store.put(content)
+      await program.interactions.addEntry(tid, cid)
+      data.interactions[tid.toString()] = content
+    }
+  })
+  return data
+}
