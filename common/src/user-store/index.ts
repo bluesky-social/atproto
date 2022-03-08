@@ -177,11 +177,37 @@ export class UserStore implements CarStreamable {
     )
   }
 
-  async getCarFile(): Promise<Uint8Array> {
+  private async openCar(
+    fn: (car: BlockWriter) => Promise<void>,
+  ): Promise<Uint8Array> {
     const { writer, out } = CarWriter.create([this.cid])
-    await this.writeToCarStream(writer)
+    await fn(writer)
     writer.close()
     return streamToArray(out)
+  }
+
+  async getCarFile(): Promise<Uint8Array> {
+    return this.openCar(this.writeToCarStream)
+  }
+
+  async writeCommitsToCarStream(
+    car: BlockWriter,
+    from: CID,
+    to: CID,
+  ): Promise<void> {
+    const { added, prev } = await this.store.get(from, check.assureCommit)
+    await this.store.addToCar(car, this.cid)
+    await Promise.all(added.map((cid) => this.store.addToCar(car, cid)))
+    if (!prev || prev.toString() === to.toString()) {
+      return
+    }
+    await this.writeCommitsToCarStream(car, prev, to)
+  }
+
+  async getDiffCar(to: CID): Promise<Uint8Array> {
+    return this.openCar(async (car: BlockWriter) => {
+      return this.writeCommitsToCarStream(car, this.cid, to)
+    })
   }
 }
 
