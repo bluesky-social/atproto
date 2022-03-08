@@ -36,14 +36,16 @@ export class UserStore implements CarStreamable {
 
   static async create(store: IpldStore, keypair: Keypair & Didable) {
     const did = await keypair.did()
-
-    const rootObj = {
-      did: did,
+    const rootObj: UserRoot = {
+      did,
+      programs: {},
     }
 
     const rootCid = await store.put(rootObj)
-    const commit = {
+    const commit: Commit = {
       root: rootCid,
+      prev: null,
+      added: [rootCid],
       sig: await keypair.sign(rootCid.bytes),
     }
 
@@ -61,13 +63,12 @@ export class UserStore implements CarStreamable {
 
   static async load(store: IpldStore, cid: CID, keypair?: Keypair) {
     const commit = await store.get(cid, check.assureCommit)
-    const rootObj = await store.get(commit.root, check.assureUserRoot)
-    const { did, ...programCids } = rootObj
+    const root = await store.get(commit.root, check.assureUserRoot)
     return new UserStore({
       store,
-      programCids,
+      programCids: root.programs,
       cid,
-      did,
+      did: root.did,
       keypair,
     })
   }
@@ -93,20 +94,26 @@ export class UserStore implements CarStreamable {
   }
 
   // arrow fn to preserve scope
-  updateRoot = async (newCids: NewCids): Promise<void> => {
-    if (this.keypair === null) {
-      throw new Error('No keypair provided. UserStore is read-only.')
+  updateRoot =
+    (programName: string) =>
+    async (newCids: NewCids): Promise<void> => {
+      if (this.keypair === null) {
+        throw new Error('No keypair provided. UserStore is read-only.')
+      }
+      this.programCids[programName] = this.programs[programName]?.cid
+      const userRoot: UserRoot = {
+        did: this.did,
+        programs: this.programCids,
+      }
+      const userCid = await this.store.put(userRoot)
+      const commit: Commit = {
+        root: userCid,
+        prev: this.cid,
+        added: newCids,
+        sig: await this.keypair.sign(userCid.bytes),
+      }
+      this.cid = await this.store.put(commit)
     }
-    const userCid = await this.store.put({
-      did: this.did,
-      ...this.programCids,
-    })
-    const commit: Commit = {
-      root: userCid,
-      sig: await this.keypair.sign(userCid.bytes),
-    }
-    this.cid = await this.store.put(commit)
-  }
 
   async getCommit(): Promise<Commit> {
     return this.store.get(this.cid, check.assureCommit)
@@ -122,7 +129,7 @@ export class UserStore implements CarStreamable {
       throw new Error(`Program store already exists for program: ${name}`)
     }
     const programStore = await ProgramStore.create(this.store)
-    programStore.onUpdate = this.updateRoot
+    programStore.onUpdate = this.updateRoot(name)
     this.programCids[name] = programStore.cid
     this.programs[name] = programStore
     return programStore
@@ -137,7 +144,7 @@ export class UserStore implements CarStreamable {
       return this.createProgramStore(name)
     }
     const programStore = await ProgramStore.load(this.store, cid)
-    programStore.onUpdate = this.updateRoot
+    programStore.onUpdate = this.updateRoot(name)
     this.programs[name] = programStore
     return programStore
   }

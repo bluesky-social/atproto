@@ -3,7 +3,10 @@ import { CID } from 'multiformats/cid'
 import { DID } from '../common/types.js'
 import TID from './tid.js'
 
-export type UserRoot = Record<string, CID> & { did: DID }
+export type UserRoot = {
+  did: DID
+  programs: Record<string, CID>
+}
 
 export type ProgramRoot = {
   posts: CID
@@ -14,6 +17,8 @@ export type ProgramRoot = {
 
 export type Commit = {
   root: CID
+  prev: CID | null
+  added: CID[]
   sig: Uint8Array
 }
 

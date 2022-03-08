@@ -85,7 +85,7 @@ export class ProgramStore {
       profile: this.profile,
     })
     if (this.onUpdate) {
-      this.onUpdate([this.cid, ...newCids])
+      await this.onUpdate([this.cid, ...newCids])
     }
   }
 
