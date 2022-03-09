@@ -132,6 +132,13 @@ export class UserStore implements CarStreamable {
     programStore.onUpdate = this.updateRoot(name)
     this.programCids[name] = programStore.cid
     this.programs[name] = programStore
+    // @TODO: this should be read-only, unless an update is actually made
+    this.updateRoot(name)([
+      programStore.cid,
+      programStore.posts.cid,
+      programStore.interactions.cid,
+      programStore.relationships.cid,
+    ])
     return programStore
   }
 
@@ -192,21 +199,31 @@ export class UserStore implements CarStreamable {
     })
   }
 
+  async getFullHistory(): Promise<Uint8Array> {
+    return this.getDiffCar(null)
+  }
+
   async writeCommitsToCarStream(
     car: BlockWriter,
     from: CID,
-    to: CID,
+    to: CID | null,
   ): Promise<void> {
     const { added, prev } = await this.store.get(from, check.assureCommit)
     await this.store.addToCar(car, this.cid)
     await Promise.all(added.map((cid) => this.store.addToCar(car, cid)))
-    if (!prev || prev.toString() === to.toString()) {
+    if (!prev) {
+      if (to === null) {
+        return
+      }
+      throw new Error(`Count not find commit: $${to}`)
+    }
+    if (prev.toString() === to?.toString()) {
       return
     }
     await this.writeCommitsToCarStream(car, prev, to)
   }
 
-  async getDiffCar(to: CID): Promise<Uint8Array> {
+  async getDiffCar(to: CID | null): Promise<Uint8Array> {
     return this.openCar((car: BlockWriter) => {
       return this.writeCommitsToCarStream(car, this.cid, to)
     })
@@ -220,7 +237,6 @@ export class UserStore implements CarStreamable {
     }
     const rootCid = roots[0]
     for await (const block of car.blocks()) {
-      // console.log('loaded: ', block.cid.toString())
       await this.store.putBytes(block.cid, block.bytes)
     }
     this.cid = rootCid

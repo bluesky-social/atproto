@@ -15,7 +15,6 @@ type Context = {
   storeAlice: UserStore
   ipldBob: IpldStore
   keypairBob: ucan.EdKeypair
-  storeBob: UserStore
   programName: string
 }
 
@@ -26,7 +25,6 @@ test.beforeEach(async (t) => {
 
   const ipldBob = IpldStore.createInMemory()
   const keypairBob = await ucan.EdKeypair.create()
-  const storeBob = await UserStore.create(ipldBob, keypairBob)
 
   const programName = 'did:bsky:test'
   t.context = {
@@ -35,31 +33,36 @@ test.beforeEach(async (t) => {
     storeAlice,
     ipldBob,
     keypairBob,
-    storeBob,
     programName,
   } as Context
   t.pass('Context setup')
 })
 
-test('syncs a repo that is starting from scratch', async (t) => {
-  const { storeAlice, storeBob, programName } = t.context as Context
+test('syncs an empty repo', async (t) => {
+  const { storeAlice, ipldBob, keypairBob } = t.context as Context
+  const car = await storeAlice.getFullHistory()
+  const storeBob = await UserStore.fromCarFile(car, ipldBob, keypairBob)
+  t.deepEqual(storeBob.programCids, {}, 'loads an empty repo')
+})
 
-  const data = await util.fillUserStore(storeAlice, programName, 10, 10)
-  const diff = await storeAlice.getDiffCar(storeBob.cid)
-  await storeBob.loadCar(diff)
+test('syncs a repo that is starting from scratch', async (t) => {
+  const { storeAlice, ipldBob, keypairBob, programName } = t.context as Context
+  const data = await util.fillUserStore(storeAlice, programName, 150, 10)
+  const car = await storeAlice.getFullHistory()
+  const storeBob = await UserStore.fromCarFile(car, ipldBob, keypairBob)
   await util.checkUserStore(t, storeBob, programName, data)
 })
 
 test('syncs a repo that is behind', async (t) => {
-  const { storeAlice, storeBob, programName } = t.context as Context
+  const { storeAlice, ipldBob, keypairBob, programName } = t.context as Context
 
-  const data = await util.fillUserStore(storeAlice, programName, 10, 10)
+  const data = await util.fillUserStore(storeAlice, programName, 150, 10)
+  const car = await storeAlice.getFullHistory()
+  const storeBob = await UserStore.fromCarFile(car, ipldBob, keypairBob)
+
+  const data2 = await util.fillUserStore(storeAlice, programName, 300, 10)
   const diff = await storeAlice.getDiffCar(storeBob.cid)
   await storeBob.loadCar(diff)
-
-  const data2 = await util.fillUserStore(storeAlice, programName, 10, 10)
-  const diff2 = await storeAlice.getDiffCar(storeBob.cid)
-  await storeBob.loadCar(diff2)
 
   const allData = {
     posts: {
@@ -77,7 +80,7 @@ test('syncs a repo that is behind', async (t) => {
 
 test('syncs a non-historical copy of a repo', async (t) => {
   const { storeAlice, programName } = t.context as Context
-  const data = await util.fillUserStore(storeAlice, programName, 20, 20)
+  const data = await util.fillUserStore(storeAlice, programName, 150, 20)
   const car = await storeAlice.getCarFile()
 
   const ipld = IpldStore.createInMemory()
