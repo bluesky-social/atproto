@@ -1,48 +1,37 @@
-import { isCID, assure, isObject, isArray } from '../common/type-check.js'
-import { Commit, UserRoot, ProgramRoot, IdMapping } from './types.js'
+// import { isCID, assure, isObject, isArray } from '../common/type-check.js'
+// import { Commit, UserRoot, ProgramRoot, IdMapping } from './types.js'
+import * as t from './types.js'
 
 export * from '../common/type-check.js'
 
-export const isUserRoot = (obj: unknown): obj is UserRoot => {
-  return isObject(obj) && typeof obj.did === 'string'
+export const isUserRoot = (obj: unknown): obj is t.UserRoot => {
+  return t.userRoot.safeParse(obj).success
 }
 
-export const assureUserRoot = (obj: unknown): UserRoot => {
-  return assure(obj, 'UserRoot', isUserRoot)
+export const assureUserRoot = (obj: unknown): t.UserRoot => {
+  return t.userRoot.parse(obj)
 }
 
-export const isCommit = (obj: unknown): obj is Commit => {
-  return (
-    isObject(obj) &&
-    isCID(obj.root) &&
-    (obj.prev === null || isCID(obj.prev)) &&
-    isArray(obj.added, isCID) &&
-    ArrayBuffer.isView(obj.sig)
-  )
+export const isCommit = (obj: unknown): obj is t.Commit => {
+  return t.commit.safeParse(obj).success
 }
 
-export const assureCommit = (obj: unknown): Commit => {
-  return assure(obj, 'Commit', isCommit)
+export const assureCommit = (obj: unknown): t.Commit => {
+  return t.commit.parse(obj)
 }
 
-export const isProgramRoot = (obj: unknown): obj is ProgramRoot => {
-  return (
-    isObject(obj) &&
-    isCID(obj.posts) &&
-    isCID(obj.relationships) &&
-    isCID(obj.interactions) &&
-    (obj.profile === null || isCID(obj.profile))
-  )
+export const isProgramRoot = (obj: unknown): obj is t.ProgramRoot => {
+  return t.programRoot.safeParse(obj).success
 }
 
-export const assureProgramRoot = (obj: unknown): ProgramRoot => {
-  return assure(obj, 'ProgramRoot', isProgramRoot)
+export const assureProgramRoot = (obj: unknown): t.ProgramRoot => {
+  return t.programRoot.parse(obj)
 }
 
-export const isIdMapping = (obj: unknown): obj is IdMapping => {
-  return isObject(obj) && Object.values(obj).every(isCID)
+export const isIdMapping = (obj: unknown): obj is t.IdMapping => {
+  return t.idMapping.safeParse(obj).success
 }
 
-export const assureIdMapping = (obj: unknown): IdMapping => {
-  return assure(obj, 'IdMapping', isIdMapping)
+export const assureIdMapping = (obj: unknown): t.IdMapping => {
+  return t.idMapping.parse(obj)
 }

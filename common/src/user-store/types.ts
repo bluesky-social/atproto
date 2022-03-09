@@ -1,35 +1,44 @@
 import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
-import { DID } from '../common/types.js'
+import { did, cid, bytes } from '../common/types.js'
 import TID from './tid.js'
+import { z } from 'zod'
 
-export type UserRoot = {
-  did: DID
-  programs: Record<string, CID>
-}
+export const tid = z.instanceof(TID)
 
-export type ProgramRoot = {
-  posts: CID
-  relationships: CID
-  interactions: CID
-  profile: CID | null
-}
+export const userRoot = z.object({
+  did: did,
+  programs: z.record(cid),
+})
+export type UserRoot = z.infer<typeof userRoot>
 
-export type Commit = {
-  root: CID
-  prev: CID | null
-  added: CID[]
-  sig: Uint8Array
-}
+export const programRoot = z.object({
+  posts: cid,
+  relationships: cid,
+  interactions: cid,
+  profile: cid.nullable(),
+})
+export type ProgramRoot = z.infer<typeof programRoot>
 
-export type IdMapping = Record<string, CID>
+export const commit = z.object({
+  root: cid,
+  prev: cid.nullable(),
+  added: z.array(cid),
+  sig: bytes,
+})
+export type Commit = z.infer<typeof commit>
 
-export type Entry = {
-  tid: TID
-  cid: CID
-}
+export const idMapping = z.record(cid)
+export type IdMapping = z.infer<typeof idMapping>
 
-export type NewCids = Set<CID>
+export const entry = z.object({
+  tid: tid,
+  cid: cid,
+})
+export type Entry = z.infer<typeof entry>
+
+export const newCids = z.set(cid)
+export type NewCids = z.infer<typeof newCids>
 
 export interface CarStreamable {
   writeToCarStream(car: BlockWriter): Promise<void>
