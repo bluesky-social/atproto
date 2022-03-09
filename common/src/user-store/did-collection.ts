@@ -43,7 +43,7 @@ export class DidCollection implements Collection<DID>, CarStreamable {
     if (this.onUpdate) {
       // @TODO either remove this class tree from data store, or actually send update
       // send empty NewCids array for now
-      await this.onUpdate([])
+      await this.onUpdate(new Set())
     }
   }
 

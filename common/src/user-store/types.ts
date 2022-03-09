@@ -29,7 +29,7 @@ export type Entry = {
   cid: CID
 }
 
-export type NewCids = CID[]
+export type NewCids = Set<CID>
 
 export interface CarStreamable {
   writeToCarStream(car: BlockWriter): Promise<void>

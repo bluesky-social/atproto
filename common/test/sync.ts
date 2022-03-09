@@ -5,9 +5,7 @@ import * as ucan from 'ucans'
 import UserStore from '../src/user-store/index.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 
-import * as check from '../src/common/type-check.js'
 import * as util from './_util.js'
-import TID from '../src/user-store/tid.js'
 
 type Context = {
   ipldAlice: IpldStore

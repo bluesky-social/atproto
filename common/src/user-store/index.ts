@@ -17,7 +17,7 @@ export class UserStore implements CarStreamable {
   programs: { [name: string]: ProgramStore }
   cid: CID
   did: DID
-  keypair: Keypair | null
+  private keypair: Keypair | null
 
   constructor(params: {
     store: IpldStore
@@ -100,16 +100,31 @@ export class UserStore implements CarStreamable {
       if (this.keypair === null) {
         throw new Error('No keypair provided. UserStore is read-only.')
       }
-      this.programCids[programName] = this.programs[programName]?.cid
+      const program = this.programs[programName]
+      if (!program) {
+        throw new Error(
+          `Tried to update program root for a program that doesnt exist: ${programName}`,
+        )
+      }
+      // if a new program, make sure we add the structural nodes
+      if (this.programCids[programName] === undefined) {
+        newCids
+          .add(program.cid)
+          .add(program.posts.cid)
+          .add(program.interactions.cid)
+          .add(program.relationships.cid)
+      }
+      this.programCids[programName] = program.cid
       const userRoot: UserRoot = {
         did: this.did,
         programs: this.programCids,
       }
       const userCid = await this.store.put(userRoot)
+      newCids.add(userCid)
       const commit: Commit = {
         root: userCid,
         prev: this.cid,
-        added: [userCid, ...newCids],
+        added: [...newCids],
         sig: await this.keypair.sign(userCid.bytes),
       }
       this.cid = await this.store.put(commit)
@@ -130,15 +145,7 @@ export class UserStore implements CarStreamable {
     }
     const programStore = await ProgramStore.create(this.store)
     programStore.onUpdate = this.updateRoot(name)
-    this.programCids[name] = programStore.cid
     this.programs[name] = programStore
-    // @TODO: this should be read-only, unless an update is actually made
-    this.updateRoot(name)([
-      programStore.cid,
-      programStore.posts.cid,
-      programStore.interactions.cid,
-      programStore.relationships.cid,
-    ])
     return programStore
   }
 

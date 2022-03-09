@@ -56,15 +56,15 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   async updateRoot(newCids: NewCids): Promise<void> {
     this.cid = await this.store.put(this.data)
     if (this.onUpdate) {
-      await this.onUpdate([...newCids, this.cid])
+      await this.onUpdate(newCids.add(this.cid))
     }
   }
 
   async compressTables(): Promise<NewCids> {
     const tableNames = this.tableNames()
-    if (tableNames.length < 1) return []
+    if (tableNames.length < 1) return new Set()
     const mostRecent = await this.getTable(tableNames[0])
-    if (mostRecent === null) return []
+    if (mostRecent === null) return new Set()
     const { table, newCids } = await this.compressCascade(
       mostRecent,
       tableNames.slice(1),
@@ -88,7 +88,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     // need 4 tables to merge down a level
     if (filtered.length < 3 || size === TableSize.xl) {
       // if no merge at this level, we just return the previous level
-      return { table: mostRecent, newCids: [] }
+      return { table: mostRecent, newCids: new Set() }
     }
 
     keys.forEach((k) => delete this.data[k.toString()])
@@ -98,7 +98,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
       merged,
       nextKeys.slice(3),
     )
-    return { table, newCids: [merged.cid, ...newCids] }
+    return { table, newCids: newCids.add(merged.cid) }
   }
 
   async getEntry(tid: TID): Promise<CID | null> {
@@ -142,13 +142,13 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     const name = this.tableNames()[0]
     const table = name ? await this.getTable(name) : null
     if (table === null) {
-      return { table: await SSTable.create(this.store), newCids: [] }
+      return { table: await SSTable.create(this.store), newCids: new Set() }
     }
     if (table.isFull()) {
       const newCids = await this.compressTables()
       return { table: await SSTable.create(this.store), newCids }
     } else {
-      return { table, newCids: [] }
+      return { table, newCids: new Set() }
     }
   }
 
@@ -162,7 +162,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     await table.addEntry(tid, cid)
     const tableName = oldestKey?.toString() || tid.toString()
     this.data[tableName] = table.cid
-    await this.updateRoot([cid, table.cid, ...newCids])
+    await this.updateRoot(newCids.add(cid).add(table.cid))
   }
 
   private async editTableForTid(
@@ -175,20 +175,20 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     if (!table) throw new Error(`Could not find entry with tid: ${tid}`)
     const newCids = await fn(table)
     this.data[tableName.toString()] = table.cid
-    await this.updateRoot([table.cid, ...newCids])
+    await this.updateRoot(newCids.add(table.cid))
   }
 
   async editEntry(tid: TID, cid: CID): Promise<void> {
     await this.editTableForTid(tid, async (table) => {
       await table.editEntry(tid, cid)
-      return [cid]
+      return new Set([cid])
     })
   }
 
   async deleteEntry(tid: TID): Promise<void> {
     await this.editTableForTid(tid, async (table) => {
       await table.deleteEntry(tid)
-      return []
+      return new Set()
     })
   }
 

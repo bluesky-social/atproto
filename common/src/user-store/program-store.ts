@@ -85,14 +85,14 @@ export class ProgramStore {
       profile: this.profile,
     })
     if (this.onUpdate) {
-      await this.onUpdate([this.cid, ...newCids])
+      await this.onUpdate(newCids.add(this.cid))
     }
   }
 
   async setProfile(cid: CID | null): Promise<void> {
     this.profile = cid
     const newCids = cid === null ? [] : [cid]
-    await this.updateRoot(newCids)
+    await this.updateRoot(new Set(newCids))
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
