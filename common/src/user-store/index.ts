@@ -4,9 +4,16 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import { UserRoot, CarStreamable, IdMapping, Commit, NewCids } from './types.js'
+import {
+  UserRoot,
+  CarStreamable,
+  IdMapping,
+  Commit,
+  NewCids,
+  schema,
+} from './types.js'
 import { DID } from '../common/types.js'
-import * as check from './type-check.js'
+import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import ProgramStore from './program-store.js'
@@ -62,8 +69,8 @@ export class UserStore implements CarStreamable {
   }
 
   static async load(store: IpldStore, cid: CID, keypair?: Keypair) {
-    const commit = await store.get(cid, check.assureCommit)
-    const root = await store.get(commit.root, check.assureUserRoot)
+    const commit = await store.get(cid, check.assure(schema.commit))
+    const root = await store.get(commit.root, check.assure(schema.userRoot))
     return new UserStore({
       store,
       programCids: root.programs,
@@ -131,12 +138,12 @@ export class UserStore implements CarStreamable {
     }
 
   async getCommit(): Promise<Commit> {
-    return this.store.get(this.cid, check.assureCommit)
+    return this.store.get(this.cid, check.assure(schema.commit))
   }
 
   async getRoot(): Promise<UserRoot> {
     const commit = await this.getCommit()
-    return this.store.get(commit.root, check.assureUserRoot)
+    return this.store.get(commit.root, check.assure(schema.userRoot))
   }
 
   async createProgramStore(name: string): Promise<ProgramStore> {
@@ -181,7 +188,7 @@ export class UserStore implements CarStreamable {
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
     await this.store.addToCar(car, this.cid)
-    const commit = await this.store.get(this.cid, check.assureCommit)
+    const commit = await this.store.get(this.cid, check.assure(schema.commit))
     await this.store.addToCar(car, commit.root)
     await Promise.all(
       Object.values(this.programCids).map(async (cid) => {
@@ -215,7 +222,10 @@ export class UserStore implements CarStreamable {
     from: CID,
     to: CID | null,
   ): Promise<void> {
-    const { added, prev } = await this.store.get(from, check.assureCommit)
+    const { added, prev } = await this.store.get(
+      from,
+      check.assure(schema.commit),
+    )
     await this.store.addToCar(car, this.cid)
     await Promise.all(added.map((cid) => this.store.addToCar(car, cid)))
     if (!prev) {

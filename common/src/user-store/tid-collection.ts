@@ -8,8 +8,9 @@ import {
   Collection,
   CarStreamable,
   NewCids,
+  schema,
 } from './types.js'
-import * as check from './type-check.js'
+import * as check from '../common/check.js'
 import SSTable, { TableSize } from './ss-table.js'
 import TID from './tid.js'
 
@@ -32,7 +33,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   }
 
   static async load(store: IpldStore, cid: CID): Promise<TidCollection> {
-    const data = await store.get(cid, check.assureIdMapping)
+    const data = await store.get(cid, check.assure(schema.idMapping))
     return new TidCollection(store, cid, data)
   }
 

@@ -1,11 +1,11 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import TID from '../src/user-store/tid.js'
-import { IdMapping } from '../src/user-store/types.js'
+import { IdMapping, schema } from '../src/user-store/types.js'
 import { DID } from '../src/common/types.js'
 import SSTable from '../src/user-store/ss-table.js'
 import UserStore from '../src/user-store/index.js'
-import * as check from '../src/common/type-check.js'
+import * as check from '../src/common/check.js'
 import { ExecutionContext } from 'ava'
 
 const fakeStore = IpldStore.createInMemory()
@@ -111,7 +111,9 @@ export const checkUserStore = async (
   await store.runOnProgram(programName, async (program) => {
     for (const tid of Object.keys(data.posts)) {
       const cid = await program.posts.getEntry(TID.fromStr(tid))
-      const actual = cid ? await store.get(cid, check.assureString) : null
+      const actual = cid
+        ? await store.get(cid, check.assure(schema.string))
+        : null
       t.deepEqual(
         actual,
         data.posts[tid],
@@ -120,7 +122,9 @@ export const checkUserStore = async (
     }
     for (const tid of Object.keys(data.interactions)) {
       const cid = await program.interactions.getEntry(TID.fromStr(tid))
-      const actual = cid ? await store.get(cid, check.assureString) : null
+      const actual = cid
+        ? await store.get(cid, check.assure(schema.string))
+        : null
       t.deepEqual(
         actual,
         data.interactions[tid],

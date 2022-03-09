@@ -1,8 +1,8 @@
 import { CID } from 'multiformats'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-import { CarStreamable, Entry, IdMapping } from './types.js'
-import * as check from './type-check.js'
+import { CarStreamable, Entry, IdMapping, schema } from './types.js'
+import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TID from './tid.js'
 
@@ -25,7 +25,7 @@ export class SSTable implements CarStreamable {
   }
 
   static async load(store: IpldStore, cid: CID): Promise<SSTable> {
-    const data = await store.get(cid, check.assureIdMapping)
+    const data = await store.get(cid, check.assure(schema.idMapping))
     return new SSTable(store, cid, data)
   }
 

@@ -1,11 +1,11 @@
 import { CID } from 'multiformats/cid'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-import * as check from './type-check.js'
+import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
 import DidCollection from './did-collection.js'
-import { NewCids, ProgramRoot } from './types.js'
+import { NewCids, ProgramRoot, schema } from './types.js'
 
 export class ProgramStore {
   store: IpldStore
@@ -62,7 +62,7 @@ export class ProgramStore {
   }
 
   static async load(store: IpldStore, cid: CID) {
-    const rootObj = await store.get(cid, check.assureProgramRoot)
+    const rootObj = await store.get(cid, check.assure(schema.programRoot))
     const posts = await TidCollection.load(store, rootObj.posts)
     const interactions = await TidCollection.load(store, rootObj.interactions)
     const relationships = await DidCollection.load(store, rootObj.relationships)
