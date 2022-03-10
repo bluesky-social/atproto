@@ -111,9 +111,7 @@ export const checkUserStore = async (
   await store.runOnProgram(programName, async (program) => {
     for (const tid of Object.keys(data.posts)) {
       const cid = await program.posts.getEntry(TID.fromStr(tid))
-      const actual = cid
-        ? await store.get(cid, check.assure(schema.string))
-        : null
+      const actual = cid ? await store.get(cid, schema.string) : null
       t.deepEqual(
         actual,
         data.posts[tid],
@@ -122,9 +120,7 @@ export const checkUserStore = async (
     }
     for (const tid of Object.keys(data.interactions)) {
       const cid = await program.interactions.getEntry(TID.fromStr(tid))
-      const actual = cid
-        ? await store.get(cid, check.assure(schema.string))
-        : null
+      const actual = cid ? await store.get(cid, schema.string) : null
       t.deepEqual(
         actual,
         data.interactions[tid],

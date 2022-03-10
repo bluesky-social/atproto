@@ -69,8 +69,8 @@ export class UserStore implements CarStreamable {
   }
 
   static async load(store: IpldStore, cid: CID, keypair?: Keypair) {
-    const commit = await store.get(cid, check.assure(schema.commit))
-    const root = await store.get(commit.root, check.assure(schema.userRoot))
+    const commit = await store.get(cid, schema.commit)
+    const root = await store.get(commit.root, schema.userRoot)
     return new UserStore({
       store,
       programCids: root.programs,
@@ -138,12 +138,12 @@ export class UserStore implements CarStreamable {
     }
 
   async getCommit(): Promise<Commit> {
-    return this.store.get(this.cid, check.assure(schema.commit))
+    return this.store.get(this.cid, schema.commit)
   }
 
   async getRoot(): Promise<UserRoot> {
     const commit = await this.getCommit()
-    return this.store.get(commit.root, check.assure(schema.userRoot))
+    return this.store.get(commit.root, schema.userRoot)
   }
 
   async createProgramStore(name: string): Promise<ProgramStore> {
@@ -182,13 +182,13 @@ export class UserStore implements CarStreamable {
     return this.store.put(value)
   }
 
-  async get<T>(cid: CID, checkFn: (obj: unknown) => T): Promise<T> {
-    return this.store.get(cid, checkFn)
+  async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
+    return this.store.get(cid, schema)
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
     await this.store.addToCar(car, this.cid)
-    const commit = await this.store.get(this.cid, check.assure(schema.commit))
+    const commit = await this.store.get(this.cid, schema.commit)
     await this.store.addToCar(car, commit.root)
     await Promise.all(
       Object.values(this.programCids).map(async (cid) => {
@@ -222,10 +222,7 @@ export class UserStore implements CarStreamable {
     from: CID,
     to: CID | null,
   ): Promise<void> {
-    const { added, prev } = await this.store.get(
-      from,
-      check.assure(schema.commit),
-    )
+    const { added, prev } = await this.store.get(from, schema.commit)
     await this.store.addToCar(car, this.cid)
     await Promise.all(added.map((cid) => this.store.addToCar(car, cid)))
     if (!prev) {

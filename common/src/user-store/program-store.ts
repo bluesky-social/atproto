@@ -62,7 +62,7 @@ export class ProgramStore {
   }
 
   static async load(store: IpldStore, cid: CID) {
-    const rootObj = await store.get(cid, check.assure(schema.programRoot))
+    const rootObj = await store.get(cid, schema.programRoot)
     const posts = await TidCollection.load(store, rootObj.posts)
     const interactions = await TidCollection.load(store, rootObj.interactions)
     const relationships = await DidCollection.load(store, rootObj.relationships)

@@ -25,7 +25,7 @@ export class SSTable implements CarStreamable {
   }
 
   static async load(store: IpldStore, cid: CID): Promise<SSTable> {
-    const data = await store.get(cid, check.assure(schema.idMapping))
+    const data = await store.get(cid, schema.idMapping)
     return new SSTable(store, cid, data)
   }
 

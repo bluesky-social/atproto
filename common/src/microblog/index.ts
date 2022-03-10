@@ -16,7 +16,7 @@ export class Microblog extends Program {
       return program.posts.getEntry(id)
     })
     if (postCid === null) return null
-    const post = await this.store.get(postCid, check.assure(schema.post))
+    const post = await this.store.get(postCid, schema.post)
     return post
   }
 
@@ -61,9 +61,7 @@ export class Microblog extends Program {
       return program.posts.getEntries(count, from)
     })
     const posts = await Promise.all(
-      entries.map((entry) =>
-        this.store.get(entry.cid, check.assure(schema.post)),
-      ),
+      entries.map((entry) => this.store.get(entry.cid, schema.post)),
     )
     return posts
   }
@@ -73,7 +71,7 @@ export class Microblog extends Program {
       return program.relationships.getEntry(did)
     })
     if (cid === null) return null
-    return this.store.get(cid, check.assure(schema.follow))
+    return this.store.get(cid, schema.follow)
   }
 
   async isFollowing(did: DID): Promise<boolean> {
@@ -101,7 +99,7 @@ export class Microblog extends Program {
       return program.relationships.getEntries()
     })
     const follows = await Promise.all(
-      cids.map((c) => this.store.get(c, check.assure(schema.follow))),
+      cids.map((c) => this.store.get(c, schema.follow)),
     )
     return follows
   }
@@ -137,9 +135,7 @@ export class Microblog extends Program {
       return program.interactions.getEntries(count, from)
     })
     const likes = await Promise.all(
-      entries.map((entry) =>
-        this.store.get(entry.cid, check.assure(schema.like)),
-      ),
+      entries.map((entry) => this.store.get(entry.cid, schema.like)),
     )
     return likes
   }

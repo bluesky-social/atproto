@@ -5,6 +5,7 @@ import * as blockCodec from '@ipld/dag-cbor'
 import { BlockWriter } from '@ipld/car/writer'
 
 import MemoryBlockstore from './memory-blockstore.js'
+import * as check from '../common/check.js'
 import { BlockstoreI } from './types.js'
 import { PersistentBlockstore } from './persistent-blockstore.js'
 
@@ -33,7 +34,7 @@ export class IpldStore {
     return block.cid
   }
 
-  async get<T>(cid: CID, checkFn: (obj: unknown) => T): Promise<T> {
+  async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
     const bytes = await this.getBytes(cid)
     const block = await Block.create({
       bytes,
@@ -42,7 +43,7 @@ export class IpldStore {
       hasher: blockHasher,
     })
     try {
-      const verified = checkFn(block.value)
+      const verified = check.assure(schema, block.value)
       return verified
     } catch (err) {
       throw new Error(
