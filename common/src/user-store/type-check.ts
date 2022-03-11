@@ -4,7 +4,13 @@ import { Commit, UserRoot, ProgramRoot, IdMapping } from './types.js'
 export * from '../common/type-check.js'
 
 export const isUserRoot = (obj: unknown): obj is UserRoot => {
-  return isObject(obj) && typeof obj.did === 'string'
+  return (
+    isObject(obj) &&
+    typeof obj.did === 'string' &&
+    (obj.prev === null || isCID(obj.prev)) &&
+    isArray(obj.added, isCID) &&
+    isObject(obj.programs)
+  )
 }
 
 export const assureUserRoot = (obj: unknown): UserRoot => {
@@ -12,13 +18,7 @@ export const assureUserRoot = (obj: unknown): UserRoot => {
 }
 
 export const isCommit = (obj: unknown): obj is Commit => {
-  return (
-    isObject(obj) &&
-    isCID(obj.root) &&
-    (obj.prev === null || isCID(obj.prev)) &&
-    isArray(obj.added, isCID) &&
-    ArrayBuffer.isView(obj.sig)
-  )
+  return isObject(obj) && isCID(obj.root) && ArrayBuffer.isView(obj.sig)
 }
 
 export const assureCommit = (obj: unknown): Commit => {

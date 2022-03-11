@@ -5,6 +5,8 @@ import TID from './tid.js'
 
 export type UserRoot = {
   did: DID
+  prev: CID | null
+  added: CID[]
   programs: Record<string, CID>
 }
 
@@ -17,8 +19,6 @@ export type ProgramRoot = {
 
 export type Commit = {
   root: CID
-  prev: CID | null
-  added: CID[]
   sig: Uint8Array
 }
 
