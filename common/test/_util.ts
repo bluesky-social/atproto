@@ -5,7 +5,6 @@ import { IdMapping, schema } from '../src/user-store/types.js'
 import { DID } from '../src/common/types.js'
 import SSTable from '../src/user-store/ss-table.js'
 import UserStore from '../src/user-store/index.js'
-import * as check from '../src/common/check.js'
 import { ExecutionContext } from 'ava'
 
 const fakeStore = IpldStore.createInMemory()

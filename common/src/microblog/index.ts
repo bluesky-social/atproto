@@ -3,7 +3,6 @@ import Program from '../user-store/program.js'
 
 import { Post, Follow, Like, schema } from './types.js'
 import { DID } from '../common/types.js'
-import * as check from '../common/check.js'
 import TID from '../user-store/tid.js'
 
 export class Microblog extends Program {

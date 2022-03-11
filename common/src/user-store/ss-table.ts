@@ -2,7 +2,6 @@ import { CID } from 'multiformats'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { CarStreamable, Entry, IdMapping, schema } from './types.js'
-import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TID from './tid.js'
 
