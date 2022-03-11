@@ -65,16 +65,16 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     if (tableNames.length < 1) return new Set()
     const mostRecent = await this.getTable(tableNames[0])
     if (mostRecent === null) return new Set()
-    const { table, newCids } = await this.compressCascade(
+    const compressed = await this.compressCascade(
       mostRecent,
       tableNames.slice(1),
     )
-    const tableName = table.oldestTid()
+    const tableName = compressed.table.oldestTid()
     if (tableName && !tableName.equals(tableNames[0])) {
       delete this.data[tableNames[0].toString()]
-      this.data[tableName.toString()] = table.cid
+      this.data[tableName.toString()] = compressed.table.cid
     }
-    return newCids
+    return compressed.newCids
   }
 
   private async compressCascade(
