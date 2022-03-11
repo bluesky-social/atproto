@@ -79,7 +79,7 @@ test('syncs a repo that is behind', async (t) => {
 test('syncs a non-historical copy of a repo', async (t) => {
   const { storeAlice, programName } = t.context as Context
   const data = await util.fillUserStore(storeAlice, programName, 150, 20)
-  const car = await storeAlice.getCarFile()
+  const car = await storeAlice.getCarNoHistory()
 
   const ipld = IpldStore.createInMemory()
   const storeBob = await UserStore.fromCarFile(car, ipld)
