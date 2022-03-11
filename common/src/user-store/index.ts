@@ -139,6 +139,9 @@ export class UserStore implements CarStreamable {
     return this.store.get(commit.root, check.assureUserRoot)
   }
 
+  // Program API
+  // -----------
+
   async createProgramStore(name: string): Promise<ProgramStore> {
     if (this.programCids[name] !== undefined) {
       throw new Error(`Program store already exists for program: ${name}`)
@@ -171,12 +174,60 @@ export class UserStore implements CarStreamable {
     return fn(program)
   }
 
+  // IPLD store methods
+  // -----------
+
   async put(value: Record<string, unknown> | string): Promise<CID> {
     return this.store.put(value)
   }
 
   async get<T>(cid: CID, checkFn: (obj: unknown) => T): Promise<T> {
     return this.store.get(cid, checkFn)
+  }
+
+  // CAR files
+  // -----------
+
+  async loadCar(buf: Uint8Array): Promise<void> {
+    const car = await CarReader.fromBytes(buf)
+    const roots = await car.getRoots()
+    if (roots.length !== 1) {
+      throw new Error(`Expected one root, got ${roots.length}`)
+    }
+    const rootCid = roots[0]
+    for await (const block of car.blocks()) {
+      await this.store.putBytes(block.cid, block.bytes)
+    }
+    this.cid = rootCid
+    const root = await this.getRoot()
+    this.did = root.did
+    this.programCids = root.programs
+    this.programs = {}
+  }
+
+  async getCarNoHistory(): Promise<Uint8Array> {
+    return this.openCar((car: BlockWriter) => {
+      return this.writeToCarStream(car)
+    })
+  }
+
+  async getDiffCar(to: CID | null): Promise<Uint8Array> {
+    return this.openCar((car: BlockWriter) => {
+      return this.writeCommitsToCarStream(car, this.cid, to)
+    })
+  }
+
+  async getFullHistory(): Promise<Uint8Array> {
+    return this.getDiffCar(null)
+  }
+
+  private async openCar(
+    fn: (car: BlockWriter) => Promise<void>,
+  ): Promise<Uint8Array> {
+    const { writer, out } = CarWriter.create([this.cid])
+    await fn(writer)
+    writer.close()
+    return streamToArray(out)
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
@@ -189,25 +240,6 @@ export class UserStore implements CarStreamable {
         await programStore.writeToCarStream(car)
       }),
     )
-  }
-
-  private async openCar(
-    fn: (car: BlockWriter) => Promise<void>,
-  ): Promise<Uint8Array> {
-    const { writer, out } = CarWriter.create([this.cid])
-    await fn(writer)
-    writer.close()
-    return streamToArray(out)
-  }
-
-  async getCarFile(): Promise<Uint8Array> {
-    return this.openCar((car: BlockWriter) => {
-      return this.writeToCarStream(car)
-    })
-  }
-
-  async getFullHistory(): Promise<Uint8Array> {
-    return this.getDiffCar(null)
   }
 
   async writeCommitsToCarStream(
@@ -234,29 +266,6 @@ export class UserStore implements CarStreamable {
       return
     }
     await this.writeCommitsToCarStream(car, prev, to)
-  }
-
-  async getDiffCar(to: CID | null): Promise<Uint8Array> {
-    return this.openCar((car: BlockWriter) => {
-      return this.writeCommitsToCarStream(car, this.cid, to)
-    })
-  }
-
-  async loadCar(buf: Uint8Array): Promise<void> {
-    const car = await CarReader.fromBytes(buf)
-    const roots = await car.getRoots()
-    if (roots.length !== 1) {
-      throw new Error(`Expected one root, got ${roots.length}`)
-    }
-    const rootCid = roots[0]
-    for await (const block of car.blocks()) {
-      await this.store.putBytes(block.cid, block.bytes)
-    }
-    this.cid = rootCid
-    const root = await this.getRoot()
-    this.did = root.did
-    this.programCids = root.programs
-    this.programs = {}
   }
 }
 
