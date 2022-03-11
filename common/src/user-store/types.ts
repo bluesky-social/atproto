@@ -8,6 +8,8 @@ const tid = z.instanceof(TID)
 
 const userRoot = z.object({
   did: common.did,
+  prev: common.cid.nullable(),
+  added: z.array(common.cid),
   programs: z.record(common.cid),
 })
 export type UserRoot = z.infer<typeof userRoot>
@@ -22,8 +24,6 @@ export type ProgramRoot = z.infer<typeof programRoot>
 
 const commit = z.object({
   root: common.cid,
-  prev: common.cid.nullable(),
-  added: z.array(common.cid),
   sig: common.bytes,
 })
 export type Commit = z.infer<typeof commit>
