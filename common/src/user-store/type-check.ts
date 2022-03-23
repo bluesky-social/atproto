@@ -8,7 +8,7 @@ export const isUserRoot = (obj: unknown): obj is UserRoot => {
     isObject(obj) &&
     typeof obj.did === 'string' &&
     (obj.prev === null || isCID(obj.prev)) &&
-    isArray(obj.added, isCID) &&
+    isArray(obj.new_cids, isCID) &&
     isObject(obj.programs)
   )
 }

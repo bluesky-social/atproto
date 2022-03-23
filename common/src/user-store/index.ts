@@ -39,7 +39,7 @@ export class UserStore implements CarStreamable {
     const rootObj: UserRoot = {
       did,
       prev: null,
-      added: [],
+      new_cids: [],
       programs: {},
     }
 
@@ -118,7 +118,7 @@ export class UserStore implements CarStreamable {
       const userRoot: UserRoot = {
         did: this.did,
         prev: this.cid,
-        added: [...newCids],
+        new_cids: [...newCids],
         programs: this.programCids,
       }
       const userCid = await this.store.put(userRoot)
@@ -248,14 +248,14 @@ export class UserStore implements CarStreamable {
     to: CID | null,
   ): Promise<void> {
     const commit = await this.store.get(from, check.assureCommit)
-    const { added, prev } = await this.store.get(
+    const { new_cids, prev } = await this.store.get(
       commit.root,
       check.assureUserRoot,
     )
     await this.store.addToCar(car, this.cid)
     await this.store.addToCar(car, commit.root)
 
-    await Promise.all(added.map((cid) => this.store.addToCar(car, cid)))
+    await Promise.all(new_cids.map((cid) => this.store.addToCar(car, cid)))
     if (!prev) {
       if (to === null) {
         return

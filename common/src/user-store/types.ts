@@ -6,7 +6,7 @@ import TID from './tid.js'
 export type UserRoot = {
   did: DID
   prev: CID | null
-  added: CID[]
+  new_cids: CID[]
   programs: Record<string, CID>
 }
 
