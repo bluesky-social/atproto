@@ -2,22 +2,16 @@ import { CID } from 'multiformats'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import {
-  Entry,
-  IdMapping,
-  Collection,
-  CarStreamable,
-  NewCids,
-  schema,
-} from './types.js'
+import { Entry, IdMapping, Collection, CarStreamable, schema } from './types.js'
 import SSTable, { TableSize } from './ss-table.js'
 import TID from './tid.js'
+import CidSet from './cid-set.js'
 
 export class TidCollection implements Collection<TID>, CarStreamable {
   store: IpldStore
   cid: CID
   data: IdMapping
-  onUpdate: ((newCids: NewCids) => Promise<void>) | null
+  onUpdate: ((newCids: CidSet) => Promise<void>) | null
 
   constructor(store: IpldStore, cid: CID, data: IdMapping) {
     this.store = store
@@ -53,18 +47,18 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     return this.getTable(name)
   }
 
-  async updateRoot(newCids: NewCids): Promise<void> {
+  async updateRoot(newCids: CidSet): Promise<void> {
     this.cid = await this.store.put(this.data)
     if (this.onUpdate) {
       await this.onUpdate(newCids.add(this.cid))
     }
   }
 
-  async compressTables(): Promise<NewCids> {
+  async compressTables(): Promise<CidSet> {
     const tableNames = this.tableNames()
-    if (tableNames.length < 1) return new Set()
+    if (tableNames.length < 1) return new CidSet()
     const mostRecent = await this.getTable(tableNames[0])
-    if (mostRecent === null) return new Set()
+    if (mostRecent === null) return new CidSet()
     const compressed = await this.compressCascade(
       mostRecent,
       tableNames.slice(1),
@@ -80,7 +74,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   private async compressCascade(
     mostRecent: SSTable,
     nextKeys: TID[],
-  ): Promise<{ table: SSTable; newCids: NewCids }> {
+  ): Promise<{ table: SSTable; newCids: CidSet }> {
     const size = mostRecent.size
     const keys = nextKeys.slice(0, 3)
     const tables = await Promise.all(keys.map((k) => this.getTable(k)))
@@ -88,7 +82,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     // need 4 tables to merge down a level
     if (filtered.length < 3 || size === TableSize.xl) {
       // if no merge at this level, we just return the previous level
-      return { table: mostRecent, newCids: new Set() }
+      return { table: mostRecent, newCids: new CidSet() }
     }
 
     keys.forEach((k) => delete this.data[k.toString()])
@@ -137,18 +131,18 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   // helper method to return table instance to write to, but leaves responsibility of adding table to `data` to the caller
   private async getOrCreateCurrTable(): Promise<{
     table: SSTable
-    newCids: NewCids
+    newCids: CidSet
   }> {
     const name = this.tableNames()[0]
     const table = name ? await this.getTable(name) : null
     if (table === null) {
-      return { table: await SSTable.create(this.store), newCids: new Set() }
+      return { table: await SSTable.create(this.store), newCids: new CidSet() }
     }
     if (table.isFull()) {
       const newCids = await this.compressTables()
       return { table: await SSTable.create(this.store), newCids }
     } else {
-      return { table, newCids: new Set() }
+      return { table, newCids: new CidSet() }
     }
   }
 
@@ -167,7 +161,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
 
   private async editTableForTid(
     tid: TID,
-    fn: (table: SSTable) => Promise<NewCids>,
+    fn: (table: SSTable) => Promise<CidSet>,
   ): Promise<void> {
     const tableName = this.getTableNameForTid(tid)
     if (!tableName) throw new Error(`Could not find entry with tid: ${tid}`)
@@ -181,14 +175,14 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   async editEntry(tid: TID, cid: CID): Promise<void> {
     await this.editTableForTid(tid, async (table) => {
       await table.editEntry(tid, cid)
-      return new Set([cid])
+      return new CidSet([cid])
     })
   }
 
   async deleteEntry(tid: TID): Promise<void> {
     await this.editTableForTid(tid, async (table) => {
       await table.deleteEntry(tid)
-      return new Set()
+      return new CidSet()
     })
   }
 

@@ -4,19 +4,13 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import {
-  UserRoot,
-  CarStreamable,
-  IdMapping,
-  Commit,
-  NewCids,
-  schema,
-} from './types.js'
+import { UserRoot, CarStreamable, IdMapping, Commit, schema } from './types.js'
 import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import ProgramStore from './program-store.js'
+import CidSet from './cid-set.js'
 
 export class UserStore implements CarStreamable {
   store: IpldStore
@@ -103,7 +97,7 @@ export class UserStore implements CarStreamable {
   // arrow fn to preserve scope
   updateRoot =
     (programName: string) =>
-    async (newCids: NewCids): Promise<void> => {
+    async (newCids: CidSet): Promise<void> => {
       if (this.keypair === null) {
         throw new Error('No keypair provided. UserStore is read-only.')
       }
@@ -125,7 +119,7 @@ export class UserStore implements CarStreamable {
       const userRoot: UserRoot = {
         did: this.did,
         prev: this.cid,
-        new_cids: [...newCids],
+        new_cids: newCids.toList(),
         programs: this.programCids,
       }
       const userCid = await this.store.put(userRoot)
