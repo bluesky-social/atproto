@@ -1,9 +1,8 @@
 import UserStore from '../user-store/index.js'
 import Program from '../user-store/program.js'
 
-import { Post, Follow, Like } from './types.js'
+import { Post, Follow, Like, schema } from './types.js'
 import { DID } from '../common/types.js'
-import * as check from './type-check.js'
 import TID from '../user-store/tid.js'
 
 export class Microblog extends Program {
@@ -16,7 +15,7 @@ export class Microblog extends Program {
       return program.posts.getEntry(id)
     })
     if (postCid === null) return null
-    const post = await this.store.get(postCid, check.assurePost)
+    const post = await this.store.get(postCid, schema.post)
     return post
   }
 
@@ -61,7 +60,7 @@ export class Microblog extends Program {
       return program.posts.getEntries(count, from)
     })
     const posts = await Promise.all(
-      entries.map((entry) => this.store.get(entry.cid, check.assurePost)),
+      entries.map((entry) => this.store.get(entry.cid, schema.post)),
     )
     return posts
   }
@@ -71,7 +70,7 @@ export class Microblog extends Program {
       return program.relationships.getEntry(did)
     })
     if (cid === null) return null
-    return this.store.get(cid, check.assureFollow)
+    return this.store.get(cid, schema.follow)
   }
 
   async isFollowing(did: DID): Promise<boolean> {
@@ -99,7 +98,7 @@ export class Microblog extends Program {
       return program.relationships.getEntries()
     })
     const follows = await Promise.all(
-      cids.map((c) => this.store.get(c, check.assureFollow)),
+      cids.map((c) => this.store.get(c, schema.follow)),
     )
     return follows
   }
@@ -135,7 +134,7 @@ export class Microblog extends Program {
       return program.interactions.getEntries(count, from)
     })
     const likes = await Promise.all(
-      entries.map((entry) => this.store.get(entry.cid, check.assureLike)),
+      entries.map((entry) => this.store.get(entry.cid, schema.like)),
     )
     return likes
   }

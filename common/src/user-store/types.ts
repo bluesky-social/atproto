@@ -1,35 +1,55 @@
+import { z } from 'zod'
 import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
-import { DID } from '../common/types.js'
+import { schema as common } from '../common/types.js'
 import TID from './tid.js'
 
-export type UserRoot = {
-  did: DID
-  prev: CID | null
-  new_cids: CID[]
-  programs: Record<string, CID>
+const tid = z.instanceof(TID)
+
+const userRoot = z.object({
+  did: common.did,
+  prev: common.cid.nullable(),
+  new_cids: z.array(common.cid),
+  programs: z.record(common.cid),
+})
+export type UserRoot = z.infer<typeof userRoot>
+
+const programRoot = z.object({
+  posts: common.cid,
+  relationships: common.cid,
+  interactions: common.cid,
+  profile: common.cid.nullable(),
+})
+export type ProgramRoot = z.infer<typeof programRoot>
+
+const commit = z.object({
+  root: common.cid,
+  sig: common.bytes,
+})
+export type Commit = z.infer<typeof commit>
+
+const idMapping = z.record(common.cid)
+export type IdMapping = z.infer<typeof idMapping>
+
+const entry = z.object({
+  tid: tid,
+  cid: common.cid,
+})
+export type Entry = z.infer<typeof entry>
+
+const newCids = z.set(common.cid)
+export type NewCids = z.infer<typeof newCids>
+
+export const schema = {
+  ...common,
+  tid,
+  userRoot,
+  programRoot,
+  commit,
+  idMapping,
+  entry,
+  newCids,
 }
-
-export type ProgramRoot = {
-  posts: CID
-  relationships: CID
-  interactions: CID
-  profile: CID | null
-}
-
-export type Commit = {
-  root: CID
-  sig: Uint8Array
-}
-
-export type IdMapping = Record<string, CID>
-
-export type Entry = {
-  tid: TID
-  cid: CID
-}
-
-export type NewCids = Set<CID>
 
 export interface CarStreamable {
   writeToCarStream(car: BlockWriter): Promise<void>
