@@ -9,7 +9,7 @@ const tid = z.instanceof(TID)
 const userRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
-  added: z.array(common.cid),
+  new_cids: z.array(common.cid),
   programs: z.record(common.cid),
 })
 export type UserRoot = z.infer<typeof userRoot>
