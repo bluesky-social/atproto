@@ -5,14 +5,15 @@ import * as HAMT from 'ipld-hashmap'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { CarStreamable, Collection, NewCids } from './types.js'
+import { CarStreamable, Collection } from './types.js'
 import { DID } from '../common/types.js'
+import CidSet from './cid-set.js'
 
 export class DidCollection implements Collection<DID>, CarStreamable {
   store: IpldStore
   cid: CID
   hamt: HAMT.HashMap<CID>
-  onUpdate: ((newCids: NewCids) => Promise<void>) | null
+  onUpdate: ((newCids: CidSet) => Promise<void>) | null
 
   constructor(store: IpldStore, cid: CID, hamt: HAMT.HashMap<CID>) {
     this.store = store
@@ -45,7 +46,7 @@ export class DidCollection implements Collection<DID>, CarStreamable {
       // we're likely removing the relationships branch from user repo
       // so we punted on implementing the proper logic here.
       // send empty NewCids array for now
-      await this.onUpdate(new Set())
+      await this.onUpdate(new CidSet())
     }
   }
 
