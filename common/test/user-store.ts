@@ -30,19 +30,17 @@ test('adds a valid signature to commit', async (t) => {
   const { store } = t.context as Context
 
   const commit = await store.getCommit()
-  const root = await store.getRoot()
   const verified = await ucan.verifySignature(
     commit.root.bytes,
     commit.sig,
-    root.did,
+    store.did,
   )
   t.true(verified, 'signature matches DID of root')
 })
 
 test('sets correct DID', async (t) => {
   const { store, keypair } = t.context as Context
-  const root = await store.getRoot()
-  t.is(root.did, keypair.did(), 'DIDs match')
+  t.is(store.did, keypair.did(), 'DIDs match')
 })
 
 test('runs operations on the related program', async (t) => {

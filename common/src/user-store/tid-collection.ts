@@ -2,7 +2,13 @@ import { CID } from 'multiformats'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping, Collection, CarStreamable } from './types.js'
+import {
+  Entry,
+  IdMapping,
+  Collection,
+  CarStreamable,
+  NewCids,
+} from './types.js'
 import * as check from './type-check.js'
 import SSTable, { TableSize } from './ss-table.js'
 import TID from './tid.js'
@@ -11,7 +17,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   store: IpldStore
   cid: CID
   data: IdMapping
-  onUpdate: (() => Promise<void>) | null
+  onUpdate: ((newCids: NewCids) => Promise<void>) | null
 
   constructor(store: IpldStore, cid: CID, data: IdMapping) {
     this.store = store
@@ -47,34 +53,34 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     return this.getTable(name)
   }
 
-  async updateRoot(): Promise<void> {
+  async updateRoot(newCids: NewCids): Promise<void> {
     this.cid = await this.store.put(this.data)
     if (this.onUpdate) {
-      await this.onUpdate()
+      await this.onUpdate(newCids.add(this.cid))
     }
   }
 
-  async compressTables(): Promise<void> {
+  async compressTables(): Promise<NewCids> {
     const tableNames = this.tableNames()
-    if (tableNames.length < 1) return
+    if (tableNames.length < 1) return new Set()
     const mostRecent = await this.getTable(tableNames[0])
-    if (mostRecent === null) return
+    if (mostRecent === null) return new Set()
     const compressed = await this.compressCascade(
       mostRecent,
       tableNames.slice(1),
     )
-    const tableName = compressed.oldestTid()
+    const tableName = compressed.table.oldestTid()
     if (tableName && !tableName.equals(tableNames[0])) {
       delete this.data[tableNames[0].toString()]
-      this.data[tableName.toString()] = compressed.cid
+      this.data[tableName.toString()] = compressed.table.cid
     }
-    await this.updateRoot()
+    return compressed.newCids
   }
 
   private async compressCascade(
     mostRecent: SSTable,
     nextKeys: TID[],
-  ): Promise<SSTable> {
+  ): Promise<{ table: SSTable; newCids: NewCids }> {
     const size = mostRecent.size
     const keys = nextKeys.slice(0, 3)
     const tables = await Promise.all(keys.map((k) => this.getTable(k)))
@@ -82,13 +88,17 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     // need 4 tables to merge down a level
     if (filtered.length < 3 || size === TableSize.xl) {
       // if no merge at this level, we just return the previous level
-      return mostRecent
+      return { table: mostRecent, newCids: new Set() }
     }
 
     keys.forEach((k) => delete this.data[k.toString()])
 
     const merged = await SSTable.merge([mostRecent, ...filtered])
-    return await this.compressCascade(merged, nextKeys.slice(3))
+    const { table, newCids } = await this.compressCascade(
+      merged,
+      nextKeys.slice(3),
+    )
+    return { table, newCids: newCids.add(merged.cid) }
   }
 
   async getEntry(tid: TID): Promise<CID | null> {
@@ -125,22 +135,25 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   }
 
   // helper method to return table instance to write to, but leaves responsibility of adding table to `data` to the caller
-  private async getOrCreateCurrTable(): Promise<SSTable> {
+  private async getOrCreateCurrTable(): Promise<{
+    table: SSTable
+    newCids: NewCids
+  }> {
     const name = this.tableNames()[0]
     const table = name ? await this.getTable(name) : null
     if (table === null) {
-      return SSTable.create(this.store)
+      return { table: await SSTable.create(this.store), newCids: new Set() }
     }
     if (table.isFull()) {
-      await this.compressTables()
-      return SSTable.create(this.store)
+      const newCids = await this.compressTables()
+      return { table: await SSTable.create(this.store), newCids }
     } else {
-      return table
+      return { table, newCids: new Set() }
     }
   }
 
   async addEntry(tid: TID, cid: CID): Promise<void> {
-    const table = await this.getOrCreateCurrTable()
+    const { table, newCids } = await this.getOrCreateCurrTable()
     const oldestKey = table.oldestTid()
     if (oldestKey && tid.olderThan(oldestKey)) {
       // @TODO handle this more gracefully
@@ -149,31 +162,33 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     await table.addEntry(tid, cid)
     const tableName = oldestKey?.toString() || tid.toString()
     this.data[tableName] = table.cid
-    await this.updateRoot()
+    await this.updateRoot(newCids.add(cid).add(table.cid))
   }
 
   private async editTableForTid(
     tid: TID,
-    fn: (table: SSTable) => Promise<void>,
+    fn: (table: SSTable) => Promise<NewCids>,
   ): Promise<void> {
     const tableName = this.getTableNameForTid(tid)
     if (!tableName) throw new Error(`Could not find entry with tid: ${tid}`)
     const table = await this.getTable(tableName)
     if (!table) throw new Error(`Could not find entry with tid: ${tid}`)
-    await fn(table)
+    const newCids = await fn(table)
     this.data[tableName.toString()] = table.cid
-    await this.updateRoot()
+    await this.updateRoot(newCids.add(table.cid))
   }
 
   async editEntry(tid: TID, cid: CID): Promise<void> {
     await this.editTableForTid(tid, async (table) => {
       await table.editEntry(tid, cid)
+      return new Set([cid])
     })
   }
 
   async deleteEntry(tid: TID): Promise<void> {
     await this.editTableForTid(tid, async (table) => {
       await table.deleteEntry(tid)
+      return new Set()
     })
   }
 
@@ -207,6 +222,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
       const table = await SSTable.load(this.store, cid)
       await table.writeToCarStream(car)
     }
+    await this.store.addToCar(car, this.cid)
   }
 }
 

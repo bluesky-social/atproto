@@ -1,8 +1,16 @@
-import { isCID, assure, isObject } from '../common/type-check.js'
+import { isCID, assure, isObject, isArray } from '../common/type-check.js'
 import { Commit, UserRoot, ProgramRoot, IdMapping } from './types.js'
 
+export * from '../common/type-check.js'
+
 export const isUserRoot = (obj: unknown): obj is UserRoot => {
-  return isObject(obj) && typeof obj.did === 'string'
+  return (
+    isObject(obj) &&
+    typeof obj.did === 'string' &&
+    (obj.prev === null || isCID(obj.prev)) &&
+    isArray(obj.new_cids, isCID) &&
+    isObject(obj.programs)
+  )
 }
 
 export const assureUserRoot = (obj: unknown): UserRoot => {

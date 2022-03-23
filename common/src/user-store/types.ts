@@ -3,7 +3,12 @@ import { CID } from 'multiformats/cid'
 import { DID } from '../common/types.js'
 import TID from './tid.js'
 
-export type UserRoot = Record<string, CID> & { did: DID }
+export type UserRoot = {
+  did: DID
+  prev: CID | null
+  new_cids: CID[]
+  programs: Record<string, CID>
+}
 
 export type ProgramRoot = {
   posts: CID
@@ -23,6 +28,8 @@ export type Entry = {
   tid: TID
   cid: CID
 }
+
+export type NewCids = Set<CID>
 
 export interface CarStreamable {
   writeToCarStream(car: BlockWriter): Promise<void>

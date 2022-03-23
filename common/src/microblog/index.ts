@@ -29,8 +29,7 @@ export class Microblog extends Program {
       author: this.store.did,
       time: new Date().toISOString(),
     }
-    // @TODO: different way to get post CID?
-    const postCid = await this.store.store.put(post)
+    const postCid = await this.store.put(post)
     await this.runOnProgram(async (program) => {
       await program.posts.addEntry(tid, postCid)
     })
