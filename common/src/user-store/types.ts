@@ -9,7 +9,7 @@ const tid = z.instanceof(TID)
 const userRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
-  added: z.array(common.cid),
+  new_cids: z.array(common.cid),
   programs: z.record(common.cid),
 })
 export type UserRoot = z.infer<typeof userRoot>
@@ -37,9 +37,6 @@ const entry = z.object({
 })
 export type Entry = z.infer<typeof entry>
 
-const newCids = z.set(common.cid)
-export type NewCids = z.infer<typeof newCids>
-
 export const schema = {
   ...common,
   tid,
@@ -48,7 +45,6 @@ export const schema = {
   commit,
   idMapping,
   entry,
-  newCids,
 }
 
 export interface CarStreamable {

@@ -4,19 +4,13 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import {
-  UserRoot,
-  CarStreamable,
-  IdMapping,
-  Commit,
-  NewCids,
-  schema,
-} from './types.js'
+import { UserRoot, CarStreamable, IdMapping, Commit, schema } from './types.js'
 import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import ProgramStore from './program-store.js'
+import CidSet from './cid-set.js'
 
 export class UserStore implements CarStreamable {
   store: IpldStore
@@ -46,7 +40,7 @@ export class UserStore implements CarStreamable {
     const rootObj: UserRoot = {
       did,
       prev: null,
-      added: [],
+      new_cids: [],
       programs: {},
     }
 
@@ -103,7 +97,7 @@ export class UserStore implements CarStreamable {
   // arrow fn to preserve scope
   updateRoot =
     (programName: string) =>
-    async (newCids: NewCids): Promise<void> => {
+    async (newCids: CidSet): Promise<void> => {
       if (this.keypair === null) {
         throw new Error('No keypair provided. UserStore is read-only.')
       }
@@ -125,7 +119,7 @@ export class UserStore implements CarStreamable {
       const userRoot: UserRoot = {
         did: this.did,
         prev: this.cid,
-        added: [...newCids],
+        new_cids: newCids.toList(),
         programs: this.programCids,
       }
       const userCid = await this.store.put(userRoot)
@@ -255,11 +249,14 @@ export class UserStore implements CarStreamable {
     to: CID | null,
   ): Promise<void> {
     const commit = await this.store.get(from, schema.commit)
-    const { added, prev } = await this.store.get(commit.root, schema.userRoot)
+    const { new_cids, prev } = await this.store.get(
+      commit.root,
+      schema.userRoot,
+    )
     await this.store.addToCar(car, this.cid)
     await this.store.addToCar(car, commit.root)
 
-    await Promise.all(added.map((cid) => this.store.addToCar(car, cid)))
+    await Promise.all(new_cids.map((cid) => this.store.addToCar(car, cid)))
     if (!prev) {
       if (to === null) {
         return
