@@ -44,3 +44,11 @@ export const s32decode = (s: string): number => {
   }
   return i
 }
+
+export const asyncFilter = async <T>(
+  arr: T[],
+  fn: (t: T) => Promise<boolean>,
+) => {
+  const results = await Promise.all(arr.map((t) => fn(t)))
+  return arr.filter((_, i) => results[i])
+}

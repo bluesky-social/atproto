@@ -4,19 +4,15 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import {
-  UserRoot,
-  CarStreamable,
-  IdMapping,
-  Commit,
-  NewCids,
-  schema,
-} from './types.js'
+import { UserRoot, CarStreamable, IdMapping, Commit, schema } from './types.js'
 import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import ProgramStore from './program-store.js'
+import CidSet from './cid-set.js'
+import * as util from './util.js'
+import TID from './tid.js'
 
 export class UserStore implements CarStreamable {
   store: IpldStore
@@ -103,7 +99,7 @@ export class UserStore implements CarStreamable {
   // arrow fn to preserve scope
   updateRoot =
     (programName: string) =>
-    async (newCids: NewCids): Promise<void> => {
+    async (newCids: CidSet): Promise<void> => {
       if (this.keypair === null) {
         throw new Error('No keypair provided. UserStore is read-only.')
       }
@@ -125,7 +121,7 @@ export class UserStore implements CarStreamable {
       const userRoot: UserRoot = {
         did: this.did,
         prev: this.cid,
-        new_cids: [...newCids],
+        new_cids: newCids.toList(),
         programs: this.programCids,
       }
       const userCid = await this.store.put(userRoot)
@@ -192,6 +188,82 @@ export class UserStore implements CarStreamable {
     return this.store.get(cid, schema)
   }
 
+  // New objects
+  // -----------
+  async verifyUpdate(prev: UserStore): Promise<util.Event[]> {
+    const root = await this.getRoot()
+    if (!root.prev) {
+      throw new Error('No previous version found at root')
+    } else if (!root.prev.equals(prev.cid)) {
+      throw new Error('Previous version root CID does not match')
+    }
+    const events: util.Event[] = []
+    const mapDiff = util.idMapDiff(
+      prev.programCids,
+      this.programCids,
+      new CidSet(root.new_cids),
+    )
+    // program deletes: we can emit as events
+    for (const del of mapDiff.deletes) {
+      events.push({
+        event: util.EventType.DeletedProgram,
+        name: del.key,
+      })
+    }
+    // program adds: we walk to ensure we have all content & then emit all posts & interactions
+    for (const add of mapDiff.adds) {
+      const program = await ProgramStore.load(this.store, add.cid)
+      const missing = await program.missingCids()
+      if (missing.size() > 0) {
+        throw new Error(
+          `Missing cids for program ${add.key}: ${missing.toList()}`,
+        )
+      }
+      const [newPosts, newInters] = await Promise.all([
+        program.posts.getAllEntries(),
+        program.interactions.getAllEntries(),
+      ])
+      for (const { cid, tid } of newPosts) {
+        events.push({
+          event: util.EventType.AddedPost,
+          tid,
+          cid,
+        })
+      }
+      for (const { cid, tid } of newInters) {
+        events.push({
+          event: util.EventType.AddedInteraction,
+          tid,
+          cid,
+        })
+      }
+    }
+    // program updates: we dive deeper to figure out the differences
+    for (const update of mapDiff.updates) {
+      const [old, curr] = await Promise.all([
+        ProgramStore.load(this.store, update.old),
+        ProgramStore.load(this.store, update.cid),
+      ])
+      const updates = await curr.verifyUpdate(old)
+      events.concat(updates)
+    }
+    return events
+  }
+
+  async missingCids(): Promise<CidSet> {
+    const missing = new CidSet()
+    for (const cid of Object.values(this.programCids)) {
+      if (await this.store.has(cid)) {
+        const program = await ProgramStore.load(this.store, cid)
+        const programMissing = await program.missingCids()
+        missing.addSet(programMissing)
+      } else {
+        missing.add(cid)
+      }
+    }
+    return missing
+  }
+
   // CAR files
   // -----------
 
@@ -202,9 +274,7 @@ export class UserStore implements CarStreamable {
       throw new Error(`Expected one root, got ${roots.length}`)
     }
     const rootCid = roots[0]
-    for await (const block of car.blocks()) {
-      await this.store.putBytes(block.cid, block.bytes)
-    }
+    await this.store.loadCar(car)
     this.cid = rootCid
     const root = await this.getRoot()
     this.did = root.did

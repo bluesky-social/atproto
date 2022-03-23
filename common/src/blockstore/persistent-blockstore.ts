@@ -21,6 +21,15 @@ export class PersistentBlockstore implements BlockstoreI {
     await this.store.put(cid.toString(), bytes)
   }
 
+  async has(cid: CID): Promise<boolean> {
+    try {
+      await this.get(cid)
+      return true
+    } catch (_) {
+      return false
+    }
+  }
+
   async destroy(): Promise<void> {
     await this.store.clear()
     await this.store.close()

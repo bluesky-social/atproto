@@ -1,11 +1,12 @@
 import { CID } from 'multiformats/cid'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
 import DidCollection from './did-collection.js'
-import { NewCids, ProgramRoot, schema } from './types.js'
+import { ProgramRoot, schema } from './types.js'
+import * as util from './util.js'
+import CidSet from './cid-set.js'
 
 export class ProgramStore {
   store: IpldStore
@@ -14,7 +15,7 @@ export class ProgramStore {
   relationships: DidCollection
   profile: CID | null
   cid: CID
-  onUpdate: ((newCids: NewCids) => Promise<void>) | null
+  onUpdate: ((newCids: CidSet) => Promise<void>) | null
 
   constructor(params: {
     store: IpldStore
@@ -77,7 +78,7 @@ export class ProgramStore {
   }
 
   // arrow fn to preserve scope
-  updateRoot = async (newCids: NewCids): Promise<void> => {
+  updateRoot = async (newCids: CidSet): Promise<void> => {
     this.cid = await this.store.put({
       posts: this.posts.cid,
       relationships: this.relationships.cid,
@@ -91,8 +92,25 @@ export class ProgramStore {
 
   async setProfile(cid: CID | null): Promise<void> {
     this.profile = cid
-    const newCids = new Set(cid === null ? [] : [cid])
+    const newCids = new CidSet(cid === null ? [] : [cid])
     await this.updateRoot(newCids)
+  }
+
+  async verifyUpdate(prev: ProgramStore): Promise<util.Event[]> {
+    // @TODO implement
+    return []
+  }
+
+  async missingCids(): Promise<CidSet> {
+    const missing = new CidSet()
+    if (this.profile !== null && (await this.store.isMissing(this.profile))) {
+      missing.add(this.profile)
+    }
+    const [missingPosts, missingInter] = await Promise.all([
+      this.interactions.missingCids(),
+      this.posts.missingCids(),
+    ])
+    return missing.addSet(missingPosts).addSet(missingInter)
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {

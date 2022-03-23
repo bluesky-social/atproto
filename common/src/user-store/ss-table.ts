@@ -4,6 +4,7 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import { CarStreamable, Entry, IdMapping, schema } from './types.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TID from './tid.js'
+import CidSet from './cid-set.js'
 
 export class SSTable implements CarStreamable {
   store: IpldStore
@@ -124,6 +125,10 @@ export class SSTable implements CarStreamable {
 
   isFull(): boolean {
     return this.currSize() >= this.maxSize()
+  }
+
+  async missingCids(): Promise<CidSet> {
+    return this.store.checkMissing(new CidSet(this.cids()))
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {

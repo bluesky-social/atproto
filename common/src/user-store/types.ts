@@ -37,9 +37,6 @@ const entry = z.object({
 })
 export type Entry = z.infer<typeof entry>
 
-const newCids = z.set(common.cid)
-export type NewCids = z.infer<typeof newCids>
-
 export const schema = {
   ...common,
   tid,
@@ -48,7 +45,6 @@ export const schema = {
   commit,
   idMapping,
   entry,
-  newCids,
 }
 
 export interface CarStreamable {
