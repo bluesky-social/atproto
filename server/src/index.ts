@@ -1,22 +1,11 @@
-import express from 'express'
-import cors from 'cors'
-import Routes from './routes/index.js'
-import { Blockstore } from '@bluesky-demo/common'
+import { IpldStore } from '@bluesky-demo/common'
+import createDB from './db/persistent.js'
 
-const app = express()
-app.use(express.json())
-app.use(cors())
+import server from './server.js'
 
-// attach blockstore instance
-const blockstore = new Blockstore()
-app.use((req, res, next) => {
-  res.locals.blockstore = blockstore
-  next()
-})
-
-app.use('/', Routes)
+const blockstore = IpldStore.createPersistent()
+const db = createDB('./db.sqlite')
 
 const PORT = 2583
-app.listen(PORT, () => {
-  console.log(`🐦 Bluesky server is running at http://localhost:${PORT}`)
-})
+
+server(blockstore, db, PORT)
