@@ -35,8 +35,11 @@ export class UserStore implements CarStreamable {
     this.keypair = params.keypair || null
   }
 
-  static async create(store: IpldStore, keypair: Keypair & Didable) {
-    const did = await keypair.did()
+  static async create(
+    store: IpldStore,
+    did: string,
+    keypair: Keypair & Didable,
+  ) {
     const rootObj: UserRoot = {
       did,
       prev: null,

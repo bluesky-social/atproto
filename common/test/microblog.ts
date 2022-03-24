@@ -19,7 +19,7 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipld = IpldStore.createInMemory()
   const keypair = await ucan.EdKeypair.create()
-  const store = await UserStore.create(ipld, keypair)
+  const store = await UserStore.create(ipld, keypair.did(), keypair)
   const microblog = new Microblog(store)
   t.context = { ipld, keypair, store, microblog } as Context
   t.pass('Context setup')

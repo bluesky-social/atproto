@@ -19,7 +19,11 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipldAlice = IpldStore.createInMemory()
   const keypairAlice = await ucan.EdKeypair.create()
-  const storeAlice = await UserStore.create(ipldAlice, keypairAlice)
+  const storeAlice = await UserStore.create(
+    ipldAlice,
+    keypairAlice.did(),
+    keypairAlice,
+  )
 
   const ipldBob = IpldStore.createInMemory()
   const keypairBob = await ucan.EdKeypair.create()
