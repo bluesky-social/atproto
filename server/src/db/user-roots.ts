@@ -23,7 +23,7 @@ export const update = async (
   did: string,
   cid: CID,
 ): Promise<void> => {
-  await db(TABLE_NAME).where('did', did).update('root', cid.toString())
+  await db(TABLE_NAME).where({ did }).update({ root: cid.toString() })
 }
 
 export const get = async (db: Database, did: string): Promise<CID | null> => {

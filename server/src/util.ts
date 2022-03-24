@@ -52,6 +52,7 @@ export const loadUserStore = async (
 ): Promise<UserStore> => {
   const { db, blockstore } = getLocals(res)
   const currRoot = await UserRoots.get(db, did)
+  console.log('CURR ROOT: ', currRoot)
   if (!currRoot) {
     throw new Error(`User has not registered a repo root: ${did}`)
   }

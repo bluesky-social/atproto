@@ -1,5 +1,5 @@
-import { z } from 'zod'
 import express from 'express'
+import { z } from 'zod'
 import * as UserRoots from '../../db/user-roots.js'
 import * as util from '../../util.js'
 import { schema, check, TID } from '@bluesky-demo/common'
@@ -17,18 +17,21 @@ export const getPostReq = z.object({
 export type GetPostReq = z.infer<typeof getPostReq>
 
 router.get('/', async (req, res) => {
-  if (!check.is(req.body, createPostReq)) {
+  console.log('QUERY: ', req.query)
+  if (!check.is(req.query, getPostReq)) {
     return res.status(400).send('Poorly formatted request')
   }
-  const { did, program, post } = req.body
+  const { did, program, tid } = req.query
   const userStore = await util.loadUserStore(res, did)
-  const postCid = await userStore.put(post)
-  userStore.runOnProgram(program, async (store) => {
-    return store.posts.addEntry(TID.fromStr(post.tid), postCid)
+  console.log('GOT ROOT: ', userStore.cid)
+  const postCid = await userStore.runOnProgram(program, async (store) => {
+    return store.posts.getEntry(TID.fromStr(tid))
   })
-  const db = util.getDB(res)
-  await UserRoots.update(db, did, userStore.cid)
-  res.status(200).send()
+  if (postCid === null) {
+    return res.status(404).send('Could not find post')
+  }
+  const post = await userStore.get(postCid, schema.microblog.post)
+  res.status(200).send(post)
 })
 
 // CREATE POST
@@ -48,11 +51,12 @@ router.post('/', async (req, res) => {
   const { did, program, post } = req.body
   const userStore = await util.loadUserStore(res, did)
   const postCid = await userStore.put(post)
-  userStore.runOnProgram(program, async (store) => {
+  await userStore.runOnProgram(program, async (store) => {
     return store.posts.addEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
   await UserRoots.update(db, did, userStore.cid)
+  console.log('UDPATED ROOT: ', userStore.cid)
   res.status(200).send()
 })
 
@@ -73,7 +77,7 @@ router.put('/', async (req, res) => {
   const { did, program, post } = req.body
   const userStore = await util.loadUserStore(res, did)
   const postCid = await userStore.put(post)
-  userStore.runOnProgram(program, async (store) => {
+  await userStore.runOnProgram(program, async (store) => {
     return store.posts.editEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
@@ -97,7 +101,7 @@ router.delete('/', async (req, res) => {
   }
   const { did, program, tid } = req.body
   const userStore = await util.loadUserStore(res, did)
-  userStore.runOnProgram(program, async (store) => {
+  await userStore.runOnProgram(program, async (store) => {
     return store.posts.deleteEntry(TID.fromStr(tid))
   })
   const db = util.getDB(res)
