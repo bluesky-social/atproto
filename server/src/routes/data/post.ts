@@ -1,6 +1,6 @@
 import express from 'express'
 import { z } from 'zod'
-import * as UserRoots from '../../db/user-roots.js'
+import * as UserRoots from '../../db/'
 import * as util from '../../util.js'
 import { schema, check, TID } from '@bluesky-demo/common'
 
@@ -17,13 +17,11 @@ export const getPostReq = z.object({
 export type GetPostReq = z.infer<typeof getPostReq>
 
 router.get('/', async (req, res) => {
-  console.log('QUERY: ', req.query)
   if (!check.is(req.query, getPostReq)) {
     return res.status(400).send('Poorly formatted request')
   }
   const { did, program, tid } = req.query
   const userStore = await util.loadUserStore(res, did)
-  console.log('GOT ROOT: ', userStore.cid)
   const postCid = await userStore.runOnProgram(program, async (store) => {
     return store.posts.getEntry(TID.fromStr(tid))
   })
@@ -55,8 +53,7 @@ router.post('/', async (req, res) => {
     return store.posts.addEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
-  await UserRoots.update(db, did, userStore.cid)
-  console.log('UDPATED ROOT: ', userStore.cid)
+  await db.updateRepoRoot(did, userStore.cid)
   res.status(200).send()
 })
 
@@ -81,7 +78,7 @@ router.put('/', async (req, res) => {
     return store.posts.editEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
-  await UserRoots.update(db, did, userStore.cid)
+  await db.updateRepoRoot(did, userStore.cid)
   res.status(200).send()
 })
 
@@ -105,7 +102,7 @@ router.delete('/', async (req, res) => {
     return store.posts.deleteEntry(TID.fromStr(tid))
   })
   const db = util.getDB(res)
-  await UserRoots.update(db, did, userStore.cid)
+  await db.updateRepoRoot(did, userStore.cid)
   res.status(200).send()
 })
 

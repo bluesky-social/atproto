@@ -1,3 +1,4 @@
 import { Knex } from 'knex'
 
-export type Database = Knex<any, unknown[]>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type KnexDB = Knex<any, unknown[]>

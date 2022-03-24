@@ -1,16 +1,12 @@
 import { IpldStore } from '@bluesky-demo/common'
-// import createDB from './db/persistent.js'
-import createDB from './db/memory.js'
-import * as tables from './db/tables.js'
-
+import Database from './db/index.js'
 import server from './server.js'
 
 // const blockstore = IpldStore.createPersistent()
-// const db = createDB('./db.sqlite')
+// const db = createDB('./dev.sqlite')
 
 const blockstore = IpldStore.createInMemory()
-const db = createDB()
-tables.create(db)
+const db = Database.memory()
 
 const PORT = 2583
 

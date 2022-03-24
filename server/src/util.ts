@@ -1,7 +1,6 @@
 import { IpldStore, UserStore } from '@bluesky-demo/common'
 import { Request, Response } from 'express'
-import { Database } from './db/types.js'
-import * as UserRoots from './db/user-roots.js'
+import { Database } from './db/index.js'
 import { SERVER_KEYPAIR } from './server-identity.js'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
@@ -51,7 +50,7 @@ export const loadUserStore = async (
   did: string,
 ): Promise<UserStore> => {
   const { db, blockstore } = getLocals(res)
-  const currRoot = await UserRoots.get(db, did)
+  const currRoot = await db.getRepoRoot(did)
   console.log('CURR ROOT: ', currRoot)
   if (!currRoot) {
     throw new Error(`User has not registered a repo root: ${did}`)

@@ -2,7 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import Routes from './routes/index.js'
 import { IpldStore } from '@bluesky-demo/common'
-import { Database } from './db/types.js'
+import Database from './db/index.js'
 
 const runServer = (blockstore: IpldStore, db: Database, port: number) => {
   const app = express()
