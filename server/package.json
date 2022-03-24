@@ -16,7 +16,8 @@
     "knex": "^1.0.4",
     "level": "^7.0.1",
     "multiformats": "^9.6.2",
-    "ucans": "0.9.0-alpha3"
+    "ucans": "0.9.0-alpha3",
+    "zod": "^3.14.2"
   },
   "devDependencies": {
     "@bluesky-demo/common": "*",
