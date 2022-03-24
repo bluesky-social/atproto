@@ -46,21 +46,17 @@ const microblogLikes = async (db: KnexDB) => {
 }
 
 export const createTables = async (db: KnexDB) => {
-  await Promise.all([
-    userRoots(db),
-    userDids(db),
-    microblogPosts(db),
-    microblogLikes(db),
-  ])
+  await userRoots(db)
+  await userDids(db)
+  await microblogPosts(db)
+  await microblogLikes(db)
 }
 
 export const dropAll = async (db: KnexDB) => {
-  await Promise.all([
-    drop(db, 'user_dids'),
-    drop(db, 'repo_roots'),
-    drop(db, 'microblog_posts'),
-    drop(db, 'microblog_likes'),
-  ])
+  await drop(db, 'microblog_likes')
+  await drop(db, 'microblog_posts')
+  await drop(db, 'repo_roots')
+  await drop(db, 'user_dids')
 }
 
 export const drop = async (db: KnexDB, tableName: string) => {

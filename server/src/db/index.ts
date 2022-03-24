@@ -1,3 +1,4 @@
+import { Post, TID } from '@bluesky-demo/common'
 import knex from 'knex'
 import { CID } from 'multiformats'
 import * as schema from './schema.js'
@@ -69,6 +70,28 @@ export class Database {
 
   // POSTS
   // -----------
+
+  async createPost(post: Post, cid: CID): Promise<void> {
+    await this.db('microblog_posts').insert({
+      ...post,
+      cid: cid.toString(),
+    })
+  }
+
+  async updatePost(post: Post, cid: CID): Promise<void> {
+    const { tid, author, program, text, time } = post
+    await this.db('repo_roots')
+      .where({ tid, author, program })
+      .update({ text, time, cid: cid.toString() })
+  }
+
+  async deletePost(
+    tid: string,
+    author: string,
+    program: string,
+  ): Promise<void> {
+    await this.db('repo_roots').where({ tid, author, program }).delete()
+  }
 }
 
 export default Database

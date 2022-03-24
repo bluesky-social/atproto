@@ -7,6 +7,7 @@ import server from './server.js'
 
 const blockstore = IpldStore.createInMemory()
 const db = Database.memory()
+db.createTables()
 
 const PORT = 2583
 

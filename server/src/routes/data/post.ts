@@ -1,6 +1,5 @@
 import express from 'express'
 import { z } from 'zod'
-import * as UserRoots from '../../db/'
 import * as util from '../../util.js'
 import { schema, check, TID } from '@bluesky-demo/common'
 
@@ -35,50 +34,44 @@ router.get('/', async (req, res) => {
 // CREATE POST
 // --------------
 
-export const createPostReq = z.object({
-  did: z.string(),
-  program: z.string(),
-  post: schema.microblog.post,
-})
+export const createPostReq = schema.microblog.post
 export type CreatePostReq = z.infer<typeof createPostReq>
 
 router.post('/', async (req, res) => {
   if (!check.is(req.body, createPostReq)) {
     return res.status(400).send('Poorly formatted request')
   }
-  const { did, program, post } = req.body
-  const userStore = await util.loadUserStore(res, did)
+  const post = req.body
+  const userStore = await util.loadUserStore(res, post.author)
   const postCid = await userStore.put(post)
-  await userStore.runOnProgram(program, async (store) => {
+  await userStore.runOnProgram(post.program, async (store) => {
     return store.posts.addEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(did, userStore.cid)
+  await db.updateRepoRoot(post.author, userStore.cid)
+  await db.createPost(post, postCid)
   res.status(200).send()
 })
 
 // UPDATE POST
 // --------------
 
-export const editPostReq = z.object({
-  did: z.string(),
-  program: z.string(),
-  post: schema.microblog.post,
-})
+export const editPostReq = schema.microblog.post
 export type EditPostReq = z.infer<typeof editPostReq>
 
 router.put('/', async (req, res) => {
   if (!check.is(req.body, editPostReq)) {
     return res.status(400).send('Poorly formatted request')
   }
-  const { did, program, post } = req.body
-  const userStore = await util.loadUserStore(res, did)
+  const post = req.body
+  const userStore = await util.loadUserStore(res, post.author)
   const postCid = await userStore.put(post)
-  await userStore.runOnProgram(program, async (store) => {
+  await userStore.runOnProgram(post.program, async (store) => {
     return store.posts.editEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(did, userStore.cid)
+  await db.updateRepoRoot(post.author, userStore.cid)
+  await db.updatePost(post, postCid)
   res.status(200).send()
 })
 
@@ -103,6 +96,7 @@ router.delete('/', async (req, res) => {
   })
   const db = util.getDB(res)
   await db.updateRepoRoot(did, userStore.cid)
+  await db.deletePost(did, program, tid)
   res.status(200).send()
 })
 
