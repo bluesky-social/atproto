@@ -16,7 +16,7 @@ const userDids = async (db: KnexDB) => {
 
 const microblogPosts = async (db: KnexDB) => {
   return db.schema.createTable('microblog_posts', (table) => {
-    table.increments('id').primary()
+    table.unique(['tid', 'author', 'program'])
     table.string('tid')
     table.string('author')
     table.string('program')
@@ -24,24 +24,31 @@ const microblogPosts = async (db: KnexDB) => {
     table.string('time')
     table.string('cid')
 
-    table.unique(['tid', 'author', 'program'])
     table.foreign('author').references('did').inTable('user_dids')
   })
 }
 
 const microblogLikes = async (db: KnexDB) => {
   return db.schema.createTable('microblog_interactions', (table) => {
-    table.increments('id').primary()
+    table.primary(['tid', 'author', 'program'])
     table.string('tid')
     table.string('author').references('user_dids.did')
     table.string('program')
     table.string('time')
     table.string('cid')
-    table.integer('post')
 
-    table.unique(['tid', 'author', 'program'])
+    table.string('post_tid')
+    table.string('post_author')
+    table.string('post_program')
+    table.string('post_cid')
+
     table.foreign('author').references('did').inTable('user_dids')
-    table.foreign('post').references('id').inTable('microblog_posts')
+    table.foreign('post_tid').references('tid').inTable('microblog_posts')
+    table.foreign('post_author').references('author').inTable('microblog_posts')
+    table
+      .foreign('post_program')
+      .references('program')
+      .inTable('microblog_posts')
   })
 }
 

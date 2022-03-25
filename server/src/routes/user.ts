@@ -1,6 +1,5 @@
 import express from 'express'
 import { UserStore } from '@bluesky-demo/common'
-import * as UserRoots from '../db/index.js'
 import * as util from '../util.js'
 import { SERVER_KEYPAIR } from '../server-identity.js'
 

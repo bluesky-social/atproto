@@ -1,4 +1,4 @@
-import { Post, TID } from '@bluesky-demo/common'
+import { Like, Post } from '@bluesky-demo/common'
 import knex from 'knex'
 import { CID } from 'multiformats'
 import * as schema from './schema.js'
@@ -71,6 +71,19 @@ export class Database {
   // POSTS
   // -----------
 
+  async getPost(
+    tid: string,
+    author: string,
+    program: string,
+  ): Promise<Post | null> {
+    const row = await this.db('microblog_posts')
+      .select('*')
+      .from('microblog_posts')
+      .where({ tid, author, program })
+    if (row.length < 1) return null
+    return row[0]
+  }
+
   async createPost(post: Post, cid: CID): Promise<void> {
     await this.db('microblog_posts').insert({
       ...post,
@@ -80,7 +93,7 @@ export class Database {
 
   async updatePost(post: Post, cid: CID): Promise<void> {
     const { tid, author, program, text, time } = post
-    await this.db('repo_roots')
+    await this.db('microblog_posts')
       .where({ tid, author, program })
       .update({ text, time, cid: cid.toString() })
   }
@@ -90,7 +103,40 @@ export class Database {
     author: string,
     program: string,
   ): Promise<void> {
-    await this.db('repo_roots').where({ tid, author, program }).delete()
+    await this.db('microblog_posts').where({ tid, author, program }).delete()
+  }
+
+  // LIKES
+  // -----------
+
+  async getLike(
+    tid: string,
+    author: string,
+    program: string,
+  ): Promise<Post | null> {
+    const row = await this.db('microblog_interactions')
+      .select('*')
+      .from('microblog_interactions')
+      .where({ tid, author, program })
+    if (row.length < 1) return null
+    return row[0]
+  }
+
+  async createLike(like: Like, cid: CID): Promise<void> {
+    await this.db('microblog_interactions').insert({
+      ...like,
+      cid: cid.toString(),
+    })
+  }
+
+  async deleteLike(
+    tid: string,
+    author: string,
+    program: string,
+  ): Promise<void> {
+    await this.db('microblog_interactions')
+      .where({ tid, author, program })
+      .delete()
   }
 }
 
