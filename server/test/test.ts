@@ -75,7 +75,8 @@ test.serial('upload post', async (t) => {
 test.serial('get post', async (t) => {
   const data: GetPostReq = {
     did: aliceDid,
-    program: aliceBlog.name,
+    // program: aliceBlog.name,
+    program: 'asdfaosiuewr',
     tid: postTid.toString(),
   }
   const res = await axios.get(`${SERVER_URL}/data/post`, { params: data })

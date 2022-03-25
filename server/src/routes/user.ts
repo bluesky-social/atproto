@@ -6,6 +6,7 @@ import { SERVER_KEYPAIR } from '../server-identity.js'
 
 const router = express.Router()
 
+// @@TODO Remove or udpate
 router.post('/:did', async (req, res) => {
   const { did } = req.params
   const bytes = await util.readReqBytes(req)
