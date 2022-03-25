@@ -2,6 +2,7 @@ import { IpldStore, UserStore } from '@bluesky-demo/common'
 import { Request, Response } from 'express'
 import { Database } from './db/index.js'
 import { SERVER_KEYPAIR } from './server-identity.js'
+import { ServerError } from './error.js'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -20,7 +21,7 @@ export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
 export const getBlockstore = (res: Response): IpldStore => {
   const blockstore = res.locals.blockstore
   if (!blockstore) {
-    throw new Error('No Blockstore object attached to server')
+    throw new ServerError(500, 'No Blockstore object attached to server')
   }
   return blockstore as IpldStore
 }
@@ -28,7 +29,7 @@ export const getBlockstore = (res: Response): IpldStore => {
 export const getDB = (res: Response): Database => {
   const db = res.locals.db
   if (!db) {
-    throw new Error('No Database object attached to server')
+    throw new ServerError(500, 'No Database object attached to server')
   }
   return db as Database
 }
@@ -52,7 +53,7 @@ export const loadUserStore = async (
   const { db, blockstore } = getLocals(res)
   const currRoot = await db.getRepoRoot(did)
   if (!currRoot) {
-    throw new Error(`User has not registered a repo root: ${did}`)
+    throw new ServerError(404, `User has not registered a repo root: ${did}`)
   }
   return UserStore.load(blockstore, currRoot, SERVER_KEYPAIR)
 }

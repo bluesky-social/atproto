@@ -1,8 +1,10 @@
 import express from 'express'
+import 'express-async-errors'
 import cors from 'cors'
 import Routes from './routes/index.js'
 import { IpldStore } from '@bluesky-demo/common'
 import Database from './db/index.js'
+import * as error from './error.js'
 
 const runServer = (blockstore: IpldStore, db: Database, port: number) => {
   const app = express()
@@ -16,6 +18,8 @@ const runServer = (blockstore: IpldStore, db: Database, port: number) => {
   })
 
   app.use('/', Routes)
+
+  app.use(error.handler)
 
   app.listen(port, () => {
     console.log(`🐦 Bluesky server is running at http://localhost:${port}`)

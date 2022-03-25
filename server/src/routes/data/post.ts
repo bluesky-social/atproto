@@ -1,6 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 import * as util from '../../util.js'
+import { ServerError } from '../../error.js'
 import { schema, check, TID } from '@bluesky-demo/common'
 
 const router = express.Router()
@@ -17,7 +18,7 @@ export type GetPostReq = z.infer<typeof getPostReq>
 
 router.get('/', async (req, res) => {
   if (!check.is(req.query, getPostReq)) {
-    return res.status(400).send('Poorly formatted request')
+    throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, tid } = req.query
   const userStore = await util.loadUserStore(res, did)
@@ -25,7 +26,7 @@ router.get('/', async (req, res) => {
     return store.posts.getEntry(TID.fromStr(tid))
   })
   if (postCid === null) {
-    return res.status(404).send('Could not find post')
+    throw new ServerError(404, 'Could not find post')
   }
   const post = await userStore.get(postCid, schema.microblog.post)
   res.status(200).send(post)
@@ -39,7 +40,7 @@ export type CreatePostReq = z.infer<typeof createPostReq>
 
 router.post('/', async (req, res) => {
   if (!check.is(req.body, createPostReq)) {
-    return res.status(400).send('Poorly formatted request')
+    throw new ServerError(400, 'Poorly formatted request')
   }
   const post = req.body
   const userStore = await util.loadUserStore(res, post.author)
@@ -61,7 +62,7 @@ export type EditPostReq = z.infer<typeof editPostReq>
 
 router.put('/', async (req, res) => {
   if (!check.is(req.body, editPostReq)) {
-    return res.status(400).send('Poorly formatted request')
+    throw new ServerError(400, 'Poorly formatted request')
   }
   const post = req.body
   const userStore = await util.loadUserStore(res, post.author)
@@ -87,7 +88,7 @@ export type DeletePostReq = z.infer<typeof deletePostReq>
 
 router.delete('/', async (req, res) => {
   if (!check.is(req.params, deletePostReq)) {
-    return res.status(400).send('Poorly formatted request')
+    throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, tid } = req.params
   const userStore = await util.loadUserStore(res, did)

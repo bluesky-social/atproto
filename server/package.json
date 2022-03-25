@@ -13,6 +13,7 @@
     "@vscode/sqlite3": "^5.0.7",
     "cors": "^2.8.5",
     "express": "^4.17.2",
+    "express-async-errors": "^3.1.1",
     "knex": "^1.0.4",
     "level": "^7.0.1",
     "multiformats": "^9.6.2",
