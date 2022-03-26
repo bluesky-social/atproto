@@ -1,10 +1,10 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import TID from '../src/user-store/tid.js'
-import { IdMapping, schema } from '../src/user-store/types.js'
+import TID from '../src/repo/tid.js'
+import { IdMapping, schema } from '../src/repo/types.js'
 import { DID } from '../src/common/types.js'
-import SSTable from '../src/user-store/ss-table.js'
-import UserStore from '../src/user-store/index.js'
+import SSTable from '../src/repo/ss-table.js'
+import Repo from '../src/repo/index.js'
 import { ExecutionContext } from 'ava'
 
 const fakeStore = IpldStore.createInMemory()
@@ -67,33 +67,33 @@ export const generateBulkDids = (count: number): DID[] => {
   return dids
 }
 
-type UserStoreData = {
+type RepoData = {
   posts: Record<string, string>
   interactions: Record<string, string>
 }
 
-export const fillUserStore = async (
-  store: UserStore,
+export const fillRepo = async (
+  repo: Repo,
   programName: string,
   postsCount: number,
   interCount: number,
-): Promise<UserStoreData> => {
-  const data: UserStoreData = {
+): Promise<RepoData> => {
+  const data: RepoData = {
     posts: {},
     interactions: {},
   }
-  await store.runOnProgram(programName, async (program) => {
+  await repo.runOnProgram(programName, async (program) => {
     for (let i = 0; i < postsCount; i++) {
       const tid = await TID.next()
       const content = randomStr(10)
-      const cid = await store.put(content)
+      const cid = await repo.put(content)
       await program.posts.addEntry(tid, cid)
       data.posts[tid.toString()] = content
     }
     for (let i = 0; i < interCount; i++) {
       const tid = await TID.next()
       const content = randomStr(10)
-      const cid = await store.put(content)
+      const cid = await repo.put(content)
       await program.interactions.addEntry(tid, cid)
       data.interactions[tid.toString()] = content
     }
@@ -101,16 +101,16 @@ export const fillUserStore = async (
   return data
 }
 
-export const checkUserStore = async (
+export const checkRepo = async (
   t: ExecutionContext<unknown>,
-  store: UserStore,
+  repo: Repo,
   programName: string,
-  data: UserStoreData,
+  data: RepoData,
 ): Promise<void> => {
-  await store.runOnProgram(programName, async (program) => {
+  await repo.runOnProgram(programName, async (program) => {
     for (const tid of Object.keys(data.posts)) {
       const cid = await program.posts.getEntry(TID.fromStr(tid))
-      const actual = cid ? await store.get(cid, schema.string) : null
+      const actual = cid ? await repo.get(cid, schema.string) : null
       t.deepEqual(
         actual,
         data.posts[tid],
@@ -119,7 +119,7 @@ export const checkUserStore = async (
     }
     for (const tid of Object.keys(data.interactions)) {
       const cid = await program.interactions.getEntry(TID.fromStr(tid))
-      const actual = cid ? await store.get(cid, schema.string) : null
+      const actual = cid ? await repo.get(cid, schema.string) : null
       t.deepEqual(
         actual,
         data.interactions[tid],

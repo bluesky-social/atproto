@@ -1,8 +1,8 @@
 import test from 'ava'
 
-import ProgramStore from '../src/user-store/program-store.js'
+import ProgramStore from '../src/repo/program-store.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import { IdMapping } from '../src/user-store/types.js'
+import { IdMapping } from '../src/repo/types.js'
 
 import * as util from './_util.js'
 

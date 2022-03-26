@@ -2,7 +2,7 @@ import test from 'ava'
 
 import * as ucan from 'ucans'
 
-import UserStore from '../src/user-store/index.js'
+import Repo from '../src/repo/index.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 
 import * as util from './_util.js'
@@ -10,7 +10,7 @@ import * as util from './_util.js'
 type Context = {
   ipldAlice: IpldStore
   keypairAlice: ucan.EdKeypair
-  storeAlice: UserStore
+  repoAlice: Repo
   ipldBob: IpldStore
   keypairBob: ucan.EdKeypair
   programName: string
@@ -19,7 +19,7 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipldAlice = IpldStore.createInMemory()
   const keypairAlice = await ucan.EdKeypair.create()
-  const storeAlice = await UserStore.create(ipldAlice, keypairAlice)
+  const repoAlice = await Repo.create(ipldAlice, keypairAlice)
 
   const ipldBob = IpldStore.createInMemory()
   const keypairBob = await ucan.EdKeypair.create()
@@ -28,7 +28,7 @@ test.beforeEach(async (t) => {
   t.context = {
     ipldAlice,
     keypairAlice,
-    storeAlice,
+    repoAlice,
     ipldBob,
     keypairBob,
     programName,
@@ -37,30 +37,30 @@ test.beforeEach(async (t) => {
 })
 
 test('syncs an empty repo', async (t) => {
-  const { storeAlice, ipldBob, keypairBob } = t.context as Context
-  const car = await storeAlice.getFullHistory()
-  const storeBob = await UserStore.fromCarFile(car, ipldBob, keypairBob)
-  t.deepEqual(storeBob.programCids, {}, 'loads an empty repo')
+  const { repoAlice, ipldBob, keypairBob } = t.context as Context
+  const car = await repoAlice.getFullHistory()
+  const repoBob = await Repo.fromCarFile(car, ipldBob, keypairBob)
+  t.deepEqual(repoBob.programCids, {}, 'loads an empty repo')
 })
 
 test('syncs a repo that is starting from scratch', async (t) => {
-  const { storeAlice, ipldBob, keypairBob, programName } = t.context as Context
-  const data = await util.fillUserStore(storeAlice, programName, 150, 10)
-  const car = await storeAlice.getFullHistory()
-  const storeBob = await UserStore.fromCarFile(car, ipldBob, keypairBob)
-  await util.checkUserStore(t, storeBob, programName, data)
+  const { repoAlice, ipldBob, keypairBob, programName } = t.context as Context
+  const data = await util.fillRepo(repoAlice, programName, 150, 10)
+  const car = await repoAlice.getFullHistory()
+  const repoBob = await Repo.fromCarFile(car, ipldBob, keypairBob)
+  await util.checkRepo(t, repoBob, programName, data)
 })
 
 test('syncs a repo that is behind', async (t) => {
-  const { storeAlice, ipldBob, keypairBob, programName } = t.context as Context
+  const { repoAlice, ipldBob, keypairBob, programName } = t.context as Context
 
-  const data = await util.fillUserStore(storeAlice, programName, 150, 10)
-  const car = await storeAlice.getFullHistory()
-  const storeBob = await UserStore.fromCarFile(car, ipldBob, keypairBob)
+  const data = await util.fillRepo(repoAlice, programName, 150, 10)
+  const car = await repoAlice.getFullHistory()
+  const repoBob = await Repo.fromCarFile(car, ipldBob, keypairBob)
 
-  const data2 = await util.fillUserStore(storeAlice, programName, 300, 10)
-  const diff = await storeAlice.getDiffCar(storeBob.cid)
-  await storeBob.loadCar(diff)
+  const data2 = await util.fillRepo(repoAlice, programName, 300, 10)
+  const diff = await repoAlice.getDiffCar(repoBob.cid)
+  await repoBob.loadCar(diff)
 
   const allData = {
     posts: {
@@ -73,16 +73,16 @@ test('syncs a repo that is behind', async (t) => {
     },
   }
 
-  await util.checkUserStore(t, storeBob, programName, allData)
+  await util.checkRepo(t, repoBob, programName, allData)
 })
 
 test('syncs a non-historical copy of a repo', async (t) => {
-  const { storeAlice, programName } = t.context as Context
-  const data = await util.fillUserStore(storeAlice, programName, 150, 20)
-  const car = await storeAlice.getCarNoHistory()
+  const { repoAlice, programName } = t.context as Context
+  const data = await util.fillRepo(repoAlice, programName, 150, 20)
+  const car = await repoAlice.getCarNoHistory()
 
   const ipld = IpldStore.createInMemory()
-  const storeBob = await UserStore.fromCarFile(car, ipld)
+  const repoBob = await Repo.fromCarFile(car, ipld)
 
-  await util.checkUserStore(t, storeBob, programName, data)
+  await util.checkRepo(t, repoBob, programName, data)
 })

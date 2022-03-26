@@ -1,8 +1,8 @@
 import test from 'ava'
 
-import SSTable, { TableSize } from '../src/user-store/ss-table.js'
+import SSTable, { TableSize } from '../src/repo/ss-table.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import TID from '../src/user-store/tid.js'
+import TID from '../src/repo/tid.js'
 
 import * as util from './_util.js'
 import { CID } from 'multiformats'

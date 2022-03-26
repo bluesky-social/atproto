@@ -1,11 +1,11 @@
 import test from 'ava'
 import { CID } from 'multiformats'
 
-import TidCollection from '../src/user-store/tid-collection.js'
+import TidCollection from '../src/repo/tid-collection.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import TID from '../src/user-store/tid.js'
+import TID from '../src/repo/tid.js'
 import * as util from './_util.js'
-import { IdMapping } from '../src/user-store/types.js'
+import { IdMapping } from '../src/repo/types.js'
 
 type Context = {
   store: IpldStore
