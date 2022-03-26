@@ -3,25 +3,25 @@ import test from 'ava'
 import * as ucan from 'ucans'
 
 import Microblog from '../src/microblog/index.js'
-import UserStore from '../src/user-store/index.js'
+import Repo from '../src/repo/index.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 
 import * as util from './_util.js'
-import TID from '../src/user-store/tid.js'
+import TID from '../src/repo/tid.js'
 
 type Context = {
   ipld: IpldStore
   keypair: ucan.EdKeypair
-  store: UserStore
+  repo: Repo
   microblog: Microblog
 }
 
 test.beforeEach(async (t) => {
   const ipld = IpldStore.createInMemory()
   const keypair = await ucan.EdKeypair.create()
-  const store = await UserStore.create(ipld, keypair)
-  const microblog = new Microblog(store)
-  t.context = { ipld, keypair, store, microblog } as Context
+  const repo = await Repo.create(ipld, keypair)
+  const microblog = new Microblog(repo)
+  t.context = { ipld, keypair, repo, microblog } as Context
   t.pass('Context setup')
 })
 

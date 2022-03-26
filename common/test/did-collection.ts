@@ -1,9 +1,9 @@
 import test from 'ava'
 
-import DidCollection from '../src/user-store/did-collection.js'
+import DidCollection from '../src/repo/did-collection.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import * as util from './_util.js'
-import { IdMapping } from '../src/user-store/types.js'
+import { IdMapping } from '../src/repo/types.js'
 import { CID } from 'multiformats'
 
 type Context = {

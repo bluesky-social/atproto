@@ -6,13 +6,13 @@ import TID from './tid.js'
 
 const tid = z.instanceof(TID)
 
-const userRoot = z.object({
+const repoRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
   new_cids: z.array(common.cid),
   programs: z.record(common.cid),
 })
-export type UserRoot = z.infer<typeof userRoot>
+export type RepoRoot = z.infer<typeof repoRoot>
 
 const programRoot = z.object({
   posts: common.cid,
@@ -40,7 +40,7 @@ export type Entry = z.infer<typeof entry>
 export const schema = {
   ...common,
   tid,
-  userRoot,
+  repoRoot,
   programRoot,
   commit,
   idMapping,

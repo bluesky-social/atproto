@@ -4,7 +4,7 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
 
-import { UserRoot, CarStreamable, IdMapping, Commit, schema } from './types.js'
+import { RepoRoot, CarStreamable, IdMapping, Commit, schema } from './types.js'
 import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
@@ -12,7 +12,7 @@ import { streamToArray } from '../common/util.js'
 import ProgramStore from './program-store.js'
 import CidSet from './cid-set.js'
 
-export class UserStore implements CarStreamable {
+export class Repo implements CarStreamable {
   store: IpldStore
   programCids: IdMapping
   programs: { [name: string]: ProgramStore }
@@ -37,7 +37,7 @@ export class UserStore implements CarStreamable {
 
   static async create(store: IpldStore, keypair: Keypair & Didable) {
     const did = await keypair.did()
-    const rootObj: UserRoot = {
+    const rootObj: RepoRoot = {
       did,
       prev: null,
       new_cids: [],
@@ -53,7 +53,7 @@ export class UserStore implements CarStreamable {
     const cid = await store.put(commit)
     const programCids: IdMapping = {}
 
-    return new UserStore({
+    return new Repo({
       store,
       programCids,
       cid,
@@ -64,8 +64,8 @@ export class UserStore implements CarStreamable {
 
   static async load(store: IpldStore, cid: CID, keypair?: Keypair) {
     const commit = await store.get(cid, schema.commit)
-    const root = await store.get(commit.root, schema.userRoot)
-    return new UserStore({
+    const root = await store.get(commit.root, schema.repoRoot)
+    return new Repo({
       store,
       programCids: root.programs,
       cid,
@@ -91,7 +91,7 @@ export class UserStore implements CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    return UserStore.load(store, root, keypair)
+    return Repo.load(store, root, keypair)
   }
 
   // arrow fn to preserve scope
@@ -99,7 +99,7 @@ export class UserStore implements CarStreamable {
     (programName: string) =>
     async (newCids: CidSet): Promise<void> => {
       if (this.keypair === null) {
-        throw new Error('No keypair provided. UserStore is read-only.')
+        throw new Error('No keypair provided. Repo is read-only.')
       }
       const program = this.programs[programName]
       if (!program) {
@@ -116,17 +116,17 @@ export class UserStore implements CarStreamable {
           .add(program.relationships.cid)
       }
       this.programCids[programName] = program.cid
-      const userRoot: UserRoot = {
+      const root: RepoRoot = {
         did: this.did,
         prev: this.cid,
         new_cids: newCids.toList(),
         programs: this.programCids,
       }
-      const userCid = await this.store.put(userRoot)
-      newCids.add(userCid)
+      const rootCid = await this.store.put(root)
+      newCids.add(rootCid)
       const commit: Commit = {
-        root: userCid,
-        sig: await this.keypair.sign(userCid.bytes),
+        root: rootCid,
+        sig: await this.keypair.sign(rootCid.bytes),
       }
       this.cid = await this.store.put(commit)
     }
@@ -135,9 +135,9 @@ export class UserStore implements CarStreamable {
     return this.store.get(this.cid, schema.commit)
   }
 
-  async getRoot(): Promise<UserRoot> {
+  async getRoot(): Promise<RepoRoot> {
     const commit = await this.getCommit()
-    return this.store.get(commit.root, schema.userRoot)
+    return this.store.get(commit.root, schema.repoRoot)
   }
 
   // Program API
@@ -251,7 +251,7 @@ export class UserStore implements CarStreamable {
     const commit = await this.store.get(from, schema.commit)
     const { new_cids, prev } = await this.store.get(
       commit.root,
-      schema.userRoot,
+      schema.repoRoot,
     )
     await this.store.addToCar(car, this.cid)
     await this.store.addToCar(car, commit.root)
@@ -270,4 +270,4 @@ export class UserStore implements CarStreamable {
   }
 }
 
-export default UserStore
+export default Repo

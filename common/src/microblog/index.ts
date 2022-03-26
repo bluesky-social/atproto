@@ -1,13 +1,13 @@
-import UserStore from '../user-store/index.js'
-import Program from '../user-store/program.js'
+import Repo from '../repo/index.js'
+import Program from '../repo/program.js'
 
 import { Post, Follow, Like, schema } from './types.js'
 import { DID } from '../common/types.js'
-import TID from '../user-store/tid.js'
+import TID from '../repo/tid.js'
 
 export class Microblog extends Program {
-  constructor(store: UserStore) {
-    super('did:bsky:microblog', store)
+  constructor(repo: Repo) {
+    super('did:bsky:microblog', repo)
   }
 
   async getPost(id: TID): Promise<Post | null> {
@@ -15,7 +15,7 @@ export class Microblog extends Program {
       return program.posts.getEntry(id)
     })
     if (postCid === null) return null
-    const post = await this.store.get(postCid, schema.post)
+    const post = await this.repo.get(postCid, schema.post)
     return post
   }
 
@@ -25,10 +25,10 @@ export class Microblog extends Program {
       tid: tid.toString(),
       program: this.name,
       text,
-      author: this.store.did,
+      author: this.repo.did,
       time: new Date().toISOString(),
     }
-    const postCid = await this.store.put(post)
+    const postCid = await this.repo.put(post)
     await this.runOnProgram(async (program) => {
       await program.posts.addEntry(tid, postCid)
     })
@@ -40,10 +40,10 @@ export class Microblog extends Program {
       tid: tid.toString(),
       program: this.name,
       text,
-      author: this.store.did,
+      author: this.repo.did,
       time: new Date().toISOString(),
     }
-    const postCid = await this.store.put(post)
+    const postCid = await this.repo.put(post)
     await this.runOnProgram(async (program) => {
       await program.posts.editEntry(tid, postCid)
     })
@@ -60,7 +60,7 @@ export class Microblog extends Program {
       return program.posts.getEntries(count, from)
     })
     const posts = await Promise.all(
-      entries.map((entry) => this.store.get(entry.cid, schema.post)),
+      entries.map((entry) => this.repo.get(entry.cid, schema.post)),
     )
     return posts
   }
@@ -70,7 +70,7 @@ export class Microblog extends Program {
       return program.relationships.getEntry(did)
     })
     if (cid === null) return null
-    return this.store.get(cid, schema.follow)
+    return this.repo.get(cid, schema.follow)
   }
 
   async isFollowing(did: DID): Promise<boolean> {
@@ -81,7 +81,7 @@ export class Microblog extends Program {
 
   async followUser(username: string, did: string): Promise<void> {
     const follow: Follow = { username, did }
-    const cid = await this.store.put(follow)
+    const cid = await this.repo.put(follow)
     await this.runOnProgram(async (program) => {
       await program.relationships.addEntry(did, cid)
     })
@@ -98,25 +98,25 @@ export class Microblog extends Program {
       return program.relationships.getEntries()
     })
     const follows = await Promise.all(
-      cids.map((c) => this.store.get(c, schema.follow)),
+      cids.map((c) => this.repo.get(c, schema.follow)),
     )
     return follows
   }
 
   async likePost(post: Post): Promise<TID> {
-    const postCid = await this.store.put(post)
+    const postCid = await this.repo.put(post)
     const tid = TID.next()
     const like: Like = {
       tid: tid.toString(),
       program: this.name,
-      author: this.store.did,
+      author: this.repo.did,
       time: new Date().toISOString(),
       post_tid: post.tid,
       post_author: post.author,
       post_program: post.program,
       post_cid: postCid,
     }
-    const likeCid = await this.store.put(like)
+    const likeCid = await this.repo.put(like)
     await this.runOnProgram(async (program) => {
       await program.interactions.addEntry(tid, likeCid)
     })
@@ -134,7 +134,7 @@ export class Microblog extends Program {
       return program.interactions.getEntries(count, from)
     })
     const likes = await Promise.all(
-      entries.map((entry) => this.store.get(entry.cid, schema.like)),
+      entries.map((entry) => this.repo.get(entry.cid, schema.like)),
     )
     return likes
   }
