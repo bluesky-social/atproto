@@ -1,5 +1,5 @@
 import test from 'ava'
-import TID from '../src/user-store/tid.js'
+import TID from '../src/repo/tid.js'
 
 test('Creates new TID', (t) => {
   const tid = TID.next()

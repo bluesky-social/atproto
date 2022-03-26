@@ -1,5 +1,5 @@
-import axios, { AxiosError, AxiosResponse } from 'axios'
-import TID from '../user-store/tid.js'
+import axios, { AxiosResponse } from 'axios'
+import TID from '../repo/tid.js'
 
 import { Post, Follow, Like, schema } from './types.js'
 import { DID } from '../common/types.js'
