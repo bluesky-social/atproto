@@ -5,11 +5,16 @@ import { Post, Follow, Like, schema } from './types.js'
 import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError } from '../network/util.js'
+import IpldStore from '../blockstore/ipld-store.js'
 
 export class MicroblogDelegator {
   programName = 'did:bsky:microblog'
+  blockstore: IpldStore
 
-  constructor(public url: string, public did: string) {}
+  constructor(public url: string, public did: string) {
+    // ephemeral used for quick block storage & getting CIDs
+    this.blockstore = IpldStore.createInMemory()
+  }
 
   async getPost(tid: TID): Promise<Post | null> {
     const params = {
@@ -128,31 +133,40 @@ export class MicroblogDelegator {
   //   return follows
   // }
 
-  // async likePost(post: Post): Promise<TID> {
-  //   const postCid = await this.store.put(post)
-  //   const tid = TID.next()
-  //   const like: Like = {
-  //     tid: tid.toString(),
-  //     program: this.name,
-  //     author: this.store.did,
-  //     time: new Date().toISOString(),
-  //     post_tid: post.tid,
-  //     post_author: post.author,
-  //     post_program: post.program,
-  //     post_cid: postCid,
-  //   }
-  //   const likeCid = await this.store.put(like)
-  //   await this.runOnProgram(async (program) => {
-  //     await program.interactions.addEntry(tid, likeCid)
-  //   })
-  //   return tid
-  // }
+  async likePost(post: Post): Promise<void> {
+    const postCid = await this.blockstore.put(post)
+    const tid = TID.next()
+    const like: Like = {
+      tid: tid.toString(),
+      program: this.programName,
+      author: this.did,
+      time: new Date().toISOString(),
+      post_tid: post.tid,
+      post_author: post.author,
+      post_program: post.program,
+      post_cid: postCid,
+    }
+    try {
+      await axios.post(`${this.url}/data/interaction`, like)
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
 
-  // async unlikePost(tid: TID): Promise<void> {
-  //   await this.runOnProgram(async (program) => {
-  //     await program.interactions.deleteEntry(tid)
-  //   })
-  // }
+  async unlikePost(likeTid: TID): Promise<void> {
+    const params = {
+      tid: likeTid.toString(),
+      did: this.did,
+      program: this.programName,
+    }
+    try {
+      await axios.delete(`${this.url}/data/interaction`, { params })
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
 
   // async listLikes(count: number, from?: TID): Promise<Like[]> {
   //   const entries = await this.runOnProgram(async (program) => {
