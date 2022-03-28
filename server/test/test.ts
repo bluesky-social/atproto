@@ -2,13 +2,7 @@ import test from 'ava'
 import axios from 'axios'
 import * as ucan from 'ucans'
 
-import {
-  UserStore,
-  IpldStore,
-  Microblog,
-  TID,
-  Post,
-} from '@bluesky-demo/common'
+import { Repo, IpldStore, Microblog, TID, Post } from '@bluesky-demo/common'
 import Database from '../src/db/index.js'
 import server from '../src/server.js'
 import { GetPostReq } from '../src/routes/data/post.js'
@@ -21,7 +15,7 @@ const SERVER_URL = `http://localhost:${PORT}`
 const aliceName = 'alice'
 let aliceKey: ucan.EdKeypair
 let aliceDid: string
-let aliceStore: UserStore
+let aliceRepo: Repo
 let aliceBlog: Microblog
 
 const blockstore = IpldStore.createInMemory()
@@ -36,8 +30,8 @@ test.before('run server', async () => {
   }
   aliceKey = await ucan.EdKeypair.create()
   aliceDid = aliceKey.did()
-  aliceStore = await UserStore.create(blockstore, aliceDid, aliceKey)
-  aliceBlog = new Microblog(aliceStore)
+  aliceRepo = await Repo.create(blockstore, aliceDid, aliceKey)
+  aliceBlog = new Microblog(aliceRepo)
 })
 
 test.serial('id registration', async (t) => {

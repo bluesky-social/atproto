@@ -1,4 +1,4 @@
-import { UserStore } from '@bluesky-demo/common'
+import { Repo } from '@bluesky-demo/common'
 import express from 'express'
 import { SERVER_KEYPAIR } from '../server-identity.js'
 import * as util from '../util.js'
@@ -10,10 +10,10 @@ router.post('/register', async (req, res) => {
   const { username, did } = req.body
   const { db, blockstore } = util.getLocals(res)
   // create empty repo
-  const userStore = await UserStore.create(blockstore, did, SERVER_KEYPAIR)
+  const repo = await Repo.create(blockstore, did, SERVER_KEYPAIR)
   await Promise.all([
     db.registerDid(username, did),
-    db.createRepoRoot(did, userStore.cid),
+    db.createRepoRoot(did, repo.cid),
   ])
   return res.sendStatus(200)
 })

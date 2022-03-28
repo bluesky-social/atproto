@@ -1,4 +1,4 @@
-import { IpldStore, UserStore } from '@bluesky-demo/common'
+import { IpldStore, Repo } from '@bluesky-demo/common'
 import { Request, Response } from 'express'
 import { Database } from './db/index.js'
 import { SERVER_KEYPAIR } from './server-identity.js'
@@ -46,14 +46,11 @@ export const getLocals = (res: Response): Locals => {
   }
 }
 
-export const loadUserStore = async (
-  res: Response,
-  did: string,
-): Promise<UserStore> => {
+export const loadRepo = async (res: Response, did: string): Promise<Repo> => {
   const { db, blockstore } = getLocals(res)
   const currRoot = await db.getRepoRoot(did)
   if (!currRoot) {
     throw new ServerError(404, `User has not registered a repo root: ${did}`)
   }
-  return UserStore.load(blockstore, currRoot, SERVER_KEYPAIR)
+  return Repo.load(blockstore, currRoot, SERVER_KEYPAIR)
 }

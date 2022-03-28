@@ -21,14 +21,14 @@ router.get('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, tid } = req.query
-  const userStore = await util.loadUserStore(res, did)
-  const postCid = await userStore.runOnProgram(program, async (store) => {
+  const repo = await util.loadRepo(res, did)
+  const postCid = await repo.runOnProgram(program, async (store) => {
     return store.posts.getEntry(TID.fromStr(tid))
   })
   if (postCid === null) {
     throw new ServerError(404, 'Could not find post')
   }
-  const post = await userStore.get(postCid, schema.microblog.post)
+  const post = await repo.get(postCid, schema.microblog.post)
   res.status(200).send(post)
 })
 
@@ -43,13 +43,13 @@ router.post('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const post = req.body
-  const userStore = await util.loadUserStore(res, post.author)
-  const postCid = await userStore.put(post)
-  await userStore.runOnProgram(post.program, async (store) => {
+  const repo = await util.loadRepo(res, post.author)
+  const postCid = await repo.put(post)
+  await repo.runOnProgram(post.program, async (store) => {
     return store.posts.addEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(post.author, userStore.cid)
+  await db.updateRepoRoot(post.author, repo.cid)
   await db.createPost(post, postCid)
   res.status(200).send()
 })
@@ -65,13 +65,13 @@ router.put('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const post = req.body
-  const userStore = await util.loadUserStore(res, post.author)
-  const postCid = await userStore.put(post)
-  await userStore.runOnProgram(post.program, async (store) => {
+  const repo = await util.loadRepo(res, post.author)
+  const postCid = await repo.put(post)
+  await repo.runOnProgram(post.program, async (store) => {
     return store.posts.editEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(post.author, userStore.cid)
+  await db.updateRepoRoot(post.author, repo.cid)
   await db.updatePost(post, postCid)
   res.status(200).send()
 })
@@ -91,12 +91,12 @@ router.delete('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, tid } = req.params
-  const userStore = await util.loadUserStore(res, did)
-  await userStore.runOnProgram(program, async (store) => {
+  const repo = await util.loadRepo(res, did)
+  await repo.runOnProgram(program, async (store) => {
     return store.posts.deleteEntry(TID.fromStr(tid))
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(did, userStore.cid)
+  await db.updateRepoRoot(did, repo.cid)
   await db.deletePost(did, program, tid)
   res.status(200).send()
 })

@@ -1,5 +1,5 @@
 import express from 'express'
-import { UserStore } from '@bluesky-demo/common'
+import { Repo } from '@bluesky-demo/common'
 import * as util from '../util.js'
 import { SERVER_KEYPAIR } from '../server-identity.js'
 
@@ -12,18 +12,18 @@ router.post('/:did', async (req, res) => {
   const db = util.getDB(res)
   const blockstore = util.getBlockstore(res)
   const currRoot = await db.getRepoRoot(did)
-  let userStore: UserStore
+  let repo: Repo
   if (!currRoot) {
     try {
-      userStore = await UserStore.fromCarFile(bytes, blockstore)
+      repo = await Repo.fromCarFile(bytes, blockstore)
     } catch (err) {
-      return res.status(400).send('Could not parse UserStore from CAR File')
+      return res.status(400).send('Could not parse Repo from CAR File')
     }
-    await db.createRepoRoot(did, userStore.cid)
+    await db.createRepoRoot(did, repo.cid)
   } else {
-    userStore = await UserStore.load(blockstore, currRoot)
-    await userStore.loadCar(bytes)
-    await db.updateRepoRoot(did, userStore.cid)
+    repo = await Repo.load(blockstore, currRoot)
+    await repo.loadCar(bytes)
+    await db.updateRepoRoot(did, repo.cid)
   }
 
   return res.sendStatus(200)
@@ -39,9 +39,9 @@ router.get('/:did', async (req, res) => {
   }
 
   const blockstore = util.getBlockstore(res)
-  const userStore = await UserStore.load(blockstore, userRoot, SERVER_KEYPAIR)
+  const repo = await Repo.load(blockstore, userRoot, SERVER_KEYPAIR)
 
-  const bytes = await userStore.getCarNoHistory()
+  const bytes = await repo.getCarNoHistory()
   return res.status(200).send(Buffer.from(bytes))
 })
 
