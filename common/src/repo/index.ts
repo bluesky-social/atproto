@@ -225,6 +225,10 @@ export class Repo implements CarStreamable {
     this.did = root.did
     this.programCids = root.programs
     this.programs = {}
+    this.relationships = await Relationships.load(
+      this.blockstore,
+      root.relationships,
+    )
   }
 
   async getCarNoHistory(): Promise<Uint8Array> {

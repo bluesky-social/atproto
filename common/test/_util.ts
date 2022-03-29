@@ -85,6 +85,7 @@ export const generateBulkFollows = (count: number): Follow[] => {
 type RepoData = {
   posts: Record<string, string>
   interactions: Record<string, string>
+  follows: Record<string, Follow>
 }
 
 export const fillRepo = async (
@@ -92,10 +93,12 @@ export const fillRepo = async (
   programName: string,
   postsCount: number,
   interCount: number,
+  followCount: number,
 ): Promise<RepoData> => {
   const data: RepoData = {
     posts: {},
     interactions: {},
+    follows: {},
   }
   await repo.runOnProgram(programName, async (program) => {
     for (let i = 0; i < postsCount; i++) {
@@ -113,6 +116,11 @@ export const fillRepo = async (
       data.interactions[tid.toString()] = content
     }
   })
+  for (let i = 0; i < followCount; i++) {
+    const follow = randomFollow()
+    await repo.relationships.follow(follow.did, follow.username)
+    data.follows[follow.did] = follow
+  }
   return data
 }
 
@@ -142,4 +150,8 @@ export const checkRepo = async (
       )
     }
   })
+  for (const did of Object.keys(data.follows)) {
+    const actual = await repo.relationships.getFollow(did)
+    t.deepEqual(actual, data.follows[did], `Matching follow for did: ${did}`)
+  }
 }
