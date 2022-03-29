@@ -38,13 +38,13 @@ export class MicroblogDelegator {
     return res.data
   }
 
-  async addPost(text: string): Promise<void> {
+  async addPost(text: string): Promise<TID> {
     const tid = TID.next()
     const post: Post = {
       tid: tid.toString(),
       program: this.programName,
-      text,
       author: this.did,
+      text,
       time: new Date().toISOString(),
     }
     try {
@@ -53,13 +53,14 @@ export class MicroblogDelegator {
       const err = assureAxiosError(e)
       throw new Error(err.message)
     }
+    return tid
   }
 
-  async editPost(post: Post, text: string): Promise<void> {
+  async editPost(tid: TID, text: string): Promise<void> {
     const updated: Post = {
-      tid: post.tid,
-      program: post.program,
-      author: post.author,
+      tid: tid.toString(),
+      program: this.programName,
+      author: this.did,
       text,
       time: new Date().toISOString(),
     }
@@ -72,13 +73,13 @@ export class MicroblogDelegator {
   }
 
   async deletePost(tid: TID): Promise<void> {
-    const params = {
+    const data = {
       tid: tid.toString(),
       did: this.did,
       program: this.programName,
     }
     try {
-      await axios.delete(`${this.url}/data/post`, { params })
+      await axios.delete(`${this.url}/data/post`, { data })
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -133,7 +134,7 @@ export class MicroblogDelegator {
   //   return follows
   // }
 
-  async likePost(post: Post): Promise<void> {
+  async likePost(post: Post): Promise<TID> {
     const postCid = await this.blockstore.put(post)
     const tid = TID.next()
     const like: Like = {
@@ -152,6 +153,7 @@ export class MicroblogDelegator {
       const err = assureAxiosError(e)
       throw new Error(err.message)
     }
+    return tid
   }
 
   async unlikePost(likeTid: TID): Promise<void> {

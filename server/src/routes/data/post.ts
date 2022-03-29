@@ -87,10 +87,10 @@ export const deletePostReq = z.object({
 export type DeletePostReq = z.infer<typeof deletePostReq>
 
 router.delete('/', async (req, res) => {
-  if (!check.is(req.params, deletePostReq)) {
+  if (!check.is(req.body, deletePostReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }
-  const { did, program, tid } = req.params
+  const { did, program, tid } = req.body
   const repo = await util.loadRepo(res, did)
   await repo.runOnProgram(program, async (store) => {
     return store.posts.deleteEntry(TID.fromStr(tid))

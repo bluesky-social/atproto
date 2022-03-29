@@ -1,14 +1,15 @@
+// catch errors that get thrown in async route handlers
+// this is a relatively non-invasive change to express
+// they get handled in the error.handler middleware
+// leave at top of file before importing Routes
+import 'express-async-errors'
+
 import express from 'express'
 import cors from 'cors'
 import Routes from './routes/index.js'
 import { IpldStore } from '@bluesky-demo/common'
 import Database from './db/index.js'
 import * as error from './error.js'
-
-// catch errors that get thrown in async route handlers
-// this is a relatively non-invasive change to express
-// they get handled in the error.handler middleware
-import 'express-async-errors'
 
 const runServer = (blockstore: IpldStore, db: Database, port: number) => {
   const app = express()
