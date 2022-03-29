@@ -27,7 +27,7 @@ const runServer = (blockstore: IpldStore, db: Database, port: number) => {
   app.use(error.handler)
 
   app.listen(port, () => {
-    console.log(`🐦 Bluesky server is running at http://localhost:${port}`)
+    console.log(`🌞 Bluesky server is running at http://localhost:${port}`)
   })
 }
 
