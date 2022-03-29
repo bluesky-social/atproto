@@ -52,14 +52,27 @@ const microblogLikes = async (db: KnexDB) => {
   })
 }
 
+const follows = async (db: KnexDB) => {
+  return db.schema.createTable('follows', (table) => {
+    table.primary(['creator', 'target'])
+    table.string('creator')
+    table.string('target')
+
+    table.foreign('creator').references('did').inTable('user_dids')
+    table.foreign('target').references('did').inTable('user_dids')
+  })
+}
+
 export const createTables = async (db: KnexDB) => {
   await userRoots(db)
   await userDids(db)
   await microblogPosts(db)
   await microblogLikes(db)
+  await follows(db)
 }
 
 export const dropAll = async (db: KnexDB) => {
+  await drop(db, 'follows')
   await drop(db, 'microblog_likes')
   await drop(db, 'microblog_posts')
   await drop(db, 'repo_roots')

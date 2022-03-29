@@ -74,8 +74,8 @@ router.delete('/', async (req, res) => {
     return store.interactions.deleteEntry(TID.fromStr(tid))
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(did, repo.cid)
   await db.deleteLike(did, program, tid)
+  await db.updateRepoRoot(did, repo.cid)
   res.status(200).send()
 })
 

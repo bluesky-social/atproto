@@ -44,7 +44,16 @@ export class Database {
     const row = await this.db
       .select('did')
       .from('user_dids')
-      .where('username', username)
+      .where({ username })
+    if (row.length < 1) return null
+    return row[0].did
+  }
+
+  async getUsername(did: string): Promise<string | null> {
+    const row = await this.db
+      .select('username')
+      .from('user_dids')
+      .where({ did })
     if (row.length < 1) return null
     return row[0].did
   }
@@ -136,6 +145,25 @@ export class Database {
   ): Promise<void> {
     await this.db('microblog_interactions')
       .where({ tid, author, program })
+      .delete()
+  }
+
+  // FOLLOWS
+  // -----------
+
+  async createFollow(creator: string, target: string): Promise<void> {
+    await this.db('follows').insert({
+      creator,
+      target,
+    })
+  }
+
+  async deleteFollow(creator: string, target: string): Promise<void> {
+    await this.db('microblog_interactions')
+      .where({
+        creator,
+        target,
+      })
       .delete()
   }
 }

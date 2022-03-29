@@ -110,19 +110,25 @@ export class MicroblogDelegator {
   //   })
   // }
 
-  // async followUser(username: string, did: string): Promise<void> {
-  //   const follow: Follow = { username, did }
-  //   const cid = await this.store.put(follow)
-  //   await this.runOnProgram(async (program) => {
-  //     await program.relationships.addEntry(did, cid)
-  //   })
-  // }
+  async followUser(did: string): Promise<void> {
+    const data = { creator: this.did, target: did }
+    try {
+      await axios.post(`${this.url}/data/relationships`, data)
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
 
-  // async unfollowUser(did: string): Promise<void> {
-  //   await this.runOnProgram(async (program) => {
-  //     await program.relationships.deleteEntry(did)
-  //   })
-  // }
+  async unfollowUser(did: string): Promise<void> {
+    const data = { creator: this.did, target: did }
+    try {
+      await axios.delete(`${this.url}/data/relationships`, { data })
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
 
   // async listFollows(): Promise<Follow[]> {
   //   const cids = await this.runOnProgram(async (program) => {
@@ -157,13 +163,13 @@ export class MicroblogDelegator {
   }
 
   async unlikePost(likeTid: TID): Promise<void> {
-    const params = {
+    const data = {
       tid: likeTid.toString(),
       did: this.did,
       program: this.programName,
     }
     try {
-      await axios.delete(`${this.url}/data/interaction`, { params })
+      await axios.delete(`${this.url}/data/interaction`, { data })
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)

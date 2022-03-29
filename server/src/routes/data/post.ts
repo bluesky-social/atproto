@@ -49,8 +49,8 @@ router.post('/', async (req, res) => {
     return store.posts.addEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(post.author, repo.cid)
   await db.createPost(post, postCid)
+  await db.updateRepoRoot(post.author, repo.cid)
   res.status(200).send()
 })
 
@@ -71,8 +71,8 @@ router.put('/', async (req, res) => {
     return store.posts.editEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(post.author, repo.cid)
   await db.updatePost(post, postCid)
+  await db.updateRepoRoot(post.author, repo.cid)
   res.status(200).send()
 })
 
@@ -96,8 +96,8 @@ router.delete('/', async (req, res) => {
     return store.posts.deleteEntry(TID.fromStr(tid))
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(did, repo.cid)
   await db.deletePost(did, program, tid)
+  await db.updateRepoRoot(did, repo.cid)
   res.status(200).send()
 })
 
