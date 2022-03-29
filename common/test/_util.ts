@@ -1,7 +1,7 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import TID from '../src/repo/tid.js'
-import { IdMapping, schema } from '../src/repo/types.js'
+import { Follow, IdMapping, schema } from '../src/repo/types.js'
 import { DID } from '../src/common/types.js'
 import SSTable from '../src/repo/ss-table.js'
 import Repo from '../src/repo/index.js'
@@ -65,6 +65,21 @@ export const generateBulkDids = (count: number): DID[] => {
     dids.push(randomDid())
   }
   return dids
+}
+
+export const randomFollow = (): Follow => {
+  return {
+    did: randomDid(),
+    username: randomStr(8),
+  }
+}
+
+export const generateBulkFollows = (count: number): Follow[] => {
+  const follows = []
+  for (let i = 0; i < count; i++) {
+    follows.push(randomFollow())
+  }
+  return follows
 }
 
 type RepoData = {

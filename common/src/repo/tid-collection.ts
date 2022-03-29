@@ -2,12 +2,12 @@ import { CID } from 'multiformats'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping, Collection, CarStreamable, schema } from './types.js'
+import { Entry, IdMapping, CarStreamable, schema } from './types.js'
 import SSTable, { TableSize } from './ss-table.js'
 import TID from './tid.js'
 import CidSet from './cid-set.js'
 
-export class TidCollection implements Collection<TID>, CarStreamable {
+export class TidCollection implements CarStreamable {
   blockstore: IpldStore
   cid: CID
   data: IdMapping

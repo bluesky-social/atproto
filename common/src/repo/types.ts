@@ -57,11 +57,3 @@ export const schema = {
 export interface CarStreamable {
   writeToCarStream(car: BlockWriter): Promise<void>
 }
-
-export interface Collection<T> {
-  getEntry(id: T): Promise<CID | null>
-  addEntry(id: T, cid: CID): Promise<void>
-  editEntry(id: T, cid: CID): Promise<void>
-  deleteEntry(id: T): Promise<void>
-  cids(): Promise<CID[]>
-}

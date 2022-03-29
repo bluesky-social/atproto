@@ -5,11 +5,11 @@ import * as HAMT from 'ipld-hashmap'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { CarStreamable, Collection, Follow } from './types.js'
+import { CarStreamable, Follow, schema } from './types.js'
 import { DID } from '../common/types.js'
 import CidSet from './cid-set.js'
 
-export class Relationships implements Collection<DID>, CarStreamable {
+export class Relationships implements CarStreamable {
   blockstore: IpldStore
   cid: CID
   hamt: HAMT.HashMap<CID>
@@ -46,46 +46,40 @@ export class Relationships implements Collection<DID>, CarStreamable {
     }
   }
 
-  async getEntry(did: DID): Promise<CID | null> {
-    const got = await this.hamt.get(did)
-    return got || null
+  async getFollow(did: DID): Promise<Follow | null> {
+    const cid = await this.hamt.get(did)
+    if (!cid) return null
+    return this.blockstore.get(cid, schema.follow)
   }
 
-  async hasEntry(did: DID): Promise<boolean> {
+  async isFollowing(did: DID): Promise<boolean> {
     return this.hamt.has(did)
   }
 
-  // async followUser(did: DID, username: string): Promise<void> {
-  //   const exists = await this.hasEntry(did)
-  //   if (exists) {
-  //     throw new Error(`Entry already exists for did ${did}`)
-  //   }
-  //   const follow: Follow = { did, username }
-  //   const cid = await this.bl
-  // }
-
-  async addEntry(did: DID, cid: CID): Promise<void> {
-    const exists = await this.hasEntry(did)
-    if (exists) {
+  async follow(did: DID, username: string): Promise<void> {
+    const isFollowing = await this.isFollowing(did)
+    if (isFollowing) {
       throw new Error(`Entry already exists for did ${did}`)
     }
+    const follow: Follow = { did, username }
+    const cid = await this.blockstore.put(follow)
     await this.runOnHamt((hamt) => hamt.set(did, cid))
   }
 
-  async editEntry(did: DID, cid: CID): Promise<void> {
-    const exists = await this.hasEntry(did)
-    if (!exists) {
-      throw new Error(`Entry does not exist for did ${did}`)
-    }
-    await this.runOnHamt((hamt) => hamt.set(did, cid))
-  }
-
-  async deleteEntry(did: DID): Promise<void> {
-    const exists = await this.hasEntry(did)
-    if (!exists) {
+  async unfollow(did: DID): Promise<void> {
+    const isFollowing = await this.isFollowing(did)
+    if (!isFollowing) {
       throw new Error(`Entry does not exist for did ${did}`)
     }
     await this.runOnHamt((hamt) => hamt.delete(did))
+  }
+
+  async getFollows(): Promise<Follow[]> {
+    const cids = await this.getEntries()
+    const follows = await Promise.all(
+      cids.map((c) => this.blockstore.get(c, schema.follow)),
+    )
+    return follows
   }
 
   async getEntries(): Promise<CID[]> {
