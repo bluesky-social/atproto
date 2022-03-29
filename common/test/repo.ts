@@ -92,19 +92,34 @@ test('name spaces programs', async (t) => {
   t.deepEqual(gotOther[1], cidOther, 'correctly retrieves tid from program')
 })
 
+// test('basic relationship operations', async (t) => {
+//   const userDid = util.randomDid()
+//   const username = 'alice'
+
+//   await repo.relationships.addEn .followUser(username, userDid)
+
+//   let follow = await microblog.getFollow(userDid)
+//   t.is(follow?.did, userDid, 'correct did on follow')
+//   t.is(follow?.username, username, 'correct username on follow')
+
+//   const isFollowing = await microblog.isFollowing(userDid)
+//   t.true(isFollowing, 'correctly reports isFollowing DID')
+
+//   await microblog.unfollowUser(userDid)
+//   follow = await microblog.getFollow(userDid)
+//   t.is(follow, null, 'deletes follows')
+// })
+
 test('loads from blockstore', async (t) => {
   const { ipld, repo, programName } = t.context as Context
   const postTid = TID.next()
   const postCid = await util.randomCid()
   const interTid = TID.next()
   const interCid = await util.randomCid()
-  const relDid = util.randomDid()
-  const relCid = await util.randomCid()
 
   await repo.runOnProgram(programName, async (program) => {
     await program.posts.addEntry(postTid, postCid)
     await program.interactions.addEntry(interTid, interCid)
-    await program.relationships.addEntry(relDid, relCid)
   })
 
   const loaded = await Repo.load(ipld, repo.cid)
@@ -112,10 +127,8 @@ test('loads from blockstore', async (t) => {
     return Promise.all([
       program.posts.getEntry(postTid),
       program.interactions.getEntry(interTid),
-      program.relationships.getEntry(relDid),
     ])
   })
   t.deepEqual(got[0], postCid, 'loads posts from blockstore')
   t.deepEqual(got[1], interCid, 'loads interaction from blockstore')
-  t.deepEqual(got[2], relCid, 'loads relationships from blockstore')
 })

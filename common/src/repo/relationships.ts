@@ -5,38 +5,38 @@ import * as HAMT from 'ipld-hashmap'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { CarStreamable, Collection } from './types.js'
+import { CarStreamable, Collection, Follow } from './types.js'
 import { DID } from '../common/types.js'
 import CidSet from './cid-set.js'
 
-export class DidCollection implements Collection<DID>, CarStreamable {
-  store: IpldStore
+export class Relationships implements Collection<DID>, CarStreamable {
+  blockstore: IpldStore
   cid: CID
   hamt: HAMT.HashMap<CID>
   onUpdate: ((newCids: CidSet) => Promise<void>) | null
 
-  constructor(store: IpldStore, cid: CID, hamt: HAMT.HashMap<CID>) {
-    this.store = store
+  constructor(blockstore: IpldStore, cid: CID, hamt: HAMT.HashMap<CID>) {
+    this.blockstore = blockstore
     this.cid = cid
     this.hamt = hamt
     this.onUpdate = null
   }
 
-  static async create(store: IpldStore): Promise<DidCollection> {
+  static async create(blockstore: IpldStore): Promise<Relationships> {
     const hamt = (await HAMT.create(
-      store.blockstore,
+      blockstore.rawBlockstore,
       HAMT_OPTS,
     )) as HAMT.HashMap<CID>
-    return new DidCollection(store, hamt.cid, hamt)
+    return new Relationships(blockstore, hamt.cid, hamt)
   }
 
-  static async load(store: IpldStore, cid: CID): Promise<DidCollection> {
+  static async load(blockstore: IpldStore, cid: CID): Promise<Relationships> {
     const hamt = (await HAMT.load(
-      store.blockstore,
+      blockstore.rawBlockstore,
       cid,
       HAMT_OPTS,
     )) as HAMT.HashMap<CID>
-    return new DidCollection(store, hamt.cid, hamt)
+    return new Relationships(blockstore, hamt.cid, hamt)
   }
 
   async updateRoot(newCids: CidSet): Promise<void> {
@@ -54,6 +54,15 @@ export class DidCollection implements Collection<DID>, CarStreamable {
   async hasEntry(did: DID): Promise<boolean> {
     return this.hamt.has(did)
   }
+
+  // async followUser(did: DID, username: string): Promise<void> {
+  //   const exists = await this.hasEntry(did)
+  //   if (exists) {
+  //     throw new Error(`Entry already exists for did ${did}`)
+  //   }
+  //   const follow: Follow = { did, username }
+  //   const cid = await this.bl
+  // }
 
   async addEntry(did: DID, cid: CID): Promise<void> {
     const exists = await this.hasEntry(did)
@@ -110,10 +119,10 @@ export class DidCollection implements Collection<DID>, CarStreamable {
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
     for await (const cid of this.hamt.cids()) {
-      await this.store.addToCar(car, cid)
+      await this.blockstore.addToCar(car, cid)
     }
     for await (const entry of this.hamt.entries()) {
-      await this.store.addToCar(car, entry[1])
+      await this.blockstore.addToCar(car, entry[1])
     }
   }
 }
@@ -126,4 +135,4 @@ const HAMT_OPTS = {
   blockCodec,
 }
 
-export default DidCollection
+export default Relationships

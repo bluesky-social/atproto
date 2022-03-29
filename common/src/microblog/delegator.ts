@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios'
 import TID from '../repo/tid.js'
 
-import { Post, Follow, Like, schema } from './types.js'
+import { Post, Like, schema } from './types.js'
 import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError } from '../network/util.js'

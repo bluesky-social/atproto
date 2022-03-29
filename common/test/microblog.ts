@@ -54,21 +54,3 @@ test('basic like operations', async (t) => {
   likes = await microblog.listLikes(1)
   t.is(likes.length, 0, 'deletes likes')
 })
-
-test('basic follow operations', async (t) => {
-  const { microblog } = t.context as Context
-  const userDid = util.randomDid()
-  const username = 'alice'
-  await microblog.followUser(username, userDid)
-
-  let follow = await microblog.getFollow(userDid)
-  t.is(follow?.did, userDid, 'correct did on follow')
-  t.is(follow?.username, username, 'correct username on follow')
-
-  const isFollowing = await microblog.isFollowing(userDid)
-  t.true(isFollowing, 'correctly reports isFollowing DID')
-
-  await microblog.unfollowUser(userDid)
-  follow = await microblog.getFollow(userDid)
-  t.is(follow, null, 'deletes follows')
-})

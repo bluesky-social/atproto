@@ -1,8 +1,7 @@
 import Repo from '../repo/index.js'
 import Program from '../repo/program.js'
 
-import { Post, Follow, Like, schema } from './types.js'
-import { DID } from '../common/types.js'
+import { Post, Like, schema } from './types.js'
 import TID from '../repo/tid.js'
 
 export class Microblog extends Program {
@@ -63,44 +62,6 @@ export class Microblog extends Program {
       entries.map((entry) => this.repo.get(entry.cid, schema.post)),
     )
     return posts
-  }
-
-  async getFollow(did: DID): Promise<Follow | null> {
-    const cid = await this.runOnProgram(async (program) => {
-      return program.relationships.getEntry(did)
-    })
-    if (cid === null) return null
-    return this.repo.get(cid, schema.follow)
-  }
-
-  async isFollowing(did: DID): Promise<boolean> {
-    return this.runOnProgram(async (program) => {
-      return program.relationships.hasEntry(did)
-    })
-  }
-
-  async followUser(username: string, did: string): Promise<void> {
-    const follow: Follow = { username, did }
-    const cid = await this.repo.put(follow)
-    await this.runOnProgram(async (program) => {
-      await program.relationships.addEntry(did, cid)
-    })
-  }
-
-  async unfollowUser(did: string): Promise<void> {
-    await this.runOnProgram(async (program) => {
-      await program.relationships.deleteEntry(did)
-    })
-  }
-
-  async listFollows(): Promise<Follow[]> {
-    const cids = await this.runOnProgram(async (program) => {
-      return program.relationships.getEntries()
-    })
-    const follows = await Promise.all(
-      cids.map((c) => this.repo.get(c, schema.follow)),
-    )
-    return follows
   }
 
   async likePost(post: Post): Promise<TID> {

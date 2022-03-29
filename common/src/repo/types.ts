@@ -17,7 +17,6 @@ export type RepoRoot = z.infer<typeof repoRoot>
 
 const programRoot = z.object({
   posts: common.cid,
-  relationships: common.cid,
   interactions: common.cid,
   profile: common.cid.nullable(),
 })
@@ -38,6 +37,12 @@ const entry = z.object({
 })
 export type Entry = z.infer<typeof entry>
 
+const follow = z.object({
+  did: z.string(),
+  username: z.string(),
+})
+export type Follow = z.infer<typeof follow>
+
 export const schema = {
   ...common,
   tid,
@@ -46,6 +51,7 @@ export const schema = {
   commit,
   idMapping,
   entry,
+  follow,
 }
 
 export interface CarStreamable {

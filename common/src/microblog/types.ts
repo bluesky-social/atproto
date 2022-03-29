@@ -1,12 +1,6 @@
 import { z } from 'zod'
 import { schema as common } from '../common/types.js'
 
-const follow = z.object({
-  username: z.string(),
-  did: common.did,
-})
-export type Follow = z.infer<typeof follow>
-
 const post = z.object({
   tid: z.string(),
   author: z.string(),
@@ -29,7 +23,6 @@ const like = z.object({
 export type Like = z.infer<typeof like>
 
 export const schema = {
-  follow,
   post,
   like,
 }
