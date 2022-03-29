@@ -10,6 +10,7 @@ const repoRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
   new_cids: z.array(common.cid),
+  relationships: common.cid,
   programs: z.record(common.cid),
 })
 export type RepoRoot = z.infer<typeof repoRoot>

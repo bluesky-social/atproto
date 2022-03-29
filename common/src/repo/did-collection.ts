@@ -39,14 +39,10 @@ export class DidCollection implements Collection<DID>, CarStreamable {
     return new DidCollection(store, hamt.cid, hamt)
   }
 
-  async updateRoot(): Promise<void> {
+  async updateRoot(newCids: CidSet): Promise<void> {
     this.cid = this.hamt.cid
     if (this.onUpdate) {
-      // @TODO
-      // we're likely removing the relationships branch from user repo
-      // so we punted on implementing the proper logic here.
-      // send empty NewCids array for now
-      await this.onUpdate(new CidSet())
+      await this.onUpdate(newCids)
     }
   }
 
@@ -64,8 +60,7 @@ export class DidCollection implements Collection<DID>, CarStreamable {
     if (exists) {
       throw new Error(`Entry already exists for did ${did}`)
     }
-    await this.hamt.set(did, cid)
-    await this.updateRoot()
+    await this.runOnHamt((hamt) => hamt.set(did, cid))
   }
 
   async editEntry(did: DID, cid: CID): Promise<void> {
@@ -73,8 +68,7 @@ export class DidCollection implements Collection<DID>, CarStreamable {
     if (!exists) {
       throw new Error(`Entry does not exist for did ${did}`)
     }
-    await this.hamt.set(did, cid)
-    await this.updateRoot()
+    await this.runOnHamt((hamt) => hamt.set(did, cid))
   }
 
   async deleteEntry(did: DID): Promise<void> {
@@ -82,8 +76,7 @@ export class DidCollection implements Collection<DID>, CarStreamable {
     if (!exists) {
       throw new Error(`Entry does not exist for did ${did}`)
     }
-    await this.hamt.delete(did)
-    await this.updateRoot()
+    await this.runOnHamt((hamt) => hamt.delete(did))
   }
 
   async getEntries(): Promise<CID[]> {
@@ -92,6 +85,18 @@ export class DidCollection implements Collection<DID>, CarStreamable {
       cids.push(entry[1])
     }
     return cids
+  }
+
+  // @TODO: clearly not the best way to get the newly added CIDs
+  // but we either need to make changes to upstream or our own impl
+  async runOnHamt(
+    fn: (hamt: HAMT.HashMap<CID>) => Promise<void>,
+  ): Promise<void> {
+    const cidsBefore = new CidSet(await this.cids())
+    await fn(this.hamt)
+    const cidsAfter = new CidSet(await this.cids())
+    const newCids = cidsAfter.subtractSet(cidsBefore)
+    await this.updateRoot(newCids)
   }
 
   async cids(): Promise<CID[]> {
