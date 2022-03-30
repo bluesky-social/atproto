@@ -53,4 +53,21 @@ router.delete('/', async (req, res) => {
   res.status(200).send()
 })
 
+// LIST
+
+export const listRelReq = z.object({
+  user: z.string(),
+})
+export type ListRelReq = z.infer<typeof listRelReq>
+
+router.get('/list', async (req, res) => {
+  if (!check.is(req.query, listRelReq)) {
+    throw new ServerError(400, 'Poorly formatted request')
+  }
+  const { user } = req.query
+  const db = util.getDB(res)
+  const follows = await db.listFollows(user)
+  res.status(200).send(follows)
+})
+
 export default router

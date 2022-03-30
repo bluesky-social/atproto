@@ -32,6 +32,33 @@ router.get('/', async (req, res) => {
   res.status(200).send(like)
 })
 
+// LIST INTERACTIONS
+// --------------
+
+export const listInteractionsReq = z.object({
+  did: z.string(),
+  program: z.string(),
+  count: z.number(),
+  from: z.string().optional(),
+})
+export type ListInteractionsReq = z.infer<typeof listInteractionsReq>
+
+router.get('/list', async (req, res) => {
+  if (!check.is(req.query, listInteractionsReq)) {
+    throw new ServerError(400, 'Poorly formatted request')
+  }
+  const { did, program, count, from } = req.query
+  const fromTid = from ? TID.fromStr(from) : undefined
+  const repo = await util.loadRepo(res, did)
+  const entries = await repo.runOnProgram(program, async (store) => {
+    return store.interactions.getEntries(count, fromTid)
+  })
+  const posts = await Promise.all(
+    entries.map((entry) => repo.get(entry.cid, schema.microblog.like)),
+  )
+  res.status(200).send(posts)
+})
+
 // CREATE INTERACTION
 // --------------
 

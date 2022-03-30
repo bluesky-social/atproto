@@ -2,17 +2,23 @@ import axios, { AxiosResponse } from 'axios'
 import TID from '../repo/tid.js'
 
 import { Post, Like, schema } from './types.js'
-import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError } from '../network/util.js'
 import IpldStore from '../blockstore/ipld-store.js'
+import * as ucan from 'ucans'
+import { Follow } from '../repo/types.js'
 
 export class MicroblogDelegator {
   programName = 'did:bsky:microblog'
+  did: string
   blockstore: IpldStore
 
-  constructor(public url: string, public did: string) {
+  constructor(
+    public url: string,
+    private keypair: ucan.Keypair & ucan.Didable,
+  ) {
     // ephemeral used for quick block storage & getting CIDs
+    this.did = keypair.did()
     this.blockstore = IpldStore.createInMemory()
   }
 
@@ -86,34 +92,28 @@ export class MicroblogDelegator {
     }
   }
 
-  // async listPosts(count: number, from?: TID): Promise<Post[]> {
-  //   const entries = await this.runOnProgram(async (program) => {
-  //     return program.posts.getEntries(count, from)
-  //   })
-  //   const posts = await Promise.all(
-  //     entries.map((entry) => this.store.get(entry.cid, schema.post)),
-  //   )
-  //   return posts
-  // }
-
-  // async getFollow(did: DID): Promise<Follow | null> {
-  //   const cid = await this.runOnProgram(async (program) => {
-  //     return program.relationships.getEntry(did)
-  //   })
-  //   if (cid === null) return null
-  //   return this.store.get(cid, schema.follow)
-  // }
-
-  // async isFollowing(did: DID): Promise<boolean> {
-  //   return this.runOnProgram(async (program) => {
-  //     return program.relationships.hasEntry(did)
-  //   })
-  // }
+  async listPosts(did: string, count: number, from?: TID): Promise<Post[]> {
+    const params = {
+      did,
+      program: this.programName,
+      count,
+      from: from?.toString(),
+    }
+    try {
+      const res = await axios.get(`${this.url}/data/post/list`, {
+        params,
+      })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
 
   async followUser(did: string): Promise<void> {
     const data = { creator: this.did, target: did }
     try {
-      await axios.post(`${this.url}/data/relationships`, data)
+      await axios.post(`${this.url}/data/relationship`, data)
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -123,22 +123,25 @@ export class MicroblogDelegator {
   async unfollowUser(did: string): Promise<void> {
     const data = { creator: this.did, target: did }
     try {
-      await axios.delete(`${this.url}/data/relationships`, { data })
+      await axios.delete(`${this.url}/data/relationship`, { data })
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
     }
   }
 
-  // async listFollows(): Promise<Follow[]> {
-  //   const cids = await this.runOnProgram(async (program) => {
-  //     return program.relationships.getEntries()
-  //   })
-  //   const follows = await Promise.all(
-  //     cids.map((c) => this.store.get(c, schema.follow)),
-  //   )
-  //   return follows
-  // }
+  async listFollows(did?: string): Promise<Follow[]> {
+    const params = { user: did || this.did }
+    try {
+      const res = await axios.get(`${this.url}/data/relationship/list`, {
+        params,
+      })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
 
   async likePost(post: Post): Promise<TID> {
     const postCid = await this.blockstore.put(post)
@@ -176,15 +179,23 @@ export class MicroblogDelegator {
     }
   }
 
-  // async listLikes(count: number, from?: TID): Promise<Like[]> {
-  //   const entries = await this.runOnProgram(async (program) => {
-  //     return program.interactions.getEntries(count, from)
-  //   })
-  //   const likes = await Promise.all(
-  //     entries.map((entry) => this.store.get(entry.cid, schema.like)),
-  //   )
-  //   return likes
-  // }
+  async listLikes(did: string, count: number, from?: TID): Promise<Like[]> {
+    const params = {
+      did,
+      program: this.programName,
+      count,
+      from: from?.toString(),
+    }
+    try {
+      const res = await axios.get(`${this.url}/data/interactions/list`, {
+        params,
+      })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
 }
 
 export default MicroblogDelegator

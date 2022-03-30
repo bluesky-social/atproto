@@ -32,6 +32,33 @@ router.get('/', async (req, res) => {
   res.status(200).send(post)
 })
 
+// LIST POSTS
+// --------------
+
+export const listPostsReq = z.object({
+  did: z.string(),
+  program: z.string(),
+  count: z.number(),
+  from: z.string().optional(),
+})
+export type ListPostsReq = z.infer<typeof listPostsReq>
+
+router.get('/list', async (req, res) => {
+  if (!check.is(req.query, listPostsReq)) {
+    throw new ServerError(400, 'Poorly formatted request')
+  }
+  const { did, program, count, from } = req.query
+  const fromTid = from ? TID.fromStr(from) : undefined
+  const repo = await util.loadRepo(res, did)
+  const entries = await repo.runOnProgram(program, async (store) => {
+    return store.posts.getEntries(count, fromTid)
+  })
+  const posts = await Promise.all(
+    entries.map((entry) => repo.get(entry.cid, schema.microblog.post)),
+  )
+  res.status(200).send(posts)
+})
+
 // CREATE POST
 // --------------
 

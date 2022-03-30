@@ -1,4 +1,5 @@
 import { Like, Post } from '@bluesky-demo/common'
+import { Follow } from '@bluesky-demo/common/dist/repo/types'
 import knex from 'knex'
 import { CID } from 'multiformats'
 import * as schema from './schema.js'
@@ -55,7 +56,7 @@ export class Database {
       .from('user_dids')
       .where({ did })
     if (row.length < 1) return null
-    return row[0].did
+    return row[0].username
   }
 
   // REPO ROOTS
@@ -87,7 +88,6 @@ export class Database {
   ): Promise<Post | null> {
     const row = await this.db('microblog_posts')
       .select('*')
-      .from('microblog_posts')
       .where({ tid, author, program })
     if (row.length < 1) return null
     return row[0]
@@ -125,7 +125,6 @@ export class Database {
   ): Promise<Post | null> {
     const row = await this.db('microblog_interactions')
       .select('*')
-      .from('microblog_interactions')
       .where({ tid, author, program })
     if (row.length < 1) return null
     return row[0]
@@ -150,6 +149,14 @@ export class Database {
 
   // FOLLOWS
   // -----------
+
+  async listFollows(creator: string): Promise<Follow[]> {
+    const list = await this.db('follows')
+      .join('user_dids', 'follows.target', '=', 'user_dids.did')
+      .select('follows.target', 'user_dids.username')
+      .where('follows.creator', creator)
+    return list.map((f) => ({ did: f.target, username: f.username }))
+  }
 
   async createFollow(creator: string, target: string): Promise<void> {
     await this.db('follows').insert({
