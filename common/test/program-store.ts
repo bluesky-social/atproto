@@ -37,12 +37,12 @@ test('loads from blockstore', async (t) => {
     actual[tid.toString()] = cid
   }
 
-  const relDids = util.generateBulkDids(100)
-  for (const did of relDids) {
-    const cid = await util.randomCid()
-    await program.relationships.addEntry(did, cid)
-    actual[did.toString()] = cid
-  }
+  // const relDids = util.generateBulkDids(100)
+  // for (const did of relDids) {
+  //   const cid = await util.randomCid()
+  //   await program.relationships.addEntry(did, cid)
+  //   actual[did.toString()] = cid
+  // }
 
   const profileCid = await util.randomCid()
   await program.setProfile(profileCid)
@@ -61,11 +61,11 @@ test('loads from blockstore', async (t) => {
   }
   t.pass('All interactions loaded correctly')
 
-  for (const did of relDids) {
-    const got = await loaded.relationships.getEntry(did)
-    t.deepEqual(got, actual[did.toString()], `Matching content for did: ${did}`)
-  }
-  t.pass('All relationships loaded correctly')
+  // for (const did of relDids) {
+  //   const got = await loaded.relationships.getEntry(did)
+  //   t.deepEqual(got, actual[did.toString()], `Matching content for did: ${did}`)
+  // }
+  // t.pass('All relationships loaded correctly')
 
   const got = await loaded.profile
   t.deepEqual(got, actual['profile'], 'Matching contnet for profile')

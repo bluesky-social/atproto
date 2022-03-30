@@ -19,7 +19,11 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipldAlice = IpldStore.createInMemory()
   const keypairAlice = await ucan.EdKeypair.create()
-  const repoAlice = await Repo.create(ipldAlice, keypairAlice)
+  const repoAlice = await Repo.create(
+    ipldAlice,
+    keypairAlice.did(),
+    keypairAlice,
+  )
 
   const ipldBob = IpldStore.createInMemory()
   const keypairBob = await ucan.EdKeypair.create()
@@ -45,7 +49,7 @@ test('syncs an empty repo', async (t) => {
 
 test('syncs a repo that is starting from scratch', async (t) => {
   const { repoAlice, ipldBob, keypairBob, programName } = t.context as Context
-  const data = await util.fillRepo(repoAlice, programName, 150, 10)
+  const data = await util.fillRepo(repoAlice, programName, 150, 10, 50)
   const car = await repoAlice.getFullHistory()
   const repoBob = await Repo.fromCarFile(car, ipldBob, keypairBob)
   await util.checkRepo(t, repoBob, programName, data)
@@ -54,11 +58,13 @@ test('syncs a repo that is starting from scratch', async (t) => {
 test('syncs a repo that is behind', async (t) => {
   const { repoAlice, ipldBob, keypairBob, programName } = t.context as Context
 
-  const data = await util.fillRepo(repoAlice, programName, 150, 10)
+  // bring bob up to date with early version of alice's repo
+  const data = await util.fillRepo(repoAlice, programName, 150, 10, 50)
   const car = await repoAlice.getFullHistory()
   const repoBob = await Repo.fromCarFile(car, ipldBob, keypairBob)
 
-  const data2 = await util.fillRepo(repoAlice, programName, 300, 10)
+  // add more to alice's repo & have bob catch up
+  const data2 = await util.fillRepo(repoAlice, programName, 300, 10, 50)
   const diff = await repoAlice.getDiffCar(repoBob.cid)
   await repoBob.loadCar(diff)
 
@@ -71,6 +77,10 @@ test('syncs a repo that is behind', async (t) => {
       ...data.interactions,
       ...data2.interactions,
     },
+    follows: {
+      ...data.follows,
+      ...data2.follows,
+    },
   }
 
   await util.checkRepo(t, repoBob, programName, allData)
@@ -78,7 +88,7 @@ test('syncs a repo that is behind', async (t) => {
 
 test('syncs a non-historical copy of a repo', async (t) => {
   const { repoAlice, programName } = t.context as Context
-  const data = await util.fillRepo(repoAlice, programName, 150, 20)
+  const data = await util.fillRepo(repoAlice, programName, 150, 20, 50)
   const car = await repoAlice.getCarNoHistory()
 
   const ipld = IpldStore.createInMemory()

@@ -1,7 +1,7 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store.js'
 import TID from '../src/repo/tid.js'
-import { IdMapping, schema } from '../src/repo/types.js'
+import { Follow, IdMapping, schema } from '../src/repo/types.js'
 import { DID } from '../src/common/types.js'
 import SSTable from '../src/repo/ss-table.js'
 import Repo from '../src/repo/index.js'
@@ -67,9 +67,25 @@ export const generateBulkDids = (count: number): DID[] => {
   return dids
 }
 
+export const randomFollow = (): Follow => {
+  return {
+    did: randomDid(),
+    username: randomStr(8),
+  }
+}
+
+export const generateBulkFollows = (count: number): Follow[] => {
+  const follows = []
+  for (let i = 0; i < count; i++) {
+    follows.push(randomFollow())
+  }
+  return follows
+}
+
 type RepoData = {
   posts: Record<string, string>
   interactions: Record<string, string>
+  follows: Record<string, Follow>
 }
 
 export const fillRepo = async (
@@ -77,10 +93,12 @@ export const fillRepo = async (
   programName: string,
   postsCount: number,
   interCount: number,
+  followCount: number,
 ): Promise<RepoData> => {
   const data: RepoData = {
     posts: {},
     interactions: {},
+    follows: {},
   }
   await repo.runOnProgram(programName, async (program) => {
     for (let i = 0; i < postsCount; i++) {
@@ -98,6 +116,11 @@ export const fillRepo = async (
       data.interactions[tid.toString()] = content
     }
   })
+  for (let i = 0; i < followCount; i++) {
+    const follow = randomFollow()
+    await repo.relationships.follow(follow.did, follow.username)
+    data.follows[follow.did] = follow
+  }
   return data
 }
 
@@ -127,4 +150,8 @@ export const checkRepo = async (
       )
     }
   })
+  for (const did of Object.keys(data.follows)) {
+    const actual = await repo.relationships.getFollow(did)
+    t.deepEqual(actual, data.follows[did], `Matching follow for did: ${did}`)
+  }
 }

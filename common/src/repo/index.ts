@@ -11,63 +11,80 @@ import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import ProgramStore from './program-store.js'
 import CidSet from './cid-set.js'
+import Relationships from './relationships.js'
 
 export class Repo implements CarStreamable {
-  store: IpldStore
+  blockstore: IpldStore
   programCids: IdMapping
   programs: { [name: string]: ProgramStore }
+  relationships: Relationships
   cid: CID
   did: DID
   private keypair: Keypair | null
 
   constructor(params: {
-    store: IpldStore
+    blockstore: IpldStore
     programCids: IdMapping
+    relationships: Relationships
     cid: CID
     did: DID
     keypair?: Keypair
   }) {
-    this.store = params.store
+    this.blockstore = params.blockstore
     this.programCids = params.programCids
     this.programs = {}
+    this.relationships = params.relationships
     this.cid = params.cid
     this.did = params.did
     this.keypair = params.keypair || null
+
+    this.relationships.onUpdate = this.updateRoot
   }
 
-  static async create(store: IpldStore, keypair: Keypair & Didable) {
-    const did = await keypair.did()
+  static async create(
+    blockstore: IpldStore,
+    did: string,
+    keypair: Keypair & Didable,
+  ) {
+    const relationships = await Relationships.create(blockstore)
     const rootObj: RepoRoot = {
       did,
       prev: null,
-      new_cids: [],
+      new_cids: await relationships.cids(),
+      relationships: relationships.cid,
       programs: {},
     }
 
-    const rootCid = await store.put(rootObj)
+    const rootCid = await blockstore.put(rootObj)
     const commit: Commit = {
       root: rootCid,
       sig: await keypair.sign(rootCid.bytes),
     }
 
-    const cid = await store.put(commit)
+    const cid = await blockstore.put(commit)
     const programCids: IdMapping = {}
 
     return new Repo({
-      store,
+      blockstore,
       programCids,
+      relationships,
       cid,
       did,
       keypair,
     })
   }
 
-  static async load(store: IpldStore, cid: CID, keypair?: Keypair) {
-    const commit = await store.get(cid, schema.commit)
-    const root = await store.get(commit.root, schema.repoRoot)
+  static async load(blockstore: IpldStore, cid: CID, keypair?: Keypair) {
+    const commit = await blockstore.get(cid, schema.commit)
+    const root = await blockstore.get(commit.root, schema.repoRoot)
+    const relationships = await Relationships.load(
+      blockstore,
+      root.relationships,
+    )
     return new Repo({
-      store,
+      blockstore,
       programCids: root.programs,
+      relationships,
       cid,
       did: root.did,
       keypair,
@@ -95,12 +112,9 @@ export class Repo implements CarStreamable {
   }
 
   // arrow fn to preserve scope
-  updateRoot =
+  updateRootForProgram =
     (programName: string) =>
     async (newCids: CidSet): Promise<void> => {
-      if (this.keypair === null) {
-        throw new Error('No keypair provided. Repo is read-only.')
-      }
       const program = this.programs[programName]
       if (!program) {
         throw new Error(
@@ -113,31 +127,38 @@ export class Repo implements CarStreamable {
           .add(program.cid)
           .add(program.posts.cid)
           .add(program.interactions.cid)
-          .add(program.relationships.cid)
       }
       this.programCids[programName] = program.cid
-      const root: RepoRoot = {
-        did: this.did,
-        prev: this.cid,
-        new_cids: newCids.toList(),
-        programs: this.programCids,
-      }
-      const rootCid = await this.store.put(root)
-      newCids.add(rootCid)
-      const commit: Commit = {
-        root: rootCid,
-        sig: await this.keypair.sign(rootCid.bytes),
-      }
-      this.cid = await this.store.put(commit)
+      await this.updateRoot(newCids)
     }
 
+  updateRoot = async (newCids: CidSet): Promise<void> => {
+    if (this.keypair === null) {
+      throw new Error('No keypair provided. Repo is read-only.')
+    }
+    const root: RepoRoot = {
+      did: this.did,
+      prev: this.cid,
+      new_cids: newCids.toList(),
+      programs: this.programCids,
+      relationships: this.relationships.cid,
+    }
+    const rootCid = await this.blockstore.put(root)
+    newCids.add(rootCid)
+    const commit: Commit = {
+      root: rootCid,
+      sig: await this.keypair.sign(rootCid.bytes),
+    }
+    this.cid = await this.blockstore.put(commit)
+  }
+
   async getCommit(): Promise<Commit> {
-    return this.store.get(this.cid, schema.commit)
+    return this.blockstore.get(this.cid, schema.commit)
   }
 
   async getRoot(): Promise<RepoRoot> {
     const commit = await this.getCommit()
-    return this.store.get(commit.root, schema.repoRoot)
+    return this.blockstore.get(commit.root, schema.repoRoot)
   }
 
   // Program API
@@ -147,8 +168,8 @@ export class Repo implements CarStreamable {
     if (this.programCids[name] !== undefined) {
       throw new Error(`Program store already exists for program: ${name}`)
     }
-    const programStore = await ProgramStore.create(this.store)
-    programStore.onUpdate = this.updateRoot(name)
+    const programStore = await ProgramStore.create(this.blockstore)
+    programStore.onUpdate = this.updateRootForProgram(name)
     this.programs[name] = programStore
     return programStore
   }
@@ -161,8 +182,8 @@ export class Repo implements CarStreamable {
     if (!cid) {
       return this.createProgramStore(name)
     }
-    const programStore = await ProgramStore.load(this.store, cid)
-    programStore.onUpdate = this.updateRoot(name)
+    const programStore = await ProgramStore.load(this.blockstore, cid)
+    programStore.onUpdate = this.updateRootForProgram(name)
     this.programs[name] = programStore
     return programStore
   }
@@ -179,11 +200,11 @@ export class Repo implements CarStreamable {
   // -----------
 
   async put(value: Record<string, unknown> | string): Promise<CID> {
-    return this.store.put(value)
+    return this.blockstore.put(value)
   }
 
   async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
-    return this.store.get(cid, schema)
+    return this.blockstore.get(cid, schema)
   }
 
   // CAR files
@@ -197,13 +218,17 @@ export class Repo implements CarStreamable {
     }
     const rootCid = roots[0]
     for await (const block of car.blocks()) {
-      await this.store.putBytes(block.cid, block.bytes)
+      await this.blockstore.putBytes(block.cid, block.bytes)
     }
     this.cid = rootCid
     const root = await this.getRoot()
     this.did = root.did
     this.programCids = root.programs
     this.programs = {}
+    this.relationships = await Relationships.load(
+      this.blockstore,
+      root.relationships,
+    )
   }
 
   async getCarNoHistory(): Promise<Uint8Array> {
@@ -232,12 +257,13 @@ export class Repo implements CarStreamable {
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
-    await this.store.addToCar(car, this.cid)
-    const commit = await this.store.get(this.cid, schema.commit)
-    await this.store.addToCar(car, commit.root)
+    await this.blockstore.addToCar(car, this.cid)
+    const commit = await this.blockstore.get(this.cid, schema.commit)
+    await this.blockstore.addToCar(car, commit.root)
+    await this.relationships.writeToCarStream(car)
     await Promise.all(
       Object.values(this.programCids).map(async (cid) => {
-        const programStore = await ProgramStore.load(this.store, cid)
+        const programStore = await ProgramStore.load(this.blockstore, cid)
         await programStore.writeToCarStream(car)
       }),
     )
@@ -248,15 +274,15 @@ export class Repo implements CarStreamable {
     from: CID,
     to: CID | null,
   ): Promise<void> {
-    const commit = await this.store.get(from, schema.commit)
-    const { new_cids, prev } = await this.store.get(
+    const commit = await this.blockstore.get(from, schema.commit)
+    const { new_cids, prev } = await this.blockstore.get(
       commit.root,
       schema.repoRoot,
     )
-    await this.store.addToCar(car, this.cid)
-    await this.store.addToCar(car, commit.root)
+    await this.blockstore.addToCar(car, this.cid)
+    await this.blockstore.addToCar(car, commit.root)
 
-    await Promise.all(new_cids.map((cid) => this.store.addToCar(car, cid)))
+    await Promise.all(new_cids.map((cid) => this.blockstore.addToCar(car, cid)))
     if (!prev) {
       if (to === null) {
         return

@@ -6,19 +6,33 @@
   "type": "module",
   "scripts": {
     "dev": "tsc -w --project tsconfig.json & nodemon -q -w dist dist/index.js",
-    "build": "(cd ../common && yarn build) && tsc --project tsconfig.json"
+    "build": "(cd ../common && yarn build) && tsc --project tsconfig.json",
+    "test": "ava -v test/*.ts"
+  },
+  "dependencies": {
+    "@vscode/sqlite3": "^5.0.7",
+    "cors": "^2.8.5",
+    "express": "^4.17.2",
+    "express-async-errors": "^3.1.1",
+    "knex": "^1.0.4",
+    "level": "^7.0.1",
+    "multiformats": "^9.6.2",
+    "ucans": "0.9.0-alpha3",
+    "zod": "^3.14.2"
   },
   "devDependencies": {
     "@bluesky-demo/common": "*",
+    "ava": "^4.1.0",
+    "axios": "^0.26.1",
     "nodemon": "^2.0.15",
     "typescript": "^4.3.5"
   },
-  "dependencies": {
-    "axios": "^0.24.0",
-    "cors": "^2.8.5",
-    "express": "^4.17.2",
-    "level": "^7.0.1",
-    "multiformats": "^9.6.2",
-    "ucans": "0.9.0-alpha3"
+  "ava": {
+    "extensions": {
+      "ts": "module"
+    },
+    "nodeArguments": [
+      "--loader=ts-node/esm"
+    ]
   }
 }

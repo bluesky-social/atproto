@@ -3,74 +3,67 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
-import DidCollection from './did-collection.js'
 import { ProgramRoot, schema } from './types.js'
 import CidSet from './cid-set.js'
 
 export class ProgramStore {
-  store: IpldStore
+  blockstore: IpldStore
   posts: TidCollection
   interactions: TidCollection
-  relationships: DidCollection
   profile: CID | null
   cid: CID
   onUpdate: ((newCids: CidSet) => Promise<void>) | null
 
   constructor(params: {
-    store: IpldStore
+    blockstore: IpldStore
     posts: TidCollection
     interactions: TidCollection
-    relationships: DidCollection
     profile: CID | null
     cid: CID
   }) {
-    this.store = params.store
+    this.blockstore = params.blockstore
     this.posts = params.posts
     this.interactions = params.interactions
-    this.relationships = params.relationships
     this.profile = params.profile
     this.cid = params.cid
     this.onUpdate = null
 
     this.posts.onUpdate = this.updateRoot
     this.interactions.onUpdate = this.updateRoot
-    this.relationships.onUpdate = this.updateRoot
   }
 
-  static async create(store: IpldStore) {
-    const posts = await TidCollection.create(store)
-    const interactions = await TidCollection.create(store)
-    const relationships = await DidCollection.create(store)
+  static async create(blockstore: IpldStore) {
+    const posts = await TidCollection.create(blockstore)
+    const interactions = await TidCollection.create(blockstore)
 
     const rootObj: ProgramRoot = {
       posts: posts.cid,
       interactions: interactions.cid,
-      relationships: relationships.cid,
       profile: null,
     }
 
-    const cid = await store.put(rootObj)
+    const cid = await blockstore.put(rootObj)
 
     return new ProgramStore({
-      store,
+      blockstore,
       posts,
       interactions,
-      relationships,
       profile: null,
       cid,
     })
   }
 
-  static async load(store: IpldStore, cid: CID) {
-    const rootObj = await store.get(cid, schema.programRoot)
-    const posts = await TidCollection.load(store, rootObj.posts)
-    const interactions = await TidCollection.load(store, rootObj.interactions)
-    const relationships = await DidCollection.load(store, rootObj.relationships)
+  static async load(blockstore: IpldStore, cid: CID) {
+    const rootObj = await blockstore.get(cid, schema.programRoot)
+    const posts = await TidCollection.load(blockstore, rootObj.posts)
+    const interactions = await TidCollection.load(
+      blockstore,
+      rootObj.interactions,
+    )
     return new ProgramStore({
-      store,
+      blockstore,
       posts,
       interactions,
-      relationships,
       profile: rootObj.profile,
       cid,
     })
@@ -78,9 +71,8 @@ export class ProgramStore {
 
   // arrow fn to preserve scope
   updateRoot = async (newCids: CidSet): Promise<void> => {
-    this.cid = await this.store.put({
+    this.cid = await this.blockstore.put({
       posts: this.posts.cid,
-      relationships: this.relationships.cid,
       interactions: this.interactions.cid,
       profile: this.profile,
     })
@@ -96,14 +88,13 @@ export class ProgramStore {
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
-    await this.store.addToCar(car, this.cid)
+    await this.blockstore.addToCar(car, this.cid)
     if (this.profile !== null) {
-      await this.store.addToCar(car, this.profile)
+      await this.blockstore.addToCar(car, this.profile)
     }
     await Promise.all([
       this.posts.writeToCarStream(car),
       this.interactions.writeToCarStream(car),
-      this.relationships.writeToCarStream(car),
     ])
   }
 }

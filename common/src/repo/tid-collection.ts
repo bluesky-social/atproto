@@ -2,39 +2,39 @@ import { CID } from 'multiformats'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping, Collection, CarStreamable, schema } from './types.js'
+import { Entry, IdMapping, CarStreamable, schema } from './types.js'
 import SSTable, { TableSize } from './ss-table.js'
 import TID from './tid.js'
 import CidSet from './cid-set.js'
 
-export class TidCollection implements Collection<TID>, CarStreamable {
-  store: IpldStore
+export class TidCollection implements CarStreamable {
+  blockstore: IpldStore
   cid: CID
   data: IdMapping
   onUpdate: ((newCids: CidSet) => Promise<void>) | null
 
-  constructor(store: IpldStore, cid: CID, data: IdMapping) {
-    this.store = store
+  constructor(blockstore: IpldStore, cid: CID, data: IdMapping) {
+    this.blockstore = blockstore
     this.cid = cid
     this.data = data
     this.onUpdate = null
   }
 
-  static async create(store: IpldStore): Promise<TidCollection> {
-    const cid = await store.put({})
-    return new TidCollection(store, cid, {})
+  static async create(blockstore: IpldStore): Promise<TidCollection> {
+    const cid = await blockstore.put({})
+    return new TidCollection(blockstore, cid, {})
   }
 
-  static async load(store: IpldStore, cid: CID): Promise<TidCollection> {
-    const data = await store.get(cid, schema.idMapping)
-    return new TidCollection(store, cid, data)
+  static async load(blockstore: IpldStore, cid: CID): Promise<TidCollection> {
+    const data = await blockstore.get(cid, schema.idMapping)
+    return new TidCollection(blockstore, cid, data)
   }
 
   async getTable(name: TID): Promise<SSTable | null> {
     if (!name) return null
     const cid = this.data[name.toString()]
     if (cid === undefined) return null
-    return SSTable.load(this.store, cid)
+    return SSTable.load(this.blockstore, cid)
   }
 
   getTableNameForTid(tid: TID): TID | null {
@@ -48,7 +48,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   }
 
   async updateRoot(newCids: CidSet): Promise<void> {
-    this.cid = await this.store.put(this.data)
+    this.cid = await this.blockstore.put(this.data)
     if (this.onUpdate) {
       await this.onUpdate(newCids.add(this.cid))
     }
@@ -136,11 +136,14 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     const name = this.tableNames()[0]
     const table = name ? await this.getTable(name) : null
     if (table === null) {
-      return { table: await SSTable.create(this.store), newCids: new CidSet() }
+      return {
+        table: await SSTable.create(this.blockstore),
+        newCids: new CidSet(),
+      }
     }
     if (table.isFull()) {
       const newCids = await this.compressTables()
-      return { table: await SSTable.create(this.store), newCids }
+      return { table: await SSTable.create(this.blockstore), newCids }
     } else {
       return { table, newCids: new CidSet() }
     }
@@ -204,7 +207,7 @@ export class TidCollection implements Collection<TID>, CarStreamable {
     const cids = this.shallowCids()
     for (const cid of cids) {
       all.push(cid)
-      const table = await SSTable.load(this.store, cid)
+      const table = await SSTable.load(this.blockstore, cid)
       table.cids().forEach((c) => all.push(c))
     }
     return all
@@ -213,10 +216,10 @@ export class TidCollection implements Collection<TID>, CarStreamable {
   async writeToCarStream(car: BlockWriter): Promise<void> {
     const cids = this.shallowCids()
     for (const cid of cids) {
-      const table = await SSTable.load(this.store, cid)
+      const table = await SSTable.load(this.blockstore, cid)
       await table.writeToCarStream(car)
     }
-    await this.store.addToCar(car, this.cid)
+    await this.blockstore.addToCar(car, this.cid)
   }
 }
 

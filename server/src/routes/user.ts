@@ -1,101 +1,47 @@
 import express from 'express'
-import * as ucan from 'ucans'
-import { ucanCheck, UserStore, Blockstore } from '@bluesky-demo/common'
-import * as UserDids from '../user-dids.js'
-import * as UserRoots from '../user-roots.js'
-import { readReqBytes } from '../util.js'
-import { SERVER_KEYPAIR, SERVER_DID } from '../server-identity.js'
-
+import { Repo } from '@bluesky-demo/common'
+import * as util from '../util.js'
+import { SERVER_KEYPAIR } from '../server-identity.js'
 
 const router = express.Router()
 
-router.post('/register', async (req, res) => {
-  // We look for a simple Ucan with no capabilities as proof the user is in possession of the given key
-  let u: ucan.Chained
-  try {
-    u = await ucanCheck.checkUcan(
-      req,
-      ucanCheck.hasAudience(SERVER_DID),
-      ucanCheck.isRoot()
-    )
-  } catch(err: any) {
-    return res.status(401).send(`Invalid Ucan: ${err.toString()}`)
-  }
-
-  let userStore: UserStore
-  try {
-    const bytes = await readReqBytes(req)
-    userStore = await UserStore.fromCarFile(bytes, res.locals.blockstore, SERVER_KEYPAIR)
-  }catch(err) {
-    return res.status(400).send("Could not parse UserStore from CAR File")
-  }
-
-  const user = await userStore.getUser()
-  const currDid = await UserDids.get(user.name)
-  if (currDid !== null) {
-    return res.status(409).send(`Username ${user.name} already taken.`)
-  }
-
-  await Promise.all([
-    UserDids.set(user.name, u.issuer()),
-    UserRoots.set(u.issuer(), userStore.root)
-  ])
-
-  return res.sendStatus(200)
-})
-
-router.post('/update', async (req, res) => {
-  let userStore: UserStore
-  try {
-    const bytes = await readReqBytes(req)
-    userStore = await UserStore.fromCarFile(bytes, res.locals.blockstore, SERVER_KEYPAIR)
-  }catch(err) {
-    return res.status(400).send("Could not parse UserStore from CAR File")
-  }
-
-  const user = await userStore.getUser()
-  const userDid = await UserDids.get(user.name)
-  if (userDid === null) {
-    return res.status(404).send("User not found")
-  }
-
-  let u: ucan.Chained
-  try {
-    if (userDid) {
-      u = await ucanCheck.checkUcan(
-        req,
-        ucanCheck.hasAudience(SERVER_DID),
-        ucanCheck.hasPostingPermission(user.name, userDid)
-      )
-    } else {
-      throw new Error(`User not found: ${user.name}`)
+// @@TODO Remove or udpate
+router.post('/:did', async (req, res) => {
+  const { did } = req.params
+  const bytes = await util.readReqBytes(req)
+  const db = util.getDB(res)
+  const blockstore = util.getBlockstore(res)
+  const currRoot = await db.getRepoRoot(did)
+  let repo: Repo
+  if (!currRoot) {
+    try {
+      repo = await Repo.fromCarFile(bytes, blockstore)
+    } catch (err) {
+      return res.status(400).send('Could not parse Repo from CAR File')
     }
-  } catch(err) {
-    return res.status(401).send(err)
+    await db.createRepoRoot(did, repo.cid)
+  } else {
+    repo = await Repo.load(blockstore, currRoot)
+    await repo.loadCar(bytes)
+    await db.updateRepoRoot(did, repo.cid)
   }
-
-  // @TODO: verify signature on data structure
-
-  await UserRoots.set(userDid, userStore.root)
 
   return res.sendStatus(200)
 })
 
-router.get('/:id', async (req, res) => {
-  const { id } = req.params
+router.get('/:did', async (req, res) => {
+  const { did } = req.params
 
-  const userRoot = await UserRoots.get(id)
-  if (userRoot === null) {
-    return res.status(404).send("User not found")
-  }
-
+  const db = util.getDB(res)
+  const userRoot = await db.getRepoRoot(did)
   if (!userRoot) {
-    return res.status(404).end()
+    return res.status(404).send('User not found')
   }
 
-  const userStore = await UserStore.get(userRoot, res.locals.blockstore, SERVER_KEYPAIR)
+  const blockstore = util.getBlockstore(res)
+  const repo = await Repo.load(blockstore, userRoot, SERVER_KEYPAIR)
 
-  const bytes = await userStore.getCarFile()
+  const bytes = await repo.getCarNoHistory()
   return res.status(200).send(Buffer.from(bytes))
 })
 

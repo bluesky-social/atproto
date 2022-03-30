@@ -1,8 +1,7 @@
 import Repo from '../repo/index.js'
 import Program from '../repo/program.js'
 
-import { Post, Follow, Like, schema } from './types.js'
-import { DID } from '../common/types.js'
+import { Post, Like, schema } from './types.js'
 import TID from '../repo/tid.js'
 
 export class Microblog extends Program {
@@ -65,44 +64,6 @@ export class Microblog extends Program {
     return posts
   }
 
-  async getFollow(did: DID): Promise<Follow | null> {
-    const cid = await this.runOnProgram(async (program) => {
-      return program.relationships.getEntry(did)
-    })
-    if (cid === null) return null
-    return this.repo.get(cid, schema.follow)
-  }
-
-  async isFollowing(did: DID): Promise<boolean> {
-    return this.runOnProgram(async (program) => {
-      return program.relationships.hasEntry(did)
-    })
-  }
-
-  async followUser(username: string, did: string): Promise<void> {
-    const follow: Follow = { username, did }
-    const cid = await this.repo.put(follow)
-    await this.runOnProgram(async (program) => {
-      await program.relationships.addEntry(did, cid)
-    })
-  }
-
-  async unfollowUser(did: string): Promise<void> {
-    await this.runOnProgram(async (program) => {
-      await program.relationships.deleteEntry(did)
-    })
-  }
-
-  async listFollows(): Promise<Follow[]> {
-    const cids = await this.runOnProgram(async (program) => {
-      return program.relationships.getEntries()
-    })
-    const follows = await Promise.all(
-      cids.map((c) => this.repo.get(c, schema.follow)),
-    )
-    return follows
-  }
-
   async likePost(post: Post): Promise<TID> {
     const postCid = await this.repo.put(post)
     const tid = TID.next()
@@ -114,7 +75,7 @@ export class Microblog extends Program {
       post_tid: post.tid,
       post_author: post.author,
       post_program: post.program,
-      post_cid: postCid,
+      post_cid: postCid.toString(),
     }
     const likeCid = await this.repo.put(like)
     await this.runOnProgram(async (program) => {
@@ -123,7 +84,7 @@ export class Microblog extends Program {
     return tid
   }
 
-  async unlikePost(tid: TID): Promise<void> {
+  async deleteLike(tid: TID): Promise<void> {
     await this.runOnProgram(async (program) => {
       await program.interactions.deleteEntry(tid)
     })

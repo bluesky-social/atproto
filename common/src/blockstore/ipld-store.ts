@@ -10,10 +10,10 @@ import { BlockstoreI } from './types.js'
 import { PersistentBlockstore } from './persistent-blockstore.js'
 
 export class IpldStore {
-  blockstore: BlockstoreI
+  rawBlockstore: BlockstoreI
 
-  constructor(blockstore: BlockstoreI) {
-    this.blockstore = blockstore
+  constructor(rawBlockstore: BlockstoreI) {
+    this.rawBlockstore = rawBlockstore
   }
 
   static createInMemory(): IpldStore {
@@ -53,15 +53,15 @@ export class IpldStore {
   }
 
   async getBytes(cid: CID): Promise<Uint8Array> {
-    return this.blockstore.get(cid)
+    return this.rawBlockstore.get(cid)
   }
 
   async putBytes(cid: CID, bytes: Uint8Array): Promise<void> {
-    return this.blockstore.put(cid, bytes)
+    return this.rawBlockstore.put(cid, bytes)
   }
 
   async destroy(): Promise<void> {
-    return this.blockstore.destroy()
+    return this.rawBlockstore.destroy()
   }
 
   async addToCar(car: BlockWriter, cid: CID) {

@@ -19,7 +19,7 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipld = IpldStore.createInMemory()
   const keypair = await ucan.EdKeypair.create()
-  const repo = await Repo.create(ipld, keypair)
+  const repo = await Repo.create(ipld, keypair.did(), keypair)
   const programName = 'did:bsky:test'
   const otherProgram = 'did:bsky:other'
   t.context = { ipld, keypair, repo, programName, otherProgram } as Context
@@ -92,30 +92,47 @@ test('name spaces programs', async (t) => {
   t.deepEqual(gotOther[1], cidOther, 'correctly retrieves tid from program')
 })
 
+test('basic relationship operations', async (t) => {
+  const { repo } = t.context as Context
+  const follow = util.randomFollow()
+
+  await repo.relationships.follow(follow.did, follow.username)
+
+  let got = await repo.relationships.getFollow(follow.did)
+  t.deepEqual(got, follow, 'correctly adds & retrieves follow')
+
+  const isFollowing = await repo.relationships.isFollowing(follow.did)
+  t.true(isFollowing, 'correctly reports isFollowing DID')
+
+  await repo.relationships.unfollow(follow.did)
+  got = await repo.relationships.getFollow(follow.did)
+  t.is(got, null, 'deletes follows')
+})
+
 test('loads from blockstore', async (t) => {
   const { ipld, repo, programName } = t.context as Context
   const postTid = TID.next()
   const postCid = await util.randomCid()
   const interTid = TID.next()
   const interCid = await util.randomCid()
-  const relDid = util.randomDid()
-  const relCid = await util.randomCid()
+  const follow = util.randomFollow()
 
   await repo.runOnProgram(programName, async (program) => {
     await program.posts.addEntry(postTid, postCid)
     await program.interactions.addEntry(interTid, interCid)
-    await program.relationships.addEntry(relDid, relCid)
   })
+
+  await repo.relationships.follow(follow.did, follow.username)
 
   const loaded = await Repo.load(ipld, repo.cid)
   const got = await loaded.runOnProgram(programName, async (program) => {
     return Promise.all([
       program.posts.getEntry(postTid),
       program.interactions.getEntry(interTid),
-      program.relationships.getEntry(relDid),
     ])
   })
+  const gotFollow = await loaded.relationships.getFollow(follow.did)
   t.deepEqual(got[0], postCid, 'loads posts from blockstore')
   t.deepEqual(got[1], interCid, 'loads interaction from blockstore')
-  t.deepEqual(got[2], relCid, 'loads relationships from blockstore')
+  t.deepEqual(gotFollow, follow, 'loads follow from blockstore')
 })

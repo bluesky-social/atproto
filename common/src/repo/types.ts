@@ -10,13 +10,13 @@ const repoRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
   new_cids: z.array(common.cid),
+  relationships: common.cid,
   programs: z.record(common.cid),
 })
 export type RepoRoot = z.infer<typeof repoRoot>
 
 const programRoot = z.object({
   posts: common.cid,
-  relationships: common.cid,
   interactions: common.cid,
   profile: common.cid.nullable(),
 })
@@ -37,6 +37,12 @@ const entry = z.object({
 })
 export type Entry = z.infer<typeof entry>
 
+const follow = z.object({
+  did: z.string(),
+  username: z.string(),
+})
+export type Follow = z.infer<typeof follow>
+
 export const schema = {
   ...common,
   tid,
@@ -45,16 +51,9 @@ export const schema = {
   commit,
   idMapping,
   entry,
+  follow,
 }
 
 export interface CarStreamable {
   writeToCarStream(car: BlockWriter): Promise<void>
-}
-
-export interface Collection<T> {
-  getEntry(id: T): Promise<CID | null>
-  addEntry(id: T, cid: CID): Promise<void>
-  editEntry(id: T, cid: CID): Promise<void>
-  deleteEntry(id: T): Promise<void>
-  cids(): Promise<CID[]>
 }

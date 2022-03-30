@@ -6,33 +6,33 @@ import IpldStore from '../blockstore/ipld-store.js'
 import TID from './tid.js'
 
 export class SSTable implements CarStreamable {
-  store: IpldStore
+  blockstore: IpldStore
   cid: CID
   size: TableSize
   data: IdMapping
 
-  constructor(store: IpldStore, cid: CID, data: IdMapping) {
-    this.store = store
+  constructor(blockstore: IpldStore, cid: CID, data: IdMapping) {
+    this.blockstore = blockstore
     this.cid = cid
     this.data = data
     this.size = nameForSize(Object.keys(data).length)
   }
 
-  static async create(store: IpldStore): Promise<SSTable> {
-    const cid = await store.put({})
-    return new SSTable(store, cid, {})
+  static async create(blockstore: IpldStore): Promise<SSTable> {
+    const cid = await blockstore.put({})
+    return new SSTable(blockstore, cid, {})
   }
 
-  static async load(store: IpldStore, cid: CID): Promise<SSTable> {
-    const data = await store.get(cid, schema.idMapping)
-    return new SSTable(store, cid, data)
+  static async load(blockstore: IpldStore, cid: CID): Promise<SSTable> {
+    const data = await blockstore.get(cid, schema.idMapping)
+    return new SSTable(blockstore, cid, data)
   }
 
   static async merge(tables: SSTable[]): Promise<SSTable> {
     if (tables.length < 1) {
       throw new Error('Must provide at least one table')
     }
-    const store = tables[0].store
+    const store = tables[0].blockstore
     const data = tables
       .map((t) => t.data)
       .reduce((acc, cur) => {
@@ -66,7 +66,7 @@ export class SSTable implements CarStreamable {
       throw new Error(`Entry already exists for tid ${tid}`)
     }
     this.data[tid.toString()] = cid
-    this.cid = await this.store.put(this.data)
+    this.cid = await this.blockstore.put(this.data)
   }
 
   async addEntries(tids: IdMapping): Promise<void> {
@@ -76,7 +76,7 @@ export class SSTable implements CarStreamable {
       }
       this.data[tid] = cid
     })
-    this.cid = await this.store.put(this.data)
+    this.cid = await this.blockstore.put(this.data)
   }
 
   async editEntry(tid: TID, cid: CID): Promise<void> {
@@ -84,7 +84,7 @@ export class SSTable implements CarStreamable {
       throw new Error(`Entry does not exist for tid ${tid}`)
     }
     this.data[tid.toString()] = cid
-    this.cid = await this.store.put(this.data)
+    this.cid = await this.blockstore.put(this.data)
   }
 
   async deleteEntry(tid: TID): Promise<void> {
@@ -92,7 +92,7 @@ export class SSTable implements CarStreamable {
       throw new Error(`Entry does not exist for tid ${tid}`)
     }
     delete this.data[tid.toString()]
-    this.cid = await this.store.put(this.data)
+    this.cid = await this.blockstore.put(this.data)
   }
 
   oldestTid(): TID | null {
@@ -128,9 +128,9 @@ export class SSTable implements CarStreamable {
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
     for (const cid of this.cids()) {
-      await this.store.addToCar(car, cid)
+      await this.blockstore.addToCar(car, cid)
     }
-    await this.store.addToCar(car, this.cid)
+    await this.blockstore.addToCar(car, this.cid)
   }
 }
 
