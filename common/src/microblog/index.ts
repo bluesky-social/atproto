@@ -75,7 +75,7 @@ export class Microblog extends Program {
       post_tid: post.tid,
       post_author: post.author,
       post_program: post.program,
-      post_cid: postCid,
+      post_cid: postCid.toString(),
     }
     const likeCid = await this.repo.put(like)
     await this.runOnProgram(async (program) => {
@@ -84,7 +84,7 @@ export class Microblog extends Program {
     return tid
   }
 
-  async unlikePost(tid: TID): Promise<void> {
+  async deleteLike(tid: TID): Promise<void> {
     await this.runOnProgram(async (program) => {
       await program.interactions.deleteEntry(tid)
     })

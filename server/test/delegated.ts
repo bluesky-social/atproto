@@ -1,8 +1,8 @@
 import test from 'ava'
-import axios from 'axios'
+
 import * as ucan from 'ucans'
 
-import { IpldStore, TID, MicroblogDelegator } from '@bluesky-demo/common'
+import { IpldStore, TID, MicroblogDelegator, Post } from '@bluesky-demo/common'
 import Database from '../src/db/index.js'
 import server from '../src/server.js'
 
@@ -43,6 +43,7 @@ test.serial('id retrieval', async (t) => {
 })
 
 let postTid: TID
+let post: Post
 const postText = 'hello world!'
 
 test.serial('create post', async (t) => {
@@ -51,7 +52,7 @@ test.serial('create post', async (t) => {
 })
 
 test.serial('get post', async (t) => {
-  const post = await aliceBlog.getPost(postTid)
+  post = (await aliceBlog.getPost(postTid)) as Post
   t.is(post?.text, postText, 'post matches')
 })
 
@@ -63,12 +64,28 @@ test.serial('edit post', async (t) => {
   t.is(post?.text, newText, 'edited post matches')
 })
 
+let likeTid: TID
+
 test.serial('create like', async (t) => {
   const post = await bobBlog.getPostFromUser(aliceBlog.did, postTid)
   if (post !== null) {
-    await bobBlog.likePost(post)
+    likeTid = await bobBlog.likePost(post)
   }
   t.pass('create like successful')
+})
+
+test.serial('list likes', async (t) => {
+  const likes = await bobBlog.listLikes(10)
+  t.is(likes.length, 1, 'registered like')
+  t.is(likes[0].tid, likeTid.toString(), 'matching tid')
+  t.is(likes[0].post_tid, postTid.toString(), 'matching post tid')
+})
+
+test.serial('delete like', async (t) => {
+  await bobBlog.deleteLike(likeTid)
+  t.pass('delete request successful')
+  const likes = await bobBlog.listLikes(10)
+  t.is(likes.length, 0, 'properly deleted like')
 })
 
 test.serial('delete post', async (t) => {
@@ -85,12 +102,16 @@ test.serial('follow user', async (t) => {
 
 test.serial('list follows', async (t) => {
   const follows = await aliceBlog.listFollows()
-  console.log('FOLLOWS: ', follows)
+  t.is(follows.length, 1, 'registered follow')
+  t.is(follows[0].did, bobKey.did(), 'matching did')
+  t.is(follows[0].username, 'bob', 'matching username')
+
   t.pass('successfully followed user')
 })
 
-// test.serial('unfollow user', async (t) => {
-//   await aliceBlog.deletePost(postTid)
-//   const post = await aliceBlog.getPost(postTid)
-//   t.is(post, null, 'post successfully deleted')
-// })
+test.serial('unfollow user', async (t) => {
+  await aliceBlog.unfollowUser(bobKey.did())
+  t.pass('unfollow request successful')
+  const follows = await aliceBlog.listFollows()
+  t.is(follows.length, 0, 'properly unfollowed user')
+})

@@ -166,7 +166,7 @@ export class Database {
   }
 
   async deleteFollow(creator: string, target: string): Promise<void> {
-    await this.db('microblog_interactions')
+    await this.db('follows')
       .where({
         creator,
         target,

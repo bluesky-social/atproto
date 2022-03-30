@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
 export const listInteractionsReq = z.object({
   did: z.string(),
   program: z.string(),
-  count: z.number(),
+  count: z.string(),
   from: z.string().optional(),
 })
 export type ListInteractionsReq = z.infer<typeof listInteractionsReq>
@@ -48,10 +48,17 @@ router.get('/list', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, count, from } = req.query
+  const countParsed = parseInt(count)
+  if (isNaN(countParsed)) {
+    throw new ServerError(
+      400,
+      'Poorly formatted request: `count` is not a number',
+    )
+  }
   const fromTid = from ? TID.fromStr(from) : undefined
   const repo = await util.loadRepo(res, did)
   const entries = await repo.runOnProgram(program, async (store) => {
-    return store.interactions.getEntries(count, fromTid)
+    return store.interactions.getEntries(countParsed, fromTid)
   })
   const posts = await Promise.all(
     entries.map((entry) => repo.get(entry.cid, schema.microblog.like)),
@@ -92,10 +99,10 @@ export const deleteInteractionReq = z.object({
 export type DeleteInteractionReq = z.infer<typeof deleteInteractionReq>
 
 router.delete('/', async (req, res) => {
-  if (!check.is(req.params, deleteInteractionReq)) {
+  if (!check.is(req.body, deleteInteractionReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }
-  const { did, program, tid } = req.params
+  const { did, program, tid } = req.body
   const repo = await util.loadRepo(res, did)
   await repo.runOnProgram(program, async (store) => {
     return store.interactions.deleteEntry(TID.fromStr(tid))

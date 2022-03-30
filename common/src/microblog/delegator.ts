@@ -193,7 +193,7 @@ export class MicroblogDelegator {
       post_tid: post.tid,
       post_author: post.author,
       post_program: post.program,
-      post_cid: postCid,
+      post_cid: postCid.toString(),
     }
     try {
       await axios.post(`${this.url}/data/interaction`, like)
@@ -204,7 +204,7 @@ export class MicroblogDelegator {
     return tid
   }
 
-  async unlikePost(likeTid: TID): Promise<void> {
+  async deleteLike(likeTid: TID): Promise<void> {
     const data = {
       tid: likeTid.toString(),
       did: this.did,
@@ -234,7 +234,7 @@ export class MicroblogDelegator {
       from: from?.toString(),
     }
     try {
-      const res = await axios.get(`${this.url}/data/interactions/list`, {
+      const res = await axios.get(`${this.url}/data/interaction/list`, {
         params,
       })
       return res.data
