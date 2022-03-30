@@ -22,10 +22,37 @@ export class MicroblogDelegator {
     this.blockstore = IpldStore.createInMemory()
   }
 
+  async register(username: string): Promise<void> {
+    const data = { username, did: this.did }
+    try {
+      await axios.post(`${this.url}/id/register`, data)
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
+
+  async lookupDid(username: string): Promise<string> {
+    const params = { resource: username }
+    try {
+      const res = await axios.get(`${this.url}/.well-known/webfinger`, {
+        params,
+      })
+      return res.data.id
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
+
   async getPost(tid: TID): Promise<Post | null> {
+    return this.getPostFromUser(this.did, tid)
+  }
+
+  async getPostFromUser(did: string, tid: TID): Promise<Post | null> {
     const params = {
       tid: tid.toString(),
-      did: this.did,
+      did: did,
       program: this.programName,
     }
     let res: AxiosResponse
@@ -92,7 +119,15 @@ export class MicroblogDelegator {
     }
   }
 
-  async listPosts(did: string, count: number, from?: TID): Promise<Post[]> {
+  async listPosts(count: number, from?: TID): Promise<Post[]> {
+    return this.listPostsFromUser(this.did, count, from)
+  }
+
+  async listPostsFromUser(
+    did: string,
+    count: number,
+    from?: TID,
+  ): Promise<Post[]> {
     const params = {
       did,
       program: this.programName,
@@ -130,7 +165,11 @@ export class MicroblogDelegator {
     }
   }
 
-  async listFollows(did?: string): Promise<Follow[]> {
+  async listFollows(): Promise<Follow[]> {
+    return this.listFollowsFromUser(this.did)
+  }
+
+  async listFollowsFromUser(did: string): Promise<Follow[]> {
     const params = { user: did || this.did }
     try {
       const res = await axios.get(`${this.url}/data/relationship/list`, {
@@ -179,7 +218,15 @@ export class MicroblogDelegator {
     }
   }
 
-  async listLikes(did: string, count: number, from?: TID): Promise<Like[]> {
+  async listLikes(count: number, from?: TID): Promise<Like[]> {
+    return this.listLikesFromUser(this.did, count, from)
+  }
+
+  async listLikesFromUser(
+    did: string,
+    count: number,
+    from?: TID,
+  ): Promise<Like[]> {
     const params = {
       did,
       program: this.programName,
