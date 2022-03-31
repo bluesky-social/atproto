@@ -17,11 +17,25 @@ const like = z.object({
   post_tid: z.string(),
   post_author: z.string(),
   post_program: z.string(),
-  post_cid: z.string(), // @TODO: should this be a CID instead of a str?
 })
 export type Like = z.infer<typeof like>
+
+const timelinePost = z.object({
+  tid: z.string(),
+  author_did: z.string(),
+  author_name: z.string(),
+  text: z.string(),
+  time: z.string(),
+  likes: z.number(),
+})
+export type TimelinePost = z.infer<typeof timelinePost>
+
+const timeline = z.array(timelinePost)
+export type Timeline = z.infer<typeof timeline>
 
 export const schema = {
   post,
   like,
+  timelinePost,
+  timeline,
 }

@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
 export const listPostsReq = z.object({
   did: z.string(),
   program: z.string(),
-  count: z.number(),
+  count: z.string(),
   from: z.string().optional(),
 })
 export type ListPostsReq = z.infer<typeof listPostsReq>
@@ -48,10 +48,17 @@ router.get('/list', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, count, from } = req.query
+  const countParsed = parseInt(count)
+  if (isNaN(countParsed)) {
+    throw new ServerError(
+      400,
+      'Poorly formatted request: `count` is not a number',
+    )
+  }
   const fromTid = from ? TID.fromStr(from) : undefined
   const repo = await util.loadRepo(res, did)
   const entries = await repo.runOnProgram(program, async (store) => {
-    return store.posts.getEntries(count, fromTid)
+    return store.posts.getEntries(countParsed, fromTid)
   })
   const posts = await Promise.all(
     entries.map((entry) => repo.get(entry.cid, schema.microblog.post)),

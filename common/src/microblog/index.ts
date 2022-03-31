@@ -64,18 +64,16 @@ export class Microblog extends Program {
     return posts
   }
 
-  async likePost(post: Post): Promise<TID> {
-    const postCid = await this.repo.put(post)
+  async likePost(postAuthor: string, postTid: TID): Promise<TID> {
     const tid = TID.next()
     const like: Like = {
       tid: tid.toString(),
       program: this.name,
       author: this.repo.did,
       time: new Date().toISOString(),
-      post_tid: post.tid,
-      post_author: post.author,
-      post_program: post.program,
-      post_cid: postCid.toString(),
+      post_tid: postTid.toString(),
+      post_author: postAuthor,
+      post_program: this.name,
     }
     const likeCid = await this.repo.put(like)
     await this.runOnProgram(async (program) => {
