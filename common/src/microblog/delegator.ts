@@ -45,6 +45,17 @@ export class MicroblogDelegator {
     }
   }
 
+  async retrieveTimeline(): Promise<any> {
+    const params = { user: this.did }
+    try {
+      const res = await axios.get(`${this.url}/indexer/timeline`, { params })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
+
   async getPost(tid: TID): Promise<Post | null> {
     return this.getPostFromUser(this.did, tid)
   }

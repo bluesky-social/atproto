@@ -173,6 +173,17 @@ export class Database {
       })
       .delete()
   }
+
+  // TIMELINE
+  // -----------
+
+  async retrieveTimeline(user: string): Promise<Post[]> {
+    return await this.db('microblog_posts')
+      .join('follows', 'microblog_posts.author', '=', 'follows.target')
+      .select('microblog_posts.*')
+      .where('follows.creator', user)
+      .orderBy('microblog_posts.tid', 'desc')
+  }
 }
 
 export default Database
