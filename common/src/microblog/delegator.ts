@@ -22,6 +22,15 @@ export class MicroblogDelegator {
     this.blockstore = IpldStore.createInMemory()
   }
 
+  async makeUcan(): Promise<void> {
+    ucan.build({
+      issuer: this.keypair,
+      audience: 'did:server',
+      capabilities: [],
+      expiration: 30,
+    })
+  }
+
   async register(username: string): Promise<void> {
     const data = { username, did: this.did }
     try {
