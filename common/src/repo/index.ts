@@ -3,18 +3,26 @@ import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { Didable, Keypair } from 'ucans'
+import * as ucan from 'ucans'
 
-import { RepoRoot, CarStreamable, IdMapping, Commit, schema } from './types.js'
+import {
+  RepoRoot,
+  CarStreamable,
+  IdMapping,
+  Commit,
+  schema,
+  UpdateData,
+} from './types.js'
 import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import ProgramStore from './program-store.js'
-import CidSet from './cid-set.js'
 import Relationships from './relationships.js'
 
 export class Repo implements CarStreamable {
   blockstore: IpldStore
+  ucanStore: ucan.Store
   programCids: IdMapping
   programs: { [name: string]: ProgramStore }
   relationships: Relationships
@@ -24,6 +32,7 @@ export class Repo implements CarStreamable {
 
   constructor(params: {
     blockstore: IpldStore
+    ucanStore: ucan.Store
     programCids: IdMapping
     relationships: Relationships
     cid: CID
@@ -31,6 +40,7 @@ export class Repo implements CarStreamable {
     keypair?: Keypair
   }) {
     this.blockstore = params.blockstore
+    this.ucanStore = params.ucanStore
     this.programCids = params.programCids
     this.programs = {}
     this.relationships = params.relationships
@@ -43,14 +53,18 @@ export class Repo implements CarStreamable {
 
   static async create(
     blockstore: IpldStore,
+    ucans: string[],
     did: string,
     keypair: Keypair & Didable,
   ) {
+    const ucanStore = await ucan.Store.fromTokens(ucans)
+    const tokenCid = await blockstore.put(ucan)
     const relationships = await Relationships.create(blockstore)
     const rootObj: RepoRoot = {
       did,
       prev: null,
       new_cids: await relationships.cids(),
+      auth_token: tokenCid, // @FIX THIS
       relationships: relationships.cid,
       programs: {},
     }
@@ -66,6 +80,7 @@ export class Repo implements CarStreamable {
 
     return new Repo({
       blockstore,
+      ucanStore,
       programCids,
       relationships,
       cid,
@@ -74,7 +89,13 @@ export class Repo implements CarStreamable {
     })
   }
 
-  static async load(blockstore: IpldStore, cid: CID, keypair?: Keypair) {
+  static async load(
+    blockstore: IpldStore,
+    ucans: string[],
+    cid: CID,
+    keypair?: Keypair,
+  ) {
+    const ucanStore = await ucan.Store.fromTokens(ucans)
     const commit = await blockstore.get(cid, schema.commit)
     const root = await blockstore.get(commit.root, schema.repoRoot)
     const relationships = await Relationships.load(
@@ -83,6 +104,7 @@ export class Repo implements CarStreamable {
     )
     return new Repo({
       blockstore,
+      ucanStore,
       programCids: root.programs,
       relationships,
       cid,
@@ -94,6 +116,7 @@ export class Repo implements CarStreamable {
   static async fromCarFile(
     buf: Uint8Array,
     store: IpldStore,
+    ucans: string[],
     keypair?: Keypair,
   ) {
     const car = await CarReader.fromBytes(buf)
@@ -108,13 +131,13 @@ export class Repo implements CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    return Repo.load(store, root, keypair)
+    return Repo.load(store, ucans, root, keypair)
   }
 
   // arrow fn to preserve scope
   updateRootForProgram =
     (programName: string) =>
-    async (newCids: CidSet): Promise<void> => {
+    async (update: UpdateData): Promise<void> => {
       const program = this.programs[programName]
       if (!program) {
         throw new Error(
@@ -122,6 +145,7 @@ export class Repo implements CarStreamable {
         )
       }
       // if a new program, make sure we add the structural nodes
+      const newCids = update.newCids
       if (this.programCids[programName] === undefined) {
         newCids
           .add(program.cid)
@@ -129,17 +153,24 @@ export class Repo implements CarStreamable {
           .add(program.interactions.cid)
       }
       this.programCids[programName] = program.cid
-      await this.updateRoot(newCids)
+      await this.updateRoot({
+        ...update,
+        program: programName,
+        newCids,
+      })
     }
 
-  updateRoot = async (newCids: CidSet): Promise<void> => {
+  updateRoot = async (update: UpdateData): Promise<void> => {
     if (this.keypair === null) {
       throw new Error('No keypair provided. Repo is read-only.')
     }
+    const newCids = update.newCids
+    const tokenCid = await this.blockstore.put('test') //@TODO Fix this
     const root: RepoRoot = {
       did: this.did,
       prev: this.cid,
       new_cids: newCids.toList(),
+      auth_token: tokenCid,
       programs: this.programCids,
       relationships: this.relationships.cid,
     }

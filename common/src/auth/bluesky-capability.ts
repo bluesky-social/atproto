@@ -32,14 +32,26 @@ Example:
 At the moment, for demonstration purposes, we support only one capability level: "WRITE"
 */
 
+export const BlueskyAbilityLevels = {
+  MAINTAINANCE: 0,
+  WRITE: 1,
+}
+export type BlueskyAbility = keyof typeof BlueskyAbilityLevels
+
+export const isBlueskyAbility = (
+  ability: string,
+): ability is BlueskyAbility => {
+  return ability === 'MAINTAINANCE' || ability === 'WRITE'
+}
+
 export interface BlueskyCapability extends Capability {
   bluesky: string
-  cap: 'WRITE' // @TODO: add in other levels of authority here?
+  cap: BlueskyAbility
 }
 
 export const blueskySemantics: CapabilitySemantics<BlueskyCapability> = {
   tryParsing(cap: Capability): BlueskyCapability | null {
-    if (typeof cap.bluesky === 'string' && cap.cap === 'WRITE') {
+    if (typeof cap.bluesky === 'string' && isBlueskyAbility(cap.cap)) {
       return {
         bluesky: cap.bluesky,
         cap: cap.cap,
@@ -52,6 +64,15 @@ export const blueskySemantics: CapabilitySemantics<BlueskyCapability> = {
     parentCap: BlueskyCapability,
     childCap: BlueskyCapability,
   ): BlueskyCapability | null | CapabilityEscalation<BlueskyCapability> {
+    if (
+      BlueskyAbilityLevels[childCap.cap] > BlueskyAbilityLevels[parentCap.cap]
+    ) {
+      return {
+        escalation: 'Capability level escalation',
+        capability: childCap,
+      }
+    }
+
     const [childDid, childProgram, childCollection, childTid] =
       childCap.bluesky.split('|')
     const [parentDid, parentProgram, parentCollection, parentTid] =

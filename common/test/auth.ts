@@ -102,3 +102,7 @@ test('token does not work for other TIDs', async (t) => {
   )
   t.pass('yay')
 })
+
+test('ucan store', async (t) => {
+  const store = await ucan.Store.fromTokens([])
+})

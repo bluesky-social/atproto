@@ -3,8 +3,9 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
-import { ProgramRoot, schema } from './types.js'
+import { Collection, ProgramRoot, schema, UpdateData } from './types.js'
 import CidSet from './cid-set.js'
+import TID from './tid.js'
 
 export class ProgramStore {
   blockstore: IpldStore
@@ -12,7 +13,7 @@ export class ProgramStore {
   interactions: TidCollection
   profile: CID | null
   cid: CID
-  onUpdate: ((newCids: CidSet) => Promise<void>) | null
+  onUpdate: ((update: UpdateData) => Promise<void>) | null
 
   constructor(params: {
     blockstore: IpldStore
@@ -28,8 +29,8 @@ export class ProgramStore {
     this.cid = params.cid
     this.onUpdate = null
 
-    this.posts.onUpdate = this.updateRoot
-    this.interactions.onUpdate = this.updateRoot
+    this.posts.onUpdate = this.updateRoot('posts')
+    this.interactions.onUpdate = this.updateRoot('interactions')
   }
 
   static async create(blockstore: IpldStore) {
@@ -70,21 +71,30 @@ export class ProgramStore {
   }
 
   // arrow fn to preserve scope
-  updateRoot = async (newCids: CidSet): Promise<void> => {
-    this.cid = await this.blockstore.put({
-      posts: this.posts.cid,
-      interactions: this.interactions.cid,
-      profile: this.profile,
-    })
-    if (this.onUpdate) {
-      await this.onUpdate(newCids.add(this.cid))
+  updateRoot =
+    (collection: Collection) =>
+    async (update: UpdateData): Promise<void> => {
+      this.cid = await this.blockstore.put({
+        posts: this.posts.cid,
+        interactions: this.interactions.cid,
+        profile: this.profile,
+      })
+      if (this.onUpdate) {
+        await this.onUpdate({
+          collection,
+          tid: update.tid,
+          newCids: update.newCids.add(this.cid),
+        })
+      }
     }
-  }
 
   async setProfile(cid: CID | null): Promise<void> {
     this.profile = cid
     const newCids = new CidSet(cid === null ? [] : [cid])
-    await this.updateRoot(newCids)
+    await this.updateRoot('profile')({
+      collection: 'profile',
+      newCids,
+    })
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
