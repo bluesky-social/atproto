@@ -1,6 +1,7 @@
 import test from 'ava'
 
 import * as ucan from 'ucans'
+import * as auth from '../src/auth/index.js'
 
 import Repo from '../src/repo/index.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
@@ -19,7 +20,13 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipld = IpldStore.createInMemory()
   const keypair = await ucan.EdKeypair.create()
-  const repo = await Repo.create(ipld, keypair.did(), keypair)
+  const token = await auth.fullyPermissioned(keypair.did(), keypair)
+  const repo = await Repo.create(
+    ipld,
+    [token.encoded()],
+    keypair.did(),
+    keypair,
+  )
   const programName = 'did:bsky:test'
   const otherProgram = 'did:bsky:other'
   t.context = { ipld, keypair, repo, programName, otherProgram } as Context
@@ -124,7 +131,7 @@ test('loads from blockstore', async (t) => {
 
   await repo.relationships.follow(follow.did, follow.username)
 
-  const loaded = await Repo.load(ipld, repo.cid)
+  const loaded = await Repo.load(ipld, [], repo.cid)
   const got = await loaded.runOnProgram(programName, async (program) => {
     return Promise.all([
       program.posts.getEntry(postTid),

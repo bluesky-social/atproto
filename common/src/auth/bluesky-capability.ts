@@ -33,7 +33,7 @@ At the moment, for demonstration purposes, we support only one capability level:
 */
 
 export const BlueskyAbilityLevels = {
-  MAINTAINANCE: 0,
+  MAINTENANCE: 0,
   WRITE: 1,
 }
 export type BlueskyAbility = keyof typeof BlueskyAbilityLevels
@@ -41,7 +41,7 @@ export type BlueskyAbility = keyof typeof BlueskyAbilityLevels
 export const isBlueskyAbility = (
   ability: string,
 ): ability is BlueskyAbility => {
-  return ability === 'MAINTAINANCE' || ability === 'WRITE'
+  return ability === 'MAINTENANCE' || ability === 'WRITE'
 }
 
 export interface BlueskyCapability extends Capability {
@@ -139,7 +139,7 @@ export const tidEscalation = (cap: BlueskyCapability) => {
   }
 }
 
-export function blueskyCapability(
+export function writeCap(
   did: string,
   program?: string,
   collection?: Collection,
@@ -160,6 +160,13 @@ export function blueskyCapability(
   return {
     bluesky: resource,
     cap: 'WRITE',
+  }
+}
+
+export function maintenanceCap(did: string): BlueskyCapability {
+  return {
+    bluesky: `${did}|*`,
+    cap: 'MAINTENANCE',
   }
 }
 

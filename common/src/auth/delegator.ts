@@ -1,9 +1,6 @@
 import * as ucan from 'ucans'
 
-import {
-  blueskyCapability,
-  blueskySemantics,
-} from '../auth/bluesky-capability.js'
+import { writeCap } from '../auth/bluesky-capability.js'
 import TID from '../repo/tid.js'
 import { Collection } from '../repo/types.js'
 
@@ -20,7 +17,7 @@ export const delegateToken = async (
       .issuedBy(keypair)
       .toAudience(serverDid)
       .withLifetimeInSeconds(30)
-      .claimCapability(blueskyCapability(did, program, collection, tid))
+      .claimCapability(writeCap(did, program, collection, tid))
       // .delegateCapability(
       //   blueskySemantics,
       //   blueskyCapability(did, program, collection, tid),

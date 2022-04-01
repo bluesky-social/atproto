@@ -4,7 +4,7 @@ import { Chained, isCapabilityEscalation } from 'ucans'
 import TID from '../repo/tid.js'
 import { Collection } from '../repo/types.js'
 import {
-  blueskyCapability,
+  writeCap,
   blueskyCapabilities,
   blueskySemantics,
 } from './bluesky-capability.js'
@@ -61,7 +61,7 @@ export const hasPostingPermission =
   (did: string, program: string, collection: Collection, tid: TID) =>
   (token: Chained): Error | null => {
     // the capability we need for the given post
-    const needed = blueskyCapability(did, program, collection, tid)
+    const needed = writeCap(did, program, collection, tid)
     for (const cap of blueskyCapabilities(token)) {
       // skip over escalations
       if (isCapabilityEscalation(cap)) continue

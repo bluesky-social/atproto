@@ -6,7 +6,6 @@ import * as check from '../common/check.js'
 import { assureAxiosError } from '../network/util.js'
 import * as ucan from 'ucans'
 import { Follow } from '../repo/types.js'
-import { buildTokenForPost } from '../auth/delegator.js'
 
 export class MicroblogDelegator {
   programName = 'did:bsky:microblog'
@@ -18,21 +17,6 @@ export class MicroblogDelegator {
     private keypair: ucan.Keypair & ucan.Didable,
   ) {
     this.did = keypair.did()
-  }
-
-  async tokenForPost(
-    collection: 'post' | 'interaction',
-    tid: TID,
-  ): Promise<ucan.Chained> {
-    return buildTokenForPost(
-      'SERVER_DID',
-      this.did,
-      this.programName,
-      collection,
-      tid,
-      this.keypair,
-      this.authority,
-    )
   }
 
   async register(username: string): Promise<void> {

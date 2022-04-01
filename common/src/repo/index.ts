@@ -19,6 +19,11 @@ import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import ProgramStore from './program-store.js'
 import Relationships from './relationships.js'
+import {
+  blueskySemantics,
+  maintenanceCap,
+  writeCap,
+} from '../auth/bluesky-capability.js'
 
 export class Repo implements CarStreamable {
   blockstore: IpldStore
@@ -28,7 +33,7 @@ export class Repo implements CarStreamable {
   relationships: Relationships
   cid: CID
   did: DID
-  private keypair: Keypair | null
+  private keypair: (Keypair & Didable) | null
 
   constructor(params: {
     blockstore: IpldStore
@@ -37,7 +42,7 @@ export class Repo implements CarStreamable {
     relationships: Relationships
     cid: CID
     did: DID
-    keypair?: Keypair
+    keypair?: Keypair & Didable
   }) {
     this.blockstore = params.blockstore
     this.ucanStore = params.ucanStore
@@ -58,7 +63,16 @@ export class Repo implements CarStreamable {
     keypair: Keypair & Didable,
   ) {
     const ucanStore = await ucan.Store.fromTokens(ucans)
-    const tokenCid = await blockstore.put(ucan)
+    const foundUcan = await ucanStore.findWithCapability(
+      keypair.did(),
+      blueskySemantics,
+      maintenanceCap(did),
+      () => true,
+    )
+    if (!foundUcan.success) {
+      throw new Error(`No valid Ucan for creating repo: ${foundUcan.reason}`)
+    }
+    const tokenCid = await blockstore.put(foundUcan.ucan.encoded())
     const relationships = await Relationships.create(blockstore)
     const rootObj: RepoRoot = {
       did,
@@ -93,7 +107,7 @@ export class Repo implements CarStreamable {
     blockstore: IpldStore,
     ucans: string[],
     cid: CID,
-    keypair?: Keypair,
+    keypair?: Keypair & Didable,
   ) {
     const ucanStore = await ucan.Store.fromTokens(ucans)
     const commit = await blockstore.get(cid, schema.commit)
@@ -117,7 +131,7 @@ export class Repo implements CarStreamable {
     buf: Uint8Array,
     store: IpldStore,
     ucans: string[],
-    keypair?: Keypair,
+    keypair?: Keypair & Didable,
   ) {
     const car = await CarReader.fromBytes(buf)
 
@@ -236,6 +250,33 @@ export class Repo implements CarStreamable {
 
   async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
     return this.blockstore.get(cid, schema)
+  }
+
+  // UCAN Auth
+  // -----------
+
+  async ucanForOperation(update: UpdateData): Promise<CID> {
+    if (!this.keypair) {
+      throw new Error('No keypair provided. Repo is read-only.')
+    }
+    const neededCap = writeCap(
+      this.did,
+      update.program,
+      update.collection,
+      update.tid,
+    )
+    const foundUcan = this.ucanStore.findWithCapability(
+      this.keypair.did(),
+      blueskySemantics,
+      neededCap,
+      () => true,
+    )
+    if (!foundUcan.success) {
+      throw new Error(
+        `Could not find a valid ucan for operation: ${neededCap.bluesky}`,
+      )
+    }
+    return this.blockstore.put(foundUcan.ucan.encoded())
   }
 
   // CAR files
