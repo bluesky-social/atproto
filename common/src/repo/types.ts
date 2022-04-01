@@ -37,6 +37,9 @@ const entry = z.object({
 })
 export type Entry = z.infer<typeof entry>
 
+const collection = z.enum(['posts', 'interactions'])
+export type Collection = z.infer<typeof collection>
+
 const follow = z.object({
   did: z.string(),
   username: z.string(),
@@ -51,6 +54,7 @@ export const schema = {
   commit,
   idMapping,
   entry,
+  collection,
   follow,
 }
 

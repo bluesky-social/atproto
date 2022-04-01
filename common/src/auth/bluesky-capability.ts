@@ -4,8 +4,10 @@ import {
   CapabilitySemantics,
   CapabilityEscalation,
   Chained,
+  isCapabilityEscalation,
 } from 'ucans'
 import TID from '../repo/tid'
+import { Collection } from '../repo/types'
 
 /*
 Bluesky Ucans:
@@ -30,7 +32,7 @@ Example:
 At the moment, for demonstration purposes, we support only one capability level: "WRITE"
 */
 
-export interface BlueskyCapability {
+export interface BlueskyCapability extends Capability {
   bluesky: string
   cap: 'WRITE' // @TODO: add in other levels of authority here?
 }
@@ -82,8 +84,17 @@ export const blueskySemantics: CapabilitySemantics<BlueskyCapability> = {
     } else if (childTid !== parentTid) {
       return null
     }
-    return null
+    // they totally match
+    return childCap
   },
+}
+
+export const hasPermission = (
+  parent: BlueskyCapability,
+  child: BlueskyCapability,
+): boolean => {
+  const attempt = blueskySemantics.tryDelegating(parent, child)
+  return attempt !== null && !isCapabilityEscalation(attempt)
 }
 
 export const namespaceEscalation = (cap: BlueskyCapability) => {
@@ -110,9 +121,9 @@ export const tidEscalation = (cap: BlueskyCapability) => {
 export function blueskyCapability(
   did: string,
   program?: string,
-  collection?: 'post' | 'interaction',
+  collection?: Collection,
   tid?: TID,
-): Capability {
+): BlueskyCapability {
   let resource = did
   if (program) {
     resource += '|' + program

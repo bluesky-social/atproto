@@ -4,31 +4,35 @@ import TID from '../repo/tid.js'
 import { Post, Like, schema, Timeline } from './types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError } from '../network/util.js'
-import IpldStore from '../blockstore/ipld-store.js'
 import * as ucan from 'ucans'
 import { Follow } from '../repo/types.js'
+import { buildTokenForPost } from '../auth/delegator.js'
 
 export class MicroblogDelegator {
   programName = 'did:bsky:microblog'
   did: string
-  blockstore: IpldStore
 
   constructor(
     public url: string,
+    public authority: ucan.Chained,
     private keypair: ucan.Keypair & ucan.Didable,
   ) {
-    // ephemeral used for quick block storage & getting CIDs
     this.did = keypair.did()
-    this.blockstore = IpldStore.createInMemory()
   }
 
-  async makeUcan(): Promise<void> {
-    ucan.build({
-      issuer: this.keypair,
-      audience: 'did:server',
-      capabilities: [],
-      expiration: 30,
-    })
+  async tokenForPost(
+    collection: 'post' | 'interaction',
+    tid: TID,
+  ): Promise<ucan.Chained> {
+    return buildTokenForPost(
+      'SERVER_DID',
+      this.did,
+      this.programName,
+      collection,
+      tid,
+      this.keypair,
+      this.authority,
+    )
   }
 
   async register(username: string): Promise<void> {
