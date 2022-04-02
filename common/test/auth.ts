@@ -2,7 +2,7 @@ import test from 'ava'
 
 import * as ucan from 'ucans'
 import { checkUcan, hasAudience } from '../src/auth/ucan-checks.js'
-import { delegateToken } from '../src/auth/delegator.js'
+import * as auth from '../src/auth/index.js'
 import TID from '../src/repo/tid.js'
 import { hasPostingPermission } from '../src/auth/ucan-checks.js'
 import { Collection } from '../src/repo/types.js'
@@ -24,7 +24,7 @@ test.beforeEach(async (t) => {
   const program = 'did:bsky:microblog'
   const collection = 'posts'
   const tid = TID.next()
-  const token = await delegateToken(
+  const token = await auth.forPost(
     serverDid,
     did,
     program,

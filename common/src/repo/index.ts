@@ -179,7 +179,7 @@ export class Repo implements CarStreamable {
       throw new Error('No keypair provided. Repo is read-only.')
     }
     const newCids = update.newCids
-    const tokenCid = await this.blockstore.put('test') //@TODO Fix this
+    const tokenCid = await this.ucanForOperation(update)
     const root: RepoRoot = {
       did: this.did,
       prev: this.cid,
