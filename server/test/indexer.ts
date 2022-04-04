@@ -1,17 +1,15 @@
 import test from 'ava'
 
-import * as ucan from 'ucans'
-
 import {
   IpldStore,
   TID,
   MicroblogDelegator,
   Post,
   TimelinePost,
-  auth,
 } from '@bluesky-demo/common'
 import Database from '../src/db/index.js'
 import server from '../src/server.js'
+import { newClient } from './_util.js'
 
 const USE_TEST_SERVER = false
 
@@ -31,16 +29,10 @@ test.before('run server', async () => {
     await db.createTables()
     server(serverBlockstore, db, PORT)
   }
-  const newClient = async (): Promise<MicroblogDelegator> => {
-    const key = await ucan.EdKeypair.create()
-    const token = await auth.claimFull(key.did(), key)
-    const ucans = await ucan.Store.fromTokens([token.encoded()])
-    return new MicroblogDelegator(SERVER_URL, key.did(), key, ucans)
-  }
-  alice = await newClient()
-  bob = await newClient()
-  carol = await newClient()
-  dan = await newClient()
+  alice = await newClient(SERVER_URL)
+  bob = await newClient(SERVER_URL)
+  carol = await newClient(SERVER_URL)
+  dan = await newClient(SERVER_URL)
   await alice.register('alice')
   await bob.register('bob')
   await carol.register('carol')
