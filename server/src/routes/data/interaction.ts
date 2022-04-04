@@ -1,8 +1,10 @@
 import express from 'express'
 import { z } from 'zod'
+import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import { ServerError } from '../../error.js'
-import { schema, check, TID } from '@bluesky-demo/common'
+import { schema, check, TID, ucanCheck } from '@bluesky-demo/common'
+import { SERVER_DID } from '../../server-identity.js'
 
 const router = express.Router()
 
@@ -77,7 +79,17 @@ router.post('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const like = req.body
-  const repo = await util.loadRepo(res, like.author)
+  const ucanStore = await auth.checkReq(
+    req,
+    ucanCheck.hasAudience(SERVER_DID),
+    ucanCheck.hasPostingPermission(
+      like.author,
+      like.program,
+      'interactions',
+      TID.fromStr(like.tid),
+    ),
+  )
+  const repo = await util.loadRepo(res, like.author, ucanStore)
   const likeCid = await repo.put(like)
   await repo.runOnProgram(like.program, async (store) => {
     return store.interactions.addEntry(TID.fromStr(like.tid), likeCid)
@@ -103,7 +115,17 @@ router.delete('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, tid } = req.body
-  const repo = await util.loadRepo(res, did)
+  const ucanStore = await auth.checkReq(
+    req,
+    ucanCheck.hasAudience(SERVER_DID),
+    ucanCheck.hasPostingPermission(
+      did,
+      program,
+      'interactions',
+      TID.fromStr(tid),
+    ),
+  )
+  const repo = await util.loadRepo(res, did, ucanStore)
   await repo.runOnProgram(program, async (store) => {
     return store.interactions.deleteEntry(TID.fromStr(tid))
   })

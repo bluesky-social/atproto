@@ -53,8 +53,13 @@ router.delete('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { creator, target } = req.body
+  const ucanStore = await auth.checkReq(
+    req,
+    ucanCheck.hasAudience(SERVER_DID),
+    ucanCheck.hasRelationshipsPermission(creator),
+  )
   const db = util.getDB(res)
-  const repo = await util.loadRepo(res, creator)
+  const repo = await util.loadRepo(res, creator, ucanStore)
   await repo.relationships.unfollow(target)
   await db.deleteFollow(creator, target)
   await db.updateRepoRoot(creator, repo.cid)
