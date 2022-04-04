@@ -2,7 +2,6 @@ import { CID } from 'multiformats/cid'
 import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-import { Didable, Keypair } from 'ucans'
 import * as ucan from 'ucans'
 
 import {
@@ -13,7 +12,7 @@ import {
   schema,
   UpdateData,
 } from './types.js'
-import { DID } from '../common/types.js'
+import { DID, Keypair } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
@@ -33,7 +32,7 @@ export class Repo implements CarStreamable {
   relationships: Relationships
   cid: CID
   did: DID
-  private keypair: (Keypair & Didable) | null
+  private keypair: Keypair | null
 
   constructor(params: {
     blockstore: IpldStore
@@ -42,7 +41,7 @@ export class Repo implements CarStreamable {
     relationships: Relationships
     cid: CID
     did: DID
-    keypair?: Keypair & Didable
+    keypair?: Keypair
   }) {
     this.blockstore = params.blockstore
     this.ucanStore = params.ucanStore
@@ -58,11 +57,10 @@ export class Repo implements CarStreamable {
 
   static async create(
     blockstore: IpldStore,
-    ucans: string[],
     did: string,
-    keypair: Keypair & Didable,
+    keypair: Keypair,
+    ucanStore: ucan.Store,
   ) {
-    const ucanStore = await ucan.Store.fromTokens(ucans)
     const foundUcan = await ucanStore.findWithCapability(
       keypair.did(),
       blueskySemantics,
@@ -105,11 +103,10 @@ export class Repo implements CarStreamable {
 
   static async load(
     blockstore: IpldStore,
-    ucans: string[],
     cid: CID,
-    keypair?: Keypair & Didable,
+    keypair?: Keypair,
+    ucanStore?: ucan.Store,
   ) {
-    const ucanStore = await ucan.Store.fromTokens(ucans)
     const commit = await blockstore.get(cid, schema.commit)
     const root = await blockstore.get(commit.root, schema.repoRoot)
     const relationships = await Relationships.load(
@@ -118,7 +115,7 @@ export class Repo implements CarStreamable {
     )
     return new Repo({
       blockstore,
-      ucanStore,
+      ucanStore: ucanStore || (await ucan.Store.fromTokens([])),
       programCids: root.programs,
       relationships,
       cid,
@@ -130,8 +127,8 @@ export class Repo implements CarStreamable {
   static async fromCarFile(
     buf: Uint8Array,
     store: IpldStore,
-    ucans: string[],
-    keypair?: Keypair & Didable,
+    keypair?: Keypair,
+    ucanStore?: ucan.Store,
   ) {
     const car = await CarReader.fromBytes(buf)
 
@@ -145,7 +142,7 @@ export class Repo implements CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    return Repo.load(store, ucans, root, keypair)
+    return Repo.load(store, root, keypair, ucanStore)
   }
 
   // arrow fn to preserve scope

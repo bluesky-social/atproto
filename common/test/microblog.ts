@@ -19,13 +19,9 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipld = IpldStore.createInMemory()
   const keypair = await ucan.EdKeypair.create()
-  const token = await auth.fullyPermissioned(keypair.did(), keypair)
-  const repo = await Repo.create(
-    ipld,
-    [token.encoded()],
-    keypair.did(),
-    keypair,
-  )
+  const token = await auth.claimFull(keypair.did(), keypair)
+  const ucanStore = await ucan.Store.fromTokens([token.encoded()])
+  const repo = await Repo.create(ipld, keypair.did(), keypair, ucanStore)
   const microblog = new Microblog(repo)
   t.context = { ipld, keypair, repo, microblog } as Context
   t.pass('Context setup')

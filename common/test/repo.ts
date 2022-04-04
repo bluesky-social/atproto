@@ -20,13 +20,9 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipld = IpldStore.createInMemory()
   const keypair = await ucan.EdKeypair.create()
-  const token = await auth.fullyPermissioned(keypair.did(), keypair)
-  const repo = await Repo.create(
-    ipld,
-    [token.encoded()],
-    keypair.did(),
-    keypair,
-  )
+  const token = await auth.claimFull(keypair.did(), keypair)
+  const ucanStore = await ucan.Store.fromTokens([token.encoded()])
+  const repo = await Repo.create(ipld, keypair.did(), keypair, ucanStore)
   const programName = 'did:bsky:test'
   const otherProgram = 'did:bsky:other'
   t.context = { ipld, keypair, repo, programName, otherProgram } as Context
@@ -131,7 +127,7 @@ test('loads from blockstore', async (t) => {
 
   await repo.relationships.follow(follow.did, follow.username)
 
-  const loaded = await Repo.load(ipld, [], repo.cid)
+  const loaded = await Repo.load(ipld, repo.cid)
   const got = await loaded.runOnProgram(programName, async (program) => {
     return Promise.all([
       program.posts.getEntry(postTid),

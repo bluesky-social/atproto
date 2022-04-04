@@ -13,7 +13,6 @@ type Context = {
   keypairAlice: ucan.EdKeypair
   repoAlice: Repo
   ipldBob: IpldStore
-  keypairBob: ucan.EdKeypair
   tokenBob: ucan.Chained
   programName: string
 }
@@ -21,16 +20,16 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipldAlice = IpldStore.createInMemory()
   const keypairAlice = await ucan.EdKeypair.create()
-  const token = await auth.fullyPermissioned(keypairAlice.did(), keypairAlice)
+  const token = await auth.claimFull(keypairAlice.did(), keypairAlice)
+  const ucanStore = await ucan.Store.fromTokens([token.encoded()])
   const repoAlice = await Repo.create(
     ipldAlice,
-    [token.encoded()],
     keypairAlice.did(),
     keypairAlice,
+    ucanStore,
   )
 
   const ipldBob = IpldStore.createInMemory()
-  const keypairBob = await ucan.EdKeypair.create()
 
   const programName = 'did:bsky:test'
   t.context = {
@@ -38,34 +37,33 @@ test.beforeEach(async (t) => {
     keypairAlice,
     repoAlice,
     ipldBob,
-    keypairBob,
     programName,
   } as Context
   t.pass('Context setup')
 })
 
 test('syncs an empty repo', async (t) => {
-  const { repoAlice, ipldBob, keypairBob } = t.context as Context
+  const { repoAlice, ipldBob } = t.context as Context
   const car = await repoAlice.getFullHistory()
-  const repoBob = await Repo.fromCarFile(car, ipldBob, [])
+  const repoBob = await Repo.fromCarFile(car, ipldBob)
   t.deepEqual(repoBob.programCids, {}, 'loads an empty repo')
 })
 
 test('syncs a repo that is starting from scratch', async (t) => {
-  const { repoAlice, ipldBob, keypairBob, programName } = t.context as Context
+  const { repoAlice, ipldBob, programName } = t.context as Context
   const data = await util.fillRepo(repoAlice, programName, 150, 10, 50)
   const car = await repoAlice.getFullHistory()
-  const repoBob = await Repo.fromCarFile(car, ipldBob, [])
+  const repoBob = await Repo.fromCarFile(car, ipldBob)
   await util.checkRepo(t, repoBob, programName, data)
 })
 
 test('syncs a repo that is behind', async (t) => {
-  const { repoAlice, ipldBob, keypairBob, programName } = t.context as Context
+  const { repoAlice, ipldBob, programName } = t.context as Context
 
   // bring bob up to date with early version of alice's repo
   const data = await util.fillRepo(repoAlice, programName, 150, 10, 50)
   const car = await repoAlice.getFullHistory()
-  const repoBob = await Repo.fromCarFile(car, ipldBob, [])
+  const repoBob = await Repo.fromCarFile(car, ipldBob)
 
   // add more to alice's repo & have bob catch up
   const data2 = await util.fillRepo(repoAlice, programName, 300, 10, 50)
@@ -96,7 +94,7 @@ test('syncs a non-historical copy of a repo', async (t) => {
   const car = await repoAlice.getCarNoHistory()
 
   const ipld = IpldStore.createInMemory()
-  const repoBob = await Repo.fromCarFile(car, ipld, [])
+  const repoBob = await Repo.fromCarFile(car, ipld)
 
   await util.checkRepo(t, repoBob, programName, data)
 })

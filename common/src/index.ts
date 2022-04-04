@@ -10,6 +10,7 @@ export * as check from './common/check.js'
 export * as service from './network/service.js'
 export * as util from './common/util.js'
 export * as ucanCheck from './auth/ucan-checks.js'
+export * as auth from './auth/index.js'
 
 import { schema as microblogSchema } from './microblog/types.js'
 import { schema as commonSchema } from './common/types.js'

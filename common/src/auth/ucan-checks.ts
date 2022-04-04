@@ -1,4 +1,3 @@
-import { Request } from 'express'
 import * as ucan from 'ucans'
 import { Chained, isCapabilityEscalation } from 'ucans'
 import TID from '../repo/tid.js'
@@ -7,23 +6,10 @@ import {
   writeCap,
   blueskyCapabilities,
   blueskySemantics,
+  BlueskyCapability,
 } from './bluesky-capability.js'
 
 type Check = (ucan: Chained) => Error | null
-
-export const checkReq = async (
-  req: Request,
-  ...checks: Check[]
-): Promise<Chained> => {
-  const header = req.headers.authorization
-  if (!header) {
-    throw new Error('No Ucan found in message headers')
-  }
-
-  const stripped = header.replace('Bearer ', '')
-  const decoded = await ucan.Chained.fromToken(stripped)
-  return checkUcan(decoded, ...checks)
-}
 
 export const checkUcan = async (
   token: ucan.Chained,
@@ -57,11 +43,10 @@ export const hasAudience =
     return null
   }
 
-export const hasPostingPermission =
-  (did: string, program: string, collection: Collection, tid: TID) =>
+export const hasValidCapability =
+  (rootDid: string, needed: BlueskyCapability) =>
   (token: Chained): Error | null => {
-    // the capability we need for the given post
-    const needed = writeCap(did, program, collection, tid)
+    // the capability we need for the given action
     for (const cap of blueskyCapabilities(token)) {
       // skip over escalations
       if (isCapabilityEscalation(cap)) continue
@@ -69,9 +54,9 @@ export const hasPostingPermission =
       const attempt = blueskySemantics.tryDelegating(cap.capability, needed)
       if (attempt === null || isCapabilityEscalation(attempt)) continue
       // check root did matches the repo's did
-      if (cap.info.originator !== did) {
+      if (cap.info.originator !== rootDid) {
         return new Error(
-          `Posting permission does not come from the user's root DID: ${did}`,
+          `Posting permission does not come from the user's root DID: ${rootDid}`,
         )
       }
       // check capability is not expired
@@ -87,6 +72,21 @@ export const hasPostingPermission =
     }
     // we looped through all options & couldn't find the capability we need
     return new Error(
-      `Ucan does not permission the ability to post for user: ${did}`,
+      `Ucan does not permission the ability to post for user: ${rootDid}`,
     )
+  }
+
+export const hasRelationshipsPermission =
+  (did: string) =>
+  (token: Chained): Error | null => {
+    const needed = writeCap(did, 'relationships')
+    return hasValidCapability(did, needed)(token)
+  }
+
+export const hasPostingPermission =
+  (did: string, program: string, collection: Collection, tid: TID) =>
+  (token: Chained): Error | null => {
+    // the capability we need for the given post
+    const needed = writeCap(did, program, collection, tid)
+    return hasValidCapability(did, needed)(token)
   }

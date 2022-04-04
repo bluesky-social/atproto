@@ -8,6 +8,7 @@ import {
   MicroblogDelegator,
   Post,
   TimelinePost,
+  auth,
 } from '@bluesky-demo/common'
 import Database from '../src/db/index.js'
 import server from '../src/server.js'
@@ -30,10 +31,16 @@ test.before('run server', async () => {
     await db.createTables()
     server(serverBlockstore, db, PORT)
   }
-  alice = new MicroblogDelegator(SERVER_URL, await ucan.EdKeypair.create())
-  bob = new MicroblogDelegator(SERVER_URL, await ucan.EdKeypair.create())
-  carol = new MicroblogDelegator(SERVER_URL, await ucan.EdKeypair.create())
-  dan = new MicroblogDelegator(SERVER_URL, await ucan.EdKeypair.create())
+  const newClient = async (): Promise<MicroblogDelegator> => {
+    const key = await ucan.EdKeypair.create()
+    const token = await auth.claimFull(key.did(), key)
+    const ucans = await ucan.Store.fromTokens([token.encoded()])
+    return new MicroblogDelegator(SERVER_URL, key.did(), key, ucans)
+  }
+  alice = await newClient()
+  bob = await newClient()
+  carol = await newClient()
+  dan = await newClient()
   await alice.register('alice')
   await bob.register('bob')
   await carol.register('carol')
