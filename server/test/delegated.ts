@@ -2,7 +2,13 @@ import test from 'ava'
 
 import * as ucan from 'ucans'
 
-import { IpldStore, TID, MicroblogDelegator, Post } from '@bluesky-demo/common'
+import {
+  IpldStore,
+  TID,
+  MicroblogDelegator,
+  Post,
+  Like,
+} from '@bluesky-demo/common'
 import Database from '../src/db/index.js'
 import server from '../src/server.js'
 
@@ -42,18 +48,19 @@ test.serial('id retrieval', async (t) => {
   t.is(did, aliceBlog.did, 'did retrieval success')
 })
 
-let postTid: TID
 let post: Post
+let postTid: TID
 const postText = 'hello world!'
 
 test.serial('create post', async (t) => {
-  postTid = await aliceBlog.addPost(postText)
+  post = await aliceBlog.addPost(postText)
+  postTid = TID.fromStr(post.tid)
   t.pass('create post successful')
 })
 
 test.serial('get post', async (t) => {
-  post = (await aliceBlog.getPost(postTid)) as Post
-  t.is(post?.text, postText, 'post matches')
+  const got = await aliceBlog.getPost(postTid)
+  t.is(got?.text, postText, 'post matches')
 })
 
 test.serial('edit post', async (t) => {
@@ -64,13 +71,12 @@ test.serial('edit post', async (t) => {
   t.is(post?.text, newText, 'edited post matches')
 })
 
+let like: Like
 let likeTid: TID
 
 test.serial('create like', async (t) => {
-  const post = await bobBlog.getPostFromUser(aliceBlog.did, postTid)
-  if (post !== null) {
-    likeTid = await bobBlog.likePost(post)
-  }
+  like = await bobBlog.likePost(aliceBlog.did, postTid)
+  likeTid = TID.fromStr(like.tid)
   t.pass('create like successful')
 })
 

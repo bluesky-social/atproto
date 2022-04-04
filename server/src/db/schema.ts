@@ -14,8 +14,8 @@ const userDids = async (db: KnexDB) => {
   })
 }
 
-const microblogPosts = async (db: KnexDB) => {
-  return db.schema.createTable('microblog_posts', (table) => {
+const posts = async (db: KnexDB) => {
+  return db.schema.createTable('posts', (table) => {
     table.unique(['tid', 'author', 'program'])
     table.string('tid')
     table.string('author')
@@ -28,8 +28,8 @@ const microblogPosts = async (db: KnexDB) => {
   })
 }
 
-const microblogLikes = async (db: KnexDB) => {
-  return db.schema.createTable('microblog_interactions', (table) => {
+const likes = async (db: KnexDB) => {
+  return db.schema.createTable('likes', (table) => {
     table.primary(['tid', 'author', 'program'])
     table.string('tid')
     table.string('author').references('user_dids.did')
@@ -43,12 +43,9 @@ const microblogLikes = async (db: KnexDB) => {
     table.string('post_cid')
 
     table.foreign('author').references('did').inTable('user_dids')
-    table.foreign('post_tid').references('tid').inTable('microblog_posts')
-    table.foreign('post_author').references('author').inTable('microblog_posts')
-    table
-      .foreign('post_program')
-      .references('program')
-      .inTable('microblog_posts')
+    table.foreign('post_tid').references('tid').inTable('posts')
+    table.foreign('post_author').references('author').inTable('posts')
+    table.foreign('post_program').references('program').inTable('posts')
   })
 }
 
@@ -66,15 +63,15 @@ const follows = async (db: KnexDB) => {
 export const createTables = async (db: KnexDB) => {
   await userRoots(db)
   await userDids(db)
-  await microblogPosts(db)
-  await microblogLikes(db)
+  await posts(db)
+  await likes(db)
   await follows(db)
 }
 
 export const dropAll = async (db: KnexDB) => {
   await drop(db, 'follows')
-  await drop(db, 'microblog_likes')
-  await drop(db, 'microblog_posts')
+  await drop(db, 'likes')
+  await drop(db, 'posts')
   await drop(db, 'repo_roots')
   await drop(db, 'user_dids')
 }

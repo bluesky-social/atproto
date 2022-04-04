@@ -1,4 +1,4 @@
-import { Like, Post } from '@bluesky-demo/common'
+import { Like, Post, Timeline } from '@bluesky-demo/common'
 import { Follow } from '@bluesky-demo/common/dist/repo/types'
 import knex from 'knex'
 import { CID } from 'multiformats'
@@ -86,7 +86,7 @@ export class Database {
     author: string,
     program: string,
   ): Promise<Post | null> {
-    const row = await this.db('microblog_posts')
+    const row = await this.db('posts')
       .select('*')
       .where({ tid, author, program })
     if (row.length < 1) return null
@@ -94,7 +94,7 @@ export class Database {
   }
 
   async createPost(post: Post, cid: CID): Promise<void> {
-    await this.db('microblog_posts').insert({
+    await this.db('posts').insert({
       ...post,
       cid: cid.toString(),
     })
@@ -102,7 +102,7 @@ export class Database {
 
   async updatePost(post: Post, cid: CID): Promise<void> {
     const { tid, author, program, text, time } = post
-    await this.db('microblog_posts')
+    await this.db('posts')
       .where({ tid, author, program })
       .update({ text, time, cid: cid.toString() })
   }
@@ -112,7 +112,7 @@ export class Database {
     author: string,
     program: string,
   ): Promise<void> {
-    await this.db('microblog_posts').where({ tid, author, program }).delete()
+    await this.db('posts').where({ tid, author, program }).delete()
   }
 
   // LIKES
@@ -122,8 +122,8 @@ export class Database {
     tid: string,
     author: string,
     program: string,
-  ): Promise<Post | null> {
-    const row = await this.db('microblog_interactions')
+  ): Promise<Like | null> {
+    const row = await this.db('likes')
       .select('*')
       .where({ tid, author, program })
     if (row.length < 1) return null
@@ -131,7 +131,7 @@ export class Database {
   }
 
   async createLike(like: Like, cid: CID): Promise<void> {
-    await this.db('microblog_interactions').insert({
+    await this.db('likes').insert({
       ...like,
       cid: cid.toString(),
     })
@@ -142,9 +142,7 @@ export class Database {
     author: string,
     program: string,
   ): Promise<void> {
-    await this.db('microblog_interactions')
-      .where({ tid, author, program })
-      .delete()
+    await this.db('likes').where({ tid, author, program }).delete()
   }
 
   // FOLLOWS
@@ -172,6 +170,70 @@ export class Database {
         target,
       })
       .delete()
+  }
+
+  // INDEXER
+  // -----------
+
+  async retrieveTimeline(
+    user: string,
+    count: number,
+    from?: string,
+  ): Promise<Timeline> {
+    // fallback to a fake TID that is larger than any possible
+    const olderThan = from || 'zzzzzzzzzzzzz'
+    const timeline = await this.db('posts')
+      .join('follows', 'posts.author', '=', 'follows.target')
+      .join('user_dids', 'posts.author', '=', 'user_dids.did')
+      .select('posts.*', 'user_dids.username')
+      .where('follows.creator', user)
+      .where('posts.tid', '<', olderThan)
+      .orderBy('posts.tid', 'desc')
+      .limit(count)
+    return Promise.all(
+      timeline.map(async (p) => ({
+        tid: p.tid,
+        author_did: p.author,
+        author_name: p.username,
+        text: p.text,
+        time: p.time,
+        likes: await this.likeCount(p.author, p.program, p.tid),
+      })),
+    )
+  }
+
+  async likesOnPost(
+    author: string,
+    program: string,
+    tid: string,
+  ): Promise<number> {
+    const res = await this.db('likes').count('*').where({
+      post_author: author,
+      post_program: program,
+      post_tid: tid,
+    })
+    const count = (res[0] || {})['count(*)']
+    if (typeof count !== 'number') {
+      throw new Error('Unable to retrieve like count on post')
+    }
+    return count
+  }
+
+  async likeCount(
+    author: string,
+    program: string,
+    tid: string,
+  ): Promise<number> {
+    const res = await this.db('likes').count('*').where({
+      post_author: author,
+      post_program: program,
+      post_tid: tid,
+    })
+    const count = (res[0] || {})['count(*)']
+    if (typeof count !== 'number') {
+      throw new Error('Unable to retrieve like count on post')
+    }
+    return count
   }
 }
 

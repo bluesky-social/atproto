@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios'
 import TID from '../repo/tid.js'
 
-import { Post, Like, schema } from './types.js'
+import { Post, Like, schema, Timeline } from './types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError } from '../network/util.js'
 import IpldStore from '../blockstore/ipld-store.js'
@@ -45,6 +45,17 @@ export class MicroblogDelegator {
     }
   }
 
+  async retrieveTimeline(count: number, from?: TID): Promise<Timeline> {
+    const params = { user: this.did, count, from: from?.toString() }
+    try {
+      const res = await axios.get(`${this.url}/indexer/timeline`, { params })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
+
   async getPost(tid: TID): Promise<Post | null> {
     return this.getPostFromUser(this.did, tid)
   }
@@ -71,7 +82,7 @@ export class MicroblogDelegator {
     return res.data
   }
 
-  async addPost(text: string): Promise<TID> {
+  async addPost(text: string): Promise<Post> {
     const tid = TID.next()
     const post: Post = {
       tid: tid.toString(),
@@ -86,7 +97,7 @@ export class MicroblogDelegator {
       const err = assureAxiosError(e)
       throw new Error(err.message)
     }
-    return tid
+    return post
   }
 
   async editPost(tid: TID, text: string): Promise<void> {
@@ -182,18 +193,16 @@ export class MicroblogDelegator {
     }
   }
 
-  async likePost(post: Post): Promise<TID> {
-    const postCid = await this.blockstore.put(post)
+  async likePost(postAuthor: string, postTid: TID): Promise<Like> {
     const tid = TID.next()
     const like: Like = {
       tid: tid.toString(),
       program: this.programName,
       author: this.did,
       time: new Date().toISOString(),
-      post_tid: post.tid,
-      post_author: post.author,
-      post_program: post.program,
-      post_cid: postCid.toString(),
+      post_tid: postTid.toString(),
+      post_author: postAuthor,
+      post_program: this.programName,
     }
     try {
       await axios.post(`${this.url}/data/interaction`, like)
@@ -201,7 +210,7 @@ export class MicroblogDelegator {
       const err = assureAxiosError(e)
       throw new Error(err.message)
     }
-    return tid
+    return like
   }
 
   async deleteLike(likeTid: TID): Promise<void> {
@@ -238,6 +247,23 @@ export class MicroblogDelegator {
         params,
       })
       return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
+
+  async likeCount(author: string, tid: TID): Promise<number> {
+    const params = {
+      author,
+      program: this.programName,
+      tid: tid.toString(),
+    }
+    try {
+      const res = await axios.get(`${this.url}/indexer/count/likes`, {
+        params,
+      })
+      return res.data.count
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)

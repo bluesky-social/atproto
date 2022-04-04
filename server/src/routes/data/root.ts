@@ -8,6 +8,7 @@ const router = express.Router()
 export const getRootReq = z.object({
   did: z.string(),
 })
+export type GetRootReq = z.infer<typeof getRootReq>
 
 router.get('/', async (req, res) => {
   if (!check.is(req.query, getRootReq)) {
