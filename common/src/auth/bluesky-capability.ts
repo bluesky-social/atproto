@@ -29,7 +29,9 @@ Example:
   cap: 'WRITE'
 }
 
-At the moment, for demonstration purposes, we support only one capability level: "WRITE"
+At the moment, for demonstration purposes, we support only two capability level: 
+- 'WRITE': this allows full create/update/delete permissions for the given resource
+- 'MAINTENANCE': this does not allow updates to repo objects, but allows maintenance of the repo, such as repo creation
 */
 
 export const BlueskyAbilityLevels = {
