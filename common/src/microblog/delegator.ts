@@ -3,29 +3,86 @@ import TID from '../repo/tid.js'
 
 import { Post, Like, schema, Timeline } from './types.js'
 import * as check from '../common/check.js'
-import { assureAxiosError } from '../network/util.js'
-import IpldStore from '../blockstore/ipld-store.js'
+import { assureAxiosError, authCfg } from '../network/util.js'
 import * as ucan from 'ucans'
-import { Follow } from '../repo/types.js'
+import { Collection, Follow } from '../repo/types.js'
+import { Keypair } from '../common/types.js'
+import * as auth from '../auth/index.js'
 
 export class MicroblogDelegator {
   programName = 'did:bsky:microblog'
-  did: string
-  blockstore: IpldStore
+  keypair: Keypair | null
+  ucanStore: ucan.Store | null
+  serverDid: string | null
 
   constructor(
     public url: string,
-    private keypair: ucan.Keypair & ucan.Didable,
+    public did: string,
+    keypair?: Keypair,
+    ucanStore?: ucan.Store,
   ) {
-    // ephemeral used for quick block storage & getting CIDs
-    this.did = keypair.did()
-    this.blockstore = IpldStore.createInMemory()
+    this.keypair = keypair || null
+    this.ucanStore = ucanStore || null
+    this.serverDid = null
+  }
+
+  async getServerDid(): Promise<string> {
+    if (!this.serverDid) {
+      let did: string
+      try {
+        const res = await axios.get(`${this.url}/.well-known/did.json`)
+        did = res.data.id
+      } catch (e) {
+        const err = assureAxiosError(e)
+        throw new Error(`Could not retrieve server did ${err.message}`)
+      }
+      this.serverDid = did
+    }
+    return this.serverDid
+  }
+
+  async maintenanceToken(): Promise<ucan.Chained> {
+    if (this.keypair === null || this.ucanStore === null) {
+      throw new Error('No keypair or ucan store provided. Client is read-only.')
+    }
+    const serverDid = await this.getServerDid()
+    return auth.delegateMaintenance(serverDid, this.keypair, this.ucanStore)
+  }
+
+  async relationshipToken(): Promise<ucan.Chained> {
+    if (this.keypair === null || this.ucanStore === null) {
+      throw new Error('No keypair or ucan store provided. Client is read-only.')
+    }
+    const serverDid = await this.getServerDid()
+    return auth.delegateForRelationship(
+      serverDid,
+      this.did,
+      this.keypair,
+      this.ucanStore,
+    )
+  }
+
+  async postToken(collection: Collection, tid: TID): Promise<ucan.Chained> {
+    if (this.keypair === null || this.ucanStore === null) {
+      throw new Error('No keypair or ucan store provided. Client is read-only.')
+    }
+    const serverDid = await this.getServerDid()
+    return auth.delegateForPost(
+      serverDid,
+      this.did,
+      this.programName,
+      collection,
+      tid,
+      this.keypair,
+      this.ucanStore,
+    )
   }
 
   async register(username: string): Promise<void> {
     const data = { username, did: this.did }
+    const token = await this.maintenanceToken()
     try {
-      await axios.post(`${this.url}/id/register`, data)
+      await axios.post(`${this.url}/id/register`, data, authCfg(token))
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -91,8 +148,9 @@ export class MicroblogDelegator {
       text,
       time: new Date().toISOString(),
     }
+    const token = await this.postToken('posts', tid)
     try {
-      await axios.post(`${this.url}/data/post`, post)
+      await axios.post(`${this.url}/data/post`, post, authCfg(token))
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -108,8 +166,9 @@ export class MicroblogDelegator {
       text,
       time: new Date().toISOString(),
     }
+    const token = await this.postToken('posts', tid)
     try {
-      await axios.put(`${this.url}/data/post`, updated)
+      await axios.put(`${this.url}/data/post`, updated, authCfg(token))
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -122,8 +181,12 @@ export class MicroblogDelegator {
       did: this.did,
       program: this.programName,
     }
+    const token = await this.postToken('posts', tid)
     try {
-      await axios.delete(`${this.url}/data/post`, { data })
+      await axios.delete(`${this.url}/data/post`, {
+        data,
+        ...authCfg(token),
+      })
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -158,8 +221,9 @@ export class MicroblogDelegator {
 
   async followUser(did: string): Promise<void> {
     const data = { creator: this.did, target: did }
+    const token = await this.relationshipToken()
     try {
-      await axios.post(`${this.url}/data/relationship`, data)
+      await axios.post(`${this.url}/data/relationship`, data, authCfg(token))
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -168,8 +232,12 @@ export class MicroblogDelegator {
 
   async unfollowUser(did: string): Promise<void> {
     const data = { creator: this.did, target: did }
+    const token = await this.relationshipToken()
     try {
-      await axios.delete(`${this.url}/data/relationship`, { data })
+      await axios.delete(`${this.url}/data/relationship`, {
+        data,
+        ...authCfg(token),
+      })
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -204,8 +272,9 @@ export class MicroblogDelegator {
       post_author: postAuthor,
       post_program: this.programName,
     }
+    const token = await this.postToken('interactions', tid)
     try {
-      await axios.post(`${this.url}/data/interaction`, like)
+      await axios.post(`${this.url}/data/interaction`, like, authCfg(token))
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -219,8 +288,12 @@ export class MicroblogDelegator {
       did: this.did,
       program: this.programName,
     }
+    const token = await this.postToken('interactions', likeTid)
     try {
-      await axios.delete(`${this.url}/data/interaction`, { data })
+      await axios.delete(`${this.url}/data/interaction`, {
+        data,
+        ...authCfg(token),
+      })
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)

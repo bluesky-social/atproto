@@ -1,20 +1,16 @@
 import test from 'ava'
 
-import * as ucan from 'ucans'
-
 import {
-  IpldStore,
   TID,
   MicroblogDelegator,
   Post,
   TimelinePost,
 } from '@bluesky-demo/common'
-import Database from '../src/db/index.js'
-import server from '../src/server.js'
+import { newClient, runTestServer } from './_util.js'
 
-const USE_TEST_SERVER = false
+const USE_TEST_SERVER = true
 
-const PORT = 2583
+const PORT = USE_TEST_SERVER ? 2584 : 2583
 const SERVER_URL = `http://localhost:${PORT}`
 
 let alice: MicroblogDelegator
@@ -24,16 +20,12 @@ let dan: MicroblogDelegator
 
 test.before('run server', async () => {
   if (USE_TEST_SERVER) {
-    const db = Database.memory()
-    const serverBlockstore = IpldStore.createInMemory()
-    await db.dropTables()
-    await db.createTables()
-    server(serverBlockstore, db, PORT)
+    await runTestServer(PORT)
   }
-  alice = new MicroblogDelegator(SERVER_URL, await ucan.EdKeypair.create())
-  bob = new MicroblogDelegator(SERVER_URL, await ucan.EdKeypair.create())
-  carol = new MicroblogDelegator(SERVER_URL, await ucan.EdKeypair.create())
-  dan = new MicroblogDelegator(SERVER_URL, await ucan.EdKeypair.create())
+  alice = await newClient(SERVER_URL)
+  bob = await newClient(SERVER_URL)
+  carol = await newClient(SERVER_URL)
+  dan = await newClient(SERVER_URL)
   await alice.register('alice')
   await bob.register('bob')
   await carol.register('carol')
@@ -46,8 +38,6 @@ test.serial('follow multiple users', async (t) => {
   await alice.followUser(dan.did)
   t.pass('followed users')
 })
-
-let timelineTids: TID[]
 
 test.serial('populate the timeline', async (t) => {
   await bob.addPost('one')

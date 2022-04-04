@@ -2,19 +2,31 @@ import { CID } from 'multiformats/cid'
 import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-import { Didable, Keypair } from 'ucans'
+import * as ucan from 'ucans'
 
-import { RepoRoot, CarStreamable, IdMapping, Commit, schema } from './types.js'
-import { DID } from '../common/types.js'
+import {
+  RepoRoot,
+  CarStreamable,
+  IdMapping,
+  Commit,
+  schema,
+  UpdateData,
+} from './types.js'
+import { DID, Keypair } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import ProgramStore from './program-store.js'
-import CidSet from './cid-set.js'
 import Relationships from './relationships.js'
+import {
+  blueskySemantics,
+  maintenanceCap,
+  writeCap,
+} from '../auth/bluesky-capability.js'
 
 export class Repo implements CarStreamable {
   blockstore: IpldStore
+  ucanStore: ucan.Store
   programCids: IdMapping
   programs: { [name: string]: ProgramStore }
   relationships: Relationships
@@ -24,6 +36,7 @@ export class Repo implements CarStreamable {
 
   constructor(params: {
     blockstore: IpldStore
+    ucanStore: ucan.Store
     programCids: IdMapping
     relationships: Relationships
     cid: CID
@@ -31,6 +44,7 @@ export class Repo implements CarStreamable {
     keypair?: Keypair
   }) {
     this.blockstore = params.blockstore
+    this.ucanStore = params.ucanStore
     this.programCids = params.programCids
     this.programs = {}
     this.relationships = params.relationships
@@ -44,13 +58,25 @@ export class Repo implements CarStreamable {
   static async create(
     blockstore: IpldStore,
     did: string,
-    keypair: Keypair & Didable,
+    keypair: Keypair,
+    ucanStore: ucan.Store,
   ) {
+    const foundUcan = await ucanStore.findWithCapability(
+      keypair.did(),
+      blueskySemantics,
+      maintenanceCap(did),
+      () => true,
+    )
+    if (!foundUcan.success) {
+      throw new Error(`No valid Ucan for creating repo: ${foundUcan.reason}`)
+    }
+    const tokenCid = await blockstore.put(foundUcan.ucan.encoded())
     const relationships = await Relationships.create(blockstore)
     const rootObj: RepoRoot = {
       did,
       prev: null,
       new_cids: await relationships.cids(),
+      auth_token: tokenCid, // @FIX THIS
       relationships: relationships.cid,
       programs: {},
     }
@@ -66,6 +92,7 @@ export class Repo implements CarStreamable {
 
     return new Repo({
       blockstore,
+      ucanStore,
       programCids,
       relationships,
       cid,
@@ -74,7 +101,12 @@ export class Repo implements CarStreamable {
     })
   }
 
-  static async load(blockstore: IpldStore, cid: CID, keypair?: Keypair) {
+  static async load(
+    blockstore: IpldStore,
+    cid: CID,
+    keypair?: Keypair,
+    ucanStore?: ucan.Store,
+  ) {
     const commit = await blockstore.get(cid, schema.commit)
     const root = await blockstore.get(commit.root, schema.repoRoot)
     const relationships = await Relationships.load(
@@ -83,6 +115,7 @@ export class Repo implements CarStreamable {
     )
     return new Repo({
       blockstore,
+      ucanStore: ucanStore || (await ucan.Store.fromTokens([])),
       programCids: root.programs,
       relationships,
       cid,
@@ -95,6 +128,7 @@ export class Repo implements CarStreamable {
     buf: Uint8Array,
     store: IpldStore,
     keypair?: Keypair,
+    ucanStore?: ucan.Store,
   ) {
     const car = await CarReader.fromBytes(buf)
 
@@ -108,13 +142,13 @@ export class Repo implements CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    return Repo.load(store, root, keypair)
+    return Repo.load(store, root, keypair, ucanStore)
   }
 
   // arrow fn to preserve scope
   updateRootForProgram =
     (programName: string) =>
-    async (newCids: CidSet): Promise<void> => {
+    async (update: UpdateData): Promise<void> => {
       const program = this.programs[programName]
       if (!program) {
         throw new Error(
@@ -122,6 +156,7 @@ export class Repo implements CarStreamable {
         )
       }
       // if a new program, make sure we add the structural nodes
+      const newCids = update.newCids
       if (this.programCids[programName] === undefined) {
         newCids
           .add(program.cid)
@@ -129,17 +164,24 @@ export class Repo implements CarStreamable {
           .add(program.interactions.cid)
       }
       this.programCids[programName] = program.cid
-      await this.updateRoot(newCids)
+      await this.updateRoot({
+        ...update,
+        program: programName,
+        newCids,
+      })
     }
 
-  updateRoot = async (newCids: CidSet): Promise<void> => {
+  updateRoot = async (update: UpdateData): Promise<void> => {
     if (this.keypair === null) {
       throw new Error('No keypair provided. Repo is read-only.')
     }
+    const newCids = update.newCids
+    const tokenCid = await this.ucanForOperation(update)
     const root: RepoRoot = {
       did: this.did,
       prev: this.cid,
       new_cids: newCids.toList(),
+      auth_token: tokenCid,
       programs: this.programCids,
       relationships: this.relationships.cid,
     }
@@ -205,6 +247,33 @@ export class Repo implements CarStreamable {
 
   async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
     return this.blockstore.get(cid, schema)
+  }
+
+  // UCAN Auth
+  // -----------
+
+  async ucanForOperation(update: UpdateData): Promise<CID> {
+    if (!this.keypair) {
+      throw new Error('No keypair provided. Repo is read-only.')
+    }
+    const neededCap = writeCap(
+      this.did,
+      update.program,
+      update.collection,
+      update.tid,
+    )
+    const foundUcan = this.ucanStore.findWithCapability(
+      this.keypair.did(),
+      blueskySemantics,
+      neededCap,
+      () => true,
+    )
+    if (!foundUcan.success) {
+      throw new Error(
+        `Could not find a valid ucan for operation: ${neededCap.bluesky}`,
+      )
+    }
+    return this.blockstore.put(foundUcan.ucan.encoded())
   }
 
   // CAR files

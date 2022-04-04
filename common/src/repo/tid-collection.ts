@@ -2,7 +2,7 @@ import { CID } from 'multiformats'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping, CarStreamable, schema } from './types.js'
+import { Entry, IdMapping, CarStreamable, schema, UpdateData } from './types.js'
 import SSTable, { TableSize } from './ss-table.js'
 import TID from './tid.js'
 import CidSet from './cid-set.js'
@@ -11,7 +11,7 @@ export class TidCollection implements CarStreamable {
   blockstore: IpldStore
   cid: CID
   data: IdMapping
-  onUpdate: ((newCids: CidSet) => Promise<void>) | null
+  onUpdate: ((update: UpdateData) => Promise<void>) | null
 
   constructor(blockstore: IpldStore, cid: CID, data: IdMapping) {
     this.blockstore = blockstore
@@ -47,10 +47,13 @@ export class TidCollection implements CarStreamable {
     return this.getTable(name)
   }
 
-  async updateRoot(newCids: CidSet): Promise<void> {
+  async updateRoot(tid: TID, newCids: CidSet): Promise<void> {
     this.cid = await this.blockstore.put(this.data)
     if (this.onUpdate) {
-      await this.onUpdate(newCids.add(this.cid))
+      await this.onUpdate({
+        tid,
+        newCids: newCids.add(this.cid),
+      })
     }
   }
 
@@ -159,7 +162,7 @@ export class TidCollection implements CarStreamable {
     await table.addEntry(tid, cid)
     const tableName = oldestKey?.toString() || tid.toString()
     this.data[tableName] = table.cid
-    await this.updateRoot(newCids.add(cid).add(table.cid))
+    await this.updateRoot(tid, newCids.add(cid).add(table.cid))
   }
 
   private async editTableForTid(
@@ -172,7 +175,7 @@ export class TidCollection implements CarStreamable {
     if (!table) throw new Error(`Could not find entry with tid: ${tid}`)
     const newCids = await fn(table)
     this.data[tableName.toString()] = table.cid
-    await this.updateRoot(newCids.add(table.cid))
+    await this.updateRoot(tid, newCids.add(table.cid))
   }
 
   async editEntry(tid: TID, cid: CID): Promise<void> {

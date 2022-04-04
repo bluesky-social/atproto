@@ -5,7 +5,7 @@ import * as HAMT from 'ipld-hashmap'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { CarStreamable, Follow, schema } from './types.js'
+import { CarStreamable, Follow, schema, UpdateData } from './types.js'
 import { DID } from '../common/types.js'
 import CidSet from './cid-set.js'
 
@@ -13,7 +13,7 @@ export class Relationships implements CarStreamable {
   blockstore: IpldStore
   cid: CID
   hamt: HAMT.HashMap<CID>
-  onUpdate: ((newCids: CidSet) => Promise<void>) | null
+  onUpdate: ((update: UpdateData) => Promise<void>) | null
 
   constructor(blockstore: IpldStore, cid: CID, hamt: HAMT.HashMap<CID>) {
     this.blockstore = blockstore
@@ -42,7 +42,7 @@ export class Relationships implements CarStreamable {
   async updateRoot(newCids: CidSet): Promise<void> {
     this.cid = this.hamt.cid
     if (this.onUpdate) {
-      await this.onUpdate(newCids)
+      await this.onUpdate({ program: 'relationships', newCids })
     }
   }
 

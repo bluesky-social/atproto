@@ -1,8 +1,11 @@
 import express from 'express'
 import { z } from 'zod'
-import * as util from '../../util.js'
+
+import { check, ucanCheck } from '@bluesky-demo/common'
+import * as auth from '../../auth.js'
 import { ServerError } from '../../error.js'
-import { check } from '@bluesky-demo/common'
+import * as util from '../../util.js'
+import { SERVER_DID } from '../../server-identity.js'
 
 const router = express.Router()
 
@@ -19,13 +22,18 @@ router.post('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { creator, target } = req.body
+  const ucanStore = await auth.checkReq(
+    req,
+    ucanCheck.hasAudience(SERVER_DID),
+    ucanCheck.hasRelationshipsPermission(creator),
+  )
   const db = util.getDB(res)
   const targetName = await db.getUsername(target)
   if (targetName === null) {
     // @TODO try to find user on network
     throw new ServerError(400, `Could not find user: ${target}`)
   }
-  const repo = await util.loadRepo(res, creator)
+  const repo = await util.loadRepo(res, creator, ucanStore)
   await repo.relationships.follow(target, targetName)
   await db.createFollow(creator, target)
   await db.updateRepoRoot(creator, repo.cid)
@@ -45,8 +53,13 @@ router.delete('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { creator, target } = req.body
+  const ucanStore = await auth.checkReq(
+    req,
+    ucanCheck.hasAudience(SERVER_DID),
+    ucanCheck.hasRelationshipsPermission(creator),
+  )
   const db = util.getDB(res)
-  const repo = await util.loadRepo(res, creator)
+  const repo = await util.loadRepo(res, creator, ucanStore)
   await repo.relationships.unfollow(target)
   await db.deleteFollow(creator, target)
   await db.updateRepoRoot(creator, repo.cid)

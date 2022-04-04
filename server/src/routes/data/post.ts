@@ -1,8 +1,10 @@
 import express from 'express'
 import { z } from 'zod'
+import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import { ServerError } from '../../error.js'
-import { schema, check, TID } from '@bluesky-demo/common'
+import { schema, check, TID, ucanCheck } from '@bluesky-demo/common'
+import { SERVER_DID } from '../../server-identity.js'
 
 const router = express.Router()
 
@@ -77,7 +79,17 @@ router.post('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const post = req.body
-  const repo = await util.loadRepo(res, post.author)
+  const ucanStore = await auth.checkReq(
+    req,
+    ucanCheck.hasAudience(SERVER_DID),
+    ucanCheck.hasPostingPermission(
+      post.author,
+      post.program,
+      'posts',
+      TID.fromStr(post.tid),
+    ),
+  )
+  const repo = await util.loadRepo(res, post.author, ucanStore)
   const postCid = await repo.put(post)
   await repo.runOnProgram(post.program, async (store) => {
     return store.posts.addEntry(TID.fromStr(post.tid), postCid)
@@ -99,7 +111,17 @@ router.put('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const post = req.body
-  const repo = await util.loadRepo(res, post.author)
+  const ucanStore = await auth.checkReq(
+    req,
+    ucanCheck.hasAudience(SERVER_DID),
+    ucanCheck.hasPostingPermission(
+      post.author,
+      post.program,
+      'posts',
+      TID.fromStr(post.tid),
+    ),
+  )
+  const repo = await util.loadRepo(res, post.author, ucanStore)
   const postCid = await repo.put(post)
   await repo.runOnProgram(post.program, async (store) => {
     return store.posts.editEntry(TID.fromStr(post.tid), postCid)
@@ -125,7 +147,12 @@ router.delete('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, tid } = req.body
-  const repo = await util.loadRepo(res, did)
+  const ucanStore = await auth.checkReq(
+    req,
+    ucanCheck.hasAudience(SERVER_DID),
+    ucanCheck.hasPostingPermission(did, program, 'posts', TID.fromStr(tid)),
+  )
+  const repo = await util.loadRepo(res, did, ucanStore)
   await repo.runOnProgram(program, async (store) => {
     return store.posts.deleteEntry(TID.fromStr(tid))
   })

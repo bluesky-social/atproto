@@ -3,6 +3,7 @@ import { Request, Response } from 'express'
 import { Database } from './db/index.js'
 import { SERVER_KEYPAIR } from './server-identity.js'
 import { ServerError } from './error.js'
+import * as ucan from 'ucans'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -46,11 +47,15 @@ export const getLocals = (res: Response): Locals => {
   }
 }
 
-export const loadRepo = async (res: Response, did: string): Promise<Repo> => {
+export const loadRepo = async (
+  res: Response,
+  did: string,
+  ucanStore?: ucan.Store,
+): Promise<Repo> => {
   const { db, blockstore } = getLocals(res)
   const currRoot = await db.getRepoRoot(did)
   if (!currRoot) {
     throw new ServerError(404, `User has not registered a repo root: ${did}`)
   }
-  return Repo.load(blockstore, currRoot, SERVER_KEYPAIR)
+  return Repo.load(blockstore, currRoot, SERVER_KEYPAIR, ucanStore)
 }

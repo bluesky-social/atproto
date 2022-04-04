@@ -61,7 +61,7 @@ test('enforces uniqueness on keys', async (t) => {
   await t.throwsAsync(
     relationships.follow(did, 'bob'),
     { instanceOf: Error },
-    'thorw when adding non-unique key',
+    'throw when adding non-unique key',
   )
 })
 

@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { BlockWriter } from '@ipld/car/writer'
-import { CID } from 'multiformats/cid'
 import { schema as common } from '../common/types.js'
 import TID from './tid.js'
+import CidSet from './cid-set.js'
 
 const tid = z.instanceof(TID)
 
@@ -10,6 +10,7 @@ const repoRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
   new_cids: z.array(common.cid),
+  auth_token: common.cid,
   relationships: common.cid,
   programs: z.record(common.cid),
 })
@@ -37,11 +38,22 @@ const entry = z.object({
 })
 export type Entry = z.infer<typeof entry>
 
+const collection = z.enum(['posts', 'interactions', 'profile'])
+export type Collection = z.infer<typeof collection>
+
 const follow = z.object({
   did: z.string(),
   username: z.string(),
 })
 export type Follow = z.infer<typeof follow>
+
+export type UpdateData = {
+  program?: string
+  collection?: Collection
+  tid?: TID
+  did?: string
+  newCids: CidSet
+}
 
 export const schema = {
   ...common,
@@ -51,6 +63,7 @@ export const schema = {
   commit,
   idMapping,
   entry,
+  collection,
   follow,
 }
 
