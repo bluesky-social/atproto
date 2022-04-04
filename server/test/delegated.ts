@@ -1,18 +1,10 @@
 import test from 'ava'
 
-import {
-  IpldStore,
-  TID,
-  MicroblogDelegator,
-  Post,
-  Like,
-} from '@bluesky-demo/common'
-import Database from '../src/db/index.js'
-import server from '../src/server.js'
+import { TID, MicroblogDelegator, Post, Like } from '@bluesky-demo/common'
 
-import { newClient } from './_util.js'
+import { newClient, runTestServer } from './_util.js'
 
-const USE_TEST_SERVER = false
+const USE_TEST_SERVER = true
 
 const PORT = 2583
 const SERVER_URL = `http://localhost:${PORT}`
@@ -22,11 +14,7 @@ let bob: MicroblogDelegator
 
 test.before('run server', async () => {
   if (USE_TEST_SERVER) {
-    const db = Database.memory()
-    const serverBlockstore = IpldStore.createInMemory()
-    await db.dropTables()
-    await db.createTables()
-    server(serverBlockstore, db, PORT)
+    await runTestServer(PORT)
   }
   alice = await newClient(SERVER_URL)
   bob = await newClient(SERVER_URL)
