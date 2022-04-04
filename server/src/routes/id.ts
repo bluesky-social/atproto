@@ -11,8 +11,11 @@ router.post('/register', async (req, res) => {
   // use UCAN validation for this
   const { username, did } = req.body
   const { db, blockstore } = util.getLocals(res)
-  // @TODO verify maintenance permission
-  const ucanStore = await auth.checkReq(req, ucanCheck.hasAudience(SERVER_DID))
+  const ucanStore = await auth.checkReq(
+    req,
+    ucanCheck.hasAudience(SERVER_DID),
+    ucanCheck.hasMaintenancePermission(did),
+  )
   // create empty repo
   const repo = await Repo.create(blockstore, did, SERVER_KEYPAIR, ucanStore)
   await Promise.all([

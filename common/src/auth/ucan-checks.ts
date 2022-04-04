@@ -7,6 +7,7 @@ import {
   blueskyCapabilities,
   blueskySemantics,
   BlueskyCapability,
+  maintenanceCap,
 } from './bluesky-capability.js'
 
 type Check = (ucan: Chained) => Error | null
@@ -74,6 +75,13 @@ export const hasValidCapability =
     return new Error(
       `Ucan does not permission the ability to post for user: ${rootDid}`,
     )
+  }
+
+export const hasMaintenancePermission =
+  (did: string) =>
+  (token: Chained): Error | null => {
+    const needed = maintenanceCap(did)
+    return hasValidCapability(did, needed)(token)
   }
 
 export const hasRelationshipsPermission =
