@@ -1,6 +1,7 @@
 import cmd from '../../lib/command.js'
-import { Repo } from '../../lib/repo.js'
+import { loadDelegate } from '../../lib/client.js'
 import { REPO_PATH } from '../../lib/env.js'
+import { TID } from '@bluesky-demo/common'
 
 export default cmd({
   name: 'post',
@@ -9,18 +10,10 @@ export default cmd({
   args: [{ name: 'text' }],
   async command(args) {
     const text = args._[0]
-    const repo = await Repo.load(REPO_PATH)
-
+    const client = await loadDelegate(REPO_PATH)
     console.log('Creating post...')
-    const store = await repo.transact(async (store) => {
-      await store.addPost({
-        user: repo.account.name,
-        text,
-      })
-      return store
-    })
-
-    console.log('Uploading to server...')
-    await repo.uploadToServer(store)
+    const post = await client.addPost(text)
+    const tid = TID.fromStr(post.tid)
+    console.log(`Created post: `, tid.formatted())
   },
 })

@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
   const targetName = await db.getUsername(target)
   if (targetName === null) {
     // @TODO try to find user on network
-    throw new ServerError(400, `Could not find user: ${target}`)
+    throw new ServerError(404, `Could not find user: ${target}`)
   }
   const repo = await util.loadRepo(res, creator, ucanStore)
   await repo.relationships.follow(target, targetName)

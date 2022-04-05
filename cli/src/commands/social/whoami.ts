@@ -1,6 +1,7 @@
 import chalk from 'chalk'
+import { loadDelegate } from '../../lib/client.js'
 import cmd from '../../lib/command.js'
-import { Repo } from '../../lib/repo.js'
+import { loadCfg } from '../../lib/config.js'
 import { REPO_PATH } from '../../lib/env.js'
 
 export default cmd({
@@ -10,11 +11,9 @@ export default cmd({
   args: [],
   opts: [],
   async command(args) {
-    const repo = await Repo.load(REPO_PATH)
-    const store = await repo.getLocalUserStore()
-    console.log(`${repo.account.name} ${chalk.gray(repo.account.did)}`)
-    console.log(
-      `${store.posts.length} posts | ${store.follows.length} followed`,
-    ) // @TODO follower count
+    const cfg = await loadCfg(REPO_PATH)
+    const client = await loadDelegate(REPO_PATH)
+    console.log(`${cfg.account.username} ${chalk.gray(client.did)}`)
+    // @TODO display follow/follwer/post counts
   },
 })

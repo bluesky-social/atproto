@@ -31,7 +31,7 @@ export interface RegisteredCmd extends Cmd {
 }
 
 export interface CmdHandler {
-  (args: MinimistParsedArgs): unknown
+  (args: MinimistParsedArgs): any
 }
 
 export interface CmdArg {
@@ -44,11 +44,11 @@ export interface CmdOpt {
   abbr?: string
   type?: 'boolean' | 'string' | 'number'
   help?: string
-  default?: unknown
+  default?: any
 }
 
 interface MinimistParsedArgs {
-  [arg: string]: unknown
+  [arg: string]: any
   '--'?: string[] | undefined
   _: string[]
 }

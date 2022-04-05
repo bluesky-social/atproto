@@ -62,6 +62,15 @@ export class MicroblogDelegator {
     )
   }
 
+  async resolveDid(nameOrDid: string): Promise<string> {
+    if (nameOrDid.startsWith('did:')) return nameOrDid
+    const did = await this.lookupDid(nameOrDid)
+    if (!did) {
+      throw new Error(`Coult not find user: ${nameOrDid}`)
+    }
+    return did
+  }
+
   async postToken(collection: Collection, tid: TID): Promise<ucan.Chained> {
     if (this.keypair === null || this.ucanStore === null) {
       throw new Error('No keypair or ucan store provided. Client is read-only.')
@@ -89,7 +98,7 @@ export class MicroblogDelegator {
     }
   }
 
-  async lookupDid(username: string): Promise<string> {
+  async lookupDid(username: string): Promise<string | null> {
     const params = { resource: username }
     try {
       const res = await axios.get(`${this.url}/.well-known/webfinger`, {
@@ -98,6 +107,9 @@ export class MicroblogDelegator {
       return res.data.id
     } catch (e) {
       const err = assureAxiosError(e)
+      if (err.response?.status === 404) {
+        return null
+      }
       throw new Error(err.message)
     }
   }
@@ -117,7 +129,8 @@ export class MicroblogDelegator {
     return this.getPostFromUser(this.did, tid)
   }
 
-  async getPostFromUser(did: string, tid: TID): Promise<Post | null> {
+  async getPostFromUser(nameOrDid: string, tid: TID): Promise<Post | null> {
+    const did = await this.resolveDid(nameOrDid)
     const params = {
       tid: tid.toString(),
       did: did,
@@ -198,10 +211,11 @@ export class MicroblogDelegator {
   }
 
   async listPostsFromUser(
-    did: string,
+    nameOrDid: string,
     count: number,
     from?: TID,
   ): Promise<Post[]> {
+    const did = await this.resolveDid(nameOrDid)
     const params = {
       did,
       program: this.programName,
@@ -219,7 +233,8 @@ export class MicroblogDelegator {
     }
   }
 
-  async followUser(did: string): Promise<void> {
+  async followUser(nameOrDid: string): Promise<void> {
+    const did = await this.resolveDid(nameOrDid)
     const data = { creator: this.did, target: did }
     const token = await this.relationshipToken()
     try {
@@ -230,7 +245,8 @@ export class MicroblogDelegator {
     }
   }
 
-  async unfollowUser(did: string): Promise<void> {
+  async unfollowUser(nameOrDid: string): Promise<void> {
+    const did = await this.resolveDid(nameOrDid)
     const data = { creator: this.did, target: did }
     const token = await this.relationshipToken()
     try {
@@ -248,8 +264,9 @@ export class MicroblogDelegator {
     return this.listFollowsFromUser(this.did)
   }
 
-  async listFollowsFromUser(did: string): Promise<Follow[]> {
-    const params = { user: did || this.did }
+  async listFollowsFromUser(nameOrDid: string): Promise<Follow[]> {
+    const did = await this.resolveDid(nameOrDid)
+    const params = { user: did }
     try {
       const res = await axios.get(`${this.url}/data/relationship/list`, {
         params,
@@ -305,10 +322,11 @@ export class MicroblogDelegator {
   }
 
   async listLikesFromUser(
-    did: string,
+    nameOrDid: string,
     count: number,
     from?: TID,
   ): Promise<Like[]> {
+    const did = await this.resolveDid(nameOrDid)
     const params = {
       did,
       program: this.programName,

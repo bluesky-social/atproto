@@ -1,9 +1,8 @@
 import prompt from 'prompt'
-import { Repo } from '../../lib/repo.js'
-import { service } from '@bluesky-demo/common'
-import * as ucan from 'ucans'
 import cmd from '../../lib/command.js'
 import { REPO_PATH } from '../../lib/env.js'
+import * as config from '../../lib/config.js'
+import { loadDelegate } from '../../lib/client.js'
 
 prompt.colors = false
 prompt.message = ''
@@ -35,7 +34,7 @@ export default cmd({
         await prompt.get({
           description: 'Username',
           type: 'string',
-          pattern: /^[a-z0-9\-]+$/i,
+          pattern: /^[a-z0-9-]+$/i,
           message: 'Name must be only letters, numbers, or dashes',
           required: true,
           default: username || '',
@@ -60,22 +59,17 @@ export default cmd({
     }
 
     console.log('Generating repo...')
-    const repo = await Repo.createNew(REPO_PATH, username, server)
+
+    await config.writeCfg(REPO_PATH, username, server)
+    const client = await loadDelegate(REPO_PATH)
 
     if (register) {
       console.log('Registering with server...')
       try {
-        // TODO - service needs to use `server`
-        const userStore = await repo.getLocalUserStore()
-        const blueskyDid = await service.getServerDid()
-        const token = await ucan.build({
-          audience: blueskyDid,
-          issuer: repo.keypair,
-        })
-        await service.register(await userStore.getCarFile(), ucan.encode(token))
-      } catch (e: any) {
+        await client.register(username)
+      } catch (e) {
         console.error(`Failed to register with server`)
-        console.error(e.toString())
+        console.error(e)
       }
     } else {
       console.log('Skipping registration')
@@ -83,6 +77,6 @@ export default cmd({
 
     console.log('')
     console.log(`Repo created at ${REPO_PATH}`)
-    console.log(`DID: ${repo.account.did}`)
+    console.log(`DID: ${client.did}`)
   },
 })
