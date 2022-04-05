@@ -7,11 +7,9 @@ export default cmd({
   name: 'follow',
   category: 'social',
   help: 'Follow the given user.',
-  args: [
-    {name: 'username'}
-  ],
+  args: [{ name: 'username' }],
   opts: [],
-  async command (args) {
+  async command(args) {
     const username = args._[0]
     const repo = await Repo.load(REPO_PATH)
 
@@ -21,14 +19,14 @@ export default cmd({
       console.error(`Error: User "${username}" not found`)
       process.exit(1)
     }
-    
+
     console.log('Creating follow...')
-    const store = await repo.transact(async store => {
+    const store = await repo.transact(async (store) => {
       await store.followUser(username, did)
       return store
     })
 
     console.log('Uploading to server...')
     await repo.uploadToServer(store)
-  }
+  },
 })

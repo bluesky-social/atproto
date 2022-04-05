@@ -4,11 +4,9 @@ export default cmd({
   name: 'unfollow',
   category: 'social',
   help: 'Unfollow the given user.',
-  args: [
-    {name: 'id'}
-  ],
+  args: [{ name: 'id' }],
   opts: [],
-  async command (args) {
+  async command(args) {
     throw new Error('TODO')
-  }
+  },
 })

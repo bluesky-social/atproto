@@ -9,10 +9,12 @@ export default cmd({
   help: 'Display the profile of the local user.',
   args: [],
   opts: [],
-  async command (args) {
+  async command(args) {
     const repo = await Repo.load(REPO_PATH)
     const store = await repo.getLocalUserStore()
     console.log(`${repo.account.name} ${chalk.gray(repo.account.did)}`)
-    console.log(`${store.posts.length} posts | ${store.follows.length} followed`) // @TODO follower count
-  }
+    console.log(
+      `${store.posts.length} posts | ${store.follows.length} followed`,
+    ) // @TODO follower count
+  },
 })

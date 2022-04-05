@@ -4,11 +4,9 @@ export default cmd({
   name: 'unlike',
   category: 'interactions',
   help: 'Unlike a post.',
-  args: [
-    {name: 'id'}
-  ],
+  args: [{ name: 'id' }],
   opts: [],
-  async command (args) {
+  async command(args) {
     throw new Error('TODO')
-  }
+  },
 })

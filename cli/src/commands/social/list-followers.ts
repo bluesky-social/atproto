@@ -4,11 +4,9 @@ export default cmd({
   name: 'list followers',
   category: 'social',
   help: 'List the followers for the given user (default to self).',
-  args: [
-    {name: 'id', optional: true}
-  ],
+  args: [{ name: 'id', optional: true }],
   opts: [],
-  async command (args) {
+  async command(args) {
     throw new Error('TODO')
-  }
+  },
 })

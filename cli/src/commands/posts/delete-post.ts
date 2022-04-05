@@ -4,11 +4,9 @@ export default cmd({
   name: 'delete post',
   category: 'posts',
   help: 'Delete an existing post.',
-  args: [
-    {name: 'id'}
-  ],
+  args: [{ name: 'id' }],
   opts: [],
-  async command (args) {
+  async command(args) {
     throw new Error('TODO')
-  }
+  },
 })

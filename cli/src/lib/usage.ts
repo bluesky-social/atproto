@@ -1,26 +1,35 @@
 import chalk from 'chalk'
-import { registeredCommands, RegisteredCmd, CmdOpt, CATEGORIES } from './command.js'
+import {
+  registeredCommands,
+  RegisteredCmd,
+  CmdOpt,
+  CATEGORIES,
+} from './command.js'
 
-export function usage (err: any) {
-  if (err) { 
+export function usage(err: any) {
+  if (err) {
     console.log(chalk.red(`\n${err}`))
   } else {
     console.log('')
   }
-  console.log(`Usage: ${chalk.bold(`scdb`)} <command> ${chalk.gray(`[opts...]`)}`)
+  console.log(
+    `Usage: ${chalk.bold(`scdb`)} <command> ${chalk.gray(`[opts...]`)}`,
+  )
 
   let lhsLength = 0
   const cats: any[] = []
-  function addcat (category: keyof typeof CATEGORIES) {
+  function addcat(category: keyof typeof CATEGORIES) {
     const lhs = []
     const rhs = []
-    for (const cmd of registeredCommands.filter(cmd => cmd.category === category)) {
+    for (const cmd of registeredCommands.filter(
+      (cmd) => cmd.category === category,
+    )) {
       const l = `  ${cmd.name}${cmdArgs(cmd)}`
       lhsLength = Math.max(l.length, lhsLength)
       lhs.push(l)
       rhs.push(cmdHelp(cmd))
     }
-    cats.push({label: CATEGORIES[category], lhs, rhs})
+    cats.push({ label: CATEGORIES[category], lhs, rhs })
   }
   addcat('setup')
   addcat('net')
@@ -37,7 +46,7 @@ export function usage (err: any) {
   process.exit(err ? 1 : 0)
 }
 
-export function commandUsage (cmd: RegisteredCmd) {
+export function commandUsage(cmd: RegisteredCmd) {
   console.log(`${chalk.bold(`scdb ${cmd.name}`)}${cmdArgs(cmd)}${cmdHelp(cmd)}`)
   if (cmd.opts?.length) {
     console.log('')
@@ -47,16 +56,16 @@ export function commandUsage (cmd: RegisteredCmd) {
   }
 }
 
-function cmdArgs (cmd: RegisteredCmd) {
+function cmdArgs(cmd: RegisteredCmd) {
   if (!cmd.args?.length) return ''
-  const argStrings = cmd.args.map(arg => {
+  const argStrings = cmd.args.map((arg) => {
     if (arg.optional) return `[${arg.name}]`
     return `{${arg.name}}`
   })
   return ` ${argStrings.join(' ')}`
 }
 
-function cmdOpt (opt: CmdOpt, extended = false) {
+function cmdOpt(opt: CmdOpt, extended = false) {
   let str = ''
   if (opt.abbr) str += `-${opt.abbr}|`
   str += `--${opt.name}`
@@ -69,6 +78,6 @@ function cmdOpt (opt: CmdOpt, extended = false) {
   return str
 }
 
-function cmdHelp (cmd: RegisteredCmd) {
+function cmdHelp(cmd: RegisteredCmd) {
   return cmd.help ? `  ${cmd.help}` : ''
 }

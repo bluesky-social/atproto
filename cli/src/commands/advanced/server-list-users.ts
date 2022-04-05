@@ -7,11 +7,11 @@ export default cmd({
   help: 'List the users in the configured server.',
   args: [],
   opts: [],
-  async command (args) {
+  async command(args) {
     const users = await service.fetchUsers()
     console.log(`${users.length} users`)
     for (const user of users) {
       console.log(`${user.name.padEnd(10)} ${user.did}`)
     }
-  }
+  },
 })

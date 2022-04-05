@@ -6,21 +6,21 @@ export default cmd({
   name: 'post',
   category: 'posts',
   help: 'Create a new post.',
-  args: [{name: 'text'}],
-  async command (args) {
+  args: [{ name: 'text' }],
+  async command(args) {
     const text = args._[0]
     const repo = await Repo.load(REPO_PATH)
-    
+
     console.log('Creating post...')
-    const store = await repo.transact(async store => {
+    const store = await repo.transact(async (store) => {
       await store.addPost({
         user: repo.account.name,
-        text
+        text,
       })
       return store
     })
 
     console.log('Uploading to server...')
     await repo.uploadToServer(store)
-  }
+  },
 })

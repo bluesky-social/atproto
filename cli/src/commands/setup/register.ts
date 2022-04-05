@@ -10,7 +10,7 @@ export default cmd({
   help: 'Registers the repo with the configured server.',
   args: [],
   opts: [],
-  async command (args) {
+  async command(args) {
     const repo = await Repo.load(REPO_PATH)
     console.log('Registering with server...')
     try {
@@ -19,12 +19,12 @@ export default cmd({
       const blueskyDid = await service.getServerDid()
       const token = await ucan.build({
         audience: blueskyDid,
-        issuer: repo.keypair
+        issuer: repo.keypair,
       })
       await service.register(await userStore.getCarFile(), ucan.encode(token))
     } catch (e: any) {
       console.error(`Failed to register with server`)
       console.error(e.toString())
     }
-  }
+  },
 })

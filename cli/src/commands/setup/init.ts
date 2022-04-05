@@ -13,12 +13,12 @@ export default cmd({
   category: 'setup',
   help: 'Create a new scdb repo.',
   opts: [
-    {name: 'server', type: 'string', default: ''},
-    {name: 'username', type: 'string', default: ''},
-    {name: 'register', type: 'boolean', default: false}
+    { name: 'server', type: 'string', default: '' },
+    { name: 'username', type: 'string', default: '' },
+    { name: 'register', type: 'boolean', default: false },
   ],
-  async command (args) {
-    let {username, server, register} = args
+  async command(args) {
+    let { username, server, register } = args
 
     console.log(` .___   .___ ___.  ___.
 / ___| / ___|  _ \\|  _ \\ 
@@ -31,26 +31,32 @@ export default cmd({
       console.log(`This utility will initialize your scdp repo.`)
       console.log(`Press ^C at any time to quit.`)
       prompt.start()
-      username = (await prompt.get({
-        description: 'Username',
-        type: 'string',
-        pattern: /^[a-z0-9\-]+$/i,
-        message: 'Name must be only letters, numbers, or dashes',
-        required: true,
-        default: username || ''
-      })).question
-      server = (await prompt.get({
-        description: 'Server',
-        type: 'string',
-        required: true,
-        default: server || ''
-      })).question
-      register = (await prompt.get({
-        description: 'Register with the server?',
-        type: 'boolean',
-        required: true,
-        default: true
-      })).question
+      username = (
+        await prompt.get({
+          description: 'Username',
+          type: 'string',
+          pattern: /^[a-z0-9\-]+$/i,
+          message: 'Name must be only letters, numbers, or dashes',
+          required: true,
+          default: username || '',
+        })
+      ).question
+      server = (
+        await prompt.get({
+          description: 'Server',
+          type: 'string',
+          required: true,
+          default: server || '',
+        })
+      ).question
+      register = (
+        await prompt.get({
+          description: 'Register with the server?',
+          type: 'boolean',
+          required: true,
+          default: true,
+        })
+      ).question
     }
 
     console.log('Generating repo...')
@@ -64,7 +70,7 @@ export default cmd({
         const blueskyDid = await service.getServerDid()
         const token = await ucan.build({
           audience: blueskyDid,
-          issuer: repo.keypair
+          issuer: repo.keypair,
         })
         await service.register(await userStore.getCarFile(), ucan.encode(token))
       } catch (e: any) {
@@ -78,5 +84,5 @@ export default cmd({
     console.log('')
     console.log(`Repo created at ${REPO_PATH}`)
     console.log(`DID: ${repo.account.did}`)
-  }
+  },
 })
