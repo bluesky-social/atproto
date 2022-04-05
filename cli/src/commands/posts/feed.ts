@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import cmd from '../../lib/command.js'
-import { LocalRepo } from '../../lib/repo.js'
+import Checkout from '../../lib/checkout.js'
 import { REPO_PATH } from '../../lib/env.js'
 
 export default cmd({
@@ -10,7 +10,7 @@ export default cmd({
   args: [{ name: 'user', optional: true }],
   async command(args) {
     const user = args._[0]
-    const repo = await Repo.load(REPO_PATH)
+    const repo = await Checkout.load(REPO_PATH)
 
     const posts = await (user ? getUserPosts(repo, user) : getFeedPosts(repo))
     for (const post of posts) {
@@ -21,12 +21,14 @@ export default cmd({
   },
 })
 
-async function getUserPosts(repo: Repo, user: string) {
-  const store = await repo.getUserStore(user)
-  return store.posts
+async function getUserPosts(checkout: Checkout, user: string) {
+  // @@TODO: ???
+  // const store = await checkout.getUserStore(user)
+  // return store.posts
+  return []
 }
 
-async function getFeedPosts(repo: Repo) {
+async function getFeedPosts(checkout: Checkout) {
   const store = await repo.getLocalUserStore()
   let posts = store.posts
   for (const follow of store.follows) {

@@ -10,7 +10,7 @@ export interface AccountJson {
   did: string
 }
 
-export class LocalRepo {
+export class Checkout {
   constructor(
     public path: string,
     public keypair: ucan.EdKeypair,
@@ -22,12 +22,12 @@ export class LocalRepo {
     repoPath: string,
     name: string,
     server: string,
-  ): Promise<Repo> {
+  ): Promise<Checkout> {
     try {
       await fsp.mkdir(repoPath, { recursive: true })
-    } catch (e: any) {
+    } catch (e) {
       console.error(`Failed to create repo at ${repoPath}`)
-      console.error(e.toString())
+      console.error(e)
       process.exit(1)
     }
 
@@ -39,7 +39,9 @@ export class LocalRepo {
       did: userDID,
     }
 
-    const blockstore = new Blockstore(path.join(repoPath, 'blockstore'))
+    const blockstore = IpldStore.createPersistent(
+      path.join(repoPath, 'blockstore'),
+    )
     await fsp.writeFile(
       path.join(repoPath, 'scdp.key'),
       await keypair.export(),
@@ -50,38 +52,49 @@ export class LocalRepo {
       JSON.stringify(account, null, 2),
       'utf-8',
     )
-
-    const localUserStore = await UserStore.create(name, blockstore, keypair)
-    const repo = new Repo(repoPath, keypair, account, blockstore)
-    await repo.putRootCid(localUserStore.root)
-    return repo
+    // @TODO: Need a UCAN here
+    const ucanStore = await ucan.Store.fromTokens([])
+    const did = '@TODO'
+    const repo = await Repo.create(blockstore, did, keypair, ucanStore)
+    const checkout = new Checkout(repoPath, keypair, account, blockstore)
+    await checkout.putRootCid(repo.cid)
+    return checkout
   }
 
-  static async load(repoPath: string): Promise<Repo> {
+  static async load(repoPath: string): Promise<Checkout> {
     const secretKeyStr = (await readFile(
       repoPath,
       'scdp.key',
       'utf-8',
     )) as string
     const account = await readAccountFile(repoPath, 'account.json')
-    const blockstore = new Blockstore(path.join(repoPath, 'blockstore'))
+    const blockstore = IpldStore.createPersistent(
+      path.join(repoPath, 'blockstore'),
+    )
     const keypair = ucan.EdKeypair.fromSecretKey(secretKeyStr)
-    return new Repo(repoPath, keypair, account, blockstore)
+    return new Checkout(repoPath, keypair, account, blockstore)
   }
 
-  async getLocalUserStore(): Promise<UserStore> {
-    return UserStore.get(await this.getRootCid(), this.blockstore, this.keypair)
+  async getLocalRepo(): Promise<Repo> {
+    // @TODO: Need a UCAN here
+    const ucanStore = await ucan.Store.fromTokens([])
+    return Repo.load(
+      this.blockstore,
+      await this.getRootCid(),
+      this.keypair,
+      ucanStore,
+    )
   }
 
-  async getUserStore(id: string): Promise<UserStore> {
-    const did = id.startsWith('did:') ? id : await service.fetchUserDid(id)
-    if (did) {
-      const carFile = await service.fetchUser(did)
-      return UserStore.fromCarFile(carFile, this.blockstore, this.keypair) // @TODO !!!! only pass in keypair if this is the local user! (waiting on PR to make keypair optional)
-    } else {
-      throw new Error(`User "${id}" not found`)
-    }
-  }
+  // async getUserStore(id: string): Promise<UserStore> {
+  //   const did = id.startsWith('did:') ? id : await service.fetchUserDid(id)
+  //   if (did) {
+  //     const carFile = await service.fetchUser(did)
+  //     return UserStore.fromCarFile(carFile, this.blockstore, this.keypair) // @TODO !!!! only pass in keypair if this is the local user! (waiting on PR to make keypair optional)
+  //   } else {
+  //     throw new Error(`User "${id}" not found`)
+  //   }
+  // }
 
   async getRootCid() {
     const str = await fsp.readFile(path.join(this.path, 'root.cid'), 'utf-8')
@@ -97,16 +110,17 @@ export class LocalRepo {
     )
   }
 
-  async transact<T>(fn: (store: UserStore) => Promise<T>): Promise<T> {
-    const store = await this.getLocalUserStore()
-    const res = await fn(store)
-    await this.putRootCid(store.root)
+  async transact<T>(fn: (repo: Repo) => Promise<T>): Promise<T> {
+    const repo = await this.getLocalRepo()
+    const res = await fn(repo)
+    await this.putRootCid(repo.cid)
     return res
   }
 
-  async uploadToServer(store?: UserStore): Promise<void> {
-    store = store || (await this.getLocalUserStore())
+  async uploadToServer(repo?: Repo): Promise<void> {
+    repo = repo || (await this.getLocalRepo())
     const blueskyDid = await service.getServerDid()
+    // @TODO use a new UCAN here
     const token = await ucan.build({
       audience: blueskyDid,
       issuer: this.keypair,
@@ -117,7 +131,8 @@ export class LocalRepo {
         },
       ],
     })
-    await service.updateUser(await store.getCarFile(), ucan.encode(token))
+    // @TODO fix updload
+    // await service.updateUser(await repo.getCarFile(), ucan.encode(token))
   }
 }
 
@@ -158,3 +173,5 @@ async function readAccountFile(
   }
   return obj as AccountJson
 }
+
+export default Checkout
