@@ -16,6 +16,7 @@ analytics.txt
 /**/*/node_modules
 /**/*/.next
 /**/*/.data
+/**/*/yarn-error.log
 
 go/bluesky
 go/bsky
