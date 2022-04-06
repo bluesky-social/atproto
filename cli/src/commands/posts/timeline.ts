@@ -23,6 +23,7 @@ export default cmd({
     console.log(``)
     for (const post of timeline) {
       console.log(`"${post.text}" - ${post.author_name}`)
+      console.log(`Likes: ${post.likes}`)
       console.log(chalk.gray(formatDate(post.time)))
       console.log(chalk.gray(`id: ${TID.fromStr(post.tid).formatted()}`))
       console.log(``)

@@ -11,27 +11,48 @@ const router = express.Router()
 // GET INTERACTION
 // --------------
 
-export const getInteractionReq = z.object({
+// find a like by it's TID
+const byTid = z.object({
   did: z.string(),
   program: z.string(),
   tid: z.string(),
 })
+
+// find a like by the post it's on
+const byPost = z.object({
+  did: z.string(),
+  postAuthor: z.string(),
+  postProgram: z.string(),
+  postTid: z.string(),
+})
+
+export const getInteractionReq = z.union([byTid, byPost])
 export type GetInteractionReq = z.infer<typeof getInteractionReq>
 
 router.get('/', async (req, res) => {
   if (!check.is(req.query, getInteractionReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }
-  const { did, program, tid } = req.query
-  const repo = await util.loadRepo(res, did)
-  const interCid = await repo.runOnProgram(program, async (store) => {
-    return store.interactions.getEntry(TID.fromStr(tid))
-  })
-  if (interCid === null) {
-    throw new ServerError(404, 'Could not find interaction')
+  if (check.is(req.query, byTid)) {
+    const { did, program, tid } = req.query
+    const repo = await util.loadRepo(res, did)
+    const interCid = await repo.runOnProgram(program, async (store) => {
+      return store.interactions.getEntry(TID.fromStr(tid))
+    })
+    if (interCid === null) {
+      throw new ServerError(404, 'Could not find interaction')
+    }
+    const like = await repo.get(interCid, schema.microblog.like)
+    res.status(200).send(like)
+  } else {
+    const { did, postAuthor, postProgram, postTid } = req.query
+    const db = util.getDB(res)
+    const like = await db.getLikeByPost(did, postTid, postAuthor, postProgram)
+    if (like === null) {
+      throw new ServerError(404, 'Could not find interaction')
+    }
+    res.status(200).send(like)
   }
-  const like = await repo.get(interCid, schema.microblog.like)
-  res.status(200).send(like)
 })
 
 // LIST INTERACTIONS
@@ -115,22 +136,18 @@ router.delete('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, tid } = req.body
+  const tidObj = TID.fromStr(tid)
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(
-      did,
-      program,
-      'interactions',
-      TID.fromStr(tid),
-    ),
+    ucanCheck.hasPostingPermission(did, program, 'interactions', tidObj),
   )
   const repo = await util.loadRepo(res, did, ucanStore)
   await repo.runOnProgram(program, async (store) => {
-    return store.interactions.deleteEntry(TID.fromStr(tid))
+    return store.interactions.deleteEntry(tidObj)
   })
   const db = util.getDB(res)
-  await db.deleteLike(did, program, tid)
+  await db.deleteLike(tidObj.toString(), did, program)
   await db.updateRepoRoot(did, repo.cid)
   res.status(200).send()
 })

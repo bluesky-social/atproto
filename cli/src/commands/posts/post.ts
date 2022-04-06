@@ -11,7 +11,6 @@ export default cmd({
   async command(args) {
     const text = args._[0]
     const client = await loadDelegate(REPO_PATH)
-    console.log('Creating post...')
     const post = await client.addPost(text)
     const tid = TID.fromStr(post.tid)
     console.log(`Created post: `, tid.formatted())

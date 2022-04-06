@@ -112,7 +112,7 @@ export class Database {
     author: string,
     program: string,
   ): Promise<void> {
-    await this.db('posts').where({ tid, author, program }).delete()
+    await this.db('posts').where({ tid, author, program }).del()
   }
 
   // LIKES
@@ -126,6 +126,19 @@ export class Database {
     const row = await this.db('likes')
       .select('*')
       .where({ tid, author, program })
+    if (row.length < 1) return null
+    return row[0]
+  }
+
+  async getLikeByPost(
+    author: string,
+    post_tid: string,
+    post_author: string,
+    post_program: string,
+  ): Promise<Like | null> {
+    const row = await this.db('likes')
+      .select('*')
+      .where({ author, post_tid, post_author, post_program })
     if (row.length < 1) return null
     return row[0]
   }

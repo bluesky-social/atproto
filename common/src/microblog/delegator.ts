@@ -278,7 +278,8 @@ export class MicroblogDelegator {
     }
   }
 
-  async likePost(postAuthor: string, postTid: TID): Promise<Like> {
+  async likePost(postAuthorNameOrDid: string, postTid: TID): Promise<Like> {
+    const postAuthorDid = await this.resolveDid(postAuthorNameOrDid)
     const tid = TID.next()
     const like: Like = {
       tid: tid.toString(),
@@ -286,7 +287,7 @@ export class MicroblogDelegator {
       author: this.did,
       time: new Date().toISOString(),
       post_tid: postTid.toString(),
-      post_author: postAuthor,
+      post_author: postAuthorDid,
       post_program: this.programName,
     }
     const token = await this.postToken('interactions', tid)
@@ -313,6 +314,37 @@ export class MicroblogDelegator {
       })
     } catch (e) {
       const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
+
+  async unlikePost(authorNameOrDid: string, postTid: TID): Promise<void> {
+    const like = await this.getLikeByPost(authorNameOrDid, postTid)
+    if (like === null) {
+      throw new Error('Like does not exist')
+    }
+    await this.deleteLike(TID.fromStr(like.tid))
+  }
+
+  async getLikeByPost(
+    authorNameOrDid: string,
+    postTid: TID,
+  ): Promise<Like | null> {
+    const authorDid = await this.resolveDid(authorNameOrDid)
+    const params = {
+      did: this.did,
+      postAuthor: authorDid,
+      postProgram: this.programName,
+      postTid: postTid.toString(),
+    }
+    try {
+      const res = await axios.get(`${this.url}/data/interaction`, { params })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      if (err.response?.status === 404) {
+        return null
+      }
       throw new Error(err.message)
     }
   }

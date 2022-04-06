@@ -52,6 +52,15 @@ export const writeCfg = async (
   )
 }
 
+export const cfgExists = async (repoPath: string): Promise<boolean> => {
+  try {
+    await loadCfg(repoPath)
+    return true
+  } catch (_) {
+    return false
+  }
+}
+
 export const loadCfg = async (repoPath: string): Promise<Config> => {
   const account = await readAccountFile(repoPath, 'account.json')
   const secretKeyStr = (await readFile(repoPath, 'scdp.key', 'utf-8')) as string
