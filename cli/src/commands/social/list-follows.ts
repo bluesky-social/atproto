@@ -7,13 +7,11 @@ export default cmd({
   name: 'list follows',
   category: 'social',
   help: 'List the follows for the given user (default to self).',
-  args: [{ name: 'did', optional: true }],
+  args: [{ name: 'username/did', optional: true }],
   opts: [],
   async command(args) {
     const client = await loadDelegate(REPO_PATH)
-
     const did = args._[0] || client.did
-
     const follows = await client.listFollowsFromUser(did)
 
     console.log(``)

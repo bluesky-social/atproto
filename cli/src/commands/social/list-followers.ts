@@ -1,3 +1,4 @@
+import chalk from 'chalk'
 import cmd from '../../lib/command.js'
 import { loadDelegate } from '../../lib/client.js'
 import { REPO_PATH } from '../../lib/env.js'
@@ -6,16 +7,18 @@ export default cmd({
   name: 'list followers',
   category: 'social',
   help: 'List the followers for the given user (default to self).',
-  args: [{ name: 'id', optional: true }],
+  args: [{ name: 'username/did', optional: true }],
   opts: [],
   async command(args) {
-    throw new Error('TODO')
-    // const client = await loadDelegate(REPO_PATH)
+    const client = await loadDelegate(REPO_PATH)
+    const did = args._[0] || client.did
+    const follows = await client.listFollowersForUser(did)
 
-    // const follows = await client.listFollows()
-    // console.log('Follows: ')
-    // follows.forEach((f) => {
-    //   console.log(`${f.username}: ${f.did}`)
-    // })
+    console.log(``)
+    console.log(`Followers of ${did}: `)
+    console.log(``)
+    follows.forEach((f) => {
+      console.log(`${f.username.padEnd(10)} ${chalk.gray(f.did)}`)
+    })
   },
 })

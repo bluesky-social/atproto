@@ -7,6 +7,7 @@ export default cmd({
   args: [{ name: 'id' }, { name: 'text' }],
   opts: [],
   async command(args) {
-    throw new Error('TODO')
+    // @TODO
+    throw new Error('Replies not implemented yet.')
   },
 })

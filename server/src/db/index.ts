@@ -185,6 +185,14 @@ export class Database {
       .delete()
   }
 
+  async listFollowers(target: string): Promise<Follow[]> {
+    const list = await this.db('follows')
+      .join('user_dids', 'follows.creator', '=', 'user_dids.did')
+      .select('follows.creator', 'user_dids.username')
+      .where('follows.target', target)
+    return list.map((f) => ({ did: f.creator, username: f.username }))
+  }
+
   // INDEXER
   // -----------
 

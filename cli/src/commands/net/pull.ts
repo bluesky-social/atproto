@@ -7,6 +7,7 @@ export default cmd({
   args: [{ name: 'id', optional: true }],
   opts: [],
   async command(args) {
-    throw new Error('TODO')
+    // @TODO
+    throw new Error('Repo pulls not implented yet')
   },
 })

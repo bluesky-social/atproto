@@ -278,6 +278,24 @@ export class MicroblogDelegator {
     }
   }
 
+  async listFollowers(): Promise<Follow[]> {
+    return this.listFollowersForUser(this.did)
+  }
+
+  async listFollowersForUser(nameOrDid: string): Promise<Follow[]> {
+    const did = await this.resolveDid(nameOrDid)
+    const params = { user: did }
+    try {
+      const res = await axios.get(`${this.url}/indexer/followers`, {
+        params,
+      })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
+
   async likePost(postAuthorNameOrDid: string, postTid: TID): Promise<Like> {
     const postAuthorDid = await this.resolveDid(postAuthorNameOrDid)
     const tid = TID.next()
