@@ -1,21 +1,32 @@
+import { Knex } from 'knex'
 import { KnexDB } from './types'
 
-const userRoots = async (db: KnexDB) => {
-  return db.schema.createTable('repo_roots', (table) => {
+type Table = Knex.CreateTableBuilder
+
+type Schema = {
+  name: string
+  create: (db: Knex.CreateTableBuilder) => void
+}
+
+const userRoots = {
+  name: 'repo_roots',
+  create: (table: Table) => {
     table.string('did').primary()
     table.string('root')
-  })
+  },
 }
 
-const userDids = async (db: KnexDB) => {
-  return db.schema.createTable('user_dids', (table) => {
+const userDids = {
+  name: 'user_dids',
+  create: (table: Table) => {
     table.string('did').primary()
     table.string('username').unique()
-  })
+  },
 }
 
-const posts = async (db: KnexDB) => {
-  return db.schema.createTable('posts', (table) => {
+const posts = {
+  name: 'posts',
+  create: (table: Table) => {
     table.unique(['tid', 'author', 'program'])
     table.string('tid')
     table.string('author')
@@ -25,11 +36,12 @@ const posts = async (db: KnexDB) => {
     table.string('cid')
 
     table.foreign('author').references('did').inTable('user_dids')
-  })
+  },
 }
 
-const likes = async (db: KnexDB) => {
-  return db.schema.createTable('likes', (table) => {
+const likes = {
+  name: 'likes',
+  create: (table: Table) => {
     table.primary(['tid', 'author', 'program'])
     table.string('tid')
     table.string('author').references('user_dids.did')
@@ -46,36 +58,40 @@ const likes = async (db: KnexDB) => {
     table.foreign('post_tid').references('tid').inTable('posts')
     table.foreign('post_author').references('author').inTable('posts')
     table.foreign('post_program').references('program').inTable('posts')
-  })
+  },
 }
 
-const follows = async (db: KnexDB) => {
-  return db.schema.createTable('follows', (table) => {
+const follows = {
+  name: 'follows',
+  create: (table: Table) => {
     table.primary(['creator', 'target'])
     table.string('creator')
     table.string('target')
 
     table.foreign('creator').references('did').inTable('user_dids')
     table.foreign('target').references('did').inTable('user_dids')
-  })
+  },
+}
+
+const SCHEMAS: Schema[] = [userRoots, userDids, posts, likes, follows]
+
+export const exists = async (db: KnexDB, name: string) => {
+  return db.schema.hasTable(name)
+}
+
+export const create = async (db: KnexDB, schema: Schema) => {
+  if (await exists(db, schema.name)) return
+  await db.schema.createTable(schema.name, schema.create)
+}
+
+export const drop = async (db: KnexDB, name: string) => {
+  return db.schema.dropTableIfExists(name)
 }
 
 export const createTables = async (db: KnexDB) => {
-  await userRoots(db)
-  await userDids(db)
-  await posts(db)
-  await likes(db)
-  await follows(db)
+  await Promise.all(SCHEMAS.map((s) => create(db, s)))
 }
 
 export const dropAll = async (db: KnexDB) => {
-  await drop(db, 'follows')
-  await drop(db, 'likes')
-  await drop(db, 'posts')
-  await drop(db, 'repo_roots')
-  await drop(db, 'user_dids')
-}
-
-export const drop = async (db: KnexDB, tableName: string) => {
-  return db.schema.dropTableIfExists(tableName)
+  await Promise.all(SCHEMAS.map((s) => drop(db, s.name)))
 }

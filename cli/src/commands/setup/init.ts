@@ -19,15 +19,9 @@ export default cmd({
   async command(args) {
     let { username, server, register } = args
 
-    console.log(` .___   .___ ___.  ___.
-/ ___| / ___|  _ \\|  _ \\ 
-\\___ \\| |   | | | | |_) |
- ___) | |___| |_| |  __/ 
-|____/ \\____|____/|_|`)
-
     console.log(`Repo path: ${REPO_PATH}`)
     if (!username || !server) {
-      console.log(`This utility will initialize your scdp repo.`)
+      console.log(`This utility will initialize your sky repo.`)
       console.log(`Press ^C at any time to quit.`)
       prompt.start()
       username = (

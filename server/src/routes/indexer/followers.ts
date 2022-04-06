@@ -11,7 +11,6 @@ export const followersReq = z.object({
 export type FollowersReq = z.infer<typeof followersReq>
 
 router.get('/', async (req, res) => {
-  console.log(req.query)
   if (!check.is(req.query, followersReq)) {
     return res.status(400).send('Poorly formatted request')
   }

@@ -36,7 +36,7 @@ export const writeCfg = async (
     server,
   }
   await fsp.writeFile(
-    path.join(repoPath, 'scdp.key'),
+    path.join(repoPath, 'sky.key'),
     await keypair.export(),
     'utf-8',
   )
@@ -63,7 +63,7 @@ export const cfgExists = async (repoPath: string): Promise<boolean> => {
 
 export const loadCfg = async (repoPath: string): Promise<Config> => {
   const account = await readAccountFile(repoPath, 'account.json')
-  const secretKeyStr = (await readFile(repoPath, 'scdp.key', 'utf-8')) as string
+  const secretKeyStr = (await readFile(repoPath, 'sky.key', 'utf-8')) as string
   const keypair = ucan.EdKeypair.fromSecretKey(secretKeyStr)
   const tokenStr = (await readFile(repoPath, 'full.ucan', 'utf-8')) as string
   const ucanStore = await ucan.Store.fromTokens([tokenStr])

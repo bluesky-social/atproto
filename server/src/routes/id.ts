@@ -17,7 +17,7 @@ export const registerReq = z.object({
 export type registerReq = z.infer<typeof registerReq>
 
 router.post('/register', async (req, res) => {
-  if (!check.is(req.query, registerReq)) {
+  if (!check.is(req.body, registerReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { username, did } = req.body
