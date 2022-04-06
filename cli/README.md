@@ -1,8 +1,9 @@
 # CLI
 
 ## Quick use guide
+Run `yarn` from the project root to install all dependencies
 Build it with `yarn build`
-Use it wiht `yarn cli {cmd}`
+Use it with `yarn cli {cmd}`
 
 To get this working, you'll need a server running. Pop over to `../server` and run `yarn dev`
 
