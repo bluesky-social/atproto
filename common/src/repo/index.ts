@@ -293,14 +293,14 @@ export class Repo implements CarStreamable {
       this.namespaceCids,
       new CidSet(root.new_cids),
     )
-    // program deletes: we can emit as events
+    // namespace deletes: we can emit as events
     for (const del of mapDiff.deletes) {
       events.push({
-        event: util.EventType.DeletedProgram,
+        event: util.EventType.DeletedNamespace,
         name: del.key,
       })
     }
-    // program adds: we walk to ensure we have all content & then emit all posts & interactions
+    // namespace adds: we walk to ensure we have all content & then emit all posts & interactions
     for (const add of mapDiff.adds) {
       const namespace = await Namespace.load(this.blockstore, add.cid)
       const missing = await namespace.missingCids()
@@ -344,9 +344,9 @@ export class Repo implements CarStreamable {
     const missing = new CidSet()
     for (const cid of Object.values(this.namespaceCids)) {
       if (await this.blockstore.has(cid)) {
-        const program = await Namespace.load(this.blockstore, cid)
-        const programMissing = await program.missingCids()
-        missing.addSet(programMissing)
+        const namespace = await Namespace.load(this.blockstore, cid)
+        const namespaceMissing = await namespace.missingCids()
+        missing.addSet(namespaceMissing)
       } else {
         missing.add(cid)
       }

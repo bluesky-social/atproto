@@ -65,7 +65,7 @@ export enum EventType {
   AddedInteraction = 'added_interaction',
   UpdatedInteraction = 'updated_interaction',
   DeletedInteraction = 'deleted_interaction',
-  DeletedProgram = 'deleted_program',
+  DeletedNamespace = 'deleted_namespace',
   DeletedCollection = 'deleted_collection',
   DeletedTable = 'deleted_table',
 }
@@ -77,7 +77,7 @@ export type Event =
   | AddedInteraction
   | UpdatedInteraction
   | DeletedInteraction
-  | DeletedProgram
+  | DeletedNamespace
   | DeletedCollection
   | DeletedTable
 
@@ -97,8 +97,8 @@ export type AddedInteraction = {
 export type UpdatedInteraction = { event: EventType.UpdatedInteraction }
 export type DeletedInteraction = { event: EventType.DeletedInteraction }
 
-export type DeletedProgram = {
-  event: EventType.DeletedProgram
+export type DeletedNamespace = {
+  event: EventType.DeletedNamespace
   name: string
 }
 export type DeletedCollection = { event: EventType.DeletedCollection }
