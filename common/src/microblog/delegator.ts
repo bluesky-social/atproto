@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios'
 import TID from '../repo/tid.js'
 
-import { Post, Like, schema, Timeline } from './types.js'
+import { Post, Like, schema, Timeline, AccountInfo } from './types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError, authCfg } from '../network/util.js'
 import * as ucan from 'ucans'
@@ -105,6 +105,23 @@ export class MicroblogDelegator {
         params,
       })
       return res.data.id
+    } catch (e) {
+      const err = assureAxiosError(e)
+      if (err.response?.status === 404) {
+        return null
+      }
+      throw new Error(err.message)
+    }
+  }
+
+  async getAccountInfo(nameOrDid: string): Promise<AccountInfo | null> {
+    const did = await this.resolveDid(nameOrDid)
+    const params = { did }
+    try {
+      const res = await axios.get(`${this.url}/indexer/account-info`, {
+        params,
+      })
+      return res.data
     } catch (e) {
       const err = assureAxiosError(e)
       if (err.response?.status === 404) {

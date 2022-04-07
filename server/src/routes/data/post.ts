@@ -46,7 +46,6 @@ export const listPostsReq = z.object({
 export type ListPostsReq = z.infer<typeof listPostsReq>
 
 router.get('/list', async (req, res) => {
-  console.log(req.query)
   if (!check.is(req.query, listPostsReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }

@@ -111,5 +111,5 @@ const readAccountFile = async (
 }
 
 export const destroy = async (repoPath: string) => {
-  await fsp.rmdir(repoPath, { recursive: true })
+  await fsp.rm(repoPath, { recursive: true })
 }

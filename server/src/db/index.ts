@@ -1,9 +1,10 @@
-import { Like, Post, Timeline } from '@bluesky-demo/common'
+import { Like, Post, Timeline, AccountInfo } from '@bluesky-demo/common'
 import { Follow } from '@bluesky-demo/common/dist/repo/types'
 import knex from 'knex'
 import { CID } from 'multiformats'
 import * as schema from './schema.js'
-import { KnexDB } from './types'
+import { KnexDB } from './types.js'
+import { ServerError } from '../error.js'
 
 export class Database {
   private db: KnexDB
@@ -115,6 +116,15 @@ export class Database {
     await this.db('posts').where({ tid, author, program }).del()
   }
 
+  async postCount(author: string): Promise<number> {
+    const res = await this.db('posts').count('*').where({ author })
+    const count = (res[0] || {})['count(*)']
+    if (typeof count !== 'number') {
+      throw new ServerError(500, 'Unable to retrieve post count')
+    }
+    return count
+  }
+
   // LIKES
   // -----------
 
@@ -161,14 +171,6 @@ export class Database {
   // FOLLOWS
   // -----------
 
-  async listFollows(creator: string): Promise<Follow[]> {
-    const list = await this.db('follows')
-      .join('user_dids', 'follows.target', '=', 'user_dids.did')
-      .select('follows.target', 'user_dids.username')
-      .where('follows.creator', creator)
-    return list.map((f) => ({ did: f.target, username: f.username }))
-  }
-
   async createFollow(creator: string, target: string): Promise<void> {
     await this.db('follows').insert({
       creator,
@@ -185,12 +187,42 @@ export class Database {
       .delete()
   }
 
+  async listFollows(creator: string): Promise<Follow[]> {
+    const list = await this.db('follows')
+      .join('user_dids', 'follows.target', '=', 'user_dids.did')
+      .select('follows.target', 'user_dids.username')
+      .where('follows.creator', creator)
+    return list.map((f) => ({ did: f.target, username: f.username }))
+  }
+
   async listFollowers(target: string): Promise<Follow[]> {
     const list = await this.db('follows')
       .join('user_dids', 'follows.creator', '=', 'user_dids.did')
       .select('follows.creator', 'user_dids.username')
       .where('follows.target', target)
     return list.map((f) => ({ did: f.creator, username: f.username }))
+  }
+
+  async followCount(creator: string): Promise<number> {
+    const res = await this.db('follows')
+      .count('*')
+      .where('follows.creator', creator)
+    const count = (res[0] || {})['count(*)']
+    if (typeof count !== 'number') {
+      throw new ServerError(500, 'Unable to retrieve follows count')
+    }
+    return count
+  }
+
+  async followerCount(target: string): Promise<number> {
+    const res = await this.db('follows')
+      .count('*')
+      .where('follows.target', target)
+    const count = (res[0] || {})['count(*)']
+    if (typeof count !== 'number') {
+      throw new ServerError(500, 'Unable to retrieve followers count')
+    }
+    return count
   }
 
   // INDEXER
@@ -223,23 +255,6 @@ export class Database {
     )
   }
 
-  async likesOnPost(
-    author: string,
-    program: string,
-    tid: string,
-  ): Promise<number> {
-    const res = await this.db('likes').count('*').where({
-      post_author: author,
-      post_program: program,
-      post_tid: tid,
-    })
-    const count = (res[0] || {})['count(*)']
-    if (typeof count !== 'number') {
-      throw new Error('Unable to retrieve like count on post')
-    }
-    return count
-  }
-
   async likeCount(
     author: string,
     program: string,
@@ -252,9 +267,30 @@ export class Database {
     })
     const count = (res[0] || {})['count(*)']
     if (typeof count !== 'number') {
-      throw new Error('Unable to retrieve like count on post')
+      throw new ServerError(500, 'Unable to retrieve like count on post')
     }
     return count
+  }
+
+  async getAccountInfo(did: string): Promise<AccountInfo> {
+    const [username, postCount, followerCount, followCount] = await Promise.all(
+      [
+        this.getUsername(did),
+        this.postCount(did),
+        this.followerCount(did),
+        this.followCount(did),
+      ],
+    )
+    if (username === null) {
+      throw new ServerError(404, 'Could not find user')
+    }
+    return {
+      did,
+      username,
+      postCount,
+      followerCount,
+      followCount,
+    }
   }
 }
 

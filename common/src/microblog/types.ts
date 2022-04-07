@@ -33,9 +33,19 @@ export type TimelinePost = z.infer<typeof timelinePost>
 const timeline = z.array(timelinePost)
 export type Timeline = z.infer<typeof timeline>
 
+const accountInfo = z.object({
+  did: z.string(),
+  username: z.string(),
+  postCount: z.number(),
+  followerCount: z.number(),
+  followCount: z.number(),
+})
+export type AccountInfo = z.infer<typeof accountInfo>
+
 export const schema = {
   post,
   like,
   timelinePost,
   timeline,
+  accountInfo,
 }

@@ -63,7 +63,7 @@ export default cmd({
         await client.register(username)
       } catch (e) {
         console.error(`Failed to register with server`)
-        console.error(e)
+        throw e
       }
     } else {
       console.log('Skipping registration')
