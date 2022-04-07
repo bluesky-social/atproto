@@ -111,20 +111,16 @@ router.put('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const post = req.body
+  const tid = TID.fromStr(post.tid)
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(
-      post.author,
-      post.program,
-      'posts',
-      TID.fromStr(post.tid),
-    ),
+    ucanCheck.hasPostingPermission(post.author, post.program, 'posts', tid),
   )
   const repo = await util.loadRepo(res, post.author, ucanStore)
   const postCid = await repo.put(post)
   await repo.runOnProgram(post.program, async (store) => {
-    return store.posts.editEntry(TID.fromStr(post.tid), postCid)
+    return store.posts.editEntry(tid, postCid)
   })
   const db = util.getDB(res)
   await db.updatePost(post, postCid)
@@ -147,17 +143,18 @@ router.delete('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   const { did, program, tid } = req.body
+  const tidObj = TID.fromStr(tid)
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(did, program, 'posts', TID.fromStr(tid)),
+    ucanCheck.hasPostingPermission(did, program, 'posts', tidObj),
   )
   const repo = await util.loadRepo(res, did, ucanStore)
   await repo.runOnProgram(program, async (store) => {
-    return store.posts.deleteEntry(TID.fromStr(tid))
+    return store.posts.deleteEntry(tidObj)
   })
   const db = util.getDB(res)
-  await db.deletePost(did, program, tid)
+  await db.deletePost(tidObj.toString(), did, program)
   await db.updateRepoRoot(did, repo.cid)
   res.status(200).send()
 })

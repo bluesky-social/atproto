@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios'
 import TID from '../repo/tid.js'
 
-import { Post, Like, schema, Timeline } from './types.js'
+import { Post, Like, schema, Timeline, AccountInfo } from './types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError, authCfg } from '../network/util.js'
 import * as ucan from 'ucans'
@@ -62,6 +62,15 @@ export class MicroblogDelegator {
     )
   }
 
+  async resolveDid(nameOrDid: string): Promise<string> {
+    if (nameOrDid.startsWith('did:')) return nameOrDid
+    const did = await this.lookupDid(nameOrDid)
+    if (!did) {
+      throw new Error(`Coult not find user: ${nameOrDid}`)
+    }
+    return did
+  }
+
   async postToken(collection: Collection, tid: TID): Promise<ucan.Chained> {
     if (this.keypair === null || this.ucanStore === null) {
       throw new Error('No keypair or ucan store provided. Client is read-only.')
@@ -89,7 +98,7 @@ export class MicroblogDelegator {
     }
   }
 
-  async lookupDid(username: string): Promise<string> {
+  async lookupDid(username: string): Promise<string | null> {
     const params = { resource: username }
     try {
       const res = await axios.get(`${this.url}/.well-known/webfinger`, {
@@ -98,6 +107,26 @@ export class MicroblogDelegator {
       return res.data.id
     } catch (e) {
       const err = assureAxiosError(e)
+      if (err.response?.status === 404) {
+        return null
+      }
+      throw new Error(err.message)
+    }
+  }
+
+  async getAccountInfo(nameOrDid: string): Promise<AccountInfo | null> {
+    const did = await this.resolveDid(nameOrDid)
+    const params = { did }
+    try {
+      const res = await axios.get(`${this.url}/indexer/account-info`, {
+        params,
+      })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      if (err.response?.status === 404) {
+        return null
+      }
       throw new Error(err.message)
     }
   }
@@ -117,7 +146,8 @@ export class MicroblogDelegator {
     return this.getPostFromUser(this.did, tid)
   }
 
-  async getPostFromUser(did: string, tid: TID): Promise<Post | null> {
+  async getPostFromUser(nameOrDid: string, tid: TID): Promise<Post | null> {
+    const did = await this.resolveDid(nameOrDid)
     const params = {
       tid: tid.toString(),
       did: did,
@@ -198,10 +228,11 @@ export class MicroblogDelegator {
   }
 
   async listPostsFromUser(
-    did: string,
+    nameOrDid: string,
     count: number,
     from?: TID,
   ): Promise<Post[]> {
+    const did = await this.resolveDid(nameOrDid)
     const params = {
       did,
       program: this.programName,
@@ -219,7 +250,8 @@ export class MicroblogDelegator {
     }
   }
 
-  async followUser(did: string): Promise<void> {
+  async followUser(nameOrDid: string): Promise<void> {
+    const did = await this.resolveDid(nameOrDid)
     const data = { creator: this.did, target: did }
     const token = await this.relationshipToken()
     try {
@@ -230,7 +262,8 @@ export class MicroblogDelegator {
     }
   }
 
-  async unfollowUser(did: string): Promise<void> {
+  async unfollowUser(nameOrDid: string): Promise<void> {
+    const did = await this.resolveDid(nameOrDid)
     const data = { creator: this.did, target: did }
     const token = await this.relationshipToken()
     try {
@@ -248,8 +281,9 @@ export class MicroblogDelegator {
     return this.listFollowsFromUser(this.did)
   }
 
-  async listFollowsFromUser(did: string): Promise<Follow[]> {
-    const params = { user: did || this.did }
+  async listFollowsFromUser(nameOrDid: string): Promise<Follow[]> {
+    const did = await this.resolveDid(nameOrDid)
+    const params = { user: did }
     try {
       const res = await axios.get(`${this.url}/data/relationship/list`, {
         params,
@@ -261,7 +295,26 @@ export class MicroblogDelegator {
     }
   }
 
-  async likePost(postAuthor: string, postTid: TID): Promise<Like> {
+  async listFollowers(): Promise<Follow[]> {
+    return this.listFollowersForUser(this.did)
+  }
+
+  async listFollowersForUser(nameOrDid: string): Promise<Follow[]> {
+    const did = await this.resolveDid(nameOrDid)
+    const params = { user: did }
+    try {
+      const res = await axios.get(`${this.url}/indexer/followers`, {
+        params,
+      })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
+
+  async likePost(postAuthorNameOrDid: string, postTid: TID): Promise<Like> {
+    const postAuthorDid = await this.resolveDid(postAuthorNameOrDid)
     const tid = TID.next()
     const like: Like = {
       tid: tid.toString(),
@@ -269,7 +322,7 @@ export class MicroblogDelegator {
       author: this.did,
       time: new Date().toISOString(),
       post_tid: postTid.toString(),
-      post_author: postAuthor,
+      post_author: postAuthorDid,
       post_program: this.programName,
     }
     const token = await this.postToken('interactions', tid)
@@ -300,15 +353,47 @@ export class MicroblogDelegator {
     }
   }
 
+  async unlikePost(authorNameOrDid: string, postTid: TID): Promise<void> {
+    const like = await this.getLikeByPost(authorNameOrDid, postTid)
+    if (like === null) {
+      throw new Error('Like does not exist')
+    }
+    await this.deleteLike(TID.fromStr(like.tid))
+  }
+
+  async getLikeByPost(
+    authorNameOrDid: string,
+    postTid: TID,
+  ): Promise<Like | null> {
+    const authorDid = await this.resolveDid(authorNameOrDid)
+    const params = {
+      did: this.did,
+      postAuthor: authorDid,
+      postProgram: this.programName,
+      postTid: postTid.toString(),
+    }
+    try {
+      const res = await axios.get(`${this.url}/data/interaction`, { params })
+      return res.data
+    } catch (e) {
+      const err = assureAxiosError(e)
+      if (err.response?.status === 404) {
+        return null
+      }
+      throw new Error(err.message)
+    }
+  }
+
   async listLikes(count: number, from?: TID): Promise<Like[]> {
     return this.listLikesFromUser(this.did, count, from)
   }
 
   async listLikesFromUser(
-    did: string,
+    nameOrDid: string,
     count: number,
     from?: TID,
   ): Promise<Like[]> {
+    const did = await this.resolveDid(nameOrDid)
     const params = {
       did,
       program: this.programName,

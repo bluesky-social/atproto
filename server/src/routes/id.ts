@@ -1,15 +1,32 @@
-import { Repo, ucanCheck } from '@bluesky-demo/common'
+import express from 'express'
+import { z } from 'zod'
+
+import { Repo, ucanCheck, check } from '@bluesky-demo/common'
 
 import * as auth from '../auth.js'
-import express from 'express'
 import { SERVER_DID, SERVER_KEYPAIR } from '../server-identity.js'
 import * as util from '../util.js'
+import { ServerError } from '../error.js'
 
 const router = express.Router()
 
+export const registerReq = z.object({
+  did: z.string(),
+  username: z.string(),
+})
+export type registerReq = z.infer<typeof registerReq>
+
 router.post('/register', async (req, res) => {
-  // use UCAN validation for this
+  if (!check.is(req.body, registerReq)) {
+    throw new ServerError(400, 'Poorly formatted request')
+  }
   const { username, did } = req.body
+  if (username.startsWith('did:')) {
+    throw new ServerError(
+      400,
+      'Cannot register a username that starts with `did:`',
+    )
+  }
   const { db, blockstore } = util.getLocals(res)
   const ucanStore = await auth.checkReq(
     req,

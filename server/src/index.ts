@@ -2,13 +2,20 @@ import { IpldStore } from '@bluesky-demo/common'
 import Database from './db/index.js'
 import server from './server.js'
 
-// const blockstore = IpldStore.createPersistent()
-// const db = createDB('./dev.sqlite')
+let blockstore: IpldStore
+let db: Database
 
-const blockstore = IpldStore.createInMemory()
-const db = Database.memory()
+if (process.env.IN_MEMORY) {
+  blockstore = IpldStore.createInMemory()
+  db = Database.memory()
+} else {
+  blockstore = IpldStore.createPersistent()
+  db = Database.sqlite('./dev.sqlite')
+}
+
 db.createTables()
 
-const PORT = 2583
+const envPort = parseInt(process.env.PORT || '')
+const port = isNaN(envPort) ? 2583 : envPort
 
-server(blockstore, db, PORT)
+server(blockstore, db, port)

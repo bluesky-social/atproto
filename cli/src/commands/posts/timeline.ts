@@ -1,32 +1,31 @@
+import chalk from 'chalk'
 import cmd from '../../lib/command.js'
 import { loadDelegate } from '../../lib/client.js'
 import { REPO_PATH } from '../../lib/env.js'
 import { TID } from '@bluesky-demo/common'
-import chalk from 'chalk'
 import { formatDate } from '../../lib/util.js'
 
 export default cmd({
-  name: 'feed',
+  name: 'timeline',
   category: 'posts',
-  help: 'List posts in your feed, or the posts of the given user.',
+  help: 'Retrieve a timeline of users you follow',
   args: [
-    { name: 'username/did', optional: true },
     { name: 'count', optional: true },
     { name: 'from', optional: true },
   ],
   async command(args) {
     const client = await loadDelegate(REPO_PATH)
-    const nameOrDid = args._[0] || client.did
-    const countParsed = parseInt(args._[1])
+    const countParsed = parseInt(args._[0])
     const count = isNaN(countParsed) ? 100 : countParsed
-    const fromStr = args._[2]
+    const fromStr = args._[1]
     const from = fromStr ? TID.fromStr(fromStr) : undefined
-    const posts = await client.listPostsFromUser(nameOrDid, count, from)
+    const timeline = await client.retrieveTimeline(count, from)
     console.log(``)
-    for (const post of posts) {
-      console.log(post.text)
+    for (const post of timeline) {
+      console.log(`"${post.text}" - ${post.author_name}`)
+      console.log(`Likes: ${post.likes}`)
       console.log(chalk.gray(formatDate(post.time)))
-      console.log(`id: ${chalk.gray(TID.fromStr(post.tid).formatted())}`)
+      console.log(chalk.gray(`id: ${TID.fromStr(post.tid).formatted()}`))
       console.log(``)
     }
   },

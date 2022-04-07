@@ -11,7 +11,7 @@ export class TID {
     if (noDashes.length !== 13) {
       throw new Error(`Poorly formatted TID: ${noDashes.length} length`)
     }
-    this.str = str
+    this.str = noDashes
   }
 
   static next(): TID {
