@@ -1,7 +1,17 @@
 import axios, { AxiosResponse } from 'axios'
 import TID from '../repo/tid.js'
 
-import { Post, Like, schema, Timeline, AccountInfo } from './types.js'
+import { z } from 'zod'
+import {
+  Post,
+  Like,
+  schema,
+  Timeline,
+  AccountInfo,
+  flattenPost,
+  flattenLike,
+} from './types.js'
+import { schema as repoSchema } from '../repo/types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError, authCfg } from '../network/util.js'
 import * as ucan from 'ucans'
@@ -104,7 +114,7 @@ export class MicroblogDelegator {
       const res = await axios.get(`${this.url}/.well-known/webfinger`, {
         params,
       })
-      return res.data.id
+      return check.assure(repoSchema.did, res.data.id)
     } catch (e) {
       const err = assureAxiosError(e)
       if (err.response?.status === 404) {
@@ -121,7 +131,7 @@ export class MicroblogDelegator {
       const res = await axios.get(`${this.url}/indexer/account-info`, {
         params,
       })
-      return res.data
+      return check.assure(schema.accountInfo, res.data)
     } catch (e) {
       const err = assureAxiosError(e)
       if (err.response?.status === 404) {
@@ -135,7 +145,7 @@ export class MicroblogDelegator {
     const params = { user: this.did, count, from: from?.toString() }
     try {
       const res = await axios.get(`${this.url}/indexer/timeline`, { params })
-      return res.data
+      return check.assure(schema.timeline, res.data)
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -156,6 +166,7 @@ export class MicroblogDelegator {
     let res: AxiosResponse
     try {
       res = await axios.get(`${this.url}/data/post`, { params })
+      return check.assure(schema.post, res.data)
     } catch (e) {
       const err = assureAxiosError(e)
       if (err.response?.status === 404) {
@@ -163,16 +174,12 @@ export class MicroblogDelegator {
       }
       throw new Error(err.message)
     }
-    if (!check.is(res.data, schema.post)) {
-      throw new Error('Did not receive a valid post object')
-    }
-    return res.data
   }
 
   async addPost(text: string): Promise<Post> {
     const tid = TID.next()
     const post: Post = {
-      tid: tid.toString(),
+      tid,
       namespace: this.namespace,
       author: this.did,
       text,
@@ -180,7 +187,11 @@ export class MicroblogDelegator {
     }
     const token = await this.postToken('posts', tid)
     try {
-      await axios.post(`${this.url}/data/post`, post, authCfg(token))
+      await axios.post(
+        `${this.url}/data/post`,
+        flattenPost(post),
+        authCfg(token),
+      )
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -190,7 +201,7 @@ export class MicroblogDelegator {
 
   async editPost(tid: TID, text: string): Promise<void> {
     const updated: Post = {
-      tid: tid.toString(),
+      tid,
       namespace: this.namespace,
       author: this.did,
       text,
@@ -198,7 +209,11 @@ export class MicroblogDelegator {
     }
     const token = await this.postToken('posts', tid)
     try {
-      await axios.put(`${this.url}/data/post`, updated, authCfg(token))
+      await axios.put(
+        `${this.url}/data/post`,
+        flattenPost(updated),
+        authCfg(token),
+      )
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -243,7 +258,7 @@ export class MicroblogDelegator {
       const res = await axios.get(`${this.url}/data/post/list`, {
         params,
       })
-      return res.data
+      return check.assure(z.array(schema.post), res.data)
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -288,7 +303,7 @@ export class MicroblogDelegator {
       const res = await axios.get(`${this.url}/data/relationship/list`, {
         params,
       })
-      return res.data
+      return check.assure(z.array(repoSchema.follow), res.data)
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -306,7 +321,7 @@ export class MicroblogDelegator {
       const res = await axios.get(`${this.url}/indexer/followers`, {
         params,
       })
-      return res.data
+      return check.assure(z.array(repoSchema.follow), res.data)
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -317,17 +332,21 @@ export class MicroblogDelegator {
     const postAuthorDid = await this.resolveDid(postAuthorNameOrDid)
     const tid = TID.next()
     const like: Like = {
-      tid: tid.toString(),
+      tid,
       namespace: this.namespace,
       author: this.did,
       time: new Date().toISOString(),
-      post_tid: postTid.toString(),
+      post_tid: postTid,
       post_author: postAuthorDid,
       post_namespace: this.namespace,
     }
     const token = await this.postToken('interactions', tid)
     try {
-      await axios.post(`${this.url}/data/interaction`, like, authCfg(token))
+      await axios.post(
+        `${this.url}/data/interaction`,
+        flattenLike(like),
+        authCfg(token),
+      )
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -358,7 +377,7 @@ export class MicroblogDelegator {
     if (like === null) {
       throw new Error('Like does not exist')
     }
-    await this.deleteLike(TID.fromStr(like.tid))
+    await this.deleteLike(like.tid)
   }
 
   async getLikeByPost(
@@ -374,7 +393,7 @@ export class MicroblogDelegator {
     }
     try {
       const res = await axios.get(`${this.url}/data/interaction`, { params })
-      return res.data
+      return check.assure(schema.like, res.data)
     } catch (e) {
       const err = assureAxiosError(e)
       if (err.response?.status === 404) {
@@ -404,7 +423,7 @@ export class MicroblogDelegator {
       const res = await axios.get(`${this.url}/data/interaction/list`, {
         params,
       })
-      return res.data
+      return check.assure(z.array(schema.like), res.data)
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)
@@ -421,7 +440,7 @@ export class MicroblogDelegator {
       const res = await axios.get(`${this.url}/indexer/count/likes`, {
         params,
       })
-      return res.data.count
+      return check.assure(z.number(), res.data.count)
     } catch (e) {
       const err = assureAxiosError(e)
       throw new Error(err.message)

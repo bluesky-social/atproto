@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { Repo, ucanCheck, check } from '@bluesky-demo/common'
+import { Repo, ucanCheck } from '@bluesky-demo/common'
 
 import * as auth from '../auth.js'
 import { SERVER_DID, SERVER_KEYPAIR } from '../server-identity.js'
@@ -17,10 +17,7 @@ export const registerReq = z.object({
 export type registerReq = z.infer<typeof registerReq>
 
 router.post('/register', async (req, res) => {
-  if (!check.is(req.body, registerReq)) {
-    throw new ServerError(400, 'Poorly formatted request')
-  }
-  const { username, did } = req.body
+  const { username, did } = util.checkReqBody(req.body, registerReq)
   if (username.startsWith('did:')) {
     throw new ServerError(
       400,

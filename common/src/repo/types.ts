@@ -6,6 +6,11 @@ import CidSet from './cid-set.js'
 
 const tid = z.instanceof(TID)
 
+const strToTid = z
+  .string()
+  .refine(TID.is, { message: 'Not a valid TID' })
+  .transform(TID.fromStr)
+
 const repoRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
@@ -58,6 +63,7 @@ export type UpdateData = {
 export const schema = {
   ...common,
   tid,
+  strToTid,
   repoRoot,
   namespaceRoot,
   commit,

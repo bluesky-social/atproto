@@ -14,9 +14,17 @@ export type Bytes = z.infer<typeof bytes>
 
 export type Keypair = ucan.Keypair & ucan.Didable
 
+const strToInt = z
+  .string()
+  .refine((str) => !isNaN(parseInt(str)), {
+    message: 'Cannot parse string to integer',
+  })
+  .transform(parseInt)
+
 export const schema = {
   string: z.string(),
   cid,
   did,
   bytes,
+  strToInt,
 }

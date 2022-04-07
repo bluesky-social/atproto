@@ -3,7 +3,13 @@ import { z } from 'zod'
 import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import { ServerError } from '../../error.js'
-import { schema, check, TID, ucanCheck } from '@bluesky-demo/common'
+import {
+  schema,
+  check,
+  TID,
+  ucanCheck,
+  flattenLike,
+} from '@bluesky-demo/common'
 import { SERVER_DID } from '../../server-identity.js'
 
 const router = express.Router()
@@ -15,7 +21,7 @@ const router = express.Router()
 const byTid = z.object({
   did: z.string(),
   namespace: z.string(),
-  tid: z.string(),
+  tid: schema.repo.strToTid,
 })
 
 // find a like by the post it's on
@@ -23,21 +29,19 @@ const byPost = z.object({
   did: z.string(),
   postAuthor: z.string(),
   postNamespace: z.string(),
-  postTid: z.string(),
+  postTid: schema.repo.strToTid,
 })
 
 export const getInteractionReq = z.union([byTid, byPost])
 export type GetInteractionReq = z.infer<typeof getInteractionReq>
 
 router.get('/', async (req, res) => {
-  if (!check.is(req.query, getInteractionReq)) {
-    throw new ServerError(400, 'Poorly formatted request')
-  }
-  if (check.is(req.query, byTid)) {
-    const { did, namespace, tid } = req.query
+  const query = util.checkReqBody(req.query, getInteractionReq)
+  if (check.is(query, byTid)) {
+    const { did, namespace, tid } = query
     const repo = await util.loadRepo(res, did)
     const interCid = await repo.runOnNamespace(namespace, async (store) => {
-      return store.interactions.getEntry(TID.fromStr(tid))
+      return store.interactions.getEntry(tid)
     })
     if (interCid === null) {
       throw new ServerError(404, 'Could not find interaction')
@@ -45,13 +49,18 @@ router.get('/', async (req, res) => {
     const like = await repo.get(interCid, schema.microblog.like)
     res.status(200).send(like)
   } else {
-    const { did, postAuthor, postNamespace, postTid } = req.query
+    const { did, postAuthor, postNamespace, postTid } = query
     const db = util.getDB(res)
-    const like = await db.getLikeByPost(did, postTid, postAuthor, postNamespace)
+    const like = await db.getLikeByPost(
+      did,
+      postTid.toString(),
+      postAuthor,
+      postNamespace,
+    )
     if (like === null) {
       throw new ServerError(404, 'Could not find interaction')
     }
-    res.status(200).send(like)
+    res.status(200).send(flattenLike(like))
   }
 })
 
@@ -61,32 +70,25 @@ router.get('/', async (req, res) => {
 export const listInteractionsReq = z.object({
   did: z.string(),
   namespace: z.string(),
-  count: z.string(),
-  from: z.string().optional(),
+  count: schema.common.strToInt,
+  from: schema.repo.strToTid.optional(),
 })
 export type ListInteractionsReq = z.infer<typeof listInteractionsReq>
 
 router.get('/list', async (req, res) => {
-  if (!check.is(req.query, listInteractionsReq)) {
-    throw new ServerError(400, 'Poorly formatted request')
-  }
-  const { did, namespace, count, from } = req.query
-  const countParsed = parseInt(count)
-  if (isNaN(countParsed)) {
-    throw new ServerError(
-      400,
-      'Poorly formatted request: `count` is not a number',
-    )
-  }
-  const fromTid = from ? TID.fromStr(from) : undefined
+  const { did, namespace, count, from } = util.checkReqBody(
+    req.query,
+    listInteractionsReq,
+  )
   const repo = await util.loadRepo(res, did)
   const entries = await repo.runOnNamespace(namespace, async (store) => {
-    return store.interactions.getEntries(countParsed, fromTid)
+    return store.interactions.getEntries(count, from)
   })
-  const posts = await Promise.all(
+  const likes = await Promise.all(
     entries.map((entry) => repo.get(entry.cid, schema.microblog.like)),
   )
-  res.status(200).send(posts)
+  const flattened = likes.map(flattenLike)
+  res.status(200).send(flattened)
 })
 
 // CREATE INTERACTION
@@ -96,10 +98,7 @@ export const createInteractionReq = schema.microblog.like
 export type CreateInteractionReq = z.infer<typeof createInteractionReq>
 
 router.post('/', async (req, res) => {
-  if (!check.is(req.body, createInteractionReq)) {
-    throw new ServerError(400, 'Poorly formatted request')
-  }
-  const like = req.body
+  const like = util.checkReqBody(req.body, createInteractionReq)
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
@@ -107,13 +106,13 @@ router.post('/', async (req, res) => {
       like.author,
       like.namespace,
       'interactions',
-      TID.fromStr(like.tid),
+      like.tid,
     ),
   )
   const repo = await util.loadRepo(res, like.author, ucanStore)
-  const likeCid = await repo.put(like)
+  const likeCid = await repo.put(flattenLike(like))
   await repo.runOnNamespace(like.namespace, async (store) => {
-    return store.interactions.addEntry(TID.fromStr(like.tid), likeCid)
+    return store.interactions.addEntry(like.tid, likeCid)
   })
   const db = util.getDB(res)
   await db.updateRepoRoot(like.author, repo.cid)
@@ -127,27 +126,26 @@ router.post('/', async (req, res) => {
 export const deleteInteractionReq = z.object({
   did: z.string(),
   namespace: z.string(),
-  tid: z.string(),
+  tid: schema.repo.strToTid,
 })
 export type DeleteInteractionReq = z.infer<typeof deleteInteractionReq>
 
 router.delete('/', async (req, res) => {
-  if (!check.is(req.body, deleteInteractionReq)) {
-    throw new ServerError(400, 'Poorly formatted request')
-  }
-  const { did, namespace, tid } = req.body
-  const tidObj = TID.fromStr(tid)
+  const { did, namespace, tid } = util.checkReqBody(
+    req.body,
+    deleteInteractionReq,
+  )
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(did, namespace, 'interactions', tidObj),
+    ucanCheck.hasPostingPermission(did, namespace, 'interactions', tid),
   )
   const repo = await util.loadRepo(res, did, ucanStore)
   await repo.runOnNamespace(namespace, async (store) => {
-    return store.interactions.deleteEntry(tidObj)
+    return store.interactions.deleteEntry(tid)
   })
   const db = util.getDB(res)
-  await db.deleteLike(tidObj.toString(), did, namespace)
+  await db.deleteLike(tid.toString(), did, namespace)
   await db.updateRepoRoot(did, repo.cid)
   res.status(200).send()
 })
