@@ -2,10 +2,18 @@ import { CID } from 'multiformats'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping, CarStreamable, schema, UpdateData } from './types.js'
+import {
+  Entry,
+  IdMapping,
+  CarStreamable,
+  schema,
+  UpdateData,
+  Collection,
+} from './types.js'
 import SSTable, { TableSize } from './ss-table.js'
 import TID from './tid.js'
 import CidSet from './cid-set.js'
+import * as util from './util.js'
 
 export class TidCollection implements CarStreamable {
   blockstore: IpldStore
@@ -57,6 +65,7 @@ export class TidCollection implements CarStreamable {
     }
   }
 
+  // NOTE: this will likely be changing to recursive tables (instead of compression) soon(ish)
   async compressTables(): Promise<CidSet> {
     const tableNames = this.tableNames()
     if (tableNames.length < 1) return new CidSet()
@@ -218,6 +227,53 @@ export class TidCollection implements CarStreamable {
       table.cids().forEach((c) => all.push(c))
     }
     return all
+  }
+
+  async verifyUpdate(
+    prev: TidCollection,
+    newCids: CidSet,
+    namespace: string,
+    collection: Collection,
+  ): Promise<util.Event[]> {
+    // @TODO: we need a better algo here, but probably changing how SSTables work soon
+    // and not going to waste time writing an optimized one for our current structure
+    // (will be easier to write for recursive tables)
+    const events: util.Event[] = []
+    const currEntries = await this.getAllEntries()
+    const prevEntries = await prev.getAllEntries()
+    const entriesDiff = util.entriesDiff(currEntries, prevEntries, newCids)
+
+    // object deletes: we can emit as events
+    for (const del of entriesDiff.deletes) {
+      events.push({
+        event: util.EventType.DeletedObject,
+        namespace,
+        collection,
+        tid: TID.fromStr(del.key),
+      })
+    }
+    // object adds: we can emit as events
+    for (const add of entriesDiff.adds) {
+      events.push({
+        event: util.EventType.AddedObject,
+        namespace,
+        collection,
+        tid: TID.fromStr(add.key),
+        cid: add.cid,
+      })
+    }
+    // object updates: we can emit as events
+    for (const update of entriesDiff.updates) {
+      events.push({
+        event: util.EventType.UpdatedObject,
+        namespace,
+        collection,
+        tid: TID.fromStr(update.key),
+        cid: update.cid,
+        prevCid: update.old,
+      })
+    }
+    return events
   }
 
   async missingCids(): Promise<CidSet> {

@@ -1,5 +1,5 @@
 import { CID } from 'multiformats'
-import { IdMapping } from '../repo/types.js'
+import { Collection, Entry, IdMapping } from '../repo/types.js'
 import CidSet from './cid-set.js'
 import TID from './tid.js'
 
@@ -58,48 +58,66 @@ export const idMapDiff = (
   return diff
 }
 
+export const entriesDiff = (
+  entriesA: Entry[],
+  entriesB: Entry[],
+  newCids: CidSet,
+): Diff => {
+  const idMapA = entriesToIdMapping(entriesA)
+  const idMapB = entriesToIdMapping(entriesB)
+  return idMapDiff(idMapA, idMapB, newCids)
+}
+
+export const entriesToIdMapping = (entries: Entry[]): IdMapping => {
+  return entries.reduce((acc, cur) => {
+    acc[cur.tid.toString()] = cur.cid
+    return acc
+  }, {} as IdMapping)
+}
+
 export enum EventType {
-  AddedPost = 'added_post',
-  UpdatedPost = 'updated_post',
-  DeletedPost = 'deleted_post',
-  AddedInteraction = 'added_interaction',
-  UpdatedInteraction = 'updated_interaction',
-  DeletedInteraction = 'deleted_interaction',
+  AddedObject = 'added_object',
+  UpdatedObject = 'updated_object',
+  DeletedObject = 'deleted_object',
   DeletedNamespace = 'deleted_namespace',
   DeletedCollection = 'deleted_collection',
   DeletedTable = 'deleted_table',
 }
 
 export type Event =
-  | AddedPost
-  | UpdatedPost
-  | DeletedPost
-  | AddedInteraction
-  | UpdatedInteraction
-  | DeletedInteraction
+  | AddedObject
+  | UpdatedObject
+  | DeletedObject
   | DeletedNamespace
   | DeletedCollection
-  | DeletedTable
 
-export type AddedPost = {
-  event: EventType.AddedPost
+export type AddedObject = {
+  event: EventType.AddedObject
+  namespace: string
+  collection: Collection
   tid: TID
   cid: CID
 }
-export type UpdatedPost = { event: EventType.UpdatedPost }
-export type DeletedPost = { event: EventType.DeletedPost }
 
-export type AddedInteraction = {
-  event: EventType.AddedInteraction
+export type UpdatedObject = {
+  event: EventType.UpdatedObject
+  namespace: string
+  collection: Collection
   tid: TID
   cid: CID
+  prevCid: CID
 }
-export type UpdatedInteraction = { event: EventType.UpdatedInteraction }
-export type DeletedInteraction = { event: EventType.DeletedInteraction }
+
+export type DeletedObject = {
+  event: EventType.DeletedObject
+  namespace: string
+  collection: Collection
+  tid: TID
+}
 
 export type DeletedNamespace = {
   event: EventType.DeletedNamespace
   name: string
 }
+
 export type DeletedCollection = { event: EventType.DeletedCollection }
-export type DeletedTable = { event: EventType.DeletedTable }

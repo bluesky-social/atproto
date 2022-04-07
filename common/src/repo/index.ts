@@ -287,11 +287,12 @@ export class Repo implements CarStreamable {
     } else if (!root.prev.equals(prev.cid)) {
       throw new Error('Previous version root CID does not match')
     }
-    const events: util.Event[] = []
+    const newCids = new CidSet(root.new_cids)
+    let events: util.Event[] = []
     const mapDiff = util.idMapDiff(
       prev.namespaceCids,
       this.namespaceCids,
-      new CidSet(root.new_cids),
+      newCids,
     )
     // namespace deletes: we can emit as events
     for (const del of mapDiff.deletes) {
@@ -315,14 +316,18 @@ export class Repo implements CarStreamable {
       ])
       for (const { cid, tid } of newPosts) {
         events.push({
-          event: util.EventType.AddedPost,
+          event: util.EventType.AddedObject,
+          namespace: add.key,
+          collection: 'posts',
           tid,
           cid,
         })
       }
       for (const { cid, tid } of newInters) {
         events.push({
-          event: util.EventType.AddedInteraction,
+          event: util.EventType.AddedObject,
+          namespace: add.key,
+          collection: 'interactions',
           tid,
           cid,
         })
@@ -334,8 +339,8 @@ export class Repo implements CarStreamable {
         Namespace.load(this.blockstore, update.old),
         Namespace.load(this.blockstore, update.cid),
       ])
-      const updates = await curr.verifyUpdate(old)
-      events.concat(updates)
+      const updates = await curr.verifyUpdate(old, newCids, update.key)
+      events = events.concat(updates)
     }
     return events
   }

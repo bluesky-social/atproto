@@ -97,9 +97,32 @@ export class Namespace {
     })
   }
 
-  async verifyUpdate(prev: Namespace): Promise<util.Event[]> {
-    // @TODO implement
-    return []
+  async verifyUpdate(
+    prev: Namespace,
+    newCids: CidSet,
+    namespaceId: string,
+  ): Promise<util.Event[]> {
+    let events: util.Event[] = []
+    // @TODO check against new cids
+    if (this.posts.cid !== prev.posts.cid) {
+      const updates = await this.posts.verifyUpdate(
+        prev.posts,
+        newCids,
+        namespaceId,
+        'posts',
+      )
+      events = events.concat(updates)
+    }
+    if (this.interactions.cid !== prev.interactions.cid) {
+      const updates = await this.interactions.verifyUpdate(
+        prev.interactions,
+        newCids,
+        namespaceId,
+        'interactions',
+      )
+      events = events.concat(updates)
+    }
+    return events
   }
 
   async missingCids(): Promise<CidSet> {
