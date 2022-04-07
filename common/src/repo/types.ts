@@ -12,16 +12,16 @@ const repoRoot = z.object({
   new_cids: z.array(common.cid),
   auth_token: common.cid,
   relationships: common.cid,
-  programs: z.record(common.cid),
+  namespaces: z.record(common.cid),
 })
 export type RepoRoot = z.infer<typeof repoRoot>
 
-const programRoot = z.object({
+const namespaceRoot = z.object({
   posts: common.cid,
   interactions: common.cid,
   profile: common.cid.nullable(),
 })
-export type ProgramRoot = z.infer<typeof programRoot>
+export type NamespaceRoot = z.infer<typeof namespaceRoot>
 
 const commit = z.object({
   root: common.cid,
@@ -48,7 +48,7 @@ const follow = z.object({
 export type Follow = z.infer<typeof follow>
 
 export type UpdateData = {
-  program?: string
+  namespace?: string
   collection?: Collection
   tid?: TID
   did?: string
@@ -59,7 +59,7 @@ export const schema = {
   ...common,
   tid,
   repoRoot,
-  programRoot,
+  namespaceRoot,
   commit,
   idMapping,
   entry,

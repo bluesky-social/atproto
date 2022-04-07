@@ -90,7 +90,7 @@ type RepoData = {
 
 export const fillRepo = async (
   repo: Repo,
-  programName: string,
+  namespaceId: string,
   postsCount: number,
   interCount: number,
   followCount: number,
@@ -100,19 +100,19 @@ export const fillRepo = async (
     interactions: {},
     follows: {},
   }
-  await repo.runOnProgram(programName, async (program) => {
+  await repo.runOnNamespace(namespaceId, async (namespace) => {
     for (let i = 0; i < postsCount; i++) {
       const tid = await TID.next()
       const content = randomStr(10)
       const cid = await repo.put(content)
-      await program.posts.addEntry(tid, cid)
+      await namespace.posts.addEntry(tid, cid)
       data.posts[tid.toString()] = content
     }
     for (let i = 0; i < interCount; i++) {
       const tid = await TID.next()
       const content = randomStr(10)
       const cid = await repo.put(content)
-      await program.interactions.addEntry(tid, cid)
+      await namespace.interactions.addEntry(tid, cid)
       data.interactions[tid.toString()] = content
     }
   })
@@ -127,12 +127,12 @@ export const fillRepo = async (
 export const checkRepo = async (
   t: ExecutionContext<unknown>,
   repo: Repo,
-  programName: string,
+  namespaceId: string,
   data: RepoData,
 ): Promise<void> => {
-  await repo.runOnProgram(programName, async (program) => {
+  await repo.runOnNamespace(namespaceId, async (namespace) => {
     for (const tid of Object.keys(data.posts)) {
-      const cid = await program.posts.getEntry(TID.fromStr(tid))
+      const cid = await namespace.posts.getEntry(TID.fromStr(tid))
       const actual = cid ? await repo.get(cid, schema.string) : null
       t.deepEqual(
         actual,
@@ -141,7 +141,7 @@ export const checkRepo = async (
       )
     }
     for (const tid of Object.keys(data.interactions)) {
-      const cid = await program.interactions.getEntry(TID.fromStr(tid))
+      const cid = await namespace.interactions.getEntry(TID.fromStr(tid))
       const actual = cid ? await repo.get(cid, schema.string) : null
       t.deepEqual(
         actual,

@@ -16,7 +16,7 @@ Resource name: 'bluesky'
 
 - Full permission for account: 
     did:bsky:userDid|*
-- Permission to write to particular program namespace: 
+- Permission to write to particular namespace: 
     did:bsky:userDid|did:bsky:microblog|*
 - Permission to make only interactions in a given namespace:
     did:bsky:userDid|did:bsky:microblog|interactions|*
@@ -75,20 +75,20 @@ export const blueskySemantics: CapabilitySemantics<BlueskyCapability> = {
       }
     }
 
-    const [childDid, childProgram, childCollection, childTid] =
+    const [childDid, childNamespace, childCollection, childTid] =
       childCap.bluesky.split('|')
-    const [parentDid, parentProgram, parentCollection, parentTid] =
+    const [parentDid, parentNamespace, parentCollection, parentTid] =
       parentCap.bluesky.split('|')
 
     if (childDid !== parentDid) {
       return null
     }
 
-    if (parentProgram === '*') {
+    if (parentNamespace === '*') {
       return childCap
-    } else if (childProgram === '*') {
+    } else if (childNamespace === '*') {
       return namespaceEscalation(childCap)
-    } else if (childProgram !== parentProgram) {
+    } else if (childNamespace !== parentNamespace) {
       return null
     }
 
@@ -122,7 +122,7 @@ export const hasPermission = (
 
 export const namespaceEscalation = (cap: BlueskyCapability) => {
   return {
-    escalation: 'Bluesky program namespace esclation',
+    escalation: 'Bluesky namespace esclation',
     capability: cap,
   }
 }
@@ -143,13 +143,13 @@ export const tidEscalation = (cap: BlueskyCapability) => {
 
 export function writeCap(
   did: string,
-  program?: string,
+  namespace?: string,
   collection?: Collection,
   tid?: TID,
 ): BlueskyCapability {
   let resource = did
-  if (program) {
-    resource += '|' + program
+  if (namespace) {
+    resource += '|' + namespace
   }
   if (collection) {
     resource += '|' + collection

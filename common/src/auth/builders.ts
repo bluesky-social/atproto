@@ -12,7 +12,7 @@ const MONTH_IN_SECONDS = 60 * 60 * 24 * 30
 export const delegateForPost = async (
   serverDid: string,
   did: string,
-  program: string,
+  namespace: string,
   collection: Collection,
   tid: TID,
   keypair: ucan.Keypair,
@@ -24,7 +24,7 @@ export const delegateForPost = async (
     .withLifetimeInSeconds(30)
     .delegateCapability(
       blueskySemantics,
-      writeCap(did, program, collection, tid),
+      writeCap(did, namespace, collection, tid),
       ucanStore,
     )
     .build()

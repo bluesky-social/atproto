@@ -42,7 +42,7 @@ export class Relationships implements CarStreamable {
   async updateRoot(newCids: CidSet): Promise<void> {
     this.cid = this.hamt.cid
     if (this.onUpdate) {
-      await this.onUpdate({ program: 'relationships', newCids })
+      await this.onUpdate({ namespace: 'relationships', newCids })
     }
   }
 

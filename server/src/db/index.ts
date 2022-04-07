@@ -85,11 +85,11 @@ export class Database {
   async getPost(
     tid: string,
     author: string,
-    program: string,
+    namespace: string,
   ): Promise<Post | null> {
     const row = await this.db('posts')
       .select('*')
-      .where({ tid, author, program })
+      .where({ tid, author, namespace })
     if (row.length < 1) return null
     return row[0]
   }
@@ -102,18 +102,18 @@ export class Database {
   }
 
   async updatePost(post: Post, cid: CID): Promise<void> {
-    const { tid, author, program, text, time } = post
+    const { tid, author, namespace, text, time } = post
     await this.db('posts')
-      .where({ tid, author, program })
+      .where({ tid, author, namespace })
       .update({ text, time, cid: cid.toString() })
   }
 
   async deletePost(
     tid: string,
     author: string,
-    program: string,
+    namespace: string,
   ): Promise<void> {
-    await this.db('posts').where({ tid, author, program }).del()
+    await this.db('posts').where({ tid, author, namespace }).del()
   }
 
   async postCount(author: string): Promise<number> {
@@ -131,11 +131,11 @@ export class Database {
   async getLike(
     tid: string,
     author: string,
-    program: string,
+    namespace: string,
   ): Promise<Like | null> {
     const row = await this.db('likes')
       .select('*')
-      .where({ tid, author, program })
+      .where({ tid, author, namespace })
     if (row.length < 1) return null
     return row[0]
   }
@@ -144,11 +144,11 @@ export class Database {
     author: string,
     post_tid: string,
     post_author: string,
-    post_program: string,
+    post_namespace: string,
   ): Promise<Like | null> {
     const row = await this.db('likes')
       .select('*')
-      .where({ author, post_tid, post_author, post_program })
+      .where({ author, post_tid, post_author, post_namespace })
     if (row.length < 1) return null
     return row[0]
   }
@@ -163,9 +163,9 @@ export class Database {
   async deleteLike(
     tid: string,
     author: string,
-    program: string,
+    namespace: string,
   ): Promise<void> {
-    await this.db('likes').where({ tid, author, program }).delete()
+    await this.db('likes').where({ tid, author, namespace }).delete()
   }
 
   // FOLLOWS
@@ -250,19 +250,19 @@ export class Database {
         author_name: p.username,
         text: p.text,
         time: p.time,
-        likes: await this.likeCount(p.author, p.program, p.tid),
+        likes: await this.likeCount(p.author, p.namespace, p.tid),
       })),
     )
   }
 
   async likeCount(
     author: string,
-    program: string,
+    namespace: string,
     tid: string,
   ): Promise<number> {
     const res = await this.db('likes').count('*').where({
       post_author: author,
-      post_program: program,
+      post_namespace: namespace,
       post_tid: tid,
     })
     const count = (res[0] || {})['count(*)']

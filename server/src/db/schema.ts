@@ -27,10 +27,10 @@ const userDids = {
 const posts = {
   name: 'posts',
   create: (table: Table) => {
-    table.unique(['tid', 'author', 'program'])
+    table.unique(['tid', 'author', 'namespace'])
     table.string('tid')
     table.string('author')
-    table.string('program')
+    table.string('namespace')
     table.string('text')
     table.string('time')
     table.string('cid')
@@ -42,22 +42,22 @@ const posts = {
 const likes = {
   name: 'likes',
   create: (table: Table) => {
-    table.primary(['tid', 'author', 'program'])
+    table.primary(['tid', 'author', 'namespace'])
     table.string('tid')
     table.string('author').references('user_dids.did')
-    table.string('program')
+    table.string('namespace')
     table.string('time')
     table.string('cid')
 
     table.string('post_tid')
     table.string('post_author')
-    table.string('post_program')
+    table.string('post_namespace')
     table.string('post_cid')
 
     table.foreign('author').references('did').inTable('user_dids')
     table.foreign('post_tid').references('tid').inTable('posts')
     table.foreign('post_author').references('author').inTable('posts')
-    table.foreign('post_program').references('program').inTable('posts')
+    table.foreign('post_namespace').references('namespace').inTable('posts')
   },
 }
 

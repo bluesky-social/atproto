@@ -14,7 +14,7 @@ const router = express.Router()
 // find a like by it's TID
 const byTid = z.object({
   did: z.string(),
-  program: z.string(),
+  namespace: z.string(),
   tid: z.string(),
 })
 
@@ -22,7 +22,7 @@ const byTid = z.object({
 const byPost = z.object({
   did: z.string(),
   postAuthor: z.string(),
-  postProgram: z.string(),
+  postNamespace: z.string(),
   postTid: z.string(),
 })
 
@@ -34,9 +34,9 @@ router.get('/', async (req, res) => {
     throw new ServerError(400, 'Poorly formatted request')
   }
   if (check.is(req.query, byTid)) {
-    const { did, program, tid } = req.query
+    const { did, namespace, tid } = req.query
     const repo = await util.loadRepo(res, did)
-    const interCid = await repo.runOnProgram(program, async (store) => {
+    const interCid = await repo.runOnNamespace(namespace, async (store) => {
       return store.interactions.getEntry(TID.fromStr(tid))
     })
     if (interCid === null) {
@@ -45,9 +45,9 @@ router.get('/', async (req, res) => {
     const like = await repo.get(interCid, schema.microblog.like)
     res.status(200).send(like)
   } else {
-    const { did, postAuthor, postProgram, postTid } = req.query
+    const { did, postAuthor, postNamespace, postTid } = req.query
     const db = util.getDB(res)
-    const like = await db.getLikeByPost(did, postTid, postAuthor, postProgram)
+    const like = await db.getLikeByPost(did, postTid, postAuthor, postNamespace)
     if (like === null) {
       throw new ServerError(404, 'Could not find interaction')
     }
@@ -60,7 +60,7 @@ router.get('/', async (req, res) => {
 
 export const listInteractionsReq = z.object({
   did: z.string(),
-  program: z.string(),
+  namespace: z.string(),
   count: z.string(),
   from: z.string().optional(),
 })
@@ -70,7 +70,7 @@ router.get('/list', async (req, res) => {
   if (!check.is(req.query, listInteractionsReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }
-  const { did, program, count, from } = req.query
+  const { did, namespace, count, from } = req.query
   const countParsed = parseInt(count)
   if (isNaN(countParsed)) {
     throw new ServerError(
@@ -80,7 +80,7 @@ router.get('/list', async (req, res) => {
   }
   const fromTid = from ? TID.fromStr(from) : undefined
   const repo = await util.loadRepo(res, did)
-  const entries = await repo.runOnProgram(program, async (store) => {
+  const entries = await repo.runOnNamespace(namespace, async (store) => {
     return store.interactions.getEntries(countParsed, fromTid)
   })
   const posts = await Promise.all(
@@ -105,14 +105,14 @@ router.post('/', async (req, res) => {
     ucanCheck.hasAudience(SERVER_DID),
     ucanCheck.hasPostingPermission(
       like.author,
-      like.program,
+      like.namespace,
       'interactions',
       TID.fromStr(like.tid),
     ),
   )
   const repo = await util.loadRepo(res, like.author, ucanStore)
   const likeCid = await repo.put(like)
-  await repo.runOnProgram(like.program, async (store) => {
+  await repo.runOnNamespace(like.namespace, async (store) => {
     return store.interactions.addEntry(TID.fromStr(like.tid), likeCid)
   })
   const db = util.getDB(res)
@@ -126,7 +126,7 @@ router.post('/', async (req, res) => {
 
 export const deleteInteractionReq = z.object({
   did: z.string(),
-  program: z.string(),
+  namespace: z.string(),
   tid: z.string(),
 })
 export type DeleteInteractionReq = z.infer<typeof deleteInteractionReq>
@@ -135,19 +135,19 @@ router.delete('/', async (req, res) => {
   if (!check.is(req.body, deleteInteractionReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }
-  const { did, program, tid } = req.body
+  const { did, namespace, tid } = req.body
   const tidObj = TID.fromStr(tid)
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(did, program, 'interactions', tidObj),
+    ucanCheck.hasPostingPermission(did, namespace, 'interactions', tidObj),
   )
   const repo = await util.loadRepo(res, did, ucanStore)
-  await repo.runOnProgram(program, async (store) => {
+  await repo.runOnNamespace(namespace, async (store) => {
     return store.interactions.deleteEntry(tidObj)
   })
   const db = util.getDB(res)
-  await db.deleteLike(tidObj.toString(), did, program)
+  await db.deleteLike(tidObj.toString(), did, namespace)
   await db.updateRepoRoot(did, repo.cid)
   res.status(200).send()
 })
