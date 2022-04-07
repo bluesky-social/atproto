@@ -2,10 +2,11 @@
 
 ## Quick use guide
 Run `yarn` from the project root to install all dependencies
-Build it with `yarn build`
-Use it with `yarn cli {cmd}`
+Run `yarn build` within the `common/` folder to build the core bsky package
+Run `yarn build` within this `cli/` folder to build the cli
+Use it with `yarn cli {cmd}` from inside the `cli/` folder
 
-To get this working, you'll need a server running. Pop over to `../server` and run `yarn dev`
+To get this working, you'll need a server running. Pop over to `server/` and run `yarn dev`
 
 We're running this demo with two users on our system.
 
