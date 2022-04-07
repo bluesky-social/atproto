@@ -13,7 +13,7 @@ const router = express.Router()
 
 export const getPostReq = z.object({
   did: z.string(),
-  program: z.string(),
+  namespace: z.string(),
   tid: z.string(),
 })
 export type GetPostReq = z.infer<typeof getPostReq>
@@ -22,9 +22,9 @@ router.get('/', async (req, res) => {
   if (!check.is(req.query, getPostReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }
-  const { did, program, tid } = req.query
+  const { did, namespace, tid } = req.query
   const repo = await util.loadRepo(res, did)
-  const postCid = await repo.runOnProgram(program, async (store) => {
+  const postCid = await repo.runOnNamespace(namespace, async (store) => {
     return store.posts.getEntry(TID.fromStr(tid))
   })
   if (postCid === null) {
@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
 
 export const listPostsReq = z.object({
   did: z.string(),
-  program: z.string(),
+  namespace: z.string(),
   count: z.string(),
   from: z.string().optional(),
 })
@@ -49,7 +49,7 @@ router.get('/list', async (req, res) => {
   if (!check.is(req.query, listPostsReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }
-  const { did, program, count, from } = req.query
+  const { did, namespace, count, from } = req.query
   const countParsed = parseInt(count)
   if (isNaN(countParsed)) {
     throw new ServerError(
@@ -59,7 +59,7 @@ router.get('/list', async (req, res) => {
   }
   const fromTid = from ? TID.fromStr(from) : undefined
   const repo = await util.loadRepo(res, did)
-  const entries = await repo.runOnProgram(program, async (store) => {
+  const entries = await repo.runOnNamespace(namespace, async (store) => {
     return store.posts.getEntries(countParsed, fromTid)
   })
   const posts = await Promise.all(
@@ -84,14 +84,14 @@ router.post('/', async (req, res) => {
     ucanCheck.hasAudience(SERVER_DID),
     ucanCheck.hasPostingPermission(
       post.author,
-      post.program,
+      post.namespace,
       'posts',
       TID.fromStr(post.tid),
     ),
   )
   const repo = await util.loadRepo(res, post.author, ucanStore)
   const postCid = await repo.put(post)
-  await repo.runOnProgram(post.program, async (store) => {
+  await repo.runOnNamespace(post.namespace, async (store) => {
     return store.posts.addEntry(TID.fromStr(post.tid), postCid)
   })
   const db = util.getDB(res)
@@ -115,11 +115,11 @@ router.put('/', async (req, res) => {
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(post.author, post.program, 'posts', tid),
+    ucanCheck.hasPostingPermission(post.author, post.namespace, 'posts', tid),
   )
   const repo = await util.loadRepo(res, post.author, ucanStore)
   const postCid = await repo.put(post)
-  await repo.runOnProgram(post.program, async (store) => {
+  await repo.runOnNamespace(post.namespace, async (store) => {
     return store.posts.editEntry(tid, postCid)
   })
   const db = util.getDB(res)
@@ -133,7 +133,7 @@ router.put('/', async (req, res) => {
 
 export const deletePostReq = z.object({
   did: z.string(),
-  program: z.string(),
+  namespace: z.string(),
   tid: z.string(),
 })
 export type DeletePostReq = z.infer<typeof deletePostReq>
@@ -142,19 +142,19 @@ router.delete('/', async (req, res) => {
   if (!check.is(req.body, deletePostReq)) {
     throw new ServerError(400, 'Poorly formatted request')
   }
-  const { did, program, tid } = req.body
+  const { did, namespace, tid } = req.body
   const tidObj = TID.fromStr(tid)
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(did, program, 'posts', tidObj),
+    ucanCheck.hasPostingPermission(did, namespace, 'posts', tidObj),
   )
   const repo = await util.loadRepo(res, did, ucanStore)
-  await repo.runOnProgram(program, async (store) => {
+  await repo.runOnNamespace(namespace, async (store) => {
     return store.posts.deleteEntry(tidObj)
   })
   const db = util.getDB(res)
-  await db.deletePost(tidObj.toString(), did, program)
+  await db.deletePost(tidObj.toString(), did, namespace)
   await db.updateRepoRoot(did, repo.cid)
   res.status(200).send()
 })

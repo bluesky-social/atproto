@@ -16,7 +16,7 @@ import { DID, Keypair } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
-import ProgramStore from './program-store.js'
+import Namespace from './namespace.js'
 import Relationships from './relationships.js'
 import {
   blueskySemantics,
@@ -27,8 +27,8 @@ import {
 export class Repo implements CarStreamable {
   blockstore: IpldStore
   ucanStore: ucan.Store
-  programCids: IdMapping
-  programs: { [name: string]: ProgramStore }
+  namespaceCids: IdMapping
+  namespaces: { [name: string]: Namespace }
   relationships: Relationships
   cid: CID
   did: DID
@@ -37,7 +37,7 @@ export class Repo implements CarStreamable {
   constructor(params: {
     blockstore: IpldStore
     ucanStore: ucan.Store
-    programCids: IdMapping
+    namespaceCids: IdMapping
     relationships: Relationships
     cid: CID
     did: DID
@@ -45,8 +45,8 @@ export class Repo implements CarStreamable {
   }) {
     this.blockstore = params.blockstore
     this.ucanStore = params.ucanStore
-    this.programCids = params.programCids
-    this.programs = {}
+    this.namespaceCids = params.namespaceCids
+    this.namespaces = {}
     this.relationships = params.relationships
     this.cid = params.cid
     this.did = params.did
@@ -78,7 +78,7 @@ export class Repo implements CarStreamable {
       new_cids: await relationships.cids(),
       auth_token: tokenCid, // @FIX THIS
       relationships: relationships.cid,
-      programs: {},
+      namespaces: {},
     }
 
     const rootCid = await blockstore.put(rootObj)
@@ -88,12 +88,12 @@ export class Repo implements CarStreamable {
     }
 
     const cid = await blockstore.put(commit)
-    const programCids: IdMapping = {}
+    const namespaceCids: IdMapping = {}
 
     return new Repo({
       blockstore,
       ucanStore,
-      programCids,
+      namespaceCids,
       relationships,
       cid,
       did,
@@ -116,7 +116,7 @@ export class Repo implements CarStreamable {
     return new Repo({
       blockstore,
       ucanStore: ucanStore || (await ucan.Store.fromTokens([])),
-      programCids: root.programs,
+      namespaceCids: root.namespaces,
       relationships,
       cid,
       did: root.did,
@@ -146,27 +146,27 @@ export class Repo implements CarStreamable {
   }
 
   // arrow fn to preserve scope
-  updateRootForProgram =
-    (programName: string) =>
+  updateRootForNamespace =
+    (namespaceId: string) =>
     async (update: UpdateData): Promise<void> => {
-      const program = this.programs[programName]
-      if (!program) {
+      const namespace = this.namespaces[namespaceId]
+      if (!namespace) {
         throw new Error(
-          `Tried to update program root for a program that doesnt exist: ${programName}`,
+          `Tried to update namespace root for a namespace that doesnt exist: ${namespaceId}`,
         )
       }
-      // if a new program, make sure we add the structural nodes
+      // if a new namespace, make sure we add the structural nodes
       const newCids = update.newCids
-      if (this.programCids[programName] === undefined) {
+      if (this.namespaceCids[namespaceId] === undefined) {
         newCids
-          .add(program.cid)
-          .add(program.posts.cid)
-          .add(program.interactions.cid)
+          .add(namespace.cid)
+          .add(namespace.posts.cid)
+          .add(namespace.interactions.cid)
       }
-      this.programCids[programName] = program.cid
+      this.namespaceCids[namespaceId] = namespace.cid
       await this.updateRoot({
         ...update,
-        program: programName,
+        namespace: namespaceId,
         newCids,
       })
     }
@@ -182,7 +182,7 @@ export class Repo implements CarStreamable {
       prev: this.cid,
       new_cids: newCids.toList(),
       auth_token: tokenCid,
-      programs: this.programCids,
+      namespaces: this.namespaceCids,
       relationships: this.relationships.cid,
     }
     const rootCid = await this.blockstore.put(root)
@@ -203,39 +203,39 @@ export class Repo implements CarStreamable {
     return this.blockstore.get(commit.root, schema.repoRoot)
   }
 
-  // Program API
+  // Namespace API
   // -----------
 
-  async createProgramStore(name: string): Promise<ProgramStore> {
-    if (this.programCids[name] !== undefined) {
-      throw new Error(`Program store already exists for program: ${name}`)
+  async createNamespace(id: string): Promise<Namespace> {
+    if (this.namespaceCids[id] !== undefined) {
+      throw new Error(`Namespace already exists for id: ${id}`)
     }
-    const programStore = await ProgramStore.create(this.blockstore)
-    programStore.onUpdate = this.updateRootForProgram(name)
-    this.programs[name] = programStore
-    return programStore
+    const namespace = await Namespace.create(this.blockstore)
+    namespace.onUpdate = this.updateRootForNamespace(id)
+    this.namespaces[id] = namespace
+    return namespace
   }
 
-  async loadOrCreateProgramStore(name: string): Promise<ProgramStore> {
-    if (this.programs[name]) {
-      return this.programs[name]
+  async loadOrCreateNamespace(id: string): Promise<Namespace> {
+    if (this.namespaces[id]) {
+      return this.namespaces[id]
     }
-    const cid = this.programCids[name]
+    const cid = this.namespaceCids[id]
     if (!cid) {
-      return this.createProgramStore(name)
+      return this.createNamespace(id)
     }
-    const programStore = await ProgramStore.load(this.blockstore, cid)
-    programStore.onUpdate = this.updateRootForProgram(name)
-    this.programs[name] = programStore
-    return programStore
+    const namespace = await Namespace.load(this.blockstore, cid)
+    namespace.onUpdate = this.updateRootForNamespace(id)
+    this.namespaces[id] = namespace
+    return namespace
   }
 
-  async runOnProgram<T>(
-    programName: string,
-    fn: (store: ProgramStore) => Promise<T>,
+  async runOnNamespace<T>(
+    id: string,
+    fn: (store: Namespace) => Promise<T>,
   ): Promise<T> {
-    const program = await this.loadOrCreateProgramStore(programName)
-    return fn(program)
+    const namespace = await this.loadOrCreateNamespace(id)
+    return fn(namespace)
   }
 
   // IPLD store methods
@@ -258,7 +258,7 @@ export class Repo implements CarStreamable {
     }
     const neededCap = writeCap(
       this.did,
-      update.program,
+      update.namespace,
       update.collection,
       update.tid,
     )
@@ -292,8 +292,8 @@ export class Repo implements CarStreamable {
     this.cid = rootCid
     const root = await this.getRoot()
     this.did = root.did
-    this.programCids = root.programs
-    this.programs = {}
+    this.namespaceCids = root.namespaces
+    this.namespaces = {}
     this.relationships = await Relationships.load(
       this.blockstore,
       root.relationships,
@@ -331,9 +331,9 @@ export class Repo implements CarStreamable {
     await this.blockstore.addToCar(car, commit.root)
     await this.relationships.writeToCarStream(car)
     await Promise.all(
-      Object.values(this.programCids).map(async (cid) => {
-        const programStore = await ProgramStore.load(this.blockstore, cid)
-        await programStore.writeToCarStream(car)
+      Object.values(this.namespaceCids).map(async (cid) => {
+        const namespace = await Namespace.load(this.blockstore, cid)
+        await namespace.writeToCarStream(car)
       }),
     )
   }

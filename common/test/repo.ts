@@ -13,8 +13,8 @@ type Context = {
   ipld: IpldStore
   keypair: ucan.EdKeypair
   repo: Repo
-  programName: string
-  otherProgram: string
+  namespaceId: string
+  otherNamespace: string
 }
 
 test.beforeEach(async (t) => {
@@ -23,9 +23,9 @@ test.beforeEach(async (t) => {
   const token = await auth.claimFull(keypair.did(), keypair)
   const ucanStore = await ucan.Store.fromTokens([token.encoded()])
   const repo = await Repo.create(ipld, keypair.did(), keypair, ucanStore)
-  const programName = 'did:bsky:test'
-  const otherProgram = 'did:bsky:other'
-  t.context = { ipld, keypair, repo, programName, otherProgram } as Context
+  const namespaceId = 'did:bsky:test'
+  const otherNamespace = 'did:bsky:other'
+  t.context = { ipld, keypair, repo, namespaceId, otherNamespace } as Context
   t.pass('Context setup')
 })
 
@@ -46,53 +46,56 @@ test('sets correct DID', async (t) => {
   t.is(repo.did, keypair.did(), 'DIDs match')
 })
 
-test('runs operations on the related program', async (t) => {
-  const { repo, programName } = t.context as Context
+test('runs operations on the related namespace', async (t) => {
+  const { repo, namespaceId } = t.context as Context
 
   const tid = TID.next()
   const cid = await util.randomCid()
-  await repo.runOnProgram(programName, async (program) => {
-    await program.posts.addEntry(tid, cid)
+  await repo.runOnNamespace(namespaceId, async (namespace) => {
+    await namespace.posts.addEntry(tid, cid)
   })
 
-  const got = await repo.runOnProgram(programName, async (program) => {
-    return program.posts.getEntry(tid)
+  const got = await repo.runOnNamespace(namespaceId, async (namespace) => {
+    return namespace.posts.getEntry(tid)
   })
   t.deepEqual(got, cid, `Matching content for post tid: ${tid}`)
 })
 
-test('name spaces programs', async (t) => {
-  const { repo, programName, otherProgram } = t.context as Context
+test('name spaces namespaces', async (t) => {
+  const { repo, namespaceId, otherNamespace } = t.context as Context
 
   const tid = TID.next()
   const cid = await util.randomCid()
-  await repo.runOnProgram(programName, async (program) => {
-    await program.posts.addEntry(tid, cid)
+  await repo.runOnNamespace(namespaceId, async (namespace) => {
+    await namespace.posts.addEntry(tid, cid)
   })
 
   const tidOther = TID.next()
   const cidOther = await util.randomCid()
-  await repo.runOnProgram(otherProgram, async (program) => {
-    await program.posts.addEntry(tidOther, cidOther)
+  await repo.runOnNamespace(otherNamespace, async (namespace) => {
+    await namespace.posts.addEntry(tidOther, cidOther)
   })
 
-  const got = await repo.runOnProgram(programName, async (program) => {
+  const got = await repo.runOnNamespace(namespaceId, async (namespace) => {
     return Promise.all([
-      program.posts.getEntry(tid),
-      program.posts.getEntry(tidOther),
+      namespace.posts.getEntry(tid),
+      namespace.posts.getEntry(tidOther),
     ])
   })
-  t.deepEqual(got[0], cid, 'correctly retrieves tid from program')
-  t.deepEqual(got[1], null, 'cannot find tid from other program')
+  t.deepEqual(got[0], cid, 'correctly retrieves tid from namespace')
+  t.deepEqual(got[1], null, 'cannot find tid from other namespace')
 
-  const gotOther = await repo.runOnProgram(otherProgram, async (program) => {
-    return Promise.all([
-      program.posts.getEntry(tid),
-      program.posts.getEntry(tidOther),
-    ])
-  })
-  t.deepEqual(gotOther[0], null, 'cannot find tid from other program')
-  t.deepEqual(gotOther[1], cidOther, 'correctly retrieves tid from program')
+  const gotOther = await repo.runOnNamespace(
+    otherNamespace,
+    async (namespace) => {
+      return Promise.all([
+        namespace.posts.getEntry(tid),
+        namespace.posts.getEntry(tidOther),
+      ])
+    },
+  )
+  t.deepEqual(gotOther[0], null, 'cannot find tid from other namespace')
+  t.deepEqual(gotOther[1], cidOther, 'correctly retrieves tid from namespace')
 })
 
 test('basic relationship operations', async (t) => {
@@ -113,25 +116,25 @@ test('basic relationship operations', async (t) => {
 })
 
 test('loads from blockstore', async (t) => {
-  const { ipld, repo, programName } = t.context as Context
+  const { ipld, repo, namespaceId } = t.context as Context
   const postTid = TID.next()
   const postCid = await util.randomCid()
   const interTid = TID.next()
   const interCid = await util.randomCid()
   const follow = util.randomFollow()
 
-  await repo.runOnProgram(programName, async (program) => {
-    await program.posts.addEntry(postTid, postCid)
-    await program.interactions.addEntry(interTid, interCid)
+  await repo.runOnNamespace(namespaceId, async (namespace) => {
+    await namespace.posts.addEntry(postTid, postCid)
+    await namespace.interactions.addEntry(interTid, interCid)
   })
 
   await repo.relationships.follow(follow.did, follow.username)
 
   const loaded = await Repo.load(ipld, repo.cid)
-  const got = await loaded.runOnProgram(programName, async (program) => {
+  const got = await loaded.runOnNamespace(namespaceId, async (namespace) => {
     return Promise.all([
-      program.posts.getEntry(postTid),
-      program.interactions.getEntry(interTid),
+      namespace.posts.getEntry(postTid),
+      namespace.interactions.getEntry(interTid),
     ])
   })
   const gotFollow = await loaded.relationships.getFollow(follow.did)

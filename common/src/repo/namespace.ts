@@ -3,11 +3,10 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
-import { Collection, ProgramRoot, schema, UpdateData } from './types.js'
+import { Collection, NamespaceRoot, schema, UpdateData } from './types.js'
 import CidSet from './cid-set.js'
-import TID from './tid.js'
 
-export class ProgramStore {
+export class Namespace {
   blockstore: IpldStore
   posts: TidCollection
   interactions: TidCollection
@@ -37,7 +36,7 @@ export class ProgramStore {
     const posts = await TidCollection.create(blockstore)
     const interactions = await TidCollection.create(blockstore)
 
-    const rootObj: ProgramRoot = {
+    const rootObj: NamespaceRoot = {
       posts: posts.cid,
       interactions: interactions.cid,
       profile: null,
@@ -45,7 +44,7 @@ export class ProgramStore {
 
     const cid = await blockstore.put(rootObj)
 
-    return new ProgramStore({
+    return new Namespace({
       blockstore,
       posts,
       interactions,
@@ -55,13 +54,13 @@ export class ProgramStore {
   }
 
   static async load(blockstore: IpldStore, cid: CID) {
-    const rootObj = await blockstore.get(cid, schema.programRoot)
+    const rootObj = await blockstore.get(cid, schema.namespaceRoot)
     const posts = await TidCollection.load(blockstore, rootObj.posts)
     const interactions = await TidCollection.load(
       blockstore,
       rootObj.interactions,
     )
-    return new ProgramStore({
+    return new Namespace({
       blockstore,
       posts,
       interactions,
@@ -109,4 +108,4 @@ export class ProgramStore {
   }
 }
 
-export default ProgramStore
+export default Namespace

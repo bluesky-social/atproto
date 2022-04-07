@@ -13,7 +13,7 @@ type Context = {
   postToken: ucan.Chained
   serverDid: string
   did: string
-  program: string
+  namespace: string
   collection: Collection
   tid: TID
 }
@@ -24,13 +24,13 @@ test.beforeEach(async (t) => {
   const ucanStore = await ucan.Store.fromTokens([fullToken.encoded()])
   const serverDid = 'did:bsky:FAKE_SERVER_DID'
   const did = keypair.did()
-  const program = 'did:bsky:microblog'
+  const namespace = 'did:bsky:microblog'
   const collection = 'posts'
   const tid = TID.next()
   const postToken = await auth.delegateForPost(
     serverDid,
     did,
-    program,
+    namespace,
     collection,
     tid,
     keypair,
@@ -43,7 +43,7 @@ test.beforeEach(async (t) => {
     postToken,
     serverDid,
     did,
-    program,
+    namespace,
     collection,
     tid,
   } as Context
@@ -55,12 +55,12 @@ test('create & validate token for post', async (t) => {
   await checkUcan(
     ctx.postToken,
     hasAudience(ctx.serverDid),
-    hasPostingPermission(ctx.did, ctx.program, ctx.collection, ctx.tid),
+    hasPostingPermission(ctx.did, ctx.namespace, ctx.collection, ctx.tid),
   )
   t.pass('created & validated token')
 })
 
-test('token does not work for other programs', async (t) => {
+test('token does not work for other namespaces', async (t) => {
   const ctx = t.context as Context
   await t.throwsAsync(
     checkUcan(
@@ -68,13 +68,13 @@ test('token does not work for other programs', async (t) => {
       hasAudience(ctx.serverDid),
       hasPostingPermission(
         ctx.did,
-        'did:bsky:otherProgram',
+        'did:bsky:otherNamespace',
         ctx.collection,
         ctx.tid,
       ),
     ),
     { instanceOf: Error },
-    'throw when program mismatch',
+    'throw when namespace mismatch',
   )
   t.pass('yay')
 })
@@ -85,7 +85,7 @@ test('token does not work for other collections', async (t) => {
     checkUcan(
       ctx.postToken,
       hasAudience(ctx.serverDid),
-      hasPostingPermission(ctx.did, ctx.program, 'interactions', ctx.tid),
+      hasPostingPermission(ctx.did, ctx.namespace, 'interactions', ctx.tid),
     ),
     { instanceOf: Error },
     'throw when collection mismatch',
@@ -100,7 +100,7 @@ test('token does not work for other TIDs', async (t) => {
     checkUcan(
       ctx.postToken,
       hasAudience(ctx.serverDid),
-      hasPostingPermission(ctx.did, ctx.program, ctx.collection, otherTid),
+      hasPostingPermission(ctx.did, ctx.namespace, ctx.collection, otherTid),
     ),
     { instanceOf: Error },
     'throw when tid mismatch',

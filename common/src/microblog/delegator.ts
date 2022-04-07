@@ -10,7 +10,7 @@ import { Keypair } from '../common/types.js'
 import * as auth from '../auth/index.js'
 
 export class MicroblogDelegator {
-  programName = 'did:bsky:microblog'
+  namespace = 'did:bsky:microblog'
   keypair: Keypair | null
   ucanStore: ucan.Store | null
   serverDid: string | null
@@ -79,7 +79,7 @@ export class MicroblogDelegator {
     return auth.delegateForPost(
       serverDid,
       this.did,
-      this.programName,
+      this.namespace,
       collection,
       tid,
       this.keypair,
@@ -151,7 +151,7 @@ export class MicroblogDelegator {
     const params = {
       tid: tid.toString(),
       did: did,
-      program: this.programName,
+      namespace: this.namespace,
     }
     let res: AxiosResponse
     try {
@@ -173,7 +173,7 @@ export class MicroblogDelegator {
     const tid = TID.next()
     const post: Post = {
       tid: tid.toString(),
-      program: this.programName,
+      namespace: this.namespace,
       author: this.did,
       text,
       time: new Date().toISOString(),
@@ -191,7 +191,7 @@ export class MicroblogDelegator {
   async editPost(tid: TID, text: string): Promise<void> {
     const updated: Post = {
       tid: tid.toString(),
-      program: this.programName,
+      namespace: this.namespace,
       author: this.did,
       text,
       time: new Date().toISOString(),
@@ -209,7 +209,7 @@ export class MicroblogDelegator {
     const data = {
       tid: tid.toString(),
       did: this.did,
-      program: this.programName,
+      namespace: this.namespace,
     }
     const token = await this.postToken('posts', tid)
     try {
@@ -235,7 +235,7 @@ export class MicroblogDelegator {
     const did = await this.resolveDid(nameOrDid)
     const params = {
       did,
-      program: this.programName,
+      namespace: this.namespace,
       count,
       from: from?.toString(),
     }
@@ -318,12 +318,12 @@ export class MicroblogDelegator {
     const tid = TID.next()
     const like: Like = {
       tid: tid.toString(),
-      program: this.programName,
+      namespace: this.namespace,
       author: this.did,
       time: new Date().toISOString(),
       post_tid: postTid.toString(),
       post_author: postAuthorDid,
-      post_program: this.programName,
+      post_namespace: this.namespace,
     }
     const token = await this.postToken('interactions', tid)
     try {
@@ -339,7 +339,7 @@ export class MicroblogDelegator {
     const data = {
       tid: likeTid.toString(),
       did: this.did,
-      program: this.programName,
+      namespace: this.namespace,
     }
     const token = await this.postToken('interactions', likeTid)
     try {
@@ -369,7 +369,7 @@ export class MicroblogDelegator {
     const params = {
       did: this.did,
       postAuthor: authorDid,
-      postProgram: this.programName,
+      postNamespace: this.namespace,
       postTid: postTid.toString(),
     }
     try {
@@ -396,7 +396,7 @@ export class MicroblogDelegator {
     const did = await this.resolveDid(nameOrDid)
     const params = {
       did,
-      program: this.programName,
+      namespace: this.namespace,
       count,
       from: from?.toString(),
     }
@@ -414,7 +414,7 @@ export class MicroblogDelegator {
   async likeCount(author: string, tid: TID): Promise<number> {
     const params = {
       author,
-      program: this.programName,
+      namespace: this.namespace,
       tid: tid.toString(),
     }
     try {

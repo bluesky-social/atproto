@@ -1,8 +1,8 @@
 import { CID } from 'multiformats/cid'
 import Repo from './index.js'
-import ProgramStore from './program-store'
+import Namespace from './namespace'
 
-export class Program {
+export class NamespaceImpl {
   name: string
   repo: Repo
 
@@ -15,9 +15,11 @@ export class Program {
     return this.repo.cid
   }
 
-  async runOnProgram<T>(fn: (program: ProgramStore) => Promise<T>): Promise<T> {
-    return this.repo.runOnProgram(this.name, fn)
+  async runOnNamespace<T>(
+    fn: (namespace: Namespace) => Promise<T>,
+  ): Promise<T> {
+    return this.repo.runOnNamespace(this.name, fn)
   }
 }
 
-export default Program
+export default NamespaceImpl
