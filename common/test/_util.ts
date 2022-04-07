@@ -1,10 +1,10 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store.js'
-import TID from '../src/user-store/tid.js'
-import { IdMapping, schema } from '../src/user-store/types.js'
+import TID from '../src/repo/tid.js'
+import { Follow, IdMapping, schema } from '../src/repo/types.js'
 import { DID } from '../src/common/types.js'
-import SSTable from '../src/user-store/ss-table.js'
-import UserStore from '../src/user-store/index.js'
+import SSTable from '../src/repo/ss-table.js'
+import Repo from '../src/repo/index.js'
 import { ExecutionContext } from 'ava'
 
 const fakeStore = IpldStore.createInMemory()
@@ -67,50 +67,73 @@ export const generateBulkDids = (count: number): DID[] => {
   return dids
 }
 
-type UserStoreData = {
-  posts: Record<string, string>
-  interactions: Record<string, string>
+export const randomFollow = (): Follow => {
+  return {
+    did: randomDid(),
+    username: randomStr(8),
+  }
 }
 
-export const fillUserStore = async (
-  store: UserStore,
-  programName: string,
+export const generateBulkFollows = (count: number): Follow[] => {
+  const follows = []
+  for (let i = 0; i < count; i++) {
+    follows.push(randomFollow())
+  }
+  return follows
+}
+
+type RepoData = {
+  posts: Record<string, string>
+  interactions: Record<string, string>
+  follows: Record<string, Follow>
+}
+
+export const fillRepo = async (
+  repo: Repo,
+  namespaceId: string,
   postsCount: number,
   interCount: number,
-): Promise<UserStoreData> => {
-  const data: UserStoreData = {
+  followCount: number,
+): Promise<RepoData> => {
+  const data: RepoData = {
     posts: {},
     interactions: {},
+    follows: {},
   }
-  await store.runOnProgram(programName, async (program) => {
+  await repo.runOnNamespace(namespaceId, async (namespace) => {
     for (let i = 0; i < postsCount; i++) {
       const tid = await TID.next()
       const content = randomStr(10)
-      const cid = await store.put(content)
-      await program.posts.addEntry(tid, cid)
+      const cid = await repo.put(content)
+      await namespace.posts.addEntry(tid, cid)
       data.posts[tid.toString()] = content
     }
     for (let i = 0; i < interCount; i++) {
       const tid = await TID.next()
       const content = randomStr(10)
-      const cid = await store.put(content)
-      await program.interactions.addEntry(tid, cid)
+      const cid = await repo.put(content)
+      await namespace.interactions.addEntry(tid, cid)
       data.interactions[tid.toString()] = content
     }
   })
+  for (let i = 0; i < followCount; i++) {
+    const follow = randomFollow()
+    await repo.relationships.follow(follow.did, follow.username)
+    data.follows[follow.did] = follow
+  }
   return data
 }
 
-export const checkUserStore = async (
+export const checkRepo = async (
   t: ExecutionContext<unknown>,
-  store: UserStore,
-  programName: string,
-  data: UserStoreData,
+  repo: Repo,
+  namespaceId: string,
+  data: RepoData,
 ): Promise<void> => {
-  await store.runOnProgram(programName, async (program) => {
+  await repo.runOnNamespace(namespaceId, async (namespace) => {
     for (const tid of Object.keys(data.posts)) {
-      const cid = await program.posts.getEntry(TID.fromStr(tid))
-      const actual = cid ? await store.get(cid, schema.string) : null
+      const cid = await namespace.posts.getEntry(TID.fromStr(tid))
+      const actual = cid ? await repo.get(cid, schema.string) : null
       t.deepEqual(
         actual,
         data.posts[tid],
@@ -118,8 +141,8 @@ export const checkUserStore = async (
       )
     }
     for (const tid of Object.keys(data.interactions)) {
-      const cid = await program.interactions.getEntry(TID.fromStr(tid))
-      const actual = cid ? await store.get(cid, schema.string) : null
+      const cid = await namespace.interactions.getEntry(TID.fromStr(tid))
+      const actual = cid ? await repo.get(cid, schema.string) : null
       t.deepEqual(
         actual,
         data.interactions[tid],
@@ -127,4 +150,8 @@ export const checkUserStore = async (
       )
     }
   })
+  for (const did of Object.keys(data.follows)) {
+    const actual = await repo.relationships.getFollow(did)
+    t.deepEqual(actual, data.follows[did], `Matching follow for did: ${did}`)
+  }
 }

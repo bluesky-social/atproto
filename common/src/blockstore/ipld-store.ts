@@ -10,13 +10,19 @@ import * as util from '../common/util.js'
 import { BlockstoreI } from './types.js'
 import { PersistentBlockstore } from './persistent-blockstore.js'
 import { BlockReader } from '@ipld/car/api'
-import CidSet from '../user-store/cid-set.js'
+import CidSet from '../repo/cid-set.js'
+
+type AllowedIpldRecordVal = string | number | CID | CID[] | Uint8Array | null
+
+export type AllowedIpldVal =
+  | AllowedIpldRecordVal
+  | Record<string, AllowedIpldRecordVal>
 
 export class IpldStore {
-  blockstore: BlockstoreI
+  rawBlockstore: BlockstoreI
 
-  constructor(blockstore: BlockstoreI) {
-    this.blockstore = blockstore
+  constructor(rawBlockstore: BlockstoreI) {
+    this.rawBlockstore = rawBlockstore
   }
 
   static createInMemory(): IpldStore {
@@ -27,7 +33,9 @@ export class IpldStore {
     return new IpldStore(new PersistentBlockstore(location))
   }
 
-  async put(value: Record<string, unknown> | string): Promise<CID> {
+  async put(
+    value: Record<string, AllowedIpldVal> | AllowedIpldVal,
+  ): Promise<CID> {
     const block = await Block.encode({
       value,
       codec: blockCodec,
@@ -56,7 +64,7 @@ export class IpldStore {
   }
 
   async has(cid: CID): Promise<boolean> {
-    return this.blockstore.has(cid)
+    return this.rawBlockstore.has(cid)
   }
 
   async isMissing(cid: CID): Promise<boolean> {
@@ -72,15 +80,15 @@ export class IpldStore {
   }
 
   async getBytes(cid: CID): Promise<Uint8Array> {
-    return this.blockstore.get(cid)
+    return this.rawBlockstore.get(cid)
   }
 
   async putBytes(cid: CID, bytes: Uint8Array): Promise<void> {
-    return this.blockstore.put(cid, bytes)
+    return this.rawBlockstore.put(cid, bytes)
   }
 
   async destroy(): Promise<void> {
-    return this.blockstore.destroy()
+    return this.rawBlockstore.destroy()
   }
 
   async addToCar(car: BlockWriter, cid: CID) {

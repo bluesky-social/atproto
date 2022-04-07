@@ -1,140 +1,99 @@
-import UserStore from '../user-store/index.js'
-import Program from '../user-store/program.js'
+import Repo from '../repo/index.js'
+import NamespaceImpl from '../repo/namespace-impl.js'
 
-import { Post, Follow, Like, schema } from './types.js'
-import { DID } from '../common/types.js'
-import TID from '../user-store/tid.js'
+import { Post, Like, schema, flattenLike, flattenPost } from './types.js'
+import TID from '../repo/tid.js'
 
-export class Microblog extends Program {
-  constructor(store: UserStore) {
-    super('did:bsky:microblog', store)
+export class Microblog extends NamespaceImpl {
+  constructor(repo: Repo) {
+    super('did:bsky:microblog', repo)
   }
 
   async getPost(id: TID): Promise<Post | null> {
-    const postCid = await this.runOnProgram(async (program) => {
-      return program.posts.getEntry(id)
+    const postCid = await this.runOnNamespace(async (namespace) => {
+      return namespace.posts.getEntry(id)
     })
     if (postCid === null) return null
-    const post = await this.store.get(postCid, schema.post)
+    const post = await this.repo.get(postCid, schema.post)
     return post
   }
 
   async addPost(text: string): Promise<Post> {
     const tid = TID.next()
     const post: Post = {
-      tid: tid.toString(),
-      program: this.name,
+      tid,
+      namespace: this.namespace,
       text,
-      author: this.store.did,
+      author: this.repo.did,
       time: new Date().toISOString(),
     }
-    const postCid = await this.store.put(post)
-    await this.runOnProgram(async (program) => {
-      await program.posts.addEntry(tid, postCid)
+    const postCid = await this.repo.put(flattenPost(post))
+    await this.runOnNamespace(async (namespace) => {
+      await namespace.posts.addEntry(tid, postCid)
     })
     return post
   }
 
   async editPost(tid: TID, text: string): Promise<void> {
     const post: Post = {
-      tid: tid.toString(),
-      program: this.name,
+      tid,
+      namespace: this.namespace,
       text,
-      author: this.store.did,
+      author: this.repo.did,
       time: new Date().toISOString(),
     }
-    const postCid = await this.store.put(post)
-    await this.runOnProgram(async (program) => {
-      await program.posts.editEntry(tid, postCid)
+    const postCid = await this.repo.put(flattenPost(post))
+    await this.runOnNamespace(async (namespace) => {
+      await namespace.posts.editEntry(tid, postCid)
     })
   }
 
   async deletePost(tid: TID): Promise<void> {
-    await this.runOnProgram(async (program) => {
-      await program.posts.deleteEntry(tid)
+    await this.runOnNamespace(async (namespace) => {
+      await namespace.posts.deleteEntry(tid)
     })
   }
 
   async listPosts(count: number, from?: TID): Promise<Post[]> {
-    const entries = await this.runOnProgram(async (program) => {
-      return program.posts.getEntries(count, from)
+    const entries = await this.runOnNamespace(async (namespace) => {
+      return namespace.posts.getEntries(count, from)
     })
     const posts = await Promise.all(
-      entries.map((entry) => this.store.get(entry.cid, schema.post)),
+      entries.map((entry) => this.repo.get(entry.cid, schema.post)),
     )
     return posts
   }
 
-  async getFollow(did: DID): Promise<Follow | null> {
-    const cid = await this.runOnProgram(async (program) => {
-      return program.relationships.getEntry(did)
-    })
-    if (cid === null) return null
-    return this.store.get(cid, schema.follow)
-  }
-
-  async isFollowing(did: DID): Promise<boolean> {
-    return this.runOnProgram(async (program) => {
-      return program.relationships.hasEntry(did)
-    })
-  }
-
-  async followUser(username: string, did: string): Promise<void> {
-    const follow: Follow = { username, did }
-    const cid = await this.store.put(follow)
-    await this.runOnProgram(async (program) => {
-      await program.relationships.addEntry(did, cid)
-    })
-  }
-
-  async unfollowUser(did: string): Promise<void> {
-    await this.runOnProgram(async (program) => {
-      await program.relationships.deleteEntry(did)
-    })
-  }
-
-  async listFollows(): Promise<Follow[]> {
-    const cids = await this.runOnProgram(async (program) => {
-      return program.relationships.getEntries()
-    })
-    const follows = await Promise.all(
-      cids.map((c) => this.store.get(c, schema.follow)),
-    )
-    return follows
-  }
-
-  async likePost(post: Post): Promise<TID> {
-    const postCid = await this.store.put(post)
+  async likePost(postAuthor: string, postTid: TID): Promise<TID> {
     const tid = TID.next()
     const like: Like = {
-      tid: tid.toString(),
-      program: this.name,
-      author: this.store.did,
+      tid,
+      namespace: this.namespace,
+      author: this.repo.did,
       time: new Date().toISOString(),
-      post_tid: post.tid,
-      post_author: post.author,
-      post_program: post.program,
-      post_cid: postCid,
+      post_tid: postTid,
+      post_author: postAuthor,
+      post_namespace: this.namespace,
     }
-    const likeCid = await this.store.put(like)
-    await this.runOnProgram(async (program) => {
-      await program.interactions.addEntry(tid, likeCid)
+    const likeCid = await this.repo.put(flattenLike(like))
+    await this.runOnNamespace(async (namespace) => {
+      await namespace.interactions.addEntry(tid, likeCid)
     })
     return tid
   }
 
-  async unlikePost(tid: TID): Promise<void> {
-    await this.runOnProgram(async (program) => {
-      await program.interactions.deleteEntry(tid)
+  async deleteLike(tid: TID): Promise<void> {
+    await this.runOnNamespace(async (namespace) => {
+      await namespace.interactions.deleteEntry(tid)
     })
   }
 
   async listLikes(count: number, from?: TID): Promise<Like[]> {
-    const entries = await this.runOnProgram(async (program) => {
-      return program.interactions.getEntries(count, from)
+    const entries = await this.runOnNamespace(async (namespace) => {
+      return namespace.interactions.getEntries(count, from)
     })
     const likes = await Promise.all(
-      entries.map((entry) => this.store.get(entry.cid, schema.like)),
+      entries.map((entry) => this.repo.get(entry.cid, schema.like)),
     )
     return likes
   }

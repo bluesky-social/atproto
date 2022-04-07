@@ -1,4 +1,10 @@
-import { Request } from "express";
+import { IpldStore, Repo } from '@bluesky-demo/common'
+import { Request, Response } from 'express'
+import { Database } from './db/index.js'
+import { SERVER_KEYPAIR } from './server-identity.js'
+import { ServerError } from './error.js'
+import * as ucan from 'ucans'
+import { check } from '@bluesky-demo/common'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -9,9 +15,56 @@ export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
     })
 
     req.on('end', () => {
-      resolve(
-        new Uint8Array(Buffer.concat(chunks))
-      )
+      resolve(new Uint8Array(Buffer.concat(chunks)))
     })
   })
+}
+
+export const checkReqBody = <T>(body: unknown, schema: check.Schema<T>): T => {
+  try {
+    return check.assure(schema, body)
+  } catch (err) {
+    throw new ServerError(400, `Poorly formatted request: ${err}`)
+  }
+}
+
+export const getBlockstore = (res: Response): IpldStore => {
+  const blockstore = res.locals.blockstore
+  if (!blockstore) {
+    throw new ServerError(500, 'No Blockstore object attached to server')
+  }
+  return blockstore as IpldStore
+}
+
+export const getDB = (res: Response): Database => {
+  const db = res.locals.db
+  if (!db) {
+    throw new ServerError(500, 'No Database object attached to server')
+  }
+  return db as Database
+}
+
+export type Locals = {
+  blockstore: IpldStore
+  db: Database
+}
+
+export const getLocals = (res: Response): Locals => {
+  return {
+    blockstore: getBlockstore(res),
+    db: getDB(res),
+  }
+}
+
+export const loadRepo = async (
+  res: Response,
+  did: string,
+  ucanStore?: ucan.Store,
+): Promise<Repo> => {
+  const { db, blockstore } = getLocals(res)
+  const currRoot = await db.getRepoRoot(did)
+  if (!currRoot) {
+    throw new ServerError(404, `User has not registered a repo root: ${did}`)
+  }
+  return Repo.load(blockstore, currRoot, SERVER_KEYPAIR, ucanStore)
 }
