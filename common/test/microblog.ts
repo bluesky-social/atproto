@@ -7,8 +7,6 @@ import Microblog from '../src/microblog/index.js'
 import Repo from '../src/repo/index.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 
-import TID from '../src/repo/tid.js'
-
 type Context = {
   ipld: IpldStore
   keypair: ucan.EdKeypair
@@ -30,7 +28,7 @@ test.beforeEach(async (t) => {
 test('basic post operations', async (t) => {
   const { microblog } = t.context as Context
   const created = await microblog.addPost('hello world')
-  const tid = TID.fromStr(created.tid)
+  const tid = created.tid
   const post = await microblog.getPost(tid)
   t.is(post?.text, 'hello world', 'retrieves correct post')
 
@@ -46,11 +44,15 @@ test('basic post operations', async (t) => {
 test('basic like operations', async (t) => {
   const { microblog } = t.context as Context
   const post = await microblog.addPost('hello world')
-  const likeTid = await microblog.likePost(post.author, TID.fromStr(post.tid))
+  const likeTid = await microblog.likePost(post.author, post.tid)
   let likes = await microblog.listLikes(1)
   t.is(likes.length, 1, 'correct number of likes')
-  t.is(likes[0]?.tid, likeTid.toString(), 'correct id on like')
-  t.is(likes[0]?.post_tid, post.tid, 'correct post_id on like')
+  t.is(likes[0]?.tid?.toString(), likeTid?.toString(), 'correct id on like')
+  t.is(
+    likes[0]?.post_tid?.toString(),
+    post.tid?.toString(),
+    'correct post_id on like',
+  )
 
   await microblog.deleteLike(likeTid)
   likes = await microblog.listLikes(1)

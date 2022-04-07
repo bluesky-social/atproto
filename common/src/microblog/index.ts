@@ -1,7 +1,7 @@
 import Repo from '../repo/index.js'
 import NamespaceImpl from '../repo/namespace-impl.js'
 
-import { Post, Like, schema } from './types.js'
+import { Post, Like, schema, flattenLike, flattenPost } from './types.js'
 import TID from '../repo/tid.js'
 
 export class Microblog extends NamespaceImpl {
@@ -21,13 +21,13 @@ export class Microblog extends NamespaceImpl {
   async addPost(text: string): Promise<Post> {
     const tid = TID.next()
     const post: Post = {
-      tid: tid.toString(),
-      namespace: this.name,
+      tid,
+      namespace: this.namespace,
       text,
       author: this.repo.did,
       time: new Date().toISOString(),
     }
-    const postCid = await this.repo.put(post)
+    const postCid = await this.repo.put(flattenPost(post))
     await this.runOnNamespace(async (namespace) => {
       await namespace.posts.addEntry(tid, postCid)
     })
@@ -36,13 +36,13 @@ export class Microblog extends NamespaceImpl {
 
   async editPost(tid: TID, text: string): Promise<void> {
     const post: Post = {
-      tid: tid.toString(),
-      namespace: this.name,
+      tid,
+      namespace: this.namespace,
       text,
       author: this.repo.did,
       time: new Date().toISOString(),
     }
-    const postCid = await this.repo.put(post)
+    const postCid = await this.repo.put(flattenPost(post))
     await this.runOnNamespace(async (namespace) => {
       await namespace.posts.editEntry(tid, postCid)
     })
@@ -67,15 +67,15 @@ export class Microblog extends NamespaceImpl {
   async likePost(postAuthor: string, postTid: TID): Promise<TID> {
     const tid = TID.next()
     const like: Like = {
-      tid: tid.toString(),
-      namespace: this.name,
+      tid,
+      namespace: this.namespace,
       author: this.repo.did,
       time: new Date().toISOString(),
-      post_tid: postTid.toString(),
+      post_tid: postTid,
       post_author: postAuthor,
-      post_namespace: this.name,
+      post_namespace: this.namespace,
     }
-    const likeCid = await this.repo.put(like)
+    const likeCid = await this.repo.put(flattenLike(like))
     await this.runOnNamespace(async (namespace) => {
       await namespace.interactions.addEntry(tid, likeCid)
     })

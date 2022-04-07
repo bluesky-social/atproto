@@ -50,6 +50,15 @@ export class TID {
     return a.compareTo(b)
   }
 
+  static is(str: string): boolean {
+    try {
+      TID.fromStr(str)
+      return true
+    } catch (err) {
+      return false
+    }
+  }
+
   timestamp(): number {
     const substr = this.str.slice(0, 11)
     return s32decode(substr)

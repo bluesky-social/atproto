@@ -4,6 +4,7 @@ import { Database } from './db/index.js'
 import { SERVER_KEYPAIR } from './server-identity.js'
 import { ServerError } from './error.js'
 import * as ucan from 'ucans'
+import { check } from '@bluesky-demo/common'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -17,6 +18,14 @@ export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
       resolve(new Uint8Array(Buffer.concat(chunks)))
     })
   })
+}
+
+export const checkReqBody = <T>(body: unknown, schema: check.Schema<T>): T => {
+  try {
+    return check.assure(schema, body)
+  } catch (err) {
+    throw new ServerError(400, `Poorly formatted request: ${err}`)
+  }
 }
 
 export const getBlockstore = (res: Response): IpldStore => {

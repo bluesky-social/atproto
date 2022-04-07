@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { TID, MicroblogDelegator, Post, Like } from '@bluesky-demo/common'
+import { MicroblogDelegator, Post, Like } from '@bluesky-demo/common'
 
 import { newClient, runTestServer } from './_util.js'
 
@@ -32,55 +32,51 @@ test.serial('id retrieval', async (t) => {
 })
 
 let post: Post
-let postTid: TID
 const postText = 'hello world!'
 
 test.serial('create post', async (t) => {
   post = await alice.addPost(postText)
-  postTid = TID.fromStr(post.tid)
   t.pass('create post successful')
 })
 
 test.serial('get post', async (t) => {
-  const got = await alice.getPost(postTid)
+  const got = await alice.getPost(post.tid)
   t.is(got?.text, postText, 'post matches')
 })
 
 test.serial('edit post', async (t) => {
   const newText = 'howdy universe!'
-  await alice.editPost(postTid, newText)
+  await alice.editPost(post.tid, newText)
   t.pass('edit post successful')
-  const post = await alice.getPost(postTid)
-  t.is(post?.text, newText, 'edited post matches')
+  const got = await alice.getPost(post.tid)
+  t.is(got?.text, newText, 'edited post matches')
 })
 
 let like: Like
-let likeTid: TID
 
 test.serial('create like', async (t) => {
-  like = await bob.likePost(alice.did, postTid)
-  likeTid = TID.fromStr(like.tid)
+  like = await bob.likePost(alice.did, post.tid)
   t.pass('create like successful')
 })
 
 test.serial('list likes', async (t) => {
   const likes = await bob.listLikes(10)
   t.is(likes.length, 1, 'registered like')
-  t.is(likes[0].tid, likeTid.toString(), 'matching tid')
-  t.is(likes[0].post_tid, postTid.toString(), 'matching post tid')
+  t.is(likes[0].tid.toString(), like.tid.toString(), 'matching tid')
+  t.is(likes[0].post_tid.toString(), post.tid.toString(), 'matching post tid')
 })
 
 test.serial('delete like', async (t) => {
-  await bob.deleteLike(likeTid)
+  await bob.deleteLike(like.tid)
   t.pass('delete request successful')
   const likes = await bob.listLikes(10)
   t.is(likes.length, 0, 'properly deleted like')
 })
 
 test.serial('delete post', async (t) => {
-  await alice.deletePost(postTid)
-  const post = await alice.getPost(postTid)
-  t.is(post, null, 'post successfully deleted')
+  await alice.deletePost(post.tid)
+  const got = await alice.getPost(post.tid)
+  t.is(got, null, 'post successfully deleted')
 })
 
 test.serial('follow user', async (t) => {

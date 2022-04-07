@@ -74,7 +74,7 @@ test.serial('get timeline', async (t) => {
 
 test.serial('get old timeline', async (t) => {
   const timeline = await alice.retrieveTimeline(2)
-  const lastSeen = TID.fromStr(timeline[1].tid)
+  const lastSeen = timeline[1].tid
   const oldTimeline = await alice.retrieveTimeline(10, lastSeen)
   const timelineText = oldTimeline.map((p: TimelinePost) => p.text)
   const expected = [
@@ -94,7 +94,7 @@ let post: Post
 
 test.serial('get some likes on your post', async (t) => {
   post = await alice.addPost('hello world!')
-  const tid = TID.fromStr(post.tid)
+  const tid = post.tid
   await bob.likePost(alice.did, tid)
   await carol.likePost(alice.did, tid)
   await dan.likePost(alice.did, tid)
@@ -102,6 +102,6 @@ test.serial('get some likes on your post', async (t) => {
 })
 
 test.serial('count likes on post', async (t) => {
-  const count = await alice.likeCount(alice.did, TID.fromStr(post.tid))
+  const count = await alice.likeCount(alice.did, post.tid)
   t.is(count, 3, 'counted likes')
 })

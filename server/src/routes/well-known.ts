@@ -1,4 +1,5 @@
 import express from 'express'
+import { z } from 'zod'
 import { SERVER_DID } from '../server-identity.js'
 import * as util from '../util.js'
 
@@ -9,12 +10,14 @@ router.get('/did.json', (_req, res) => {
   return res.send({ id: SERVER_DID })
 })
 
+const webfingerReq = z.object({
+  resource: z.string(),
+})
+export type WebfingerReq = z.infer<typeof webfingerReq>
+
 // Retrieve a user's DID by their username
 router.get('/webfinger', async (req, res) => {
-  const { resource } = req.query
-  if (typeof resource !== 'string') {
-    return res.status(400).send('Bad param: expected `resource` to be a string')
-  }
+  const { resource } = util.checkReqBody(req.query, webfingerReq)
   const db = util.getDB(res)
   const did = await db.getDidForUser(resource)
   if (!did) {

@@ -3,11 +3,11 @@ import Repo from './index.js'
 import Namespace from './namespace'
 
 export class NamespaceImpl {
-  name: string
+  namespace: string
   repo: Repo
 
-  constructor(name: string, repo: Repo) {
-    this.name = name
+  constructor(namespace: string, repo: Repo) {
+    this.namespace = namespace
     this.repo = repo
   }
 
@@ -18,7 +18,7 @@ export class NamespaceImpl {
   async runOnNamespace<T>(
     fn: (namespace: Namespace) => Promise<T>,
   ): Promise<T> {
-    return this.repo.runOnNamespace(this.name, fn)
+    return this.repo.runOnNamespace(this.namespace, fn)
   }
 }
 

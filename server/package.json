@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsc -w --project tsconfig.json & nodemon -q -w dist dist/index.js",
     "build": "(cd ../common && yarn build) && tsc --project tsconfig.json",
-    "test": "ava -v test/*.ts",
+    "test": "ava -v */data.ts",
     "temp": "IN_MEMORY=true yarn dev",
     "wipe-db": "rimraf dev.sqlite && rimraf blockstore"
   },

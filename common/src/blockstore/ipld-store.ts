@@ -9,6 +9,12 @@ import * as check from '../common/check.js'
 import { BlockstoreI } from './types.js'
 import { PersistentBlockstore } from './persistent-blockstore.js'
 
+type AllowedIpldRecordVal = string | number | CID | CID[] | Uint8Array | null
+
+export type AllowedIpldVal =
+  | AllowedIpldRecordVal
+  | Record<string, AllowedIpldRecordVal>
+
 export class IpldStore {
   rawBlockstore: BlockstoreI
 
@@ -24,7 +30,9 @@ export class IpldStore {
     return new IpldStore(new PersistentBlockstore(location))
   }
 
-  async put(value: Record<string, unknown> | string): Promise<CID> {
+  async put(
+    value: Record<string, AllowedIpldVal> | AllowedIpldVal,
+  ): Promise<CID> {
     const block = await Block.encode({
       value,
       codec: blockCodec,

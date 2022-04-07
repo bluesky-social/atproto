@@ -14,7 +14,7 @@ import {
 } from './types.js'
 import { DID, Keypair } from '../common/types.js'
 import * as check from '../common/check.js'
-import IpldStore from '../blockstore/ipld-store.js'
+import IpldStore, { AllowedIpldVal } from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import Namespace from './namespace.js'
 import Relationships from './relationships.js'
@@ -241,7 +241,7 @@ export class Repo implements CarStreamable {
   // IPLD store methods
   // -----------
 
-  async put(value: Record<string, unknown> | string): Promise<CID> {
+  async put(value: AllowedIpldVal): Promise<CID> {
     return this.blockstore.put(value)
   }
 

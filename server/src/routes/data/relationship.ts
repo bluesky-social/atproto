@@ -18,10 +18,7 @@ export const createRelReq = z.object({
 export type CreateRelReq = z.infer<typeof createRelReq>
 
 router.post('/', async (req, res) => {
-  if (!check.is(req.body, createRelReq)) {
-    throw new ServerError(400, 'Poorly formatted request')
-  }
-  const { creator, target } = req.body
+  const { creator, target } = util.checkReqBody(req.body, createRelReq)
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
@@ -49,10 +46,7 @@ export const deleteRelReq = z.object({
 export type DeleteRelReq = z.infer<typeof deleteRelReq>
 
 router.delete('/', async (req, res) => {
-  if (!check.is(req.body, deleteRelReq)) {
-    throw new ServerError(400, 'Poorly formatted request')
-  }
-  const { creator, target } = req.body
+  const { creator, target } = util.checkReqBody(req.body, deleteRelReq)
   const ucanStore = await auth.checkReq(
     req,
     ucanCheck.hasAudience(SERVER_DID),
@@ -74,10 +68,7 @@ export const listRelReq = z.object({
 export type ListRelReq = z.infer<typeof listRelReq>
 
 router.get('/list', async (req, res) => {
-  if (!check.is(req.query, listRelReq)) {
-    throw new ServerError(400, 'Poorly formatted request')
-  }
-  const { user } = req.query
+  const { user } = util.checkReqBody(req.query, listRelReq)
   const db = util.getDB(res)
   const follows = await db.listFollows(user)
   res.status(200).send(follows)
