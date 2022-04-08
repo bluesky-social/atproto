@@ -303,7 +303,7 @@ export class Repo implements CarStreamable {
   // emits semantic updates to the structure starting from oldest first
   async loadAndVerifyDiff(
     buf: Uint8Array,
-    emit: (evt: delta.Event) => Promise<void>,
+    emit?: (evt: delta.Event) => Promise<void>,
   ): Promise<void> {
     const root = await this.loadCar(buf)
     await this.verifySetOfUpdates(this.cid, root, emit)
@@ -313,7 +313,7 @@ export class Repo implements CarStreamable {
   async verifySetOfUpdates(
     from: CID | null,
     to: CID,
-    emit: (evt: delta.Event) => Promise<void>,
+    emit?: (evt: delta.Event) => Promise<void>,
   ): Promise<void> {
     if (from === null || from.equals(to)) return
     const toRepo = await Repo.load(this.blockstore, to)
@@ -343,7 +343,9 @@ export class Repo implements CarStreamable {
     for (const update of updates) {
       const neededCap = delta.capabilityForEvent(root.did, update)
       await auth.checkUcan(token, auth.hasValidCapability(root.did, neededCap))
-      await emit(update)
+      if (emit) {
+        await emit(update)
+      }
     }
   }
 
