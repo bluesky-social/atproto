@@ -25,7 +25,7 @@ import {
   writeCap,
 } from '../auth/bluesky-capability.js'
 import * as auth from '../auth/index.js'
-import * as util from './util.js'
+import * as delta from './delta.js'
 
 export class Repo implements CarStreamable {
   blockstore: IpldStore
@@ -286,7 +286,7 @@ export class Repo implements CarStreamable {
 
   async loadAndVerifyDiff(
     buf: Uint8Array,
-    emit: (evt: util.Event) => Promise<void>,
+    emit: (evt: delta.Event) => Promise<void>,
   ): Promise<void> {
     const car = await CarReader.fromBytes(buf)
     const roots = await car.getRoots()
@@ -316,7 +316,7 @@ export class Repo implements CarStreamable {
   async verifySetOfUpdates(
     to: CID | null,
     from: CID,
-    emit: (evt: util.Event) => Promise<void>,
+    emit: (evt: delta.Event) => Promise<void>,
   ): Promise<void> {
     if (to === null || to.equals(from)) return
     const fromRepo = await Repo.load(this.blockstore, from)
@@ -344,13 +344,13 @@ export class Repo implements CarStreamable {
       throw new Error(`Invalid signature on commit: ${fromRepo.cid.toString()}`)
     }
     for (const update of updates) {
-      const neededCap = util.capabilityForEvent(root.did, update)
+      const neededCap = delta.capabilityForEvent(root.did, update)
       await auth.checkUcan(token, auth.hasValidCapability(root.did, neededCap))
       await emit(update)
     }
   }
 
-  async verifyUpdate(prev: Repo): Promise<util.Event[]> {
+  async verifyUpdate(prev: Repo): Promise<delta.Event[]> {
     const root = await this.getRoot()
     if (!root.prev) {
       throw new Error('No previous version found at root')
@@ -358,18 +358,15 @@ export class Repo implements CarStreamable {
       throw new Error('Previous version root CID does not match')
     }
     const newCids = new CidSet(root.new_cids)
-    let events: util.Event[] = []
-    const mapDiff = util.idMapDiff(
+    let events: delta.Event[] = []
+    const mapDiff = delta.idMapDiff(
       prev.namespaceCids,
       this.namespaceCids,
       newCids,
     )
     // namespace deletes: we can emit as events
     for (const del of mapDiff.deletes) {
-      events.push({
-        event: util.EventType.DeletedNamespace,
-        namespace: del.key,
-      })
+      events.push(delta.deletedNamespace(del.key))
     }
     // namespace adds: we walk to ensure we have all content & then emit all posts & interactions
     for (const add of mapDiff.adds) {
@@ -385,22 +382,10 @@ export class Repo implements CarStreamable {
         namespace.interactions.getAllEntries(),
       ])
       for (const { cid, tid } of newPosts) {
-        events.push({
-          event: util.EventType.AddedObject,
-          namespace: add.key,
-          collection: 'posts',
-          tid,
-          cid,
-        })
+        events.push(delta.addedObject(add.key, 'posts', tid, cid))
       }
       for (const { cid, tid } of newInters) {
-        events.push({
-          event: util.EventType.AddedObject,
-          namespace: add.key,
-          collection: 'interactions',
-          tid,
-          cid,
-        })
+        events.push(delta.addedObject(add.key, 'interactions', tid, cid))
       }
     }
     // namespace updates: we dive deeper to figure out the differences

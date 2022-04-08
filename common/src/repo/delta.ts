@@ -199,3 +199,72 @@ export type DeletedNamespace = {
   event: EventType.DeletedNamespace
   namespace: string
 }
+
+export const addedObject = (
+  namespace: string,
+  collection: Collection,
+  tid: TID,
+  cid: CID,
+): AddedObject => ({
+  event: EventType.AddedObject,
+  namespace,
+  collection,
+  tid,
+  cid,
+})
+
+export const updatedObject = (
+  namespace: string,
+  collection: Collection,
+  tid: TID,
+  cid: CID,
+  prevCid: CID,
+): UpdatedObject => ({
+  event: EventType.UpdatedObject,
+  namespace,
+  collection,
+  tid,
+  cid,
+  prevCid,
+})
+
+export const deletedObject = (
+  namespace: string,
+  collection: Collection,
+  tid: TID,
+): DeletedObject => ({
+  event: EventType.DeletedObject,
+  namespace,
+  collection,
+  tid,
+})
+
+export const addedRelationship = (
+  did: string,
+  cid: CID,
+): AddedRelationship => ({
+  event: EventType.AddedRelationship,
+  did,
+  cid,
+})
+
+export const updatedRelationship = (
+  did: string,
+  cid: CID,
+  prevCid: CID,
+): UpdatedRelationship => ({
+  event: EventType.UpdatedRelationship,
+  did,
+  cid,
+  prevCid,
+})
+
+export const deletedRelationship = (did: string): DeletedRelationship => ({
+  event: EventType.DeletedRelationship,
+  did,
+})
+
+export const deletedNamespace = (namespace: string): DeletedNamespace => ({
+  event: EventType.DeletedNamespace,
+  namespace,
+})

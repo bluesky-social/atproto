@@ -8,7 +8,7 @@ import IpldStore from '../blockstore/ipld-store.js'
 import { CarStreamable, DIDEntry, Follow, schema, UpdateData } from './types.js'
 import { DID } from '../common/types.js'
 import CidSet from './cid-set.js'
-import * as util from './util.js'
+import * as delta from './delta.js'
 
 export class Relationships implements CarStreamable {
   blockstore: IpldStore
@@ -106,36 +106,24 @@ export class Relationships implements CarStreamable {
   async verifyUpdate(
     prev: Relationships,
     newCids: CidSet,
-  ): Promise<util.Event[]> {
+  ): Promise<delta.Event[]> {
     // @TODO: similar to in tid-colleciton & the above note on runOnHamt, we need a better algo here after we fix up data structures
-    const events: util.Event[] = []
+    const events: delta.Event[] = []
     const currEntries = await this.getEntries()
     const prevEntries = await prev.getEntries()
-    const entriesDiff = util.didEntriesDiff(prevEntries, currEntries, newCids)
+    const entriesDiff = delta.didEntriesDiff(prevEntries, currEntries, newCids)
 
     // relationship deletes: we can emit as events
     for (const del of entriesDiff.deletes) {
-      events.push({
-        event: util.EventType.DeletedRelationship,
-        did: del.key,
-      })
+      events.push(delta.deletedRelationship(del.key))
     }
     // relationship adds: we can emit as events
     for (const add of entriesDiff.adds) {
-      events.push({
-        event: util.EventType.AddedRelationship,
-        did: add.key,
-        cid: add.cid,
-      })
+      events.push(delta.addedRelationship(add.key, add.cid))
     }
     // relationship updates: we can emit as events
     for (const update of entriesDiff.updates) {
-      events.push({
-        event: util.EventType.UpdatedRelationship,
-        did: update.key,
-        cid: update.cid,
-        prevCid: update.old,
-      })
+      events.push(delta.updatedRelationship(update.key, update.cid, update.old))
     }
     return events
   }

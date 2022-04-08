@@ -5,7 +5,7 @@ import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
 import { Collection, NamespaceRoot, schema, UpdateData } from './types.js'
 import CidSet from './cid-set.js'
-import * as util from './util.js'
+import * as delta from './delta.js'
 
 export class Namespace {
   blockstore: IpldStore
@@ -101,8 +101,8 @@ export class Namespace {
     prev: Namespace,
     newCids: CidSet,
     namespaceId: string,
-  ): Promise<util.Event[]> {
-    let events: util.Event[] = []
+  ): Promise<delta.Event[]> {
+    let events: delta.Event[] = []
     // @TODO check against new cids
     if (this.posts.cid !== prev.posts.cid) {
       const updates = await this.posts.verifyUpdate(

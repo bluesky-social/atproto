@@ -13,7 +13,7 @@ import {
 import SSTable, { TableSize } from './ss-table.js'
 import TID from './tid.js'
 import CidSet from './cid-set.js'
-import * as util from './util.js'
+import * as delta from './delta.js'
 
 export class TidCollection implements CarStreamable {
   blockstore: IpldStore
@@ -234,44 +234,38 @@ export class TidCollection implements CarStreamable {
     newCids: CidSet,
     namespace: string,
     collection: Collection,
-  ): Promise<util.Event[]> {
+  ): Promise<delta.Event[]> {
     // @TODO: we need a better algo here, but probably changing how SSTables work soon
     // and not going to waste time writing an optimized one for our current structure
     // (will be easier to write for recursive tables)
-    const events: util.Event[] = []
+    const events: delta.Event[] = []
     const currEntries = await this.getAllEntries()
     const prevEntries = await prev.getAllEntries()
-    const entriesDiff = util.tidEntriesDiff(prevEntries, currEntries, newCids)
+    const entriesDiff = delta.tidEntriesDiff(prevEntries, currEntries, newCids)
 
     // object deletes: we can emit as events
     for (const del of entriesDiff.deletes) {
-      events.push({
-        event: util.EventType.DeletedObject,
-        namespace,
-        collection,
-        tid: TID.fromStr(del.key),
-      })
+      events.push(
+        delta.deletedObject(namespace, collection, TID.fromStr(del.key)),
+      )
     }
     // object adds: we can emit as events
     for (const add of entriesDiff.adds) {
-      events.push({
-        event: util.EventType.AddedObject,
-        namespace,
-        collection,
-        tid: TID.fromStr(add.key),
-        cid: add.cid,
-      })
+      events.push(
+        delta.addedObject(namespace, collection, TID.fromStr(add.key), add.cid),
+      )
     }
     // object updates: we can emit as events
     for (const update of entriesDiff.updates) {
-      events.push({
-        event: util.EventType.UpdatedObject,
-        namespace,
-        collection,
-        tid: TID.fromStr(update.key),
-        cid: update.cid,
-        prevCid: update.old,
-      })
+      events.push(
+        delta.updatedObject(
+          namespace,
+          collection,
+          TID.fromStr(update.key),
+          update.cid,
+          update.old,
+        ),
+      )
     }
     return events
   }
