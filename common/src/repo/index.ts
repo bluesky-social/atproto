@@ -24,6 +24,7 @@ import {
   maintenanceCap,
   writeCap,
 } from '../auth/bluesky-capability.js'
+import * as auth from '../auth/index.js'
 import * as util from './util.js'
 
 export class Repo implements CarStreamable {
@@ -74,11 +75,12 @@ export class Repo implements CarStreamable {
     }
     const tokenCid = await blockstore.put(foundUcan.ucan.encoded())
     const relationships = await Relationships.create(blockstore)
+    const newCids = [...(await relationships.cids()), tokenCid]
     const rootObj: RepoRoot = {
       did,
       prev: null,
-      new_cids: await relationships.cids(),
-      auth_token: tokenCid, // @FIX THIS
+      new_cids: newCids,
+      auth_token: tokenCid,
       relationships: relationships.cid,
       namespaces: {},
     }
@@ -188,6 +190,7 @@ export class Repo implements CarStreamable {
       relationships: this.relationships.cid,
     }
     const rootCid = await this.blockstore.put(root)
+    newCids.add(tokenCid)
     newCids.add(rootCid)
     const commit: Commit = {
       root: rootCid,
@@ -324,8 +327,25 @@ export class Repo implements CarStreamable {
     await this.verifySetOfUpdates(to, root.prev, emit)
     const prevRepo = await Repo.load(this.blockstore, root.prev)
     const updates = await fromRepo.verifyUpdate(prevRepo)
+
+    // verify sig & auth
+    const encodedToken = await this.blockstore.get(
+      root.auth_token,
+      schema.string,
+    )
+    const token = await ucan.Chained.fromToken(encodedToken)
+    const commit = await fromRepo.getCommit()
+    const validSig = await ucan.verifySignature(
+      commit.root.bytes,
+      commit.sig,
+      token.audience(),
+    )
+    if (!validSig) {
+      throw new Error(`Invalid signature on commit: ${fromRepo.cid.toString()}`)
+    }
     for (const update of updates) {
-      // @TODO: verify commit sig & each update is permissioned
+      const neededCap = util.capabilityForEvent(root.did, update)
+      await auth.checkUcan(token, auth.hasValidCapability(root.did, neededCap))
       await emit(update)
     }
   }
@@ -348,7 +368,7 @@ export class Repo implements CarStreamable {
     for (const del of mapDiff.deletes) {
       events.push({
         event: util.EventType.DeletedNamespace,
-        name: del.key,
+        namespace: del.key,
       })
     }
     // namespace adds: we walk to ensure we have all content & then emit all posts & interactions

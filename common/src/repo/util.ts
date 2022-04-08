@@ -1,7 +1,9 @@
 import { CID } from 'multiformats'
+import { BlueskyCapability } from '../auth/bluesky-capability.js'
 import { Collection, TIDEntry, DIDEntry, IdMapping } from '../repo/types.js'
 import CidSet from './cid-set.js'
 import TID from './tid.js'
+import * as auth from '../auth/index.js'
 
 type Delete = {
   key: string
@@ -91,27 +93,65 @@ export const didEntriesToIdMapping = (entries: DIDEntry[]): IdMapping => {
   }, {} as IdMapping)
 }
 
+export const isRelationshipEvent = (
+  event: Event,
+): event is RelationshipEvent => {
+  return (
+    event.event === EventType.AddedRelationship ||
+    event.event === EventType.UpdatedRelationship ||
+    event.event === EventType.DeletedRelationship
+  )
+}
+
+export const isObjectEvent = (event: Event): event is ObjectEvent => {
+  return (
+    event.event === EventType.AddedObject ||
+    event.event === EventType.UpdatedObject ||
+    event.event === EventType.DeletedObject ||
+    event.event === EventType.DeletedNamespace
+  )
+}
+
+export const isNamespaceEvent = (event: Event): event is NamespaceEvent => {
+  return event.event === EventType.DeletedNamespace
+}
+
+export const capabilityForEvent = (
+  did: string,
+  event: Event,
+): BlueskyCapability => {
+  if (isRelationshipEvent(event)) {
+    return auth.writeCap(did, 'relationships')
+  }
+  if (isObjectEvent(event)) {
+    return auth.writeCap(did, event.namespace, event.collection, event.tid)
+  }
+  if (isNamespaceEvent(event)) {
+    return auth.writeCap(did, event.namespace)
+  }
+  throw new Error(`Could not identity event: ${event}`)
+}
+
 export enum EventType {
-  AddedObject = 'added_object',
-  UpdatedObject = 'updated_object',
-  DeletedObject = 'deleted_object',
   AddedRelationship = 'added_relationship',
   UpdatedRelationship = 'updated_relationship',
   DeletedRelationship = 'deleted_relationship',
+  AddedObject = 'added_object',
+  UpdatedObject = 'updated_object',
+  DeletedObject = 'deleted_object',
   DeletedNamespace = 'deleted_namespace',
-  DeletedCollection = 'deleted_collection',
-  DeletedTable = 'deleted_table',
 }
 
-export type Event =
-  | AddedObject
-  | UpdatedObject
-  | DeletedObject
+export type RelationshipEvent =
   | AddedRelationship
   | UpdatedRelationship
   | DeletedRelationship
-  | DeletedNamespace
-  | DeletedCollection
+
+export type ObjectEvent = AddedObject | UpdatedObject | DeletedObject
+
+export type NamespaceEvent = DeletedNamespace
+
+export type Event = RelationshipEvent | ObjectEvent | NamespaceEvent
 
 export type AddedObject = {
   event: EventType.AddedObject
@@ -157,7 +197,5 @@ export type DeletedRelationship = {
 
 export type DeletedNamespace = {
   event: EventType.DeletedNamespace
-  name: string
+  namespace: string
 }
-
-export type DeletedCollection = { event: EventType.DeletedCollection }
