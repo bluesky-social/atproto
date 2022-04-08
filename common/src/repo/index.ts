@@ -300,7 +300,7 @@ export class Repo implements CarStreamable {
   // -----------
 
   // loads car files, verifies structure, signature & auth on each commit
-  // emits semantic updates to the strcuture starting from oldest first
+  // emits semantic updates to the structure starting from oldest first
   async loadAndVerifyDiff(
     buf: Uint8Array,
     emit: (evt: delta.Event) => Promise<void>,
@@ -433,7 +433,6 @@ export class Repo implements CarStreamable {
       await this.blockstore.putBytes(block.cid, block.bytes)
     }
     return rootCid
-    await this.loadRoot(rootCid)
   }
 
   async loadCarRoot(buf: Uint8Array): Promise<void> {
