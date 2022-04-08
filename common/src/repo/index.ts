@@ -149,6 +149,9 @@ export class Repo implements CarStreamable {
     return Repo.load(store, root, keypair, ucanStore)
   }
 
+  // ROOT OPERATIONS
+  // -----------
+
   // arrow fn to preserve scope
   updateRootForNamespace =
     (namespaceId: string) =>
@@ -208,7 +211,19 @@ export class Repo implements CarStreamable {
     return this.blockstore.get(commit.root, schema.repoRoot)
   }
 
-  // Namespace API
+  async loadRoot(cid: CID): Promise<void> {
+    this.cid = cid
+    const root = await this.getRoot()
+    this.did = root.did
+    this.namespaceCids = root.namespaces
+    this.namespaces = {}
+    this.relationships = await Relationships.load(
+      this.blockstore,
+      root.relationships,
+    )
+  }
+
+  // NAMESPACE API
   // -----------
 
   async createNamespace(id: string): Promise<Namespace> {
@@ -243,7 +258,7 @@ export class Repo implements CarStreamable {
     return fn(namespace)
   }
 
-  // IPLD store methods
+  // IPLD STORE PASS THROUGHS
   // -----------
 
   async put(value: AllowedIpldVal): Promise<CID> {
@@ -254,7 +269,7 @@ export class Repo implements CarStreamable {
     return this.blockstore.get(cid, schema)
   }
 
-  // UCAN Auth
+  // UCAN AUTH
   // -----------
 
   async ucanForOperation(update: UpdateData): Promise<CID> {
@@ -281,52 +296,34 @@ export class Repo implements CarStreamable {
     return this.blockstore.put(foundUcan.ucan.encoded())
   }
 
-  // Verifying Updates
+  // VERIFYING UPDATES
   // -----------
 
+  // loads car files, verifies structure, signature & auth on each commit
+  // emits semantic updates to the strcuture starting from oldest first
   async loadAndVerifyDiff(
     buf: Uint8Array,
     emit: (evt: delta.Event) => Promise<void>,
   ): Promise<void> {
-    const car = await CarReader.fromBytes(buf)
-    const roots = await car.getRoots()
-    if (roots.length !== 1) {
-      throw new Error(`Expected one root, got ${roots.length}`)
-    }
-    const rootCid = roots[0]
-    for await (const block of car.blocks()) {
-      await this.blockstore.putBytes(block.cid, block.bytes)
-    }
-    await this.verifySetOfUpdates(this.cid, rootCid, emit)
-    await this.loadRoot(rootCid)
-  }
-
-  async loadRoot(cid: CID): Promise<void> {
-    this.cid = cid
-    const root = await this.getRoot()
-    this.did = root.did
-    this.namespaceCids = root.namespaces
-    this.namespaces = {}
-    this.relationships = await Relationships.load(
-      this.blockstore,
-      root.relationships,
-    )
+    const root = await this.loadCar(buf)
+    await this.verifySetOfUpdates(this.cid, root, emit)
+    await this.loadRoot(root)
   }
 
   async verifySetOfUpdates(
-    to: CID | null,
-    from: CID,
+    from: CID | null,
+    to: CID,
     emit: (evt: delta.Event) => Promise<void>,
   ): Promise<void> {
-    if (to === null || to.equals(from)) return
-    const fromRepo = await Repo.load(this.blockstore, from)
-    const root = await fromRepo.getRoot()
+    if (from === null || from.equals(to)) return
+    const toRepo = await Repo.load(this.blockstore, to)
+    const root = await toRepo.getRoot()
     if (!root.prev) {
       throw new Error('Could not find start repo root')
     }
-    await this.verifySetOfUpdates(to, root.prev, emit)
+    await this.verifySetOfUpdates(from, root.prev, emit)
     const prevRepo = await Repo.load(this.blockstore, root.prev)
-    const updates = await fromRepo.verifyUpdate(prevRepo)
+    const updates = await toRepo.verifyUpdate(prevRepo)
 
     // verify sig & auth
     const encodedToken = await this.blockstore.get(
@@ -334,14 +331,14 @@ export class Repo implements CarStreamable {
       schema.string,
     )
     const token = await ucan.Chained.fromToken(encodedToken)
-    const commit = await fromRepo.getCommit()
+    const commit = await toRepo.getCommit()
     const validSig = await ucan.verifySignature(
       commit.root.bytes,
       commit.sig,
       token.audience(),
     )
     if (!validSig) {
-      throw new Error(`Invalid signature on commit: ${fromRepo.cid.toString()}`)
+      throw new Error(`Invalid signature on commit: ${toRepo.cid.toString()}`)
     }
     for (const update of updates) {
       const neededCap = delta.capabilityForEvent(root.did, update)
@@ -422,10 +419,10 @@ export class Repo implements CarStreamable {
     return missing
   }
 
-  // CAR files
+  // CAR FILES
   // -----------
 
-  async loadCar(buf: Uint8Array): Promise<void> {
+  async loadCar(buf: Uint8Array): Promise<CID> {
     const car = await CarReader.fromBytes(buf)
     const roots = await car.getRoots()
     if (roots.length !== 1) {
@@ -435,7 +432,13 @@ export class Repo implements CarStreamable {
     for await (const block of car.blocks()) {
       await this.blockstore.putBytes(block.cid, block.bytes)
     }
+    return rootCid
     await this.loadRoot(rootCid)
+  }
+
+  async loadCarRoot(buf: Uint8Array): Promise<void> {
+    const root = await this.loadCar(buf)
+    await this.loadRoot(root)
   }
 
   async getCarNoHistory(): Promise<Uint8Array> {

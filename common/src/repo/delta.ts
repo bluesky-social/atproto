@@ -5,6 +5,28 @@ import CidSet from './cid-set.js'
 import TID from './tid.js'
 import * as auth from '../auth/index.js'
 
+// AUTHORIZATION HELPERS
+// ----------------------
+
+export const capabilityForEvent = (
+  did: string,
+  event: Event,
+): BlueskyCapability => {
+  if (isRelationshipEvent(event)) {
+    return auth.writeCap(did, 'relationships')
+  }
+  if (isObjectEvent(event)) {
+    return auth.writeCap(did, event.namespace, event.collection, event.tid)
+  }
+  if (isNamespaceEvent(event)) {
+    return auth.writeCap(did, event.namespace)
+  }
+  throw new Error(`Could not identity event: ${event}`)
+}
+
+// DELTA TYPES & HELPERS
+// ----------------------
+
 type Delete = {
   key: string
 }
@@ -93,44 +115,8 @@ export const didEntriesToIdMapping = (entries: DIDEntry[]): IdMapping => {
   }, {} as IdMapping)
 }
 
-export const isRelationshipEvent = (
-  event: Event,
-): event is RelationshipEvent => {
-  return (
-    event.event === EventType.AddedRelationship ||
-    event.event === EventType.UpdatedRelationship ||
-    event.event === EventType.DeletedRelationship
-  )
-}
-
-export const isObjectEvent = (event: Event): event is ObjectEvent => {
-  return (
-    event.event === EventType.AddedObject ||
-    event.event === EventType.UpdatedObject ||
-    event.event === EventType.DeletedObject ||
-    event.event === EventType.DeletedNamespace
-  )
-}
-
-export const isNamespaceEvent = (event: Event): event is NamespaceEvent => {
-  return event.event === EventType.DeletedNamespace
-}
-
-export const capabilityForEvent = (
-  did: string,
-  event: Event,
-): BlueskyCapability => {
-  if (isRelationshipEvent(event)) {
-    return auth.writeCap(did, 'relationships')
-  }
-  if (isObjectEvent(event)) {
-    return auth.writeCap(did, event.namespace, event.collection, event.tid)
-  }
-  if (isNamespaceEvent(event)) {
-    return auth.writeCap(did, event.namespace)
-  }
-  throw new Error(`Could not identity event: ${event}`)
-}
+// EVENT TYPES & HELPERS
+// ----------------------
 
 export enum EventType {
   AddedRelationship = 'added_relationship',
@@ -268,3 +254,26 @@ export const deletedNamespace = (namespace: string): DeletedNamespace => ({
   event: EventType.DeletedNamespace,
   namespace,
 })
+
+export const isRelationshipEvent = (
+  event: Event,
+): event is RelationshipEvent => {
+  return (
+    event.event === EventType.AddedRelationship ||
+    event.event === EventType.UpdatedRelationship ||
+    event.event === EventType.DeletedRelationship
+  )
+}
+
+export const isObjectEvent = (event: Event): event is ObjectEvent => {
+  return (
+    event.event === EventType.AddedObject ||
+    event.event === EventType.UpdatedObject ||
+    event.event === EventType.DeletedObject ||
+    event.event === EventType.DeletedNamespace
+  )
+}
+
+export const isNamespaceEvent = (event: Event): event is NamespaceEvent => {
+  return event.event === EventType.DeletedNamespace
+}
