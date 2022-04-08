@@ -5,9 +5,10 @@ import * as HAMT from 'ipld-hashmap'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { CarStreamable, Follow, schema, UpdateData } from './types.js'
+import { CarStreamable, DIDEntry, Follow, schema, UpdateData } from './types.js'
 import { DID } from '../common/types.js'
 import CidSet from './cid-set.js'
+import * as delta from './delta.js'
 
 export class Relationships implements CarStreamable {
   blockstore: IpldStore
@@ -75,19 +76,19 @@ export class Relationships implements CarStreamable {
   }
 
   async getFollows(): Promise<Follow[]> {
-    const cids = await this.getEntries()
+    const entries = await this.getEntries()
     const follows = await Promise.all(
-      cids.map((c) => this.blockstore.get(c, schema.follow)),
+      entries.map((e) => this.blockstore.get(e.cid, schema.follow)),
     )
     return follows
   }
 
-  async getEntries(): Promise<CID[]> {
-    const cids: CID[] = []
+  async getEntries(): Promise<DIDEntry[]> {
+    const entries: DIDEntry[] = []
     for await (const entry of this.hamt.entries()) {
-      cids.push(entry[1])
+      entries.push({ did: entry[0], cid: entry[1] })
     }
-    return cids
+    return entries
   }
 
   // @TODO: clearly not the best way to get the newly added CIDs
@@ -102,13 +103,39 @@ export class Relationships implements CarStreamable {
     await this.updateRoot(newCids)
   }
 
+  async verifyUpdate(
+    prev: Relationships,
+    newCids: CidSet,
+  ): Promise<delta.Event[]> {
+    // @TODO: similar to in tid-colleciton & the above note on runOnHamt, we need a better algo here after we fix up data structures
+    const events: delta.Event[] = []
+    const currEntries = await this.getEntries()
+    const prevEntries = await prev.getEntries()
+    const entriesDiff = delta.didEntriesDiff(prevEntries, currEntries, newCids)
+
+    // relationship deletes: we can emit as events
+    for (const del of entriesDiff.deletes) {
+      events.push(delta.deletedRelationship(del.key))
+    }
+    // relationship adds: we can emit as events
+    for (const add of entriesDiff.adds) {
+      events.push(delta.addedRelationship(add.key, add.cid))
+    }
+    // relationship updates: we can emit as events
+    for (const update of entriesDiff.updates) {
+      events.push(delta.updatedRelationship(update.key, update.cid, update.old))
+    }
+    return events
+  }
+
   async cids(): Promise<CID[]> {
     const structure: CID[] = []
     for await (const cid of this.hamt.cids()) {
       structure.push(cid)
     }
     const entries = await this.getEntries()
-    return structure.concat(entries)
+    const entryCids = entries.map((e) => e.cid)
+    return structure.concat(entryCids)
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {

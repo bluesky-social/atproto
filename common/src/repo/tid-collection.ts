@@ -2,10 +2,18 @@ import { CID } from 'multiformats'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
-import { Entry, IdMapping, CarStreamable, schema, UpdateData } from './types.js'
+import {
+  TIDEntry,
+  IdMapping,
+  CarStreamable,
+  schema,
+  UpdateData,
+  Collection,
+} from './types.js'
 import SSTable, { TableSize } from './ss-table.js'
 import TID from './tid.js'
 import CidSet from './cid-set.js'
+import * as delta from './delta.js'
 
 export class TidCollection implements CarStreamable {
   blockstore: IpldStore
@@ -57,6 +65,7 @@ export class TidCollection implements CarStreamable {
     }
   }
 
+  // NOTE: this will likely be changing to recursive tables (instead of compression) soon(ish)
   async compressTables(): Promise<CidSet> {
     const tableNames = this.tableNames()
     if (tableNames.length < 1) return new CidSet()
@@ -104,13 +113,13 @@ export class TidCollection implements CarStreamable {
     return table.getEntry(tid)
   }
 
-  async getEntries(count: number, from?: TID): Promise<Entry[]> {
+  async getEntries(count: number, from?: TID): Promise<TIDEntry[]> {
     const names = this.tableNames()
     const index =
       from !== undefined ? names.findIndex((n) => !from.olderThan(n)) : 0
     if (index === -1) return []
 
-    let entries: Entry[] = []
+    let entries: TIDEntry[] = []
     for (let i = index; i < names.length; i++) {
       const table = await this.getTable(names[i])
       if (table === null) {
@@ -129,6 +138,10 @@ export class TidCollection implements CarStreamable {
     }
 
     return entries
+  }
+
+  async getAllEntries(): Promise<TIDEntry[]> {
+    return this.getEntries(Number.MAX_SAFE_INTEGER)
   }
 
   // helper method to return table instance to write to, but leaves responsibility of adding table to `data` to the caller
@@ -214,6 +227,61 @@ export class TidCollection implements CarStreamable {
       table.cids().forEach((c) => all.push(c))
     }
     return all
+  }
+
+  async verifyUpdate(
+    prev: TidCollection,
+    newCids: CidSet,
+    namespace: string,
+    collection: Collection,
+  ): Promise<delta.Event[]> {
+    // @TODO: we need a better algo here, but probably changing how SSTables work soon
+    // and not going to waste time writing an optimized one for our current structure
+    // (will be easier to write for recursive tables)
+    const events: delta.Event[] = []
+    const currEntries = await this.getAllEntries()
+    const prevEntries = await prev.getAllEntries()
+    const entriesDiff = delta.tidEntriesDiff(prevEntries, currEntries, newCids)
+
+    // object deletes: we can emit as events
+    for (const del of entriesDiff.deletes) {
+      events.push(
+        delta.deletedObject(namespace, collection, TID.fromStr(del.key)),
+      )
+    }
+    // object adds: we can emit as events
+    for (const add of entriesDiff.adds) {
+      events.push(
+        delta.addedObject(namespace, collection, TID.fromStr(add.key), add.cid),
+      )
+    }
+    // object updates: we can emit as events
+    for (const update of entriesDiff.updates) {
+      events.push(
+        delta.updatedObject(
+          namespace,
+          collection,
+          TID.fromStr(update.key),
+          update.cid,
+          update.old,
+        ),
+      )
+    }
+    return events
+  }
+
+  async missingCids(): Promise<CidSet> {
+    const missing = new CidSet()
+    for (const cid of this.shallowCids()) {
+      if (await this.blockstore.has(cid)) {
+        const table = await SSTable.load(this.blockstore, cid)
+        const tableMissing = await table.missingCids()
+        missing.addSet(tableMissing)
+      } else {
+        missing.add(cid)
+      }
+    }
+    return missing
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {

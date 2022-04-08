@@ -6,8 +6,11 @@ import { BlockWriter } from '@ipld/car/writer'
 
 import MemoryBlockstore from './memory-blockstore.js'
 import * as check from '../common/check.js'
+import * as util from '../common/util.js'
 import { BlockstoreI } from './types.js'
 import { PersistentBlockstore } from './persistent-blockstore.js'
+import { BlockReader } from '@ipld/car/api'
+import CidSet from '../repo/cid-set.js'
 
 type AllowedIpldRecordVal = string | number | CID | CID[] | Uint8Array | null
 
@@ -60,6 +63,22 @@ export class IpldStore {
     }
   }
 
+  async has(cid: CID): Promise<boolean> {
+    return this.rawBlockstore.has(cid)
+  }
+
+  async isMissing(cid: CID): Promise<boolean> {
+    const has = await this.has(cid)
+    return !has
+  }
+
+  async checkMissing(cids: CidSet): Promise<CidSet> {
+    const missing = await util.asyncFilter(cids.toList(), (c) => {
+      return this.isMissing(c)
+    })
+    return new CidSet(missing)
+  }
+
   async getBytes(cid: CID): Promise<Uint8Array> {
     return this.rawBlockstore.get(cid)
   }
@@ -74,6 +93,12 @@ export class IpldStore {
 
   async addToCar(car: BlockWriter, cid: CID) {
     car.put({ cid, bytes: await this.getBytes(cid) })
+  }
+
+  async loadCar(car: BlockReader): Promise<void> {
+    for await (const block of car.blocks()) {
+      await this.putBytes(block.cid, block.bytes)
+    }
   }
 }
 

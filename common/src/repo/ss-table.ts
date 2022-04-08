@@ -1,9 +1,10 @@
 import { CID } from 'multiformats'
-import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-import { CarStreamable, Entry, IdMapping, schema } from './types.js'
+import { CarStreamable, TIDEntry, IdMapping, schema } from './types.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TID from './tid.js'
+import CidSet from './cid-set.js'
+import { BlockWriter } from '@ipld/car/writer'
 
 export class SSTable implements CarStreamable {
   blockstore: IpldStore
@@ -108,7 +109,7 @@ export class SSTable implements CarStreamable {
     return Object.values(this.data)
   }
 
-  entries(): Entry[] {
+  entries(): TIDEntry[] {
     return Object.entries(this.data)
       .map(([tid, cid]) => ({ tid: TID.fromStr(tid), cid }))
       .sort((a, b) => TID.newestFirst(a.tid, b.tid))
@@ -124,6 +125,10 @@ export class SSTable implements CarStreamable {
 
   isFull(): boolean {
     return this.currSize() >= this.maxSize()
+  }
+
+  async missingCids(): Promise<CidSet> {
+    return this.blockstore.checkMissing(new CidSet(this.cids()))
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {

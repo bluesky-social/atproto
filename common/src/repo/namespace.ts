@@ -5,6 +5,7 @@ import IpldStore from '../blockstore/ipld-store.js'
 import TidCollection from './tid-collection.js'
 import { Collection, NamespaceRoot, schema, UpdateData } from './types.js'
 import CidSet from './cid-set.js'
+import * as delta from './delta.js'
 
 export class Namespace {
   blockstore: IpldStore
@@ -94,6 +95,49 @@ export class Namespace {
       collection: 'profile',
       newCids,
     })
+  }
+
+  async verifyUpdate(
+    prev: Namespace,
+    newCids: CidSet,
+    namespaceId: string,
+  ): Promise<delta.Event[]> {
+    let events: delta.Event[] = []
+    // @TODO check against new cids
+    if (this.posts.cid !== prev.posts.cid) {
+      const updates = await this.posts.verifyUpdate(
+        prev.posts,
+        newCids,
+        namespaceId,
+        'posts',
+      )
+      events = events.concat(updates)
+    }
+    if (this.interactions.cid !== prev.interactions.cid) {
+      const updates = await this.interactions.verifyUpdate(
+        prev.interactions,
+        newCids,
+        namespaceId,
+        'interactions',
+      )
+      events = events.concat(updates)
+    }
+    return events
+  }
+
+  async missingCids(): Promise<CidSet> {
+    const missing = new CidSet()
+    if (
+      this.profile !== null &&
+      (await this.blockstore.isMissing(this.profile))
+    ) {
+      missing.add(this.profile)
+    }
+    const [missingPosts, missingInter] = await Promise.all([
+      this.interactions.missingCids(),
+      this.posts.missingCids(),
+    ])
+    return missing.addSet(missingPosts).addSet(missingInter)
   }
 
   async writeToCarStream(car: BlockWriter): Promise<void> {

@@ -18,11 +18,14 @@ import IpldStore, { AllowedIpldVal } from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import Namespace from './namespace.js'
 import Relationships from './relationships.js'
+import CidSet from './cid-set.js'
 import {
   blueskySemantics,
   maintenanceCap,
   writeCap,
 } from '../auth/bluesky-capability.js'
+import * as auth from '../auth/index.js'
+import * as delta from './delta.js'
 
 export class Repo implements CarStreamable {
   blockstore: IpldStore
@@ -72,11 +75,12 @@ export class Repo implements CarStreamable {
     }
     const tokenCid = await blockstore.put(foundUcan.ucan.encoded())
     const relationships = await Relationships.create(blockstore)
+    const newCids = [...(await relationships.cids()), tokenCid]
     const rootObj: RepoRoot = {
       did,
       prev: null,
-      new_cids: await relationships.cids(),
-      auth_token: tokenCid, // @FIX THIS
+      new_cids: newCids,
+      auth_token: tokenCid,
       relationships: relationships.cid,
       namespaces: {},
     }
@@ -145,6 +149,9 @@ export class Repo implements CarStreamable {
     return Repo.load(store, root, keypair, ucanStore)
   }
 
+  // ROOT OPERATIONS
+  // -----------
+
   // arrow fn to preserve scope
   updateRootForNamespace =
     (namespaceId: string) =>
@@ -186,6 +193,7 @@ export class Repo implements CarStreamable {
       relationships: this.relationships.cid,
     }
     const rootCid = await this.blockstore.put(root)
+    newCids.add(tokenCid)
     newCids.add(rootCid)
     const commit: Commit = {
       root: rootCid,
@@ -203,7 +211,19 @@ export class Repo implements CarStreamable {
     return this.blockstore.get(commit.root, schema.repoRoot)
   }
 
-  // Namespace API
+  async loadRoot(cid: CID): Promise<void> {
+    this.cid = cid
+    const root = await this.getRoot()
+    this.did = root.did
+    this.namespaceCids = root.namespaces
+    this.namespaces = {}
+    this.relationships = await Relationships.load(
+      this.blockstore,
+      root.relationships,
+    )
+  }
+
+  // NAMESPACE API
   // -----------
 
   async createNamespace(id: string): Promise<Namespace> {
@@ -238,7 +258,7 @@ export class Repo implements CarStreamable {
     return fn(namespace)
   }
 
-  // IPLD store methods
+  // IPLD STORE PASS THROUGHS
   // -----------
 
   async put(value: AllowedIpldVal): Promise<CID> {
@@ -249,7 +269,7 @@ export class Repo implements CarStreamable {
     return this.blockstore.get(cid, schema)
   }
 
-  // UCAN Auth
+  // UCAN AUTH
   // -----------
 
   async ucanForOperation(update: UpdateData): Promise<CID> {
@@ -276,10 +296,135 @@ export class Repo implements CarStreamable {
     return this.blockstore.put(foundUcan.ucan.encoded())
   }
 
-  // CAR files
+  // VERIFYING UPDATES
   // -----------
 
-  async loadCar(buf: Uint8Array): Promise<void> {
+  // loads car files, verifies structure, signature & auth on each commit
+  // emits semantic updates to the structure starting from oldest first
+  async loadAndVerifyDiff(
+    buf: Uint8Array,
+    emit?: (evt: delta.Event) => Promise<void>,
+  ): Promise<void> {
+    const root = await this.loadCar(buf)
+    await this.verifySetOfUpdates(this.cid, root, emit)
+    await this.loadRoot(root)
+  }
+
+  async verifySetOfUpdates(
+    from: CID | null,
+    to: CID,
+    emit?: (evt: delta.Event) => Promise<void>,
+  ): Promise<void> {
+    if (from === null || from.equals(to)) return
+    const toRepo = await Repo.load(this.blockstore, to)
+    const root = await toRepo.getRoot()
+    if (!root.prev) {
+      throw new Error('Could not find start repo root')
+    }
+    await this.verifySetOfUpdates(from, root.prev, emit)
+    const prevRepo = await Repo.load(this.blockstore, root.prev)
+    const updates = await toRepo.verifyUpdate(prevRepo)
+
+    // verify sig & auth
+    const encodedToken = await this.blockstore.get(
+      root.auth_token,
+      schema.string,
+    )
+    const token = await ucan.Chained.fromToken(encodedToken)
+    const commit = await toRepo.getCommit()
+    const validSig = await ucan.verifySignature(
+      commit.root.bytes,
+      commit.sig,
+      token.audience(),
+    )
+    if (!validSig) {
+      throw new Error(`Invalid signature on commit: ${toRepo.cid.toString()}`)
+    }
+    for (const update of updates) {
+      const neededCap = delta.capabilityForEvent(root.did, update)
+      await auth.checkUcan(token, auth.hasValidCapability(root.did, neededCap))
+      if (emit) {
+        await emit(update)
+      }
+    }
+  }
+
+  async verifyUpdate(prev: Repo): Promise<delta.Event[]> {
+    const root = await this.getRoot()
+    if (!root.prev) {
+      throw new Error('No previous version found at root')
+    } else if (!root.prev.equals(prev.cid)) {
+      throw new Error('Previous version root CID does not match')
+    }
+    const newCids = new CidSet(root.new_cids)
+    let events: delta.Event[] = []
+    const mapDiff = delta.idMapDiff(
+      prev.namespaceCids,
+      this.namespaceCids,
+      newCids,
+    )
+    // namespace deletes: we can emit as events
+    for (const del of mapDiff.deletes) {
+      events.push(delta.deletedNamespace(del.key))
+    }
+    // namespace adds: we walk to ensure we have all content & then emit all posts & interactions
+    for (const add of mapDiff.adds) {
+      const namespace = await Namespace.load(this.blockstore, add.cid)
+      const missing = await namespace.missingCids()
+      if (missing.size() > 0) {
+        throw new Error(
+          `Missing cids for namespace ${add.key}: ${missing.toList()}`,
+        )
+      }
+      const [newPosts, newInters] = await Promise.all([
+        namespace.posts.getAllEntries(),
+        namespace.interactions.getAllEntries(),
+      ])
+      for (const { cid, tid } of newPosts) {
+        events.push(delta.addedObject(add.key, 'posts', tid, cid))
+      }
+      for (const { cid, tid } of newInters) {
+        events.push(delta.addedObject(add.key, 'interactions', tid, cid))
+      }
+    }
+    // namespace updates: we dive deeper to figure out the differences
+    for (const update of mapDiff.updates) {
+      const [old, curr] = await Promise.all([
+        Namespace.load(this.blockstore, update.old),
+        Namespace.load(this.blockstore, update.cid),
+      ])
+      const updates = await curr.verifyUpdate(old, newCids, update.key)
+      events = events.concat(updates)
+    }
+    // relationship updates: we dive deeper to figure out the difference
+    if (this.relationships.cid !== prev.relationships.cid) {
+      const updates = await this.relationships.verifyUpdate(
+        prev.relationships,
+        newCids,
+      )
+      events = events.concat(updates)
+    }
+    return events
+  }
+
+  async missingCids(): Promise<CidSet> {
+    const missing = new CidSet()
+    for (const cid of Object.values(this.namespaceCids)) {
+      if (await this.blockstore.has(cid)) {
+        const namespace = await Namespace.load(this.blockstore, cid)
+        const namespaceMissing = await namespace.missingCids()
+        missing.addSet(namespaceMissing)
+      } else {
+        missing.add(cid)
+      }
+    }
+    return missing
+  }
+
+  // CAR FILES
+  // -----------
+
+  async loadCar(buf: Uint8Array): Promise<CID> {
     const car = await CarReader.fromBytes(buf)
     const roots = await car.getRoots()
     if (roots.length !== 1) {
@@ -289,15 +434,12 @@ export class Repo implements CarStreamable {
     for await (const block of car.blocks()) {
       await this.blockstore.putBytes(block.cid, block.bytes)
     }
-    this.cid = rootCid
-    const root = await this.getRoot()
-    this.did = root.did
-    this.namespaceCids = root.namespaces
-    this.namespaces = {}
-    this.relationships = await Relationships.load(
-      this.blockstore,
-      root.relationships,
-    )
+    return rootCid
+  }
+
+  async loadCarRoot(buf: Uint8Array): Promise<void> {
+    const root = await this.loadCar(buf)
+    await this.loadRoot(root)
   }
 
   async getCarNoHistory(): Promise<Uint8Array> {
@@ -348,7 +490,7 @@ export class Repo implements CarStreamable {
       commit.root,
       schema.repoRoot,
     )
-    await this.blockstore.addToCar(car, this.cid)
+    await this.blockstore.addToCar(car, from)
     await this.blockstore.addToCar(car, commit.root)
 
     await Promise.all(new_cids.map((cid) => this.blockstore.addToCar(car, cid)))

@@ -19,9 +19,7 @@ export class CidSet {
   }
 
   subtractSet(toSubtract: CidSet): CidSet {
-    toSubtract.toList().forEach((cid) => {
-      this.set.delete(cid.toString())
-    })
+    toSubtract.toList().map((c) => this.delete(c))
     return this
   }
 

@@ -68,7 +68,7 @@ test('syncs a repo that is behind', async (t) => {
   // add more to alice's repo & have bob catch up
   const data2 = await util.fillRepo(repoAlice, namespaceId, 300, 10, 50)
   const diff = await repoAlice.getDiffCar(repoBob.cid)
-  await repoBob.loadCar(diff)
+  await repoBob.loadCarRoot(diff)
 
   const allData = {
     posts: {

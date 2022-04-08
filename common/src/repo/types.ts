@@ -37,11 +37,17 @@ export type Commit = z.infer<typeof commit>
 const idMapping = z.record(common.cid)
 export type IdMapping = z.infer<typeof idMapping>
 
-const entry = z.object({
+const tidEntry = z.object({
   tid: tid,
   cid: common.cid,
 })
-export type Entry = z.infer<typeof entry>
+export type TIDEntry = z.infer<typeof tidEntry>
+
+const didEntry = z.object({
+  did: z.string(),
+  cid: common.cid,
+})
+export type DIDEntry = z.infer<typeof didEntry>
 
 const collection = z.enum(['posts', 'interactions', 'profile'])
 export type Collection = z.infer<typeof collection>
@@ -68,7 +74,8 @@ export const schema = {
   namespaceRoot,
   commit,
   idMapping,
-  entry,
+  tidEntry,
+  didEntry,
   collection,
   follow,
 }

@@ -9,9 +9,9 @@ import { ExecutionContext } from 'ava'
 
 const fakeStore = IpldStore.createInMemory()
 
-export const randomCid = async (): Promise<CID> => {
+export const randomCid = async (store: IpldStore = fakeStore): Promise<CID> => {
   const content = Math.floor(Math.random() * 1000000)
-  return fakeStore.put({ test: content })
+  return store.put({ test: content })
 }
 
 export const generateBulkTids = (count: number): TID[] => {

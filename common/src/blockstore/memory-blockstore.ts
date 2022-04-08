@@ -18,6 +18,10 @@ export class MemoryBlockstore implements BlockstoreI {
     this.map.set(k.toString(), v)
   }
 
+  async has(k: CID): Promise<boolean> {
+    return this.map.has(k.toString())
+  }
+
   async destroy(): Promise<void> {
     this.map.clear()
   }
