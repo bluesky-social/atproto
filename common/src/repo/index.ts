@@ -131,6 +131,7 @@ export class Repo implements CarStreamable {
   static async fromCarFile(
     buf: Uint8Array,
     store: IpldStore,
+    emit?: (evt: delta.Event) => Promise<void>,
     keypair?: Keypair,
     ucanStore?: ucan.Store,
   ) {
@@ -146,7 +147,9 @@ export class Repo implements CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    return Repo.load(store, root, keypair, ucanStore)
+    const repo = await Repo.load(store, root, keypair, ucanStore)
+    await repo.verifySetOfUpdates(null, repo.cid, emit)
+    return repo
   }
 
   // ROOT OPERATIONS
@@ -355,6 +358,9 @@ export class Repo implements CarStreamable {
       throw new Error('No previous version found at root')
     } else if (!root.prev.equals(prev.cid)) {
       throw new Error('Previous version root CID does not match')
+    }
+    if (root.did !== prev.did) {
+      throw new Error('Changes in DID are not allowed at this point')
     }
     const newCids = new CidSet(root.new_cids)
     let events: delta.Event[] = []
