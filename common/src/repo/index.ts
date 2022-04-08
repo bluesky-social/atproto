@@ -318,11 +318,15 @@ export class Repo implements CarStreamable {
     to: CID,
     emit?: (evt: delta.Event) => Promise<void>,
   ): Promise<void> {
-    if (from === null || from.equals(to)) return
+    if (to.equals(from)) return
     const toRepo = await Repo.load(this.blockstore, to)
     const root = await toRepo.getRoot()
     if (!root.prev) {
-      throw new Error('Could not find start repo root')
+      if (from === null) {
+        return
+      } else {
+        throw new Error('Could not find start repo root')
+      }
     }
     await this.verifySetOfUpdates(from, root.prev, emit)
     const prevRepo = await Repo.load(this.blockstore, root.prev)

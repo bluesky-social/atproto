@@ -3,7 +3,7 @@ import axios from 'axios'
 
 import * as ucan from 'ucans'
 
-import { auth, IpldStore, Repo } from '@bluesky-demo/common'
+import { auth, IpldStore, Microblog, Repo } from '@bluesky-demo/common'
 // import * as auth from '../src/auth/index.js'
 // import Repo from '../src/repo/index.js'
 // import IpldStore from '../src/blockstore/ipld-store.js'
@@ -15,6 +15,7 @@ import { auth, IpldStore, Repo } from '@bluesky-demo/common'
 type Context = {
   ipldAlice: IpldStore
   alice: Repo
+  aliceBlog: Microblog
   ipldBob: IpldStore
   tokenBob: ucan.Chained
   namespaceId: string
@@ -31,6 +32,7 @@ test.beforeEach(async (t) => {
     keypairAlice,
     ucanStore,
   )
+  const aliceBlog = new Microblog(alice)
 
   const ipldBob = IpldStore.createInMemory()
 
@@ -38,6 +40,7 @@ test.beforeEach(async (t) => {
   t.context = {
     ipldAlice,
     alice,
+    aliceBlog,
     ipldBob,
     namespaceId,
   } as Context
@@ -45,13 +48,23 @@ test.beforeEach(async (t) => {
 })
 
 test('syncs a repo that is behind', async (t) => {
-  const { alice, ipldBob, namespaceId } = t.context as Context
+  const { alice, aliceBlog, ipldBob, namespaceId } = t.context as Context
 
-  await alice.relationships.follow('did:asdfwerq', 'asdfoiewru')
+  await aliceBlog.addPost('hello world!')
+  const car = await alice.getFullHistory()
 
-  const
+  await axios.post(`http://localhost:2583/data/repo/${alice.did}`, car)
 
-  await axios.post('http://localhost:2583', )
+  const res = await axios.get(`http://localhost:2583/data/root`, {
+    params: { did: alice.did },
+  })
+
+  const prevCid = alice.cid
+  await aliceBlog.addPost('another one')
+  const diff = await alice.getDiffCar(prevCid)
+  await axios.post(`http://localhost:2583/data/repo/${alice.did}`, diff)
+
+  t.pass('yeehaw')
 
   // bring bob up to date with early version of alice's repo
   // await util.fillRepo(alice, namespaceId, 150, 10, 50)
