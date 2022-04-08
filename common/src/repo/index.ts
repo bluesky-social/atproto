@@ -280,6 +280,56 @@ export class Repo implements CarStreamable {
 
   // Verifying Updates
   // -----------
+
+  async loadAndVerifyDiff(
+    buf: Uint8Array,
+    emit: (evt: util.Event) => Promise<void>,
+  ): Promise<void> {
+    const car = await CarReader.fromBytes(buf)
+    const roots = await car.getRoots()
+    if (roots.length !== 1) {
+      throw new Error(`Expected one root, got ${roots.length}`)
+    }
+    const rootCid = roots[0]
+    for await (const block of car.blocks()) {
+      await this.blockstore.putBytes(block.cid, block.bytes)
+    }
+    await this.verifySetOfUpdates(this.cid, rootCid, emit)
+    await this.loadRoot(rootCid)
+  }
+
+  async loadRoot(cid: CID): Promise<void> {
+    this.cid = cid
+    const root = await this.getRoot()
+    this.did = root.did
+    this.namespaceCids = root.namespaces
+    this.namespaces = {}
+    this.relationships = await Relationships.load(
+      this.blockstore,
+      root.relationships,
+    )
+  }
+
+  async verifySetOfUpdates(
+    to: CID | null,
+    from: CID,
+    emit: (evt: util.Event) => Promise<void>,
+  ): Promise<void> {
+    if (to === null || to.equals(from)) return
+    const fromRepo = await Repo.load(this.blockstore, from)
+    const root = await fromRepo.getRoot()
+    if (!root.prev) {
+      throw new Error('Could not find start repo root')
+    }
+    await this.verifySetOfUpdates(to, root.prev, emit)
+    const prevRepo = await Repo.load(this.blockstore, root.prev)
+    const updates = await fromRepo.verifyUpdate(prevRepo)
+    for (const update of updates) {
+      // @TODO: verify commit sig & each update is permissioned
+      await emit(update)
+    }
+  }
+
   async verifyUpdate(prev: Repo): Promise<util.Event[]> {
     const root = await this.getRoot()
     if (!root.prev) {
@@ -342,6 +392,14 @@ export class Repo implements CarStreamable {
       const updates = await curr.verifyUpdate(old, newCids, update.key)
       events = events.concat(updates)
     }
+    // relationship updates: we dive deeper to figure out the difference
+    if (this.relationships.cid !== prev.relationships.cid) {
+      const updates = await this.relationships.verifyUpdate(
+        prev.relationships,
+        newCids,
+      )
+      events = events.concat(updates)
+    }
     return events
   }
 
@@ -372,15 +430,7 @@ export class Repo implements CarStreamable {
     for await (const block of car.blocks()) {
       await this.blockstore.putBytes(block.cid, block.bytes)
     }
-    this.cid = rootCid
-    const root = await this.getRoot()
-    this.did = root.did
-    this.namespaceCids = root.namespaces
-    this.namespaces = {}
-    this.relationships = await Relationships.load(
-      this.blockstore,
-      root.relationships,
-    )
+    await this.loadRoot(rootCid)
   }
 
   async getCarNoHistory(): Promise<Uint8Array> {
@@ -431,7 +481,7 @@ export class Repo implements CarStreamable {
       commit.root,
       schema.repoRoot,
     )
-    await this.blockstore.addToCar(car, this.cid)
+    await this.blockstore.addToCar(car, from)
     await this.blockstore.addToCar(car, commit.root)
 
     await Promise.all(new_cids.map((cid) => this.blockstore.addToCar(car, cid)))

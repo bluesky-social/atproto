@@ -1,6 +1,6 @@
 import { CID } from 'multiformats'
 
-import { CarStreamable, Entry, IdMapping, schema } from './types.js'
+import { CarStreamable, TIDEntry, IdMapping, schema } from './types.js'
 import IpldStore from '../blockstore/ipld-store.js'
 import TID from './tid.js'
 import CidSet from './cid-set.js'
@@ -109,7 +109,7 @@ export class SSTable implements CarStreamable {
     return Object.values(this.data)
   }
 
-  entries(): Entry[] {
+  entries(): TIDEntry[] {
     return Object.entries(this.data)
       .map(([tid, cid]) => ({ tid: TID.fromStr(tid), cid }))
       .sort((a, b) => TID.newestFirst(a.tid, b.tid))

@@ -1,5 +1,5 @@
 import { CID } from 'multiformats'
-import { Collection, Entry, IdMapping } from '../repo/types.js'
+import { Collection, TIDEntry, DIDEntry, IdMapping } from '../repo/types.js'
 import CidSet from './cid-set.js'
 import TID from './tid.js'
 
@@ -25,8 +25,8 @@ type Diff = {
 }
 
 export const idMapDiff = (
-  mapA: IdMapping,
-  mapB: IdMapping,
+  prevMap: IdMapping,
+  currMap: IdMapping,
   newCids: CidSet,
 ): Diff => {
   const diff: Diff = {
@@ -35,42 +35,58 @@ export const idMapDiff = (
     deletes: [],
   }
   // find deletions
-  for (const key of Object.keys(mapA)) {
-    if (!mapB[key]) {
+  for (const key of Object.keys(prevMap)) {
+    if (!currMap[key]) {
       diff.deletes.push({ key })
     }
   }
   // find additions & changes
-  for (const key of Object.keys(mapB)) {
-    const old = mapA[key]
-    const cid = mapB[key]
+  for (const key of Object.keys(currMap)) {
+    const old = prevMap[key]
+    const cid = currMap[key]
+    if (old && old.equals(cid)) continue
     if (!newCids.has(cid)) {
       throw new Error(`Cid not included in added cids: ${cid.toString()}`)
     }
-    if (old !== cid) {
-      if (old) {
-        diff.adds.push({ key, cid })
-      } else {
-        diff.updates.push({ key, old, cid })
-      }
+    if (old) {
+      diff.updates.push({ key, old, cid })
+    } else {
+      diff.adds.push({ key, cid })
     }
   }
   return diff
 }
 
-export const entriesDiff = (
-  entriesA: Entry[],
-  entriesB: Entry[],
+export const tidEntriesDiff = (
+  prevEntries: TIDEntry[],
+  currEntries: TIDEntry[],
   newCids: CidSet,
 ): Diff => {
-  const idMapA = entriesToIdMapping(entriesA)
-  const idMapB = entriesToIdMapping(entriesB)
-  return idMapDiff(idMapA, idMapB, newCids)
+  const idPrevMap = tidEntriesToIdMapping(prevEntries)
+  const idCurrMap = tidEntriesToIdMapping(currEntries)
+  return idMapDiff(idPrevMap, idCurrMap, newCids)
 }
 
-export const entriesToIdMapping = (entries: Entry[]): IdMapping => {
+export const tidEntriesToIdMapping = (entries: TIDEntry[]): IdMapping => {
   return entries.reduce((acc, cur) => {
     acc[cur.tid.toString()] = cur.cid
+    return acc
+  }, {} as IdMapping)
+}
+
+export const didEntriesDiff = (
+  prevEntries: DIDEntry[],
+  currEntries: DIDEntry[],
+  newCids: CidSet,
+): Diff => {
+  const idPrevMap = didEntriesToIdMapping(prevEntries)
+  const idCurrMap = didEntriesToIdMapping(currEntries)
+  return idMapDiff(idPrevMap, idCurrMap, newCids)
+}
+
+export const didEntriesToIdMapping = (entries: DIDEntry[]): IdMapping => {
+  return entries.reduce((acc, cur) => {
+    acc[cur.did] = cur.cid
     return acc
   }, {} as IdMapping)
 }
@@ -79,6 +95,9 @@ export enum EventType {
   AddedObject = 'added_object',
   UpdatedObject = 'updated_object',
   DeletedObject = 'deleted_object',
+  AddedRelationship = 'added_relationship',
+  UpdatedRelationship = 'updated_relationship',
+  DeletedRelationship = 'deleted_relationship',
   DeletedNamespace = 'deleted_namespace',
   DeletedCollection = 'deleted_collection',
   DeletedTable = 'deleted_table',
@@ -88,6 +107,9 @@ export type Event =
   | AddedObject
   | UpdatedObject
   | DeletedObject
+  | AddedRelationship
+  | UpdatedRelationship
+  | DeletedRelationship
   | DeletedNamespace
   | DeletedCollection
 
@@ -113,6 +135,24 @@ export type DeletedObject = {
   namespace: string
   collection: Collection
   tid: TID
+}
+
+export type AddedRelationship = {
+  event: EventType.AddedRelationship
+  did: string
+  cid: CID
+}
+
+export type UpdatedRelationship = {
+  event: EventType.UpdatedRelationship
+  did: string
+  cid: CID
+  prevCid: CID
+}
+
+export type DeletedRelationship = {
+  event: EventType.DeletedRelationship
+  did: string
 }
 
 export type DeletedNamespace = {

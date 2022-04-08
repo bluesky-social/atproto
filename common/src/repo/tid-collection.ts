@@ -3,7 +3,7 @@ import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import IpldStore from '../blockstore/ipld-store.js'
 import {
-  Entry,
+  TIDEntry,
   IdMapping,
   CarStreamable,
   schema,
@@ -113,13 +113,13 @@ export class TidCollection implements CarStreamable {
     return table.getEntry(tid)
   }
 
-  async getEntries(count: number, from?: TID): Promise<Entry[]> {
+  async getEntries(count: number, from?: TID): Promise<TIDEntry[]> {
     const names = this.tableNames()
     const index =
       from !== undefined ? names.findIndex((n) => !from.olderThan(n)) : 0
     if (index === -1) return []
 
-    let entries: Entry[] = []
+    let entries: TIDEntry[] = []
     for (let i = index; i < names.length; i++) {
       const table = await this.getTable(names[i])
       if (table === null) {
@@ -140,7 +140,7 @@ export class TidCollection implements CarStreamable {
     return entries
   }
 
-  async getAllEntries(): Promise<Entry[]> {
+  async getAllEntries(): Promise<TIDEntry[]> {
     return this.getEntries(Number.MAX_SAFE_INTEGER)
   }
 
@@ -241,7 +241,7 @@ export class TidCollection implements CarStreamable {
     const events: util.Event[] = []
     const currEntries = await this.getAllEntries()
     const prevEntries = await prev.getAllEntries()
-    const entriesDiff = util.entriesDiff(currEntries, prevEntries, newCids)
+    const entriesDiff = util.tidEntriesDiff(prevEntries, currEntries, newCids)
 
     // object deletes: we can emit as events
     for (const del of entriesDiff.deletes) {
