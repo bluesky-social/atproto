@@ -5,6 +5,7 @@ import * as util from '../../util.js'
 import { ServerError } from '../../error.js'
 import { flattenPost, schema, TID, ucanCheck } from '@bluesky-demo/common'
 import { SERVER_DID } from '../../server-identity.js'
+import * as subscriptions from '../../subscriptions.js'
 
 const router = express.Router()
 
@@ -85,6 +86,7 @@ router.post('/', async (req, res) => {
   const db = util.getDB(res)
   await db.createPost(post, postCid)
   await db.updateRepoRoot(post.author, repo.cid)
+  await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
 })
 
@@ -114,6 +116,7 @@ router.put('/', async (req, res) => {
   const db = util.getDB(res)
   await db.updatePost(post, postCid)
   await db.updateRepoRoot(post.author, repo.cid)
+  await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
 })
 
@@ -141,6 +144,7 @@ router.delete('/', async (req, res) => {
   const db = util.getDB(res)
   await db.deletePost(tid.toString(), did, namespace)
   await db.updateRepoRoot(did, repo.cid)
+  await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
 })
 

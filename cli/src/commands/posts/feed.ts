@@ -26,7 +26,7 @@ export default cmd({
     for (const post of posts) {
       console.log(post.text)
       console.log(chalk.gray(formatDate(post.time)))
-      console.log(`id: ${chalk.gray(TID.fromStr(post.tid).formatted())}`)
+      console.log(`id: ${chalk.gray(post.tid.formatted())}`)
       console.log(``)
     }
   },

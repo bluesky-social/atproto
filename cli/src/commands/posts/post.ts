@@ -12,7 +12,7 @@ export default cmd({
     const text = args._[0]
     const client = await loadDelegate(REPO_PATH)
     const post = await client.addPost(text)
-    const tid = TID.fromStr(post.tid)
+    const tid = post.tid
     console.log(`Created post: `, tid.formatted())
   },
 })

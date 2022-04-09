@@ -10,8 +10,8 @@ export const subscribeReq = z.object({
 })
 export type subscribeReq = z.infer<typeof subscribeReq>
 
-router.get('/', async (req, res) => {
-  const { did, host } = util.checkReqBody(req.query, subscribeReq)
+router.post('/', async (req, res) => {
+  const { did, host } = util.checkReqBody(req.body, subscribeReq)
   const db = util.getDB(res)
   await db.createSubscription(host, did)
   res.status(200).send()

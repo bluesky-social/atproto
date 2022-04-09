@@ -36,6 +36,7 @@ router.post('/register', async (req, res) => {
     db.registerDid(username, did),
     db.createRepoRoot(did, repo.cid),
   ])
+
   return res.sendStatus(200)
 })
 

@@ -4,6 +4,7 @@ import * as util from '../../util.js'
 import { delta, IpldStore, Repo, schema } from '@bluesky-demo/common'
 import Database from '../../db/index.js'
 import { ServerError } from '../../error.js'
+import * as subscriptions from '../../subscriptions.js'
 
 const router = express.Router()
 
@@ -27,7 +28,6 @@ export const postRepoReq = z.object({
 export type PostRepoReq = z.infer<typeof postRepoReq>
 
 router.post('/:did', async (req, res) => {
-  console.log('PROCESSING PUSH')
   // we don't need auth here because the auth is on the data structure 😎
   const { did } = util.checkReqBody(req.params, postRepoReq)
   const bytes = await util.readReqBytes(req)
@@ -41,12 +41,14 @@ router.post('/:did', async (req, res) => {
       await indexOperation(db, repo.blockstore, did, evt)
     })
     await db.updateRepoRoot(did, repo.cid)
+    await subscriptions.notifySubscribers(db, repo)
   } else {
     const blockstore = util.getBlockstore(res)
     const loaded = await Repo.fromCarFile(bytes, blockstore, async (evt) => {
       await indexOperation(db, blockstore, did, evt)
     })
     await db.createRepoRoot(did, loaded.cid)
+    await subscriptions.notifySubscribers(db, loaded)
   }
   res.status(200).send()
 })
