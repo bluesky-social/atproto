@@ -18,6 +18,7 @@ import * as ucan from 'ucans'
 import { Collection, Follow } from '../repo/types.js'
 import { Keypair } from '../common/types.js'
 import * as auth from '../auth/index.js'
+import * as service from '../network/service.js'
 
 export class MicroblogDelegator {
   namespace = 'did:bsky:microblog'
@@ -73,7 +74,6 @@ export class MicroblogDelegator {
   }
 
   async resolveDid(nameOrDid: string): Promise<string> {
-    // @TODO resolve federated
     if (nameOrDid.startsWith('did:')) return nameOrDid
     const did = await this.lookupDid(nameOrDid)
     if (!did) {
@@ -110,18 +110,11 @@ export class MicroblogDelegator {
   }
 
   async lookupDid(username: string): Promise<string | null> {
-    const params = { resource: username }
-    try {
-      const res = await axios.get(`${this.url}/.well-known/webfinger`, {
-        params,
-      })
-      return check.assure(repoSchema.did, res.data.id)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
-        return null
-      }
-      throw new Error(err.message)
+    const [name, host] = username.split('@')
+    if (!host) {
+      return service.lookupDid(this.url, name)
+    } else {
+      return service.lookupDid(`http://${host}`, name)
     }
   }
 
@@ -267,8 +260,7 @@ export class MicroblogDelegator {
   }
 
   async followUser(username: string): Promise<void> {
-    const did = await this.resolveDid(username)
-    const data = { creator: this.did, target: did }
+    const data = { creator: this.did, username }
     const token = await this.relationshipToken()
     try {
       await axios.post(`${this.url}/data/relationship`, data, authCfg(token))

@@ -188,6 +188,7 @@ export class Repo implements CarStreamable {
     }
     const newCids = update.newCids
     const tokenCid = await this.ucanForOperation(update)
+    newCids.add(tokenCid)
     const root: RepoRoot = {
       did: this.did,
       prev: this.cid,
@@ -197,8 +198,6 @@ export class Repo implements CarStreamable {
       relationships: this.relationships.cid,
     }
     const rootCid = await this.blockstore.put(root)
-    newCids.add(tokenCid)
-    newCids.add(rootCid)
     const commit: Commit = {
       root: rootCid,
       sig: await this.keypair.sign(rootCid.bytes),

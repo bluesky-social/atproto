@@ -23,8 +23,8 @@ go/bsky
 go/server
 
 server/blockstore
-server/user_dids
-server/user_roots
 server/dev.sqlite
+server/blockstore2
+server/dev2.sqlite
 server/test.sqlite
 third-party/blockstore
