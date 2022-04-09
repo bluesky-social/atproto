@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { check, ucanCheck } from '@bluesky-demo/common'
+import { ucanCheck } from '@bluesky-demo/common'
 import * as auth from '../../auth.js'
 import { ServerError } from '../../error.js'
 import * as util from '../../util.js'
@@ -14,6 +14,7 @@ const router = express.Router()
 export const createRelReq = z.object({
   creator: z.string(),
   target: z.string(),
+  username: z.string(),
 })
 export type CreateRelReq = z.infer<typeof createRelReq>
 

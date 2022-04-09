@@ -73,6 +73,7 @@ export class MicroblogDelegator {
   }
 
   async resolveDid(nameOrDid: string): Promise<string> {
+    // @TODO resolve federated
     if (nameOrDid.startsWith('did:')) return nameOrDid
     const did = await this.lookupDid(nameOrDid)
     if (!did) {
@@ -265,8 +266,8 @@ export class MicroblogDelegator {
     }
   }
 
-  async followUser(nameOrDid: string): Promise<void> {
-    const did = await this.resolveDid(nameOrDid)
+  async followUser(username: string): Promise<void> {
+    const did = await this.resolveDid(username)
     const data = { creator: this.did, target: did }
     const token = await this.relationshipToken()
     try {

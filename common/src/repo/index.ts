@@ -25,6 +25,7 @@ import {
   writeCap,
 } from '../auth/bluesky-capability.js'
 import * as auth from '../auth/index.js'
+import * as service from '../network/service.js'
 import * as delta from './delta.js'
 
 export class Repo implements CarStreamable {
@@ -297,6 +298,23 @@ export class Repo implements CarStreamable {
       )
     }
     return this.blockstore.put(foundUcan.ucan.encoded())
+  }
+
+  // PUSH/PULL TO REMOTE
+  // -----------
+
+  async push(url: string): Promise<void> {
+    const remoteRoot = await service.getRemoteRoot(url, this.did)
+    const car = await this.getDiffCar(remoteRoot)
+    await service.pushRepo(url, this.did, car)
+  }
+
+  async pull(url: string): Promise<void> {
+    const car = await service.pullRepo(url, this.did, this.cid)
+    if (car === null) {
+      throw new Error(`Could not find repo for did: ${this.did}`)
+    }
+    await this.loadAndVerifyDiff(car)
   }
 
   // VERIFYING UPDATES

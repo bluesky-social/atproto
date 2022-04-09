@@ -27,6 +27,7 @@ export const postRepoReq = z.object({
 export type PostRepoReq = z.infer<typeof postRepoReq>
 
 router.post('/:did', async (req, res) => {
+  console.log('PROCESSING PUSH')
   // we don't need auth here because the auth is on the data structure 😎
   const { did } = util.checkReqBody(req.params, postRepoReq)
   const bytes = await util.readReqBytes(req)

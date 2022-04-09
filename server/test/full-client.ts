@@ -12,6 +12,8 @@ import { auth, IpldStore, Microblog, Repo } from '@bluesky-demo/common'
 // import * as util from './_util.js'
 // import TID from '../src/repo/tid.js'
 
+const SERVER_URL = 'http://localhost:2583'
+
 type Context = {
   ipldAlice: IpldStore
   alice: Repo
@@ -48,23 +50,14 @@ test.beforeEach(async (t) => {
 })
 
 test('syncs a repo that is behind', async (t) => {
-  const { alice, aliceBlog, ipldBob, namespaceId } = t.context as Context
+  const { alice, aliceBlog } = t.context as Context
 
   await aliceBlog.addPost('hello world!')
-  const car = await alice.getFullHistory()
-
-  await axios.post(`http://localhost:2583/data/repo/${alice.did}`, car)
-
-  const res = await axios.get(`http://localhost:2583/data/root`, {
-    params: { did: alice.did },
-  })
-
-  const prevCid = alice.cid
+  await alice.push(SERVER_URL)
   await aliceBlog.addPost('another one')
-  const diff = await alice.getDiffCar(prevCid)
-  await axios.post(`http://localhost:2583/data/repo/${alice.did}`, diff)
+  await alice.push(SERVER_URL)
 
-  t.pass('yeehaw')
+  t.pass('all good')
 
   // bring bob up to date with early version of alice's repo
   // await util.fillRepo(alice, namespaceId, 150, 10, 50)

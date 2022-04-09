@@ -79,6 +79,21 @@ export class Database {
     return row.length < 1 ? null : CID.parse(row[0].root)
   }
 
+  // SERVER SUBSCRIPTIONS
+  // -----------
+
+  async createSubscription(host: string, user: string): Promise<void> {
+    await this.db.insert({ host, user }).into('subscriptions')
+  }
+
+  async getSubscriptionsForUser(user: string): Promise<string[]> {
+    const res = await this.db
+      .select('host')
+      .from('subscriptions')
+      .where({ user })
+    return res.map((row) => row.host)
+  }
+
   // POSTS
   // -----------
 
