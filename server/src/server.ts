@@ -7,7 +7,7 @@ import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import Routes from './routes/index.js'
-import { IpldStore } from '@bluesky-demo/common'
+import { IpldStore } from '@bluesky/common'
 import Database from './db/index.js'
 import * as error from './error.js'
 

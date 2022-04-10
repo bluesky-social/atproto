@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 import * as util from '../../util.js'
-import { delta, IpldStore, Repo, schema } from '@bluesky-demo/common'
+import { delta, IpldStore, Repo, schema } from '@bluesky/common'
 import Database from '../../db/index.js'
 import { ServerError } from '../../error.js'
 import * as subscriptions from '../../subscriptions.js'

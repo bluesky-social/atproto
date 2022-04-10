@@ -1,5 +1,5 @@
 import * as ucan from 'ucans'
-import { IpldStore, MicroblogDelegator, auth } from '@bluesky-demo/common'
+import { IpldStore, MicroblogDelegator, auth } from '@bluesky/common'
 
 import server from '../src/server.js'
 import Database from '../src/db/index.js'

@@ -1,7 +1,7 @@
 import cmd from '../../lib/command.js'
 import { loadDelegate } from '../../lib/client.js'
 import { REPO_PATH } from '../../lib/env.js'
-import { TID } from '@bluesky-demo/common'
+import { TID } from '@bluesky/common'
 
 export default cmd({
   name: 'edit post',

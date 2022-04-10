@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { MicroblogDelegator, Post, Like } from '@bluesky-demo/common'
+import { MicroblogDelegator, Post, Like } from '@bluesky/common'
 
 import { newClient, runTestServer } from './_util.js'
 

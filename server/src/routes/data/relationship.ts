@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { service, ucanCheck } from '@bluesky-demo/common'
+import { service, ucanCheck } from '@bluesky/common'
 import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import * as subscriptions from '../../subscriptions.js'

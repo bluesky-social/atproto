@@ -1,7 +1,7 @@
 import path from 'path'
 import { promises as fsp } from 'fs'
 import * as ucan from 'ucans'
-import { auth } from '@bluesky-demo/common'
+import { auth } from '@bluesky/common'
 
 export type AccountJson = {
   username: string

@@ -1,5 +1,5 @@
 {
-  "name": "@bluesky-demo/third-party",
+  "name": "@bluesky/third-party",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "build": "esbuild src/index.ts --outfile=dist/index.js"
   },
   "devDependencies": {
-    "@bluesky-demo/common": "*",
+    "@bluesky/common": "*",
     "esbuild": "^0.14.10",
     "esbuild-runner": "^2.2.1"
   },

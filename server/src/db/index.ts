@@ -1,5 +1,5 @@
-import { Like, Post, Timeline, AccountInfo } from '@bluesky-demo/common'
-import { Follow } from '@bluesky-demo/common/dist/repo/types'
+import { Like, Post, Timeline, AccountInfo } from '@bluesky/common'
+import { Follow } from '@bluesky/common/dist/repo/types'
 import knex from 'knex'
 import { CID } from 'multiformats'
 import * as schema from './schema.js'

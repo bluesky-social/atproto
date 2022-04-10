@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { check } from '@bluesky-demo/common'
+import { check } from '@bluesky/common'
 
 export const handler = (
   err: Error,

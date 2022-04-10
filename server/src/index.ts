@@ -1,4 +1,4 @@
-import { IpldStore } from '@bluesky-demo/common'
+import { IpldStore } from '@bluesky/common'
 import Database from './db/index.js'
 import server from './server.js'
 

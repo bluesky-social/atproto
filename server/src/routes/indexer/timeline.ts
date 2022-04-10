@@ -1,6 +1,6 @@
 import express from 'express'
 import { z } from 'zod'
-import { schema } from '@bluesky-demo/common'
+import { schema } from '@bluesky/common'
 import * as util from '../../util.js'
 
 const router = express.Router()

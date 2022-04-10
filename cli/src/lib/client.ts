@@ -1,4 +1,4 @@
-import { MicroblogDelegator } from '@bluesky-demo/common'
+import { MicroblogDelegator } from '@bluesky/common'
 import * as config from '../lib/config.js'
 
 export const loadDelegate = async (

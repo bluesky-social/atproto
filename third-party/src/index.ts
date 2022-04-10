@@ -1,12 +1,7 @@
 import express from "express";
 import cors from "cors";
 import * as ucan from "ucans";
-import {
-  service,
-  UserStore,
-  Blockstore,
-  ucanCheck,
-} from "@bluesky-demo/common";
+import { service, UserStore, Blockstore, ucanCheck } from "@bluesky/common";
 
 // WARNING: For demo only, do not actually store secret keys in plaintext.
 const SECRET_KEY =
