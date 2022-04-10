@@ -9,8 +9,10 @@ if (process.env.IN_MEMORY) {
   blockstore = IpldStore.createInMemory()
   db = Database.memory()
 } else {
-  blockstore = IpldStore.createPersistent()
-  db = Database.sqlite('./dev.sqlite')
+  const bsLocation = process.env.BLOCKSTORE_LOC
+  const dbLocation = process.env.DATABASE_LOC || './dev.sqlite'
+  blockstore = IpldStore.createPersistent(bsLocation)
+  db = Database.sqlite(dbLocation)
 }
 
 db.createTables()

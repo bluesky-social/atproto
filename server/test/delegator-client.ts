@@ -7,7 +7,8 @@ import { newClient, runTestServer } from './_util.js'
 const USE_TEST_SERVER = true
 
 const PORT = 2583
-const SERVER_URL = `http://localhost:${PORT}`
+const HOST = `localhost:${PORT}`
+const SERVER_URL = `http://${HOST}`
 
 let alice: MicroblogDelegator
 let bob: MicroblogDelegator
@@ -81,7 +82,7 @@ test.serial('delete post', async (t) => {
 
 test.serial('follow user', async (t) => {
   // register bob
-  await alice.followUser(bob.did)
+  await alice.followUser(`bob@${HOST}`)
   t.pass('successfully followed user')
 })
 

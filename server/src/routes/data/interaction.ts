@@ -2,14 +2,9 @@ import express from 'express'
 import { z } from 'zod'
 import * as auth from '../../auth.js'
 import * as util from '../../util.js'
+import * as subscriptions from '../../subscriptions.js'
 import { ServerError } from '../../error.js'
-import {
-  schema,
-  check,
-  TID,
-  ucanCheck,
-  flattenLike,
-} from '@bluesky-demo/common'
+import { schema, check, ucanCheck, flattenLike } from '@bluesky-demo/common'
 import { SERVER_DID } from '../../server-identity.js'
 
 const router = express.Router()
@@ -115,8 +110,9 @@ router.post('/', async (req, res) => {
     return store.interactions.addEntry(like.tid, likeCid)
   })
   const db = util.getDB(res)
-  await db.updateRepoRoot(like.author, repo.cid)
   await db.createLike(like, likeCid)
+  await db.updateRepoRoot(like.author, repo.cid)
+  await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
 })
 
@@ -147,6 +143,7 @@ router.delete('/', async (req, res) => {
   const db = util.getDB(res)
   await db.deleteLike(tid.toString(), did, namespace)
   await db.updateRepoRoot(did, repo.cid)
+  await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
 })
 

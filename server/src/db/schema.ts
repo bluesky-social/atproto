@@ -21,6 +21,17 @@ const userDids = {
   create: (table: Table) => {
     table.string('did').primary()
     table.string('username').unique()
+    table.string('host')
+  },
+}
+
+const subscriptions = {
+  name: 'subscriptions',
+  create: (table: Table) => {
+    table.string('host')
+    table.string('user')
+
+    table.foreign('user').references('did').inTable('repo_roots')
   },
 }
 
@@ -73,7 +84,14 @@ const follows = {
   },
 }
 
-const SCHEMAS: Schema[] = [userRoots, userDids, posts, likes, follows]
+const SCHEMAS: Schema[] = [
+  userRoots,
+  userDids,
+  subscriptions,
+  posts,
+  likes,
+  follows,
+]
 
 export const exists = async (db: KnexDB, name: string) => {
   return db.schema.hasTable(name)

@@ -38,25 +38,28 @@ export class Database {
   // USER DIDS
   // -----------
 
-  async registerDid(username: string, did: string): Promise<void> {
-    await this.db.insert({ username, did }).into('user_dids')
+  async registerDid(
+    username: string,
+    did: string,
+    host: string,
+  ): Promise<void> {
+    await this.db.insert({ username, did, host }).into('user_dids')
   }
 
-  async getDidForUser(username: string): Promise<string | null> {
+  async getDidForUser(username: string, host: string): Promise<string | null> {
     const row = await this.db
       .select('did')
       .from('user_dids')
-      .where({ username })
+      .where({ username, host })
     if (row.length < 1) return null
     return row[0].did
   }
 
   async getUsername(did: string): Promise<string | null> {
-    const row = await this.db
-      .select('username')
-      .from('user_dids')
-      .where({ did })
+    const row = await this.db.select('*').from('user_dids').where({ did })
     if (row.length < 1) return null
+    return `${row[0].username}@${row[0].host}`
+
     return row[0].username
   }
 
@@ -77,6 +80,21 @@ export class Database {
       .from('repo_roots')
       .where('did', did)
     return row.length < 1 ? null : CID.parse(row[0].root)
+  }
+
+  // SERVER SUBSCRIPTIONS
+  // -----------
+
+  async createSubscription(host: string, user: string): Promise<void> {
+    await this.db.insert({ host, user }).into('subscriptions')
+  }
+
+  async getSubscriptionsForUser(user: string): Promise<string[]> {
+    const res = await this.db
+      .select('host')
+      .from('subscriptions')
+      .where({ user })
+    return res.map((row) => row.host)
   }
 
   // POSTS

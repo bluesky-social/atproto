@@ -25,7 +25,7 @@ export default cmd({
       console.log(`"${post.text}" - ${post.author_name}`)
       console.log(`Likes: ${post.likes}`)
       console.log(chalk.gray(formatDate(post.time)))
-      console.log(chalk.gray(`id: ${TID.fromStr(post.tid).formatted()}`))
+      console.log(chalk.gray(`id: ${post.tid.formatted()}`))
       console.log(``)
     }
   },

@@ -1,5 +1,6 @@
 import express from 'express'
 import { z } from 'zod'
+import { ServerError } from '../../error.js'
 import * as util from '../../util.js'
 
 const router = express.Router()
@@ -13,7 +14,10 @@ router.get('/', async (req, res) => {
   const { did } = util.checkReqBody(req.query, getRootReq)
   const db = util.getDB(res)
   const root = await db.getRepoRoot(did)
-  res.status(200).send({ root })
+  if (root === null) {
+    throw new ServerError(404, `Could not find root for DID: ${did}`)
+  }
+  res.status(200).send({ root: root.toString() })
 })
 
 export default router

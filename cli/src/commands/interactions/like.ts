@@ -14,7 +14,7 @@ export default cmd({
     const tid = TID.fromStr(args._[1])
     const client = await loadDelegate(REPO_PATH)
     const like = await client.likePost(author, tid)
-    const likeTid = TID.fromStr(like.tid)
+    const likeTid = like.tid
     console.log(`Created like: `, likeTid.formatted())
   },
 })

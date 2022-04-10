@@ -30,12 +30,17 @@ router.post('/register', async (req, res) => {
     ucanCheck.hasAudience(SERVER_DID),
     ucanCheck.hasMaintenancePermission(did),
   )
+  const host = req.get('host')
+  if (!host) {
+    throw new ServerError(500, 'Could not get own host')
+  }
   // create empty repo
   const repo = await Repo.create(blockstore, did, SERVER_KEYPAIR, ucanStore)
   await Promise.all([
-    db.registerDid(username, did),
+    db.registerDid(username, did, host),
     db.createRepoRoot(did, repo.cid),
   ])
+
   return res.sendStatus(200)
 })
 

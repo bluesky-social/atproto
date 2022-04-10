@@ -56,15 +56,27 @@ export const getLocals = (res: Response): Locals => {
   }
 }
 
+export const maybeLoadRepo = async (
+  res: Response,
+  did: string,
+  ucanStore?: ucan.Store,
+): Promise<Repo | null> => {
+  const { db, blockstore } = getLocals(res)
+  const currRoot = await db.getRepoRoot(did)
+  if (!currRoot) {
+    return null
+  }
+  return Repo.load(blockstore, currRoot, SERVER_KEYPAIR, ucanStore)
+}
+
 export const loadRepo = async (
   res: Response,
   did: string,
   ucanStore?: ucan.Store,
 ): Promise<Repo> => {
-  const { db, blockstore } = getLocals(res)
-  const currRoot = await db.getRepoRoot(did)
-  if (!currRoot) {
+  const maybeRepo = await maybeLoadRepo(res, did, ucanStore)
+  if (!maybeRepo) {
     throw new ServerError(404, `User has not registered a repo root: ${did}`)
   }
-  return Repo.load(blockstore, currRoot, SERVER_KEYPAIR, ucanStore)
+  return maybeRepo
 }

@@ -25,6 +25,7 @@ import {
   writeCap,
 } from '../auth/bluesky-capability.js'
 import * as auth from '../auth/index.js'
+import * as service from '../network/service.js'
 import * as delta from './delta.js'
 
 export class Repo implements CarStreamable {
@@ -131,6 +132,7 @@ export class Repo implements CarStreamable {
   static async fromCarFile(
     buf: Uint8Array,
     store: IpldStore,
+    emit?: (evt: delta.Event) => Promise<void>,
     keypair?: Keypair,
     ucanStore?: ucan.Store,
   ) {
@@ -146,7 +148,9 @@ export class Repo implements CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    return Repo.load(store, root, keypair, ucanStore)
+    const repo = await Repo.load(store, root, keypair, ucanStore)
+    await repo.verifySetOfUpdates(null, repo.cid, emit)
+    return repo
   }
 
   // ROOT OPERATIONS
@@ -184,6 +188,7 @@ export class Repo implements CarStreamable {
     }
     const newCids = update.newCids
     const tokenCid = await this.ucanForOperation(update)
+    newCids.add(tokenCid)
     const root: RepoRoot = {
       did: this.did,
       prev: this.cid,
@@ -193,8 +198,6 @@ export class Repo implements CarStreamable {
       relationships: this.relationships.cid,
     }
     const rootCid = await this.blockstore.put(root)
-    newCids.add(tokenCid)
-    newCids.add(rootCid)
     const commit: Commit = {
       root: rootCid,
       sig: await this.keypair.sign(rootCid.bytes),
@@ -296,6 +299,23 @@ export class Repo implements CarStreamable {
     return this.blockstore.put(foundUcan.ucan.encoded())
   }
 
+  // PUSH/PULL TO REMOTE
+  // -----------
+
+  async push(url: string): Promise<void> {
+    const remoteRoot = await service.getRemoteRoot(url, this.did)
+    const car = await this.getDiffCar(remoteRoot)
+    await service.pushRepo(url, this.did, car)
+  }
+
+  async pull(url: string): Promise<void> {
+    const car = await service.pullRepo(url, this.did, this.cid)
+    if (car === null) {
+      throw new Error(`Could not find repo for did: ${this.did}`)
+    }
+    await this.loadAndVerifyDiff(car)
+  }
+
   // VERIFYING UPDATES
   // -----------
 
@@ -315,11 +335,15 @@ export class Repo implements CarStreamable {
     to: CID,
     emit?: (evt: delta.Event) => Promise<void>,
   ): Promise<void> {
-    if (from === null || from.equals(to)) return
+    if (to.equals(from)) return
     const toRepo = await Repo.load(this.blockstore, to)
     const root = await toRepo.getRoot()
     if (!root.prev) {
-      throw new Error('Could not find start repo root')
+      if (from === null) {
+        return
+      } else {
+        throw new Error('Could not find start repo root')
+      }
     }
     await this.verifySetOfUpdates(from, root.prev, emit)
     const prevRepo = await Repo.load(this.blockstore, root.prev)
@@ -355,6 +379,9 @@ export class Repo implements CarStreamable {
       throw new Error('No previous version found at root')
     } else if (!root.prev.equals(prev.cid)) {
       throw new Error('Previous version root CID does not match')
+    }
+    if (root.did !== prev.did) {
+      throw new Error('Changes in DID are not allowed at this point')
     }
     const newCids = new CidSet(root.new_cids)
     let events: delta.Event[] = []
