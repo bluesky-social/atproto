@@ -13,11 +13,12 @@ const router = express.Router()
 export const registerReq = z.object({
   did: z.string(),
   username: z.string(),
+  createRepo: z.boolean(),
 })
 export type registerReq = z.infer<typeof registerReq>
 
 router.post('/register', async (req, res) => {
-  const { username, did } = util.checkReqBody(req.body, registerReq)
+  const { username, did, createRepo } = util.checkReqBody(req.body, registerReq)
   if (username.startsWith('did:')) {
     throw new ServerError(
       400,
@@ -34,12 +35,15 @@ router.post('/register', async (req, res) => {
   if (!host) {
     throw new ServerError(500, 'Could not get own host')
   }
+
   // create empty repo
-  const repo = await Repo.create(blockstore, did, SERVER_KEYPAIR, ucanStore)
-  await Promise.all([
-    db.registerDid(username, did, host),
-    db.createRepoRoot(did, repo.cid),
-  ])
+  if (createRepo) {
+    const repo = await Repo.create(blockstore, did, SERVER_KEYPAIR, ucanStore)
+    await Promise.all([
+      db.registerDid(username, did, host),
+      db.createRepoRoot(did, repo.cid),
+    ])
+  }
 
   return res.sendStatus(200)
 })

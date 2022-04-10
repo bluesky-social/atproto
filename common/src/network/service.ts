@@ -1,8 +1,25 @@
 import axios from 'axios'
 import { CID } from 'multiformats'
-import { assureAxiosError } from './util.js'
+import { assureAxiosError, authCfg } from './util.js'
 import * as check from '../common/check.js'
 import { schema as repoSchema } from '../repo/types.js'
+import * as ucan from 'ucans'
+
+export const register = async (
+  url: string,
+  username: string,
+  did: string,
+  createRepo: boolean,
+  token: ucan.Chained,
+): Promise<void> => {
+  const data = { username, did, createRepo }
+  try {
+    await axios.post(`${url}/id/register`, data, authCfg(token))
+  } catch (e) {
+    const err = assureAxiosError(e)
+    throw new Error(err.message)
+  }
+}
 
 export const lookupDid = async (
   url: string,
@@ -20,6 +37,16 @@ export const lookupDid = async (
       return null
     }
     throw new Error(err.message)
+  }
+}
+
+export const getServerDid = async (url: string): Promise<string> => {
+  try {
+    const res = await axios.get(`${url}/.well-known/did.json`)
+    return res.data.id
+  } catch (e) {
+    const err = assureAxiosError(e)
+    throw new Error(`Could not retrieve server did ${err.message}`)
   }
 }
 

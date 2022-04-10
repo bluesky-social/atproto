@@ -39,15 +39,7 @@ export class MicroblogDelegator {
 
   async getServerDid(): Promise<string> {
     if (!this.serverDid) {
-      let did: string
-      try {
-        const res = await axios.get(`${this.url}/.well-known/did.json`)
-        did = res.data.id
-      } catch (e) {
-        const err = assureAxiosError(e)
-        throw new Error(`Could not retrieve server did ${err.message}`)
-      }
-      this.serverDid = did
+      this.serverDid = await service.getServerDid(this.url)
     }
     return this.serverDid
   }
@@ -99,14 +91,8 @@ export class MicroblogDelegator {
   }
 
   async register(username: string): Promise<void> {
-    const data = { username, did: this.did }
     const token = await this.maintenanceToken()
-    try {
-      await axios.post(`${this.url}/id/register`, data, authCfg(token))
-    } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
-    }
+    await service.register(this.url, username, this.did, true, token)
   }
 
   async lookupDid(username: string): Promise<string | null> {

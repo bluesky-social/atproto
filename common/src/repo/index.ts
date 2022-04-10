@@ -276,7 +276,7 @@ export class Repo implements CarStreamable {
   // -----------
 
   async ucanForOperation(update: UpdateData): Promise<CID> {
-    if (!this.keypair) {
+    if (!this.keypair || !this.ucanStore) {
       throw new Error('No keypair provided. Repo is read-only.')
     }
     const neededCap = writeCap(
@@ -299,8 +299,22 @@ export class Repo implements CarStreamable {
     return this.blockstore.put(foundUcan.ucan.encoded())
   }
 
+  async maintenanceToken(forDid: string): Promise<ucan.Chained> {
+    if (!this.keypair || !this.ucanStore) {
+      throw new Error('No keypair provided. Repo is read-only.')
+    }
+    return auth.delegateMaintenance(forDid, this.keypair, this.ucanStore)
+  }
+
   // PUSH/PULL TO REMOTE
   // -----------
+
+  async register(url: string, username: string): Promise<void> {
+    const serverDid = await service.getServerDid(url)
+    const token = await this.maintenanceToken(serverDid)
+    await service.register(url, username, this.did, false, token)
+    await this.push(url)
+  }
 
   async push(url: string): Promise<void> {
     const remoteRoot = await service.getRemoteRoot(url, this.did)

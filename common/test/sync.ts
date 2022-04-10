@@ -87,14 +87,3 @@ test('syncs a repo that is behind', async (t) => {
 
   await util.checkRepo(t, repoBob, namespaceId, allData)
 })
-
-test('syncs a non-historical copy of a repo', async (t) => {
-  const { repoAlice, namespaceId } = t.context as Context
-  const data = await util.fillRepo(repoAlice, namespaceId, 150, 20, 50)
-  const car = await repoAlice.getCarNoHistory()
-
-  const ipld = IpldStore.createInMemory()
-  const repoBob = await Repo.fromCarFile(car, ipld)
-
-  await util.checkRepo(t, repoBob, namespaceId, data)
-})
