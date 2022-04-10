@@ -9,7 +9,6 @@
   "workspaces": [
     "common",
     "cli",
-    "third-party",
     "server"
   ],
   "scripts": {
