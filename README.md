@@ -1,216 +1,166 @@
 # Bluesky hack
 
-This is a proof of concept for a 'decentralized social network'.
+Welcome to the Bluesky network prototype 🌞
 
-The demo revolves around two main concepts:
+To learn more about the Bluesky network check out our docs on [Network architecture]() and the [Blogpost on self-authenticating data structures]().
 
-**Content Addressing:** Data is stored and distributed in a content addressed manner. A user's profile & post history can be represented by a single hash.
+We encourage you to play around with the tools here, but please do not use anything here in production. This is a _proof of concept_ meant to demonstrate the core functionality of the bluesky network.
 
-**User-controlled Keys & Auth:** Users register a public key to their account and sign updates & authorization tokens in the form of [ucans](https://github.com/ucan-wg/ts-ucan/) 
+## What's here?
 
-## Running the Demo
+This is a monorepo containing three packages:
+
+- `common`: This is the bluesky SDK that contains implementations of:
+  - the repository data structure structure 
+  - a sample network namespace (microblogging) with both a full client and delegator client implementation
+  - an authorization library for working with bluesky-capable UCANs
+  - some helpers for making calls to a bluesky data server
+
+  This package is published on npm as [bsky](https://www.npmjs.com/package/bsky)
+
+- `server`: This is an implementation of a bluesky server. For simplicity's sake, it actually combines the function of three "roles" in the network:
+  - **Identity:** 
+    - maintains a mapping of username -> DID
+  - **Data:** 
+    - maintains a pointer to the latest root CID of a data repository. 
+    - verifies the authority of pushes to your repo and updates the root.
+    - servers the repository for pulls.
+    - acts as a delgatee and makes udpates to your repository for properly authorized requests
+    - sends updates to other data/indexing servers that have subscribed to a particular DID that it is hosting
+  - **Indexing:**
+    - stores an indexed version of repositories that it is hosting or that its user's are following
+    - returned global view of data including follower lists, aggregated like counts, and user timelines.
+
+- `cli`: This is a basic command line interface for interactions with the bluesky network :
+  - creating a local repository
+  - registering a user
+  - creating/editing/deleting posts
+  - creating/deleting likes
+  - viewing a user's timeline
+  - viewing a user's feed
+
+  _Note: the cli uses a delegator client at the moment. We are adding the option to use a full client soon._
+
+## Quick use
 _Requires Node>=15, and yarn_
 
-There are four components to the demo:
-- a "bluesky" server (federated data & identity management)
-- the frontend (simple micro-blogging application)
-- the command-line (simple micro-blogging CLI)
-- a third-party server that a user can delegate permission to to post on it's behalf (think [Buffer](https://buffer.com/))
+Want to jump right in? Follow these steps to get a sample two server network up and running.
 
-This project is setup in a yarn workspace. To install dependencies for all sub-projects, just run `yarn` from the project root. To build all sub-projects, run `yarn build` from the project root.
+This demo takes four terminal windows: 
+- two servers to show of data federation
+- two cli clients representing two users on separate servers interaction
 
-### Bluesky Server
+The number in parantheses tells you which terminal to run each command in
 
-Run the main bluesky server
+From project root:
+```bash
+# install dependencies
+(1) yarn
 
-```sh
-cd server
-yarn dev
+# build projects
+(1) yarn build
+
+# run server
+(1) yarn server # runs on localhost:2583
+
+# in a separate terminal, run a second server
+(2) yarn server:alt # runs on localhost:2584
+
+# set an env var to store alice's repo in a scoped dir
+(3) export SKY_REPO_PATH="~/.sky-alice"
+
+# set an env var to store bob's repo in a scoped dir
+(4) export SKY_REPO_PATH="~/.sky-bob"
+
+# register alice
+(3) yarn cli init
+# prompt with 'alice' for username, 'localhost:2583' for host & true for registration
+
+# register bob
+(4) yarn cli init
+# prompt with 'bob' for username, 'localhost:2584' for host & true for registration
+
+# make a couple posts as alice
+(3) yarn cli post "hello world"
+(3) yarn cli post "howdy"
+
+# follow alice as bob
+(4) yarn cli follow alice@localhost:2583
+
+# like alice's post
+(4) yarn cli like alice@localhost:2583 {post_id from alice post} # the post id has the format `3iwc-gvs-ehpk-2s`
+
+# view your timeline
+(4) yarn cli timeline
+
+# list your follows
+(3/4) yarn cli list follows
+
+# list your followers
+(3/4) yarn cli list followers
+
+# list your feed
+(3/4) yarn cli feed
+
+# list your followers
+(3/4) yarn cli list followers
+
+# list your feed
+(3/4) yarn cli feed
+
+# view alice's feed as bob
+(4) yarn cli feed alice@localhost:2583
+
+# Keep playing around. Try unliking, deleting or editing posts, or add a third user into the mix! They can be registered to one of the existing servers
 ```
 
-Server will be running at `http://localhost:2583`
+## Documentation
+We are putting together more detailed documentation for the server API as well as the SDK.
 
-### Frontend
+If you are inclined to play with either, your best option is to check the tests to see how to use each part of the library.
 
-In another console tab, run the frontend
+Specifically:
 
-```sh
-cd frontend
-yarn dev
-```
+`server/test/delegator.ts` contains an example of a delegator client (the simplest client to work with)
 
-Go to `http://localhost:3005` to try the demo.
+`server/test/indexer.ts` contains an example of multiple users interaction on a 2 server network
 
-### Command-line
+`common/test/repo.ts` contains an examples of directly performing updates to a user repo
 
-In another console tab, run the CLI
+`common/test/microblog.ts` contains an examples of using the microblog library to create/update microblog namespace objects in the repository
 
-```sh
-cd cli
-# build, if needed, with `yarn build`
-yarn cli
-```
+For communicating directly with the server api, there is a schema above each route that details the exact parameters it expects to receive. Any post route will require a valid UCAN as a Bearer token. We recommend using the SDK make these requests as these tokens can be difficult to roll by hand.
 
-### Third-party server (optional)
-To enable third-party posting, run the third-party server as well in another console
-```sh
-cd third-party
-yarn dev
-```
+## Notes for code spelunkers
+We hope you jump into the code to explore these concepts alongside us! Feel free to create issues/discussion with problems that you come across or questions that you have.
 
-Server will be running on `http://localhost:2584`
+A few notes for the curious ones that find themselves trawling the depths of the code:
 
-## What's going on here?
-### Building blocks
-- [Ucans](https://github.com/ucan-wg/ts-ucan/): Ucans are distributed user-controlled & signed authorization tokens. They are signed JWTs that indicate what a given user (or keypair) is capable of. A user registers a "root DID" that has full account access, and using that keypair, can delegate some subset of their capabilities (such as posting) to another device, user, or third-party platform.
-- [CAR files](https://github.com/ipld/js-car): CAR files are "Content Addressable aRchives". They encode and serialize some set of content addressable objects and allow you to indicate a "root" of the content addressed structure. CAR files allow us to take advantage of content addressing while avoiding the performance hit of content discovery in an in-browser DHT.
-- [Hash Array Mapped Trie(HAMT)](https://github.com/rvagg/js-ipld-hashmap): A data structure that functions like a hashmap, but under the hood stores values in a trie. 
+### Namespaces
 
-### Registration
-The user creates an keypair and signs an empty (no attenuation) UCAN. This servers as proof of ownership of the key.
+Data is separated in the user repository by namespace.
 
-They then send the signed ucan and their requested username to the server.
+A user's microblogging data live separately from their community forum data which lives separate from their long form writing data and so on. Each namespace following its respective data spec.
 
-The server parses and validates the UCAN, checks to make sure the username is available, and registers the DID that issued the UCAN to the requested username.
+We've implemented only one sample namespace here: microblogging.
 
-_Note: currently keys are stored in localStorage, which is not a safe location in production_
+You'll notice that we sometimes switch between using the words "interactions" and "likes". The reason for this is that the user repository speaks in terms of "interactions", which is any sort of interaction generated by an application. These may be likes, retweets, upvotes, shares, rsvps, etc. Our current (simplified) microblogging spec only allows for "likes" as interactions.
 
-### Posting
-The user maintains a merkelized "User Store" that wraps around a HAMT (described in more detail later). When they create a new post, they add it to the HAMT, indexed by the current post count.
+Therefore we try to talk about the general concept as "interactions" and the particular as "likes". There is some gray area here where those two concepts blur together and will be better demarcated as we develop our schema system.
 
-The user signs a UCAN with a valid `POST` permission for their username.
+### DIDs and UCANs
 
-The user serializes their user store to a CAR file, and sends it to the server, adding the encoded UCAN to the request in the form of a Bearer token.
+In this prototype a user's root DID is a simple `did:key`. In the future, these will be more permanent identifiers such as `did:bsky` (read our proposal in the architecture docs) or `did:ion`. 
 
-The server validates the UCAN, ensuring that it has valid `POST` permission, decodes the CAR file, stores it in it's datastore (currently: memory), and updates the user's data root to the root of the CAR file.
+You'll notice that we delegate a UCAN from the root key to the root key (which is a noop), this is to mirror the process of receiving a fully delegated UCAN _from your actual root key_ to a _fully permissioned device key_.
 
-### Listing posts
-Posts are all public for the time being, so no authentication is needed.
+You'll also notice that the DID for the microblogging namespace is just `did:bsky:microblog` (which is not an actual valid DID). This is a stand in until we have an addressed network for schemas.
 
-The user requests the data for a given DID.
+UCAN permissions are also simplified at the current moment, allowing for scoped `WRITE` permission or full-repo `MAINTENANCE` permission. These permissions will be expanding in the future to allow presenting CRUD operations, and more detailed maintenance (ie creation vs merging vs cleanup, etc)
 
-The server serializes the user store to a CAR file and sends it to the user.
+### Client types
 
-The user decodes the CAR file and displays the posts to the user.
+In the architecture overview, we specify three client types: full, light, and delegator. This library only contains implementaions of full and delegator. Thus we use delegator for light weight operations and a full client when we want the entire repository. 
 
-
-## User Store
-The user store is a content-addressed merkelized data structure that encodes some basic information about a user and their post history.
-
-Posts are stored in a HAMT, indexed by the current post count.
-
-An [dag-cbor](https://github.com/ipld/js-dag-cbor) encoded [IPLD](https://github.com/ipld/ipld) block contains some basic information about a user and a pointer to the current root of the HAMT.
-
-```ts
-// dag-cbor encoded user root
-type User = {
-  name: string
-  did: string
-  nextPost: number
-  postsRoot: CID
-  follows: Follow[]
-}
-
-// stored in HAMT
-type Post = {
-  user: string
-  text: string
-}
-
-type Follow = {
-  username: string
-  did: string
-}
-```
-
-The CID of the IPLD-encoded "User" block is then signed by the user and added to to an "Commit" IPLD object:
-```ts
-type Commit = {
-  user: CID
-  sig: Uint8Array
-}
-```
-
-The CID of the Commit serves as the root of the datastructure.
-
-## Persistence
-User data is persisted in [Level](https://github.com/Level/level) which is a simple key-value store. This **Blockstore** is a mapping of `CID -> Bytes` and represents the consituent blocks that make up the UserStore.
-
-## Server API
-The server uses [Ucans](https://github.com/ucan-wg/ts-ucan/) for authorization.
-
-### `POST /register`
-
-**Body:**
-```
-{ 
-  name: string
-}
-```
-
-**Auth:**
-A Ucan no attenuation. This token is just used to prove key ownership.
-
----
-
-### `POST /update`
-
-**Body:**
-Binary [CAR file](https://github.com/ipld/go-car) representing a valid user store
-
-**Auth:**
-A valid Ucan with attenuation for the following resource:
-```
-{
-  'bluesky': '${USERNAME}'
-  'cap': 'POST'
-}
-```
-
-### `GET /users`
-
-**Params:**
-- `id`: User's DID
-
-**Returns:**
-An array of all user DIDs
-```
-[
-  did:key:abcdef.....,
-  did:key:123456....,
-  ...
-]
-```
-
-### `GET /user/:id`
-
-**Params:**
-- `id`: User's DID
-
-**Returns:**
-Binary [CAR file](https://github.com/ipld/go-car) representing the user's current user store
-
-### `Get /.well-known/did.json`
-
-**Returns:**
-The server's DID
-```
-{
-  id: "did:key:z6Mkmi4eUvWtRAP6PNB7MnGfUFdLkGe255ftW9sGo28uv44g"
-}
-```
-
-### `Get /.well-known/webfinger?resource=${username}`
-
-**Params:**
-- `resource`: The user's name
-
-**Returns:**
-A (very sparse) webfinger document. It currently only contains the user's DID.
-```
-{
-  id: "did:key:zAbc...."
-}
-```
-
+The main ramification of this is that data server subscribers must receive the _full repo_ of the users that they subscribe to. Once we add in light clients, they can receive only the _sections_ the repo that they are interested in (for instance a single post or a like) while having the same trust model as a full repo.
 
