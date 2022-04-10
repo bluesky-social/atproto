@@ -8,7 +8,7 @@
     "dev": "tsc -w --project tsconfig.json & nodemon -q -w dist dist/index.js",
     "alt": "BLOCKSTORE_LOC='blockstore2' DATABASE_LOC='dev2.sqlite' PORT='2584' yarn dev",
     "build": "(cd ../common && yarn build) && tsc --project tsconfig.json",
-    "test": "ava -v test/federation.ts",
+    "test": "ava -v test/*.ts",
     "temp": "IN_MEMORY=true yarn dev",
     "alt-temp": "IN_MEMORY=true yarn alt",
     "wipe-db": "rimraf dev.sqlite && rimraf blockstore && rimraf dev2.sqlite && rimraf blockstore2"

@@ -38,9 +38,10 @@ router.post('/', async (req, res) => {
       throw new ServerError(404, `Could not find user: ${username}`)
     }
     target = did
+    await db.registerDid(name, did, host)
     await service.subscribe(`http://${host}`, target, `http://${ownHost}`)
   } else {
-    const did = await db.getDidForUser(name)
+    const did = await db.getDidForUser(name, ownHost)
     if (did === null) {
       throw new ServerError(404, `Could not find user: ${username}`)
     }

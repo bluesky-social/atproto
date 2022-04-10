@@ -1,17 +1,16 @@
 import test from 'ava'
 
-import {
-  TID,
-  MicroblogDelegator,
-  Post,
-  TimelinePost,
-} from '@bluesky-demo/common'
+import { MicroblogDelegator, Post, TimelinePost } from '@bluesky-demo/common'
 import { newClient, runTestServer } from './_util.js'
 
 const USE_TEST_SERVER = true
 
-const PORT = USE_TEST_SERVER ? 2584 : 2583
-const SERVER_URL = `http://localhost:${PORT}`
+const PORT_ONE = USE_TEST_SERVER ? 2585 : 2583
+const HOST_ONE = `localhost:${PORT_ONE}`
+const SERVER_ONE = `http://${HOST_ONE}`
+const PORT_TWO = USE_TEST_SERVER ? 2586 : 2584
+const HOST_TWO = `localhost:${PORT_TWO}`
+const SERVER_TWO = `http://${HOST_TWO}`
 
 let alice: MicroblogDelegator
 let bob: MicroblogDelegator
@@ -20,12 +19,13 @@ let dan: MicroblogDelegator
 
 test.before('run server', async () => {
   if (USE_TEST_SERVER) {
-    await runTestServer(PORT)
+    await runTestServer(PORT_ONE)
+    await runTestServer(PORT_TWO)
   }
-  alice = await newClient(SERVER_URL)
-  bob = await newClient(SERVER_URL)
-  carol = await newClient(SERVER_URL)
-  dan = await newClient(SERVER_URL)
+  alice = await newClient(SERVER_ONE)
+  bob = await newClient(SERVER_ONE)
+  carol = await newClient(SERVER_TWO)
+  dan = await newClient(SERVER_TWO)
   await alice.register('alice')
   await bob.register('bob')
   await carol.register('carol')
@@ -33,9 +33,9 @@ test.before('run server', async () => {
 })
 
 test.serial('follow multiple users', async (t) => {
-  await alice.followUser(bob.did)
-  await alice.followUser(carol.did)
-  await alice.followUser(dan.did)
+  await alice.followUser(`bob@${HOST_ONE}`)
+  await alice.followUser(`carol@${HOST_TWO}`)
+  await alice.followUser(`dan@${HOST_TWO}`)
   t.pass('followed users')
 })
 

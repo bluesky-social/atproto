@@ -21,6 +21,7 @@ const userDids = {
   create: (table: Table) => {
     table.string('did').primary()
     table.string('username').unique()
+    table.string('host')
   },
 }
 
