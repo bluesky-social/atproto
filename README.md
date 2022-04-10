@@ -1,5 +1,76 @@
 # Bluesky hack
 
+## Quick use
+_Requires Node>=15, and yarn_
+
+This demo takes four terminal windows: 
+- two servers to show of data federation
+- two cli clients representing two users on separate servers interaction
+
+The number in parantheses tells you which terminal to run each command in
+
+From project root:
+```bash
+# install dependencies
+(1) yarn
+
+# build projects
+(1) yarn build
+
+# run server
+(1) yarn server # runs on localhost:2583
+
+# in a separate terminal, run a second server
+(2) yarn server:alt # runs on localhost:2584
+
+# set an env var to store alice's repo in a scoped dir
+(3) export SKY_REPO_PATH="~/.sky-alice"
+
+# set an env var to store bob's repo in a scoped dir
+(4) export SKY_REPO_PATH="~/.sky-bob"
+
+# register alice
+(3) yarn cli init
+# prompt with 'alice' for username, 'localhost:2583' for host & true for registration
+
+# register bob
+(4) yarn cli init
+# prompt with 'bob' for username, 'localhost:2584' for host & true for registration
+
+# make a couple posts as alice
+(3) yarn cli post "hello world"
+(3) yarn cli post "howdy"
+
+# follow alice as bob
+(4) yarn cli follow alice@localhost:2583
+
+# like alice's post
+(4) yarn cli like alice@localhost:2583 {post_id from alice post} # the post id has the format `3iwc-gvs-ehpk-2s`
+
+# view your timeline
+(4) yarn cli timeline
+
+# list your follows
+(3/4) yarn cli list follows
+
+# list your followers
+(3/4) yarn cli list followers
+
+# list your feed
+(3/4) yarn cli feed
+
+# list your followers
+(3/4) yarn cli list followers
+
+# list your feed
+(3/4) yarn cli feed
+
+# view alice's feed as bob
+(4) yarn cli feed alice@localhost:2583
+
+# Keep playing around. Try unliking, deleting or editing posts, or add a third user into the mix! They can be registered to one of the existing servers
+```
+
 This is a proof of concept for a 'decentralized social network'.
 
 The demo revolves around two main concepts:
