@@ -1,4 +1,4 @@
-# Bluesky hack
+# Bluesky
 
 Welcome to the Bluesky network prototype 🌞
 
@@ -6,7 +6,7 @@ To learn more about the Bluesky network check out our docs on [Network architect
 
 We encourage you to play around with the tools here, but please do not use anything here in production. This is a _proof of concept_ meant to demonstrate the core functionality of the bluesky network.
 
-## What's here?
+## 🔍 What's here?
 
 This is a monorepo containing three packages:
 
@@ -41,7 +41,9 @@ This is a monorepo containing three packages:
 
   _Note: the cli uses a delegator client at the moment. We are adding the option to use a full client soon._
 
-## Quick use
+---
+
+## 🏎️ Quick use
 _Requires Node>=15, and yarn_
 
 Want to jump right in? Follow these steps to get a sample two server network up and running.
@@ -114,7 +116,9 @@ From project root:
 # Keep playing around. Try unliking, deleting or editing posts, or add a third user into the mix! They can be registered to one of the existing servers
 ```
 
-## Documentation
+---
+
+## 🗒️ Documentation
 We are putting together more detailed documentation for the server API as well as the SDK.
 
 If you are inclined to play with either, your best option is to check the tests to see how to use each part of the library.
@@ -131,7 +135,9 @@ Specifically:
 
 For communicating directly with the server api, there is a schema above each route that details the exact parameters it expects to receive. Any post route will require a valid UCAN as a Bearer token. We recommend using the SDK make these requests as these tokens can be difficult to roll by hand.
 
-## Notes for code spelunkers
+---
+
+## 🔦 Notes for code spelunkers
 We hope you jump into the code to explore these concepts alongside us! Feel free to create issues/discussion with problems that you come across or questions that you have.
 
 A few notes for the curious ones that find themselves trawling the depths of the code:
