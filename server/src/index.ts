@@ -1,6 +1,14 @@
+import dotenv from 'dotenv'
 import { IpldStore } from '@bluesky/common'
 import Database from './db/index.js'
 import server from './server.js'
+
+const env = process.env.ENV
+if (env) {
+  dotenv.config({ path: `./.${env}.env` })
+} else {
+  dotenv.config()
+}
 
 let blockstore: IpldStore
 let db: Database

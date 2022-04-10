@@ -1,4 +1,6 @@
-# CLI
+# @bluesky/cli
+
+This is the commandline interface to interact with the SKY protocol.
 
 ## Quick use guide
 Run `yarn` from the project root to install all dependencies

@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "wsrun -c \"build\"",
-    "wipe-db": "rimraf server/blockstore && rimraf server/user_dids && rimraf server/user_roots && rimraf third-party/blockstore"
+    "wipe-db": "yarn workspace @bluesky/server wipe-db"
   },
   "devDependencies": {
     "rimraf": "^3.0.2",
