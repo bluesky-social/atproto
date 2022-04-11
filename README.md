@@ -11,7 +11,7 @@ We encourage you to play around with the tools here, but please do not use anyth
 This is a monorepo containing three packages:
 
 - `common`: This is the bluesky SDK that contains implementations of:
-  - the repository data structure structure 
+  - the repository data structure 
   - a sample network namespace (microblogging) with both a full client and delegator client implementation
   - an authorization library for working with bluesky-capable UCANs
   - some helpers for making calls to a bluesky data server
@@ -24,8 +24,8 @@ This is a monorepo containing three packages:
   - **Data:** 
     - maintains a pointer to the latest root CID of a data repository. 
     - verifies the authority of pushes to your repo and updates the root.
-    - servers the repository for pulls.
-    - acts as a delgatee and makes udpates to your repository for properly authorized requests
+    - serves the repository for pulls.
+    - acts as a delgatee and makes updates to your repository for properly authorized requests
     - sends updates to other data/indexing servers that have subscribed to a particular DID that it is hosting
   - **Indexing:**
     - stores an indexed version of repositories that it is hosting or that its user's are following
@@ -49,7 +49,7 @@ _Requires Node>=15, and yarn_
 Want to jump right in? Follow these steps to get a sample two server network up and running.
 
 This demo takes four terminal windows: 
-- two servers to show of data federation
+- two servers to show off data federation (you can use just one here if you like)
 - two cli clients representing two users on separate servers interaction
 
 The number in parantheses tells you which terminal to run each command in
@@ -121,7 +121,7 @@ From project root:
 ## 🗒️ Documentation
 We are putting together more detailed documentation for the server API as well as the SDK.
 
-If you are inclined to play with either, your best option is to check the tests to see how to use each part of the library.
+If you are inclined to play with either, your best bet is to check the tests to see how to use each part of the library.
 
 Specifically:
 
@@ -133,7 +133,7 @@ Specifically:
 
 `common/test/microblog.ts` contains an examples of using the microblog library to create/update microblog namespace objects in the repository
 
-For communicating directly with the server api, there is a schema above each route that details the exact parameters it expects to receive. Any post route will require a valid UCAN as a Bearer token. We recommend using the SDK make these requests as these tokens can be difficult to roll by hand.
+For communicating directly with the server api, there is a schema above each route that details the exact parameters it expects to receive. Any post route will require a valid UCAN as a Bearer token. We recommend using the SDK to make these requests as these tokens can be difficult to roll by hand.
 
 ---
 
@@ -146,7 +146,7 @@ A few notes for the curious ones that find themselves trawling the depths of the
 
 Data is separated in the user repository by namespace.
 
-A user's microblogging data live separately from their community forum data which lives separate from their long form writing data and so on. Each namespace following its respective data spec.
+A user's microblogging data lives separately from their community forum data which lives separate from their long form writing data and so on. Each namespace following its respective data spec.
 
 We've implemented only one sample namespace here: microblogging.
 
@@ -158,7 +158,7 @@ Therefore we try to talk about the general concept as "interactions" and the par
 
 In this prototype a user's root DID is a simple `did:key`. In the future, these will be more permanent identifiers such as `did:bsky` (read our proposal in the architecture docs) or `did:ion`. 
 
-You'll notice that we delegate a UCAN from the root key to the root key (which is a noop), this is to mirror the process of receiving a fully delegated UCAN _from your actual root key_ to a _fully permissioned device key_.
+You'll notice that we delegate a UCAN from the root key to the root key (which is a no-op), this is to mirror the process of receiving a fully delegated UCAN _from your actual root key_ to a _fully permissioned device key_.
 
 You'll also notice that the DID for the microblogging namespace is just `did:bsky:microblog` (which is not an actual valid DID). This is a stand in until we have an addressed network for schemas.
 
