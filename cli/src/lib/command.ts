@@ -10,7 +10,7 @@ export const registeredCommands: RegisteredCmd[] = []
 
 export const CATEGORIES = {
   setup: 'Setup',
-  net: 'Networking',
+  repo: 'Repo',
   social: 'Social',
   posts: 'Posts',
   interactions: 'Interactions',

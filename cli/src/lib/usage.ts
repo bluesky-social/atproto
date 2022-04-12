@@ -32,7 +32,7 @@ export function usage(err: any) {
     cats.push({ label: CATEGORIES[category], lhs, rhs })
   }
   addcat('setup')
-  addcat('net')
+  addcat('repo')
   addcat('social')
   addcat('posts')
   addcat('interactions')

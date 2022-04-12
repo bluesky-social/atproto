@@ -9,6 +9,7 @@
 .DS_STORE
 DS_STORE
 node_modules
+yarn-error.log
 dist
 analytics.txt
 
