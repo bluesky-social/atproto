@@ -43,7 +43,11 @@ export class Database {
     did: string,
     host: string,
   ): Promise<void> {
-    await this.db.insert({ username, did, host }).into('user_dids')
+    await this.db
+      .insert({ username, did, host })
+      .into('user_dids')
+      .onConflict()
+      .ignore()
   }
 
   async getDidForUser(username: string, host: string): Promise<string | null> {
