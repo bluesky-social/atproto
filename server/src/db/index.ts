@@ -216,17 +216,23 @@ export class Database {
   async listFollows(creator: string): Promise<Follow[]> {
     const list = await this.db('follows')
       .join('user_dids', 'follows.target', '=', 'user_dids.did')
-      .select('follows.target', 'user_dids.username')
+      .select('follows.target', 'user_dids.username', 'user_dids.host')
       .where('follows.creator', creator)
-    return list.map((f) => ({ did: f.target, username: f.username }))
+    return list.map((f) => ({
+      did: f.target,
+      username: `${f.username}@${f.host}`,
+    }))
   }
 
   async listFollowers(target: string): Promise<Follow[]> {
     const list = await this.db('follows')
       .join('user_dids', 'follows.creator', '=', 'user_dids.did')
-      .select('follows.creator', 'user_dids.username')
+      .select('follows.creator', 'user_dids.username', 'user_dids.host')
       .where('follows.target', target)
-    return list.map((f) => ({ did: f.creator, username: f.username }))
+    return list.map((f) => ({
+      did: f.creator,
+      username: `${f.username}@${f.host}`,
+    }))
   }
 
   async followCount(creator: string): Promise<number> {
