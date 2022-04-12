@@ -523,28 +523,26 @@ export class Repo implements CarStreamable {
 
   async writeCommitsToCarStream(
     car: BlockWriter,
-    from: CID,
-    to: CID | null,
+    newestCommit: CID,
+    oldestCommit: CID | null,
   ): Promise<void> {
-    const commit = await this.blockstore.get(from, schema.commit)
+    if (oldestCommit && oldestCommit.equals(newestCommit)) return
+    const commit = await this.blockstore.get(newestCommit, schema.commit)
     const { new_cids, prev } = await this.blockstore.get(
       commit.root,
       schema.repoRoot,
     )
-    await this.blockstore.addToCar(car, from)
+    await this.blockstore.addToCar(car, newestCommit)
     await this.blockstore.addToCar(car, commit.root)
 
     await Promise.all(new_cids.map((cid) => this.blockstore.addToCar(car, cid)))
     if (!prev) {
-      if (to === null) {
+      if (oldestCommit === null) {
         return
       }
-      throw new Error(`Count not find commit: $${to}`)
+      throw new Error(`Could not find commit in repo history: $${oldestCommit}`)
     }
-    if (prev.toString() === to?.toString()) {
-      return
-    }
-    await this.writeCommitsToCarStream(car, prev, to)
+    await this.writeCommitsToCarStream(car, prev, oldestCommit)
   }
 }
 
