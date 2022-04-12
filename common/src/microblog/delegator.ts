@@ -425,6 +425,14 @@ export class MicroblogDelegator {
       throw new Error(err.message)
     }
   }
+
+  async export(): Promise<Uint8Array> {
+    const car = await service.pullRepo(this.url, this.did)
+    if (car === null) {
+      throw new Error(`Could not fetch repo ${this.did} from ${this.url}`)
+    }
+    return car
+  }
 }
 
 export default MicroblogDelegator
