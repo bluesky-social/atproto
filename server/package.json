@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "build": "(cd ../common && yarn build) && tsc --project tsconfig.json",
     "test": "ava -v test/*.ts",
-    "wipe-db": "rimraf dev.sqlite && rimraf blockstore && rimraf dev2.sqlite && rimraf blockstore2"
+    "wipe-db": "rimraf dev.sqlite && rimraf blockstore && rimraf dev-alt.sqlite && rimraf blockstore-alt"
   },
   "dependencies": {
     "@vscode/sqlite3": "^5.0.7",
