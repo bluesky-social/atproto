@@ -293,11 +293,13 @@ export class Database {
       .orderBy('posts.tid', 'desc')
       .limit(count)
 
+    console.log('FEED: ', feed)
+
     return Promise.all(
       feed.map(async (p) => ({
         tid: p.tid,
         author: p.author,
-        author_name: `${p.username}@${p.host}`,
+        author_name: username,
         text: p.text,
         time: p.time,
         likes: await this.likeCount(p.author, p.namespace, p.tid),
