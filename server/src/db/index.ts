@@ -1,10 +1,4 @@
-import {
-  Like,
-  Post,
-  Timeline,
-  AccountInfo,
-  TimelinePost,
-} from '@bluesky/common'
+import { Like, Post, Timeline, AccountInfo } from '@bluesky/common'
 import { Follow } from '@bluesky/common/dist/repo/types'
 import knex from 'knex'
 import { CID } from 'multiformats'
@@ -253,6 +247,36 @@ export class Database {
 
   // INDEXER
   // -----------
+
+  async retrieveFeed(
+    user: string,
+    count: number,
+    from?: string,
+  ): Promise<Timeline> {
+    // fallback to a fake TID that is larger than any possible
+    const username = await this.getUsername(user)
+    if (!username) {
+      throw new ServerError(404, `Could not find user ${user}`)
+    }
+    const olderThan = from || 'zzzzzzzzzzzzz'
+    const feed = await this.db('posts')
+      .where('posts.author', user)
+      .where('posts.tid', '<', olderThan)
+      .select('*')
+      .orderBy('posts.tid', 'desc')
+      .limit(count)
+
+    return Promise.all(
+      feed.map(async (p) => ({
+        tid: p.tid,
+        author: p.author,
+        author_name: username,
+        text: p.text,
+        time: p.time,
+        likes: await this.likeCount(p.author, p.namespace, p.tid),
+      })),
+    )
+  }
 
   async retrieveTimeline(
     user: string,

@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from 'axios'
 import TID from '../repo/tid.js'
 
 import { z } from 'zod'
-import { Post, Like, schema, AccountInfo } from './types.js'
+import { Post, Like, schema, AccountInfo, Timeline } from './types.js'
 import { schema as repoSchema } from '../repo/types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError } from '../network/util.js'
@@ -50,6 +50,28 @@ export class MicroblogReader {
         params,
       })
       return check.assure(schema.accountInfo, res.data)
+    } catch (e) {
+      const err = assureAxiosError(e)
+      if (err.response?.status === 404) {
+        return null
+      }
+      throw new Error(err.message)
+    }
+  }
+
+  async retrieveFeed(
+    username: string,
+    count: number,
+    from?: TID,
+  ): Promise<Timeline | null> {
+    const { hostUrl } = this.normalizeUsername(username)
+    const did = await this.resolveDid(username)
+    const params = { user: did, count, from: from?.toString() }
+    try {
+      const res = await axios.get(`${hostUrl}/indexer/feed`, {
+        params,
+      })
+      return check.assure(schema.timeline, res.data)
     } catch (e) {
       const err = assureAxiosError(e)
       if (err.response?.status === 404) {

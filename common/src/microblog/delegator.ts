@@ -127,6 +127,28 @@ export class MicroblogDelegator {
     }
   }
 
+  async retrieveFeed(
+    username: string,
+    count: number,
+    from?: TID,
+  ): Promise<Timeline | null> {
+    const { hostUrl } = this.normalizeUsername(username)
+    const did = await this.resolveDid(username)
+    const params = { user: did, count, from: from?.toString() }
+    try {
+      const res = await axios.get(`${hostUrl}/indexer/feed`, {
+        params,
+      })
+      return check.assure(schema.timeline, res.data)
+    } catch (e) {
+      const err = assureAxiosError(e)
+      if (err.response?.status === 404) {
+        return null
+      }
+      throw new Error(err.message)
+    }
+  }
+
   async retrieveTimeline(count: number, from?: TID): Promise<Timeline> {
     const params = { user: this.did, count, from: from?.toString() }
     try {

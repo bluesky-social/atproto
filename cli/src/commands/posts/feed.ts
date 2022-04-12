@@ -10,23 +10,28 @@ export default cmd({
   category: 'posts',
   help: 'List posts in your feed, or the posts of the given user.',
   args: [
-    { name: 'username/did', optional: true },
+    { name: 'username', optional: true },
     { name: 'count', optional: true },
     { name: 'from', optional: true },
   ],
   async command(args) {
     const client = await loadDelegate(REPO_PATH)
-    const nameOrDid = args._[0] || client.did
+    const username = args._[0] || client.did
     const countParsed = parseInt(args._[1])
     const count = isNaN(countParsed) ? 100 : countParsed
     const fromStr = args._[2]
     const from = fromStr ? TID.fromStr(fromStr) : undefined
-    const posts = await client.listPostsFromUser(nameOrDid, count, from)
+    const feed = await client.retrieveFeed(username, count, from)
+    if (!feed) {
+      console.log('Could not find user: ', username)
+      return
+    }
     console.log(``)
-    for (const post of posts) {
-      console.log(post.text)
+    for (const post of feed) {
+      console.log(`"${post.text}" - ${post.author_name}`)
+      console.log(`Likes: ${post.likes}`)
       console.log(chalk.gray(formatDate(post.time)))
-      console.log(`id: ${chalk.gray(post.tid.formatted())}`)
+      console.log(chalk.gray(`id: ${post.tid.formatted()}`))
       console.log(``)
     }
   },
