@@ -114,6 +114,10 @@ From project root:
 (4) yarn cli feed alice@localhost:2583
 
 # Keep playing around. Try unliking, deleting or editing posts, or add a third user into the mix! They can be registered to one of the existing servers
+
+# If you want to wipe the slate clean run
+(1/2) yarn wipe-db # wipes server databases & blockstore
+(3/4) yarn destroy # deletes user repo & keypair
 ```
 
 ---
@@ -146,7 +150,7 @@ A few notes for the curious ones that find themselves trawling the depths of the
 
 Data is separated in the user repository by namespace.
 
-A user's microblogging data lives separately from their community forum data which lives separate from their long form writing data and so on. Each namespace following its respective data spec.
+A user's microblogging data lives separately from theichr community forum data which lives separate from their long form writing data and so on. Each namespace following its respective data spec.
 
 We've implemented only one sample namespace here: microblogging.
 
