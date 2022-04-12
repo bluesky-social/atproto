@@ -318,6 +318,10 @@ export class Repo implements CarStreamable {
 
   async push(url: string): Promise<void> {
     const remoteRoot = await service.getRemoteRoot(url, this.did)
+    if (this.cid.equals(remoteRoot)) {
+      // already up to date
+      return
+    }
     const car = await this.getDiffCar(remoteRoot)
     await service.pushRepo(url, this.did, car)
   }
