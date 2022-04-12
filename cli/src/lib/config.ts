@@ -28,12 +28,13 @@ export const writeCfg = async (
   }
 
   const keypair = await ucan.EdKeypair.create({ exportable: true })
-  const userDID = keypair.did()
   const fullToken = await auth.claimFull(keypair.did(), keypair)
+
+  const serverCleaned = cleanHost(server)
 
   const account: AccountJson = {
     username,
-    server,
+    server: serverCleaned,
   }
   await fsp.writeFile(
     path.join(repoPath, 'sky.key'),
@@ -95,19 +96,25 @@ const readAccountFile = async (
   filename: string,
 ): Promise<AccountJson> => {
   const str = (await readFile(repoPath, filename, 'utf-8')) as string
-  let obj
   try {
-    obj = JSON.parse(str)
-    if (!obj.username || typeof obj.username !== 'string')
+    const obj = JSON.parse(str)
+    const username = obj.username
+    const server = obj.server
+    if (!username || typeof username !== 'string')
       throw new Error('"username" is invalid')
-    if (!obj.server || typeof obj.server !== 'string')
+    if (!server || typeof server !== 'string')
       throw new Error('"server" is invalid')
+    const serverCleaned = cleanHost(server)
+    return { username, server: serverCleaned } as AccountJson
   } catch (e) {
     console.error(`Failed to load ${filename} file`)
     console.error(e)
     process.exit(1)
   }
-  return obj as AccountJson
+}
+
+const cleanHost = (str: string): string => {
+  return str.replace('http://', '').replace('https://', '')
 }
 
 export const destroy = async (repoPath: string) => {

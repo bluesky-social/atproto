@@ -6,7 +6,7 @@ export const loadDelegate = async (
 ): Promise<MicroblogDelegator> => {
   const { account, keypair, ucanStore } = await config.loadCfg(repoPath)
   return new MicroblogDelegator(
-    'http://' + account.server,
+    `http://${account.server}`,
     keypair.did(),
     keypair,
     ucanStore,

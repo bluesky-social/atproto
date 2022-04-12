@@ -54,8 +54,6 @@ export default cmd({
 
     console.log('Generating repo...')
 
-    const serverCleaned = server.replace('http://', '').replace('https://', '')
-
     await config.writeCfg(REPO_PATH, username, server)
     const client = await loadDelegate(REPO_PATH)
 
