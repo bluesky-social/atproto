@@ -46,7 +46,7 @@ export const flattenLike = (like: Like): Record<string, string | number> => {
 
 const timelinePost = z.object({
   tid: repo.strToTid,
-  author_did: z.string(),
+  author: z.string(),
   author_name: z.string(),
   text: z.string(),
   time: z.string(),

@@ -1,4 +1,10 @@
-import { Like, Post, Timeline, AccountInfo } from '@bluesky/common'
+import {
+  Like,
+  Post,
+  Timeline,
+  AccountInfo,
+  TimelinePost,
+} from '@bluesky/common'
 import { Follow } from '@bluesky/common/dist/repo/types'
 import knex from 'knex'
 import { CID } from 'multiformats'
@@ -63,8 +69,6 @@ export class Database {
     const row = await this.db.select('*').from('user_dids').where({ did })
     if (row.length < 1) return null
     return `${row[0].username}@${row[0].host}`
-
-    return row[0].username
   }
 
   // REPO ROOTS
@@ -258,18 +262,20 @@ export class Database {
     // fallback to a fake TID that is larger than any possible
     const olderThan = from || 'zzzzzzzzzzzzz'
     const timeline = await this.db('posts')
-      .join('follows', 'posts.author', '=', 'follows.target')
       .join('user_dids', 'posts.author', '=', 'user_dids.did')
-      .select('posts.*', 'user_dids.username')
-      .where('follows.creator', user)
+      .leftJoin('follows', 'posts.author', '=', 'follows.target')
+      .where(function () {
+        this.where('follows.creator', user).orWhere('posts.author', user)
+      })
       .where('posts.tid', '<', olderThan)
+      .select('posts.*', 'user_dids.username', 'user_dids.host')
       .orderBy('posts.tid', 'desc')
       .limit(count)
     return Promise.all(
       timeline.map(async (p) => ({
         tid: p.tid,
-        author_did: p.author,
-        author_name: p.username,
+        author: p.author,
+        author_name: `${p.username}@${p.host}`,
         text: p.text,
         time: p.time,
         likes: await this.likeCount(p.author, p.namespace, p.tid),
