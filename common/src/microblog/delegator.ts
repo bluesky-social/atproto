@@ -95,20 +95,26 @@ export class MicroblogDelegator {
     await service.register(this.url, username, this.did, true, token)
   }
 
-  async lookupDid(username: string): Promise<string | null> {
+  normalizeUsername(username: string): { name: string; hostUrl: string } {
     const [name, host] = username.split('@')
-    if (!host) {
-      return service.lookupDid(this.url, name)
+    if (host) {
+      return { name, hostUrl: 'http://' + host }
     } else {
-      return service.lookupDid(`http://${host}`, name)
+      return { name, hostUrl: this.url }
     }
   }
 
-  async getAccountInfo(nameOrDid: string): Promise<AccountInfo | null> {
-    const did = await this.resolveDid(nameOrDid)
+  async lookupDid(username: string): Promise<string | null> {
+    const { name, hostUrl } = this.normalizeUsername(username)
+    return service.lookupDid(hostUrl, name)
+  }
+
+  async getAccountInfo(username: string): Promise<AccountInfo | null> {
+    const { hostUrl } = this.normalizeUsername(username)
+    const did = await this.resolveDid(username)
     const params = { did }
     try {
-      const res = await axios.get(`${this.url}/indexer/account-info`, {
+      const res = await axios.get(`${hostUrl}/indexer/account-info`, {
         params,
       })
       return check.assure(schema.accountInfo, res.data)

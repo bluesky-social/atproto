@@ -7,7 +7,7 @@ export default cmd({
   name: 'whois',
   category: 'social',
   help: 'Display the profile of the given user.',
-  args: [{ name: 'user' }],
+  args: [{ name: 'username' }],
   opts: [],
   async command(args) {
     const nameOrDid = args._[0]
