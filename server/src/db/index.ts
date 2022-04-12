@@ -1,4 +1,10 @@
-import { Like, Post, Timeline, AccountInfo } from '@bluesky/common'
+import {
+  Like,
+  Post,
+  Timeline,
+  AccountInfo,
+  TimelinePost,
+} from '@bluesky/common'
 import { Follow } from '@bluesky/common/dist/repo/types'
 import knex from 'knex'
 import { CID } from 'multiformats'
@@ -248,6 +254,27 @@ export class Database {
   // INDEXER
   // -----------
 
+  async retrievePostInfo(
+    tid: string,
+    author: string,
+    namespace: string,
+  ): Promise<TimelinePost | null> {
+    const row = await this.db('posts')
+      .join('user_dids', 'posts.author', '=', 'user_dids.did')
+      .select('*')
+      .where({ tid, author, namespace })
+    if (row.length < 1) return null
+    const p = row[0]
+    return {
+      tid: p.tid,
+      author: p.author,
+      author_name: `${p.username}@${p.host}`,
+      text: p.text,
+      time: p.time,
+      likes: await this.likeCount(p.author, p.namespace, p.tid),
+    }
+  }
+
   async retrieveFeed(
     user: string,
     count: number,
@@ -270,7 +297,7 @@ export class Database {
       feed.map(async (p) => ({
         tid: p.tid,
         author: p.author,
-        author_name: username,
+        author_name: `${p.username}@${p.host}`,
         text: p.text,
         time: p.time,
         likes: await this.likeCount(p.author, p.namespace, p.tid),
