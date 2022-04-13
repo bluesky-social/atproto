@@ -16,7 +16,7 @@ function makeRandText(l: number) {
 
 export default cmd({
   name: 'gen-random-posts',
-  category: 'posts',
+  category: 'dev',
   help: 'Create a large number of random posts.',
   args: [{ name: 'count' }],
   async command(args) {
