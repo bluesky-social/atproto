@@ -15,6 +15,7 @@ export const CATEGORIES = {
   posts: 'Posts',
   interactions: 'Interactions',
   advanced: 'Advanced',
+  dev: 'Development',
 }
 
 export interface Cmd {
