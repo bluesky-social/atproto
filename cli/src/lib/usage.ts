@@ -37,6 +37,7 @@ export function usage(err: any) {
   addcat('posts')
   addcat('interactions')
   addcat('advanced')
+  addcat('dev')
   for (const cat of cats) {
     console.log(`\n${chalk.bold(cat.label)}:\n`)
     for (let i = 0; i < cat.lhs.length; i++) {
