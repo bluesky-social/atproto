@@ -19,17 +19,46 @@ import * as service from '../network/service.js'
 export class MicroblogReader {
   namespace = 'did:bsky:microblog'
 
+  constructor(public url: string, public did?: string) {}
+
+  ownDid(): string {
+    if (this.did) {
+      return this.did
+    }
+    throw new Error('No User DID provided')
+  }
+
+  // DIDs & Username
+  // ----------------
+
+  async getOwnServerDid(): Promise<string> {
+    return this.getServerDid(this.url)
+  }
+
   async getServerDid(url: string): Promise<string> {
     return await service.getServerDid(url)
   }
 
-  async resolveDid(nameOrDid: string): Promise<string> {
-    if (nameOrDid.startsWith('did:')) return nameOrDid
-    const did = await this.lookupDid(nameOrDid)
-    if (!did) {
+  async resolveUser(
+    nameOrDid: string,
+  ): Promise<{ username: string; did: string; hostUrl: string }> {
+    let username, did
+    if (nameOrDid.startsWith('did:')) {
+      did = nameOrDid
+      username = await this.lookupUsername(nameOrDid)
+    } else {
+      username = nameOrDid
+      did = await this.lookupDid(nameOrDid)
+    }
+    if (!username || !did) {
       throw new Error(`Coult not find user: ${nameOrDid}`)
     }
-    return did
+    const { hostUrl } = this.normalizeUsername(username)
+    return {
+      username,
+      did,
+      hostUrl,
+    }
   }
 
   normalizeUsername(username: string): { name: string; hostUrl: string } {
@@ -48,9 +77,15 @@ export class MicroblogReader {
     return service.lookupDid(hostUrl, name)
   }
 
-  async getAccountInfo(username: string): Promise<AccountInfo | null> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
+  async lookupUsername(did: string): Promise<string | null> {
+    return service.getUsernameFromDidNetwork(did)
+  }
+
+  // Indexed Data
+  // ----------------
+
+  async getAccountInfo(nameOrDid: string): Promise<AccountInfo | null> {
+    const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = { did }
     try {
       const res = await axios.get(`${hostUrl}/indexer/account-info`, {
@@ -67,12 +102,11 @@ export class MicroblogReader {
   }
 
   async retrieveFeed(
-    username: string,
+    nameOrDid: string,
     count: number,
     from?: TID,
   ): Promise<Timeline | null> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
+    const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = { user: did, count, from: from?.toString() }
     try {
       const res = await axios.get(`${hostUrl}/indexer/feed`, {
@@ -88,9 +122,19 @@ export class MicroblogReader {
     }
   }
 
-  async getPostInfo(username: string, tid: TID): Promise<TimelinePost | null> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
+  async retrieveTimeline(count: number, from?: TID): Promise<Timeline> {
+    const params = { user: this.ownDid(), count, from: from?.toString() }
+    try {
+      const res = await axios.get(`${this.url}/indexer/timeline`, { params })
+      return check.assure(schema.timeline, res.data)
+    } catch (e) {
+      const err = assureAxiosError(e)
+      throw new Error(err.message)
+    }
+  }
+
+  async getPostInfo(nameOrDid: string, tid: TID): Promise<TimelinePost | null> {
+    const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = { did, namespace: this.namespace, tid: tid.toString() }
     try {
       const res = await axios.get(`${hostUrl}/indexer/post-info`, {
@@ -106,9 +150,12 @@ export class MicroblogReader {
     }
   }
 
-  async getPostFromUser(username: string, tid: TID): Promise<Post | null> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
+  async getPost(tid: TID): Promise<Post | null> {
+    return this.getPostFromUser(this.ownDid(), tid)
+  }
+
+  async getPostFromUser(nameOrDid: string, tid: TID): Promise<Post | null> {
+    const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = {
       tid: tid.toString(),
       did: did,
@@ -127,13 +174,16 @@ export class MicroblogReader {
     }
   }
 
+  async listPosts(count: number, from?: TID): Promise<Post[]> {
+    return this.listPostsFromUser(this.ownDid(), count, from)
+  }
+
   async listPostsFromUser(
-    username: string,
+    nameOrDid: string,
     count: number,
     from?: TID,
   ): Promise<Post[]> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
+    const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = {
       did,
       namespace: this.namespace,
@@ -151,9 +201,12 @@ export class MicroblogReader {
     }
   }
 
-  async listFollowsFromUser(username: string): Promise<Follow[]> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
+  async listFollows(): Promise<Follow[]> {
+    return this.listFollowsFromUser(this.ownDid())
+  }
+
+  async listFollowsFromUser(nameOrDid: string): Promise<Follow[]> {
+    const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = { user: did }
     try {
       const res = await axios.get(`${hostUrl}/data/relationship/list`, {
@@ -166,9 +219,12 @@ export class MicroblogReader {
     }
   }
 
-  async listFollowersForUser(username: string): Promise<Follow[]> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
+  async listFollowers(): Promise<Follow[]> {
+    return this.listFollowersForUser(this.ownDid())
+  }
+
+  async listFollowersForUser(nameOrDid: string): Promise<Follow[]> {
+    const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = { user: did }
     try {
       const res = await axios.get(`${hostUrl}/indexer/followers`, {
@@ -181,13 +237,46 @@ export class MicroblogReader {
     }
   }
 
+  async getLikeByPost(
+    authorNameOrDid: string,
+    postTid: TID,
+  ): Promise<Like | null> {
+    return this.getLikeByPostForUser(this.ownDid(), authorNameOrDid, postTid)
+  }
+
+  async getLikeByPostForUser(
+    userNameOrDid: string,
+    authorNameOrDid: string,
+    postTid: TID,
+  ): Promise<Like | null> {
+    const user = await this.resolveUser(userNameOrDid)
+    const author = await this.resolveUser(authorNameOrDid)
+    const params = {
+      did: user.did,
+      postAuthor: author.did,
+      postNamespace: this.namespace,
+      postTid: postTid.toString(),
+    }
+    try {
+      const res = await axios.get(`${user.hostUrl}/data/interaction`, {
+        params,
+      })
+      return check.assure(schema.like, res.data)
+    } catch (e) {
+      const err = assureAxiosError(e)
+      if (err.response?.status === 404) {
+        return null
+      }
+      throw new Error(err.message)
+    }
+  }
+
   async listLikesFromUser(
-    username: string,
+    nameOrDid: string,
     count: number,
     from?: TID,
   ): Promise<Like[]> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
+    const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = {
       did,
       namespace: this.namespace,
