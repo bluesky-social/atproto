@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import cmd from '../../lib/command.js'
-import { loadDelegate } from '../../lib/client.js'
+import { loadClient } from '../../lib/client.js'
 import { REPO_PATH } from '../../lib/env.js'
 
 export default cmd({
@@ -10,7 +10,7 @@ export default cmd({
   args: [{ name: 'username/did', optional: true }],
   opts: [],
   async command(args) {
-    const client = await loadDelegate(REPO_PATH)
+    const client = await loadClient(REPO_PATH)
     const did = args._[0] || client.did
     const follows = await client.listFollowsFromUser(did)
 

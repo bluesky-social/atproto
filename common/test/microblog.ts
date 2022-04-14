@@ -20,7 +20,7 @@ test.beforeEach(async (t) => {
   const token = await auth.claimFull(keypair.did(), keypair)
   const ucanStore = await ucan.Store.fromTokens([token.encoded()])
   const repo = await Repo.create(ipld, keypair.did(), keypair, ucanStore)
-  const microblog = new MicroblogFull(repo, '', false)
+  const microblog = new MicroblogFull(repo, '', { pushOnUpdate: false })
   t.context = { ipld, keypair, repo, microblog } as Context
   t.pass('Context setup')
 })

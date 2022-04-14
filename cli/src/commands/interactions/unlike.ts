@@ -1,5 +1,5 @@
 import cmd from '../../lib/command.js'
-import { loadDelegate } from '../../lib/client.js'
+import { loadClient } from '../../lib/client.js'
 import { REPO_PATH } from '../../lib/env.js'
 import { TID } from '@bluesky/common'
 
@@ -12,7 +12,7 @@ export default cmd({
   async command(args) {
     const authorNameOrDid = args._[0]
     const postTid = TID.fromStr(args._[1])
-    const client = await loadDelegate(REPO_PATH)
+    const client = await loadClient(REPO_PATH)
     await client.unlikePost(authorNameOrDid, postTid)
     console.log('Deleted Like')
   },

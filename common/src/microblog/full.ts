@@ -12,20 +12,44 @@ import TID from '../repo/tid.js'
 import MicroblogReader from './reader.js'
 import { NAMESPACE } from './const.js'
 import Namespace from '../repo/namespace.js'
+import { CID } from 'multiformats'
+import { service } from '../index.js'
+import { cleanHostUrl } from '../network/util.js'
+
+type Opts = {
+  pushOnUpdate: boolean
+  onPush: (cid: CID) => Promise<void>
+}
 
 export class MicroblogFull extends MicroblogReader implements MicroblogClient {
   namespace = NAMESPACE
+  did: string
   repo: Repo
   pushOnUpdate: boolean
+  onPush?: (cid: CID) => Promise<void>
 
-  constructor(repo: Repo, url: string, pushOnUpdate = true) {
+  constructor(repo: Repo, url: string, opts: Partial<Opts> = {}) {
     super(url, repo.did)
+    this.did = repo.did
     this.repo = repo
-    this.pushOnUpdate = pushOnUpdate
+    this.pushOnUpdate = opts.pushOnUpdate || true
+    this.onPush = opts.onPush
   }
 
   async register(name: string): Promise<void> {
-    return this.repo.register(this.url, name)
+    const serverDid = await this.getOwnServerDid()
+    const token = await this.repo.maintenanceToken(serverDid)
+    await service.register(this.url, name, this.did, false, token)
+
+    const host = cleanHostUrl(this.url)
+    const username = `${name}@${host}`
+
+    if (!this.repo.keypair) {
+      throw new Error('No keypair provided. Repo is read-only.')
+    }
+    // register on did network
+    await service.registerToDidNetwork(username, this.repo.keypair)
+    await this.push()
   }
 
   async getPost(id: TID): Promise<Post | null> {
@@ -157,8 +181,15 @@ export class MicroblogFull extends MicroblogReader implements MicroblogClient {
     return likes
   }
 
+  async export(): Promise<Uint8Array> {
+    return this.repo.getFullHistory()
+  }
+
   async push(): Promise<void> {
     await this.repo.push(this.url)
+    if (this.onPush) {
+      await this.onPush(this.repo.cid)
+    }
   }
 
   async pull(): Promise<void> {

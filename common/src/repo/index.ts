@@ -36,7 +36,7 @@ export class Repo implements CarStreamable {
   relationships: Relationships
   cid: CID
   did: DID
-  private keypair: Keypair | null
+  keypair: Keypair | null
 
   constructor(params: {
     blockstore: IpldStore
@@ -308,13 +308,6 @@ export class Repo implements CarStreamable {
 
   // PUSH/PULL TO REMOTE
   // -----------
-
-  async register(url: string, username: string): Promise<void> {
-    const serverDid = await service.getServerDid(url)
-    const token = await this.maintenanceToken(serverDid)
-    await service.register(url, username, this.did, false, token)
-    await this.push(url)
-  }
 
   async push(url: string): Promise<void> {
     const remoteRoot = await service.getRemoteRoot(url, this.did)

@@ -321,8 +321,6 @@ export class Database {
       .orderBy('posts.tid', 'desc')
       .limit(count)
 
-    console.log('FEED: ', feed)
-
     return Promise.all(
       feed.map(async (p) => ({
         tid: p.tid,

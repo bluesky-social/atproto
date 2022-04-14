@@ -73,7 +73,7 @@ export const hasValidCapability =
     }
     // we looped through all options & couldn't find the capability we need
     return new Error(
-      `Ucan does not permission the ability to post for user: ${rootDid}`,
+      `Ucan does not permission the requested capability for user: ${needed.cap} ${needed.bluesky}`,
     )
   }
 

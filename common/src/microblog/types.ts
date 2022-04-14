@@ -82,6 +82,8 @@ export const schema = {
 // ------------
 
 export interface MicroblogClient extends MicroblogReaderI {
+  did: string
+  register(name: string): Promise<void>
   addPost(text: string): Promise<Post>
   editPost(tid: TID, text: string): Promise<void>
   deletePost(tid: TID): Promise<void>
@@ -90,6 +92,7 @@ export interface MicroblogClient extends MicroblogReaderI {
   likePost(postAuthorNameOrDid: string, postTid: TID): Promise<Like>
   deleteLike(tid: TID): Promise<void>
   unlikePost(authorNameOrDid: string, postTid: TID): Promise<void>
+  export(): Promise<Uint8Array>
 }
 
 export interface MicroblogReaderI {

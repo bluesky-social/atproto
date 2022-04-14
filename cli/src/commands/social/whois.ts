@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import cmd from '../../lib/command.js'
-import { loadDelegate } from '../../lib/client.js'
+import { loadClient } from '../../lib/client.js'
 import { REPO_PATH } from '../../lib/env.js'
 
 export default cmd({
@@ -11,7 +11,7 @@ export default cmd({
   opts: [],
   async command(args) {
     const nameOrDid = args._[0]
-    const client = await loadDelegate(REPO_PATH)
+    const client = await loadClient(REPO_PATH)
     const info = await client.getAccountInfo(nameOrDid)
     if (info === null) {
       throw new Error(`Could not find user ${nameOrDid}`)

@@ -2,6 +2,7 @@ import path from 'path'
 import { promises as fsp } from 'fs'
 import * as ucan from 'ucans'
 import { auth } from '@bluesky/common'
+import { CID } from 'multiformats/cid'
 
 export type AccountJson = {
   username: string
@@ -12,6 +13,7 @@ export type Config = {
   keypair: ucan.EdKeypair
   account: AccountJson
   ucanStore: ucan.Store
+  root: CID | null
 }
 
 export const writeCfg = async (
@@ -68,10 +70,12 @@ export const loadCfg = async (repoPath: string): Promise<Config> => {
   const keypair = ucan.EdKeypair.fromSecretKey(secretKeyStr)
   const tokenStr = (await readFile(repoPath, 'full.ucan', 'utf-8')) as string
   const ucanStore = await ucan.Store.fromTokens([tokenStr])
+  const root = await readRoot(repoPath)
   return {
     account,
     keypair,
     ucanStore,
+    root,
   }
 }
 
@@ -111,6 +115,19 @@ const readAccountFile = async (
     console.error(e)
     process.exit(1)
   }
+}
+
+export const readRoot = async (repoPath: string): Promise<CID | null> => {
+  try {
+    const rootStr = await fsp.readFile(path.join(repoPath, 'root'), 'utf-8')
+    return rootStr ? CID.parse(rootStr) : null
+  } catch (_) {
+    return null
+  }
+}
+
+export const writeRoot = async (repoPath: string, cid: CID): Promise<void> => {
+  await fsp.writeFile(path.join(repoPath, 'root'), cid.toString(), 'utf-8')
 }
 
 const cleanHost = (str: string): string => {

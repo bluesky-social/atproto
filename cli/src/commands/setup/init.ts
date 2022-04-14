@@ -2,7 +2,7 @@ import prompt from 'prompt'
 import cmd from '../../lib/command.js'
 import { REPO_PATH } from '../../lib/env.js'
 import * as config from '../../lib/config.js'
-import { loadDelegate } from '../../lib/client.js'
+import { loadClient } from '../../lib/client.js'
 
 prompt.colors = false
 prompt.message = ''
@@ -55,7 +55,7 @@ export default cmd({
     console.log('Generating repo...')
 
     await config.writeCfg(REPO_PATH, username, server)
-    const client = await loadDelegate(REPO_PATH)
+    const client = await loadClient(REPO_PATH)
 
     if (register) {
       console.log('Registering with server...')
