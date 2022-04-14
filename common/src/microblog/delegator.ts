@@ -283,8 +283,9 @@ export class MicroblogDelegator {
     }
   }
 
-  async followUser(username: string): Promise<void> {
-    const data = { creator: this.did, username }
+  async followUser(nameOrDid: string): Promise<void> {
+    const target = await this.resolveDid(nameOrDid)
+    const data = { creator: this.did, target }
     const token = await this.relationshipToken()
     try {
       await axios.post(`${this.url}/data/relationship`, data, authCfg(token))

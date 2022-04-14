@@ -40,26 +40,14 @@ export const isSubscriber = async (
 export const notifyOneOff = async (
   db: Database,
   ownHost: string,
-  userToNotifyDidOrUsername: string,
+  didToNotify: string,
   repo: Repo,
 ): Promise<void> => {
-  let username: string
-  if (userToNotifyDidOrUsername.startsWith('did:')) {
-    const found = await service.getUsernameFromDidNetwork(
-      userToNotifyDidOrUsername,
-    )
-    if (!found) {
-      console.error(
-        `Could not find user on DID network: ${userToNotifyDidOrUsername}`,
-      )
-      return
-    } else {
-      username = found
-    }
-  } else {
-    username = userToNotifyDidOrUsername
+  const username = await service.getUsernameFromDidNetwork(didToNotify)
+  if (!username) {
+    console.error(`Could not find user on DID network: ${didToNotify}`)
+    return
   }
-
   const [_, host] = username.split('@')
   if (host === ownHost) return
 
