@@ -15,7 +15,7 @@ export const registerReq = z.object({
   username: z.string(),
   createRepo: z.boolean(),
 })
-export type registerReq = z.infer<typeof registerReq>
+export type RegisterReq = z.infer<typeof registerReq>
 
 router.post('/register', async (req, res) => {
   const { username, did, createRepo } = util.checkReqBody(req.body, registerReq)
@@ -31,10 +31,7 @@ router.post('/register', async (req, res) => {
     ucanCheck.hasAudience(SERVER_DID),
     ucanCheck.hasMaintenancePermission(did),
   )
-  const host = req.get('host')
-  if (!host) {
-    throw new ServerError(500, 'Could not get own host')
-  }
+  const host = util.getOwnHost(req)
 
   // create empty repo
   if (createRepo) {

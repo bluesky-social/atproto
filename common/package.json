@@ -17,7 +17,8 @@
     "ipld-hashmap": "^2.1.10",
     "level": "^7.0.1",
     "multiformats": "^9.6.4",
-    "ucans": "0.9.0-alpha3"
+    "ucans": "0.9.0-alpha3",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@types/level": "^6.0.0",

@@ -13,7 +13,7 @@ import {
 } from './types.js'
 import { schema as repoSchema } from '../repo/types.js'
 import * as check from '../common/check.js'
-import { assureAxiosError, authCfg } from '../network/util.js'
+import { assureAxiosError, authCfg, cleanHostUrl } from '../network/util.js'
 import * as ucan from 'ucans'
 import { Collection, Follow } from '../repo/types.js'
 import { Keypair } from '../common/types.js'
@@ -90,9 +90,19 @@ export class MicroblogDelegator {
     )
   }
 
-  async register(username: string): Promise<void> {
+  async register(name: string): Promise<void> {
+    if (!this.keypair) {
+      throw new Error('No keypair or ucan store provided. Client is read-only.')
+    }
+    // register on data server
     const token = await this.maintenanceToken()
-    await service.register(this.url, username, this.did, true, token)
+    await service.register(this.url, name, this.did, true, token)
+
+    const host = cleanHostUrl(this.url)
+    const username = `${name}@${host}`
+
+    // register on did network
+    await service.registerToDidNetwork(username, this.keypair)
   }
 
   normalizeUsername(username: string): { name: string; hostUrl: string } {
@@ -273,8 +283,9 @@ export class MicroblogDelegator {
     }
   }
 
-  async followUser(username: string): Promise<void> {
-    const data = { creator: this.did, username }
+  async followUser(nameOrDid: string): Promise<void> {
+    const target = await this.resolveDid(nameOrDid)
+    const data = { creator: this.did, target }
     const token = await this.relationshipToken()
     try {
       await axios.post(`${this.url}/data/relationship`, data, authCfg(token))

@@ -112,6 +112,13 @@ router.post('/', async (req, res) => {
   const db = util.getDB(res)
   await db.createLike(like, likeCid)
   await db.updateRepoRoot(like.author, repo.cid)
+
+  await subscriptions.notifyOneOff(
+    db,
+    util.getOwnHost(req),
+    like.post_author,
+    repo,
+  )
   await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
 })
@@ -137,12 +144,23 @@ router.delete('/', async (req, res) => {
     ucanCheck.hasPostingPermission(did, namespace, 'interactions', tid),
   )
   const repo = await util.loadRepo(res, did, ucanStore)
-  await repo.runOnNamespace(namespace, async (store) => {
-    return store.interactions.deleteEntry(tid)
+
+  // delete the like, but first find the user it was for so we can notify their server
+  const postAuthor = await repo.runOnNamespace(namespace, async (store) => {
+    const cid = await store.interactions.getEntry(tid)
+    if (cid === null) {
+      throw new ServerError(404, `Could not find like: ${tid.formatted()}`)
+    }
+    const like = await repo.get(cid, schema.microblog.like)
+    await store.interactions.deleteEntry(tid)
+    return like.post_author
   })
+
   const db = util.getDB(res)
   await db.deleteLike(tid.toString(), did, namespace)
   await db.updateRepoRoot(did, repo.cid)
+
+  await subscriptions.notifyOneOff(db, util.getOwnHost(req), postAuthor, repo)
   await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
 })

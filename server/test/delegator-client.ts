@@ -90,7 +90,7 @@ test.serial('list follows', async (t) => {
   const follows = await alice.listFollows()
   t.is(follows.length, 1, 'registered follow')
   t.is(follows[0].did, bob.did, 'matching did')
-  t.is(follows[0].username, 'bob', 'matching username')
+  t.is(follows[0].username, `bob@${HOST}`, 'matching username')
 
   t.pass('successfully followed user')
 })

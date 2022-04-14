@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 import * as util from '../../util.js'
-import { delta, IpldStore, Repo, schema } from '@bluesky/common'
+import { delta, IpldStore, Repo, schema, service } from '@bluesky/common'
 import Database from '../../db/index.js'
 import { ServerError } from '../../error.js'
 import * as subscriptions from '../../subscriptions.js'
@@ -50,6 +50,17 @@ router.post('/:did', async (req, res) => {
     await db.createRepoRoot(did, loaded.cid)
     await subscriptions.notifySubscribers(db, loaded)
   }
+
+  // check to see if we have their username in DB, for indexed queries
+  const haveUsername = await db.isDidRegistered(did)
+  if (!haveUsername) {
+    const username = await service.getUsernameFromDidNetwork(did)
+    if (username) {
+      const [name, host] = username.split('@')
+      await db.registerDid(name, did, host)
+    }
+  }
+
   res.status(200).send()
 })
 

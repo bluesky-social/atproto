@@ -8,6 +8,16 @@ type Schema = {
   create: (db: Knex.CreateTableBuilder) => void
 }
 
+const didNetwork = {
+  name: 'did_network',
+  create: (table: Table) => {
+    table.string('did').primary()
+    table.string('username')
+    table.string('host')
+    table.unique(['username', 'host'])
+  },
+}
+
 const userRoots = {
   name: 'repo_roots',
   create: (table: Table) => {
@@ -20,8 +30,10 @@ const userDids = {
   name: 'user_dids',
   create: (table: Table) => {
     table.string('did').primary()
-    table.string('username').unique()
+    table.string('username')
     table.string('host')
+
+    table.unique(['username', 'host'])
   },
 }
 
@@ -85,6 +97,7 @@ const follows = {
 }
 
 const SCHEMAS: Schema[] = [
+  didNetwork,
   userRoots,
   userDids,
   subscriptions,

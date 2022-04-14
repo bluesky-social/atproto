@@ -41,6 +41,23 @@ export class Database {
     await schema.dropAll(this.db)
   }
 
+  // DID NETWORK
+  // -----------
+
+  async registerOnDidNetwork(
+    username: string,
+    did: string,
+    host: string,
+  ): Promise<void> {
+    await this.db.insert({ username, did, host }).into('did_network')
+  }
+
+  async getUsernameFromDidNetwork(did: string): Promise<string | null> {
+    const row = await this.db.select('*').from('did_network').where({ did })
+    if (row.length < 1) return null
+    return `${row[0].username}@${row[0].host}`
+  }
+
   // USER DIDS
   // -----------
 
@@ -69,6 +86,11 @@ export class Database {
     const row = await this.db.select('*').from('user_dids').where({ did })
     if (row.length < 1) return null
     return `${row[0].username}@${row[0].host}`
+  }
+
+  async isDidRegistered(did: string): Promise<boolean> {
+    const un = await this.getUsername(did)
+    return un !== null
   }
 
   // REPO ROOTS
