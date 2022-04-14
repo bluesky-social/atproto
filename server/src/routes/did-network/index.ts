@@ -47,13 +47,13 @@ export const getDidNetworkReq = z.object({
 export type GetDidNetworkReq = z.infer<typeof getDidNetworkReq>
 
 router.get('/', async (req, res) => {
-  const { did } = util.checkReqBody(req.body, getDidNetworkReq)
+  const { did } = util.checkReqBody(req.query, getDidNetworkReq)
   const { db } = util.getLocals(res)
   const username = await db.getUsernameFromDidNetwork(did)
   if (username === null) {
     throw new ServerError(404, 'Could not find user')
   }
-  res.send(200).send({ username })
+  res.send({ username })
 })
 
 export default router

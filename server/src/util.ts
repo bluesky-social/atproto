@@ -80,3 +80,11 @@ export const loadRepo = async (
   }
   return maybeRepo
 }
+
+export const getOwnHost = (req: Request): string => {
+  const host = req.get('host')
+  if (!host) {
+    throw new ServerError(500, 'Could not get own host')
+  }
+  return host
+}

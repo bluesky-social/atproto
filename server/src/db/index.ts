@@ -88,6 +88,11 @@ export class Database {
     return `${row[0].username}@${row[0].host}`
   }
 
+  async isDidRegistered(did: string): Promise<boolean> {
+    const un = await this.getUsername(did)
+    return un !== null
+  }
+
   // REPO ROOTS
   // -----------
 

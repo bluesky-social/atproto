@@ -7,7 +7,7 @@ export const handler = (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log('Error: ', err.toString())
+  console.log(err.toString())
   const status = ServerError.is(err) ? err.status : 500
   res.status(status).send(err.message)
   next(err)

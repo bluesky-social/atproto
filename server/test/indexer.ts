@@ -12,6 +12,8 @@ const PORT_TWO = USE_TEST_SERVER ? 2586 : 2584
 const HOST_TWO = `localhost:${PORT_TWO}`
 const SERVER_TWO = `http://${HOST_TWO}`
 
+process.env['DID_NETWORK_URL'] = `${SERVER_ONE}/did-network`
+
 let alice: MicroblogDelegator
 let bob: MicroblogDelegator
 let carol: MicroblogDelegator

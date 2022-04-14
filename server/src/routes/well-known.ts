@@ -20,10 +20,7 @@ export type WebfingerReq = z.infer<typeof webfingerReq>
 router.get('/webfinger', async (req, res) => {
   const { resource } = util.checkReqBody(req.query, webfingerReq)
   const db = util.getDB(res)
-  const host = req.get('host')
-  if (!host) {
-    throw new ServerError(500, 'Could not get own host')
-  }
+  const host = util.getOwnHost(req)
   const did = await db.getDidForUser(resource, host)
   if (!did) {
     return res.status(404).send('User DID not found')

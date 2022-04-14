@@ -30,3 +30,11 @@ export const didNetworkUrl = (): string => {
   }
   return 'http://localhost:2583/did-network'
 }
+
+export const cleanHostUrl = (url: string): string => {
+  let cleaned = url.replace('http://', '').replace('https://', '')
+  if (cleaned.endsWith('/')) {
+    cleaned = cleaned.slice(0, -1)
+  }
+  return cleaned
+}

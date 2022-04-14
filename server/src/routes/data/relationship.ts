@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
   if (!host) {
     throw new ServerError(400, 'Expected a username with a host')
   }
-  const ownHost = req.get('host')
+  const ownHost = util.getOwnHost(req)
   let target: string
   if (host !== ownHost) {
     const did = await service.lookupDid(`http://${host}`, name)
@@ -51,6 +51,7 @@ router.post('/', async (req, res) => {
   await repo.relationships.follow(target, username)
   await db.createFollow(creator, target)
   await db.updateRepoRoot(creator, repo.cid)
+  await subscriptions.notifyOneOff(db, util.getOwnHost(req), username, repo)
   await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
 })
@@ -75,6 +76,7 @@ router.delete('/', async (req, res) => {
   await repo.relationships.unfollow(target)
   await db.deleteFollow(creator, target)
   await db.updateRepoRoot(creator, repo.cid)
+  await subscriptions.notifyOneOff(db, util.getOwnHost(req), target, repo)
   await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
 })
