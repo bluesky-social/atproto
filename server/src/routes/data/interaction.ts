@@ -144,6 +144,8 @@ router.delete('/', async (req, res) => {
     ucanCheck.hasPostingPermission(did, namespace, 'interactions', tid),
   )
   const repo = await util.loadRepo(res, did, ucanStore)
+
+  // delete the like, but first find the user it was for so we can notify their server
   const postAuthor = await repo.runOnNamespace(namespace, async (store) => {
     const cid = await store.interactions.getEntry(tid)
     if (cid === null) {
