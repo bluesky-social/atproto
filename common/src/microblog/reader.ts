@@ -9,6 +9,7 @@ import {
   AccountInfo,
   Timeline,
   TimelinePost,
+  MicroblogReaderI,
 } from './types.js'
 import { schema as repoSchema } from '../repo/types.js'
 import * as check from '../common/check.js'
@@ -16,10 +17,16 @@ import { assureAxiosError } from '../network/util.js'
 import { Follow } from '../repo/types.js'
 import * as service from '../network/service.js'
 
-export class MicroblogReader {
+export class MicroblogReader implements MicroblogReaderI {
   namespace = 'did:bsky:microblog'
 
-  constructor(public url: string, public did?: string) {}
+  url: string
+  did?: string
+
+  constructor(url: string, did?: string) {
+    this.url = url
+    this.did = did
+  }
 
   ownDid(): string {
     if (this.did) {
@@ -45,13 +52,10 @@ export class MicroblogReader {
     let username, did
     if (nameOrDid.startsWith('did:')) {
       did = nameOrDid
-      username = await this.lookupUsername(nameOrDid)
+      username = await this.resolveUsername(nameOrDid)
     } else {
       username = nameOrDid
-      did = await this.lookupDid(nameOrDid)
-    }
-    if (!username || !did) {
-      throw new Error(`Coult not find user: ${nameOrDid}`)
+      did = await this.resolveDid(nameOrDid)
     }
     const { hostUrl } = this.normalizeUsername(username)
     return {
@@ -59,6 +63,33 @@ export class MicroblogReader {
       did,
       hostUrl,
     }
+  }
+
+  async resolveDid(nameOrDid: string): Promise<string> {
+    if (nameOrDid.startsWith('did:')) return nameOrDid
+    const did = await this.lookupDid(nameOrDid)
+    if (!did) {
+      throw new Error(`Coult not find user: ${nameOrDid}`)
+    }
+    return did
+  }
+
+  async resolveUsername(nameOrDid: string): Promise<string> {
+    if (!nameOrDid.startsWith('did:')) return nameOrDid
+    const username = await this.lookupUsername(nameOrDid)
+    if (!username) {
+      throw new Error(`Coult not find user: ${nameOrDid}`)
+    }
+    return username
+  }
+
+  async lookupDid(username: string): Promise<string | null> {
+    const { name, hostUrl } = this.normalizeUsername(username)
+    return service.lookupDid(hostUrl, name)
+  }
+
+  async lookupUsername(did: string): Promise<string | null> {
+    return service.getUsernameFromDidNetwork(did)
   }
 
   normalizeUsername(username: string): { name: string; hostUrl: string } {
@@ -70,15 +101,6 @@ export class MicroblogReader {
         `Can't normalize username (${username}), host segment not found`,
       )
     }
-  }
-
-  async lookupDid(username: string): Promise<string | null> {
-    const { name, hostUrl } = this.normalizeUsername(username)
-    return service.lookupDid(hostUrl, name)
-  }
-
-  async lookupUsername(did: string): Promise<string | null> {
-    return service.getUsernameFromDidNetwork(did)
   }
 
   // Indexed Data

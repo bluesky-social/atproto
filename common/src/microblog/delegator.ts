@@ -2,7 +2,13 @@ import axios from 'axios'
 import TID from '../repo/tid.js'
 
 import { z } from 'zod'
-import { Post, Like, flattenPost, flattenLike } from './types.js'
+import {
+  Post,
+  Like,
+  flattenPost,
+  flattenLike,
+  MicroblogClient,
+} from './types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError, authCfg, cleanHostUrl } from '../network/util.js'
 import * as ucan from 'ucans'
@@ -12,7 +18,10 @@ import * as auth from '../auth/index.js'
 import * as service from '../network/service.js'
 import MicroblogReader from './reader.js'
 
-export class MicroblogDelegator extends MicroblogReader {
+export class MicroblogDelegator
+  extends MicroblogReader
+  implements MicroblogClient
+{
   namespace = 'did:bsky:microblog'
   keypair: Keypair | null
   ucanStore: ucan.Store | null
@@ -108,8 +117,8 @@ export class MicroblogDelegator extends MicroblogReader {
   }
 
   async followUser(nameOrDid: string): Promise<void> {
-    const target = await this.resolveUser(nameOrDid)
-    const data = { creator: this.did, target: target.did }
+    const target = await this.resolveDid(nameOrDid)
+    const data = { creator: this.did, target }
     const token = await this.relationshipToken()
     try {
       await axios.post(`${this.url}/data/relationship`, data, authCfg(token))
@@ -120,8 +129,8 @@ export class MicroblogDelegator extends MicroblogReader {
   }
 
   async unfollowUser(nameOrDid: string): Promise<void> {
-    const target = await this.resolveUser(nameOrDid)
-    const data = { creator: this.did, target: target.did }
+    const target = await this.resolveDid(nameOrDid)
+    const data = { creator: this.did, target: target }
     const token = await this.relationshipToken()
     try {
       await axios.delete(`${this.url}/data/relationship`, {
@@ -135,7 +144,7 @@ export class MicroblogDelegator extends MicroblogReader {
   }
 
   async likePost(postAuthorNameOrDid: string, postTid: TID): Promise<Like> {
-    const author = await this.resolveUser(postAuthorNameOrDid)
+    const postAuthor = await this.resolveDid(postAuthorNameOrDid)
     const tid = TID.next()
     const like: Like = {
       tid,
@@ -143,7 +152,7 @@ export class MicroblogDelegator extends MicroblogReader {
       author: this.did,
       time: new Date().toISOString(),
       post_tid: postTid,
-      post_author: author.did,
+      post_author: postAuthor,
       post_namespace: this.namespace,
     }
     const token = await this.postToken('interactions', tid)
