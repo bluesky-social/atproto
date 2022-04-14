@@ -21,3 +21,12 @@ export const authCfg = (token: ucan.Chained): AxiosRequestConfig => {
     headers: authHeader(token),
   }
 }
+
+// this will be self describing from the DID, so we hardwire this for now & make it an env variable
+export const didNetworkUrl = (): string => {
+  const envVar = process.env.DID_NETWORK_URL
+  if (typeof envVar === 'string') {
+    return envVar
+  }
+  return 'http://localhost:2583/did-network'
+}

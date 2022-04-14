@@ -91,8 +91,15 @@ export class MicroblogDelegator {
   }
 
   async register(username: string): Promise<void> {
+    if (!this.keypair) {
+      throw new Error('No keypair or ucan store provided. Client is read-only.')
+    }
+    // register on data server
     const token = await this.maintenanceToken()
     await service.register(this.url, username, this.did, true, token)
+
+    // register on did network
+    await service.registerToDidNetwork(username, this.keypair)
   }
 
   normalizeUsername(username: string): { name: string; hostUrl: string } {

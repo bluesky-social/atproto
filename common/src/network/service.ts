@@ -1,9 +1,46 @@
 import axios from 'axios'
 import { CID } from 'multiformats'
-import { assureAxiosError, authCfg } from './util.js'
+import { assureAxiosError, authCfg, didNetworkUrl } from './util.js'
 import * as check from '../common/check.js'
 import { schema as repoSchema } from '../repo/types.js'
 import * as ucan from 'ucans'
+import * as uint8arrays from 'uint8arrays'
+import { Keypair } from '../common/types.js'
+
+export const registerToDidNetwork = async (
+  username: string,
+  keypair: Keypair,
+): Promise<void> => {
+  const url = didNetworkUrl()
+  const dataBytes = uint8arrays.fromString(username, 'utf8')
+  const sigBytes = await keypair.sign(dataBytes)
+  const signature = uint8arrays.toString(sigBytes, 'base64url')
+  const did = keypair.did()
+  const data = { did, username, signature }
+  try {
+    await axios.post(url, data)
+  } catch (e) {
+    const err = assureAxiosError(e)
+    throw new Error(err.message)
+  }
+}
+
+export const getUsernameFromDidNetwork = async (
+  did: string,
+): Promise<string | null> => {
+  const url = didNetworkUrl()
+  const params = { did }
+  try {
+    const res = await axios.get(url, { params })
+    return res.data.username
+  } catch (e) {
+    const err = assureAxiosError(e)
+    if (err.response?.status === 404) {
+      return null
+    }
+    throw new Error(err.message)
+  }
+}
 
 export const register = async (
   url: string,
