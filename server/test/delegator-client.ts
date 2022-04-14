@@ -74,30 +74,30 @@ test.serial('delete like', async (t) => {
   t.is(likes.length, 0, 'properly deleted like')
 })
 
-// test.serial('delete post', async (t) => {
-//   await alice.deletePost(post.tid)
-//   const got = await alice.getPost(post.tid)
-//   t.is(got, null, 'post successfully deleted')
-// })
+test.serial('delete post', async (t) => {
+  await alice.deletePost(post.tid)
+  const got = await alice.getPost(post.tid)
+  t.is(got, null, 'post successfully deleted')
+})
 
-// test.serial('follow user', async (t) => {
-//   // register bob
-//   await alice.followUser(`bob@${HOST}`)
-//   t.pass('successfully followed user')
-// })
+test.serial('follow user', async (t) => {
+  // register bob
+  await alice.followUser(`bob@${HOST}`)
+  t.pass('successfully followed user')
+})
 
-// test.serial('list follows', async (t) => {
-//   const follows = await alice.listFollows()
-//   t.is(follows.length, 1, 'registered follow')
-//   t.is(follows[0].did, bob.did, 'matching did')
-//   t.is(follows[0].username, `bob@${HOST}`, 'matching username')
+test.serial('list follows', async (t) => {
+  const follows = await alice.listFollows()
+  t.is(follows.length, 1, 'registered follow')
+  t.is(follows[0].did, bob.did, 'matching did')
+  t.is(follows[0].username, `bob@${HOST}`, 'matching username')
 
-//   t.pass('successfully followed user')
-// })
+  t.pass('successfully followed user')
+})
 
-// test.serial('unfollow user', async (t) => {
-//   await alice.unfollowUser(bob.did)
-//   t.pass('unfollow request successful')
-//   const follows = await alice.listFollows()
-//   t.is(follows.length, 0, 'properly unfollowed user')
-// })
+test.serial('unfollow user', async (t) => {
+  await alice.unfollowUser(bob.did)
+  t.pass('unfollow request successful')
+  const follows = await alice.listFollows()
+  t.is(follows.length, 0, 'properly unfollowed user')
+})

@@ -1,4 +1,4 @@
-import express, { request } from 'express'
+import express from 'express'
 import { z } from 'zod'
 
 import { Repo, ucanCheck } from '@bluesky/common'

@@ -52,8 +52,8 @@ router.post('/:did', async (req, res) => {
   }
 
   // check to see if we have their username in DB, for indexed queries
-  const isRegistered = await db.isDidRegistered(did)
-  if (!isRegistered) {
+  const haveUsername = await db.isDidRegistered(did)
+  if (!haveUsername) {
     const username = await service.getUsernameFromDidNetwork(did)
     if (username) {
       const [name, host] = username.split('@')
