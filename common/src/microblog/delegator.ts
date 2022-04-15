@@ -1,93 +1,42 @@
-import axios, { AxiosResponse } from 'axios'
+import axios from 'axios'
 import TID from '../repo/tid.js'
 
 import { z } from 'zod'
 import {
   Post,
   Like,
-  schema,
-  Timeline,
-  AccountInfo,
   flattenPost,
   flattenLike,
+  MicroblogClient,
 } from './types.js'
-import { schema as repoSchema } from '../repo/types.js'
 import * as check from '../common/check.js'
 import { assureAxiosError, authCfg, cleanHostUrl } from '../network/util.js'
 import * as ucan from 'ucans'
-import { Collection, Follow } from '../repo/types.js'
+import { Collection } from '../repo/types.js'
 import { Keypair } from '../common/types.js'
 import * as auth from '../auth/index.js'
 import * as service from '../network/service.js'
+import MicroblogReader from './reader.js'
 
-export class MicroblogDelegator {
+export class MicroblogDelegator
+  extends MicroblogReader
+  implements MicroblogClient
+{
   namespace = 'did:bsky:microblog'
   keypair: Keypair | null
   ucanStore: ucan.Store | null
-  serverDid: string | null
+  did: string
 
   constructor(
-    public url: string,
-    public did: string,
+    url: string,
+    did: string,
     keypair?: Keypair,
     ucanStore?: ucan.Store,
   ) {
+    super(url, did)
+    this.did = did
     this.keypair = keypair || null
     this.ucanStore = ucanStore || null
-    this.serverDid = null
-  }
-
-  async getServerDid(): Promise<string> {
-    if (!this.serverDid) {
-      this.serverDid = await service.getServerDid(this.url)
-    }
-    return this.serverDid
-  }
-
-  async maintenanceToken(): Promise<ucan.Chained> {
-    if (this.keypair === null || this.ucanStore === null) {
-      throw new Error('No keypair or ucan store provided. Client is read-only.')
-    }
-    const serverDid = await this.getServerDid()
-    return auth.delegateMaintenance(serverDid, this.keypair, this.ucanStore)
-  }
-
-  async relationshipToken(): Promise<ucan.Chained> {
-    if (this.keypair === null || this.ucanStore === null) {
-      throw new Error('No keypair or ucan store provided. Client is read-only.')
-    }
-    const serverDid = await this.getServerDid()
-    return auth.delegateForRelationship(
-      serverDid,
-      this.did,
-      this.keypair,
-      this.ucanStore,
-    )
-  }
-
-  async resolveDid(nameOrDid: string): Promise<string> {
-    if (nameOrDid.startsWith('did:')) return nameOrDid
-    const did = await this.lookupDid(nameOrDid)
-    if (!did) {
-      throw new Error(`Coult not find user: ${nameOrDid}`)
-    }
-    return did
-  }
-
-  async postToken(collection: Collection, tid: TID): Promise<ucan.Chained> {
-    if (this.keypair === null || this.ucanStore === null) {
-      throw new Error('No keypair or ucan store provided. Client is read-only.')
-    }
-    const serverDid = await this.getServerDid()
-    return auth.delegateForPost(
-      serverDid,
-      this.did,
-      this.namespace,
-      collection,
-      tid,
-      this.keypair,
-      this.ucanStore,
-    )
   }
 
   async register(name: string): Promise<void> {
@@ -103,95 +52,6 @@ export class MicroblogDelegator {
 
     // register on did network
     await service.registerToDidNetwork(username, this.keypair)
-  }
-
-  normalizeUsername(username: string): { name: string; hostUrl: string } {
-    const [name, host] = username.split('@')
-    if (host) {
-      return { name, hostUrl: 'http://' + host }
-    } else {
-      return { name, hostUrl: this.url }
-    }
-  }
-
-  async lookupDid(username: string): Promise<string | null> {
-    const { name, hostUrl } = this.normalizeUsername(username)
-    return service.lookupDid(hostUrl, name)
-  }
-
-  async getAccountInfo(username: string): Promise<AccountInfo | null> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
-    const params = { did }
-    try {
-      const res = await axios.get(`${hostUrl}/indexer/account-info`, {
-        params,
-      })
-      return check.assure(schema.accountInfo, res.data)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
-        return null
-      }
-      throw new Error(err.message)
-    }
-  }
-
-  async retrieveFeed(
-    username: string,
-    count: number,
-    from?: TID,
-  ): Promise<Timeline | null> {
-    const { hostUrl } = this.normalizeUsername(username)
-    const did = await this.resolveDid(username)
-    const params = { user: did, count, from: from?.toString() }
-    try {
-      const res = await axios.get(`${hostUrl}/indexer/feed`, {
-        params,
-      })
-      return check.assure(schema.timeline, res.data)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
-        return null
-      }
-      throw new Error(err.message)
-    }
-  }
-
-  async retrieveTimeline(count: number, from?: TID): Promise<Timeline> {
-    const params = { user: this.did, count, from: from?.toString() }
-    try {
-      const res = await axios.get(`${this.url}/indexer/timeline`, { params })
-      return check.assure(schema.timeline, res.data)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
-    }
-  }
-
-  async getPost(tid: TID): Promise<Post | null> {
-    return this.getPostFromUser(this.did, tid)
-  }
-
-  async getPostFromUser(nameOrDid: string, tid: TID): Promise<Post | null> {
-    const did = await this.resolveDid(nameOrDid)
-    const params = {
-      tid: tid.toString(),
-      did: did,
-      namespace: this.namespace,
-    }
-    let res: AxiosResponse
-    try {
-      res = await axios.get(`${this.url}/data/post`, { params })
-      return check.assure(schema.post, res.data)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
-        return null
-      }
-      throw new Error(err.message)
-    }
   }
 
   async addPost(text: string): Promise<Post> {
@@ -256,33 +116,6 @@ export class MicroblogDelegator {
     }
   }
 
-  async listPosts(count: number, from?: TID): Promise<Post[]> {
-    return this.listPostsFromUser(this.did, count, from)
-  }
-
-  async listPostsFromUser(
-    nameOrDid: string,
-    count: number,
-    from?: TID,
-  ): Promise<Post[]> {
-    const did = await this.resolveDid(nameOrDid)
-    const params = {
-      did,
-      namespace: this.namespace,
-      count,
-      from: from?.toString(),
-    }
-    try {
-      const res = await axios.get(`${this.url}/data/post/list`, {
-        params,
-      })
-      return check.assure(z.array(schema.post), res.data)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
-    }
-  }
-
   async followUser(nameOrDid: string): Promise<void> {
     const target = await this.resolveDid(nameOrDid)
     const data = { creator: this.did, target }
@@ -296,8 +129,8 @@ export class MicroblogDelegator {
   }
 
   async unfollowUser(nameOrDid: string): Promise<void> {
-    const did = await this.resolveDid(nameOrDid)
-    const data = { creator: this.did, target: did }
+    const target = await this.resolveDid(nameOrDid)
+    const data = { creator: this.did, target: target }
     const token = await this.relationshipToken()
     try {
       await axios.delete(`${this.url}/data/relationship`, {
@@ -310,44 +143,8 @@ export class MicroblogDelegator {
     }
   }
 
-  async listFollows(): Promise<Follow[]> {
-    return this.listFollowsFromUser(this.did)
-  }
-
-  async listFollowsFromUser(nameOrDid: string): Promise<Follow[]> {
-    const did = await this.resolveDid(nameOrDid)
-    const params = { user: did }
-    try {
-      const res = await axios.get(`${this.url}/data/relationship/list`, {
-        params,
-      })
-      return check.assure(z.array(repoSchema.follow), res.data)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
-    }
-  }
-
-  async listFollowers(): Promise<Follow[]> {
-    return this.listFollowersForUser(this.did)
-  }
-
-  async listFollowersForUser(nameOrDid: string): Promise<Follow[]> {
-    const did = await this.resolveDid(nameOrDid)
-    const params = { user: did }
-    try {
-      const res = await axios.get(`${this.url}/indexer/followers`, {
-        params,
-      })
-      return check.assure(z.array(repoSchema.follow), res.data)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
-    }
-  }
-
   async likePost(postAuthorNameOrDid: string, postTid: TID): Promise<Like> {
-    const postAuthorDid = await this.resolveDid(postAuthorNameOrDid)
+    const postAuthor = await this.resolveDid(postAuthorNameOrDid)
     const tid = TID.next()
     const like: Like = {
       tid,
@@ -355,7 +152,7 @@ export class MicroblogDelegator {
       author: this.did,
       time: new Date().toISOString(),
       post_tid: postTid,
-      post_author: postAuthorDid,
+      post_author: postAuthor,
       post_namespace: this.namespace,
     }
     const token = await this.postToken('interactions', tid)
@@ -398,54 +195,8 @@ export class MicroblogDelegator {
     await this.deleteLike(like.tid)
   }
 
-  async getLikeByPost(
-    authorNameOrDid: string,
-    postTid: TID,
-  ): Promise<Like | null> {
-    const authorDid = await this.resolveDid(authorNameOrDid)
-    const params = {
-      did: this.did,
-      postAuthor: authorDid,
-      postNamespace: this.namespace,
-      postTid: postTid.toString(),
-    }
-    try {
-      const res = await axios.get(`${this.url}/data/interaction`, { params })
-      return check.assure(schema.like, res.data)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
-        return null
-      }
-      throw new Error(err.message)
-    }
-  }
-
   async listLikes(count: number, from?: TID): Promise<Like[]> {
     return this.listLikesFromUser(this.did, count, from)
-  }
-
-  async listLikesFromUser(
-    nameOrDid: string,
-    count: number,
-    from?: TID,
-  ): Promise<Like[]> {
-    const did = await this.resolveDid(nameOrDid)
-    const params = {
-      did,
-      namespace: this.namespace,
-      count,
-      from: from?.toString(),
-    }
-    try {
-      const res = await axios.get(`${this.url}/data/interaction/list`, {
-        params,
-      })
-      return check.assure(z.array(schema.like), res.data)
-    } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
-    }
   }
 
   async likeCount(author: string, tid: TID): Promise<number> {
@@ -471,6 +222,46 @@ export class MicroblogDelegator {
       throw new Error(`Could not fetch repo ${this.did} from ${this.url}`)
     }
     return car
+  }
+
+  // UCAN Creators
+  // --------------
+
+  async maintenanceToken(): Promise<ucan.Chained> {
+    if (this.keypair === null || this.ucanStore === null) {
+      throw new Error('No keypair or ucan store provided. Client is read-only.')
+    }
+    const serverDid = await this.getOwnServerDid()
+    return auth.delegateMaintenance(serverDid, this.keypair, this.ucanStore)
+  }
+
+  async relationshipToken(): Promise<ucan.Chained> {
+    if (this.keypair === null || this.ucanStore === null) {
+      throw new Error('No keypair or ucan store provided. Client is read-only.')
+    }
+    const serverDid = await this.getOwnServerDid()
+    return auth.delegateForRelationship(
+      serverDid,
+      this.did,
+      this.keypair,
+      this.ucanStore,
+    )
+  }
+
+  async postToken(collection: Collection, tid: TID): Promise<ucan.Chained> {
+    if (this.keypair === null || this.ucanStore === null) {
+      throw new Error('No keypair or ucan store provided. Client is read-only.')
+    }
+    const serverDid = await this.getOwnServerDid()
+    return auth.delegateForPost(
+      serverDid,
+      this.did,
+      this.namespace,
+      collection,
+      tid,
+      this.keypair,
+      this.ucanStore,
+    )
   }
 }
 

@@ -10,6 +10,7 @@
     "@bluesky/common": "*",
     "chalk": "^5.0.0",
     "minimist": "^1.2.5",
+    "multiformats": "^9.6.4",
     "prompt": "^1.2.1",
     "ucans": "0.9.0-alpha3"
   },

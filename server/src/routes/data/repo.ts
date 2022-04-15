@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 import * as util from '../../util.js'
-import { delta, IpldStore, Repo, schema, service } from '@bluesky/common'
+import { delta, Repo, schema, service } from '@bluesky/common'
 import Database from '../../db/index.js'
 import { ServerError } from '../../error.js'
 import * as subscriptions from '../../subscriptions.js'
@@ -32,24 +32,31 @@ router.post('/:did', async (req, res) => {
   const { did } = util.checkReqBody(req.params, postRepoReq)
   const bytes = await util.readReqBytes(req)
 
-  const repo = await util.maybeLoadRepo(res, did)
+  const maybeRepo = await util.maybeLoadRepo(res, did)
   const db = util.getDB(res)
 
+  let repo: Repo
+  const evts: delta.Event[] = []
+
   // @TODO: we should do these on a temp in-memory blockstore before merging down to our on-disk one
-  if (repo) {
+  if (maybeRepo) {
+    repo = maybeRepo
     await repo.loadAndVerifyDiff(bytes, async (evt) => {
-      await indexOperation(db, repo.blockstore, did, evt)
+      evts.push(evt)
     })
     await db.updateRepoRoot(did, repo.cid)
-    await subscriptions.notifySubscribers(db, repo)
   } else {
     const blockstore = util.getBlockstore(res)
-    const loaded = await Repo.fromCarFile(bytes, blockstore, async (evt) => {
-      await indexOperation(db, blockstore, did, evt)
+    repo = await Repo.fromCarFile(bytes, blockstore, async (evt) => {
+      evts.push(evt)
     })
-    await db.createRepoRoot(did, loaded.cid)
-    await subscriptions.notifySubscribers(db, loaded)
+    await db.createRepoRoot(did, repo.cid)
   }
+
+  for (const evt of evts) {
+    await processEvent(db, util.getOwnHost(req), repo, did, evt)
+  }
+  await subscriptions.notifySubscribers(db, repo)
 
   // check to see if we have their username in DB, for indexed queries
   const haveUsername = await db.isDidRegistered(did)
@@ -64,26 +71,29 @@ router.post('/:did', async (req, res) => {
   res.status(200).send()
 })
 
-const indexOperation = async (
+const processEvent = async (
   db: Database,
-  blockstore: IpldStore,
+  ownHost: string,
+  repo: Repo,
   did: string,
   evt: delta.Event,
 ): Promise<void> => {
   switch (evt.event) {
-    case delta.EventType.AddedObject:
+    case delta.EventType.AddedObject: {
       if (evt.collection === 'posts') {
-        const post = await blockstore.get(evt.cid, schema.microblog.post)
+        const post = await repo.get(evt.cid, schema.microblog.post)
         await db.createPost(post, evt.cid)
       } else if (evt.collection === 'interactions') {
-        const like = await blockstore.get(evt.cid, schema.microblog.like)
+        const like = await repo.get(evt.cid, schema.microblog.like)
         await db.createLike(like, evt.cid)
+        await subscriptions.notifyOneOff(db, ownHost, like.post_author, repo)
       }
       return
+    }
 
-    case delta.EventType.UpdatedObject:
+    case delta.EventType.UpdatedObject: {
       if (evt.collection === 'posts') {
-        const post = await blockstore.get(evt.cid, schema.microblog.post)
+        const post = await repo.get(evt.cid, schema.microblog.post)
         await db.updatePost(post, evt.cid)
       } else if (evt.collection === 'interactions') {
         throw new ServerError(
@@ -92,34 +102,57 @@ const indexOperation = async (
         )
       }
       return
+    }
 
-    case delta.EventType.DeletedObject:
+    case delta.EventType.DeletedObject: {
       if (evt.collection === 'posts') {
         await db.deletePost(evt.tid.toString(), did, evt.namespace)
       } else if (evt.collection === 'interactions') {
-        await db.deleteLike(evt.tid.toString(), did, evt.namespace)
+        const like = await db.getLike(evt.tid.toString(), did, evt.namespace)
+        if (like) {
+          await db.deleteLike(evt.tid.toString(), did, evt.namespace)
+          await subscriptions.notifyOneOff(db, ownHost, like.post_author, repo)
+        }
       }
       return
+    }
 
-    case delta.EventType.AddedRelationship:
+    case delta.EventType.AddedRelationship: {
       await db.createFollow(did, evt.did)
+      const follow = await repo.get(evt.cid, schema.repo.follow)
+      const [name, host] = follow.username.split('@')
+      if (host && host !== ownHost) {
+        await db.registerDid(name, follow.did, host)
+        await service.subscribe(
+          `http://${host}`,
+          follow.did,
+          `http://${ownHost}`,
+        )
+        await subscriptions.notifyOneOff(db, ownHost, evt.did, repo)
+      }
       return
+    }
 
-    case delta.EventType.DeletedRelationship:
+    case delta.EventType.DeletedRelationship: {
       await db.deleteFollow(did, evt.did)
+      await subscriptions.notifyOneOff(db, ownHost, evt.did, repo)
       return
+    }
 
-    case delta.EventType.UpdatedRelationship:
+    case delta.EventType.UpdatedRelationship: {
       throw new ServerError(
         500,
         "We don't support in place relationship edits yet",
       )
+    }
 
-    case delta.EventType.DeletedNamespace:
+    case delta.EventType.DeletedNamespace: {
       throw new ServerError(
         500,
         "We don't support full deletion of namespaces yet",
       )
+    }
+
     default:
       throw new ServerError(500, 'Unsupported operation')
   }

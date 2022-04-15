@@ -2,22 +2,26 @@ import path from 'path'
 import { promises as fsp } from 'fs'
 import * as ucan from 'ucans'
 import { auth } from '@bluesky/common'
+import { CID } from 'multiformats/cid'
 
 export type AccountJson = {
   username: string
   server: string
+  delegator: boolean
 }
 
 export type Config = {
   keypair: ucan.EdKeypair
   account: AccountJson
   ucanStore: ucan.Store
+  root: CID | null
 }
 
 export const writeCfg = async (
   repoPath: string,
   username: string,
   server: string,
+  delegator: boolean,
 ) => {
   try {
     await fsp.mkdir(repoPath, { recursive: true })
@@ -35,6 +39,7 @@ export const writeCfg = async (
   const account: AccountJson = {
     username,
     server: serverCleaned,
+    delegator,
   }
   await fsp.writeFile(
     path.join(repoPath, 'sky.key'),
@@ -68,10 +73,12 @@ export const loadCfg = async (repoPath: string): Promise<Config> => {
   const keypair = ucan.EdKeypair.fromSecretKey(secretKeyStr)
   const tokenStr = (await readFile(repoPath, 'full.ucan', 'utf-8')) as string
   const ucanStore = await ucan.Store.fromTokens([tokenStr])
+  const root = await readRoot(repoPath)
   return {
     account,
     keypair,
     ucanStore,
+    root,
   }
 }
 
@@ -98,19 +105,33 @@ const readAccountFile = async (
   const str = (await readFile(repoPath, filename, 'utf-8')) as string
   try {
     const obj = JSON.parse(str)
-    const username = obj.username
-    const server = obj.server
+    const { username, server, delegator } = obj
     if (!username || typeof username !== 'string')
       throw new Error('"username" is invalid')
     if (!server || typeof server !== 'string')
       throw new Error('"server" is invalid')
+    if (typeof delegator !== 'boolean')
+      throw new Error('"delegator" is invalid')
     const serverCleaned = cleanHost(server)
-    return { username, server: serverCleaned } as AccountJson
+    return { username, server: serverCleaned, delegator }
   } catch (e) {
     console.error(`Failed to load ${filename} file`)
     console.error(e)
     process.exit(1)
   }
+}
+
+export const readRoot = async (repoPath: string): Promise<CID | null> => {
+  try {
+    const rootStr = await fsp.readFile(path.join(repoPath, 'root'), 'utf-8')
+    return rootStr ? CID.parse(rootStr) : null
+  } catch (_) {
+    return null
+  }
+}
+
+export const writeRoot = async (repoPath: string, cid: CID): Promise<void> => {
+  await fsp.writeFile(path.join(repoPath, 'root'), cid.toString(), 'utf-8')
 }
 
 const cleanHost = (str: string): string => {

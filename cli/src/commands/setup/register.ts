@@ -1,4 +1,4 @@
-import { loadDelegate } from '../../lib/client.js'
+import { loadClient } from '../../lib/client.js'
 import { loadCfg } from '../../lib/config.js'
 import cmd from '../../lib/command.js'
 import { REPO_PATH } from '../../lib/env.js'
@@ -10,7 +10,7 @@ export default cmd({
   args: [],
   opts: [],
   async command(_args) {
-    const client = await loadDelegate(REPO_PATH)
+    const client = await loadClient(REPO_PATH)
     const cfg = await loadCfg(REPO_PATH)
     console.log('Registering with server...')
     try {

@@ -25,6 +25,7 @@ router.post('/register', async (req, res) => {
       'Cannot register a username that starts with `did:`',
     )
   }
+
   const { db, blockstore } = util.getLocals(res)
   const ucanStore = await auth.checkReq(
     req,
@@ -33,13 +34,11 @@ router.post('/register', async (req, res) => {
   )
   const host = util.getOwnHost(req)
 
+  await db.registerDid(username, did, host)
   // create empty repo
   if (createRepo) {
     const repo = await Repo.create(blockstore, did, SERVER_KEYPAIR, ucanStore)
-    await Promise.all([
-      db.registerDid(username, did, host),
-      db.createRepoRoot(did, repo.cid),
-    ])
+    await db.createRepoRoot(did, repo.cid)
   }
 
   return res.sendStatus(200)

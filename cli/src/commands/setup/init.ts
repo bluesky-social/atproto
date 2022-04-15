@@ -2,7 +2,7 @@ import prompt from 'prompt'
 import cmd from '../../lib/command.js'
 import { REPO_PATH } from '../../lib/env.js'
 import * as config from '../../lib/config.js'
-import { loadDelegate } from '../../lib/client.js'
+import { loadClient } from '../../lib/client.js'
 
 prompt.colors = false
 prompt.message = ''
@@ -14,10 +14,11 @@ export default cmd({
   opts: [
     { name: 'server', type: 'string', default: '' },
     { name: 'username', type: 'string', default: '' },
-    { name: 'register', type: 'boolean', default: false },
+    { name: 'register', type: 'boolean', default: true },
+    { name: 'delegator', type: 'boolean', default: false },
   ],
   async command(args) {
-    let { username, server, register } = args
+    let { username, server, register, delegatorClient } = args
 
     console.log(`Repo path: ${REPO_PATH}`)
     if (!username || !server) {
@@ -50,12 +51,21 @@ export default cmd({
           default: true,
         })
       ).question
+      delegatorClient = (
+        await prompt.get({
+          description:
+            'Run a delegator client (and avoid storing repo locally)',
+          type: 'boolean',
+          required: true,
+          default: false,
+        })
+      ).question
     }
 
     console.log('Generating repo...')
 
-    await config.writeCfg(REPO_PATH, username, server)
-    const client = await loadDelegate(REPO_PATH)
+    await config.writeCfg(REPO_PATH, username, server, delegatorClient)
+    const client = await loadClient(REPO_PATH)
 
     if (register) {
       console.log('Registering with server...')

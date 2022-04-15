@@ -3,7 +3,7 @@ import test from 'ava'
 import * as ucan from 'ucans'
 import * as auth from '../src/auth/index.js'
 
-import Microblog from '../src/microblog/index.js'
+import { MicroblogFull } from '../src/microblog/index.js'
 import Repo from '../src/repo/index.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 
@@ -11,7 +11,7 @@ type Context = {
   ipld: IpldStore
   keypair: ucan.EdKeypair
   repo: Repo
-  microblog: Microblog
+  microblog: MicroblogFull
 }
 
 test.beforeEach(async (t) => {
@@ -20,7 +20,7 @@ test.beforeEach(async (t) => {
   const token = await auth.claimFull(keypair.did(), keypair)
   const ucanStore = await ucan.Store.fromTokens([token.encoded()])
   const repo = await Repo.create(ipld, keypair.did(), keypair, ucanStore)
-  const microblog = new Microblog(repo)
+  const microblog = new MicroblogFull(repo, '', { pushOnUpdate: false })
   t.context = { ipld, keypair, repo, microblog } as Context
   t.pass('Context setup')
 })
@@ -44,17 +44,17 @@ test('basic post operations', async (t) => {
 test('basic like operations', async (t) => {
   const { microblog } = t.context as Context
   const post = await microblog.addPost('hello world')
-  const likeTid = await microblog.likePost(post.author, post.tid)
+  const like = await microblog.likePost(post.author, post.tid)
   let likes = await microblog.listLikes(1)
   t.is(likes.length, 1, 'correct number of likes')
-  t.is(likes[0]?.tid?.toString(), likeTid?.toString(), 'correct id on like')
+  t.is(likes[0]?.tid?.toString(), like.tid.toString(), 'correct id on like')
   t.is(
     likes[0]?.post_tid?.toString(),
     post.tid?.toString(),
     'correct post_id on like',
   )
 
-  await microblog.deleteLike(likeTid)
+  await microblog.deleteLike(like.tid)
   likes = await microblog.listLikes(1)
   t.is(likes.length, 0, 'deletes likes')
 })

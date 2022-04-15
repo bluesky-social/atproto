@@ -1,5 +1,9 @@
 import { z } from 'zod'
-import { schema as repo } from '../repo/types.js'
+import TID from '../repo/tid.js'
+import { Follow, schema as repo } from '../repo/types.js'
+
+// SCHEMAS
+// ------------
 
 const post = z.object({
   tid: repo.strToTid,
@@ -72,4 +76,70 @@ export const schema = {
   timelinePost,
   timeline,
   accountInfo,
+}
+
+// INTERFACES
+// ------------
+
+export interface MicroblogClient extends MicroblogReaderI {
+  did: string
+  register(name: string): Promise<void>
+  addPost(text: string): Promise<Post>
+  editPost(tid: TID, text: string): Promise<void>
+  deletePost(tid: TID): Promise<void>
+  followUser(nameOrDid: string): Promise<void>
+  unfollowUser(nameOrDid: string): Promise<void>
+  likePost(postAuthorNameOrDid: string, postTid: TID): Promise<Like>
+  deleteLike(tid: TID): Promise<void>
+  unlikePost(authorNameOrDid: string, postTid: TID): Promise<void>
+  export(): Promise<Uint8Array>
+}
+
+export interface MicroblogReaderI {
+  ownDid(): string
+  getOwnServerDid(): Promise<string>
+  getServerDid(url: string): Promise<string>
+  resolveUser(
+    nameOrDid: string,
+  ): Promise<{ username: string; did: string; hostUrl: string }>
+  resolveDid(nameOrDid: string): Promise<string>
+  resolveUsername(nameOrDid: string): Promise<string>
+  lookupDid(username: string): Promise<string | null>
+  lookupUsername(did: string): Promise<string | null>
+  normalizeUsername(username: string): { name: string; hostUrl: string }
+
+  getAccountInfo(nameOrDid: string): Promise<AccountInfo | null>
+  retrieveFeed(
+    nameOrDid: string,
+    count: number,
+    from?: TID,
+  ): Promise<Timeline | null>
+  retrieveTimeline(count: number, from?: TID): Promise<Timeline>
+
+  getPostInfo(nameOrDid: string, tid: TID): Promise<TimelinePost | null>
+  getPost(tid: TID): Promise<Post | null>
+  getPostFromUser(nameOrDid: string, tid: TID): Promise<Post | null>
+  listPosts(count: number, from?: TID): Promise<Post[]>
+  listPostsFromUser(
+    nameOrDid: string,
+    count: number,
+    from?: TID,
+  ): Promise<Post[]>
+
+  listFollows(): Promise<Follow[]>
+  listFollowsFromUser(nameOrDid: string): Promise<Follow[]>
+  listFollowers(): Promise<Follow[]>
+  listFollowersForUser(nameOrDid: string): Promise<Follow[]>
+
+  getLikeByPost(authorNameOrDid: string, postTid: TID): Promise<Like | null>
+  getLikeByPostForUser(
+    userNameOrDid: string,
+    authorNameOrDid: string,
+    postTid: TID,
+  ): Promise<Like | null>
+  listLikesFromUser(
+    nameOrDid: string,
+    count: number,
+    from?: TID,
+  ): Promise<Like[]>
 }
