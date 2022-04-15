@@ -11,11 +11,19 @@ import * as config from '../lib/config.js'
 export const loadClient = async (
   repoPath: string,
 ): Promise<MicroblogClient> => {
-  return await loadFull(repoPath)
+  const cfg = await config.loadCfg(repoPath)
+  if (cfg.account.delegator) {
+    return loadDelegate(cfg)
+  } else {
+    return loadFull(cfg, repoPath)
+  }
 }
 
-export const loadFull = async (repoPath: string): Promise<MicroblogFull> => {
-  const { account, keypair, ucanStore, root } = await config.loadCfg(repoPath)
+export const loadFull = async (
+  cfg: config.Config,
+  repoPath: string,
+): Promise<MicroblogFull> => {
+  const { account, keypair, ucanStore, root } = cfg
   const blockstore = IpldStore.createPersistent(
     path.join(repoPath, 'blockstore'),
   )
@@ -33,9 +41,9 @@ export const loadFull = async (repoPath: string): Promise<MicroblogFull> => {
 }
 
 export const loadDelegate = async (
-  repoPath: string,
+  cfg: config.Config,
 ): Promise<MicroblogDelegator> => {
-  const { account, keypair, ucanStore } = await config.loadCfg(repoPath)
+  const { account, keypair, ucanStore } = cfg
   return new MicroblogDelegator(
     `http://${account.server}`,
     keypair.did(),

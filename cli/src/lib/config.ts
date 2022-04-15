@@ -7,6 +7,7 @@ import { CID } from 'multiformats/cid'
 export type AccountJson = {
   username: string
   server: string
+  delegator: boolean
 }
 
 export type Config = {
@@ -20,6 +21,7 @@ export const writeCfg = async (
   repoPath: string,
   username: string,
   server: string,
+  delegator: boolean,
 ) => {
   try {
     await fsp.mkdir(repoPath, { recursive: true })
@@ -37,6 +39,7 @@ export const writeCfg = async (
   const account: AccountJson = {
     username,
     server: serverCleaned,
+    delegator,
   }
   await fsp.writeFile(
     path.join(repoPath, 'sky.key'),
@@ -102,14 +105,15 @@ const readAccountFile = async (
   const str = (await readFile(repoPath, filename, 'utf-8')) as string
   try {
     const obj = JSON.parse(str)
-    const username = obj.username
-    const server = obj.server
+    const { username, server, delegator } = obj
     if (!username || typeof username !== 'string')
       throw new Error('"username" is invalid')
     if (!server || typeof server !== 'string')
       throw new Error('"server" is invalid')
+    if (typeof delegator !== 'boolean')
+      throw new Error('"delegator" is invalid')
     const serverCleaned = cleanHost(server)
-    return { username, server: serverCleaned } as AccountJson
+    return { username, server: serverCleaned, delegator }
   } catch (e) {
     console.error(`Failed to load ${filename} file`)
     console.error(e)
