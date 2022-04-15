@@ -32,8 +32,9 @@ export class MicroblogFull extends MicroblogReader implements MicroblogClient {
     super(url, repo.did)
     this.did = repo.did
     this.repo = repo
-    this.pushOnUpdate = opts.pushOnUpdate || true
-    this.onPush = opts.onPush
+    const { pushOnUpdate = true, onPush = undefined } = opts
+    this.pushOnUpdate = pushOnUpdate
+    this.onPush = onPush
   }
 
   async register(name: string): Promise<void> {

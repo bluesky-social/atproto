@@ -28,7 +28,7 @@ test.serial('id registration', async (t) => {
 })
 
 test.serial('id retrieval', async (t) => {
-  const did = await alice.lookupDid('alice')
+  const did = await alice.lookupDid(`alice@${HOST}`)
   t.is(did, alice.did, 'did retrieval success')
 })
 
