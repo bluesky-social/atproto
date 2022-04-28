@@ -2,7 +2,7 @@
 
 Welcome 👋
 
-This is an early prototype of the Bluesky data network. We built this for two primary reasons:
+This is an early proof of concept of the Bluesky data network. We built this for two primary reasons:
 - to explore and demonstrate some of the core concepts that we're working with: content addressing, user held keys, user generated authority, and a federated network topology
 - to help identity the sort of interfaces we'll want and the rough edges and pain points that we'll hit along the way
 
