@@ -87,15 +87,9 @@ const readFile = async (
   filename: string,
   encoding?: BufferEncoding,
 ): Promise<string | Buffer> => {
-  try {
-    const value = await fsp.readFile(path.join(repoPath, filename), encoding)
-    if (!value) throw new Error(`${filename} file not found`)
-    return value
-  } catch (e) {
-    console.error(`Failed to read ${filename} file`)
-    console.error(e)
-    process.exit(1)
-  }
+  const value = await fsp.readFile(path.join(repoPath, filename), encoding)
+  if (!value) throw new Error(`${filename} file not found`)
+  return value
 }
 
 const readAccountFile = async (
@@ -103,22 +97,15 @@ const readAccountFile = async (
   filename: string,
 ): Promise<AccountJson> => {
   const str = (await readFile(repoPath, filename, 'utf-8')) as string
-  try {
-    const obj = JSON.parse(str)
-    const { username, server, delegator } = obj
-    if (!username || typeof username !== 'string')
-      throw new Error('"username" is invalid')
-    if (!server || typeof server !== 'string')
-      throw new Error('"server" is invalid')
-    if (typeof delegator !== 'boolean')
-      throw new Error('"delegator" is invalid')
-    const serverCleaned = cleanHost(server)
-    return { username, server: serverCleaned, delegator }
-  } catch (e) {
-    console.error(`Failed to load ${filename} file`)
-    console.error(e)
-    process.exit(1)
-  }
+  const obj = JSON.parse(str)
+  const { username, server, delegator } = obj
+  if (!username || typeof username !== 'string')
+    throw new Error('"username" is invalid')
+  if (!server || typeof server !== 'string')
+    throw new Error('"server" is invalid')
+  if (typeof delegator !== 'boolean') throw new Error('"delegator" is invalid')
+  const serverCleaned = cleanHost(server)
+  return { username, server: serverCleaned, delegator }
 }
 
 export const readRoot = async (repoPath: string): Promise<CID | null> => {
