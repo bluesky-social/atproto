@@ -32,31 +32,7 @@ router.post('/:did', async (req, res) => {
   const { did } = util.checkReqBody(req.params, postRepoReq)
   const bytes = await util.readReqBytes(req)
 
-  const maybeRepo = await util.maybeLoadRepo(res, did)
   const db = util.getDB(res)
-
-  let repo: Repo
-  const evts: delta.Event[] = []
-
-  // @TODO: we should do these on a temp in-memory blockstore before merging down to our on-disk one
-  if (maybeRepo) {
-    repo = maybeRepo
-    await repo.loadAndVerifyDiff(bytes, async (evt) => {
-      evts.push(evt)
-    })
-    await db.updateRepoRoot(did, repo.cid)
-  } else {
-    const blockstore = util.getBlockstore(res)
-    repo = await Repo.fromCarFile(bytes, blockstore, async (evt) => {
-      evts.push(evt)
-    })
-    await db.createRepoRoot(did, repo.cid)
-  }
-
-  for (const evt of evts) {
-    await processEvent(db, util.getOwnHost(req), repo, did, evt)
-  }
-  await subscriptions.notifySubscribers(db, repo)
 
   // check to see if we have their username in DB, for indexed queries
   const haveUsername = await db.isDidRegistered(did)
@@ -67,6 +43,33 @@ router.post('/:did', async (req, res) => {
       await db.registerDid(name, did, host)
     }
   }
+
+  const maybeRepo = await util.maybeLoadRepo(res, did)
+  const isNewRepo = maybeRepo === null
+  let repo: Repo
+  const evts: delta.Event[] = []
+
+  // @TODO: we should do these on a temp in-memory blockstore before merging down to our on-disk one
+  if (!isNewRepo) {
+    repo = maybeRepo
+    await repo.loadAndVerifyDiff(bytes, async (evt) => {
+      evts.push(evt)
+    })
+  } else {
+    const blockstore = util.getBlockstore(res)
+    repo = await Repo.fromCarFile(bytes, blockstore, async (evt) => {
+      evts.push(evt)
+    })
+  }
+
+  for (const evt of evts) {
+    await processEvent(db, util.getOwnHost(req), repo, did, evt)
+  }
+  await subscriptions.notifySubscribers(db, repo)
+
+  if (isNewRepo) {
+    await db.createRepoRoot(did, repo.cid)
+  } else [await db.updateRepoRoot(did, repo.cid)]
 
   res.status(200).send()
 })

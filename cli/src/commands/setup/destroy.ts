@@ -20,7 +20,7 @@ export default cmd({
       required: true,
       default: false,
     })
-    if (!isSure) {
+    if (!isSure.question) {
       console.log('Exiting without deleting')
       return
     }
