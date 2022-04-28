@@ -21,6 +21,15 @@ export default cmd({
     let { username, server, register, delegatorClient } = args
 
     console.log(`Repo path: ${REPO_PATH}`)
+
+    const exists = await config.cfgExists(REPO_PATH)
+    if (exists) {
+      console.log('Repo already exists.')
+      console.log('To overwrite, run `destroy`.')
+      console.log('If unregistered, run `register`.')
+      return
+    }
+
     if (!username || !server) {
       console.log(`This utility will initialize your sky repo.`)
       console.log(`Press ^C at any time to quit.`)
@@ -63,7 +72,6 @@ export default cmd({
     }
 
     console.log('Generating repo...')
-
     await config.writeCfg(REPO_PATH, username, server, delegatorClient)
     const client = await loadClient(REPO_PATH)
 
