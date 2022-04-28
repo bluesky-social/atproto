@@ -2,11 +2,13 @@
 
 Welcome 👋
 
-This is an early proof of concept of the Bluesky data network. We built this for two primary reasons:
-- to explore and demonstrate some of the core concepts that we're working with: content addressing, user held keys, user generated authority, and a federated network topology
-- to help identity the sort of interfaces we'll want and the rough edges and pain points that we'll hit along the way
+This is an early proof of concept for the Bluesky data network. We built this for two primary reasons:
+- To explore and demonstrate some of the core concepts that we're working with: content addressing, user held keys, user generated authority, and a federated network topology
+- To help identify the sort of interfaces we'll want and the rough edges and pain points that we'll hit along the way
 
-**This is not production-ready, or even alpha software. This is a proof of concept.** Please do not try to build your next big social network on this. There are many rough edges. Interfaces and data structures are likely to radically change, and we took some shortcuts on concepts that were not in the scope of this demo (key management, schemas, indexing, to name a few). This experiment is primarily confined to the data & authorization layer with hints at some of the other systems.
+**This is not production-ready, or even alpha software. This is a proof of concept.**
+
+Please do not try to build your next big social network on this. There are many rough edges. Interfaces and data structures are likely to radically change, and we took some shortcuts on concepts that were not in the scope of this demo (key management, schemas, indexing, to name a few). This experiment is primarily confined to the data & authorization layer with hints at some of the other systems.
 
 To learn more about the Bluesky network, and get a fuller picture of what we're building towards check out our docs on [Network architecture]() and the [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
