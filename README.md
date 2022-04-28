@@ -1,10 +1,18 @@
-# Bluesky
+# Bluesky Experiment 🧪
 
-Welcome to the Bluesky network prototype 🌞
+Welcome 👋
 
-To learn more about the Bluesky network check out our docs on [Network architecture]() and the [Blogpost on self-authenticating data structures]().
+This is an early prototype of the Bluesky data network. We built this for two primary reasons:
+- to explore and demonstrate some of the core concepts that we're working with: content addressing, user held keys, user generated authority, and a federated network topology
+- to help identity the sort of interfaces we'll want and the rough edges and pain points that we'll hit along the way
 
-We encourage you to play around with the tools here, but please do not use anything here in production. This is a _proof of concept_ meant to demonstrate the core functionality of the bluesky network.
+**This is not production-ready, or even alpha software. This is a proof of concept.** Please do not try to build your next big social network on this. There are many rough edges. Interfaces and data structures are likely to radically change, and we took some shortcuts on concepts that were not in the scope of this demo (key management, schemas, indexing, to name a few). This experiment is primarily confined to the data & authorization layer with hints at some of the other systems.
+
+To learn more about the Bluesky network, and get a fuller picture of what we're building towards check out our docs on [Network architecture]() and the [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
+
+All that being said, we're very excited to share some of the work that we've done here. Please play around with the server & CLI, poke around the code, even build a small demo app to get the feel for it!
+
+So without further ado, let's dive into what you'll find here.
 
 ## 🔍 What's here?
 
@@ -123,7 +131,7 @@ From project root:
 ---
 
 ## 🗒️ Documentation
-We are putting together more detailed documentation for the server API as well as the SDK.
+We have not put together detailed coumentation for the server API or the SDK because the APIs are expected to change soon.
 
 If you are inclined to play with either, your best bet is to check the tests to see how to use each part of the library.
 
@@ -150,7 +158,7 @@ A few notes for the curious ones that find themselves trawling the depths of the
 
 Data is separated in the user repository by namespace.
 
-A user's microblogging data lives separately from theichr community forum data which lives separate from their long form writing data and so on. Each namespace following its respective data spec.
+A user's microblogging data lives separately from their image broadcasting data which lives separately from their long form writing data and so on. Each namespace following its respective data spec.
 
 We've implemented only one sample namespace here: microblogging.
 
