@@ -10,7 +10,7 @@ import {
   MicroblogClient,
 } from './types.js'
 import * as check from '../common/check.js'
-import { assureAxiosError, authCfg, cleanHostUrl } from '../network/util.js'
+import { parseAxiosError, cleanHostUrl, authCfg } from '../network/util.js'
 import * as ucan from 'ucans'
 import { Collection } from '../repo/types.js'
 import { Keypair } from '../common/types.js'
@@ -71,8 +71,8 @@ export class MicroblogDelegator
         authCfg(token),
       )
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
     return post
   }
@@ -93,8 +93,8 @@ export class MicroblogDelegator
         authCfg(token),
       )
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 
@@ -111,8 +111,8 @@ export class MicroblogDelegator
         ...authCfg(token),
       })
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 
@@ -123,8 +123,8 @@ export class MicroblogDelegator
     try {
       await axios.post(`${this.url}/data/relationship`, data, authCfg(token))
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 
@@ -138,8 +138,8 @@ export class MicroblogDelegator
         ...authCfg(token),
       })
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 
@@ -163,8 +163,8 @@ export class MicroblogDelegator
         authCfg(token),
       )
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
     return like
   }
@@ -182,8 +182,8 @@ export class MicroblogDelegator
         ...authCfg(token),
       })
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 
@@ -211,8 +211,8 @@ export class MicroblogDelegator
       })
       return check.assure(z.number(), res.data.count)
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 

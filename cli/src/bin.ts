@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import minimist from 'minimist'
+import chalk from 'chalk'
 import './commands/index.js'
 import { matchCommand, runCommand } from './lib/command.js'
 import { usage, commandUsage } from './lib/usage.js'
@@ -24,8 +25,7 @@ if (!cmd) {
       try {
         await runCommand(cmd, process.argv.slice(2 + cmd.nameParsed.length))
       } catch (e: any) {
-        console.error(e.toString())
-        process.exit(1)
+        console.error(chalk.red(e.toString()))
       }
     })()
   }

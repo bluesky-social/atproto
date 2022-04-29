@@ -26,9 +26,7 @@ export const writeCfg = async (
   try {
     await fsp.mkdir(repoPath, { recursive: true })
   } catch (e) {
-    console.error(`Failed to create repo at ${repoPath}`)
-    console.error(e)
-    process.exit(1)
+    throw new Error(`Failed to create repo at ${repoPath}`)
   }
 
   const keypair = await ucan.EdKeypair.create({ exportable: true })

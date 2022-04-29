@@ -34,6 +34,12 @@ router.post('/register', async (req, res) => {
   )
   const host = util.getOwnHost(req)
 
+  if (await db.isNameRegistered(username, host)) {
+    throw new ServerError(409, 'Username already taken')
+  } else if (await db.isDidRegistered(did)) {
+    throw new ServerError(409, 'Did already registered')
+  }
+
   await db.registerDid(username, did, host)
   // create empty repo
   if (createRepo) {

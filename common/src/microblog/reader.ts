@@ -13,7 +13,7 @@ import {
 } from './types.js'
 import { schema as repoSchema } from '../repo/types.js'
 import * as check from '../common/check.js'
-import { assureAxiosError } from '../network/util.js'
+import { parseAxiosError } from '../network/util.js'
 import { Follow } from '../repo/types.js'
 import * as service from '../network/service.js'
 
@@ -69,7 +69,7 @@ export class MicroblogReader implements MicroblogReaderI {
     if (nameOrDid.startsWith('did:')) return nameOrDid
     const did = await this.lookupDid(nameOrDid)
     if (!did) {
-      throw new Error(`Coult not find user: ${nameOrDid}`)
+      throw new Error(`Could not find user: ${nameOrDid}`)
     }
     return did
   }
@@ -78,7 +78,7 @@ export class MicroblogReader implements MicroblogReaderI {
     if (!nameOrDid.startsWith('did:')) return nameOrDid
     const username = await this.lookupUsername(nameOrDid)
     if (!username) {
-      throw new Error(`Coult not find user: ${nameOrDid}`)
+      throw new Error(`Could not find user: ${nameOrDid}`)
     }
     return username
   }
@@ -115,11 +115,11 @@ export class MicroblogReader implements MicroblogReaderI {
       })
       return check.assure(schema.accountInfo, res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
+      const err = parseAxiosError(e)
+      if (err.code === 404) {
         return null
       }
-      throw new Error(err.message)
+      throw new Error(err.msg)
     }
   }
 
@@ -136,11 +136,11 @@ export class MicroblogReader implements MicroblogReaderI {
       })
       return check.assure(schema.timeline, res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
+      const err = parseAxiosError(e)
+      if (err.code === 404) {
         return null
       }
-      throw new Error(err.message)
+      throw new Error(err.msg)
     }
   }
 
@@ -150,8 +150,8 @@ export class MicroblogReader implements MicroblogReaderI {
       const res = await axios.get(`${this.url}/indexer/timeline`, { params })
       return check.assure(schema.timeline, res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 
@@ -164,11 +164,11 @@ export class MicroblogReader implements MicroblogReaderI {
       })
       return check.assure(schema.timelinePost, res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
+      const err = parseAxiosError(e)
+      if (err.code === 404) {
         return null
       }
-      throw new Error(err.message)
+      throw new Error(err.msg)
     }
   }
 
@@ -188,11 +188,11 @@ export class MicroblogReader implements MicroblogReaderI {
       res = await axios.get(`${hostUrl}/data/post`, { params })
       return check.assure(schema.post, res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
+      const err = parseAxiosError(e)
+      if (err.code === 404) {
         return null
       }
-      throw new Error(err.message)
+      throw new Error(err.msg)
     }
   }
 
@@ -218,8 +218,8 @@ export class MicroblogReader implements MicroblogReaderI {
       })
       return check.assure(z.array(schema.post), res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 
@@ -236,8 +236,8 @@ export class MicroblogReader implements MicroblogReaderI {
       })
       return check.assure(z.array(repoSchema.follow), res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 
@@ -254,8 +254,8 @@ export class MicroblogReader implements MicroblogReaderI {
       })
       return check.assure(z.array(repoSchema.follow), res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 
@@ -285,11 +285,11 @@ export class MicroblogReader implements MicroblogReaderI {
       })
       return check.assure(schema.like, res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      if (err.response?.status === 404) {
+      const err = parseAxiosError(e)
+      if (err.code === 404) {
         return null
       }
-      throw new Error(err.message)
+      throw new Error(err.msg)
     }
   }
 
@@ -311,8 +311,8 @@ export class MicroblogReader implements MicroblogReaderI {
       })
       return check.assure(z.array(schema.like), res.data)
     } catch (e) {
-      const err = assureAxiosError(e)
-      throw new Error(err.message)
+      const err = parseAxiosError(e)
+      throw new Error(err.msg)
     }
   }
 }

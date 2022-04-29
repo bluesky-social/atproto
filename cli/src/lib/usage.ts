@@ -44,7 +44,6 @@ export function usage(err: any) {
       console.log(`${cat.lhs[i].padEnd(lhsLength)}  ${cat.rhs[i]}`)
     }
   }
-  process.exit(err ? 1 : 0)
 }
 
 export function commandUsage(cmd: RegisteredCmd) {
