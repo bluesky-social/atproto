@@ -14,7 +14,9 @@ To learn more about the Bluesky network, and get a fuller picture of what we're 
 
 All that being said, we're very excited to share some of the work that we've done here. Please play around with the server & CLI, poke around the code, even build a small demo app to get the feel for it!
 
-So without further ado, let's dive into what you'll find here.
+We encourage you to make Discussions with any questions or ideas you have - about the code or the architecture overview. This code is not meant to be perfect or 100% bug free. Therefore, while we're interested to hear about any problems you may run into (in the form of Issues), we will likely leave them for a larger rewrite and may not be resolving them in the near term.
+
+And without further ado, let's dive into what you'll find here.
 
 ## 🔍 What's here?
 
@@ -152,7 +154,9 @@ For communicating directly with the server api, there is a schema above each rou
 ---
 
 ## 🔦 Notes for code spelunkers
-We hope you jump into the code to explore these concepts alongside us! Feel free to create issues/discussion with problems that you come across or questions that you have.
+We hope you jump into the code to explore these concepts alongside us! 
+
+As mentioned earlier, please join in the Discussions with questions and ideas. Feel free to report bugs, with the understanding that we may not be resolving them any time soon.
 
 A few notes for the curious ones that find themselves trawling the depths of the code:
 
@@ -182,6 +186,6 @@ UCAN permissions are also simplified at the current moment, allowing for scoped 
 
 ### Client types
 
-In the architecture overview, we specify three client types: full, light, and delegator. This library only contains implementaions of full and delegator. Thus we use delegator for light weight operations and a full client when we want the entire repository. 
+In the architecture overview, we specify three client types: full, light, and delegator. This library only contains implementations of full and delegator. Thus we use delegator for light weight operations and a full client when we want the entire repository. 
 
 The main ramification of this is that data server subscribers must receive the _full repo_ of the users that they subscribe to. Once we add in light clients, they can receive only the _sections_ of the repo that they are interested in (for instance a single post or a like) while having the same trust model as a full repo.
