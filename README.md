@@ -186,6 +186,6 @@ UCAN permissions are also simplified at the current moment, allowing for scoped 
 
 ### Client types
 
-In the architecture overview, we specify three client types: full, light, and delegator. This library only contains implementaions of full and delegator. Thus we use delegator for light weight operations and a full client when we want the entire repository. 
+In the architecture overview, we specify three client types: full, light, and delegator. This library only contains implementations of full and delegator. Thus we use delegator for light weight operations and a full client when we want the entire repository. 
 
 The main ramification of this is that data server subscribers must receive the _full repo_ of the users that they subscribe to. Once we add in light clients, they can receive only the _sections_ of the repo that they are interested in (for instance a single post or a like) while having the same trust model as a full repo.
