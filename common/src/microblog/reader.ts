@@ -69,7 +69,7 @@ export class MicroblogReader implements MicroblogReaderI {
     if (nameOrDid.startsWith('did:')) return nameOrDid
     const did = await this.lookupDid(nameOrDid)
     if (!did) {
-      throw new Error(`Coult not find user: ${nameOrDid}`)
+      throw new Error(`Could not find user: ${nameOrDid}`)
     }
     return did
   }
@@ -78,7 +78,7 @@ export class MicroblogReader implements MicroblogReaderI {
     if (!nameOrDid.startsWith('did:')) return nameOrDid
     const username = await this.lookupUsername(nameOrDid)
     if (!username) {
-      throw new Error(`Coult not find user: ${nameOrDid}`)
+      throw new Error(`Could not find user: ${nameOrDid}`)
     }
     return username
   }
