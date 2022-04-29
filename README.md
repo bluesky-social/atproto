@@ -14,7 +14,7 @@ To learn more about the Bluesky network, and get a fuller picture of what we're 
 
 All that being said, we're very excited to share some of the work that we've done here. Please play around with the server & CLI, poke around the code, even build a small demo app to get the feel for it!
 
-We encourage you to make Discussions with any questions or ideas you have - about the code or the architecture overview. This code is not meant to be perfect or 100% bug free. Therefore, while we're interested to hear about any problems you may run into, we will likely leave them for a larger rewrite and won't be resolving them in the near term. The same goes for Pull Requests, which we won't be accepting at this time.
+We encourage you to make Discussions with any questions or ideas you have - about the code or the architecture overview. This code is not meant to be perfect or 100% bug free. Therefore, while we're interested to hear about any problems you may run into (in the form of Issues), we will likely leave them for a larger rewrite and may not be resolving them in the near term.
 
 And without further ado, let's dive into what you'll find here.
 
@@ -156,7 +156,7 @@ For communicating directly with the server api, there is a schema above each rou
 ## 🔦 Notes for code spelunkers
 We hope you jump into the code to explore these concepts alongside us! 
 
-As mentioned earlier, please join in the Discussions with questions and ideas. Feel free to report bugs, with the understanding that we likely won't be resolving them in the short term.
+As mentioned earlier, please join in the Discussions with questions and ideas. Feel free to report bugs, with the understanding that we may not be resolving them in the short term.
 
 A few notes for the curious ones that find themselves trawling the depths of the code:
 
