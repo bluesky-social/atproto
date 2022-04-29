@@ -156,7 +156,7 @@ For communicating directly with the server api, there is a schema above each rou
 ## 🔦 Notes for code spelunkers
 We hope you jump into the code to explore these concepts alongside us! 
 
-As mentioned earlier, please join in the Discussions with questions and ideas. Feel free to report bugs, with the understanding that we may not be resolving them in the short term.
+As mentioned earlier, please join in the Discussions with questions and ideas. Feel free to report bugs, with the understanding that we may not be resolving them any time soon.
 
 A few notes for the curious ones that find themselves trawling the depths of the code:
 
