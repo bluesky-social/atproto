@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { CID } from 'multiformats'
-import { assureAxiosError, authCfg, didNetworkUrl } from './util.js'
+import { authCfg, didNetworkUrl, parseAxiosError } from './util.js'
 import * as check from '../common/check.js'
 import { schema as repoSchema } from '../repo/types.js'
 import * as ucan from 'ucans'
@@ -20,8 +20,8 @@ export const registerToDidNetwork = async (
   try {
     await axios.post(url, data)
   } catch (e) {
-    const err = assureAxiosError(e)
-    throw new Error(err.message)
+    const err = parseAxiosError(e)
+    throw new Error(err.msg)
   }
 }
 
@@ -34,11 +34,11 @@ export const getUsernameFromDidNetwork = async (
     const res = await axios.get(url, { params })
     return res.data.username
   } catch (e) {
-    const err = assureAxiosError(e)
-    if (err.response?.status === 404) {
+    const err = parseAxiosError(e)
+    if (err.code === 404) {
       return null
     }
-    throw new Error(err.message)
+    throw new Error(err.msg)
   }
 }
 
@@ -53,8 +53,8 @@ export const register = async (
   try {
     await axios.post(`${url}/id/register`, data, authCfg(token))
   } catch (e) {
-    const err = assureAxiosError(e)
-    throw new Error(err.message)
+    const err = parseAxiosError(e)
+    throw new Error(err.msg)
   }
 }
 
@@ -69,11 +69,11 @@ export const lookupDid = async (
     })
     return check.assure(repoSchema.did, res.data.id)
   } catch (e) {
-    const err = assureAxiosError(e)
-    if (err.response?.status === 404) {
+    const err = parseAxiosError(e)
+    if (err.code === 404) {
       return null
     }
-    throw new Error(err.message)
+    throw new Error(err.msg)
   }
 }
 
@@ -82,8 +82,8 @@ export const getServerDid = async (url: string): Promise<string> => {
     const res = await axios.get(`${url}/.well-known/did.json`)
     return res.data.id
   } catch (e) {
-    const err = assureAxiosError(e)
-    throw new Error(`Could not retrieve server did ${err.message}`)
+    const err = parseAxiosError(e)
+    throw new Error(`Could not retrieve server did ${err.msg}`)
   }
 }
 
@@ -96,11 +96,11 @@ export const getRemoteRoot = async (
     const res = await axios.get(`${url}/data/root`, { params })
     return CID.parse(res.data.root)
   } catch (e) {
-    const err = assureAxiosError(e)
-    if (err.response?.status === 404) {
+    const err = parseAxiosError(e)
+    if (err.code === 404) {
       return null
     }
-    throw new Error(`Could not retrieve server did ${err.message}`)
+    throw new Error(`Could not retrieve server did ${err.msg}`)
   }
 }
 
@@ -113,8 +113,8 @@ export const subscribe = async (
   try {
     await axios.post(`${url}/data/subscribe`, data)
   } catch (e) {
-    const err = assureAxiosError(e)
-    throw new Error(`Could not retrieve server did ${err.message}`)
+    const err = parseAxiosError(e)
+    throw new Error(`Could not retrieve server did ${err.msg}`)
   }
 }
 
@@ -130,8 +130,8 @@ export const pushRepo = async (
       },
     })
   } catch (e) {
-    const err = assureAxiosError(e)
-    throw new Error(`Could not retrieve server did ${err.message}`)
+    const err = parseAxiosError(e)
+    throw new Error(`Could not retrieve server did ${err.msg}`)
   }
 }
 
@@ -148,10 +148,10 @@ export const pullRepo = async (
     })
     return new Uint8Array(res.data)
   } catch (e) {
-    const err = assureAxiosError(e)
-    if (err.response?.status === 404) {
+    const err = parseAxiosError(e)
+    if (err.code === 404) {
       return null
     }
-    throw new Error(`Could not retrieve server did ${err.message}`)
+    throw new Error(`Could not retrieve server did ${err.msg}`)
   }
 }

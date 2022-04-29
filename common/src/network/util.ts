@@ -10,6 +10,18 @@ export const assureAxiosError = (err: unknown): AxiosError => {
   throw err
 }
 
+export const parseAxiosError = (
+  e: unknown,
+): { code: number; msg: string; err: AxiosError } => {
+  const err = assureAxiosError(e)
+  const msg = err.response?.data || err.message
+  return {
+    code: err.response?.status || 500,
+    msg,
+    err,
+  }
+}
+
 export const authHeader = (token: ucan.Chained): AxiosRequestHeaders => {
   return {
     Authorization: `Bearer ${token.encoded()}`,
