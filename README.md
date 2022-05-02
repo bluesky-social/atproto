@@ -28,8 +28,6 @@ This is a monorepo containing three packages:
   - an authorization library for working with bluesky-capable UCANs
   - some helpers for making calls to a bluesky data server
 
-  This package is published on npm as [bsky](https://www.npmjs.com/package/bsky)
-
 - `server`: This is an implementation of a bluesky server. For simplicity's sake, it actually combines the function of three "roles" in the network:
   - **Identity:** 
     - maintains a mapping of username -> DID
