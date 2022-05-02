@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { check } from '@bluesky/common'
+import { check } from '@adx/common'
 
 export const handler = (
   err: Error,

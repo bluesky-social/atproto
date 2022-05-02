@@ -1,7 +1,7 @@
 import path from 'path'
 import { promises as fsp } from 'fs'
 import * as ucan from 'ucans'
-import { auth } from '@bluesky/common'
+import { auth } from '@adx/common'
 import { CID } from 'multiformats/cid'
 
 export type AccountJson = {
@@ -40,7 +40,7 @@ export const writeCfg = async (
     delegator,
   }
   await fsp.writeFile(
-    path.join(repoPath, 'sky.key'),
+    path.join(repoPath, 'adx.key'),
     await keypair.export(),
     'utf-8',
   )
@@ -67,7 +67,7 @@ export const cfgExists = async (repoPath: string): Promise<boolean> => {
 
 export const loadCfg = async (repoPath: string): Promise<Config> => {
   const account = await readAccountFile(repoPath, 'account.json')
-  const secretKeyStr = (await readFile(repoPath, 'sky.key', 'utf-8')) as string
+  const secretKeyStr = (await readFile(repoPath, 'adx.key', 'utf-8')) as string
   const keypair = ucan.EdKeypair.fromSecretKey(secretKeyStr)
   const tokenStr = (await readFile(repoPath, 'full.ucan', 'utf-8')) as string
   const ucanStore = await ucan.Store.fromTokens([tokenStr])

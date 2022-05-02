@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { MicroblogDelegator, Post, TimelinePost } from '@bluesky/common'
+import { MicroblogDelegator, Post, TimelinePost } from '@adx/common'
 import { newClient, runTestServer } from './_util.js'
 
 const USE_TEST_SERVER = true

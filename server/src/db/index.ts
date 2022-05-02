@@ -4,8 +4,8 @@ import {
   Timeline,
   AccountInfo,
   TimelinePost,
-} from '@bluesky/common'
-import { Follow } from '@bluesky/common/dist/repo/types'
+  Follow,
+} from '@adx/common'
 import knex from 'knex'
 import { CID } from 'multiformats'
 import * as schema from './schema.js'

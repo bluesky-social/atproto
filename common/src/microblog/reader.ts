@@ -18,7 +18,7 @@ import { Follow } from '../repo/types.js'
 import * as service from '../network/service.js'
 
 export class MicroblogReader implements MicroblogReaderI {
-  namespace = 'did:bsky:microblog'
+  namespace = 'did:adx:microblog'
 
   url: string
   did?: string

@@ -22,7 +22,7 @@ export class MicroblogDelegator
   extends MicroblogReader
   implements MicroblogClient
 {
-  namespace = 'did:bsky:microblog'
+  namespace = 'did:adx:microblog'
   keypair: Keypair | null
   ucanStore: ucan.Store | null
   did: string

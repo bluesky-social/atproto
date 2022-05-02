@@ -1,8 +1,8 @@
 {
-  "name": "bluesky-demo",
-  "version": "1.0.0",
+  "name": "auth-data-experiment",
+  "version": "0.0.1",
   "main": "index.js",
-  "repository": "git@github.com:bluesky-social/bluesky-hack.git",
+  "repository": "git@github.com:bluesky-social/auth-data-experiment.git",
   "author": "Daniel Holmgren <dtholmgren@gmail.com>",
   "license": "MIT",
   "private": true,
@@ -13,10 +13,10 @@
   ],
   "scripts": {
     "build": "wsrun -c \"build\"",
-    "server": "yarn workspace @bluesky/server start",
+    "server": "yarn workspace @adx/server start",
     "server:alt": "PORT=5284 yarn server",
-    "cli": "yarn workspace @bluesky/cli cli",
-    "wipe-db": "yarn workspace @bluesky/server wipe-db"
+    "cli": "yarn workspace @adx/cli cli",
+    "wipe-db": "yarn workspace @adx/server wipe-db"
   },
   "devDependencies": {
     "rimraf": "^3.0.2",

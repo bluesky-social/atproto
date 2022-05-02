@@ -19,9 +19,5 @@ analytics.txt
 /**/*/.data
 /**/*/yarn-error.log
 
-go/bluesky
-go/bsky
-go/server
-
 server/blockstore
 server/dev.sqlite

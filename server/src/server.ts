@@ -7,7 +7,7 @@ import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import Routes from './routes/index.js'
-import { IpldStore } from '@bluesky/common'
+import { IpldStore } from '@adx/common'
 import Database from './db/index.js'
 import * as error from './error.js'
 
@@ -27,7 +27,7 @@ const runServer = (blockstore: IpldStore, db: Database, port: number) => {
   app.use(error.handler)
 
   app.listen(port, () => {
-    console.log(`🌞 Bluesky server is running at http://localhost:${port}`)
+    console.log(`🌞 ADX Data server is running at http://localhost:${port}`)
   })
 }
 

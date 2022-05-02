@@ -13,7 +13,7 @@ export function usage(err: any) {
     console.log('')
   }
   console.log(
-    `Usage: ${chalk.bold(`scdb`)} <command> ${chalk.gray(`[opts...]`)}`,
+    `Usage: ${chalk.bold(`adx`)} <command> ${chalk.gray(`[opts...]`)}`,
   )
 
   let lhsLength = 0
@@ -47,7 +47,7 @@ export function usage(err: any) {
 }
 
 export function commandUsage(cmd: RegisteredCmd) {
-  console.log(`${chalk.bold(`scdb ${cmd.name}`)}${cmdArgs(cmd)}${cmdHelp(cmd)}`)
+  console.log(`${chalk.bold(`adx ${cmd.name}`)}${cmdArgs(cmd)}${cmdHelp(cmd)}`)
   if (cmd.opts?.length) {
     console.log('')
     for (const opt of cmd.opts) {

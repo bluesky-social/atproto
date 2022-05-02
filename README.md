@@ -1,8 +1,10 @@
-# Bluesky Experiment 🧪
+# Authenticated Data eXperiment (ADX) 🧪
 
 Welcome 👋
 
-This is an early proof of concept for the Bluesky data network. We built this for two primary reasons:
+This is an early proof of concept for the Bluesky data protocol, which we've affectionately termed ADX - Authenticated Data eXperiment.
+
+We built this for two primary reasons:
 - To explore and demonstrate some of the core concepts that we're working with: content addressing, user held keys, user generated authority, and a federated network topology
 - To help identify the sort of interfaces we'll want and the rough edges and pain points that we'll hit along the way
 
@@ -81,10 +83,10 @@ From project root:
 (2) yarn server:alt # runs on localhost:2584
 
 # set an env var to store alice's repo in a scoped dir
-(3) export SKY_REPO_PATH="~/.sky-alice"
+(3) export ADX_REPO_PATH="~/.adx-alice"
 
 # set an env var to store bob's repo in a scoped dir
-(4) export SKY_REPO_PATH="~/.sky-bob"
+(4) export ADXZ_REPO_PATH="~/.adx-bob"
 
 # register alice
 (3) yarn cli init
@@ -174,13 +176,13 @@ Therefore we try to talk about the general concept as "interactions" and the par
 
 ### DIDs and UCANs
 
-In this prototype a user's root DID is a simple `did:key`. In the future, these will be more permanent identifiers such as `did:bsky` (read our proposal in the architecture docs) or `did:ion`. 
+In this prototype a user's root DID is a simple `did:key`. In the future, these will be more permanent identifiers such as `did:adx` (read our proposal in the architecture docs) or `did:ion`. 
 
 The DID network is outside of the scope of this prototype. However, a DID is the canoncial, unchanging identifier for a user. and is needed in ordcer to enable data/server interop.  Therefore we run a very simple DID network that only allows POSTs and GETs (with signature checks). The DID network is run _on_ the data server (`http://localhost:2583/did-network`), however every server that is running communicates with the _same_ data server when it comes to DID network requests. As DIDs are self-describing for resolution, we emulate this by hard coding how to discover a DID (ie "always go to _this particular address_ not your personal data server").
 
 You'll notice that we delegate a UCAN from the root key to the root key (which is a no-op), this is to mirror the process of receiving a fully delegated UCAN _from your actual root key_ to a _fully permissioned device key_.
 
-You'll also notice that the DID for the microblogging namespace is just `did:bsky:microblog` (which is not an actual valid DID). This is a stand in until we have an addressed network for schemas.
+You'll also notice that the DID for the microblogging namespace is just `did:adx:microblog` (which is not an actual valid DID). This is a stand in until we have an addressed network for schemas.
 
 UCAN permissions are also simplified at the current moment, allowing for scoped `WRITE` permission or full-repo `MAINTENANCE` permission. These permissions will be expanding in the future to allow presenting CRUD operations, and more detailed maintenance (ie creation vs merging vs cleanup, etc)
 

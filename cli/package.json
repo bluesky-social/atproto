@@ -1,5 +1,5 @@
 {
-  "name": "@bluesky/cli",
+  "name": "@adx/cli",
   "version": "0.0.1",
   "type": "module",
   "scripts": {
@@ -7,7 +7,7 @@
     "build": "(cd ../common && yarn build) && tsc --project tsconfig.json"
   },
   "dependencies": {
-    "@bluesky/common": "*",
+    "@adx/common": "*",
     "chalk": "^5.0.0",
     "minimist": "^1.2.5",
     "multiformats": "^9.6.4",
