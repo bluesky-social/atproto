@@ -13,14 +13,19 @@ if (env) {
 let blockstore: IpldStore
 let db: Database
 
-if (process.env.IN_MEMORY) {
-  blockstore = IpldStore.createInMemory()
-  db = Database.memory()
+const bsLoc = process.env.BLOCKSTORE_LOC
+const dbLoc = process.env.DATABASE_LOC
+
+if (bsLoc) {
+  blockstore = IpldStore.createPersistent(bsLoc)
 } else {
-  const bsLocation = process.env.BLOCKSTORE_LOC
-  const dbLocation = process.env.DATABASE_LOC || './dev.sqlite'
-  blockstore = IpldStore.createPersistent(bsLocation)
-  db = Database.sqlite(dbLocation)
+  blockstore = IpldStore.createInMemory()
+}
+
+if (dbLoc) {
+  db = Database.sqlite(dbLoc)
+} else {
+  db = Database.memory()
 }
 
 db.createTables()

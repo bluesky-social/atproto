@@ -25,7 +25,3 @@ go/server
 
 server/blockstore
 server/dev.sqlite
-server/blockstore-alt
-server/dev-alt.sqlite
-server/test.sqlite
-third-party/blockstore
