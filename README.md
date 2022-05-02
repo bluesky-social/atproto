@@ -12,7 +12,7 @@ We built this for two primary reasons:
 
 Please do not try to build your next big social network on this. There are many rough edges. Interfaces and data structures are likely to radically change, and we took some shortcuts on concepts that were not in the scope of this demo (key management, schemas, indexing, to name a few). This experiment is primarily confined to the data & authorization layer with hints at some of the other systems.
 
-To learn more about the Bluesky network, and get a fuller picture of what we're building towards check out our docs on [Network architecture]() and the [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
+To learn more about the ADX network, and get a fuller picture of what we're building towards check out our docs on [Network architecture]() and the [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
 All that being said, we're very excited to share some of the work that we've done here. Please play around with the server & CLI, poke around the code, even build a small demo app to get the feel for it!
 
@@ -24,13 +24,13 @@ And without further ado, let's dive into what you'll find here.
 
 This is a monorepo containing three packages:
 
-- `common`: This is the bluesky SDK that contains implementations of:
+- `common`: This is the adx SDK that contains implementations of:
   - the repository data structure 
   - a sample network namespace (microblogging) with both a full client and delegator client implementation
-  - an authorization library for working with bluesky-capable UCANs
-  - some helpers for making calls to a bluesky data server
+  - an authorization library for working with adx-capable UCANs
+  - some helpers for making calls to a adx data server
 
-- `server`: This is an implementation of a bluesky server. For simplicity's sake, it actually combines the function of three "roles" in the network:
+- `server`: This is an implementation of a adx server. For simplicity's sake, it actually combines the function of three "roles" in the network:
   - **Identity:** 
     - maintains a mapping of username -> DID
   - **Data:** 
@@ -43,7 +43,7 @@ This is a monorepo containing three packages:
     - stores an indexed version of repositories that it is hosting or that its user's are following
     - returned global view of data including follower lists, aggregated like counts, and user timelines.
 
-- `cli`: This is a basic command line interface for interactions with the bluesky network :
+- `cli`: This is a basic command line interface for interactions with the adx network:
   - creating a local repository
   - registering a user
   - creating/editing/deleting posts
