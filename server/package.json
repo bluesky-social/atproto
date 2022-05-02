@@ -6,11 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "tsc -w --project tsconfig.json & nodemon -q -w dist dist/index.js",
-    "temp": "IN_MEMORY=true yarn dev",
     "start": "node dist/index.js",
     "build": "(cd ../common && yarn build) && tsc --project tsconfig.json",
+    "persistent": "ENV=persistent yarn dev",
     "test": "ava -v test/*.ts",
-    "wipe-db": "rimraf dev.sqlite && rimraf blockstore && rimraf dev-alt.sqlite && rimraf blockstore-alt"
+    "wipe-db": "rimraf dev.sqlite && rimraf blockstore"
   },
   "dependencies": {
     "@vscode/sqlite3": "^5.0.7",

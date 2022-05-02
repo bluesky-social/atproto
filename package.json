@@ -14,7 +14,7 @@
   "scripts": {
     "build": "wsrun -c \"build\"",
     "server": "yarn workspace @bluesky/server start",
-    "server:alt": "ENV=alt yarn server",
+    "server:alt": "PORT=5284 yarn server",
     "cli": "yarn workspace @bluesky/cli cli",
     "wipe-db": "yarn workspace @bluesky/server wipe-db"
   },
