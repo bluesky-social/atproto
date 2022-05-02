@@ -176,13 +176,13 @@ Therefore we try to talk about the general concept as "interactions" and the par
 
 ### DIDs and UCANs
 
-In this prototype a user's root DID is a simple `did:key`. In the future, these will be more permanent identifiers such as `did:adx` (read our proposal in the architecture docs) or `did:ion`. 
+In this prototype a user's root DID is a simple `did:key`. In the future, these will be more permanent identifiers such as `did:ion` or our currently unnamed consortium-provided DID proposed in the architecture docs. 
 
 The DID network is outside of the scope of this prototype. However, a DID is the canoncial, unchanging identifier for a user. and is needed in ordcer to enable data/server interop.  Therefore we run a very simple DID network that only allows POSTs and GETs (with signature checks). The DID network is run _on_ the data server (`http://localhost:2583/did-network`), however every server that is running communicates with the _same_ data server when it comes to DID network requests. As DIDs are self-describing for resolution, we emulate this by hard coding how to discover a DID (ie "always go to _this particular address_ not your personal data server").
 
 You'll notice that we delegate a UCAN from the root key to the root key (which is a no-op), this is to mirror the process of receiving a fully delegated UCAN _from your actual root key_ to a _fully permissioned device key_.
 
-You'll also notice that the DID for the microblogging namespace is just `did:adx:microblog` (which is not an actual valid DID). This is a stand in until we have an addressed network for schemas.
+You'll also notice that the DID for the microblogging namespace is just `did:example:microblog` (which is not an actual valid DID). This is a stand in until we have an addressed network for schemas.
 
 UCAN permissions are also simplified at the current moment, allowing for scoped `WRITE` permission or full-repo `MAINTENANCE` permission. These permissions will be expanding in the future to allow presenting CRUD operations, and more detailed maintenance (ie creation vs merging vs cleanup, etc)
 

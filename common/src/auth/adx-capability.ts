@@ -15,17 +15,17 @@ ADX Ucans:
 Resource name: 'adx'
 
 - Full permission for account: 
-    did:adx:userDid|*
+    did:example:userDid|*
 - Permission to write to particular namespace: 
-    did:adx:userDid|did:adx:microblog|*
+    did:example:userDid|did:example:microblog|*
 - Permission to make only interactions in a given namespace:
-    did:adx:userDid|did:adx:microblog|interactions|*
+    did:example:userDid|did:example:microblog|interactions|*
 - Permission to create a single interaction on user's behalf: 
-    did:adx:userDid|did:adx:microblog|interactions|234567abcdefg
+    did:example:userDid|did:example:microblog|interactions|234567abcdefg
 
 Example: 
 {
-  adx: 'did:adx:abcdefg|did:adx:microblog|*'
+  adx: 'did:example:abcdefg|did:example:microblog|*'
   cap: 'WRITE'
 }
 

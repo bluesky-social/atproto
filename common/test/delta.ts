@@ -32,7 +32,7 @@ test.beforeEach(async (t) => {
 
   const ipldBob = IpldStore.createInMemory()
 
-  const namespaceId = 'did:adx:test'
+  const namespaceId = 'did:example:test'
   t.context = {
     ipldAlice,
     alice,
