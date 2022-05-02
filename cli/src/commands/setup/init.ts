@@ -10,7 +10,7 @@ prompt.message = ''
 export default cmd({
   name: 'init',
   category: 'setup',
-  help: 'Create a new scdb repo.',
+  help: 'Create a new adx repo.',
   opts: [
     { name: 'server', type: 'string', default: '' },
     { name: 'username', type: 'string', default: '' },
@@ -31,7 +31,7 @@ export default cmd({
     }
 
     if (!username || !server) {
-      console.log(`This utility will initialize your sky repo.`)
+      console.log(`This utility will initialize your adx repo.`)
       console.log(`Press ^C at any time to quit.`)
       prompt.start()
       username = (

@@ -1,3 +1,3 @@
-# @bluesky/cli
+# @adx/cli
 
-The command line interface for the SKY protocol.
+The command line interface for ADX.

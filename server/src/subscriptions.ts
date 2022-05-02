@@ -1,4 +1,4 @@
-import { Repo, service } from '@bluesky/common'
+import { Repo, service } from '@adx/common'
 import Database from './db'
 
 export const attemptNotify = async (

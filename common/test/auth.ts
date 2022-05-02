@@ -22,9 +22,9 @@ test.beforeEach(async (t) => {
   const keypair = await ucan.EdKeypair.create()
   const fullToken = await auth.claimFull(keypair.did(), keypair)
   const ucanStore = await ucan.Store.fromTokens([fullToken.encoded()])
-  const serverDid = 'did:bsky:FAKE_SERVER_DID'
+  const serverDid = 'did:example:fakeServerDid'
   const did = keypair.did()
-  const namespace = 'did:bsky:microblog'
+  const namespace = 'did:example:microblog'
   const collection = 'posts'
   const tid = TID.next()
   const postToken = await auth.delegateForPost(
@@ -68,7 +68,7 @@ test('token does not work for other namespaces', async (t) => {
       hasAudience(ctx.serverDid),
       hasPostingPermission(
         ctx.did,
-        'did:bsky:otherNamespace',
+        'did:example:otherNamespace',
         ctx.collection,
         ctx.tid,
       ),

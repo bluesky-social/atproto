@@ -16,9 +16,10 @@ import * as check from '../common/check.js'
 import { parseAxiosError } from '../network/util.js'
 import { Follow } from '../repo/types.js'
 import * as service from '../network/service.js'
+import { NAMESPACE } from './const.js'
 
 export class MicroblogReader implements MicroblogReaderI {
-  namespace = 'did:bsky:microblog'
+  namespace = NAMESPACE
 
   url: string
   did?: string

@@ -10,7 +10,6 @@ import {
 } from './types.js'
 import TID from '../repo/tid.js'
 import MicroblogReader from './reader.js'
-import { NAMESPACE } from './const.js'
 import Namespace from '../repo/namespace.js'
 import { CID } from 'multiformats'
 import { service } from '../index.js'
@@ -22,7 +21,6 @@ type Opts = {
 }
 
 export class MicroblogFull extends MicroblogReader implements MicroblogClient {
-  namespace = NAMESPACE
   did: string
   repo: Repo
   pushOnUpdate: boolean

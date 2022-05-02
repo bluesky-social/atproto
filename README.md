@@ -1,8 +1,8 @@
-# Bluesky Experiment 🧪
+# Authenticated Data eXperiment (ADX) 🧪
 
-Welcome 👋
+This is an early proof of concept for Bluesky's data protocol, which we've affectionately termed ADX - Authenticated Data eXperiment.
 
-This is an early proof of concept for the Bluesky data network. We built this for two primary reasons:
+We built this for two primary reasons:
 - To explore and demonstrate some of the core concepts that we're working with: content addressing, user held keys, user generated authority, and a federated network topology
 - To help identify the sort of interfaces we'll want and the rough edges and pain points that we'll hit along the way
 
@@ -10,7 +10,7 @@ This is an early proof of concept for the Bluesky data network. We built this fo
 
 Please do not try to build your next big social network on this. There are many rough edges. Interfaces and data structures are likely to radically change, and we took some shortcuts on concepts that were not in the scope of this demo (key management, schemas, indexing, to name a few). This experiment is primarily confined to the data & authorization layer with hints at some of the other systems.
 
-To learn more about the Bluesky network, and get a fuller picture of what we're building towards check out our docs on [Network architecture]() and the [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
+To learn more about the ADX network, and get a fuller picture of what we're building towards check out our docs on [Network architecture]() and the [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
 All that being said, we're very excited to share some of the work that we've done here. Please play around with the server & CLI, poke around the code, even build a small demo app to get the feel for it!
 
@@ -22,13 +22,13 @@ And without further ado, let's dive into what you'll find here.
 
 This is a monorepo containing three packages:
 
-- `common`: This is the bluesky SDK that contains implementations of:
+- `common`: This is the adx SDK that contains implementations of:
   - the repository data structure 
   - a sample network namespace (microblogging) with both a full client and delegator client implementation
-  - an authorization library for working with bluesky-capable UCANs
-  - some helpers for making calls to a bluesky data server
+  - an authorization library for working with adx-capable UCANs
+  - some helpers for making calls to a adx data server
 
-- `server`: This is an implementation of a bluesky server. For simplicity's sake, it actually combines the function of three "roles" in the network:
+- `server`: This is an implementation of a adx server. For simplicity's sake, it actually combines the function of three "roles" in the network:
   - **Identity:** 
     - maintains a mapping of username -> DID
   - **Data:** 
@@ -41,7 +41,7 @@ This is a monorepo containing three packages:
     - stores an indexed version of repositories that it is hosting or that its user's are following
     - returned global view of data including follower lists, aggregated like counts, and user timelines.
 
-- `cli`: This is a basic command line interface for interactions with the bluesky network :
+- `cli`: This is a basic command line interface for interactions with the adx network:
   - creating a local repository
   - registering a user
   - creating/editing/deleting posts
@@ -81,10 +81,10 @@ From project root:
 (2) yarn server:alt # runs on localhost:2584
 
 # set an env var to store alice's repo in a scoped dir
-(3) export SKY_REPO_PATH="~/.sky-alice"
+(3) export ADX_REPO_PATH="~/.adx-alice"
 
 # set an env var to store bob's repo in a scoped dir
-(4) export SKY_REPO_PATH="~/.sky-bob"
+(4) export ADX_REPO_PATH="~/.adx-bob"
 
 # register alice
 (3) yarn cli init
@@ -174,13 +174,13 @@ Therefore we try to talk about the general concept as "interactions" and the par
 
 ### DIDs and UCANs
 
-In this prototype a user's root DID is a simple `did:key`. In the future, these will be more permanent identifiers such as `did:bsky` (read our proposal in the architecture docs) or `did:ion`. 
+In this prototype a user's root DID is a simple `did:key`. In the future, these will be more permanent identifiers such as `did:ion` or our currently unnamed consortium-provided DID proposed in the architecture docs. 
 
 The DID network is outside of the scope of this prototype. However, a DID is the canoncial, unchanging identifier for a user. and is needed in ordcer to enable data/server interop.  Therefore we run a very simple DID network that only allows POSTs and GETs (with signature checks). The DID network is run _on_ the data server (`http://localhost:2583/did-network`), however every server that is running communicates with the _same_ data server when it comes to DID network requests. As DIDs are self-describing for resolution, we emulate this by hard coding how to discover a DID (ie "always go to _this particular address_ not your personal data server").
 
 You'll notice that we delegate a UCAN from the root key to the root key (which is a no-op), this is to mirror the process of receiving a fully delegated UCAN _from your actual root key_ to a _fully permissioned device key_.
 
-You'll also notice that the DID for the microblogging namespace is just `did:bsky:microblog` (which is not an actual valid DID). This is a stand in until we have an addressed network for schemas.
+You'll also notice that the DID for the microblogging namespace is just `did:example:microblog` (which is not an actual valid DID). This is a stand in until we have an addressed network for schemas.
 
 UCAN permissions are also simplified at the current moment, allowing for scoped `WRITE` permission or full-repo `MAINTENANCE` permission. These permissions will be expanding in the future to allow presenting CRUD operations, and more detailed maintenance (ie creation vs merging vs cleanup, etc)
 

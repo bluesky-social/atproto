@@ -4,11 +4,11 @@ import TID from '../repo/tid.js'
 import { Collection } from '../repo/types.js'
 import {
   writeCap,
-  blueskyCapabilities,
-  blueskySemantics,
-  BlueskyCapability,
+  adxCapabilities,
+  adxSemantics,
+  AdxCapability,
   maintenanceCap,
-} from './bluesky-capability.js'
+} from './adx-capability.js'
 
 type Check = (ucan: Chained) => Error | null
 
@@ -45,14 +45,14 @@ export const hasAudience =
   }
 
 export const hasValidCapability =
-  (rootDid: string, needed: BlueskyCapability) =>
+  (rootDid: string, needed: AdxCapability) =>
   (token: Chained): Error | null => {
     // the capability we need for the given action
-    for (const cap of blueskyCapabilities(token)) {
+    for (const cap of adxCapabilities(token)) {
       // skip over escalations
       if (isCapabilityEscalation(cap)) continue
       // check if this capability includes the one we need, if not skip
-      const attempt = blueskySemantics.tryDelegating(cap.capability, needed)
+      const attempt = adxSemantics.tryDelegating(cap.capability, needed)
       if (attempt === null || isCapabilityEscalation(attempt)) continue
       // check root did matches the repo's did
       if (cap.info.originator !== rootDid) {
@@ -73,7 +73,7 @@ export const hasValidCapability =
     }
     // we looped through all options & couldn't find the capability we need
     return new Error(
-      `Ucan does not permission the requested capability for user: ${needed.cap} ${needed.bluesky}`,
+      `Ucan does not permission the requested capability for user: ${needed.cap} ${needed.adx}`,
     )
   }
 

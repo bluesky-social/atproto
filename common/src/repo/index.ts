@@ -20,10 +20,10 @@ import Namespace from './namespace.js'
 import Relationships from './relationships.js'
 import CidSet from './cid-set.js'
 import {
-  blueskySemantics,
+  adxSemantics,
   maintenanceCap,
   writeCap,
-} from '../auth/bluesky-capability.js'
+} from '../auth/adx-capability.js'
 import * as auth from '../auth/index.js'
 import * as service from '../network/service.js'
 import * as delta from './delta.js'
@@ -67,7 +67,7 @@ export class Repo implements CarStreamable {
   ) {
     const foundUcan = await ucanStore.findWithCapability(
       keypair.did(),
-      blueskySemantics,
+      adxSemantics,
       maintenanceCap(did),
       () => true,
     )
@@ -287,13 +287,13 @@ export class Repo implements CarStreamable {
     )
     const foundUcan = this.ucanStore.findWithCapability(
       this.keypair.did(),
-      blueskySemantics,
+      adxSemantics,
       neededCap,
       () => true,
     )
     if (!foundUcan.success) {
       throw new Error(
-        `Could not find a valid ucan for operation: ${neededCap.bluesky}`,
+        `Could not find a valid ucan for operation: ${neededCap.adx}`,
       )
     }
     return this.blockstore.put(foundUcan.ucan.encoded())

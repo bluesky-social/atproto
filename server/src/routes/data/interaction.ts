@@ -4,7 +4,7 @@ import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import * as subscriptions from '../../subscriptions.js'
 import { ServerError } from '../../error.js'
-import { schema, check, ucanCheck, flattenLike } from '@bluesky/common'
+import { schema, check, ucanCheck, flattenLike } from '@adx/common'
 import { SERVER_DID } from '../../server-identity.js'
 
 const router = express.Router()

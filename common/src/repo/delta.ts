@@ -1,5 +1,5 @@
 import { CID } from 'multiformats'
-import { BlueskyCapability } from '../auth/bluesky-capability.js'
+import { AdxCapability } from '../auth/adx-capability.js'
 import { Collection, TIDEntry, DIDEntry, IdMapping } from '../repo/types.js'
 import CidSet from './cid-set.js'
 import TID from './tid.js'
@@ -11,7 +11,7 @@ import * as auth from '../auth/index.js'
 export const capabilityForEvent = (
   did: string,
   event: Event,
-): BlueskyCapability => {
+): AdxCapability => {
   if (isRelationshipEvent(event)) {
     return auth.writeCap(did, 'relationships')
   }

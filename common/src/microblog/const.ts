@@ -1,1 +1,1 @@
-export const NAMESPACE = 'did:bsky:microblog'
+export const NAMESPACE = 'did:example:microblog'

@@ -23,8 +23,8 @@ test.beforeEach(async (t) => {
   const token = await auth.claimFull(keypair.did(), keypair)
   const ucanStore = await ucan.Store.fromTokens([token.encoded()])
   const repo = await Repo.create(ipld, keypair.did(), keypair, ucanStore)
-  const namespaceId = 'did:bsky:test'
-  const otherNamespace = 'did:bsky:other'
+  const namespaceId = 'did:example:test'
+  const otherNamespace = 'did:example:other'
   t.context = { ipld, keypair, repo, namespaceId, otherNamespace } as Context
   t.pass('Context setup')
 })

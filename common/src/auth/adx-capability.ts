@@ -10,22 +10,22 @@ import TID from '../repo/tid'
 import { Collection } from '../repo/types'
 
 /*
-Bluesky Ucans:
+ADX Ucans:
 
-Resource name: 'bluesky'
+Resource name: 'adx'
 
 - Full permission for account: 
-    did:bsky:userDid|*
+    did:example:userDid|*
 - Permission to write to particular namespace: 
-    did:bsky:userDid|did:bsky:microblog|*
+    did:example:userDid|did:example:microblog|*
 - Permission to make only interactions in a given namespace:
-    did:bsky:userDid|did:bsky:microblog|interactions|*
+    did:example:userDid|did:example:microblog|interactions|*
 - Permission to create a single interaction on user's behalf: 
-    did:bsky:userDid|did:bsky:microblog|interactions|234567abcdefg
+    did:example:userDid|did:example:microblog|interactions|234567abcdefg
 
 Example: 
 {
-  bluesky: 'did:bsky:abcdefg|did:bsky:microblog|*'
+  adx: 'did:example:abcdefg|did:example:microblog|*'
   cap: 'WRITE'
 }
 
@@ -34,28 +34,26 @@ At the moment, for demonstration purposes, we support only two capability level:
 - 'MAINTENANCE': this does not allow updates to repo objects, but allows maintenance of the repo, such as repo creation
 */
 
-export const BlueskyAbilityLevels = {
+export const AdxAbilityLevels = {
   MAINTENANCE: 0,
   WRITE: 1,
 }
-export type BlueskyAbility = keyof typeof BlueskyAbilityLevels
+export type AdxAbility = keyof typeof AdxAbilityLevels
 
-export const isBlueskyAbility = (
-  ability: string,
-): ability is BlueskyAbility => {
+export const isAdxAbility = (ability: string): ability is AdxAbility => {
   return ability === 'MAINTENANCE' || ability === 'WRITE'
 }
 
-export interface BlueskyCapability extends Capability {
-  bluesky: string
-  cap: BlueskyAbility
+export interface AdxCapability extends Capability {
+  adx: string
+  cap: AdxAbility
 }
 
-export const blueskySemantics: CapabilitySemantics<BlueskyCapability> = {
-  tryParsing(cap: Capability): BlueskyCapability | null {
-    if (typeof cap.bluesky === 'string' && isBlueskyAbility(cap.cap)) {
+export const adxSemantics: CapabilitySemantics<AdxCapability> = {
+  tryParsing(cap: Capability): AdxCapability | null {
+    if (typeof cap.adx === 'string' && isAdxAbility(cap.cap)) {
       return {
-        bluesky: cap.bluesky,
+        adx: cap.adx,
         cap: cap.cap,
       }
     }
@@ -63,12 +61,10 @@ export const blueskySemantics: CapabilitySemantics<BlueskyCapability> = {
   },
 
   tryDelegating(
-    parentCap: BlueskyCapability,
-    childCap: BlueskyCapability,
-  ): BlueskyCapability | null | CapabilityEscalation<BlueskyCapability> {
-    if (
-      BlueskyAbilityLevels[childCap.cap] > BlueskyAbilityLevels[parentCap.cap]
-    ) {
+    parentCap: AdxCapability,
+    childCap: AdxCapability,
+  ): AdxCapability | null | CapabilityEscalation<AdxCapability> {
+    if (AdxAbilityLevels[childCap.cap] > AdxAbilityLevels[parentCap.cap]) {
       return {
         escalation: 'Capability level escalation',
         capability: childCap,
@@ -76,9 +72,9 @@ export const blueskySemantics: CapabilitySemantics<BlueskyCapability> = {
     }
 
     const [childDid, childNamespace, childCollection, childTid] =
-      childCap.bluesky.split('|')
+      childCap.adx.split('|')
     const [parentDid, parentNamespace, parentCollection, parentTid] =
-      parentCap.bluesky.split('|')
+      parentCap.adx.split('|')
 
     if (childDid !== parentDid) {
       return null
@@ -113,30 +109,30 @@ export const blueskySemantics: CapabilitySemantics<BlueskyCapability> = {
 }
 
 export const hasPermission = (
-  parent: BlueskyCapability,
-  child: BlueskyCapability,
+  parent: AdxCapability,
+  child: AdxCapability,
 ): boolean => {
-  const attempt = blueskySemantics.tryDelegating(parent, child)
+  const attempt = adxSemantics.tryDelegating(parent, child)
   return attempt !== null && !isCapabilityEscalation(attempt)
 }
 
-export const namespaceEscalation = (cap: BlueskyCapability) => {
+export const namespaceEscalation = (cap: AdxCapability) => {
   return {
-    escalation: 'Bluesky namespace esclation',
+    escalation: 'ADX namespace esclation',
     capability: cap,
   }
 }
 
-export const collectionEscalation = (cap: BlueskyCapability) => {
+export const collectionEscalation = (cap: AdxCapability) => {
   return {
-    escalation: 'Bluesky collection esclation',
+    escalation: 'ADX collection esclation',
     capability: cap,
   }
 }
 
-export const tidEscalation = (cap: BlueskyCapability) => {
+export const tidEscalation = (cap: AdxCapability) => {
   return {
-    escalation: 'Bluesky TID esclation',
+    escalation: 'ADX TID esclation',
     capability: cap,
   }
 }
@@ -146,7 +142,7 @@ export function writeCap(
   namespace?: string,
   collection?: Collection,
   tid?: TID,
-): BlueskyCapability {
+): AdxCapability {
   let resource = did
   if (namespace) {
     resource += '|' + namespace
@@ -160,18 +156,18 @@ export function writeCap(
     resource += '|*'
   }
   return {
-    bluesky: resource,
+    adx: resource,
     cap: 'WRITE',
   }
 }
 
-export function maintenanceCap(did: string): BlueskyCapability {
+export function maintenanceCap(did: string): AdxCapability {
   return {
-    bluesky: `${did}|*`,
+    adx: `${did}|*`,
     cap: 'MAINTENANCE',
   }
 }
 
-export function blueskyCapabilities(ucan: Chained) {
-  return capabilities(ucan, blueskySemantics)
+export function adxCapabilities(ucan: Chained) {
+  return capabilities(ucan, adxSemantics)
 }

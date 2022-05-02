@@ -1,11 +1,7 @@
 import * as ucan from 'ucans'
 import TID from '../repo/tid.js'
 import { Collection } from '../repo/types.js'
-import {
-  blueskySemantics,
-  maintenanceCap,
-  writeCap,
-} from './bluesky-capability.js'
+import { adxSemantics, maintenanceCap, writeCap } from './adx-capability.js'
 
 const MONTH_IN_SECONDS = 60 * 60 * 24 * 30
 
@@ -23,7 +19,7 @@ export const delegateForPost = async (
     .toAudience(serverDid)
     .withLifetimeInSeconds(30)
     .delegateCapability(
-      blueskySemantics,
+      adxSemantics,
       writeCap(did, namespace, collection, tid),
       ucanStore,
     )
@@ -40,11 +36,7 @@ export const delegateForRelationship = async (
     .issuedBy(keypair)
     .toAudience(serverDid)
     .withLifetimeInSeconds(30)
-    .delegateCapability(
-      blueskySemantics,
-      writeCap(did, 'relationships'),
-      ucanStore,
-    )
+    .delegateCapability(adxSemantics, writeCap(did, 'relationships'), ucanStore)
     .build()
 }
 
@@ -57,11 +49,7 @@ export const delegateMaintenance = (
     .issuedBy(keypair)
     .toAudience(audience)
     .withLifetimeInSeconds(30)
-    .delegateCapability(
-      blueskySemantics,
-      maintenanceCap(keypair.did()),
-      ucanStore,
-    )
+    .delegateCapability(adxSemantics, maintenanceCap(keypair.did()), ucanStore)
     .build()
 }
 
