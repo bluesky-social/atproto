@@ -62,6 +62,8 @@ This demo takes four terminal windows:
 - two servers to show off data federation (you can use just one here if you like)
 - two cli clients representing two users on separate servers interaction
 
+⚠️ Please note, the server stores data in-memory. If you shutdown and restart a server, your account and related data will be deleted.
+
 The number in parantheses tells you which terminal to run each command in
 
 From project root:
