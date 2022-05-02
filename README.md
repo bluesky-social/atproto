@@ -84,7 +84,7 @@ From project root:
 (3) export ADX_REPO_PATH="~/.adx-alice"
 
 # set an env var to store bob's repo in a scoped dir
-(4) export ADXZ_REPO_PATH="~/.adx-bob"
+(4) export ADX_REPO_PATH="~/.adx-bob"
 
 # register alice
 (3) yarn cli init
