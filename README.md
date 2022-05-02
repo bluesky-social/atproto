@@ -1,8 +1,6 @@
 # Authenticated Data eXperiment (ADX) 🧪
 
-Welcome 👋
-
-This is an early proof of concept for the Bluesky data protocol, which we've affectionately termed ADX - Authenticated Data eXperiment.
+This is an early proof of concept for Bluesky's data protocol, which we've affectionately termed ADX - Authenticated Data eXperiment.
 
 We built this for two primary reasons:
 - To explore and demonstrate some of the core concepts that we're working with: content addressing, user held keys, user generated authority, and a federated network topology
