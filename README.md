@@ -127,8 +127,7 @@ From project root:
 
 # Keep playing around. Try unliking, deleting or editing posts, or add a third user into the mix! They can be registered to one of the existing servers
 
-# If you want to wipe the slate clean run
-(1/2) yarn wipe-db # wipes server databases & blockstore
+# Remember, the servers are running in-memory, if you restart a server and want to restart your CLI as well, run
 (3/4) yarn destroy # deletes user repo & keypair
 ```
 
