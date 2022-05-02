@@ -88,11 +88,11 @@ From project root:
 
 # register alice
 (3) yarn cli init
-# prompt with 'alice' for username, 'localhost:2583' for host & true for registration
+# prompt with 'alice' for username, 'localhost:2583' for host, true for registration & false for delegator client
 
 # register bob
 (4) yarn cli init
-# prompt with 'bob' for username, 'localhost:2584' for host & true for registration
+# prompt with 'bob' for username, 'localhost:2584' for host, true for registration & false for delegator client
 
 # make a couple posts as alice
 (3) yarn cli post "hello world"
