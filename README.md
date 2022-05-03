@@ -53,6 +53,10 @@ This is a monorepo containing three packages:
   _Note: the cli uses a delegator client at the moment. We are adding the option to use a full client soon._
 
 
+## 📺 Demo recording
+
+![demo.gif](./docs/demo.gif)
+
 ## 🏎️ Quick use
 _Requires Node>=15, and yarn_
 
