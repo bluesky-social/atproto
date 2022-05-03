@@ -20,6 +20,14 @@ export default cmd({
   async command(args) {
     let { username, server, register, delegatorClient } = args
 
+    console.log(`
+ █████╗ ██████╗ ██╗  ██╗
+██╔══██╗██╔══██╗╚██╗██╔╝
+███████║██║  ██║ ╚███╔╝
+██╔══██║██║  ██║ ██╔██╗
+██║  ██║██████╔╝██╔╝ ██╗
+╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝`)
+
     console.log(`Repo path: ${REPO_PATH}`)
 
     const exists = await config.cfgExists(REPO_PATH)
