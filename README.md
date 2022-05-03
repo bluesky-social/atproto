@@ -116,12 +116,6 @@ From project root:
 # list your feed
 (3/4) yarn cli feed
 
-# list your followers
-(3/4) yarn cli list followers
-
-# list your feed
-(3/4) yarn cli feed
-
 # view alice's feed as bob
 (4) yarn cli feed alice@localhost:2583
 
