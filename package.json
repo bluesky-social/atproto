@@ -1,8 +1,8 @@
 {
-  "name": "auth-data-experiment",
+  "name": "adx",
   "version": "0.0.1",
   "main": "index.js",
-  "repository": "git@github.com:bluesky-social/auth-data-experiment.git",
+  "repository": "git@github.com:bluesky-social/adx.git",
   "author": "Daniel Holmgren <dtholmgren@gmail.com>",
   "license": "MIT",
   "private": true,

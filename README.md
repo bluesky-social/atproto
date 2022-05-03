@@ -1,22 +1,23 @@
-# Authenticated Data eXperiment (ADX) 🧪
+# ADX - Authenticated Data eXperiment
 
-This is an early proof of concept for Bluesky's data protocol, which we've affectionately termed ADX - Authenticated Data eXperiment.
+This is a working repository for Bluesky's data protocol which we've termed ADX: the Authenticated Data eXperiment. The "X" stands for "experiment" while the project lives in an early exploratory state.
 
-We built this for two primary reasons:
-- To explore and demonstrate some of the core concepts that we're working with: content addressing, user held keys, user generated authority, and a federated network topology
-- To help identify the sort of interfaces we'll want and the rough edges and pain points that we'll hit along the way
+---
 
-**This is not production-ready, or even alpha software. This is a proof of concept.**
+**⚠️This is not production-ready or even alpha software. This project is in active development.⚠️**
 
-Please do not try to build your next big social network on this. There are many rough edges. Interfaces and data structures are likely to radically change, and we took some shortcuts on concepts that were not in the scope of this demo (key management, schemas, indexing, to name a few). This experiment is primarily confined to the data & authorization layer with hints at some of the other systems.
+---
 
-To learn more about the ADX network, and get a fuller picture of what we're building towards check out our docs on [Network architecture]() and the [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
+Please do not try to build anything with this! Interfaces and data structures are likely to radically change, and we took some shortcuts on features still in development (key management, schemas, indexing, to name a few). This experiment is primarily confined to the data & authorization layer with hints at some of the other systems.
 
-All that being said, we're very excited to share some of the work that we've done here. Please play around with the server & CLI, poke around the code, even build a small demo app to get the feel for it!
+We encourage you to [open discussions](https://github.com/bluesky-social/adx/discussions) with any questions or ideas you have. This code is not meant to be perfect or 100% bug free. Therefore, while we're interested to hear about any problems you may run into (in the form of Issues), we will likely leave them for a larger rewrite and may not be resolving them in the near term.
 
-We encourage you to make Discussions with any questions or ideas you have - about the code or the architecture overview. This code is not meant to be perfect or 100% bug free. Therefore, while we're interested to hear about any problems you may run into (in the form of Issues), we will likely leave them for a larger rewrite and may not be resolving them in the near term.
+## ℹ️ About this project
 
-And without further ado, let's dive into what you'll find here.
+To learn more about ADX, see:
+
+- [Network architecture]()
+- The [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
 ## 🔍 What's here?
 
@@ -51,7 +52,6 @@ This is a monorepo containing three packages:
 
   _Note: the cli uses a delegator client at the moment. We are adding the option to use a full client soon._
 
----
 
 ## 🏎️ Quick use
 _Requires Node>=15, and yarn_
@@ -62,11 +62,10 @@ This demo takes four terminal windows:
 - two servers to show off data federation (you can use just one here if you like)
 - two cli clients representing two users on separate servers interaction
 
-⚠️ Please note, the server stores data in-memory. If you shutdown and restart a server, your account and related data will be deleted.
+**⚠️ Please note, the server stores data in-memory. If you shutdown and restart a server, your account and related data will be deleted.**
 
-The number in parantheses tells you which terminal to run each command in
+The number in parantheses tells you which terminal to run each command in. From project root:
 
-From project root:
 ```bash
 # install dependencies
 (1) yarn
@@ -131,8 +130,6 @@ From project root:
 (3/4) yarn destroy # deletes user repo & keypair
 ```
 
----
-
 ## 🗒️ Documentation
 We have not put together detailed coumentation for the server API or the SDK because the APIs are expected to change soon.
 
@@ -149,8 +146,6 @@ Specifically:
 `common/test/microblog.ts` contains an examples of using the microblog library to create/update microblog namespace objects in the repository
 
 For communicating directly with the server api, there is a schema above each route that details the exact parameters it expects to receive. Any post route will require a valid UCAN as a Bearer token. We recommend using the SDK to make these requests as these tokens can be difficult to roll by hand.
-
----
 
 ## 🔦 Notes for code spelunkers
 We hope you jump into the code to explore these concepts alongside us! 
