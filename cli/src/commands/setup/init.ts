@@ -60,23 +60,29 @@ export default cmd({
           default: server || '',
         })
       ).question
-      register = (
-        await prompt.get({
-          description: 'Register with the server?',
-          type: 'boolean',
-          required: true,
-          default: true,
-        })
-      ).question
-      delegatorClient = (
-        await prompt.get({
-          description:
-            'Run a delegator client (and avoid storing repo locally)',
-          type: 'boolean',
-          required: true,
-          default: false,
-        })
-      ).question
+      register = isYes(
+        (
+          await prompt.get({
+            description: 'Register with the server? [Y/n]',
+            type: 'string',
+            pattern: /y|yes|n|no/,
+            required: true,
+            default: 'yes',
+          })
+        ).question,
+      )
+      delegatorClient = isNo(
+        (
+          await prompt.get({
+            description:
+              'Run a delegator client (and avoid storing repo locally) [y/N]',
+            type: 'string',
+            pattern: /y|yes|n|no/,
+            required: true,
+            default: 'no',
+          })
+        ).question,
+      )
     }
 
     console.log('Generating repo...')
@@ -100,3 +106,11 @@ export default cmd({
     console.log(`DID: ${client.did}`)
   },
 })
+
+function isYes(v: string | prompt.RevalidatorSchema): boolean {
+  return v === 'y' || v === 'yes'
+}
+
+function isNo(v: string | prompt.RevalidatorSchema): boolean {
+  return v === 'n' || v === 'no'
+}
