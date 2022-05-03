@@ -15,12 +15,13 @@ export default cmd({
     console.log(`Repo path: ${REPO_PATH}`)
     prompt.start()
     const isSure = await prompt.get({
-      description: 'Are you sure? This keypair will be unrecoverable',
-      type: 'boolean',
+      description: 'Are you sure? This keypair will be unrecoverable [y/N]',
+      type: 'string',
+      pattern: /y|yes|n|no/,
       required: true,
-      default: false,
+      default: 'no',
     })
-    if (!isSure.question) {
+    if (isSure.question === 'n' || isSure.question === 'no') {
       console.log('Exiting without deleting')
       return
     }

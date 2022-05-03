@@ -115,19 +115,13 @@ The number in parantheses tells you which terminal to run each command in. From 
 # list your feed
 (3/4) yarn cli feed
 
-# list your followers
-(3/4) yarn cli list followers
-
-# list your feed
-(3/4) yarn cli feed
-
 # view alice's feed as bob
 (4) yarn cli feed alice@localhost:2583
 
 # Keep playing around. Try unliking, deleting or editing posts, or add a third user into the mix! They can be registered to one of the existing servers
 
 # Remember, the servers are running in-memory, if you restart a server and want to restart your CLI as well, run
-(3/4) yarn destroy # deletes user repo & keypair
+(3/4) yarn cli destroy # deletes user repo & keypair
 ```
 
 ## 🗒️ Documentation
