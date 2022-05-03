@@ -122,7 +122,7 @@ From project root:
 # Keep playing around. Try unliking, deleting or editing posts, or add a third user into the mix! They can be registered to one of the existing servers
 
 # Remember, the servers are running in-memory, if you restart a server and want to restart your CLI as well, run
-(3/4) yarn destroy # deletes user repo & keypair
+(3/4) yarn cli destroy # deletes user repo & keypair
 ```
 
 ---
