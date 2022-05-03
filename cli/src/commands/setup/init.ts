@@ -71,7 +71,7 @@ export default cmd({
           })
         ).question,
       )
-      delegatorClient = isNo(
+      delegatorClient = isYes(
         (
           await prompt.get({
             description:
@@ -109,8 +109,4 @@ export default cmd({
 
 function isYes(v: string | prompt.RevalidatorSchema): boolean {
   return v === 'y' || v === 'yes'
-}
-
-function isNo(v: string | prompt.RevalidatorSchema): boolean {
-  return v === 'n' || v === 'no'
 }
