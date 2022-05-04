@@ -16,7 +16,7 @@ We encourage you to [open discussions](https://github.com/bluesky-social/adx/dis
 
 To learn more about ADX, see:
 
-- [Network architecture]()
+- [The Architecture document](architecture.md)
 - The [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
 ## 🔍 What's here?
