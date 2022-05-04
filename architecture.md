@@ -34,7 +34,7 @@ Our model is that _speech_ and _reach_ should be two separate layers, built to w
 
 ![Speech vs Reach](docs/architecture/speech-reach-layers.png)
 
-The base layer of ADX (Personal Data Repositories and Federated Networking) creates a common space for speech where everyone is free to participate, analogous to the Web where anyone can put up a website. The Crawling Indexer services then enable reach by aggregating content from the network. Moderation occurs during aggregation or by end-user choice of who they follow and block. There's no one company that can decide what gets published; instead there is a marketplace of companies deciding what to carry to their audiences.
+The base layer of ADX (Personal Data Repositories and Federated Networking) creates a common space for speech where everyone is free to participate, analogous to the Web where anyone can put up a website. The Crawling Indexer services then enable reach by aggregating content from the network. Moderation occurs in multiple layers through the system, including in aggregation algorithms, thresholds based on reputation, and end-user choice. There's no one company that can decide what gets published; instead there is a marketplace of companies deciding what to carry to their audiences.
 
 Separating speech and reach gives indexing services more freedom to moderate. Moderation action by an indexing service doesn't remove a user's identity or destroy their social graph – it only affects the services' own indexes. Users choose their indexers, and so can choose a different service or to supplement with additional services if they're unhappy with the policies of any particular service.
 
