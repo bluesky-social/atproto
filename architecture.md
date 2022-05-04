@@ -48,8 +48,8 @@ The identity system has a number of requirements:
 
 * **ID Provision.** Users should be able to create global IDs which are stable across services. These IDs should rarely change to ensure that links to their content are stable.
 * **Public key distribution.** Distributed systems rely on cryptography to prove the authenticity of data and provide end-to-end privacy. The identity system must publish their public keys with strong security.
-* **Service discovery. **To interact with users, applications must be able to discover the services in use by a given user.
-* **Usability. **Users should have human-readable and memorable names.
+* **Service discovery.** To interact with users, applications must be able to discover the services in use by a given user.
+* **Usability.** Users should have human-readable and memorable names.
 * **Portability.** Identities should be portable across services. Changing a provider should not cause a user to lose their identity, social graph, or content
 
 Adopting this system should give applications the tools for end-to-end encryption, signed user data, service sign in, and general interoperation.
