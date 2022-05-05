@@ -117,7 +117,7 @@ While we believe supporting the existing methods which meet these criteria is a 
 
 ### The DID Consortium
 
-The (currently-unnamed) DID Consortium will securely host user IDs at a low cost to users. It will be operated by multiple different organizations who share ownership of the service.
+The (currently-unnamed) DID Consortium will securely host user IDs. It will be operated by multiple different organizations who share ownership of the service.
 
 ![Consortium diagram](docs/architecture/consortium-diagram.png)
 
