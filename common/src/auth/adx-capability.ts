@@ -118,21 +118,21 @@ export const hasPermission = (
 
 export const namespaceEscalation = (cap: AdxCapability) => {
   return {
-    escalation: 'ADX namespace esclation',
+    escalation: 'ADX namespace escalation',
     capability: cap,
   }
 }
 
 export const collectionEscalation = (cap: AdxCapability) => {
   return {
-    escalation: 'ADX collection esclation',
+    escalation: 'ADX collection escalation',
     capability: cap,
   }
 }
 
 export const tidEscalation = (cap: AdxCapability) => {
   return {
-    escalation: 'ADX TID esclation',
+    escalation: 'ADX TID escalation',
     capability: cap,
   }
 }

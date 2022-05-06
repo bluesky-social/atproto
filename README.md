@@ -36,7 +36,7 @@ This is a monorepo containing three packages:
     - maintains a pointer to the latest root CID of a data repository. 
     - verifies the authority of pushes to your repo and updates the root.
     - serves the repository for pulls.
-    - acts as a delgatee and makes updates to your repository for properly authorized requests
+    - acts as a delegatee and makes updates to your repository for properly authorized requests
     - sends updates to other data/indexing servers that have subscribed to a particular DID that it is hosting
   - **Indexing:**
     - stores an indexed version of repositories that it is hosting or that its user's are following
@@ -68,7 +68,7 @@ This demo takes four terminal windows:
 
 **⚠️ Please note, the server stores data in-memory. If you shutdown and restart a server, your account and related data will be deleted.**
 
-The number in parantheses tells you which terminal to run each command in. From project root:
+The number in parentheses tells you which terminal to run each command in. From project root:
 
 ```bash
 # install dependencies
@@ -168,7 +168,7 @@ Therefore we try to talk about the general concept as "interactions" and the par
 
 In this prototype a user's root DID is a simple `did:key`. In the future, these will be more permanent identifiers such as `did:ion` or our currently unnamed consortium-provided DID proposed in the architecture docs. 
 
-The DID network is outside of the scope of this prototype. However, a DID is the canoncial, unchanging identifier for a user. and is needed in ordcer to enable data/server interop.  Therefore we run a very simple DID network that only allows POSTs and GETs (with signature checks). The DID network is run _on_ the data server (`http://localhost:2583/did-network`), however every server that is running communicates with the _same_ data server when it comes to DID network requests. As DIDs are self-describing for resolution, we emulate this by hard coding how to discover a DID (ie "always go to _this particular address_ not your personal data server").
+The DID network is outside of the scope of this prototype. However, a DID is the canonical, unchanging identifier for a user. and is needed in order to enable data/server interop.  Therefore we run a very simple DID network that only allows POSTs and GETs (with signature checks). The DID network is run _on_ the data server (`http://localhost:2583/did-network`), however every server that is running communicates with the _same_ data server when it comes to DID network requests. As DIDs are self-describing for resolution, we emulate this by hard coding how to discover a DID (ie "always go to _this particular address_ not your personal data server").
 
 You'll notice that we delegate a UCAN from the root key to the root key (which is a no-op), this is to mirror the process of receiving a fully delegated UCAN _from your actual root key_ to a _fully permissioned device key_.
 

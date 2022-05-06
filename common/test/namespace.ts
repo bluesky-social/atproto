@@ -55,5 +55,5 @@ test('loads from blockstore', async (t) => {
   t.pass('All interactions loaded correctly')
 
   const got = await loaded.profile
-  t.deepEqual(got, actual['profile'], 'Matching contnet for profile')
+  t.deepEqual(got, actual['profile'], 'Matching content for profile')
 })

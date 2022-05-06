@@ -107,7 +107,7 @@ export class Relationships implements CarStreamable {
     prev: Relationships,
     newCids: CidSet,
   ): Promise<delta.Event[]> {
-    // @TODO: similar to in tid-colleciton & the above note on runOnHamt, we need a better algo here after we fix up data structures
+    // @TODO: similar to in tid-collection & the above note on runOnHamt, we need a better algo here after we fix up data structures
     const events: delta.Event[] = []
     const currEntries = await this.getEntries()
     const prevEntries = await prev.getEntries()
