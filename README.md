@@ -68,7 +68,7 @@ This demo takes four terminal windows:
 
 **⚠️ Please note, the server stores data in-memory. If you shutdown and restart a server, your account and related data will be deleted.**
 
-The number in parantheses tells you which terminal to run each command in. From project root:
+The number in parentheses tells you which terminal to run each command in. From project root:
 
 ```bash
 # install dependencies
