@@ -36,7 +36,7 @@ This is a monorepo containing three packages:
     - maintains a pointer to the latest root CID of a data repository. 
     - verifies the authority of pushes to your repo and updates the root.
     - serves the repository for pulls.
-    - acts as a delgatee and makes updates to your repository for properly authorized requests
+    - acts as a delegatee and makes updates to your repository for properly authorized requests
     - sends updates to other data/indexing servers that have subscribed to a particular DID that it is hosting
   - **Indexing:**
     - stores an indexed version of repositories that it is hosting or that its user's are following
