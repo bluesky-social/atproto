@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
   const db = util.getDB(res)
   const username = await service.getUsernameFromDidNetwork(target)
   if (!username) {
-    throw new ServerError(404, `Could not find user on DID netork: ${target}`)
+    throw new ServerError(404, `Could not find user on DID network: ${target}`)
   }
   const [name, host] = username.split('@')
   if (!host) {
