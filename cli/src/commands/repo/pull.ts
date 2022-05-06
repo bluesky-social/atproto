@@ -8,6 +8,6 @@ export default cmd({
   opts: [],
   async command(args) {
     // @TODO
-    throw new Error('Repo pulls not implented yet')
+    throw new Error('Repo pulls not implemented yet')
   },
 })
