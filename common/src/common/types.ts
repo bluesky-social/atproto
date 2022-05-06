@@ -19,7 +19,7 @@ const strToCid = z
   .refine(isCid, { message: 'Not a valid CID' })
   .transform(mf.CID.parse)
 
-// @TODO improve our DID represnetation
+// @TODO improve our DID representation
 const did = z.string()
 export type DID = z.infer<typeof did>
 
