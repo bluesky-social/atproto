@@ -129,7 +129,7 @@ The number in parantheses tells you which terminal to run each command in. From 
 ```
 
 ## 🗒️ Documentation
-We have not put together detailed coumentation for the server API or the SDK because the APIs are expected to change soon.
+We have not put together detailed documentation for the server API or the SDK because the APIs are expected to change soon.
 
 If you are inclined to play with either, your best bet is to check the tests to see how to use each part of the library.
 
