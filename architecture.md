@@ -347,7 +347,7 @@ The record and retraction are both considered part of the repository and the rep
 
 Deletions are a middle form of a removal. When a record has been deleted, the deletion stays in the repo but the record may be dropped. For this reason the Deletion needs to contain a hash of the record so the older merkle trees can still be validated. It is at the discretion of the server of the repo to either continue storing the deleted data or to compact the repo and remove the data. 
 
-Deleted data should not count agent storage quota. This is essentially a “don't care”. If you want to store this data and return it for queries that rely on retracted data that is at the discretion of the host, as the repo is considered complete without this data.
+Deleted data should not count against storage quota. This is essentially a “don't care”. If you want to store this data and return it for queries that rely on retracted data that is at the discretion of the host, as the repo is considered complete without this data.
 
 #### Purge Requests (hard removal)
 
