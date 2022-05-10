@@ -6,6 +6,9 @@
   "author": "Daniel Holmgren <dtholmgren@gmail.com>",
   "license": "MIT",
   "private": true,
+  "engines": {
+    "node": ">=16"
+  },
   "workspaces": [
     "common",
     "cli",

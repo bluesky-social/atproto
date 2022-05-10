@@ -58,7 +58,7 @@ This is a monorepo containing three packages:
 ![demo.gif](./docs/demo.gif)
 
 ## 🏎️ Quick use
-_Requires Node>=15, and yarn_
+_Requires Node>=16, and yarn_
 
 Want to jump right in? Follow these steps to get a sample two server network up and running.
 
