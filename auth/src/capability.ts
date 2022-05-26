@@ -99,6 +99,7 @@ export interface AdxCapability {
   did: string
   collection: string
   record: string
+  resource: string
   ability: AdxAbility
 }
 
@@ -118,10 +119,13 @@ export const adxSemantics: CapabilitySemantics<AdxCapability> = {
     }
     if (!record) return null
 
+    const resource = `${cap.with.scheme}://${cap.with.hierPart}`
+
     return {
       did,
       collection,
       record,
+      resource,
       ability,
     }
   },
