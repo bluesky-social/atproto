@@ -151,12 +151,16 @@ export const adxSemantics: CapabilitySemantics<AdxCapability> = {
       return childCap
     } else if (childCap.collection === '*') {
       return collectionEscalation(childCap)
+    } else if (childCap.collection !== parentCap.collection) {
+      return null
     }
 
     if (parentCap.record === '*') {
       return childCap
     } else if (childCap.record === '*') {
       return recordEscalation(childCap)
+    } else if (childCap.record !== parentCap.record) {
+      return null
     }
 
     // all good
