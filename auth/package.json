@@ -1,0 +1,12 @@
+{
+  "name": "@adx/auth",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ucans": "^0.9.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.2"
+  }
+}
