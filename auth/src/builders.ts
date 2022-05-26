@@ -2,6 +2,7 @@ import * as ucan from 'ucans'
 import { adxSemantics, maintenanceCap, writeCap } from './capability.js'
 
 const MONTH_IN_SECONDS = 60 * 60 * 24 * 30
+const YEAR_IN_SECONDS = MONTH_IN_SECONDS * 12
 
 export const delegateForPost = async (
   serverDid: string,
@@ -21,6 +22,37 @@ export const delegateForPost = async (
       ucanStore,
     )
     .build()
+}
+
+export const delegateForCollections = async (
+  serverDid: string,
+  did: string,
+  collections: string[],
+  keypair: ucan.Keypair,
+  ucanStore: ucan.Store,
+): Promise<ucan.Chained> => {
+  const token = await ucan.Builder.create()
+    .issuedBy(keypair)
+    .toAudience(serverDid)
+    .withLifetimeInSeconds(30)
+  for (const c in collections) {
+    await token.delegateCapability(adxSemantics, writeCap(did, c), ucanStore)
+  }
+  return token.build()
+}
+
+export const delegateForRep = async (
+  serverDid: string,
+  did: string,
+  keypair: ucan.Keypair,
+  ucanStore: ucan.Store,
+): Promise<ucan.Chained> => {
+  const token = await ucan.Builder.create()
+    .issuedBy(keypair)
+    .toAudience(serverDid)
+    .withLifetimeInSeconds(30)
+    .delegateCapability(adxSemantics, writeCap(did), ucanStore)
+  return token.build()
 }
 
 export const delegateForRelationship = async (
@@ -57,7 +89,7 @@ export const claimFull = (
   return ucan.Builder.create()
     .issuedBy(keypair)
     .toAudience(audience)
-    .withLifetimeInSeconds(MONTH_IN_SECONDS)
+    .withLifetimeInSeconds(YEAR_IN_SECONDS)
     .claimCapability(writeCap(keypair.did()))
     .build()
 }
