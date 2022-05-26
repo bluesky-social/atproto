@@ -8,6 +8,7 @@ export const delegateForPost = async (
   serverDid: string,
   did: string,
   collection: string,
+  schema: string,
   record: string,
   keypair: ucan.Keypair,
   ucanStore: ucan.Store,
@@ -18,7 +19,7 @@ export const delegateForPost = async (
     .withLifetimeInSeconds(30)
     .delegateCapability(
       adxSemantics,
-      writeCap(did, collection, record),
+      writeCap(did, collection, schema, record),
       ucanStore,
     )
     .build()

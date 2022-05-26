@@ -76,14 +76,18 @@ export function adxCapability(
 export function writeCap(
   did: string,
   collection?: string,
-  tid?: string,
+  schema?: string,
+  record?: string,
 ): Capability {
   let resource = did
   if (collection) {
     resource += '|' + collection
   }
-  if (tid) {
-    resource += '|' + tid.toString()
+  if (schema) {
+    resource += '|' + schema
+  }
+  if (record) {
+    resource += '|' + record
   } else {
     resource += '|*'
   }
@@ -98,6 +102,7 @@ export function maintenanceCap(did: string): Capability {
 export interface AdxCapability {
   did: string
   collection: string
+  schema: string
   record: string
   resource: string
   ability: AdxAbility
@@ -111,10 +116,14 @@ export const adxSemantics: CapabilitySemantics<AdxCapability> = {
 
     const parts = cap.with.hierPart.split('|')
     const [did, collection] = parts
-    let record = parts[2]
+    let [schema, record] = parts.slice(2)
     if (!did) return null
     if (!collection) return null
     if (collection === '*') {
+      schema = '*'
+    }
+    if (!schema) return null
+    if (schema === '*') {
       record = '*'
     }
     if (!record) return null
@@ -124,6 +133,7 @@ export const adxSemantics: CapabilitySemantics<AdxCapability> = {
     return {
       did,
       collection,
+      schema,
       record,
       resource,
       ability,
@@ -155,6 +165,14 @@ export const adxSemantics: CapabilitySemantics<AdxCapability> = {
       return null
     }
 
+    if (parentCap.schema === '*') {
+      return childCap
+    } else if (childCap.schema === '*') {
+      return schemaEscalation(childCap)
+    } else if (childCap.schema !== parentCap.schema) {
+      return null
+    }
+
     if (parentCap.record === '*') {
       return childCap
     } else if (childCap.record === '*') {
@@ -179,6 +197,13 @@ export const hasPermission = (
 export const collectionEscalation = (cap: AdxCapability) => {
   return {
     escalation: 'ADX collection escalation',
+    capability: cap,
+  }
+}
+
+export const schemaEscalation = (cap: AdxCapability) => {
+  return {
+    escalation: 'ADX schema escalation',
     capability: cap,
   }
 }

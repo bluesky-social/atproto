@@ -93,9 +93,9 @@ export const hasRelationshipsPermission =
   }
 
 export const hasPostingPermission =
-  (did: string, collection: string, record: string) =>
+  (did: string, collection: string, schema: string, record: string) =>
   (token: Chained): Error | null => {
     // the capability we need for the given post
-    const needed = writeCap(did, collection, record)
+    const needed = writeCap(did, collection, schema, record)
     return hasValidCapability(did, needed)(token)
   }

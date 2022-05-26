@@ -12,6 +12,7 @@ type Context = {
   serverDid: string
   did: string
   collection: string
+  schema: string
   record: string
 }
 
@@ -22,11 +23,13 @@ test.beforeEach(async (t) => {
   const serverDid = 'did:example:fakeServerDid'
   const did = keypair.did()
   const collection = 'did:example:microblog'
+  const schema = 'did:example:like'
   const record = '3iwc-gvs-ehpk-2s'
   const postToken = await auth.delegateForPost(
     serverDid,
     did,
     collection,
+    schema,
     record,
     keypair,
     ucanStore,
@@ -39,6 +42,7 @@ test.beforeEach(async (t) => {
     serverDid,
     did,
     collection,
+    schema,
     record,
   } as Context
   t.pass('context setup')
@@ -49,7 +53,7 @@ test('create & validate token for post', async (t) => {
   await checkUcan(
     ctx.postToken,
     hasAudience(ctx.serverDid),
-    hasPostingPermission(ctx.did, ctx.collection, ctx.record),
+    hasPostingPermission(ctx.did, ctx.collection, ctx.schema, ctx.record),
   )
   t.pass('created & validated token')
 })
@@ -60,7 +64,12 @@ test('token does not work for other collections', async (t) => {
     checkUcan(
       ctx.postToken,
       hasAudience(ctx.serverDid),
-      hasPostingPermission(ctx.did, 'did:example:otherCollection', ctx.record),
+      hasPostingPermission(
+        ctx.did,
+        'did:example:otherCollection',
+        ctx.schema,
+        ctx.record,
+      ),
     ),
     { instanceOf: Error },
     'throw when namespace mismatch',
@@ -75,7 +84,7 @@ test('token does not work for other TIDs', async (t) => {
     checkUcan(
       ctx.postToken,
       hasAudience(ctx.serverDid),
-      hasPostingPermission(ctx.did, ctx.collection, otherRecord),
+      hasPostingPermission(ctx.did, ctx.collection, ctx.schema, otherRecord),
     ),
     { instanceOf: Error },
     'throw when tid mismatch',
