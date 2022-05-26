@@ -13,6 +13,7 @@
   "dependencies": {
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
+    "ava": "^4.2.0",
     "axios": "^0.24.0",
     "ipld-hashmap": "^2.1.10",
     "level": "^7.0.1",
@@ -24,23 +25,11 @@
     "@types/level": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^5.12.1",
     "@typescript-eslint/parser": "^5.12.1",
-    "ava": "^3.15.0",
     "eslint": "^8.9.0",
     "eslint-config-prettier": "^8.4.0",
     "eslint-plugin-prettier": "^4.0.0",
     "prettier": "^2.5.1",
     "ts-node": "^10.2.1",
     "typescript": "^4.3.5"
-  },
-  "ava": {
-    "extensions": {
-      "ts": "module"
-    },
-    "nonSemVerExperiments": {
-      "configurableModuleFormat": true
-    },
-    "nodeArguments": [
-      "--loader=ts-node/esm"
-    ]
   }
 }

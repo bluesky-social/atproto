@@ -1,16 +1,19 @@
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import { check } from '@adx/common'
 
-export const handler = (
-  err: Error,
-  _req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  console.log(err.toString())
-  const status = ServerError.is(err) ? err.status : 500
+export const handler = (err: Error, _req: Request, res: Response) => {
+  console.log('HERE')
+  console.log(err)
+
+  let status
+  if (ServerError.is(err)) {
+    status = err.status
+    console.log('Info: ', err.message)
+  } else {
+    status = 500
+    console.log('Error: ', err.message)
+  }
   res.status(status).send(err.message)
-  next(err)
 }
 
 export class ServerError extends Error {
