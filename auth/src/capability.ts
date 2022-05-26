@@ -16,16 +16,16 @@ Resource name: 'adx'
 
 - Full permission for account: 
     did:example:userDid|*
-- Permission to write to particular namespace: 
+- Permission to write to particular collection: 
     did:example:userDid|did:example:microblog|*
-- Permission to make only interactions in a given namespace:
-    did:example:userDid|did:example:microblog|interactions|*
+- Permission to write to write particular schemas in a collection: 
+    did:example:userDid|did:example:microblog|did:example:like|*
 - Permission to create a single interaction on user's behalf: 
-    did:example:userDid|did:example:microblog|interactions|234567abcdefg
+    did:example:userDid|did:example:microblog|did:example:like|234567abcdefg
 
 Example: 
 {
-  with: { scheme: "adx", hierPart: "did:example:abcdefg|did:example:microblog|*" },
+  with: { scheme: "adx", hierPart: "did:example:userDid|did:example:microblog|*" },
   can: { namespace: "adx", segments: [ "WRITE" ] }
 }
 
