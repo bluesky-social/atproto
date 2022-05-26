@@ -17,7 +17,7 @@ export const isCid = (str: string): boolean => {
 const strToCid = z
   .string()
   .refine(isCid, { message: 'Not a valid CID' })
-  .transform(mf.CID.parse)
+  .transform((str: string) => mf.CID.parse(str))
 
 // @TODO improve our DID representation
 const did = z.string()
@@ -33,7 +33,7 @@ const strToInt = z
   .refine((str) => !isNaN(parseInt(str)), {
     message: 'Cannot parse string to integer',
   })
-  .transform(parseInt)
+  .transform((str) => parseInt(str))
 
 export const schema = {
   string: z.string(),
