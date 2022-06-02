@@ -1,0 +1,33 @@
+{
+  "name": "@adx/did-sdk",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "dev": "tsc -w --project tsconfig.json",
+    "test": "ava -v test/*.ts",
+    "lint": "eslint --ext .ts ."
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@decentralized-identity/ion-sdk": "^0.5.0",
+    "@transmute/did-key.js": "^0.3.0-unstable.8",
+    "@transmute/did-key-ed25519": "^0.3.0-unstable.5",
+    "@transmute/did-key-secp256k1": "^0.3.0-unstable.5",
+    "did-resolver": "^3.2.0",
+    "ion-pow-sdk": "^1.0.16",
+    "node-fetch": "^3.2.0",
+    "web-did-resolver": "^2.0.16"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.12.1",
+    "@typescript-eslint/parser": "^5.12.1",
+    "eslint": "^8.9.0",
+    "eslint-config-prettier": "^8.4.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.5.1",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.3.5"
+  }
+}
