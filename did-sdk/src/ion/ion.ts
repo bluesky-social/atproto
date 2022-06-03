@@ -47,7 +47,7 @@ export interface IonDidState {
   ops: Op[]
 }
 
-export class IonDid extends DidDocAPI {
+export class IonDidDocAPI extends DidDocAPI {
   _longForm: string | undefined
   _ops: Op[]
   _ionChallengeEndpoint = CHALLENGE_ENDPOINT

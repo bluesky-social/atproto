@@ -5,79 +5,10 @@ import {
   VerificationMethod,
   ServiceEndpoint,
 } from 'did-resolver'
-/*export type DidDocVerificationMethodOrLink = string | DidDocVerificationMethod
-
-export type KeyCapabilitySection =
-  | 'authentication'
-  | 'assertionMethod'
-  | 'capabilityDelegation'
-  | 'capabilityInvocation'
-  | 'keyAgreement'
-
-export interface DIDDocument {
-  id: string
-  alsoKnownAs?: string[]
-  controller?: string | string[]
-  service?: DidDocService[]
-  verificationMethod?: DidDocVerificationMethod[]
-
-  assertionMethod?: DidDocVerificationMethodOrLink[]
-  authentication?: DidDocVerificationMethodOrLink[]
-  capabilityDelegation?: DidDocVerificationMethodOrLink[]
-  capabilityInvocation?: DidDocVerificationMethodOrLink[]
-  keyAgreement?: DidDocVerificationMethodOrLink[]
-}
-
-export interface DidDocVerificationMethod {
-  id: string
-  controller: string
-  type: string
-  publicKeyJwk?: Record<string, unknown>
-  publicKeyMultibase?: string
-}
-
-export interface DidDocService {
-  id: string
-  type: string
-  serviceEndpoint: string
-}*/
 
 export class DidDocAPI {
-  getURI(): string {
+  get didDoc(): DIDDocument {
     throw new Error('Must be overridden')
-  }
-
-  getController(): string {
-    throw new Error('Must be overridden')
-  }
-
-  listPublicKeys(purpose: KeyCapabilitySection): VerificationMethod[] {
-    throw new Error('Must be overridden')
-  }
-
-  getPublicKey(purpose: KeyCapabilitySection, offset = 0): VerificationMethod {
-    throw new Error('Must be overridden')
-  }
-
-  getKeyPair(id: string) {
-    throw new Error('Must be overridden')
-  }
-
-  listServices(): ServiceEndpoint[] {
-    throw new Error('Must be overridden')
-  }
-
-  getService(type: string): ServiceEndpoint {
-    throw new Error('Must be overridden')
-  }
-}
-
-export class ReadOnlyDidDocAPI extends DidDocAPI {
-  constructor(
-    public didDoc: DIDDocument,
-    public didDocMetadata?: DIDDocumentMetadata,
-  ) {
-    super()
   }
 
   getURI(): string {
@@ -116,16 +47,55 @@ export class ReadOnlyDidDocAPI extends DidDocAPI {
     throw new Error('Keypair not available')
   }
 
-  listServices() {
+  listServices(): ServiceEndpoint[] {
     return this.didDoc.service || []
   }
 
-  getService(type: string) {
+  getService(type: string): ServiceEndpoint {
     if (!this.didDoc.service || this.didDoc.service.length === 0)
       throw new Error('Service not found')
     const service = this.didDoc.service.find((s) => s.type === type)
     if (!service) throw new Error('Service not found')
     return service
+  }
+}
+
+export class WritableDidDocAPI extends DidDocAPI {
+  async create(opts: any): Promise<void> {
+    throw new Error('Must be overridden')
+  }
+
+  async update(opts: any): Promise<void> {
+    throw new Error('Must be overridden')
+  }
+
+  async recover(opts: any): Promise<void> {
+    throw new Error('Must be overridden')
+  }
+
+  async deactivate(opts: any): Promise<void> {
+    throw new Error('Must be overridden')
+  }
+
+  serialize(): any {
+    throw new Error('Must be overridden')
+  }
+
+  async hydrate(state: any): Promise<void> {
+    throw new Error('Must be overridden')
+  }
+}
+
+export class ReadOnlyDidDocAPI extends DidDocAPI {
+  constructor(
+    private _didDoc: DIDDocument,
+    public didDocMetadata?: DIDDocumentMetadata,
+  ) {
+    super()
+  }
+
+  get didDoc(): DIDDocument {
+    return this._didDoc
   }
 }
 
