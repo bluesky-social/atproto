@@ -157,6 +157,27 @@ test('Create, update, recover, and deactivate did:ion (dummy server)', async (t)
   })
 })
 
+test('Serialize and hydrate did:ion', async (t) => {
+  const service = {
+    id: Buffer.from('#service1', 'utf8').toString('base64'), // TODO: is this right?
+    type: 'SomeService',
+    serviceEndpoint: 'https://example.com',
+  }
+  const didDoc = await ion.create(
+    { services: [service] },
+    {
+      keyType: 'secp256k1',
+      secureRandom: () => crypto.randomBytes(32),
+      ionResolveEndpoint: server?.resolveEndpoint,
+      ionChallengeEndpoint: server?.challengeEndpoint,
+      ionSolutionEndpoint: server?.solutionEndpoint,
+    },
+  )
+  const state = JSON.stringify(didDoc.serialize(), null, 2)
+  const didDoc2 = await ion.inst(JSON.parse(state))
+  t.deepEqual(didDoc.didDoc, didDoc2.didDoc)
+})
+
 test('Resolve throws on malformed did:ions', async (t) => {
   await t.throwsAsync(() => resolve(`did:ion:asdf`))
   await t.throwsAsync(() => resolve(`did:ion:`))
