@@ -1,3 +1,5 @@
+@adx/did-sdk / [Exports](modules.md)
+
 # @adx/did-sdk
 
 An SDK for working with DIDs in ADX. Supports did:key, did:web, and did:ion.

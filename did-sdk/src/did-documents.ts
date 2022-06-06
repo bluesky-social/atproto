@@ -43,10 +43,6 @@ export class DidDocAPI {
     return key
   }
 
-  getKeyPair(id: string) {
-    throw new Error('Keypair not available')
-  }
-
   listServices(): ServiceEndpoint[] {
     return this.didDoc.service || []
   }

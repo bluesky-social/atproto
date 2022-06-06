@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "dev": "tsc -w --project tsconfig.json",
+    "docs": "typedoc --plugin typedoc-plugin-markdown --out docs src/index.ts",
     "test": "ava -v test/*.ts",
     "lint": "eslint --ext .ts ."
   },
@@ -30,6 +31,8 @@
     "get-port": "^6.1.2",
     "prettier": "^2.5.1",
     "ts-node": "^10.2.1",
+    "typedoc": "^0.22.17",
+    "typedoc-plugin-markdown": "^3.12.1",
     "typescript": "^4.3.5"
   }
 }
