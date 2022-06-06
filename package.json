@@ -12,6 +12,7 @@
   "workspaces": [
     "common",
     "cli",
+    "did-sdk",
     "server"
   ],
   "scripts": {
