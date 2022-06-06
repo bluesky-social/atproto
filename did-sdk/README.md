@@ -3,7 +3,7 @@
 An SDK for working with DIDs in ADX. Supports did:key, did:web, and did:ion.
 
 ```typescript
-import crypto from 'crypto
+import crypto from 'crypto'
 import * as didSdk from '@adx/did-sdk'
 
 // resolve a did
