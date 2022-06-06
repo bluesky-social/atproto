@@ -1,9 +1,12 @@
 {
-  "name": "@adx/auth",
+  "name": "@adxp/auth",
   "version": "0.0.1",
   "main": "dist/index.js",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "dev": "tsc -w --project tsconfig.json",
