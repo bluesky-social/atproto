@@ -77,19 +77,84 @@ test('Create, update, recover, and deactivate did:ion (dummy server)', async (t)
     type: 'SomeService',
     serviceEndpoint: 'https://example.com',
   }
+  const service2 = {
+    id: Buffer.from('#service2', 'utf8').toString('base64'), // TODO: is this right?
+    type: 'SomeService',
+    serviceEndpoint: 'https://foobar.com',
+  }
+
+  // create
   const did = await ion.create(
-    'secp256k1',
     { services: [service] },
     {
+      keyType: 'secp256k1',
       secureRandom: () => crypto.randomBytes(32),
       ionResolveEndpoint: server?.resolveEndpoint,
       ionChallengeEndpoint: server?.challengeEndpoint,
       ionSolutionEndpoint: server?.solutionEndpoint,
     },
   )
-  const did2 = await resolve(did.getURI())
+  const did2 = await ion.resolve(did.getURI(), server?.resolveEndpoint)
   t.deepEqual(did.didDoc, did2.didDoc)
   t.is(did.getService(service.type)?.serviceEndpoint, service.serviceEndpoint)
+
+  // update
+  await did.update(
+    {
+      addServices: [service2],
+    },
+    { keyType: 'secp256k1', secureRandom: () => crypto.randomBytes(32) },
+  )
+  const did3 = await ion.resolve(did.getURI(), server?.resolveEndpoint)
+  t.deepEqual(did.didDoc, did3.didDoc)
+  t.deepEqual(
+    did
+      .listServices()
+      .map((s) => s.serviceEndpoint)
+      .sort(),
+    [service.serviceEndpoint, service2.serviceEndpoint].sort(),
+  )
+
+  // update2
+  await did.update(
+    {
+      removeServices: [service.id],
+    },
+    { keyType: 'secp256k1', secureRandom: () => crypto.randomBytes(32) },
+  )
+  const did4 = await ion.resolve(did.getURI(), server?.resolveEndpoint)
+  t.deepEqual(did.didDoc, did4.didDoc)
+  t.deepEqual(
+    did
+      .listServices()
+      .map((s) => s.serviceEndpoint)
+      .sort(),
+    [service2.serviceEndpoint].sort(),
+  )
+
+  // recover
+  await did.recover(
+    {
+      services: [service],
+    },
+    { keyType: 'secp256k1', secureRandom: () => crypto.randomBytes(32) },
+  )
+  const did5 = await ion.resolve(did.getURI(), server?.resolveEndpoint)
+  t.deepEqual(did.didDoc, did5.didDoc)
+  t.is(did.getService(service.type)?.serviceEndpoint, service.serviceEndpoint)
+
+  // deactivate
+  await did.deactivate()
+  const did6 = await ion.resolve(did.getURI(), server?.resolveEndpoint)
+  t.deepEqual(did.didDoc, did6.didDoc)
+  await t.throwsAsync(() => {
+    return did.update(
+      {
+        addServices: [service2],
+      },
+      { keyType: 'secp256k1', secureRandom: () => crypto.randomBytes(32) },
+    )
+  })
 })
 
 test('Resolve throws on malformed did:ions', async (t) => {

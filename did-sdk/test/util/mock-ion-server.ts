@@ -175,8 +175,9 @@ async function getJsonBody(req: http.IncomingMessage) {
   return undefined
 }
 
-function createShortFormDid(createRequest: any): string {
-  const didUniqueSuffix = computeDidUniqueSuffix(createRequest.suffixData)
+function createShortFormDid(request: any): string {
+  if (request.didSuffix) return `did:ion:${request.didSuffix}`
+  const didUniqueSuffix = computeDidUniqueSuffix(request.suffixData)
   return `did:ion:${didUniqueSuffix}`
 }
 

@@ -28,6 +28,7 @@ export { KeyType, generateFromSeedOptions } from './keypairs.js'
 export type CreateParams = IonDocumentModel
 export type UpdateParams = OpUpdateParams
 export type RecoverParams = IonDocumentModel
+export type KeyParams = generateFromSeedOptions & { keyType: KeyType }
 export * as OPS from './ops.js'
 export interface DidIonSerializedState {
   shortForm: string
@@ -52,16 +53,15 @@ export async function resolve(
 }
 
 export async function create(
-  type: KeyType,
   doc: CreateParams,
   options: {
     ionResolveEndpoint?: string
     ionChallengeEndpoint?: string
     ionSolutionEndpoint?: string
-  } & generateFromSeedOptions,
+  } & KeyParams,
 ): Promise<IonDidDocAPI> {
   const did = new IonDidDocAPI(options)
-  await did.create(type, doc, options)
+  await did.create(doc, options)
   return did
 }
 
@@ -146,7 +146,7 @@ export class IonDidDocAPI extends WritableDidDocAPI {
   assertActive() {
     const lastOp = this.getLastOperation()
     if (lastOp?.operation === 'deactivate') {
-      throw 'Cannot perform further operations on a deactivated DID'
+      throw new Error('Cannot perform further operations on a deactivated DID')
     }
   }
 
@@ -197,17 +197,13 @@ export class IonDidDocAPI extends WritableDidDocAPI {
   // writable api
   // =
 
-  async create(
-    type: KeyType,
-    doc: CreateParams,
-    options: generateFromSeedOptions,
-  ): Promise<OpCreate> {
+  async create(doc: CreateParams, options: KeyParams): Promise<OpCreate> {
     this.assertActive()
     const op: OpCreate = {
       operation: 'create',
       content: doc,
-      recovery: await generateKeyPair(type, options),
-      update: await generateKeyPair(type, options),
+      recovery: await generateKeyPair(options.keyType, options),
+      update: await generateKeyPair(options.keyType, options),
     }
     const reqBody = IonSdk.IonRequest.createCreateRequest({
       recoveryKey: op.recovery.publicJwk,
@@ -221,75 +217,78 @@ export class IonDidDocAPI extends WritableDidDocAPI {
     return op
   }
 
-  // async update(params: UpdateParams): Promise<OpUpdate> {
-  //   this.assertActive()
-  //   const op: OpUpdate = {
-  //     operation: 'update',
-  //     content: params,
-  //     previous: this.getPreviousOperation('update'),
-  //     update: await generateKeyPair(),
-  //   }
-  //   if (!op.previous.update) {
-  //     throw new Error('Update key not found on previous ops')
-  //   }
-  //   const reqBody = IonSdk.IonRequest.createUpdateRequest({
-  //     didSuffix: this.getSuffix(),
-  //     signer: IonSdk.LocalSigner.create(op.previous.update.privateJwk),
-  //     updatePublicKey: op.previous.update.publicJwk,
-  //     nextUpdatePublicKey: op.update.publicJwk,
-  //     servicesToAdd: op.content.addServices,
-  //     idsOfServicesToRemove: op.content?.removeServices,
-  //     publicKeysToAdd: op.content?.addPublicKeys,
-  //     idsOfPublicKeysToRemove: op.content?.removePublicKeys,
-  //   })
-  //   await this._submitAnchorRequest(reqBody)
-  //   this._ops.push(op)
-  //   return op
-  // }
+  async update(params: UpdateParams, options: KeyParams): Promise<OpUpdate> {
+    this.assertActive()
+    const op: OpUpdate = {
+      operation: 'update',
+      content: params,
+      previous: this.getPreviousOperation('update'),
+      update: await generateKeyPair(options.keyType, options),
+    }
+    if (!op.previous.update) {
+      throw new Error('Update key not found on previous ops')
+    }
+    const reqBody = await IonSdk.IonRequest.createUpdateRequest({
+      didSuffix: this.getSuffix(),
+      signer: IonSdk.LocalSigner.create(op.previous.update.privateJwk),
+      updatePublicKey: op.previous.update.publicJwk,
+      nextUpdatePublicKey: op.update.publicJwk,
+      servicesToAdd: op.content.addServices,
+      idsOfServicesToRemove: op.content?.removeServices,
+      publicKeysToAdd: op.content?.addPublicKeys,
+      idsOfPublicKeysToRemove: op.content?.removePublicKeys,
+    })
+    await this._submitAnchorRequest(reqBody)
+    this._ops.push(op)
+    await this._resolveDidDoc()
+    return op
+  }
 
-  // async recover(doc: RecoverParams): Promise<OpRecover> {
-  //   this.assertActive()
-  //   const op: OpRecover = {
-  //     operation: 'recover',
-  //     content: doc,
-  //     previous: this.getPreviousOperation('recover'),
-  //     recovery: await generateKeyPair(),
-  //     update: await generateKeyPair(),
-  //   }
-  //   if (!op.previous.recovery) {
-  //     throw new Error('Recovery key not found on previous ops')
-  //   }
-  //   const reqBody = IonSdk.IonRequest.createRecoverRequest({
-  //     didSuffix: this.getSuffix(),
-  //     signer: IonSdk.LocalSigner.create(op.previous.recovery.privateJwk),
-  //     recoveryPublicKey: op.previous.recovery.publicJwk,
-  //     nextRecoveryPublicKey: op.recovery.publicJwk,
-  //     nextUpdatePublicKey: op.update.publicJwk,
-  //     document: op.content,
-  //   })
-  //   await this._submitAnchorRequest(reqBody)
-  //   this._ops.push(op)
-  //   return op
-  // }
+  async recover(doc: RecoverParams, options: KeyParams): Promise<OpRecover> {
+    this.assertActive()
+    const op: OpRecover = {
+      operation: 'recover',
+      content: doc,
+      previous: this.getPreviousOperation('recover'),
+      recovery: await generateKeyPair(options.keyType, options),
+      update: await generateKeyPair(options.keyType, options),
+    }
+    if (!op.previous.recovery) {
+      throw new Error('Recovery key not found on previous ops')
+    }
+    const reqBody = await IonSdk.IonRequest.createRecoverRequest({
+      didSuffix: this.getSuffix(),
+      signer: IonSdk.LocalSigner.create(op.previous.recovery.privateJwk),
+      recoveryPublicKey: op.previous.recovery.publicJwk,
+      nextRecoveryPublicKey: op.recovery.publicJwk,
+      nextUpdatePublicKey: op.update.publicJwk,
+      document: op.content,
+    })
+    await this._submitAnchorRequest(reqBody)
+    this._ops.push(op)
+    await this._resolveDidDoc()
+    return op
+  }
 
-  // async deactivate(): Promise<OpDeactivate> {
-  //   this.assertActive()
-  //   const op: OpDeactivate = {
-  //     operation: 'deactivate',
-  //     previous: this.getPreviousOperation('deactivate'),
-  //   }
-  //   if (!op.previous.recovery) {
-  //     throw new Error('Recovery key not found on previous ops')
-  //   }
-  //   const reqBody = IonSdk.IonRequest.createDeactivateRequest({
-  //     didSuffix: this.getSuffix(),
-  //     recoveryPublicKey: op.previous.recovery.publicJwk,
-  //     signer: IonSdk.LocalSigner.create(op.previous.recovery.privateJwk),
-  //   })
-  //   await this._submitAnchorRequest(reqBody)
-  //   this._ops.push(op)
-  //   return op
-  // }
+  async deactivate(): Promise<OpDeactivate> {
+    this.assertActive()
+    const op: OpDeactivate = {
+      operation: 'deactivate',
+      previous: this.getPreviousOperation('deactivate'),
+    }
+    if (!op.previous.recovery) {
+      throw new Error('Recovery key not found on previous ops')
+    }
+    const reqBody = await IonSdk.IonRequest.createDeactivateRequest({
+      didSuffix: this.getSuffix(),
+      recoveryPublicKey: op.previous.recovery.publicJwk,
+      signer: IonSdk.LocalSigner.create(op.previous.recovery.privateJwk),
+    })
+    await this._submitAnchorRequest(reqBody)
+    this._ops.push(op)
+    await this._resolveDidDoc()
+    return op
+  }
 
   serialize(): DidIonSerializedState {
     return {
