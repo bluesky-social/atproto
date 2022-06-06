@@ -16,10 +16,10 @@ console.log(did.listServices()) // => ServiceEndpoint[]
 console.log(did.getService('SomeService')) // => ServiceEndpoint
 
 // create a did
-const didKey = await did.key.create('ed25519', {
+const didKey = await didSdk.key.create('ed25519', {
   secureRandom: () => crypto.randomBytes(32)
 })
-const didIon = await ion.create(
+const didIon = await didSdk.ion.create(
   {
     services: [{
       id: Buffer.from('#service1', 'utf8').toString('base64'),
@@ -32,6 +32,12 @@ const didIon = await ion.create(
     secureRandom: () => crypto.randomBytes(32),
   }
 )
+
+// save / restore a did
+const serializableState = didKey.serialize()
+const state = JSON.stringify(didKey.serialize(), null, 2)
+// ...write to some storage...
+const didKey2 = await didSdk.key.inst(JSON.parse(state))
 
 // run a simple did:web server
 const server = await didSdk.createDidWebServer(12345)
