@@ -38,6 +38,6 @@ const server = await didSdk.createDidWebServer(12345)
 server.put({/* ... did doc ... */})
 ```
 
-## [Docs](./docs)
+## [Docs](./docs/modules.md)
 
-You can [find the generated docs here](./docs).
+You can [find the generated docs here](./docs/modules.md).
