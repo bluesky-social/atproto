@@ -1,8 +1,8 @@
 import * as web from './web/web.js'
 import * as key from './key/key.js'
-// import * as ION from './ion/ion.js'
+import * as ion from './ion/ion.js'
 import { DidWebServer } from './web/server.js'
-import { DidDocAPI, ReadOnlyDidDocAPI } from './did-documents.js'
+import { ReadOnlyDidDocAPI } from './did-documents.js'
 
 export async function resolve(didUri: string): Promise<ReadOnlyDidDocAPI> {
   const didMethod = didUri.split(':').at(1)
@@ -13,7 +13,7 @@ export async function resolve(didUri: string): Promise<ReadOnlyDidDocAPI> {
     return key.resolve(didUri)
   }
   if (didMethod === 'ion') {
-    // return ION.resolve(didUri)
+    return ion.resolve(didUri)
   }
   throw new Error(`Unsupported did method (${didMethod}) ${didUri}`)
 }
@@ -29,5 +29,4 @@ export { DidDocAPI, ReadOnlyDidDocAPI } from './did-documents.js'
 export { DidWebServer } from './web/server.js'
 export * as web from './web/web.js'
 export * as key from './key/key.js'
-// export * as ION from './ion/ion.js'
-export { KeyPair, generateKeyPair } from './keypairs.js'
+export * as ion from './ion/ion.js'

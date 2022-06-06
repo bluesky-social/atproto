@@ -82,18 +82,6 @@ export class KeyDidDocAPI extends WritableDidDocAPI {
     ).didDocument
   }
 
-  async update(): Promise<void> {
-    throw new Error('Cannot update did:key')
-  }
-
-  async recover(): Promise<void> {
-    throw new Error('Cannot recover did:key')
-  }
-
-  async deactivate(): Promise<void> {
-    throw new Error('Cannot deactivate did:key')
-  }
-
   serialize(): DidKeySerializedState {
     return {
       id: this.id,

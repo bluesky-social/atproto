@@ -10,7 +10,6 @@ import {
 let server: DidWebServer | undefined
 
 test.before('Server setup', async (t) => {
-  console.log('starting')
   server = await createDidWebServer(await getPort())
 })
 

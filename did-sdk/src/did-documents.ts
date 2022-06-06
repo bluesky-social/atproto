@@ -61,22 +61,6 @@ export class DidDocAPI {
 }
 
 export class WritableDidDocAPI extends DidDocAPI {
-  async create(opts: any): Promise<void> {
-    throw new Error('Must be overridden')
-  }
-
-  async update(opts: any): Promise<void> {
-    throw new Error('Must be overridden')
-  }
-
-  async recover(opts: any): Promise<void> {
-    throw new Error('Must be overridden')
-  }
-
-  async deactivate(opts: any): Promise<void> {
-    throw new Error('Must be overridden')
-  }
-
   serialize(): any {
     throw new Error('Must be overridden')
   }

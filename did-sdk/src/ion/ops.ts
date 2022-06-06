@@ -1,7 +1,7 @@
 import IonDocumentModel from '@decentralized-identity/ion-sdk/lib/models/IonDocumentModel'
 import IonPublicKeyModel from '@decentralized-identity/ion-sdk/lib/models/IonPublicKeyModel'
 import IonServiceModel from '@decentralized-identity/ion-sdk/lib/models/IonServiceModel'
-import { KeyPair } from '../keypairs.js'
+import { KeyPair } from './keypairs.js'
 
 interface BaseOp {
   previous?: BaseOp
