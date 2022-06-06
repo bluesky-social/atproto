@@ -87,9 +87,9 @@ test('Create, update, recover, and deactivate did:ion (dummy server)', async (t)
       ionSolutionEndpoint: server?.solutionEndpoint,
     },
   )
-  console.log(did)
-  console.log(JSON.stringify((await resolve(TEST_ION_DID)).didDoc, null, 2))
-  t.fail()
+  const did2 = await resolve(did.getURI())
+  t.deepEqual(did.didDoc, did2.didDoc)
+  t.is(did.getService(service.type)?.serviceEndpoint, service.serviceEndpoint)
 })
 
 test('Resolve throws on malformed did:ions', async (t) => {

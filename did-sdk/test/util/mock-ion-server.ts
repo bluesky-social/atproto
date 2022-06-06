@@ -5,7 +5,13 @@ import crypto from 'crypto'
 import EncoderModule from '@decentralized-identity/ion-sdk/dist/lib/Encoder.js'
 import JsonCanonicalizerModule from '@decentralized-identity/ion-sdk/dist/lib/JsonCanonicalizer.js'
 import MultihashModule from '@decentralized-identity/ion-sdk/dist/lib/Multihash.js'
+import MockOperationStoreModule from '@decentralized-identity/sidetree/dist/tests/mocks/MockOperationStore.js'
+import MockVersionManagerModule from '@decentralized-identity/sidetree/dist/tests/mocks/MockVersionManager.js'
+import OperationGeneratorModule from '@decentralized-identity/sidetree/dist/tests/generators/OperationGenerator.js'
+import DidModule from '@decentralized-identity/sidetree/dist/lib/core/versions/latest/Did.js'
 import DocumentComposerModule from '@decentralized-identity/sidetree/dist/lib/core/versions/latest/DocumentComposer.js'
+import OperationProcessorModule from '@decentralized-identity/sidetree/dist/lib/core/versions/latest/OperationProcessor.js'
+import ResolverModule from '@decentralized-identity/sidetree/dist/lib/core/Resolver.js'
 
 // @ts-ignore module interop issue -prf
 const Encoder = EncoderModule.default
@@ -14,7 +20,19 @@ const JsonCanonicalizer = JsonCanonicalizerModule.default
 // @ts-ignore module interop issue -prf
 const Multihash = MultihashModule.default
 // @ts-ignore module interop issue -prf
+const MockOperationStore = MockOperationStoreModule.default
+// @ts-ignore module interop issue -prf
+const MockVersionManager = MockVersionManagerModule.default
+// @ts-ignore module interop issue -prf
+const OperationGenerator = OperationGeneratorModule.default
+// @ts-ignore module interop issue -prf
+const DidWrapper = DidModule.default
+// @ts-ignore module interop issue -prf
 const DocumentComposer = DocumentComposerModule.default
+// @ts-ignore module interop issue -prf
+const OperationProcessor = OperationProcessorModule.default
+// @ts-ignore module interop issue -prf
+const Resolver = ResolverModule.default
 
 const hashAlgorithmInMultihashCode = 18 // SHA256
 const RESOLVE_ENDPOINT = '/1.0/identifiers'
@@ -29,9 +47,13 @@ export async function createDidIonServer(
   return s
 }
 
+let anchorCounter = 0
 export class MockDidIonServer {
   _server: http.Server
-  dids: Map<string, any> = new Map()
+  resolver: any
+  operationStore: any
+  versionManager: any
+  operationProcessor: any
   whenReady: Promise<void>
 
   get resolveEndpoint() {
@@ -47,6 +69,12 @@ export class MockDidIonServer {
   }
 
   constructor(public port: number) {
+    this.operationStore = new MockOperationStore()
+    this.operationProcessor = new OperationProcessor()
+    this.versionManager = new MockVersionManager()
+    this.versionManager.getOperationProcessor = () => this.operationProcessor
+    this.resolver = new Resolver(this.versionManager, this.operationStore)
+
     this._server = http
       .createServer((req, res) => this._onRequest(req, res))
       .listen(port)
@@ -55,18 +83,16 @@ export class MockDidIonServer {
     })
   }
 
-  resolveDid(did: string, ops: any[]) {
-    const doc = {}
-    for (const op of ops) {
-      DocumentComposer.applyPatches(doc, op.delta.patches)
-    }
-    return {
-      didDocument: Object.assign({}, doc, {
-        '@context': ['https://www.w3.org/ns/did/v1'],
-        id: did,
-      }),
-      didDocumentMetadata: {}, // TODO
-    }
+  async resolveDid(didShortForm: string, did: string) {
+    const didState = await this.resolver.resolve(didShortForm)
+    const published = false
+    const response = DocumentComposer.transformToExternalDocument(
+      didState,
+      new DidWrapper(did, 'ion'),
+      published,
+    )
+    // console.log('resolveDid()', did, didState, response)
+    return response
   }
 
   async _onRequest(req: http.IncomingMessage, res: http.ServerResponse) {
@@ -74,17 +100,15 @@ export class MockDidIonServer {
       if (req.url?.startsWith(RESOLVE_ENDPOINT)) {
         const did = req.url.slice(RESOLVE_ENDPOINT.length + 1)
         const didShortForm = did.split(':').slice(0, 3).join(':')
-        console.log('RESOLVE', didShortForm, did)
-        const didDoc = this.dids.get(didShortForm)
-        if (didDoc) {
-          console.log('GOT', didDoc)
+        // console.log('RESOLVE', didShortForm, did)
+        try {
+          const resBody = await this.resolveDid(didShortForm, did)
           res.writeHead(200, 'OK', {
             'Content-Type': 'application/json',
           })
-          console.log('returning', this.resolveDid(didShortForm, didDoc.ops))
-          res.write(JSON.stringify(this.resolveDid(didShortForm, didDoc.ops)))
+          res.write(JSON.stringify(resBody))
           res.end()
-        } else {
+        } catch {
           res.writeHead(404, 'Not found')
           res.end()
         }
@@ -100,11 +124,24 @@ export class MockDidIonServer {
         res.end()
       } else if (req.url === SOLUTION_ENDPOINT) {
         const op = await getJsonBody(req)
-        if (op.type === 'create') {
-          const did = createShortFormDid(op)
-          this.dids.set(did, { ops: [op] })
-        } else {
-          console.log('TODO', op)
+        const did = createShortFormDid(op)
+        const anchoredOp =
+          OperationGenerator.createAnchoredOperationModelFromOperationModel(
+            {
+              didUniqueSuffix: did,
+              type: op.type,
+              operationBuffer: Buffer.from(JSON.stringify(op)),
+            },
+            anchorCounter,
+            anchorCounter,
+            anchorCounter,
+          )
+        anchorCounter++
+        try {
+          // console.log('inserting', op, anchoredOp)
+          await this.operationStore.insertOrReplace([anchoredOp])
+        } catch (e) {
+          console.error('ION update failed', op, e)
         }
         res.writeHead(200, 'OK')
         res.end()
