@@ -13,7 +13,8 @@
     "auth",
     "common",
     "cli",
-    "server"
+    "server",
+    "ws-relay"
   ],
   "scripts": {
     "build": "wsrun -c \"build\"",
