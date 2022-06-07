@@ -1,7 +1,6 @@
 import test from 'ava'
 import getPort from 'get-port'
-import crypto from 'crypto'
-import { resolve, ion, DIDDocument } from '../src/index.js'
+import { resolve, ion } from '../src/index.js'
 import { createDidIonServer, MockDidIonServer } from './util/mock-ion-server.js'
 
 const TEST_ION_DID = `did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw:eyJkZWx0YSI6eyJwYXRjaGVzIjpbeyJhY3Rpb24iOiJyZXBsYWNlIiwiZG9jdW1lbnQiOnsicHVibGljS2V5cyI6W3siaWQiOiJzaWdfNzJiZDE2ZDYiLCJwdWJsaWNLZXlKd2siOnsiY3J2Ijoic2VjcDI1NmsxIiwia3R5IjoiRUMiLCJ4IjoiS2JfMnVOR3Nyd1VOdkh2YUNOckRGdW14VXlQTWZZd3kxNEpZZmphQUhmayIsInkiOiJhSFNDZDVEOFh0RUxvSXBpN1A5eDV1cXBpeEVxNmJDenQ0QldvUVk1UUFRIn0sInB1cnBvc2VzIjpbImF1dGhlbnRpY2F0aW9uIiwiYXNzZXJ0aW9uTWV0aG9kIl0sInR5cGUiOiJFY2RzYVNlY3AyNTZrMVZlcmlmaWNhdGlvbktleTIwMTkifV0sInNlcnZpY2VzIjpbeyJpZCI6ImxpbmtlZGRvbWFpbnMiLCJzZXJ2aWNlRW5kcG9pbnQiOnsib3JpZ2lucyI6WyJodHRwczovL3d3dy52Y3NhdG9zaGkuY29tLyJdfSwidHlwZSI6IkxpbmtlZERvbWFpbnMifV19fV0sInVwZGF0ZUNvbW1pdG1lbnQiOiJFaUR4SWxJak9xQk5NTGZjdzZndWpHNEdFVDM3UjBIRWM2Z20xclNZTjlMOF9RIn0sInN1ZmZpeERhdGEiOnsiZGVsdGFIYXNoIjoiRWlBLXV3TWo3RVFheURmWTRJS3pfSE9LdmJZQ05td19Tb1lhUmhOcWhFSWhudyIsInJlY292ZXJ5Q29tbWl0bWVudCI6IkVpQ0czQ1M5RFJpeU1JRVoxRl9sSjZnRVRMZWVHREwzZnpuQUViMVRGdFZXNEEifX0#sig_72bd16d6`
@@ -86,8 +85,6 @@ test('Create, update, recover, and deactivate did:ion (dummy server)', async (t)
   const did = await ion.create(
     { services: [service] },
     {
-      keyType: 'secp256k1',
-      secureRandom: () => crypto.randomBytes(32),
       ionResolveEndpoint: server?.resolveEndpoint,
       ionChallengeEndpoint: server?.challengeEndpoint,
       ionSolutionEndpoint: server?.solutionEndpoint,
@@ -98,12 +95,9 @@ test('Create, update, recover, and deactivate did:ion (dummy server)', async (t)
   t.is(did.getService(service.type)?.serviceEndpoint, service.serviceEndpoint)
 
   // update
-  await did.update(
-    {
-      addServices: [service2],
-    },
-    { keyType: 'secp256k1', secureRandom: () => crypto.randomBytes(32) },
-  )
+  await did.update({
+    addServices: [service2],
+  })
   const did3 = await ion.resolve(did.getURI(), server?.resolveEndpoint)
   t.deepEqual(did.didDoc, did3.didDoc)
   t.deepEqual(
@@ -115,12 +109,9 @@ test('Create, update, recover, and deactivate did:ion (dummy server)', async (t)
   )
 
   // update2
-  await did.update(
-    {
-      removeServices: [service.id],
-    },
-    { keyType: 'secp256k1', secureRandom: () => crypto.randomBytes(32) },
-  )
+  await did.update({
+    removeServices: [service.id],
+  })
   const did4 = await ion.resolve(did.getURI(), server?.resolveEndpoint)
   t.deepEqual(did.didDoc, did4.didDoc)
   t.deepEqual(
@@ -132,12 +123,9 @@ test('Create, update, recover, and deactivate did:ion (dummy server)', async (t)
   )
 
   // recover
-  await did.recover(
-    {
-      services: [service],
-    },
-    { keyType: 'secp256k1', secureRandom: () => crypto.randomBytes(32) },
-  )
+  await did.recover({
+    services: [service],
+  })
   const did5 = await ion.resolve(did.getURI(), server?.resolveEndpoint)
   t.deepEqual(did.didDoc, did5.didDoc)
   t.is(did.getService(service.type)?.serviceEndpoint, service.serviceEndpoint)
@@ -147,12 +135,9 @@ test('Create, update, recover, and deactivate did:ion (dummy server)', async (t)
   const did6 = await ion.resolve(did.getURI(), server?.resolveEndpoint)
   t.deepEqual(did.didDoc, did6.didDoc)
   await t.throwsAsync(() => {
-    return did.update(
-      {
-        addServices: [service2],
-      },
-      { keyType: 'secp256k1', secureRandom: () => crypto.randomBytes(32) },
-    )
+    return did.update({
+      addServices: [service2],
+    })
   })
 })
 
@@ -165,8 +150,6 @@ test('Serialize and hydrate did:ion', async (t) => {
   const didDoc = await ion.create(
     { services: [service] },
     {
-      keyType: 'secp256k1',
-      secureRandom: () => crypto.randomBytes(32),
       ionResolveEndpoint: server?.resolveEndpoint,
       ionChallengeEndpoint: server?.challengeEndpoint,
       ionSolutionEndpoint: server?.solutionEndpoint,

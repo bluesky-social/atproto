@@ -1,5 +1,4 @@
 import test from 'ava'
-import crypto from 'crypto'
 import * as did from '../src/index.js'
 
 const KEY_MULTIBASE = 'z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH'
@@ -57,9 +56,7 @@ test('Resolve throws on malformed did:keys', async (t) => {
 })
 
 test('Create did:key', async (t) => {
-  const didDoc = await did.key.create('ed25519', {
-    secureRandom: () => crypto.randomBytes(32),
-  })
+  const didDoc = await did.key.create('ed25519')
   const didDoc2 = await did.resolve(didDoc.getURI())
   t.deepEqual(didDoc.didDoc, didDoc2.didDoc)
   t.is(didDoc.getURI(), didDoc2.getURI())
@@ -108,9 +105,7 @@ test('Create did:key', async (t) => {
 })
 
 test('Serialize and hydrate did:key', async (t) => {
-  const didDoc = await did.key.create('ed25519', {
-    secureRandom: () => crypto.randomBytes(32),
-  })
+  const didDoc = await did.key.create('ed25519')
   const state = JSON.stringify(didDoc.serialize(), null, 2)
   const didDoc2 = await did.key.inst(JSON.parse(state))
   t.deepEqual(didDoc.didDoc, didDoc2.didDoc)

@@ -1,5 +1,6 @@
 import * as key from '@transmute/did-key.js'
 import { DIDDocument } from 'did-resolver'
+import { secureRandom } from '../crypto.js'
 import { ReadOnlyDidDocAPI, WritableDidDocAPI } from '../did-documents.js'
 
 export type generateFromSeedOptions = { secureRandom: () => Buffer }
@@ -68,7 +69,15 @@ export class KeyDidDocAPI extends WritableDidDocAPI {
     generateOptions?: generateFromSeedOptions | generateFromRandomOptions,
   ): Promise<void> {
     if (!generateOptions) {
-      generateOptions = key.getOptionsForType(type) as generateFromRandomOptions
+      try {
+        generateOptions = key.getOptionsForType(
+          type,
+        ) as generateFromRandomOptions
+      } catch (e) {
+        generateOptions = {
+          secureRandom: () => secureRandom(32),
+        } as generateFromSeedOptions
+      }
     }
     const res = await key.generate(type, generateOptions, {
       accept: 'application/did+ld+json',

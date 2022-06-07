@@ -16,9 +16,7 @@ console.log(did.listServices()) // => ServiceEndpoint[]
 console.log(did.getService('SomeService')) // => ServiceEndpoint
 
 // create a did
-const didKey = await didSdk.key.create('ed25519', {
-  secureRandom: () => crypto.randomBytes(32)
-})
+const didKey = await didSdk.key.create('ed25519')
 const didIon = await didSdk.ion.create(
   {
     services: [{
@@ -26,10 +24,6 @@ const didIon = await didSdk.ion.create(
       type: 'SomeService',
       serviceEndpoint: 'https://example.com'
     }]
-  },
-  {
-    keyType: 'secp256k1',
-    secureRandom: () => crypto.randomBytes(32),
   }
 )
 

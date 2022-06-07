@@ -28,7 +28,7 @@ export { KeyType, generateFromSeedOptions } from './keypairs.js'
 export type CreateParams = IonDocumentModel
 export type UpdateParams = OpUpdateParams
 export type RecoverParams = IonDocumentModel
-export type KeyParams = generateFromSeedOptions & { keyType: KeyType }
+export type KeyParams = generateFromSeedOptions & { keyType?: KeyType }
 export * as OPS from './ops.js'
 export interface DidIonSerializedState {
   shortForm: string
@@ -58,7 +58,7 @@ export async function create(
     ionResolveEndpoint?: string
     ionChallengeEndpoint?: string
     ionSolutionEndpoint?: string
-  } & KeyParams,
+  } & KeyParams = {},
 ): Promise<IonDidDocAPI> {
   const did = new IonDidDocAPI(options)
   await did.create(doc, options)
@@ -197,13 +197,13 @@ export class IonDidDocAPI extends WritableDidDocAPI {
   // writable api
   // =
 
-  async create(doc: CreateParams, options: KeyParams): Promise<OpCreate> {
+  async create(doc: CreateParams, options?: KeyParams): Promise<OpCreate> {
     this.assertActive()
     const op: OpCreate = {
       operation: 'create',
       content: doc,
-      recovery: await generateKeyPair(options.keyType, options),
-      update: await generateKeyPair(options.keyType, options),
+      recovery: await generateKeyPair(options?.keyType ?? 'secp256k1', options),
+      update: await generateKeyPair(options?.keyType ?? 'secp256k1', options),
     }
     const reqBody = IonSdk.IonRequest.createCreateRequest({
       recoveryKey: op.recovery.publicJwk,
@@ -217,13 +217,13 @@ export class IonDidDocAPI extends WritableDidDocAPI {
     return op
   }
 
-  async update(params: UpdateParams, options: KeyParams): Promise<OpUpdate> {
+  async update(params: UpdateParams, options?: KeyParams): Promise<OpUpdate> {
     this.assertActive()
     const op: OpUpdate = {
       operation: 'update',
       content: params,
       previous: this.getPreviousOperation('update'),
-      update: await generateKeyPair(options.keyType, options),
+      update: await generateKeyPair(options?.keyType ?? 'secp256k1', options),
     }
     if (!op.previous.update) {
       throw new Error('Update key not found on previous ops')
@@ -244,14 +244,14 @@ export class IonDidDocAPI extends WritableDidDocAPI {
     return op
   }
 
-  async recover(doc: RecoverParams, options: KeyParams): Promise<OpRecover> {
+  async recover(doc: RecoverParams, options?: KeyParams): Promise<OpRecover> {
     this.assertActive()
     const op: OpRecover = {
       operation: 'recover',
       content: doc,
       previous: this.getPreviousOperation('recover'),
-      recovery: await generateKeyPair(options.keyType, options),
-      update: await generateKeyPair(options.keyType, options),
+      recovery: await generateKeyPair(options?.keyType ?? 'secp256k1', options),
+      update: await generateKeyPair(options?.keyType ?? 'secp256k1', options),
     }
     if (!op.previous.recovery) {
       throw new Error('Recovery key not found on previous ops')
