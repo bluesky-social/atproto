@@ -71,12 +71,12 @@ test('Resolve valid did:ion', async (t) => {
 
 test('Create, update, recover, and deactivate did:ion (dummy server)', async (t) => {
   const service = {
-    id: Buffer.from('#service1', 'utf8').toString('base64'), // TODO: is this right?
+    id: 'service1',
     type: 'SomeService',
     serviceEndpoint: 'https://example.com',
   }
   const service2 = {
-    id: Buffer.from('#service2', 'utf8').toString('base64'), // TODO: is this right?
+    id: 'service2',
     type: 'SomeService',
     serviceEndpoint: 'https://foobar.com',
   }
@@ -143,7 +143,7 @@ test('Create, update, recover, and deactivate did:ion (dummy server)', async (t)
 
 test('Serialize and hydrate did:ion', async (t) => {
   const service = {
-    id: Buffer.from('#service1', 'utf8').toString('base64'), // TODO: is this right?
+    id: 'service1',
     type: 'SomeService',
     serviceEndpoint: 'https://example.com',
   }

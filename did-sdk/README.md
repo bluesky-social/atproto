@@ -20,7 +20,7 @@ const didKey = await didSdk.key.create('ed25519')
 const didIon = await didSdk.ion.create(
   {
     services: [{
-      id: Buffer.from('#service1', 'utf8').toString('base64'),
+      id: 'service1',
       type: 'SomeService',
       serviceEndpoint: 'https://example.com'
     }]
