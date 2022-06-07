@@ -64,14 +64,13 @@ test.after('Server teardown', async (t) => {
   server = undefined
 })
 
-test.skip('Resolve valid did:ion', async (t) => {
+test('Resolve valid did:ion', async (t) => {
   const didRes = await resolve(TEST_ION_DID)
   t.deepEqual(didRes.didDoc, TEST_ION_DID_DOC.didDocument)
   t.deepEqual(didRes.didDocMetadata, TEST_ION_DID_DOC.didDocumentMetadata)
 })
 
 test('Create, update, recover, and deactivate did:ion (dummy server)', async (t) => {
-  // TODO ed25519 test
   const service = {
     id: Buffer.from('#service1', 'utf8').toString('base64'), // TODO: is this right?
     type: 'SomeService',
