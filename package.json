@@ -10,6 +10,7 @@
     "node": ">=16"
   },
   "workspaces": [
+    "auth",
     "common",
     "cli",
     "server"
