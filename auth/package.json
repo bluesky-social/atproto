@@ -14,6 +14,7 @@
     "lint": "eslint --ext .ts ."
   },
   "dependencies": {
+    "@adxp/auth": "*",
     "ucans": "^0.9.1"
   },
   "devDependencies": {

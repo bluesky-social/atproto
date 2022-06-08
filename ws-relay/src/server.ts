@@ -46,6 +46,9 @@ io.on('connection', (socket) => {
     const channelName = channelForSocket[socket.id]
     if (channelName) {
       delete channels[channelName][socket.id]
+      if (Object.values(channels[channelName]).length < 1) {
+        delete channels[channelName]
+      }
     }
   })
   socket.on('message', (data: Message) => {

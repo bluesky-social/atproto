@@ -8,21 +8,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "exports": {
-    ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./client": {
-      "default": "./dist/client.js",
-      "types": "./dist/client.d.ts"
-    },
-    "./server": {
-      "default": "./dist/server.js",
-      "types": "./dist/server.d.ts"
-    }
-  },
   "scripts": {
+    "start": "node dist/bin.js",
     "dev": "tsc -w & nodemon -q -w dist dist/server/index.js",
     "build": "tsc",
     "test": "ava -v test/*.ts"
