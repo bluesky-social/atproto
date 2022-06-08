@@ -1,7 +1,6 @@
 import ucan from 'ucans'
 
 export interface AuthStore {
-  clear: () => Promise<void>
   getDid: () => Promise<string>
   addUcan: (token: ucan.Chained) => Promise<void>
   findUcan: (scope: string) => Promise<ucan.Chained | null>
@@ -13,4 +12,6 @@ export interface AuthStore {
   ) => Promise<ucan.Chained>
   createAwakeProof: (audience: string, resouce: string) => Promise<ucan.Chained>
   getUcanStore: () => Promise<ucan.Store> // @TODO: do we need this?
+  clear: () => Promise<void>
+  reset: () => Promise<void>
 }

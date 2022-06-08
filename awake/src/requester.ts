@@ -1,6 +1,6 @@
-import Channel from './channel'
-import * as messages from './messages'
-import * as crypto from './crypto'
+import Channel from './channel.js'
+import * as messages from './messages.js'
+import * as crypto from './crypto.js'
 import * as ucan from 'ucans'
 import * as auth from '@adxp/auth'
 
