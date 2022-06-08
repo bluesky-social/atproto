@@ -25,6 +25,7 @@ function LoginPage(props: Props) {
   const onSuccess = async () => {
     console.log('SUCCESS')
     // @TODO any other clean up?
+    setPin(null)
     props.checkAuthorized()
   }
 

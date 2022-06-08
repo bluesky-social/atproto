@@ -9,6 +9,7 @@ export type PinParams = {
 }
 
 export type ValidatePinFn = (params: PinParams) => void
+export type onSuccess = (channelDid: string) => void
 
 export class Provider {
   sessionKeys: Record<string, CryptoKey> = {}
@@ -20,6 +21,7 @@ export class Provider {
     public authStore: auth.AuthStore,
     public tempKeypair: CryptoKeyPair,
     public validatePin: ValidatePinFn,
+    public onSuccess: onSuccess,
   ) {}
 
   static async openChannel(
@@ -27,6 +29,7 @@ export class Provider {
     user: string,
     authStore: auth.AuthStore,
     validatePin: ValidatePinFn,
+    onSuccess: onSuccess,
   ): Promise<Provider> {
     const announceChannel = new Channel(host, user)
     const tempKeypair = await crypto.makeEcdhKeypair()
@@ -35,6 +38,7 @@ export class Provider {
       authStore,
       tempKeypair,
       validatePin,
+      onSuccess,
     )
 
     provider.announceProvision()
@@ -125,6 +129,7 @@ export class Provider {
       const encrypted = await crypto.encrypt(token.encoded(), sessionKey)
       negotiateChannel.sendMessage(messages.delegateCred(encrypted))
       this.closeChannel(channelDid)
+      this.onSuccess(channelDid)
     })
   }
 

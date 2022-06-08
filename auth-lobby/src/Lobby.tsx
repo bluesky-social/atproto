@@ -11,7 +11,7 @@ interface Props {
   checkAuthorized: () => Promise<void>
 }
 
-function Authorized(props: Props) {
+function Lobby(props: Props) {
   const [did, setDid] = useState<string>()
   const [awakeProvider, setAwakeProvider] = useState<awake.Provider | null>(
     null,
@@ -32,16 +32,21 @@ function Authorized(props: Props) {
       env.ROOT_USER,
       props.authStore,
       setPinParams,
+      onSuccess,
     )
     setAwakeProvider(provider)
+  }
+
+  const onSuccess = (channelDid: string) => {
+    setPinParams(null)
   }
 
   const getDid = async () => {
     setDid(await props.authStore.getDid())
   }
 
-  const logout = () => {
-    props.authStore.reset()
+  const logout = async () => {
+    await props.authStore.reset()
     props.checkAuthorized()
   }
 
@@ -99,4 +104,4 @@ function Authorized(props: Props) {
   )
 }
 
-export default Authorized
+export default Lobby

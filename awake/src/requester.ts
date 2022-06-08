@@ -17,7 +17,7 @@ export class Requester {
     public channelDid: string,
     public pin: number,
     public showPin: ShowPinFn,
-    public onFinish: () => void | Promise<void>,
+    public onSuccess: () => void | Promise<void>,
   ) {}
 
   static async openChannel(
@@ -25,7 +25,7 @@ export class Requester {
     user: string,
     authStore: auth.AuthStore,
     showPin: ShowPinFn,
-    onFinish: () => void | Promise<void>,
+    onSuccess: () => void | Promise<void>,
   ): Promise<Requester> {
     const announceChannel = new Channel(host, user)
     const channelKeypair = await crypto.makeEcdhKeypair()
@@ -39,7 +39,7 @@ export class Requester {
       channelDid,
       pin,
       showPin,
-      onFinish,
+      onSuccess,
     )
 
     requester.sendRequest()
@@ -135,7 +135,7 @@ export class Requester {
       await this.authStore.addUcan(token)
       this.closeNegotiateChannel()
       this.closeAnnounceChannel()
-      this.onFinish()
+      this.onSuccess()
     })
   }
 
