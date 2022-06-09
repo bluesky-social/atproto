@@ -20,28 +20,19 @@ function Lobby(props: Props) {
   const [pin, setPin] = useState<number | null>(null)
 
   useEffect(() => {
-    openProvider()
     getDid()
+    openProvider()
     getUcanReq()
   }, [])
-
-  const openProvider = async () => {
-    if (awakeProvider) return
-    const provider = await awake.Provider.create(
-      env.RELAY_HOST,
-      env.ROOT_USER,
-      props.authStore,
-    )
-    setAwakeProvider(provider)
-    const pin = await provider.attemptProvision()
-    setPin(pin)
-  }
 
   const getDid = async () => {
     setDid(await props.authStore.getDid())
   }
 
   const logout = async () => {
+    if (awakeProvider) {
+      awakeProvider.close()
+    }
     await props.authStore.reset()
     props.checkAuthorized()
   }
@@ -69,17 +60,37 @@ function Lobby(props: Props) {
     window.addEventListener('message', handler)
   }
 
+  const openProvider = async () => {
+    if (awakeProvider) return
+    const provider = await awake.Provider.create(
+      env.RELAY_HOST,
+      env.ROOT_USER,
+      props.authStore,
+    )
+    setAwakeProvider(provider)
+    announceProvision(provider)
+  }
+
+  const announceProvision = async (provider = awakeProvider) => {
+    if (!provider) return
+    const pin = await provider.attemptProvision()
+    setPin(pin)
+  }
+
   const approvePinReq = () => {
     if (awakeProvider) {
       awakeProvider.approvePinAndDelegateCred()
     }
     setPin(null)
+    announceProvision()
   }
 
   const denyPinReq = () => {
     if (awakeProvider) {
       awakeProvider.denyPin()
     }
+    setPin(null)
+    announceProvision()
   }
 
   return (

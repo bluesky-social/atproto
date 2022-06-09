@@ -120,7 +120,7 @@ export class Requester {
       }
       const decrypted = await crypto.decrypt(msg.ucan, this.sessionKey)
       const token = await ucan.Chained.fromToken(decrypted)
-      this.closeChannels()
+      this.close()
       return token
     })
   }
@@ -138,7 +138,7 @@ export class Requester {
     }
   }
 
-  closeChannels() {
+  close() {
     if (this.negotiateChannel) {
       this.negotiateChannel.close()
       this.negotiateChannel = null

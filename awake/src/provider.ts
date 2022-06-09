@@ -134,11 +134,15 @@ export class Provider {
   }
 
   close() {
+    this.closeNegotiateChannel()
+    this.announceChannel.close()
+  }
+
+  closeNegotiateChannel() {
     if (this.negotiateChannel) {
       this.negotiateChannel.close()
       this.negotiateChannel = null
     }
-    this.announceChannel.close()
   }
 }
 

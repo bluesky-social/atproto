@@ -23,7 +23,6 @@ export default class Client {
   sendMessage(message: any): void {
     this.socket.emit('message', {
       type: 'message',
-      channel: this.topic,
       message,
     })
   }

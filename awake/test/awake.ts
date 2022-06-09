@@ -11,7 +11,7 @@ const RELAY_HOST = `http://localhost:${RELAY_PORT}`
 let server: http.Server
 
 test.before(() => {
-  server = wsRelay.server(RELAY_PORT)
+  server = wsRelay(RELAY_PORT)
 })
 
 test.after(() => {
