@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "PORT=3001 REACT_APP_ROOT_KEY=true react-scripts start",
-    "alt": "PORT=3002 react-scripts start",
+    "start": "react-scripts start",
+    "start:authed": "PORT=3001 REACT_APP_ROOT_KEY=true yarn start",
+    "start:unauthed": "PORT=3002 yarn start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
