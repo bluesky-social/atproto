@@ -29,7 +29,6 @@ function LoginPage(props: Props) {
       const token = await requester.awaitDelegation()
       await props.authStore.addUcan(token)
       requester.close()
-      console.log('SUCCESS')
       props.checkAuthorized()
     } catch (_err) {
       setPin(null)

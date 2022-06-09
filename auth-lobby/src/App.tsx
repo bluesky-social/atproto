@@ -11,7 +11,6 @@ function App() {
   const [authStore, setAuthStore] = useState<auth.AuthStore | null>(null)
 
   useEffect(() => {
-    console.log(process.env)
     getAuthStore()
   }, [])
 

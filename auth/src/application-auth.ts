@@ -78,11 +78,7 @@ export const approveAppUcanReq = async (
   const resource =
     typeof ucanReq.scope === 'string' ? ucanReq.scope : ucanReq.scope[0]
   const cap = capability.adxCapability(resource, 'WRITE')
-  console.log('CAP: ', cap)
-  const hasIt = await authStore.hasUcan(cap)
-  console.log('HAS IT AUTH: ', hasIt)
   const ucan = await authStore.createUcan(ucanReq.did, cap)
-  console.log('UCAN: ', ucan)
 
   window.opener.postMessage(
     {
