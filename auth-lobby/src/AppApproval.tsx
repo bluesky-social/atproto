@@ -1,14 +1,8 @@
 import * as auth from '@adxp/auth'
 
-export type UcanReq = {
-  host: string
-  did: string
-  scope: string | string[]
-}
-
 interface Props {
   authStore: auth.AuthStore
-  ucanReq: UcanReq
+  ucanReq: auth.UcanReq
 }
 
 function AppApproval(props: Props) {
@@ -16,33 +10,11 @@ function AppApproval(props: Props) {
     if (props.ucanReq === null) {
       throw new Error('Permission Req is null')
     }
-
-    const resource =
-      typeof props.ucanReq.scope === 'string'
-        ? props.ucanReq.scope
-        : props.ucanReq.scope[0]
-    const cap = auth.adxCapability(resource, 'WRITE')
-    const ucan = await props.authStore.createUcan(props.ucanReq.did, cap)
-
-    window.opener.postMessage(
-      {
-        type: 'Adx_Auth_Success',
-        ucan: ucan.encoded(),
-      },
-      props.ucanReq.host,
-    )
-    window.close()
+    return auth.approveAppUcanReq(props.ucanReq, props.authStore)
   }
 
   const denyAppReq = async () => {
-    window.opener.postMessage(
-      {
-        type: 'Adx_Auth_Fail',
-        error: 'Auth request denied',
-      },
-      props.ucanReq.host,
-    )
-    window.close()
+    return auth.denyAppUcanReq(props.ucanReq)
   }
 
   return (

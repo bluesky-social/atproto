@@ -4,7 +4,7 @@ import * as auth from '@adxp/auth'
 import * as awake from '@adxp/awake'
 import * as env from './env'
 
-import AppApproval, { UcanReq } from './AppApproval'
+import AppApproval from './AppApproval'
 
 interface Props {
   authStore: auth.AuthStore
@@ -16,7 +16,7 @@ function Lobby(props: Props) {
   const [awakeProvider, setAwakeProvider] = useState<awake.Provider | null>(
     null,
   )
-  const [ucanReq, setUcanReq] = useState<UcanReq | null>(null)
+  const [ucanReq, setUcanReq] = useState<auth.UcanReq | null>(null)
   const [pin, setPin] = useState<number | null>(null)
 
   useEffect(() => {
