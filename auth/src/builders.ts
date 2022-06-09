@@ -42,16 +42,17 @@ export const delegateForCollections = async (
   return token.build()
 }
 
-export const delegateForRep = async (
-  serverDid: string,
+export const delegateForRepo = async (
+  audience: string,
   did: string,
   keypair: ucan.Keypair,
   ucanStore: ucan.Store,
+  lifetime = 30,
 ): Promise<ucan.Chained> => {
   const token = await ucan.Builder.create()
     .issuedBy(keypair)
-    .toAudience(serverDid)
-    .withLifetimeInSeconds(30)
+    .toAudience(audience)
+    .withLifetimeInSeconds(lifetime)
     .delegateCapability(adxSemantics, writeCap(did), ucanStore)
   return token.build()
 }

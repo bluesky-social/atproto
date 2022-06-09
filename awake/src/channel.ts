@@ -4,7 +4,7 @@ export default class Client {
   host: string
   topic: string
   socket: Socket
-  onMessage: ((message: any) => Promise<void>) | null
+  onMessage: ((message: any) => void) | null
 
   constructor(host: string, topic: string) {
     this.socket = io(host)
@@ -24,6 +24,17 @@ export default class Client {
     this.socket.emit('message', {
       type: 'message',
       message,
+    })
+  }
+
+  async awaitMessage(msgTypes: string[]): Promise<any> {
+    return new Promise((resolve) => {
+      this.onMessage = (msg: any) => {
+        if (msgTypes.indexOf(msg.type) > -1) {
+          this.onMessage = null
+          resolve(msg)
+        }
+      }
     })
   }
 

@@ -1,5 +1,6 @@
 import * as ucan from 'ucans'
 import * as capability from './capability.js'
+import * as builders from './builders.js'
 
 const MONTH_IN_SECONDS = 60 * 60 * 24 * 30
 
@@ -15,9 +16,9 @@ export abstract class AuthStore {
     return keypair.did()
   }
 
-  async findUcan(scope: string): Promise<ucan.Chained | null> {
+  async findUcan(cap: ucan.Capability): Promise<ucan.Chained | null> {
     const ucanStore = await this.getUcanStore()
-    const cap = capability.adxCapability(scope, 'WRITE')
+    // we only handle adx caps right now
     const adxCap = capability.adxSemantics.tryParsing(cap)
     if (adxCap === null) return null
     const res = await ucanStore.findWithCapability(
@@ -37,13 +38,13 @@ export abstract class AuthStore {
     }
   }
 
-  async hasUcan(scope: string): Promise<boolean> {
-    const found = await this.findUcan(scope)
+  async hasUcan(cap: ucan.Capability): Promise<boolean> {
+    const found = await this.findUcan(cap)
     return found !== null
   }
 
   async createUcan(
-    did: string,
+    audience: string,
     cap: ucan.Capability,
     lifetime = MONTH_IN_SECONDS,
   ): Promise<ucan.Chained> {
@@ -51,7 +52,7 @@ export abstract class AuthStore {
     const ucanStore = await this.getUcanStore()
     return ucan.Builder.create()
       .issuedBy(keypair)
-      .toAudience(did)
+      .toAudience(audience)
       .withLifetimeInSeconds(lifetime)
       .delegateCapability(capability.adxSemantics, cap, ucanStore)
       .build()
@@ -59,13 +60,14 @@ export abstract class AuthStore {
 
   async createAwakeProof(
     audience: string,
-    resource: string,
+    cap: ucan.Capability,
   ): Promise<ucan.Chained> {
     const keypair = await this.getKeypair()
-    const fullUcan = await this.findUcan(resource)
+    const fullUcan = await this.findUcan(cap)
     if (!fullUcan) {
       throw new Error("Couldn't find ucan")
     }
+    // gotta do the old fashioned API to build a token with no att
     const sessionUcan = await ucan.build({
       issuer: keypair,
       audience: audience,
@@ -77,9 +79,12 @@ export abstract class AuthStore {
     return chained
   }
 
-  async buildUcan(): Promise<ucan.Builder<Record<string, unknown>>> {
+  // Claim a fully permissioned Ucan & add to store
+  // Mainly for dev purposes
+  async claimFull(): Promise<void> {
     const keypair = await this.getKeypair()
-    return ucan.Builder.create().issuedBy(keypair)
+    const token = await builders.claimFull(await keypair.did(), keypair)
+    await this.addUcan(token)
   }
 }
 

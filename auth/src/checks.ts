@@ -85,6 +85,13 @@ export const hasMaintenancePermission =
     return hasValidCapability(did, needed)(token)
   }
 
+export const hasFullWritePermission =
+  (did: string) =>
+  (token: Chained): Error | null => {
+    const needed = writeCap(did)
+    return hasValidCapability(did, needed)(token)
+  }
+
 export const hasRelationshipsPermission =
   (did: string) =>
   (token: Chained): Error | null => {

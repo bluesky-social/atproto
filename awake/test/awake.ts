@@ -1,7 +1,7 @@
 import test from 'ava'
 import http from 'http'
 import wsRelay from '@adxp/ws-relay'
-import Provider, { PinParams } from '../src/provider.js'
+import Provider from '../src/provider.js'
 import Requester from '../src/requester.js'
 import * as auth from '@adxp/auth'
 
@@ -20,6 +20,7 @@ test.after(() => {
 
 type Context = {
   rootDid: string
+  reqDid: string
   provAuth: auth.AuthStore
   reqAuth: auth.AuthStore
 }
@@ -27,55 +28,36 @@ type Context = {
 test.beforeEach('setup', async (t) => {
   const provAuth = await auth.MemoryStore.load()
   const rootDid = await provAuth.getDid()
-
   // we claim full authority for provider
-  const tokenBuilder = await provAuth.buildUcan()
-  const fullToken = await tokenBuilder
-    .toAudience(rootDid)
-    .withLifetimeInSeconds(100000)
-    .claimCapability(auth.writeCap(rootDid))
-    .build()
-  await provAuth.addUcan(fullToken)
+  await provAuth.claimFull()
 
   const reqAuth = await auth.MemoryStore.load()
+  const reqDid = await reqAuth.getDid()
 
-  t.context = { rootDid, provAuth, reqAuth } as Context
+  t.context = { rootDid, reqDid, provAuth, reqAuth } as Context
 })
 
-test('test', async (t) => {
-  const { rootDid, provAuth, reqAuth } = t.context as Context
-  const provShowPin = (pin: PinParams) => {
-    console.log(pin)
-  }
-  const onProvSuccess = () => {
-    console.log('prov success')
-  }
-  const reqShowPin = (pin: number) => {
-    console.log(pin)
-  }
-  const onReqSuccess = () => {
-    t.pass('yay')
-    console.log('prov success')
-  }
-  const provider = await Provider.openChannel(
-    RELAY_HOST,
-    rootDid,
-    provAuth,
-    provShowPin,
-    onProvSuccess,
-  )
-  const requester = await Requester.openChannel(
-    RELAY_HOST,
-    rootDid,
-    reqAuth,
-    reqShowPin,
-    onReqSuccess,
+test('AWAKE works', async (t) => {
+  const { rootDid, reqDid, provAuth } = t.context as Context
+  const provider = await Provider.create(RELAY_HOST, rootDid, provAuth)
+  const requester = await Requester.create(RELAY_HOST, rootDid, reqDid)
+  const [provPin, reqPin] = await Promise.all([
+    provider.attemptProvision(),
+    requester.sendRequest(),
+  ])
+
+  t.is(provPin, reqPin, 'Pins match')
+
+  const [token, _] = await Promise.all([
+    requester.awaitDelegation(),
+    provider.approvePinAndDelegateCred(),
+  ])
+
+  await auth.checkUcan(
+    token,
+    auth.hasAudience(reqDid),
+    auth.hasFullWritePermission(rootDid),
   )
 
-  await wait(3)
-  t.pass('asdf')
+  t.pass('Got a valid UCAN!')
 })
-
-const wait = (s: number) => {
-  return new Promise((resolve) => setTimeout(resolve, s * 1000))
-}
