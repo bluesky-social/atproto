@@ -41,20 +41,22 @@ export class Provider {
   }
 
   async attemptProvision(): Promise<number> {
-    const promise = new Promise<number>((resolve) => {
-      this.announceChannel.onMessage = async (msg: any) => {
-        if (msg.type === 'Awake_Request') {
-          this.announceChannel.sendMessage(messages.provisionAnnounce())
-        } else if (msg.type === 'Awake_Channel_Did') {
-          const pin = await this.negotiateSession(msg)
-          this.announceChannel.onMessage = null
-          resolve(pin)
+    return this.attempt(async () => {
+      const promise = new Promise<number>((resolve) => {
+        this.announceChannel.onMessage = async (msg: any) => {
+          if (msg.type === 'Awake_Request') {
+            this.announceChannel.sendMessage(messages.provisionAnnounce())
+          } else if (msg.type === 'Awake_Channel_Did') {
+            const pin = await this.negotiateSession(msg)
+            this.announceChannel.onMessage = null
+            resolve(pin)
+          }
         }
-      }
-    })
+      })
 
-    this.announceChannel.sendMessage(messages.provisionAnnounce())
-    return promise
+      this.announceChannel.sendMessage(messages.provisionAnnounce())
+      return promise
+    })
   }
 
   private async negotiateSession(reqMsg: messages.ChannelDid): Promise<number> {
@@ -99,13 +101,15 @@ export class Provider {
   }
 
   async approvePinAndDelegateCred() {
-    if (!this.recipientDid || !this.sessionKey || !this.negotiateChannel) {
-      throw new Error('AWAKE out of sync')
-    }
-    const cap = auth.writeCap(this.rootDid)
-    const token = await this.authStore.createUcan(this.recipientDid, cap)
-    const encrypted = await crypto.encrypt(token.encoded(), this.sessionKey)
-    await this.negotiateChannel.sendMessage(messages.delegateCred(encrypted))
+    return this.attempt(async () => {
+      if (!this.recipientDid || !this.sessionKey || !this.negotiateChannel) {
+        throw new Error('AWAKE out of sync')
+      }
+      const cap = auth.writeCap(this.rootDid)
+      const token = await this.authStore.createUcan(this.recipientDid, cap)
+      const encrypted = await crypto.encrypt(token.encoded(), this.sessionKey)
+      await this.negotiateChannel.sendMessage(messages.delegateCred(encrypted))
+    })
   }
 
   async denyPin() {
@@ -115,6 +119,17 @@ export class Provider {
   terminate(err: Error) {
     if (this.negotiateChannel) {
       this.negotiateChannel.sendMessage(messages.terminate(err.toString()))
+    }
+  }
+
+  // catch errors so we can notify other party if we errored out
+  private async attempt<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      const val = await fn()
+      return val
+    } catch (err: any) {
+      this.terminate(err)
+      throw err
     }
   }
 

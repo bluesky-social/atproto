@@ -39,15 +39,17 @@ export class Requester {
   }
 
   async findProvider(): Promise<number> {
-    if (!this.announceChannel) {
-      throw new Error('AWAKE out of sync: no announce channel')
-    }
-    this.announceChannel.sendMessage(messages.request())
-    await this.announceChannel.awaitMessage(['Awake_Provision_Announce'])
-    return this.announceChannelDid()
+    return this.attempt(async () => {
+      if (!this.announceChannel) {
+        throw new Error('AWAKE out of sync: no announce channel')
+      }
+      this.announceChannel.sendMessage(messages.request())
+      await this.announceChannel.awaitMessage(['Awake_Provision_Announce'])
+      return this.announceChannelDid()
+    })
   }
 
-  async announceChannelDid(): Promise<number> {
+  private async announceChannelDid(): Promise<number> {
     if (!this.announceChannel) {
       throw new Error('AWAKE out of sync: no announce channel')
     }
@@ -67,7 +69,7 @@ export class Requester {
     return this.sendPin(negotiateMsg)
   }
 
-  async sendPin(provMsg: messages.NegotiateSession): Promise<number> {
+  private async sendPin(provMsg: messages.NegotiateSession): Promise<number> {
     const providerPubkey = await crypto.pubkeyFromDid(provMsg.prov_did)
     this.sessionKey = await crypto.deriveSharedKey(
       this.channelKeypair.privateKey,
@@ -106,19 +108,34 @@ export class Requester {
   }
 
   async awaitDelegation(): Promise<ucan.Chained> {
-    if (!this.negotiateChannel) {
-      throw new Error('AWAKE out of sync: negotiation channel closed')
+    return this.attempt(async () => {
+      if (!this.negotiateChannel) {
+        throw new Error('AWAKE out of sync: negotiation channel closed')
+      }
+      const msg = await this.negotiateChannel.awaitMessage([
+        'Awake_Delegate_Cred',
+      ])
+      if (!this.sessionKey) {
+        throw new Error('AWAKE out of sync: no session key')
+      }
+      const decrypted = await crypto.decrypt(msg.ucan, this.sessionKey)
+      const token = await ucan.Chained.fromToken(decrypted)
+      this.closeChannels()
+      return token
+    })
+  }
+
+  // catch errors so we can notify other party if we errored out
+  private async attempt<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      const val = await fn()
+      return val
+    } catch (err: any) {
+      if (this.negotiateChannel) {
+        this.negotiateChannel.sendMessage(messages.terminate(err.toString()))
+      }
+      throw err
     }
-    const msg = await this.negotiateChannel.awaitMessage([
-      'Awake_Delegate_Cred',
-    ])
-    if (!this.sessionKey) {
-      throw new Error('AWAKE out of sync: no session key')
-    }
-    const decrypted = await crypto.decrypt(msg.ucan, this.sessionKey)
-    const token = await ucan.Chained.fromToken(decrypted)
-    this.closeChannels()
-    return token
   }
 
   closeChannels() {

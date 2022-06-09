@@ -61,3 +61,19 @@ test('AWAKE works', async (t) => {
 
   t.pass('Got a valid UCAN!')
 })
+
+test('AWAKE handles errors', async (t) => {
+  const { rootDid, reqDid, provAuth } = t.context as Context
+  const provider = await Provider.create(RELAY_HOST, rootDid, provAuth)
+  const requester = await Requester.create(RELAY_HOST, rootDid, reqDid)
+
+  await Promise.all([provider.attemptProvision(), requester.findProvider()])
+
+  provider.denyPin()
+
+  try {
+    await requester.awaitDelegation()
+  } catch (err) {
+    t.true(err instanceof Error, 'throws an error on pin denial')
+  }
+})
