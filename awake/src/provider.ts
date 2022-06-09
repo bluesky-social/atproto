@@ -57,7 +57,7 @@ export class Provider {
     return promise
   }
 
-  async negotiateSession(reqMsg: messages.ChannelDid): Promise<number> {
+  private async negotiateSession(reqMsg: messages.ChannelDid): Promise<number> {
     const channelDid = reqMsg.channel_did
     this.negotiateChannel = new Channel(this.announceChannel.host, channelDid)
 
@@ -85,7 +85,7 @@ export class Provider {
     return this.receivePin()
   }
 
-  async receivePin(): Promise<number> {
+  private async receivePin(): Promise<number> {
     if (!this.negotiateChannel || !this.sessionKey) {
       throw new Error('AWAKE out of sync')
     }
@@ -108,7 +108,7 @@ export class Provider {
     await this.negotiateChannel.sendMessage(messages.delegateCred(encrypted))
   }
 
-  denyPin() {
+  async denyPin() {
     this.terminate(new Error('Pin rejected'))
   }
 

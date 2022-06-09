@@ -7,9 +7,9 @@ const MONTH_IN_SECONDS = 60 * 60 * 24 * 30
 export abstract class AuthStore {
   protected abstract getKeypair(): Promise<ucan.EdKeypair>
   abstract addUcan(token: ucan.Chained): Promise<void>
-  protected abstract getUcanStore(): Promise<ucan.Store>
-  protected abstract clear(): Promise<void>
-  protected abstract reset(): Promise<void>
+  abstract getUcanStore(): Promise<ucan.Store>
+  abstract clear(): Promise<void>
+  abstract reset(): Promise<void>
 
   async getDid(): Promise<string> {
     const keypair = await this.getKeypair()

@@ -17,7 +17,7 @@ function Lobby(props: Props) {
     null,
   )
   const [ucanReq, setUcanReq] = useState<UcanReq | null>(null)
-  const [pinParams, setPinParams] = useState<awake.PinParams | null>(null)
+  const [pin, setPin] = useState<number | null>(null)
 
   useEffect(() => {
     openProvider()
@@ -27,18 +27,14 @@ function Lobby(props: Props) {
 
   const openProvider = async () => {
     if (awakeProvider) return
-    const provider = await awake.Provider.openChannel(
+    const provider = await awake.Provider.create(
       env.RELAY_HOST,
       env.ROOT_USER,
       props.authStore,
-      setPinParams,
-      onSuccess,
     )
     setAwakeProvider(provider)
-  }
-
-  const onSuccess = (channelDid: string) => {
-    setPinParams(null)
+    const pin = await provider.attemptProvision()
+    setPin(pin)
   }
 
   const getDid = async () => {
@@ -74,14 +70,15 @@ function Lobby(props: Props) {
   }
 
   const approvePinReq = () => {
-    if (awakeProvider && pinParams) {
-      awakeProvider.verifyPinAndDelegateCred(pinParams.channelDid)
+    if (awakeProvider) {
+      awakeProvider.approvePinAndDelegateCred()
     }
+    setPin(null)
   }
 
   const denyPinReq = () => {
-    if (awakeProvider && pinParams) {
-      awakeProvider.denyPin(pinParams.channelDid)
+    if (awakeProvider) {
+      awakeProvider.denyPin()
     }
   }
 
@@ -90,9 +87,9 @@ function Lobby(props: Props) {
       <p>Logged in as {did}</p>
       <button onClick={logout}>Logout</button>
       {ucanReq && <AppApproval authStore={props.authStore} ucanReq={ucanReq} />}
-      {pinParams && (
+      {pin && (
         <div>
-          <p>Pin: {pinParams.pin}</p>
+          <p>Pin: {pin}</p>
           <p>
             <button onClick={approvePinReq}>Approve</button>
             &nbsp;&nbsp;&nbsp;&nbsp;

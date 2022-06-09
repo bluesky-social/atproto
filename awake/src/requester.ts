@@ -4,8 +4,6 @@ import * as crypto from './crypto.js'
 import * as ucan from 'ucans'
 import * as auth from '@adxp/auth'
 
-type ShowPinFn = (pin: number) => void
-
 export class Requester {
   sessionKey: CryptoKey | null = null
   negotiateChannel: Channel | null = null
@@ -40,7 +38,7 @@ export class Requester {
     return requester
   }
 
-  async sendRequest(): Promise<number> {
+  async findProvider(): Promise<number> {
     if (!this.announceChannel) {
       throw new Error('AWAKE out of sync: no announce channel')
     }
@@ -119,31 +117,15 @@ export class Requester {
     }
     const decrypted = await crypto.decrypt(msg.ucan, this.sessionKey)
     const token = await ucan.Chained.fromToken(decrypted)
-    this.closeAnnounceChannel()
-    this.closeNegotiateChannel()
+    this.closeChannels()
     return token
   }
 
-  // async attemptMessage(fn: () => Promise<void>) {
-  //   try {
-  //     await fn()
-  //   } catch (err: any) {
-  //     if (this.negotiateChannel) {
-  //       this.negotiateChannel.sendMessage(messages.terminate(err.toString()))
-  //     }
-  //     this.closeNegotiateChannel()
-  //     throw err
-  //   }
-  // }
-
-  closeNegotiateChannel() {
+  closeChannels() {
     if (this.negotiateChannel) {
       this.negotiateChannel.close()
       this.negotiateChannel = null
     }
-  }
-
-  closeAnnounceChannel() {
     if (this.announceChannel) {
       this.announceChannel.close()
       this.announceChannel.onMessage = null

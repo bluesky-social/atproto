@@ -43,7 +43,7 @@ test('AWAKE works', async (t) => {
   const requester = await Requester.create(RELAY_HOST, rootDid, reqDid)
   const [provPin, reqPin] = await Promise.all([
     provider.attemptProvision(),
-    requester.sendRequest(),
+    requester.findProvider(),
   ])
 
   t.is(provPin, reqPin, 'Pins match')

@@ -13,25 +13,17 @@ function LoginPage(props: Props) {
   const [pin, setPin] = useState<number | null>(null)
 
   const linkDevice = async () => {
-    await awake.Requester.openChannel(
+    const requester = await awake.Requester.create(
       env.RELAY_HOST,
       env.ROOT_USER,
-      props.authStore,
-      setPin,
-      onSuccess,
+      await props.authStore.getDid(),
     )
-  }
-
-  const onSuccess = async () => {
+    const pin = await requester.findProvider()
+    setPin(pin)
+    const token = await requester.awaitDelegation()
+    await props.authStore.addUcan(token)
     console.log('SUCCESS')
-    // @TODO any other clean up?
-    setPin(null)
     props.checkAuthorized()
-  }
-
-  const onError = async () => {
-    console.log('OH NO AN ERROR')
-    // @TODO handle errors
   }
 
   return (

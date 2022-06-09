@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 
 import * as auth from '@adxp/auth'
 
-import BrowserStore from './BrowserStore'
 import Lobby from './Lobby'
 import LoginPage from './LoginPage'
 import * as env from './env'
@@ -20,7 +19,7 @@ function App() {
   }, [authStore])
 
   const getAuthStore = async () => {
-    const browserStore = await BrowserStore.load()
+    const browserStore = await auth.BrowserStore.load()
     setAuthStore(browserStore)
   }
 
@@ -29,7 +28,7 @@ function App() {
       setAuthorized(false)
       return
     }
-    const isAuthorized = await authStore.hasUcan(env.SCOPE)
+    const isAuthorized = await authStore.hasUcan(auth.writeCap(env.SCOPE))
     setAuthorized(isAuthorized)
   }
 
