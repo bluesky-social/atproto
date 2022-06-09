@@ -1,8 +1,7 @@
 import * as ucan from 'ucans'
 import * as capability from './capability.js'
 import * as builders from './builders.js'
-
-const MONTH_IN_SECONDS = 60 * 60 * 24 * 30
+import { MONTH_IN_SEC } from './consts.js'
 
 export abstract class AuthStore {
   protected abstract getKeypair(): Promise<ucan.EdKeypair>
@@ -46,7 +45,7 @@ export abstract class AuthStore {
   async createUcan(
     audience: string,
     cap: ucan.Capability,
-    lifetime = MONTH_IN_SECONDS,
+    lifetime = MONTH_IN_SEC,
   ): Promise<ucan.Chained> {
     const keypair = await this.getKeypair()
     const ucanStore = await this.getUcanStore()

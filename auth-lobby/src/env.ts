@@ -1,4 +1,9 @@
-export const RELAY_HOST = 'http://localhost:3005'
-export const ROOT_USER =
-  'did:key:z6MkfRiFMLzCxxnw6VMrHK8pPFt4QAHS3jX3XM87y9rta6kP'
-export const SCOPE = `${ROOT_USER}|*`
+if (typeof process.env.REACT_APP_RELAY_HOST !== 'string') {
+  throw new Error('ENV: No relay host provided')
+}
+export const RELAY_HOST = process.env.REACT_APP_RELAY_HOST
+// @TODO: this is temporary for dev purposes
+if (typeof process.env.REACT_APP_ROOT_USER !== 'string') {
+  throw new Error('ENV: No relay host provided')
+}
+export const ROOT_USER = process.env.REACT_APP_ROOT_USER

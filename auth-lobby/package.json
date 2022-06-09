@@ -2,26 +2,9 @@
   "name": "@adxp/auth-lobby",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@adxp/auth": "*",
-    "@adxp/awake": "*",
-    "@types/node": "^16.11.36",
-    "@types/react": "^18.0.9",
-    "@types/react-dom": "^18.0.5",
-    "channel-relay": "^0.1.7",
-    "one-webcrypto": "^1.0.3",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
-    "react-scripts": "5.0.1",
-    "socket.io-client": "^4.5.1",
-    "typescript": "^4.7.2",
-    "ucans": "^0.9.1",
-    "uint8arrays": "^3.0.0"
-  },
   "scripts": {
     "start": "PORT=3001 REACT_APP_ROOT_KEY=true react-scripts start",
     "alt": "PORT=3002 react-scripts start",
-    "relay": "channel-relay",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -43,6 +26,21 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "dependencies": {
+    "@adxp/auth": "*",
+    "@adxp/awake": "*",
+    "@types/node": "^16.11.36",
+    "@types/react": "^18.0.9",
+    "@types/react-dom": "^18.0.5",
+    "one-webcrypto": "^1.0.3",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-scripts": "5.0.1",
+    "socket.io-client": "^4.5.1",
+    "typescript": "^4.7.2",
+    "ucans": "^0.9.1",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.27.0",

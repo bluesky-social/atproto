@@ -3433,15 +3433,6 @@ chalk@^5.0.0, chalk@^5.0.1:
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-5.0.1.tgz#ca57d71e82bb534a296df63bbacc4a1c22b2a4b6"
   integrity sha512-Fo07WOYGqMfCWHOzSXOt2CxDbC6skS/jO9ynEcmpANMoPrD+W1r1K6Vx7iNm+AQmETU1Xr2t+n8nzkV9t6xh3w==
 
-channel-relay@^0.1.7:
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/channel-relay/-/channel-relay-0.1.7.tgz#0127db543351f8eeb88b7ce793c0d3828ef53394"
-  integrity sha512-xdqRZHk1P2Ctfy1OG8EajnRY6im7haDrFPtIfIOVPeBjskrdrva40e1YbDjk3yE3FzG7vsE87HAXwo+VChjqrQ==
-  dependencies:
-    express "^4.18.1"
-    socket.io "^4.5.1"
-    socket.io-client "^4.5.1"
-
 char-regex@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/char-regex/-/char-regex-1.0.2.tgz#d744358226217f981ed58f479b1d6bcc29545dcf"

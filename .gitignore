@@ -11,6 +11,7 @@ DS_STORE
 node_modules
 yarn-error.log
 dist
+build
 analytics.txt
 
 /**/*/.DS_STORE

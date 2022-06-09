@@ -1,8 +1,6 @@
 import * as ucan from 'ucans'
 import { adxSemantics, maintenanceCap, writeCap } from './capability.js'
-
-const MONTH_IN_SECONDS = 60 * 60 * 24 * 30
-const YEAR_IN_SECONDS = MONTH_IN_SECONDS * 12
+import { YEAR_IN_SEC } from './consts.js'
 
 export const delegateForPost = async (
   serverDid: string,
@@ -91,7 +89,7 @@ export const claimFull = (
   return ucan.Builder.create()
     .issuedBy(keypair)
     .toAudience(audience)
-    .withLifetimeInSeconds(10 * YEAR_IN_SECONDS)
+    .withLifetimeInSeconds(10 * YEAR_IN_SEC)
     .claimCapability(writeCap(keypair.did()))
     .build()
 }

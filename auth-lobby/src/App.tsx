@@ -11,6 +11,7 @@ function App() {
   const [authStore, setAuthStore] = useState<auth.AuthStore | null>(null)
 
   useEffect(() => {
+    console.log(process.env)
     getAuthStore()
   }, [])
 
@@ -28,7 +29,7 @@ function App() {
       setAuthorized(false)
       return
     }
-    const isAuthorized = await authStore.hasUcan(auth.writeCap(env.SCOPE))
+    const isAuthorized = await authStore.hasUcan(auth.writeCap(env.ROOT_USER))
     setAuthorized(isAuthorized)
   }
 

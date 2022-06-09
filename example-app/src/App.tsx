@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 // import * as authStore from './auth-store'
 import * as auth from '@adxp/auth'
+import * as env from './env'
 
 const SCOPE = auth.writeCap(
   'did:key:z6MkfRiFMLzCxxnw6VMrHK8pPFt4QAHS3jX3XM87y9rta6kP',
   'did:example:microblog',
 )
-
-const AUTH_LOBBY = 'http://localhost:3002'
 
 function App() {
   const [authorized, setAuthorized] = useState(false)
@@ -44,7 +43,7 @@ function App() {
 
     try {
       const did = await authStore.getDid()
-      const ucan = await auth.acquireAppUcan(AUTH_LOBBY, did, SCOPE)
+      const ucan = await auth.acquireAppUcan(env.AUTH_LOBBY, did, SCOPE)
       await authStore.addUcan(ucan)
       setAuthorized(true)
     } catch (err) {
