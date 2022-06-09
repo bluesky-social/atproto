@@ -15,6 +15,7 @@
     "awake",
     "common",
     "cli",
+    "example-app",
     "server",
     "ws-relay"
   ],

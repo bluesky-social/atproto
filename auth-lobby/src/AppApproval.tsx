@@ -26,7 +26,7 @@ function AppApproval(props: Props) {
 
     window.opener.postMessage(
       {
-        type: 'adxAuthResp',
+        type: 'Adx_Auth_Success',
         ucan: ucan.encoded(),
       },
       props.ucanReq.host,
@@ -35,7 +35,14 @@ function AppApproval(props: Props) {
   }
 
   const denyAppReq = async () => {
-    console.log('DENIED APP REQ')
+    window.opener.postMessage(
+      {
+        type: 'Adx_Auth_Fail',
+        error: 'Auth request denied',
+      },
+      props.ucanReq.host,
+    )
+    window.close()
   }
 
   return (
