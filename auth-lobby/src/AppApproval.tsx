@@ -10,6 +10,9 @@ function AppApproval(props: Props) {
     if (props.ucanReq === null) {
       throw new Error('Permission Req is null')
     }
+    const hasIt = await props.authStore.hasUcan(
+      auth.writeCap('did:key:z6MkfRiFMLzCxxnw6VMrHK8pPFt4QAHS3jX3XM87y9rta6kP'),
+    )
     return auth.approveAppUcanReq(props.ucanReq, props.authStore)
   }
 

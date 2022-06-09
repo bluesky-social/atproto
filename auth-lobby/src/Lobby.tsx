@@ -40,28 +40,8 @@ function Lobby(props: Props) {
   const getUcanReq = async () => {
     if (!window.opener) return
     if (ucanReq !== null) return
-
-    // listen for auth requester
-    const handler = (e: MessageEvent) => {
-      const data = e.data
-      if (data.type === 'Adx_Auth_Req') {
-        setUcanReq({
-          host: data.host,
-          did: data.did,
-          scope: data.scope,
-        })
-        window.removeEventListener('message', handler)
-      }
-    }
-    window.addEventListener('message', handler)
-
-    // tell application we're ready for auth reqeusts
-    window.opener.postMessage(
-      {
-        type: 'Adx_Auth_Ready',
-      },
-      '*',
-    )
+    const req = await auth.listenForAppUcanReq()
+    setUcanReq(req)
   }
 
   const openProvider = async () => {

@@ -11,6 +11,8 @@ export type PinParams = {
 export type ValidatePinFn = (params: PinParams) => void
 export type onSuccess = (channelDid: string) => void
 
+const YEAR_IN_SECONDS = 60 * 60 * 24 * 30 * 12
+
 export class Provider {
   sessionKey: CryptoKey | null = null
   negotiateChannel: Channel | null = null
@@ -106,7 +108,11 @@ export class Provider {
         throw new Error('AWAKE out of sync')
       }
       const cap = auth.writeCap(this.rootDid)
-      const token = await this.authStore.createUcan(this.recipientDid, cap)
+      const token = await this.authStore.createUcan(
+        this.recipientDid,
+        cap,
+        YEAR_IN_SECONDS,
+      )
       const encrypted = await crypto.encrypt(token.encoded(), this.sessionKey)
       await this.negotiateChannel.sendMessage(messages.delegateCred(encrypted))
     })

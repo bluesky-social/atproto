@@ -91,7 +91,7 @@ export const claimFull = (
   return ucan.Builder.create()
     .issuedBy(keypair)
     .toAudience(audience)
-    .withLifetimeInSeconds(YEAR_IN_SECONDS)
+    .withLifetimeInSeconds(10 * YEAR_IN_SECONDS)
     .claimCapability(writeCap(keypair.did()))
     .build()
 }

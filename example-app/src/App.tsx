@@ -7,7 +7,7 @@ const SCOPE = auth.writeCap(
   'did:example:microblog',
 )
 
-const AUTH_LOBBY = 'http://localhost:3001'
+const AUTH_LOBBY = 'http://localhost:3002'
 
 function App() {
   const [authorized, setAuthorized] = useState(false)
