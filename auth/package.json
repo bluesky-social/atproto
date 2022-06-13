@@ -14,7 +14,8 @@
     "lint": "eslint --ext .ts ."
   },
   "dependencies": {
-    "ucans": "^0.9.1"
+    "ucans": "^0.9.1",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "ava": "^4.2.0",

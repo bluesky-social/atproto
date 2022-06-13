@@ -18,6 +18,7 @@ function App() {
 
   useEffect(() => {
     checkAuthorized()
+    checkHashFragment()
   }, [authStore])
 
   const getAuthStore = async () => {
@@ -34,21 +35,41 @@ function App() {
     setAuthorized(isAuthorized)
   }
 
-  const redirectToAuthLobby = async () => {
-    if (!authStore) {
-      return
-    }
-    setError(false)
-
+  const checkHashFragment = async () => {
+    if (!authStore) return
+    const fragment = window.location.hash
+    if (fragment.length < 1) return
     try {
-      const did = await authStore.getDid()
-      const ucan = await auth.acquireAppUcan(env.AUTH_LOBBY, did, SCOPE)
+      const ucan = await auth.parseLobbyResponseHashFragment(fragment)
       await authStore.addUcan(ucan)
       setAuthorized(true)
+      window.location.hash = ''
     } catch (err) {
       console.error(err)
       setError(true)
     }
+  }
+
+  const redirectToAuthLobby = async () => {
+    if (!authStore) return
+
+    // REDIRECT FLOW
+    const did = await authStore.getDid()
+    const redirectTo = window.location.origin
+    const fragment = auth.requestAppUcanHashFragment(did, SCOPE, redirectTo)
+    window.location.href = `${env.AUTH_LOBBY}#${fragment}`
+
+    // POST MESSAGE FLOW
+    // setError(false)
+    // try {
+    //   const did = await authStore.getDid()
+    //   const ucan = await auth.requestAppUcan(env.AUTH_LOBBY, did, SCOPE)
+    //   await authStore.addUcan(ucan)
+    //   setAuthorized(true)
+    // } catch (err) {
+    //   console.error(err)
+    //   setError(true)
+    // }
   }
 
   const logout = async () => {

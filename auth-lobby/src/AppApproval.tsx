@@ -10,19 +10,34 @@ function AppApproval(props: Props) {
     if (props.appReq === null) {
       throw new Error('Permission Req is null')
     }
-    const hasIt = await props.authStore.hasUcan(
-      auth.writeCap('did:key:z6MkfRiFMLzCxxnw6VMrHK8pPFt4QAHS3jX3XM87y9rta6kP'),
-    )
-    return auth.approveAppUcanReq(props.appReq, props.authStore)
+    if (props.appReq.useRedirect) {
+      const fragment = await auth.approveAppHashFragment(
+        props.appReq,
+        props.authStore,
+      )
+      window.location.href = `${props.appReq.redirectTo}#${fragment}`
+    } else {
+      return auth.approveAppReq(props.appReq, props.authStore)
+    }
   }
 
   const denyAppReq = async () => {
-    return auth.denyAppUcanReq(props.appReq)
+    if (props.appReq.useRedirect) {
+      const fragment = await auth.denyAppHashFragment()
+      window.location.href = `${props.appReq.redirectTo}#${fragment}`
+    } else {
+      return auth.denyAppReq(props.appReq)
+    }
   }
+
+  // @TODO only show host with no paths
+  const host = props.appReq.useRedirect
+    ? props.appReq.redirectTo
+    : props.appReq.host
 
   return (
     <div>
-      <p>Host: {props.appReq.host}</p>
+      <p>Host: {host}</p>
       <p>DID: {props.appReq.did}</p>
       <p>Scope: {props.appReq.scope}</p>
       <p>

@@ -38,10 +38,19 @@ function Lobby(props: Props) {
   }
 
   const getAppUcanReq = async () => {
-    if (!window.opener) return
     if (appReq !== null) return
-    const req = await auth.listenForAppUcanReq()
-    setAppReq(req)
+    const frag = window.location.hash
+    if (frag.length > 0) {
+      const req = auth.parseAppReqHashFragment(frag)
+      setAppReq({
+        ...req,
+        useRedirect: true,
+      })
+    } else {
+      if (!window.opener) return
+      const req = await auth.listenForAppUcanReq()
+      setAppReq(req)
+    }
   }
 
   const openProvider = async () => {
