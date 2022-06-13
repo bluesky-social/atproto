@@ -2,17 +2,6 @@ import * as ucan from 'ucans'
 import AuthStore from './auth-store.js'
 import * as builders from './builders.js'
 
-// @TODO: Stand in since we don't have actual root keys
-// ---------------
-const PRIV_KEY =
-  'aghhYelL58I8vwVWt7W5cs+Y4uYYWQma6jX0MjkCt7cOdiciXp5JJcOtoWHCgljZhLFV/h0E9zdeYXoSZ0rCgA=='
-
-const isRootKey = (): boolean => {
-  console.log(process.env.REACT_APP_ROOT_KEY)
-  return process.env.REACT_APP_ROOT_KEY === 'true'
-}
-// ---------------
-
 export class BrowserStore extends AuthStore {
   private keypair: ucan.EdKeypair
   private ucanStore: ucan.Store
@@ -27,11 +16,6 @@ export class BrowserStore extends AuthStore {
     const keypair = await BrowserStore.loadOrCreateKeypair()
 
     const storedUcans = BrowserStore.getStoredUcanStrs()
-    if (storedUcans.length === 0 && isRootKey()) {
-      // if this is the root device, we claim full authority
-      const fullToken = await builders.claimFull(keypair.did(), keypair)
-      storedUcans.push(fullToken.encoded())
-    }
     const ucanStore = await ucan.Store.fromTokens(storedUcans)
 
     return new BrowserStore(keypair, ucanStore)
@@ -43,12 +27,26 @@ export class BrowserStore extends AuthStore {
       return ucan.EdKeypair.fromSecretKey(storedKey)
     } else {
       // @TODO: again just stand in since no actual root keys
-      const keypair = isRootKey()
-        ? await ucan.EdKeypair.fromSecretKey(PRIV_KEY, { exportable: true })
-        : await ucan.EdKeypair.create({ exportable: true })
+      const keypair = await ucan.EdKeypair.create({ exportable: true })
       localStorage.setItem('adxKey', await keypair.export())
       return keypair
     }
+  }
+
+  // This is for dev purposes, not expected to be used in production
+  static async loadRootAuth(privKey: string): Promise<BrowserStore> {
+    const keypair = await ucan.EdKeypair.fromSecretKey(privKey, {
+      exportable: true,
+    })
+    const storedUcans = BrowserStore.getStoredUcanStrs()
+    if (storedUcans.length === 0) {
+      // since this is the root device, we claim full authority
+      const fullToken = await builders.claimFull(keypair.did(), keypair)
+      storedUcans.push(fullToken.encoded())
+    }
+    const ucanStore = await ucan.Store.fromTokens(storedUcans)
+
+    return new BrowserStore(keypair, ucanStore)
   }
 
   static getStoredUcanStrs(): string[] {

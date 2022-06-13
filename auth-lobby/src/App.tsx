@@ -19,7 +19,10 @@ function App() {
   }, [authStore])
 
   const getAuthStore = async () => {
-    const browserStore = await auth.BrowserStore.load()
+    const browserStore =
+      env.PRIV_KEY !== null
+        ? await auth.BrowserStore.loadRootAuth(env.PRIV_KEY)
+        : await auth.BrowserStore.load()
     setAuthStore(browserStore)
   }
 
