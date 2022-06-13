@@ -1,6 +1,5 @@
 .next
 .nova
-.env
 .env.local
 .env-custom-development
 .env-development
@@ -11,6 +10,7 @@ DS_STORE
 node_modules
 yarn-error.log
 dist
+build
 analytics.txt
 
 /**/*/.DS_STORE

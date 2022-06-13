@@ -1,0 +1,54 @@
+{
+  "name": "@adxp/auth-lobby",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "react-scripts start",
+    "start:authed": "PORT=3001 REACT_APP_PRIV_KEY='aghhYelL58I8vwVWt7W5cs+Y4uYYWQma6jX0MjkCt7cOdiciXp5JJcOtoWHCgljZhLFV/h0E9zdeYXoSZ0rCgA==' yarn start",
+    "start:unauthed": "PORT=3002 yarn start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@adxp/auth": "*",
+    "@adxp/awake": "*",
+    "@types/node": "^16.11.36",
+    "@types/react": "^18.0.9",
+    "@types/react-dom": "^18.0.5",
+    "one-webcrypto": "^1.0.3",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-scripts": "5.0.1",
+    "socket.io-client": "^4.5.1",
+    "typescript": "^4.7.2",
+    "ucans": "^0.9.1",
+    "uint8arrays": "^3.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.27.0",
+    "@typescript-eslint/parser": "^5.27.0",
+    "eslint": "^8.16.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.6.2"
+  }
+}

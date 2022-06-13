@@ -11,9 +11,13 @@
   },
   "workspaces": [
     "auth",
+    "auth-lobby",
+    "awake",
     "common",
     "cli",
-    "server"
+    "example-app",
+    "server",
+    "ws-relay"
   ],
   "scripts": {
     "build": "wsrun -c \"build\"",
