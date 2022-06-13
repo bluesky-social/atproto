@@ -50,7 +50,7 @@ function App() {
     }
   }
 
-  const redirectToAuthLobby = async () => {
+  const requestAppUcan = async () => {
     if (!authStore) return
 
     // REDIRECT FLOW
@@ -90,7 +90,7 @@ function App() {
       )}
       {error && <div>Oh no! Something went wrong. Try again?</div>}
       {!authorized && (
-        <button onClick={redirectToAuthLobby}>Sign in with Bluesky</button>
+        <button onClick={requestAppUcan}>Sign in with Bluesky</button>
       )}
     </div>
   )
