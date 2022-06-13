@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-// import * as authStore from './auth-store'
 import * as auth from '@adxp/auth'
 import * as env from './env'
 
