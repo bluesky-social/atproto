@@ -16,13 +16,13 @@ function Lobby(props: Props) {
   const [awakeProvider, setAwakeProvider] = useState<awake.Provider | null>(
     null,
   )
-  const [ucanReq, setUcanReq] = useState<auth.UcanReq | null>(null)
+  const [appReq, setAppReq] = useState<auth.AppUcanReq | null>(null)
   const [pin, setPin] = useState<number | null>(null)
 
   useEffect(() => {
     getDid()
     openProvider()
-    getUcanReq()
+    getAppUcanReq()
   }, [])
 
   const getDid = async () => {
@@ -37,11 +37,11 @@ function Lobby(props: Props) {
     props.checkAuthorized()
   }
 
-  const getUcanReq = async () => {
+  const getAppUcanReq = async () => {
     if (!window.opener) return
-    if (ucanReq !== null) return
+    if (appReq !== null) return
     const req = await auth.listenForAppUcanReq()
-    setUcanReq(req)
+    setAppReq(req)
   }
 
   const openProvider = async () => {
@@ -81,7 +81,7 @@ function Lobby(props: Props) {
     <div>
       <p>Logged in as {did}</p>
       <button onClick={logout}>Logout</button>
-      {ucanReq && <AppApproval authStore={props.authStore} ucanReq={ucanReq} />}
+      {appReq && <AppApproval authStore={props.authStore} appReq={appReq} />}
       {pin && (
         <div>
           <p>Pin: {pin}</p>

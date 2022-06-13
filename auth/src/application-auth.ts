@@ -2,7 +2,7 @@ import * as ucan from 'ucans'
 import * as capability from './capability.js'
 import AuthStore from './auth-store.js'
 
-export type UcanReq = {
+export type AppUcanReq = {
   host: string
   did: string
   scope: string | string[]
@@ -42,7 +42,7 @@ export const acquireAppUcan = async (
   })
 }
 
-export const listenForAppUcanReq = async (): Promise<UcanReq> => {
+export const listenForAppUcanReq = async (): Promise<AppUcanReq> => {
   if (!window.opener) {
     throw new Error('Could not find window.opener')
   }
@@ -72,31 +72,31 @@ export const listenForAppUcanReq = async (): Promise<UcanReq> => {
 }
 
 export const approveAppUcanReq = async (
-  ucanReq: UcanReq,
+  appReq: AppUcanReq,
   authStore: AuthStore,
 ) => {
   const resource =
-    typeof ucanReq.scope === 'string' ? ucanReq.scope : ucanReq.scope[0]
+    typeof appReq.scope === 'string' ? appReq.scope : appReq.scope[0]
   const cap = capability.adxCapability(resource, 'WRITE')
-  const ucan = await authStore.createUcan(ucanReq.did, cap)
+  const ucan = await authStore.createUcan(appReq.did, cap)
 
   window.opener.postMessage(
     {
       type: 'Adx_Auth_Success',
       ucan: ucan.encoded(),
     },
-    ucanReq.host,
+    appReq.host,
   )
   window.close()
 }
 
-export const denyAppUcanReq = (ucanReq: UcanReq) => {
+export const denyAppUcanReq = (appReq: AppUcanReq) => {
   window.opener.postMessage(
     {
       type: 'Adx_Auth_Error',
       error: 'Auth request denied',
     },
-    ucanReq.host,
+    appReq.host,
   )
   window.close()
 }
