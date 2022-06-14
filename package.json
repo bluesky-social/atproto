@@ -21,10 +21,10 @@
   ],
   "scripts": {
     "build": "wsrun -c \"build\"",
-    "server": "yarn workspace @adx/server start",
+    "server": "yarn workspace @adxp/server start",
     "server:alt": "PORT=2584 yarn server",
-    "cli": "yarn workspace @adx/cli cli",
-    "wipe-db": "yarn workspace @adx/server wipe-db"
+    "cli": "yarn workspace @adxp/cli cli",
+    "wipe-db": "yarn workspace @adxp/server wipe-db"
   },
   "devDependencies": {
     "rimraf": "^3.0.2",

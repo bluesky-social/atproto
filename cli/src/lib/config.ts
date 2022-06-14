@@ -1,7 +1,7 @@
 import path from 'path'
 import { promises as fsp } from 'fs'
 import * as ucan from 'ucans'
-import { auth } from '@adx/common'
+import { auth } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 
 export type AccountJson = {

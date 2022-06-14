@@ -1,4 +1,4 @@
-import { Repo, service } from '@adx/common'
+import { Repo, service } from '@adxp/common'
 import Database from './db'
 
 export const attemptNotify = async (

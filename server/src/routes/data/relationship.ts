@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { service, ucanCheck } from '@adx/common'
+import { service, ucanCheck } from '@adxp/common'
 import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import * as subscriptions from '../../subscriptions.js'

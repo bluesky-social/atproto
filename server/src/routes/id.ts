@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { Repo, ucanCheck } from '@adx/common'
+import { Repo, ucanCheck } from '@adxp/common'
 
 import * as auth from '../auth.js'
 import { SERVER_DID, SERVER_KEYPAIR } from '../server-identity.js'

@@ -2,7 +2,7 @@ import chalk from 'chalk'
 import cmd from '../../lib/command.js'
 import { loadClient } from '../../lib/client.js'
 import { REPO_PATH } from '../../lib/env.js'
-import { TID } from '@adx/common'
+import { TID } from '@adxp/common'
 import { formatDate } from '../../lib/util.js'
 
 export default cmd({
