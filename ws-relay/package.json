@@ -1,6 +1,6 @@
 {
   "name": "@adxp/ws-relay",
-  "version": "0.1.7",
+  "version": "0.0.1",
   "main": "dist/index.js",
   "bin": "dist/bin.js",
   "license": "MIT",
