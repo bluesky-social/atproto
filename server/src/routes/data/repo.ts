@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 import * as util from '../../util.js'
-import { delta, Repo, schema, service } from '@adx/common'
+import { delta, Repo, schema, service } from '@adxp/common'
 import Database from '../../db/index.js'
 import { ServerError } from '../../error.js'
 import * as subscriptions from '../../subscriptions.js'

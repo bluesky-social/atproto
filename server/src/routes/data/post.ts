@@ -3,7 +3,7 @@ import { z } from 'zod'
 import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import { ServerError } from '../../error.js'
-import { flattenPost, schema, TID, ucanCheck } from '@adx/common'
+import { flattenPost, schema, TID, ucanCheck } from '@adxp/common'
 import { SERVER_DID } from '../../server-identity.js'
 import * as subscriptions from '../../subscriptions.js'
 

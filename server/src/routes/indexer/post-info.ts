@@ -1,6 +1,6 @@
 import express from 'express'
 import { z } from 'zod'
-import { schema } from '@adx/common'
+import { schema } from '@adxp/common'
 import * as util from '../../util.js'
 import { ServerError } from '../../error.js'
 

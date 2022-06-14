@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { IpldStore } from '@adx/common'
+import { IpldStore } from '@adxp/common'
 import Database from './db/index.js'
 import server from './server.js'
 

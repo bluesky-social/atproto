@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { MicroblogDelegator, Post, Like } from '@adx/common'
+import { MicroblogDelegator, Post, Like } from '@adxp/common'
 
 import { newClient, runTestServer } from './_util.js'
 

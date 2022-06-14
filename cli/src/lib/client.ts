@@ -5,7 +5,7 @@ import {
   MicroblogDelegator,
   MicroblogFull,
   Repo,
-} from '@adx/common'
+} from '@adxp/common'
 import * as config from '../lib/config.js'
 
 export const loadClient = async (

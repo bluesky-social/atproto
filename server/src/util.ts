@@ -3,7 +3,7 @@ import { Database } from './db/index.js'
 import { SERVER_KEYPAIR } from './server-identity.js'
 import { ServerError } from './error.js'
 import * as ucan from 'ucans'
-import { IpldStore, Repo, check } from '@adx/common'
+import { IpldStore, Repo, check } from '@adxp/common'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {

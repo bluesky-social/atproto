@@ -1,6 +1,6 @@
 import { Request } from 'express'
 import * as ucan from 'ucans'
-import { auth } from '@adx/common'
+import { auth } from '@adxp/common'
 import { ServerError } from './error.js'
 
 type Check = (ucan: ucan.Chained) => Error | null

@@ -5,7 +5,7 @@ import {
   AccountInfo,
   TimelinePost,
   Follow,
-} from '@adx/common'
+} from '@adxp/common'
 import knex from 'knex'
 import { CID } from 'multiformats'
 import * as schema from './schema.js'
