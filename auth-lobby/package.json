@@ -1,6 +1,6 @@
 {
   "name": "@adxp/auth-lobby",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "start": "react-scripts start",
     "start:authed": "PORT=3001 REACT_APP_PRIV_KEY='aghhYelL58I8vwVWt7W5cs+Y4uYYWQma6jX0MjkCt7cOdiciXp5JJcOtoWHCgljZhLFV/h0E9zdeYXoSZ0rCgA==' yarn start",
