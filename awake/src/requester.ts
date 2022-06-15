@@ -1,8 +1,8 @@
 import Channel from './channel.js'
 import * as messages from './messages.js'
-import * as crypto from './crypto.js'
 import * as ucan from 'ucans'
 import * as auth from '@adxp/auth'
+import * as crypto from '@adxp/crypto'
 
 export class Requester {
   sessionKey: CryptoKey | null = null
@@ -12,7 +12,7 @@ export class Requester {
     public announceChannel: Channel | null,
     public rootDid: string,
     public ownDid: string,
-    public channelKeypair: CryptoKeyPair,
+    public channelKeypair: crypto.EcdhKeypair,
     public channelDid: string,
     public pin: number,
   ) {}
@@ -23,8 +23,8 @@ export class Requester {
     ownDid: string,
   ): Promise<Requester> {
     const announceChannel = new Channel(host, rootDid)
-    const channelKeypair = await crypto.makeEcdhKeypair()
-    const channelDid = await crypto.didForKeypair(channelKeypair)
+    const channelKeypair = await crypto.EcdhKeypair.create()
+    const channelDid = await channelKeypair.did()
     // 6 digit pin
     const pin = Math.floor(Math.random() * 1000000)
     const requester = new Requester(
@@ -70,10 +70,8 @@ export class Requester {
   }
 
   private async sendPin(provMsg: messages.NegotiateSession): Promise<number> {
-    const providerPubkey = await crypto.pubkeyFromDid(provMsg.prov_did)
-    this.sessionKey = await crypto.deriveSharedKey(
-      this.channelKeypair.privateKey,
-      providerPubkey,
+    this.sessionKey = await this.channelKeypair.deriveSharedKey(
+      provMsg.prov_did,
     )
 
     try {

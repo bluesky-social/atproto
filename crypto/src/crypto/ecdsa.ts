@@ -6,17 +6,11 @@ import * as util from './util.js'
 export class EcdsaKeypair implements ucan.Keypair, ucan.Didable {
   keyType: ucan.KeyType
   publicKey: Uint8Array
-  private pubkeyDid: string
   private keypair: CryptoKeyPair
 
-  constructor(
-    keypair: CryptoKeyPair,
-    publicKey: Uint8Array,
-    pubkeyDid: string,
-  ) {
+  constructor(keypair: CryptoKeyPair, publicKey: Uint8Array) {
     this.keypair = keypair
     this.publicKey = publicKey
-    this.pubkeyDid = pubkeyDid
     this.keyType = 'p256'
   }
 
@@ -28,8 +22,7 @@ export class EcdsaKeypair implements ucan.Keypair, ucan.Didable {
     )
     const pubkeyBuf = await webcrypto.subtle.exportKey('raw', keypair.publicKey)
     const pubkeyBytes = new Uint8Array(pubkeyBuf)
-    const did = await util.didForPubkey(keypair.publicKey)
-    return new EcdsaKeypair(keypair, pubkeyBytes, did)
+    return new EcdsaKeypair(keypair, pubkeyBytes)
   }
 
   publicKeyStr(encoding: ucan.Encodings = 'base64pad'): string {
@@ -37,7 +30,7 @@ export class EcdsaKeypair implements ucan.Keypair, ucan.Didable {
   }
 
   did(): string {
-    return this.pubkeyDid
+    return util.didForPubkeyBytes(this.publicKey)
   }
 
   async sign(msg: Uint8Array): Promise<Uint8Array> {

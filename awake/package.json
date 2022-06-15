@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@adxp/auth": "*",
+    "@adxp/crypto": "*",
     "one-webcrypto": "^1.0.3",
     "socket.io-client": "^4.5.1",
     "ucans": "^0.9.1",

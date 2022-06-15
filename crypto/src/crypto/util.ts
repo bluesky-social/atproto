@@ -13,7 +13,8 @@ export const pubkeyFromDid = async (did: string): Promise<CryptoKey> => {
   if (!uint8arrays.equals(P256_DID_PREFIX, didBytes.slice(0, 2))) {
     throw new Error('Unsupported key method: Expected NIST P-256')
   }
-  const keyBytes = didBytes.slice(2)
+  const compressedKeyBytes = didBytes.slice(2)
+  const keyBytes = decompressPubkey(compressedKeyBytes)
   return webcrypto.subtle.importKey(
     'raw',
     keyBytes,
@@ -26,7 +27,12 @@ export const pubkeyFromDid = async (did: string): Promise<CryptoKey> => {
 export const didForPubkey = async (pubkey: CryptoKey): Promise<string> => {
   const buf = await webcrypto.subtle.exportKey('raw', pubkey)
   const bytes = new Uint8Array(buf)
-  const prefixedBytes = uint8arrays.concat([P256_DID_PREFIX, bytes])
+  return didForPubkeyBytes(bytes)
+}
+
+export const didForPubkeyBytes = (pubkey: Uint8Array): string => {
+  const compressedKey = compressPubkey(pubkey)
+  const prefixedBytes = uint8arrays.concat([P256_DID_PREFIX, compressedKey])
   return BASE58_DID_PREFIX + uint8arrays.toString(prefixedBytes, 'base58btc')
 }
 

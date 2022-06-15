@@ -1,7 +1,7 @@
 import Channel from './channel.js'
 import * as messages from './messages.js'
-import * as crypto from './crypto.js'
 import * as auth from '@adxp/auth'
+import * as crypto from '@adxp/crypto'
 
 export type PinParams = {
   pin: number
@@ -22,7 +22,7 @@ export class Provider {
     public announceChannel: Channel,
     public rootDid: string,
     public authStore: auth.AuthStore,
-    public tempKeypair: CryptoKeyPair,
+    public tempKeypair: crypto.EcdhKeypair,
   ) {}
 
   static async create(
@@ -31,7 +31,7 @@ export class Provider {
     authStore: auth.AuthStore,
   ): Promise<Provider> {
     const announceChannel = new Channel(host, rootDid)
-    const tempKeypair = await crypto.makeEcdhKeypair()
+    const tempKeypair = await crypto.EcdhKeypair.create()
     const provider = new Provider(
       announceChannel,
       rootDid,
@@ -65,13 +65,9 @@ export class Provider {
     const channelDid = reqMsg.channel_did
     this.negotiateChannel = new Channel(this.announceChannel.host, channelDid)
 
-    const userPubkey = await crypto.pubkeyFromDid(channelDid)
-    this.sessionKey = await crypto.deriveSharedKey(
-      this.tempKeypair.privateKey,
-      userPubkey,
-    )
+    this.sessionKey = await this.tempKeypair.deriveSharedKey(channelDid)
 
-    const tempDid = await crypto.didForKeypair(this.tempKeypair)
+    const tempDid = await this.tempKeypair.did()
     const sessionUcan = await this.authStore.createAwakeProof(
       tempDid,
       auth.writeCap(this.rootDid),

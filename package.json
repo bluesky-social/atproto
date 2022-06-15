@@ -13,8 +13,9 @@
     "auth",
     "auth-lobby",
     "awake",
-    "common",
     "cli",
+    "common",
+    "crypto",
     "example-app",
     "server",
     "ws-relay"
