@@ -29,3 +29,13 @@ PORT=3002 yarn start
 cd example-app
 yarn start
 ```
+
+### Use API
+
+```typescript
+import serveAuthLobby from '@adxp/auth-lobby'
+
+const server = serveAuthLobby(/* port */3001)
+server.on('error', /* ... */)
+server.on('listening', /* ... */)
+```
