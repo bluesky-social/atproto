@@ -1,7 +1,7 @@
 import Channel from './channel.js'
 import * as messages from './messages.js'
-import * as crypto from './crypto.js'
 import * as auth from '@adxp/auth'
+import * as crypto from '@adxp/crypto'
 
 export type PinParams = {
   pin: number
@@ -14,7 +14,7 @@ export type onSuccess = (channelDid: string) => void
 const YEAR_IN_SECONDS = 60 * 60 * 24 * 30 * 12
 
 export class Provider {
-  sessionKey: CryptoKey | null = null
+  sessionKey: crypto.AesKey | null = null
   negotiateChannel: Channel | null = null
   recipientDid: string | null = null
 
@@ -22,7 +22,7 @@ export class Provider {
     public announceChannel: Channel,
     public rootDid: string,
     public authStore: auth.AuthStore,
-    public tempKeypair: CryptoKeyPair,
+    public tempKeypair: crypto.EcdhKeypair,
   ) {}
 
   static async create(
@@ -31,7 +31,7 @@ export class Provider {
     authStore: auth.AuthStore,
   ): Promise<Provider> {
     const announceChannel = new Channel(host, rootDid)
-    const tempKeypair = await crypto.makeEcdhKeypair()
+    const tempKeypair = await crypto.EcdhKeypair.create()
     const provider = new Provider(
       announceChannel,
       rootDid,
@@ -65,22 +65,15 @@ export class Provider {
     const channelDid = reqMsg.channel_did
     this.negotiateChannel = new Channel(this.announceChannel.host, channelDid)
 
-    const userPubkey = await crypto.pubkeyFromDid(channelDid)
-    this.sessionKey = await crypto.deriveSharedKey(
-      this.tempKeypair.privateKey,
-      userPubkey,
-    )
+    this.sessionKey = await this.tempKeypair.deriveSharedKey(channelDid)
 
-    const tempDid = await crypto.didForKeypair(this.tempKeypair)
+    const tempDid = await this.tempKeypair.did()
     const sessionUcan = await this.authStore.createAwakeProof(
       tempDid,
       auth.writeCap(this.rootDid),
     )
 
-    const encryptedUcan = await crypto.encrypt(
-      sessionUcan.encoded(),
-      this.sessionKey,
-    )
+    const encryptedUcan = await this.sessionKey.encrypt(sessionUcan.encoded())
 
     this.negotiateChannel.sendMessage(
       messages.negotiateSession(tempDid, encryptedUcan),
@@ -94,11 +87,11 @@ export class Provider {
       throw new Error('AWAKE out of sync')
     }
     const msg = await this.negotiateChannel.awaitMessage(['Awake_Share_Pin'])
-    const pin = parseInt(await crypto.decrypt(msg.pin, this.sessionKey))
+    const pin = parseInt(await this.sessionKey.decrypt(msg.pin))
     if (isNaN(pin)) {
       throw new Error('Bad pin received from client')
     }
-    this.recipientDid = await crypto.decrypt(msg.did, this.sessionKey)
+    this.recipientDid = await this.sessionKey.decrypt(msg.did)
     return pin
   }
 
@@ -113,7 +106,7 @@ export class Provider {
         cap,
         YEAR_IN_SECONDS,
       )
-      const encrypted = await crypto.encrypt(token.encoded(), this.sessionKey)
+      const encrypted = await this.sessionKey.encrypt(token.encoded())
       await this.negotiateChannel.sendMessage(messages.delegateCred(encrypted))
     })
   }
