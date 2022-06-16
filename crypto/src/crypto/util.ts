@@ -4,6 +4,10 @@ import bigInt from 'big-integer'
 
 import { P256_DID_PREFIX, BASE58_DID_PREFIX } from './const.js'
 
+export const randomIV = (): Uint8Array => {
+  return webcrypto.getRandomValues(new Uint8Array(12))
+}
+
 export const pubkeyFromDid = async (did: string): Promise<CryptoKey> => {
   if (!did.startsWith(BASE58_DID_PREFIX)) {
     throw new Error('Expected a base58-encoded DID formatted `did:key:z...`')

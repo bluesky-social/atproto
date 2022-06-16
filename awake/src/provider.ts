@@ -14,7 +14,7 @@ export type onSuccess = (channelDid: string) => void
 const YEAR_IN_SECONDS = 60 * 60 * 24 * 30 * 12
 
 export class Provider {
-  sessionKey: CryptoKey | null = null
+  sessionKey: crypto.AesKey | null = null
   negotiateChannel: Channel | null = null
   recipientDid: string | null = null
 
@@ -73,10 +73,7 @@ export class Provider {
       auth.writeCap(this.rootDid),
     )
 
-    const encryptedUcan = await crypto.encrypt(
-      sessionUcan.encoded(),
-      this.sessionKey,
-    )
+    const encryptedUcan = await this.sessionKey.encrypt(sessionUcan.encoded())
 
     this.negotiateChannel.sendMessage(
       messages.negotiateSession(tempDid, encryptedUcan),
@@ -90,11 +87,11 @@ export class Provider {
       throw new Error('AWAKE out of sync')
     }
     const msg = await this.negotiateChannel.awaitMessage(['Awake_Share_Pin'])
-    const pin = parseInt(await crypto.decrypt(msg.pin, this.sessionKey))
+    const pin = parseInt(await this.sessionKey.decrypt(msg.pin))
     if (isNaN(pin)) {
       throw new Error('Bad pin received from client')
     }
-    this.recipientDid = await crypto.decrypt(msg.did, this.sessionKey)
+    this.recipientDid = await this.sessionKey.decrypt(msg.did)
     return pin
   }
 
@@ -109,7 +106,7 @@ export class Provider {
         cap,
         YEAR_IN_SECONDS,
       )
-      const encrypted = await crypto.encrypt(token.encoded(), this.sessionKey)
+      const encrypted = await this.sessionKey.encrypt(token.encoded())
       await this.negotiateChannel.sendMessage(messages.delegateCred(encrypted))
     })
   }

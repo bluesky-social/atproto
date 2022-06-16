@@ -1,5 +1,5 @@
 import { webcrypto } from 'one-webcrypto'
-import * as aes from './aes.js'
+import AesKey from './aes.js'
 import * as util from './util.js'
 
 export class EcdhKeypair {
@@ -21,9 +21,9 @@ export class EcdhKeypair {
     return util.didForPubkey(this.keypair.publicKey)
   }
 
-  async deriveSharedKey(otherDid: string): Promise<CryptoKey> {
+  async deriveSharedKey(otherDid: string): Promise<AesKey> {
     const publicKey = await util.pubkeyFromDid(otherDid)
-    return webcrypto.subtle.deriveKey(
+    const key = await webcrypto.subtle.deriveKey(
       { name: 'ECDH', public: publicKey },
       this.keypair.privateKey,
       {
@@ -33,18 +33,19 @@ export class EcdhKeypair {
       false,
       ['encrypt', 'decrypt'],
     )
+    return new AesKey(key)
   }
 
   // returns base64 encrypted data with iv prepended
   async encryptForDid(data: string, otherDid: string): Promise<string> {
     const sharedKey = await this.deriveSharedKey(otherDid)
-    return aes.encrypt(data, sharedKey)
+    return sharedKey.encrypt(data)
   }
 
   // expects base64 encrypted data with iv prepended
   async decryptFromDid(data: string, otherDid: string): Promise<string> {
     const sharedKey = await this.deriveSharedKey(otherDid)
-    return aes.decrypt(data, sharedKey)
+    return sharedKey.decrypt(data)
   }
 }
 

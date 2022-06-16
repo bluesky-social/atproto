@@ -5,7 +5,7 @@ import * as auth from '@adxp/auth'
 import * as crypto from '@adxp/crypto'
 
 export class Requester {
-  sessionKey: CryptoKey | null = null
+  sessionKey: crypto.AesKey | null = null
   negotiateChannel: Channel | null = null
 
   constructor(
@@ -75,7 +75,7 @@ export class Requester {
     )
 
     try {
-      const decryptedUcan = await crypto.decrypt(provMsg.ucan, this.sessionKey)
+      const decryptedUcan = await this.sessionKey.decrypt(provMsg.ucan)
       // this function validates tokens so we just need to check att on second to the top
       const token = await ucan.Chained.fromToken(decryptedUcan)
       const prf = token.proofs()[0]
@@ -91,11 +91,8 @@ export class Requester {
       throw new Error(`Invalid negotiation proof: ${e.toString()}`)
     }
 
-    const encryptedPin = await crypto.encrypt(
-      this.pin.toString(),
-      this.sessionKey,
-    )
-    const encryptedAppDid = await crypto.encrypt(this.ownDid, this.sessionKey)
+    const encryptedPin = await this.sessionKey.encrypt(this.pin.toString())
+    const encryptedAppDid = await this.sessionKey.encrypt(this.ownDid)
     if (!this.negotiateChannel) {
       throw new Error('AWAKE out of sync: negotiation channel closed')
     }
@@ -116,7 +113,7 @@ export class Requester {
       if (!this.sessionKey) {
         throw new Error('AWAKE out of sync: no session key')
       }
-      const decrypted = await crypto.decrypt(msg.ucan, this.sessionKey)
+      const decrypted = await this.sessionKey.decrypt(msg.ucan)
       const token = await ucan.Chained.fromToken(decrypted)
       this.close()
       return token
