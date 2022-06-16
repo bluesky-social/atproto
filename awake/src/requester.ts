@@ -115,6 +115,17 @@ export class Requester {
       }
       const decrypted = await this.sessionKey.decrypt(msg.ucan)
       const token = await ucan.Chained.fromToken(decrypted)
+      try {
+        await auth.checkUcan(
+          token,
+          auth.hasAudience(this.ownDid),
+          auth.hasFullWritePermission(this.rootDid),
+        )
+      } catch (err) {
+        throw new Error(
+          `Token from AWAKE provider does not have correct capability: ${err}`,
+        )
+      }
       this.close()
       return token
     })
