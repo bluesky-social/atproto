@@ -18,6 +18,7 @@
     "crypto",
     "did-sdk",
     "example-app",
+    "network",
     "server",
     "ws-relay",
     "server"

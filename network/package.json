@@ -1,0 +1,24 @@
+{
+  "name": "@adxp/network",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node index.ts"
+  },
+  "dependencies": {
+    "@adxp/auth-lobby": "*",
+    "@adxp/common": "*",
+    "@adxp/example-app": "*",
+    "@adxp/server": "*",
+    "@adxp/ws-relay": "*",
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "knex": "^2.1.0",
+    "ucans": "^0.9.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "ts-node": "^10.8.1"
+  }
+}
