@@ -19,10 +19,12 @@ function App() {
   }, [authStore])
 
   const getAuthStore = async () => {
-    const browserStore =
-      env.PRIV_KEY !== null
-        ? await auth.BrowserStore.loadRootAuth(env.PRIV_KEY)
-        : await auth.BrowserStore.load()
+    const browserStore = await auth.BrowserStore.load()
+    setAuthStore(browserStore)
+  }
+
+  const loginAsRoot = async () => {
+    const browserStore = await auth.BrowserStore.loadRootAuth(env.PRIV_KEY)
     setAuthStore(browserStore)
   }
 
@@ -45,10 +47,13 @@ function App() {
             <Lobby authStore={authStore} checkAuthorized={checkAuthorized} />
           )}
           {!authorized && (
-            <LoginPage
-              authStore={authStore}
-              checkAuthorized={checkAuthorized}
-            />
+            <>
+              <button onClick={loginAsRoot}>Debug: Login As Root</button>
+              <LoginPage
+                authStore={authStore}
+                checkAuthorized={checkAuthorized}
+              />
+            </>
           )}
         </div>
       )}

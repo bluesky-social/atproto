@@ -9,4 +9,8 @@ if (typeof process.env.REACT_APP_ROOT_USER !== 'string') {
 }
 export const ROOT_USER = process.env.REACT_APP_ROOT_USER
 
-export const PRIV_KEY: string | null = process.env.REACT_APP_PRIV_KEY || null
+// @TODO: this is temporary for dev purposes
+if (typeof process.env.REACT_APP_PRIV_KEY !== 'string') {
+  throw new Error('ENV: No root user private key provided')
+}
+export const PRIV_KEY: string = process.env.REACT_APP_PRIV_KEY
