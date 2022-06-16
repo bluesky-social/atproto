@@ -1,6 +1,7 @@
 import { webcrypto } from 'one-webcrypto'
 import * as uint8arrays from 'uint8arrays'
 
+// takes either bytes of utf8 input
 export const sha256 = async (
   input: Uint8Array | string,
 ): Promise<Uint8Array> => {
