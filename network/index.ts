@@ -2,28 +2,42 @@ import { IpldStore } from '@adxp/common'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
 import WSRelayServer from '@adxp/ws-relay/dist/index.js'
+import DidNetwork from './did-network/server.js'
+import DidNetworkDB from './did-network/db.js'
 
-const SERVICES = {
-  personalDataServer,
+type ServiceConfig = {
+  personalDataServers?: number[]
+  webSocketRelay?: number
+  didNetwork?: number
 }
 
-const PDS_PORT = 2583
-const WSR_PORT = 3005
+const SERVICES: ServiceConfig = {
+  personalDataServers: [2583],
+  webSocketRelay: 3005,
+  didNetwork: 2582,
+}
 
 async function start() {
   console.log('Initializing...')
 
-  const db = PDSDatabase.memory()
-  const serverBlockstore = IpldStore.createInMemory()
-  await db.dropTables()
-  await db.createTables()
-  PDSServer(serverBlockstore, db, PDS_PORT)
+  if (SERVICES.personalDataServers) {
+    for (const pdsPort of SERVICES.personalDataServers) {
+      const db = PDSDatabase.memory()
+      const serverBlockstore = IpldStore.createInMemory()
+      PDSServer(serverBlockstore, db, pdsPort)
+    }
+  }
 
-  if (process.argv.includes('--relay')) {
-    WSRelayServer(WSR_PORT)
-    console.log(`🔁 Relay server running on port ${WSR_PORT}`)
-  } else {
-    console.log('Include --relay to start the WS Relay')
+  if (SERVICES.webSocketRelay) {
+    WSRelayServer(SERVICES.webSocketRelay)
+    console.log(
+      `🔁 Relay server running on http://localhost:${SERVICES.webSocketRelay}`,
+    )
+  }
+
+  if (SERVICES.didNetwork) {
+    const db = DidNetworkDB.memory()
+    DidNetwork(db, SERVICES.didNetwork)
   }
 }
 start()

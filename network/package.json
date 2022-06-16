@@ -3,8 +3,9 @@
   "version": "0.0.1",
   "main": "index.js",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "start": "ts-node index.ts"
+    "start": "node --loader ts-node/esm ./index.ts "
   },
   "dependencies": {
     "@adxp/auth-lobby": "*",
@@ -12,9 +13,11 @@
     "@adxp/example-app": "*",
     "@adxp/server": "*",
     "@adxp/ws-relay": "*",
+    "@vscode/sqlite3": "^5.0.8",
     "cors": "^2.8.5",
     "express": "^4.18.1",
     "knex": "^2.1.0",
+    "sqlite3": "^5.0.8",
     "ucans": "^0.9.1"
   },
   "devDependencies": {
