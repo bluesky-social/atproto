@@ -1,10 +1,9 @@
 {
   "name": "@adxp/auth-lobby",
   "version": "0.0.2",
+  "main": "./lib/serve.mjs",
   "scripts": {
     "start": "react-scripts start",
-    "start:authed": "PORT=3001 REACT_APP_PRIV_KEY='aghhYelL58I8vwVWt7W5cs+Y4uYYWQma6jX0MjkCt7cOdiciXp5JJcOtoWHCgljZhLFV/h0E9zdeYXoSZ0rCgA==' yarn start",
-    "start:unauthed": "PORT=3002 yarn start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -37,6 +36,7 @@
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-scripts": "5.0.1",
+    "serve-handler": "^6.1.3",
     "socket.io-client": "^4.5.1",
     "typescript": "^4.7.2",
     "ucans": "^0.9.1",

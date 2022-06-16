@@ -17,15 +17,25 @@ yarn build
 cd ws-relay
 yarn start
 
-# Run Authenticated Auth lobby
+# Run Auth lobby
 cd auth-lobby
-yarn start:authed
+yarn start
 
-# Run Un-authenticated Auth lobby
+# (Optional) Run second Auth lobby to test device linking
 cd auth-lobby
-yarn start:unauthed
+PORT=3002 yarn start
 
 # Run example application
 cd example-app
 yarn start
+```
+
+### Use API
+
+```typescript
+import serveAuthLobby from '@adxp/auth-lobby'
+
+const server = serveAuthLobby(/* port */3001)
+server.on('error', /* ... */)
+server.on('listening', /* ... */)
 ```
