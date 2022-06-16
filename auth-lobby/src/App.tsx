@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 
 import * as auth from '@adxp/auth'
 
-import Lobby from './Lobby'
-import LoginPage from './LoginPage'
+import './index.css'
+import Lobby from './views/Lobby'
+import LoginPage from './views/LoginPage'
 import * as env from './env'
 
 function App() {
@@ -39,7 +40,6 @@ function App() {
 
   return (
     <div>
-      <h1>Auth Lobby</h1>
       {!authStore && <div>Loading...</div>}
       {authStore && (
         <div>
@@ -47,13 +47,11 @@ function App() {
             <Lobby authStore={authStore} checkAuthorized={checkAuthorized} />
           )}
           {!authorized && (
-            <>
-              <button onClick={loginAsRoot}>Debug: Login As Root</button>
-              <LoginPage
-                authStore={authStore}
-                checkAuthorized={checkAuthorized}
-              />
-            </>
+            <LoginPage
+              authStore={authStore}
+              loginAsRoot={loginAsRoot}
+              checkAuthorized={checkAuthorized}
+            />
           )}
         </div>
       )}
