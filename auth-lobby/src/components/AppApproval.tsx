@@ -1,5 +1,7 @@
 import * as auth from '@adxp/auth'
 
+import { Btn } from './Btn'
+
 interface Props {
   authStore: auth.AuthStore
   appReq: auth.AppUcanReq
@@ -37,14 +39,30 @@ function AppApproval(props: Props) {
 
   return (
     <div>
-      <p>Host: {host}</p>
-      <p>DID: {props.appReq.did}</p>
-      <p>Scope: {props.appReq.scope}</p>
-      <p>
-        <button onClick={approveAppReq}>Approve</button>
-        &nbsp;&nbsp;&nbsp;&nbsp;
-        <button onClick={denyAppReq}>Deny</button>
-      </p>
+      <div className="mb-3">
+        The application{' '}
+        <a
+          className="text-blue-600 hover:underline"
+          href={host}
+          target="_blank"
+        >
+          {host}
+        </a>{' '}
+        is attempting to log in to your account.
+      </div>
+
+      <div className="px-4 py-3 bg-gray-100 rounded-lg mb-4 font-mono text-sm overflow-auto">
+        <div>Host: {host}</div>
+        <div>DID: {props.appReq.did}</div>
+        <div>Scope: {props.appReq.scope}</div>
+      </div>
+
+      <div className="flex justify-between mb-2">
+        <Btn onClick={denyAppReq}>Deny</Btn>
+        <Btn type="primary" filled onClick={approveAppReq}>
+          Allow
+        </Btn>
+      </div>
     </div>
   )
 }
