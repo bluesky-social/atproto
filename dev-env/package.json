@@ -10,14 +10,14 @@
   "dependencies": {
     "@adxp/auth-lobby": "*",
     "@adxp/common": "*",
+    "@adxp/crypto": "*",
     "@adxp/did-sdk": "*",
     "@adxp/example-app": "*",
     "@adxp/server": "*",
     "@adxp/ws-relay": "*",
-    "@vscode/sqlite3": "^5.0.8",
     "cors": "^2.8.5",
     "express": "^4.18.1",
-    "knex": "^2.1.0",
+    "level": "^8.0.0",
     "ucans": "^0.9.1"
   },
   "devDependencies": {

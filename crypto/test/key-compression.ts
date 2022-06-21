@@ -1,7 +1,7 @@
 import test from 'ava'
 
-import EcdsaKeypair from '../src/crypto/ecdsa.js'
-import * as cryptoUtil from '../src/crypto/util.js'
+import EcdsaKeypair from '../src/ecdsa.js'
+import * as cryptoUtil from '../src/util.js'
 
 test('public key compression', async (t) => {
   const keypair = await EcdsaKeypair.create()
