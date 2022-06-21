@@ -6,11 +6,13 @@ import {
   DidWebServer,
   DIDDocument,
 } from '../src/index.js'
+import DidWebDb from '../src/web/db.js'
 
 let server: DidWebServer | undefined
 
 test.before('Server setup', async (t) => {
-  server = await createDidWebServer(await getPort())
+  const db = DidWebDb.memory()
+  server = await createDidWebServer(db, await getPort())
 })
 
 test.after('Server teardown', async (t) => {
@@ -20,6 +22,7 @@ test.after('Server teardown', async (t) => {
 
 test('Resolve valid did:web', async (t) => {
   const domain = encodeURIComponent(`localhost:${server?.port}`)
+  console.log('DOMAIN: ', domain)
   for (const did of [
     `did:web:${domain}`,
     `did:web:${domain}:alice`,
@@ -51,7 +54,7 @@ test('Resolve valid did:web', async (t) => {
       capabilityDelegation: ['#key1'],
       service: [service],
     }
-    server?.put(didDoc)
+    await server?.put(didDoc)
     const didRes = await resolve(did)
     t.deepEqual(didRes.didDoc, didDoc)
     t.is(didRes.getURI(), did)
