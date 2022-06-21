@@ -108,7 +108,13 @@ export const decompressPubkey = (compressed: Uint8Array): Uint8Array => {
     yBig = prime.subtract(maybeY)
   }
   const y = uint8arrays.fromString(yBig.toString(10), 'base10')
+
+  // left-pad for smaller than 32 byte y
+  const offset = 32 - y.length
+  const yPadded = new Uint8Array(32)
+  yPadded.set(y, offset)
+
   // concat coords & prepend P-256 prefix
-  const publicKey = uint8arrays.concat([[0x04], x, y])
+  const publicKey = uint8arrays.concat([[0x04], x, yPadded])
   return publicKey
 }
