@@ -2,8 +2,7 @@ import { IpldStore } from '@adxp/common'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
 import WSRelayServer from '@adxp/ws-relay/dist/index.js'
-import DidNetwork from './did-network/server.js'
-import DidNetworkDB from './did-network/db.js'
+import { DidWebDb, createDidWebServer } from '@adxp/did-sdk'
 
 type ServiceConfig = {
   personalDataServers?: number[]
@@ -36,8 +35,11 @@ async function start() {
   }
 
   if (SERVICES.didNetwork) {
-    const db = DidNetworkDB.memory()
-    DidNetwork(db, SERVICES.didNetwork)
+    const db = DidWebDb.memory()
+    await createDidWebServer(db, SERVICES.didNetwork)
+    console.log(
+      `📰 did:web server is running at http://localhost:${SERVICES.didNetwork}`,
+    )
   }
 }
 start()

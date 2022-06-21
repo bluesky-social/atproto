@@ -5,11 +5,12 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "start": "node --loader ts-node/esm ./index.ts "
+    "start": "node --loader ts-node/esm ./src/index.ts "
   },
   "dependencies": {
     "@adxp/auth-lobby": "*",
     "@adxp/common": "*",
+    "@adxp/did-sdk": "*",
     "@adxp/example-app": "*",
     "@adxp/server": "*",
     "@adxp/ws-relay": "*",
