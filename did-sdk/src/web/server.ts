@@ -1,71 +1,113 @@
+import express from 'express'
+import cors from 'cors'
 import http from 'http'
 import { DIDDocument } from 'did-resolver'
 import DidWebDb from './db'
 
 const DOC_PATH = '/.well-known/did.json'
 
+const routes = express.Router()
+
+// Get DID Doc
+routes.get('/*', async (req, res) => {
+  const db = res.locals.db
+  const got = await db.get(req.url)
+  if (got === null) {
+    return res.status(404).send('Not found')
+  }
+  res.type('application/did+ld+json')
+  res.send(JSON.stringify(got))
+})
+
+// Create DID
+routes.post('/', async (req, res) => {
+  const { didDoc } = req.body
+  if (!didDoc) {
+    return res.status(400)
+  }
+  // @TODO validate didDoc body
+  const db = res.locals.db
+  const path = idToPath(didDoc.id)
+  if (await db.has(path)) {
+    return res.status(409).send(`DID already exists with id: ${didDoc.id}`)
+  }
+  await db.put(path, didDoc)
+  res.status(200).send()
+})
+
+const idToPath = (id: string): string => {
+  const idp = id.split(':').slice(3)
+  let path =
+    idp.length > 0
+      ? idp.map(decodeURIComponent).join('/') + '/did.json'
+      : DOC_PATH
+
+  if (!path.startsWith('/')) path = `/${path}`
+  return path
+}
+
 export class DidWebServer {
-  _server: http.Server
-  whenReady: Promise<void>
+  port: number
+  private _db: DidWebDb
+  _app: express.Application
+  _httpServer: http.Server | null = null
 
-  constructor(private db: DidWebDb, public port: number) {
-    this._server = http
-      .createServer((req, res) => this._onRequest(req, res))
-      .listen(port)
-    this.whenReady = new Promise((resolve) => {
-      this._server.on('listening', () => resolve())
+  constructor(_app: express.Application, _db: DidWebDb, port: number) {
+    this._app = _app
+    this._db = _db
+    this.port = port
+  }
+
+  static async create(db: DidWebDb, port: number): Promise<DidWebServer> {
+    const app = express()
+
+    app.use(cors())
+    app.use(express.json())
+    app.use((_req, res, next) => {
+      res.locals.db = db
+      next()
     })
-  }
+    app.use('/', routes)
 
-  async _onRequest(req: http.IncomingMessage, res: http.ServerResponse) {
-    const got = await this.getByPath(req.url)
-    if (got !== null) {
-      res.writeHead(200, 'OK', {
-        'Content-Type': 'application/did+ld+json',
+    const server = new DidWebServer(app, db, port)
+
+    return new Promise((resolve) => {
+      const _server = app.listen(port, () => {
+        console.log(`📰 did:web server is running at http://localhost:${port}`)
+        resolve(server)
       })
-      res.write(JSON.stringify(got))
-      res.end()
-    } else {
-      res.writeHead(404, 'Not found')
-      res.end()
-    }
-  }
-
-  _idToPath(id: string): string {
-    const idp = id.split(':').slice(3)
-    let path =
-      idp.length > 0
-        ? idp.map(decodeURIComponent).join('/') + '/did.json'
-        : DOC_PATH
-
-    if (!path.startsWith('/')) path = `/${path}`
-    return path
+      server._httpServer = _server
+    })
   }
 
   async getByPath(didPath?: string): Promise<DIDDocument | null> {
     if (!didPath) return null
-    return this.db.get(didPath)
+    return this._db.get(didPath)
   }
 
   async getById(did?: string): Promise<DIDDocument | null> {
     if (!did) return null
-    const path = this._idToPath(did)
+    const path = idToPath(did)
     return this.getByPath(path)
   }
 
   async put(didDoc: DIDDocument) {
-    await this.db.put(this._idToPath(didDoc.id), didDoc)
+    await this._db.put(idToPath(didDoc.id), didDoc)
   }
 
   async delete(didOrDoc: string | DIDDocument) {
     const did = typeof didOrDoc === 'string' ? didOrDoc : didOrDoc.id
-    const path = this._idToPath(did)
-    await this.db.del(path)
+    const path = idToPath(did)
+    await this._db.del(path)
   }
 
   close(): Promise<void> {
     return new Promise((resolve) => {
-      this._server.close(() => resolve())
+      if (this._httpServer) {
+        this._httpServer.close(() => resolve())
+      } else {
+        resolve()
+      }
     })
   }
 }

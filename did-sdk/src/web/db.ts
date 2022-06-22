@@ -58,6 +58,11 @@ export class DidWebDb {
     }
   }
 
+  async has(didPath: string): Promise<boolean> {
+    const got = await this.get(didPath)
+    return got !== null
+  }
+
   async del(didPath: string): Promise<void> {
     await this.store.del(didPath)
   }

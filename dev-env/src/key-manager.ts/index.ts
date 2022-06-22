@@ -3,7 +3,10 @@ import cors from 'cors'
 import KeyManagerDb from './db'
 import * as crypto from '@adxp/crypto'
 
-const runServer = (db: KeyManagerDb, port: number) => {
+export const runServer = (
+  db: KeyManagerDb,
+  port: number,
+): Promise<Express.Application> => {
   const app = express()
   app.use(cors())
 
@@ -12,22 +15,28 @@ const runServer = (db: KeyManagerDb, port: number) => {
     next()
   })
 
-  // create root keypair
   // request ucan
+  app.get('/ucan', async (req, res) => {
+    res.send(200)
+  })
+
+  // create root keypair + DID
+  app.post('/account', async (req, res) => {
+    const keypair = await crypto.EcdsaKeypair.create({ exportable: true })
+
+    res.send(200)
+  })
+
   // request DID doc mutation
 
-  app.post('/keypair', async (req, res) => {
-    const keypair = await crypto.EcdsaKeypair.create()
-    res.send(200)
-  })
-
-  app.get('/', async (req, res) => {
-    res.send(200)
-  })
-
-  app.listen(port, () => {
-    console.log(
-      `🔑 Key management server is running at http://localhost:${port}`,
-    )
+  return new Promise((resolve) => {
+    app.listen(port, () => {
+      console.log(
+        `🔑 Key management server is running at http://localhost:${port}`,
+      )
+      resolve(app)
+    })
   })
 }
+
+export default runServer

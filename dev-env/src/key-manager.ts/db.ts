@@ -1,5 +1,6 @@
 import { DIDDocument } from 'did-resolver'
 import level from 'level'
+import * as crypto from '@adxp/crypto'
 
 interface KeyStore {
   put(key: string, val: string): Promise<void>
@@ -45,21 +46,28 @@ export class KeyManagerDb {
     return new KeyManagerDb(store)
   }
 
-  async put(did: string, privateKey: string): Promise<void> {
-    await this.store.put(did, privateKey)
+  async put(did: string, keypair: crypto.EcdsaKeypair): Promise<void> {
+    const exported = await keypair.export()
+    await this.store.put(did, JSON.stringify(exported))
   }
 
-  async get(didPath: string): Promise<string | null> {
+  async get(did: string): Promise<crypto.EcdsaKeypair | null> {
+    let exportedKey: string
     try {
-      return await this.store.get(didPath)
+      exportedKey = await this.store.get(did)
     } catch (err) {
-      console.log(`Could not get did with path ${didPath}: ${err}`)
+      console.log(`Could not get did with path ${did}: ${err}`)
       return null
+    }
+    try {
+      return await crypto.EcdsaKeypair.import(JSON.parse(exportedKey))
+    } catch (err) {
+      throw new Error(`Could not parse stored exported key: ${err}`)
     }
   }
 
-  async del(didPath: string): Promise<void> {
-    await this.store.del(didPath)
+  async del(did: string): Promise<void> {
+    await this.store.del(did)
   }
 }
 

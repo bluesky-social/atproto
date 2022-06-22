@@ -1,18 +1,13 @@
 import test from 'ava'
 import getPort from 'get-port'
-import {
-  resolve,
-  createDidWebServer,
-  DidWebServer,
-  DIDDocument,
-} from '../src/index.js'
+import { resolve, DidWebServer, DIDDocument } from '../src/index.js'
 import DidWebDb from '../src/web/db.js'
 
 let server: DidWebServer | undefined
 
 test.before('Server setup', async (t) => {
   const db = DidWebDb.memory()
-  server = await createDidWebServer(db, await getPort())
+  server = await DidWebServer.create(db, await getPort())
 })
 
 test.after('Server teardown', async (t) => {
@@ -22,7 +17,6 @@ test.after('Server teardown', async (t) => {
 
 test('Resolve valid did:web', async (t) => {
   const domain = encodeURIComponent(`localhost:${server?.port}`)
-  console.log('DOMAIN: ', domain)
   for (const did of [
     `did:web:${domain}`,
     `did:web:${domain}:alice`,

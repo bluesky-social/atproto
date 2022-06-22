@@ -1,9 +1,7 @@
 import * as web from './web/web.js'
 import * as key from './key/key.js'
 import * as ion from './ion/ion.js'
-import { DidWebServer } from './web/server.js'
 import { ReadOnlyDidDocAPI } from './did-documents.js'
-import DidWebDb from './web/db.js'
 
 export async function resolve(didUri: string): Promise<ReadOnlyDidDocAPI> {
   const didMethod = didUri.split(':').at(1)
@@ -17,15 +15,6 @@ export async function resolve(didUri: string): Promise<ReadOnlyDidDocAPI> {
     return ion.resolve(didUri)
   }
   throw new Error(`Unsupported did method (${didMethod}) ${didUri}`)
-}
-
-export async function createDidWebServer(
-  db: DidWebDb,
-  port = 9999,
-): Promise<DidWebServer> {
-  const s = new DidWebServer(db, port)
-  await s.whenReady
-  return s
 }
 
 export { KeyCapabilitySection, DIDDocument } from 'did-resolver'
