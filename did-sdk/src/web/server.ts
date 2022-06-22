@@ -25,6 +25,7 @@ routes.post('/', async (req, res) => {
   if (!didDoc) {
     return res.status(400)
   }
+  // @TODO add in some proof
   // @TODO validate didDoc body
   const db = res.locals.db
   const path = idToPath(didDoc.id)
