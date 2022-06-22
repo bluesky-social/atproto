@@ -2,11 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import axios from 'axios'
 import * as uint8arrays from 'uint8arrays'
-import * as ucan from 'ucans'
 import * as crypto from '@adxp/crypto'
 
-import KeyManagerDb from './db'
-import { formatDidWeb } from './did'
+import KeyManagerDb from './db.js'
+import { formatDidWeb } from './did.js'
 
 const DID_SERVER = 'localhost:9999'
 
@@ -25,8 +24,6 @@ export const runServer = (
 
   // request device ucan
   app.get('/ucan', async (req, res) => {
-    const { did } = req.query
-    const token = await ucan.Builder.create()
     res.send(200)
   })
 
