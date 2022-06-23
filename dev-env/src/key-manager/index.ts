@@ -7,7 +7,7 @@ import * as crypto from '@adxp/crypto'
 import KeyManagerDb from './db.js'
 import { formatDidWeb } from './did.js'
 
-const DID_SERVER = 'localhost:9999'
+const DID_SERVER = 'localhost:2582'
 
 export const runServer = (
   db: KeyManagerDb,
@@ -35,7 +35,7 @@ export const runServer = (
     const pubKey58 = uint8arrays.toString(keypair.publicKey, 'base58btc')
     const didDoc = formatDidWeb(did, pubKey58, 'idprovider.net') // @TODO: stand in id provider
     try {
-      await axios.post(DID_SERVER, { didDoc })
+      await axios.post(`http://${DID_SERVER}`, { didDoc })
     } catch (err) {
       return res
         .status(500)
@@ -43,7 +43,7 @@ export const runServer = (
     }
     const db: KeyManagerDb = res.locals.db
     await db.put(did, keypair)
-    await res.send(200)
+    await res.json({ did, didKey: keypair.did() })
   })
 
   // request DID doc mutation

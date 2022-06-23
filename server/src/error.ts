@@ -2,9 +2,6 @@ import { Request, Response } from 'express'
 import { check } from '@adxp/common'
 
 export const handler = (err: Error, _req: Request, res: Response) => {
-  console.log('HERE')
-  console.log(err)
-
   let status
   if (ServerError.is(err)) {
     status = err.status
