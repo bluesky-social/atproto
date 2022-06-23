@@ -1,16 +1,13 @@
 import test from 'ava'
 import getPort from 'get-port'
-import {
-  resolve,
-  createDidWebServer,
-  DidWebServer,
-  DIDDocument,
-} from '../src/index.js'
+import { resolve, DidWebServer, DIDDocument } from '../src/index.js'
+import DidWebDb from '../src/web/db.js'
 
 let server: DidWebServer | undefined
 
 test.before('Server setup', async (t) => {
-  server = await createDidWebServer(await getPort())
+  const db = DidWebDb.memory()
+  server = await DidWebServer.create(db, await getPort())
 })
 
 test.after('Server teardown', async (t) => {
@@ -51,7 +48,7 @@ test('Resolve valid did:web', async (t) => {
       capabilityDelegation: ['#key1'],
       service: [service],
     }
-    server?.put(didDoc)
+    await server?.put(didDoc)
     const didRes = await resolve(did)
     t.deepEqual(didRes.didDoc, didDoc)
     t.is(didRes.getURI(), did)

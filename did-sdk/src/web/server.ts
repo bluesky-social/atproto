@@ -1,62 +1,114 @@
+import express from 'express'
+import cors from 'cors'
 import http from 'http'
 import { DIDDocument } from 'did-resolver'
+import DidWebDb from './db'
 
 const DOC_PATH = '/.well-known/did.json'
 
-export class DidWebServer {
-  _server: http.Server
-  dids: Map<string, DIDDocument> = new Map()
-  whenReady: Promise<void>
+const routes = express.Router()
 
-  constructor(public port: number) {
-    this._server = http
-      .createServer((req, res) => this._onRequest(req, res))
-      .listen(port)
-    this.whenReady = new Promise((resolve) => {
-      this._server.on('listening', () => resolve())
+// Get DID Doc
+routes.get('/*', async (req, res) => {
+  const db = res.locals.db
+  const got = await db.get(req.url)
+  if (got === null) {
+    return res.status(404).send('Not found')
+  }
+  res.type('application/did+ld+json')
+  res.send(JSON.stringify(got))
+})
+
+// Create DID
+routes.post('/', async (req, res) => {
+  const { didDoc } = req.body
+  if (!didDoc) {
+    return res.status(400)
+  }
+  // @TODO add in some proof
+  // @TODO validate didDoc body
+  const db = res.locals.db
+  const path = idToPath(didDoc.id)
+  if (await db.has(path)) {
+    return res.status(409).send(`DID already exists with id: ${didDoc.id}`)
+  }
+  await db.put(path, didDoc)
+  res.status(200).send()
+})
+
+const idToPath = (id: string): string => {
+  const idp = id.split(':').slice(3)
+  let path =
+    idp.length > 0
+      ? idp.map(decodeURIComponent).join('/') + '/did.json'
+      : DOC_PATH
+
+  if (!path.startsWith('/')) path = `/${path}`
+  return path
+}
+
+export class DidWebServer {
+  port: number
+  private _db: DidWebDb
+  _app: express.Application
+  _httpServer: http.Server | null = null
+
+  constructor(_app: express.Application, _db: DidWebDb, port: number) {
+    this._app = _app
+    this._db = _db
+    this.port = port
+  }
+
+  static async create(db: DidWebDb, port: number): Promise<DidWebServer> {
+    const app = express()
+
+    app.use(cors())
+    app.use(express.json())
+    app.use((_req, res, next) => {
+      res.locals.db = db
+      next()
+    })
+    app.use('/', routes)
+
+    const server = new DidWebServer(app, db, port)
+
+    return new Promise((resolve) => {
+      const _server = app.listen(port, () => {
+        console.log(`📰 did:web server is running at http://localhost:${port}`)
+        resolve(server)
+      })
+      server._httpServer = _server
     })
   }
 
-  _onRequest(req: http.IncomingMessage, res: http.ServerResponse) {
-    if (req.url && this.dids.has(req.url)) {
-      res.writeHead(200, 'OK', {
-        'Content-Type': 'application/did+ld+json',
-      })
-      res.write(JSON.stringify(this.dids.get(req.url)))
-      res.end()
-    } else {
-      res.writeHead(404, 'Not found')
-      res.end()
-    }
+  async getByPath(didPath?: string): Promise<DIDDocument | null> {
+    if (!didPath) return null
+    return this._db.get(didPath)
   }
 
-  _idToPath(id: string): string {
-    const idp = id.split(':').slice(3)
-    let path = DOC_PATH
-    if (idp.length > 0) {
-      path = idp.map(decodeURIComponent).join('/') + '/did.json'
-    } else {
-      path = DOC_PATH
-    }
-    if (!path.startsWith('/')) path = `/${path}`
-    return path
+  async getById(did?: string): Promise<DIDDocument | null> {
+    if (!did) return null
+    const path = idToPath(did)
+    return this.getByPath(path)
   }
 
-  put(didDoc: DIDDocument) {
-    this.dids.set(this._idToPath(didDoc.id), didDoc)
+  async put(didDoc: DIDDocument) {
+    await this._db.put(idToPath(didDoc.id), didDoc)
   }
 
-  delete(did: string | DIDDocument) {
-    if (typeof did === 'string') {
-      this.dids.delete(this._idToPath(did))
-    } else {
-      this.dids.delete(this._idToPath(did.id))
-    }
+  async delete(didOrDoc: string | DIDDocument) {
+    const did = typeof didOrDoc === 'string' ? didOrDoc : didOrDoc.id
+    const path = idToPath(did)
+    await this._db.del(path)
   }
 
   close(): Promise<void> {
     return new Promise((resolve) => {
-      this._server.close(() => resolve())
+      if (this._httpServer) {
+        this._httpServer.close(() => resolve())
+      } else {
+        resolve()
+      }
     })
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@adxp/example-app",
   "version": "0.1.0",
-  "private": true,
+  "main": "./lib/serve.mjs",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

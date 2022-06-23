@@ -16,9 +16,9 @@
     "cli",
     "common",
     "crypto",
+    "dev-env",
     "did-sdk",
     "example-app",
-    "server",
     "ws-relay",
     "server"
   ],

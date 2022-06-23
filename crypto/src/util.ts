@@ -8,7 +8,10 @@ export const randomIV = (): Uint8Array => {
   return webcrypto.getRandomValues(new Uint8Array(12))
 }
 
-export const pubkeyFromDid = async (did: string): Promise<CryptoKey> => {
+export const pubkeyFromDid = async (
+  did: string,
+  isEcdsa = false,
+): Promise<CryptoKey> => {
   if (!did.startsWith(BASE58_DID_PREFIX)) {
     throw new Error('Expected a base58-encoded DID formatted `did:key:z...`')
   }
@@ -22,9 +25,9 @@ export const pubkeyFromDid = async (did: string): Promise<CryptoKey> => {
   return webcrypto.subtle.importKey(
     'raw',
     keyBytes,
-    { name: 'ECDH', namedCurve: 'P-256' },
+    { name: isEcdsa ? 'ECDSA' : 'ECDH', namedCurve: 'P-256' },
     true,
-    [],
+    isEcdsa ? ['verify'] : [],
   )
 }
 
@@ -105,7 +108,13 @@ export const decompressPubkey = (compressed: Uint8Array): Uint8Array => {
     yBig = prime.subtract(maybeY)
   }
   const y = uint8arrays.fromString(yBig.toString(10), 'base10')
+
+  // left-pad for smaller than 32 byte y
+  const offset = 32 - y.length
+  const yPadded = new Uint8Array(32)
+  yPadded.set(y, offset)
+
   // concat coords & prepend P-256 prefix
-  const publicKey = uint8arrays.concat([[0x04], x, y])
+  const publicKey = uint8arrays.concat([[0x04], x, yPadded])
   return publicKey
 }
