@@ -24,7 +24,6 @@ export const formatDidWeb = (
       'https://w3id.org/security/suites/ecdsa-2019/v1',
     ],
     id: did,
-    controller: 'did:example:123456', // TODO what controller to put here?
     verificationMethod: [key],
     assertionMethod: ['#key1'],
     authentication: ['#key1'],

@@ -15,7 +15,7 @@ test('public key compression', async (t) => {
 
 test('works consistently', async (t) => {
   const pubkeys = []
-  for (let i = 0; i < 10000; i++) {
+  for (let i = 0; i < 1000; i++) {
     const key = await EcdsaKeypair.create()
     pubkeys.push(key.publicKey)
   }

@@ -6,7 +6,7 @@ import WSRelayServer from '@adxp/ws-relay/dist/index.js'
 import AuthLobbyServer from '@adxp/auth-lobby'
 // @ts-ignore
 import ExampleApp from '@adxp/example-app'
-import { DidWebDb, createDidWebServer } from '@adxp/did-sdk'
+import { DidWebDb, DidWebServer } from '@adxp/did-sdk'
 import KeyManagerServer from './key-manager/index.js'
 import KeyManagerDb from './key-manager/db.js'
 
@@ -44,7 +44,7 @@ async function start() {
   const didPort = getPort('DID_WEB_HOST')
   if (didPort) {
     const db = DidWebDb.memory()
-    await createDidWebServer(db, didPort)
+    await DidWebServer.create(db, didPort)
     console.log(`📰 did:web server is running at http://localhost:${didPort}`)
   }
 
@@ -73,5 +73,5 @@ start()
 function init(fn: any, port: number, name: string) {
   const s = fn(port)
   s.on('listening', () => console.log(`${name} running on port ${port}`))
-  s.on('error', (e: any) => console.log(`${name} failed to start:`, e))
+  s.on('error', (e: Error) => console.log(`${name} failed to start:`, e))
 }
