@@ -1,3 +1,4 @@
+import http from 'http'
 import express from 'express'
 import cors from 'cors'
 import axios from 'axios'
@@ -9,10 +10,7 @@ import { formatDidWeb } from './did.js'
 
 const DID_SERVER = 'localhost:2582'
 
-export const runServer = (
-  db: KeyManagerDb,
-  port: number,
-): Promise<Express.Application> => {
+export const runServer = (db: KeyManagerDb, port: number): http.Server => {
   const app = express()
   app.use(cors())
   app.use(express.json())
@@ -48,14 +46,7 @@ export const runServer = (
 
   // request DID doc mutation
 
-  return new Promise((resolve) => {
-    app.listen(port, () => {
-      console.log(
-        `🔑 Key management server is running at http://localhost:${port}`,
-      )
-      resolve(app)
-    })
-  })
+  return app.listen(port)
 }
 
 export default runServer
