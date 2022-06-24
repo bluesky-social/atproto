@@ -59,7 +59,7 @@ export class DidWebServer {
     this.port = port
   }
 
-  static async create(db: DidWebDb, port: number): Promise<DidWebServer> {
+  static create(db: DidWebDb, port: number): DidWebServer {
     const app = express()
 
     app.use(cors())
@@ -71,14 +71,8 @@ export class DidWebServer {
     app.use('/', routes)
 
     const server = new DidWebServer(app, db, port)
-
-    return new Promise((resolve) => {
-      const _server = app.listen(port, () => {
-        console.log(`📰 did:web server is running at http://localhost:${port}`)
-        resolve(server)
-      })
-      server._httpServer = _server
-    })
+    server._httpServer = app.listen(port)
+    return server
   }
 
   async getByPath(didPath?: string): Promise<DIDDocument | null> {

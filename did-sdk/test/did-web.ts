@@ -7,7 +7,11 @@ let server: DidWebServer | undefined
 
 test.before('Server setup', async (t) => {
   const db = DidWebDb.memory()
-  server = await DidWebServer.create(db, await getPort())
+  server = DidWebServer.create(db, await getPort())
+  await new Promise((resolve, reject) => {
+    server?._httpServer?.on('listening', resolve)
+    server?._httpServer?.on('error', reject)
+  })
 })
 
 test.after('Server teardown', async (t) => {
