@@ -33,4 +33,7 @@ db.createTables()
 const envPort = parseInt(process.env.PORT || '')
 const port = isNaN(envPort) ? 2583 : envPort
 
-server(blockstore, db, port)
+const s = server(blockstore, db, port)
+s.on('listening', () => {
+  console.log(`🌞 ADX Data server is running at http://localhost:${port}`)
+})
