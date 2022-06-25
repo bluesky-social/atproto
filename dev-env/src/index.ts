@@ -20,6 +20,29 @@ export class DevEnv {
   authLobby: http.Server[] = []
   exampleApp: http.Server[] = []
 
+  static async create(params: StartParams): Promise<DevEnv> {
+    const devEnv = new DevEnv()
+    for (const cfg of params.personalDataServer || []) {
+      await devEnv.startPersonalDataSever(cfg)
+    }
+    for (const cfg of params.webSocketRelay || []) {
+      await devEnv.startWebSocketRelay(cfg)
+    }
+    for (const cfg of params.didWebHost || []) {
+      await devEnv.startDidWebHost(cfg)
+    }
+    for (const cfg of params.keyManager || []) {
+      await devEnv.startKeyManager(cfg)
+    }
+    for (const cfg of params.authLobby || []) {
+      await devEnv.startAuthLobby(cfg)
+    }
+    for (const cfg of params.exampleApp || []) {
+      await devEnv.startExampleApp(cfg)
+    }
+    return devEnv
+  }
+
   async startPersonalDataSever(cfg: ServerConfig) {
     const db = PDSDatabase.memory()
     const serverBlockstore = IpldStore.createInMemory()
@@ -92,30 +115,7 @@ export class DevEnv {
   }
 }
 
-export async function start(params: StartParams): Promise<DevEnv> {
-  const devEnv = new DevEnv()
-  for (const cfg of params.personalDataServer || []) {
-    devEnv.startPersonalDataSever(cfg)
-  }
-  for (const cfg of params.webSocketRelay || []) {
-    devEnv.startWebSocketRelay(cfg)
-  }
-  for (const cfg of params.didWebHost || []) {
-    devEnv.startWebSocketRelay(cfg)
-  }
-  for (const cfg of params.keyManager || []) {
-    devEnv.startKeyManager(cfg)
-  }
-  for (const cfg of params.authLobby || []) {
-    devEnv.startAuthLobby(cfg)
-  }
-  for (const cfg of params.exampleApp || []) {
-    devEnv.startExampleApp(cfg)
-  }
-  return devEnv
-}
-
-function getUrl(s: http.Server) {
+export function getUrl(s: http.Server) {
   const addr = s.address()
   const url =
     typeof addr === 'string'
@@ -124,6 +124,11 @@ function getUrl(s: http.Server) {
       ? `http://localhost:${addr.port}`
       : '<unknown>'
   return url
+}
+
+export function getServerPort(s: http.Server) {
+  const addr = s.address()
+  return addr && typeof addr === 'object' ? addr.port : 0
 }
 
 function onServerReady(s: http.Server, name: string): Promise<http.Server> {
