@@ -1,4 +1,5 @@
 import http from 'http'
+import chalk from 'chalk'
 import { IpldStore } from '@adxp/common'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
@@ -10,143 +11,143 @@ import ExampleApp from '@adxp/example-app'
 import { DidWebDb, DidWebServer } from '@adxp/did-sdk'
 import KeyManagerServer from './key-manager/index.js'
 import KeyManagerDb from './key-manager/db.js'
-import { ServerConfig, StartParams } from './types.js'
+import { ServerType, ServerConfig, StartParams } from './types.js'
+
+class DevEnvServer {
+  inst?: http.Server | DidWebServer
+
+  constructor(public type: ServerType, public port: number) {}
+
+  get name() {
+    return {
+      [ServerType.PersonalDataServer]: '🌞 ADX Data server',
+      [ServerType.WebSocketRelay]: '🔁 Relay server',
+      [ServerType.DidWebHost]: '📰 did:web server',
+      [ServerType.KeyManager]: '🔑 Key management server',
+      [ServerType.AuthLobby]: '🧘 Auth lobby',
+      [ServerType.ExampleApp]: '💻 Example app',
+    }[this.type]
+  }
+
+  get description() {
+    return `[${chalk.bold(this.port)}] ${this.name}`
+  }
+
+  get url() {
+    return `http://localhost:${this.port}`
+  }
+
+  async start() {
+    if (this.inst) {
+      throw new Error('Already started')
+    }
+
+    const onServerReady = (s: http.Server): Promise<http.Server> => {
+      return new Promise((resolve, reject) => {
+        s.on('listening', () => {
+          console.log(`${this.name} running at ${this.url}`)
+          resolve(s)
+        })
+        s.on('error', (e: Error) => {
+          console.log(`${this.name} failed to start:`, e)
+          reject(e)
+        })
+      })
+    }
+
+    switch (this.type) {
+      case ServerType.PersonalDataServer: {
+        const db = PDSDatabase.memory()
+        const serverBlockstore = IpldStore.createInMemory()
+        this.inst = await onServerReady(
+          PDSServer(serverBlockstore, db, this.port),
+        )
+        break
+      }
+      case ServerType.WebSocketRelay: {
+        this.inst = await onServerReady(WSRelayServer(this.port))
+        break
+      }
+      case ServerType.DidWebHost: {
+        const db = DidWebDb.memory()
+        this.inst = DidWebServer.create(db, this.port)
+        if (this.inst._httpServer) {
+          await onServerReady(this.inst._httpServer)
+        } else {
+          throw new Error(
+            `did:web server at port ${this.port} failed to start a server`,
+          )
+        }
+        break
+      }
+      case ServerType.KeyManager: {
+        const db = KeyManagerDb.memory()
+        this.inst = await onServerReady(KeyManagerServer(db, this.port))
+        break
+      }
+      case ServerType.AuthLobby: {
+        this.inst = await onServerReady(AuthLobbyServer(this.port))
+        break
+      }
+      case ServerType.ExampleApp: {
+        this.inst = await onServerReady(ExampleApp(this.port))
+        break
+      }
+      default:
+        throw new Error(`Unsupported server type: ${this.type}`)
+    }
+  }
+
+  async close() {
+    const closeServer = (s: http.Server): Promise<void> => {
+      return new Promise((resolve) => {
+        console.log(`Closing ${this.description}`)
+        s.close(() => resolve())
+      })
+    }
+
+    if (this.inst instanceof DidWebServer) {
+      if (this.inst._httpServer) {
+        await closeServer(this.inst._httpServer)
+      }
+    } else if (this.inst) {
+      await closeServer(this.inst)
+    }
+  }
+}
 
 export class DevEnv {
-  personalDataServer: http.Server[] = []
-  webSocketRelay: http.Server[] = []
-  didWebHost: DidWebServer[] = []
-  keyManager: http.Server[] = []
-  authLobby: http.Server[] = []
-  exampleApp: http.Server[] = []
+  servers: Map<number, DevEnvServer> = new Map()
 
   static async create(params: StartParams): Promise<DevEnv> {
     const devEnv = new DevEnv()
-    for (const cfg of params.personalDataServer || []) {
-      await devEnv.startPersonalDataSever(cfg)
-    }
-    for (const cfg of params.webSocketRelay || []) {
-      await devEnv.startWebSocketRelay(cfg)
-    }
-    for (const cfg of params.didWebHost || []) {
-      await devEnv.startDidWebHost(cfg)
-    }
-    for (const cfg of params.keyManager || []) {
-      await devEnv.startKeyManager(cfg)
-    }
-    for (const cfg of params.authLobby || []) {
-      await devEnv.startAuthLobby(cfg)
-    }
-    for (const cfg of params.exampleApp || []) {
-      await devEnv.startExampleApp(cfg)
+    for (const cfg of params.servers || []) {
+      await devEnv.add(cfg)
     }
     return devEnv
   }
 
-  async startPersonalDataSever(cfg: ServerConfig) {
-    const db = PDSDatabase.memory()
-    const serverBlockstore = IpldStore.createInMemory()
-    const inst = await onServerReady(
-      PDSServer(serverBlockstore, db, cfg.port),
-      '🌞 ADX Data server',
-    )
-    this.personalDataServer.push(inst)
+  async add(cfg: ServerConfig) {
+    if (this.servers.has(cfg.port)) {
+      throw new Error(`Port ${cfg.port} is in use`)
+    }
+    const server = new DevEnvServer(cfg.type, cfg.port)
+    await server.start()
+    this.servers.set(cfg.port, server)
   }
 
-  async startWebSocketRelay(cfg: ServerConfig) {
-    const inst = await onServerReady(WSRelayServer(cfg.port), '🔁 Relay server')
-    this.webSocketRelay.push(inst)
-  }
-
-  async startDidWebHost(cfg: ServerConfig) {
-    const db = DidWebDb.memory()
-    const inst = DidWebServer.create(db, cfg.port)
-    if (inst._httpServer) {
-      await onServerReady(inst._httpServer, '📰 did:web server')
-      this.didWebHost.push(inst)
-    } else {
-      throw new Error(
-        `did:web server at port ${cfg.port} failed to start a server`,
-      )
+  async remove(server: number | DevEnvServer) {
+    const port = typeof server === 'number' ? server : server.port
+    const inst = this.servers.get(port)
+    if (inst) {
+      await inst.close()
+      this.servers.delete(port)
     }
   }
 
-  async startKeyManager(cfg: ServerConfig) {
-    const db = KeyManagerDb.memory()
-    const inst = await onServerReady(
-      KeyManagerServer(db, cfg.port),
-      '🔑 Key management server',
-    )
-    this.keyManager.push(inst)
-  }
-
-  async startAuthLobby(cfg: ServerConfig) {
-    const inst = await onServerReady(AuthLobbyServer(cfg.port), '🧘 Auth lobby')
-    this.authLobby.push(inst)
-  }
-
-  async startExampleApp(cfg: ServerConfig) {
-    const inst = await onServerReady(ExampleApp(cfg.port), '💻 Example app')
-    this.exampleApp.push(inst)
-  }
-
-  async close(inst: http.Server | DidWebServer) {
-    if (inst instanceof DidWebServer) {
-      if (inst._httpServer) {
-        await closeServer(inst._httpServer)
-      }
-    } else {
-      await closeServer(inst)
+  async shutdown() {
+    for (const server of this.servers.values()) {
+      await server.close()
     }
   }
-
-  async closeAll() {
-    const close = this.close.bind(this)
-    await Promise.all(this.personalDataServer.map(close))
-    await Promise.all(this.webSocketRelay.map(close))
-    await Promise.all(
-      this.didWebHost.map((inst) =>
-        inst._httpServer ? close(inst._httpServer) : undefined,
-      ),
-    )
-    await Promise.all(this.keyManager.map(close))
-    await Promise.all(this.authLobby.map(close))
-    await Promise.all(this.exampleApp.map(close))
-  }
-}
-
-export function getUrl(s: http.Server) {
-  const addr = s.address()
-  const url =
-    typeof addr === 'string'
-      ? addr
-      : addr
-      ? `http://localhost:${addr.port}`
-      : '<unknown>'
-  return url
-}
-
-export function getServerPort(s: http.Server) {
-  const addr = s.address()
-  return addr && typeof addr === 'object' ? addr.port : 0
-}
-
-function onServerReady(s: http.Server, name: string): Promise<http.Server> {
-  return new Promise((resolve, reject) => {
-    s.on('listening', () => {
-      console.log(`${name} running at ${getUrl(s)}`)
-      resolve(s)
-    })
-    s.on('error', (e: Error) => {
-      console.log(`${name} failed to start:`, e)
-      reject(e)
-    })
-  })
-}
-
-function closeServer(s: http.Server): Promise<void> {
-  return new Promise((resolve) => {
-    console.log(`Closing ${getUrl(s)}`)
-    s.close(() => resolve())
-  })
 }

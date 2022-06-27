@@ -1,21 +1,26 @@
-export const PORTS = {
-  PERSONAL_DATA_SERVER: 2583,
-  WEB_SOCKET_RELAY: 3005,
-  DID_WEB_HOST: 2582,
-  KEY_MANAGER: 2581,
-  EXAMPLE_APP: 3002,
-  AUTH_LOBBY: 3000,
+export enum ServerType {
+  PersonalDataServer = 'pds',
+  WebSocketRelay = 'wsrelay',
+  DidWebHost = 'didweb',
+  KeyManager = 'keymanager',
+  AuthLobby = 'auth',
+  ExampleApp = 'example-app',
 }
 
 export interface ServerConfig {
+  type: ServerType
   port: number
 }
 
 export interface StartParams {
-  personalDataServer?: ServerConfig[]
-  webSocketRelay?: ServerConfig[]
-  didWebHost?: ServerConfig[]
-  keyManager?: ServerConfig[]
-  authLobby?: ServerConfig[]
-  exampleApp?: ServerConfig[]
+  servers?: ServerConfig[]
+}
+
+export const PORTS = {
+  [ServerType.PersonalDataServer]: 2583,
+  [ServerType.WebSocketRelay]: 3005,
+  [ServerType.DidWebHost]: 2582,
+  [ServerType.KeyManager]: 2581,
+  [ServerType.AuthLobby]: 3000,
+  [ServerType.ExampleApp]: 3002,
 }
