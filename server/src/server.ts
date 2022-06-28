@@ -6,12 +6,17 @@ import 'express-async-errors'
 
 import express from 'express'
 import cors from 'cors'
+import http from 'http'
 import Routes from './routes/index.js'
 import { IpldStore } from '@adxp/common'
 import Database from './db/index.js'
 import * as error from './error.js'
 
-const runServer = (blockstore: IpldStore, db: Database, port: number) => {
+const runServer = (
+  blockstore: IpldStore,
+  db: Database,
+  port: number,
+): http.Server => {
   const app = express()
   app.use(express.json())
   app.use(cors())
@@ -23,12 +28,9 @@ const runServer = (blockstore: IpldStore, db: Database, port: number) => {
   })
 
   app.use('/', Routes)
-
   app.use(error.handler)
 
-  app.listen(port, () => {
-    console.log(`🌞 ADX Data server is running at http://localhost:${port}`)
-  })
+  return app.listen(port)
 }
 
 export default runServer

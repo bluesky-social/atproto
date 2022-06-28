@@ -1,3 +1,5 @@
+import http from 'http'
+import chalk from 'chalk'
 import { IpldStore } from '@adxp/common'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
@@ -9,69 +11,143 @@ import ExampleApp from '@adxp/example-app'
 import { DidWebDb, DidWebServer } from '@adxp/did-sdk'
 import KeyManagerServer from './key-manager/index.js'
 import KeyManagerDb from './key-manager/db.js'
+import { ServerType, ServerConfig, StartParams } from './types.js'
 
-import dotenv from 'dotenv'
+class DevEnvServer {
+  inst?: http.Server | DidWebServer
 
-dotenv.config()
+  constructor(public type: ServerType, public port: number) {}
 
-const getPort = (name: string): number | null => {
-  const portStr = process.env[name]
-  return portStr ? parseInt(portStr) : null
-}
+  get name() {
+    return {
+      [ServerType.PersonalDataServer]: '🌞 ADX Data server',
+      [ServerType.WebSocketRelay]: '🔁 Relay server',
+      [ServerType.DidWebHost]: '📰 did:web server',
+      [ServerType.KeyManager]: '🔑 Key management server',
+      [ServerType.AuthLobby]: '🧘 Auth lobby',
+      [ServerType.ExampleApp]: '💻 Example app',
+    }[this.type]
+  }
 
-const getPorts = (name: string): number[] | null => {
-  const portsStr = process.env[name]
-  if (!portsStr) return null
-  return portsStr.split(',').map((str) => parseInt(str))
-}
+  get description() {
+    return `[${chalk.bold(this.port)}] ${this.name}`
+  }
 
-async function start() {
-  const pdsPorts = getPorts('PERSONAL_DATA_SERVERS')
-  if (pdsPorts) {
-    for (const port of pdsPorts) {
-      const db = PDSDatabase.memory()
-      const serverBlockstore = IpldStore.createInMemory()
-      PDSServer(serverBlockstore, db, port)
+  get url() {
+    return `http://localhost:${this.port}`
+  }
+
+  async start() {
+    if (this.inst) {
+      throw new Error('Already started')
+    }
+
+    const onServerReady = (s: http.Server): Promise<http.Server> => {
+      return new Promise((resolve, reject) => {
+        s.on('listening', () => {
+          console.log(`${this.name} running at ${this.url}`)
+          resolve(s)
+        })
+        s.on('error', (e: Error) => {
+          console.log(`${this.name} failed to start:`, e)
+          reject(e)
+        })
+      })
+    }
+
+    switch (this.type) {
+      case ServerType.PersonalDataServer: {
+        const db = PDSDatabase.memory()
+        const serverBlockstore = IpldStore.createInMemory()
+        this.inst = await onServerReady(
+          PDSServer(serverBlockstore, db, this.port),
+        )
+        break
+      }
+      case ServerType.WebSocketRelay: {
+        this.inst = await onServerReady(WSRelayServer(this.port))
+        break
+      }
+      case ServerType.DidWebHost: {
+        const db = DidWebDb.memory()
+        this.inst = DidWebServer.create(db, this.port)
+        if (this.inst._httpServer) {
+          await onServerReady(this.inst._httpServer)
+        } else {
+          throw new Error(
+            `did:web server at port ${this.port} failed to start a server`,
+          )
+        }
+        break
+      }
+      case ServerType.KeyManager: {
+        const db = KeyManagerDb.memory()
+        this.inst = await onServerReady(KeyManagerServer(db, this.port))
+        break
+      }
+      case ServerType.AuthLobby: {
+        this.inst = await onServerReady(AuthLobbyServer(this.port))
+        break
+      }
+      case ServerType.ExampleApp: {
+        this.inst = await onServerReady(ExampleApp(this.port))
+        break
+      }
+      default:
+        throw new Error(`Unsupported server type: ${this.type}`)
     }
   }
 
-  const wsrPort = getPort('WEB_SOCKET_RELAY')
-  if (wsrPort) {
-    WSRelayServer(wsrPort)
-    console.log(`🔁 Relay server running on http://localhost:${wsrPort}`)
-  }
-
-  const didPort = getPort('DID_WEB_HOST')
-  if (didPort) {
-    const db = DidWebDb.memory()
-    await DidWebServer.create(db, didPort)
-    console.log(`📰 did:web server is running at http://localhost:${didPort}`)
-  }
-
-  const kmPort = getPort('KEY_MANAGER')
-  if (kmPort) {
-    const db = KeyManagerDb.memory()
-    KeyManagerServer(db, kmPort)
-  }
-
-  const authPorts = getPorts('AUTH_LOBBYS')
-  if (authPorts) {
-    for (const port of authPorts) {
-      init(AuthLobbyServer, port, '🧘 Auth lobby')
+  async close() {
+    const closeServer = (s: http.Server): Promise<void> => {
+      return new Promise((resolve) => {
+        console.log(`Closing ${this.description}`)
+        s.close(() => resolve())
+      })
     }
-  }
 
-  const appPorts = getPorts('EXAMPLE_APPS')
-  if (appPorts) {
-    for (const port of appPorts) {
-      init(ExampleApp, port, '💻 Example app')
+    if (this.inst instanceof DidWebServer) {
+      if (this.inst._httpServer) {
+        await closeServer(this.inst._httpServer)
+      }
+    } else if (this.inst) {
+      await closeServer(this.inst)
     }
   }
 }
-start()
 
-function init(fn: any, port: number, name: string) {
-  const s = fn(port)
-  s.on('listening', () => console.log(`${name} running on port ${port}`))
-  s.on('error', (e: Error) => console.log(`${name} failed to start:`, e))
+export class DevEnv {
+  servers: Map<number, DevEnvServer> = new Map()
+
+  static async create(params: StartParams): Promise<DevEnv> {
+    const devEnv = new DevEnv()
+    for (const cfg of params.servers || []) {
+      await devEnv.add(cfg)
+    }
+    return devEnv
+  }
+
+  async add(cfg: ServerConfig) {
+    if (this.servers.has(cfg.port)) {
+      throw new Error(`Port ${cfg.port} is in use`)
+    }
+    const server = new DevEnvServer(cfg.type, cfg.port)
+    await server.start()
+    this.servers.set(cfg.port, server)
+  }
+
+  async remove(server: number | DevEnvServer) {
+    const port = typeof server === 'number' ? server : server.port
+    const inst = this.servers.get(port)
+    if (inst) {
+      await inst.close()
+      this.servers.delete(port)
+    }
+  }
+
+  async shutdown() {
+    for (const server of this.servers.values()) {
+      await server.close()
+    }
+  }
 }

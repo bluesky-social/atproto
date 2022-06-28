@@ -5,7 +5,7 @@
     "outDir": "dist",
     "typeRoots": [ "./types", "../node_modules/@types"],
     "lib": ["es2020"],
-    "module": "es2020",
+    "module": "es2022",
     "moduleResolution": "node",
     "target": "es2020",
     "declaration": true,
