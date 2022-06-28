@@ -408,6 +408,36 @@ export class Database {
       followCount,
     }
   }
-}
 
+  // AIC
+  // -----------
+
+  async tick_for_did(
+    did: string,
+  ): Promise<{ did: string; tid: string; tick: string } | undefined> {
+    return await this.db
+      .select('did', 'tid', 'tick')
+      .from('aic_ticks')
+      .where({ did })
+      .orderBy('tid', 'desc')
+      .first()
+  }
+
+  async put_tick_for_did(
+    did: string,
+    tid: string, // the tid for the tick being inserted
+    prev_tid: string | null, // the did for the tick being superseded
+    tick: string, // the new tick
+  ) {
+    // This is just a db wraper conferm that the tick is valid before calling
+    // whereJsonPath('diff', '$.prev', '=', )
+    if (prev_tid === null) {
+      await this.db('aic_ticks').insert({ did, tid, tick })
+    } else {
+      await this.db('aic_ticks')
+        .insert({ did, tid, tick })
+        .whereExists(this.db.select(1).from('aic_ticks').where(tid, prev_tid))
+    }
+  }
+}
 export default Database

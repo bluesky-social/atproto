@@ -1,16 +1,19 @@
 import { Request, Response } from 'express'
 import { check } from '@adxp/common'
 
-export const handler = (err: Error, _req: Request, res: Response) => {
-  let status
-  if (ServerError.is(err)) {
-    status = err.status
-    console.log('Info: ', err.message)
-  } else {
-    status = 500
-    console.log('Error: ', err.message)
-  }
-  res.status(status).send(err.message)
+export const handler = (_req: Request, res: Response, next: () => void) => {
+  console.log(typeof _req, typeof res, typeof next)
+  console.log(_req)
+  // const status = 500
+  // if (ServerError.is(err)) {
+  //   status = err.status
+  //   console.log('Info: ', err.message)
+  // } else {
+  //   status = 500
+  //   console.log('Error: ', err.message)
+  // }
+  res.sendStatus(500)
+  next()
 }
 
 export class ServerError extends Error {

@@ -8,6 +8,16 @@ type Schema = {
   create: (db: Knex.CreateTableBuilder) => void
 }
 
+const aic_diffs = {
+  name: 'aic_ticks',
+  create: (table: Table) => {
+    table.string('did') // did the tick is for /did:aic:[2-7a-z]{16}/
+    table.string('tid') // consensus tid if the tick /[2-7a-z]{4}-[2-7a-z]{3}-[2-7a-z]{4}-[2-7a-z]{2}/
+    table.text('tick') // the tick signed by the consortium
+    table.primary(['did', 'tid'])
+  },
+}
+
 const didNetwork = {
   name: 'did_network',
   create: (table: Table) => {
@@ -97,6 +107,7 @@ const follows = {
 }
 
 const SCHEMAS: Schema[] = [
+  aic_diffs,
   didNetwork,
   userRoots,
   userDids,
