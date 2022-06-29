@@ -11,6 +11,7 @@
     "lint": "eslint --ext .ts ."
   },
   "dependencies": {
+    "@adxp/auth": "*",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
     "ava": "^4.2.0",
@@ -18,7 +19,7 @@
     "ipld-hashmap": "^2.1.10",
     "level": "^7.0.1",
     "multiformats": "^9.6.4",
-    "ucans": "0.9.0-alpha3",
+    "ucans": "^0.9.1",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {

@@ -2,17 +2,50 @@ import * as ucan from 'ucans'
 import * as capability from './capability.js'
 import * as builders from './builders.js'
 import { MONTH_IN_SEC } from './consts.js'
+import { Signer } from './types.js'
 
-export abstract class AuthStore {
-  protected abstract getKeypair(): Promise<ucan.EdKeypair>
-  abstract addUcan(token: ucan.Chained): Promise<void>
-  abstract getUcanStore(): Promise<ucan.Store>
-  abstract clear(): Promise<void>
-  abstract reset(): Promise<void>
+export class AuthStore implements Signer {
+  protected keypair: ucan.Keypair & ucan.Didable
+  protected ucanStore: ucan.Store
+
+  constructor(keypair: ucan.Keypair & ucan.Didable, ucanStore: ucan.Store) {
+    this.keypair = keypair
+    this.ucanStore = ucanStore
+  }
+
+  // Update these for sub classes
+  // ----------------
+
+  protected async getKeypair(): Promise<ucan.Keypair & ucan.Didable> {
+    return this.keypair
+  }
+
+  async addUcan(token: ucan.Chained): Promise<void> {
+    this.ucanStore.add(token)
+  }
+
+  async getUcanStore(): Promise<ucan.Store> {
+    return this.ucanStore
+  }
+
+  async clear(): Promise<void> {
+    // noop
+  }
+
+  async reset(): Promise<void> {
+    // noop
+  }
+
+  // ----------------
 
   async getDid(): Promise<string> {
     const keypair = await this.getKeypair()
     return keypair.did()
+  }
+
+  async sign(data: Uint8Array): Promise<Uint8Array> {
+    const keypair = await this.getKeypair()
+    return keypair.sign(data)
   }
 
   async findUcan(cap: ucan.Capability): Promise<ucan.Chained | null> {

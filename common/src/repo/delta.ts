@@ -1,9 +1,9 @@
 import { CID } from 'multiformats'
-import { AdxCapability } from '../auth/adx-capability.js'
 import { Collection, TIDEntry, DIDEntry, IdMapping } from '../repo/types.js'
 import CidSet from './cid-set.js'
 import TID from './tid.js'
-import * as auth from '../auth/index.js'
+import * as auth from '@adxp/auth'
+import * as ucan from 'ucans'
 
 // AUTHORIZATION HELPERS
 // ----------------------
@@ -11,12 +11,17 @@ import * as auth from '../auth/index.js'
 export const capabilityForEvent = (
   did: string,
   event: Event,
-): AdxCapability => {
+): ucan.Capability => {
   if (isRelationshipEvent(event)) {
     return auth.writeCap(did, 'relationships')
   }
   if (isObjectEvent(event)) {
-    return auth.writeCap(did, event.namespace, event.collection, event.tid)
+    return auth.writeCap(
+      did,
+      event.namespace,
+      event.collection,
+      event.tid.toString(),
+    )
   }
   if (isNamespaceEvent(event)) {
     return auth.writeCap(did, event.namespace)

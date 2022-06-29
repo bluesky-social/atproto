@@ -11,8 +11,6 @@ export * from './microblog/reader.js'
 export * as check from './common/check.js'
 export * as util from './common/util.js'
 export * as service from './network/service.js'
-export * as ucanCheck from './auth/ucan-checks.js'
-export * as auth from './auth/index.js'
 export * as delta from './repo/delta.js'
 
 import { schema as microblogSchema } from './microblog/types.js'

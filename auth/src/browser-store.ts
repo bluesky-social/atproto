@@ -3,15 +3,6 @@ import AuthStore from './auth-store.js'
 import * as builders from './builders.js'
 
 export class BrowserStore extends AuthStore {
-  private keypair: ucan.EdKeypair
-  private ucanStore: ucan.Store
-
-  constructor(keypair: ucan.EdKeypair, ucanStore: ucan.Store) {
-    super()
-    this.keypair = keypair
-    this.ucanStore = ucanStore
-  }
-
   static async load(): Promise<BrowserStore> {
     const keypair = await BrowserStore.loadOrCreateKeypair()
 
@@ -57,10 +48,6 @@ export class BrowserStore extends AuthStore {
 
   static setStoredUcanStrs(ucans: string[]): void {
     localStorage.setItem('adxUcans', ucans.join(','))
-  }
-
-  protected async getKeypair(): Promise<ucan.EdKeypair> {
-    return this.keypair
   }
 
   async addUcan(token: ucan.Chained): Promise<void> {

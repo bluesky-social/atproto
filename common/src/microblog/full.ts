@@ -43,11 +43,11 @@ export class MicroblogFull extends MicroblogReader implements MicroblogClient {
     const host = cleanHostUrl(this.url)
     const username = `${name}@${host}`
 
-    if (!this.repo.keypair) {
+    if (!this.repo.authStore) {
       throw new Error('No keypair provided. Repo is read-only.')
     }
     // register on did network
-    await service.registerToDidNetwork(username, this.repo.keypair)
+    await service.registerToDidNetwork(username, this.repo.authStore)
     await this.push()
   }
 
