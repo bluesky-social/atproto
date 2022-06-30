@@ -23,15 +23,15 @@ export const loadFull = async (
   cfg: config.Config,
   repoPath: string,
 ): Promise<MicroblogFull> => {
-  const { account, keypair, ucanStore, root } = cfg
+  const { account, authStore, root } = cfg
   const blockstore = IpldStore.createPersistent(
     path.join(repoPath, 'blockstore'),
   )
   let repo: Repo
   if (!root) {
-    repo = await Repo.create(blockstore, keypair.did(), keypair, ucanStore)
+    repo = await Repo.create(blockstore, await authStore.getDid(), authStore)
   } else {
-    repo = await Repo.load(blockstore, root, keypair, ucanStore)
+    repo = await Repo.load(blockstore, root, authStore)
   }
   return new MicroblogFull(repo, `http://${account.server}`, {
     onPush: async (newRoot) => {
@@ -43,11 +43,10 @@ export const loadFull = async (
 export const loadDelegate = async (
   cfg: config.Config,
 ): Promise<MicroblogDelegator> => {
-  const { account, keypair, ucanStore } = cfg
+  const { account, authStore } = cfg
   return new MicroblogDelegator(
     `http://${account.server}`,
-    keypair.did(),
-    keypair,
-    ucanStore,
+    await authStore.getDid(),
+    authStore,
   )
 }

@@ -118,10 +118,11 @@ export class AuthStore implements Signer {
 
   // Claim a fully permissioned Ucan & add to store
   // Mainly for dev purposes
-  async claimFull(): Promise<void> {
+  async claimFull(): Promise<ucan.Chained> {
     const keypair = await this.getKeypair()
     const token = await builders.claimFull(await keypair.did(), keypair)
     await this.addUcan(token)
+    return token
   }
 }
 
