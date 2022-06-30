@@ -2,7 +2,7 @@ import test from 'ava'
 
 import * as ucan from 'ucans'
 
-import * as auth from '../src/auth/index.js'
+import * as auth from '@adxp/auth'
 import Repo from '../src/repo/index.js'
 import IpldStore from '../src/blockstore/ipld-store.js'
 
@@ -20,14 +20,9 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipldAlice = IpldStore.createInMemory()
   const keypairAlice = await ucan.EdKeypair.create()
-  const token = await auth.claimFull(keypairAlice.did(), keypairAlice)
-  const ucanStore = await ucan.Store.fromTokens([token.encoded()])
-  const repoAlice = await Repo.create(
-    ipldAlice,
-    keypairAlice.did(),
-    keypairAlice,
-    ucanStore,
-  )
+  const authStore = await auth.AuthStore.fromTokens(keypairAlice, [])
+  await authStore.claimFull()
+  const repoAlice = await Repo.create(ipldAlice, keypairAlice.did(), authStore)
 
   const ipldBob = IpldStore.createInMemory()
 

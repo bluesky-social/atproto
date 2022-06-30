@@ -2,21 +2,26 @@ import * as ucan from 'ucans'
 import * as capability from './capability.js'
 import * as builders from './builders.js'
 import { MONTH_IN_SEC } from './consts.js'
-import { Signer } from './types.js'
+import { Keypair, Signer } from './types.js'
 
 export class AuthStore implements Signer {
-  protected keypair: ucan.Keypair & ucan.Didable
+  protected keypair: Keypair
   protected ucanStore: ucan.Store
 
-  constructor(keypair: ucan.Keypair & ucan.Didable, ucanStore: ucan.Store) {
+  constructor(keypair: Keypair, ucanStore: ucan.Store) {
     this.keypair = keypair
     this.ucanStore = ucanStore
+  }
+
+  static async fromTokens(keypair: Keypair, tokens: string[]) {
+    const ucanStore = await ucan.Store.fromTokens(tokens)
+    return new AuthStore(keypair, ucanStore)
   }
 
   // Update these for sub classes
   // ----------------
 
-  protected async getKeypair(): Promise<ucan.Keypair & ucan.Didable> {
+  protected async getKeypair(): Promise<Keypair> {
     return this.keypair
   }
 

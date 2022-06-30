@@ -22,6 +22,7 @@ import CidSet from './cid-set.js'
 import * as auth from '@adxp/auth'
 import * as service from '../network/service.js'
 import * as delta from './delta.js'
+import { AuthStore } from '@adxp/auth'
 
 export class Repo implements CarStreamable {
   blockstore: IpldStore
@@ -55,10 +56,8 @@ export class Repo implements CarStreamable {
   static async create(
     blockstore: IpldStore,
     did: string,
-    keypair: Keypair,
-    ucanStore: ucan.Store,
+    authStore: auth.AuthStore,
   ) {
-    const authStore = new auth.AuthStore(keypair, ucanStore)
     const foundUcan = await authStore.findUcan(auth.maintenanceCap(did))
     if (foundUcan === null) {
       throw new Error(`No valid Ucan for creating repo`)
@@ -78,7 +77,7 @@ export class Repo implements CarStreamable {
     const rootCid = await blockstore.put(rootObj)
     const commit: Commit = {
       root: rootCid,
-      sig: await keypair.sign(rootCid.bytes),
+      sig: await authStore.sign(rootCid.bytes),
     }
 
     const cid = await blockstore.put(commit)
@@ -94,30 +93,20 @@ export class Repo implements CarStreamable {
     })
   }
 
-  static async load(
-    blockstore: IpldStore,
-    cid: CID,
-    keypair?: Keypair,
-    ucanStore?: ucan.Store,
-  ) {
+  static async load(blockstore: IpldStore, cid: CID, authStore?: AuthStore) {
     const commit = await blockstore.get(cid, schema.commit)
     const root = await blockstore.get(commit.root, schema.repoRoot)
     const relationships = await Relationships.load(
       blockstore,
       root.relationships,
     )
-    let authStore = null
-    if (keypair) {
-      ucanStore = ucanStore ?? (await ucan.Store.fromTokens([]))
-      authStore = new auth.AuthStore(keypair, ucanStore)
-    }
     return new Repo({
       blockstore,
       namespaceCids: root.namespaces,
       relationships,
       cid,
       did: root.did,
-      authStore,
+      authStore: authStore || null,
     })
   }
 
@@ -125,8 +114,7 @@ export class Repo implements CarStreamable {
     buf: Uint8Array,
     store: IpldStore,
     emit?: (evt: delta.Event) => Promise<void>,
-    keypair?: Keypair,
-    ucanStore?: ucan.Store,
+    authStore?: auth.AuthStore,
   ) {
     const car = await CarReader.fromBytes(buf)
 
@@ -140,7 +128,7 @@ export class Repo implements CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    const repo = await Repo.load(store, root, keypair, ucanStore)
+    const repo = await Repo.load(store, root, authStore)
     await repo.verifySetOfUpdates(null, repo.cid, emit)
     return repo
   }
