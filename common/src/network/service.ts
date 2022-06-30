@@ -15,7 +15,7 @@ export const registerToDidNetwork = async (
   const dataBytes = uint8arrays.fromString(username, 'utf8')
   const sigBytes = await signer.sign(dataBytes)
   const signature = uint8arrays.toString(sigBytes, 'base64url')
-  const did = signer.getDid()
+  const did = await signer.getDid()
   const data = { did, username, signature }
   try {
     await axios.post(url, data)

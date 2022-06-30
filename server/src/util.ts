@@ -4,6 +4,7 @@ import { SERVER_KEYPAIR } from './server-identity.js'
 import { ServerError } from './error.js'
 import * as ucan from 'ucans'
 import { IpldStore, Repo, check } from '@adxp/common'
+import * as auth from '@adxp/auth'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -65,7 +66,11 @@ export const maybeLoadRepo = async (
   if (!currRoot) {
     return null
   }
-  return Repo.load(blockstore, currRoot, SERVER_KEYPAIR, ucanStore)
+  let authStore
+  if (ucanStore) {
+    authStore = new auth.AuthStore(SERVER_KEYPAIR, ucanStore)
+  }
+  return Repo.load(blockstore, currRoot, authStore)
 }
 
 export const loadRepo = async (

@@ -1,10 +1,11 @@
 import { Request } from 'express'
 import * as ucan from 'ucans'
-import { auth } from '@adxp/common'
+import * as auth from '@adxp/auth'
 import { ServerError } from './error.js'
 
 type Check = (ucan: ucan.Chained) => Error | null
 
+// @TODO should this return auth store instead?
 export const checkReq = async (
   req: Request,
   ...checks: Check[]

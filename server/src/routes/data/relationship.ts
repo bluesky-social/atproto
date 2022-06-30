@@ -1,7 +1,8 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { service, ucanCheck } from '@adxp/common'
+import { service } from '@adxp/common'
+import * as authLib from '@adxp/auth'
 import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import * as subscriptions from '../../subscriptions.js'
@@ -22,8 +23,8 @@ router.post('/', async (req, res) => {
   const { creator, target } = util.checkReqBody(req.body, createRelReq)
   const ucanStore = await auth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasRelationshipsPermission(creator),
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasRelationshipsPermission(creator),
   )
   const db = util.getDB(res)
   const username = await service.getUsernameFromDidNetwork(target)
@@ -61,8 +62,8 @@ router.delete('/', async (req, res) => {
   const { creator, target } = util.checkReqBody(req.body, deleteRelReq)
   const ucanStore = await auth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasRelationshipsPermission(creator),
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasRelationshipsPermission(creator),
   )
   const db = util.getDB(res)
   const repo = await util.loadRepo(res, creator, ucanStore)

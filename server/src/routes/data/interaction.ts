@@ -4,7 +4,8 @@ import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import * as subscriptions from '../../subscriptions.js'
 import { ServerError } from '../../error.js'
-import { schema, check, ucanCheck, flattenLike } from '@adxp/common'
+import * as authLib from '@adxp/auth'
+import { schema, check, flattenLike } from '@adxp/common'
 import { SERVER_DID } from '../../server-identity.js'
 
 const router = express.Router()
@@ -96,12 +97,12 @@ router.post('/', async (req, res) => {
   const like = util.checkReqBody(req.body, createInteractionReq)
   const ucanStore = await auth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasPostingPermission(
       like.author,
       like.namespace,
       'interactions',
-      like.tid,
+      like.tid.toString(),
     ),
   )
   const repo = await util.loadRepo(res, like.author, ucanStore)
@@ -140,8 +141,13 @@ router.delete('/', async (req, res) => {
   )
   const ucanStore = await auth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(did, namespace, 'interactions', tid),
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasPostingPermission(
+      did,
+      namespace,
+      'interactions',
+      tid.toString(),
+    ),
   )
   const repo = await util.loadRepo(res, did, ucanStore)
 

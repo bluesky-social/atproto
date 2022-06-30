@@ -3,7 +3,8 @@ import { z } from 'zod'
 import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import { ServerError } from '../../error.js'
-import { flattenPost, schema, TID, ucanCheck } from '@adxp/common'
+import { flattenPost, schema, TID } from '@adxp/common'
+import * as authLib from '@adxp/auth'
 import { SERVER_DID } from '../../server-identity.js'
 import * as subscriptions from '../../subscriptions.js'
 
@@ -70,12 +71,12 @@ router.post('/', async (req, res) => {
   const post = util.checkReqBody(req.body, createPostReq)
   const ucanStore = await auth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasPostingPermission(
       post.author,
       post.namespace,
       'posts',
-      post.tid,
+      post.tid.toString(),
     ),
   )
   const repo = await util.loadRepo(res, post.author, ucanStore)
@@ -100,12 +101,12 @@ router.put('/', async (req, res) => {
   const post = util.checkReqBody(req.body, editPostReq)
   const ucanStore = await auth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasPostingPermission(
       post.author,
       post.namespace,
       'posts',
-      post.tid,
+      post.tid.toString(),
     ),
   )
   const repo = await util.loadRepo(res, post.author, ucanStore)
@@ -134,8 +135,8 @@ router.delete('/', async (req, res) => {
   const { did, namespace, tid } = util.checkReqBody(req.body, deletePostReq)
   const ucanStore = await auth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(did, namespace, 'posts', tid),
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasPostingPermission(did, namespace, 'posts', tid.toString()),
   )
   const repo = await util.loadRepo(res, did, ucanStore)
   await repo.runOnNamespace(namespace, async (store) => {
