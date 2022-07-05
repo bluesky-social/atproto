@@ -12,7 +12,7 @@ import {
   schema,
   UpdateData,
 } from './types.js'
-import { DID, Keypair } from '../common/types.js'
+import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore, { AllowedIpldVal } from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
@@ -52,7 +52,6 @@ export class Repo implements CarStreamable {
     this.relationships.onUpdate = this.updateRoot
   }
 
-  // @TODO ssiwtch out ucanStore for AuthStore
   static async create(
     blockstore: IpldStore,
     did: string,
