@@ -1,7 +1,7 @@
 import path from 'path'
 import { promises as fsp } from 'fs'
 import * as ucan from 'ucans'
-import { auth } from '@adxp/common'
+import * as auth from '@adxp/auth'
 import { CID } from 'multiformats/cid'
 
 export type AccountJson = {
@@ -11,9 +11,8 @@ export type AccountJson = {
 }
 
 export type Config = {
-  keypair: ucan.EdKeypair
   account: AccountJson
-  ucanStore: ucan.Store
+  authStore: auth.AuthStore
   root: CID | null
 }
 
@@ -70,12 +69,11 @@ export const loadCfg = async (repoPath: string): Promise<Config> => {
   const secretKeyStr = (await readFile(repoPath, 'adx.key', 'utf-8')) as string
   const keypair = ucan.EdKeypair.fromSecretKey(secretKeyStr)
   const tokenStr = (await readFile(repoPath, 'full.ucan', 'utf-8')) as string
-  const ucanStore = await ucan.Store.fromTokens([tokenStr])
+  const authStore = await auth.AuthStore.fromTokens(keypair, [tokenStr])
   const root = await readRoot(repoPath)
   return {
     account,
-    keypair,
-    ucanStore,
+    authStore,
     root,
   }
 }

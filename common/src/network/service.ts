@@ -5,17 +5,17 @@ import * as check from '../common/check.js'
 import { schema as repoSchema } from '../repo/types.js'
 import * as ucan from 'ucans'
 import * as uint8arrays from 'uint8arrays'
-import { Keypair } from '../common/types.js'
+import * as auth from '@adxp/auth'
 
 export const registerToDidNetwork = async (
   username: string,
-  keypair: Keypair,
+  signer: auth.AuthStore,
 ): Promise<void> => {
   const url = didNetworkUrl()
   const dataBytes = uint8arrays.fromString(username, 'utf8')
-  const sigBytes = await keypair.sign(dataBytes)
+  const sigBytes = await signer.sign(dataBytes)
   const signature = uint8arrays.toString(sigBytes, 'base64url')
-  const did = keypair.did()
+  const did = await signer.getDid()
   const data = { did, username, signature }
   try {
     await axios.post(url, data)

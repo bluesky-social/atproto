@@ -1,9 +1,8 @@
 import { Request, Response } from 'express'
 import { Database } from './db/index.js'
-import { SERVER_KEYPAIR } from './server-identity.js'
 import { ServerError } from './error.js'
-import * as ucan from 'ucans'
 import { IpldStore, Repo, check } from '@adxp/common'
+import * as auth from '@adxp/auth'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -58,22 +57,22 @@ export const getLocals = (res: Response): Locals => {
 export const maybeLoadRepo = async (
   res: Response,
   did: string,
-  ucanStore?: ucan.Store,
+  authStore?: auth.AuthStore,
 ): Promise<Repo | null> => {
   const { db, blockstore } = getLocals(res)
   const currRoot = await db.getRepoRoot(did)
   if (!currRoot) {
     return null
   }
-  return Repo.load(blockstore, currRoot, SERVER_KEYPAIR, ucanStore)
+  return Repo.load(blockstore, currRoot, authStore)
 }
 
 export const loadRepo = async (
   res: Response,
   did: string,
-  ucanStore?: ucan.Store,
+  authStore?: auth.AuthStore,
 ): Promise<Repo> => {
-  const maybeRepo = await maybeLoadRepo(res, did, ucanStore)
+  const maybeRepo = await maybeLoadRepo(res, did, authStore)
   if (!maybeRepo) {
     throw new ServerError(404, `User has not registered a repo root: ${did}`)
   }

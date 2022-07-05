@@ -12,49 +12,42 @@ import {
   schema,
   UpdateData,
 } from './types.js'
-import { DID, Keypair } from '../common/types.js'
+import { DID } from '../common/types.js'
 import * as check from '../common/check.js'
 import IpldStore, { AllowedIpldVal } from '../blockstore/ipld-store.js'
 import { streamToArray } from '../common/util.js'
 import Namespace from './namespace.js'
 import Relationships from './relationships.js'
 import CidSet from './cid-set.js'
-import {
-  adxSemantics,
-  maintenanceCap,
-  writeCap,
-} from '../auth/adx-capability.js'
-import * as auth from '../auth/index.js'
+import * as auth from '@adxp/auth'
 import * as service from '../network/service.js'
 import * as delta from './delta.js'
+import { AuthStore } from '@adxp/auth'
 
 export class Repo implements CarStreamable {
   blockstore: IpldStore
-  ucanStore: ucan.Store
   namespaceCids: IdMapping
   namespaces: { [name: string]: Namespace }
   relationships: Relationships
   cid: CID
   did: DID
-  keypair: Keypair | null
+  authStore: auth.AuthStore | null
 
   constructor(params: {
     blockstore: IpldStore
-    ucanStore: ucan.Store
     namespaceCids: IdMapping
     relationships: Relationships
     cid: CID
     did: DID
-    keypair?: Keypair
+    authStore: auth.AuthStore | null
   }) {
     this.blockstore = params.blockstore
-    this.ucanStore = params.ucanStore
     this.namespaceCids = params.namespaceCids
     this.namespaces = {}
     this.relationships = params.relationships
     this.cid = params.cid
     this.did = params.did
-    this.keypair = params.keypair || null
+    this.authStore = params.authStore
 
     this.relationships.onUpdate = this.updateRoot
   }
@@ -62,19 +55,13 @@ export class Repo implements CarStreamable {
   static async create(
     blockstore: IpldStore,
     did: string,
-    keypair: Keypair,
-    ucanStore: ucan.Store,
+    authStore: auth.AuthStore,
   ) {
-    const foundUcan = await ucanStore.findWithCapability(
-      keypair.did(),
-      adxSemantics,
-      maintenanceCap(did),
-      () => true,
-    )
-    if (!foundUcan.success) {
-      throw new Error(`No valid Ucan for creating repo: ${foundUcan.reason}`)
+    const foundUcan = await authStore.findUcan(auth.maintenanceCap(did))
+    if (foundUcan === null) {
+      throw new Error(`No valid Ucan for creating repo`)
     }
-    const tokenCid = await blockstore.put(foundUcan.ucan.encoded())
+    const tokenCid = await blockstore.put(foundUcan.encoded())
     const relationships = await Relationships.create(blockstore)
     const newCids = [...(await relationships.cids()), tokenCid]
     const rootObj: RepoRoot = {
@@ -89,7 +76,7 @@ export class Repo implements CarStreamable {
     const rootCid = await blockstore.put(rootObj)
     const commit: Commit = {
       root: rootCid,
-      sig: await keypair.sign(rootCid.bytes),
+      sig: await authStore.sign(rootCid.bytes),
     }
 
     const cid = await blockstore.put(commit)
@@ -97,21 +84,15 @@ export class Repo implements CarStreamable {
 
     return new Repo({
       blockstore,
-      ucanStore,
       namespaceCids,
       relationships,
       cid,
       did,
-      keypair,
+      authStore,
     })
   }
 
-  static async load(
-    blockstore: IpldStore,
-    cid: CID,
-    keypair?: Keypair,
-    ucanStore?: ucan.Store,
-  ) {
+  static async load(blockstore: IpldStore, cid: CID, authStore?: AuthStore) {
     const commit = await blockstore.get(cid, schema.commit)
     const root = await blockstore.get(commit.root, schema.repoRoot)
     const relationships = await Relationships.load(
@@ -120,12 +101,11 @@ export class Repo implements CarStreamable {
     )
     return new Repo({
       blockstore,
-      ucanStore: ucanStore || (await ucan.Store.fromTokens([])),
       namespaceCids: root.namespaces,
       relationships,
       cid,
       did: root.did,
-      keypair,
+      authStore: authStore || null,
     })
   }
 
@@ -133,8 +113,7 @@ export class Repo implements CarStreamable {
     buf: Uint8Array,
     store: IpldStore,
     emit?: (evt: delta.Event) => Promise<void>,
-    keypair?: Keypair,
-    ucanStore?: ucan.Store,
+    authStore?: auth.AuthStore,
   ) {
     const car = await CarReader.fromBytes(buf)
 
@@ -148,7 +127,7 @@ export class Repo implements CarStreamable {
       await store.putBytes(block.cid, block.bytes)
     }
 
-    const repo = await Repo.load(store, root, keypair, ucanStore)
+    const repo = await Repo.load(store, root, authStore)
     await repo.verifySetOfUpdates(null, repo.cid, emit)
     return repo
   }
@@ -183,7 +162,7 @@ export class Repo implements CarStreamable {
     }
 
   updateRoot = async (update: UpdateData): Promise<void> => {
-    if (this.keypair === null) {
+    if (this.authStore === null) {
       throw new Error('No keypair provided. Repo is read-only.')
     }
     const newCids = update.newCids
@@ -200,7 +179,7 @@ export class Repo implements CarStreamable {
     const rootCid = await this.blockstore.put(root)
     const commit: Commit = {
       root: rootCid,
-      sig: await this.keypair.sign(rootCid.bytes),
+      sig: await this.authStore.sign(rootCid.bytes),
     }
     this.cid = await this.blockstore.put(commit)
   }
@@ -276,34 +255,29 @@ export class Repo implements CarStreamable {
   // -----------
 
   async ucanForOperation(update: UpdateData): Promise<CID> {
-    if (!this.keypair || !this.ucanStore) {
+    if (!this.authStore) {
       throw new Error('No keypair provided. Repo is read-only.')
     }
-    const neededCap = writeCap(
+    const neededCap = auth.writeCap(
       this.did,
       update.namespace,
       update.collection,
-      update.tid,
+      update.tid?.toString(),
     )
-    const foundUcan = this.ucanStore.findWithCapability(
-      this.keypair.did(),
-      adxSemantics,
-      neededCap,
-      () => true,
-    )
-    if (!foundUcan.success) {
+    const foundUcan = await this.authStore.findUcan(neededCap)
+    if (foundUcan === null) {
       throw new Error(
-        `Could not find a valid ucan for operation: ${neededCap.adx}`,
+        `Could not find a valid ucan for operation: ${neededCap.can.toString()}`,
       )
     }
-    return this.blockstore.put(foundUcan.ucan.encoded())
+    return this.blockstore.put(foundUcan.encoded())
   }
 
   async maintenanceToken(forDid: string): Promise<ucan.Chained> {
-    if (!this.keypair || !this.ucanStore) {
+    if (!this.authStore) {
       throw new Error('No keypair provided. Repo is read-only.')
     }
-    return auth.delegateMaintenance(forDid, this.keypair, this.ucanStore)
+    return this.authStore.createUcan(forDid, auth.maintenanceCap(this.did))
   }
 
   // PUSH/PULL TO REMOTE

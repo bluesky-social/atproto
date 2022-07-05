@@ -1,10 +1,11 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { Repo, ucanCheck } from '@adxp/common'
+import { Repo } from '@adxp/common'
+import * as authLib from '@adxp/auth'
 
 import * as auth from '../auth.js'
-import { SERVER_DID, SERVER_KEYPAIR } from '../server-identity.js'
+import { SERVER_DID } from '../server-identity.js'
 import * as util from '../util.js'
 import { ServerError } from '../error.js'
 
@@ -27,23 +28,23 @@ router.post('/register', async (req, res) => {
   }
 
   const { db, blockstore } = util.getLocals(res)
-  const ucanStore = await auth.checkReq(
-    req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasMaintenancePermission(did),
-  )
   const host = util.getOwnHost(req)
-
   if (await db.isNameRegistered(username, host)) {
     throw new ServerError(409, 'Username already taken')
   } else if (await db.isDidRegistered(did)) {
     throw new ServerError(409, 'Did already registered')
   }
 
+  const authStore = await auth.checkReq(
+    req,
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasMaintenancePermission(did),
+  )
+
   await db.registerDid(username, did, host)
   // create empty repo
   if (createRepo) {
-    const repo = await Repo.create(blockstore, did, SERVER_KEYPAIR, ucanStore)
+    const repo = await Repo.create(blockstore, did, authStore)
     await db.createRepoRoot(did, repo.cid)
   }
 

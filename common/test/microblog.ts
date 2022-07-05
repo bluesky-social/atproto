@@ -1,7 +1,7 @@
 import test from 'ava'
 
 import * as ucan from 'ucans'
-import * as auth from '../src/auth/index.js'
+import * as auth from '@adxp/auth'
 
 import { MicroblogFull } from '../src/microblog/index.js'
 import Repo from '../src/repo/index.js'
@@ -17,9 +17,9 @@ type Context = {
 test.beforeEach(async (t) => {
   const ipld = IpldStore.createInMemory()
   const keypair = await ucan.EdKeypair.create()
-  const token = await auth.claimFull(keypair.did(), keypair)
-  const ucanStore = await ucan.Store.fromTokens([token.encoded()])
-  const repo = await Repo.create(ipld, keypair.did(), keypair, ucanStore)
+  const authStore = await auth.AuthStore.fromTokens(keypair, [])
+  await authStore.claimFull()
+  const repo = await Repo.create(ipld, keypair.did(), authStore)
   const microblog = new MicroblogFull(repo, '', { pushOnUpdate: false })
   t.context = { ipld, keypair, repo, microblog } as Context
   t.pass('Context setup')

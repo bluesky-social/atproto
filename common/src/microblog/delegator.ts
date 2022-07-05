@@ -13,8 +13,7 @@ import * as check from '../common/check.js'
 import { parseAxiosError, cleanHostUrl, authCfg } from '../network/util.js'
 import * as ucan from 'ucans'
 import { Collection } from '../repo/types.js'
-import { Keypair } from '../common/types.js'
-import * as auth from '../auth/index.js'
+import * as auth from '@adxp/auth'
 import * as service from '../network/service.js'
 import MicroblogReader from './reader.js'
 
@@ -22,24 +21,17 @@ export class MicroblogDelegator
   extends MicroblogReader
   implements MicroblogClient
 {
-  keypair: Keypair | null
-  ucanStore: ucan.Store | null
+  authStore: auth.AuthStore | null
   did: string
 
-  constructor(
-    url: string,
-    did: string,
-    keypair?: Keypair,
-    ucanStore?: ucan.Store,
-  ) {
+  constructor(url: string, did: string, authStore?: auth.AuthStore) {
     super(url, did)
     this.did = did
-    this.keypair = keypair || null
-    this.ucanStore = ucanStore || null
+    this.authStore = authStore || null
   }
 
   async register(name: string): Promise<void> {
-    if (!this.keypair) {
+    if (!this.authStore) {
       throw new Error('No keypair or ucan store provided. Client is read-only.')
     }
     // register on data server
@@ -50,7 +42,7 @@ export class MicroblogDelegator
     const username = `${name}@${host}`
 
     // register on did network
-    await service.registerToDidNetwork(username, this.keypair)
+    await service.registerToDidNetwork(username, this.authStore)
   }
 
   async addPost(text: string): Promise<Post> {
@@ -227,39 +219,33 @@ export class MicroblogDelegator
   // --------------
 
   async maintenanceToken(): Promise<ucan.Chained> {
-    if (this.keypair === null || this.ucanStore === null) {
+    if (!this.authStore) {
       throw new Error('No keypair or ucan store provided. Client is read-only.')
     }
     const serverDid = await this.getOwnServerDid()
-    return auth.delegateMaintenance(serverDid, this.keypair, this.ucanStore)
+    return this.authStore.createUcan(serverDid, auth.maintenanceCap(this.did))
   }
 
   async relationshipToken(): Promise<ucan.Chained> {
-    if (this.keypair === null || this.ucanStore === null) {
+    if (!this.authStore) {
       throw new Error('No keypair or ucan store provided. Client is read-only.')
     }
     const serverDid = await this.getOwnServerDid()
-    return auth.delegateForRelationship(
+    return this.authStore.createUcan(
       serverDid,
-      this.did,
-      this.keypair,
-      this.ucanStore,
+      auth.writeCap(this.did, 'relationships'),
     )
   }
 
+  // @TODO our use of "collection" & "namespace" has changed
   async postToken(collection: Collection, tid: TID): Promise<ucan.Chained> {
-    if (this.keypair === null || this.ucanStore === null) {
+    if (!this.authStore) {
       throw new Error('No keypair or ucan store provided. Client is read-only.')
     }
     const serverDid = await this.getOwnServerDid()
-    return auth.delegateForPost(
+    return this.authStore.createUcan(
       serverDid,
-      this.did,
-      this.namespace,
-      collection,
-      tid,
-      this.keypair,
-      this.ucanStore,
+      auth.writeCap(this.did, this.namespace, collection, tid.toString()),
     )
   }
 }

@@ -2,17 +2,55 @@ import * as ucan from 'ucans'
 import * as capability from './capability.js'
 import * as builders from './builders.js'
 import { MONTH_IN_SEC } from './consts.js'
+import { Keypair, Signer } from './types.js'
 
-export abstract class AuthStore {
-  protected abstract getKeypair(): Promise<ucan.EdKeypair>
-  abstract addUcan(token: ucan.Chained): Promise<void>
-  abstract getUcanStore(): Promise<ucan.Store>
-  abstract clear(): Promise<void>
-  abstract reset(): Promise<void>
+export class AuthStore implements Signer {
+  protected keypair: Keypair
+  protected ucanStore: ucan.Store
+
+  constructor(keypair: Keypair, ucanStore: ucan.Store) {
+    this.keypair = keypair
+    this.ucanStore = ucanStore
+  }
+
+  static async fromTokens(keypair: Keypair, tokens: string[]) {
+    const ucanStore = await ucan.Store.fromTokens(tokens)
+    return new AuthStore(keypair, ucanStore)
+  }
+
+  // Update these for sub classes
+  // ----------------
+
+  protected async getKeypair(): Promise<Keypair> {
+    return this.keypair
+  }
+
+  async addUcan(token: ucan.Chained): Promise<void> {
+    this.ucanStore.add(token)
+  }
+
+  async getUcanStore(): Promise<ucan.Store> {
+    return this.ucanStore
+  }
+
+  async clear(): Promise<void> {
+    // noop
+  }
+
+  async reset(): Promise<void> {
+    // noop
+  }
+
+  // ----------------
 
   async getDid(): Promise<string> {
     const keypair = await this.getKeypair()
     return keypair.did()
+  }
+
+  async sign(data: Uint8Array): Promise<Uint8Array> {
+    const keypair = await this.getKeypair()
+    return keypair.sign(data)
   }
 
   async findUcan(cap: ucan.Capability): Promise<ucan.Chained | null> {
@@ -80,10 +118,11 @@ export abstract class AuthStore {
 
   // Claim a fully permissioned Ucan & add to store
   // Mainly for dev purposes
-  async claimFull(): Promise<void> {
+  async claimFull(): Promise<ucan.Chained> {
     const keypair = await this.getKeypair()
     const token = await builders.claimFull(await keypair.did(), keypair)
     await this.addUcan(token)
+    return token
   }
 }
 

@@ -1,14 +1,15 @@
 import { Request } from 'express'
 import * as ucan from 'ucans'
-import { auth } from '@adxp/common'
+import * as auth from '@adxp/auth'
 import { ServerError } from './error.js'
+import { SERVER_KEYPAIR } from './server-identity.js'
 
 type Check = (ucan: ucan.Chained) => Error | null
 
 export const checkReq = async (
   req: Request,
   ...checks: Check[]
-): Promise<ucan.Store> => {
+): Promise<auth.AuthStore> => {
   const header = req.headers.authorization
   if (!header) {
     throw new ServerError(403, 'No UCAN found in message headers')
@@ -32,5 +33,5 @@ export const checkReq = async (
       `Attached UCAN does not allow the requested operation: ${err}`,
     )
   }
-  return ucan.Store.fromTokens([token.encoded()])
+  return auth.AuthStore.fromTokens(SERVER_KEYPAIR, [token.encoded()])
 }

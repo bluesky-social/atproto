@@ -7,6 +7,7 @@
     "build": "(cd ../common && yarn build) && tsc --project tsconfig.json"
   },
   "dependencies": {
+    "@adxp/auth": "*",
     "@adxp/common": "*",
     "chalk": "^5.0.0",
     "minimist": "^1.2.5",

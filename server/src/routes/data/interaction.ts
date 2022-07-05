@@ -4,7 +4,8 @@ import * as auth from '../../auth.js'
 import * as util from '../../util.js'
 import * as subscriptions from '../../subscriptions.js'
 import { ServerError } from '../../error.js'
-import { schema, check, ucanCheck, flattenLike } from '@adxp/common'
+import * as authLib from '@adxp/auth'
+import { schema, check, flattenLike } from '@adxp/common'
 import { SERVER_DID } from '../../server-identity.js'
 
 const router = express.Router()
@@ -94,17 +95,17 @@ export type CreateInteractionReq = z.infer<typeof createInteractionReq>
 
 router.post('/', async (req, res) => {
   const like = util.checkReqBody(req.body, createInteractionReq)
-  const ucanStore = await auth.checkReq(
+  const authStore = await auth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasPostingPermission(
       like.author,
       like.namespace,
       'interactions',
-      like.tid,
+      like.tid.toString(),
     ),
   )
-  const repo = await util.loadRepo(res, like.author, ucanStore)
+  const repo = await util.loadRepo(res, like.author, authStore)
   const likeCid = await repo.put(flattenLike(like))
   await repo.runOnNamespace(like.namespace, async (store) => {
     return store.interactions.addEntry(like.tid, likeCid)
@@ -138,12 +139,17 @@ router.delete('/', async (req, res) => {
     req.body,
     deleteInteractionReq,
   )
-  const ucanStore = await auth.checkReq(
+  const authStore = await auth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasPostingPermission(did, namespace, 'interactions', tid),
+    authLib.hasAudience(SERVER_DID),
+    authLib.hasPostingPermission(
+      did,
+      namespace,
+      'interactions',
+      tid.toString(),
+    ),
   )
-  const repo = await util.loadRepo(res, did, ucanStore)
+  const repo = await util.loadRepo(res, did, authStore)
 
   // delete the like, but first find the user it was for so we can notify their server
   const postAuthor = await repo.runOnNamespace(namespace, async (store) => {
