@@ -95,7 +95,7 @@ export type CreateInteractionReq = z.infer<typeof createInteractionReq>
 
 router.post('/', async (req, res) => {
   const like = util.checkReqBody(req.body, createInteractionReq)
-  const ucanStore = await auth.checkReq(
+  const authStore = await auth.checkReq(
     req,
     authLib.hasAudience(SERVER_DID),
     authLib.hasPostingPermission(
@@ -105,7 +105,7 @@ router.post('/', async (req, res) => {
       like.tid.toString(),
     ),
   )
-  const repo = await util.loadRepo(res, like.author, ucanStore)
+  const repo = await util.loadRepo(res, like.author, authStore)
   const likeCid = await repo.put(flattenLike(like))
   await repo.runOnNamespace(like.namespace, async (store) => {
     return store.interactions.addEntry(like.tid, likeCid)
@@ -139,7 +139,7 @@ router.delete('/', async (req, res) => {
     req.body,
     deleteInteractionReq,
   )
-  const ucanStore = await auth.checkReq(
+  const authStore = await auth.checkReq(
     req,
     authLib.hasAudience(SERVER_DID),
     authLib.hasPostingPermission(
@@ -149,7 +149,7 @@ router.delete('/', async (req, res) => {
       tid.toString(),
     ),
   )
-  const repo = await util.loadRepo(res, did, ucanStore)
+  const repo = await util.loadRepo(res, did, authStore)
 
   // delete the like, but first find the user it was for so we can notify their server
   const postAuthor = await repo.runOnNamespace(namespace, async (store) => {

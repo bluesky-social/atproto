@@ -5,7 +5,7 @@ import { Repo } from '@adxp/common'
 import * as authLib from '@adxp/auth'
 
 import * as auth from '../auth.js'
-import { SERVER_DID, SERVER_KEYPAIR } from '../server-identity.js'
+import { SERVER_DID } from '../server-identity.js'
 import * as util from '../util.js'
 import { ServerError } from '../error.js'
 
@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
     throw new ServerError(409, 'Did already registered')
   }
 
-  const ucanStore = await auth.checkReq(
+  const authStore = await auth.checkReq(
     req,
     authLib.hasAudience(SERVER_DID),
     authLib.hasMaintenancePermission(did),
@@ -44,7 +44,6 @@ router.post('/register', async (req, res) => {
   await db.registerDid(username, did, host)
   // create empty repo
   if (createRepo) {
-    const authStore = new authLib.AuthStore(SERVER_KEYPAIR, ucanStore)
     const repo = await Repo.create(blockstore, did, authStore)
     await db.createRepoRoot(did, repo.cid)
   }
