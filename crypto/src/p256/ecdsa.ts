@@ -1,7 +1,7 @@
 import { webcrypto } from 'one-webcrypto'
 import * as uint8arrays from 'uint8arrays'
-import * as ucan from 'ucans'
-import * as util from './util.js'
+import * as ucan from '@ucans/core'
+import * as encoding from './encoding'
 
 export type EcdsaKeypairOptions = {
   exportable: boolean
@@ -13,9 +13,9 @@ export type KeyExport = {
   privateKey: string
 }
 
-export class EcdsaKeypair implements ucan.Keypair, ucan.Didable {
-  keyType: ucan.KeyType
-  publicKey: Uint8Array
+export class EcdsaKeypair implements ucan.DidableKey {
+  jwtAlg = 'ES256'
+  private publicKey: Uint8Array
   private keypair: CryptoKeyPair
   private exportable: boolean
 
@@ -26,7 +26,6 @@ export class EcdsaKeypair implements ucan.Keypair, ucan.Didable {
   ) {
     this.keypair = keypair
     this.publicKey = publicKey
-    this.keyType = 'p256'
     this.exportable = exportable
   }
 
@@ -75,7 +74,7 @@ export class EcdsaKeypair implements ucan.Keypair, ucan.Didable {
   }
 
   did(): string {
-    return util.didForPubkeyBytes(this.publicKey)
+    return encoding.didFromPubkeyBytes(this.publicKey)
   }
 
   async sign(msg: Uint8Array): Promise<Uint8Array> {
