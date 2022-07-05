@@ -1,5 +1,5 @@
 import * as ucans from '@ucans/core'
-import p256Plugin from './p256/plugin.js'
+import { p256Plugin } from '@adxp/crypto'
 
 export * from '@ucans/core'
 

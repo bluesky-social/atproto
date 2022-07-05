@@ -1,4 +1,4 @@
-export default { // eslint-disable-line
+export default {
   transform: {
     '.(ts|tsx)': 'ts-jest',
   },

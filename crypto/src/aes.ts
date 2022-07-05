@@ -1,6 +1,6 @@
 import { webcrypto } from 'one-webcrypto'
 import * as uint8arrays from 'uint8arrays'
-import * as util from './util.js'
+import * as random from './random.js'
 
 export class AesKey {
   private key: CryptoKey
@@ -23,7 +23,7 @@ export class AesKey {
   // utf8 data -> base64pad cipher
   // returns base64 encrypted data with iv prepended
   async encrypt(data: string): Promise<string> {
-    const iv = util.randomIV()
+    const iv = random.randomIV()
     const dataBytes = uint8arrays.fromString(data, 'utf8')
     const buf = await webcrypto.subtle.encrypt(
       {

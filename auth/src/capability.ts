@@ -1,13 +1,4 @@
-import {
-  capabilities,
-  Capability,
-  CapabilitySemantics,
-  CapabilityEscalation,
-  Chained,
-  isCapabilityEscalation,
-} from 'ucans'
-import { Ability, isAbility } from 'ucans/capability/ability'
-import { SUPERUSER } from 'ucans/capability/super-user'
+import * as ucans from './ucans/index.js'
 
 /*
 ADX Ucans:
@@ -44,21 +35,23 @@ export const ADX_ABILITIES: string[] = Object.keys(ADX_ABILITY_LEVELS)
 
 export type AdxAbility = keyof typeof ADX_ABILITY_LEVELS
 
-export const isAdxCap = (cap: Capability): boolean => {
+export const isAdxCap = (cap: ucans.Capability): boolean => {
   return cap.with.scheme === 'adx' && isAdxAbility(cap.can)
 }
 
 export const isAdxAbility = (ability: unknown): ability is AdxAbility => {
-  if (!isAbility(ability)) return false
-  if (ability === SUPERUSER) return true
+  if (!ucans.ability.isAbility(ability)) return false
+  if (ability === ucans.ability.SUPERUSER) return true
   const abilitySegment = ability.segments[0]
   const isAdxAbilitySegment =
     !!abilitySegment && ADX_ABILITIES.includes(abilitySegment)
   return isAdxAbilitySegment && ability.namespace.toLowerCase() === 'adx'
 }
 
-export function parseAdxAbility(ability: Ability): AdxAbility | null {
-  if (ability === SUPERUSER) return 'SUPER_USER'
+export function parseAdxAbility(
+  ability: ucans.ability.Ability,
+): AdxAbility | null {
+  if (ability === ucans.ability.SUPERUSER) return 'SUPER_USER'
   if (isAdxAbility(ability)) return ability.segments[0] as AdxAbility
   return null
 }
@@ -66,155 +59,135 @@ export function parseAdxAbility(ability: Ability): AdxAbility | null {
 export function adxCapability(
   resource: string,
   ability: AdxAbility,
-): Capability {
+): ucans.Capability {
   return {
     with: { scheme: 'adx', hierPart: resource },
     can: { namespace: 'adx', segments: [ability] },
   }
 }
-
-export function writeCap(
-  did: string,
-  collection?: string,
-  schema?: string,
-  record?: string,
-): Capability {
-  let resource = did
-  if (collection) {
-    resource += '|' + collection
-  }
-  if (schema) {
-    resource += '|' + schema
-  }
-  if (record) {
-    resource += '|' + record
-  } else {
-    resource += '|*'
-  }
-  return adxCapability(resource, 'WRITE')
-}
-
-export function maintenanceCap(did: string): Capability {
-  const resource = `${did}|*`
-  return adxCapability(resource, 'MAINTENANCE')
-}
-
-export interface AdxCapability {
+export interface AdxResourcePointer {
   did: string
   collection: string
   schema: string
   record: string
-  resource: string
-  ability: AdxAbility
 }
 
-export const adxSemantics: CapabilitySemantics<AdxCapability> = {
-  tryParsing(cap: Capability): AdxCapability | null {
-    if (!isAdxCap(cap)) return null
-    const ability = parseAdxAbility(cap.can)
-    if (!ability) return null
+// @TODO: ugly import on param
+const parseAdxResource = (
+  pointer: ucans.capability.resourcePointer.ResourcePointer,
+): AdxResourcePointer | null => {
+  if (pointer.scheme !== 'adx') return null
 
-    const parts = cap.with.hierPart.split('|')
-    const [did, collection] = parts
-    let [schema, record] = parts.slice(2)
-    if (!did) return null
-    if (!collection) return null
-    if (collection === '*') {
-      schema = '*'
-    }
-    if (!schema) return null
-    if (schema === '*') {
-      record = '*'
-    }
-    if (!record) return null
+  const parts = pointer.hierPart.split('|')
+  const [did, collection] = parts
+  let [schema, record] = parts.slice(2)
+  if (!did) return null
+  if (!collection) return null
+  if (collection === '*') {
+    schema = '*'
+  }
+  if (!schema) return null
+  if (schema === '*') {
+    record = '*'
+  }
+  if (!record) return null
 
-    const resource = `${cap.with.scheme}://${cap.with.hierPart}`
+  return {
+    did,
+    collection,
+    schema,
+    record,
+  }
+}
 
-    return {
-      did,
-      collection,
-      schema,
-      record,
-      resource,
-      ability,
-    }
+export const adxSemantics: ucans.DelegationSemantics = {
+  canDelegateResource(parentResource, childResource) {
+    const parent = parseAdxResource(parentResource)
+    const child = parseAdxResource(childResource)
+
+    if (parent == null || child == null) return false
+    if (parent.did !== child.did) return false
+
+    if (parent.collection === '*') return true
+    if (parent.collection !== child.collection) return false
+
+    if (parent.schema === '*') return true
+    if (parent.schema !== child.schema) return false
+
+    if (parent.record === '*') return true
+
+    return parent.record !== child.record
   },
 
-  tryDelegating(
-    parentCap: AdxCapability,
-    childCap: AdxCapability,
-  ): AdxCapability | null | CapabilityEscalation<AdxCapability> {
-    // need to delegate to the same user's repo
-    if (childCap.did !== parentCap.did) return null
+  canDelegateAbility(parentAbility, childAbility) {
+    const parent = parseAdxAbility(parentAbility)
+    const child = parseAdxAbility(childAbility)
 
-    if (
-      ADX_ABILITY_LEVELS[childCap.ability] >
-      ADX_ABILITY_LEVELS[parentCap.ability]
-    ) {
-      return {
-        escalation: 'Capability level escalation',
-        capability: childCap,
-      }
+    if (parent == null || child == null) return false
+
+    if (ADX_ABILITY_LEVELS[child] > ADX_ABILITY_LEVELS[parent]) {
+      return false
     }
 
-    if (parentCap.collection === '*') {
-      return childCap
-    } else if (childCap.collection === '*') {
-      return collectionEscalation(childCap)
-    } else if (childCap.collection !== parentCap.collection) {
-      return null
-    }
-
-    if (parentCap.schema === '*') {
-      return childCap
-    } else if (childCap.schema === '*') {
-      return schemaEscalation(childCap)
-    } else if (childCap.schema !== parentCap.schema) {
-      return null
-    }
-
-    if (parentCap.record === '*') {
-      return childCap
-    } else if (childCap.record === '*') {
-      return recordEscalation(childCap)
-    } else if (childCap.record !== parentCap.record) {
-      return null
-    }
-
-    // all good
-    return childCap
+    return true
   },
 }
 
-export const hasPermission = (
-  parent: AdxCapability,
-  child: AdxCapability,
-): boolean => {
-  const attempt = adxSemantics.tryDelegating(parent, child)
-  return attempt !== null && !isCapabilityEscalation(attempt)
-}
+// export const hasPermission = (
+//   parent: AdxCapability,
+//   child: AdxCapability,
+// ): boolean => {
+//   const attempt = adxSemantics.tryDelegating(parent, child)
+//   return attempt !== null && !isCapabilityEscalation(attempt)
+// }
 
-export const collectionEscalation = (cap: AdxCapability) => {
-  return {
-    escalation: 'ADX collection escalation',
-    capability: cap,
-  }
-}
+// export const collectionEscalation = (cap: AdxCapability) => {
+//   return {
+//     escalation: 'ADX collection escalation',
+//     capability: cap,
+//   }
+// }
 
-export const schemaEscalation = (cap: AdxCapability) => {
-  return {
-    escalation: 'ADX schema escalation',
-    capability: cap,
-  }
-}
+// export const schemaEscalation = (cap: AdxCapability) => {
+//   return {
+//     escalation: 'ADX schema escalation',
+//     capability: cap,
+//   }
+// }
 
-export const recordEscalation = (cap: AdxCapability) => {
-  return {
-    escalation: 'ADX record escalation',
-    capability: cap,
-  }
-}
+// export const recordEscalation = (cap: AdxCapability) => {
+//   return {
+//     escalation: 'ADX record escalation',
+//     capability: cap,
+//   }
+// }
 
-export function adxCapabilities(ucan: Chained) {
-  return capabilities(ucan, adxSemantics)
-}
+// export function adxCapabilities(ucan: Chained) {
+//   return capabilities(ucan, adxSemantics)
+// }
+
+// export function writeCap(
+//   did: string,
+//   collection?: string,
+//   schema?: string,
+//   record?: string,
+// ): Capability {
+//   let resource = did
+//   if (collection) {
+//     resource += '|' + collection
+//   }
+//   if (schema) {
+//     resource += '|' + schema
+//   }
+//   if (record) {
+//     resource += '|' + record
+//   } else {
+//     resource += '|*'
+//   }
+//   return adxCapability(resource, 'WRITE')
+// }
+
+// export function maintenanceCap(did: string): Capability {
+//   const resource = `${did}|*`
+//   return adxCapability(resource, 'MAINTENANCE')
+// }

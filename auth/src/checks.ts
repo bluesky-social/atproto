@@ -1,5 +1,4 @@
-import * as ucan from 'ucans'
-import { Chained, isCapabilityEscalation } from 'ucans'
+import * as ucan from './ucans'
 import {
   writeCap,
   adxCapabilities,
@@ -7,12 +6,12 @@ import {
   maintenanceCap,
 } from './capability.js'
 
-type Check = (ucan: Chained) => Error | null
+type Check = (ucan: ucan.Ucan) => Error | null
 
 export const checkUcan = async (
-  token: ucan.Chained,
+  token: ucan.Ucan,
   ...checks: Check[]
-): Promise<Chained> => {
+): Promise<ucan.Ucan> => {
   for (let i = 0; i < checks.length; i++) {
     const maybeErr = checks[i](token)
     if (maybeErr !== null) {
@@ -25,7 +24,7 @@ export const checkUcan = async (
 
 export const isRoot =
   () =>
-  (token: Chained): Error | null => {
+  (token: ucan.Ucan): Error | null => {
     if (token.proofs && token.proofs.length > 0) {
       throw new Error('Ucan is an attenuation and not the root')
     }
@@ -34,7 +33,7 @@ export const isRoot =
 
 export const hasAudience =
   (did: string) =>
-  (token: Chained): Error | null => {
+  (token: ucan.Ucan): Error | null => {
     if (token.audience() !== did) {
       return new Error('Ucan audience does not match server Did')
     }
@@ -43,7 +42,7 @@ export const hasAudience =
 
 export const hasValidCapability =
   (rootDid: string, needed: ucan.Capability) =>
-  (token: Chained): Error | null => {
+  (token: ucan.Ucan): Error | null => {
     const neededAdx = adxSemantics.tryParsing(needed)
     if (neededAdx === null) {
       return new Error(`Could not parse a valid ADX capability`)

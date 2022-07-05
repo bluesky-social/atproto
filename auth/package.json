@@ -14,7 +14,8 @@
     "lint": "eslint --ext .ts ."
   },
   "dependencies": {
-    "ucans": "^0.9.1",
+    "@adxp/crypto": "*",
+    "@ucans/core": "^0.0.1-alpha",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
