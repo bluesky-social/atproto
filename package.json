@@ -30,7 +30,10 @@
     "wipe-db": "yarn workspace @adxp/server wipe-db"
   },
   "devDependencies": {
+    "@types/jest": "^28.1.4",
+    "jest": "^28.1.2",
     "rimraf": "^3.0.2",
+    "ts-jest": "^28.0.5",
     "wsrun": "^5.2.4"
   }
 }

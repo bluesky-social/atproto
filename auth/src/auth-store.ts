@@ -1,31 +1,33 @@
-import * as ucan from 'ucans'
-import * as capability from './capability.js'
-import * as builders from './builders.js'
-import { MONTH_IN_SEC } from './consts.js'
-import { Keypair, Signer } from './types.js'
+import * as ucan from './ucans/index.js'
+import { DidableKey } from './ucans/index.js'
+
+import { adxSemantics, parseAdxResource } from './semantics.js'
+import { MONTH_IN_SEC, YEAR_IN_SEC } from './consts.js'
+import { Signer } from './types.js'
+import { writeCap } from './capabilities.js'
 
 export class AuthStore implements Signer {
-  protected keypair: Keypair
+  protected keypair: DidableKey
   protected ucanStore: ucan.Store
 
-  constructor(keypair: Keypair, ucanStore: ucan.Store) {
+  constructor(keypair: DidableKey, ucanStore: ucan.Store) {
     this.keypair = keypair
     this.ucanStore = ucanStore
   }
 
-  static async fromTokens(keypair: Keypair, tokens: string[]) {
-    const ucanStore = await ucan.Store.fromTokens(tokens)
+  static async fromTokens(keypair: DidableKey, tokens: string[]) {
+    const ucanStore = await ucan.storeFromTokens(adxSemantics, tokens)
     return new AuthStore(keypair, ucanStore)
   }
 
   // Update these for sub classes
   // ----------------
 
-  protected async getKeypair(): Promise<Keypair> {
+  protected async getKeypair(): Promise<DidableKey> {
     return this.keypair
   }
 
-  async addUcan(token: ucan.Chained): Promise<void> {
+  async addUcan(token: ucan.Ucan): Promise<void> {
     this.ucanStore.add(token)
   }
 
@@ -43,7 +45,7 @@ export class AuthStore implements Signer {
 
   // ----------------
 
-  async getDid(): Promise<string> {
+  async did(): Promise<string> {
     const keypair = await this.getKeypair()
     return keypair.did()
   }
@@ -53,26 +55,16 @@ export class AuthStore implements Signer {
     return keypair.sign(data)
   }
 
-  async findUcan(cap: ucan.Capability): Promise<ucan.Chained | null> {
+  async findUcan(cap: ucan.Capability): Promise<ucan.Ucan | null> {
     const ucanStore = await this.getUcanStore()
     // we only handle adx caps right now
-    const adxCap = capability.adxSemantics.tryParsing(cap)
-    if (adxCap === null) return null
-    const res = await ucanStore.findWithCapability(
-      await this.getDid(),
-      capability.adxSemantics,
-      adxCap,
-      ({ originator, expiresAt, notBefore }) => {
-        if (expiresAt * 1000 < Date.now()) return false
-        if (notBefore && notBefore * 1000 > Date.now()) return false
-        return originator === adxCap.did
-      },
+    const resource = parseAdxResource(cap.with)
+    if (resource === null) return null
+    const res = await ucan.first(
+      ucanStore.findWithCapability(await this.did(), cap, resource.did),
     )
-    if (res.success) {
-      return res.ucan
-    } else {
-      return null
-    }
+    if (!res) return null
+    return res.ucan
   }
 
   async hasUcan(cap: ucan.Capability): Promise<boolean> {
@@ -84,43 +76,48 @@ export class AuthStore implements Signer {
     audience: string,
     cap: ucan.Capability,
     lifetime = MONTH_IN_SEC,
-  ): Promise<ucan.Chained> {
+  ): Promise<ucan.Ucan> {
     const keypair = await this.getKeypair()
     const ucanStore = await this.getUcanStore()
-    return ucan.Builder.create()
+    return ucan
+      .createBuilder()
       .issuedBy(keypair)
       .toAudience(audience)
       .withLifetimeInSeconds(lifetime)
-      .delegateCapability(capability.adxSemantics, cap, ucanStore)
+      .delegateCapability(cap, ucanStore)
       .build()
   }
 
   async createAwakeProof(
     audience: string,
     cap: ucan.Capability,
-  ): Promise<ucan.Chained> {
+  ): Promise<ucan.Ucan> {
     const keypair = await this.getKeypair()
     const fullUcan = await this.findUcan(cap)
     if (!fullUcan) {
       throw new Error("Couldn't find ucan")
     }
     // gotta do the old fashioned API to build a token with no att
-    const sessionUcan = await ucan.build({
+    return ucan.build({
       issuer: keypair,
       audience: audience,
       lifetimeInSeconds: 60 * 5,
-      proofs: [fullUcan.encoded()],
+      proofs: [ucan.encode(fullUcan)],
     })
-    const encoded = ucan.encode(sessionUcan)
-    const chained = await ucan.Chained.fromToken(encoded)
-    return chained
   }
 
   // Claim a fully permissioned Ucan & add to store
   // Mainly for dev purposes
-  async claimFull(): Promise<ucan.Chained> {
+  async claimFull(): Promise<ucan.Ucan> {
     const keypair = await this.getKeypair()
-    const token = await builders.claimFull(await keypair.did(), keypair)
+    const ownDid = await keypair.did()
+    const token = await ucan
+      .createBuilder()
+      .issuedBy(keypair)
+      .toAudience(ownDid)
+      .withLifetimeInSeconds(10 & YEAR_IN_SEC)
+      .claimCapability(writeCap(ownDid))
+      .build()
     await this.addUcan(token)
     return token
   }

@@ -1,43 +1,45 @@
-import * as ucan from 'ucans'
+import * as crypto from '@adxp/crypto'
+import * as ucan from './ucans/index.js'
 import AuthStore from './auth-store.js'
-import * as builders from './builders.js'
+import { adxSemantics } from './semantics.js'
 
 export class BrowserStore extends AuthStore {
   static async load(): Promise<BrowserStore> {
     const keypair = await BrowserStore.loadOrCreateKeypair()
 
     const storedUcans = BrowserStore.getStoredUcanStrs()
-    const ucanStore = await ucan.Store.fromTokens(storedUcans)
+    const ucanStore = await ucan.storeFromTokens(adxSemantics, storedUcans)
 
     return new BrowserStore(keypair, ucanStore)
   }
 
-  static async loadOrCreateKeypair(): Promise<ucan.EdKeypair> {
+  static async loadOrCreateKeypair(): Promise<crypto.EcdsaKeypair> {
     const storedKey = localStorage.getItem('adxKey')
     if (storedKey) {
-      return ucan.EdKeypair.fromSecretKey(storedKey)
+      const jwk = JSON.parse(storedKey)
+      return crypto.EcdsaKeypair.import(jwk)
     } else {
       // @TODO: again just stand in since no actual root keys
-      const keypair = await ucan.EdKeypair.create({ exportable: true })
-      localStorage.setItem('adxKey', await keypair.export())
+      const keypair = await crypto.EcdsaKeypair.create({ exportable: true })
+      const jwk = await keypair.export()
+      localStorage.setItem('adxKey', JSON.stringify(jwk))
       return keypair
     }
   }
 
   // This is for dev purposes, not expected to be used in production
-  static async loadRootAuth(privKey: string): Promise<BrowserStore> {
-    const keypair = await ucan.EdKeypair.fromSecretKey(privKey, {
+  static async loadRootAuth(jwk: JsonWebKey): Promise<BrowserStore> {
+    const keypair = await crypto.EcdsaKeypair.import(jwk, {
       exportable: true,
     })
     const storedUcans = BrowserStore.getStoredUcanStrs()
+    const ucanStore = await ucan.storeFromTokens(adxSemantics, storedUcans)
+    const authStore = new BrowserStore(keypair, ucanStore)
     if (storedUcans.length === 0) {
       // since this is the root device, we claim full authority
-      const fullToken = await builders.claimFull(keypair.did(), keypair)
-      storedUcans.push(fullToken.encoded())
+      await authStore.claimFull()
     }
-    const ucanStore = await ucan.Store.fromTokens(storedUcans)
-
-    return new BrowserStore(keypair, ucanStore)
+    return authStore
   }
 
   static getStoredUcanStrs(): string[] {
@@ -50,10 +52,10 @@ export class BrowserStore extends AuthStore {
     localStorage.setItem('adxUcans', ucans.join(','))
   }
 
-  async addUcan(token: ucan.Chained): Promise<void> {
+  async addUcan(token: ucan.Ucan): Promise<void> {
     this.ucanStore.add(token)
     const storedUcans = BrowserStore.getStoredUcanStrs()
-    BrowserStore.setStoredUcanStrs([...storedUcans, token.encoded()])
+    BrowserStore.setStoredUcanStrs([...storedUcans, ucan.encode(token)])
   }
 
   async getUcanStore(): Promise<ucan.Store> {
@@ -67,7 +69,7 @@ export class BrowserStore extends AuthStore {
   async reset(): Promise<void> {
     this.clear()
     this.keypair = await BrowserStore.loadOrCreateKeypair()
-    this.ucanStore = await ucan.Store.fromTokens([])
+    this.ucanStore = await ucan.storeFromTokens(adxSemantics, [])
   }
 }
 

@@ -1,6 +1,6 @@
-import * as ucan from 'ucans'
 import * as uint8arrays from 'uint8arrays'
-import * as capability from './capability.js'
+import * as ucan from './ucans/index.js'
+import * as capability from './semantics.js'
 import AuthStore from './auth-store.js'
 
 export type AppUcanReq = AppUcanMessageReq | AppUcanRedirectReq
@@ -47,11 +47,11 @@ export const parseAppReqHashFragment = (
 
 export const parseLobbyResponseHashFragment = (
   fragment: string,
-): Promise<ucan.Chained> => {
+): Promise<ucan.Ucan> => {
   // @TODO validation
   const obj = parseHashFragment(fragment) as any
   if (obj.ucan) {
-    return ucan.Chained.fromToken(obj.ucan)
+    return ucan.validate(obj.ucan)
   } else if (obj.error) {
     throw new Error(obj.error)
   } else {
@@ -63,8 +63,8 @@ export const approveAppHashFragment = async (
   appReq: AppUcanReq,
   authStore: AuthStore,
 ): Promise<string> => {
-  const ucan = await getApprovedAppUcan(appReq, authStore)
-  const msg = { ucan: ucan.encoded() }
+  const token = await getApprovedAppUcan(appReq, authStore)
+  const msg = { ucan: ucan.encode(token) }
   return utf8ToB64(JSON.stringify(msg))
 }
 
@@ -79,7 +79,7 @@ export const requestAppUcan = async (
   lobbyUrl: string,
   appDid: string,
   cap: ucan.Capability,
-): Promise<ucan.Chained> => {
+): Promise<ucan.Ucan> => {
   const lobby = window.open(lobbyUrl)
   const ownUrl = window.location.origin
 
@@ -97,7 +97,7 @@ export const requestAppUcan = async (
           lobbyUrl,
         )
       } else if (data.type === 'Adx_Auth_Success') {
-        const token = await ucan.Chained.fromToken(data.ucan)
+        const token = await ucan.validate(data.ucan)
         window.removeEventListener('message', handler)
         resolve(token)
       } else if (data.type === 'Adx_Auth_Error') {
@@ -144,12 +144,12 @@ export const approveAppReq = async (
   appReq: AppUcanMessageReq,
   authStore: AuthStore,
 ) => {
-  const ucan = await getApprovedAppUcan(appReq, authStore)
+  const token = await getApprovedAppUcan(appReq, authStore)
 
   window.opener.postMessage(
     {
       type: 'Adx_Auth_Success',
-      ucan: ucan.encoded(),
+      ucan: ucan.encode(token),
     },
     appReq.host,
   )
@@ -173,7 +173,7 @@ export const denyAppReq = (appReq: AppUcanMessageReq) => {
 export const getApprovedAppUcan = async (
   appReq: AppUcanReq,
   authStore: AuthStore,
-): Promise<ucan.Chained> => {
+): Promise<ucan.Ucan> => {
   const resource =
     typeof appReq.scope === 'string' ? appReq.scope : appReq.scope[0]
   const cap = capability.adxCapability(resource, 'WRITE')

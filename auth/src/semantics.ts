@@ -48,18 +48,18 @@ export const isAdxAbility = (ability: unknown): ability is AdxAbility => {
   return isAdxAbilitySegment && ability.namespace.toLowerCase() === 'adx'
 }
 
-export function parseAdxAbility(
+export const parseAdxAbility = (
   ability: ucans.ability.Ability,
-): AdxAbility | null {
+): AdxAbility | null => {
   if (ability === ucans.ability.SUPERUSER) return 'SUPER_USER'
   if (isAdxAbility(ability)) return ability.segments[0] as AdxAbility
   return null
 }
 
-export function adxCapability(
+export const adxCapability = (
   resource: string,
   ability: AdxAbility,
-): ucans.Capability {
+): ucans.Capability => {
   return {
     with: { scheme: 'adx', hierPart: resource },
     can: { namespace: 'adx', segments: [ability] },
@@ -73,7 +73,7 @@ export interface AdxResourcePointer {
 }
 
 // @TODO: ugly import on param
-const parseAdxResource = (
+export const parseAdxResource = (
   pointer: ucans.capability.resourcePointer.ResourcePointer,
 ): AdxResourcePointer | null => {
   if (pointer.scheme !== 'adx') return null
@@ -132,62 +132,3 @@ export const adxSemantics: ucans.DelegationSemantics = {
     return true
   },
 }
-
-// export const hasPermission = (
-//   parent: AdxCapability,
-//   child: AdxCapability,
-// ): boolean => {
-//   const attempt = adxSemantics.tryDelegating(parent, child)
-//   return attempt !== null && !isCapabilityEscalation(attempt)
-// }
-
-// export const collectionEscalation = (cap: AdxCapability) => {
-//   return {
-//     escalation: 'ADX collection escalation',
-//     capability: cap,
-//   }
-// }
-
-// export const schemaEscalation = (cap: AdxCapability) => {
-//   return {
-//     escalation: 'ADX schema escalation',
-//     capability: cap,
-//   }
-// }
-
-// export const recordEscalation = (cap: AdxCapability) => {
-//   return {
-//     escalation: 'ADX record escalation',
-//     capability: cap,
-//   }
-// }
-
-// export function adxCapabilities(ucan: Chained) {
-//   return capabilities(ucan, adxSemantics)
-// }
-
-// export function writeCap(
-//   did: string,
-//   collection?: string,
-//   schema?: string,
-//   record?: string,
-// ): Capability {
-//   let resource = did
-//   if (collection) {
-//     resource += '|' + collection
-//   }
-//   if (schema) {
-//     resource += '|' + schema
-//   }
-//   if (record) {
-//     resource += '|' + record
-//   } else {
-//     resource += '|*'
-//   }
-//   return adxCapability(resource, 'WRITE')
-// }
-
-// export function maintenanceCap(did: string): Capability {
-//   const resource = `${did}|*`
-//   return adxCapability(resource, 'MAINTENANCE')
-// }

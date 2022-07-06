@@ -1,16 +1,11 @@
 import { webcrypto } from 'one-webcrypto'
 import * as uint8arrays from 'uint8arrays'
 import * as ucan from '@ucans/core'
-import * as encoding from './encoding'
+import * as encoding from './encoding.js'
+import * as operations from './operations.js'
 
 export type EcdsaKeypairOptions = {
   exportable: boolean
-  encoding: ucan.Encodings
-}
-
-export type KeyExport = {
-  publicKey: string
-  privateKey: string
 }
 
 export class EcdsaKeypair implements ucan.DidableKey {
@@ -44,29 +39,14 @@ export class EcdsaKeypair implements ucan.DidableKey {
   }
 
   static async import(
-    keyExport: KeyExport,
+    jwk: JsonWebKey,
     opts?: Partial<EcdsaKeypairOptions>,
   ): Promise<EcdsaKeypair> {
-    const { exportable = false, encoding = 'base64pad' } = opts || {}
-    const pubBytes = uint8arrays.fromString(keyExport.publicKey, encoding)
-    const privBytes = uint8arrays.fromString(keyExport.privateKey, encoding)
-
-    const privateKey = await webcrypto.subtle.importKey(
-      'pkcs8',
-      privBytes.buffer,
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      exportable,
-      ['sign'],
-    )
-    const publicKey = await webcrypto.subtle.importKey(
-      'raw',
-      pubBytes,
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      exportable,
-      ['verify'],
-    )
-    const keypair = { privateKey, publicKey }
-    return new EcdsaKeypair(keypair, pubBytes, exportable)
+    const { exportable = false } = opts || {}
+    const keypair = await operations.importKeypairJwk(jwk, exportable)
+    const pubkeyBuf = await webcrypto.subtle.exportKey('raw', keypair.publicKey)
+    const pubkeyBytes = new Uint8Array(pubkeyBuf)
+    return new EcdsaKeypair(keypair, pubkeyBytes, exportable)
   }
 
   publicKeyStr(encoding: ucan.Encodings = 'base64pad'): string {
@@ -86,22 +66,12 @@ export class EcdsaKeypair implements ucan.DidableKey {
     return new Uint8Array(buf)
   }
 
-  async export(encoding: ucan.Encodings = 'base64pad'): Promise<KeyExport> {
+  async export(): Promise<JsonWebKey> {
     if (!this.exportable) {
       throw new Error('Private key is not exportable')
     }
-    const privBuf = await webcrypto.subtle.exportKey(
-      'pkcs8',
-      this.keypair.privateKey,
-    )
-    const pubBuf = await webcrypto.subtle.exportKey(
-      'raw',
-      this.keypair.publicKey,
-    )
-    return {
-      publicKey: uint8arrays.toString(new Uint8Array(pubBuf), encoding),
-      privateKey: uint8arrays.toString(new Uint8Array(privBuf), encoding),
-    }
+    const jwk = await webcrypto.subtle.exportKey('jwk', this.keypair.privateKey)
+    return jwk
   }
 }
 

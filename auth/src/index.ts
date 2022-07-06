@@ -1,6 +1,6 @@
 export * from './builders.js'
 export * from './checks.js'
-export * from './capability.js'
+export * from './semantics.js'
 export * from './auth-store.js'
 export * from './memory-store.js'
 export * from './browser-store.js'

@@ -2975,6 +2975,13 @@
     "@typescript-eslint/types" "5.28.0"
     eslint-visitor-keys "^3.3.0"
 
+"@ucans/core@0.0.1-alpha2":
+  version "0.0.1-alpha2"
+  resolved "https://registry.yarnpkg.com/@ucans/core/-/core-0.0.1-alpha2.tgz#b09047fb7df6e99c53dbcd4889b8f7bf6c4aaa76"
+  integrity sha512-KguUbvyDMef6/nnNK2NjCKcb6iHl6DGREo8oTNq1AD32WMj60tFmwQw1Alj7QpdgRbaNxveMIfXkIuvVUrrIrA==
+  dependencies:
+    uint8arrays "^3.0.0"
+
 "@ucans/core@^0.0.1-alpha":
   version "0.0.1-alpha"
   resolved "https://registry.yarnpkg.com/@ucans/core/-/core-0.0.1-alpha.tgz#1c7e877210e96b98a49e154e9a38985f9341df98"

@@ -1,5 +1,28 @@
 import { webcrypto } from 'one-webcrypto'
 
+export const importKeypairJwk = async (
+  jwk: JsonWebKey,
+  exportable = false,
+): Promise<CryptoKeyPair> => {
+  const privateKey = await webcrypto.subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    exportable,
+    ['sign'],
+  )
+  const { kty, crv, x, y } = jwk
+  const pubKeyJwk = { kty, crv, x, y }
+  const publicKey = await webcrypto.subtle.importKey(
+    'jwk',
+    pubKeyJwk,
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    true,
+    ['verify'],
+  )
+  return { privateKey, publicKey }
+}
+
 export const verify = async (
   publicKey: Uint8Array,
   data: Uint8Array,
