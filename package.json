@@ -1,39 +1,60 @@
 {
-  "name": "adx",
-  "version": "0.0.1",
-  "main": "index.js",
-  "repository": "git@github.com:bluesky-social/adx.git",
-  "author": "Daniel Holmgren <dtholmgren@gmail.com>",
-  "license": "MIT",
-  "private": true,
-  "engines": {
-    "node": ">=16"
-  },
-  "workspaces": [
-    "auth",
-    "auth-lobby",
-    "awake",
-    "cli",
-    "common",
-    "crypto",
-    "dev-env",
-    "did-sdk",
-    "example-app",
-    "ws-relay",
-    "server"
-  ],
+  "name": "typescript-monorepo-example",
+  "version": "1.0.0",
+  "description": "An example typescript monorepo",
   "scripts": {
-    "build": "wsrun -c \"build\"",
-    "server": "yarn workspace @adxp/server start",
-    "server:alt": "PORT=2584 yarn server",
-    "cli": "yarn workspace @adxp/cli cli",
-    "wipe-db": "yarn workspace @adxp/server wipe-db"
+    "prepublish": "yarn build",
+    "verify": "lerna run verify --stream",
+    "prettier": "lerna run prettier",
+    "build": "lerna run build",
+    "test": "NODE_ENV=development lerna run test --stream"
+  },
+  "author": "@CryogenicPlanet",
+  "license": "ISC",
+  "private": true,
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn prettier",
+      "pre-push": "yarn verify"
+    }
   },
   "devDependencies": {
-    "@types/jest": "^28.1.4",
-    "jest": "^28.1.2",
-    "rimraf": "^3.0.2",
-    "ts-jest": "^28.0.5",
-    "wsrun": "^5.2.4"
-  }
+    "@types/jest": "^26.0.23",
+    "@types/node": "^15.6.2",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "ava": "^4.3.0",
+    "babel-eslint": "^10.1.0",
+    "esbuild": "^0.12.5",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-prettier-standard": "^4.0.1",
+    "eslint-config-react-app": "^6.0.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-flowtype": "^5.7.2",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-react": "^7.24.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "eslint-plugin-standard": "^5.0.0",
+    "husky": "^6.0.0",
+    "jest": "^27.0.3",
+    "lerna": "^4.0.0",
+    "nodemon": "^2.0.19",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.3.0",
+    "prettier-config-standard": "^4.0.0",
+    "ts-jest": "^27.0.2",
+    "ts-node": "^10.8.2",
+    "tsconfig-paths-jest": "^0.0.1",
+    "typescript": "^4.3.2",
+    "wait-on": "^5.3.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

@@ -1,5 +1,13 @@
+*/**.js
+*/**.d.ts
+packages/*/dist
+packages/*/lib
 node_modules
-dist
+packages/*/node_modules
 
-/**/*/node_modules
-/**/*/dist
+jest.config.base.js
+jest.config.js
+tailwind.config.js
+postcss.config.js
+
+packages/auth-lobby/build/bundleDts.js

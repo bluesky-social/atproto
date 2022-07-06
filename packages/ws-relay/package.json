@@ -1,0 +1,23 @@
+{
+  "name": "@adxp/ws-relay",
+  "version": "1.0.0",
+  "description": "An example monorepo package with testing/esbuild",
+  "main": "src/index.ts",
+  "bin": "dist/bin.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "nodemon ./src/bin.ts",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix"
+  },
+  "author": "Rahul Tarak",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.1",
+    "socket.io": "^4.5.1"
+  }
+}

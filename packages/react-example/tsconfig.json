@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": ["src/*"],
+  "exclude": ["dist/*"],
+  // "references": [{ "path": "../package-a/tsconfig.build.json" }]
+}
