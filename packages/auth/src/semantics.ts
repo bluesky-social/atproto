@@ -116,7 +116,7 @@ export const adxSemantics: ucans.DelegationSemantics = {
 
     if (parent.record === '*') return true
 
-    return parent.record !== child.record
+    return parent.record === child.record
   },
 
   canDelegateAbility(parentAbility, childAbility) {

@@ -1,5 +1,5 @@
 import { writeCap } from './capabilities'
-import { parseAdxResource } from './semantics'
+import { adxSemantics, parseAdxResource } from './semantics'
 import * as ucans from './ucans'
 
 export const verifyUcan = async (
@@ -7,7 +7,10 @@ export const verifyUcan = async (
   opts: ucans.VerifyOptions,
 ): Promise<ucans.Ucan> => {
   const encoded = typeof token === 'string' ? token : ucans.encode(token)
-  const res = await ucans.verify(encoded, opts)
+  const res = await ucans.verify(encoded, {
+    ...opts,
+    semantics: opts.semantics || adxSemantics,
+  })
   if (!res.ok) {
     if (res.error[0]) {
       throw res.error[0]

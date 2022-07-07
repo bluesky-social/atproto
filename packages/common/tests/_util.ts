@@ -5,7 +5,6 @@ import { Follow, IdMapping, schema } from '../src/repo/types'
 import { DID } from '../src/common/types'
 import SSTable from '../src/repo/ss-table'
 import Repo from '../src/repo/index'
-import { ExecutionContext } from 'ava'
 
 const fakeStore = IpldStore.createInMemory()
 
@@ -82,7 +81,7 @@ export const generateBulkFollows = (count: number): Follow[] => {
   return follows
 }
 
-type RepoData = {
+export type RepoData = {
   posts: Record<string, string>
   interactions: Record<string, string>
   follows: Record<string, Follow>
@@ -125,7 +124,6 @@ export const fillRepo = async (
 }
 
 export const checkRepo = async (
-  t: ExecutionContext<unknown>,
   repo: Repo,
   namespaceId: string,
   data: RepoData,
@@ -134,24 +132,16 @@ export const checkRepo = async (
     for (const tid of Object.keys(data.posts)) {
       const cid = await namespace.posts.getEntry(TID.fromStr(tid))
       const actual = cid ? await repo.get(cid, schema.string) : null
-      t.deepEqual(
-        actual,
-        data.posts[tid],
-        `Matching post content for tid: ${tid}`,
-      )
+      expect(actual).toEqual(data.posts[tid])
     }
     for (const tid of Object.keys(data.interactions)) {
       const cid = await namespace.interactions.getEntry(TID.fromStr(tid))
       const actual = cid ? await repo.get(cid, schema.string) : null
-      t.deepEqual(
-        actual,
-        data.interactions[tid],
-        `Matching post content for tid: ${tid}`,
-      )
+      expect(actual).toEqual(data.interactions[tid])
     }
   })
   for (const did of Object.keys(data.follows)) {
     const actual = await repo.relationships.getFollow(did)
-    t.deepEqual(actual, data.follows[did], `Matching follow for did: ${did}`)
+    expect(actual).toEqual(data.follows[did])
   }
 }

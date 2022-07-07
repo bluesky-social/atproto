@@ -349,7 +349,15 @@ export class Repo implements CarStreamable {
     }
     for (const update of updates) {
       const neededCap = delta.capabilityForEvent(root.did, update)
-      await auth.verifyAdxUcan(token, token.payload.aud, neededCap)
+      try {
+        await auth.verifyAdxUcan(token, token.payload.aud, neededCap)
+      } catch (err) {
+        console.log('TOKEN: ', token)
+        console.log('NEEDED CAP: ', neededCap)
+        console.log('ATT: ', token.payload.att)
+        console.log('CAN: ', token.payload.att[0].can)
+        throw err
+      }
       if (emit) {
         await emit(update)
       }
