@@ -58,6 +58,9 @@
   },
   "workspaces": {
     "packages": ["packages/*"],
-    "nohoist": ["**/ipld-hashmap", "**/ipld-hashmap/**"]
+    "nohoist": [
+      "**/ipld-hashmap", 
+      "**/ipld-hashmap/**"
+    ]
   }
 }
