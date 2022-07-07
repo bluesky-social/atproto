@@ -20,11 +20,9 @@
     "@adxp/auth": "*",
     "@adxp/common": "*",
     "chalk": "^5.0.0",
-    "prompt": "^1.2.1",
-    "minimist": "^1.2.5"
+    "prompt": "^1.2.1"
   },
   "devDependencies": {
-    "@types/minimist": "^1.2.2",
     "@types/prompt": "^1.1.2"
   }
 }

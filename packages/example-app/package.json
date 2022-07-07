@@ -1,9 +1,7 @@
 {
   "name": "@adxp/example-app",
   "version": "0.0.0",
-  "main": "./dist/index.umd.js",
-  "typings": "./dist/index.d.ts",
-  "module": "./dist/index.es.js",
+  "main": "./lib/serve.js",
   "license": "Apache-2.0",
   "exports": {
     ".": {
@@ -27,7 +25,6 @@
   },
   "dependencies": {
     "@adxp/auth": "*",
-    "@adxp/awake": "*",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },

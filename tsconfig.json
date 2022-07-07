@@ -28,6 +28,7 @@
     { "path": "./packages/awake/tsconfig.build.json" },
     { "path": "./packages/common/tsconfig.build.json" },
     { "path": "./packages/crypto/tsconfig.build.json" },
+    { "path": "./packages/dev-env" },
     { "path": "./packages/did-sdk/tsconfig.build.json" },
     { "path": "./packages/example-app" },
     { "path": "./packages/ws-relay" },

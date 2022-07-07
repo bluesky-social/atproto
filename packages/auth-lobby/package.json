@@ -1,9 +1,7 @@
 {
   "name": "@adxp/auth-lobby",
   "version": "0.0.0",
-  "main": "./dist/index.umd.js",
-  "typings": "./dist/index.d.ts",
-  "module": "./dist/index.es.js",
+  "main": "./lib/serve.js",
   "license": "Apache-2.0",
   "exports": {
     ".": {

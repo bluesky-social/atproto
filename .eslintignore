@@ -12,4 +12,4 @@ postcss.config.js
 babel.config.js
 
 packages/auth-lobby/build/bundleDts.js
-packages/server/build.js
+build.js
