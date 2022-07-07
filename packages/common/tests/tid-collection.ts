@@ -6,8 +6,6 @@ import TID from '../src/repo/tid'
 import * as util from './_util'
 import { IdMapping } from '../src/repo/types'
 
-describe('TID collection', () => {})
-
 type Context = {
   store: IpldStore
   collection: TidCollection

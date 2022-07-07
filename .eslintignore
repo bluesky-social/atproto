@@ -9,5 +9,6 @@ jest.config.base.js
 jest.config.js
 tailwind.config.js
 postcss.config.js
+babel.config.js
 
 packages/auth-lobby/build/bundleDts.js

@@ -1,10 +1,18 @@
+// Jest doesn't like ES modules, so we need to transpile them
+// For each one, add them to this list, add them to 
+// "workspaces.nohoist" in the root package.json, and
+// make sure that a babel.config.js is in the package root
+const esModules = ['ipld-hashmap'].join('|')
+
 // jestconfig.base.js
 module.exports = {
-  roots: ['<rootDir>/src', '<rootDir>/__tests__'],
+  roots: ['<rootDir>/src', '<rootDir>/tests'],
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    '^.+\\.ts$': 'ts-jest',
+    "^.+\\.js?$": "babel-jest"
   },
-  testRegex: '(/__tests__/.*.(test|spec)).(jsx?|tsx?)$',
+  transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
+  testRegex: '(/tests/.*.(test|spec)).(jsx?|tsx?)$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: true,
   testTimeout: 30000
