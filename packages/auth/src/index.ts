@@ -7,6 +7,7 @@ export * from './browser-store'
 export * from './application-auth'
 export * from './verify'
 export * from './types'
+export * from './signatures'
 export * from './ucans/plugins'
 
 export * as ucans from './ucans'

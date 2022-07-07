@@ -339,7 +339,7 @@ export class Repo implements CarStreamable {
     )
     const token = await auth.validateUcan(encodedToken)
     const commit = await toRepo.getCommit()
-    const validSig = await auth.didPlugins.verifySignature(
+    const validSig = await auth.verifySignature(
       token.payload.aud,
       commit.root.bytes,
       commit.sig,

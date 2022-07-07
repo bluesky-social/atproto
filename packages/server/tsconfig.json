@@ -5,5 +5,9 @@
     "emitDeclarationOnly": true
   },
   "include": ["./src","__tests__/**/**.ts"],
-  "references": [{ "path": "../crypto/tsconfig.build.json" }]
+  "references": [
+    { "path": "../auth/tsconfig.build.json" },
+    { "path": "../common/tsconfig.build.json" },
+    { "path": "../crypto/tsconfig.build.json" }
+  ]
 }
