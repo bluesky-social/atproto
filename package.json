@@ -62,7 +62,9 @@
     ],
     "nohoist": [
       "**/ipld-hashmap",
-      "**/ipld-hashmap/**"
+      "**/ipld-hashmap/**",
+      "**/level",
+      "**/level/**"
     ]
   }
 }

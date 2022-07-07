@@ -4,8 +4,6 @@ import * as crypto from '@adxp/crypto'
 import Database from './db/index'
 import server from './server'
 
-console.log('HERE')
-
 const run = async () => {
   const env = process.env.ENV
   if (env) {
