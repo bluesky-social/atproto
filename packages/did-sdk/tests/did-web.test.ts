@@ -75,11 +75,9 @@ describe('did:web', () => {
     }
   })
 
-  // @TODO this is hanging for some reason
-
-  // it('Resolve throws on malformed did:webs', async () => {
-  //   await expect(resolve(`did:web:asdf`)).rejects.toThrow()
-  //   await expect(resolve(`did:web:`)).rejects.toThrow()
-  //   await expect(resolve(``)).rejects.toThrow()
-  // })
+  it('Resolve throws on malformed did:webs', async () => {
+    await expect(resolve(`did:web:asdf`)).rejects.toThrow()
+    await expect(resolve(`did:web:`)).rejects.toThrow()
+    await expect(resolve(``)).rejects.toThrow()
+  })
 })

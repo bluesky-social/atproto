@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/did-sdk",
+  "name": "@adxp/server",
   "version": "1.0.0",
   "description": "An example monorepo package with testing/esbuild",
   "main": "src/index.ts",
@@ -17,23 +17,16 @@
   "author": "Rahul Tarak",
   "license": "MIT",
   "dependencies": {
-    "@decentralized-identity/ion-sdk": "^0.5.0",
-    "@transmute/did-key-ed25519": "^0.3.0-unstable.5",
-    "@transmute/did-key-secp256k1": "^0.3.0-unstable.5",
-    "@transmute/did-key.js": "^0.3.0-unstable.8",
-    "core-js": "2.6.5",
+    "@adxp/auth": "*",
+    "@adxp/common": "*",
+    "@vscode/sqlite3": "^5.0.7",
+    "ava": "^4.2.0",
     "cors": "^2.8.5",
-    "did-resolver": "^3.2.0",
-    "express": "^4.18.1",
-    "ion-pow-sdk": "^1.0.16",
-    "level": "^8.0.0",
-    "node-fetch": "^3.2.0",
-    "one-webcrypto": "^1.0.3"
-  },
-  "devDependencies": {
-    "@decentralized-identity/sidetree": "^1.0.5",
-    "get-port": "^6.1.2",
-    "typedoc": "^0.22.17",
-    "typedoc-plugin-markdown": "^3.12.1"
+    "dotenv": "^16.0.0",
+    "express": "^4.17.2",
+    "express-async-errors": "^3.1.1",
+    "knex": "^1.0.4",
+    "level": "^7.0.1",
+    "zod": "^3.14.2"
   }
 }

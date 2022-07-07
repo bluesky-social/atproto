@@ -6,9 +6,15 @@ export const DOC_PATH = '/.well-known/did.json'
 
 async function get(url: string, timeout = 5000): Promise<any> {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeout)
+  const timeoutId = setTimeout(controller.abort, timeout)
 
-  const res = await fetch(url, { signal: controller.signal })
+  let res
+  try {
+    res = await fetch(url, { signal: controller.signal })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    throw err
+  }
   clearTimeout(timeoutId)
 
   if (res.status >= 400) {
