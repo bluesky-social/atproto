@@ -1,7 +1,14 @@
 import * as mf from 'multiformats/cid'
 import { z } from 'zod'
 
-const cid = z.instanceof(mf.CID)
+const cid = z
+  .any()
+  .refine((obj: unknown) => mf.CID.asCID(obj) !== null, {
+    message: 'Not a CID',
+  })
+  .transform((obj: unknown) => mf.CID.asCID(obj) as mf.CID)
+
+// const cid = z.instanceof(mf.CID)
 export type CID = z.infer<typeof cid>
 
 export const isCid = (str: string): boolean => {

@@ -4,7 +4,7 @@
   "description": "An example monorepo package with testing/esbuild",
   "main": "src/index.ts",
   "scripts": {
-    "test": "jest",
+    "test": "jest tests/tid-collection.test.ts",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",

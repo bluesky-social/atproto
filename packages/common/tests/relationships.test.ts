@@ -25,7 +25,7 @@ describe('relationships', () => {
 
   it('gets user follows', async () => {
     const got = await relationships.getFollow(aliceDid)
-    expect(got).toEqual('alice')
+    expect(got?.username).toEqual('alice')
   })
 
   it('deletes user follows', async () => {
