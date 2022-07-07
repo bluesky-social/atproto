@@ -4,6 +4,8 @@ import * as crypto from '@adxp/crypto'
 import Database from './db/index'
 import server from './server'
 
+console.log('HERE')
+
 const run = async () => {
   const env = process.env.ENV
   if (env) {
@@ -41,7 +43,6 @@ const run = async () => {
   s.on('listening', () => {
     console.log(`🌞 ADX Data server is running at http://localhost:${port}`)
   })
-  return s
 }
 
 run()

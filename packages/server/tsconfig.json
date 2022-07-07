@@ -4,6 +4,7 @@
     "outDir": "./dist", // Your outDir,
     "emitDeclarationOnly": true
   },
+  "module": "nodenext",
   "include": ["./src","__tests__/**/**.ts"],
   "references": [
     { "path": "../auth/tsconfig.build.json" },

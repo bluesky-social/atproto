@@ -27,7 +27,7 @@
     "ava": "^4.3.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^28.1.2",
-    "esbuild": "^0.12.5",
+    "esbuild": "^0.14.48",
     "eslint": "^7.27.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-prettier-standard": "^4.0.1",
@@ -57,9 +57,11 @@
     "wait-on": "^5.3.0"
   },
   "workspaces": {
-    "packages": ["packages/*"],
+    "packages": [
+      "packages/*"
+    ],
     "nohoist": [
-      "**/ipld-hashmap", 
+      "**/ipld-hashmap",
       "**/ipld-hashmap/**"
     ]
   }

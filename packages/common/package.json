@@ -12,7 +12,7 @@
     "verify": "run-p prettier lint",
     "verify:fix": "yarn prettier:fix && yarn lint:fix",
     "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
-    "postbuild" : "tsc --build tsconfig.build.json"
+    "postbuild": "tsc --build tsconfig.build.json"
   },
   "author": "Rahul Tarak",
   "license": "MIT",
@@ -23,7 +23,7 @@
     "@ucans/core": "0.0.1-alpha2",
     "axios": "^0.24.0",
     "ipld-hashmap": "^2.1.10",
-    "level": "^7.0.1",
+    "level": "^8.0.0",
     "multiformats": "^9.6.4",
     "uint8arrays": "^3.0.0",
     "zod": "^3.14.2"
