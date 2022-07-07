@@ -11,7 +11,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
-      name: '@monorepo/package-b',
+      name: '@adxp/auth-lobby',
       fileName: 'index',
     },
     rollupOptions: {

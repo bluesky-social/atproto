@@ -29,7 +29,7 @@
     { "path": "./packages/common/tsconfig.build.json" },
     { "path": "./packages/crypto/tsconfig.build.json" },
     { "path": "./packages/did-sdk/tsconfig.build.json" },
-    { "path": "./packages/react-example" },
+    { "path": "./packages/example-app" },
     { "path": "./packages/ws-relay" },
   ]
 }
