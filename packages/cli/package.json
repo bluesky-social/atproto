@@ -1,0 +1,24 @@
+{
+  "name": "@adxp/cli",
+  "version": "0.0.1",
+  "main": "dist/bin.js",
+  "scripts": {
+    "cli": "node dist/bin.js",
+    "build": "node ./build.js",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix"
+  },
+  "dependencies": {
+    "@adxp/auth": "*",
+    "@adxp/common": "*",
+    "chalk": "^5.0.0",
+    "prompt": "^1.2.1"
+  },
+  "devDependencies": {
+    "@types/prompt": "^1.1.2"
+  }
+}
