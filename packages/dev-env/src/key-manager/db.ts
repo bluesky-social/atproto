@@ -1,3 +1,13 @@
+<<<<<<< HEAD:packages/dev-env/src/key-manager/db.ts
+=======
+/**
+ * NOTE
+ * This key manager service is not meant for production use.
+ * It's specifically designed for the dev env.
+ */
+
+import { DIDDocument } from 'did-resolver'
+>>>>>>> cab993c (WIP API branch squash):dev-env/src/key-manager/db.ts
 import level from 'level'
 import * as crypto from '@adxp/crypto'
 

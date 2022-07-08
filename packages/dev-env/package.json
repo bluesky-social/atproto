@@ -27,9 +27,22 @@
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "get-port": "^6.1.2",
+<<<<<<< HEAD:packages/dev-env/package.json
     "level": "^8.0.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.13"
+=======
+    "inquirer": "^9.0.0",
+    "level": "^8.0.0",
+    "ucans": "^0.9.1",
+    "uint8arrays": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/inquirer": "^8.2.1",
+    "@types/node-fetch": "^2.6.2",
+    "ts-node": "^10.8.1"
+>>>>>>> cab993c (WIP API branch squash):dev-env/package.json
   }
 }

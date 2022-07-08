@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "include": ["src/**/*", "types"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "typeRoots": [ "types", "../node_modules/@types"],
+    "lib": ["es2020"],
+    "module": "es2020",
+    "moduleResolution": "node",
+    "target": "es2020",
+    "declaration": true,
+    "checkJs": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "ts-node": {
+    "files": true
+  }
+}

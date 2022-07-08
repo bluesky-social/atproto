@@ -1,3 +1,9 @@
+/**
+ * NOTE
+ * This key manager service is not meant for production use.
+ * It's specifically designed for the dev env.
+ */
+
 import * as didSdk from '@adxp/did-sdk'
 
 // Assumes 1 NIST P-256 key
@@ -5,18 +11,12 @@ import * as didSdk from '@adxp/did-sdk'
 export const formatDidWeb = (
   did: string,
   publicKeyBase58: string,
-  idProvider: string,
 ): didSdk.DIDDocument => {
   const key = {
     id: `#key1`,
     type: 'EcdsaSecp256r1VerificationKey2019',
     controller: did,
     publicKeyBase58: publicKeyBase58,
-  }
-  const service = {
-    id: '#service1',
-    type: 'AdxIdentityProvider',
-    serviceEndpoint: idProvider,
   }
   return {
     '@context': [
@@ -29,6 +29,6 @@ export const formatDidWeb = (
     authentication: ['#key1'],
     capabilityInvocation: ['#key1'],
     capabilityDelegation: ['#key1'],
-    service: [service],
+    service: [],
   }
 }

@@ -4,6 +4,7 @@ import * as util from '../util'
 
 const router = express.Router()
 
+<<<<<<< HEAD:packages/server/src/routes/well-known.ts
 // Return the server's did
 router.get('/did.json', (_req, res) => {
   const keypair = util.getKeypair(res)
@@ -26,6 +27,12 @@ router.get('/webfinger', async (req, res) => {
   }
   // @TODO: sketch out more of a webfinger doc
   return res.status(200).send({ id: did })
+=======
+router.get('/adx-did', (_req, res) => {
+  // Return the server's did
+  // TODO check host header
+  return res.send(SERVER_DID)
+>>>>>>> cab993c (WIP API branch squash):server/src/routes/well-known.ts
 })
 
 export default router
