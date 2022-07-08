@@ -4,7 +4,7 @@
   "main": "dist/index.ts",
   "bin": "dist/bin.js",
   "scripts": {
-    "build": "tsc",
+    "build": "node build.js",
     "dev": "nodemon ./src/bin.ts",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
