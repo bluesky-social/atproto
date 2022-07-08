@@ -43,10 +43,14 @@ export type GetRecordResponse = z.infer<typeof getRecordResponse>
 export const batchWriteParams = z.object({
   writes: z.array(
     z.object({
-      action: z.union([z.literal('put'), z.literal('del')]),
+      action: z.union([
+        z.literal('create'),
+        z.literal('put'),
+        z.literal('del'),
+      ]),
       auth: z.string(),
       collection: z.string(),
-      key: z.string(),
+      key: z.string().optional(),
       value: z.any().optional(),
     }),
   ),

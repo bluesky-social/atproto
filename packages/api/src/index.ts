@@ -222,12 +222,12 @@ export class AdxRepoClient {
       throw new t.WritePermissionError()
     }
     const pdsDid = await this.pds.getDid()
-    const authedWrites = []
+    const authedWrites: ht.BatchWriteParams['writes'] = []
     for (const write of writes) {
-      const token = await this.authStore.createUcan(
+      const token = (await this.authStore.createUcan(
         pdsDid,
         auth.writeCap(this.did, write.collection, write.key),
-      )
+      )) as string
       authedWrites.push(Object.assign({}, write, { auth: token }))
     }
     const body = ht.batchWriteParams.parse({ writes: authedWrites })

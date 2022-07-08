@@ -1,21 +1,13 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "include": ["src/**/*", "types"],
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "typeRoots": [ "types", "../node_modules/@types"],
-    "lib": ["es2020"],
-    "module": "es2020",
-    "moduleResolution": "node",
-    "target": "es2020",
-    "declaration": true,
-    "checkJs": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "outDir": "./dist", // Your outDir,
+    "emitDeclarationOnly": true
   },
-  "ts-node": {
-    "files": true
-  }
+  "include": ["./src"],
+  "references": [
+    { "path": "../auth/tsconfig.build.json" },
+    { "path": "../common/tsconfig.build.json" },
+    { "path": "../schemas/tsconfig.build.json" },
+  ]
 }
