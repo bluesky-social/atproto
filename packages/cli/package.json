@@ -4,15 +4,14 @@
   "description": "An example monorepo package with testing/esbuild",
   "main": "src/index.ts",
   "scripts": {
-    "test": "jest",
+    "cli": "node dist/bin.js",
+    "build": "node ./build.js",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
-    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
-    "postbuild": "tsc --build tsconfig.build.json"
+    "verify:fix": "yarn prettier:fix && yarn lint:fix"
   },
   "author": "Rahul Tarak",
   "license": "MIT",

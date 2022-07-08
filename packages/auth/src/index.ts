@@ -12,6 +12,8 @@ export * from './ucans/plugins'
 
 export * as ucans from './ucans'
 
+export { EcdsaKeypair } from '@adxp/crypto'
+
 export { encode as encodeUcan, validate as validateUcan } from './ucans'
 
 export type { Ucan, DidableKey } from './ucans'
