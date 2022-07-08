@@ -7,7 +7,7 @@ import {
   SchemaNotFoundError,
   WrongSchemaTypeError,
   adxFallbackStrings,
-} from './types.js'
+} from './types'
 
 const ajv = new Ajv()
 ajvAddFormats(ajv)
@@ -17,7 +17,7 @@ export interface AdxRecordValidatorDescription {
   type: string | string[]
   ext?: string | string[]
 }
-export * from './types.js'
+export * from './types'
 
 /**
  * A compiled schema.

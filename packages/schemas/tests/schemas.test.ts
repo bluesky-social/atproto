@@ -1,126 +1,99 @@
-import test from 'ava'
 import {
   AdxSchemas,
   AdxSchemaDefinitionMalformedError,
   SchemaNotFoundError,
   WrongSchemaTypeError,
   AdxValidationError,
-} from '../src/index.js'
-import FeedViewSchema from './_scaffolds/schemas/feed-view.js'
-import ZeetSchema from './_scaffolds/schemas/zeet.js'
-import ZeetRev2Schema from './_scaffolds/schemas/zeet-rev2.js'
-import PollSchema from './_scaffolds/schemas/poll.js'
+} from '../src/index'
+import FeedViewSchema from './_scaffolds/schemas/feed-view'
+import ZeetSchema from './_scaffolds/schemas/zeet'
+import ZeetRev2Schema from './_scaffolds/schemas/zeet-rev2'
+import PollSchema from './_scaffolds/schemas/poll'
 
-test('Create schema collections and validators', (t) => {
+describe('Create schema collections and validators', () => {
   const s = new AdxSchemas()
-  s.add(FeedViewSchema)
-  s.add(ZeetSchema)
-  t.throws(() => s.add(ZeetRev2Schema))
-  s.add(PollSchema)
-  t.is(s.schemas.size, 6) // 2 for each because we register twice under name and id
 
-  {
+  it('Adds schemas', () => {
+    s.add(FeedViewSchema)
+    s.add(ZeetSchema)
+    expect(() => s.add(ZeetRev2Schema)).toThrow()
+    s.add(PollSchema)
+    expect(s.schemas.size).toBe(6) // 2 for each because we register twice under name and id
+  })
+
+  it('Creates record validators by shortnames', () => {
     const v = s.createRecordValidator('Zeet')
-    t.is(v.type.length, 1)
-    t.is(v.ext.length, 0)
-  }
-  {
+    expect(v.type.length).toBe(1)
+    expect(v.ext.length).toBe(0)
+  })
+  it('Creates record validators by longnames', () => {
     const v = s.createRecordValidator('blueskyweb.xyz:Zeet')
-    t.is(v.type.length, 1)
-    t.is(v.ext.length, 0)
-  }
-  {
+    expect(v.type.length).toBe(1)
+    expect(v.ext.length).toBe(0)
+  })
+  it('Creates complex record validators', () => {
     const v = s.createRecordValidator({
       type: 'Zeet',
       ext: 'Poll',
     })
-    t.is(v.type.length, 1)
-    t.is(v.ext.length, 1)
-  }
+    expect(v.type.length).toBe(1)
+    expect(v.ext.length).toBe(1)
+  })
 
-  t.throws(() => s.createRecordValidator('FeedView'), {
-    instanceOf: WrongSchemaTypeError,
-    message: 'Schema "blueskyweb.xyz:FeedView" does not validate adxs-record',
-  })
-  t.throws(() => s.createRecordValidator('Foo'), {
-    instanceOf: SchemaNotFoundError,
-    message: 'Schema not found: Foo',
-  })
-  s.remove('Zeet')
-  t.throws(() => s.createRecordValidator('Zeet'), {
-    instanceOf: SchemaNotFoundError,
-    message: 'Schema not found: Zeet',
-  })
-  t.throws(() => s.createRecordValidator('blueskyweb.xyz:Zeet'), {
-    instanceOf: SchemaNotFoundError,
-    message: 'Schema not found: blueskyweb.xyz:Zeet',
+  it('Throws for invalid conditions', () => {
+    expect(() => s.createRecordValidator('FeedView')).toThrow(
+      WrongSchemaTypeError,
+    )
+    expect(() => s.createRecordValidator('Foo')).toThrow(SchemaNotFoundError)
+    s.remove('Zeet')
+    expect(() => s.createRecordValidator('Zeet')).toThrow(SchemaNotFoundError)
+    expect(() => s.createRecordValidator('blueskyweb.xyz:Zeet')).toThrow(
+      SchemaNotFoundError,
+    )
   })
 })
 
-test('Validates schemas', (t) => {
+describe('Validates schemas', () => {
   const s = new AdxSchemas()
-  t.throws(() => s.add({}), {
-    instanceOf: AdxSchemaDefinitionMalformedError,
-    message: 'Failed to parse schema definition',
-  })
-  t.throws(() => s.add({ $type: 'wrong' }), {
-    instanceOf: AdxSchemaDefinitionMalformedError,
-    message: 'Failed to parse schema definition',
-  })
-  t.throws(() => s.add({ $type: 'adxs-record' }), {
-    instanceOf: AdxSchemaDefinitionMalformedError,
-    message: 'Failed to parse schema definition',
-  })
-  t.throws(
-    () =>
-      s.add({
-        $type: 'adxs-record',
-        author: 'blueskyweb.xyz',
-        name: 'Test',
-        schema: 'wrong',
-      }),
-    {
-      instanceOf: AdxSchemaDefinitionMalformedError,
-      message:
-        'The "blueskyweb.xyz:Test" .schema failed to compile: The base .type must be an "object"',
-    },
+  expect(() => s.add({})).toThrow(AdxSchemaDefinitionMalformedError)
+  expect(() => s.add({ $type: 'wrong' })).toThrow(
+    AdxSchemaDefinitionMalformedError,
   )
-  t.throws(
-    () =>
-      s.add({
-        $type: 'adxs-record',
-        author: 'blueskyweb.xyz',
-        name: 'Test',
-        schema: {
-          type: 'array',
-        },
-      }),
-    {
-      instanceOf: AdxSchemaDefinitionMalformedError,
-      message:
-        'The "blueskyweb.xyz:Test" .schema failed to compile: The base .type must be an "object"',
-    },
+  expect(() => s.add({ $type: 'adxs-record' })).toThrow(
+    AdxSchemaDefinitionMalformedError,
   )
-  t.throws(
-    () =>
-      s.add({
-        $type: 'adxs-record',
-        author: 'blueskyweb.xyz',
-        name: 'Test',
-        schema: {
-          type: 'object',
-          unsupportedField: 'ohno',
-        },
-      }),
-    {
-      instanceOf: AdxSchemaDefinitionMalformedError,
-      message:
-        'The "blueskyweb.xyz:Test" .schema failed to compile: strict mode: unknown keyword: "unsupportedField"',
-    },
-  )
+  expect(() =>
+    s.add({
+      $type: 'adxs-record',
+      author: 'blueskyweb.xyz',
+      name: 'Test',
+      schema: 'wrong',
+    }),
+  ).toThrow(AdxSchemaDefinitionMalformedError)
+  expect(() =>
+    s.add({
+      $type: 'adxs-record',
+      author: 'blueskyweb.xyz',
+      name: 'Test',
+      schema: {
+        type: 'array',
+      },
+    }),
+  ).toThrow(AdxSchemaDefinitionMalformedError)
+  expect(() =>
+    s.add({
+      $type: 'adxs-record',
+      author: 'blueskyweb.xyz',
+      name: 'Test',
+      schema: {
+        type: 'object',
+        unsupportedField: 'ohno',
+      },
+    }),
+  ).toThrow(AdxSchemaDefinitionMalformedError)
 })
 
-test('Validates record types', (t) => {
+describe('Validates record types', () => {
   const s = new AdxSchemas()
   s.add(ZeetSchema)
 
@@ -133,10 +106,10 @@ test('Validates record types', (t) => {
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       })
-      t.truthy(res.valid)
-      t.truthy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.falsy(res.error)
+      expect(res.valid).toBeTruthy()
+      expect(res.fullySupported).toBeTruthy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBeFalsy()
     }
     {
       // valid w/extra field
@@ -146,10 +119,10 @@ test('Validates record types', (t) => {
         extraField: 'foo',
         createdAt: new Date().toISOString(),
       })
-      t.truthy(res.valid)
-      t.truthy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.falsy(res.error)
+      expect(res.valid).toBeTruthy()
+      expect(res.fullySupported).toBeTruthy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBeFalsy()
     }
     {
       // invalid - missing createdAt
@@ -157,11 +130,10 @@ test('Validates record types', (t) => {
         $type: 'blueskyweb.xyz:Zeet',
         text: 'Hello, world!',
       })
-      t.falsy(res.valid)
-      t.falsy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.is(
-        res.error,
+      expect(res.valid).toBeFalsy()
+      expect(res.fullySupported).toBeFalsy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBe(
         `Failed blueskyweb.xyz:Zeet validation for #/required: must have required property 'createdAt'`,
       )
     }
@@ -172,11 +144,10 @@ test('Validates record types', (t) => {
         text: 'Hello, world!',
         createdAt: 1234,
       })
-      t.falsy(res.valid)
-      t.falsy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.is(
-        res.error,
+      expect(res.valid).toBeFalsy()
+      expect(res.fullySupported).toBeFalsy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBe(
         `Failed blueskyweb.xyz:Zeet validation for #/properties/createdAt/type: must be string`,
       )
     }
@@ -187,15 +158,17 @@ test('Validates record types', (t) => {
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       })
-      t.falsy(res.valid)
-      t.falsy(res.fullySupported)
-      t.truthy(res.incompatible)
-      t.is(res.error, 'Record type blueskyweb.xyz:Invalid is not supported')
+      expect(res.valid).toBeFalsy()
+      expect(res.fullySupported).toBeFalsy()
+      expect(res.incompatible).toBeTruthy()
+      expect(res.error).toBe(
+        'Record type blueskyweb.xyz:Invalid is not supported',
+      )
     }
   }
 })
 
-test('Validates extension types', (t) => {
+describe('Validates extension types', () => {
   const s = new AdxSchemas()
   s.add(ZeetSchema)
   s.add(PollSchema)
@@ -220,10 +193,10 @@ test('Validates extension types', (t) => {
           },
         },
       })
-      t.truthy(res.valid)
-      t.truthy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.falsy(res.error)
+      expect(res.valid).toBeTruthy()
+      expect(res.fullySupported).toBeTruthy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBeFalsy()
     }
     {
       // valid w/extra field
@@ -244,10 +217,10 @@ test('Validates extension types', (t) => {
           },
         },
       })
-      t.truthy(res.valid)
-      t.truthy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.falsy(res.error)
+      expect(res.valid).toBeTruthy()
+      expect(res.fullySupported).toBeTruthy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBeFalsy()
     }
     {
       // valid but partial support
@@ -267,12 +240,11 @@ test('Validates extension types', (t) => {
           },
         },
       })
-      t.truthy(res.valid)
-      t.falsy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.falsy(res.error)
-      t.is(
-        res.fallbacks[0],
+      expect(res.valid).toBeTruthy()
+      expect(res.fullySupported).toBeFalsy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBeFalsy()
+      expect(res.fallbacks[0]).toBe(
         'This zeet includes a poll which this application does not support.',
       )
     }
@@ -290,11 +262,11 @@ test('Validates extension types', (t) => {
           },
         },
       })
-      t.truthy(res.valid)
-      t.falsy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.falsy(res.error)
-      t.is(res.fallbacks.length, 0)
+      expect(res.valid).toBeTruthy()
+      expect(res.fullySupported).toBeFalsy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBeFalsy()
+      expect(res.fallbacks.length).toBe(0)
     }
     {
       // invalid - extension object is missing answers
@@ -313,11 +285,10 @@ test('Validates extension types', (t) => {
           },
         },
       })
-      t.falsy(res.valid)
-      t.falsy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.is(
-        res.error,
+      expect(res.valid).toBeFalsy()
+      expect(res.fullySupported).toBeFalsy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBe(
         "Failed blueskyweb.xyz:Poll validation for #/required: must have required property 'answers'",
       )
     }
@@ -339,15 +310,15 @@ test('Validates extension types', (t) => {
           },
         },
       })
-      t.falsy(res.valid)
-      t.falsy(res.fullySupported)
-      t.truthy(res.incompatible)
-      t.is(res.error, 'Record extension other.org:Poll is not supported')
+      expect(res.valid).toBeFalsy()
+      expect(res.fullySupported).toBeFalsy()
+      expect(res.incompatible).toBeTruthy()
+      expect(res.error).toBe('Record extension other.org:Poll is not supported')
     }
   }
 })
 
-test('Validates views', (t) => {
+describe('Validates views', () => {
   const s = new AdxSchemas()
   s.add(FeedViewSchema)
 
@@ -374,10 +345,10 @@ test('Validates views', (t) => {
           },
         ],
       })
-      t.truthy(res.valid)
-      t.truthy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.falsy(res.error)
+      expect(res.valid).toBeTruthy()
+      expect(res.fullySupported).toBeTruthy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBeFalsy()
     }
     {
       // valid w/extra field
@@ -401,19 +372,18 @@ test('Validates views', (t) => {
           },
         ],
       })
-      t.truthy(res.valid)
-      t.truthy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.falsy(res.error)
+      expect(res.valid).toBeTruthy()
+      expect(res.fullySupported).toBeTruthy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBeFalsy()
     }
     {
       // invalid - missing feed
       const res = v.validateResponse({})
-      t.falsy(res.valid)
-      t.falsy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.is(
-        res.error,
+      expect(res.valid).toBeFalsy()
+      expect(res.fullySupported).toBeFalsy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBe(
         `Failed blueskyweb.xyz:FeedView validation for #/required: must have required property 'feed'`,
       )
     }
@@ -422,18 +392,17 @@ test('Validates views', (t) => {
       const res = v.validateResponse({
         feed: true,
       })
-      t.falsy(res.valid)
-      t.falsy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.is(
-        res.error,
+      expect(res.valid).toBeFalsy()
+      expect(res.fullySupported).toBeFalsy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBe(
         `Failed blueskyweb.xyz:FeedView validation for #/properties/feed/type: must be array`,
       )
     }
   }
 })
 
-test('isValid()', (t) => {
+describe('isValid()', () => {
   const s = new AdxSchemas()
   s.add(ZeetSchema)
 
@@ -446,7 +415,7 @@ test('isValid()', (t) => {
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       })
-      t.truthy(res)
+      expect(res).toBeTruthy()
     }
     {
       // valid w/partial support
@@ -464,7 +433,7 @@ test('isValid()', (t) => {
           answers: ['yes', 'no', 'eh'],
         },
       })
-      t.truthy(res)
+      expect(res).toBeTruthy()
     }
     {
       // invalid - missing createdAt
@@ -472,12 +441,12 @@ test('isValid()', (t) => {
         $type: 'blueskyweb.xyz:Zeet',
         text: 'Hello, world!',
       })
-      t.falsy(res)
+      expect(res).toBeFalsy()
     }
   }
 })
 
-test('assertValid()', (t) => {
+describe('assertValid()', () => {
   const s = new AdxSchemas()
   s.add(ZeetSchema)
 
@@ -490,29 +459,24 @@ test('assertValid()', (t) => {
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       })
-      t.truthy(res.valid)
-      t.truthy(res.fullySupported)
-      t.falsy(res.incompatible)
-      t.falsy(res.error)
+      expect(res.valid).toBeTruthy()
+      expect(res.fullySupported).toBeTruthy()
+      expect(res.incompatible).toBeFalsy()
+      expect(res.error).toBeFalsy()
     }
     {
       // invalid - missing createdAt
-      t.throws(
-        () =>
-          v.assertValid({
-            $type: 'blueskyweb.xyz:Zeet',
-            text: 'Hello, world!',
-          }),
-        {
-          instanceOf: AdxValidationError,
-          message: `Failed blueskyweb.xyz:Zeet validation for #/required: must have required property 'createdAt'`,
-        },
-      )
+      expect(() =>
+        v.assertValid({
+          $type: 'blueskyweb.xyz:Zeet',
+          text: 'Hello, world!',
+        }),
+      ).toThrow(AdxValidationError)
     }
   }
 })
 
-test('Fallback localization', (t) => {
+describe('Fallback localization', () => {
   const s = new AdxSchemas()
   s.add(ZeetSchema)
   s.add(PollSchema)
@@ -537,8 +501,7 @@ test('Fallback localization', (t) => {
         },
       },
     })
-    t.is(
-      res.fallbacks[0],
+    expect(res.fallbacks[0]).toBe(
       'This zeet includes a poll which this application does not support.',
     )
   }
@@ -563,8 +526,7 @@ test('Fallback localization', (t) => {
         },
       },
     })
-    t.is(
-      res.fallbacks[0],
+    expect(res.fallbacks[0]).toBe(
       'Este zeet incluye una encuesta que esta aplicación no admite.',
     )
   }
