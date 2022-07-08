@@ -1,15 +1,13 @@
 import repl, { REPLServer } from 'repl'
 import fs from 'fs'
 import os from 'os'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
 import chalk from 'chalk'
 import getPort, { portNumbers } from 'get-port'
 import { DevEnv } from './index.js'
 import * as env from './env.js'
 import { PORTS, ServerType, ServerConfig } from './types.js'
 
-// const __dirname = join(dirname(fileURLToPath(import.meta.url)))
 const pkg = JSON.parse(
   fs.readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'),
 )

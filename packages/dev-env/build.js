@@ -6,6 +6,7 @@ require('esbuild')
     outdir: 'dist',
     platform: 'node',
     external: [
+      'serve-handler',
       '../../../node_modules/knex/*',
       '../../../node_modules/@vscode/sqlite3/*',
       '../../../node_modules/level/*',

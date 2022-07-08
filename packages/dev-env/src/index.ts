@@ -4,13 +4,14 @@ import { IpldStore } from '@adxp/common'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
 import WSRelayServer from '@adxp/ws-relay/dist/index.js'
-// we were ts ignoring this?
 import AuthLobbyServer from '@adxp/auth-lobby'
 import ExampleApp from '@adxp/example-app'
 import { DidWebDb, DidWebServer } from '@adxp/did-sdk'
 import KeyManagerServer from './key-manager/index.js'
 import KeyManagerDb from './key-manager/db.js'
 import { ServerType, ServerConfig, StartParams } from './types.js'
+
+console.log(AuthLobbyServer)
 
 class DevEnvServer {
   inst?: http.Server | DidWebServer

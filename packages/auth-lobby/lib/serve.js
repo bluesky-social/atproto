@@ -1,12 +1,11 @@
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
-import handler from 'serve-handler'
-import http from 'http'
+const { join } = require('path')
+const handler = require('serve-handler')
+const http = require('http')
 
-// const __dirname = dirname(fileURLToPath(import.meta.url))
-const BUILD_DIR = join(__dirname, '..', 'dist')
+const parts = __dirname.split('/packages/')
+const BUILD_DIR = join(parts[0], 'packages', 'auth-lobby', 'dist')
 
-export default function runServer(port) {
+const runServer = (port) => {
   const server = http.createServer((request, response) => {
     return handler(request, response, {
       public: BUILD_DIR,
@@ -17,3 +16,5 @@ export default function runServer(port) {
   server.listen(port)
   return server
 }
+
+module.exports = runServer
