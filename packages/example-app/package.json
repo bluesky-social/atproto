@@ -1,8 +1,7 @@
 {
   "name": "@adxp/example-app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "main": "./lib/serve.js",
-  "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
     "build:tsc": "tsc --build && echo 'Completed typecheck!'",

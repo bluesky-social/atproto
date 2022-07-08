@@ -1,22 +1,19 @@
 {
-  "name": "typescript-monorepo-example",
-  "version": "1.0.0",
-  "description": "An example typescript monorepo",
+  "name": "adx",
+  "version": "0.0.1",
+  "repository": "git@github.com:bluesky-social/adx.git",
+  "author": "Daniel Holmgren <dtholmgren@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {
     "prepublish": "yarn build",
     "verify": "lerna run verify --stream",
     "prettier": "lerna run prettier",
     "build": "lerna run build",
     "test": "NODE_ENV=development lerna run test --stream"
-  },
-  "author": "@CryogenicPlanet",
-  "license": "ISC",
-  "private": true,
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn prettier",
-      "pre-push": "yarn verify"
-    }
   },
   "devDependencies": {
     "@babel/preset-env": "^7.18.6",

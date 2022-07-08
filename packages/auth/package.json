@@ -1,8 +1,7 @@
 {
   "name": "@adxp/auth",
-  "version": "1.0.0",
-  "description": "An example monorepo package with testing/esbuild",
-  "main": "src/index.ts",
+  "version": "0.0.3",
+  "main": "dist/index.js",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/",
@@ -14,8 +13,6 @@
     "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
     "postbuild": "tsc --build tsconfig.build.json"
   },
-  "author": "Rahul Tarak",
-  "license": "MIT",
   "dependencies": {
     "@adxp/crypto": "*",
     "@ucans/core": "0.0.1-alpha2",

@@ -1,8 +1,7 @@
 {
   "name": "@adxp/cli",
-  "version": "1.0.0",
-  "description": "An example monorepo package with testing/esbuild",
-  "main": "src/index.ts",
+  "version": "0.0.1",
+  "main": "dist/bin.js",
   "scripts": {
     "cli": "node dist/bin.js",
     "build": "node ./build.js",
@@ -13,8 +12,6 @@
     "verify": "run-p prettier lint",
     "verify:fix": "yarn prettier:fix && yarn lint:fix"
   },
-  "author": "Rahul Tarak",
-  "license": "MIT",
   "dependencies": {
     "@adxp/auth": "*",
     "@adxp/common": "*",
