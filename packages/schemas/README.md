@@ -59,9 +59,9 @@ const res1 = ublogValidator.validate({
   text: 'Hello, world!',
   createdAt: '2022-06-28T22:17:33.459Z'
 })
+res1.compatible     // => true
 res1.valid          // => true
 res1.fullySupported // => true
-res1.incompatible   // => false
 res1.error          // => undefined
 res1.fallbacks      // => []
 
@@ -72,9 +72,9 @@ const res2 = ublogValidator.validate({
   text: 'Hello, world!',
   createdAt: 12345 // <-- wrong type!
 })
+res2.compatible     // => true
 res2.valid          // => false
 res2.fullySupported // => false
-res2.incompatible   // => false
 res2.error          // => `Failed blueskyweb.xyz:UBlog validation for #/properties/createdAt/type: must be string`
 res2.fallbacks      // => []
 
@@ -85,9 +85,9 @@ const res3 = ublogValidator.validate({
   text: 'Hello, world!',
   createdAt: '2022-06-28T22:17:33.459Z'
 })
+res3.compatible     // => false
 res3.valid          // => false
 res3.fullySupported // => false
-res3.incompatible   // => true
 res3.error          // => `Record type other.org:Fret is not supported`
 res3.fallbacks      // => []
 
@@ -108,9 +108,9 @@ const res4 = ublogValidator.validate({
     },
   },
 })
+res4.compatible     // => true
 res4.valid          // => true
 res4.fullySupported // => true
-res4.incompatible   // => false
 res4.error          // => undefined
 res4.fallbacks      // => []
 
@@ -131,9 +131,9 @@ const res5 = ublogValidator.validate({
     },
   },
 })
+res5.compatible     // => true
 res5.valid          // => true
 res5.fullySupported // => false
-res5.incompatible   // => false
 res5.error          // => undefined
 res5.fallbacks      // => ['This zeet includes a poll which this application does not support.']
 ```

@@ -108,7 +108,7 @@ describe('Validates record types', () => {
       })
       expect(res.valid).toBeTruthy()
       expect(res.fullySupported).toBeTruthy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBeFalsy()
     }
     {
@@ -121,7 +121,7 @@ describe('Validates record types', () => {
       })
       expect(res.valid).toBeTruthy()
       expect(res.fullySupported).toBeTruthy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBeFalsy()
     }
     {
@@ -132,7 +132,7 @@ describe('Validates record types', () => {
       })
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBe(
         `Failed blueskyweb.xyz:Zeet validation for #/required: must have required property 'createdAt'`,
       )
@@ -146,7 +146,7 @@ describe('Validates record types', () => {
       })
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBe(
         `Failed blueskyweb.xyz:Zeet validation for #/properties/createdAt/type: must be string`,
       )
@@ -160,7 +160,7 @@ describe('Validates record types', () => {
       })
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
-      expect(res.incompatible).toBeTruthy()
+      expect(res.compatible).toBeFalsy()
       expect(res.error).toBe(
         'Record type blueskyweb.xyz:Invalid is not supported',
       )
@@ -195,7 +195,7 @@ describe('Validates extension types', () => {
       })
       expect(res.valid).toBeTruthy()
       expect(res.fullySupported).toBeTruthy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBeFalsy()
     }
     {
@@ -219,7 +219,7 @@ describe('Validates extension types', () => {
       })
       expect(res.valid).toBeTruthy()
       expect(res.fullySupported).toBeTruthy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBeFalsy()
     }
     {
@@ -242,7 +242,7 @@ describe('Validates extension types', () => {
       })
       expect(res.valid).toBeTruthy()
       expect(res.fullySupported).toBeFalsy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBeFalsy()
       expect(res.fallbacks[0]).toBe(
         'This zeet includes a poll which this application does not support.',
@@ -264,7 +264,7 @@ describe('Validates extension types', () => {
       })
       expect(res.valid).toBeTruthy()
       expect(res.fullySupported).toBeFalsy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBeFalsy()
       expect(res.fallbacks.length).toBe(0)
     }
@@ -287,7 +287,7 @@ describe('Validates extension types', () => {
       })
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBe(
         "Failed blueskyweb.xyz:Poll validation for #/required: must have required property 'answers'",
       )
@@ -312,7 +312,7 @@ describe('Validates extension types', () => {
       })
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
-      expect(res.incompatible).toBeTruthy()
+      expect(res.compatible).toBeFalsy()
       expect(res.error).toBe('Record extension other.org:Poll is not supported')
     }
   }
@@ -347,7 +347,7 @@ describe('Validates views', () => {
       })
       expect(res.valid).toBeTruthy()
       expect(res.fullySupported).toBeTruthy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBeFalsy()
     }
     {
@@ -374,7 +374,7 @@ describe('Validates views', () => {
       })
       expect(res.valid).toBeTruthy()
       expect(res.fullySupported).toBeTruthy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBeFalsy()
     }
     {
@@ -382,7 +382,7 @@ describe('Validates views', () => {
       const res = v.validateResponse({})
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBe(
         `Failed blueskyweb.xyz:FeedView validation for #/required: must have required property 'feed'`,
       )
@@ -394,7 +394,7 @@ describe('Validates views', () => {
       })
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBe(
         `Failed blueskyweb.xyz:FeedView validation for #/properties/feed/type: must be array`,
       )
@@ -461,7 +461,7 @@ describe('assertValid()', () => {
       })
       expect(res.valid).toBeTruthy()
       expect(res.fullySupported).toBeTruthy()
-      expect(res.incompatible).toBeFalsy()
+      expect(res.compatible).toBeTruthy()
       expect(res.error).toBeFalsy()
     }
     {

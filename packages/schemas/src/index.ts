@@ -394,8 +394,8 @@ export class AdxValidationResult {
     return this.code === AdxValidationResultCode.Full
   }
 
-  get incompatible() {
-    return this.code === AdxValidationResultCode.Incompatible
+  get compatible() {
+    return this.code !== AdxValidationResultCode.Incompatible
   }
 
   /**
