@@ -108,8 +108,12 @@ export class AdxPdsClient {
       pdsDid,
       auth.maintenanceCap(params.did),
     )
+    const reqBody = {
+      did: params.did,
+      username: params.username,
+    }
     await axios
-      .post(this.url(PdsEndpoint.Account), params, requestCfg(token))
+      .post(this.url(PdsEndpoint.Account), reqBody, requestCfg(token))
       .catch(toAPIError)
     return new AdxRepoClient(this, params.did, params.authStore)
   }
