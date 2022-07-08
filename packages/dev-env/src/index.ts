@@ -13,13 +13,7 @@ import DidWebClient from './did-web/client.js'
 import KeyManagerClient from './key-manager/client.js'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
-<<<<<<< HEAD:packages/dev-env/src/index.ts
-console.log(AuthLobbyServer)
-
-class DevEnvServer {
-=======
 export class DevEnvServer {
->>>>>>> cab993c (WIP API branch squash):dev-env/src/index.ts
   inst?: http.Server | DidWebServer
   client?: DidWebClient | KeyManagerClient
 

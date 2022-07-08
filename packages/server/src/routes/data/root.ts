@@ -1,12 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
-<<<<<<< HEAD:packages/server/src/routes/data/root.ts
-import { ServerError } from '../../error'
-import * as util from '../../util'
-=======
-import { ServerError } from '../../../error.js'
-import * as util from '../../../util.js'
->>>>>>> cab993c (WIP API branch squash):packages/server/src/routes/v1/data/root.ts
+import { ServerError } from '../../error.js'
+import * as util from '../../util.js'
 
 const router = express.Router()
 

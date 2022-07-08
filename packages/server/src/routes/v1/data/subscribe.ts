@@ -1,10 +1,6 @@
 import express from 'express'
 import { z } from 'zod'
-<<<<<<< HEAD:packages/server/src/routes/data/subscribe.ts
-import * as util from '../../util'
-=======
 import * as util from '../../../util.js'
->>>>>>> cab993c (WIP API branch squash):packages/server/src/routes/v1/data/subscribe.ts
 
 const router = express.Router()
 

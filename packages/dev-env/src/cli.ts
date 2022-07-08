@@ -3,10 +3,7 @@ import fs from 'fs'
 import os from 'os'
 import { join } from 'path'
 import chalk from 'chalk'
-<<<<<<< HEAD:packages/dev-env/src/cli.ts
-=======
 import inquirer from 'inquirer'
->>>>>>> cab993c (WIP API branch squash):dev-env/src/cli.ts
 import getPort, { portNumbers } from 'get-port'
 import { DevEnv, DevEnvServer } from './index.js'
 import * as env from './env.js'
@@ -33,12 +30,8 @@ console.log(`
 
 Initializing...`)
 console.log('Type .help if you get lost')
-<<<<<<< HEAD:packages/dev-env/src/cli.ts
-createREPL()
-=======
 let replInst = createREPL()
 let isReplPaused = false
->>>>>>> cab993c (WIP API branch squash):dev-env/src/cli.ts
 
 // commands
 // =

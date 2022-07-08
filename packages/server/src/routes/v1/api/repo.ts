@@ -1,13 +1,5 @@
 import express from 'express'
 import { z } from 'zod'
-<<<<<<< HEAD:packages/server/src/routes/data/post.ts
-import { checkReq } from '../../auth'
-import * as util from '../../util'
-import { ServerError } from '../../error'
-import { flattenPost, schema, TID } from '@adxp/common'
-import * as auth from '@adxp/auth'
-import * as subscriptions from '../../subscriptions'
-=======
 import {
   PdsError,
   describeRepoParams,
@@ -22,7 +14,6 @@ import * as authLib from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
 import { SERVER_DID } from '../../../server-identity.js'
 import * as subscriptions from '../../../subscriptions.js'
->>>>>>> cab993c (WIP API branch squash):packages/server/src/routes/v1/api/repo.ts
 
 const router = express.Router()
 

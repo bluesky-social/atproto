@@ -4,9 +4,12 @@ import { z } from 'zod'
 import { Repo, ucanCheck } from '@adxp/common'
 
 import * as auth from '../../auth.js'
-import { SERVER_DID, SERVER_KEYPAIR } from '../../server-identity.js'
 import * as util from '../../util.js'
 import { ServerError } from '../../error.js'
+
+// import { SERVER_DID, SERVER_KEYPAIR } from '../../server-identity.js'
+const SERVER_DID = 'did:todo'
+const SERVER_KEYPAIR = undefined // TODO
 
 const router = express.Router()
 
