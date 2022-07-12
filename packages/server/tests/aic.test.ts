@@ -24,6 +24,13 @@ const key_account = EcdsaKeypair.import(
   },
 )
 
+describe('delegator client', () => {
+  it('works', () => {
+    expect(true)
+  })
+})
+
+// old test to migrate.
 test.before('run server', async () => {
   if (USE_TEST_SERVER) {
     await runTestServer(PORT)

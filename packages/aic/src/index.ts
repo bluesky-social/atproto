@@ -1,5 +1,5 @@
-import * as crypto from '@adxp/crypto'
 import { TID } from '@adxp/common'
+import {EcdsaKeypair, sha256, verifyDidSig} from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
 
 /*
@@ -83,7 +83,7 @@ export const update_tick = async (
   tid: TID, // the consenus time of the tick's generation
   candidate_diff: Diff | null, // null when only updating tid
   stored_tick: Tick | null, // null when there is not db entry (did init)
-  key: crypto.EcdsaKeypair, // the consortium passes in the key
+  key: EcdsaKeypair, // the consortium passes in the key
 ): Promise<Tick | ErrorMessage> => {
   // @TODO
   // validate that tid > all tids in the diffs
@@ -181,7 +181,7 @@ export const tick_to_diffs = async (tick: {
 export const tick_from_diffs = async (
   diffs: Diffs,
   tid: TID,
-  key: crypto.EcdsaKeypair,
+  key: EcdsaKeypair,
 ): Promise<Tick | ErrorMessage> => {
   // This function dose not validate the diffs remember to do that first
   const tids = Object.keys(diffs).sort()
@@ -225,8 +225,8 @@ const authorise_key = (
     // only changes 'adx/account_keys' or 'adx/recovery_keys'
     // @TODO the 72 hour window logic needs to be here
     return diff.patches.every((patch: Patch) => {
-      const path = patch[2]
-      path === ['adx/account_keys'] || path === ['adx/recovery_keys']
+      const pathSegment = patch[1][0]
+      pathSegment === 'adx/account_keys' || pathSegment === 'adx/recovery_keys'
     })
   }
   return false
@@ -292,7 +292,7 @@ export const pid = async (
 ): Promise<string> => {
   if (data instanceof Uint8Array) {
     // return the pid120 a 24 char pid
-    const hash = s32encode(await crypto.sha256(data))
+    const hash = s32encode(await sha256(data))
     let twos = 0
     for (twos = 0; twos < 32; twos++) {
       if (hash[twos] !== '2') {
@@ -353,7 +353,7 @@ const patch = (doc: Document, patches: Patch[]): Document => {
   return doc
 }
 
-export const sign = async (doc: Document, key: crypto.EcdsaKeypair) => {
+export const sign = async (doc: Document, key: EcdsaKeypair) => {
   if (doc.key !== key.did()) {
     throw Error('Info: passed in secret key and did do not match')
   }
@@ -387,7 +387,7 @@ export const validate_sig = async (
   const sig = uint8arrays.fromString(doc.sig.slice(1), 'base58btc')
   let valid
   try {
-    valid = await crypto.verifyEcdsaSig(data, sig, doc.key)
+    valid = await verifyDidSig(doc.key, data, sig)
   } catch (e) {
     valid = false
   }

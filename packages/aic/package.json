@@ -3,12 +3,16 @@
   "version": "0.0.1",
   "main": "dist/index.js",
   "license": "MIT",
-  "type": "module",
   "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "dev": "tsc -w --project tsconfig.json",
-    "test": "ava -v test/*.ts",
-    "lint": "eslint --ext .ts ."
+    "test": "jest",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@adxp/common": "*",
@@ -20,7 +24,6 @@
   },
   "devDependencies": {
     "ts-node": "^10.8.1",
-    "ava": "^4.2.0",
     "typescript": "^4.7.2"
   }
 }
