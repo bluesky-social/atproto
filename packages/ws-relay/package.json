@@ -1,7 +1,7 @@
 {
   "name": "@adxp/ws-relay",
   "version": "0.0.1",
-  "main": "dist/index.ts",
+  "main": "src/index.ts",
   "bin": "dist/bin.js",
   "scripts": {
     "build": "node build.js",
