@@ -2,7 +2,7 @@ import test from 'ava'
 import axios from 'axios'
 import { EcdsaKeypair } from '@adxp/crypto'
 import { pid, sign, validate_sig } from '@adxp/aic'
-import { runTestServer } from './_util.js'
+import { runTestServer } from './_util'
 
 const USE_TEST_SERVER = false
 

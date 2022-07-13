@@ -1,7 +1,7 @@
 import express from 'express'
 import { TID } from '@adxp/common'
 import { sign } from '@adxp/aic'
-import { CONSORTIUM_KEYPAIR } from './index.js'
+import { CONSORTIUM_KEYPAIR } from './index'
 
 const router = express.Router()
 

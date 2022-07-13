@@ -1,5 +1,5 @@
 import express from 'express'
-import tid from './tid.js'
+import tid from './tid'
 import { TID } from '@adxp/common'
 import { update_tick } from '@adxp/aic'
 import * as crypto from '@adxp/crypto'
@@ -9,15 +9,17 @@ import { z } from 'zod'
 //       pull the prod key from the secret store
 export const CONSORTIUM_KEYPAIR = crypto.EcdsaKeypair.import(
   {
-    // did:key:zDnaesnjCLbxSB2EiJgTZUYCBqHTkuDJDdLbSmaAn2bpqXtuY
-    publicKey:
-      'QUwjqkzD7TZQ1iJY5TAdAD5mJDDxZrBYyi9Ld4Kebj7ZuR87TiFhKX5QeoYvffMquYTvToRV1P3EJXVqUYDMGnCc',
-    privateKey:
-      '2EPbyvKQKUaUPMF7Mm94FjEzvs5tsLWfesyc97W1dqYeeZFEG2axhDPdH5LDfLF28yNjJu26wYXiSypZtaMWCajYu4hHgUvHhygV8kHzQkvszbL6BrvGP8GsYpeWBBWBxx4q816yVUBjzFH21mkekFnHF5fWAXDUN72rii66kR81rkaxCTacSMJu2XUuz',
+    // did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh
+    key_ops: [ 'sign' ],
+    ext: true,
+    kty: 'EC',
+    x: 'zn_OWx4zJM5zy8E_WUAJH9OS75K5t6q74D7lMf7AmnQ',
+    y: 'trzc_f9i_nOuYRCLMyXxBcpc3OVlylmxdESQ0zdKHeQ',
+    crv: 'P-256',
+    d: 'Ii__doqqQ5YYZLfKh-LSh1Vm6AqCWHGMrBTDYKaEWfU',
   },
   {
     exportable: true,
-    encoding: 'base58btc',
   },
 )
 
