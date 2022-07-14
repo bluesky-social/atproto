@@ -4,7 +4,11 @@ This is a working repository for Bluesky's data protocol which we've termed ADX:
 
 ---
 
-**⚠️This is not production-ready or even alpha software. This project is in active development.⚠️**
+**⚠️ This is not production-ready or even alpha software. This project is in active development ⚠️**
+
+---
+
+The `main` branch is in active development and does not yet have documentation. We previously released a demo of our data system. You can check it out on the `data-demo` branch [Here](https://github.com/bluesky-social/adx/tree/data-demo). This README still contains the instructions for that branch.
 
 ---
 
