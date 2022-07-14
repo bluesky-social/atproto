@@ -33,6 +33,7 @@ export class BrowserStore extends AuthStore {
     const keypair = await crypto.EcdsaKeypair.import(jwk, {
       exportable: true,
     })
+    localStorage.setItem('adxKey', JSON.stringify(jwk))
     const storedUcans = BrowserStore.getStoredUcanStrs()
     const ucanStore = await ucan.storeFromTokens(adxSemantics, storedUcans)
     const authStore = new BrowserStore(keypair, ucanStore)
@@ -54,9 +55,9 @@ export class BrowserStore extends AuthStore {
   }
 
   async addUcan(token: ucan.Ucan): Promise<void> {
-    this.ucanStore.add(token)
     const storedUcans = BrowserStore.getStoredUcanStrs()
     BrowserStore.setStoredUcanStrs([...storedUcans, ucan.encode(token)])
+    await this.ucanStore.add(token)
   }
 
   async getUcanStore(): Promise<ucan.Store> {
