@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { AdxUri } from './uri.js'
+import { AdxUri } from './uri'
 
 const WELL_KNOWN_PATH = '/.well-known/adx-did'
 
