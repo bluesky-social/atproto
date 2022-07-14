@@ -1,3 +1,9 @@
+/**
+ * NOTE
+ * This key manager service is not meant for production use.
+ * It's specifically designed for the dev env.
+ */
+
 import level from 'level'
 import * as crypto from '@adxp/crypto'
 

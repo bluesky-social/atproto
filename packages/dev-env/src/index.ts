@@ -9,12 +9,13 @@ import ExampleApp from '@adxp/example-app'
 import { DidWebDb, DidWebServer } from '@adxp/did-sdk'
 import KeyManagerServer from './key-manager/index.js'
 import KeyManagerDb from './key-manager/db.js'
+import DidWebClient from './did-web/client.js'
+import KeyManagerClient from './key-manager/client.js'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
-console.log(AuthLobbyServer)
-
-class DevEnvServer {
+export class DevEnvServer {
   inst?: http.Server | DidWebServer
+  client?: DidWebClient | KeyManagerClient
 
   constructor(public type: ServerType, public port: number) {}
 
@@ -45,11 +46,11 @@ class DevEnvServer {
     const onServerReady = (s: http.Server): Promise<http.Server> => {
       return new Promise((resolve, reject) => {
         s.on('listening', () => {
-          console.log(`${this.name} running at ${this.url}`)
+          console.log(`${this.description} started ${chalk.gray(this.url)}`)
           resolve(s)
         })
         s.on('error', (e: Error) => {
-          console.log(`${this.name} failed to start:`, e)
+          console.log(`${this.description} failed to start:`, e)
           reject(e)
         })
       })
@@ -78,11 +79,13 @@ class DevEnvServer {
             `did:web server at port ${this.port} failed to start a server`,
           )
         }
+        this.client = new DidWebClient(this.url)
         break
       }
       case ServerType.KeyManager: {
         const db = KeyManagerDb.memory()
         this.inst = await onServerReady(KeyManagerServer(db, this.port))
+        this.client = new KeyManagerClient(this.url)
         break
       }
       case ServerType.AuthLobby: {
@@ -149,5 +152,18 @@ export class DevEnv {
     for (const server of this.servers.values()) {
       await server.close()
     }
+  }
+
+  hasType(type: ServerType) {
+    for (const s of this.servers.values()) {
+      if (s.type === type) {
+        return true
+      }
+    }
+    return false
+  }
+
+  listOfType(type: ServerType): DevEnvServer[] {
+    return Array.from(this.servers.values()).filter((s) => s.type === type)
   }
 }

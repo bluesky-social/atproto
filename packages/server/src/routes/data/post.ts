@@ -1,72 +1,89 @@
 import express from 'express'
 import { z } from 'zod'
-import { checkReq } from '../../auth'
-import * as util from '../../util'
-import { ServerError } from '../../error'
-import { flattenPost, schema, TID } from '@adxp/common'
-import * as auth from '@adxp/auth'
-import * as subscriptions from '../../subscriptions'
+import {
+  PdsError,
+  describeRepoParams,
+  DescribeRepoResponse,
+  listRecordsParams,
+} from '@adxp/api'
+import * as auth from '../../auth.js'
+import * as util from '../../util.js'
+import { ServerError } from '../../error.js'
+import { flattenPost, schema, TID, resolveName } from '@adxp/common'
+import * as authLib from '@adxp/auth'
+import * as didSdk from '@adxp/did-sdk'
+import { SERVER_DID } from '../../server-identity.js'
+import * as subscriptions from '../../subscriptions.js'
 
 const router = express.Router()
 
-// GET POST
-// --------------
+// DESCRIBE REPO
+// -------------
 
-export const getPostReq = z.object({
-  did: z.string(),
-  namespace: z.string(),
-  tid: schema.repo.strToTid,
+export const getPathParams = z.object({
+  nameOrDid: z.string(),
 })
-export type GetPostReq = z.infer<typeof getPostReq>
 
-router.get('/', async (req, res) => {
-  const { did, namespace, tid } = util.checkReqBody(req.query, getPostReq)
-  const repo = await util.loadRepo(res, did)
-  const postCid = await repo.runOnNamespace(namespace, async (store) => {
-    return store.posts.getEntry(tid)
-  })
-  if (postCid === null) {
-    throw new ServerError(404, 'Could not find post')
+async function resolveDidWrapped(did: string) {
+  try {
+    return (await didSdk.resolve(did)).didDoc
+  } catch (e) {
+    throw new PdsError('DidResolutionFailed', `Failed to resolve DID "${did}"`)
   }
-  const post = await repo.get(postCid, schema.microblog.post)
-  res.status(200).send(flattenPost(post))
+}
+
+async function resolveNameWrapped(name: string) {
+  try {
+    return await resolveName(name)
+  } catch (e) {
+    throw new PdsError(
+      'NameResolutionFailed',
+      `Failed to resolve name "${name}"`,
+    )
+  }
+}
+
+router.get('/:nameOrDid', async (req, res) => {
+  const { nameOrDid } = req.params
+  const { confirmName } = util.checkReqBody(req.query, describeRepoParams)
+
+  let name: string | undefined
+  let did: string
+  let didDoc: didSdk.DIDDocument
+  let nameIsCorrect: boolean | undefined
+
+  if (nameOrDid.startsWith('did:')) {
+    did = nameOrDid
+    didDoc = await resolveDidWrapped(did)
+    name = 'undefined' // TODO: need to decide how username gets published in the did doc
+    if (confirmName) {
+      const namesDeclaredDid = await resolveNameWrapped(name)
+      nameIsCorrect = did === namesDeclaredDid
+    }
+  } else {
+    name = nameOrDid
+    did = await resolveNameWrapped(name)
+    didDoc = await resolveDidWrapped(did)
+    if (confirmName) {
+      const didsDeclaredName = 'undefined' // TODO: need to decide how username gets published in the did doc
+      nameIsCorrect = name === didsDeclaredName
+    }
+  }
+
+  // TODO: list collections
+
+  const resBody: DescribeRepoResponse = { name, did, didDoc, nameIsCorrect }
+  res.status(200)
+  res.json(resBody)
 })
 
-// LIST POSTS
-// --------------
-
-export const listPostsReq = z.object({
-  did: z.string(),
-  namespace: z.string(),
-  count: schema.common.strToInt,
-  from: z.string().optional(),
-})
-export type ListPostsReq = z.infer<typeof listPostsReq>
-
-router.get('/list', async (req, res) => {
-  const { did, namespace, count, from } = util.checkReqBody(
-    req.query,
-    listPostsReq,
-  )
-  const fromTid = from ? TID.fromStr(from) : undefined
-  const repo = await util.loadRepo(res, did)
-  const entries = await repo.runOnNamespace(namespace, async (store) => {
-    return store.posts.getEntries(count, fromTid)
-  })
-  const posts = await Promise.all(
-    entries.map((entry) => repo.get(entry.cid, schema.microblog.post)),
-  )
-  const flattened = posts.map(flattenPost)
-  res.status(200).send(flattened)
-})
-
-// CREATE POST
-// --------------
+// EXECUTE TRANSACTION
+// -------------------
 
 export const createPostReq = schema.microblog.post
 export type CreatePostReq = z.infer<typeof createPostReq>
 
-router.post('/', async (req, res) => {
+router.post('/:did', async (req, res) => {
   const post = util.checkReqBody(req.body, createPostReq)
   const authStore = await checkReq(
     req,
@@ -83,15 +100,16 @@ router.post('/', async (req, res) => {
   await db.updateRepoRoot(post.author, repo.cid)
   await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
-})
 
-// UPDATE POST
-// --------------
+  /*
+
+// UPDATE RECORD
+// -------------
 
 export const editPostReq = schema.microblog.post
 export type EditPostReq = z.infer<typeof editPostReq>
 
-router.put('/', async (req, res) => {
+router.put('/:did/c/:coll/r/:key', async (req, res) => {
   const post = util.checkReqBody(req.body, editPostReq)
   const authStore = await checkReq(
     req,
@@ -110,8 +128,8 @@ router.put('/', async (req, res) => {
   res.status(200).send()
 })
 
-// DELETE POST
-// --------------
+// DELETE RECORD
+// -------------
 
 export const deletePostReq = z.object({
   did: z.string(),
@@ -120,7 +138,7 @@ export const deletePostReq = z.object({
 })
 export type DeletePostReq = z.infer<typeof deletePostReq>
 
-router.delete('/', async (req, res) => {
+router.delete('/:did/c/:coll/r/:key', async (req, res) => {
   const { did, namespace, tid } = util.checkReqBody(req.body, deletePostReq)
   const authStore = await checkReq(
     req,
@@ -136,6 +154,53 @@ router.delete('/', async (req, res) => {
   await db.updateRepoRoot(did, repo.cid)
   await subscriptions.notifySubscribers(db, repo)
   res.status(200).send()
+})
+
+*/
+})
+
+// LIST RECORDS
+// ------------
+
+router.get('/:nameOrDid/c/:coll', async (req, res) => {
+  const { nameOrDid, coll } = req.params
+  const { count, from } = util.checkReqBody(req.query, listRecordsParams)
+  const fromTid = from ? TID.fromStr(from) : undefined
+  const repo = await util.loadRepo(res, nameOrDid)
+  const entries = await repo.runOnNamespace(coll, async (store) => {
+    return store.posts.getEntries(count, fromTid)
+  })
+  const posts = await Promise.all(
+    entries.map((entry) => repo.get(entry.cid, schema.microblog.post)),
+  )
+  const flattened = posts.map(flattenPost)
+  res.status(200).send(flattened)
+})
+
+// GET RECORD
+// ----------
+
+export const getPostReq = z.object({
+  nameOrDid: z.string(),
+  coll: z.string(),
+  recordKey: schema.repo.strToTid,
+})
+export type GetPostReq = z.infer<typeof getPostReq>
+
+router.get('/:nameOrDid/c/:coll/r/:recordKey', async (req, res) => {
+  const { nameOrDid, coll, recordKey } = util.checkReqBody(
+    req.params,
+    getPostReq,
+  )
+  const repo = await util.loadRepo(res, nameOrDid)
+  const postCid = await repo.runOnNamespace(coll, async (store) => {
+    return store.posts.getEntry(recordKey)
+  })
+  if (postCid === null) {
+    throw new ServerError(404, 'Could not find post')
+  }
+  const post = await repo.get(postCid, schema.microblog.post)
+  res.status(200).send(flattenPost(post))
 })
 
 export default router

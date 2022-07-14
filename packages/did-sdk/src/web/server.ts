@@ -19,7 +19,7 @@ routes.get('/*', async (req, res) => {
   res.send(JSON.stringify(got))
 })
 
-// Create DID
+// Write DID
 routes.post('/', async (req, res) => {
   const { didDoc } = req.body
   if (!didDoc) {
@@ -29,9 +29,6 @@ routes.post('/', async (req, res) => {
   // @TODO validate didDoc body
   const db = res.locals.db
   const path = idToPath(didDoc.id)
-  if (await db.has(path)) {
-    return res.status(409).send(`DID already exists with id: ${didDoc.id}`)
-  }
   await db.put(path, didDoc)
   res.status(200).send()
 })

@@ -1,16 +1,16 @@
 import express from 'express'
 import WellKnown from './well-known'
-import ID from './id'
-import Data from './data'
-import Indexer from './indexer'
-import DidNetwork from './did-network'
+import Account from './v1/account'
+import API from './v1/api/index'
+import Data from './v1/data/index'
+import Session from './v1/session'
 
 const router = express.Router()
 
 router.use('/.well-known', WellKnown)
-router.use('/id', ID)
-router.use('/data', Data)
-router.use('/indexer', Indexer)
-router.use('/did-network', DidNetwork)
+router.use('/.adx/v1/account', Account)
+router.use('/.adx/v1/api', API)
+router.use('/.adx/v1/data', Data)
+router.use('/.adx/v1/session', Session)
 
 export default router

@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
-import { ServerError } from '../../error'
-import * as util from '../../util'
+import { ServerError } from '../../error.js'
+import * as util from '../../util.js'
 
 const router = express.Router()
 

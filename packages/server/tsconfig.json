@@ -7,6 +7,7 @@
   "module": "nodenext",
   "include": ["./src","__tests__/**/**.ts"],
   "references": [
+    { "path": "../api/tsconfig.build.json" },
     { "path": "../auth/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },
     { "path": "../crypto/tsconfig.build.json" }

@@ -78,8 +78,8 @@ export const lookupDid = async (
 
 export const getServerDid = async (url: string): Promise<string> => {
   try {
-    const res = await axios.get(`${url}/.well-known/did.json`)
-    return res.data.id
+    const res = await axios.get(`${url}/.well-known/adx-did`)
+    return res.data
   } catch (e) {
     const err = parseAxiosError(e)
     throw new Error(`Could not retrieve server did ${err.msg}`)

@@ -24,3 +24,12 @@ export const PORTS = {
   [ServerType.AuthLobby]: 3000,
   [ServerType.ExampleApp]: 3002,
 }
+
+export const SERVER_TYPE_LABELS = {
+  [ServerType.PersonalDataServer]: 'personal data server',
+  [ServerType.WebSocketRelay]: 'websocket relay',
+  [ServerType.DidWebHost]: 'did:web host',
+  [ServerType.KeyManager]: 'key manager',
+  [ServerType.AuthLobby]: 'auth lobby',
+  [ServerType.ExampleApp]: 'example app',
+}
