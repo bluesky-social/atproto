@@ -1,6 +1,6 @@
 import express from 'express'
-import Repo from './repo.js'
-import View from './view.js'
+import Repo from './repo'
+import View from './view'
 
 const router = express.Router()
 

@@ -392,6 +392,6 @@ function getViewValidator(
 
 export * as did from '@adxp/did-sdk'
 export { resolveName, AdxUri } from '@adxp/common'
-export * from './types.js'
-export * from './http-types.js'
-export * from './errors.js'
+export * from './types'
+export * from './http-types'
+export * from './errors'

@@ -1,7 +1,7 @@
 import express from 'express'
-import Root from './root.js'
-import Repo from './repo.js'
-import Subscribe from './subscribe.js'
+import Root from './root'
+import Repo from './repo'
+import Subscribe from './subscribe'
 
 const router = express.Router()
 

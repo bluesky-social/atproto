@@ -1,15 +1,12 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { Repo, ucanCheck } from '@adxp/common'
+import { Repo } from '@adxp/common'
+import * as auth from '@adxp/auth'
 
-import * as auth from '../../auth.js'
-import * as util from '../../util.js'
-import { ServerError } from '../../error.js'
-
-// import { SERVER_DID, SERVER_KEYPAIR } from '../../server-identity.js'
-const SERVER_DID = 'did:todo'
-const SERVER_KEYPAIR = undefined // TODO
+import * as serverAuth from '../../auth'
+import * as util from '../../util'
+import { ServerError } from '../../error'
 
 const router = express.Router()
 
@@ -35,10 +32,10 @@ router.post('/', async (req, res) => {
   }
 
   const { db, blockstore } = util.getLocals(res)
-  const ucanStore = await auth.checkReq(
+  const authStore = await serverAuth.checkReq(
     req,
-    ucanCheck.hasAudience(SERVER_DID),
-    ucanCheck.hasMaintenancePermission(did),
+    res,
+    auth.maintenanceCap(did),
   )
   const host = util.getOwnHost(req)
 
@@ -51,14 +48,14 @@ router.post('/', async (req, res) => {
   await db.registerDid(username, did, host)
   // create empty repo
   if (createRepo) {
-    const repo = await Repo.create(blockstore, did, SERVER_KEYPAIR, ucanStore)
+    const repo = await Repo.create(blockstore, did, authStore)
     await db.createRepoRoot(did, repo.cid)
   }
 
   return res.sendStatus(200)
 })
 
-router.get('/', async (req, res) => {
+router.delete('/', async (req, res) => {
   // TODO delete the session account
   res.sendStatus(501)
 })

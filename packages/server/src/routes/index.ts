@@ -1,9 +1,9 @@
 import express from 'express'
-import WellKnown from './well-known.js'
-import Account from './v1/account.js'
-import API from './v1/api/index.js'
-import Data from './v1/data/index.js'
-import Session from './v1/session.js'
+import WellKnown from './well-known'
+import Account from './v1/account'
+import API from './v1/api/index'
+import Data from './v1/data/index'
+import Session from './v1/session'
 
 const router = express.Router()
 

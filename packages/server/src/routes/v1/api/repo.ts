@@ -1,19 +1,22 @@
 import express from 'express'
 import { z } from 'zod'
 import {
-  PdsError,
+  NameResolutionFailed,
+  DidResolutionFailed,
   describeRepoParams,
   DescribeRepoResponse,
   listRecordsParams,
+  batchWriteParams,
+  BatchWriteReponse,
 } from '@adxp/api'
-import * as auth from '../../../auth.js'
-import * as util from '../../../util.js'
-import { ServerError } from '../../../error.js'
 import { flattenPost, schema, TID, resolveName } from '@adxp/common'
-import * as authLib from '@adxp/auth'
+import * as auth from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
-import { SERVER_DID } from '../../../server-identity.js'
-import * as subscriptions from '../../../subscriptions.js'
+
+import * as serverAuth from '../../../auth'
+import * as util from '../../../util'
+import { ServerError } from '../../../error'
+import * as subscriptions from '../../../subscriptions'
 
 const router = express.Router()
 
@@ -28,7 +31,7 @@ async function resolveDidWrapped(did: string) {
   try {
     return (await didSdk.resolve(did)).didDoc
   } catch (e) {
-    throw new PdsError('DidResolutionFailed', `Failed to resolve DID "${did}"`)
+    throw new DidResolutionFailed(did)
   }
 }
 
@@ -36,10 +39,7 @@ async function resolveNameWrapped(name: string) {
   try {
     return await resolveName(name)
   } catch (e) {
-    throw new PdsError(
-      'NameResolutionFailed',
-      `Failed to resolve name "${name}"`,
-    )
+    throw new NameResolutionFailed(name)
   }
 }
 
@@ -79,29 +79,50 @@ router.get('/:nameOrDid', async (req, res) => {
 
 // EXECUTE TRANSACTION
 // -------------------
-
-export const createPostReq = schema.microblog.post
-export type CreatePostReq = z.infer<typeof createPostReq>
-
 router.post('/:did', async (req, res) => {
-  const post = util.checkReqBody(req.body, createPostReq)
-  const authStore = await checkReq(
-    req,
-    res,
-    auth.writeCap(post.author, post.namespace, 'posts', post.tid.toString()),
-  )
-  const repo = await util.loadRepo(res, post.author, authStore)
-  const postCid = await repo.put(flattenPost(post))
-  await repo.runOnNamespace(post.namespace, async (store) => {
-    return store.posts.addEntry(post.tid, postCid)
-  })
-  const db = util.getDB(res)
-  await db.createPost(post, postCid)
-  await db.updateRepoRoot(post.author, repo.cid)
-  await subscriptions.notifySubscribers(db, repo)
-  res.status(200).send()
+  const { did } = req.params
+  const tx = util.checkReqBody(req.body, batchWriteParams)
+  // auth token is in the request data not in http header
 
-  /*
+  const serverKey = util.getKeypair(res)
+
+  const tokens = tx.writes.map((op) => op.auth)
+  const authStore = await auth.AuthStore.fromTokens(serverKey, tokens)
+  const repo = await util.loadRepo(res, did, authStore)
+  for (const op of tx.writes) {
+    await repo.runOnNamespace(op.collection, async (store) => {})
+    const token = await auth.validateUcan(op.auth)
+    try {
+      await auth.verifyAdxUcan(
+        token,
+        serverKey.did(),
+        auth.writeCap(did, op.collection),
+      )
+    } catch (err) {
+      // @TODO make this a real error
+      throw new Error('UNAUTHORIZED')
+    }
+
+    await repo.runOnNamespace(op.collection, async (store) => {})
+  }
+
+  // const authStore = await serverAuth.checkReq(
+  //   req,
+  //   res,
+  //   auth.writeCap(post.author, post.namespace, 'posts', post.tid.toString()),
+  // )
+  // const repo = await util.loadRepo(res, post.author, authStore)
+  // const postCid = await repo.put(flattenPost(post))
+  // await repo.runOnNamespace(post.namespace, async (store) => {
+  //   return store.posts.addEntry(post.tid, postCid)
+  // })
+  // const db = util.getDB(res)
+  // await db.createPost(post, postCid)
+  // await db.updateRepoRoot(post.author, repo.cid)
+  // await subscriptions.notifySubscribers(db, repo)
+  // res.status(200).send()
+})
+/*
 
 // UPDATE RECORD
 // -------------
@@ -157,14 +178,13 @@ router.delete('/:did/c/:coll/r/:key', async (req, res) => {
 })
 
 */
-})
 
 // LIST RECORDS
 // ------------
 
 router.get('/:nameOrDid/c/:coll', async (req, res) => {
   const { nameOrDid, coll } = req.params
-  const { count, from } = util.checkReqBody(req.query, listRecordsParams)
+  const { count = 50, from } = util.checkReqBody(req.query, listRecordsParams)
   const fromTid = from ? TID.fromStr(from) : undefined
   const repo = await util.loadRepo(res, nameOrDid)
   const entries = await repo.runOnNamespace(coll, async (store) => {
