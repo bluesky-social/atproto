@@ -3,6 +3,9 @@ import {
   sign,
   validate_sig,
   tick_from_diffs,
+  update_tick,
+  pid,
+  tick_to_did_doc,
 } from '../src/index'
 import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
@@ -74,15 +77,15 @@ const key_recovery = EcdsaKeypair.import(
 )
 
 describe('aic test test', () => {
-  it('works', async () => {
-    console.log(TID.next().formatted())
-    console.log(await (await EcdsaKeypair.create({exportable: true})).export())
-    console.log('key_consortium', (await key_consortium).did())
-    console.log('key_tick', (await key_tick).did())
-    console.log('key_account', (await key_account).did())
-    console.log('key_recovery', (await key_recovery).did())
-    expect(true)
-  })
+  // it('works', async () => {
+  //   console.log(TID.next().formatted())
+  //   console.log(await (await EcdsaKeypair.create({exportable: true})).export())
+  //   console.log('key_consortium', (await key_consortium).did())
+  //   console.log('key_tick', (await key_tick).did())
+  //   console.log('key_account', (await key_account).did())
+  //   console.log('key_recovery', (await key_recovery).did())
+  //   expect(true)
+  // })
 
 
 // old test to migrate.
@@ -400,5 +403,124 @@ describe('aic test test', () => {
       }),
     ).toBeTruthy()
     expect(await validate_sig(JSON.parse(JSON.stringify(tick)))).toBeTruthy()
+  })
+
+  it('should update_tick', async () => {
+    const doc = {
+      'adx/account_keys': [
+        'did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV',
+      ],
+      'adx/recovery_keys':[
+        'did:key:zDnaeYHbbWiaCwAXvHXRyVqENDv8Sr3fwHW8P5eakkz4MqsTa',
+      ],
+    }
+    const did_of_doc = "did:aic:zrr5lxhs4rjlowv5"
+    if (did_of_doc !== `did:aic:${await pid(doc)}`) {
+      console.log('pid', await pid(doc))
+    }
+    const tick1 = await update_tick(
+      did_of_doc, 
+      TID.next(), 
+      doc,
+      null,
+      (await key_consortium)
+    )
+    if ('error' in tick1){
+      console.log(tick1)
+      expect(false).toBeTruthy()
+      return
+    }
+    console.log('tick1', tick1, await tick_to_did_doc(tick1, (await key_consortium).did()))
+
+    expect(await validate_sig(tick1)).toBeTruthy()
+    expect(tick1.did).toEqual(did_of_doc)
+    expect(tick1.key).toEqual('did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh')
+    
+    const tids1 = Object.keys(tick1.diffs).sort()
+    const tick2 = await update_tick(
+      did_of_doc, 
+      TID.next(),
+      await sign(
+        // candidate_diff is singed on clint then sent to consortium
+        {
+          prev: tids1.at(-1),
+          patches: [
+            ['put', ['name'], 'aaron.blueskyweb.xyz'],
+          ],
+          key: (await key_account).did(),
+          sig: ''
+        },
+        (await key_account), // only the client has this key
+      ),
+      tick1,
+      (await key_consortium) // only the consortium has this key
+    )
+    if ('error' in tick2){
+      console.log(tick2)
+      expect(false).toBeTruthy()
+      return
+    }
+    console.log('tick2', tick2, await tick_to_did_doc(tick2, (await key_consortium).did()))
+
+    expect(await validate_sig(tick2)).toBeTruthy()
+    expect(tick1.did).toEqual(did_of_doc)
+    expect(tick1.key).toEqual('did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh')
+
+
+    const tids2 = Object.keys(tick2.diffs).sort()
+    const tick3 = await update_tick(
+      did_of_doc,
+      TID.next(),
+      await sign(
+        {
+          prev: tids2.at(-1),
+          patches: [
+            ['del', ['adx/account_keys']],
+          ],
+          key: (await key_account).did(),
+          sig: ''
+        },
+        (await key_account),
+      ),
+      tick2,
+      (await key_consortium)
+    )
+    if ('error' in tick3){
+      console.log(tick3)
+      expect(false).toBeTruthy()
+      return
+    }
+    console.log('tick3', JSON.stringify(tick3), await tick_to_did_doc(tick3, (await key_consortium).did()))
+    expect(await validate_sig(tick3)).toBeTruthy()
+    expect(tick3.did).toEqual(did_of_doc)
+    expect(tick3.key).toEqual('did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh')
+
+    const tids3 = Object.keys(tick3.diffs).sort()
+    const tick4 = await update_tick(
+      did_of_doc,
+      TID.next(),
+      await sign(
+        {
+          prev: tids3.at(-1),
+          patches: [
+            ['put', ['hello'], 'world'],
+          ],
+          key: (await key_account).did(),
+          sig: ''
+        },
+        (await key_account),
+      ),
+      tick3,
+      (await key_consortium)
+    )
+    if ('error' in tick4){
+      console.log(tick4)
+      expect(false).toBeTruthy()
+      return
+    }
+    console.log('tick4', JSON.stringify(tick4), await tick_to_did_doc(tick4, (await key_consortium).did()))
+    expect(await validate_sig(tick4)).toBeTruthy()
+    expect(tick4.did).toEqual(did_of_doc)
+    expect(tick4.key).toEqual('did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh')
   })
 })

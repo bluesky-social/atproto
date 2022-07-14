@@ -4,41 +4,42 @@ import * as uint8arrays from 'uint8arrays'
 
 /*
   Example identity tick
- {"tid": "3j5k-ctc-emls-2x",
-  "did": "did:aic:zbrqqxuhii7m3fgi",
-  "diffs": {"3j5k-csv-ytkk-2x": {"nonce": 5381959927546556,
-                                 "a": 1,
-                                 "b": 2,
-                                 "c": 3,
-                                 "adx/account_keys": ["did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez"]},
-           "3j5k-csv-zc7c-2x": {"prev": "3j5k-csv-ytkk-2x",
-                                "patches": [["put",["d"],4]],
-                                "key": "did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez",
-                                "sig": "z5BRFnNDdUc9NkYbo9x8REDxk1b6e1RBVefrfvF1pjC5JB9FBcGcRcnqkYmWKHdTUbSD9333egXfwRvbJQ8kpcjU2"},
-           "3j5k-csv-zj22-2x": {"prev": "3j5k-csv-zc7c-2x",
-                                "patches": [["del",["b"]]],
-                                "key": "did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez",
-                                "sig": "z5Tfo2Juoq5jXZHpvzaGRguDXJLrgVFuno7cmfTzb8cu9ewKfeYmpntAuX3FYZDmgbMimGjY1ABmaa6vo9y738kvY"},
-           "3j5k-csv-zpus-2x": {"prev": "3j5k-csv-zj22-2x",
-                                "patches": [["put",["e","ea"], "each"]],
-                                "key": "did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez",
-                                "sig": "zkQFgzyoC5CHzLRMYNLynJBLmJtxeDQg3e9oESXVzdgTnzXAd4tVnNYfHGPiNXLiUDJdPwvgcDy3LKVpQNANH3en"},
-           "3j5k-csv-zwpk-2x": {"prev": "3j5k-csv-zj22-2x",
-                                "patches": [["put",["Don't","put","me"],"in"]],
-                                "key": "did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez",
-                                "sig": "z4VNsb9jiUiAVYnbGMWkFiQSjBXkooAwrxnomFjy2rkbTiuWTxjqUo47ohXxv7gUTZtm2nHqwHyEtGmTuM3JGoxpq"}},
-  "key": "did:key:zDnaesnjCLbxSB2EiJgTZUYCBqHTkuDJDdLbSmaAn2bpqXtuY",
-  "sig": "z3LCsyzAjnvHU2Wse7y9wspgMDGA4HkdwfA24vGJNKa77H3xxHieWqRnmuzgbW2Gjbkk4xrLrvC2gnoYYeftgULwv"}
-
-  This makes
-    {
-    id: 'did:aic:zwulnkrxrjkobowd',
-    nonce: 5381959927546556,
-    a: 1,
-    c: 3,
-    d: 4,
-    e: { ea: 'each' },
-    }
+  {
+    "tid": "3j5r-ts5-ojpm-2c",
+    "did": "did:aic:zrr5lxhs4rjlowv5",
+    "diffs": {
+      "3j5r-ts5-o7x4-2c": {
+        "adx/account_keys": [ "did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV" ],
+        "adx/recovery_keys": [ "did:key:zDnaeYHbbWiaCwAXvHXRyVqENDv8Sr3fwHW8P5eakkz4MqsTa" ]
+      },
+      "3j5r-ts5-ocuu-2c": {
+        "prev": "3j5r-ts5-o7x4-2c",
+        "patches": [ [ "put", [ "name" ], "aaron.blueskyweb.xyz" ] ],
+        "key": "did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV",
+        "sig": "z4PWrudF88YEBqPQPhfWpiL7MFqhHhCWuKn8Ri4MyKZRcRLbSMFgP3WYKTBsfnq5TXGR9wbjJKKPSb7i1kQgisHzf"
+      },
+      "3j5r-ts5-ofsm-2c": {
+        "prev": "3j5r-ts5-ocuu-2c",
+        "patches": [ [ "del", [ "adx/account_keys" ] ] ],
+        "key": "did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV",
+        "sig": "zSFwunTYyAh5ePkDgJ1Gw1nCtnqpVs1QzfXzkB9bHvoLoYKNeKsfeFHvToKT6tLiB5y9H5CBH1jgeYPtK57kodh7"
+      },
+      "3j5r-ts5-ojpm-2c": {
+        "prev": "3j5r-ts5-ofsm-2c",
+        "patches": [ [ "put", [ "hello" ], "world" ] ],
+        "key": "did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV",
+        "sig": "z431h9jjokS7TJ3VWT6XtbSUfTFVGUrLQi2uNMU4PbRXSNLoZS13dkkyeBrnfRrHdpiZhYGx6LCYSw5GgdEiDfEm9"
+      }
+    },
+    "key": "did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh",
+    "sig": "z3naShLa1KV5ZV5raHbuAAC2zjjyBbTp4htmCA42GKVLDQi7kSnFCteg7n5ap5uJMpsjdxLgL8E6kRR9cqyt6zqK6"
+  }
+makes
+  {
+    'adx/recovery_keys': [ 'did:key:zDnaeYHbbWiaCwAXvHXRyVqENDv8Sr3fwHW8P5eakkz4MqsTa'],
+    id: 'did:aic:zrr5lxhs4rjlowv5',
+    name: 'aaron.blueskyweb.xyz'
+  }
 */
 
 // @TODO move this to "@adxp/common/src/common/types"
@@ -81,7 +82,7 @@ type Document = { [key: string]: Value }
 export const update_tick = async (
   did: string, // the did:aic: being updated
   tid: TID, // the consenus time of the tick's generation
-  candidate_diff: Diff | null, // null when only updating tid
+  candidate_diff: Diff | Document | null, // null when only updating tid
   stored_tick: Tick | null, // null when there is not db entry (did init)
   key: EcdsaKeypair, // the consortium passes in the key
 ): Promise<Tick | ErrorMessage> => {
@@ -100,7 +101,7 @@ export const update_tick = async (
         {
           tid: tid.formatted(),
           did: did,
-          error: 'did not found',
+          error: `${did} not found`,
           diffs: {},
           key: key.did(),
           sig: '',
@@ -149,8 +150,10 @@ export const update_tick = async (
   if (!(await validate_sig(candidate_diff))) {
     return { error: 'diff has bad signature' }
   }
-  if (!validate_key_in_doc_for_diffs(candidate_diff.key, stored_tick.diffs)) {
-    return { error: 'diff signed by key not in did doc' }
+  if ('key' in candidate_diff && typeof candidate_diff.key == 'string'){
+    if (!validate_key_in_doc_for_diffs(candidate_diff.key, stored_tick.diffs)) {
+      return { error: 'diff signed by key not in did doc' }
+    }
   }
   // there is a validated stored_tick and a valid candidate_diff
   const diffs: Diffs = stored_tick.diffs
@@ -202,21 +205,18 @@ export const tick_from_diffs = async (
 }
 
 const authorise_key = (
-  doc: { [index: string]: Value },
-  diff: {
-    patches: Patch[]
-    'adx/account_keys'?: Value[]
-    'adx/recovery_keys'?: Value[]
-    [index: string]: Value
-  },
-) => {
+  doc: Document,
+  diff: Diff,
+): boolean => {
   if (
+    'adx/account_keys' in doc && 
     Array.isArray(doc['adx/account_keys']) &&
     doc['adx/account_keys'].includes(diff.key)
   ) {
     return true
   }
   if (
+    'adx/recovery_keys' in doc &&
     Array.isArray(doc['adx/recovery_keys']) &&
     doc['adx/recovery_keys'].includes(diff.key)
   ) {
@@ -226,10 +226,26 @@ const authorise_key = (
     // @TODO the 72 hour window logic needs to be here
     return diff.patches.every((patch: Patch) => {
       const pathSegment = patch[1][0]
-      pathSegment === 'adx/account_keys' || pathSegment === 'adx/recovery_keys'
+      return (pathSegment === 'adx/account_keys' ||
+      pathSegment === 'adx/recovery_keys')
     })
   }
   return false
+}
+
+export const tick_to_did_doc = async (tick: Tick, consortium_did: string, asOf?: TidString): Promise<Document> => {
+  const valid = await validate_sig(tick)
+  if (!valid){
+    return { error: 'tick has bad signature' }
+  }
+  if (tick.key != consortium_did) {
+    return { error: 'not signed by consortium' }
+  }
+  const doc = await diffs_to_did_doc(tick.diffs, asOf)
+  if (doc !== null){
+    return doc
+  }
+  return { error: 'malformed diffs' }
 }
 
 export const diffs_to_did_doc = async (diffs: Diffs, asOf?: TidString) => {
@@ -243,7 +259,7 @@ export const diffs_to_did_doc = async (diffs: Diffs, asOf?: TidString) => {
     return null // there is no initial state this is invalid
   }
   let last = tids[0]
-  let doc = diffs[last] as Document // the first tid is the initial state
+  let doc = JSON.parse(JSON.stringify(diffs[last])) as Document // the first tid is the initial state
 
   // add the id feild
   doc['id'] = 'did:aic:' + (await pid(diffs[last])) // we calculate and add the id automaticly
@@ -251,7 +267,7 @@ export const diffs_to_did_doc = async (diffs: Diffs, asOf?: TidString) => {
   for (const tid of tids.slice(1)) {
     const diff = diffs[tid] as Diff // after the first the rest are Diffs
     if (!(await validate_sig(diff))) {
-      console.log('INFO: ignoreing: bad sig')
+      console.log('INFO: ignoreing: bad sig', diff)
       continue // not valid ignore it
     }
     if (!authorise_key(doc, diff)) {
@@ -311,20 +327,21 @@ export const pid = async (
 
 const patch = (doc: Document, patches: Patch[]): Document => {
   // @TODO this needs more testing
+  const new_doc = JSON.parse(JSON.stringify(doc)) as Document
   for (const p of patches) {
     const [op, path, value] = p
-    let node = doc as Value
+    let node = new_doc as Value
     for (const segment of path.slice(0, -1)) {
       if (typeof node !== 'object' || node === null) {
         if (op === 'put') {
           node = {}
         } else {
-          return doc
+          return new_doc
         }
       }
       if (Array.isArray(node) || typeof segment === 'number') {
         console.log('Warning: patch dose not support Array traversal')
-        return doc
+        return new_doc
       }
       if (op === 'put' && !(segment in node)) {
         node[segment] = {}
@@ -336,12 +353,12 @@ const patch = (doc: Document, patches: Patch[]): Document => {
       if (op === 'put') {
         node = {}
       } else {
-        return doc
+        return new_doc
       }
     }
     if (Array.isArray(node) || typeof segment === 'number') {
       console.log('Warning: patch dose not support Array traversal')
-      return doc
+      return new_doc
     }
     if (op === 'put') {
       node[segment] = value
@@ -350,7 +367,7 @@ const patch = (doc: Document, patches: Patch[]): Document => {
       delete node[segment]
     }
   }
-  return doc
+  return new_doc
 }
 
 export const sign = async (doc: Document, key: EcdsaKeypair) => {
@@ -377,20 +394,16 @@ export const validate_sig = async (
   }
 
   const doc_copy = JSON.parse(JSON.stringify(doc))
-  doc_copy.sig = ''
-  const data = canonicaliseDocumentToUint8Array(doc_copy)
-  if (doc.sig[0] !== 'z') {
+  if (doc_copy.sig[0] !== 'z') {
     // check the multibase https://github.com/multiformats/multibase
     throw "signatures must be 'z'+ base58btc" // maby just retuen false?
   }
+  doc_copy.sig = ''
+  const data = canonicaliseDocumentToUint8Array(doc_copy)
+
 
   const sig = uint8arrays.fromString(doc.sig.slice(1), 'base58btc')
-  let valid
-  try {
-    valid = await verifyDidSig(doc.key, data, sig)
-  } catch (e) {
-    valid = false
-  }
+  let valid = await verifyDidSig(doc.key, data, sig)
   return valid // @TODO check that the key is in the did doc
 }
 
