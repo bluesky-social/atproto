@@ -1,5 +1,4 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import ucan from 'ucans'
 import { resolveName } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import { AdxSchemas, AdxRecordValidator, AdxViewValidator } from '@adxp/schemas'
@@ -228,10 +227,11 @@ export class AdxRepoClient {
     const pdsDid = await this.pds.getDid()
     const authedWrites: ht.BatchWriteParams['writes'] = []
     for (const write of writes) {
-      const token = (await this.authStore.createUcan(
+      const ucan = (await this.authStore.createUcan(
         pdsDid,
         auth.writeCap(this.did, write.collection, write.key),
-      )) as string
+      ))
+      const token = auth.encodeUcan(ucan)
       authedWrites.push(Object.assign({}, write, { auth: token }))
     }
     const body = ht.batchWriteParams.parse({ writes: authedWrites })
@@ -357,10 +357,10 @@ class AdxRepoCollectionClient {
   }
 }
 
-function requestCfg(token?: ucan.Chained): AxiosRequestConfig {
+function requestCfg(token?: auth.Ucan): AxiosRequestConfig {
   const headers: Record<string, string> = {}
   if (token) {
-    headers['Authorization'] = `Bearer ${token.encoded()}`
+    headers['Authorization'] = `Bearer ${auth.encodeUcan(token)}`
   }
   return { headers }
 }

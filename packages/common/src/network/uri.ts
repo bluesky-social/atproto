@@ -1,4 +1,4 @@
-export const REGEX =
+export const ADX_URI_REGEX =
   // protocol-  --did--------------   --name-------------   --path----   --query--   --hash--
   /^(adx:\/\/)?((?:did:[a-z0-9:%-]+)|(?:[a-z][a-z0-9.:-]*))(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 //                       --path-----   --query--  --hash--
@@ -102,7 +102,7 @@ export class AdxUri {
 }
 
 function parse(str: string) {
-  const match = REGEX.exec(str)
+  const match = ADX_URI_REGEX.exec(str)
   if (match) {
     return {
       hash: match[5] || '',
