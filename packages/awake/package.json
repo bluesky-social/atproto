@@ -1,0 +1,27 @@
+{
+  "name": "@adxp/awake",
+  "version": "0.0.2",
+  "main": "src/index.ts",
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "test": "jest",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "postbuild" : "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@adxp/auth": "*",
+    "@adxp/crypto": "*",
+    "socket.io-client": "^4.5.1"
+  }, 
+  "devDependencies": {
+    "@adxp/ws-relay": "*"
+  }
+}

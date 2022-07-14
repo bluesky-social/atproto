@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "noLib": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2020",
+    "sourceMap": true,
+    "module": "commonjs",
+    "jsx": "preserve",
+    "strict": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "composite": true
+  },
+  "exclude": ["node_modules", "**/*/dist"],
+  "references": [
+    { "path": "./packages/api/tsconfig.build.json" },
+    { "path": "./packages/auth/tsconfig.build.json" },
+    { "path": "./packages/auth-lobby" },
+    { "path": "./packages/awake/tsconfig.build.json" },
+    { "path": "./packages/common/tsconfig.build.json" },
+    { "path": "./packages/crypto/tsconfig.build.json" },
+    { "path": "./packages/dev-env" },
+    { "path": "./packages/did-sdk/tsconfig.build.json" },
+    { "path": "./packages/example-app" },
+    { "path": "./packages/schemas/tsconfig.build.json" },
+    { "path": "./packages/ws-relay" },
+  ]
+}
