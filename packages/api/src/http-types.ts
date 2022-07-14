@@ -1,10 +1,5 @@
 import { z } from 'zod'
 
-export type ErrorCode =
-  | 'NetworkError'
-  | 'DidResolutionFailed'
-  | 'NameResolutionFailed'
-
 export const describeRepoParams = z.object({
   confirmName: z.boolean().optional(),
 })

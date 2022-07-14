@@ -2,8 +2,9 @@ import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 import { resolveName } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import { AdxSchemas, AdxRecordValidator, AdxViewValidator } from '@adxp/schemas'
-import * as t from './types.js'
-import * as ht from './http-types.js'
+import * as t from './types'
+import * as err from './errors'
+import * as ht from './http-types'
 
 export type QP = Record<string, any> | URLSearchParams
 
@@ -222,15 +223,15 @@ export class AdxRepoClient {
    */
   async _batchWrite(writes: t.BatchWrite[]): Promise<ht.BatchWriteReponse> {
     if (!this.writable || !this.authStore) {
-      throw new t.WritePermissionError()
+      throw new err.WritePermissionError()
     }
     const pdsDid = await this.pds.getDid()
     const authedWrites: ht.BatchWriteParams['writes'] = []
     for (const write of writes) {
-      const ucan = (await this.authStore.createUcan(
+      const ucan = await this.authStore.createUcan(
         pdsDid,
         auth.writeCap(this.did, write.collection, write.key),
-      ))
+      )
       const token = auth.encodeUcan(ucan)
       authedWrites.push(Object.assign({}, write, { auth: token }))
     }
@@ -314,7 +315,7 @@ class AdxRepoCollectionClient {
    */
   async create(schema: t.SchemaOpt, value: any) {
     if (!this.repo.writable) {
-      throw new t.WritePermissionError()
+      throw new err.WritePermissionError()
     }
     if (schema !== '*') {
       const validator = getRecordValidator(schema, this.repo.pds.client)
@@ -331,7 +332,7 @@ class AdxRepoCollectionClient {
    */
   async put(schema: t.SchemaOpt, key: string, value: any) {
     if (!this.repo.writable) {
-      throw new t.WritePermissionError()
+      throw new err.WritePermissionError()
     }
     if (schema !== '*') {
       const validator = getRecordValidator(schema, this.repo.pds.client)
@@ -348,7 +349,7 @@ class AdxRepoCollectionClient {
    */
   async del(key: string) {
     if (!this.repo.writable) {
-      throw new t.WritePermissionError()
+      throw new err.WritePermissionError()
     }
     const res = await this.repo._batchWrite([
       { action: 'del', collection: this.id, key },
@@ -366,7 +367,7 @@ function requestCfg(token?: auth.Ucan): AxiosRequestConfig {
 }
 
 function toAPIError(error: AxiosError): AxiosResponse {
-  throw new t.APIResponseError(
+  throw new err.APIResponseError(
     error.response?.status || 0,
     error.response?.statusText || 'Request failed',
     error.response?.headers,
@@ -393,3 +394,4 @@ export * as did from '@adxp/did-sdk'
 export { resolveName, AdxUri } from '@adxp/common'
 export * from './types.js'
 export * from './http-types.js'
+export * from './errors.js'
