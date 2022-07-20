@@ -1,7 +1,7 @@
 import express from 'express'
 import tid from './tid'
 import { TID } from '@adxp/common'
-import { updateTick } from '@adxp/aic'
+import { updateTick } from '../doc/index'
 import * as crypto from '@adxp/crypto'
 import { z } from 'zod'
 
@@ -57,7 +57,7 @@ let consortiumCrypto = async () => {
 // type Diff = z.infer<typeof Diff>
 
 const router = express.Router()
-
+router.use('/favicon.ico', express.static('static'))
 router.use('/tid', tid)
 
 router.get(

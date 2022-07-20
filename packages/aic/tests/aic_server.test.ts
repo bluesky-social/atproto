@@ -1,15 +1,14 @@
-import test from 'ava'
 import axios from 'axios'
 import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
-import { pid, sign, validateSig ,} from '@adxp/aic'
-import {Asymmetric} from '@adxp/aic/src/types'
-import { runTestServer } from './_util'
+import {pid} from '../src/doc/pid'
+import { sign, validateSig ,} from '../src/doc/signature'
+import {Asymmetric} from '../src/doc/types'
 
 const USE_TEST_SERVER = false
 
-const PORT = 2583
+const PORT = 26979
 const HOST = `localhost`
-const PATH = `aic`
+const PATH = ``
 let testPid = ''
 
 const keyAccount = EcdsaKeypair.import(
@@ -35,9 +34,9 @@ describe('delegator client', () => {
   })
 
   beforeAll(async () => {
-    if (USE_TEST_SERVER) {
-      await runTestServer(PORT)
-    }
+    // if (USE_TEST_SERVER) {
+    //   await runTestServer(PORT)
+    // }
     const key = ( await keyAccount )
     accountCrypto = {
       did: (): string => {return key.did()},
@@ -47,7 +46,7 @@ describe('delegator client', () => {
   })
 
   it('get tid', async () => {
-    const resp = await axios.get(`http://${HOST}:${PORT}/${PATH}/tid`)
+    const resp = await axios.get(`http://${HOST}:${PORT}/${PATH}tid`)
     expect(await validateSig(resp.data, accountCrypto as Asymmetric)).toBeTruthy()
   })
 
@@ -60,7 +59,7 @@ describe('delegator client', () => {
       'adx/account_keys': [(await keyAccount).did()],
     }
     testPid = await pid(data)
-    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
     // console.log('post init data', resp.status, resp.data)
@@ -68,7 +67,7 @@ describe('delegator client', () => {
   })
 
   it('post an update bad signature', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
     const data = '{}'
     const headers = { 'Content-Type': 'application/json' }
 
@@ -78,7 +77,7 @@ describe('delegator client', () => {
   })
 
   it('valid update 1 add d', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
     const respGet = await axios.get(url)
     // console.log('get an update last tid', respGet.data)
     const data = await sign(
@@ -96,7 +95,7 @@ describe('delegator client', () => {
     expect(resp.status == 200).toBeTruthy()
   })
   it('valid update 2 del b', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
     const respGet = await axios.get(url)
     // console.log('get an update last tid', respGet.data)
     const data = await sign(
@@ -115,7 +114,7 @@ describe('delegator client', () => {
   })
 
   it('valid update 3 put each level', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
     const respGet = await axios.get(url)
     // console.log('get an update last tid', respGet.data)
     const data = await sign(
@@ -134,7 +133,7 @@ describe('delegator client', () => {
   })
 
   it('invalid update 4 reject fork', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
     const respGet = await axios.get(url)
     // console.log('get an update last tid', respGet.data)
     const data = await sign(

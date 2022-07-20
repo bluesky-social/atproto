@@ -5,12 +5,12 @@ import {
   tickFromDiffs,
   updateTick,
   tickToDidDoc,
-} from '../src/index'
-import { pid } from '../src/pid'
+} from '../src/doc/index'
+import { pid } from '../src/doc/pid'
 import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
 import { TID } from '@adxp/common'
-import { Diff, Document, Tick, Asymmetric } from '../src/types'
+import { Diff, Document, Tick, Asymmetric } from '../src/doc/types'
 
 const keyConsortium = EcdsaKeypair.import(
   {

@@ -1,6 +1,6 @@
 import express from 'express'
 import { TID } from '@adxp/common'
-import { sign } from '@adxp/aic'
+import { sign } from '../doc/signature'
 import { CONSORTIUM_KEYPAIR } from './index'
 import {verifyDidSig} from '@adxp/crypto'
 

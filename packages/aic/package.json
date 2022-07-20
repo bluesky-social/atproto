@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "license": "MIT",
   "scripts": {
+    "start": "node dist/index.js",
     "test": "jest",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
@@ -11,19 +12,25 @@
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
     "verify:fix": "yarn prettier:fix && yarn lint:fix",
-    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@adxp/common": "*",
     "@adxp/crypto": "*",
-    "@adxp/did-sdk": "*",
     "one-webcrypto": "^1.0.3",
-    "ucans": "^0.9.1",
-    "uint8arrays": "^3.0.0"
+    "uint8arrays": "^3.0.0",
+    "@vscode/sqlite3": "^4.0.12",
+    "cors": "^2.8.5",
+    "express": "^4.17.2",
+    "express-async-errors": "^3.1.1",
+    "knex": "^0.95.15",
+    "sqlite3": "^5.0.8",
+    "zod": "^3.14.2"
   },
   "devDependencies": {
     "ts-node": "^10.8.1",
-    "typescript": "^4.7.2"
+    "typescript": "^4.7.2",
+    "axios": "^0.26.1"
   }
 }
