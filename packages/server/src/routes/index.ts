@@ -4,7 +4,6 @@ import ID from './id'
 import Data from './data'
 import Indexer from './indexer'
 import DidNetwork from './did-network'
-import AIC from './aic'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -15,7 +14,6 @@ router.use('/id', ID)
 router.use('/data', Data)
 router.use('/indexer', Indexer)
 router.use('/did-network', DidNetwork)
-router.use('/aic', AIC)
 router.use('/favicon.ico', express.static('static'))
 
 export default router

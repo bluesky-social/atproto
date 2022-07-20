@@ -97,7 +97,6 @@ const follows = {
 }
 
 const SCHEMAS: Schema[] = [
-  aicDiffs,
   didNetwork,
   userRoots,
   userDids,
