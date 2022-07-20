@@ -1,7 +1,7 @@
 {
   "name": "@adxp/awake",
   "version": "0.0.2",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "engines": {
     "node": ">=16"
   },

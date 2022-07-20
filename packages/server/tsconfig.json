@@ -6,7 +6,6 @@
   },
   "module": "nodenext",
   "include": ["./src","__tests__/**/**.ts"],
-  "exclude": ["node_modules", "**/*/dist"],
   "references": [
     { "path": "../auth/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },

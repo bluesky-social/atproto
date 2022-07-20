@@ -1,7 +1,7 @@
 {
   "name": "@adxp/auth",
   "version": "0.0.3",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/",
