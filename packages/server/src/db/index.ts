@@ -12,6 +12,8 @@ import * as schema from './schema'
 import { KnexDB } from './types'
 import { ServerError } from '../error'
 
+const aicTicks = 'aic_ticks'
+
 export class Database {
   private db: KnexDB
 
@@ -412,31 +414,31 @@ export class Database {
   // AIC
   // -----------
 
-  async tick_for_did(
+  async tickForDid(
     did: string,
   ): Promise<{ did: string; tid: string; tick: string } | undefined> {
     return await this.db
       .select('did', 'tid', 'tick')
-      .from('aic_ticks')
+      .from(aicTicks)
       .where({ did })
       .orderBy('tid', 'desc')
       .first()
   }
 
-  async put_tick_for_did(
+  async putTickForDid(
     did: string,
     tid: string, // the tid for the tick being inserted
-    prev_tid: string | null, // the did for the tick being superseded
+    prevTid: string | null, // the did for the tick being superseded
     tick: string, // the new tick
   ) {
     // This is just a db wraper conferm that the tick is valid before calling
     // whereJsonPath('diff', '$.prev', '=', )
-    if (prev_tid === null) {
-      await this.db('aic_ticks').insert({ did, tid, tick })
+    if (prevTid === null) {
+      await this.db(aicTicks).insert({ did, tid, tick })
     } else {
-      await this.db('aic_ticks')
+      await this.db(aicTicks)
         .insert({ did, tid, tick })
-        .whereExists(this.db.select(1).from('aic_ticks').where(tid, prev_tid))
+        .whereExists(this.db.select(1).from(aicTicks).where(tid, prevTid))
     }
   }
 }

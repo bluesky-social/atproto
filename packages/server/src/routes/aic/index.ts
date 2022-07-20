@@ -1,7 +1,7 @@
 import express from 'express'
 import tid from './tid'
 import { TID } from '@adxp/common'
-import { update_tick } from '@adxp/aic'
+import { updateTick } from '@adxp/aic'
 import * as crypto from '@adxp/crypto'
 import { z } from 'zod'
 
@@ -23,6 +23,16 @@ export const CONSORTIUM_KEYPAIR = crypto.EcdsaKeypair.import(
   },
 )
 
+let consortiumCrypto = async () => {
+    let key = (await CONSORTIUM_KEYPAIR)
+    return {
+    did: (): string => { return key.did() },
+    sign: async (msg:Uint8Array): Promise<Uint8Array> => {
+      return await key.sign(msg)
+    },
+    verifyDidSig: crypto.verifyDidSig,
+  }
+}
 // const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()])
 // type Literal = z.infer<typeof literalSchema>
 // type Json = Literal | { [key: string]: Json } | Json[]
@@ -58,16 +68,16 @@ router.get(
     // Retreve the latest tick from the databace
     // pass the tick and curent tid to the aic lib for signing
     const did = 'did:aic:' + req.params.pid
-    const row = await res.locals.db.tick_for_did(did) // retreve latest tick
+    const row = await res.locals.db.tickForDid(did) // retreve latest tick
     const prev_tick = row ? JSON.parse(row.tick) : null
-    const signed_doc = await update_tick(
+    const signedDoc = await updateTick(
       did,
-      TID.next(),
-      null, // candidate_diff: this is a get no updates
+      TID.next().formatted(),
+      null, // candidateDiff: this is a get no updates
       prev_tick,
-      await CONSORTIUM_KEYPAIR,
+      await consortiumCrypto(),
     )
-    res.type('json').send(signed_doc)
+    res.type('json').send(signedDoc)
   },
 )
 
@@ -76,24 +86,24 @@ router.post(
   async function (req, res) {
     // extract from post
     const did = 'did:aic:' + req.params.pid
-    const candidate_diff = req.body
+    const candidateDiff = req.body
 
     // extract from DB
-    const row = await res.locals.db.tick_for_did(did)
-    const prev_tid = row ? row.tid : null
+    const row = await res.locals.db.tickForDid(did)
+    const prevTid = row ? row.tid : null
     const prev_tick = row ? JSON.parse(row.tick) : null
 
     // aic lib will do the doc update
-    const new_tick = await update_tick(
+    const newTick = await updateTick(
       did, // did from the URL
-      TID.next(), // curent time (tid)
-      candidate_diff, // diff that was posted/put
+      TID.next().formatted(), // curent time (tid)
+      candidateDiff, // diff that was posted/put
       prev_tick, // tick from db for did:aic
-      await CONSORTIUM_KEYPAIR, // server's aic key
+      await consortiumCrypto(), // server's aic key
     )
 
-    if ('error' in new_tick) {
-      // error return from update_tick
+    if ('error' in newTick) {
+      // error return from updateTick
       // type ErrorMessage = { error: string; cause?: ErrorMessage; [index: string]: Value }
       // if there is an error property it is an error don't store in DB
       // also send the last tick that is still valid
@@ -102,23 +112,23 @@ router.post(
         tid: TID.next().formatted(),
         did: `did:aic:${req.params.pid}`,
         tick: prev_tick,
-        error: 'error return from update_tick',
-        cause: new_tick,
+        error: 'error return from updateTick',
+        cause: newTick,
       })
       return
     }
 
-    // if the output of update_tick is not an error put in db
-    console.log(`Saving ${new_tick.did} to AIC at ${new_tick.tid}`)
-    res.locals.db.put_tick_for_did(
-      new_tick.did,
-      new_tick.tid,
-      prev_tid, // gard: if the prev_tid has changed the tick from the db is stale
-      JSON.stringify(new_tick),
+    // if the output of updateTick is not an error put in db
+    console.log(`Saving ${newTick.did} to AIC at ${newTick.tid}`)
+    res.locals.db.putTickForDid(
+      newTick.did,
+      newTick.tid,
+      prevTid, // gard: if the prevTid has changed the tick from the db is stale
+      JSON.stringify(newTick),
     )
 
     res.status(200)
-    res.type('json').send(new_tick)
+    res.type('json').send(newTick)
   },
 )
 

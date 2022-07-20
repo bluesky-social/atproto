@@ -1,18 +1,18 @@
 import {
-  diffs_to_did_doc,
+  diffsToDidDoc,
   sign,
-  validate_sig,
-  tick_from_diffs,
-  update_tick,
-  pid,
-  tick_to_did_doc,
+  validateSig,
+  tickFromDiffs,
+  updateTick,
+  tickToDidDoc,
 } from '../src/index'
+import { pid } from '../src/pid'
 import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
-import test from 'ava'
 import { TID } from '@adxp/common'
+import { Diff, Document, Tick, Asymmetric } from '../src/types'
 
-const key_consortium = EcdsaKeypair.import(
+const keyConsortium = EcdsaKeypair.import(
   {
     // did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh
     key_ops: [ 'sign' ],
@@ -28,7 +28,10 @@ const key_consortium = EcdsaKeypair.import(
   },
 )
 
-const key_tick = EcdsaKeypair.import(
+let consortiumCrypto: Asymmetric | null = null
+let accountCrypto: Asymmetric | null = null
+
+const keyTick = EcdsaKeypair.import(
   {
     // did:key:zDnaenyrpzvz4VNQVRTSRUwQWM8wLNcUeh1mmoBiTb1PLQrht
     key_ops: [ 'sign' ],
@@ -44,7 +47,7 @@ const key_tick = EcdsaKeypair.import(
   },
 )
 
-const key_account = EcdsaKeypair.import(
+const keyAccount = EcdsaKeypair.import(
   {
     // did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV
     key_ops: [ 'sign' ],
@@ -60,7 +63,7 @@ const key_account = EcdsaKeypair.import(
   },
 )
 
-const key_recovery = EcdsaKeypair.import(
+const keyRecovery = EcdsaKeypair.import(
   {
     // did:key:zDnaepvdtQ3jDLU15JihZwmMghuRugJArN8x9rm6Czt9BkHEM  
     key_ops: [ 'sign' ],
@@ -77,21 +80,45 @@ const key_recovery = EcdsaKeypair.import(
 )
 
 describe('aic test test', () => {
-  // it('works', async () => {
-  //   console.log(TID.next().formatted())
-  //   console.log(await (await EcdsaKeypair.create({exportable: true})).export())
-  //   console.log('key_consortium', (await key_consortium).did())
-  //   console.log('key_tick', (await key_tick).did())
-  //   console.log('key_account', (await key_account).did())
-  //   console.log('key_recovery', (await key_recovery).did())
-  //   expect(true)
-  // })
+  beforeAll(async () => {
+    const keyc = (await keyConsortium)
+    consortiumCrypto = {
+      did: (): string => {return keyc.did()},
+      sign: async (msg:Uint8Array): Promise<Uint8Array> => {
+        return await (await keyConsortium).sign(msg)
+      },
+      verifyDidSig: verifyDidSig,
+    }
+    const key2 = (await keyAccount)
+    accountCrypto = {
+      did: (): string => {return key2.did()},
+      sign: async (msg:Uint8Array): Promise<Uint8Array> => {
+        return await (await keyAccount).sign(msg)
+      },
+      verifyDidSig: verifyDidSig,
+    }
+    keyAccount
+  })
+
+  it('works', async () => {
+    console.log(TID.next().formatted())
+    console.log(await (await EcdsaKeypair.create({exportable: true})).export())
+    console.log('keyConsortium', (await keyConsortium).did())
+    console.log('keyTick', (await keyTick).did())
+    console.log('keyAccount', (await keyAccount).did())
+    console.log('keyRecovery', (await keyRecovery).did())
+
+    const c = await keyConsortium
+    const f = (msg) =>{return c.sign(msg)}
+    console.log('f', await f(new Uint8Array()))
+    expect(true)
+  })
 
 
 // old test to migrate.
 
-  it('diffs_to_doc basic test 1', async () => {
-    const diffs_doc = {
+  it('diffsToDoc basic test 1', async () => {
+    const diffsDoc = {
       '3j55-hih-g24c-22': {
         a: 1,
         b: 2,
@@ -127,7 +154,7 @@ describe('aic test test', () => {
     }
 
   expect(
-    await diffs_to_did_doc(diffs_doc)
+    await diffsToDidDoc(diffsDoc, consortiumCrypto as Asymmetric)
   ).toEqual(
     {
       id: 'did:aic:zkug3v3btzimdf4d',
@@ -142,8 +169,8 @@ describe('aic test test', () => {
   )
 })
 
-  it('diffs_to_doc init test', async () => {
-    const diffs_doc = {
+  it('diffsToDoc init test', async () => {
+    const diffsDoc = {
       '2': {
         a: 1,
         b: 2,
@@ -154,7 +181,7 @@ describe('aic test test', () => {
       },
     }
     expect(
-      await diffs_to_did_doc(diffs_doc),
+      await diffsToDidDoc(diffsDoc, consortiumCrypto as Asymmetric),
     ).toEqual(
       {
         id: 'did:aic:zkug3v3btzimdf4d',
@@ -168,8 +195,8 @@ describe('aic test test', () => {
     )
   })
 
-  it('diffs_to_doc put test', async () => {
-    const diffs_doc = {
+  it('diffsToDoc put test', async () => {
+    const diffsDoc = {
       '2': {
         a: 1,
         b: 2,
@@ -186,7 +213,7 @@ describe('aic test test', () => {
       },
     }
     expect(
-      await diffs_to_did_doc(diffs_doc),
+      await diffsToDidDoc(diffsDoc, consortiumCrypto as Asymmetric),
     ).toEqual(
       {
         id: 'did:aic:zkug3v3btzimdf4d',
@@ -201,8 +228,8 @@ describe('aic test test', () => {
     )
   })
 
-  it('diffs_to_doc del test', async () => {
-    const diffs_doc = {
+  it('diffsToDoc del test', async () => {
+    const diffsDoc = {
       '2': {
         a: 1,
         b: 2,
@@ -219,7 +246,7 @@ describe('aic test test', () => {
       },
     }
     expect(
-      await diffs_to_did_doc(diffs_doc),
+      await diffsToDidDoc(diffsDoc, consortiumCrypto as Asymmetric),
     ).toEqual(
       {
         id: 'did:aic:zkug3v3btzimdf4d',
@@ -232,8 +259,8 @@ describe('aic test test', () => {
     )
   })
 
-  it('diffs_to_did_doc skip bad prev test', async () => {
-    const diffs_doc = {
+  it('diffsToDidDoc skip bad prev test', async () => {
+    const diffsDoc = {
       '2': {
         a: 1,
         b: 2,
@@ -250,7 +277,7 @@ describe('aic test test', () => {
       },
     }
     expect(
-      await diffs_to_did_doc(diffs_doc),
+      await diffsToDidDoc(diffsDoc, consortiumCrypto as Asymmetric),
     ).toEqual(
       {
         id: 'did:aic:zkug3v3btzimdf4d',
@@ -264,13 +291,18 @@ describe('aic test test', () => {
     )
   })
 
-  it('diffs_to_did_doc test key gen', async () => {
+  it('diffsToDidDoc test key gen', async () => {
     //gen key
     const key = await EcdsaKeypair.create({ exportable: true })
+    const crypto = {
+      did: (): string => {return key.did()},
+      sign: async (msg:Uint8Array): Promise<Uint8Array> => { return await key.sign(msg) },
+      verifyDidSig: verifyDidSig,
+    }
     // console.log(await key.export('base58btc'), key.did())
 
     // make message
-    const data_object = {
+    const dataObject = {
       prev: 'tid',
       patches: [
         ['put', ['path'], 'value'],
@@ -278,8 +310,8 @@ describe('aic test test', () => {
       ],
       key: key.did(),
       sig: '',
-    }
-    const signed = await sign(data_object, key) // replace sig with valid signature
+    } as Diff
+    const signed = await sign(dataObject, crypto) // replace sig with valid signature
     const msg = JSON.stringify(signed)
 
     // parse message
@@ -287,24 +319,28 @@ describe('aic test test', () => {
     if (recv.sig[0] !== 'z') {
       throw "signatures must be 'z'+ base58btc"
     }
-    const recv_sig = uint8arrays.fromString(recv.sig.slice(1), 'base58btc')
+    const recvSig = uint8arrays.fromString(recv.sig.slice(1), 'base58btc')
     recv.sig = ''
-    const recv_data = uint8arrays.fromString(JSON.stringify(recv))
+    const recvData = uint8arrays.fromString(JSON.stringify(recv))
 
     // validate signature
-    const valid = await verifyDidSig(recv.key, recv_data, recv_sig)
+    const valid = await verifyDidSig(recv.key, recvData, recvSig)
     expect(valid).toBeTruthy()
   })
 
-  it('sign validate_sig', async () => {
+  it('sign validateSig', async () => {
     // pre baked signed diff
+    if (accountCrypto === null) {
+      return
+    }
+    
     expect(
-      await validate_sig({
+      await validateSig({
         prev: '3j2b-pul-dlia-22',
         patches: [],
         key: 'did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez',
         sig: 'z5wYnrLa136SZsdxEvrbpLwu5wi6FDsynwiVeNR3KoJqVzgBUXLv9VQffLaz78w4tngKURh1cdbZ837S6PFC9Tu4y',
-      }),
+      } as Document, consortiumCrypto as Asymmetric),
     ).toBeTruthy()
 
     // fresh baked signed diff
@@ -312,13 +348,13 @@ describe('aic test test', () => {
       {
         prev: '3j2b-pul-dlia-22',
         patches: [],
-        key: (await key_account).did(),
+        key: (await keyAccount).did(),
         sig: '',
       },
-      await key_account,
+      accountCrypto,
     )
     // console.log(diff)
-    expect(await validate_sig(diff)).toBeTruthy()
+    expect(await validateSig(diff, consortiumCrypto as Asymmetric)).toBeTruthy()
   })
 
   it('tid next', async () => {
@@ -328,8 +364,12 @@ describe('aic test test', () => {
     expect(toc > tic).toBeTruthy()
   })
 
-  it('tick_from_diffs', async () => {
-    const tick = await tick_from_diffs(
+  it('tickFromDiffs', async () => {
+    if (consortiumCrypto === null) {
+      return
+    }
+
+    const tick = await tickFromDiffs(
       {
         '3j55-hih-g24c-22': {
           a: 1,
@@ -364,11 +404,11 @@ describe('aic test test', () => {
           sig: 'z5oHy2qCSKR9Z9hXuha6c7qEpUWMzGNeZcj8D5kDAxsWP6P8FN4kmSWHcoLv4q5umiyMWcUk5CePGeh51khRGEgGL',
         },
       },
-      TID.next(),
-      await key_consortium,
+      TID.next().formatted(),
+      consortiumCrypto,
     )
     expect(
-      await validate_sig({
+      await validateSig({
         tid: '3j57-dxc-6tjt-2o',
         diffs: {
           '3j55-hih-g24c-22': { a: 1, b: 2, c: 3 },
@@ -400,12 +440,19 @@ describe('aic test test', () => {
         id: 'did:aic:zwulnkrxrjkobowd',
         key: 'did:key:zDnaesnjCLbxSB2EiJgTZUYCBqHTkuDJDdLbSmaAn2bpqXtuY',
         sig: 'zE3zimBwrcerAfSATbhXjyMSaiGfmgP7BBaeCJKpFocTaj2fHiVnCbWYksb9czgRk4zEwPZ7RXvYEXmqVeiyoUNu',
-      }),
+      }, consortiumCrypto as Asymmetric),
     ).toBeTruthy()
-    expect(await validate_sig(JSON.parse(JSON.stringify(tick)))).toBeTruthy()
+    expect(await validateSig(JSON.parse(JSON.stringify(tick)), consortiumCrypto as Asymmetric)).toBeTruthy()
   })
 
-  it('should update_tick', async () => {
+  it('should updateTick', async () => {
+    if (consortiumCrypto === null) {
+      return
+    }
+    if (accountCrypto === null) {
+      return
+    }
+
     const doc = {
       'adx/account_keys': [
         'did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV',
@@ -414,113 +461,113 @@ describe('aic test test', () => {
         'did:key:zDnaeYHbbWiaCwAXvHXRyVqENDv8Sr3fwHW8P5eakkz4MqsTa',
       ],
     }
-    const did_of_doc = "did:aic:zrr5lxhs4rjlowv5"
-    if (did_of_doc !== `did:aic:${await pid(doc)}`) {
+    const didOfDoc = "did:aic:zrr5lxhs4rjlowv5"
+    if (didOfDoc !== `did:aic:${await pid(doc)}`) {
       console.log('pid', await pid(doc))
     }
-    const tick1 = await update_tick(
-      did_of_doc, 
-      TID.next(), 
+    const tick1 = await updateTick(
+      didOfDoc, 
+      TID.next().formatted(), 
       doc,
       null,
-      (await key_consortium)
+      consortiumCrypto
     )
     if ('error' in tick1){
       console.log(tick1)
       expect(false).toBeTruthy()
       return
     }
-    console.log('tick1', tick1, await tick_to_did_doc(tick1, (await key_consortium).did()))
+    console.log('tick1', tick1, await tickToDidDoc(tick1, (await keyConsortium).did(), consortiumCrypto as Asymmetric))
 
-    expect(await validate_sig(tick1)).toBeTruthy()
-    expect(tick1.did).toEqual(did_of_doc)
+    expect(await validateSig(tick1, consortiumCrypto as Asymmetric)).toBeTruthy()
+    expect(tick1.did).toEqual(didOfDoc)
     expect(tick1.key).toEqual('did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh')
     
     const tids1 = Object.keys(tick1.diffs).sort()
-    const tick2 = await update_tick(
-      did_of_doc, 
-      TID.next(),
+    const tick2 = await updateTick(
+      didOfDoc, 
+      TID.next().formatted(),
       await sign(
-        // candidate_diff is singed on clint then sent to consortium
+        // candidateDiff is singed on clint then sent to consortium
         {
           prev: tids1.at(-1),
           patches: [
             ['put', ['name'], 'aaron.blueskyweb.xyz'],
           ],
-          key: (await key_account).did(),
+          key: (await keyAccount).did(),
           sig: ''
         },
-        (await key_account), // only the client has this key
+        (await accountCrypto), // only the client has this key
       ),
       tick1,
-      (await key_consortium) // only the consortium has this key
+      (await consortiumCrypto) // only the consortium has this key
     )
     if ('error' in tick2){
       console.log(tick2)
       expect(false).toBeTruthy()
       return
     }
-    console.log('tick2', tick2, await tick_to_did_doc(tick2, (await key_consortium).did()))
+    console.log('tick2', tick2, await tickToDidDoc(tick2, (await keyConsortium).did(), consortiumCrypto as Asymmetric))
 
-    expect(await validate_sig(tick2)).toBeTruthy()
-    expect(tick1.did).toEqual(did_of_doc)
+    expect(await validateSig(tick2, consortiumCrypto as Asymmetric)).toBeTruthy()
+    expect(tick1.did).toEqual(didOfDoc)
     expect(tick1.key).toEqual('did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh')
 
 
     const tids2 = Object.keys(tick2.diffs).sort()
-    const tick3 = await update_tick(
-      did_of_doc,
-      TID.next(),
+    const tick3 = await updateTick(
+      didOfDoc,
+      TID.next().formatted(),
       await sign(
         {
           prev: tids2.at(-1),
           patches: [
             ['del', ['adx/account_keys']],
           ],
-          key: (await key_account).did(),
+          key: (await keyAccount).did(),
           sig: ''
         },
-        (await key_account),
+        accountCrypto,
       ),
       tick2,
-      (await key_consortium)
+      consortiumCrypto
     )
     if ('error' in tick3){
       console.log(tick3)
       expect(false).toBeTruthy()
       return
     }
-    console.log('tick3', JSON.stringify(tick3), await tick_to_did_doc(tick3, (await key_consortium).did()))
-    expect(await validate_sig(tick3)).toBeTruthy()
-    expect(tick3.did).toEqual(did_of_doc)
+    console.log('tick3', JSON.stringify(tick3), await tickToDidDoc(tick3, (await keyConsortium).did(), consortiumCrypto as Asymmetric))
+    expect(await validateSig(tick3, consortiumCrypto as Asymmetric)).toBeTruthy()
+    expect(tick3.did).toEqual(didOfDoc)
     expect(tick3.key).toEqual('did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh')
 
     const tids3 = Object.keys(tick3.diffs).sort()
-    const tick4 = await update_tick(
-      did_of_doc,
-      TID.next(),
+    const tick4 = await updateTick(
+      didOfDoc,
+      TID.next().formatted(),
       await sign(
         {
           prev: tids3.at(-1),
           patches: [
             ['put', ['hello'], 'world'],
           ],
-          key: (await key_account).did(),
+          key: (await keyAccount).did(),
           sig: ''
         },
-        (await key_account),
+        (await accountCrypto),
       ),
       tick3,
-      (await key_consortium)
+      (await consortiumCrypto)
     )
     if ('error' in tick4){
       console.log(tick4)
       expect(false).toBeTruthy()
       return
     }
-    console.log('tick4', JSON.stringify(tick4), await tick_to_did_doc(tick4, (await key_consortium).did()))
-    expect(await validate_sig(tick4)).toBeTruthy()
-    expect(tick4.did).toEqual(did_of_doc)
+    console.log('tick4', JSON.stringify(tick4), await tickToDidDoc(tick4, (await keyConsortium).did(), consortiumCrypto as Asymmetric))
+    expect(await validateSig(tick4, consortiumCrypto as Asymmetric)).toBeTruthy()
+    expect(tick4.did).toEqual(didOfDoc)
     expect(tick4.key).toEqual('did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh')
   })
 })

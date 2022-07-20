@@ -1,6 +1,8 @@
-import { TID } from '@adxp/common'
-import {EcdsaKeypair, sha256, verifyDidSig} from '@adxp/crypto'
-import * as uint8arrays from 'uint8arrays'
+import { sign, validateSig } from './signature'
+import { pid, tidDifferenceHours } from './pid'
+import { ErrorMessage, Value, TidString, DidKeyString, Patch, Diff, Diffs, Document, Tick, Asymmetric } from './types'
+
+export { pid, sign, validateSig }
 
 /*
   Example identity tick
@@ -42,101 +44,91 @@ makes
   }
 */
 
-// @TODO move this to "@adxp/common/src/common/types"
-type ErrorMessage = {
-  error: string
-  cause?: ErrorMessage
-  [key: string]: Value
-}
-
-type Value =
-  | null
-  | boolean
-  | number
-  | string
-  | Value[]
-  | { [key: string]: Value }
-  | undefined
-
-type TidString = string
-type Signature = string
-type DidKeyString = string
-type Patch = ['put' | 'del', (string | number)[], Value]
-type Diff = {
-  prev: TidString
-  patches: Patch[]
-  key: DidKeyString
-  sig: Signature
-}
-type Diffs = { [index: string]: Document | Diff } // the first diff is arbatrary JSON object initial value
-type Tick = {
-  tid: TidString
-  did: string
-  diffs: Diffs
-  key: DidKeyString
-  sig: Signature
-}
-
-type Document = { [key: string]: Value }
-
-export const update_tick = async (
+export const updateTick = async (
   did: string, // the did:aic: being updated
-  tid: TID, // the consenus time of the tick's generation
-  candidate_diff: Diff | Document | null, // null when only updating tid
+  tid: TidString, // the consenus time of the tick's generation
+  candidateDiff: Diff | Document | null, // null when only updating tid
   stored_tick: Tick | null, // null when there is not db entry (did init)
-  key: EcdsaKeypair, // the consortium passes in the key
+  key: Asymmetric, // the consortium passes in the key
 ): Promise<Tick | ErrorMessage> => {
-  // @TODO
-  // validate that tid > all tids in the diffs
-
-  // if candidate_diff is null just update tid and re-sign
-  // if stored_tick is null the candidate_diff is inital state
+  // @TODO validate that tid > all tids in the diffs
   if (stored_tick === null) {
     // this is the  initial registration of a did:aic
-    if (candidate_diff === null) {
-      // since the stored_tick and candidate_diff are null
-      // this is a request for a fresh tick of a non-exixtant did
-      // return a signed affirmation that the did dose not exist
-      return (await sign(
-        {
-          tid: tid.formatted(),
-          did: did,
-          error: `${did} not found`,
-          diffs: {},
-          key: key.did(),
-          sig: '',
-        },
-        key,
-      )) as Tick
-    }
-    // since the candidate_diff is not null it is the inital state
-    // calulate the did:aic from the inital state if they match make the inital tick
-    const calculated_did = `did:aic:${await pid(candidate_diff)}`
-    if (did !== calculated_did) {
-      // client must caulate did corectly to acsept, mostly an integraty check
-      return { error: 'calculated did dose not match url' }
-    }
-    const diffs: Diffs = {}
-    diffs[tid.formatted()] = candidate_diff
-    return tick_from_diffs(diffs, tid, key)
+    return registerNewDid(did, tid, candidateDiff, key)    
   }
+
   // since stored_tick is not null this is an update
-  // of an existing did:aic
-  if (!(await validate_sig(stored_tick))) {
-    return { error: 'stored tick has bad signature' }
+  // of a registered did:aic
+  if (!(await validateSig(stored_tick, key))) {
+    // this means the consortium data base has been corupted
+    return { error: 'bad signature: stored tick' }
   }
   if (stored_tick.key != key.did()) {
-    return { error: 'stored tick signed by diffrent consortium' }
+    // the consortium should not update a tick signed by a difrent consortium
+    // this logic may get more complicated if the consortium is mid key rotation
+    return { error: 'mismatch: consortium key, stored tick key' }
   }
   if (stored_tick.did != did) {
-    return { error: 'stored tick did dose not match url' } // databace is corupted
+    // databace index is coruptend
+    return {
+      error: 'stored tick not for did',
+      did: did,
+      stored_tick_did: stored_tick.did,
+    }
   }
   // stored_tick is now validated by consortium key and url
-  if (candidate_diff === null) {
+  return updateExistingValidatedDid(tid, candidateDiff, stored_tick, key)
+}
+
+const registerNewDid = async (
+  did: string,
+  tid: TidString,
+  candidateDiff: Document | null,
+  key: Asymmetric,
+): Promise<Tick | ErrorMessage> => {
+  if (candidateDiff === null) {
+    // since candidateDiff is null
+    // this is a request for a fresh tick of a non-exixtant did
+    // return a signed affirmation that the did dose not exist
+    return (await sign(
+      {
+        tid: tid,
+        did: did,
+        error: 'not found',
+        key: key.did(),
+        sig: '',
+      },
+      key,
+    )) as Tick
+  }
+  // since the candidateDiff is not null it is the inital state
+  // calulate the did:aic from the inital state if they match make the inital tick
+  const calculated_did = `did:aic:${await pid(candidateDiff)}`
+  if (did !== calculated_did) {
+    // client must caulate did corectly to acsept, mostly an integraty check
+    return {
+      tid: tid,
+      did: did,
+      error: 'calculated did dose not match url',
+      calculated_did: calculated_did,
+    }
+  }
+  const diffs: Diffs = {}
+  diffs[tid] = candidateDiff
+  return tickFromDiffs(diffs, tid, key)
+}
+
+export const updateExistingValidatedDid = async (
+  tid: TidString, // the consenus time of the tick's generation
+  candidateDiff: Diff | Document | null, // null when only updating tid
+  stored_tick: Tick, // null when there is not db entry (did init)
+  key: Asymmetric, // the consortium passes in the key
+): Promise<Tick | ErrorMessage> => {
+  if (candidateDiff === null) {
     // nothing to update return the old tick but with new tid
     return (await sign(
       {
-        tid: tid.formatted(),
+        tid: tid,
         did: stored_tick.did,
         diffs: stored_tick.diffs,
         key: stored_tick.key,
@@ -145,23 +137,25 @@ export const update_tick = async (
       key,
     )) as Tick
   }
-  // there is a validated stored_tick and a candidate_diff
+  // there is a validated stored_tick and a candidateDiff
   // this is a update of the did document
-  if (!(await validate_sig(candidate_diff))) {
+  if (!(await validateSig(candidateDiff, key))) {
     return { error: 'diff has bad signature' }
   }
-  if ('key' in candidate_diff && typeof candidate_diff.key == 'string'){
-    if (!validate_key_in_doc_for_diffs(candidate_diff.key, stored_tick.diffs)) {
+  if (
+      'key' in candidateDiff && 
+      typeof candidateDiff.key == 'string' && 
+      !validateKeyInDocForDiffs(candidateDiff.key, stored_tick.diffs)
+    ) {
       return { error: 'diff signed by key not in did doc' }
     }
-  }
-  // there is a validated stored_tick and a valid candidate_diff
+  // there is a validated stored_tick and a valid candidateDiff
   const diffs: Diffs = stored_tick.diffs
-  diffs[tid.formatted()] = candidate_diff
-  return tick_from_diffs(diffs, tid, key)
+  diffs[tid] = candidateDiff
+  return tickFromDiffs(diffs, tid, key)
 }
 
-const validate_key_in_doc_for_diffs = async (
+const validateKeyInDocForDiffs = async (
   key: DidKeyString,
   diffs: Diffs,
 ) => {
@@ -169,33 +163,21 @@ const validate_key_in_doc_for_diffs = async (
   // the 72 hour key prioraty window gos here :)
 }
 
-export const tick_to_diffs = async (tick: {
-  sig: string
-  key: string
-  [index: string]: Value
-}): Promise<Diffs | null> => {
-  if (await validate_sig(tick)) {
-    return tick.diffs as Diffs
-  } else {
-    return null
-  }
-}
-
-export const tick_from_diffs = async (
+export const tickFromDiffs = async (
   diffs: Diffs,
-  tid: TID,
-  key: EcdsaKeypair,
+  tid: TidString,
+  key: Asymmetric,
 ): Promise<Tick | ErrorMessage> => {
   // This function dose not validate the diffs remember to do that first
   const tids = Object.keys(diffs).sort()
   if (tids.length < 1) {
     return { error: 'no diffs' }
   }
-  const initial_state = diffs[tids[0]]
+  const initialState = diffs[tids[0]]
   return (await sign(
     {
-      tid: tid.formatted(),
-      did: 'did:aic:' + (await pid(initial_state)),
+      tid: tid,
+      did: 'did:aic:' + (await pid(initialState)),
       diffs,
       key: key.did(),
       sig: '', // sig will be filld in by call to sign
@@ -204,51 +186,52 @@ export const tick_from_diffs = async (
   )) as Tick
 }
 
-const authorise_key = (
+const authoriseKey = (
   doc: Document,
   diff: Diff,
 ): boolean => {
-  if (
-    'adx/account_keys' in doc && 
-    Array.isArray(doc['adx/account_keys']) &&
-    doc['adx/account_keys'].includes(diff.key)
-  ) {
+  // @TODO the 72 hour window logic needs to be here
+  if (keyIn(doc, 'adx/account_keys', diff.key)) {
     return true
   }
-  if (
-    'adx/recovery_keys' in doc &&
-    Array.isArray(doc['adx/recovery_keys']) &&
-    doc['adx/recovery_keys'].includes(diff.key)
-  ) {
-    // check that the diff.patches[*][2]
-    // the recovey key is only authorised to update account or recovery keys
-    // only changes 'adx/account_keys' or 'adx/recovery_keys'
-    // @TODO the 72 hour window logic needs to be here
-    return diff.patches.every((patch: Patch) => {
-      const pathSegment = patch[1][0]
-      return (pathSegment === 'adx/account_keys' ||
-      pathSegment === 'adx/recovery_keys')
-    })
+  if (keyIn(doc, 'adx/recovery_keys', diff.key)) {
+    return patchesKeysOnly(diff.patches)
   }
   return false
 }
 
-export const tick_to_did_doc = async (tick: Tick, consortium_did: string, asOf?: TidString): Promise<Document> => {
-  const valid = await validate_sig(tick)
+const keyIn = (doc: Document, keyList: string, didKey: DidKeyString): boolean => {
+  return keyList in doc &&
+  Array.isArray(doc[keyList]) &&
+  (doc[keyList] as String[]).includes(didKey)
+}
+
+const patchesKeysOnly = (patches: Patch[]): boolean => {
+  // check that the diff.patches[*][2]
+  // the recovey key is only authorised to update account or recovery keys
+  // only changes 'adx/account_keys' or 'adx/recovery_keys'
+  return patches.every((patch: Patch) => {
+    const pathSegment = patch[1][0]
+    return ( pathSegment === 'adx/account_keys' || pathSegment === 'adx/recovery_keys' )
+  })
+}
+
+export const tickToDidDoc = async (tick: Tick, consortiumDid: string, key: Asymmetric, asOf?: TidString,): Promise<Document> => {
+  const valid = await validateSig(tick, key)
   if (!valid){
     return { error: 'tick has bad signature' }
   }
-  if (tick.key != consortium_did) {
+  if (tick.key != consortiumDid) {
     return { error: 'not signed by consortium' }
   }
-  const doc = await diffs_to_did_doc(tick.diffs, asOf)
+  const doc = await diffsToDidDoc(tick.diffs, key, asOf)
   if (doc !== null){
     return doc
   }
   return { error: 'malformed diffs' }
 }
 
-export const diffs_to_did_doc = async (diffs: Diffs, asOf?: TidString) => {
+export const diffsToDidDoc = async (diffs: Diffs, key: Asymmetric, asOf?: TidString) => {
   // the consortium dose not build doc for the client
   // but it still needs to build the docs to authorise_keys as of the time the diff was signed
   if (typeof diffs !== 'object') {
@@ -266,11 +249,11 @@ export const diffs_to_did_doc = async (diffs: Diffs, asOf?: TidString) => {
 
   for (const tid of tids.slice(1)) {
     const diff = diffs[tid] as Diff // after the first the rest are Diffs
-    if (!(await validate_sig(diff))) {
+    if (!(await validateSig(diff, key))) {
       console.log('INFO: ignoreing: bad sig', diff)
       continue // not valid ignore it
     }
-    if (!authorise_key(doc, diff)) {
+    if (!authoriseKey(doc, diff)) {
       console.log('INFO: ignoreing: bad key')
       continue // not valid ignore it
     }
@@ -287,42 +270,6 @@ export const diffs_to_did_doc = async (diffs: Diffs, asOf?: TidString) => {
     last = tid
   }
   return doc
-}
-
-// @TODO move this to "@adxp/common/src/common/util"
-const S32_CHAR = '234567abcdefghijklmnopqrstuvwxyz'
-const B32_CHAR = 'abcdefghijklmnopqrstuvwxyz234567'
-
-const s32encode = (data: Uint8Array): string => {
-  // this is gross so many alocatons and funtion calls :(
-  const base32 = uint8arrays.toString(data, 'base32')
-  const sort_order_invariant_base32 = base32.split('').map((c) => {
-    return S32_CHAR[B32_CHAR.indexOf(c)]
-  })
-  return sort_order_invariant_base32.join('')
-}
-
-// @TODO move this to "@adxp/common/src/common/util"
-export const pid = async (
-  data: Uint8Array | string | Document,
-): Promise<string> => {
-  if (data instanceof Uint8Array) {
-    // return the pid120 a 24 char pid
-    const hash = s32encode(await sha256(data))
-    let twos = 0
-    for (twos = 0; twos < 32; twos++) {
-      if (hash[twos] !== '2') {
-        break
-      }
-    }
-    const head = S32_CHAR[31 - twos]
-    const tail = hash.slice(twos, twos + 15) // 23 for pid120; 15 for pid80 // Are we ok with 80 bits?
-    return head + tail
-  }
-  if (typeof data === 'string') {
-    return pid(uint8arrays.fromString(data))
-  }
-  return pid(canonicaliseDocumentToUint8Array(data))
 }
 
 const patch = (doc: Document, patches: Patch[]): Document => {
@@ -368,50 +315,4 @@ const patch = (doc: Document, patches: Patch[]): Document => {
     }
   }
   return new_doc
-}
-
-export const sign = async (doc: Document, key: EcdsaKeypair) => {
-  if (doc.key !== key.did()) {
-    throw Error('Info: passed in secret key and did do not match')
-  }
-  doc['sig'] = ''
-  const data = canonicaliseDocumentToUint8Array(doc)
-  const sig = await key.sign(data)
-  // https://github.com/multiformats/multihash
-  doc['sig'] = 'z' + uint8arrays.toString(sig, 'base58btc')
-  return doc
-}
-
-export const validate_sig = async (
-  doc: Document,
-): Promise<boolean | ErrorMessage> => {
-  if (
-    typeof doc.sig !== 'string' ||
-    typeof doc.key !== 'string' ||
-    doc.key.length < 1
-  ) {
-    return false
-  }
-
-  const doc_copy = JSON.parse(JSON.stringify(doc))
-  if (doc_copy.sig[0] !== 'z') {
-    // check the multibase https://github.com/multiformats/multibase
-    throw "signatures must be 'z'+ base58btc" // maby just retuen false?
-  }
-  doc_copy.sig = ''
-  const data = canonicaliseDocumentToUint8Array(doc_copy)
-
-
-  const sig = uint8arrays.fromString(doc.sig.slice(1), 'base58btc')
-  let valid = await verifyDidSig(doc.key, data, sig)
-  return valid // @TODO check that the key is in the did doc
-}
-
-export const canonicaliseDocumentToUint8Array = (
-  document: Document,
-): Uint8Array => {
-  // @TODO canonicalise json/cbor?
-  // JSON Canonicalization Scheme (JCS)
-  // https://datatracker.ietf.org/doc/html/rfc8785
-  return uint8arrays.fromString(JSON.stringify(document))
 }

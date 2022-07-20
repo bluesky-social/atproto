@@ -1,7 +1,8 @@
 import test from 'ava'
 import axios from 'axios'
-import { EcdsaKeypair } from '@adxp/crypto'
-import { pid, sign, validate_sig } from '@adxp/aic'
+import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
+import { pid, sign, validateSig ,} from '@adxp/aic'
+import {Asymmetric} from '@adxp/aic/src/types'
 import { runTestServer } from './_util'
 
 const USE_TEST_SERVER = false
@@ -9,9 +10,9 @@ const USE_TEST_SERVER = false
 const PORT = 2583
 const HOST = `localhost`
 const PATH = `aic`
-let test_pid = ''
+let testPid = ''
 
-const key_account = EcdsaKeypair.import(
+const keyAccount = EcdsaKeypair.import(
   {
     // did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV
     key_ops: [ 'sign' ],
@@ -26,6 +27,7 @@ const key_account = EcdsaKeypair.import(
     exportable: true,
   },
 )
+let accountCrypto: Asymmetric | null = null
 
 describe('delegator client', () => {
   it('works', () => {
@@ -36,11 +38,17 @@ describe('delegator client', () => {
     if (USE_TEST_SERVER) {
       await runTestServer(PORT)
     }
+    const key = ( await keyAccount )
+    accountCrypto = {
+      did: (): string => {return key.did()},
+      sign: async (msg:Uint8Array): Promise<Uint8Array> => { return await (await keyAccount).sign(msg) },
+      verifyDidSig: verifyDidSig,
+    }
   })
 
   it('get tid', async () => {
     const resp = await axios.get(`http://${HOST}:${PORT}/${PATH}/tid`)
-    expect(await validate_sig(resp.data)).toBeTruthy()
+    expect(await validateSig(resp.data, accountCrypto as Asymmetric)).toBeTruthy()
   })
 
   it('post init data', async () => {
@@ -49,38 +57,38 @@ describe('delegator client', () => {
       a: 1,
       b: 2,
       c: 3,
-      'adx/account_keys': [(await key_account).did()],
+      'adx/account_keys': [(await keyAccount).did()],
     }
-    test_pid = await pid(data)
-    const url = `http://${HOST}:${PORT}/${PATH}/${test_pid}`
+    testPid = await pid(data)
+    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
-    console.log('post init data', resp.status, resp.data)
+    // console.log('post init data', resp.status, resp.data)
     expect(resp.status == 200).toBeTruthy()
   })
 
   it('post an update bad signature', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${test_pid}`
+    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
     const data = '{}'
     const headers = { 'Content-Type': 'application/json' }
 
     const resp = await axios.post(url, data, { headers })
-    console.log('update bad signature', resp.status, resp.data)
+    // console.log('update bad signature', resp.status, resp.data)
     expect(resp.status == 200).toBeTruthy()
   })
 
   it('valid update 1 add d', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${test_pid}`
-    const resp_get = await axios.get(url)
-    console.log('get an update last tid', resp_get.data)
+    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const respGet = await axios.get(url)
+    // console.log('get an update last tid', respGet.data)
     const data = await sign(
       {
-        prev: Object.keys(resp_get.data.diffs)[0],
+        prev: Object.keys(respGet.data.diffs)[0],
         patches: [['put', ['d'], 4]],
-        key: 'did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez',
+        key: 'did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV',
         sig: '',
       },
-      await key_account,
+      accountCrypto as Asymmetric,
     )
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
@@ -88,17 +96,17 @@ describe('delegator client', () => {
     expect(resp.status == 200).toBeTruthy()
   })
   it('valid update 2 del b', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${test_pid}`
-    const resp_get = await axios.get(url)
-    console.log('get an update last tid', resp_get.data)
+    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const respGet = await axios.get(url)
+    // console.log('get an update last tid', respGet.data)
     const data = await sign(
       {
-        prev: Object.keys(resp_get.data.diffs)[1],
+        prev: Object.keys(respGet.data.diffs)[1],
         patches: [['del', ['b']]],
-        key: 'did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez',
+        key: 'did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV',
         sig: '',
       },
-      await key_account,
+      accountCrypto as Asymmetric,
     )
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
@@ -107,17 +115,17 @@ describe('delegator client', () => {
   })
 
   it('valid update 3 put each level', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${test_pid}`
-    const resp_get = await axios.get(url)
-    console.log('get an update last tid', resp_get.data)
+    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const respGet = await axios.get(url)
+    // console.log('get an update last tid', respGet.data)
     const data = await sign(
       {
-        prev: Object.keys(resp_get.data.diffs)[2],
+        prev: Object.keys(respGet.data.diffs)[2],
         patches: [['put', ['e', 'ea'], 'each']],
-        key: 'did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez',
+        key: 'did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV',
         sig: '',
       },
-      await key_account,
+      accountCrypto as Asymmetric,
     )
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
@@ -126,17 +134,17 @@ describe('delegator client', () => {
   })
 
   it('invalid update 4 reject fork', async () => {
-    const url = `http://${HOST}:${PORT}/${PATH}/${test_pid}`
-    const resp_get = await axios.get(url)
-    console.log('get an update last tid', resp_get.data)
+    const url = `http://${HOST}:${PORT}/${PATH}/${testPid}`
+    const respGet = await axios.get(url)
+    // console.log('get an update last tid', respGet.data)
     const data = await sign(
       {
-        prev: Object.keys(resp_get.data.diffs)[2],
+        prev: Object.keys(respGet.data.diffs)[2],
         patches: [['put', ["Don't", 'put', 'me'], 'in']],
-        key: 'did:key:zDnaeYgdnK7nVH2xNQENrBRJbdCQ1KKjxt5sbykiUGLAh46Ez',
+        key: 'did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV',
         sig: 'z5oHy2qCSKR9Z9hXuha6c7qEpUWMzGNeZcj8D5kDAxsWP6P8FN4kmSWHcoLv4q5umiyMWcUk5CePGeh51khRGEgGL',
       },
-      await key_account,
+      accountCrypto as Asymmetric,
     )
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
