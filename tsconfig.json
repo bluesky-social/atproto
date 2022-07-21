@@ -24,6 +24,7 @@
   "exclude": ["node_modules", "**/*/dist"],
   "references": [
     { "path": "./packages/aic/tsconfig.build.json" },
+    { "path": "./packages/api/tsconfig.build.json" },
     { "path": "./packages/auth/tsconfig.build.json" },
     { "path": "./packages/auth-lobby" },
     { "path": "./packages/awake/tsconfig.build.json" },
@@ -32,6 +33,7 @@
     { "path": "./packages/dev-env" },
     { "path": "./packages/did-sdk/tsconfig.build.json" },
     { "path": "./packages/example-app" },
+    { "path": "./packages/schemas/tsconfig.build.json" },
     { "path": "./packages/ws-relay" },
   ]
 }

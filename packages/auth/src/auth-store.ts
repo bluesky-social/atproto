@@ -113,7 +113,7 @@ export class AuthStore implements Signer {
   // Mainly for dev purposes
   async claimFull(): Promise<ucan.Ucan> {
     const keypair = await this.getKeypair()
-    const ownDid = keypair.did()
+    const ownDid = await this.did()
     const token = await ucan
       .createBuilder()
       .issuedBy(keypair)

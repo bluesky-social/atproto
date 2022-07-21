@@ -1,7 +1,7 @@
 {
   "name": "@adxp/did-sdk",
   "version": "0.0.1",
-  "main": "dist/index.js",
+  "main": "src/index.ts",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/",
@@ -24,7 +24,7 @@
     "express": "^4.18.1",
     "ion-pow-sdk": "^1.0.16",
     "level": "^8.0.0",
-    "node-fetch": "^3.2.0",
+    "node-fetch": "^3.2.6",
     "one-webcrypto": "^1.0.3"
   },
   "devDependencies": {
