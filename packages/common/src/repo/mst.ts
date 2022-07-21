@@ -34,7 +34,6 @@ export const leadingZerosOnHash = async (key: string): Promise<number> => {
 }
 
 const spliceIn = <T>(array: T[], item: T, index: number): T[] => {
-  // const spliceIndex = Math.max(index, 0)
   return [...array.slice(0, index), item, ...array.slice(index)]
 }
 
@@ -64,10 +63,20 @@ export class MST {
     return new MST(blockstore, cid, node, zeros)
   }
 
-  static async load(blockstore: IpldStore, cid: CID): Promise<MST> {
+  static async load(
+    blockstore: IpldStore,
+    cid: CID,
+    zeros?: number,
+  ): Promise<MST> {
     const node = await blockstore.get(cid, nodeSchema)
-
-    return new MST(blockstore, cid, node, 0) // @TODO calculate 0s
+    if (!zeros) {
+      const firstLeaf = node.find((entry) => check.is(entry, leafPointer))
+      if (!firstLeaf) {
+        throw new Error('not a valid mst node: no leaves')
+      }
+      zeros = await leadingZerosOnHash(firstLeaf[0])
+    }
+    return new MST(blockstore, cid, node, zeros)
   }
 
   async put(): Promise<CID> {
@@ -77,6 +86,9 @@ export class MST {
 
   async set(key: string, value: CID): Promise<CID> {
     const keyZeros = await leadingZerosOnHash(key)
+    if (keyZeros > 1) {
+      console.log('GREATER THAN 1')
+    }
     // it belongs in this layer
     if (keyZeros === this.zeros) {
       const index = this.insertIndex(key)
@@ -87,18 +99,52 @@ export class MST {
         return this.put()
       } else {
         // else we need to investigate the subtree
-        const subTree = await MST.load(this.blockstore, prevNode)
+        const subTree = await MST.load(
+          this.blockstore,
+          prevNode,
+          this.zeros - 1,
+        )
+        // we try to split the subtree around the key
         const splitSubTree = await subTree.splitAround(key)
         const newNode = this.node.slice(0, index - 1)
         if (splitSubTree[0]) newNode.push(splitSubTree[0])
-        newNode.push(value)
+        newNode.push([key, value])
         if (splitSubTree[1]) newNode.push(splitSubTree[1])
         newNode.push(...this.node.slice(index))
         this.node = newNode
         return this.put()
       }
+    } else if (keyZeros < this.zeros) {
+      // it belongs on a lower layer
+      const index = this.insertIndex(key)
+      const prevNode = this.node[index - 1]
+      if (check.is(prevNode, treePointer)) {
+        // if entry before is a tree, we add it to that tree
+        const subTree = await MST.load(
+          this.blockstore,
+          prevNode,
+          this.zeros - 1,
+        )
+        const newSubTreeCid = await subTree.set(key, value)
+        this.node[index - 1] = newSubTreeCid
+        return this.put()
+      } else {
+        // else we need to create the subtree for it to go in
+        const subTree = await MST.create(this.blockstore, this.zeros - 1)
+        const newSubTreeCid = await subTree.set(key, value)
+        this.node = spliceIn(this.node, newSubTreeCid, index)
+        return this.put()
+      }
     } else {
-      // it belongs in a different layer
+      // it belongs on a higher layer & we must push the rest of the tree down
+      const split = this.splitAround(key)
+      const newNode: Node = []
+      if (split[0]) newNode.push(split[0])
+      newNode.push([key, value])
+      if (split[1]) newNode.push(split[1])
+      this.node = newNode
+      this.zeros++
+      return this.put()
     }
   }
 
