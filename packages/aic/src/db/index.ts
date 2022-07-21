@@ -56,9 +56,11 @@ export const database = async (location: string): Promise<Database> =>  {
             if (prevTid === null) {
               await db('aic_ticks').insert({ did, tid, tick })
             } else {
+              // the tid must be both
+              // prevTid must be the greatest tid for that pid in the
               await db('aic_ticks')
                 .insert({ did, tid, tick })
-                .whereExists(db.select(1).from('aic_ticks').where(tid, prevTid))
+                .whereExists(db.max('tid').from('aic_ticks').where(tid, prevTid))
             }
         }
     }
