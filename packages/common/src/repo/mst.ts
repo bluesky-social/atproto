@@ -86,9 +86,6 @@ export class MST {
 
   async set(key: string, value: CID): Promise<CID> {
     const keyZeros = await leadingZerosOnHash(key)
-    if (keyZeros > 1) {
-      console.log('GREATER THAN 1')
-    }
     // it belongs in this layer
     if (keyZeros === this.zeros) {
       const index = this.insertIndex(key)
@@ -137,7 +134,7 @@ export class MST {
       }
     } else {
       // it belongs on a higher layer & we must push the rest of the tree down
-      const split = this.splitAround(key)
+      const split = await this.splitAround(key)
       const newNode: Node = []
       if (split[0]) newNode.push(split[0])
       newNode.push([key, value])
@@ -151,7 +148,7 @@ export class MST {
   insertIndex(key: string): number {
     // find first leaf that is bigger
     const maybeIndex = this.node.findIndex(
-      (entry) => check.is(entry, leafPointer) && entry[0] > key,
+      (entry) => check.is(entry, leafPointer) && entry[0] >= key,
     )
     // if not find, we're on the end
     return maybeIndex >= 0 ? maybeIndex : this.node.length
@@ -172,27 +169,31 @@ export class MST {
     return [left.cid, right.cid]
   }
 
-  // async lowest(): Promise<string> {
-  //   const lowestEntry = this.node[0]
-  //   if (check.is(lowestEntry, leafPointer)) {
-  //     return lowestEntry[0]
-  //   } else {
-  //     const subTree = await MST.load(this.blockstore, lowestEntry)
-  //     return subTree.lowest()
-  //   }
-  // }
+  async get(key: string): Promise<CID | null> {
+    const index = this.insertIndex(key)
+    const found = this.node[index]
+    if (found && check.is(found, leafPointer) && found[0] === key) {
+      return found[1]
+    }
+    const prev = this.node[index - 1]
+    if (check.is(prev, treePointer)) {
+      const subTree = await MST.load(this.blockstore, prev, this.zeros - 1)
+      return subTree.get(key)
+    }
+    return null
+  }
 
-  // async highest(): Promise<string> {
-  //   const highestEntry = this.node[this.node.length]
-  //   if (check.is(highestEntry, leafPointer)) {
-  //     return highestEntry[0]
-  //   } else {
-  //     const subTree = await MST.load(this.blockstore, highestEntry)
-  //     return subTree.lowest()
-  //   }
-  // }
+  async walk(fn: (level: number, key: string) => void) {
+    for (const entry of this.node) {
+      if (check.is(entry, treePointer)) {
+        const subTree = await MST.load(this.blockstore, entry, this.zeros - 1)
+        await subTree.walk(fn)
+      } else {
+        fn(this.zeros, entry[0])
+      }
+    }
+  }
 
-  // async get(key: string): Promise<CID> {}
   // async delete(key: string): Promise<void> {}
 }
 
