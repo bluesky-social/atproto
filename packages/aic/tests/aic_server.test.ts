@@ -1,8 +1,8 @@
 import axios from 'axios'
 import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
-import {pid} from '../src/doc/pid'
-import { sign, validateSig ,} from '../src/doc/signature'
-import {Asymmetric} from '../src/doc/types'
+import {pid} from '../src/pid'
+import { sign, validateSig ,} from '../src/signature'
+import {Asymmetric} from '../src/types'
 
 const USE_TEST_SERVER = false
 
@@ -91,7 +91,7 @@ describe('delegator client', () => {
     )
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
-    console.log('post an update last tid', resp.status, resp.data, 'for', data)
+    // console.log('post an update last tid', resp.status, resp.data, 'for', data)
     expect(resp.status == 200).toBeTruthy()
   })
   it('valid update 2 del b', async () => {
@@ -109,7 +109,7 @@ describe('delegator client', () => {
     )
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
-    console.log('post an update last tid', resp.status, resp.data, 'for', data)
+    // console.log('post an update last tid', resp.status, resp.data, 'for', data)
     expect(resp.status == 200).toBeTruthy()
   })
 
@@ -128,7 +128,7 @@ describe('delegator client', () => {
     )
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
-    console.log('post an update last tid', resp.status, resp.data, 'for', data)
+    // console.log('post an update last tid', resp.status, resp.data, 'for', data)
     expect(resp.status == 200).toBeTruthy()
   })
 
@@ -147,7 +147,7 @@ describe('delegator client', () => {
     )
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
-    console.log('post an update last tid', resp.status, resp.data, 'for', data)
+    // console.log('post an update last tid', resp.status, resp.data, 'for', data)
     expect(resp.status == 200).toBeTruthy()
   })
 })

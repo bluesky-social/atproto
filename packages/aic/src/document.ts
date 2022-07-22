@@ -118,7 +118,7 @@ const registerNewDid = async (
   return tickFromDiffs(diffs, tid, key)
 }
 
-export const updateExistingValidatedDid = async (
+const updateExistingValidatedDid = async (
   tid: TidString, // the consenus time of the tick's generation
   candidateDiff: Diff | Document | null, // null when only updating tid
   stored_tick: Tick, // null when there is not db entry (did init)

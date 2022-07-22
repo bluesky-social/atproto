@@ -1,5 +1,5 @@
 import * as crypto from '@adxp/crypto'
-import { database, Database } from './db/index'
+import { database, Database } from './db'
 import { server } from './server'
 
 const run = async () => {

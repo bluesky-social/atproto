@@ -1,7 +1,7 @@
 import express from 'express'
-import tid from './tid'
 import { TID } from '@adxp/common'
-import { updateTick } from '../doc/index'
+import { updateTick } from './document'
+import { sign } from './signature'
 import * as crypto from '@adxp/crypto'
 import { z } from 'zod'
 
@@ -58,7 +58,19 @@ let consortiumCrypto = async () => {
 
 const router = express.Router()
 router.use('/favicon.ico', express.static('static'))
-router.use('/tid', tid)
+// router.use('/tid', tid)
+router.all('/tid', async (req, res) => {
+  res.send(
+    await sign(
+      {
+        tid: TID.next().formatted(),
+        key: (await consortiumCrypto()).did(),
+        sig: '',
+      },
+      await consortiumCrypto(),
+    ),
+  )
+})
 
 router.get(
   '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
@@ -120,15 +132,17 @@ router.post(
 
     // if the output of updateTick is not an error put in db
     console.log(`Saving ${newTick.did} to AIC at ${newTick.tid}`)
-    res.locals.db.putTickForDid(
+    await res.locals.db.putTickForDid(
       newTick.did,
       newTick.tid,
       prevTid, // gard: if the prevTid has changed the tick from the db is stale
       JSON.stringify(newTick),
     )
 
+    // we reload the tick from the databace if the put failed/pending we return the last tick 
+    const storedTick = (await res.locals.db.tickForDid(did)).tick
     res.status(200)
-    res.type('json').send(newTick)
+    res.type('json').send(storedTick)
   },
 )
 
