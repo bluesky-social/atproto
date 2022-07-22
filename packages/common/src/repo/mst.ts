@@ -3,7 +3,6 @@ import * as uint8arrays from 'uint8arrays'
 import IpldStore from '../blockstore/ipld-store'
 import { sha256 } from '@adxp/crypto'
 
-import * as dagCbor from '@ipld/dag-cbor'
 import z from 'zod'
 import { schema } from '../common/types'
 import * as check from '../common/check'
@@ -69,7 +68,7 @@ export class MST {
     zeros?: number,
   ): Promise<MST> {
     const node = await blockstore.get(cid, nodeSchema)
-    if (!zeros) {
+    if (zeros === undefined) {
       const firstLeaf = node.find((entry) => check.is(entry, leafPointer))
       if (!firstLeaf) {
         throw new Error('not a valid mst node: no leaves')
@@ -134,14 +133,37 @@ export class MST {
       }
     } else {
       // it belongs on a higher layer & we must push the rest of the tree down
-      // @TODO handle two level pushes
-      const split = await this.splitAround(key)
-      const newNode: Node = []
-      if (split[0]) newNode.push(split[0])
+      let split = await this.splitAround(key)
+      // if the newly added key has >=2 more leading zeros than the current highest layer
+      // then we need to add in structural nodes in between as well
+      let left: CID | null = split[0]
+      let right: CID | null = split[1]
+      const extraLayersToAdd = keyZeros - this.zeros
+      // intentionally starting at 1, since first layer is taken care of by split
+      for (let i = 1; i < extraLayersToAdd; i++) {
+        if (left !== null) {
+          const leftNode = await MST.fromData(
+            this.blockstore,
+            [left],
+            this.zeros + i,
+          )
+          left = leftNode.cid
+        }
+        if (right !== null) {
+          const rightNode = await MST.fromData(
+            this.blockstore,
+            [right],
+            this.zeros + i,
+          )
+          right = rightNode.cid
+        }
+      }
+      let newNode: Node = []
+      if (left) newNode.push(left)
       newNode.push([key, value])
-      if (split[1]) newNode.push(split[1])
+      if (right) newNode.push(right)
       this.node = newNode
-      this.zeros++
+      this.zeros = keyZeros
       return this.put()
     }
   }
@@ -160,6 +182,7 @@ export class MST {
     const index = this.insertIndex(key)
     const leftData = this.node.slice(0, index)
     const rightData = this.node.slice(index)
+
     if (leftData.length === 0) {
       return [null, this.cid]
     }
