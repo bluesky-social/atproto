@@ -168,7 +168,29 @@ export class MST {
     }
     const left = await MST.fromData(this.blockstore, leftData, this.zeros)
     const right = await MST.fromData(this.blockstore, rightData, this.zeros)
+    const prev = leftData[leftData.length - 1]
+    if (check.is(prev, treePointer)) {
+      const prevSubtree = await MST.load(this.blockstore, prev, this.zeros - 1)
+      const prevSplit = await prevSubtree.splitAround(key)
+      if (prevSplit[0]) {
+        await left.append(prev)
+      }
+      if (prevSplit[1]) {
+        await right.prepend(prev)
+      }
+    }
+
     return [left.cid, right.cid]
+  }
+
+  async append(entry: TreeEntry): Promise<CID> {
+    this.node = [...this.node, entry]
+    return this.put()
+  }
+
+  async prepend(entry: TreeEntry): Promise<CID> {
+    this.node = [entry, ...this.node]
+    return this.put()
   }
 
   async get(key: string): Promise<CID | null> {
