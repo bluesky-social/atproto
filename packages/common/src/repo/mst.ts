@@ -134,6 +134,7 @@ export class MST {
       }
     } else {
       // it belongs on a higher layer & we must push the rest of the tree down
+      // @TODO handle two level pushes
       const split = await this.splitAround(key)
       const newNode: Node = []
       if (split[0]) newNode.push(split[0])
@@ -145,6 +146,7 @@ export class MST {
     }
   }
 
+  // finds first leaf node that is greater than or equal to the value
   insertIndex(key: string): number {
     // find first leaf that is bigger
     const maybeIndex = this.node.findIndex(
