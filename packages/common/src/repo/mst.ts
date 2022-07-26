@@ -83,11 +83,15 @@ export class MST {
     return this.cid
   }
 
-  async set(key: string, value: CID): Promise<CID> {
+  async add(key: string, value: CID): Promise<CID> {
     const keyZeros = await leadingZerosOnHash(key)
-    // it belongs in this layer
     if (keyZeros === this.zeros) {
-      const index = this.insertIndex(key)
+      // it belongs in this layer
+      const index = this.findGtOrEqualLeafIndex(key)
+      const found = this.node[index]
+      if (found && found[0] === key) {
+        throw new Error(`There is already a value at key: ${key}`)
+      }
       const prevNode = this.node[index - 1]
       if (!prevNode || check.is(prevNode, leafPointer)) {
         // if entry before is a leaf, (or we're on far left) we can just splice in
@@ -112,7 +116,7 @@ export class MST {
       }
     } else if (keyZeros < this.zeros) {
       // it belongs on a lower layer
-      const index = this.insertIndex(key)
+      const index = this.findGtOrEqualLeafIndex(key)
       const prevNode = this.node[index - 1]
       if (check.is(prevNode, treePointer)) {
         // if entry before is a tree, we add it to that tree
@@ -121,13 +125,13 @@ export class MST {
           prevNode,
           this.zeros - 1,
         )
-        const newSubTreeCid = await subTree.set(key, value)
+        const newSubTreeCid = await subTree.add(key, value)
         this.node[index - 1] = newSubTreeCid
         return this.put()
       } else {
         // else we need to create the subtree for it to go in
         const subTree = await MST.create(this.blockstore, this.zeros - 1)
-        const newSubTreeCid = await subTree.set(key, value)
+        const newSubTreeCid = await subTree.add(key, value)
         this.node = spliceIn(this.node, newSubTreeCid, index)
         return this.put()
       }
@@ -169,17 +173,16 @@ export class MST {
   }
 
   // finds first leaf node that is greater than or equal to the value
-  insertIndex(key: string): number {
-    // find first leaf that is bigger
+  findGtOrEqualLeafIndex(key: string): number {
     const maybeIndex = this.node.findIndex(
       (entry) => check.is(entry, leafPointer) && entry[0] >= key,
     )
-    // if not find, we're on the end
+    // if we can't find, we're on the end
     return maybeIndex >= 0 ? maybeIndex : this.node.length
   }
 
   async splitAround(key: string): Promise<[CID | null, CID | null]> {
-    const index = this.insertIndex(key)
+    const index = this.findGtOrEqualLeafIndex(key)
     const leftData = this.node.slice(0, index)
     const rightData = this.node.slice(index)
 
@@ -217,7 +220,7 @@ export class MST {
   }
 
   async get(key: string): Promise<CID | null> {
-    const index = this.insertIndex(key)
+    const index = this.findGtOrEqualLeafIndex(key)
     const found = this.node[index]
     if (found && check.is(found, leafPointer) && found[0] === key) {
       return found[1]
@@ -230,10 +233,91 @@ export class MST {
     return null
   }
 
-  async walk(fn: (level: number, key: string) => void) {
+  async edit(key: string, value: CID): Promise<CID> {
+    const index = this.findGtOrEqualLeafIndex(key)
+    const found = this.node[index]
+    if (found && check.is(found, leafPointer) && found[0] === key) {
+      this.node[index][1] = value
+      return await this.put()
+    }
+    const prev = this.node[index - 1]
+    if (check.is(prev, treePointer)) {
+      const subTree = await MST.load(this.blockstore, prev, this.zeros - 1)
+      const subTreeCid = await subTree.edit(key, value)
+      this.node[index - 1] = subTreeCid
+      return await this.put()
+    }
+    throw new Error(`Could not find a record with key: ${key}`)
+  }
+
+  // async delete(key: string): Promise<void> {}
+
+  layerHasEntry(entry: TreeEntry): boolean {
+    let found: TreeEntry | undefined
+    if (check.is(entry, leafPointer)) {
+      found = this.node.find((e) => {
+        return (
+          check.is(e, leafPointer) && entry[0] === e[0] && entry[1].equals(e[1])
+        )
+      })
+    } else {
+      found = this.node.find((e) => {
+        return check.is(e, treePointer) && entry.equals(e)
+      })
+    }
+    return found !== undefined
+  }
+
+  // toMerge wins on merge conflicts
+  async mergeIn(toMerge: MST): Promise<CID> {
+    let lastIndex = 0
+    for (const entry of toMerge.node) {
+      if (check.is(entry, leafPointer)) {
+        lastIndex = this.findGtOrEqualLeafIndex(entry[0])
+        const found = this.node[lastIndex]
+        if (found && found[0] === entry[0]) {
+          // does nothing if same, overwrites if different
+          this.node[lastIndex] = entry
+          lastIndex++
+        } else {
+          this.node = spliceIn(this.node, entry, lastIndex)
+          lastIndex++
+        }
+      } else {
+        const nextEntryInNode = this.node[lastIndex]
+        if (!check.is(nextEntryInNode, treePointer)) {
+          // if the next is a leaf, we splice in before
+          this.node = spliceIn(this.node, entry, lastIndex)
+          lastIndex++
+        } else if (!nextEntryInNode.equals(entry)) {
+          // if it's a new subtree, then we have to merge the two children
+          const nodeChild = await MST.load(
+            this.blockstore,
+            nextEntryInNode,
+            this.zeros - 1,
+          )
+          const toMergeChild = await MST.load(
+            this.blockstore,
+            entry,
+            this.zeros - 1,
+          )
+          const mergedCid = await nodeChild.mergeIn(toMergeChild)
+          this.node[lastIndex] = mergedCid
+          lastIndex++
+        } else {
+          // if it's the same subtree, do nothing & increment index
+          lastIndex++
+        }
+      }
+    }
+    return this.put()
+  }
+
+  async walk(fn: (level: number, key: string | null) => void) {
     for (const entry of this.node) {
       if (check.is(entry, treePointer)) {
         const subTree = await MST.load(this.blockstore, entry, this.zeros - 1)
+        fn(this.zeros, null)
         await subTree.walk(fn)
       } else {
         fn(this.zeros, entry[0])
@@ -241,7 +325,18 @@ export class MST {
     }
   }
 
-  // async delete(key: string): Promise<void> {}
+  async structure() {
+    const tree: any = []
+    for (const entry of this.node) {
+      if (check.is(entry, treePointer)) {
+        const subTree = await MST.load(this.blockstore, entry, this.zeros - 1)
+        tree.push(['LINK', await subTree.structure()])
+      } else {
+        tree.push([entry[0], entry[1].toString()])
+      }
+    }
+    return tree
+  }
 }
 
 export default MST
