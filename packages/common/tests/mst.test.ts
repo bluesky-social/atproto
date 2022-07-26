@@ -13,13 +13,18 @@ describe('Merkle Search Tree', () => {
     const mapping = await util.generateBulkTidMapping(500)
     const shuffled = shuffle(Object.entries(mapping))
 
-    for (const entry of shuffled.slice(0, 400)) {
+    for (const entry of shuffled.slice(0, 350)) {
       await mst.add(entry[0], entry[1])
       await toMerge.add(entry[0], entry[1])
+    }
+    for (const entry of shuffled.slice(350, 400)) {
+      await mst.add(entry[0], entry[1])
     }
     for (const entry of shuffled.slice(400)) {
       await toMerge.add(entry[0], entry[1])
     }
+    console.log('zeros 1: ', mst.zeros)
+    console.log('zeros 2: ', toMerge.zeros)
 
     await mst.mergeIn(toMerge)
     for (const entry of shuffled) {

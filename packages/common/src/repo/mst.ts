@@ -268,8 +268,100 @@ export class MST {
     return found !== undefined
   }
 
-  // toMerge wins on merge conflicts
+  async loadChild(cid: CID): Promise<MST> {
+    return MST.load(this.blockstore, cid, this.zeros - 1)
+  }
+
   async mergeIn(toMerge: MST): Promise<CID> {
+    let newNode: Node = []
+    let thisI = 0,
+      toMergeI = 0
+    while (thisI < this.node.length && toMergeI < toMerge.node.length) {
+      const thisHead = this.node[thisI]
+      const toMergeHead = toMerge.node[toMergeI]
+      if (!thisHead) {
+        newNode.push(toMergeHead)
+        toMergeI++
+      } else if (!toMergeHead) {
+        newNode.push(thisHead)
+        thisI++
+      } else if (
+        check.is(thisHead, leafPointer) &&
+        check.is(toMergeHead, leafPointer)
+      ) {
+        if (thisHead[0] === toMergeHead[0]) {
+          // on same, toMerge wins
+          newNode.push(toMergeHead)
+          thisI++
+          toMergeI++
+        } else if (thisHead[0] < toMergeHead[0]) {
+          newNode.push(thisHead)
+          thisI++
+        } else {
+          newNode.push(toMergeHead)
+          toMergeI++
+        }
+      } else if (
+        check.is(thisHead, treePointer) &&
+        check.is(toMergeHead, leafPointer)
+      ) {
+        const toSplit = await this.loadChild(thisHead)
+        const split = await toSplit.splitAround(toMergeHead[0])
+        if (split[0] !== null) {
+          const prev = newNode[newNode.length - 1]
+          if (check.is(prev, treePointer)) {
+            const toMerge = await this.loadChild(split[0])
+            const toMergeIn = await this.loadChild(prev)
+            await toMerge.mergeIn(toMergeIn)
+            newNode.push(toMerge.cid)
+          } else {
+            newNode.push(split[0])
+          }
+        }
+        newNode.push(toMergeHead)
+        if (split[1] !== null) newNode.push(split[1])
+        thisI++
+        toMergeI++
+      } else if (
+        check.is(thisHead, leafPointer) &&
+        check.is(toMergeHead, treePointer)
+      ) {
+        const toSplit = await this.loadChild(toMergeHead)
+        const split = await toSplit.splitAround(thisHead[0])
+        if (split[0] !== null) {
+          const prev = newNode[newNode.length - 1]
+          if (check.is(prev, treePointer)) {
+            const toMerge = await this.loadChild(prev)
+            const toMergeIn = await this.loadChild(split[0])
+            await toMerge.mergeIn(toMergeIn)
+            newNode.push(toMerge.cid)
+          } else {
+            newNode.push(split[0])
+          }
+        }
+        newNode.push(toMergeHead)
+        if (split[1] !== null) newNode.push(split[1])
+        thisI++
+        toMergeI++
+      } else if (
+        check.is(thisHead, treePointer) &&
+        check.is(toMergeHead, treePointer)
+      ) {
+        const toMerge = await this.loadChild(thisHead)
+        const toMergeIn = await this.loadChild(toMergeHead)
+        await toMerge.mergeIn(toMergeIn)
+        newNode.push(toMerge.cid)
+        thisI++
+        toMergeI++
+      } else {
+        throw new Error('SHOULDNT ever reach this')
+      }
+    }
+    return this.put()
+  }
+
+  // toMerge wins on merge conflicts
+  async mergeInOld(toMerge: MST): Promise<CID> {
     let lastIndex = 0
     for (const entry of toMerge.node) {
       if (check.is(entry, leafPointer)) {
