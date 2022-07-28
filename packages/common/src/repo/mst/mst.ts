@@ -222,20 +222,22 @@ class MST {
   async delete(key: string): Promise<MST> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
+    // if found, remove it on this level
     if (found?.isLeaf() && found.key === key) {
       const prev = await this.atIndex(index - 1)
-      const next = await this.atIndex(index + 10)
+      const next = await this.atIndex(index + 1)
       if (prev?.isTree() && next?.isTree()) {
         const merged = await prev.appendMerge(next)
         return this.newTree([
           ...(await this.slice(0, index - 1)),
           merged,
-          ...(await this.slice(0, index + 1)),
+          ...(await this.slice(index + 1)),
         ])
       } else {
         return this.removeEntry(index)
       }
     }
+    // else recurse down to find it
     const prev = await this.atIndex(index - 1)
     if (prev?.isTree()) {
       const subtree = await prev.delete(key)
@@ -291,30 +293,37 @@ class MST {
   }
 
   async removeEntry(index: number): Promise<MST> {
-    const entries = await this.getEntries()
-    const updated = entries.splice(index, 1)
+    const updated = [
+      ...(await this.slice(0, index)),
+      ...(await this.slice(index + 1)),
+    ]
     return this.newTree(updated)
   }
 
-  newTree(entries: NodeEntry[]): MST {
-    return new MST(this.blockstore, this.pointer, entries, this.layer)
+  async newTree(entries: NodeEntry[]): Promise<MST> {
+    const pointer = await MST.getCid(entries)
+    return new MST(this.blockstore, pointer, entries, this.layer)
   }
 
   async splitAround(key: string): Promise<[MST | null, MST | null]> {
     const index = await this.findGtOrEqualLeafIndex(key)
+    // split tree around key
     const leftData = await this.slice(0, index)
     const rightData = await this.slice(index)
+    let left = await this.newTree(leftData)
+    let right = await this.newTree(rightData)
 
-    let left = this.newTree(leftData)
-    let right = this.newTree(rightData)
-    const prev = leftData[leftData.length - 1]
-    if (prev?.isTree()) {
-      const prevSplit = await prev.splitAround(key)
-      if (prevSplit[0]) {
-        left = await left.append(prev)
+    // if the far right of the left side is a subtree,
+    // we need to split it on the key as well
+    const lastInLeft = leftData[leftData.length - 1]
+    if (lastInLeft?.isTree()) {
+      left = await left.removeEntry(leftData.length - 1)
+      const split = await lastInLeft.splitAround(key)
+      if (split[0]) {
+        left = await left.append(split[0])
       }
-      if (prevSplit[1]) {
-        right = await right.prepend(prev)
+      if (split[1]) {
+        right = await right.prepend(split[1])
       }
     }
 
@@ -322,6 +331,16 @@ class MST {
       (await left.getEntries()).length > 0 ? left : null,
       (await right.getEntries()).length > 0 ? right : null,
     ]
+  }
+
+  async anyOverlap(other: MST): Promise<boolean> {
+    const thisEntries = await this.getEntries()
+    const otherEntries = await other.getEntries()
+    for (const entry of thisEntries) {
+      const found = otherEntries.find((e) => e.equals(entry))
+      if (found) return true
+    }
+    return false
   }
 
   async append(entry: NodeEntry): Promise<MST> {
@@ -395,7 +414,6 @@ class MST {
 
   async walk(fn: (entry: NodeEntry) => boolean) {
     const entries = await this.getEntries()
-    const layer = await this.getLayer()
     for (const entry of entries) {
       if (entry.isTree()) {
         const keepGoing = fn(entry)
@@ -406,6 +424,17 @@ class MST {
         fn(entry)
       }
     }
+  }
+
+  async entryCount(): Promise<number> {
+    let size = 0
+    await this.walk((entry) => {
+      if (entry.isLeaf()) {
+        size += 1
+      }
+      return true
+    })
+    return size
   }
 
   isTree(): this is MST {

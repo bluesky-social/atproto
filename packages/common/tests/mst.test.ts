@@ -86,10 +86,63 @@ describe('Merkle Search Tree', () => {
     let mst = await MST.create(blockstore)
     const mapping = await util.generateBulkTidMapping(1000)
     const shuffled = shuffle(Object.entries(mapping))
+    // Adds
     for (const entry of shuffled) {
       mst = await mst.add(entry[0], entry[1])
     }
     for (const entry of shuffled) {
+      const got = await mst.get(entry[0])
+      expect(entry[1].equals(got)).toBeTruthy()
+    }
+
+    await writeLog('walk-mst', mst)
+    const leaves: Record<string, number> = {}
+    await mst.walk((entry) => {
+      if (entry.isLeaf()) {
+        if (leaves[entry.key]) {
+          leaves[entry.key]++
+        } else {
+          leaves[entry.key] = 1
+        }
+      }
+      return true
+    })
+
+    let totalSize = await mst.entryCount()
+    expect(totalSize).toBe(1000)
+
+    // Edits
+    const toEdit = shuffled.slice(400, 500)
+    const edited: [string, CID][] = []
+    for (const entry of toEdit) {
+      const newCid = await util.randomCid()
+      mst = await mst.edit(entry[0], newCid)
+      edited.push([entry[0], newCid])
+    }
+
+    for (const entry of edited) {
+      const got = await mst.get(entry[0])
+      expect(entry[1].equals(got)).toBeTruthy()
+    }
+
+    totalSize = await mst.entryCount()
+    expect(totalSize).toBe(1000)
+
+    // Deletes
+    const toDelete = shuffled.slice(0, 100)
+    const theRest = shuffled.slice(100)
+    for (const entry of toDelete) {
+      mst = await mst.delete(entry[0])
+    }
+
+    totalSize = await mst.entryCount()
+    expect(totalSize).toBe(900)
+
+    for (const entry of toDelete) {
+      const got = await mst.get(entry[0])
+      expect(got).toBe(null)
+    }
+    for (const entry of theRest) {
       const got = await mst.get(entry[0])
       expect(entry[1].equals(got)).toBeTruthy()
     }
@@ -190,4 +243,17 @@ const shuffle = <T>(arr: T[]): T[] => {
     toShuffle.splice(index, 1)
   }
   return shuffled
+}
+
+const writeLog = async (filename: string, tree: MST) => {
+  let log = ''
+  await tree.walk((entry) => {
+    if (entry.isTree()) {
+      log += `STARTING NODE: ${entry.layer}\n`
+    } else {
+      log += `${entry.key}\n`
+    }
+    return true
+  })
+  fs.writeFileSync(filename, log)
 }
