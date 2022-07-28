@@ -16,6 +16,7 @@ const treeEntry = z.union([leafPointer, treePointer])
 const nodeDataSchema = z.array(treeEntry)
 
 type NodeData = z.infer<typeof nodeDataSchema>
+type NodeEntry = MST | Leaf
 
 export const leadingZerosOnHash = async (key: string): Promise<number> => {
   const hash = await sha256(key)
@@ -96,7 +97,7 @@ class MST {
   }
 
   async getEntries(): Promise<NodeEntry[]> {
-    if (this.entries) return this.entries
+    if (this.entries) return [...this.entries]
     if (this.pointer) {
       const data = await this.blockstore.get(this.pointer, nodeDataSchema)
       this.entries = data.map((entry) => {
@@ -287,9 +288,12 @@ class MST {
   }
 
   async updateEntry(index: number, entry: NodeEntry): Promise<MST> {
-    const entries = await this.getEntries()
-    entries[index] = entry
-    return this.newTree(entries)
+    const update = [
+      ...(await this.slice(0, index)),
+      entry,
+      ...(await this.slice(index + 1)),
+    ]
+    return this.newTree(update)
   }
 
   async removeEntry(index: number): Promise<MST> {
@@ -331,6 +335,77 @@ class MST {
       (await left.getEntries()).length > 0 ? left : null,
       (await right.getEntries()).length > 0 ? right : null,
     ]
+  }
+
+  async diff(other: MST): Promise<Diff> {
+    const diff = new Diff()
+    let leftI = 0
+    let rightI = 0
+    const leftEntries = await this.getEntries()
+    const rightEntries = await other.getEntries()
+    while (leftI < leftEntries.length || rightI < rightEntries.length) {
+      const left = leftEntries[leftI]
+      const right = rightEntries[rightI]
+      if (!left && !right) {
+        // shouldn't ever reach this, but if both are null, we break
+        break
+      } else if (!left) {
+        // if no left, record a right leaf as an add, or add all leaves in the right subtree
+        if (right.isLeaf()) {
+          diff.recordAdd(right.key, right.value)
+        } else {
+          const allChildren = await right.leaves()
+          for (const leaf of allChildren) {
+            diff.recordAdd(leaf.key, leaf.value)
+          }
+        }
+        rightI++
+      } else if (!right) {
+        // if no right, record a left leaf as an del, or del all leaves in the left subtree
+        if (left.isLeaf()) {
+          diff.recordDelete(left.key)
+        } else {
+          const allChildren = await left.leaves()
+          for (const leaf of allChildren) {
+            diff.recordDelete(leaf.key)
+          }
+        }
+        leftI++
+      } else if (left.isLeaf() && right.isLeaf()) {
+        // if both are leaves, check if they're the same key
+        // if they're equal, move on. if the value is changed, record update
+        // if they're different, record the smaller one & increment that side
+        if (left.key === right.key) {
+          if (!left.value.equals(right.value)) {
+            diff.recordUpdate(left.key, left.value, right.value)
+          }
+          leftI++
+          rightI++
+        } else if (left.key < right.key) {
+          diff.recordDelete(left.key)
+          leftI++
+        } else {
+          diff.recordAdd(right.key, right.value)
+          rightI++
+        }
+      } else if (left.isTree() && right.isTree()) {
+        // if both are trees, find the diff of those trees
+        if (!left.equals(right)) {
+          const subDiff = await left.diff(right)
+          diff.addDiff(subDiff)
+        }
+        leftI++
+        rightI++
+      } else if (left.isLeaf() && right.isTree()) {
+        // if one is a leaf & one is a tree, record the leaf and increment that side
+        diff.recordDelete(left.key)
+        leftI++
+      } else if (left.isTree() && right.isLeaf()) {
+        diff.recordAdd(right.key, right.value)
+        rightI++
+      }
+    }
+    return diff
   }
 
   async anyOverlap(other: MST): Promise<boolean> {
@@ -425,15 +500,18 @@ class MST {
     }
   }
 
-  async entryCount(): Promise<number> {
-    let size = 0
+  async leaves() {
+    const leaves: Leaf[] = []
     await this.walk((entry) => {
-      if (entry.isLeaf()) {
-        size += 1
-      }
+      if (entry.isLeaf()) leaves.push(entry)
       return true
     })
-    return size
+    return leaves
+  }
+
+  async entryCount(): Promise<number> {
+    const leaves = await this.leaves()
+    return leaves.length
   }
 
   isTree(): this is MST {
@@ -452,30 +530,6 @@ class MST {
     }
   }
 }
-
-type NodeEntry = MST | Leaf
-
-// class Subtree {
-
-//   constructor(public pointer: CID) {}
-
-//   isSubtree(): this is Subtree {
-//     return true
-//   }
-
-//   isLeaf(): this is Leaf {
-//     return false
-//   }
-
-//   equals(entry: NodeEntry): boolean {
-//     if(entry.isSubtree()) {
-//       return entry.pointer.equals(this.pointer)
-//     } else {
-//       return false
-//     }
-//   }
-
-// }
 
 class Leaf {
   constructor(public key: string, public value: CID) {}
@@ -497,59 +551,65 @@ class Leaf {
   }
 }
 
-// class DiffTracker {
-//   adds: Record<string, Add> = {}
-//   updates: Record<string, Update> = {}
-//   deletes: Record<string, Delete> = {}
+class Diff {
+  adds: Record<string, Add> = {}
+  updates: Record<string, Update> = {}
+  deletes: Record<string, Delete> = {}
 
-//   recordDelete(key: string): void {
-//     if (this.adds[key]) {
-//       delete this.adds[key]
-//     } else {
-//       this.deletes[key] = { key }
-//     }
-//   }
+  recordAdd(key: string, cid: CID): void {
+    if (this.deletes[key]) {
+      delete this.deletes[key]
+    } else {
+      this.adds[key] = { key, cid }
+    }
+  }
 
-//   recordAdd(key: string, cid: CID): void {
-//     if (this.deletes[key]) {
-//       delete this.deletes[key]
-//     } else {
-//       this.adds[key] = { key, cid }
-//     }
-//   }
+  recordUpdate(key: string, old: CID, cid: CID): void {
+    this.updates[key] = { key, old, cid }
+  }
 
-//   recordUpdate(key: string, old: CID, cid: CID): void {
-//     this.updates[key] = { key, old, cid }
-//   }
+  recordDelete(key: string): void {
+    if (this.adds[key]) {
+      delete this.adds[key]
+    } else {
+      this.deletes[key] = { key }
+    }
+  }
 
-//   getDiff(): Diff {
-//     return {
-//       adds: Object.values(adds),
-//       updates: Object.values(updates),
-//       deletes: Object.values(deletes),
-//     }
-//   }
-// }
+  addDiff(diff: Diff) {
+    for (const add of Object.values(diff.adds)) {
+      this.recordAdd(add.key, add.cid)
+    }
+    for (const update of Object.values(diff.updates)) {
+      this.recordUpdate(update.key, update.old, update.cid)
+    }
+    for (const del of Object.values(diff.deletes)) {
+      this.recordDelete(del.key)
+    }
+  }
 
-// type Delete = {
-//   key: string
-// }
+  // getDiff(): Diff {
+  //   return {
+  //     adds: Object.values(this.adds),
+  //     updates: Object.values(this.updates),
+  //     deletes: Object.values(this.deletes),
+  //   }
+  // }
+}
 
-// type Add = {
-//   key: string
-//   cid: CID
-// }
+type Delete = {
+  key: string
+}
 
-// type Update = {
-//   key: string
-//   old: CID
-//   cid: CID
-// }
+type Add = {
+  key: string
+  cid: CID
+}
 
-// type Diff = {
-//   adds: Add[]
-//   updates: Update[]
-//   deletes: Delete[]
-// }
+type Update = {
+  key: string
+  old: CID
+  cid: CID
+}
 
 export default MST
