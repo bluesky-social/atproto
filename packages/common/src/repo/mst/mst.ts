@@ -231,7 +231,7 @@ class MST {
         return this.newTree([
           ...(await this.slice(0, index - 1)),
           merged,
-          ...(await this.slice(index + 1)),
+          ...(await this.slice(index + 2)),
         ])
       } else {
         return this.removeEntry(index)
@@ -256,7 +256,7 @@ class MST {
     }
     const thisEntries = await this.getEntries()
     const toMergeEntries = await toMerge.getEntries()
-    const lastInLeft = thisEntries[toMergeEntries.length - 1]
+    const lastInLeft = thisEntries[thisEntries.length - 1]
     const firstInRight = toMergeEntries[0]
     if (lastInLeft?.isTree() && firstInRight?.isTree()) {
       const merged = await lastInLeft.appendMerge(firstInRight)
@@ -412,16 +412,15 @@ class MST {
     return maybeIndex >= 0 ? maybeIndex : entries.length
   }
 
-  async walk(fn: (entry: NodeEntry) => boolean) {
+  async walk(fn: (entry: NodeEntry) => boolean | Promise<boolean>) {
+    const keepGoing = await fn(this)
+    if (!keepGoing) return
     const entries = await this.getEntries()
     for (const entry of entries) {
       if (entry.isTree()) {
-        const keepGoing = fn(entry)
-        if (keepGoing) {
-          await entry.walk(fn)
-        }
+        await entry.walk(fn)
       } else {
-        fn(entry)
+        await fn(entry)
       }
     }
   }

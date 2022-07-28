@@ -3,7 +3,7 @@ import MST from '../src/repo/mst/mst'
 import * as util from './_util'
 import { IpldStore } from '../src'
 import { CID } from 'multiformats'
-import fs from 'fs'
+import fs, { write } from 'fs'
 
 describe('Merkle Search Tree', () => {
   // it('height of all stupidity', async () => {
@@ -112,7 +112,7 @@ describe('Merkle Search Tree', () => {
     expect(totalSize).toBe(1000)
 
     // Edits
-    const toEdit = shuffled.slice(400, 500)
+    const toEdit = shuffled.slice(0, 100)
     const edited: [string, CID][] = []
     for (const entry of toEdit) {
       const newCid = await util.randomCid()
@@ -129,7 +129,7 @@ describe('Merkle Search Tree', () => {
     expect(totalSize).toBe(1000)
 
     // Deletes
-    const toDelete = shuffled.slice(0, 100)
+    const toDelete = toEdit
     const theRest = shuffled.slice(100)
     for (const entry of toDelete) {
       mst = await mst.delete(entry[0])
@@ -247,12 +247,20 @@ const shuffle = <T>(arr: T[]): T[] => {
 
 const writeLog = async (filename: string, tree: MST) => {
   let log = ''
-  await tree.walk((entry) => {
-    if (entry.isTree()) {
-      log += `STARTING NODE: ${entry.layer}\n`
-    } else {
-      log += `${entry.key}\n`
+  await tree.walk(async (entry) => {
+    if (entry.isLeaf()) return true
+    const layer = await entry.getLayer()
+    log += `Layer ${layer}: ${entry.pointer}\n`
+    log += '--------------\n'
+    const entries = await entry.getEntries()
+    for (const e of entries) {
+      if (e.isLeaf()) {
+        log += `Key: ${e.key}\n`
+      } else {
+        log += `Subtree: ${e.pointer}\n`
+      }
     }
+    log += '\n\n'
     return true
   })
   fs.writeFileSync(filename, log)
