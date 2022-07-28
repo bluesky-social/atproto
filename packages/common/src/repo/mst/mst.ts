@@ -305,16 +305,10 @@ class MST {
     const leftData = await this.slice(0, index)
     const rightData = await this.slice(index)
 
-    if (leftData.length === 0) {
-      return [null, this]
-    }
-    if (rightData.length === 0) {
-      return [this, null]
-    }
     let left = this.newTree(leftData)
     let right = this.newTree(rightData)
     const prev = leftData[leftData.length - 1]
-    if (prev.isTree()) {
+    if (prev?.isTree()) {
       const prevSplit = await prev.splitAround(key)
       if (prevSplit[0]) {
         left = await left.append(prev)
@@ -324,7 +318,10 @@ class MST {
       }
     }
 
-    return [left, right]
+    return [
+      (await left.getEntries()).length > 0 ? left : null,
+      (await right.getEntries()).length > 0 ? right : null,
+    ]
   }
 
   async append(entry: NodeEntry): Promise<MST> {
@@ -396,16 +393,17 @@ class MST {
     return maybeIndex >= 0 ? maybeIndex : entries.length
   }
 
-  async walk(fn: (level: number, key: string | null) => void) {
+  async walk(fn: (entry: NodeEntry) => boolean) {
     const entries = await this.getEntries()
     const layer = await this.getLayer()
     for (const entry of entries) {
       if (entry.isTree()) {
-        fn(layer, 'START SUBTREE')
-        await entry.walk(fn)
-        fn(layer, 'END SUBTREE')
+        const keepGoing = fn(entry)
+        if (keepGoing) {
+          await entry.walk(fn)
+        }
       } else {
-        fn(layer, entry.key)
+        fn(entry)
       }
     }
   }
