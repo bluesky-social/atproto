@@ -15,9 +15,6 @@ const treePointer = schema.cid
 const treeEntry = z.union([leafPointer, treePointer])
 const nodeDataSchema = z.array(treeEntry)
 
-// type LeafPointer = z.infer<typeof leafPointer>
-// type TreePointer = z.infer<typeof treePointer>
-// type TreeEntry = z.infer<typeof treeEntry>
 type NodeData = z.infer<typeof nodeDataSchema>
 
 export const leadingZerosOnHash = async (key: string): Promise<number> => {
@@ -314,16 +311,16 @@ class MST {
     if (rightData.length === 0) {
       return [this, null]
     }
-    const left = this.newTree(leftData)
-    const right = this.newTree(rightData)
+    let left = this.newTree(leftData)
+    let right = this.newTree(rightData)
     const prev = leftData[leftData.length - 1]
     if (prev.isTree()) {
       const prevSplit = await prev.splitAround(key)
       if (prevSplit[0]) {
-        left.append(prev)
+        left = await left.append(prev)
       }
       if (prevSplit[1]) {
-        right.prepend(prev)
+        right = await right.prepend(prev)
       }
     }
 
@@ -397,6 +394,20 @@ class MST {
     )
     // if we can't find, we're on the end
     return maybeIndex >= 0 ? maybeIndex : entries.length
+  }
+
+  async walk(fn: (level: number, key: string | null) => void) {
+    const entries = await this.getEntries()
+    const layer = await this.getLayer()
+    for (const entry of entries) {
+      if (entry.isTree()) {
+        fn(layer, 'START SUBTREE')
+        await entry.walk(fn)
+        fn(layer, 'END SUBTREE')
+      } else {
+        fn(layer, entry.key)
+      }
+    }
   }
 
   isTree(): this is MST {
