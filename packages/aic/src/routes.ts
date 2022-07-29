@@ -57,8 +57,8 @@ let consortiumCrypto = async () => {
 // type Diff = z.infer<typeof Diff>
 
 const router = express.Router()
-router.use('/favicon.ico', express.static('static'))
-// router.use('/tid', tid)
+router.use('/favicon.ico', express.static('static/favicon.ico'))
+
 router.all('/tid', async (req, res) => {
   res.send(
     await sign(
@@ -70,6 +70,10 @@ router.all('/tid', async (req, res) => {
       await consortiumCrypto(),
     ),
   )
+})
+
+router.get('/lobby', async (req, res) => {
+  res.send('hello lobby')
 })
 
 router.get(

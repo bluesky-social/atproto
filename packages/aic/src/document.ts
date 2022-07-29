@@ -1,5 +1,5 @@
 import { sign, validateSig } from './signature'
-import { pid, tidDifferenceHours } from './pid'
+import { pid } from './pid'
 import { ErrorMessage, Value, TidString, DidKeyString, Patch, Diff, Diffs, Document, Tick, Asymmetric } from './types'
 
 export { pid, sign, validateSig }

@@ -3,11 +3,8 @@ import * as uint8arrays from 'uint8arrays'
 import { canonicaliseDocumentToUint8Array } from './signature'
 import { Document, TidString } from './types'
 
-// @TODO move this to "@adxp/common/src/common/util"
 const S32_CHAR = '234567abcdefghijklmnopqrstuvwxyz'
-const B32_CHAR = 'abcdefghijklmnopqrstuvwxyz234567'
 
-// @TODO move this to "@adxp/common/src/common/util"
 export const pid = async (
   data: Uint8Array | string | Document,
 ): Promise<string> => {
@@ -30,33 +27,50 @@ export const pid = async (
   return pid(canonicaliseDocumentToUint8Array(data))
 }
 
-const s32encode = (data: Uint8Array): string => {
-    // this is gross so many alocatons and funtion calls :(
-    const base32 = uint8arrays.toString(data, 'base32')
-    const sort_order_invariant_base32 = base32.split('').map((c) => {
-      return S32_CHAR[B32_CHAR.indexOf(c)]
-    })
-    return sort_order_invariant_base32.join('')
+const s32encode = (data: Uint8Array) => {
+  const bitsPerChar = 5
+  const mask = (1 << bitsPerChar) - 1
+  let out = ''
+
+  let bits = 0 // Number of bits currently in the buffer
+  let buffer = 0 // Bits waiting to be written out, MSB first
+  for (let i = 0; i < data.length; ++i) {
+    // Slurp data into the buffer:
+    buffer = (buffer << 8) | data[i]
+    bits += 8
+
+    // Write out as much as we can:
+    while (bits > bitsPerChar) {
+      bits -= bitsPerChar
+      out += S32_CHAR[mask & (buffer >> bits)]
+    }
   }
 
-const tidToSec = (tid: TidString): number => {
-  // 3j5s-z6d-c2hy-22
-  // 3j5s-z6d first 7 char represent ~ seconds
-  const s = tid.replace(/-/g, '')
-  return (((((((
-    S32_CHAR.indexOf(s[0])) * 32 + 
-    S32_CHAR.indexOf(s[1])) * 32 + 
-    S32_CHAR.indexOf(s[2])) * 32 + 
-    S32_CHAR.indexOf(s[3])) * 32 + 
-    S32_CHAR.indexOf(s[4])) * 32 + 
-    S32_CHAR.indexOf(s[5])) * 32 + 
-    S32_CHAR.indexOf(s[6]))
+  // Partial character:
+  if (bits) {
+    out += S32_CHAR[mask & (buffer << (bitsPerChar - bits))]
+  }
+  return out
 }
 
-const tidDifferenceSeconds = (tid1:TidString, tid2:TidString): number => {
-  return tidToSec(tid1) - tidToSec(tid2)
-}
+// const tidToSec = (tid: TidString): number => {
+//   // 3j5s-z6d-c2hy-22
+//   // 3j5s-z6d first 7 char represent ~ seconds
+//   const s = tid.replace(/-/g, '')
+//   return (((((((
+//     S32_CHAR.indexOf(s[0])) * 32 + 
+//     S32_CHAR.indexOf(s[1])) * 32 + 
+//     S32_CHAR.indexOf(s[2])) * 32 + 
+//     S32_CHAR.indexOf(s[3])) * 32 + 
+//     S32_CHAR.indexOf(s[4])) * 32 + 
+//     S32_CHAR.indexOf(s[5])) * 32 + 
+//     S32_CHAR.indexOf(s[6]))
+// }
 
-export const tidDifferenceHours = (tid1:TidString, tid2:TidString): number => {
-  return tidDifferenceSeconds(tid1, tid2) / 60 / 60
-}
+// const tidDifferenceSeconds = (tid1:TidString, tid2:TidString): number => {
+//   return tidToSec(tid1) - tidToSec(tid2)
+// }
+
+// export const tidDifferenceHours = (tid1:TidString, tid2:TidString): number => {
+//   return tidDifferenceSeconds(tid1, tid2) / 60 / 60
+// }

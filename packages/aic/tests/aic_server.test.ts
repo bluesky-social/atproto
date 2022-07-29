@@ -1,14 +1,14 @@
 import axios from 'axios'
 import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
 import {pid} from '../src/pid'
-import { sign, validateSig ,} from '../src/signature'
+import { sign, validateSig, canonicaliseDocumentToUint8Array} from '../src/signature'
 import {Asymmetric} from '../src/types'
 
 const USE_TEST_SERVER = false
 
 const PORT = 26979
-const HOST = `localhost`
-const PATH = ``
+const HOST = 'localhost'
+const PATH = ''
 let testPid = ''
 
 const keyAccount = EcdsaKeypair.import(
@@ -29,7 +29,36 @@ const keyAccount = EcdsaKeypair.import(
 let accountCrypto: Asymmetric | null = null
 
 describe('delegator client', () => {
-  it('works', () => {
+  it('works', async () => {
+    // let min_p = "y";
+    // const tic = Number(new Date())
+    // const iterations = 100_000
+    // for (let i=0; i<iterations; i++){
+    // const data = {
+    //   nonce: Math.random() * (Number.MAX_SAFE_INTEGER + 1),
+    //   a: 1,
+    //   b: 2,
+    //   c: 3,
+    //   'adx/account_keys': [(await keyAccount).did()],
+    // }
+    // const p = await pid(data)
+    // if (p < min_p){
+    //   min_p = p
+    //   console.log(i, min_p, data)
+    // }
+    // }
+    // const toc = Number(new Date())
+    // console.log("time", toc-tic, 'iterations', iterations, 'hashrate KH/s', iterations/(toc-tic))
+
+    // const data = {
+    //   nonce: 1976288751210850,
+    //   a: 1,
+    //   b: 2,
+    //   c: 3,
+    //   'adx/account_keys': [ 'did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV' ]
+    // }
+    // console.log("best", await pid(data), data)
+
     expect(true)
   })
 
