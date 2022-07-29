@@ -497,36 +497,33 @@ export class MST {
   // -------------------
 
   // Walk full tree & emit nodes, consumer can bail at any point by returning false
-  async walk(fn: (entry: NodeEntry) => boolean | Promise<boolean>) {
-    const keepGoing = await fn(this)
-    if (!keepGoing) return
+  async *walk(): AsyncIterable<NodeEntry> {
     const entries = await this.getEntries()
     for (const entry of entries) {
+      yield entry
       if (entry.isTree()) {
-        await entry.walk(fn)
-      } else {
-        await fn(entry)
+        for await (const e of entry.walk()) {
+          yield e
+        }
       }
     }
   }
 
   // Walks tree & returns all nodes
-  async allNodes() {
+  async allNodes(): Promise<NodeEntry[]> {
     const nodes: NodeEntry[] = []
-    await this.walk((entry) => {
+    for await (const entry of this.walk()) {
       nodes.push(entry)
-      return true
-    })
+    }
     return nodes
   }
 
   // Walks tree & returns all leaves
   async leaves() {
     const leaves: Leaf[] = []
-    await this.walk((entry) => {
+    for await (const entry of this.walk()) {
       if (entry.isLeaf()) leaves.push(entry)
-      return true
-    })
+    }
     return leaves
   }
 

@@ -39,18 +39,6 @@ describe('Merkle Search Tree', () => {
       expect(entry[1].equals(got)).toBeTruthy()
     }
 
-    const leaves: Record<string, number> = {}
-    await mst.walk((entry) => {
-      if (entry.isLeaf()) {
-        if (leaves[entry.key]) {
-          leaves[entry.key]++
-        } else {
-          leaves[entry.key] = 1
-        }
-      }
-      return true
-    })
-
     let totalSize = await mst.leafCount()
     expect(totalSize).toBe(1000)
 
@@ -89,6 +77,28 @@ describe('Merkle Search Tree', () => {
       const got = await mst.get(entry[0])
       expect(entry[1].equals(got)).toBeTruthy()
     }
+  })
+
+  it('is order independent', async () => {
+    const blockstore = IpldStore.createInMemory()
+    const mapping = await util.generateBulkTidMapping(1000)
+
+    let mst1 = await MST.create(blockstore)
+    const shuffled1 = shuffle(Object.entries(mapping))
+    for (const entry of shuffled1) {
+      mst1 = await mst1.add(entry[0], entry[1])
+    }
+    const all1 = await mst1.allNodes()
+
+    let mst2 = await MST.create(blockstore)
+    const shuffled2 = shuffle(Object.entries(mapping))
+    for (const entry of shuffled2) {
+      mst2 = await mst2.add(entry[0], entry[1])
+    }
+    const all2 = await mst2.allNodes()
+
+    expect(all1.length).toBe(all2.length)
+    for (let i = 0; i < all1.length; i++) {}
   })
 
   it('diffs', async () => {
@@ -214,7 +224,7 @@ const shuffle = <T>(arr: T[]): T[] => {
 
 const writeLog = async (filename: string, tree: MST) => {
   let log = ''
-  await tree.walk(async (entry) => {
+  for await (const entry of tree.walk()) {
     if (entry.isLeaf()) return true
     const layer = await entry.getLayer()
     log += `Layer ${layer}: ${entry.pointer}\n`
@@ -228,7 +238,6 @@ const writeLog = async (filename: string, tree: MST) => {
       }
     }
     log += '\n\n'
-    return true
-  })
+  }
   fs.writeFileSync(filename, log)
 }
