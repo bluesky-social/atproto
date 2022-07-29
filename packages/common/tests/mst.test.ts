@@ -15,7 +15,7 @@ describe('Merkle Search Tree', () => {
     blockstore = IpldStore.createInMemory()
     mst = await MST.create(blockstore)
     mapping = await util.generateBulkTidMapping(1000)
-    shuffled = shuffle(Object.entries(mapping))
+    shuffled = util.shuffle(Object.entries(mapping))
   })
 
   it('adds records', async () => {
@@ -76,7 +76,7 @@ describe('Merkle Search Tree', () => {
     const allNodes = await mst.allNodes()
 
     let recreated = await MST.create(blockstore)
-    const reshuffled = shuffle(Object.entries(mapping))
+    const reshuffled = util.shuffle(Object.entries(mapping))
     for (const entry of reshuffled) {
       recreated = await recreated.add(entry[0], entry[1])
     }
@@ -99,30 +99,39 @@ describe('Merkle Search Tree', () => {
     }
   })
 
-  return
   it('diffs', async () => {
-    const blockstore = IpldStore.createInMemory()
-    let mst = await MST.create(blockstore)
-    const mapping = await util.generateBulkTidMapping(1000)
-    const shuffled = shuffle(Object.entries(mapping))
-    // Adds
-    for (const entry of shuffled) {
-      mst = await mst.add(entry[0], entry[1])
-    }
-    const cid = await util.randomCid()
+    let toDiff = mst
 
-    const toDel = shuffled[550]
-    const toEdit = shuffled[650]
-    let toDiff = await mst.add('testing', cid)
-    toDiff = await toDiff.delete(toDel[0])
-    toDiff = await toDiff.edit(toEdit[0], cid)
-    const entries = await mst.getEntries()
-    const toDiffEntries = await toDiff.getEntries()
-    console.log(mst)
-    console.log(toDiff)
+    const toAdd = Object.entries(await util.generateBulkTidMapping(100))
+    const toEdit = shuffled.slice(500, 600)
+    const toDel = shuffled.slice(400, 500)
+
+    for (const entry of toAdd) {
+      toDiff = await toDiff.add(entry[0], entry[1])
+    }
+    for (const entry of toEdit) {
+      toDiff = await toDiff.edit(entry[0], entry[1])
+    }
+    for (const entry of toDel) {
+      toDiff = await toDiff.delete(entry[0])
+    }
+
     const diff = await mst.diff(toDiff)
-    console.log('DIFF: ', diff)
+
+    console.log('DIF: ', diff)
+    console.log(diff.addList().length)
+    console.log(diff.updateList().length)
+    console.log(diff.deleteList().length)
+
+    expect(diff.addList().length).toBe(100)
+    expect(diff.updateList().length).toBe(100)
+    expect(diff.deleteList().length).toBe(100)
   })
+
+  // Special Cases
+  // ------------
+
+  // These are some tricky things that can come up that may not be included in a randomized tree
 
   /**
    *   `f` gets added & it does two node splits (e is no longer grouped with g/h)
@@ -153,8 +162,7 @@ describe('Merkle Search Tree', () => {
     ]
     const layer1 = ['3j6hnk65jju2t', '3j6hnk65kve2t']
     const layer2 = '3j6hnk65jng2t'
-    const blockstore = IpldStore.createInMemory()
-    let mst = await MST.create(blockstore)
+    mst = await MST.create(blockstore)
     const cid = await util.randomCid()
     for (const tid of layer0) {
       mst = await mst.add(tid, cid)
@@ -189,8 +197,7 @@ describe('Merkle Search Tree', () => {
     const layer0 = ['3j6hnk65jis2t', '3j6hnk65kvz2t']
     const layer1 = ['3j6hnk65jju2t', '3j6hnk65l222t']
     const layer2 = '3j6hnk65jng2t'
-    const blockstore = IpldStore.createInMemory()
-    let mst = await MST.create(blockstore)
+    mst = await MST.create(blockstore)
     const cid = await util.randomCid()
     for (const tid of layer0) {
       mst = await mst.add(tid, cid)
@@ -209,34 +216,3 @@ describe('Merkle Search Tree', () => {
     }
   })
 })
-
-const shuffle = <T>(arr: T[]): T[] => {
-  let toShuffle = [...arr]
-  let shuffled: T[] = []
-  while (toShuffle.length > 0) {
-    const index = Math.floor(Math.random() * toShuffle.length)
-    shuffled.push(toShuffle[index])
-    toShuffle.splice(index, 1)
-  }
-  return shuffled
-}
-
-const writeLog = async (filename: string, tree: MST) => {
-  let log = ''
-  for await (const entry of tree.walk()) {
-    if (entry.isLeaf()) return true
-    const layer = await entry.getLayer()
-    log += `Layer ${layer}: ${entry.pointer}\n`
-    log += '--------------\n'
-    const entries = await entry.getEntries()
-    for (const e of entries) {
-      if (e.isLeaf()) {
-        log += `Key: ${e.key}\n`
-      } else {
-        log += `Subtree: ${e.pointer}\n`
-      }
-    }
-    log += '\n\n'
-  }
-  fs.writeFileSync(filename, log)
-}

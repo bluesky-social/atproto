@@ -36,6 +36,18 @@ export class MstDiff {
       this.recordDelete(del.key)
     }
   }
+
+  addList(): MstAdd[] {
+    return Object.values(this.adds)
+  }
+
+  updateList(): MstUpdate[] {
+    return Object.values(this.updates)
+  }
+
+  deleteList(): MstDelete[] {
+    return Object.values(this.deletes)
+  }
 }
 
 export type MstDelete = {

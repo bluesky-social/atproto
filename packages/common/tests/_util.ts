@@ -5,6 +5,8 @@ import { Follow, IdMapping, schema } from '../src/repo/types'
 import { DID } from '../src/common/types'
 import SSTable from '../src/repo/ss-table'
 import Repo from '../src/repo/index'
+import { MST } from '../src'
+import fs from 'fs'
 
 const fakeStore = IpldStore.createInMemory()
 
@@ -144,4 +146,35 @@ export const checkRepo = async (
     const actual = await repo.relationships.getFollow(did)
     expect(actual).toEqual(data.follows[did])
   }
+}
+
+export const shuffle = <T>(arr: T[]): T[] => {
+  let toShuffle = [...arr]
+  let shuffled: T[] = []
+  while (toShuffle.length > 0) {
+    const index = Math.floor(Math.random() * toShuffle.length)
+    shuffled.push(toShuffle[index])
+    toShuffle.splice(index, 1)
+  }
+  return shuffled
+}
+
+export const writeMstLog = async (filename: string, tree: MST) => {
+  let log = ''
+  for await (const entry of tree.walk()) {
+    if (entry.isLeaf()) return true
+    const layer = await entry.getLayer()
+    log += `Layer ${layer}: ${entry.pointer}\n`
+    log += '--------------\n'
+    const entries = await entry.getEntries()
+    for (const e of entries) {
+      if (e.isLeaf()) {
+        log += `Key: ${e.key}\n`
+      } else {
+        log += `Subtree: ${e.pointer}\n`
+      }
+    }
+    log += '\n\n'
+  }
+  fs.writeFileSync(filename, log)
 }
