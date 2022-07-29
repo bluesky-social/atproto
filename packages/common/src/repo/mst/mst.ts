@@ -9,31 +9,17 @@ import { sha256 } from '@adxp/crypto'
 import z from 'zod'
 import { schema } from '../../common/types'
 import * as check from '../../common/check'
+import { Diff } from './diff'
 
 const leafPointer = z.tuple([z.string(), schema.cid])
 const treePointer = schema.cid
 const treeEntry = z.union([leafPointer, treePointer])
-const nodeDataSchema = z.array(treeEntry)
+export const nodeDataSchema = z.array(treeEntry)
 
-type NodeData = z.infer<typeof nodeDataSchema>
-type NodeEntry = MST | Leaf
+export type NodeData = z.infer<typeof nodeDataSchema>
+export type NodeEntry = MST | Leaf
 
-export const leadingZerosOnHash = async (key: string): Promise<number> => {
-  const hash = await sha256(key)
-  const b32 = uint8arrays.toString(hash, 'base32')
-  let count = 0
-  for (const char of b32) {
-    if (char === 'a') {
-      // 'a' is 0 in b32
-      count++
-    } else {
-      break
-    }
-  }
-  return count
-}
-
-class MST {
+export class MST {
   blockstore: IpldStore
   entries: NodeEntry[] | null
   layer: number | null
@@ -51,28 +37,12 @@ class MST {
     this.pointer = pointer
   }
 
-  static async getCid(entries: NodeEntry[]): Promise<CID> {
-    const data = entries.map((entry) => {
-      if (entry.isLeaf()) {
-        return [entry.key, entry.value]
-      } else {
-        return entry.pointer
-      }
-    })
-    const block = await Block.encode({
-      value: data as any,
-      codec: blockCodec,
-      hasher: blockHasher,
-    })
-    return block.cid
-  }
-
   static async create(
     blockstore: IpldStore,
     entries: NodeEntry[] = [],
     layer = 0,
   ): Promise<MST> {
-    const pointer = await MST.getCid(entries)
+    const pointer = await getCidForEntries(entries)
     return new MST(blockstore, pointer, entries, layer)
   }
 
@@ -88,7 +58,7 @@ class MST {
         return new Leaf(entry[0], entry[1])
       }
     })
-    const pointer = await MST.getCid(entries)
+    const pointer = await getCidForEntries(entries)
     return new MST(blockstore, pointer, entries, layer ?? null)
   }
 
@@ -96,25 +66,16 @@ class MST {
     return new MST(blockstore, cid, null, layer ?? null)
   }
 
-  async save(): Promise<CID> {
-    const alreadyHas = await this.blockstore.has(this.pointer)
-    if (alreadyHas) return this.pointer
-    const entries = await this.getEntries()
-    const data = entries.map((entry) => {
-      if (entry.isLeaf()) {
-        return [entry.key, entry.value]
-      } else {
-        return entry.pointer
-      }
-    })
-    await this.blockstore.put(data as any)
-    for (const entry of entries) {
-      if (entry.isTree()) {
-        await entry.save()
-      }
-    }
-    return this.pointer
+  // Immutability
+  // -------------------
+
+  async newTree(entries: NodeEntry[]): Promise<MST> {
+    const pointer = await getCidForEntries(entries)
+    return new MST(this.blockstore, pointer, entries, this.layer)
   }
+
+  // Getters (lazy load)
+  // -------------------
 
   async getEntries(): Promise<NodeEntry[]> {
     if (this.entries) return [...this.entries]
@@ -147,6 +108,182 @@ class MST {
     }
     this.layer = await leadingZerosOnHash(firstLeaf[0])
     return this.layer
+  }
+
+  // Simple Operations
+  // -------------------
+
+  async updateEntry(index: number, entry: NodeEntry): Promise<MST> {
+    const update = [
+      ...(await this.slice(0, index)),
+      entry,
+      ...(await this.slice(index + 1)),
+    ]
+    return this.newTree(update)
+  }
+
+  async removeEntry(index: number): Promise<MST> {
+    const updated = [
+      ...(await this.slice(0, index)),
+      ...(await this.slice(index + 1)),
+    ]
+    return this.newTree(updated)
+  }
+
+  async append(entry: NodeEntry): Promise<MST> {
+    const entries = await this.getEntries()
+    return this.newTree([...entries, entry])
+  }
+
+  async prepend(entry: NodeEntry): Promise<MST> {
+    const entries = await this.getEntries()
+    return this.newTree([entry, ...entries])
+  }
+
+  async atIndex(index: number): Promise<NodeEntry | null> {
+    const entries = await this.getEntries()
+    return entries[index] ?? null
+  }
+
+  async slice(
+    start?: number | undefined,
+    end?: number | undefined,
+  ): Promise<NodeEntry[]> {
+    const entries = await this.getEntries()
+    return entries.slice(start, end)
+  }
+
+  async spliceIn(entry: NodeEntry, index: number): Promise<MST> {
+    const update = [
+      ...(await this.slice(0, index)),
+      entry,
+      ...(await this.slice(index)),
+    ]
+    return this.newTree(update)
+  }
+
+  async replaceWithSplit(
+    index: number,
+    left: MST | null,
+    leaf: Leaf,
+    right: MST | null,
+  ): Promise<MST> {
+    const update = await this.slice(0, index)
+    if (left) update.push(left)
+    update.push(leaf)
+    if (right) update.push(right)
+    update.push(...(await this.slice(index + 1)))
+    return this.newTree(update)
+  }
+
+  // Subtree & Splits
+  // -------------------
+
+  async splitAround(key: string): Promise<[MST | null, MST | null]> {
+    const index = await this.findGtOrEqualLeafIndex(key)
+    // split tree around key
+    const leftData = await this.slice(0, index)
+    const rightData = await this.slice(index)
+    let left = await this.newTree(leftData)
+    let right = await this.newTree(rightData)
+
+    // if the far right of the left side is a subtree,
+    // we need to split it on the key as well
+    const lastInLeft = leftData[leftData.length - 1]
+    if (lastInLeft?.isTree()) {
+      left = await left.removeEntry(leftData.length - 1)
+      const split = await lastInLeft.splitAround(key)
+      if (split[0]) {
+        left = await left.append(split[0])
+      }
+      if (split[1]) {
+        right = await right.prepend(split[1])
+      }
+    }
+
+    return [
+      (await left.getEntries()).length > 0 ? left : null,
+      (await right.getEntries()).length > 0 ? right : null,
+    ]
+  }
+
+  // the simple merge case where every key in the right tree is greater than every key in the left tree (ie deletes)
+  async appendMerge(toMerge: MST): Promise<MST> {
+    if ((await this.getLayer()) !== (await toMerge.getLayer())) {
+      throw new Error(
+        'Trying to merge two nodes from different layers of the MST',
+      )
+    }
+    const thisEntries = await this.getEntries()
+    const toMergeEntries = await toMerge.getEntries()
+    const lastInLeft = thisEntries[thisEntries.length - 1]
+    const firstInRight = toMergeEntries[0]
+    if (lastInLeft?.isTree() && firstInRight?.isTree()) {
+      const merged = await lastInLeft.appendMerge(firstInRight)
+      return this.newTree([
+        ...thisEntries.slice(0, thisEntries.length - 1),
+        merged,
+        ...toMergeEntries.slice(1),
+      ])
+    } else {
+      return this.newTree([...thisEntries, ...toMergeEntries])
+    }
+  }
+
+  // Create relatives
+  // -------------------
+
+  async createChild(): Promise<MST> {
+    const layer = await this.getLayer()
+    return MST.create(this.blockstore, [], layer - 1)
+  }
+
+  async createParent(): Promise<MST> {
+    const layer = await this.getLayer()
+    return MST.create(this.blockstore, [this], layer + 1)
+  }
+
+  // Finding insertion points
+  // -------------------
+
+  async findLeafOrPriorSubTree(key: string): Promise<NodeEntry | null> {
+    const index = await this.findGtOrEqualLeafIndex(key)
+    const found = await this.atIndex(index)
+    if (found && found.isLeaf() && found.key === key) {
+      return found
+    }
+    const prev = await this.atIndex(index - 1)
+    if (prev && prev.isTree()) {
+      return prev
+    }
+    return null
+  }
+
+  // finds first leaf node that is greater than or equal to the value
+  async findGtOrEqualLeafIndex(key: string): Promise<number> {
+    const entries = await this.getEntries()
+    const maybeIndex = entries.findIndex(
+      (entry) => entry.isLeaf() && entry.key >= key,
+    )
+    // if we can't find, we're on the end
+    return maybeIndex >= 0 ? maybeIndex : entries.length
+  }
+
+  // Core functionality
+  // -------------------
+
+  async save(): Promise<CID> {
+    const alreadyHas = await this.blockstore.has(this.pointer)
+    if (alreadyHas) return this.pointer
+    const entries = await this.getEntries()
+    const data = entriesToData(entries)
+    await this.blockstore.put(data as any)
+    for (const entry of entries) {
+      if (entry.isTree()) {
+        await entry.save()
+      }
+    }
+    return this.pointer
   }
 
   async add(key: string, value: CID): Promise<MST> {
@@ -268,95 +405,6 @@ class MST {
     }
   }
 
-  // the simple merge case where every key in the right tree is greater than every key in the left tree (ie deletes)
-  async appendMerge(toMerge: MST): Promise<MST> {
-    if (!(await this.isSameLayer(toMerge))) {
-      throw new Error(
-        'Trying to merge two nodes from different layers of the MST',
-      )
-    }
-    const thisEntries = await this.getEntries()
-    const toMergeEntries = await toMerge.getEntries()
-    const lastInLeft = thisEntries[thisEntries.length - 1]
-    const firstInRight = toMergeEntries[0]
-    if (lastInLeft?.isTree() && firstInRight?.isTree()) {
-      const merged = await lastInLeft.appendMerge(firstInRight)
-      return this.newTree([
-        ...thisEntries.slice(0, thisEntries.length - 1),
-        merged,
-        ...toMergeEntries.slice(1),
-      ])
-    } else {
-      return this.newTree([...thisEntries, ...toMergeEntries])
-    }
-  }
-
-  async isSameLayer(other: MST): Promise<boolean> {
-    const thisLayer = await this.getLayer()
-    const otherLayer = await other.getLayer()
-    return thisLayer === otherLayer
-  }
-
-  async createChild(): Promise<MST> {
-    const layer = await this.getLayer()
-    return MST.create(this.blockstore, [], layer - 1)
-  }
-
-  async createParent(): Promise<MST> {
-    const layer = await this.getLayer()
-    return MST.create(this.blockstore, [this], layer + 1)
-  }
-
-  async updateEntry(index: number, entry: NodeEntry): Promise<MST> {
-    const update = [
-      ...(await this.slice(0, index)),
-      entry,
-      ...(await this.slice(index + 1)),
-    ]
-    return this.newTree(update)
-  }
-
-  async removeEntry(index: number): Promise<MST> {
-    const updated = [
-      ...(await this.slice(0, index)),
-      ...(await this.slice(index + 1)),
-    ]
-    return this.newTree(updated)
-  }
-
-  async newTree(entries: NodeEntry[]): Promise<MST> {
-    const pointer = await MST.getCid(entries)
-    return new MST(this.blockstore, pointer, entries, this.layer)
-  }
-
-  async splitAround(key: string): Promise<[MST | null, MST | null]> {
-    const index = await this.findGtOrEqualLeafIndex(key)
-    // split tree around key
-    const leftData = await this.slice(0, index)
-    const rightData = await this.slice(index)
-    let left = await this.newTree(leftData)
-    let right = await this.newTree(rightData)
-
-    // if the far right of the left side is a subtree,
-    // we need to split it on the key as well
-    const lastInLeft = leftData[leftData.length - 1]
-    if (lastInLeft?.isTree()) {
-      left = await left.removeEntry(leftData.length - 1)
-      const split = await lastInLeft.splitAround(key)
-      if (split[0]) {
-        left = await left.append(split[0])
-      }
-      if (split[1]) {
-        right = await right.prepend(split[1])
-      }
-    }
-
-    return [
-      (await left.getEntries()).length > 0 ? left : null,
-      (await right.getEntries()).length > 0 ? right : null,
-    ]
-  }
-
   async diff(other: MST): Promise<Diff> {
     const diff = new Diff()
     let leftI = 0
@@ -428,84 +476,8 @@ class MST {
     return diff
   }
 
-  async anyOverlap(other: MST): Promise<boolean> {
-    const thisEntries = await this.getEntries()
-    const otherEntries = await other.getEntries()
-    for (const entry of thisEntries) {
-      const found = otherEntries.find((e) => e.equals(entry))
-      if (found) return true
-    }
-    return false
-  }
-
-  async append(entry: NodeEntry): Promise<MST> {
-    const entries = await this.getEntries()
-    return this.newTree([...entries, entry])
-  }
-
-  async prepend(entry: NodeEntry): Promise<MST> {
-    const entries = await this.getEntries()
-    return this.newTree([entry, ...entries])
-  }
-
-  async atIndex(index: number): Promise<NodeEntry | null> {
-    const entries = await this.getEntries()
-    return entries[index] ?? null
-  }
-
-  async slice(
-    start?: number | undefined,
-    end?: number | undefined,
-  ): Promise<NodeEntry[]> {
-    const entries = await this.getEntries()
-    return entries.slice(start, end)
-  }
-
-  async spliceIn(entry: NodeEntry, index: number): Promise<MST> {
-    const update = [
-      ...(await this.slice(0, index)),
-      entry,
-      ...(await this.slice(index)),
-    ]
-    return this.newTree(update)
-  }
-
-  async replaceWithSplit(
-    index: number,
-    left: MST | null,
-    leaf: Leaf,
-    right: MST | null,
-  ): Promise<MST> {
-    const update = await this.slice(0, index)
-    if (left) update.push(left)
-    update.push(leaf)
-    if (right) update.push(right)
-    update.push(...(await this.slice(index + 1)))
-    return this.newTree(update)
-  }
-
-  async findLeafOrPriorSubTree(key: string): Promise<NodeEntry | null> {
-    const index = await this.findGtOrEqualLeafIndex(key)
-    const found = await this.atIndex(index)
-    if (found && found.isLeaf() && found.key === key) {
-      return found
-    }
-    const prev = await this.atIndex(index - 1)
-    if (prev && prev.isTree()) {
-      return prev
-    }
-    return null
-  }
-
-  // finds first leaf node that is greater than or equal to the value
-  async findGtOrEqualLeafIndex(key: string): Promise<number> {
-    const entries = await this.getEntries()
-    const maybeIndex = entries.findIndex(
-      (entry) => entry.isLeaf() && entry.key >= key,
-    )
-    // if we can't find, we're on the end
-    return maybeIndex >= 0 ? maybeIndex : entries.length
-  }
+  // Full tree traversal
+  // -------------------
 
   async walk(fn: (entry: NodeEntry) => boolean | Promise<boolean>) {
     const keepGoing = await fn(this)
@@ -543,6 +515,9 @@ class MST {
     return leaves.length
   }
 
+  // Matching Leaf interface
+  // -------------------
+
   isTree(): this is MST {
     return true
   }
@@ -560,7 +535,7 @@ class MST {
   }
 }
 
-class Leaf {
+export class Leaf {
   constructor(public key: string, public value: CID) {}
 
   isTree(): this is MST {
@@ -580,65 +555,39 @@ class Leaf {
   }
 }
 
-class Diff {
-  adds: Record<string, Add> = {}
-  updates: Record<string, Update> = {}
-  deletes: Record<string, Delete> = {}
-
-  recordAdd(key: string, cid: CID): void {
-    if (this.deletes[key]) {
-      delete this.deletes[key]
+export const leadingZerosOnHash = async (key: string): Promise<number> => {
+  const hash = await sha256(key)
+  const b32 = uint8arrays.toString(hash, 'base32')
+  let count = 0
+  for (const char of b32) {
+    if (char === 'a') {
+      // 'a' is 0 in b32
+      count++
     } else {
-      this.adds[key] = { key, cid }
+      break
     }
   }
+  return count
+}
 
-  recordUpdate(key: string, old: CID, cid: CID): void {
-    this.updates[key] = { key, old, cid }
-  }
-
-  recordDelete(key: string): void {
-    if (this.adds[key]) {
-      delete this.adds[key]
+const entriesToData = (entries: NodeEntry[]): NodeData => {
+  return entries.map((entry) => {
+    if (entry.isLeaf()) {
+      return [entry.key, entry.value]
     } else {
-      this.deletes[key] = { key }
+      return entry.pointer
     }
-  }
-
-  addDiff(diff: Diff) {
-    for (const add of Object.values(diff.adds)) {
-      this.recordAdd(add.key, add.cid)
-    }
-    for (const update of Object.values(diff.updates)) {
-      this.recordUpdate(update.key, update.old, update.cid)
-    }
-    for (const del of Object.values(diff.deletes)) {
-      this.recordDelete(del.key)
-    }
-  }
-
-  // getDiff(): Diff {
-  //   return {
-  //     adds: Object.values(this.adds),
-  //     updates: Object.values(this.updates),
-  //     deletes: Object.values(this.deletes),
-  //   }
-  // }
+  })
 }
 
-type Delete = {
-  key: string
-}
-
-type Add = {
-  key: string
-  cid: CID
-}
-
-type Update = {
-  key: string
-  old: CID
-  cid: CID
+const getCidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
+  const data = entriesToData(entries)
+  const block = await Block.encode({
+    value: data as any,
+    codec: blockCodec,
+    hasher: blockHasher,
+  })
+  return block.cid
 }
 
 export default MST

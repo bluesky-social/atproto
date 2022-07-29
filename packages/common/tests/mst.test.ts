@@ -24,31 +24,7 @@ describe('Merkle Search Tree', () => {
       expect(origNodes[i].equals(loadedNodes[i])).toBeTruthy()
     }
   })
-  return
-  it('diffs', async () => {
-    const blockstore = IpldStore.createInMemory()
-    let mst = await MST.create(blockstore)
-    const mapping = await util.generateBulkTidMapping(1000)
-    const shuffled = shuffle(Object.entries(mapping))
-    // Adds
-    for (const entry of shuffled) {
-      mst = await mst.add(entry[0], entry[1])
-    }
-    const cid = await util.randomCid()
 
-    const toDel = shuffled[550]
-    const toEdit = shuffled[650]
-    let toDiff = await mst.add('testing', cid)
-    toDiff = await toDiff.delete(toDel[0])
-    toDiff = await toDiff.edit(toEdit[0], cid)
-    const entries = await mst.getEntries()
-    const toDiffEntries = await toDiff.getEntries()
-    console.log(mst)
-    console.log(toDiff)
-    const diff = await mst.diff(toDiff)
-    console.log('DIFF: ', diff)
-  })
-  return
   it('works', async () => {
     const blockstore = IpldStore.createInMemory()
     let mst = await MST.create(blockstore)
@@ -114,6 +90,30 @@ describe('Merkle Search Tree', () => {
       const got = await mst.get(entry[0])
       expect(entry[1].equals(got)).toBeTruthy()
     }
+  })
+
+  it('diffs', async () => {
+    const blockstore = IpldStore.createInMemory()
+    let mst = await MST.create(blockstore)
+    const mapping = await util.generateBulkTidMapping(1000)
+    const shuffled = shuffle(Object.entries(mapping))
+    // Adds
+    for (const entry of shuffled) {
+      mst = await mst.add(entry[0], entry[1])
+    }
+    const cid = await util.randomCid()
+
+    const toDel = shuffled[550]
+    const toEdit = shuffled[650]
+    let toDiff = await mst.add('testing', cid)
+    toDiff = await toDiff.delete(toDel[0])
+    toDiff = await toDiff.edit(toEdit[0], cid)
+    const entries = await mst.getEntries()
+    const toDiffEntries = await toDiff.getEntries()
+    console.log(mst)
+    console.log(toDiff)
+    const diff = await mst.diff(toDiff)
+    console.log('DIFF: ', diff)
   })
 
   /**
