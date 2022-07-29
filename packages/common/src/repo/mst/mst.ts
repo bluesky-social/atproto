@@ -96,6 +96,26 @@ class MST {
     return new MST(blockstore, cid, null, layer ?? null)
   }
 
+  async save(): Promise<CID> {
+    const alreadyHas = await this.blockstore.has(this.pointer)
+    if (alreadyHas) return this.pointer
+    const entries = await this.getEntries()
+    const data = entries.map((entry) => {
+      if (entry.isLeaf()) {
+        return [entry.key, entry.value]
+      } else {
+        return entry.pointer
+      }
+    })
+    await this.blockstore.put(data as any)
+    for (const entry of entries) {
+      if (entry.isTree()) {
+        await entry.save()
+      }
+    }
+    return this.pointer
+  }
+
   async getEntries(): Promise<NodeEntry[]> {
     if (this.entries) return [...this.entries]
     if (this.pointer) {
@@ -498,6 +518,15 @@ class MST {
         await fn(entry)
       }
     }
+  }
+
+  async allNodes() {
+    const nodes: NodeEntry[] = []
+    await this.walk((entry) => {
+      nodes.push(entry)
+      return true
+    })
+    return nodes
   }
 
   async leaves() {

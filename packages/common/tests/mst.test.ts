@@ -6,6 +6,25 @@ import { CID } from 'multiformats'
 import fs from 'fs'
 
 describe('Merkle Search Tree', () => {
+  it('saves and laods from blockstore', async () => {
+    const blockstore = IpldStore.createInMemory()
+    let mst = await MST.create(blockstore)
+    const mapping = await util.generateBulkTidMapping(1000)
+    const shuffled = shuffle(Object.entries(mapping))
+    // Adds
+    for (const entry of shuffled) {
+      mst = await mst.add(entry[0], entry[1])
+    }
+    const cid = await mst.save()
+    const loaded = await MST.fromCid(blockstore, cid)
+    const origNodes = await mst.allNodes()
+    const loadedNodes = await loaded.allNodes()
+    expect(origNodes.length).toBe(loadedNodes.length)
+    for (let i = 0; i < origNodes.length; i++) {
+      expect(origNodes[i].equals(loadedNodes[i])).toBeTruthy()
+    }
+  })
+  return
   it('diffs', async () => {
     const blockstore = IpldStore.createInMemory()
     let mst = await MST.create(blockstore)
@@ -16,23 +35,6 @@ describe('Merkle Search Tree', () => {
       mst = await mst.add(entry[0], entry[1])
     }
     const cid = await util.randomCid()
-    // const keys = [
-    //   '3j6hnk65jis2t',
-    //   '3j6hnk65jit2t',
-    //   '3j6hnk65jiu2t',
-    //   '3j6hnk65jne2t',
-    //   '3j6hnk65jnm2t',
-    //   '3j6hnk65jnn2t',
-    //   '3j6hnk65kvx2t',
-    //   '3j6hnk65kvy2t',
-    //   '3j6hnk65kvz2t',
-    //   '3j6hnk65jju2t',
-    //   '3j6hnk65kve2t',
-    //   '3j6hnk65jng2t',
-    // ]
-    // for (const key of keys) {
-    //   mst = await mst.add(key, cid)
-    // }
 
     const toDel = shuffled[550]
     const toEdit = shuffled[650]
