@@ -9,14 +9,15 @@ import { sha256 } from '@adxp/crypto'
 import z from 'zod'
 import { schema } from '../../common/types'
 import * as check from '../../common/check'
-import { Diff } from './diff'
+import { MstDiff } from './diff'
 
+// Description of the data in the actual CBOR-encoded blocks
 const leafPointer = z.tuple([z.string(), schema.cid])
 const treePointer = schema.cid
 const treeEntry = z.union([leafPointer, treePointer])
 export const nodeDataSchema = z.array(treeEntry)
-
 export type NodeData = z.infer<typeof nodeDataSchema>
+
 export type NodeEntry = MST | Leaf
 
 export class MST {
@@ -69,6 +70,7 @@ export class MST {
   // Immutability
   // -------------------
 
+  // We never mutate an MST, we just return a new MST with updated values
   async newTree(entries: NodeEntry[]): Promise<MST> {
     const pointer = await getCidForEntries(entries)
     return new MST(this.blockstore, pointer, entries, this.layer)
@@ -77,17 +79,22 @@ export class MST {
   // Getters (lazy load)
   // -------------------
 
+  // We don't want to load entries of every subtree, just the ones we need
   async getEntries(): Promise<NodeEntry[]> {
     if (this.entries) return [...this.entries]
     if (this.pointer) {
       const data = await this.blockstore.get(this.pointer, nodeDataSchema)
+      const firstLeaf = data.filter((e) => check.is(e, leafPointer))
+      const layer =
+        firstLeaf[0] !== undefined
+          ? await leadingZerosOnHash(firstLeaf[0][0])
+          : null
       this.entries = data.map((entry) => {
         if (check.is(entry, treePointer)) {
-          // @TODO using this.layer instead of getLayer here??
           return MST.fromCid(
             this.blockstore,
             entry,
-            this.layer ? this.layer - 1 : undefined,
+            layer ? layer - 1 : undefined,
           )
         } else {
           return new Leaf(entry[0], entry[1])
@@ -99,179 +106,24 @@ export class MST {
     throw new Error('No entries or CID provided')
   }
 
+  // We should be able to find the layer of a node by either a hint on creation or by looking at the first leaf
+  // If we have neither a hint nor a leaf, we throw an error
+  // We could recurse to find the layer, but it isn't necessary for any of our current operations
   async getLayer(): Promise<number> {
     if (this.layer !== null) return this.layer
     const entries = await this.getEntries()
-    const firstLeaf = entries.find((entry) => entry.isLeaf())
-    if (!firstLeaf) {
-      throw new Error('not a valid mst node: no leaves')
+    const layer = await layerForEntries(entries)
+    if (!layer) {
+      throw new Error('Could not find layer for tree')
     }
-    this.layer = await leadingZerosOnHash(firstLeaf[0])
+    this.layer = layer
     return this.layer
-  }
-
-  // Simple Operations
-  // -------------------
-
-  async updateEntry(index: number, entry: NodeEntry): Promise<MST> {
-    const update = [
-      ...(await this.slice(0, index)),
-      entry,
-      ...(await this.slice(index + 1)),
-    ]
-    return this.newTree(update)
-  }
-
-  async removeEntry(index: number): Promise<MST> {
-    const updated = [
-      ...(await this.slice(0, index)),
-      ...(await this.slice(index + 1)),
-    ]
-    return this.newTree(updated)
-  }
-
-  async append(entry: NodeEntry): Promise<MST> {
-    const entries = await this.getEntries()
-    return this.newTree([...entries, entry])
-  }
-
-  async prepend(entry: NodeEntry): Promise<MST> {
-    const entries = await this.getEntries()
-    return this.newTree([entry, ...entries])
-  }
-
-  async atIndex(index: number): Promise<NodeEntry | null> {
-    const entries = await this.getEntries()
-    return entries[index] ?? null
-  }
-
-  async slice(
-    start?: number | undefined,
-    end?: number | undefined,
-  ): Promise<NodeEntry[]> {
-    const entries = await this.getEntries()
-    return entries.slice(start, end)
-  }
-
-  async spliceIn(entry: NodeEntry, index: number): Promise<MST> {
-    const update = [
-      ...(await this.slice(0, index)),
-      entry,
-      ...(await this.slice(index)),
-    ]
-    return this.newTree(update)
-  }
-
-  async replaceWithSplit(
-    index: number,
-    left: MST | null,
-    leaf: Leaf,
-    right: MST | null,
-  ): Promise<MST> {
-    const update = await this.slice(0, index)
-    if (left) update.push(left)
-    update.push(leaf)
-    if (right) update.push(right)
-    update.push(...(await this.slice(index + 1)))
-    return this.newTree(update)
-  }
-
-  // Subtree & Splits
-  // -------------------
-
-  async splitAround(key: string): Promise<[MST | null, MST | null]> {
-    const index = await this.findGtOrEqualLeafIndex(key)
-    // split tree around key
-    const leftData = await this.slice(0, index)
-    const rightData = await this.slice(index)
-    let left = await this.newTree(leftData)
-    let right = await this.newTree(rightData)
-
-    // if the far right of the left side is a subtree,
-    // we need to split it on the key as well
-    const lastInLeft = leftData[leftData.length - 1]
-    if (lastInLeft?.isTree()) {
-      left = await left.removeEntry(leftData.length - 1)
-      const split = await lastInLeft.splitAround(key)
-      if (split[0]) {
-        left = await left.append(split[0])
-      }
-      if (split[1]) {
-        right = await right.prepend(split[1])
-      }
-    }
-
-    return [
-      (await left.getEntries()).length > 0 ? left : null,
-      (await right.getEntries()).length > 0 ? right : null,
-    ]
-  }
-
-  // the simple merge case where every key in the right tree is greater than every key in the left tree (ie deletes)
-  async appendMerge(toMerge: MST): Promise<MST> {
-    if ((await this.getLayer()) !== (await toMerge.getLayer())) {
-      throw new Error(
-        'Trying to merge two nodes from different layers of the MST',
-      )
-    }
-    const thisEntries = await this.getEntries()
-    const toMergeEntries = await toMerge.getEntries()
-    const lastInLeft = thisEntries[thisEntries.length - 1]
-    const firstInRight = toMergeEntries[0]
-    if (lastInLeft?.isTree() && firstInRight?.isTree()) {
-      const merged = await lastInLeft.appendMerge(firstInRight)
-      return this.newTree([
-        ...thisEntries.slice(0, thisEntries.length - 1),
-        merged,
-        ...toMergeEntries.slice(1),
-      ])
-    } else {
-      return this.newTree([...thisEntries, ...toMergeEntries])
-    }
-  }
-
-  // Create relatives
-  // -------------------
-
-  async createChild(): Promise<MST> {
-    const layer = await this.getLayer()
-    return MST.create(this.blockstore, [], layer - 1)
-  }
-
-  async createParent(): Promise<MST> {
-    const layer = await this.getLayer()
-    return MST.create(this.blockstore, [this], layer + 1)
-  }
-
-  // Finding insertion points
-  // -------------------
-
-  async findLeafOrPriorSubTree(key: string): Promise<NodeEntry | null> {
-    const index = await this.findGtOrEqualLeafIndex(key)
-    const found = await this.atIndex(index)
-    if (found && found.isLeaf() && found.key === key) {
-      return found
-    }
-    const prev = await this.atIndex(index - 1)
-    if (prev && prev.isTree()) {
-      return prev
-    }
-    return null
-  }
-
-  // finds first leaf node that is greater than or equal to the value
-  async findGtOrEqualLeafIndex(key: string): Promise<number> {
-    const entries = await this.getEntries()
-    const maybeIndex = entries.findIndex(
-      (entry) => entry.isLeaf() && entry.key >= key,
-    )
-    // if we can't find, we're on the end
-    return maybeIndex >= 0 ? maybeIndex : entries.length
   }
 
   // Core functionality
   // -------------------
 
+  // Persist the MST to the blockstore
   async save(): Promise<CID> {
     const alreadyHas = await this.blockstore.has(this.pointer)
     if (alreadyHas) return this.pointer
@@ -286,6 +138,8 @@ export class MST {
     return this.pointer
   }
 
+  // Adds a new leaf for the given key/value pair
+  // Throws if a leaf with that key already exists
   async add(key: string, value: CID): Promise<MST> {
     const keyZeros = await leadingZerosOnHash(key)
     const layer = await this.getLayer()
@@ -350,6 +204,7 @@ export class MST {
     }
   }
 
+  // Gets the value at the given key
   async get(key: string): Promise<CID | null> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
@@ -363,6 +218,8 @@ export class MST {
     return null
   }
 
+  // Edits the value at the given key
+  // Throws if the given key does not exist
   async edit(key: string, value: CID): Promise<MST> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
@@ -377,6 +234,7 @@ export class MST {
     throw new Error(`Could not find a record with key: ${key}`)
   }
 
+  // Deletes the value at the given key
   async delete(key: string): Promise<MST> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
@@ -405,8 +263,11 @@ export class MST {
     }
   }
 
-  async diff(other: MST): Promise<Diff> {
-    const diff = new Diff()
+  // Finds the semantic changes between two MSTs
+  // This uses a stateful diff tracker that will sometimes record encountered leaves
+  // before removing them later when they're encountered in the other tree
+  async diff(other: MST): Promise<MstDiff> {
+    const diff = new MstDiff()
     let leftI = 0
     let rightI = 0
     const leftEntries = await this.getEntries()
@@ -476,9 +337,166 @@ export class MST {
     return diff
   }
 
+  // Simple Operations
+  // -------------------
+
+  // update entry in place
+  async updateEntry(index: number, entry: NodeEntry): Promise<MST> {
+    const update = [
+      ...(await this.slice(0, index)),
+      entry,
+      ...(await this.slice(index + 1)),
+    ]
+    return this.newTree(update)
+  }
+
+  // remove entry at index
+  async removeEntry(index: number): Promise<MST> {
+    const updated = [
+      ...(await this.slice(0, index)),
+      ...(await this.slice(index + 1)),
+    ]
+    return this.newTree(updated)
+  }
+
+  // append entry to end of the node
+  async append(entry: NodeEntry): Promise<MST> {
+    const entries = await this.getEntries()
+    return this.newTree([...entries, entry])
+  }
+
+  // prepend entry to start of the node
+  async prepend(entry: NodeEntry): Promise<MST> {
+    const entries = await this.getEntries()
+    return this.newTree([entry, ...entries])
+  }
+
+  // returns entry at index
+  async atIndex(index: number): Promise<NodeEntry | null> {
+    const entries = await this.getEntries()
+    return entries[index] ?? null
+  }
+
+  // returns a slice of the node (like array.slice)
+  async slice(
+    start?: number | undefined,
+    end?: number | undefined,
+  ): Promise<NodeEntry[]> {
+    const entries = await this.getEntries()
+    return entries.slice(start, end)
+  }
+
+  // inserts entry at index
+  async spliceIn(entry: NodeEntry, index: number): Promise<MST> {
+    const update = [
+      ...(await this.slice(0, index)),
+      entry,
+      ...(await this.slice(index)),
+    ]
+    return this.newTree(update)
+  }
+
+  // replaces an entry with [ Maybe(tree), Leaf, Maybe(tree) ]
+  async replaceWithSplit(
+    index: number,
+    left: MST | null,
+    leaf: Leaf,
+    right: MST | null,
+  ): Promise<MST> {
+    const update = await this.slice(0, index)
+    if (left) update.push(left)
+    update.push(leaf)
+    if (right) update.push(right)
+    update.push(...(await this.slice(index + 1)))
+    return this.newTree(update)
+  }
+
+  // Subtree & Splits
+  // -------------------
+
+  // Recursively splits a sub tree around a given key
+  async splitAround(key: string): Promise<[MST | null, MST | null]> {
+    const index = await this.findGtOrEqualLeafIndex(key)
+    // split tree around key
+    const leftData = await this.slice(0, index)
+    const rightData = await this.slice(index)
+    let left = await this.newTree(leftData)
+    let right = await this.newTree(rightData)
+
+    // if the far right of the left side is a subtree,
+    // we need to split it on the key as well
+    const lastInLeft = leftData[leftData.length - 1]
+    if (lastInLeft?.isTree()) {
+      left = await left.removeEntry(leftData.length - 1)
+      const split = await lastInLeft.splitAround(key)
+      if (split[0]) {
+        left = await left.append(split[0])
+      }
+      if (split[1]) {
+        right = await right.prepend(split[1])
+      }
+    }
+
+    return [
+      (await left.getEntries()).length > 0 ? left : null,
+      (await right.getEntries()).length > 0 ? right : null,
+    ]
+  }
+
+  // The simple merge case where every key in the right tree is greater than every key in the left tree
+  // (used primarily for deletes)
+  async appendMerge(toMerge: MST): Promise<MST> {
+    if ((await this.getLayer()) !== (await toMerge.getLayer())) {
+      throw new Error(
+        'Trying to merge two nodes from different layers of the MST',
+      )
+    }
+    const thisEntries = await this.getEntries()
+    const toMergeEntries = await toMerge.getEntries()
+    const lastInLeft = thisEntries[thisEntries.length - 1]
+    const firstInRight = toMergeEntries[0]
+    if (lastInLeft?.isTree() && firstInRight?.isTree()) {
+      const merged = await lastInLeft.appendMerge(firstInRight)
+      return this.newTree([
+        ...thisEntries.slice(0, thisEntries.length - 1),
+        merged,
+        ...toMergeEntries.slice(1),
+      ])
+    } else {
+      return this.newTree([...thisEntries, ...toMergeEntries])
+    }
+  }
+
+  // Create relatives
+  // -------------------
+
+  async createChild(): Promise<MST> {
+    const layer = await this.getLayer()
+    return MST.create(this.blockstore, [], layer - 1)
+  }
+
+  async createParent(): Promise<MST> {
+    const layer = await this.getLayer()
+    return MST.create(this.blockstore, [this], layer + 1)
+  }
+
+  // Finding insertion points
+  // -------------------
+
+  // finds index of first leaf node that is greater than or equal to the value
+  async findGtOrEqualLeafIndex(key: string): Promise<number> {
+    const entries = await this.getEntries()
+    const maybeIndex = entries.findIndex(
+      (entry) => entry.isLeaf() && entry.key >= key,
+    )
+    // if we can't find, we're on the end
+    return maybeIndex >= 0 ? maybeIndex : entries.length
+  }
+
   // Full tree traversal
   // -------------------
 
+  // Walk full tree & emit nodes, consumer can bail at any point by returning false
   async walk(fn: (entry: NodeEntry) => boolean | Promise<boolean>) {
     const keepGoing = await fn(this)
     if (!keepGoing) return
@@ -492,6 +510,7 @@ export class MST {
     }
   }
 
+  // Walks tree & returns all nodes
   async allNodes() {
     const nodes: NodeEntry[] = []
     await this.walk((entry) => {
@@ -501,6 +520,7 @@ export class MST {
     return nodes
   }
 
+  // Walks tree & returns all leaves
   async leaves() {
     const leaves: Leaf[] = []
     await this.walk((entry) => {
@@ -510,7 +530,8 @@ export class MST {
     return leaves
   }
 
-  async entryCount(): Promise<number> {
+  // Returns total leaf count
+  async leafCount(): Promise<number> {
     const leaves = await this.leaves()
     return leaves.length
   }
@@ -568,6 +589,14 @@ export const leadingZerosOnHash = async (key: string): Promise<number> => {
     }
   }
   return count
+}
+
+const layerForEntries = async (
+  entries: NodeEntry[],
+): Promise<number | null> => {
+  const firstLeaf = entries.find((entry) => entry.isLeaf())
+  if (!firstLeaf || firstLeaf.isTree()) return null
+  return await leadingZerosOnHash(firstLeaf.key)
 }
 
 const entriesToData = (entries: NodeEntry[]): NodeData => {

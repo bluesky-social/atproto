@@ -39,7 +39,6 @@ describe('Merkle Search Tree', () => {
       expect(entry[1].equals(got)).toBeTruthy()
     }
 
-    await writeLog('walk-mst', mst)
     const leaves: Record<string, number> = {}
     await mst.walk((entry) => {
       if (entry.isLeaf()) {
@@ -52,7 +51,7 @@ describe('Merkle Search Tree', () => {
       return true
     })
 
-    let totalSize = await mst.entryCount()
+    let totalSize = await mst.leafCount()
     expect(totalSize).toBe(1000)
 
     // Edits
@@ -69,7 +68,7 @@ describe('Merkle Search Tree', () => {
       expect(entry[1].equals(got)).toBeTruthy()
     }
 
-    totalSize = await mst.entryCount()
+    totalSize = await mst.leafCount()
     expect(totalSize).toBe(1000)
 
     // Deletes
@@ -79,7 +78,7 @@ describe('Merkle Search Tree', () => {
       mst = await mst.delete(entry[0])
     }
 
-    totalSize = await mst.entryCount()
+    totalSize = await mst.leafCount()
     expect(totalSize).toBe(900)
 
     for (const entry of toDelete) {
