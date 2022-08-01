@@ -188,7 +188,7 @@ describe('Merkle Search Tree', () => {
     }
   })
   /**
-   *   `b` gets added & it hashes to 2 levels above any existing laves
+   *   `b` gets added & it hashes to 2 levels above any existing leaves
    *
    *          *        ->            *
    *        __|__                  __|__

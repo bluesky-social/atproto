@@ -11,6 +11,36 @@ import { schema } from '../../common/types'
 import * as check from '../../common/check'
 import { MstDiff } from './diff'
 
+/**
+ * This is an implementation of a Merkle Search Tree (MST)
+ * The data structure is described here: https://hal.inria.fr/hal-02303490/document
+ * The MST is an ordered, insert-order-independent, deterministic tree.
+ * Keys are laid out in alphabetic order.
+ * The key insight of an MST is that each key is hashed and starting 0s are counted
+ * to determine which layer it falls on (5 zeros for ~32 fanout).
+ * This is a merkle tree, so each subtree is referred to by it's hash (CID).
+ * When a leaf is changed, ever tree on the path to that leaf is changed as well,
+ * thereby updating the root hash.
+ */
+
+/**
+ * A couple notes on CBOR encoding:
+ *
+ * There are never two neighboring subtrees.
+ * Therefore, we can represent a node as an array of
+ * leaves & pointers to their right neighbor (possibly null),
+ * along with a pointer to the left-most subtree (also possibly null).
+ *
+ * Most keys in a subtree will have overlap.
+ * We do compression on prefixes by describing keys as:
+ * - the length of the prefix that it shares in common with the preceding key
+ * - the rest of the string
+ *
+ * For example:
+ * If the first leaf in a tree is `bsky/posts/abcdefg` and the second is `bsky/posts/abcdehi`
+ * Then the first will be described as `prefix: 0, key: 'bsky/posts/abcdefg'`,
+ * and the second will be described as `prefix: 16, key: 'hi'.`
+ */
 const subTreePointer = z.union([schema.cid, z.null()])
 const treeEntry = z.object({
   p: z.number(), // prefix count that is the same as the prev key
@@ -18,17 +48,10 @@ const treeEntry = z.object({
   v: schema.cid, // value
   t: subTreePointer, // next subtree (to the right of leaf)
 })
-
 export const nodeDataSchema = z.object({
   l: subTreePointer, // left-most subtree
   e: z.array(treeEntry), //entries
 })
-
-// Description of the data in the actual CBOR-encoded blocks
-// const leafPointer = z.tuple([z.string(), schema.cid])
-// const treePointer = schema.cid
-// const treeEntry = z.union([leafPointer, treePointer])
-// export const nodeDataSchema = z.array(treeEntry)
 export type NodeData = z.infer<typeof nodeDataSchema>
 
 export type NodeEntry = MST | Leaf
