@@ -1,4 +1,4 @@
-import MST from '../src/repo/mst/mst'
+import MST, { countPrefixLen } from '../src/repo/mst/mst'
 
 import * as util from './_util'
 import { IpldStore, MstAdd, MstDelete, MstDiff, MstUpdate } from '../src'
@@ -221,5 +221,15 @@ describe('Merkle Search Tree', () => {
       const got = await mst.get(tid)
       expect(cid.equals(got)).toBeTruthy()
     }
+  })
+})
+
+describe('utils', () => {
+  it('counts prefix length', () => {
+    expect(countPrefixLen('abc', 'abc')).toBe(3)
+    expect(countPrefixLen('', 'abc')).toBe(0)
+    expect(countPrefixLen('abc', '')).toBe(0)
+    expect(countPrefixLen('ab', 'abc')).toBe(2)
+    expect(countPrefixLen('abc', 'ab')).toBe(2)
   })
 })

@@ -13,6 +13,7 @@ import { MstDiff } from './diff'
 
 const subTreePointer = z.union([schema.cid, z.null()])
 const treeEntry = z.object({
+  p: z.number(), // prefix count that is the same as the prev key
   k: z.string(), // key
   v: schema.cid, // value
   t: subTreePointer, // next subtree (to the right of leaf)
@@ -603,8 +604,11 @@ const deserializeNodeData = async (
       await MST.fromCid(blockstore, data.l, layer ? layer - 1 : undefined),
     )
   }
+  let lastKey = ''
   for (const entry of data.e) {
-    entries.push(new Leaf(entry.k, entry.v))
+    const key = lastKey.slice(0, entry.p) + entry.k
+    entries.push(new Leaf(key, entry.v))
+    lastKey = key
     if (entry.t !== null) {
       entries.push(
         await MST.fromCid(blockstore, entry.t, layer ? layer - 1 : undefined),
@@ -624,6 +628,7 @@ const serializeNodeData = (entries: NodeEntry[]): NodeData => {
     i++
     data.l = entries[0].pointer
   }
+  let lastKey = ''
   while (i < entries.length) {
     const leaf = entries[i]
     const next = entries[i + 1]
@@ -636,9 +641,27 @@ const serializeNodeData = (entries: NodeEntry[]): NodeData => {
       subtree = next.pointer
       i++
     }
-    data.e.push({ k: leaf.key, v: leaf.value, t: subtree })
+    const prefixLen = countPrefixLen(lastKey, leaf.key)
+    data.e.push({
+      p: prefixLen,
+      k: leaf.key.slice(prefixLen),
+      v: leaf.value,
+      t: subtree,
+    })
+
+    lastKey = leaf.key
   }
   return data
+}
+
+export const countPrefixLen = (a: string, b: string): number => {
+  let i
+  for (i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      break
+    }
+  }
+  return i
 }
 
 const cidForNodeData = async (data: NodeData): Promise<CID> => {
