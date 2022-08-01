@@ -1,7 +1,7 @@
 import MST from '../src/repo/mst/mst'
 
 import * as util from './_util'
-import { IpldStore } from '../src'
+import { IpldStore, MstAdd, MstDelete, MstDiff, MstUpdate } from '../src'
 import { CID } from 'multiformats'
 import fs from 'fs'
 
@@ -106,26 +106,33 @@ describe('Merkle Search Tree', () => {
     const toEdit = shuffled.slice(500, 600)
     const toDel = shuffled.slice(400, 500)
 
+    const expectedAdds: Record<string, MstAdd> = {}
+    const expectedUpdates: Record<string, MstUpdate> = {}
+    const expectedDels: Record<string, MstDelete> = {}
+
     for (const entry of toAdd) {
       toDiff = await toDiff.add(entry[0], entry[1])
+      expectedAdds[entry[0]] = { key: entry[0], cid: entry[1] }
     }
     for (const entry of toEdit) {
-      toDiff = await toDiff.edit(entry[0], entry[1])
+      const updated = await util.randomCid()
+      toDiff = await toDiff.edit(entry[0], updated)
+      expectedUpdates[entry[0]] = { key: entry[0], old: entry[1], cid: updated }
     }
     for (const entry of toDel) {
       toDiff = await toDiff.delete(entry[0])
+      expectedDels[entry[0]] = { key: entry[0], cid: entry[1] }
     }
 
     const diff = await mst.diff(toDiff)
 
-    console.log('DIF: ', diff)
-    console.log(diff.addList().length)
-    console.log(diff.updateList().length)
-    console.log(diff.deleteList().length)
-
     expect(diff.addList().length).toBe(100)
     expect(diff.updateList().length).toBe(100)
     expect(diff.deleteList().length).toBe(100)
+
+    expect(diff.adds).toEqual(expectedAdds)
+    expect(diff.updates).toEqual(expectedUpdates)
+    expect(diff.deletes).toEqual(expectedDels)
   })
 
   // Special Cases

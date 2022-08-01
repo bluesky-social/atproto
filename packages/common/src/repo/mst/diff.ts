@@ -6,8 +6,12 @@ export class MstDiff {
   deletes: Record<string, MstDelete> = {}
 
   recordAdd(key: string, cid: CID): void {
-    if (this.deletes[key]) {
+    const del = this.deletes[key]
+    if (del) {
       delete this.deletes[key]
+      if (!del.cid.equals(cid)) {
+        this.recordUpdate(key, del.cid, cid)
+      }
     } else {
       this.adds[key] = { key, cid }
     }
@@ -17,11 +21,15 @@ export class MstDiff {
     this.updates[key] = { key, old, cid }
   }
 
-  recordDelete(key: string): void {
-    if (this.adds[key]) {
+  recordDelete(key: string, cid: CID): void {
+    const add = this.adds[key]
+    if (add) {
       delete this.adds[key]
+      if (!add.cid.equals(cid)) {
+        this.recordUpdate(key, cid, add.cid)
+      }
     } else {
-      this.deletes[key] = { key }
+      this.deletes[key] = { key, cid }
     }
   }
 
@@ -33,7 +41,7 @@ export class MstDiff {
       this.recordUpdate(update.key, update.old, update.cid)
     }
     for (const del of Object.values(diff.deletes)) {
-      this.recordDelete(del.key)
+      this.recordDelete(del.key, del.cid)
     }
   }
 
@@ -52,6 +60,7 @@ export class MstDiff {
 
 export type MstDelete = {
   key: string
+  cid: CID
 }
 
 export type MstAdd = {

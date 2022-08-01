@@ -11,8 +11,8 @@ import fs from 'fs'
 const fakeStore = IpldStore.createInMemory()
 
 export const randomCid = async (store: IpldStore = fakeStore): Promise<CID> => {
-  const content = Math.floor(Math.random() * 1000000)
-  return store.put({ test: content })
+  const str = randomStr(50)
+  return store.put({ test: str })
 }
 
 export const generateBulkTids = (count: number): TID[] => {

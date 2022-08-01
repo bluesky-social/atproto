@@ -292,11 +292,11 @@ export class MST {
       } else if (!right) {
         // if no right, record a left leaf as an del, or del all leaves in the left subtree
         if (left.isLeaf()) {
-          diff.recordDelete(left.key)
+          diff.recordDelete(left.key, left.value)
         } else {
           const allChildren = await left.leaves()
           for (const leaf of allChildren) {
-            diff.recordDelete(leaf.key)
+            diff.recordDelete(leaf.key, leaf.value)
           }
         }
         leftI++
@@ -311,7 +311,7 @@ export class MST {
           leftI++
           rightI++
         } else if (left.key < right.key) {
-          diff.recordDelete(left.key)
+          diff.recordDelete(left.key, left.value)
           leftI++
         } else {
           diff.recordAdd(right.key, right.value)
@@ -327,7 +327,7 @@ export class MST {
         rightI++
       } else if (left.isLeaf() && right.isTree()) {
         // if one is a leaf & one is a tree, record the leaf and increment that side
-        diff.recordDelete(left.key)
+        diff.recordDelete(left.key, left.value)
         leftI++
       } else if (left.isTree() && right.isLeaf()) {
         diff.recordAdd(right.key, right.value)
