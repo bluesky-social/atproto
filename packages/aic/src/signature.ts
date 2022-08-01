@@ -37,7 +37,7 @@ export const validateSig = async (
   const doc_copy = JSON.parse(JSON.stringify(doc))
   if (doc_copy.sig[0] !== 'z') {
       // check the multibase https://github.com/multiformats/multibase
-      throw "signatures must be 'z'+ base58btc" // maby just retuen false?
+      throw Error("signatures must be 'z'+ base58btc") // maby just retuen false?
   }
   doc_copy.sig = ''
   const data = canonicaliseDocumentToUint8Array(doc_copy)

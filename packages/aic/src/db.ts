@@ -1,6 +1,13 @@
 import {knex, Knex} from 'knex'
 
 export type Database = {
+    /**
+     * The Database implementation must have two functions
+     * 
+     *  tickForDid to retreve the latest tick
+     *  putTickForDid to atomicly update the tick only if prevTid is the head
+     * 
+     */
     tickForDid: ((did: string) => Promise<{ did: string; tid: string; tick: string } | undefined>),
     putTickForDid: ((
         did:string,

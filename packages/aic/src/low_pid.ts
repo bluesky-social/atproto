@@ -1,4 +1,4 @@
-import { pid } from '../src/pid'
+import { pid } from './pid'
 
 const run = async () => {
     let min_p = "y";
@@ -15,10 +15,10 @@ const run = async () => {
         const p = await pid(data)
         if (p < min_p) {
             min_p = p
-            console.log(i, min_p, data)
+            console.log('\n', i, min_p, data)
         }
         if (i % 500_000 == 0) {
-            console.log(i, min_p, 'hashrate KH/s', i / (Number(new Date()) - tic))
+            process.stdout.write(`\r${i} ${min_p} hashrate ${i / (Number(new Date()) - tic)} KH/s`)
         }
     }
     const toc = Number(new Date())

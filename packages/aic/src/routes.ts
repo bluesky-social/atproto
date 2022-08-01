@@ -1,5 +1,5 @@
 import express from 'express'
-import { TID } from '@adxp/common'
+import { tid } from './tid'
 import { updateTick } from './document'
 import { sign } from './signature'
 import * as crypto from '@adxp/crypto'
@@ -63,17 +63,13 @@ router.all('/tid', async (req, res) => {
   res.send(
     await sign(
       {
-        tid: TID.next().formatted(),
+        tid: tid(),
         key: (await consortiumCrypto()).did(),
         sig: '',
       },
       await consortiumCrypto(),
     ),
   )
-})
-
-router.get('/lobby', async (req, res) => {
-  res.send('hello lobby')
 })
 
 router.get(
@@ -88,7 +84,7 @@ router.get(
     const prev_tick = row ? JSON.parse(row.tick) : null
     const signedDoc = await updateTick(
       did,
-      TID.next().formatted(),
+      tid(),
       null, // candidateDiff: this is a get no updates
       prev_tick,
       await consortiumCrypto(),
@@ -112,7 +108,7 @@ router.post(
     // aic lib will do the doc update
     const newTick = await updateTick(
       did, // did from the URL
-      TID.next().formatted(), // curent time (tid)
+      tid(), // curent time (tid)
       candidateDiff, // diff that was posted/put
       prev_tick, // tick from db for did:aic
       await consortiumCrypto(), // server's aic key
@@ -125,7 +121,7 @@ router.post(
       // also send the last tick that is still valid
       res.status(200)
       res.type('json').send({
-        tid: TID.next().formatted(),
+        tid: tid(),
         did: `did:aic:${req.params.pid}`,
         tick: prev_tick,
         error: 'error return from updateTick',
@@ -149,5 +145,20 @@ router.post(
     res.type('json').send(storedTick)
   },
 )
+
+router.get('/lobby', async (req, res) => {
+  res.send(`
+  <html>
+    <head><title>AIC Lobby</title></head>
+    <body>
+      hello lobby
+      <form action="#" id="">
+        Did Doc: <input type="text" name="init">
+        <input type="submit">
+      </form>
+    </body>
+  </html>
+  `)
+})
 
 export default router

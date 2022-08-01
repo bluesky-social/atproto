@@ -28,7 +28,7 @@ const keyAccount = EcdsaKeypair.import(
 )
 let accountCrypto: Asymmetric | null = null
 
-describe('delegator client', () => {
+describe('aic client', () => {
   it('works', async () => {
     // let min_p = "y";
     // const tic = Number(new Date())

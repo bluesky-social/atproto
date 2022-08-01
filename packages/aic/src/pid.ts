@@ -52,25 +52,3 @@ const s32encode = (data: Uint8Array) => {
   }
   return out
 }
-
-// const tidToSec = (tid: TidString): number => {
-//   // 3j5s-z6d-c2hy-22
-//   // 3j5s-z6d first 7 char represent ~ seconds
-//   const s = tid.replace(/-/g, '')
-//   return (((((((
-//     S32_CHAR.indexOf(s[0])) * 32 + 
-//     S32_CHAR.indexOf(s[1])) * 32 + 
-//     S32_CHAR.indexOf(s[2])) * 32 + 
-//     S32_CHAR.indexOf(s[3])) * 32 + 
-//     S32_CHAR.indexOf(s[4])) * 32 + 
-//     S32_CHAR.indexOf(s[5])) * 32 + 
-//     S32_CHAR.indexOf(s[6]))
-// }
-
-// const tidDifferenceSeconds = (tid1:TidString, tid2:TidString): number => {
-//   return tidToSec(tid1) - tidToSec(tid2)
-// }
-
-// export const tidDifferenceHours = (tid1:TidString, tid2:TidString): number => {
-//   return tidDifferenceSeconds(tid1, tid2) / 60 / 60
-// }

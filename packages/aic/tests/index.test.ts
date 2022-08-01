@@ -9,8 +9,8 @@ import {
 import { pid } from '../src/pid'
 import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
-import { TID } from '@adxp/common'
 import { Diff, Document, Tick, Asymmetric } from '../src/types'
+import { tid, tidDifferenceHours } from '../src/tid'
 
 const keyConsortium = EcdsaKeypair.import(
   {
@@ -101,7 +101,7 @@ describe('aic test test', () => {
   })
 
   it('works', async () => {
-    console.log(TID.next().formatted())
+    console.log(tid())
     console.log(await (await EcdsaKeypair.create({exportable: true})).export())
     // console.log('keyConsortium', (await keyConsortium).did())
     // console.log('keyTick', (await keyTick).did())
@@ -317,7 +317,7 @@ describe('aic test test', () => {
     // parse message
     const recv = JSON.parse(msg)
     if (recv.sig[0] !== 'z') {
-      throw "signatures must be 'z'+ base58btc"
+      throw Error("signatures must be 'z'+ base58btc")
     }
     const recvSig = uint8arrays.fromString(recv.sig.slice(1), 'base58btc')
     recv.sig = ''
@@ -358,9 +358,9 @@ describe('aic test test', () => {
   })
 
   it('tid next', async () => {
-    const tic = TID.next().formatted()
-    const toc = TID.next().formatted()
-    // console.log(tic, toc)
+    const tic = tid()
+    const toc = tid()
+    console.log(tic, toc, tidDifferenceHours(tic, toc))
     expect(toc > tic).toBeTruthy()
   })
 
@@ -404,7 +404,7 @@ describe('aic test test', () => {
           sig: 'z5oHy2qCSKR9Z9hXuha6c7qEpUWMzGNeZcj8D5kDAxsWP6P8FN4kmSWHcoLv4q5umiyMWcUk5CePGeh51khRGEgGL',
         },
       },
-      TID.next().formatted(),
+      tid(),
       consortiumCrypto,
     )
     expect(
@@ -467,7 +467,7 @@ describe('aic test test', () => {
     }
     const tick1 = await updateTick(
       didOfDoc, 
-      TID.next().formatted(), 
+      tid(), 
       doc,
       null,
       consortiumCrypto
@@ -486,7 +486,7 @@ describe('aic test test', () => {
     const tids1 = Object.keys(tick1.diffs).sort()
     const tick2 = await updateTick(
       didOfDoc, 
-      TID.next().formatted(),
+      tid(),
       await sign(
         // candidateDiff is singed on clint then sent to consortium
         {
@@ -517,7 +517,7 @@ describe('aic test test', () => {
     const tids2 = Object.keys(tick2.diffs).sort()
     const tick3 = await updateTick(
       didOfDoc,
-      TID.next().formatted(),
+      tid(),
       await sign(
         {
           prev: tids2.at(-1),
@@ -545,7 +545,7 @@ describe('aic test test', () => {
     const tids3 = Object.keys(tick3.diffs).sort()
     const tick4 = await updateTick(
       didOfDoc,
-      TID.next().formatted(),
+      tid(),
       await sign(
         {
           prev: tids3.at(-1),
