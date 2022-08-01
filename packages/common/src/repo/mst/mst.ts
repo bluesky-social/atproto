@@ -11,11 +11,23 @@ import { schema } from '../../common/types'
 import * as check from '../../common/check'
 import { MstDiff } from './diff'
 
+const subTreePointer = z.union([schema.cid, z.null()])
+const treeEntry = z.object({
+  k: z.string(), // key
+  v: schema.cid, // value
+  t: subTreePointer, // next subtree (to the right of leaf)
+})
+
+export const nodeDataSchema = z.object({
+  l: subTreePointer, // left-most subtree
+  e: z.array(treeEntry), //entries
+})
+
 // Description of the data in the actual CBOR-encoded blocks
-const leafPointer = z.tuple([z.string(), schema.cid])
-const treePointer = schema.cid
-const treeEntry = z.union([leafPointer, treePointer])
-export const nodeDataSchema = z.array(treeEntry)
+// const leafPointer = z.tuple([z.string(), schema.cid])
+// const treePointer = schema.cid
+// const treeEntry = z.union([leafPointer, treePointer])
+// export const nodeDataSchema = z.array(treeEntry)
 export type NodeData = z.infer<typeof nodeDataSchema>
 
 export type NodeEntry = MST | Leaf
@@ -43,7 +55,7 @@ export class MST {
     entries: NodeEntry[] = [],
     layer = 0,
   ): Promise<MST> {
-    const pointer = await getCidForEntries(entries)
+    const pointer = await cidForEntries(entries)
     return new MST(blockstore, pointer, entries, layer)
   }
 
@@ -52,14 +64,8 @@ export class MST {
     data: NodeData,
     layer?: number,
   ): Promise<MST> {
-    const entries = data.map((entry) => {
-      if (check.is(entry, treePointer)) {
-        return MST.fromCid(blockstore, entry, layer ? layer - 1 : undefined)
-      } else {
-        return new Leaf(entry[0], entry[1])
-      }
-    })
-    const pointer = await getCidForEntries(entries)
+    const entries = await deserializeNodeData(blockstore, data, layer)
+    const pointer = await cidForNodeData(data)
     return new MST(blockstore, pointer, entries, layer ?? null)
   }
 
@@ -72,7 +78,7 @@ export class MST {
 
   // We never mutate an MST, we just return a new MST with updated values
   async newTree(entries: NodeEntry[]): Promise<MST> {
-    const pointer = await getCidForEntries(entries)
+    const pointer = await cidForEntries(entries)
     return new MST(this.blockstore, pointer, entries, this.layer)
   }
 
@@ -84,22 +90,12 @@ export class MST {
     if (this.entries) return [...this.entries]
     if (this.pointer) {
       const data = await this.blockstore.get(this.pointer, nodeDataSchema)
-      const firstLeaf = data.filter((e) => check.is(e, leafPointer))
+      const firstLeaf = data.e[0]
       const layer =
-        firstLeaf[0] !== undefined
-          ? await leadingZerosOnHash(firstLeaf[0][0])
-          : null
-      this.entries = data.map((entry) => {
-        if (check.is(entry, treePointer)) {
-          return MST.fromCid(
-            this.blockstore,
-            entry,
-            layer ? layer - 1 : undefined,
-          )
-        } else {
-          return new Leaf(entry[0], entry[1])
-        }
-      })
+        firstLeaf !== undefined
+          ? await leadingZerosOnHash(firstLeaf.k)
+          : undefined
+      this.entries = await deserializeNodeData(this.blockstore, data, layer)
 
       return this.entries
     }
@@ -128,7 +124,7 @@ export class MST {
     const alreadyHas = await this.blockstore.has(this.pointer)
     if (alreadyHas) return this.pointer
     const entries = await this.getEntries()
-    const data = entriesToData(entries)
+    const data = serializeNodeData(entries)
     await this.blockstore.put(data as any)
     for (const entry of entries) {
       if (entry.isTree()) {
@@ -596,24 +592,67 @@ const layerForEntries = async (
   return await leadingZerosOnHash(firstLeaf.key)
 }
 
-const entriesToData = (entries: NodeEntry[]): NodeData => {
-  return entries.map((entry) => {
-    if (entry.isLeaf()) {
-      return [entry.key, entry.value]
-    } else {
-      return entry.pointer
+const deserializeNodeData = async (
+  blockstore: IpldStore,
+  data: NodeData,
+  layer?: number,
+): Promise<NodeEntry[]> => {
+  const entries: NodeEntry[] = []
+  if (data.l !== null) {
+    entries.push(
+      await MST.fromCid(blockstore, data.l, layer ? layer - 1 : undefined),
+    )
+  }
+  for (const entry of data.e) {
+    entries.push(new Leaf(entry.k, entry.v))
+    if (entry.t !== null) {
+      entries.push(
+        await MST.fromCid(blockstore, entry.t, layer ? layer - 1 : undefined),
+      )
     }
-  })
+  }
+  return entries
 }
 
-const getCidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
-  const data = entriesToData(entries)
+const serializeNodeData = (entries: NodeEntry[]): NodeData => {
+  const data: NodeData = {
+    l: null,
+    e: [],
+  }
+  let i = 0
+  if (entries[0]?.isTree()) {
+    i++
+    data.l = entries[0].pointer
+  }
+  while (i < entries.length) {
+    const leaf = entries[i]
+    const next = entries[i + 1]
+    if (!leaf.isLeaf()) {
+      throw new Error('Not a valid node: two subtrees next to each other')
+    }
+    i++
+    let subtree: CID | null = null
+    if (next?.isTree()) {
+      subtree = next.pointer
+      i++
+    }
+    data.e.push({ k: leaf.key, v: leaf.value, t: subtree })
+  }
+  return data
+}
+
+const cidForNodeData = async (data: NodeData): Promise<CID> => {
   const block = await Block.encode({
     value: data as any,
     codec: blockCodec,
     hasher: blockHasher,
   })
   return block.cid
+}
+
+const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
+  const data = serializeNodeData(entries)
+  return cidForNodeData(data)
 }
 
 export default MST
