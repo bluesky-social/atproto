@@ -8,7 +8,6 @@ import { sha256 } from '@adxp/crypto'
 
 import z from 'zod'
 import { schema } from '../../common/types'
-import * as check from '../../common/check'
 import { MstDiff } from './diff'
 
 /**
@@ -41,10 +40,10 @@ import { MstDiff } from './diff'
  * Then the first will be described as `prefix: 0, key: 'bsky/posts/abcdefg'`,
  * and the second will be described as `prefix: 16, key: 'hi'.`
  */
-const subTreePointer = z.union([schema.cid, z.null()])
+const subTreePointer = z.nullable(schema.cid)
 const treeEntry = z.object({
-  p: z.number(), // prefix count that is the same as the prev key
-  k: z.string(), // key
+  p: z.number(), // prefix count of utf-8 chars that this key shares with the prev key
+  k: z.string(), // the rest of the key outside the shared prefix
   v: schema.cid, // value
   t: subTreePointer, // next subtree (to the right of leaf)
 })
@@ -56,19 +55,28 @@ export type NodeData = z.infer<typeof nodeDataSchema>
 
 export type NodeEntry = MST | Leaf
 
+export type Fanout = 2 | 8 | 16 | 32 | 64
+export type MstOpts = {
+  layer: number
+  fanout: Fanout
+}
+
 export class MST {
   blockstore: IpldStore
+  fanout: Fanout
   entries: NodeEntry[] | null
   layer: number | null
   pointer: CID
 
   constructor(
     blockstore: IpldStore,
+    fanout: Fanout,
     pointer: CID,
     entries: NodeEntry[] | null,
     layer: number | null,
   ) {
     this.blockstore = blockstore
+    this.fanout = fanout
     this.entries = entries
     this.layer = layer
     this.pointer = pointer
@@ -77,24 +85,31 @@ export class MST {
   static async create(
     blockstore: IpldStore,
     entries: NodeEntry[] = [],
-    layer = 0,
+    opts?: Partial<MstOpts>,
   ): Promise<MST> {
     const pointer = await cidForEntries(entries)
-    return new MST(blockstore, pointer, entries, layer)
+    const { layer = 0, fanout = 32 } = opts || {}
+    return new MST(blockstore, fanout, pointer, entries, layer)
   }
 
   static async fromData(
     blockstore: IpldStore,
     data: NodeData,
-    layer?: number,
+    opts?: Partial<MstOpts>,
   ): Promise<MST> {
-    const entries = await deserializeNodeData(blockstore, data, layer)
+    const { layer = null, fanout = 32 } = opts || {}
+    const entries = await deserializeNodeData(blockstore, data, opts)
     const pointer = await cidForNodeData(data)
-    return new MST(blockstore, pointer, entries, layer ?? null)
+    return new MST(blockstore, fanout, pointer, entries, layer)
   }
 
-  static fromCid(blockstore: IpldStore, cid: CID, layer?: number): MST {
-    return new MST(blockstore, cid, null, layer ?? null)
+  static fromCid(
+    blockstore: IpldStore,
+    cid: CID,
+    opts?: Partial<MstOpts>,
+  ): MST {
+    const { layer = null, fanout = 32 } = opts || {}
+    return new MST(blockstore, fanout, cid, null, layer)
   }
 
   // Immutability
@@ -103,7 +118,7 @@ export class MST {
   // We never mutate an MST, we just return a new MST with updated values
   async newTree(entries: NodeEntry[]): Promise<MST> {
     const pointer = await cidForEntries(entries)
-    return new MST(this.blockstore, pointer, entries, this.layer)
+    return new MST(this.blockstore, this.fanout, pointer, entries, this.layer)
   }
 
   // Getters (lazy load)
@@ -117,9 +132,12 @@ export class MST {
       const firstLeaf = data.e[0]
       const layer =
         firstLeaf !== undefined
-          ? await leadingZerosOnHash(firstLeaf.k)
+          ? await leadingZerosOnHash(firstLeaf.k, this.fanout)
           : undefined
-      this.entries = await deserializeNodeData(this.blockstore, data, layer)
+      this.entries = await deserializeNodeData(this.blockstore, data, {
+        layer,
+        fanout: this.fanout,
+      })
 
       return this.entries
     }
@@ -132,7 +150,7 @@ export class MST {
   async getLayer(): Promise<number> {
     if (this.layer !== null) return this.layer
     const entries = await this.getEntries()
-    const layer = await layerForEntries(entries)
+    const layer = await layerForEntries(entries, this.fanout)
     if (!layer) {
       throw new Error('Could not find layer for tree')
     }
@@ -161,7 +179,7 @@ export class MST {
   // Adds a new leaf for the given key/value pair
   // Throws if a leaf with that key already exists
   async add(key: string, value: CID): Promise<MST> {
-    const keyZeros = await leadingZerosOnHash(key)
+    const keyZeros = await leadingZerosOnHash(key, this.fanout)
     const layer = await this.getLayer()
     const newLeaf = new Leaf(key, value)
     if (keyZeros === layer) {
@@ -220,7 +238,10 @@ export class MST {
       if (left) updated.push(left)
       updated.push(new Leaf(key, value))
       if (right) updated.push(right)
-      return MST.create(this.blockstore, updated, keyZeros)
+      return MST.create(this.blockstore, updated, {
+        layer: keyZeros,
+        fanout: this.fanout,
+      })
     }
   }
 
@@ -492,12 +513,18 @@ export class MST {
 
   async createChild(): Promise<MST> {
     const layer = await this.getLayer()
-    return MST.create(this.blockstore, [], layer - 1)
+    return MST.create(this.blockstore, [], {
+      layer: layer - 1,
+      fanout: this.fanout,
+    })
   }
 
   async createParent(): Promise<MST> {
     const layer = await this.getLayer()
-    return MST.create(this.blockstore, [this], layer + 1)
+    return MST.create(this.blockstore, [this], {
+      layer: layer + 1,
+      fanout: this.fanout,
+    })
   }
 
   // Finding insertion points
@@ -593,16 +620,32 @@ export class Leaf {
   }
 }
 
-export const leadingZerosOnHash = async (key: string): Promise<number> => {
+type SupportedBases = 'base2' | 'base8' | 'base16' | 'base32' | 'base64'
+
+export const leadingZerosOnHash = async (
+  key: string,
+  fanout: Fanout,
+): Promise<number> => {
+  if ([2, 8, 16, 32, 64].indexOf(fanout) < 0) {
+    throw new Error(`Not a valid fanout: ${fanout}`)
+  }
+  const base: SupportedBases = `base${fanout}`
   const hash = await sha256(key)
-  const b32 = uint8arrays.toString(hash, 'base32')
+  const encoded = uint8arrays.toString(hash, base)
   let count = 0
-  for (const char of b32) {
-    if (char === 'a') {
-      // 'a' is 0 in b32
-      count++
+  for (const char of encoded) {
+    if (base === 'base32' || 'base64') {
+      if (char === 'a') {
+        count++
+      } else {
+        break
+      }
     } else {
-      break
+      if (char === '0') {
+        count++
+      } else {
+        break
+      }
     }
   }
   return count
@@ -610,21 +653,26 @@ export const leadingZerosOnHash = async (key: string): Promise<number> => {
 
 const layerForEntries = async (
   entries: NodeEntry[],
+  fanout: Fanout,
 ): Promise<number | null> => {
   const firstLeaf = entries.find((entry) => entry.isLeaf())
   if (!firstLeaf || firstLeaf.isTree()) return null
-  return await leadingZerosOnHash(firstLeaf.key)
+  return await leadingZerosOnHash(firstLeaf.key, fanout)
 }
 
 const deserializeNodeData = async (
   blockstore: IpldStore,
   data: NodeData,
-  layer?: number,
+  opts?: Partial<MstOpts>,
 ): Promise<NodeEntry[]> => {
+  const { layer, fanout } = opts || {}
   const entries: NodeEntry[] = []
   if (data.l !== null) {
     entries.push(
-      await MST.fromCid(blockstore, data.l, layer ? layer - 1 : undefined),
+      await MST.fromCid(blockstore, data.l, {
+        layer: layer ? layer - 1 : undefined,
+        fanout,
+      }),
     )
   }
   let lastKey = ''
@@ -634,7 +682,10 @@ const deserializeNodeData = async (
     lastKey = key
     if (entry.t !== null) {
       entries.push(
-        await MST.fromCid(blockstore, entry.t, layer ? layer - 1 : undefined),
+        await MST.fromCid(blockstore, entry.t, {
+          layer: layer ? layer - 1 : undefined,
+          fanout,
+        }),
       )
     }
   }

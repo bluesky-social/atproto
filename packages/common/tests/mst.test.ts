@@ -117,7 +117,11 @@ describe('Merkle Search Tree', () => {
     for (const entry of toEdit) {
       const updated = await util.randomCid()
       toDiff = await toDiff.edit(entry[0], updated)
-      expectedUpdates[entry[0]] = { key: entry[0], old: entry[1], cid: updated }
+      expectedUpdates[entry[0]] = {
+        key: entry[0],
+        prev: entry[1],
+        cid: updated,
+      }
     }
     for (const entry of toDel) {
       toDiff = await toDiff.delete(entry[0])
