@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "scripts": {
     "test": "jest",
+    "bench": "jest --config jest.bench.config.js ",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",

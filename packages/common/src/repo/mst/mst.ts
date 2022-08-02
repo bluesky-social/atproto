@@ -634,7 +634,7 @@ export const leadingZerosOnHash = async (
   const encoded = uint8arrays.toString(hash, base)
   let count = 0
   for (const char of encoded) {
-    if (base === 'base32' || 'base64') {
+    if (base === 'base32' || base === 'base64') {
       if (char === 'a') {
         count++
       } else {
