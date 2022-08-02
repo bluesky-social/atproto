@@ -1,9 +1,8 @@
 import MST, { countPrefixLen } from '../src/repo/mst/mst'
 
 import * as util from './_util'
-import { IpldStore, MstAdd, MstDelete, MstDiff, MstUpdate } from '../src'
+import { IpldStore, MstAdd, MstDelete, MstUpdate } from '../src'
 import { CID } from 'multiformats'
-import fs from 'fs'
 
 describe('Merkle Search Tree', () => {
   let blockstore: IpldStore

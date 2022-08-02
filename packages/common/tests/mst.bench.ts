@@ -1,5 +1,5 @@
 import { CID } from 'multiformats'
-import { Fanout, IpldStore, MST, NodeEntry, TID } from '../src'
+import { Fanout, IpldStore, MemoryBlockstore, MST, NodeEntry } from '../src'
 import * as util from './_util'
 import fs from 'fs'
 
@@ -11,6 +11,7 @@ type BenchmarkData = {
   walkTime: string
   depth: number
   maxWidth: number
+  blockstoreSize: number
   largestProofSize: number
   avgProofSize: number
   widths: Record<number, number>
@@ -20,7 +21,7 @@ describe('MST Benchmarks', () => {
   let mapping: Record<string, CID>
   let shuffled: [string, CID][]
 
-  const size = 10000
+  const size = 500000
 
   beforeAll(async () => {
     mapping = await util.generateBulkTidMapping(size)
@@ -71,6 +72,10 @@ describe('MST Benchmarks', () => {
       }
       const avgProofSize = Math.ceil(combinedProofSizes / paths.length)
 
+      const blockstoreSize = await (
+        blockstore.rawBlockstore as MemoryBlockstore
+      ).sizeInBytes()
+
       benches.push({
         fanout,
         size,
@@ -78,6 +83,7 @@ describe('MST Benchmarks', () => {
         saveTime: secDiff(doneAdding, doneSaving),
         walkTime: secDiff(doneSaving, doneWalking),
         depth: await mst.getLayer(),
+        blockstoreSize,
         largestProofSize: largestProof,
         avgProofSize: avgProofSize,
         maxWidth: widthTracker.max,
@@ -137,6 +143,7 @@ Time to save tree with ${bench.size} leaves: ${bench.saveTime}s
 Time to reconstruct & walk ${bench.size} leaves: ${bench.walkTime}s
 Tree depth: ${bench.depth}
 Max Node Width (only counting leaves): ${bench.maxWidth}
+The total blockstore size is: ${bench.blockstoreSize} bytes
 Largest proof size: ${bench.largestProofSize} bytes
 Average proof size: ${bench.avgProofSize} bytes
 Nodes with >= 0 leaves: ${bench.widths[0]}

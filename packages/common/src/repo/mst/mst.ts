@@ -676,22 +676,15 @@ export const leadingZerosOnHash = async (
     throw new Error(`Not a valid fanout: ${fanout}`)
   }
   const base: SupportedBases = `base${fanout}`
+  const zeroChar = uint8arrays.toString(new Uint8Array(1), base)[0]
   const hash = await sha256(key)
   const encoded = uint8arrays.toString(hash, base)
   let count = 0
   for (const char of encoded) {
-    if (base === 'base32' || base === 'base64') {
-      if (char === 'a') {
-        count++
-      } else {
-        break
-      }
+    if (char === zeroChar) {
+      count++
     } else {
-      if (char === '0') {
-        count++
-      } else {
-        break
-      }
+      break
     }
   }
   return count
