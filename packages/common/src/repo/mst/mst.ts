@@ -68,6 +68,7 @@ export class MST {
   entries: NodeEntry[] | null
   layer: number | null
   pointer: CID
+  outdatedPointer = false
 
   constructor(
     blockstore: IpldStore,
@@ -118,8 +119,15 @@ export class MST {
 
   // We never mutate an MST, we just return a new MST with updated values
   async newTree(entries: NodeEntry[]): Promise<MST> {
-    const pointer = await cidForEntries(entries)
-    return new MST(this.blockstore, this.fanout, pointer, entries, this.layer)
+    const mst = new MST(
+      this.blockstore,
+      this.fanout,
+      this.pointer,
+      entries,
+      this.layer,
+    )
+    mst.outdatedPointer = true
+    return mst
   }
 
   // Getters (lazy load)
@@ -145,6 +153,23 @@ export class MST {
     throw new Error('No entries or CID provided')
   }
 
+  // We don't hash the node on every mutation for performance reasons
+  // Instead we keep track of whether the pointer is outdated and only (recursively) calculate when needed
+  async getPointer(): Promise<CID> {
+    if (!this.outdatedPointer) return this.pointer
+    let entries = await this.getEntries()
+    const outdated = entries.filter(
+      (e) => e.isTree() && e.outdatedPointer,
+    ) as MST[]
+    if (outdated.length > 0) {
+      await Promise.all(outdated.map((e) => e.getPointer()))
+      entries = await this.getEntries()
+    }
+    this.pointer = await cidForEntries(entries)
+    this.outdatedPointer = false
+    return this.pointer
+  }
+
   // We should be able to find the layer of a node by either a hint on creation or by looking at the first leaf
   // If we have neither a hint nor a leaf, we throw an error
   // We could recurse to find the layer, but it isn't necessary for any of our current operations
@@ -164,8 +189,9 @@ export class MST {
 
   // Persist the MST to the blockstore
   async save(): Promise<CID> {
-    const alreadyHas = await this.blockstore.has(this.pointer)
-    if (alreadyHas) return this.pointer
+    const pointer = await this.getPointer()
+    const alreadyHas = await this.blockstore.has(pointer)
+    if (alreadyHas) return pointer
     const entries = await this.getEntries()
     const data = serializeNodeData(entries)
     await this.blockstore.put(data as any)
@@ -174,20 +200,20 @@ export class MST {
         await entry.save()
       }
     }
-    return this.pointer
+    return pointer
   }
 
   // Adds a new leaf for the given key/value pair
   // Throws if a leaf with that key already exists
-  async add(key: string, value: CID): Promise<MST> {
-    const keyZeros = await leadingZerosOnHash(key, this.fanout)
+  async add(key: string, value: CID, knownZeros?: number): Promise<MST> {
+    const keyZeros = knownZeros ?? (await leadingZerosOnHash(key, this.fanout))
     const layer = await this.getLayer()
     const newLeaf = new Leaf(key, value)
     if (keyZeros === layer) {
       // it belongs in this layer
       const index = await this.findGtOrEqualLeafIndex(key)
       const found = await this.atIndex(index)
-      if (found && found.equals(newLeaf)) {
+      if (found?.isLeaf() && found.key === key) {
         throw new Error(`There is already a value at key: ${key}`)
       }
       const prevNode = await this.atIndex(index - 1)
@@ -210,11 +236,11 @@ export class MST {
       const prevNode = await this.atIndex(index - 1)
       if (prevNode && prevNode.isTree()) {
         // if entry before is a tree, we add it to that tree
-        const newSubtree = await prevNode.add(key, value)
+        const newSubtree = await prevNode.add(key, value, keyZeros)
         return this.updateEntry(index - 1, newSubtree)
       } else {
         const subTree = await this.createChild()
-        const newSubTree = await subTree.add(key, value)
+        const newSubTree = await subTree.add(key, value, keyZeros)
         return this.spliceIn(newSubTree, index)
       }
     } else {
@@ -309,6 +335,10 @@ export class MST {
   // This uses a stateful diff tracker that will sometimes record encountered leaves
   // before removing them later when they're encountered in the other tree
   async diff(other: MST): Promise<MstDiff> {
+    // we need to make sure both of our pointers are in date for diffing
+    await this.getPointer()
+    await other.getPointer()
+
     const diff = new MstDiff()
     let leftI = 0
     let rightI = 0
@@ -361,7 +391,7 @@ export class MST {
         }
       } else if (left.isTree() && right.isTree()) {
         // if both are trees, find the diff of those trees
-        if (!left.equals(right)) {
+        if (!(await left.equals(right))) {
           const subDiff = await left.diff(right)
           diff.addDiff(subDiff)
         }
@@ -608,12 +638,11 @@ export class MST {
     return false
   }
 
-  equals(entry: NodeEntry): boolean {
-    if (entry.isTree()) {
-      return entry.pointer.equals(this.pointer)
-    } else {
-      return false
-    }
+  async equals(other: NodeEntry): Promise<boolean> {
+    if (other.isLeaf()) return false
+    const thisPointer = await this.getPointer()
+    const otherPointer = await other.getPointer()
+    return thisPointer.equals(otherPointer)
   }
 }
 

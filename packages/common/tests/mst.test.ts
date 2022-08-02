@@ -84,7 +84,7 @@ describe('Merkle Search Tree', () => {
 
     expect(allNodes.length).toBe(allReshuffled.length)
     for (let i = 0; i < allNodes.length; i++) {
-      expect(allNodes[i].equals(allReshuffled[i])).toBeTruthy()
+      expect(await allNodes[i].equals(allReshuffled[i])).toBeTruthy()
     }
   })
 
@@ -95,7 +95,7 @@ describe('Merkle Search Tree', () => {
     const loadedNodes = await loaded.allNodes()
     expect(origNodes.length).toBe(loadedNodes.length)
     for (let i = 0; i < origNodes.length; i++) {
-      expect(origNodes[i].equals(loadedNodes[i])).toBeTruthy()
+      expect(await origNodes[i].equals(loadedNodes[i])).toBeTruthy()
     }
   })
 
