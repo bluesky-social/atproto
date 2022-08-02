@@ -1,5 +1,5 @@
 import { CID } from 'multiformats'
-import { Fanout, IpldStore, MST, NodeEntry } from '../src'
+import { Fanout, IpldStore, MST, NodeEntry, TID } from '../src'
 import * as util from './_util'
 import fs from 'fs'
 
@@ -11,6 +11,8 @@ type BenchmarkData = {
   walkTime: string
   depth: number
   maxWidth: number
+  largestProofSize: number
+  avgProofSize: number
   widths: Record<number, number>
 }
 
@@ -18,14 +20,15 @@ describe('MST Benchmarks', () => {
   let mapping: Record<string, CID>
   let shuffled: [string, CID][]
 
-  const size = 100000
+  const size = 10000
 
   beforeAll(async () => {
     mapping = await util.generateBulkTidMapping(size)
     shuffled = util.shuffle(Object.entries(mapping))
   })
 
-  const fanouts: Fanout[] = [2, 8, 16, 32, 64]
+  // const fanouts: Fanout[] = [8, 16, 32]
+  const fanouts: Fanout[] = [16, 32]
   it('benchmarks various fanouts', async () => {
     let benches: BenchmarkData[] = []
     for (const fanout of fanouts) {
@@ -52,6 +55,22 @@ describe('MST Benchmarks', () => {
 
       const doneWalking = Date.now()
 
+      const paths = await reloaded.paths()
+      let largestProof = 0
+      let combinedProofSizes = 0
+      for (const path of paths) {
+        let proofSize = 0
+        for (const entry of path) {
+          if (entry.isTree()) {
+            const bytes = await blockstore.getBytes(entry.pointer)
+            proofSize += bytes.byteLength
+          }
+        }
+        largestProof = Math.max(largestProof, proofSize)
+        combinedProofSizes += proofSize
+      }
+      const avgProofSize = Math.ceil(combinedProofSizes / paths.length)
+
       benches.push({
         fanout,
         size,
@@ -59,6 +78,8 @@ describe('MST Benchmarks', () => {
         saveTime: secDiff(doneAdding, doneSaving),
         walkTime: secDiff(doneSaving, doneWalking),
         depth: await mst.getLayer(),
+        largestProofSize: largestProof,
+        avgProofSize: avgProofSize,
         maxWidth: widthTracker.max,
         widths: widthTracker.data,
       })
@@ -116,6 +137,8 @@ Time to save tree with ${bench.size} leaves: ${bench.saveTime}s
 Time to reconstruct & walk ${bench.size} leaves: ${bench.walkTime}s
 Tree depth: ${bench.depth}
 Max Node Width (only counting leaves): ${bench.maxWidth}
+Largest proof size: ${bench.largestProofSize} bytes
+Average proof size: ${bench.avgProofSize} bytes
 Nodes with >= 0 leaves: ${bench.widths[0]}
 Nodes with >= 16 leaves: ${bench.widths[16]}
 Nodes with >= 32 leaves: ${bench.widths[32]}
@@ -127,7 +150,6 @@ Nodes with >= 160 leaves: ${bench.widths[160]}
 Nodes with >= 192 leaves: ${bench.widths[192]}
 Nodes with >= 224 leaves: ${bench.widths[224]}
 Nodes with >= 256 leaves: ${bench.widths[256]}
-
 
 `
   }

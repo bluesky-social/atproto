@@ -55,6 +55,7 @@ export type NodeData = z.infer<typeof nodeDataSchema>
 
 export type NodeEntry = MST | Leaf
 
+const DEFAULT_MST_FANOUT = 32
 export type Fanout = 2 | 8 | 16 | 32 | 64
 export type MstOpts = {
   layer: number
@@ -88,7 +89,7 @@ export class MST {
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
     const pointer = await cidForEntries(entries)
-    const { layer = 0, fanout = 32 } = opts || {}
+    const { layer = 0, fanout = DEFAULT_MST_FANOUT } = opts || {}
     return new MST(blockstore, fanout, pointer, entries, layer)
   }
 
@@ -97,7 +98,7 @@ export class MST {
     data: NodeData,
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
-    const { layer = null, fanout = 32 } = opts || {}
+    const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     const entries = await deserializeNodeData(blockstore, data, opts)
     const pointer = await cidForNodeData(data)
     return new MST(blockstore, fanout, pointer, entries, layer)
@@ -108,7 +109,7 @@ export class MST {
     cid: CID,
     opts?: Partial<MstOpts>,
   ): MST {
-    const { layer = null, fanout = 32 } = opts || {}
+    const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     return new MST(blockstore, fanout, cid, null, layer)
   }
 
@@ -554,6 +555,22 @@ export class MST {
         }
       }
     }
+  }
+
+  // Walk full tree & emit nodes, consumer can bail at any point by returning false
+  async paths(): Promise<NodeEntry[][]> {
+    const entries = await this.getEntries()
+    let paths: NodeEntry[][] = []
+    for (const entry of entries) {
+      if (entry.isLeaf()) {
+        paths.push([entry])
+      }
+      if (entry.isTree()) {
+        const subPaths = await entry.paths()
+        paths = [...paths, ...subPaths.map((p) => [entry, ...p])]
+      }
+    }
+    return paths
   }
 
   // Walks tree & returns all nodes
