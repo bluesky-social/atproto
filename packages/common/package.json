@@ -3,8 +3,9 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
-    "test": "jest",
+    "test": "jest tests/mst.test.ts",
     "bench": "jest --config jest.bench.config.js ",
+    "bench:profile": "node --inspect ../../node_modules/.bin/jest --config jest.bench.config.js",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
