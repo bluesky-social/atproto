@@ -2,7 +2,6 @@
   "name": "@adxp/aic",
   "version": "0.0.1",
   "main": "src/index.ts",
-  "license": "MIT",
   "scripts": {
     "start": "node dist/index.js",
     "test": "jest",
@@ -17,17 +16,17 @@
     "low": "node dist/low_pid.js"
   },
   "dependencies": {
-    "@adxp/common": "*",
     "@adxp/crypto": "*",
-    "uint8arrays": "^3.0.0",
     "@vscode/sqlite3": "^5.0.7",
     "cors": "^2.8.5",
     "express": "^4.17.2",
     "express-async-errors": "^3.1.1",
     "knex": "^1.0.4",
+    "uint8arrays": "^3.0.0",
     "zod": "^3.14.2"
   },
   "devDependencies": {
-    "axios": "^0.26.1"
+    "axios": "^0.26.1",
+    "eslint-plugin-prettier": "^4.2.1"
   }
 }

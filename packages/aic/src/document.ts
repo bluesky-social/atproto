@@ -1,6 +1,17 @@
 import { sign, validateSig } from './signature'
 import { pid } from './pid'
-import { ErrorMessage, Value, TidString, DidKeyString, Patch, Diff, Diffs, Document, Tick, Asymmetric } from './types'
+import {
+  ErrorMessage,
+  Value,
+  TidString,
+  DidKeyString,
+  Patch,
+  Diff,
+  Diffs,
+  Document,
+  Tick,
+  Asymmetric,
+} from './types'
 
 export { pid, sign, validateSig }
 
@@ -54,7 +65,7 @@ export const updateTick = async (
   // @TODO validate that tid > all tids in the diffs
   if (stored_tick === null) {
     // this is the  initial registration of a did:aic
-    return registerNewDid(did, tid, candidateDiff, key)    
+    return registerNewDid(did, tid, candidateDiff, key)
   }
 
   // since stored_tick is not null this is an update
@@ -143,22 +154,19 @@ const updateExistingValidatedDid = async (
     return { error: 'diff has bad signature' }
   }
   if (
-      'key' in candidateDiff && 
-      typeof candidateDiff.key == 'string' && 
-      !validateKeyInDocForDiffs(candidateDiff.key, stored_tick.diffs)
-    ) {
-      return { error: 'diff signed by key not in did doc' }
-    }
+    'key' in candidateDiff &&
+    typeof candidateDiff.key == 'string' &&
+    !validateKeyInDocForDiffs(candidateDiff.key, stored_tick.diffs)
+  ) {
+    return { error: 'diff signed by key not in did doc' }
+  }
   // there is a validated stored_tick and a valid candidateDiff
   const diffs: Diffs = stored_tick.diffs
   diffs[tid] = candidateDiff
   return tickFromDiffs(diffs, tid, key)
 }
 
-const validateKeyInDocForDiffs = async (
-  key: DidKeyString,
-  diffs: Diffs,
-) => {
+const validateKeyInDocForDiffs = async (key: DidKeyString, diffs: Diffs) => {
   return true // @TODO write this
   // the 72 hour key prioraty window gos here :)
 }
@@ -186,10 +194,7 @@ export const tickFromDiffs = async (
   )) as Tick
 }
 
-const authoriseKey = (
-  doc: Document,
-  diff: Diff,
-): boolean => {
+const authoriseKey = (doc: Document, diff: Diff): boolean => {
   // @TODO the 72 hour window logic needs to be here
   if (keyIn(doc, 'adx/account_keys', diff.key)) {
     return true
@@ -200,10 +205,16 @@ const authoriseKey = (
   return false
 }
 
-const keyIn = (doc: Document, keyList: string, didKey: DidKeyString): boolean => {
-  return keyList in doc &&
-  Array.isArray(doc[keyList]) &&
-  (doc[keyList] as String[]).includes(didKey)
+const keyIn = (
+  doc: Document,
+  keyList: string,
+  didKey: DidKeyString,
+): boolean => {
+  return (
+    keyList in doc &&
+    Array.isArray(doc[keyList]) &&
+    (doc[keyList] as String[]).includes(didKey)
+  )
 }
 
 const patchesKeysOnly = (patches: Patch[]): boolean => {
@@ -212,26 +223,37 @@ const patchesKeysOnly = (patches: Patch[]): boolean => {
   // only changes 'adx/account_keys' or 'adx/recovery_keys'
   return patches.every((patch: Patch) => {
     const pathSegment = patch[1][0]
-    return ( pathSegment === 'adx/account_keys' || pathSegment === 'adx/recovery_keys' )
+    return (
+      pathSegment === 'adx/account_keys' || pathSegment === 'adx/recovery_keys'
+    )
   })
 }
 
-export const tickToDidDoc = async (tick: Tick, consortiumDid: string, key: Asymmetric, asOf?: TidString,): Promise<Document> => {
+export const tickToDidDoc = async (
+  tick: Tick,
+  consortiumDid: string,
+  key: Asymmetric,
+  asOf?: TidString,
+): Promise<Document> => {
   const valid = await validateSig(tick, key)
-  if (!valid){
+  if (!valid) {
     return { error: 'tick has bad signature' }
   }
   if (tick.key != consortiumDid) {
     return { error: 'not signed by consortium' }
   }
   const doc = await diffsToDidDoc(tick.diffs, key, asOf)
-  if (doc !== null){
+  if (doc !== null) {
     return doc
   }
   return { error: 'malformed diffs' }
 }
 
-export const diffsToDidDoc = async (diffs: Diffs, key: Asymmetric, asOf?: TidString) => {
+export const diffsToDidDoc = async (
+  diffs: Diffs,
+  key: Asymmetric,
+  asOf?: TidString,
+) => {
   // the consortium dose not build doc for the client
   // but it still needs to build the docs to authorise_keys as of the time the diff was signed
   if (typeof diffs !== 'object') {

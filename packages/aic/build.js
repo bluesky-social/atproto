@@ -6,6 +6,7 @@ require('esbuild')
     treeShaking: true,
     outdir: 'dist',
     platform: 'node',
+    assetNames: 'src/static',
     external: [
       '../../node_modules/knex/*',
       '../../node_modules/@vscode/sqlite3/*',

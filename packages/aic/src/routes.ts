@@ -10,7 +10,7 @@ import { z } from 'zod'
 export const CONSORTIUM_KEYPAIR = crypto.EcdsaKeypair.import(
   {
     // did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh
-    key_ops: [ 'sign' ],
+    key_ops: ['sign'],
     ext: true,
     kty: 'EC',
     x: 'zn_OWx4zJM5zy8E_WUAJH9OS75K5t6q74D7lMf7AmnQ',
@@ -24,10 +24,12 @@ export const CONSORTIUM_KEYPAIR = crypto.EcdsaKeypair.import(
 )
 
 let consortiumCrypto = async () => {
-    let key = (await CONSORTIUM_KEYPAIR)
-    return {
-    did: (): string => { return key.did() },
-    sign: async (msg:Uint8Array): Promise<Uint8Array> => {
+  let key = await CONSORTIUM_KEYPAIR
+  return {
+    did: (): string => {
+      return key.did()
+    },
+    sign: async (msg: Uint8Array): Promise<Uint8Array> => {
       return await key.sign(msg)
     },
     verifyDidSig: crypto.verifyDidSig,
@@ -57,7 +59,8 @@ let consortiumCrypto = async () => {
 // type Diff = z.infer<typeof Diff>
 
 const router = express.Router()
-router.use('/favicon.ico', express.static('static/favicon.ico'))
+// router.use('/favicon.ico', express.static('static/favicon.ico'))
+router.use(express.static('static'))
 
 router.all('/tid', async (req, res) => {
   res.send(
@@ -139,7 +142,7 @@ router.post(
       JSON.stringify(newTick),
     )
 
-    // we reload the tick from the databace if the put failed/pending we return the last tick 
+    // we reload the tick from the databace if the put failed/pending we return the last tick
     const storedTick = (await res.locals.db.tickForDid(did)).tick
     res.status(200)
     res.type('json').send(storedTick)
@@ -149,13 +152,21 @@ router.post(
 router.get('/lobby', async (req, res) => {
   res.send(`
   <html>
-    <head><title>AIC Lobby</title></head>
+    <head>
+      <title>AIC Lobby</title>
+    </head>
     <body>
       hello lobby
       <form action="#" id="">
-        Did Doc: <input type="text" name="init">
-        <input type="submit">
+        Did Doc: <input type="text" name="init" id="doc">
+        <input type="button" value="look up" id="btn">
       </form>
+      <script type="text/javascript">
+        function run() {
+          alert(document.getElementById('doc').value)
+        }
+        document.getElementById('btn').onclick = run;
+      </script>
     </body>
   </html>
   `)

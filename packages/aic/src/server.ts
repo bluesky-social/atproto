@@ -7,9 +7,9 @@ import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import http from 'http'
-import {Database} from './db'
+import { Database } from './db'
 // import * as error from './error'
-import {Asymmetric} from './types'
+import { Asymmetric } from './types'
 import router from './routes'
 
 export const server = (
@@ -26,7 +26,7 @@ export const server = (
     res.locals.crypto = crypto
     next()
   })
-  
+
   app.use('/', router)
   // app.use(error.handler)
 
