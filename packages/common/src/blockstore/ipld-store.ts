@@ -46,6 +46,17 @@ export class IpldStore {
   }
 
   async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
+    const value = await this.getUnchecked(cid)
+    try {
+      return check.assure(schema, value)
+    } catch (err) {
+      throw new Error(
+        `Did not find expected object at ${cid.toString()}: ${err}`,
+      )
+    }
+  }
+
+  async getUnchecked(cid: CID): Promise<unknown> {
     const bytes = await this.getBytes(cid)
     const block = await Block.create({
       bytes,
@@ -53,14 +64,7 @@ export class IpldStore {
       codec: blockCodec,
       hasher: blockHasher,
     })
-    try {
-      const verified = check.assure(schema, block.value)
-      return verified
-    } catch (err) {
-      throw new Error(
-        `Did not find expected object at ${cid.toString()}: ${err}`,
-      )
-    }
+    return block.value
   }
 
   async has(cid: CID): Promise<boolean> {
