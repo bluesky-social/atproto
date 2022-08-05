@@ -8,7 +8,8 @@ import { sha256 } from '@adxp/crypto'
 
 import z from 'zod'
 import { schema } from '../../common/types'
-import { MstDiff } from './diff'
+import { DataDiff } from './diff'
+import { DataStore } from '../types'
 
 /**
  * This is an implementation of a Merkle Search Tree (MST)
@@ -62,7 +63,7 @@ export type MstOpts = {
   fanout: Fanout
 }
 
-export class MST {
+export class MST implements DataStore {
   blockstore: IpldStore
   fanout: Fanout
   entries: NodeEntry[] | null
@@ -285,7 +286,7 @@ export class MST {
 
   // Edits the value at the given key
   // Throws if the given key does not exist
-  async edit(key: string, value: CID): Promise<MST> {
+  async update(key: string, value: CID): Promise<MST> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
     if (found && found.isLeaf() && found.key === key) {
@@ -293,7 +294,7 @@ export class MST {
     }
     const prev = await this.atIndex(index - 1)
     if (prev && prev.isTree()) {
-      const updatedTree = await prev.edit(key, value)
+      const updatedTree = await prev.update(key, value)
       return this.updateEntry(index - 1, updatedTree)
     }
     throw new Error(`Could not find a record with key: ${key}`)
@@ -331,12 +332,12 @@ export class MST {
   // Finds the semantic changes between two MSTs
   // This uses a stateful diff tracker that will sometimes record encountered leaves
   // before removing them later when they're encountered in the other tree
-  async diff(other: MST): Promise<MstDiff> {
+  async diff(other: MST): Promise<DataDiff> {
     // we need to make sure both of our pointers are in date for diffing
     await this.getPointer()
     await other.getPointer()
 
-    const diff = new MstDiff()
+    const diff = new DataDiff()
     let leftI = 0
     let rightI = 0
     const leftEntries = await this.getEntries()
@@ -566,6 +567,54 @@ export class MST {
     )
     // if we can't find, we're on the end
     return maybeIndex >= 0 ? maybeIndex : entries.length
+  }
+
+  // List operations (partial tree traversal)
+  // -------------------
+
+  // @TODO write tests for these
+
+  // Walk tree starting at key
+  async *walkLeavesFrom(key: string): AsyncIterable<Leaf> {
+    const index = await this.findGtOrEqualLeafIndex(key)
+    const entries = await this.getEntries()
+    const prev = entries[index - 1]
+    if (prev && prev.isTree()) {
+      for await (const e of prev.walkLeavesFrom(key)) {
+        yield e
+      }
+    }
+    for (let i = index; i < entries.length; i++) {
+      const entry = entries[i]
+      if (entry.isLeaf()) {
+        yield entry
+      } else {
+        for await (const e of entry.walkLeavesFrom(key)) {
+          yield e
+        }
+      }
+    }
+  }
+
+  async list(from: string, count: number): Promise<Leaf[]> {
+    const vals: Leaf[] = []
+    for await (const leaf of this.walkLeavesFrom(from)) {
+      if (vals.length >= count) break
+      vals.push(leaf)
+    }
+    return vals
+  }
+
+  async listWithPrefix(
+    prefix: string,
+    count = Number.MAX_SAFE_INTEGER,
+  ): Promise<Leaf[]> {
+    const vals: Leaf[] = []
+    for await (const leaf of this.walkLeavesFrom(prefix)) {
+      if (vals.length >= count || !leaf.key.startsWith(prefix)) break
+      vals.push(leaf)
+    }
+    return vals
   }
 
   // Full tree traversal

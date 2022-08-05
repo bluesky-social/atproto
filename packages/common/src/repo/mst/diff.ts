@@ -1,9 +1,9 @@
 import { CID } from 'multiformats'
 
-export class MstDiff {
-  adds: Record<string, MstAdd> = {}
-  updates: Record<string, MstUpdate> = {}
-  deletes: Record<string, MstDelete> = {}
+export class DataDiff {
+  adds: Record<string, DataAdd> = {}
+  updates: Record<string, DataUpdate> = {}
+  deletes: Record<string, DataDelete> = {}
 
   recordAdd(key: string, cid: CID): void {
     const del = this.deletes[key]
@@ -33,7 +33,7 @@ export class MstDiff {
     }
   }
 
-  addDiff(diff: MstDiff) {
+  addDiff(diff: DataDiff) {
     for (const add of Object.values(diff.adds)) {
       this.recordAdd(add.key, add.cid)
     }
@@ -45,30 +45,30 @@ export class MstDiff {
     }
   }
 
-  addList(): MstAdd[] {
+  addList(): DataAdd[] {
     return Object.values(this.adds)
   }
 
-  updateList(): MstUpdate[] {
+  updateList(): DataUpdate[] {
     return Object.values(this.updates)
   }
 
-  deleteList(): MstDelete[] {
+  deleteList(): DataDelete[] {
     return Object.values(this.deletes)
   }
 }
 
-export type MstDelete = {
+export type DataDelete = {
   key: string
   cid: CID
 }
 
-export type MstAdd = {
+export type DataAdd = {
   key: string
   cid: CID
 }
 
-export type MstUpdate = {
+export type DataUpdate = {
   key: string
   prev: CID
   cid: CID

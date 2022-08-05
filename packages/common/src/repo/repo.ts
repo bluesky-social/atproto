@@ -9,6 +9,8 @@ import {
   Commit,
   schema,
   UpdateData,
+  BatchWrite,
+  DataStore,
 } from './types'
 import { DID } from '../common/types'
 import * as check from '../common/check'
@@ -17,20 +19,20 @@ import { streamToArray } from '../common/util'
 import CidSet from './cid-set'
 import * as auth from '@adxp/auth'
 import * as service from '../network/service'
-import * as delta from './delta'
 import { AuthStore } from '@adxp/auth'
 import { MST } from './mst'
+import Collection from './collection'
 
 export class Repo implements CarStreamable {
   blockstore: IpldStore
-  data: MST
+  data: DataStore
   cid: CID
   did: DID
   authStore: auth.AuthStore | null
 
   constructor(params: {
     blockstore: IpldStore
-    data: MST
+    data: DataStore
     cid: CID
     did: DID
     authStore: auth.AuthStore | null
@@ -93,81 +95,96 @@ export class Repo implements CarStreamable {
     })
   }
 
-  static async fromCarFile(
-    buf: Uint8Array,
-    store: IpldStore,
-    emit?: (evt: delta.Event) => Promise<void>,
-    authStore?: auth.AuthStore,
-  ) {
-    const car = await CarReader.fromBytes(buf)
+  // static async fromCarFile(
+  //   buf: Uint8Array,
+  //   store: IpldStore,
+  //   emit?: (evt: delta.Event) => Promise<void>,
+  //   authStore?: auth.AuthStore,
+  // ) {
+  //   const car = await CarReader.fromBytes(buf)
 
-    const roots = await car.getRoots()
-    if (roots.length !== 1) {
-      throw new Error(`Expected one root, got ${roots.length}`)
-    }
-    const root = roots[0]
+  //   const roots = await car.getRoots()
+  //   if (roots.length !== 1) {
+  //     throw new Error(`Expected one root, got ${roots.length}`)
+  //   }
+  //   const root = roots[0]
 
-    for await (const block of car.blocks()) {
-      await store.putBytes(block.cid, block.bytes)
-    }
+  //   for await (const block of car.blocks()) {
+  //     await store.putBytes(block.cid, block.bytes)
+  //   }
 
-    const repo = await Repo.load(store, root, authStore)
-    await repo.verifySetOfUpdates(null, repo.cid, emit)
-    return repo
+  //   const repo = await Repo.load(store, root, authStore)
+  //   await repo.verifySetOfUpdates(null, repo.cid, emit)
+  //   return repo
+  // }
+
+  getCollection(name: string): Collection {
+    return new Collection(this, name)
   }
 
-  // ROOT OPERATIONS
-  // -----------
-
-  // arrow fn to preserve scope
-  updateRootForNamespace =
-    (namespaceId: string) =>
-    async (update: UpdateData): Promise<void> => {
-      const namespace = this.namespaces[namespaceId]
-      if (!namespace) {
-        throw new Error(
-          `Tried to update namespace root for a namespace that doesnt exist: ${namespaceId}`,
-        )
-      }
-      // if a new namespace, make sure we add the structural nodes
-      const newCids = update.newCids
-      if (this.namespaceCids[namespaceId] === undefined) {
-        newCids
-          .add(namespace.cid)
-          .add(namespace.posts.cid)
-          .add(namespace.interactions.cid)
-      }
-      this.namespaceCids[namespaceId] = namespace.cid
-      await this.updateRoot({
-        ...update,
-        namespace: namespaceId,
-        newCids,
-      })
-    }
-
-  updateRoot = async (update: UpdateData): Promise<void> => {
+  // The repo is mutable & things can change while you perform an operation
+  // Ensure that the root of the repo has not changed so that you don't get local branching
+  async safeCommit(
+    mutation: (data: DataStore) => Promise<DataStore>,
+  ): Promise<void> {
     if (this.authStore === null) {
       throw new Error('No keypair provided. Repo is read-only.')
     }
-    const newCids = update.newCids
-    const tokenCid = await this.ucanForOperation(update)
-    newCids.add(tokenCid)
+    const currentCommit = this.cid
+    const updatedData = await mutation(this.data)
+    const tokenCid = await this.ucanForOperation({} as any) // @TODO get an actual token
+    const dataCid = await updatedData.save()
     const root: RepoRoot = {
       did: this.did,
-      prev: this.cid,
-      new_cids: newCids.toList(),
+      prev: currentCommit,
       auth_token: tokenCid,
-      namespaces: this.namespaceCids,
-      relationships: this.relationships.cid,
+      data: dataCid,
     }
     const rootCid = await this.blockstore.put(root)
     const commit: Commit = {
       root: rootCid,
       sig: await this.authStore.sign(rootCid.bytes),
     }
-    this.cid = await this.blockstore.put(commit)
+    const commitCid = await this.blockstore.put(commit)
+    // If the root of the repo has changed, retry
+    if (!this.cid.equals(currentCommit)) {
+      return this.safeCommit(mutation)
+    }
+    this.cid = commitCid
+    this.data = updatedData
   }
 
+  async batchWrite(writes: BatchWrite[]) {
+    this.safeCommit(async (data: DataStore) => {
+      for (const write of writes) {
+        // @TODO verify collection & key constraints
+        const dataKey = write.collection + '/' + write.key
+        let valueCid: CID | undefined
+        if (write.value) {
+          valueCid = await this.put(write.value)
+        }
+        if (write.action === 'create') {
+          if (!valueCid) {
+            throw new Error('No value given for create operation')
+          }
+          data = await data.add(dataKey, valueCid)
+        } else if (write.action === 'update') {
+          if (!valueCid) {
+            throw new Error('No value given for update operation')
+          }
+          data = await data.update(dataKey, valueCid)
+        } else if (write.action === 'del') {
+          data = await data.delete(dataKey)
+        } else {
+          throw new Error(`Invalid write action: ${write.action}`)
+        }
+      }
+      return data
+    })
+  }
+
+  // ROOT OPERATIONS
+  // -----------
   async getCommit(): Promise<Commit> {
     return this.blockstore.get(this.cid, schema.commit)
   }
@@ -175,53 +192,6 @@ export class Repo implements CarStreamable {
   async getRoot(): Promise<RepoRoot> {
     const commit = await this.getCommit()
     return this.blockstore.get(commit.root, schema.repoRoot)
-  }
-
-  async loadRoot(cid: CID): Promise<void> {
-    this.cid = cid
-    const root = await this.getRoot()
-    this.did = root.did
-    this.namespaceCids = root.namespaces
-    this.namespaces = {}
-    this.relationships = await Relationships.load(
-      this.blockstore,
-      root.relationships,
-    )
-  }
-
-  // NAMESPACE API
-  // -----------
-
-  async createNamespace(id: string): Promise<Namespace> {
-    if (this.namespaceCids[id] !== undefined) {
-      throw new Error(`Namespace already exists for id: ${id}`)
-    }
-    const namespace = await Namespace.create(this.blockstore)
-    namespace.onUpdate = this.updateRootForNamespace(id)
-    this.namespaces[id] = namespace
-    return namespace
-  }
-
-  async loadOrCreateNamespace(id: string): Promise<Namespace> {
-    if (this.namespaces[id]) {
-      return this.namespaces[id]
-    }
-    const cid = this.namespaceCids[id]
-    if (!cid) {
-      return this.createNamespace(id)
-    }
-    const namespace = await Namespace.load(this.blockstore, cid)
-    namespace.onUpdate = this.updateRootForNamespace(id)
-    this.namespaces[id] = namespace
-    return namespace
-  }
-
-  async runOnNamespace<T>(
-    id: string,
-    fn: (store: Namespace) => Promise<T>,
-  ): Promise<T> {
-    const namespace = await this.loadOrCreateNamespace(id)
-    return fn(namespace)
   }
 
   // IPLD STORE PASS THROUGHS

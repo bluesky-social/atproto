@@ -1,7 +1,7 @@
 import MST, { countPrefixLen } from '../src/repo/mst/mst'
 
 import * as util from './_util'
-import { IpldStore, MstAdd, MstDelete, MstUpdate } from '../src'
+import { IpldStore, DataAdd, DataUpdate, DataDelete } from '../src'
 import { CID } from 'multiformats'
 
 describe('Merkle Search Tree', () => {
@@ -37,7 +37,7 @@ describe('Merkle Search Tree', () => {
     const edited: [string, CID][] = []
     for (const entry of toEdit) {
       const newCid = await util.randomCid()
-      editedMst = await editedMst.edit(entry[0], newCid)
+      editedMst = await editedMst.update(entry[0], newCid)
       edited.push([entry[0], newCid])
     }
 
@@ -105,9 +105,9 @@ describe('Merkle Search Tree', () => {
     const toEdit = shuffled.slice(500, 600)
     const toDel = shuffled.slice(400, 500)
 
-    const expectedAdds: Record<string, MstAdd> = {}
-    const expectedUpdates: Record<string, MstUpdate> = {}
-    const expectedDels: Record<string, MstDelete> = {}
+    const expectedAdds: Record<string, DataAdd> = {}
+    const expectedUpdates: Record<string, DataUpdate> = {}
+    const expectedDels: Record<string, DataDelete> = {}
 
     for (const entry of toAdd) {
       toDiff = await toDiff.add(entry[0], entry[1])
@@ -115,7 +115,7 @@ describe('Merkle Search Tree', () => {
     }
     for (const entry of toEdit) {
       const updated = await util.randomCid()
-      toDiff = await toDiff.edit(entry[0], updated)
+      toDiff = await toDiff.update(entry[0], updated)
       expectedUpdates[entry[0]] = {
         key: entry[0],
         prev: entry[1],
