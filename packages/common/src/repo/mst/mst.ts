@@ -176,11 +176,8 @@ export class MST {
   async getLayer(): Promise<number> {
     if (this.layer !== null) return this.layer
     const entries = await this.getEntries()
-    const layer = await layerForEntries(entries, this.fanout)
-    if (!layer) {
-      throw new Error('Could not find layer for tree')
-    }
-    this.layer = layer
+    this.layer = await layerForEntries(entries, this.fanout)
+    if (!this.layer) this.layer = 0
     return this.layer
   }
 

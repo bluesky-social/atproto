@@ -14,10 +14,8 @@ const strToTid = z
 const repoRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
-  new_cids: z.array(common.cid),
   auth_token: common.cid,
-  relationships: common.cid,
-  namespaces: z.record(common.cid),
+  data: common.cid,
 })
 export type RepoRoot = z.infer<typeof repoRoot>
 
