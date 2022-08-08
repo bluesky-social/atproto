@@ -3,8 +3,8 @@ import { DidableKey } from './ucans'
 
 import { adxSemantics, parseAdxResource } from './semantics'
 import { MONTH_IN_SEC, YEAR_IN_SEC } from './consts'
-import { Signer } from './types'
-import { writeCap } from './capabilities'
+import { CapWithProof, Signer } from './types'
+import { vaguerCap, writeCap } from './capabilities'
 
 export class AuthStore implements Signer {
   protected keypair: DidableKey
@@ -58,7 +58,7 @@ export class AuthStore implements Signer {
     return keypair.sign(data)
   }
 
-  async findUcan(cap: ucan.Capability): Promise<ucan.Ucan | null> {
+  async findProof(cap: ucan.Capability): Promise<ucan.DelegationChain | null> {
     const ucanStore = await this.getUcanStore()
     // we only handle adx caps right now
     const resource = parseAdxResource(cap.with)
@@ -67,7 +67,13 @@ export class AuthStore implements Signer {
       ucanStore.findWithCapability(await this.did(), cap, resource.did),
     )
     if (!res) return null
-    return res.ucan
+    return res
+  }
+
+  async findUcan(cap: ucan.Capability): Promise<ucan.Ucan | null> {
+    const chain = await this.findProof(cap)
+    if (chain === null) return null
+    return chain.ucan
   }
 
   async hasUcan(cap: ucan.Capability): Promise<boolean> {
@@ -89,6 +95,51 @@ export class AuthStore implements Signer {
       .withLifetimeInSeconds(lifetime)
       .delegateCapability(cap, ucanStore)
       .build()
+  }
+
+  async createUcanForCaps(
+    audience: string,
+    caps: ucan.Capability[],
+    lifetime = MONTH_IN_SEC,
+  ): Promise<ucan.Ucan> {
+    const proofs: CapWithProof[] = []
+    const encodedTokens = new Set()
+    for (const cap of caps) {
+      const proof = await this.vaguestProofForCap(cap)
+      if (proof === null) {
+        throw new Error(`Could not find a ucan for capability: ${cap.with}`)
+      }
+      // avoid duplicate proofs
+      const token = ucan.encode(proof.prf.ucan)
+      if (!encodedTokens.has(token)) {
+        encodedTokens.add(token)
+        proofs.push(proof)
+      }
+    }
+
+    const keypair = await this.getKeypair()
+
+    const builder = ucan
+      .createBuilder()
+      .issuedBy(keypair)
+      .toAudience(audience)
+      .withLifetimeInSeconds(lifetime)
+
+    for (const prf of proofs) {
+      builder.delegateCapability(prf.cap, prf.prf, adxSemantics)
+    }
+
+    return builder.build()
+  }
+
+  async vaguestProofForCap(cap: ucan.Capability): Promise<CapWithProof | null> {
+    const prf = await this.findProof(cap)
+    if (prf === null) return null
+    const vauger = vaguerCap(cap)
+    if (vauger === null) return { cap, prf }
+    const vaugerPrf = await this.vaguestProofForCap(vauger)
+    if (vaugerPrf === null) return { cap, prf }
+    return vaugerPrf
   }
 
   async createAwakeProof(

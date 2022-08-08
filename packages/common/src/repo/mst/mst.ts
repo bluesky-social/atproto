@@ -10,6 +10,7 @@ import z from 'zod'
 import { schema } from '../../common/types'
 import { DataDiff } from './diff'
 import { DataStore } from '../types'
+import { BlockWriter } from '@ipld/car/api'
 
 /**
  * This is an implementation of a Merkle Search Tree (MST)
@@ -671,6 +672,17 @@ export class MST implements DataStore {
   async leafCount(): Promise<number> {
     const leaves = await this.leaves()
     return leaves.length
+  }
+
+  async writeToCarStream(car: BlockWriter): Promise<void> {
+    for await (const entry of this.walk()) {
+      if (entry.isTree()) {
+        const pointer = await entry.getPointer()
+        await this.blockstore.addToCar(car, pointer)
+      } else {
+        await this.blockstore.addToCar(car, entry.value)
+      }
+    }
   }
 
   // Matching Leaf interface

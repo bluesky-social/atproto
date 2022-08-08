@@ -106,4 +106,5 @@ export interface DataStore {
   listWithPrefix(from: string, count?: number): Promise<DataValue[]>
   diff(other: DataStore): Promise<DataDiff>
   save(): Promise<CID>
+  writeToCarStream(car: BlockWriter): Promise<void>
 }

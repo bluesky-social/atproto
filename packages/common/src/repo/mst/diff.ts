@@ -1,3 +1,4 @@
+import * as auth from '@adxp/auth'
 import { CID } from 'multiformats'
 
 export class DataDiff {
@@ -56,11 +57,25 @@ export class DataDiff {
   deleteList(): DataDelete[] {
     return Object.values(this.deletes)
   }
-}
 
-export type DataDelete = {
-  key: string
-  cid: CID
+  updatedKeys(): string[] {
+    const keys = [
+      ...Object.keys(this.adds),
+      ...Object.keys(this.updates),
+      ...Object.keys(this.deletes),
+    ]
+    return [...new Set(keys)]
+  }
+
+  neededCapabilities(rootDid: string): auth.ucans.Capability[] {
+    return this.updatedKeys().map((key) => {
+      const split = key.split('/')
+      const tid = split[1]
+      if (tid === undefined) throw new Error(`Invalid record id: ${key}`)
+      const collection = split.slice(0, -1).join('/')
+      return auth.writeCap(rootDid, collection, tid)
+    })
+  }
 }
 
 export type DataAdd = {
@@ -71,5 +86,10 @@ export type DataAdd = {
 export type DataUpdate = {
   key: string
   prev: CID
+  cid: CID
+}
+
+export type DataDelete = {
+  key: string
   cid: CID
 }

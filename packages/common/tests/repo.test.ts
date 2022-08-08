@@ -1,6 +1,6 @@
 import * as auth from '@adxp/auth'
 
-import Repo from '../src/repo/index'
+import { Repo } from '../src/repo'
 import IpldStore from '../src/blockstore/ipld-store'
 
 import * as util from './_util'
