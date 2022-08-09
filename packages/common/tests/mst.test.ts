@@ -159,7 +159,7 @@ describe('Merkle Search Tree', () => {
     }
   })
 
-  // Special Cases
+  // Special Cases (these are made for fanout 32)
   // ------------
 
   // These are some tricky things that can come up that may not be included in a randomized tree

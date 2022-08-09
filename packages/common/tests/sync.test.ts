@@ -1,54 +1,9 @@
 import * as auth from '@adxp/auth'
-import { MST, Repo } from '../src/repo'
+import { Repo } from '../src/repo'
 import IpldStore from '../src/blockstore/ipld-store'
 
+import * as fixtures from './fixtures'
 import * as util from './_util'
-
-const posts = [
-  { name: 'post1' },
-  { name: 'post2' },
-  { name: 'post3' },
-  { name: 'post4' },
-  { name: 'post5' },
-  { name: 'post6' },
-  { name: 'post7' },
-  { name: 'post8' },
-]
-
-const likes = [
-  { name: 'like1' },
-  { name: 'like2' },
-  { name: 'like3' },
-  { name: 'like4' },
-  { name: 'like5' },
-  { name: 'like6' },
-  { name: 'like7' },
-  { name: 'like8' },
-]
-
-const morePosts = [
-  { name: 'post9' },
-  { name: 'post10' },
-  { name: 'post11' },
-  { name: 'post12' },
-  { name: 'post13' },
-  { name: 'post14' },
-  { name: 'post15' },
-  { name: 'post16' },
-  { name: 'post17' },
-]
-
-const moreLikes = [
-  { name: 'like9' },
-  { name: 'like10' },
-  { name: 'like11' },
-  { name: 'like12' },
-  { name: 'like13' },
-  { name: 'like14' },
-  { name: 'like15' },
-  { name: 'like16' },
-  { name: 'like17' },
-]
 
 describe('Sync', () => {
   let aliceBlockstore, bobBlockstore: IpldStore
@@ -79,11 +34,11 @@ describe('Sync', () => {
 
   it('syncs a repo that is starting from scratch', async () => {
     const postsColl = aliceRepo.getCollection('bsky/posts')
-    for (const post of posts) {
+    for (const post of fixtures.posts) {
       await postsColl.createRecord(post)
     }
     const likesColl = aliceRepo.getCollection('bsky/likes')
-    for (const like of likes) {
+    for (const like of fixtures.likes) {
       await likesColl.createRecord(like)
     }
     // data = await util.fillRepo(aliceRepo, namespaceId, 150, 10, 50)

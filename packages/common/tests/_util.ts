@@ -84,70 +84,44 @@ export const generateBulkFollows = (count: number): Follow[] => {
   return follows
 }
 
-export type RepoData = {
-  posts: Record<string, string>
-  interactions: Record<string, string>
-  follows: Record<string, Follow>
+export const generateObject = (): Record<string, string> => {
+  return {
+    name: randomStr(50),
+  }
 }
 
-// export const fillRepo = async (
-//   repo: Repo,
-//   namespaceId: string,
-//   postsCount: number,
-//   interCount: number,
-//   followCount: number,
-// ): Promise<RepoData> => {
-//   const data: RepoData = {
-//     posts: {},
-//     interactions: {},
-//     follows: {},
-//   }
-//   await repo.runOnNamespace(namespaceId, async (namespace) => {
-//     for (let i = 0; i < postsCount; i++) {
-//       const tid = await TID.next()
-//       const content = randomStr(10)
-//       const cid = await repo.put(content)
-//       await namespace.posts.addEntry(tid, cid)
-//       data.posts[tid.toString()] = content
-//     }
-//     for (let i = 0; i < interCount; i++) {
-//       const tid = await TID.next()
-//       const content = randomStr(10)
-//       const cid = await repo.put(content)
-//       await namespace.interactions.addEntry(tid, cid)
-//       data.interactions[tid.toString()] = content
-//     }
-//   })
-//   for (let i = 0; i < followCount; i++) {
-//     const follow = randomFollow()
-//     await repo.relationships.follow(follow.did, follow.username)
-//     data.follows[follow.did] = follow
-//   }
-//   return data
-// }
+export type CollectionData = Record<string, unknown>
+export type RepoData = Record<string, CollectionData>
 
-// export const checkRepo = async (
-//   repo: Repo,
-//   namespaceId: string,
-//   data: RepoData,
-// ): Promise<void> => {
-//   await repo.runOnNamespace(namespaceId, async (namespace) => {
-//     for (const tid of Object.keys(data.posts)) {
-//       const cid = await namespace.posts.getEntry(TID.fromStr(tid))
-//       const actual = cid ? await repo.get(cid, schema.string) : null
-//       expect(actual).toEqual(data.posts[tid])
-//     }
-//     for (const tid of Object.keys(data.interactions)) {
-//       const cid = await namespace.interactions.getEntry(TID.fromStr(tid))
-//       const actual = cid ? await repo.get(cid, schema.string) : null
-//       expect(actual).toEqual(data.interactions[tid])
-//     }
-//   })
-//   for (const did of Object.keys(data.follows)) {
-//     const actual = await repo.relationships.getFollow(did)
-//     expect(actual).toEqual(data.follows[did])
-//   }
-// }
+export const fillRepo = async (
+  repo: Repo,
+  itemsPerCollection: Record<string, number>,
+): Promise<RepoData> => {
+  const repoData: RepoData = {}
+  for (const collName of Object.keys(itemsPerCollection)) {
+    const collData: CollectionData = {}
+    const coll = await repo.getCollection(collName)
+    const count = itemsPerCollection[collName]
+    for (let i = 0; i < count; i++) {
+      const object = generateObject()
+      const tid = await coll.createRecord(object)
+      collData[tid.toString()] = object
+    }
+    repoData[collName] = collData
+  }
+  return repoData
+}
+
+export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
+  for (const collName of Object.keys(data)) {
+    const coll = await repo.getCollection(collName)
+    const collData = data[collName]
+    for (const tid of Object.keys(collData)) {
+      const record = await coll.getRecord(TID.fromStr(tid))
+      expect(record).toEqual(collData[tid])
+    }
+  }
+}
 
 export const shuffle = <T>(arr: T[]): T[] => {
   let toShuffle = [...arr]
