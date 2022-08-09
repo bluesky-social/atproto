@@ -92,7 +92,7 @@ describe('aic client', () => {
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
     // console.log('post init data', resp.status, resp.data)
-    expect(resp.status == 200).toBeTruthy()
+    expect(resp.status).toEqual(200)
   })
 
   it('post an update bad signature', async () => {
@@ -102,7 +102,7 @@ describe('aic client', () => {
 
     const resp = await axios.post(url, data, { headers })
     // console.log('update bad signature', resp.status, resp.data)
-    expect(resp.status == 200).toBeTruthy()
+    expect(resp.status).toEqual(200)
   })
 
   it('valid update 1 add d', async () => {
@@ -121,7 +121,7 @@ describe('aic client', () => {
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
     // console.log('post an update last tid', resp.status, resp.data, 'for', data)
-    expect(resp.status == 200).toBeTruthy()
+    expect(resp.status).toEqual(200)
   })
   it('valid update 2 del b', async () => {
     const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
@@ -139,7 +139,7 @@ describe('aic client', () => {
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
     // console.log('post an update last tid', resp.status, resp.data, 'for', data)
-    expect(resp.status == 200).toBeTruthy()
+    expect(resp.status).toEqual(200)
   })
 
   it('valid update 3 put each level', async () => {
@@ -158,7 +158,7 @@ describe('aic client', () => {
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
     // console.log('post an update last tid', resp.status, resp.data, 'for', data)
-    expect(resp.status == 200).toBeTruthy()
+    expect(resp.status).toEqual(200)
   })
 
   it('invalid update 4 reject fork', async () => {
@@ -177,6 +177,6 @@ describe('aic client', () => {
     const headers = { 'Content-Type': 'application/json' }
     const resp = await axios.post(url, data, { headers })
     // console.log('post an update last tid', resp.status, resp.data, 'for', data)
-    expect(resp.status == 200).toBeTruthy()
+    expect(resp.status).toEqual(200)
   })
 })

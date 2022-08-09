@@ -74,12 +74,12 @@ export const updateTick = async (
     // this means the consortium data base has been corupted
     return { error: 'bad signature: stored tick' }
   }
-  if (stored_tick.key != key.did()) {
+  if (stored_tick.key !== key.did()) {
     // the consortium should not update a tick signed by a difrent consortium
     // this logic may get more complicated if the consortium is mid key rotation
     return { error: 'mismatch: consortium key, stored tick key' }
   }
-  if (stored_tick.did != did) {
+  if (stored_tick.did !== did) {
     // databace index is coruptend
     return {
       error: 'stored tick not for did',
@@ -155,7 +155,7 @@ const updateExistingValidatedDid = async (
   }
   if (
     'key' in candidateDiff &&
-    typeof candidateDiff.key == 'string' &&
+    typeof candidateDiff.key === 'string' &&
     !validateKeyInDocForDiffs(candidateDiff.key, stored_tick.diffs)
   ) {
     return { error: 'diff signed by key not in did doc' }
@@ -239,7 +239,7 @@ export const tickToDidDoc = async (
   if (!valid) {
     return { error: 'tick has bad signature' }
   }
-  if (tick.key != consortiumDid) {
+  if (tick.key !== consortiumDid) {
     return { error: 'not signed by consortium' }
   }
   const doc = await diffsToDidDoc(tick.diffs, key, asOf)
@@ -301,6 +301,9 @@ const patch = (doc: Document, patches: Patch[]): Document => {
     const [op, path, value] = p
     let node = new_doc as Value
     for (const segment of path.slice(0, -1)) {
+      if (op !== 'put' && op !== 'del') {
+        throw Error("unrecognised op")
+      }
       if (typeof node !== 'object' || node === null) {
         if (op === 'put') {
           node = {}

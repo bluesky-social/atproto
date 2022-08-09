@@ -1,11 +1,10 @@
 import * as crypto from '@adxp/crypto'
 import { database, Database } from './db'
 import { server } from './server'
+import {dbLoc, port} from './config'
 
 const run = async () => {
   // create or open db
-  const dbLoc = 'adx.sqlite'
-  const port = 26979
   const db: Database = await database(dbLoc)
   console.log('Database:', dbLoc)
 

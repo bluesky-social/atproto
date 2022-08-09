@@ -78,7 +78,7 @@ router.all('/tid', async (req, res) => {
 router.get(
   '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
   async function (req, res) {
-    // AIC git
+    // AIC get
     //
     // Retreve the latest tick from the databace
     // pass the tick and curent tid to the aic lib for signing

@@ -13,7 +13,7 @@
     "verify:fix": "yarn prettier:fix && yarn lint:fix",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
-    "low": "node dist/low_pid.js"
+    "low": "node dist/scripts/low_pid.js"
   },
   "dependencies": {
     "@adxp/crypto": "*",
