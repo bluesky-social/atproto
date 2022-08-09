@@ -25,11 +25,12 @@ export const generateBulkTids = (count: number): TID[] => {
 
 export const generateBulkTidMapping = async (
   count: number,
+  blockstore: IpldStore = fakeStore,
 ): Promise<IdMapping> => {
   const ids = generateBulkTids(count)
   const obj: IdMapping = {}
   for (const id of ids) {
-    obj[id.toString()] = await randomCid()
+    obj[id.toString()] = await randomCid(blockstore)
   }
   return obj
 }
@@ -162,14 +163,14 @@ export const shuffle = <T>(arr: T[]): T[] => {
 export const writeMstLog = async (filename: string, tree: MST) => {
   let log = ''
   for await (const entry of tree.walk()) {
-    if (entry.isLeaf()) return true
+    if (entry.isLeaf()) continue
     const layer = await entry.getLayer()
     log += `Layer ${layer}: ${entry.pointer}\n`
     log += '--------------\n'
     const entries = await entry.getEntries()
     for (const e of entries) {
       if (e.isLeaf()) {
-        log += `Key: ${e.key}\n`
+        log += `Key: ${e.key} (${e.value})\n`
       } else {
         log += `Subtree: ${e.pointer}\n`
       }

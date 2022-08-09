@@ -87,8 +87,7 @@ export class Repo {
 
   static async fromCarFile(
     buf: Uint8Array,
-    store: IpldStore,
-    // emit?: (evt: delta.Event) => Promise<void>,
+    blockstore: IpldStore,
     authStore?: auth.AuthStore,
   ) {
     const car = await CarReader.fromBytes(buf)
@@ -100,17 +99,31 @@ export class Repo {
     const root = roots[0]
 
     for await (const block of car.blocks()) {
-      await store.putBytes(block.cid, block.bytes)
+      await blockstore.putBytes(block.cid, block.bytes)
     }
 
-    const repo = await Repo.load(store, root, authStore)
-    // await repo.verifySetOfUpdates(null, repo.cid, emit)
+    const repo = await Repo.load(blockstore, root, authStore)
     await repo.verifySetOfUpdates(null, repo.cid)
     return repo
   }
 
   getCollection(name: string): Collection {
-    return new Collection(this, name)
+    if (name.length > 256) {
+      throw new Error(
+        `Collection names may not be longer than 256 chars: ${name}`,
+      )
+    }
+    const parts = name.split('/')
+    if (parts.length > 2) {
+      throw new Error(
+        `Only one level of namespacing allowed in collection names: ${name}`,
+      )
+    } else if (parts.length < 2) {
+      throw new Error(
+        `Expected at least one level of namespacing in collection name: ${name}`,
+      )
+    }
+    return new Collection(this, parts[0], parts[1])
   }
 
   // The repo is mutable & things can change while you perform an operation
@@ -288,7 +301,6 @@ export class Repo {
     const diff = await prevRepo.data.diff(this.data)
     const neededCaps = diff.neededCapabilities(this.did)
     for (const cap of neededCaps) {
-      console.log('cap: ', cap)
       await auth.verifyAdxUcan(token, this.did, cap)
     }
 
@@ -306,20 +318,6 @@ export class Repo {
     // check next commits
     await this.verifySetOfUpdates(oldCommit, root.prev)
   }
-
-  // async missingCids(): Promise<CidSet> {
-  //   const missing = new CidSet()
-  //   for (const cid of Object.values(this.namespaceCids)) {
-  //     if (await this.blockstore.has(cid)) {
-  //       const namespace = await Namespace.load(this.blockstore, cid)
-  //       const namespaceMissing = await namespace.missingCids()
-  //       missing.addSet(namespaceMissing)
-  //     } else {
-  //       missing.add(cid)
-  //     }
-  //   }
-  //   return missing
-  // }
 
   // CAR FILES
   // -----------
@@ -381,6 +379,7 @@ export class Repo {
     newestCommit: CID,
     oldestCommit: CID | null,
   ): Promise<void> {
+    // console.log('RUNNING: ', newestCommit)
     // @TODO write this
     if (newestCommit.equals(oldestCommit)) return
     const commit = await this.blockstore.get(newestCommit, schema.commit)
@@ -408,8 +407,9 @@ export class Repo {
     const currData = await MST.fromCid(this.blockstore, root.data)
     const prevData = await MST.fromCid(this.blockstore, prevRoot.data)
     const diff = await prevData.diff(currData)
-    const newCids = diff.cidsForDiff()
-    await Promise.all(newCids.map((cid) => this.blockstore.addToCar(car, cid)))
+    await Promise.all(
+      diff.newCids().map((cid) => this.blockstore.addToCar(car, cid)),
+    )
 
     await this.writeCommitsToCarStream(car, root.prev, oldestCommit)
   }

@@ -3,15 +3,21 @@ import TID from './tid'
 
 export class Collection {
   repo: Repo
-  name: string
+  namespace: string
+  dataset: string
 
-  constructor(repo: Repo, name: string) {
+  constructor(repo: Repo, namespace: string, dataset: string) {
     this.repo = repo
-    this.name = name
+    this.namespace = namespace
+    this.dataset = dataset
   }
 
   dataIdForRecord(tid: TID): string {
-    return `${this.name}/${tid.toString()}`
+    return `${this.name()}/${tid.toString()}`
+  }
+
+  name(): string {
+    return `${this.namespace}/${this.dataset}`
   }
 
   async getRecord(tid: TID): Promise<unknown> {
@@ -23,7 +29,7 @@ export class Collection {
   }
 
   async listRecords(count?: number): Promise<unknown[]> {
-    const vals = await this.repo.data.listWithPrefix(this.name, count)
+    const vals = await this.repo.data.listWithPrefix(this.name(), count)
     return Promise.all(
       vals.map((val) => this.repo.blockstore.getUnchecked(val.value)),
     )

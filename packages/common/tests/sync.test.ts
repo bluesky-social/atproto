@@ -90,33 +90,30 @@ describe('Sync', () => {
     const car = await aliceRepo.getFullHistory()
     bobRepo = await Repo.fromCarFile(car, bobBlockstore)
     const bobPosts = await bobRepo.getCollection('bsky/posts').listRecords()
-    const bobLikes = await bobRepo.getCollection('bsky/likes').listRecords()
     expect(bobPosts).toEqual(posts)
+    const bobLikes = await bobRepo.getCollection('bsky/likes').listRecords()
     expect(bobLikes).toEqual(likes)
     // await util.checkRepo(repoBob, namespaceId, data)
   })
 
-  // it('syncs a repo that is behind', async () => {
-  //   // add more to alice's repo & have bob catch up
-  //   const data2 = await util.fillRepo(aliceRepo, namespaceId, 300, 10, 50)
-  //   const diff = await aliceRepo.getDiffCar(repoBob.cid)
-  //   await repoBob.loadCarRoot(diff)
+  it('syncs a repo that is behind', async () => {
+    // add more to alice's repo & have bob catch up
+    const postsColl = aliceRepo.getCollection('bsky/posts')
+    for (const post of morePosts) {
+      await postsColl.createRecord(post)
+    }
+    const likesColl = aliceRepo.getCollection('bsky/likes')
+    for (const like of moreLikes) {
+      await likesColl.createRecord(like)
+    }
+    // const data2 = await util.fillRepo(aliceRepo, namespaceId, 300, 10, 50)
+    const diff = await aliceRepo.getDiffCar(bobRepo.cid)
+    await bobRepo.loadCarRoot(diff)
 
-  //   const allData = {
-  //     posts: {
-  //       ...data.posts,
-  //       ...data2.posts,
-  //     },
-  //     interactions: {
-  //       ...data.interactions,
-  //       ...data2.interactions,
-  //     },
-  //     follows: {
-  //       ...data.follows,
-  //       ...data2.follows,
-  //     },
-  //   }
-
-  //   await util.checkRepo(repoBob, namespaceId, allData)
-  // })
+    const bobPosts = await bobRepo.getCollection('bsky/posts').listRecords()
+    expect(bobPosts).toEqual([...posts, ...morePosts])
+    const bobLikes = await bobRepo.getCollection('bsky/likes').listRecords()
+    expect(bobLikes).toEqual([...likes, ...moreLikes])
+    // await util.checkRepo(repoBob, namespaceId, allData)
+  })
 })

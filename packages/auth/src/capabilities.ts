@@ -3,10 +3,14 @@ import * as ucan from './ucans/index'
 
 export const writeCap = (
   did: string,
+  namespace?: string,
   collection?: string,
   record?: string,
 ): ucan.Capability => {
   let resource = did
+  if (namespace) {
+    resource += '/' + namespace
+  }
   if (collection) {
     resource += '/' + collection
   }

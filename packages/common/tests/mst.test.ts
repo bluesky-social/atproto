@@ -1,7 +1,14 @@
-import MST, { countPrefixLen } from '../src/repo/mst/mst'
+import {
+  MST,
+  countPrefixLen,
+  DataAdd,
+  DataUpdate,
+  DataDelete,
+} from '../src/repo/mst'
 
+import { IpldStore } from '../src/blockstore/ipld-store'
 import * as util from './_util'
-import { IpldStore, DataAdd, DataUpdate, DataDelete } from '../src'
+
 import { CID } from 'multiformats'
 
 describe('Merkle Search Tree', () => {
@@ -13,7 +20,7 @@ describe('Merkle Search Tree', () => {
   beforeAll(async () => {
     blockstore = IpldStore.createInMemory()
     mst = await MST.create(blockstore)
-    mapping = await util.generateBulkTidMapping(1000)
+    mapping = await util.generateBulkTidMapping(1000, blockstore)
     shuffled = util.shuffle(Object.entries(mapping))
   })
 
@@ -101,7 +108,9 @@ describe('Merkle Search Tree', () => {
   it('diffs', async () => {
     let toDiff = mst
 
-    const toAdd = Object.entries(await util.generateBulkTidMapping(100))
+    const toAdd = Object.entries(
+      await util.generateBulkTidMapping(100, blockstore),
+    )
     const toEdit = shuffled.slice(500, 600)
     const toDel = shuffled.slice(400, 500)
 
@@ -136,6 +145,18 @@ describe('Merkle Search Tree', () => {
     expect(diff.adds).toEqual(expectedAdds)
     expect(diff.updates).toEqual(expectedUpdates)
     expect(diff.deletes).toEqual(expectedDels)
+
+    // ensure we correctly report all added CIDs
+    for await (const entry of toDiff.walk()) {
+      let cid: CID
+      if (entry.isTree()) {
+        cid = await entry.getPointer()
+      } else {
+        cid = entry.value
+      }
+      const found = (await blockstore.has(cid)) || diff.cidsRight.has(cid)
+      expect(found).toBeTruthy()
+    }
   })
 
   // Special Cases
@@ -172,7 +193,7 @@ describe('Merkle Search Tree', () => {
     ]
     const layer1 = ['3j6hnk65jju2t', '3j6hnk65kve2t']
     const layer2 = '3j6hnk65jng2t'
-    mst = await MST.create(blockstore)
+    mst = await MST.create(blockstore, [], { fanout: 32 })
     const cid = await util.randomCid()
     for (const tid of layer0) {
       mst = await mst.add(tid, cid)
@@ -207,7 +228,7 @@ describe('Merkle Search Tree', () => {
     const layer0 = ['3j6hnk65jis2t', '3j6hnk65kvz2t']
     const layer1 = ['3j6hnk65jju2t', '3j6hnk65l222t']
     const layer2 = '3j6hnk65jng2t'
-    mst = await MST.create(blockstore)
+    mst = await MST.create(blockstore, [], { fanout: 32 })
     const cid = await util.randomCid()
     for (const tid of layer0) {
       mst = await mst.add(tid, cid)

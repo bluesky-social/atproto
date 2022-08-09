@@ -57,7 +57,7 @@ export type NodeData = z.infer<typeof nodeDataSchema>
 
 export type NodeEntry = MST | Leaf
 
-const DEFAULT_MST_FANOUT = 32
+const DEFAULT_MST_FANOUT = 16
 export type Fanout = 2 | 8 | 16 | 32 | 64
 export type MstOpts = {
   layer: number
@@ -339,8 +339,8 @@ export class MST implements DataStore {
     await other.getPointer()
 
     const diff = new DataDiff()
-    diff.recordAddedCid(this.pointer)
-    diff.recordDeletedCid(other.pointer)
+    diff.recordAddedCid(other.pointer)
+    diff.recordDeletedCid(this.pointer)
 
     let leftI = 0
     let rightI = 0
@@ -629,11 +629,12 @@ export class MST implements DataStore {
     yield this
     const entries = await this.getEntries()
     for (const entry of entries) {
-      yield entry
       if (entry.isTree()) {
         for await (const e of entry.walk()) {
           yield e
         }
+      } else {
+        yield entry
       }
     }
   }

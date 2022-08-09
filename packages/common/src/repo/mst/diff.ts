@@ -85,10 +85,10 @@ export class DataDiff {
     }
 
     for (const cid of diff.cidsLeft.toList()) {
-      this.recordAddedCid(cid)
+      this.recordDeletedCid(cid)
     }
     for (const cid of diff.cidsRight.toList()) {
-      this.recordDeletedCid(cid)
+      this.recordAddedCid(cid)
     }
   }
 
@@ -104,7 +104,7 @@ export class DataDiff {
     return Object.values(this.deletes)
   }
 
-  cidsForDiff(): CID[] {
+  newCids(): CID[] {
     return this.cidsRight.toList()
   }
 
@@ -119,11 +119,11 @@ export class DataDiff {
 
   neededCapabilities(rootDid: string): auth.ucans.Capability[] {
     return this.updatedKeys().map((key) => {
-      const split = key.split('/')
-      const tid = split[1]
-      if (tid === undefined) throw new Error(`Invalid record id: ${key}`)
-      const collection = split.slice(0, -1).join('/')
-      return auth.writeCap(rootDid, collection, tid)
+      const parts = key.split('/')
+      if (parts.length !== 3) {
+        throw new Error(`Invalid record id: ${key}`)
+      }
+      return auth.writeCap(rootDid, parts[0], parts[1], parts[2])
     })
   }
 }

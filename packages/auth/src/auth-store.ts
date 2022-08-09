@@ -119,14 +119,14 @@ export class AuthStore implements Signer {
 
     const keypair = await this.getKeypair()
 
-    const builder = ucan
+    let builder = ucan
       .createBuilder()
       .issuedBy(keypair)
       .toAudience(audience)
       .withLifetimeInSeconds(lifetime)
 
     for (const prf of proofs) {
-      builder.delegateCapability(prf.cap, prf.prf, adxSemantics)
+      builder = builder.delegateCapability(prf.cap, prf.prf, adxSemantics)
     }
 
     return builder.build()
