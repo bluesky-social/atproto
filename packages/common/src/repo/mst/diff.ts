@@ -1,48 +1,94 @@
 import * as auth from '@adxp/auth'
 import { CID } from 'multiformats'
+import CidSet from '../cid-set'
+import { Leaf, NodeEntry } from './mst'
 
 export class DataDiff {
   adds: Record<string, DataAdd> = {}
   updates: Record<string, DataUpdate> = {}
   deletes: Record<string, DataDelete> = {}
 
-  recordAdd(key: string, cid: CID): void {
-    const del = this.deletes[key]
-    if (del) {
-      delete this.deletes[key]
-      if (!del.cid.equals(cid)) {
-        this.recordUpdate(key, del.cid, cid)
+  cidsLeft: CidSet = new CidSet()
+  cidsRight: CidSet = new CidSet()
+
+  recordAdd(entry: NodeEntry): void {
+    let cid
+    if (entry.isLeaf()) {
+      cid = entry.value
+      const key = entry.key
+      const del = this.deletes[key]
+      if (del) {
+        delete this.deletes[key]
+        if (!del.cid.equals(cid)) {
+          this.recordUpdate(key, del.cid, cid)
+        }
+      } else {
+        this.adds[key] = { key, cid }
       }
     } else {
-      this.adds[key] = { key, cid }
+      cid = entry.pointer
     }
+    this.recordAddedCid(cid)
   }
 
   recordUpdate(key: string, prev: CID, cid: CID): void {
     this.updates[key] = { key, prev, cid }
+    this.recordAddedCid(cid)
+    this.recordDeletedCid(prev)
   }
 
-  recordDelete(key: string, cid: CID): void {
-    const add = this.adds[key]
-    if (add) {
-      delete this.adds[key]
-      if (!add.cid.equals(cid)) {
-        this.recordUpdate(key, cid, add.cid)
+  recordDelete(entry: NodeEntry): void {
+    let cid
+    if (entry.isLeaf()) {
+      cid = entry.value
+      const key = entry.key
+      const add = this.adds[key]
+      if (add) {
+        delete this.adds[key]
+        if (!add.cid.equals(cid)) {
+          this.recordUpdate(key, cid, add.cid)
+        }
+      } else {
+        this.deletes[key] = { key, cid }
       }
     } else {
-      this.deletes[key] = { key, cid }
+      cid = entry.pointer
+    }
+    this.recordDeletedCid(cid)
+  }
+
+  recordAddedCid(cid: CID): void {
+    if (this.cidsLeft.has(cid)) {
+      this.cidsLeft.delete(cid)
+    } else {
+      this.cidsRight.add(cid)
+    }
+  }
+
+  recordDeletedCid(cid: CID): void {
+    if (this.cidsRight.has(cid)) {
+      this.cidsRight.delete(cid)
+    } else {
+      this.cidsLeft.add(cid)
     }
   }
 
   addDiff(diff: DataDiff) {
-    for (const add of Object.values(diff.adds)) {
-      this.recordAdd(add.key, add.cid)
+    for (const add of diff.addList()) {
+      this.recordAdd(new Leaf(add.key, add.cid))
     }
-    for (const update of Object.values(diff.updates)) {
+    for (const update of diff.updateList()) {
       this.recordUpdate(update.key, update.prev, update.cid)
     }
-    for (const del of Object.values(diff.deletes)) {
-      this.recordDelete(del.key, del.cid)
+    for (const del of diff.deleteList()) {
+      this.recordDelete(new Leaf(del.key, del.cid))
+    }
+
+    for (const cid of diff.cidsLeft.toList()) {
+      this.recordAddedCid(cid)
+    }
+    for (const cid of diff.cidsRight.toList()) {
+      this.recordDeletedCid(cid)
     }
   }
 
@@ -56,6 +102,10 @@ export class DataDiff {
 
   deleteList(): DataDelete[] {
     return Object.values(this.deletes)
+  }
+
+  cidsForDiff(): CID[] {
+    return this.cidsRight.toList()
   }
 
   updatedKeys(): string[] {

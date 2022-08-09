@@ -103,7 +103,7 @@ export interface DataStore {
   delete(key: string): Promise<DataStore>
   get(key: string): Promise<CID | null>
   list(from: string, count: number): Promise<DataValue[]>
-  listWithPrefix(from: string, count?: number): Promise<DataValue[]>
+  listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
   diff(other: DataStore): Promise<DataDiff>
   save(): Promise<CID>
   writeToCarStream(car: BlockWriter): Promise<void>

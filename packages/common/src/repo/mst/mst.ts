@@ -193,7 +193,7 @@ export class MST implements DataStore {
     if (alreadyHas) return pointer
     const entries = await this.getEntries()
     const data = serializeNodeData(entries)
-    await this.blockstore.put(data as any)
+    const put = await this.blockstore.put(data as any)
     for (const entry of entries) {
       if (entry.isTree()) {
         await entry.save()
@@ -339,6 +339,9 @@ export class MST implements DataStore {
     await other.getPointer()
 
     const diff = new DataDiff()
+    diff.recordAddedCid(this.pointer)
+    diff.recordDeletedCid(other.pointer)
+
     let leftI = 0
     let rightI = 0
     const leftEntries = await this.getEntries()
@@ -352,22 +355,22 @@ export class MST implements DataStore {
       } else if (!left) {
         // if no left, record a right leaf as an add, or add all leaves in the right subtree
         if (right.isLeaf()) {
-          diff.recordAdd(right.key, right.value)
+          diff.recordAdd(right)
         } else {
-          const allChildren = await right.leaves()
-          for (const leaf of allChildren) {
-            diff.recordAdd(leaf.key, leaf.value)
+          const allChildren = await right.allNodes()
+          for (const entry of allChildren) {
+            diff.recordAdd(entry)
           }
         }
         rightI++
       } else if (!right) {
         // if no right, record a left leaf as an del, or del all leaves in the left subtree
         if (left.isLeaf()) {
-          diff.recordDelete(left.key, left.value)
+          diff.recordDelete(left)
         } else {
           const allChildren = await left.leaves()
-          for (const leaf of allChildren) {
-            diff.recordDelete(leaf.key, leaf.value)
+          for (const entry of allChildren) {
+            diff.recordDelete(entry)
           }
         }
         leftI++
@@ -382,10 +385,10 @@ export class MST implements DataStore {
           leftI++
           rightI++
         } else if (left.key < right.key) {
-          diff.recordDelete(left.key, left.value)
+          diff.recordDelete(left)
           leftI++
         } else {
-          diff.recordAdd(right.key, right.value)
+          diff.recordAdd(right)
           rightI++
         }
       } else if (left.isTree() && right.isTree()) {
@@ -398,10 +401,10 @@ export class MST implements DataStore {
         rightI++
       } else if (left.isLeaf() && right.isTree()) {
         // if one is a leaf & one is a tree, record the leaf and increment that side
-        diff.recordDelete(left.key, left.value)
+        diff.recordDelete(left)
         leftI++
       } else if (left.isTree() && right.isLeaf()) {
-        diff.recordAdd(right.key, right.value)
+        diff.recordAdd(right)
         rightI++
       }
     }
@@ -623,6 +626,7 @@ export class MST implements DataStore {
 
   // Walk full tree & emit nodes, consumer can bail at any point by returning false
   async *walk(): AsyncIterable<NodeEntry> {
+    yield this
     const entries = await this.getEntries()
     for (const entry of entries) {
       yield entry
@@ -673,6 +677,8 @@ export class MST implements DataStore {
     const leaves = await this.leaves()
     return leaves.length
   }
+
+  // Sync Protocol
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
     for await (const entry of this.walk()) {

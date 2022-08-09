@@ -22,20 +22,34 @@ export class Collection {
     return this.repo.blockstore.getUnchecked(cid)
   }
 
+  async listRecords(count?: number): Promise<unknown[]> {
+    const vals = await this.repo.data.listWithPrefix(this.name, count)
+    return Promise.all(
+      vals.map((val) => this.repo.blockstore.getUnchecked(val.value)),
+    )
+  }
+
   async createRecord(record: unknown): Promise<TID> {
     const tid = TID.next()
     const cid = await this.repo.blockstore.put(record as any) // @TODO add a check here
-    await this.repo.data.add(this.dataIdForRecord(tid), cid)
+
+    await this.repo.safeCommit(async (data) => {
+      return data.add(this.dataIdForRecord(tid), cid)
+    })
     return tid
   }
 
   async updateRecord(tid: TID, record: unknown): Promise<void> {
     const cid = await this.repo.blockstore.put(record as any) // @TODO add a check ehre
-    await this.repo.data.add(this.dataIdForRecord(tid), cid)
+    await this.repo.safeCommit(async (data) => {
+      return data.add(this.dataIdForRecord(tid), cid)
+    })
   }
 
   async deleteRecord(tid: TID): Promise<void> {
-    await this.repo.data.delete(this.dataIdForRecord(tid))
+    await this.repo.safeCommit(async (data) => {
+      return data.delete(this.dataIdForRecord(tid))
+    })
   }
 }
 

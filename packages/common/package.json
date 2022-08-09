@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
-    "test": "jest tests/mst.test.ts",
+    "test": "jest tests/sync.test.ts",
     "bench": "jest --config jest.bench.config.js ",
     "bench:profile": "node --inspect ../../node_modules/.bin/jest --config jest.bench.config.js",
     "prettier": "prettier --check src/",

@@ -67,8 +67,8 @@ export const adxCapability = (
 }
 export interface AdxResourcePointer {
   did: string
+  namespace: string
   collection: string
-  schema: string
   record: string
 }
 
@@ -78,24 +78,24 @@ export const parseAdxResource = (
 ): AdxResourcePointer | null => {
   if (pointer.scheme !== 'adx') return null
 
-  const parts = pointer.hierPart.split('|')
-  const [did, collection] = parts
-  let [schema, record] = parts.slice(2)
+  const parts = pointer.hierPart.split('/')
+  const [did, namespace] = parts
+  let [collection, record] = parts.slice(2)
   if (!did) return null
+  if (!namespace) return null
+  if (namespace === '*') {
+    collection = '*'
+  }
   if (!collection) return null
   if (collection === '*') {
-    schema = '*'
-  }
-  if (!schema) return null
-  if (schema === '*') {
     record = '*'
   }
   if (!record) return null
 
   return {
     did,
+    namespace,
     collection,
-    schema,
     record,
   }
 }
@@ -108,11 +108,11 @@ export const adxSemantics: ucans.DelegationSemantics = {
     if (parent == null || child == null) return false
     if (parent.did !== child.did) return false
 
+    if (parent.namespace === '*') return true
+    if (parent.namespace !== child.namespace) return false
+
     if (parent.collection === '*') return true
     if (parent.collection !== child.collection) return false
-
-    if (parent.schema === '*') return true
-    if (parent.schema !== child.schema) return false
 
     if (parent.record === '*') return true
 

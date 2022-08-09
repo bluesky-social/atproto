@@ -85,28 +85,29 @@ export class Repo {
     })
   }
 
-  // static async fromCarFile(
-  //   buf: Uint8Array,
-  //   store: IpldStore,
-  //   emit?: (evt: delta.Event) => Promise<void>,
-  //   authStore?: auth.AuthStore,
-  // ) {
-  //   const car = await CarReader.fromBytes(buf)
+  static async fromCarFile(
+    buf: Uint8Array,
+    store: IpldStore,
+    // emit?: (evt: delta.Event) => Promise<void>,
+    authStore?: auth.AuthStore,
+  ) {
+    const car = await CarReader.fromBytes(buf)
 
-  //   const roots = await car.getRoots()
-  //   if (roots.length !== 1) {
-  //     throw new Error(`Expected one root, got ${roots.length}`)
-  //   }
-  //   const root = roots[0]
+    const roots = await car.getRoots()
+    if (roots.length !== 1) {
+      throw new Error(`Expected one root, got ${roots.length}`)
+    }
+    const root = roots[0]
 
-  //   for await (const block of car.blocks()) {
-  //     await store.putBytes(block.cid, block.bytes)
-  //   }
+    for await (const block of car.blocks()) {
+      await store.putBytes(block.cid, block.bytes)
+    }
 
-  //   const repo = await Repo.load(store, root, authStore)
-  //   await repo.verifySetOfUpdates(null, repo.cid, emit)
-  //   return repo
-  // }
+    const repo = await Repo.load(store, root, authStore)
+    // await repo.verifySetOfUpdates(null, repo.cid, emit)
+    await repo.verifySetOfUpdates(null, repo.cid)
+    return repo
+  }
 
   getCollection(name: string): Collection {
     return new Collection(this, name)
@@ -287,6 +288,7 @@ export class Repo {
     const diff = await prevRepo.data.diff(this.data)
     const neededCaps = diff.neededCapabilities(this.did)
     for (const cap of neededCaps) {
+      console.log('cap: ', cap)
       await auth.verifyAdxUcan(token, this.did, cap)
     }
 
@@ -366,10 +368,10 @@ export class Repo {
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    await this.blockstore.addToCar(car, this.cid)
     const commit = await this.blockstore.get(this.cid, schema.commit)
-    await this.blockstore.addToCar(car, commit.root)
     const root = await this.blockstore.get(commit.root, schema.repoRoot)
+    await this.blockstore.addToCar(car, this.cid)
+    await this.blockstore.addToCar(car, commit.root)
     await this.blockstore.addToCar(car, root.auth_token)
     await this.data.writeToCarStream(car)
   }
@@ -380,22 +382,36 @@ export class Repo {
     oldestCommit: CID | null,
   ): Promise<void> {
     // @TODO write this
-    // if (newestCommit.equals(oldestCommit)) return
-    // const commit = await this.blockstore.get(newestCommit, schema.commit)
-    // const { new_cids, prev } = await this.blockstore.get(
-    //   commit.root,
-    //   schema.repoRoot,
-    // )
-    // await this.blockstore.addToCar(car, newestCommit)
-    // await this.blockstore.addToCar(car, commit.root)
-    // await Promise.all(new_cids.map((cid) => this.blockstore.addToCar(car, cid)))
-    // if (!prev) {
-    //   if (oldestCommit === null) {
-    //     return
-    //   }
-    //   throw new Error(`Could not find commit in repo history: $${oldestCommit}`)
-    // }
-    // await this.writeCommitsToCarStream(car, prev, oldestCommit)
+    if (newestCommit.equals(oldestCommit)) return
+    const commit = await this.blockstore.get(newestCommit, schema.commit)
+    const root = await this.blockstore.get(commit.root, schema.repoRoot)
+
+    await this.blockstore.addToCar(car, newestCommit)
+    await this.blockstore.addToCar(car, commit.root)
+    await this.blockstore.addToCar(car, root.auth_token)
+
+    // if the root does not have a predecessor
+    // & we still have not found the commit we're searching for, then bail
+    if (!root.prev && oldestCommit !== null) {
+      throw new Error(`Could not find commit in repo history: $${oldestCommit}`)
+    }
+    // if we were supposed to walk from the beginning, then just write the whole genesis
+    // data store to the car and we're done
+    if (!root.prev) {
+      await this.data.writeToCarStream(car)
+      return
+    }
+    // otherwise write the new cids from the last commit and recurse
+
+    const prevCommit = await this.blockstore.get(root.prev, schema.commit)
+    const prevRoot = await this.blockstore.get(prevCommit.root, schema.repoRoot)
+    const currData = await MST.fromCid(this.blockstore, root.data)
+    const prevData = await MST.fromCid(this.blockstore, prevRoot.data)
+    const diff = await prevData.diff(currData)
+    const newCids = diff.cidsForDiff()
+    await Promise.all(newCids.map((cid) => this.blockstore.addToCar(car, cid)))
+
+    await this.writeCommitsToCarStream(car, root.prev, oldestCommit)
   }
 }
 
