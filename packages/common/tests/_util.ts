@@ -43,10 +43,6 @@ export const keysFromMappings = (mappings: IdMapping[]): TID[] => {
   return mappings.map(keysFromMapping).flat()
 }
 
-// export const checkInclusionInTable = (tids: TID[], table: SSTable): boolean => {
-//   return tids.map((tid) => table.hasEntry(tid)).every((has) => has === true)
-// }
-
 export const randomStr = (len: number): string => {
   let result = ''
   const CHARS = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
@@ -56,32 +52,15 @@ export const randomStr = (len: number): string => {
   return result
 }
 
-export const randomDid = (): DID => {
-  const result = randomStr(48)
-  return `did:key:${result}`
-}
-
-export const generateBulkDids = (count: number): DID[] => {
-  const dids: DID[] = []
-  for (let i = 0; i < count; i++) {
-    dids.push(randomDid())
+export const shuffle = <T>(arr: T[]): T[] => {
+  let toShuffle = [...arr]
+  let shuffled: T[] = []
+  while (toShuffle.length > 0) {
+    const index = Math.floor(Math.random() * toShuffle.length)
+    shuffled.push(toShuffle[index])
+    toShuffle.splice(index, 1)
   }
-  return dids
-}
-
-export const randomFollow = (): Follow => {
-  return {
-    did: randomDid(),
-    username: randomStr(8),
-  }
-}
-
-export const generateBulkFollows = (count: number): Follow[] => {
-  const follows: Follow[] = []
-  for (let i = 0; i < count; i++) {
-    follows.push(randomFollow())
-  }
-  return follows
+  return shuffled
 }
 
 export const generateObject = (): Record<string, string> => {
@@ -90,22 +69,67 @@ export const generateObject = (): Record<string, string> => {
   }
 }
 
+// Mass repo mutations & checking
+// -------------------------------
+
+export const testCollections = ['bsky/posts', 'bsky/likes']
+
 export type CollectionData = Record<string, unknown>
 export type RepoData = Record<string, CollectionData>
 
 export const fillRepo = async (
   repo: Repo,
-  itemsPerCollection: Record<string, number>,
+  itemsPerCollection: number,
 ): Promise<RepoData> => {
   const repoData: RepoData = {}
-  for (const collName of Object.keys(itemsPerCollection)) {
+  for (const collName of testCollections) {
     const collData: CollectionData = {}
     const coll = await repo.getCollection(collName)
-    const count = itemsPerCollection[collName]
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < itemsPerCollection; i++) {
       const object = generateObject()
       const tid = await coll.createRecord(object)
       collData[tid.toString()] = object
+    }
+    repoData[collName] = collData
+  }
+  return repoData
+}
+
+export const editRepo = async (
+  repo: Repo,
+  prevData: RepoData,
+  params: {
+    adds?: number
+    updates?: number
+    deletes?: number
+  },
+): Promise<RepoData> => {
+  const { adds = 0, updates = 0, deletes = 0 } = params
+  const repoData: RepoData = {}
+  for (const collName of testCollections) {
+    const collData = prevData[collName]
+    const shuffled = shuffle(Object.entries(collData))
+    const coll = await repo.getCollection(collName)
+
+    for (let i = 0; i < adds; i++) {
+      const object = generateObject()
+      const tid = await coll.createRecord(object)
+      collData[tid.toString()] = object
+    }
+
+    const toUpdate = shuffled.slice(0, updates)
+    for (let i = 0; i < toUpdate.length; i++) {
+      const object = generateObject()
+      const tid = TID.fromStr(toUpdate[i][0])
+      await coll.updateRecord(tid, object)
+      collData[tid.toString()] = object
+    }
+
+    const toDelete = shuffled.slice(updates, deletes)
+    for (let i = 0; i < toDelete.length; i++) {
+      const tid = TID.fromStr(toDelete[i][0])
+      await coll.deleteRecord(tid)
+      delete collData[tid.toString()]
     }
     repoData[collName] = collData
   }
@@ -123,16 +147,8 @@ export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
   }
 }
 
-export const shuffle = <T>(arr: T[]): T[] => {
-  let toShuffle = [...arr]
-  let shuffled: T[] = []
-  while (toShuffle.length > 0) {
-    const index = Math.floor(Math.random() * toShuffle.length)
-    shuffled.push(toShuffle[index])
-    toShuffle.splice(index, 1)
-  }
-  return shuffled
-}
+// Logging
+// ----------------
 
 export const writeMstLog = async (filename: string, tree: MST) => {
   let log = ''

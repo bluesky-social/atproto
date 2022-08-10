@@ -8,8 +8,7 @@ describe('Repo', () => {
   let blockstore: IpldStore
   let authStore: auth.AuthStore
   let repo: Repo
-  let postData: util.RepoData
-  let likeData: util.RepoData
+  let repoData: util.RepoData
 
   it('creates repo', async () => {
     blockstore = IpldStore.createInMemory()
@@ -18,14 +17,18 @@ describe('Repo', () => {
     repo = await Repo.create(blockstore, await authStore.did(), authStore)
   })
 
-  it('adds content within a given collection', async () => {
-    postData = await util.fillRepo(repo, { 'bsky/posts': 100 })
-    await util.checkRepo(repo, postData)
+  it('adds content collections', async () => {
+    repoData = await util.fillRepo(repo, 100)
+    await util.checkRepo(repo, repoData)
   })
 
-  it('adds content within another collection', async () => {
-    likeData = await util.fillRepo(repo, { 'bsky/likes': 100 })
-    await util.checkRepo(repo, likeData)
+  it('edits and deletes content', async () => {
+    repoData = await util.editRepo(repo, repoData, {
+      adds: 20,
+      updates: 20,
+      deletes: 20,
+    })
+    await util.checkRepo(repo, repoData)
   })
 
   it('adds a valid signature to commit', async () => {
@@ -45,7 +48,6 @@ describe('Repo', () => {
   it('loads from blockstore', async () => {
     const reloadedRepo = await Repo.load(blockstore, repo.cid, authStore)
 
-    await util.checkRepo(reloadedRepo, postData)
-    await util.checkRepo(reloadedRepo, likeData)
+    await util.checkRepo(reloadedRepo, repoData)
   })
 })

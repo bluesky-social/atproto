@@ -48,7 +48,7 @@ export class Collection {
   async updateRecord(tid: TID, record: unknown): Promise<void> {
     const cid = await this.repo.blockstore.put(record as any) // @TODO add a check ehre
     await this.repo.safeCommit(async (data) => {
-      return data.add(this.dataIdForRecord(tid), cid)
+      return data.update(this.dataIdForRecord(tid), cid)
     })
   }
 

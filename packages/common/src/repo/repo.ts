@@ -9,7 +9,7 @@ import { streamToArray } from '../common/util'
 import * as auth from '@adxp/auth'
 import * as service from '../network/service'
 import { AuthStore } from '@adxp/auth'
-import { MST } from './mst'
+import { DataDiff, MST } from './mst'
 import Collection from './collection'
 
 export class Repo {
@@ -277,21 +277,23 @@ export class Repo {
 
   // loads car files, verifies structure, signature & auth on each commit
   // emits semantic updates to the structure starting from oldest first
-  async loadAndVerifyDiff(buf: Uint8Array): Promise<void> {
+  async loadAndVerifyDiff(buf: Uint8Array): Promise<DataDiff> {
     const root = await this.loadCar(buf)
-    await this.verifySetOfUpdates(this.cid, root)
+    const diff = await this.verifySetOfUpdates(this.cid, root)
     await this.loadRoot(root)
+    return diff
   }
 
   async verifySetOfUpdates(
     oldCommit: CID | null,
     recentCommit: CID,
-  ): Promise<void> {
+  ): Promise<DataDiff> {
     const commitPath = await this.commitPath(oldCommit, recentCommit)
     if (commitPath === null) {
       throw new Error('Could not find shared history')
     }
-    if (commitPath.length === 0) return
+    let fullDiff = new DataDiff()
+    if (commitPath.length === 0) return fullDiff
     let prevRepo = await Repo.load(this.blockstore, commitPath[0])
     for (const commit of commitPath.slice(1)) {
       const nextRepo = await Repo.load(this.blockstore, commit)
@@ -308,6 +310,8 @@ export class Repo {
         await auth.verifyAdxUcan(token, this.did(), cap)
       }
 
+      fullDiff.addDiff(diff)
+
       // verify signature matches repo root + auth token
       // const commit = await toRepo.getCommit()
       const validSig = await auth.verifySignature(
@@ -322,6 +326,7 @@ export class Repo {
       }
       prevRepo = nextRepo
     }
+    return fullDiff
   }
 
   async commitPath(

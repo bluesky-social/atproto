@@ -7,6 +7,7 @@ import * as util from './_util'
 describe('Sync', () => {
   let aliceBlockstore, bobBlockstore: IpldStore
   let aliceRepo: Repo
+  let repoData: util.RepoData
 
   beforeAll(async () => {
     aliceBlockstore = IpldStore.createInMemory()
@@ -30,26 +31,22 @@ describe('Sync', () => {
   let bobRepo: Repo
 
   it('syncs a repo that is starting from scratch', async () => {
-    const repoData = await util.fillRepo(aliceRepo, {
-      'bsky/posts': 100,
-      'bsky/likes': 100,
-    })
-    const before = Date.now()
+    repoData = await util.fillRepo(aliceRepo, 100)
     const car = await aliceRepo.getFullHistory()
-    const madeCar = Date.now()
     bobRepo = await Repo.fromCarFile(car, bobBlockstore)
-    const readCar = Date.now()
+    // const diff = await bobRepo.verifySetOfUpdates(null, bobRepo.cid)
     await util.checkRepo(bobRepo, repoData)
   })
 
   it('syncs a repo that is behind', async () => {
     // add more to alice's repo & have bob catch up
-    const moreData = await util.fillRepo(aliceRepo, {
-      'bsky/posts': 20,
-      'bsky/likes': 20,
+    repoData = await util.editRepo(aliceRepo, repoData, {
+      adds: 20,
+      updates: 20,
+      deletes: 20,
     })
-    const diff = await aliceRepo.getDiffCar(bobRepo.cid)
-    await bobRepo.loadCarRoot(diff)
-    await util.checkRepo(bobRepo, moreData)
+    const diffCar = await aliceRepo.getDiffCar(bobRepo.cid)
+    // const diff = await bobRepo.loadAndVerifyDiff(diffCar)
+    await util.checkRepo(bobRepo, repoData)
   })
 })
