@@ -1,17 +1,17 @@
 import * as auth from '@adxp/auth'
 
 import { Repo } from '../src/repo'
-import IpldStore from '../src/blockstore/ipld-store'
+import { MemoryBlockstore } from '../src/blockstore'
 import * as util from './_util'
 
 describe('Repo', () => {
-  let blockstore: IpldStore
+  let blockstore: MemoryBlockstore
   let authStore: auth.AuthStore
   let repo: Repo
   let repoData: util.RepoData
 
   it('creates repo', async () => {
-    blockstore = IpldStore.createInMemory()
+    blockstore = new MemoryBlockstore()
     authStore = await auth.MemoryStore.load()
     await authStore.claimFull()
     repo = await Repo.create(blockstore, await authStore.did(), authStore)

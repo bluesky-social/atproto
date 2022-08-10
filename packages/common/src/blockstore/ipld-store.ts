@@ -4,11 +4,8 @@ import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
 import { BlockWriter } from '@ipld/car/writer'
 
-import MemoryBlockstore from './memory-blockstore'
 import * as check from '../common/check'
 import * as util from '../common/util'
-import { BlockstoreI } from './types'
-import { PersistentBlockstore } from './persistent-blockstore'
 import { BlockReader } from '@ipld/car/api'
 import CidSet from '../repo/cid-set'
 
@@ -18,20 +15,11 @@ export type AllowedIpldVal =
   | AllowedIpldRecordVal
   | Record<string, AllowedIpldRecordVal>
 
-export class IpldStore {
-  rawBlockstore: BlockstoreI
-
-  constructor(rawBlockstore: BlockstoreI) {
-    this.rawBlockstore = rawBlockstore
-  }
-
-  static createInMemory(): IpldStore {
-    return new IpldStore(new MemoryBlockstore())
-  }
-
-  static createPersistent(location = 'blockstore'): IpldStore {
-    return new IpldStore(new PersistentBlockstore(location))
-  }
+export abstract class IpldStore {
+  abstract has(cid: CID): Promise<boolean>
+  abstract getBytes(cid: CID): Promise<Uint8Array>
+  abstract putBytes(cid: CID, bytes: Uint8Array): Promise<void>
+  abstract destroy(): Promise<void>
 
   async put(
     value: Record<string, AllowedIpldVal> | AllowedIpldVal,
@@ -67,10 +55,6 @@ export class IpldStore {
     return block.value
   }
 
-  async has(cid: CID): Promise<boolean> {
-    return this.rawBlockstore.has(cid)
-  }
-
   async isMissing(cid: CID): Promise<boolean> {
     const has = await this.has(cid)
     return !has
@@ -81,18 +65,6 @@ export class IpldStore {
       return this.isMissing(c)
     })
     return new CidSet(missing)
-  }
-
-  async getBytes(cid: CID): Promise<Uint8Array> {
-    return this.rawBlockstore.get(cid)
-  }
-
-  async putBytes(cid: CID, bytes: Uint8Array): Promise<void> {
-    return this.rawBlockstore.put(cid, bytes)
-  }
-
-  async destroy(): Promise<void> {
-    return this.rawBlockstore.destroy()
   }
 
   async addToCar(car: BlockWriter, cid: CID) {

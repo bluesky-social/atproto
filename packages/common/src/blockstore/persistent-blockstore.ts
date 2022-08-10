@@ -1,29 +1,29 @@
 import level from 'level'
 import { CID } from 'multiformats/cid'
+import IpldStore from './ipld-store'
 
-import { BlockstoreI } from './types'
-
-export class PersistentBlockstore implements BlockstoreI {
+export class PersistentBlockstore extends IpldStore {
   store: level.Level
 
   constructor(location = 'blockstore') {
+    super()
     this.store = new level.Level(location, {
       valueEncoding: 'view',
       compression: false,
     })
   }
 
-  async get(cid: CID): Promise<Uint8Array> {
+  async getBytes(cid: CID): Promise<Uint8Array> {
     return this.store.get(cid.toString(), { valueEncoding: 'view' })
   }
 
-  async put(cid: CID, bytes: Uint8Array): Promise<void> {
+  async putBytes(cid: CID, bytes: Uint8Array): Promise<void> {
     await this.store.put(cid.toString(), bytes, { valueEncoding: 'view' })
   }
 
   async has(cid: CID): Promise<boolean> {
     try {
-      await this.get(cid)
+      await this.getBytes(cid)
       return true
     } catch (_) {
       return false

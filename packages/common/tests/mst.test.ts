@@ -6,19 +6,19 @@ import {
   DataDelete,
 } from '../src/repo/mst'
 
-import { IpldStore } from '../src/blockstore/ipld-store'
+import { MemoryBlockstore } from '../src/blockstore'
 import * as util from './_util'
 
 import { CID } from 'multiformats'
 
 describe('Merkle Search Tree', () => {
-  let blockstore: IpldStore
+  let blockstore: MemoryBlockstore
   let mst: MST
   let mapping: Record<string, CID>
   let shuffled: [string, CID][]
 
   beforeAll(async () => {
-    blockstore = IpldStore.createInMemory()
+    blockstore = new MemoryBlockstore()
     mst = await MST.create(blockstore)
     mapping = await util.generateBulkTidMapping(1000, blockstore)
     shuffled = util.shuffle(Object.entries(mapping))

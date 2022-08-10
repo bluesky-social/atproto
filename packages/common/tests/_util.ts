@@ -1,14 +1,12 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store'
 import TID from '../src/repo/tid'
-import { Follow, IdMapping, schema } from '../src/repo/types'
-import { DID } from '../src/common/types'
-// import SSTable from '../src/repo/ss-table'
+import { IdMapping } from '../src/repo/types'
 import { Repo } from '../src/repo'
-import { MST } from '../src'
+import { MemoryBlockstore, MST } from '../src'
 import fs from 'fs'
 
-const fakeStore = IpldStore.createInMemory()
+const fakeStore = new MemoryBlockstore()
 
 export const randomCid = async (store: IpldStore = fakeStore): Promise<CID> => {
   const str = randomStr(50)
@@ -65,7 +63,7 @@ export const shuffle = <T>(arr: T[]): T[] => {
 
 export const generateObject = (): Record<string, string> => {
   return {
-    name: randomStr(50),
+    name: randomStr(100),
   }
 }
 

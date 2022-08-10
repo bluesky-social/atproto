@@ -1,20 +1,21 @@
 import { CID } from 'multiformats/cid'
-import { BlockstoreI } from './types'
+import IpldStore from './ipld-store'
 
-export class MemoryBlockstore implements BlockstoreI {
+export class MemoryBlockstore extends IpldStore {
   map: Map<string, Uint8Array>
 
   constructor() {
+    super()
     this.map = new Map()
   }
 
-  async get(k: CID): Promise<Uint8Array> {
+  async getBytes(k: CID): Promise<Uint8Array> {
     const v = this.map.get(k.toString())
     if (!v) throw new Error(`Not found: ${k.toString()}`)
     return v
   }
 
-  async put(k: CID, v: Uint8Array): Promise<void> {
+  async putBytes(k: CID, v: Uint8Array): Promise<void> {
     this.map.set(k.toString(), v)
   }
 

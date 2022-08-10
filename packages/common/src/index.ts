@@ -1,7 +1,4 @@
-export * from './blockstore/ipld-store'
-export * from './blockstore/memory-blockstore'
-export * from './blockstore/persistent-blockstore'
-
+export * from './blockstore'
 export * from './repo'
 
 export * from './microblog/index'
