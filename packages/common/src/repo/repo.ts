@@ -291,7 +291,7 @@ export class Repo {
     if (commitPath === null) {
       throw new Error('Could not find shared history')
     }
-    if (commitPath.length === null) return
+    if (commitPath.length === 0) return
     let prevRepo = await Repo.load(this.blockstore, commitPath[0])
     for (const commit of commitPath.slice(1)) {
       const nextRepo = await Repo.load(this.blockstore, commit)
@@ -374,7 +374,7 @@ export class Repo {
 
   async getDiffCar(to: CID | null): Promise<Uint8Array> {
     return this.openCar((car: BlockWriter) => {
-      return this.writeCommitsToCarStream(car, this.cid, to)
+      return this.writeCommitsToCarStream(car, to, this.cid)
     })
   }
 
@@ -402,40 +402,35 @@ export class Repo {
 
   async writeCommitsToCarStream(
     car: BlockWriter,
-    newestCommit: CID,
     oldestCommit: CID | null,
+    recentCommit: CID,
   ): Promise<void> {
-    if (newestCommit.equals(oldestCommit)) return
-    const commit = await this.blockstore.get(newestCommit, schema.commit)
-    const root = await this.blockstore.get(commit.root, schema.repoRoot)
-
-    await this.blockstore.addToCar(car, newestCommit)
-    await this.blockstore.addToCar(car, commit.root)
-    await this.blockstore.addToCar(car, root.auth_token)
-
-    // if the root does not have a predecessor
-    // & we still have not found the commit we're searching for, then bail
-    if (!root.prev && oldestCommit !== null) {
-      throw new Error(`Could not find commit in repo history: $${oldestCommit}`)
+    const commitPath = await this.commitPath(oldestCommit, recentCommit)
+    if (commitPath === null) {
+      throw new Error('Could not find shared history')
     }
-    // if we were supposed to walk from the beginning, then just write the whole genesis
-    // data store to the car and we're done
-    if (!root.prev) {
-      await this.data.writeToCarStream(car)
-      return
+    if (commitPath.length === 0) return
+    const firstHeadInPath = await Repo.load(this.blockstore, commitPath[0])
+    // handle the first commit
+    let prevHead: Repo | null =
+      firstHeadInPath.root.prev !== null
+        ? await Repo.load(this.blockstore, firstHeadInPath.root.prev)
+        : null
+    for (const commit of commitPath) {
+      const nextHead = await Repo.load(this.blockstore, commit)
+      await this.blockstore.addToCar(car, nextHead.cid)
+      await this.blockstore.addToCar(car, nextHead.commit.root)
+      await this.blockstore.addToCar(car, nextHead.root.auth_token)
+      if (prevHead === null) {
+        await nextHead.data.writeToCarStream(car)
+      } else {
+        const diff = await prevHead.data.diff(nextHead.data)
+        await Promise.all(
+          diff.newCids().map((cid) => this.blockstore.addToCar(car, cid)),
+        )
+      }
+      prevHead = nextHead
     }
-
-    // otherwise write the new cids from the last commit and recurse
-    const prevCommit = await this.blockstore.get(root.prev, schema.commit)
-    const prevRoot = await this.blockstore.get(prevCommit.root, schema.repoRoot)
-    const currData = await MST.load(this.blockstore, root.data)
-    const prevData = await MST.load(this.blockstore, prevRoot.data)
-    const diff = await prevData.diff(currData)
-    await Promise.all(
-      diff.newCids().map((cid) => this.blockstore.addToCar(car, cid)),
-    )
-
-    await this.writeCommitsToCarStream(car, root.prev, oldestCommit)
   }
 }
 

@@ -31,7 +31,7 @@ describe('Repo', () => {
   it('adds a valid signature to commit', async () => {
     const commit = await repo.getCommit()
     const verified = await auth.verifySignature(
-      repo.did,
+      repo.did(),
       commit.root.bytes,
       commit.sig,
     )
@@ -39,7 +39,7 @@ describe('Repo', () => {
   })
 
   it('sets correct DID', async () => {
-    expect(repo.did).toEqual(await authStore.did())
+    expect(repo.did()).toEqual(await authStore.did())
   })
 
   it('loads from blockstore', async () => {
