@@ -33,42 +33,28 @@ describe('Sync', () => {
   let bobRepo: Repo
 
   it('syncs a repo that is starting from scratch', async () => {
-    const postsColl = aliceRepo.getCollection('bsky/posts')
-    for (const post of fixtures.posts) {
-      await postsColl.createRecord(post)
-    }
-    const likesColl = aliceRepo.getCollection('bsky/likes')
-    for (const like of fixtures.likes) {
-      await likesColl.createRecord(like)
-    }
-    // data = await util.fillRepo(aliceRepo, namespaceId, 150, 10, 50)
+    const repoData = await util.fillRepo(aliceRepo, {
+      'bsky/posts': 200,
+      'bsky/likes': 200,
+    })
+    const before = Date.now()
     const car = await aliceRepo.getFullHistory()
+    const madeCar = Date.now()
     bobRepo = await Repo.fromCarFile(car, bobBlockstore)
-    const bobPosts = await bobRepo.getCollection('bsky/posts').listRecords()
-    expect(bobPosts).toEqual(posts)
-    const bobLikes = await bobRepo.getCollection('bsky/likes').listRecords()
-    expect(bobLikes).toEqual(likes)
-    // await util.checkRepo(repoBob, namespaceId, data)
+    const readCar = Date.now()
+    console.log('make car: ', (madeCar - before) / 1000)
+    console.log('read car: ', (readCar - madeCar) / 1000)
+    await util.checkRepo(bobRepo, repoData)
   })
 
-  it('syncs a repo that is behind', async () => {
-    // add more to alice's repo & have bob catch up
-    const postsColl = aliceRepo.getCollection('bsky/posts')
-    for (const post of morePosts) {
-      await postsColl.createRecord(post)
-    }
-    const likesColl = aliceRepo.getCollection('bsky/likes')
-    for (const like of moreLikes) {
-      await likesColl.createRecord(like)
-    }
-    // const data2 = await util.fillRepo(aliceRepo, namespaceId, 300, 10, 50)
-    const diff = await aliceRepo.getDiffCar(bobRepo.cid)
-    await bobRepo.loadCarRoot(diff)
-
-    const bobPosts = await bobRepo.getCollection('bsky/posts').listRecords()
-    expect(bobPosts).toEqual([...posts, ...morePosts])
-    const bobLikes = await bobRepo.getCollection('bsky/likes').listRecords()
-    expect(bobLikes).toEqual([...likes, ...moreLikes])
-    // await util.checkRepo(repoBob, namespaceId, allData)
-  })
+  // it('syncs a repo that is behind', async () => {
+  //   // add more to alice's repo & have bob catch up
+  //   const moreData = await util.fillRepo(aliceRepo, {
+  //     'bsky/posts': 20,
+  //     'bsky/likes': 20,
+  //   })
+  //   const diff = await aliceRepo.getDiffCar(bobRepo.cid)
+  //   await bobRepo.loadCarRoot(diff)
+  //   await util.checkRepo(bobRepo, moreData)
+  // })
 })

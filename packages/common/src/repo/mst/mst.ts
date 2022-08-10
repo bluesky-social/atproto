@@ -107,11 +107,7 @@ export class MST implements DataStore {
     return new MST(blockstore, fanout, pointer, entries, layer)
   }
 
-  static fromCid(
-    blockstore: IpldStore,
-    cid: CID,
-    opts?: Partial<MstOpts>,
-  ): MST {
+  static load(blockstore: IpldStore, cid: CID, opts?: Partial<MstOpts>): MST {
     const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     return new MST(blockstore, fanout, cid, null, layer)
   }
@@ -773,7 +769,7 @@ const deserializeNodeData = async (
   const entries: NodeEntry[] = []
   if (data.l !== null) {
     entries.push(
-      await MST.fromCid(blockstore, data.l, {
+      await MST.load(blockstore, data.l, {
         layer: layer ? layer - 1 : undefined,
         fanout,
       }),
@@ -786,7 +782,7 @@ const deserializeNodeData = async (
     lastKey = key
     if (entry.t !== null) {
       entries.push(
-        await MST.fromCid(blockstore, entry.t, {
+        await MST.load(blockstore, entry.t, {
           layer: layer ? layer - 1 : undefined,
           fanout,
         }),

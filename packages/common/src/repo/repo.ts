@@ -3,7 +3,6 @@ import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { RepoRoot, Commit, schema, BatchWrite, DataStore } from './types'
-import { DID } from '../common/types'
 import * as check from '../common/check'
 import IpldStore, { AllowedIpldVal } from '../blockstore/ipld-store'
 import { streamToArray } from '../common/util'
@@ -16,21 +15,24 @@ import Collection from './collection'
 export class Repo {
   blockstore: IpldStore
   data: DataStore
+  commit: Commit
+  root: RepoRoot
   cid: CID
-  did: DID
   authStore: auth.AuthStore | null
 
   constructor(params: {
     blockstore: IpldStore
     data: DataStore
+    commit: Commit
+    root: RepoRoot
     cid: CID
-    did: DID
     authStore: auth.AuthStore | null
   }) {
     this.blockstore = params.blockstore
     this.data = params.data
+    this.commit = params.commit
+    this.root = params.root
     this.cid = params.cid
-    this.did = params.did
     this.authStore = params.authStore
   }
 
@@ -48,14 +50,14 @@ export class Repo {
     const data = await MST.create(blockstore)
     const dataCid = await data.save()
 
-    const rootObj: RepoRoot = {
+    const root: RepoRoot = {
       did,
       prev: null,
       auth_token: tokenCid,
       data: dataCid,
     }
 
-    const rootCid = await blockstore.put(rootObj)
+    const rootCid = await blockstore.put(root)
     const commit: Commit = {
       root: rootCid,
       sig: await authStore.sign(rootCid.bytes),
@@ -66,8 +68,9 @@ export class Repo {
     return new Repo({
       blockstore,
       data,
+      commit,
+      root,
       cid,
-      did,
       authStore,
     })
   }
@@ -75,12 +78,13 @@ export class Repo {
   static async load(blockstore: IpldStore, cid: CID, authStore?: AuthStore) {
     const commit = await blockstore.get(cid, schema.commit)
     const root = await blockstore.get(commit.root, schema.repoRoot)
-    const data = await MST.fromCid(blockstore, root.data)
+    const data = await MST.load(blockstore, root.data)
     return new Repo({
       blockstore,
       data,
+      commit,
+      root,
       cid,
-      did: root.did,
       authStore: authStore || null,
     })
   }
@@ -88,6 +92,7 @@ export class Repo {
   static async fromCarFile(
     buf: Uint8Array,
     blockstore: IpldStore,
+    verifyAuthority = true,
     authStore?: auth.AuthStore,
   ) {
     const car = await CarReader.fromBytes(buf)
@@ -103,8 +108,14 @@ export class Repo {
     }
 
     const repo = await Repo.load(blockstore, root, authStore)
-    await repo.verifySetOfUpdates(null, repo.cid)
+    if (verifyAuthority) {
+      await repo.verifySetOfUpdates(null, repo.cid)
+    }
     return repo
+  }
+
+  did(): string {
+    return this.root.did
   }
 
   getCollection(name: string): Collection {
@@ -139,7 +150,7 @@ export class Repo {
     const tokenCid = await this.ucanForOperation(updatedData)
     const dataCid = await updatedData.save()
     const root: RepoRoot = {
-      did: this.did,
+      did: this.did(),
       prev: currentCommit,
       auth_token: tokenCid,
       data: dataCid,
@@ -201,7 +212,7 @@ export class Repo {
   async loadRoot(newRoot: CID): Promise<void> {
     const commit = await this.blockstore.get(newRoot, schema.commit)
     const root = await this.blockstore.get(commit.root, schema.repoRoot)
-    this.data = await MST.fromCid(this.blockstore, root.data)
+    this.data = await MST.load(this.blockstore, root.data)
     this.cid = newRoot
   }
 
@@ -224,9 +235,9 @@ export class Repo {
       throw new Error('No keypair provided. Repo is read-only.')
     }
     const diff = await this.data.diff(newData)
-    const neededCaps = diff.neededCapabilities(this.did)
+    const neededCaps = diff.neededCapabilities(this.did())
     const ucanForOp = await this.authStore.createUcanForCaps(
-      this.did,
+      this.did(),
       neededCaps,
       30,
     )
@@ -237,26 +248,26 @@ export class Repo {
     if (!this.authStore) {
       throw new Error('No keypair provided. Repo is read-only.')
     }
-    return this.authStore.createUcan(forDid, auth.maintenanceCap(this.did))
+    return this.authStore.createUcan(forDid, auth.maintenanceCap(this.did()))
   }
 
   // PUSH/PULL TO REMOTE
   // -----------
 
   async push(url: string): Promise<void> {
-    const remoteRoot = await service.getRemoteRoot(url, this.did)
+    const remoteRoot = await service.getRemoteRoot(url, this.did())
     if (this.cid.equals(remoteRoot)) {
       // already up to date
       return
     }
     const car = await this.getDiffCar(remoteRoot)
-    await service.pushRepo(url, this.did, car)
+    await service.pushRepo(url, this.did(), car)
   }
 
   async pull(url: string): Promise<void> {
-    const car = await service.pullRepo(url, this.did, this.cid)
+    const car = await service.pullRepo(url, this.did(), this.cid)
     if (car === null) {
-      throw new Error(`Could not find repo for did: ${this.did}`)
+      throw new Error(`Could not find repo for did: ${this.did()}`)
     }
     await this.loadAndVerifyDiff(car)
   }
@@ -276,47 +287,62 @@ export class Repo {
     oldCommit: CID | null,
     recentCommit: CID,
   ): Promise<void> {
-    if (recentCommit.equals(oldCommit)) return
-    const toRepo = await Repo.load(this.blockstore, recentCommit)
-    const root = await toRepo.getRoot()
+    const commitPath = await this.commitPath(oldCommit, recentCommit)
+    if (commitPath === null) {
+      throw new Error('Could not find shared history')
+    }
+    if (commitPath.length === null) return
+    let prevRepo = await Repo.load(this.blockstore, commitPath[0])
+    for (const commit of commitPath.slice(1)) {
+      const nextRepo = await Repo.load(this.blockstore, commit)
 
-    // if the root does not have a predecessor (the genesis commit)
-    // & we still have not found the commit we're searching for, then bail
-    if (!root.prev) {
-      if (oldCommit === null) {
-        return
-      } else {
-        throw new Error('Could not find shared history')
+      // verify auth token covers all necessary writes
+      const encodedToken = await this.blockstore.get(
+        nextRepo.root.auth_token,
+        schema.string,
+      )
+      const token = await auth.validateUcan(encodedToken)
+      const diff = await prevRepo.data.diff(nextRepo.data)
+      const neededCaps = diff.neededCapabilities(this.did())
+      for (const cap of neededCaps) {
+        await auth.verifyAdxUcan(token, this.did(), cap)
       }
+
+      // verify signature matches repo root + auth token
+      // const commit = await toRepo.getCommit()
+      const validSig = await auth.verifySignature(
+        token.payload.iss,
+        nextRepo.commit.root.bytes,
+        nextRepo.commit.sig,
+      )
+      if (!validSig) {
+        throw new Error(
+          `Invalid signature on commit: ${nextRepo.cid.toString()}`,
+        )
+      }
+      prevRepo = nextRepo
     }
+  }
 
-    const prevRepo = await Repo.load(this.blockstore, root.prev)
-
-    // verify auth token covers all necessary writes
-    const encodedToken = await this.blockstore.get(
-      root.auth_token,
-      schema.string,
-    )
-    const token = await auth.validateUcan(encodedToken)
-    const diff = await prevRepo.data.diff(this.data)
-    const neededCaps = diff.neededCapabilities(this.did)
-    for (const cap of neededCaps) {
-      await auth.verifyAdxUcan(token, this.did, cap)
+  async commitPath(
+    toFind: CID | null, // null to go to genesis commit
+    recentCommit = this.cid,
+  ): Promise<CID[] | null> {
+    let curr: CID | null = recentCommit
+    const path: CID[] = []
+    while (curr !== null) {
+      path.push(curr)
+      const commit = await this.blockstore.get(curr, schema.commit)
+      if (toFind && curr.equals(toFind)) {
+        return path.reverse()
+      }
+      const root = await this.blockstore.get(commit.root, schema.repoRoot)
+      if (!toFind && root.prev === null) {
+        return path.reverse()
+      }
+      curr = root.prev
     }
-
-    // verify signature matches repo root + auth token
-    const commit = await toRepo.getCommit()
-    const validSig = await auth.verifySignature(
-      token.payload.iss,
-      commit.root.bytes,
-      commit.sig,
-    )
-    if (!validSig) {
-      throw new Error(`Invalid signature on commit: ${toRepo.cid.toString()}`)
-    }
-
-    // check next commits
-    await this.verifySetOfUpdates(oldCommit, root.prev)
+    return null
   }
 
   // CAR FILES
@@ -379,8 +405,6 @@ export class Repo {
     newestCommit: CID,
     oldestCommit: CID | null,
   ): Promise<void> {
-    // console.log('RUNNING: ', newestCommit)
-    // @TODO write this
     if (newestCommit.equals(oldestCommit)) return
     const commit = await this.blockstore.get(newestCommit, schema.commit)
     const root = await this.blockstore.get(commit.root, schema.repoRoot)
@@ -400,12 +424,12 @@ export class Repo {
       await this.data.writeToCarStream(car)
       return
     }
-    // otherwise write the new cids from the last commit and recurse
 
+    // otherwise write the new cids from the last commit and recurse
     const prevCommit = await this.blockstore.get(root.prev, schema.commit)
     const prevRoot = await this.blockstore.get(prevCommit.root, schema.repoRoot)
-    const currData = await MST.fromCid(this.blockstore, root.data)
-    const prevData = await MST.fromCid(this.blockstore, prevRoot.data)
+    const currData = await MST.load(this.blockstore, root.data)
+    const prevData = await MST.load(this.blockstore, prevRoot.data)
     const diff = await prevData.diff(currData)
     await Promise.all(
       diff.newCids().map((cid) => this.blockstore.addToCar(car, cid)),

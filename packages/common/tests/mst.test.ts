@@ -96,7 +96,7 @@ describe('Merkle Search Tree', () => {
 
   it('saves and loads from blockstore', async () => {
     const cid = await mst.save()
-    const loaded = await MST.fromCid(blockstore, cid)
+    const loaded = await MST.load(blockstore, cid)
     const origNodes = await mst.allNodes()
     const loadedNodes = await loaded.allNodes()
     expect(origNodes.length).toBe(loadedNodes.length)
