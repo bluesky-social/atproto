@@ -168,3 +168,14 @@ export const writeMstLog = async (filename: string, tree: MST) => {
   }
   fs.writeFileSync(filename, log)
 }
+
+export const saveMstEntries = (filename: string, entries: [string, CID][]) => {
+  const writable = entries.map(([key, val]) => [key, val.toString()])
+  fs.writeFileSync(filename, JSON.stringify(writable))
+}
+
+export const loadMstEntries = (filename: string): [string, CID][] => {
+  const contents = fs.readFileSync(filename)
+  const parsed = JSON.parse(contents.toString())
+  return parsed.map(([key, value]) => [key, CID.parse(value)])
+}

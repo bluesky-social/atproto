@@ -105,33 +105,6 @@ describe('Merkle Search Tree', () => {
     }
   })
 
-  it('temp diff test', async () => {
-    const layer0 = [
-      '3j6hnk65jis2t',
-      '3j6hnk65jit2t',
-      '3j6hnk65jiu2t',
-      '3j6hnk65jne2t',
-      '3j6hnk65jnm2t',
-      '3j6hnk65jnn2t',
-      '3j6hnk65kvx2t',
-      '3j6hnk65kvy2t',
-      '3j6hnk65kvz2t',
-    ]
-    const layer1 = ['3j6hnk65jju2t', '3j6hnk65kve2t']
-    const layer2 = '3j6hnk65jng2t'
-    mst = await MST.create(blockstore, [], { fanout: 32 })
-    const cid = await util.randomCid()
-    for (const tid of layer0) {
-      mst = await mst.add(tid, cid)
-    }
-    for (const tid of layer1) {
-      mst = await mst.add(tid, cid)
-    }
-    const toDiff = await mst.add(layer2, cid)
-    const diff = await mst.diffNew(toDiff)
-    console.log(diff)
-  })
-
   it('diffs', async () => {
     let toDiff = mst
 
@@ -163,7 +136,7 @@ describe('Merkle Search Tree', () => {
       expectedDels[entry[0]] = { key: entry[0], cid: entry[1] }
     }
 
-    const diff = await mst.diffNew(toDiff)
+    const diff = await mst.diff(toDiff)
 
     expect(diff.addList().length).toBe(100)
     expect(diff.updateList().length).toBe(100)

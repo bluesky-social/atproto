@@ -322,13 +322,19 @@ export class MST implements DataStore {
     const prev = await this.atIndex(index - 1)
     if (prev?.isTree()) {
       const subtree = await prev.delete(key)
-      return this.updateEntry(index - 1, subtree)
+      const subTreeEntries = await subtree.getEntries()
+      if (subTreeEntries.length === 0) {
+        return this.removeEntry(index - 1)
+      } else {
+        return this.updateEntry(index - 1, subtree)
+      }
     } else {
       throw new Error(`Could not find a record with key: ${key}`)
     }
   }
 
-  async diffNew(other: MST): Promise<DataDiff> {
+  // Walk two MSTs to find the semantic changes
+  async diff(other: MST): Promise<DataDiff> {
     await this.getPointer()
     await other.getPointer()
     const diff = new DataDiff()
@@ -350,21 +356,43 @@ export class MST implements DataStore {
       const right = rightWalker.status.curr
       if (left === null || right === null) break
 
-      if (leftWalker.layer() > rightWalker.layer()) {
-        if (left.isLeaf()) {
+      if (left.isLeaf() && right.isLeaf()) {
+        if (left.key === right.key) {
+          if (!left.value.equals(right.value)) {
+            diff.recordUpdate(left.key, left.value, right.value)
+          }
+          await leftWalker.stepOver()
+          await rightWalker.stepOver()
+        } else if (left.key < right.key) {
           diff.recordDelete(left)
           await leftWalker.stepOver()
+        } else {
+          diff.recordAdd(right)
+          await rightWalker.stepOver()
+        }
+        continue
+      }
+
+      if (leftWalker.layer() > rightWalker.layer()) {
+        if (left.isLeaf()) {
+          if (right.isLeaf()) {
+            diff.recordAdd(right)
+          } else {
+            diff.recordAddedCid(right.pointer)
+          }
+          await rightWalker.advance()
         } else {
           await leftWalker.stepInto()
         }
         continue
       } else if (leftWalker.layer() < rightWalker.layer()) {
         if (right.isLeaf()) {
-          diff.recordAdd(right)
-          await rightWalker.stepOver()
+          if (left.isLeaf()) {
+            diff.recordDelete(left)
+          }
+          await leftWalker.advance()
         } else {
           diff.recordAddedCid(right.pointer)
-          console.log('RIGHT: ', right.pointer.toString())
           await rightWalker.stepInto()
         }
         continue
@@ -375,115 +403,25 @@ export class MST implements DataStore {
           await leftWalker.stepOver()
           await rightWalker.stepOver()
         } else {
-          console.log('RECORIND: ', right.pointer.toString())
           diff.recordAddedCid(right.pointer)
           await leftWalker.stepInto()
           await rightWalker.stepInto()
         }
-      } else if (left.isLeaf() && right.isLeaf()) {
-        if (left.key === right.key) {
-          if (!left.value.equals(right.value)) {
-            diff.recordUpdate(left.key, left.value, right.value)
-          }
-          await leftWalker.stepOver()
-          await rightWalker.stepOver()
-        } else if (left.key < right.key) {
-          diff.recordDelete(left)
-          await leftWalker.stepOver()
-        } else {
-          diff.recordAdd(right)
-          await rightWalker.stepOver()
-        }
-      } else if (left.isLeaf() && right.isTree()) {
-        diff.recordDelete(left)
-        await leftWalker.stepOver()
-      } else if (left.isTree() && right.isLeaf()) {
-        diff.recordAdd(right)
-        await rightWalker.stepOver()
-      } else {
-        throw new Error("Shouldn't reach this")
+        continue
       }
-    }
-    return diff
-  }
 
-  // Finds the semantic changes between two MSTs
-  // This uses a stateful diff tracker that will sometimes record encountered leaves
-  // before removing them later when they're encountered in the other tree
-  async diff(other: MST): Promise<DataDiff> {
-    // we need to make sure both of our pointers are in date for diffing
-    await this.getPointer()
-    await other.getPointer()
-
-    const diff = new DataDiff()
-    diff.recordAddedCid(other.pointer)
-    diff.recordDeletedCid(this.pointer)
-
-    let leftI = 0
-    let rightI = 0
-    const leftEntries = await this.getEntries()
-    const rightEntries = await other.getEntries()
-    while (leftI < leftEntries.length || rightI < rightEntries.length) {
-      const left = leftEntries[leftI]
-      const right = rightEntries[rightI]
-      if (!left && !right) {
-        // shouldn't ever reach this, but if both are null, we break
-        break
-      } else if (!left) {
-        // if no left, record a right leaf as an add, or add all leaves in the right subtree
-        if (right.isLeaf()) {
-          diff.recordAdd(right)
-        } else {
-          const allChildren = await right.allNodes()
-          for (const entry of allChildren) {
-            diff.recordAdd(entry)
-          }
-        }
-        rightI++
-      } else if (!right) {
-        // if no right, record a left leaf as an del, or del all leaves in the left subtree
-        if (left.isLeaf()) {
-          diff.recordDelete(left)
-        } else {
-          const allChildren = await left.leaves()
-          for (const entry of allChildren) {
-            diff.recordDelete(entry)
-          }
-        }
-        leftI++
-      } else if (left.isLeaf() && right.isLeaf()) {
-        // if both are leaves, check if they're the same key
-        // if they're equal, move on. if the value is changed, record update
-        // if they're different, record the smaller one & increment that side
-        if (left.key === right.key) {
-          if (!left.value.equals(right.value)) {
-            diff.recordUpdate(left.key, left.value, right.value)
-          }
-          leftI++
-          rightI++
-        } else if (left.key < right.key) {
-          diff.recordDelete(left)
-          leftI++
-        } else {
-          diff.recordAdd(right)
-          rightI++
-        }
-      } else if (left.isTree() && right.isTree()) {
-        // if both are trees, find the diff of those trees
-        if (!(await left.equals(right))) {
-          const subDiff = await left.diff(right)
-          diff.addDiff(subDiff)
-        }
-        leftI++
-        rightI++
-      } else if (left.isLeaf() && right.isTree()) {
-        // if one is a leaf & one is a tree, record the leaf and increment that side
-        diff.recordDelete(left)
-        leftI++
-      } else if (left.isTree() && right.isLeaf()) {
-        diff.recordAdd(right)
-        rightI++
+      if (left.isLeaf() && right.isTree()) {
+        await diff.recordAddedCid(right.pointer)
+        await rightWalker.stepInto()
+        continue
       }
+
+      if (left.isTree() && right.isLeaf()) {
+        await leftWalker.stepInto()
+        continue
+      }
+
+      throw new Error('Unidentifiable case in diff walk')
     }
     return diff
   }
@@ -1027,12 +965,11 @@ class Walker {
       }
       return
     }
-    const node = await this.status.walking.atIndex(this.status.index)
-    if (!node?.isTree()) {
+    if (!this.status.curr.isTree()) {
       throw new Error('No tree at pointer, cannot step into')
     }
 
-    const next = await node.atIndex(0)
+    const next = await this.status.curr.atIndex(0)
     if (!next) {
       throw new Error(
         'Tried to step into a node with 0 entries which is invalid',
@@ -1040,7 +977,7 @@ class Walker {
     }
 
     this.stack.push({ ...this.status })
-    this.status.walking = node
+    this.status.walking = this.status.curr
     this.status.curr = next
     this.status.index = 0
   }
