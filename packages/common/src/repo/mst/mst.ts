@@ -343,11 +343,19 @@ export class MST implements DataStore {
     const rightWalker = new Walker(other)
     while (!leftWalker.status.done || !rightWalker.status.done) {
       if (leftWalker.status.done && !rightWalker.status.done) {
-        diff.recordAdd(rightWalker.status.curr)
+        const node = rightWalker.status.curr
+        if (node.isLeaf()) {
+          diff.recordAdd(node.key, node.value)
+        } else {
+          diff.recordNewCid(node.pointer)
+        }
         await rightWalker.advance()
         continue
       } else if (!leftWalker.status.done && rightWalker.status.done) {
-        diff.recordDelete(leftWalker.status.curr)
+        const node = leftWalker.status.curr
+        if (node.isLeaf()) {
+          diff.recordDelete(node.key, node.value)
+        }
         await leftWalker.advance()
         continue
       }
@@ -364,10 +372,10 @@ export class MST implements DataStore {
           await leftWalker.stepOver()
           await rightWalker.stepOver()
         } else if (left.key < right.key) {
-          diff.recordDelete(left)
+          diff.recordDelete(left.key, left.value)
           await leftWalker.stepOver()
         } else {
-          diff.recordAdd(right)
+          diff.recordAdd(right.key, right.value)
           await rightWalker.stepOver()
         }
         continue
@@ -376,9 +384,9 @@ export class MST implements DataStore {
       if (leftWalker.layer() > rightWalker.layer()) {
         if (left.isLeaf()) {
           if (right.isLeaf()) {
-            diff.recordAdd(right)
+            diff.recordAdd(right.key, right.value)
           } else {
-            diff.recordAddedCid(right.pointer)
+            diff.recordNewCid(right.pointer)
           }
           await rightWalker.advance()
         } else {
@@ -388,11 +396,11 @@ export class MST implements DataStore {
       } else if (leftWalker.layer() < rightWalker.layer()) {
         if (right.isLeaf()) {
           if (left.isLeaf()) {
-            diff.recordDelete(left)
+            diff.recordDelete(left.key, left.value)
           }
           await leftWalker.advance()
         } else {
-          diff.recordAddedCid(right.pointer)
+          diff.recordNewCid(right.pointer)
           await rightWalker.stepInto()
         }
         continue
@@ -403,7 +411,7 @@ export class MST implements DataStore {
           await leftWalker.stepOver()
           await rightWalker.stepOver()
         } else {
-          diff.recordAddedCid(right.pointer)
+          diff.recordNewCid(right.pointer)
           await leftWalker.stepInto()
           await rightWalker.stepInto()
         }
@@ -411,7 +419,7 @@ export class MST implements DataStore {
       }
 
       if (left.isLeaf() && right.isTree()) {
-        await diff.recordAddedCid(right.pointer)
+        await diff.recordNewCid(right.pointer)
         await rightWalker.stepInto()
         continue
       }
