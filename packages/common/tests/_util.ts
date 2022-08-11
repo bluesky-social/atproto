@@ -3,7 +3,8 @@ import IpldStore from '../src/blockstore/ipld-store'
 import TID from '../src/repo/tid'
 import { IdMapping } from '../src/repo/types'
 import { Repo } from '../src/repo'
-import { MemoryBlockstore, MST } from '../src'
+import { MemoryBlockstore } from '../src/blockstore'
+import { MST } from '../src/repo/mst'
 import fs from 'fs'
 
 const fakeStore = new MemoryBlockstore()

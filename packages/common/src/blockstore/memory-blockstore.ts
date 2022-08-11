@@ -34,6 +34,15 @@ export class MemoryBlockstore extends IpldStore {
   async destroy(): Promise<void> {
     this.map.clear()
   }
+
+  // Mainly for dev purposes
+  async getContents(): Promise<Record<string, unknown>> {
+    const contents: Record<string, unknown> = {}
+    for (const key of this.map.keys()) {
+      contents[key] = await this.getUnchecked(CID.parse(key))
+    }
+    return contents
+  }
 }
 
 export default MemoryBlockstore

@@ -260,10 +260,12 @@ export class MST implements DataStore {
       if (left) updated.push(left)
       updated.push(new Leaf(key, value))
       if (right) updated.push(right)
-      return MST.create(this.blockstore, updated, {
+      const newRoot = await MST.create(this.blockstore, updated, {
         layer: keyZeros,
         fanout: this.fanout,
       })
+      newRoot.outdatedPointer = true
+      return newRoot
     }
   }
 
@@ -324,6 +326,85 @@ export class MST implements DataStore {
     } else {
       throw new Error(`Could not find a record with key: ${key}`)
     }
+  }
+
+  async diffNew(other: MST): Promise<DataDiff> {
+    await this.getPointer()
+    await other.getPointer()
+    const diff = new DataDiff()
+
+    const leftWalker = new Walker(this)
+    const rightWalker = new Walker(other)
+    while (!leftWalker.status.done || !rightWalker.status.done) {
+      if (leftWalker.status.done && !rightWalker.status.done) {
+        diff.recordAdd(rightWalker.status.curr)
+        await rightWalker.advance()
+        continue
+      } else if (!leftWalker.status.done && rightWalker.status.done) {
+        diff.recordDelete(leftWalker.status.curr)
+        await leftWalker.advance()
+        continue
+      }
+
+      const left = leftWalker.status.curr
+      const right = rightWalker.status.curr
+      if (left === null || right === null) break
+
+      if (leftWalker.layer() > rightWalker.layer()) {
+        if (left.isLeaf()) {
+          diff.recordDelete(left)
+          await leftWalker.stepOver()
+        } else {
+          await leftWalker.stepInto()
+        }
+        continue
+      } else if (leftWalker.layer() < rightWalker.layer()) {
+        if (right.isLeaf()) {
+          diff.recordAdd(right)
+          await rightWalker.stepOver()
+        } else {
+          diff.recordAddedCid(right.pointer)
+          console.log('RIGHT: ', right.pointer.toString())
+          await rightWalker.stepInto()
+        }
+        continue
+      }
+
+      if (left.isTree() && right.isTree()) {
+        if (left.pointer.equals(right.pointer)) {
+          await leftWalker.stepOver()
+          await rightWalker.stepOver()
+        } else {
+          console.log('RECORIND: ', right.pointer.toString())
+          diff.recordAddedCid(right.pointer)
+          await leftWalker.stepInto()
+          await rightWalker.stepInto()
+        }
+      } else if (left.isLeaf() && right.isLeaf()) {
+        if (left.key === right.key) {
+          if (!left.value.equals(right.value)) {
+            diff.recordUpdate(left.key, left.value, right.value)
+          }
+          await leftWalker.stepOver()
+          await rightWalker.stepOver()
+        } else if (left.key < right.key) {
+          diff.recordDelete(left)
+          await leftWalker.stepOver()
+        } else {
+          diff.recordAdd(right)
+          await rightWalker.stepOver()
+        }
+      } else if (left.isLeaf() && right.isTree()) {
+        diff.recordDelete(left)
+        await leftWalker.stepOver()
+      } else if (left.isTree() && right.isLeaf()) {
+        diff.recordAdd(right)
+        await rightWalker.stepOver()
+      } else {
+        throw new Error("Shouldn't reach this")
+      }
+    }
+    return diff
   }
 
   // Finds the semantic changes between two MSTs
@@ -850,6 +931,150 @@ const cidForNodeData = async (data: NodeData): Promise<CID> => {
 const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
   const data = serializeNodeData(entries)
   return cidForNodeData(data)
+}
+
+type Status =
+  | {
+      done: true
+      curr: null
+      walking: null
+      index: number
+    }
+  | {
+      done: false
+      curr: NodeEntry
+      walking: MST | null
+      index: number
+    }
+
+class Walker {
+  stack: Status[] = []
+  status: Status
+
+  constructor(public root: MST) {
+    this.status = {
+      done: false,
+      curr: root,
+      walking: null,
+      index: 0,
+    }
+  }
+
+  layer(): number {
+    if (this.status.done) {
+      throw new Error('Walk is done')
+    }
+    if (this.status.walking) {
+      return this.status.walking.layer ?? 0
+    }
+    if (this.status.curr.isTree()) {
+      return (this.status.curr.layer ?? 0) + 1
+    }
+    throw new Error('Could not identify layer of walk')
+  }
+
+  async stepOver(): Promise<void> {
+    if (this.status.done) return
+    // if stepping over the root of the node, we're done
+    if (this.status.walking === null) {
+      this.status = {
+        done: true,
+        curr: null,
+        walking: null,
+        index: 0,
+      }
+      return
+    }
+    const entries = await this.status.walking.getEntries()
+    this.status.index++
+    const next = entries[this.status.index]
+    if (!next) {
+      const popped = this.stack.pop()
+      if (!popped) {
+        this.status = {
+          done: true,
+          curr: null,
+          walking: null,
+          index: 0,
+        }
+        return
+      } else {
+        this.status = popped
+        await this.stepOver()
+        return
+      }
+    } else {
+      this.status.curr = next
+    }
+  }
+
+  async stepInto(): Promise<void> {
+    if (this.status.done) return
+    // edge case for very start of walk
+    if (this.status.walking === null) {
+      if (!this.status.curr.isTree()) {
+        throw new Error('aosdiur')
+      }
+      const next = await this.status.curr.atIndex(0)
+      if (!next) {
+        throw new Error('aosdiur')
+      }
+      this.status = {
+        done: false,
+        walking: this.status.curr,
+        curr: next,
+        index: 0,
+      }
+      return
+    }
+    const node = await this.status.walking.atIndex(this.status.index)
+    if (!node?.isTree()) {
+      throw new Error('No tree at pointer, cannot step into')
+    }
+
+    const next = await node.atIndex(0)
+    if (!next) {
+      throw new Error(
+        'Tried to step into a node with 0 entries which is invalid',
+      )
+    }
+
+    this.stack.push({ ...this.status })
+    this.status.walking = node
+    this.status.curr = next
+    this.status.index = 0
+  }
+
+  async advance(): Promise<void> {
+    if (this.status.done) return
+    if (this.status.curr.isLeaf()) {
+      await this.stepOver()
+    } else {
+      await this.stepInto()
+    }
+  }
+
+  async walkUntil(key: string): Promise<NodeEntry[]> {
+    const nodes: NodeEntry[] = []
+    while (!this.status.done) {
+      if (this.status.curr.isLeaf() && this.status.curr.key > key) {
+        break
+      }
+      nodes.push(this.status.curr)
+      await this.advance()
+      if (this.status.curr.isLeaf() && this.status.curr.key === key) {
+        break
+      }
+    }
+    return nodes
+  }
+
+  async curr(): Promise<NodeEntry> {
+    if (this.status.done) {
+      throw new Error('Walk finished, no more nodes')
+    }
+    return this.status.curr
+  }
 }
 
 export default MST
