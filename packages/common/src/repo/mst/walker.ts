@@ -2,9 +2,6 @@ import { MST, NodeEntry } from './mst'
 
 type WalkerStatusDone = {
   done: true
-  curr: null
-  walking: null
-  index: number
 }
 
 type WalkerStatusProgress = {
@@ -49,12 +46,7 @@ export class MstWalker {
     if (this.status.done) return
     // if stepping over the root of the node, we're done
     if (this.status.walking === null) {
-      this.status = {
-        done: true,
-        curr: null,
-        walking: null,
-        index: 0,
-      }
+      this.status = { done: true }
       return
     }
     const entries = await this.status.walking.getEntries()
@@ -63,12 +55,7 @@ export class MstWalker {
     if (!next) {
       const popped = this.stack.pop()
       if (!popped) {
-        this.status = {
-          done: true,
-          curr: null,
-          walking: null,
-          index: 0,
-        }
+        this.status = { done: true }
         return
       } else {
         this.status = popped
@@ -86,17 +73,18 @@ export class MstWalker {
     // edge case for very start of walk
     if (this.status.walking === null) {
       if (!this.status.curr.isTree()) {
-        throw new Error('aosdiur')
+        throw new Error('The root of the tree cannot be a leaf')
       }
       const next = await this.status.curr.atIndex(0)
       if (!next) {
-        throw new Error('aosdiur')
-      }
-      this.status = {
-        done: false,
-        walking: this.status.curr,
-        curr: next,
-        index: 0,
+        this.status = { done: true }
+      } else {
+        this.status = {
+          done: false,
+          walking: this.status.curr,
+          curr: next,
+          index: 0,
+        }
       }
       return
     }

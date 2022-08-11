@@ -431,7 +431,7 @@ export class Repo {
       } else {
         const diff = await prevHead.data.diff(nextHead.data)
         await Promise.all(
-          diff.newCids().map((cid) => this.blockstore.addToCar(car, cid)),
+          diff.newCidList().map((cid) => this.blockstore.addToCar(car, cid)),
         )
       }
       prevHead = nextHead

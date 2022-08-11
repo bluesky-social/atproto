@@ -358,7 +358,7 @@ export class MST implements DataStore {
         await leftWalker.advance()
         continue
       }
-
+      if (leftWalker.status.done || rightWalker.status.done) break
       const left = leftWalker.status.curr
       const right = rightWalker.status.curr
       if (left === null || right === null) break

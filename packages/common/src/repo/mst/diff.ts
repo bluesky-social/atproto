@@ -27,6 +27,34 @@ export class DataDiff {
     this.newCids.add(cid)
   }
 
+  addDiff(diff: DataDiff) {
+    for (const add of diff.addList()) {
+      if (this.deletes[add.key]) {
+        const del = this.deletes[add.key]
+        if (del.cid !== add.cid) {
+          this.recordUpdate(add.key, del.cid, add.cid)
+        }
+        delete this.deletes[add.key]
+      } else {
+        this.recordAdd(add.key, add.cid)
+      }
+    }
+    for (const update of diff.updateList()) {
+      this.recordUpdate(update.key, update.prev, update.cid)
+      delete this.adds[update.key]
+      delete this.deletes[update.key]
+    }
+    for (const del of diff.deleteList()) {
+      if (this.adds[del.key]) {
+        delete this.adds[del.key]
+      } else {
+        delete this.updates[del.key]
+        this.recordDelete(del.key, del.cid)
+      }
+    }
+    this.newCids.addSet(diff.newCids)
+  }
+
   addList(): DataAdd[] {
     return Object.values(this.adds)
   }
