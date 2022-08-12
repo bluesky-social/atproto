@@ -22,6 +22,14 @@ export class MemoryBlockstore implements BlockstoreI {
     return this.map.has(k.toString())
   }
 
+  async sizeInBytes(): Promise<number> {
+    let total = 0
+    for (const val of this.map.values()) {
+      total += val.byteLength
+    }
+    return total
+  }
+
   async destroy(): Promise<void> {
     this.map.clear()
   }

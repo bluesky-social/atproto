@@ -4,6 +4,7 @@ export * from './blockstore/persistent-blockstore'
 
 export * from './repo'
 export * from './repo/tid'
+export * from './repo/mst'
 export * from './repo/types'
 export * as delta from './repo/delta'
 
