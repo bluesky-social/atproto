@@ -1,4 +1,5 @@
 import * as auth from '@adxp/auth'
+import { MONTH_IN_SEC } from '@adxp/auth'
 import * as crypto from '@adxp/crypto'
 import Channel from './channel'
 import * as messages from './messages'
@@ -103,10 +104,11 @@ export class Provider {
         throw new Error('AWAKE out of sync')
       }
       const cap = auth.writeCap(this.rootDid)
+      const found = await this.authStore.findUcan(cap)
       const token = await this.authStore.createUcan(
         this.recipientDid,
         cap,
-        YEAR_IN_SECONDS,
+        MONTH_IN_SEC,
       )
       const encrypted = await this.sessionKey.encrypt(auth.ucans.encode(token))
       await this.negotiateChannel.sendMessage(messages.delegateCred(encrypted))

@@ -9,6 +9,7 @@ export * from './verify'
 export * from './types'
 export * from './signatures'
 export * from './ucans/plugins'
+export * from './consts'
 
 export * as ucans from './ucans'
 

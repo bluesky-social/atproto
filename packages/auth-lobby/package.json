@@ -31,6 +31,8 @@
   "dependencies": {
     "@adxp/auth": "*",
     "@adxp/awake": "*",
+    "@magic-ext/ed25519": "^0.0.2",
+    "magic-sdk": "^9.0.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },

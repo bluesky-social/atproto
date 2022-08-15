@@ -16,6 +16,7 @@
   "dependencies": {
     "@adxp/crypto": "*",
     "@ucans/core": "0.0.1-alpha2",
+    "@ucans/default-plugins": "0.11.0-alpha",
     "uint8arrays": "^3.0.0"
   }
 }

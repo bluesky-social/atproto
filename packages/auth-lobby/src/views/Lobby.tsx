@@ -9,7 +9,8 @@ import AppApproval from '../components/AppApproval'
 
 interface Props {
   authStore: auth.AuthStore
-  checkAuthorized: () => Promise<void>
+  rootDid: string
+  logout: () => void
 }
 
 const Lobby: React.FC<Props> = (props) => {
@@ -35,7 +36,7 @@ const Lobby: React.FC<Props> = (props) => {
       awakeProvider.close()
     }
     await props.authStore.reset()
-    props.checkAuthorized()
+    props.logout()
   }
 
   const getAppUcanReq = async () => {
@@ -58,7 +59,7 @@ const Lobby: React.FC<Props> = (props) => {
     if (awakeProvider) return
     const provider = await awake.Provider.create(
       env.RELAY_HOST,
-      env.ROOT_USER,
+      props.rootDid,
       props.authStore,
     )
     setAwakeProvider(provider)
@@ -134,7 +135,11 @@ const Lobby: React.FC<Props> = (props) => {
           </h1>
         ) : undefined}
         <div className="px-6 py-4">
-          <div className="mb-2">Logged in as</div>
+          <div className="mb-2">Root DID</div>
+          <div className="px-4 py-3 bg-gray-100 rounded-lg font-mono overflow-auto mb-3 text-sm">
+            {props.rootDid}
+          </div>
+          <div className="mb-2">Device DID</div>
           <div className="px-4 py-3 bg-gray-100 rounded-lg font-mono overflow-auto mb-3 text-sm">
             {did}
           </div>

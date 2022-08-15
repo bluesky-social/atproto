@@ -5,11 +5,11 @@ import * as auth from '@adxp/auth'
 import './index.css'
 import Lobby from './views/Lobby'
 import LoginPage from './views/LoginPage'
-import * as env from './env'
 
 interface Props {}
 
 const App: React.FC<Props> = () => {
+  const [rootDid, setRootDid] = useState<string | null>(null)
   const [authorized, setAuthorized] = useState(false)
   const [authStore, setAuthStore] = useState<auth.AuthStore | null>(null)
 
@@ -19,26 +19,36 @@ const App: React.FC<Props> = () => {
 
   useEffect(() => {
     checkAuthorized()
-  }, [authStore])
+  }, [rootDid, authStore])
 
   const getAuthStore = async () => {
+    if (authStore) return
     const browserStore = await auth.BrowserStore.load()
     setAuthStore(browserStore)
-  }
-
-  const loginAsRoot = async () => {
-    const jwk = JSON.parse(env.PRIV_KEY)
-    const browserStore = await auth.BrowserStore.loadRootAuth(jwk)
-    setAuthStore(browserStore)
-  }
-
-  const checkAuthorized = async () => {
-    if (!authStore) {
-      setAuthorized(false)
-      return
+    const rootDid = localStorage.getItem('rootDid')
+    if (rootDid) {
+      await checkAuthorized(rootDid)
     }
-    const isAuthorized = await authStore.hasUcan(auth.writeCap(env.ROOT_USER))
+  }
+
+  const checkAuthorized = async (rootDidtoSet?: string): Promise<boolean> => {
+    if (rootDidtoSet) {
+      localStorage.setItem('rootDid', rootDidtoSet)
+      setRootDid(rootDidtoSet)
+    }
+    const didToCheck = rootDidtoSet ?? rootDid
+    if (!authStore || !didToCheck) {
+      setAuthorized(false)
+      return false
+    }
+    const isAuthorized = await authStore.hasUcan(auth.writeCap(didToCheck))
     setAuthorized(isAuthorized)
+    return isAuthorized
+  }
+
+  const logout = (): void => {
+    localStorage.removeItem('rootDid')
+    setAuthorized(false)
   }
 
   return (
@@ -46,13 +56,12 @@ const App: React.FC<Props> = () => {
       {!authStore && <div>Loading...</div>}
       {authStore && (
         <div>
-          {authorized && (
-            <Lobby authStore={authStore} checkAuthorized={checkAuthorized} />
+          {authorized && rootDid && (
+            <Lobby authStore={authStore} rootDid={rootDid} logout={logout} />
           )}
           {!authorized && (
             <LoginPage
               authStore={authStore}
-              loginAsRoot={loginAsRoot}
               checkAuthorized={checkAuthorized}
             />
           )}
