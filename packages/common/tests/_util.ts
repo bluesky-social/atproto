@@ -4,7 +4,7 @@ import TID from '../src/repo/tid'
 import { IdMapping } from '../src/repo/types'
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/blockstore'
-import { MST } from '../src/repo/mst'
+import { DataDiff, MST } from '../src/repo/mst'
 import fs from 'fs'
 
 const fakeStore = new MemoryBlockstore()
@@ -143,6 +143,46 @@ export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
       const record = await coll.getRecord(TID.fromStr(tid))
       expect(record).toEqual(collData[tid])
     }
+  }
+}
+
+export const checkRepoDiff = async (
+  diff: DataDiff,
+  before: RepoData,
+  after: RepoData,
+): Promise<void> => {
+  const getObjectCid = async (
+    key: string,
+    data: RepoData,
+  ): Promise<CID | undefined> => {
+    const parts = key.split('/')
+    const collection = parts.slice(0, 2).join('/')
+    const obj = (data[collection] || {})[parts[2]]
+    return obj === undefined ? undefined : fakeStore.put(obj as any)
+  }
+
+  for (const add of diff.addList()) {
+    const beforeCid = await getObjectCid(add.key, before)
+    const afterCid = await getObjectCid(add.key, after)
+
+    expect(beforeCid).toBeUndefined()
+    expect(afterCid).toEqual(add.cid)
+  }
+
+  for (const update of diff.updateList()) {
+    const beforeCid = await getObjectCid(update.key, before)
+    const afterCid = await getObjectCid(update.key, after)
+
+    expect(beforeCid).toEqual(update.prev)
+    expect(afterCid).toEqual(update.cid)
+  }
+
+  for (const del of diff.deleteList()) {
+    const beforeCid = await getObjectCid(del.key, before)
+    const afterCid = await getObjectCid(del.key, after)
+
+    expect(beforeCid).toEqual(del.cid)
+    expect(afterCid).toBeUndefined()
   }
 }
 

@@ -46,10 +46,12 @@ describe('Sync', () => {
     bobRepo = await Repo.fromCarFile(car, bobBlockstore)
     const diff = await bobRepo.verifySetOfUpdates(null, bobRepo.cid)
     await util.checkRepo(bobRepo, repoData)
+    await util.checkRepoDiff(diff, {}, repoData)
   })
 
   it('syncs a repo that is behind', async () => {
     // add more to alice's repo & have bob catch up
+    const beforeData = JSON.parse(JSON.stringify(repoData))
     repoData = await util.editRepo(aliceRepo, repoData, {
       adds: 20,
       updates: 20,
@@ -58,6 +60,7 @@ describe('Sync', () => {
     const diffCar = await aliceRepo.getDiffCar(bobRepo.cid)
     const diff = await bobRepo.loadAndVerifyDiff(diffCar)
     await util.checkRepo(bobRepo, repoData)
+    await util.checkRepoDiff(diff, beforeData, repoData)
   })
 
   it('throws an error on invalid UCANs', async () => {
