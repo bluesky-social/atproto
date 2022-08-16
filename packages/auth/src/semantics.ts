@@ -80,7 +80,6 @@ export const parseAdxResource = (
 
   const parts = pointer.hierPart.split('/')
   let [did, namespace, dataset, record] = parts
-  // let [namespace, dataset, record] = parts.slice(1)
   if (!did) return null
   if (!namespace) namespace = '*'
   if (!dataset) dataset = '*'

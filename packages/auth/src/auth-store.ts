@@ -97,6 +97,8 @@ export class AuthStore implements Signer {
       .build()
   }
 
+  // Creates a UCAN that permissions all required caps
+  // We find the vaguest proof possible for each cap to avoid unnecessary duplication
   async createUcanForCaps(
     audience: string,
     caps: ucan.Capability[],
@@ -109,12 +111,7 @@ export class AuthStore implements Signer {
       if (proof === null) {
         throw new Error(`Could not find a ucan for capability: ${cap.with}`)
       }
-      // avoid duplicate proofs
-      const token = ucan.encode(proof.prf.ucan)
-      if (!encodedTokens.has(token)) {
-        encodedTokens.add(token)
-        proofs.push(proof)
-      }
+      proofs.push(proof)
     }
 
     const keypair = await this.getKeypair()
@@ -132,6 +129,8 @@ export class AuthStore implements Signer {
     return builder.build()
   }
 
+  // Finds the most general proof for the given cap
+  // (And thus most likely to overlap with other proofs)
   async vaguestProofForCap(cap: ucan.Capability): Promise<CapWithProof | null> {
     const prf = await this.findProof(cap)
     if (prf === null) return null

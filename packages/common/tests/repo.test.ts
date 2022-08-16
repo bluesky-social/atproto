@@ -17,6 +17,24 @@ describe('Repo', () => {
     repo = await Repo.create(blockstore, await authStore.did(), authStore)
   })
 
+  it('does basic operations', async () => {
+    const collection = repo.getCollection('bsky/posts')
+
+    const obj = util.generateObject()
+    const tid = await collection.createRecord(obj)
+    let got = await collection.getRecord(tid)
+    expect(got).toEqual(obj)
+
+    const updatedObj = util.generateObject()
+    await collection.updateRecord(tid, updatedObj)
+    got = await collection.getRecord(tid)
+    expect(got).toEqual(updatedObj)
+
+    await collection.deleteRecord(tid)
+    got = await collection.getRecord(tid)
+    expect(got).toBeNull()
+  })
+
   it('adds content collections', async () => {
     repoData = await util.fillRepo(repo, 100)
     await util.checkRepo(repo, repoData)

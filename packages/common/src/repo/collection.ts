@@ -20,11 +20,9 @@ export class Collection {
     return `${this.namespace}/${this.dataset}`
   }
 
-  async getRecord(tid: TID): Promise<unknown> {
+  async getRecord(tid: TID): Promise<unknown | null> {
     const cid = await this.repo.data.get(this.dataIdForRecord(tid))
-    if (cid === null) {
-      throw new Error(`Could not find record: ${tid.formatted()}`)
-    }
+    if (cid === null) return null
     return this.repo.blockstore.getUnchecked(cid)
   }
 
