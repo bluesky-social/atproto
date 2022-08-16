@@ -1,22 +1,24 @@
 import * as auth from '@adxp/auth'
-import { Repo } from '../src/repo'
+import { Repo, RepoRoot, TID } from '../src/repo'
 import { MemoryBlockstore } from '../src/blockstore'
 
 import * as util from './_util'
+import { AuthStore } from '@adxp/auth'
 
 describe('Sync', () => {
   let aliceBlockstore, bobBlockstore: MemoryBlockstore
   let aliceRepo: Repo
+  let aliceAuth: AuthStore
   let repoData: util.RepoData
 
   beforeAll(async () => {
     aliceBlockstore = new MemoryBlockstore()
-    const authStore = await auth.MemoryStore.load()
-    await authStore.claimFull()
+    aliceAuth = await auth.MemoryStore.load()
+    await aliceAuth.claimFull()
     aliceRepo = await Repo.create(
       aliceBlockstore,
-      await authStore.did(),
-      authStore,
+      await aliceAuth.did(),
+      aliceAuth,
     )
     bobBlockstore = new MemoryBlockstore()
   })
@@ -56,5 +58,57 @@ describe('Sync', () => {
     const diffCar = await aliceRepo.getDiffCar(bobRepo.cid)
     const diff = await bobRepo.loadAndVerifyDiff(diffCar)
     await util.checkRepo(bobRepo, repoData)
+  })
+
+  it('throws an error on invalid UCANs', async () => {
+    const obj = util.generateObject()
+    const cid = await aliceBlockstore.put(obj)
+    const updatedData = await aliceRepo.data.add(`test/coll/${TID.next()}`, cid)
+    // we create an unrelated token for bob & try to permission alice's repo commit with it
+    const bobAuth = await auth.MemoryStore.load()
+    const badUcan = await bobAuth.claimFull()
+    const auth_token = await aliceBlockstore.put(auth.encodeUcan(badUcan))
+    const dataCid = await updatedData.save()
+    const root: RepoRoot = {
+      did: aliceRepo.did(),
+      prev: aliceRepo.cid,
+      auth_token,
+      data: dataCid,
+    }
+    const rootCid = await aliceBlockstore.put(root)
+    const commit = {
+      root: rootCid,
+      sig: await aliceAuth.sign(rootCid.bytes),
+    }
+    aliceRepo.cid = await aliceBlockstore.put(commit)
+    aliceRepo.data = updatedData
+    const diffCar = await aliceRepo.getDiffCar(bobRepo.cid)
+    await expect(bobRepo.loadAndVerifyDiff(diffCar)).rejects.toThrow()
+    await aliceRepo.revert(1)
+  })
+
+  it('throws on a bad signature', async () => {
+    const obj = util.generateObject()
+    const cid = await aliceBlockstore.put(obj)
+    const updatedData = await aliceRepo.data.add(`test/coll/${TID.next()}`, cid)
+    const auth_token = await aliceRepo.ucanForOperation(updatedData)
+    const dataCid = await updatedData.save()
+    const root: RepoRoot = {
+      did: aliceRepo.did(),
+      prev: aliceRepo.cid,
+      auth_token,
+      data: dataCid,
+    }
+    const rootCid = await aliceBlockstore.put(root)
+    // we generated a bad sig by signing the data cid instead of root cid
+    const commit = {
+      root: rootCid,
+      sig: await aliceAuth.sign(dataCid.bytes),
+    }
+    aliceRepo.cid = await aliceBlockstore.put(commit)
+    aliceRepo.data = updatedData
+    const diffCar = await aliceRepo.getDiffCar(bobRepo.cid)
+    await expect(bobRepo.loadAndVerifyDiff(diffCar)).rejects.toThrow()
+    await aliceRepo.revert(1)
   })
 })

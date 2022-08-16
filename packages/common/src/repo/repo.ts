@@ -198,6 +198,19 @@ export class Repo {
     })
   }
 
+  async revert(count: number): Promise<void> {
+    let revertTo = this.cid
+    for (let i = 0; i < count; i++) {
+      const commit = await this.blockstore.get(revertTo, schema.commit)
+      const root = await this.blockstore.get(commit.root, schema.repoRoot)
+      if (root.prev === null) {
+        throw new Error(`Could not revert ${count} commits`)
+      }
+      revertTo = root.prev
+    }
+    await this.loadRoot(revertTo)
+  }
+
   // ROOT OPERATIONS
   // -----------
   async getCommit(): Promise<Commit> {
