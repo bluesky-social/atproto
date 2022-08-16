@@ -35,8 +35,7 @@ export class Collection {
 
   async createRecord(record: unknown): Promise<TID> {
     const tid = TID.next()
-    const cid = await this.repo.blockstore.put(record as any) // @TODO add a check here
-
+    const cid = await this.repo.blockstore.put(record as any)
     await this.repo.safeCommit(async (data) => {
       return data.add(this.dataIdForRecord(tid), cid)
     })
@@ -44,7 +43,7 @@ export class Collection {
   }
 
   async updateRecord(tid: TID, record: unknown): Promise<void> {
-    const cid = await this.repo.blockstore.put(record as any) // @TODO add a check ehre
+    const cid = await this.repo.blockstore.put(record as any)
     await this.repo.safeCommit(async (data) => {
       return data.update(this.dataIdForRecord(tid), cid)
     })
