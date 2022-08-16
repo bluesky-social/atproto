@@ -66,8 +66,7 @@ export class AuthStore implements Signer {
     const res = await ucan.first(
       ucanStore.findWithCapability(await this.did(), cap, resource.did),
     )
-    if (!res) return null
-    return res
+    return res ?? null
   }
 
   async findUcan(cap: ucan.Capability): Promise<ucan.Ucan | null> {
@@ -87,13 +86,16 @@ export class AuthStore implements Signer {
     lifetime = MONTH_IN_SEC,
   ): Promise<ucan.Ucan> {
     const keypair = await this.getKeypair()
-    const ucanStore = await this.getUcanStore()
+    const prf = await this.findProof(cap)
+    if (!prf) {
+      throw new Error(`Could not find a valid ucan for cap: ${cap.toString()}`)
+    }
     return ucan
       .createBuilder()
       .issuedBy(keypair)
       .toAudience(audience)
       .withLifetimeInSeconds(lifetime)
-      .delegateCapability(cap, ucanStore)
+      .delegateCapability(cap, prf, adxSemantics)
       .build()
   }
 
