@@ -155,7 +155,7 @@ export class AuthStore implements Signer {
     return ucan.build({
       issuer: keypair,
       audience: audience,
-      lifetimeInSeconds: 60 * 5,
+      lifetimeInSeconds: 60,
       proofs: [ucan.encode(fullUcan)],
     })
   }
@@ -169,7 +169,7 @@ export class AuthStore implements Signer {
       .createBuilder()
       .issuedBy(keypair)
       .toAudience(ownDid)
-      .withLifetimeInSeconds(10 * YEAR_IN_SEC)
+      .withLifetimeInSeconds(YEAR_IN_SEC)
       .claimCapability(writeCap(ownDid))
       .build()
     await this.addUcan(token)

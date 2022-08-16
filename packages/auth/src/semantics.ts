@@ -6,21 +6,21 @@ ADX Ucans:
 Resource name: 'adx'
 
 - Full permission for account: 
-    did:example:userDid|*
-- Permission to write to particular collection: 
-    did:example:userDid|did:example:microblog|*
-- Permission to write to write particular schemas in a collection: 
-    did:example:userDid|did:example:microblog|did:example:like|*
+    adx://did:example:userDid/*
+- Permission to write to particular application namespace: 
+    adx://did:example:userDid/namespace/*
+- Permission to write objects within a particular collection (namespace + dataset): 
+    adx://did:example:userDid/namespace/post/*
 - Permission to create a single interaction on user's behalf: 
-    did:example:userDid|did:example:microblog|did:example:like|234567abcdefg
+    adx://did:example:userDid/namespace/post/234567abcdefg
 
 Example: 
 {
-  with: { scheme: "adx", hierPart: "did:example:userDid|did:example:microblog|*" },
+  with: { scheme: "adx", hierPart: "did:example:userDid/microblog/*" },
   can: { namespace: "adx", segments: [ "WRITE" ] }
 }
 
-At the moment, for demonstration purposes, we support only two capability level: 
+At the moment, we support only two capability level: 
 - 'WRITE': this allows full create/update/delete permissions for the given resource
 - 'MAINTENANCE': this does not allow updates to repo objects, but allows maintenance of the repo, such as repo creation
 */
@@ -68,7 +68,7 @@ export const adxCapability = (
 export interface AdxResourcePointer {
   did: string
   namespace: string
-  collection: string
+  dataset: string
   record: string
 }
 
@@ -79,23 +79,16 @@ export const parseAdxResource = (
   if (pointer.scheme !== 'adx') return null
 
   const parts = pointer.hierPart.split('/')
-  const [did, namespace] = parts
-  let [collection, record] = parts.slice(2)
+  let [did, namespace, dataset, record] = parts
+  // let [namespace, dataset, record] = parts.slice(1)
   if (!did) return null
-  if (!namespace) return null
-  if (namespace === '*') {
-    collection = '*'
-  }
-  if (!collection) return null
-  if (collection === '*') {
-    record = '*'
-  }
-  if (!record) return null
-
+  if (!namespace) namespace = '*'
+  if (!dataset) dataset = '*'
+  if (!record) record = '*'
   return {
     did,
     namespace,
-    collection,
+    dataset,
     record,
   }
 }
@@ -111,8 +104,8 @@ export const adxSemantics: ucans.DelegationSemantics = {
     if (parent.namespace === '*') return true
     if (parent.namespace !== child.namespace) return false
 
-    if (parent.collection === '*') return true
-    if (parent.collection !== child.collection) return false
+    if (parent.dataset === '*') return true
+    if (parent.dataset !== child.dataset) return false
 
     if (parent.record === '*') return true
 
