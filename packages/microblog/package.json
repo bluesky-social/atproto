@@ -1,0 +1,18 @@
+{
+  "name": "@adxp/microblog",
+  "version": "0.0.1",
+  "main": "src/index.ts",
+  "scripts": {
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "postbuild": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@adxp/schemas": "*"
+  }
+}

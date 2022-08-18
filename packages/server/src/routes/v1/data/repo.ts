@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 import * as util from '../../../util'
-import { delta, Repo, schema, service } from '@adxp/common'
+import { DataDiff, Repo, schema, service } from '@adxp/common'
 import Database from '../../../db/index'
 import { ServerError } from '../../../error'
 import * as subscriptions from '../../../subscriptions'
@@ -47,24 +47,21 @@ router.post('/:did', async (req, res) => {
   const maybeRepo = await util.maybeLoadRepo(res, did)
   const isNewRepo = maybeRepo === null
   let repo: Repo
-  const evts: delta.Event[] = []
+  let diff: DataDiff
 
   // @TODO: we should do these on a temp in-memory blockstore before merging down to our on-disk one
   if (!isNewRepo) {
     repo = maybeRepo
-    await repo.loadAndVerifyDiff(bytes, async (evt) => {
-      evts.push(evt)
-    })
+    await repo.loadAndVerifyDiff
+    diff = await repo.loadAndVerifyDiff(bytes)
   } else {
     const blockstore = util.getBlockstore(res)
-    repo = await Repo.fromCarFile(bytes, blockstore, async (evt) => {
-      evts.push(evt)
-    })
+    repo = await Repo.fromCarFile(bytes, blockstore)
+    diff = await repo.verifySetOfUpdates(null, repo.cid)
   }
 
-  for (const evt of evts) {
-    await processEvent(db, util.getOwnHost(req), repo, did, evt)
-  }
+  await processDiff(db, util.getOwnHost(req), repo, did, diff)
+
   await subscriptions.notifySubscribers(db, repo)
 
   if (isNewRepo) {
@@ -74,91 +71,86 @@ router.post('/:did', async (req, res) => {
   res.status(200).send()
 })
 
-const processEvent = async (
+const processDiff = async (
   db: Database,
   ownHost: string,
   repo: Repo,
   did: string,
-  evt: delta.Event,
+  diff: DataDiff,
 ): Promise<void> => {
-  switch (evt.event) {
-    case delta.EventType.AddedObject: {
-      if (evt.collection === 'posts') {
-        const post = await repo.get(evt.cid, schema.microblog.post)
-        await db.createPost(post, evt.cid)
-      } else if (evt.collection === 'interactions') {
-        const like = await repo.get(evt.cid, schema.microblog.like)
-        await db.createLike(like, evt.cid)
-        await subscriptions.notifyOneOff(db, ownHost, like.post_author, repo)
-      }
-      return
-    }
-
-    case delta.EventType.UpdatedObject: {
-      if (evt.collection === 'posts') {
-        const post = await repo.get(evt.cid, schema.microblog.post)
-        await db.updatePost(post, evt.cid)
-      } else if (evt.collection === 'interactions') {
-        throw new ServerError(
-          500,
-          "We don't support in place interaction edits yet",
-        )
-      }
-      return
-    }
-
-    case delta.EventType.DeletedObject: {
-      if (evt.collection === 'posts') {
-        await db.deletePost(evt.tid.toString(), did, evt.namespace)
-      } else if (evt.collection === 'interactions') {
-        const like = await db.getLike(evt.tid.toString(), did, evt.namespace)
-        if (like) {
-          await db.deleteLike(evt.tid.toString(), did, evt.namespace)
-          await subscriptions.notifyOneOff(db, ownHost, like.post_author, repo)
-        }
-      }
-      return
-    }
-
-    case delta.EventType.AddedRelationship: {
-      await db.createFollow(did, evt.did)
-      const follow = await repo.get(evt.cid, schema.repo.follow)
-      const [name, host] = follow.username.split('@')
-      if (host && host !== ownHost) {
-        await db.registerDid(name, follow.did, host)
-        await service.subscribe(
-          `http://${host}`,
-          follow.did,
-          `http://${ownHost}`,
-        )
-        await subscriptions.notifyOneOff(db, ownHost, evt.did, repo)
-      }
-      return
-    }
-
-    case delta.EventType.DeletedRelationship: {
-      await db.deleteFollow(did, evt.did)
-      await subscriptions.notifyOneOff(db, ownHost, evt.did, repo)
-      return
-    }
-
-    case delta.EventType.UpdatedRelationship: {
-      throw new ServerError(
-        500,
-        "We don't support in place relationship edits yet",
-      )
-    }
-
-    case delta.EventType.DeletedNamespace: {
-      throw new ServerError(
-        500,
-        "We don't support full deletion of namespaces yet",
-      )
-    }
-
-    default:
-      throw new ServerError(500, 'Unsupported operation')
-  }
+  // @TODO fix this
+  // ----------------------
+  // switch (evt.event) {
+  //   case delta.EventType.AddedObject: {
+  //     if (evt.collection === 'posts') {
+  //       const post = await repo.get(evt.cid, schema.microblog.post)
+  //       await db.createPost(post, evt.cid)
+  //     } else if (evt.collection === 'interactions') {
+  //       const like = await repo.get(evt.cid, schema.microblog.like)
+  //       await db.createLike(like, evt.cid)
+  //       await subscriptions.notifyOneOff(db, ownHost, like.post_author, repo)
+  //     }
+  //     return
+  //   }
+  //   case delta.EventType.UpdatedObject: {
+  //     if (evt.collection === 'posts') {
+  //       const post = await repo.get(evt.cid, schema.microblog.post)
+  //       await db.updatePost(post, evt.cid)
+  //     } else if (evt.collection === 'interactions') {
+  //       throw new ServerError(
+  //         500,
+  //         "We don't support in place interaction edits yet",
+  //       )
+  //     }
+  //     return
+  //   }
+  //   case delta.EventType.DeletedObject: {
+  //     if (evt.collection === 'posts') {
+  //       await db.deletePost(evt.tid.toString(), did, evt.namespace)
+  //     } else if (evt.collection === 'interactions') {
+  //       const like = await db.getLike(evt.tid.toString(), did, evt.namespace)
+  //       if (like) {
+  //         await db.deleteLike(evt.tid.toString(), did, evt.namespace)
+  //         await subscriptions.notifyOneOff(db, ownHost, like.post_author, repo)
+  //       }
+  //     }
+  //     return
+  //   }
+  //   case delta.EventType.AddedRelationship: {
+  //     await db.createFollow(did, evt.did)
+  //     const follow = await repo.get(evt.cid, schema.repo.follow)
+  //     const [name, host] = follow.username.split('@')
+  //     if (host && host !== ownHost) {
+  //       await db.registerDid(name, follow.did, host)
+  //       await service.subscribe(
+  //         `http://${host}`,
+  //         follow.did,
+  //         `http://${ownHost}`,
+  //       )
+  //       await subscriptions.notifyOneOff(db, ownHost, evt.did, repo)
+  //     }
+  //     return
+  //   }
+  //   case delta.EventType.DeletedRelationship: {
+  //     await db.deleteFollow(did, evt.did)
+  //     await subscriptions.notifyOneOff(db, ownHost, evt.did, repo)
+  //     return
+  //   }
+  //   case delta.EventType.UpdatedRelationship: {
+  //     throw new ServerError(
+  //       500,
+  //       "We don't support in place relationship edits yet",
+  //     )
+  //   }
+  //   case delta.EventType.DeletedNamespace: {
+  //     throw new ServerError(
+  //       500,
+  //       "We don't support full deletion of namespaces yet",
+  //     )
+  //   }
+  //   default:
+  //     throw new ServerError(500, 'Unsupported operation')
+  // }
 }
 
 export default router
