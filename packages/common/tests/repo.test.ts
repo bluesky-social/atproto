@@ -68,4 +68,15 @@ describe('Repo', () => {
 
     await util.checkRepo(reloadedRepo, repoData)
   })
+
+  it('is concurrency safe', async () => {
+    repo = await Repo.create(blockstore, await authStore.did(), authStore)
+    const [data1, data2] = await Promise.all([
+      util.fillRepo(repo, 50),
+      util.fillRepo(repo, 50),
+    ])
+
+    await util.checkRepo(repo, data1)
+    await util.checkRepo(repo, data2)
+  })
 })
