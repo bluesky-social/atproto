@@ -10,7 +10,9 @@ export class MemoryBlockstore implements BlockstoreI {
 
   async get(k: CID): Promise<Uint8Array> {
     const v = this.map.get(k.toString())
-    if (!v) throw new Error(`Not found: ${k.toString()}`)
+    if (!v) {
+      throw new Error(`Not found: ${k.toString()}`)
+    }
     return v
   }
 

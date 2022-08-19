@@ -1,9 +1,9 @@
 import express from 'express'
 import { z } from 'zod'
-import { checkReq } from '../../auth'
-import * as util from '../../util'
-import * as subscriptions from '../../subscriptions'
-import { ServerError } from '../../error'
+import { checkReq } from '../../../auth'
+import * as util from '../../../util'
+import * as subscriptions from '../../../subscriptions'
+import { ServerError } from '../../../error'
 import * as auth from '@adxp/auth'
 import { schema, check, flattenLike } from '@adxp/common'
 

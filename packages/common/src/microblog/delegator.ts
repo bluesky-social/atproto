@@ -50,7 +50,7 @@ export class MicroblogDelegator
     const token = await this.postToken('posts', tid)
     try {
       await axios.post(
-        `${this.url}/data/post`,
+        `${this.url}/.adx/v1/data/post/` + this.did,
         flattenPost(post),
         authCfg(token),
       )
@@ -72,7 +72,7 @@ export class MicroblogDelegator
     const token = await this.postToken('posts', tid)
     try {
       await axios.put(
-        `${this.url}/data/post`,
+        `${this.url}/.adx/v1/data/post`,
         flattenPost(updated),
         authCfg(token),
       )
@@ -90,7 +90,7 @@ export class MicroblogDelegator
     }
     const token = await this.postToken('posts', tid)
     try {
-      await axios.delete(`${this.url}/data/post`, {
+      await axios.delete(`${this.url}/.adx/v1/data/post`, {
         data,
         ...authCfg(token),
       })
@@ -105,7 +105,7 @@ export class MicroblogDelegator
     const data = { creator: this.did, target }
     const token = await this.relationshipToken()
     try {
-      await axios.post(`${this.url}/data/relationship`, data, authCfg(token))
+      await axios.post(`${this.url}/.adx/v1/data/relationship`, data, authCfg(token))
     } catch (e) {
       const err = parseAxiosError(e)
       throw new Error(err.msg)
@@ -117,7 +117,7 @@ export class MicroblogDelegator
     const data = { creator: this.did, target: target }
     const token = await this.relationshipToken()
     try {
-      await axios.delete(`${this.url}/data/relationship`, {
+      await axios.delete(`${this.url}/.adx/v1/data/relationship`, {
         data,
         ...authCfg(token),
       })
@@ -142,7 +142,7 @@ export class MicroblogDelegator
     const token = await this.postToken('interactions', tid)
     try {
       await axios.post(
-        `${this.url}/data/interaction`,
+        `${this.url}/.adx/v1/data/interaction`,
         flattenLike(like),
         authCfg(token),
       )
@@ -161,7 +161,7 @@ export class MicroblogDelegator
     }
     const token = await this.postToken('interactions', likeTid)
     try {
-      await axios.delete(`${this.url}/data/interaction`, {
+      await axios.delete(`${this.url}/.adx/v1/data/interaction`, {
         data,
         ...authCfg(token),
       })
@@ -190,7 +190,7 @@ export class MicroblogDelegator
       tid: tid.toString(),
     }
     try {
-      const res = await axios.get(`${this.url}/indexer/count/likes`, {
+      const res = await axios.get(`${this.url}/.adx/v1/indexer/count/likes`, {
         params,
       })
       return check.assure(z.number(), res.data.count)

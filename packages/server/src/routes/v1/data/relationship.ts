@@ -1,12 +1,12 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { service } from '@adxp/common'
+import { service } from "@adxp/common";
 import * as auth from '@adxp/auth'
-import { checkReq } from '../../auth'
-import * as util from '../../util'
-import * as subscriptions from '../../subscriptions'
-import { ServerError } from '../../error'
+import { checkReq } from '../../../auth'
+import * as util from '../../../util'
+import * as subscriptions from '../../../subscriptions'
+import { ServerError } from '../../../error'
 
 const router = express.Router()
 

@@ -1,7 +1,7 @@
 import express from 'express'
 import { z } from 'zod'
 import { schema } from '@adxp/common'
-import * as util from '../../util'
+import * as util from '../../../util'
 
 const router = express.Router()
 

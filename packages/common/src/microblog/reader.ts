@@ -111,7 +111,7 @@ export class MicroblogReader implements MicroblogReaderI {
     const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = { did }
     try {
-      const res = await axios.get(`${hostUrl}/indexer/account-info`, {
+      const res = await axios.get(`${hostUrl}/.adx/v1/indexer/account-info`, {
         params,
       })
       return check.assure(schema.accountInfo, res.data)
@@ -132,7 +132,7 @@ export class MicroblogReader implements MicroblogReaderI {
     const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = { user: did, count, from: from?.toString() }
     try {
-      const res = await axios.get(`${hostUrl}/indexer/feed`, {
+      const res = await axios.get(`${hostUrl}/.adx/v1/indexer/feed`, {
         params,
       })
       return check.assure(schema.timeline, res.data)
@@ -148,7 +148,7 @@ export class MicroblogReader implements MicroblogReaderI {
   async retrieveTimeline(count: number, from?: TID): Promise<Timeline> {
     const params = { user: this.ownDid(), count, from: from?.toString() }
     try {
-      const res = await axios.get(`${this.url}/indexer/timeline`, { params })
+      const res = await axios.get(`${this.url}/.adx/v1/indexer/timeline`, { params })
       return check.assure(schema.timeline, res.data)
     } catch (e) {
       const err = parseAxiosError(e)
@@ -160,7 +160,7 @@ export class MicroblogReader implements MicroblogReaderI {
     const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = { did, namespace: this.namespace, tid: tid.toString() }
     try {
-      const res = await axios.get(`${hostUrl}/indexer/post-info`, {
+      const res = await axios.get(`${hostUrl}/.adx/v1/indexer/post-info`, {
         params,
       })
       return check.assure(schema.timelinePost, res.data)
@@ -186,7 +186,7 @@ export class MicroblogReader implements MicroblogReaderI {
     }
     let res: AxiosResponse
     try {
-      res = await axios.get(`${hostUrl}/data/post`, { params })
+      res = await axios.get(`${hostUrl}/.adx/v1/data/post/${did}`, { params })
       return check.assure(schema.post, res.data)
     } catch (e) {
       const err = parseAxiosError(e)
@@ -214,7 +214,7 @@ export class MicroblogReader implements MicroblogReaderI {
       from: from?.toString(),
     }
     try {
-      const res = await axios.get(`${hostUrl}/data/post/list`, {
+      const res = await axios.get(`${hostUrl}/.adx/v1/data/post/list`, {
         params,
       })
       return check.assure(z.array(schema.post), res.data)
@@ -250,7 +250,7 @@ export class MicroblogReader implements MicroblogReaderI {
     const { hostUrl, did } = await this.resolveUser(nameOrDid)
     const params = { user: did }
     try {
-      const res = await axios.get(`${hostUrl}/indexer/followers`, {
+      const res = await axios.get(`${hostUrl}/.adx/v1/indexer/followers`, {
         params,
       })
       return check.assure(z.array(repoSchema.follow), res.data)
@@ -281,7 +281,7 @@ export class MicroblogReader implements MicroblogReaderI {
       postTid: postTid.toString(),
     }
     try {
-      const res = await axios.get(`${user.hostUrl}/data/interaction`, {
+      const res = await axios.get(`${user.hostUrl}/.adx/v1/data/interaction`, {
         params,
       })
       return check.assure(schema.like, res.data)
@@ -307,7 +307,7 @@ export class MicroblogReader implements MicroblogReaderI {
       from: from?.toString(),
     }
     try {
-      const res = await axios.get(`${hostUrl}/data/interaction/list`, {
+      const res = await axios.get(`${hostUrl}/.adx/v1/data/interaction/list`, {
         params,
       })
       return check.assure(z.array(schema.like), res.data)

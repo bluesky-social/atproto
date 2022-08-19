@@ -50,7 +50,7 @@ export const register = async (
 ): Promise<void> => {
   const data = { username, did, createRepo }
   try {
-    await axios.post(`${url}/id/register`, data, authCfg(token))
+    await axios.post(`${url}/.adx/v1/account`, data, authCfg(token))
   } catch (e) {
     const err = parseAxiosError(e)
     throw new Error(err.msg)
@@ -92,7 +92,7 @@ export const getRemoteRoot = async (
 ): Promise<CID | null> => {
   const params = { did }
   try {
-    const res = await axios.get(`${url}/data/root`, { params })
+    const res = await axios.get(`${url}/.adx/v1/data/root`, { params })
     return CID.parse(res.data.root)
   } catch (e) {
     const err = parseAxiosError(e)
@@ -110,7 +110,7 @@ export const subscribe = async (
 ): Promise<void> => {
   const data = { did, host: ownUrl }
   try {
-    await axios.post(`${url}/data/subscribe`, data)
+    await axios.post(`${url}/.adx/v1/data/subscribe`, data)
   } catch (e) {
     const err = parseAxiosError(e)
     throw new Error(`Could not retrieve server did ${err.msg}`)
@@ -123,7 +123,7 @@ export const pushRepo = async (
   car: Uint8Array,
 ): Promise<void> => {
   try {
-    await axios.post(`${url}/data/repo/${did}`, car, {
+    await axios.post(`${url}/.adx/v1/data/repo/${did}`, car, {
       headers: {
         'Content-Type': 'application/octet-stream',
       },
@@ -141,7 +141,7 @@ export const pullRepo = async (
 ): Promise<Uint8Array | null> => {
   const params = { did, from: from?.toString() }
   try {
-    const res = await axios.get(`${url}/data/repo`, {
+    const res = await axios.get(`${url}/.adx/v1/data/repo`, {
       params,
       responseType: 'arraybuffer',
     })

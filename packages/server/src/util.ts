@@ -1,8 +1,8 @@
-import { Request, Response } from 'express'
-import { IpldStore, Repo, check } from '@adxp/common'
-import * as auth from '@adxp/auth'
-import { Database } from './db'
-import { ServerError } from './error'
+import { Request, Response } from "express";
+import { check, IpldStore, Repo } from "@adxp/common";
+import * as auth from "@adxp/auth";
+import { Database } from "./db";
+import { ServerError } from "./error";
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -71,9 +71,11 @@ export const maybeLoadRepo = async (
 ): Promise<Repo | null> => {
   const { db, blockstore } = getLocals(res)
   const currRoot = await db.getRepoRoot(did)
+
   if (!currRoot) {
     return null
   }
+
   return Repo.load(blockstore, currRoot, authStore)
 }
 

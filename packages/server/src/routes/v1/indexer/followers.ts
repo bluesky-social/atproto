@@ -1,6 +1,6 @@
 import express from 'express'
 import { z } from 'zod'
-import * as util from '../../util'
+import * as util from '../../../util'
 
 const router = express.Router()
 

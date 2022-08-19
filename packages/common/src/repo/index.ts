@@ -89,7 +89,7 @@ export class Repo implements CarStreamable {
       authStore,
     })
   }
-
+  
   static async load(blockstore: IpldStore, cid: CID, authStore?: AuthStore) {
     const commit = await blockstore.get(cid, schema.commit)
     const root = await blockstore.get(commit.root, schema.repoRoot)

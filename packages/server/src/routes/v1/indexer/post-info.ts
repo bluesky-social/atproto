@@ -1,8 +1,8 @@
 import express from 'express'
 import { z } from 'zod'
 import { schema } from '@adxp/common'
-import * as util from '../../util'
-import { ServerError } from '../../error'
+import * as util from '../../../util'
+import { ServerError } from '../../../error'
 
 const router = express.Router()
 
