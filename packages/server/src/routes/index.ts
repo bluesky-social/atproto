@@ -21,6 +21,9 @@ router.get('/test', async (req, res) => {
     createdAt: new Date().toISOString(),
   })
 
+  const got = await db.records.posts.get(uri)
+  console.log('got: ', got)
+
   res.status(200).send()
 })
 

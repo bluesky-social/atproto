@@ -9,17 +9,17 @@ const collection = 'bsky/posts'
 const tableName = collectionToTableName(collection)
 
 @Entity({ name: tableName })
-export class PostDbObj {
-  @PrimaryColumn('string')
+export class PostIndex {
+  @PrimaryColumn('varchar')
   uri: string
 
   @Column('text')
   text: string
 
-  @Column('string')
+  @Column({ type: 'varchar', nullable: true })
   replyRoot?: string
 
-  @Column('string')
+  @Column({ type: 'varchar', nullable: true })
   replyParent?: string
 
   @Column('datetime')
@@ -27,7 +27,7 @@ export class PostDbObj {
 }
 
 const getFn =
-  (repo: Repository<PostDbObj>) =>
+  (repo: Repository<PostIndex>) =>
   async (uri: AdxUri): Promise<Post.Record | null> => {
     const found = await repo.findOneBy({ uri: uri.toString() })
     if (found === null) return null
@@ -38,22 +38,19 @@ const getFn =
         }
       : undefined
     return {
-      text: found.uri,
+      text: found.text,
       reply: reply,
       createdAt: found.createdAt,
     }
   }
 
 const setFn =
-  (repo: Repository<PostDbObj>) =>
+  (repo: Repository<PostIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!microblog.isPost(obj)) {
-      console.log(postRecordValidator)
-      const res = postRecordValidator.validate(obj)
-      console.log(res)
       throw new Error('Not a valid post record')
     }
-    const post = new PostDbObj()
+    const post = new PostIndex()
     post.uri = uri.toString()
     post.text = obj.text
     post.createdAt = obj.createdAt
@@ -64,13 +61,13 @@ const setFn =
   }
 
 const deleteFn =
-  (repo: Repository<PostDbObj>) =>
+  (repo: Repository<PostIndex>) =>
   async (uri: AdxUri): Promise<void> => {
     await repo.delete({ uri: uri.toString() })
   }
 
 export const makePlugin = (db: DataSource): DbPlugin<Post.Record> => {
-  const repository = db.getRepository(PostDbObj)
+  const repository = db.getRepository(PostIndex)
   return {
     collection,
     tableName,

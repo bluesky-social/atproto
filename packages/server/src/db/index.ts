@@ -1,7 +1,9 @@
-import { Like, Post } from '@adxp/microblog'
+import { Follow, Like, Post } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { DbPlugin } from './types'
-import postPlugin from './records.ts/posts'
+import postPlugin, { PostIndex } from './records/posts'
+import likePlugin, { LikeIndex } from './records/likes'
+import followPlugin, { FollowIndex } from './records/follows'
 import { AdxUri } from '@adxp/common'
 
 export class Database {
@@ -9,19 +11,25 @@ export class Database {
   records: {
     posts: DbPlugin<Post.Record>
     likes: DbPlugin<Like.Record>
+    follows: DbPlugin<Follow.Record>
   }
 
   constructor(db: DataSource) {
     this.db = db
     this.records = {
       posts: postPlugin(db),
-      likes: {} as any,
+      likes: likePlugin(db),
+      follows: followPlugin(db),
     }
     this.db.synchronize()
   }
 
   static async sqlite(location: string): Promise<Database> {
-    const db = new DataSource({ type: 'sqlite', database: location })
+    const db = new DataSource({
+      type: 'sqlite',
+      database: location,
+      entities: [PostIndex, LikeIndex, FollowIndex],
+    })
     await db.initialize()
     return new Database(db)
   }
