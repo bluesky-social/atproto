@@ -3,7 +3,9 @@ import { AdxSchemas } from '@adxp/schemas'
 import { Post } from './types'
 
 const s = new AdxSchemas()
-recordSchemas.forEach(s.add)
+for (const schema of recordSchemas) {
+  s.add(schema)
+}
 
 export const postRecordValidator = s.createRecordValidator(
   'blueskyweb.xyz:Post',

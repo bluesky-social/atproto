@@ -1,25 +1,25 @@
 import { AdxUri } from '@adxp/common'
 import * as microblog from '@adxp/microblog'
-import { Post } from '@adxp/microblog'
+import { Post, postRecordValidator } from '@adxp/microblog'
 import { DataSource, Entity, Column, PrimaryColumn, Repository } from 'typeorm'
-import { DbPlugin } from './types'
-import { collectionToTableName } from './util'
+import { DbPlugin } from '../types'
+import { collectionToTableName } from '../util'
 
-const collection = 'bksy/posts'
+const collection = 'bsky/posts'
 const tableName = collectionToTableName(collection)
 
-@Entity({ name: 'record_bsky_posts' })
+@Entity({ name: tableName })
 export class PostDbObj {
-  @PrimaryColumn()
+  @PrimaryColumn('string')
   uri: string
 
   @Column('text')
   text: string
 
-  @Column()
+  @Column('string')
   replyRoot?: string
 
-  @Column()
+  @Column('string')
   replyParent?: string
 
   @Column('datetime')
@@ -48,6 +48,9 @@ const setFn =
   (repo: Repository<PostDbObj>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!microblog.isPost(obj)) {
+      console.log(postRecordValidator)
+      const res = postRecordValidator.validate(obj)
+      console.log(res)
       throw new Error('Not a valid post record')
     }
     const post = new PostDbObj()

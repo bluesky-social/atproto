@@ -20,12 +20,12 @@
     "@adxp/crypto": "*",
     "@adxp/microblog": "*",
     "@adxp/schemas": "*",
-    "@vscode/sqlite3": "^5.0.7",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.17.2",
     "express-async-errors": "^3.1.1",
     "level": "^8.0.0",
+    "sqlite3": "^5.0.11",
     "typeorm": "^0.3.7",
     "zod": "^3.14.2"
   },

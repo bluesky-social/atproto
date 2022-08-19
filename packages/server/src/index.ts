@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
-import { IpldStore } from '@adxp/common'
+import { IpldStore, MemoryBlockstore, PersistentBlockstore } from '@adxp/common'
 import * as crypto from '@adxp/crypto'
-import Database from './db/index'
+import Database from './db'
 import server from './server'
 
 const run = async () => {
@@ -19,18 +19,22 @@ const run = async () => {
   const dbLoc = process.env.DATABASE_LOC
 
   if (bsLoc) {
-    blockstore = IpldStore.createPersistent(bsLoc)
+    blockstore = new PersistentBlockstore(bsLoc)
   } else {
-    blockstore = IpldStore.createInMemory()
+    blockstore = new MemoryBlockstore()
   }
 
-  if (dbLoc) {
-    db = Database.sqlite(dbLoc)
-  } else {
-    db = Database.memory()
-  }
+  db = await Database.sqlite(dbLoc || 'test.sqlite')
 
-  db.createTables()
+  // if (dbLoc) {
+  //   db = Database.sqlite(dbLoc)
+  // } else {
+  //   // @TODO add in memory option
+  //   throw new Error('TODO: no memory db')
+  //   // db = Database.memory()
+  // }
+
+  // db.createTables()
 
   const keypair = await crypto.EcdsaKeypair.create()
 
