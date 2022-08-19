@@ -1,4 +1,9 @@
-import { Knex } from 'knex'
+import { AdxUri } from '@adxp/common'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type KnexDB = Knex<any, unknown[]>
+export type DbPlugin<T> = {
+  collection: string
+  tableName: string
+  get: (uri: AdxUri) => Promise<T | null>
+  set: (uri: AdxUri, obj: unknown) => Promise<void>
+  delete: (uri: AdxUri) => Promise<void>
+}
