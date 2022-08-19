@@ -24,17 +24,11 @@ const run = async () => {
     blockstore = new MemoryBlockstore()
   }
 
-  db = await Database.sqlite(dbLoc || 'test.sqlite')
-
-  // if (dbLoc) {
-  //   db = Database.sqlite(dbLoc)
-  // } else {
-  //   // @TODO add in memory option
-  //   throw new Error('TODO: no memory db')
-  //   // db = Database.memory()
-  // }
-
-  // db.createTables()
+  if (dbLoc) {
+    db = await Database.sqlite(dbLoc)
+  } else {
+    db = await Database.memory()
+  }
 
   const keypair = await crypto.EcdsaKeypair.create()
 

@@ -34,6 +34,10 @@ export class Database {
     return new Database(db)
   }
 
+  static async memory(): Promise<Database> {
+    return Database.sqlite(':memory:')
+  }
+
   async addRecord(uri: AdxUri, obj: unknown) {
     const table = this.findTableForCollection(uri.collection)
     await table.set(uri, obj)
