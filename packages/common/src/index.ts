@@ -14,11 +14,11 @@ export * from './network/names'
 export * from './network/uri'
 
 // import { schema as microblogSchema } from './microblog/types'
-// import { schema as commonSchema } from './common/types'
-// import { schema as repoSchema } from './repo/types'
+import { def as commonDef } from './common/types'
+import { def as repoDef } from './repo/types'
 
-// export const schema = {
-//   microblog: microblogSchema,
-//   common: commonSchema,
-//   repo: repoSchema,
-// }
+export const def = {
+  // microblog: microblogSchema,
+  common: commonDef,
+  repo: repoDef,
+}

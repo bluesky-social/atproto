@@ -1,48 +1,38 @@
 import express from 'express'
-import { z } from 'zod'
 import * as util from '../../../util'
-import { DataDiff, Repo, schema, service } from '@adxp/common'
+import { getRepoRequest, postRepoRequest } from '@adxp/api'
+import { DataDiff, Repo, service } from '@adxp/common'
 import Database from '../../../db/index'
 import { ServerError } from '../../../error'
 import * as subscriptions from '../../../subscriptions'
 
 const router = express.Router()
 
-export const getRepoReq = z.object({
-  did: z.string(),
-  from: schema.common.strToCid.optional(),
-})
-export type GetRepoReq = z.infer<typeof getRepoReq>
-
 router.get('/', async (req, res) => {
-  const query = util.checkReqBody(req.query, getRepoReq)
+  const query = util.checkReqBody(req.query, getRepoRequest)
   const { did, from = null } = query
   const repo = await util.loadRepo(res, did)
   const diff = await repo.getDiffCar(from)
   res.status(200).send(Buffer.from(diff))
 })
 
-export const postRepoReq = z.object({
-  did: z.string(),
-})
-export type PostRepoReq = z.infer<typeof postRepoReq>
-
 router.post('/:did', async (req, res) => {
   // we don't need auth here because the auth is on the data structure 😎
-  const { did } = util.checkReqBody(req.params, postRepoReq)
+  const { did } = util.checkReqBody(req.params, postRepoRequest)
   const bytes = await util.readReqBytes(req)
 
   const db = util.getDB(res)
 
+  // @TODO Add fix something here
   // check to see if we have their username in DB, for indexed queries
-  const haveUsername = await db.isDidRegistered(did)
-  if (!haveUsername) {
-    const username = await service.getUsernameFromDidNetwork(did)
-    if (username) {
-      const [name, host] = username.split('@')
-      await db.registerDid(name, did, host)
-    }
-  }
+  // const haveUsername = await db.isDidRegistered(did)
+  // if (!haveUsername) {
+  //   const username = await service.getUsernameFromDidNetwork(did)
+  //   if (username) {
+  //     const [name, host] = username.split('@')
+  //     await db.registerDid(name, did, host)
+  //   }
+  // }
 
   const maybeRepo = await util.maybeLoadRepo(res, did)
   const isNewRepo = maybeRepo === null
@@ -64,9 +54,7 @@ router.post('/:did', async (req, res) => {
 
   await subscriptions.notifySubscribers(db, repo)
 
-  if (isNewRepo) {
-    await db.createRepoRoot(did, repo.cid)
-  } else [await db.updateRepoRoot(did, repo.cid)]
+  await db.setRepoRoot(did, repo.cid)
 
   res.status(200).send()
 })

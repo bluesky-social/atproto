@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { BlockWriter } from '@ipld/car/writer'
-import { schema as common } from '../common/types'
+import { def as common } from '../common/types'
 import TID from './tid'
 import CidSet from './cid-set'
 import { CID } from 'multiformats'
@@ -66,7 +66,7 @@ export type UpdateData = {
   newCids: CidSet
 }
 
-export const schema = {
+export const def = {
   ...common,
   tid,
   strToTid,

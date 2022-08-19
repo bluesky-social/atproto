@@ -1,4 +1,16 @@
+import { def } from '@adxp/common'
 import { z } from 'zod'
+
+export const getRepoRequest = z.object({
+  did: z.string(),
+  from: def.common.strToCid.optional(),
+})
+export type GetRepoRequest = z.infer<typeof getRepoRequest>
+
+export const postRepoRequest = z.object({
+  did: z.string(),
+})
+export type PostRepoRequest = z.infer<typeof postRepoRequest>
 
 export const describeRepoParams = z.object({
   confirmName: z.boolean().optional(),

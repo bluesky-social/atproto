@@ -5,6 +5,8 @@ import postPlugin, { PostIndex } from './records/posts'
 import likePlugin, { LikeIndex } from './records/likes'
 import followPlugin, { FollowIndex } from './records/follows'
 import { AdxUri } from '@adxp/common'
+import { CID } from 'multiformats/cid'
+import { RepoRoot } from './repo-root'
 
 export class Database {
   db: DataSource
@@ -28,7 +30,7 @@ export class Database {
     const db = new DataSource({
       type: 'sqlite',
       database: location,
-      entities: [PostIndex, LikeIndex, FollowIndex],
+      entities: [PostIndex, LikeIndex, FollowIndex, RepoRoot],
     })
     await db.initialize()
     return new Database(db)
@@ -36,6 +38,24 @@ export class Database {
 
   static async memory(): Promise<Database> {
     return Database.sqlite(':memory:')
+  }
+
+  async getRepoRoot(did: string): Promise<CID | null> {
+    const table = this.db.getRepository(RepoRoot)
+    const found = await table.findOneBy({ did })
+    if (found === null) return null
+    return CID.parse(found.root)
+  }
+
+  async setRepoRoot(did: string, root: CID) {
+    const table = this.db.getRepository(RepoRoot)
+    let newRoot = await table.findOneBy({ did })
+    if (newRoot === null) {
+      newRoot = new RepoRoot()
+      newRoot.did = did
+    }
+    newRoot.root = root.toString()
+    await table.save(newRoot)
   }
 
   async addRecord(uri: AdxUri, obj: unknown) {

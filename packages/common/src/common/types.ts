@@ -39,7 +39,7 @@ const strToInt = z
   })
   .transform((str) => parseInt(str))
 
-export const schema = {
+export const def = {
   string: z.string(),
   cid,
   strToCid,
