@@ -1,19 +1,21 @@
-import MST, { countPrefixLen } from '../src/repo/mst/mst'
+import { MST, DataAdd, DataUpdate, DataDelete } from '../src/repo/mst'
+import { countPrefixLen } from '../src/repo/mst/util'
 
+import { MemoryBlockstore } from '../src/blockstore'
 import * as util from './_util'
-import { IpldStore, MstAdd, MstDelete, MstUpdate } from '../src'
+
 import { CID } from 'multiformats'
 
 describe('Merkle Search Tree', () => {
-  let blockstore: IpldStore
+  let blockstore: MemoryBlockstore
   let mst: MST
   let mapping: Record<string, CID>
   let shuffled: [string, CID][]
 
   beforeAll(async () => {
-    blockstore = IpldStore.createInMemory()
+    blockstore = new MemoryBlockstore()
     mst = await MST.create(blockstore)
-    mapping = await util.generateBulkTidMapping(1000)
+    mapping = await util.generateBulkTidMapping(1000, blockstore)
     shuffled = util.shuffle(Object.entries(mapping))
   })
 
@@ -37,7 +39,7 @@ describe('Merkle Search Tree', () => {
     const edited: [string, CID][] = []
     for (const entry of toEdit) {
       const newCid = await util.randomCid()
-      editedMst = await editedMst.edit(entry[0], newCid)
+      editedMst = await editedMst.update(entry[0], newCid)
       edited.push([entry[0], newCid])
     }
 
@@ -89,7 +91,7 @@ describe('Merkle Search Tree', () => {
 
   it('saves and loads from blockstore', async () => {
     const cid = await mst.save()
-    const loaded = await MST.fromCid(blockstore, cid)
+    const loaded = await MST.load(blockstore, cid)
     const origNodes = await mst.allNodes()
     const loadedNodes = await loaded.allNodes()
     expect(origNodes.length).toBe(loadedNodes.length)
@@ -101,13 +103,15 @@ describe('Merkle Search Tree', () => {
   it('diffs', async () => {
     let toDiff = mst
 
-    const toAdd = Object.entries(await util.generateBulkTidMapping(100))
+    const toAdd = Object.entries(
+      await util.generateBulkTidMapping(100, blockstore),
+    )
     const toEdit = shuffled.slice(500, 600)
     const toDel = shuffled.slice(400, 500)
 
-    const expectedAdds: Record<string, MstAdd> = {}
-    const expectedUpdates: Record<string, MstUpdate> = {}
-    const expectedDels: Record<string, MstDelete> = {}
+    const expectedAdds: Record<string, DataAdd> = {}
+    const expectedUpdates: Record<string, DataUpdate> = {}
+    const expectedDels: Record<string, DataDelete> = {}
 
     for (const entry of toAdd) {
       toDiff = await toDiff.add(entry[0], entry[1])
@@ -115,7 +119,7 @@ describe('Merkle Search Tree', () => {
     }
     for (const entry of toEdit) {
       const updated = await util.randomCid()
-      toDiff = await toDiff.edit(entry[0], updated)
+      toDiff = await toDiff.update(entry[0], updated)
       expectedUpdates[entry[0]] = {
         key: entry[0],
         prev: entry[1],
@@ -136,9 +140,21 @@ describe('Merkle Search Tree', () => {
     expect(diff.adds).toEqual(expectedAdds)
     expect(diff.updates).toEqual(expectedUpdates)
     expect(diff.deletes).toEqual(expectedDels)
+
+    // ensure we correctly report all added CIDs
+    for await (const entry of toDiff.walk()) {
+      let cid: CID
+      if (entry.isTree()) {
+        cid = await entry.getPointer()
+      } else {
+        cid = entry.value
+      }
+      const found = (await blockstore.has(cid)) || diff.newCids.has(cid)
+      expect(found).toBeTruthy()
+    }
   })
 
-  // Special Cases
+  // Special Cases (these are made for fanout 32)
   // ------------
 
   // These are some tricky things that can come up that may not be included in a randomized tree
@@ -172,7 +188,7 @@ describe('Merkle Search Tree', () => {
     ]
     const layer1 = ['3j6hnk65jju2t', '3j6hnk65kve2t']
     const layer2 = '3j6hnk65jng2t'
-    mst = await MST.create(blockstore)
+    mst = await MST.create(blockstore, [], { fanout: 32 })
     const cid = await util.randomCid()
     for (const tid of layer0) {
       mst = await mst.add(tid, cid)
@@ -207,7 +223,7 @@ describe('Merkle Search Tree', () => {
     const layer0 = ['3j6hnk65jis2t', '3j6hnk65kvz2t']
     const layer1 = ['3j6hnk65jju2t', '3j6hnk65l222t']
     const layer2 = '3j6hnk65jng2t'
-    mst = await MST.create(blockstore)
+    mst = await MST.create(blockstore, [], { fanout: 32 })
     const cid = await util.randomCid()
     for (const tid of layer0) {
       mst = await mst.add(tid, cid)

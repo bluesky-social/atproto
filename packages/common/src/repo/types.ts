@@ -3,6 +3,8 @@ import { BlockWriter } from '@ipld/car/writer'
 import { schema as common } from '../common/types'
 import TID from './tid'
 import CidSet from './cid-set'
+import { CID } from 'multiformats'
+import { DataDiff } from './mst'
 
 const tid = z.instanceof(TID)
 
@@ -14,10 +16,8 @@ const strToTid = z
 const repoRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
-  new_cids: z.array(common.cid),
   auth_token: common.cid,
-  relationships: common.cid,
-  namespaces: z.record(common.cid),
+  data: common.cid,
 })
 export type RepoRoot = z.infer<typeof repoRoot>
 
@@ -81,5 +81,30 @@ export const schema = {
 }
 
 export interface CarStreamable {
+  writeToCarStream(car: BlockWriter): Promise<void>
+}
+
+// @TODO dedup from api/types
+export interface BatchWrite {
+  action: 'create' | 'update' | 'del'
+  collection: string
+  key: string
+  value: any
+}
+
+export type DataValue = {
+  key: string
+  value: CID
+}
+
+export interface DataStore {
+  add(key: string, value: CID): Promise<DataStore>
+  update(key: string, value: CID): Promise<DataStore>
+  delete(key: string): Promise<DataStore>
+  get(key: string): Promise<CID | null>
+  list(from: string, count: number): Promise<DataValue[]>
+  listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
+  diff(other: DataStore): Promise<DataDiff>
+  save(): Promise<CID>
   writeToCarStream(car: BlockWriter): Promise<void>
 }

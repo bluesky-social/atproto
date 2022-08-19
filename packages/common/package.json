@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
-    "test": "jest tests/mst.test.ts",
+    "test": "jest",
+    "test:profile": "node --inspect ../../node_modules/.bin/jest",
     "bench": "jest --config jest.bench.config.js ",
     "bench:profile": "node --inspect ../../node_modules/.bin/jest --config jest.bench.config.js",
     "prettier": "prettier --check src/",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@adxp/auth": "*",
+    "@adxp/schemas": "*",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
     "@ucans/core": "0.0.1-alpha2",

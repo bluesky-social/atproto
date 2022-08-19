@@ -3,8 +3,8 @@ import { DidableKey } from './ucans'
 
 import { adxSemantics, parseAdxResource } from './semantics'
 import { MONTH_IN_SEC, YEAR_IN_SEC } from './consts'
-import { Signer } from './types'
-import { writeCap } from './capabilities'
+import { CapWithProof, Signer } from './types'
+import { vaguerCap, writeCap } from './capabilities'
 
 export class AuthStore implements Signer {
   protected keypair: DidableKey
@@ -58,7 +58,7 @@ export class AuthStore implements Signer {
     return keypair.sign(data)
   }
 
-  async findUcan(cap: ucan.Capability): Promise<ucan.Ucan | null> {
+  async findProof(cap: ucan.Capability): Promise<ucan.DelegationChain | null> {
     const ucanStore = await this.getUcanStore()
     // we only handle adx caps right now
     const resource = parseAdxResource(cap.with)
@@ -67,7 +67,13 @@ export class AuthStore implements Signer {
       ucanStore.findWithCapability(await this.did(), cap, resource.did),
     )
     if (!res) return null
-    return res.ucan
+    return res
+  }
+
+  async findUcan(cap: ucan.Capability): Promise<ucan.Ucan | null> {
+    const chain = await this.findProof(cap)
+    if (chain === null) return null
+    return chain.ucan
   }
 
   async hasUcan(cap: ucan.Capability): Promise<boolean> {
@@ -91,6 +97,50 @@ export class AuthStore implements Signer {
       .build()
   }
 
+  // Creates a UCAN that permissions all required caps
+  // We find the vaguest proof possible for each cap to avoid unnecessary duplication
+  async createUcanForCaps(
+    audience: string,
+    caps: ucan.Capability[],
+    lifetime = MONTH_IN_SEC,
+  ): Promise<ucan.Ucan> {
+    const proofs: CapWithProof[] = []
+    const encodedTokens = new Set()
+    for (const cap of caps) {
+      const proof = await this.vaguestProofForCap(cap)
+      if (proof === null) {
+        throw new Error(`Could not find a ucan for capability: ${cap.with}`)
+      }
+      proofs.push(proof)
+    }
+
+    const keypair = await this.getKeypair()
+
+    let builder = ucan
+      .createBuilder()
+      .issuedBy(keypair)
+      .toAudience(audience)
+      .withLifetimeInSeconds(lifetime)
+
+    for (const prf of proofs) {
+      builder = builder.delegateCapability(prf.cap, prf.prf, adxSemantics)
+    }
+
+    return builder.build()
+  }
+
+  // Finds the most general proof for the given cap
+  // (And thus most likely to overlap with other proofs)
+  async vaguestProofForCap(cap: ucan.Capability): Promise<CapWithProof | null> {
+    const prf = await this.findProof(cap)
+    if (prf === null) return null
+    const vauger = vaguerCap(cap)
+    if (vauger === null) return { cap, prf }
+    const vaugerPrf = await this.vaguestProofForCap(vauger)
+    if (vaugerPrf === null) return { cap, prf }
+    return vaugerPrf
+  }
+
   async createAwakeProof(
     audience: string,
     cap: ucan.Capability,
@@ -104,7 +154,7 @@ export class AuthStore implements Signer {
     return ucan.build({
       issuer: keypair,
       audience: audience,
-      lifetimeInSeconds: 60 * 5,
+      lifetimeInSeconds: 60,
       proofs: [ucan.encode(fullUcan)],
     })
   }
@@ -118,7 +168,7 @@ export class AuthStore implements Signer {
       .createBuilder()
       .issuedBy(keypair)
       .toAudience(ownDid)
-      .withLifetimeInSeconds(10 * YEAR_IN_SEC)
+      .withLifetimeInSeconds(YEAR_IN_SEC)
       .claimCapability(writeCap(ownDid))
       .build()
     await this.addUcan(token)

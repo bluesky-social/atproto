@@ -1,14 +1,13 @@
 import { CID } from 'multiformats'
 import IpldStore from '../src/blockstore/ipld-store'
 import TID from '../src/repo/tid'
-import { Follow, IdMapping, schema } from '../src/repo/types'
-import { DID } from '../src/common/types'
-import SSTable from '../src/repo/ss-table'
-import Repo from '../src/repo/index'
-import { MST } from '../src'
+import { IdMapping } from '../src/repo/types'
+import { Repo } from '../src/repo'
+import { MemoryBlockstore } from '../src/blockstore'
+import { DataDiff, MST } from '../src/repo/mst'
 import fs from 'fs'
 
-const fakeStore = IpldStore.createInMemory()
+const fakeStore = new MemoryBlockstore()
 
 export const randomCid = async (store: IpldStore = fakeStore): Promise<CID> => {
   const str = randomStr(50)
@@ -25,11 +24,12 @@ export const generateBulkTids = (count: number): TID[] => {
 
 export const generateBulkTidMapping = async (
   count: number,
+  blockstore: IpldStore = fakeStore,
 ): Promise<IdMapping> => {
   const ids = generateBulkTids(count)
   const obj: IdMapping = {}
   for (const id of ids) {
-    obj[id.toString()] = await randomCid()
+    obj[id.toString()] = await randomCid(blockstore)
   }
   return obj
 }
@@ -42,10 +42,6 @@ export const keysFromMappings = (mappings: IdMapping[]): TID[] => {
   return mappings.map(keysFromMapping).flat()
 }
 
-export const checkInclusionInTable = (tids: TID[], table: SSTable): boolean => {
-  return tids.map((tid) => table.hasEntry(tid)).every((has) => has === true)
-}
-
 export const randomStr = (len: number): string => {
   let result = ''
   const CHARS = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
@@ -53,99 +49,6 @@ export const randomStr = (len: number): string => {
     result += CHARS.charAt(Math.floor(Math.random() * CHARS.length))
   }
   return result
-}
-
-export const randomDid = (): DID => {
-  const result = randomStr(48)
-  return `did:key:${result}`
-}
-
-export const generateBulkDids = (count: number): DID[] => {
-  const dids: DID[] = []
-  for (let i = 0; i < count; i++) {
-    dids.push(randomDid())
-  }
-  return dids
-}
-
-export const randomFollow = (): Follow => {
-  return {
-    did: randomDid(),
-    username: randomStr(8),
-  }
-}
-
-export const generateBulkFollows = (count: number): Follow[] => {
-  const follows: Follow[] = []
-  for (let i = 0; i < count; i++) {
-    follows.push(randomFollow())
-  }
-  return follows
-}
-
-export type RepoData = {
-  posts: Record<string, string>
-  interactions: Record<string, string>
-  follows: Record<string, Follow>
-}
-
-export const fillRepo = async (
-  repo: Repo,
-  namespaceId: string,
-  postsCount: number,
-  interCount: number,
-  followCount: number,
-): Promise<RepoData> => {
-  const data: RepoData = {
-    posts: {},
-    interactions: {},
-    follows: {},
-  }
-  await repo.runOnNamespace(namespaceId, async (namespace) => {
-    for (let i = 0; i < postsCount; i++) {
-      const tid = await TID.next()
-      const content = randomStr(10)
-      const cid = await repo.put(content)
-      await namespace.posts.addEntry(tid, cid)
-      data.posts[tid.toString()] = content
-    }
-    for (let i = 0; i < interCount; i++) {
-      const tid = await TID.next()
-      const content = randomStr(10)
-      const cid = await repo.put(content)
-      await namespace.interactions.addEntry(tid, cid)
-      data.interactions[tid.toString()] = content
-    }
-  })
-  for (let i = 0; i < followCount; i++) {
-    const follow = randomFollow()
-    await repo.relationships.follow(follow.did, follow.username)
-    data.follows[follow.did] = follow
-  }
-  return data
-}
-
-export const checkRepo = async (
-  repo: Repo,
-  namespaceId: string,
-  data: RepoData,
-): Promise<void> => {
-  await repo.runOnNamespace(namespaceId, async (namespace) => {
-    for (const tid of Object.keys(data.posts)) {
-      const cid = await namespace.posts.getEntry(TID.fromStr(tid))
-      const actual = cid ? await repo.get(cid, schema.string) : null
-      expect(actual).toEqual(data.posts[tid])
-    }
-    for (const tid of Object.keys(data.interactions)) {
-      const cid = await namespace.interactions.getEntry(TID.fromStr(tid))
-      const actual = cid ? await repo.get(cid, schema.string) : null
-      expect(actual).toEqual(data.interactions[tid])
-    }
-  })
-  for (const did of Object.keys(data.follows)) {
-    const actual = await repo.relationships.getFollow(did)
-    expect(actual).toEqual(data.follows[did])
-  }
 }
 
 export const shuffle = <T>(arr: T[]): T[] => {
@@ -159,17 +62,144 @@ export const shuffle = <T>(arr: T[]): T[] => {
   return shuffled
 }
 
+export const generateObject = (): Record<string, string> => {
+  return {
+    name: randomStr(100),
+  }
+}
+
+// Mass repo mutations & checking
+// -------------------------------
+
+export const testCollections = ['bsky/posts', 'bsky/likes']
+
+export type CollectionData = Record<string, unknown>
+export type RepoData = Record<string, CollectionData>
+
+export const fillRepo = async (
+  repo: Repo,
+  itemsPerCollection: number,
+): Promise<RepoData> => {
+  const repoData: RepoData = {}
+  for (const collName of testCollections) {
+    const collData: CollectionData = {}
+    const coll = await repo.getCollection(collName)
+    for (let i = 0; i < itemsPerCollection; i++) {
+      const object = generateObject()
+      const tid = await coll.createRecord(object)
+      collData[tid.toString()] = object
+    }
+    repoData[collName] = collData
+  }
+  return repoData
+}
+
+export const editRepo = async (
+  repo: Repo,
+  prevData: RepoData,
+  params: {
+    adds?: number
+    updates?: number
+    deletes?: number
+  },
+): Promise<RepoData> => {
+  const { adds = 0, updates = 0, deletes = 0 } = params
+  const repoData: RepoData = {}
+  for (const collName of testCollections) {
+    const collData = prevData[collName]
+    const shuffled = shuffle(Object.entries(collData))
+    const coll = await repo.getCollection(collName)
+
+    for (let i = 0; i < adds; i++) {
+      const object = generateObject()
+      const tid = await coll.createRecord(object)
+      collData[tid.toString()] = object
+    }
+
+    const toUpdate = shuffled.slice(0, updates)
+    for (let i = 0; i < toUpdate.length; i++) {
+      const object = generateObject()
+      const tid = TID.fromStr(toUpdate[i][0])
+      await coll.updateRecord(tid, object)
+      collData[tid.toString()] = object
+    }
+
+    const toDelete = shuffled.slice(updates, deletes)
+    for (let i = 0; i < toDelete.length; i++) {
+      const tid = TID.fromStr(toDelete[i][0])
+      await coll.deleteRecord(tid)
+      delete collData[tid.toString()]
+    }
+    repoData[collName] = collData
+  }
+  return repoData
+}
+
+export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
+  for (const collName of Object.keys(data)) {
+    const coll = await repo.getCollection(collName)
+    const collData = data[collName]
+    for (const tid of Object.keys(collData)) {
+      const record = await coll.getRecord(TID.fromStr(tid))
+      expect(record).toEqual(collData[tid])
+    }
+  }
+}
+
+export const checkRepoDiff = async (
+  diff: DataDiff,
+  before: RepoData,
+  after: RepoData,
+): Promise<void> => {
+  const getObjectCid = async (
+    key: string,
+    data: RepoData,
+  ): Promise<CID | undefined> => {
+    const parts = key.split('/')
+    const collection = parts.slice(0, 2).join('/')
+    const obj = (data[collection] || {})[parts[2]]
+    return obj === undefined ? undefined : fakeStore.put(obj as any)
+  }
+
+  for (const add of diff.addList()) {
+    const beforeCid = await getObjectCid(add.key, before)
+    const afterCid = await getObjectCid(add.key, after)
+
+    expect(beforeCid).toBeUndefined()
+    expect(afterCid).toEqual(add.cid)
+  }
+
+  for (const update of diff.updateList()) {
+    const beforeCid = await getObjectCid(update.key, before)
+    const afterCid = await getObjectCid(update.key, after)
+
+    expect(beforeCid).toEqual(update.prev)
+    expect(afterCid).toEqual(update.cid)
+  }
+
+  for (const del of diff.deleteList()) {
+    const beforeCid = await getObjectCid(del.key, before)
+    const afterCid = await getObjectCid(del.key, after)
+
+    expect(beforeCid).toEqual(del.cid)
+    expect(afterCid).toBeUndefined()
+  }
+}
+
+// Logging
+// ----------------
+
 export const writeMstLog = async (filename: string, tree: MST) => {
   let log = ''
   for await (const entry of tree.walk()) {
-    if (entry.isLeaf()) return true
+    if (entry.isLeaf()) continue
     const layer = await entry.getLayer()
     log += `Layer ${layer}: ${entry.pointer}\n`
     log += '--------------\n'
     const entries = await entry.getEntries()
     for (const e of entries) {
       if (e.isLeaf()) {
-        log += `Key: ${e.key}\n`
+        log += `Key: ${e.key} (${e.value})\n`
       } else {
         log += `Subtree: ${e.pointer}\n`
       }
@@ -177,4 +207,15 @@ export const writeMstLog = async (filename: string, tree: MST) => {
     log += '\n\n'
   }
   fs.writeFileSync(filename, log)
+}
+
+export const saveMstEntries = (filename: string, entries: [string, CID][]) => {
+  const writable = entries.map(([key, val]) => [key, val.toString()])
+  fs.writeFileSync(filename, JSON.stringify(writable))
+}
+
+export const loadMstEntries = (filename: string): [string, CID][] => {
+  const contents = fs.readFileSync(filename)
+  const parsed = JSON.parse(contents.toString())
+  return parsed.map(([key, value]) => [key, CID.parse(value)])
 }

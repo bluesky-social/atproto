@@ -1,5 +1,5 @@
 import { CID } from 'multiformats'
-import { Fanout, IpldStore, MemoryBlockstore, MST, NodeEntry } from '../src'
+import { Fanout, MemoryBlockstore, MST, NodeEntry } from '../src'
 import * as util from './_util'
 import fs from 'fs'
 
@@ -33,7 +33,7 @@ describe('MST Benchmarks', () => {
   it('benchmarks various fanouts', async () => {
     let benches: BenchmarkData[] = []
     for (const fanout of fanouts) {
-      const blockstore = IpldStore.createInMemory()
+      const blockstore = new MemoryBlockstore()
       let mst = await MST.create(blockstore, [], { fanout })
 
       const start = Date.now()
@@ -48,7 +48,7 @@ describe('MST Benchmarks', () => {
 
       const doneSaving = Date.now()
 
-      let reloaded = await MST.fromCid(blockstore, root, { fanout })
+      let reloaded = await MST.load(blockstore, root, { fanout })
       const widthTracker = new NodeWidths()
       for await (const entry of reloaded.walk()) {
         await widthTracker.trackEntry(entry)
@@ -72,9 +72,7 @@ describe('MST Benchmarks', () => {
       }
       const avgProofSize = Math.ceil(combinedProofSizes / paths.length)
 
-      const blockstoreSize = await (
-        blockstore.rawBlockstore as MemoryBlockstore
-      ).sizeInBytes()
+      const blockstoreSize = await blockstore.sizeInBytes()
 
       benches.push({
         fanout,
