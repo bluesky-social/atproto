@@ -1,9 +1,12 @@
-import { Follow, Like, Post } from '@adxp/microblog'
+import { Badge, Follow, Like, Post, Profile, Repost } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { DbPlugin } from './types'
-import postPlugin, { PostIndex } from './records/posts'
-import likePlugin, { LikeIndex } from './records/likes'
-import followPlugin, { FollowIndex } from './records/follows'
+import postPlugin, { PostIndex } from './records/post'
+import likePlugin, { LikeIndex } from './records/like'
+import followPlugin, { FollowIndex } from './records/follow'
+import badgePlugin, { BadgeIndex } from './records/badge'
+import profilePlugin, { ProfileIndex } from './records/profile'
+import repostPlugin, { RepostIndex } from './records/repost'
 import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
@@ -15,6 +18,9 @@ export class Database {
     posts: DbPlugin<Post.Record, PostIndex>
     likes: DbPlugin<Like.Record, LikeIndex>
     follows: DbPlugin<Follow.Record, FollowIndex>
+    badges: DbPlugin<Badge.Record, BadgeIndex>
+    profiles: DbPlugin<Profile.Record, ProfileIndex>
+    reposts: DbPlugin<Repost.Record, RepostIndex>
   }
 
   constructor(db: DataSource) {
@@ -23,6 +29,9 @@ export class Database {
       posts: postPlugin(db),
       likes: likePlugin(db),
       follows: followPlugin(db),
+      badges: badgePlugin(db),
+      profiles: profilePlugin(db),
+      reposts: repostPlugin(db),
     }
     this.db.synchronize()
   }

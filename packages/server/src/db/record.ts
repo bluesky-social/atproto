@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryColumn } from 'typeorm'
+import { Entity, Column, PrimaryColumn, UpdateDateColumn } from 'typeorm'
 
 @Entity({ name: 'records' })
 export class AdxRecord {
@@ -13,4 +13,11 @@ export class AdxRecord {
 
   @Column('varchar')
   tid: string
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  })
+  indexedAt: Date
 }

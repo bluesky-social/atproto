@@ -1,6 +1,6 @@
 import { AdxUri } from '@adxp/common'
 import * as microblog from '@adxp/microblog'
-import { Post, postRecordValidator } from '@adxp/microblog'
+import { Like } from '@adxp/microblog'
 import {
   DataSource,
   Entity,
@@ -8,86 +8,78 @@ import {
   PrimaryColumn,
   Repository,
   In,
+  UpdateDateColumn,
 } from 'typeorm'
 import { DbPlugin } from '../types'
 import { collectionToTableName } from '../util'
 
-const collection = 'bsky/posts'
+const collection = 'bsky/likes'
 const tableName = collectionToTableName(collection)
 
 @Entity({ name: tableName })
-export class PostIndex {
+export class LikeIndex {
   @PrimaryColumn('varchar')
   uri: string
 
-  @Column('text')
-  text: string
-
-  @Column({ type: 'varchar', nullable: true })
-  replyRoot?: string
-
-  @Column({ type: 'varchar', nullable: true })
-  replyParent?: string
+  @Column('varchar')
+  subject: string
 
   @Column('datetime')
   createdAt: string
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  })
+  indexedAt: Date
 }
 
 const getFn =
-  (repo: Repository<PostIndex>) =>
-  async (uri: AdxUri): Promise<Post.Record | null> => {
+  (repo: Repository<LikeIndex>) =>
+  async (uri: AdxUri): Promise<Like.Record | null> => {
     const found = await repo.findOneBy({ uri: uri.toString() })
     return found === null ? null : translateDbObj(found)
   }
 
 const getManyFn =
-  (repo: Repository<PostIndex>) =>
-  async (uris: AdxUri[] | string[]): Promise<Post.Record[]> => {
+  (repo: Repository<LikeIndex>) =>
+  async (uris: AdxUri[] | string[]): Promise<Like.Record[]> => {
     const uriStrs = uris.map((u) => u.toString())
     const found = await repo.findBy({ uri: In(uriStrs) })
     return found.map(translateDbObj)
   }
 
 const setFn =
-  (repo: Repository<PostIndex>) =>
+  (repo: Repository<LikeIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!microblog.isPost(obj)) {
-      throw new Error('Not a valid post record')
+    if (!microblog.isLike(obj)) {
+      throw new Error('Not a valid like record')
     }
-    const post = new PostIndex()
-    post.uri = uri.toString()
-    post.text = obj.text
-    post.createdAt = obj.createdAt
-    post.replyRoot = obj.reply?.root
-    post.replyParent = obj.reply?.parent
-
-    await repo.save(post)
+    const like = new LikeIndex()
+    like.uri = uri.toString()
+    like.subject = obj.subject
+    like.createdAt = obj.createdAt
+    await repo.save(like)
   }
 
 const deleteFn =
-  (repo: Repository<PostIndex>) =>
+  (repo: Repository<LikeIndex>) =>
   async (uri: AdxUri): Promise<void> => {
     await repo.delete({ uri: uri.toString() })
   }
 
-const translateDbObj = (dbObj: PostIndex): Post.Record => {
-  const reply = dbObj.replyRoot
-    ? {
-        root: dbObj.replyRoot,
-        parent: dbObj.replyParent,
-      }
-    : undefined
+const translateDbObj = (dbObj: LikeIndex): Like.Record => {
   return {
-    text: dbObj.text,
-    reply: reply,
+    subject: dbObj.subject,
     createdAt: dbObj.createdAt,
   }
 }
 
 export const makePlugin = (
   db: DataSource,
-): DbPlugin<Post.Record, PostIndex> => {
-  const repository = db.getRepository(PostIndex)
+): DbPlugin<Like.Record, LikeIndex> => {
+  const repository = db.getRepository(LikeIndex)
   return {
     collection,
     tableName,

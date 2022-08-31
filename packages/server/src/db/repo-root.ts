@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryColumn } from 'typeorm'
+import { Entity, Column, PrimaryColumn, UpdateDateColumn } from 'typeorm'
 
 @Entity({ name: 'repo_roots' })
 export class RepoRoot {
@@ -7,4 +7,11 @@ export class RepoRoot {
 
   @Column('varchar')
   root: string
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  })
+  indexedAt: Date
 }

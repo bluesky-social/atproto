@@ -1,6 +1,6 @@
 import { AdxUri } from '@adxp/common'
 import * as microblog from '@adxp/microblog'
-import { Like } from '@adxp/microblog'
+import { Follow } from '@adxp/microblog'
 import {
   DataSource,
   Entity,
@@ -8,70 +8,85 @@ import {
   PrimaryColumn,
   Repository,
   In,
+  UpdateDateColumn,
 } from 'typeorm'
 import { DbPlugin } from '../types'
 import { collectionToTableName } from '../util'
 
-const collection = 'bsky/likes'
+const collection = 'bsky/follows'
 const tableName = collectionToTableName(collection)
 
 @Entity({ name: tableName })
-export class LikeIndex {
+export class FollowIndex {
   @PrimaryColumn('varchar')
   uri: string
 
   @Column('varchar')
   subject: string
 
+  @Column({ type: 'varchar', nullable: true })
+  subjectName?: string
+
   @Column('datetime')
   createdAt: string
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  })
+  indexedAt: Date
 }
 
 const getFn =
-  (repo: Repository<LikeIndex>) =>
-  async (uri: AdxUri): Promise<Like.Record | null> => {
+  (repo: Repository<FollowIndex>) =>
+  async (uri: AdxUri): Promise<Follow.Record | null> => {
     const found = await repo.findOneBy({ uri: uri.toString() })
     return found === null ? null : translateDbObj(found)
   }
 
 const getManyFn =
-  (repo: Repository<LikeIndex>) =>
-  async (uris: AdxUri[] | string[]): Promise<Like.Record[]> => {
+  (repo: Repository<FollowIndex>) =>
+  async (uris: AdxUri[] | string[]): Promise<Follow.Record[]> => {
     const uriStrs = uris.map((u) => u.toString())
     const found = await repo.findBy({ uri: In(uriStrs) })
     return found.map(translateDbObj)
   }
 
 const setFn =
-  (repo: Repository<LikeIndex>) =>
+  (repo: Repository<FollowIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!microblog.isLike(obj)) {
-      throw new Error('Not a valid like record')
+    if (!microblog.isFollow(obj)) {
+      throw new Error('Not a valid follow record')
     }
-    const like = new LikeIndex()
-    like.uri = uri.toString()
-    like.subject = obj.subject
-    like.createdAt = obj.createdAt
-    await repo.save(like)
+    const follow = new FollowIndex()
+    follow.uri = uri.toString()
+    follow.subject = obj.subject.did
+    follow.subjectName = obj.subject.name
+    follow.createdAt = obj.createdAt
+    await repo.save(follow)
   }
 
 const deleteFn =
-  (repo: Repository<LikeIndex>) =>
+  (repo: Repository<FollowIndex>) =>
   async (uri: AdxUri): Promise<void> => {
     await repo.delete({ uri: uri.toString() })
   }
 
-const translateDbObj = (dbObj: LikeIndex): Like.Record => {
+const translateDbObj = (dbObj: FollowIndex): Follow.Record => {
   return {
-    subject: dbObj.subject,
+    subject: {
+      did: dbObj.subject,
+      name: dbObj.subjectName,
+    },
     createdAt: dbObj.createdAt,
   }
 }
 
 export const makePlugin = (
   db: DataSource,
-): DbPlugin<Like.Record, LikeIndex> => {
-  const repository = db.getRepository(LikeIndex)
+): DbPlugin<Follow.Record, FollowIndex> => {
+  const repository = db.getRepository(FollowIndex)
   return {
     collection,
     tableName,

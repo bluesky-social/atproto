@@ -30,6 +30,7 @@ router.post('/:did', async (req, res) => {
 // DESCRIBE REPO
 // -------------
 
+// @TODO move to a utility file
 // @TODO: don't think we want to call out to did sdk here 🤔
 async function resolveDidWrapped(did: string) {
   try {

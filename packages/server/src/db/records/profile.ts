@@ -1,0 +1,101 @@
+import { AdxUri } from '@adxp/common'
+import * as microblog from '@adxp/microblog'
+import { Profile } from '@adxp/microblog'
+import {
+  DataSource,
+  Entity,
+  Column,
+  PrimaryColumn,
+  Repository,
+  In,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm'
+import { DbPlugin } from '../types'
+import { collectionToTableName } from '../util'
+import { BadgeIndex } from './badge'
+
+const collection = 'bsky/profile'
+const tableName = collectionToTableName(collection)
+
+@Entity({ name: tableName })
+export class ProfileIndex {
+  @PrimaryColumn('varchar')
+  uri: string
+
+  @Column('varchar')
+  displayName: string
+
+  @Column({ type: 'text', nullable: true })
+  description?: string
+
+  @OneToMany(() => BadgeIndex, (badge) => badge.uri)
+  badges: string[]
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  })
+  indexedAt: Date
+}
+
+const getFn =
+  (repo: Repository<ProfileIndex>) =>
+  async (uri: AdxUri): Promise<Profile.Record | null> => {
+    const found = await repo.findOneBy({ uri: uri.toString() })
+    return found === null ? null : translateDbObj(found)
+  }
+
+const getManyFn =
+  (repo: Repository<ProfileIndex>) =>
+  async (uris: AdxUri[] | string[]): Promise<Profile.Record[]> => {
+    const uriStrs = uris.map((u) => u.toString())
+    const found = await repo.findBy({ uri: In(uriStrs) })
+    return found.map(translateDbObj)
+  }
+
+const setFn =
+  (repo: Repository<ProfileIndex>) =>
+  async (uri: AdxUri, obj: unknown): Promise<void> => {
+    if (!microblog.isProfile(obj)) {
+      throw new Error('Not a valid profile record')
+    }
+    const profile = new ProfileIndex()
+    profile.uri = uri.toString()
+    profile.displayName = obj.displayName
+    profile.description = obj.description
+    profile.badges = (obj.badges || []).map((ref) => ref.uri)
+    await repo.save(profile)
+  }
+
+const deleteFn =
+  (repo: Repository<ProfileIndex>) =>
+  async (uri: AdxUri): Promise<void> => {
+    await repo.delete({ uri: uri.toString() })
+  }
+
+const translateDbObj = (dbObj: ProfileIndex): Profile.Record => {
+  return {
+    displayName: dbObj.displayName,
+    description: dbObj.description,
+    badges: dbObj.badges.map((uri) => ({ uri })),
+  }
+}
+
+export const makePlugin = (
+  db: DataSource,
+): DbPlugin<Profile.Record, ProfileIndex> => {
+  const repository = db.getRepository(ProfileIndex)
+  return {
+    collection,
+    tableName,
+    get: getFn(repository),
+    getMany: getManyFn(repository),
+    set: setFn(repository),
+    delete: deleteFn(repository),
+    translateDbObj,
+  }
+}
+
+export default makePlugin
