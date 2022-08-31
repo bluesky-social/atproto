@@ -148,7 +148,11 @@ export class Repo {
     }
     const currentCommit = this.cid
     const updatedData = await mutation(this.data)
-    const tokenCid = await this.ucanForOperation(updatedData)
+    // if we're signing with the root key, we don't need an auth token
+    const tokenCid =
+      (await this.authStore.did()) === this.did()
+        ? null
+        : await this.ucanForOperation(updatedData)
     const dataCid = await updatedData.save()
     const root: RepoRoot = {
       did: this.did(),
@@ -302,25 +306,29 @@ export class Repo {
     let prevRepo = await Repo.load(this.blockstore, commitPath[0])
     for (const commit of commitPath.slice(1)) {
       const nextRepo = await Repo.load(this.blockstore, commit)
-
-      // verify auth token covers all necessary writes
-      const encodedToken = await this.blockstore.get(
-        nextRepo.root.auth_token,
-        def.string,
-      )
-      const token = await auth.validateUcan(encodedToken)
       const diff = await prevRepo.data.diff(nextRepo.data)
-      const neededCaps = diff.neededCapabilities(this.did())
-      for (const cap of neededCaps) {
-        await auth.verifyAdxUcan(token, this.did(), cap)
-      }
 
-      fullDiff.addDiff(diff)
+      let didForSignature: string
+      if (nextRepo.root.auth_token) {
+        // verify auth token covers all necessary writes
+        const encodedToken = await this.blockstore.get(
+          nextRepo.root.auth_token,
+          def.string,
+        )
+        const token = await auth.validateUcan(encodedToken)
+        const neededCaps = diff.neededCapabilities(this.did())
+        for (const cap of neededCaps) {
+          await auth.verifyAdxUcan(token, this.did(), cap)
+        }
+        didForSignature = token.payload.iss
+      } else {
+        didForSignature = this.did()
+      }
 
       // verify signature matches repo root + auth token
       // const commit = await toRepo.getCommit()
       const validSig = await auth.verifySignature(
-        token.payload.iss,
+        didForSignature,
         nextRepo.commit.root.bytes,
         nextRepo.commit.sig,
       )
@@ -329,6 +337,8 @@ export class Repo {
           `Invalid signature on commit: ${nextRepo.cid.toString()}`,
         )
       }
+
+      fullDiff.addDiff(diff)
       prevRepo = nextRepo
     }
     return fullDiff
@@ -406,7 +416,9 @@ export class Repo {
     const root = await this.blockstore.get(commit.root, def.repoRoot)
     await this.blockstore.addToCar(car, this.cid)
     await this.blockstore.addToCar(car, commit.root)
-    await this.blockstore.addToCar(car, root.auth_token)
+    if (root.auth_token) {
+      await this.blockstore.addToCar(car, root.auth_token)
+    }
     await this.data.writeToCarStream(car)
   }
 
@@ -430,7 +442,9 @@ export class Repo {
       const nextHead = await Repo.load(this.blockstore, commit)
       await this.blockstore.addToCar(car, nextHead.cid)
       await this.blockstore.addToCar(car, nextHead.commit.root)
-      await this.blockstore.addToCar(car, nextHead.root.auth_token)
+      if (nextHead.root.auth_token) {
+        await this.blockstore.addToCar(car, nextHead.root.auth_token)
+      }
       if (prevHead === null) {
         await nextHead.data.writeToCarStream(car)
       } else {

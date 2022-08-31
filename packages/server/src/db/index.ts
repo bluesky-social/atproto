@@ -11,6 +11,7 @@ import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
 import { AdxRecord } from './record'
+import { UserDid } from './user-dids'
 
 export class Database {
   db: DataSource
@@ -40,7 +41,17 @@ export class Database {
     const db = new DataSource({
       type: 'sqlite',
       database: location,
-      entities: [PostIndex, LikeIndex, FollowIndex, RepoRoot, AdxRecord],
+      entities: [
+        RepoRoot,
+        AdxRecord,
+        PostIndex,
+        LikeIndex,
+        FollowIndex,
+        BadgeIndex,
+        ProfileIndex,
+        RepostIndex,
+        UserDid,
+      ],
     })
     await db.initialize()
     return new Database(db)
@@ -66,6 +77,29 @@ export class Database {
     }
     newRoot.root = root.toString()
     await table.save(newRoot)
+  }
+
+  async getDidForUsername(username: string): Promise<string | null> {
+    const table = this.db.getRepository(UserDid)
+    const found = await table.findOneBy({ username })
+    return found ? found.did : null
+  }
+
+  async getUsernameForDid(did: string): Promise<string | null> {
+    const table = this.db.getRepository(UserDid)
+    const found = await table.findOneBy({ did })
+    return found ? found.username : null
+  }
+
+  async setUserDid(username: string, did: string) {
+    const table = this.db.getRepository(UserDid)
+    let newDid = await table.findOneBy({ username })
+    if (newDid === null) {
+      newDid = new UserDid()
+      newDid.did = did
+    }
+    newDid.did = did
+    await table.save(newDid)
   }
 
   async indexRecord(uri: AdxUri, obj: unknown) {

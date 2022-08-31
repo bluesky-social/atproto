@@ -16,55 +16,16 @@ const strToTid = z
 const repoRoot = z.object({
   did: common.did,
   prev: common.cid.nullable(),
-  auth_token: common.cid,
+  auth_token: common.cid.nullable(),
   data: common.cid,
 })
 export type RepoRoot = z.infer<typeof repoRoot>
-
-const namespaceRoot = z.object({
-  posts: common.cid,
-  interactions: common.cid,
-  profile: common.cid.nullable(),
-})
-export type NamespaceRoot = z.infer<typeof namespaceRoot>
 
 const commit = z.object({
   root: common.cid,
   sig: common.bytes,
 })
 export type Commit = z.infer<typeof commit>
-
-const idMapping = z.record(common.cid)
-export type IdMapping = z.infer<typeof idMapping>
-
-const tidEntry = z.object({
-  tid: tid,
-  cid: common.cid,
-})
-export type TIDEntry = z.infer<typeof tidEntry>
-
-const didEntry = z.object({
-  did: z.string(),
-  cid: common.cid,
-})
-export type DIDEntry = z.infer<typeof didEntry>
-
-const collection = z.enum(['posts', 'interactions', 'profile'])
-export type Collection = z.infer<typeof collection>
-
-const follow = z.object({
-  did: z.string(),
-  username: z.string(),
-})
-export type Follow = z.infer<typeof follow>
-
-export type UpdateData = {
-  namespace?: string
-  collection?: Collection
-  tid?: TID
-  did?: string
-  newCids: CidSet
-}
 
 export const batchWriteCreate = z.object({
   action: z.literal('create'),
@@ -97,13 +58,7 @@ export const def = {
   tid,
   strToTid,
   repoRoot,
-  namespaceRoot,
   commit,
-  idMapping,
-  tidEntry,
-  didEntry,
-  collection,
-  follow,
   batchWrite,
 }
 
