@@ -21,6 +21,7 @@ export const describeRepoResponse = z.object({
   name: z.string(),
   did: z.string(),
   didDoc: z.any(), // TODO need full?
+  collections: z.array(z.string()),
   nameIsCorrect: z.boolean().optional(),
 })
 export type DescribeRepoResponse = z.infer<typeof describeRepoResponse>
@@ -48,28 +49,6 @@ export const getRecordResponse = z.object({
 export type GetRecordResponse = z.infer<typeof getRecordResponse>
 
 export const batchWriteParams = z.object({
-  writes: z.array(
-    z.object({
-      action: z.union([
-        z.literal('create'),
-        z.literal('put'),
-        z.literal('del'),
-      ]),
-      auth: z.string(),
-      collection: z.string(),
-      key: z.string().optional(),
-      value: z.any().optional(),
-    }),
-  ),
+  writes: z.array(def.repo.batchWrite),
 })
 export type BatchWriteParams = z.infer<typeof batchWriteParams>
-
-export const batchWriteReponse = z.object({
-  writes: z.array(
-    z.object({
-      success: z.boolean(),
-      key: z.string(),
-    }),
-  ),
-})
-export type BatchWriteReponse = z.infer<typeof batchWriteReponse>

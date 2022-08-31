@@ -2,7 +2,7 @@ import axios from 'axios'
 import { CID } from 'multiformats'
 import { authCfg, didNetworkUrl, parseAxiosError } from './util'
 import * as check from '../common/check'
-import { schema as repoSchema } from '../repo/types'
+import { def as repoSchema } from '../repo/types'
 import * as uint8arrays from 'uint8arrays'
 import * as auth from '@adxp/auth'
 

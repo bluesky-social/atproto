@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-import { RepoRoot, Commit, schema, BatchWrite, DataStore } from './types'
+import { RepoRoot, Commit, def, BatchWrite, DataStore } from './types'
 import * as check from '../common/check'
 import IpldStore, { AllowedIpldVal } from '../blockstore/ipld-store'
 import { streamToArray } from '../common/util'
@@ -11,6 +11,7 @@ import * as service from '../network/service'
 import { AuthStore } from '@adxp/auth'
 import { DataDiff, MST } from './mst'
 import Collection from './collection'
+import TID from './tid'
 
 export class Repo {
   blockstore: IpldStore
@@ -76,8 +77,8 @@ export class Repo {
   }
 
   static async load(blockstore: IpldStore, cid: CID, authStore?: AuthStore) {
-    const commit = await blockstore.get(cid, schema.commit)
-    const root = await blockstore.get(commit.root, schema.repoRoot)
+    const commit = await blockstore.get(cid, def.commit)
+    const root = await blockstore.get(commit.root, def.repoRoot)
     const data = await MST.load(blockstore, root.data)
     return new Repo({
       blockstore,
@@ -172,26 +173,17 @@ export class Repo {
   async batchWrite(writes: BatchWrite[]) {
     this.safeCommit(async (data: DataStore) => {
       for (const write of writes) {
-        // @TODO verify collection & key constraints
-        const dataKey = write.collection + '/' + write.key
-        let valueCid: CID | undefined
-        if (write.value) {
-          valueCid = await this.put(write.value)
-        }
         if (write.action === 'create') {
-          if (!valueCid) {
-            throw new Error('No value given for create operation')
-          }
-          data = await data.add(dataKey, valueCid)
+          const dataKey = write.collection + '/' + TID.next().toString()
+          const cid = await this.put(write.value)
+          data = await data.add(dataKey, cid)
         } else if (write.action === 'update') {
-          if (!valueCid) {
-            throw new Error('No value given for update operation')
-          }
-          data = await data.update(dataKey, valueCid)
-        } else if (write.action === 'del') {
+          const cid = await this.put(write.value)
+          const dataKey = write.collection + '/' + write.tid
+          data = await data.update(dataKey, cid)
+        } else if (write.action === 'delete') {
+          const dataKey = write.collection + '/' + write.tid
           data = await data.delete(dataKey)
-        } else {
-          throw new Error(`Invalid write action: ${write.action}`)
         }
       }
       return data
@@ -201,8 +193,8 @@ export class Repo {
   async revert(count: number): Promise<void> {
     let revertTo = this.cid
     for (let i = 0; i < count; i++) {
-      const commit = await this.blockstore.get(revertTo, schema.commit)
-      const root = await this.blockstore.get(commit.root, schema.repoRoot)
+      const commit = await this.blockstore.get(revertTo, def.commit)
+      const root = await this.blockstore.get(commit.root, def.repoRoot)
       if (root.prev === null) {
         throw new Error(`Could not revert ${count} commits`)
       }
@@ -214,17 +206,17 @@ export class Repo {
   // ROOT OPERATIONS
   // -----------
   async getCommit(): Promise<Commit> {
-    return this.blockstore.get(this.cid, schema.commit)
+    return this.blockstore.get(this.cid, def.commit)
   }
 
   async getRoot(): Promise<RepoRoot> {
     const commit = await this.getCommit()
-    return this.blockstore.get(commit.root, schema.repoRoot)
+    return this.blockstore.get(commit.root, def.repoRoot)
   }
 
   async loadRoot(newRoot: CID): Promise<void> {
-    const commit = await this.blockstore.get(newRoot, schema.commit)
-    const root = await this.blockstore.get(commit.root, schema.repoRoot)
+    const commit = await this.blockstore.get(newRoot, def.commit)
+    const root = await this.blockstore.get(commit.root, def.repoRoot)
     this.data = await MST.load(this.blockstore, root.data)
     this.cid = newRoot
   }
@@ -314,7 +306,7 @@ export class Repo {
       // verify auth token covers all necessary writes
       const encodedToken = await this.blockstore.get(
         nextRepo.root.auth_token,
-        schema.string,
+        def.string,
       )
       const token = await auth.validateUcan(encodedToken)
       const diff = await prevRepo.data.diff(nextRepo.data)
@@ -350,11 +342,11 @@ export class Repo {
     const path: CID[] = []
     while (curr !== null) {
       path.push(curr)
-      const commit = await this.blockstore.get(curr, schema.commit)
+      const commit = await this.blockstore.get(curr, def.commit)
       if (toFind && curr.equals(toFind)) {
         return path.reverse()
       }
-      const root = await this.blockstore.get(commit.root, schema.repoRoot)
+      const root = await this.blockstore.get(commit.root, def.repoRoot)
       if (!toFind && root.prev === null) {
         return path.reverse()
       }
@@ -410,8 +402,8 @@ export class Repo {
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    const commit = await this.blockstore.get(this.cid, schema.commit)
-    const root = await this.blockstore.get(commit.root, schema.repoRoot)
+    const commit = await this.blockstore.get(this.cid, def.commit)
+    const root = await this.blockstore.get(commit.root, def.repoRoot)
     await this.blockstore.addToCar(car, this.cid)
     await this.blockstore.addToCar(car, commit.root)
     await this.blockstore.addToCar(car, root.auth_token)

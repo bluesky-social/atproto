@@ -7,13 +7,14 @@ import followPlugin, { FollowIndex } from './records/follows'
 import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
+import { AdxRecord } from './record'
 
 export class Database {
   db: DataSource
   records: {
-    posts: DbPlugin<Post.Record>
-    likes: DbPlugin<Like.Record>
-    follows: DbPlugin<Follow.Record>
+    posts: DbPlugin<Post.Record, PostIndex>
+    likes: DbPlugin<Like.Record, LikeIndex>
+    follows: DbPlugin<Follow.Record, FollowIndex>
   }
 
   constructor(db: DataSource) {
@@ -30,7 +31,7 @@ export class Database {
     const db = new DataSource({
       type: 'sqlite',
       database: location,
-      entities: [PostIndex, LikeIndex, FollowIndex, RepoRoot],
+      entities: [PostIndex, LikeIndex, FollowIndex, RepoRoot, AdxRecord],
     })
     await db.initialize()
     return new Database(db)
@@ -58,14 +59,70 @@ export class Database {
     await table.save(newRoot)
   }
 
-  async addRecord(uri: AdxUri, obj: unknown) {
+  async indexRecord(uri: AdxUri, obj: unknown) {
+    const record = new AdxRecord()
+    record.uri = uri.toString()
+
+    record.did = uri.host
+    if (!record.did.startsWith('did:')) {
+      throw new Error('Expected indexed URI to contain DID')
+    }
+    record.collection = uri.collection
+    if (record.collection.length < 1) {
+      throw new Error('Expected indexed URI to contain a collection')
+    }
+    record.tid = uri.recordKey
+    if (record.tid.length < 1) {
+      throw new Error('Expected indexed URI to contain a record TID')
+    }
+
     const table = this.findTableForCollection(uri.collection)
     await table.set(uri, obj)
+    const recordTable = this.db.getRepository(AdxRecord)
+    await recordTable.save(record)
   }
 
   async deleteRecord(uri: AdxUri) {
     const table = this.findTableForCollection(uri.collection)
-    await table.delete(uri)
+    const recordTable = this.db.getRepository(AdxRecord)
+    await Promise.all([table.delete(uri), recordTable.delete(uri)])
+  }
+
+  async listCollectionsForDid(did: string): Promise<string[]> {
+    const recordTable = await this.db
+      .getRepository(AdxRecord)
+      .createQueryBuilder('record')
+      .select('record.collection')
+      .where('record.did = :did', { did })
+      .getRawMany()
+
+    return recordTable
+  }
+
+  async listRecordsForCollection(
+    did: string,
+    collection: string,
+    count: number,
+    from = 'zzzzzzzzzzzzz', // 14 z's is larger than any TID
+  ): Promise<unknown[]> {
+    const uris: string[] = await this.db
+      .getRepository(AdxRecord)
+      .createQueryBuilder('record')
+      .select('record.uri')
+      .where('record.did = :did', { did })
+      .andWhere('record.collection = :collection', { collection })
+      .andWhere('record.tid <= :from', { from })
+      .orderBy('record.tid', 'DESC')
+      .limit(count)
+      .getRawMany()
+
+    const table = this.findTableForCollection(collection)
+    return table.getMany(uris)
+  }
+
+  async getRecord(uri: AdxUri): Promise<unknown | null> {
+    const table = this.findTableForCollection(uri.collection)
+    return table.get(uri)
   }
 
   findTableForCollection(collection: string) {

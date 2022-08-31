@@ -2,7 +2,7 @@ import z from 'zod'
 import { CID } from 'multiformats'
 
 import IpldStore from '../../blockstore/ipld-store'
-import { schema } from '../../common/types'
+import { def } from '../../common/types'
 import { DataDiff } from './diff'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
@@ -39,18 +39,18 @@ import MstWalker from './walker'
  * Then the first will be described as `prefix: 0, key: 'bsky/posts/abcdefg'`,
  * and the second will be described as `prefix: 16, key: 'hi'.`
  */
-const subTreePointer = z.nullable(schema.cid)
+const subTreePointer = z.nullable(def.cid)
 const treeEntry = z.object({
   p: z.number(), // prefix count of utf-8 chars that this key shares with the prev key
   k: z.string(), // the rest of the key outside the shared prefix
-  v: schema.cid, // value
+  v: def.cid, // value
   t: subTreePointer, // next subtree (to the right of leaf)
 })
-export const nodeDataSchema = z.object({
+export const nodeDataDef = z.object({
   l: subTreePointer, // left-most subtree
   e: z.array(treeEntry), //entries
 })
-export type NodeData = z.infer<typeof nodeDataSchema>
+export type NodeData = z.infer<typeof nodeDataDef>
 
 export type NodeEntry = MST | Leaf
 
@@ -132,7 +132,7 @@ export class MST implements DataStore {
   async getEntries(): Promise<NodeEntry[]> {
     if (this.entries) return [...this.entries]
     if (this.pointer) {
-      const data = await this.blockstore.get(this.pointer, nodeDataSchema)
+      const data = await this.blockstore.get(this.pointer, nodeDataDef)
       const firstLeaf = data.e[0]
       const layer =
         firstLeaf !== undefined

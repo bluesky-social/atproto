@@ -1,7 +1,14 @@
 import { AdxUri } from '@adxp/common'
 import * as microblog from '@adxp/microblog'
 import { Post, postRecordValidator } from '@adxp/microblog'
-import { DataSource, Entity, Column, PrimaryColumn, Repository } from 'typeorm'
+import {
+  DataSource,
+  Entity,
+  Column,
+  PrimaryColumn,
+  Repository,
+  In,
+} from 'typeorm'
 import { DbPlugin } from '../types'
 import { collectionToTableName } from '../util'
 
@@ -30,18 +37,15 @@ const getFn =
   (repo: Repository<PostIndex>) =>
   async (uri: AdxUri): Promise<Post.Record | null> => {
     const found = await repo.findOneBy({ uri: uri.toString() })
-    if (found === null) return null
-    const reply = found.replyRoot
-      ? {
-          root: found.replyRoot,
-          parent: found.replyParent,
-        }
-      : undefined
-    return {
-      text: found.text,
-      reply: reply,
-      createdAt: found.createdAt,
-    }
+    return found === null ? null : translateDbObj(found)
+  }
+
+const getManyFn =
+  (repo: Repository<PostIndex>) =>
+  async (uris: AdxUri[] | string[]): Promise<Post.Record[]> => {
+    const uriStrs = uris.map((u) => u.toString())
+    const found = await repo.findBy({ uri: In(uriStrs) })
+    return found.map(translateDbObj)
   }
 
 const setFn =
@@ -66,14 +70,32 @@ const deleteFn =
     await repo.delete({ uri: uri.toString() })
   }
 
-export const makePlugin = (db: DataSource): DbPlugin<Post.Record> => {
+const translateDbObj = (dbObj: PostIndex): Post.Record => {
+  const reply = dbObj.replyRoot
+    ? {
+        root: dbObj.replyRoot,
+        parent: dbObj.replyParent,
+      }
+    : undefined
+  return {
+    text: dbObj.text,
+    reply: reply,
+    createdAt: dbObj.createdAt,
+  }
+}
+
+export const makePlugin = (
+  db: DataSource,
+): DbPlugin<Post.Record, PostIndex> => {
   const repository = db.getRepository(PostIndex)
   return {
     collection,
     tableName,
     get: getFn(repository),
+    getMany: getManyFn(repository),
     set: setFn(repository),
     delete: deleteFn(repository),
+    translateDbObj,
   }
 }
 

@@ -66,6 +66,32 @@ export type UpdateData = {
   newCids: CidSet
 }
 
+export const batchWriteCreate = z.object({
+  action: z.literal('create'),
+  collection: z.string(),
+  value: z.any(),
+})
+
+export const batchWriteUpdate = z.object({
+  action: z.literal('update'),
+  collection: z.string(),
+  tid: z.string(),
+  value: z.any(),
+})
+
+export const batchWriteDelete = z.object({
+  action: z.literal('delete'),
+  collection: z.string(),
+  tid: z.string(),
+})
+
+export const batchWrite = z.union([
+  batchWriteCreate,
+  batchWriteUpdate,
+  batchWriteDelete,
+])
+export type BatchWrite = z.infer<typeof batchWrite>
+
 export const def = {
   ...common,
   tid,
@@ -78,18 +104,11 @@ export const def = {
   didEntry,
   collection,
   follow,
+  batchWrite,
 }
 
 export interface CarStreamable {
   writeToCarStream(car: BlockWriter): Promise<void>
-}
-
-// @TODO dedup from api/types
-export interface BatchWrite {
-  action: 'create' | 'update' | 'del'
-  collection: string
-  key: string
-  value: any
 }
 
 export type DataValue = {
