@@ -1,4 +1,12 @@
-import { Badge, Follow, Like, Post, Profile, Repost } from '@adxp/microblog'
+import {
+  Badge,
+  Follow,
+  Like,
+  LikedByView,
+  Post,
+  Profile,
+  Repost,
+} from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { DbPlugin } from './types'
 import postPlugin, { PostIndex } from './records/post'
@@ -7,7 +15,8 @@ import followPlugin, { FollowIndex } from './records/follow'
 import badgePlugin, { BadgeIndex } from './records/badge'
 import profilePlugin, { ProfileIndex } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-import { AdxUri, DataDiff } from '@adxp/common'
+import likedByView from './views/likedBy'
+import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
 import { AdxRecord } from './record'
@@ -23,6 +32,9 @@ export class Database {
     profiles: DbPlugin<Profile.Record, ProfileIndex>
     reposts: DbPlugin<Repost.Record, RepostIndex>
   }
+  views: {
+    likedBy: (params: LikedByView.Params) => Promise<LikedByView.Response>
+  }
 
   constructor(db: DataSource) {
     this.db = db
@@ -33,6 +45,9 @@ export class Database {
       badges: badgePlugin(db),
       profiles: profilePlugin(db),
       reposts: repostPlugin(db),
+    }
+    this.views = {
+      likedBy: likedByView(db),
     }
     this.db.synchronize()
   }

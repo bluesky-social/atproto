@@ -1,3 +1,4 @@
+import { isPost } from '@adxp/microblog'
 import axios from 'axios'
 const url = 'http://localhost:2583/.adx/v1'
 
@@ -27,8 +28,33 @@ describe('server', () => {
     })
   })
 
+  let postUri: string
+
   it('retreives posts', async () => {
     const res = await axios.get(`${url}/api/repo/${aliceDid}/c/bsky/posts`)
+    expect(isPost(res.data[0])).toBeTruthy()
+    postUri = res.data[0].uri
+  })
+
+  it('likes a post', async () => {
+    await axios.post(`${url}/api/repo/${bobDid}`, {
+      writes: [
+        {
+          action: 'create',
+          collection: 'bsky/likes',
+          value: {
+            $type: 'blueskyweb.xyz:Like',
+            subject: postUri,
+            createdAt: new Date().toISOString(),
+          },
+        },
+      ],
+    })
+  })
+
+  it('fetches liked by view', async () => {
+    console.log(postUri)
+    const res = await axios.get(`${url}/api/view/likedBy`)
     console.log(res.data)
   })
 })

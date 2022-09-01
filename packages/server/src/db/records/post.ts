@@ -16,6 +16,11 @@ import { collectionToTableName } from '../util'
 const collection = 'bsky/posts'
 const tableName = collectionToTableName(collection)
 
+type Labeled<T> = T & {
+  $type: string
+  uri: string
+}
+
 @Entity({ name: tableName })
 export class PostIndex {
   @PrimaryColumn('varchar')
@@ -39,14 +44,14 @@ export class PostIndex {
 
 const getFn =
   (repo: Repository<PostIndex>) =>
-  async (uri: AdxUri): Promise<Post.Record | null> => {
+  async (uri: AdxUri): Promise<Labeled<Post.Record> | null> => {
     const found = await repo.findOneBy({ uri: uri.toString() })
     return found === null ? null : translateDbObj(found)
   }
 
 const getManyFn =
   (repo: Repository<PostIndex>) =>
-  async (uris: AdxUri[] | string[]): Promise<Post.Record[]> => {
+  async (uris: AdxUri[] | string[]): Promise<Labeled<Post.Record>[]> => {
     const uriStrs = uris.map((u) => u.toString())
     const found = await repo.findBy({ uri: In(uriStrs) })
     return found.map(translateDbObj)
@@ -74,7 +79,7 @@ const deleteFn =
     await repo.delete({ uri: uri.toString() })
   }
 
-const translateDbObj = (dbObj: PostIndex): Post.Record => {
+const translateDbObj = (dbObj: PostIndex): Labeled<Post.Record> => {
   const reply = dbObj.replyRoot
     ? {
         root: dbObj.replyRoot,
@@ -82,6 +87,8 @@ const translateDbObj = (dbObj: PostIndex): Post.Record => {
       }
     : undefined
   return {
+    $type: 'blueskyweb.xyz:Post',
+    uri: dbObj.uri,
     text: dbObj.text,
     reply: reply,
     createdAt: dbObj.createdAt,
