@@ -8,10 +8,6 @@ export class RepoRoot {
   @Column('varchar')
   root: string
 
-  @UpdateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)',
-    onUpdate: 'CURRENT_TIMESTAMP(6)',
-  })
+  @UpdateDateColumn()
   indexedAt: Date
 }

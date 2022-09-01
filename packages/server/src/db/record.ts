@@ -20,16 +20,9 @@ export class AdxRecord {
   @Column('varchar')
   tid: string
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)',
-  })
+  @CreateDateColumn()
   receivedAt: Date
 
-  @UpdateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)',
-    onUpdate: 'CURRENT_TIMESTAMP(6)',
-  })
+  @UpdateDateColumn()
   indexedAt: Date
 }

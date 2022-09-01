@@ -5,6 +5,7 @@ import { AdxUri, DataDiff, Repo, service } from '@adxp/common'
 import Database from '../../../db/index'
 import { ServerError } from '../../../error'
 import * as subscriptions from '../../../subscriptions'
+import * as repoDiff from '../../../repo-diff'
 
 const router = express.Router()
 
@@ -50,7 +51,7 @@ router.post('/:did', async (req, res) => {
     diff = await repo.verifySetOfUpdates(null, repo.cid)
   }
 
-  await processDiff(db, util.getOwnHost(req), repo, did, diff)
+  await repoDiff.processDiff(db, repo, diff)
 
   await subscriptions.notifySubscribers(db, repo)
 
@@ -58,32 +59,5 @@ router.post('/:did', async (req, res) => {
 
   res.status(200).send()
 })
-
-const processDiff = async (
-  db: Database,
-  ownHost: string,
-  repo: Repo,
-  did: string,
-  diff: DataDiff,
-): Promise<void> => {
-  const adds = diff.addList().map(async (add) => {
-    const loaded = await repo.blockstore.getUnchecked(add.cid)
-    const uri = new AdxUri(`${did}/${add.key}`)
-    await db.indexRecord(uri, loaded)
-  })
-  const updates = diff.updateList().map(async (update) => {
-    const loaded = await repo.blockstore.getUnchecked(update.cid)
-    const uri = new AdxUri(`${did}/${update.key}`)
-    await db.indexRecord(uri, loaded)
-  })
-  const deletes = diff.deleteList().map(async (del) => {
-    const uri = new AdxUri(`${did}/${del.key}`)
-    await db.deleteRecord(uri)
-  })
-
-  await Promise.all([...adds, ...updates, ...deletes])
-
-  // @TODO notify subscribers
-}
 
 export default router

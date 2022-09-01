@@ -53,6 +53,17 @@ export class AuthStore implements Signer {
     return keypair.did()
   }
 
+  async canSignForDid(did: string): Promise<boolean> {
+    // @TODO this is just for dev purposes. remove?
+    if (did.startsWith('did:example')) {
+      return true
+    }
+    if (did === (await this.did())) {
+      return true
+    }
+    return false
+  }
+
   async sign(data: Uint8Array): Promise<Uint8Array> {
     const keypair = await this.getKeypair()
     return keypair.sign(data)

@@ -33,8 +33,3 @@ export const checkReq = async (
   }
   return auth.AuthStore.fromTokens(serverKey, [auth.encodeUcan(token)])
 }
-
-export const serverAuthStore = (res: Response) => {
-  const serverKey = util.getKeypair(res)
-  return auth.AuthStore.fromTokens(serverKey, [])
-}

@@ -30,11 +30,7 @@ export class FollowIndex {
   @Column('datetime')
   createdAt: string
 
-  @UpdateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)',
-    onUpdate: 'CURRENT_TIMESTAMP(6)',
-  })
+  @UpdateDateColumn()
   indexedAt: Date
 }
 

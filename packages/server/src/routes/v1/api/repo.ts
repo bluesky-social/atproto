@@ -8,8 +8,10 @@ import {
   batchWriteParams,
 } from '@adxp/api'
 import { resolveName, AdxUri } from '@adxp/common'
+import * as auth from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
 
+import * as repoDiff from '../../../repo-diff'
 import * as util from '../../../util'
 import { ServerError } from '../../../error'
 
@@ -22,8 +24,14 @@ router.post('/:did', async (req, res) => {
   const tx = util.checkReqBody(req.body, batchWriteParams)
   // @TODO add user auth here!
   const serverKey = util.getKeypair(res)
-  const repo = await util.loadRepo(res, did, {} as any) //@TODO need to add server auth store here
+  const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+  const repo = await util.loadRepo(res, did, authStore)
+  const prevCid = repo.cid
   await repo.batchWrite(tx.writes)
+  // @TODO: do something better here instead of rescanning for diff
+  const diff = await repo.verifySetOfUpdates(prevCid, repo.cid)
+  const db = util.getDB(res)
+  await repoDiff.processDiff(db, repo, diff)
   res.status(200).send()
 })
 
@@ -92,8 +100,9 @@ router.get('/:nameOrDid', async (req, res) => {
 // LIST RECORDS
 // ------------
 
-router.get('/:nameOrDid/c/:coll', async (req, res) => {
-  const { nameOrDid, coll } = req.params
+router.get('/:nameOrDid/c/:namespace/:dataset', async (req, res) => {
+  const { nameOrDid, namespace, dataset } = req.params
+  const coll = namespace + '/' + dataset
   const { count = 50, from } = util.checkReqBody(req.query, listRecordsParams)
   const db = util.getDB(res)
   const did = nameOrDid.startsWith('did:')
@@ -107,20 +116,24 @@ router.get('/:nameOrDid/c/:coll', async (req, res) => {
 // GET RECORD
 // ----------
 
-router.get('/:nameOrDid/c/:coll/r/:recordKey', async (req, res) => {
-  const { nameOrDid, coll, recordKey } = req.params
+router.get(
+  '/:nameOrDid/c/:namespace/:dataset/r/:recordKey',
+  async (req, res) => {
+    const { nameOrDid, namespace, dataset, recordKey } = req.params
+    const coll = namespace + '/' + dataset
 
-  const did = nameOrDid.startsWith('did:')
-    ? nameOrDid
-    : await resolveNameWrapped(nameOrDid)
-  const uri = new AdxUri(`${did}/${coll}/${recordKey}`)
+    const did = nameOrDid.startsWith('did:')
+      ? nameOrDid
+      : await resolveNameWrapped(nameOrDid)
+    const uri = new AdxUri(`${did}/${coll}/${recordKey}`)
 
-  const db = util.getDB(res)
-  const record = await db.getRecord(uri)
-  if (record === null) {
-    throw new ServerError(404, `Could not locate record: ${uri}`)
-  }
-  res.status(200).send(record)
-})
+    const db = util.getDB(res)
+    const record = await db.getRecord(uri)
+    if (record === null) {
+      throw new ServerError(404, `Could not locate record: ${uri}`)
+    }
+    res.status(200).send(record)
+  },
+)
 
 export default router

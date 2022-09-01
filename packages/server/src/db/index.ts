@@ -7,7 +7,7 @@ import followPlugin, { FollowIndex } from './records/follow'
 import badgePlugin, { BadgeIndex } from './records/badge'
 import profilePlugin, { ProfileIndex } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-import { AdxUri } from '@adxp/common'
+import { AdxUri, DataDiff } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
 import { AdxRecord } from './record'
@@ -91,15 +91,12 @@ export class Database {
     return found ? found.username : null
   }
 
-  async setUserDid(username: string, did: string) {
+  async registerUser(username: string, did: string) {
     const table = this.db.getRepository(UserDid)
-    let newDid = await table.findOneBy({ username })
-    if (newDid === null) {
-      newDid = new UserDid()
-      newDid.did = did
-    }
-    newDid.did = did
-    await table.save(newDid)
+    const user = new UserDid()
+    user.username = username
+    user.did = did
+    await table.save(user)
   }
 
   async indexRecord(uri: AdxUri, obj: unknown) {
@@ -148,16 +145,18 @@ export class Database {
     count: number,
     from = 'zzzzzzzzzzzzz', // 14 z's is larger than any TID
   ): Promise<unknown[]> {
-    const uris: string[] = await this.db
-      .getRepository(AdxRecord)
-      .createQueryBuilder('record')
+    const res = await this.db
+      .createQueryBuilder()
       .select('record.uri')
+      .from(AdxRecord, 'record')
       .where('record.did = :did', { did })
       .andWhere('record.collection = :collection', { collection })
       .andWhere('record.tid <= :from', { from })
       .orderBy('record.tid', 'DESC')
       .limit(count)
       .getRawMany()
+
+    const uris: string[] = res.map((row) => row.record_uri)
 
     const table = this.findTableForCollection(collection)
     return table.getMany(uris)
@@ -169,8 +168,6 @@ export class Database {
   }
 
   findTableForCollection(collection: string) {
-    console.log(Object.values(this.records))
-    console.log(collection)
     const found = Object.values(this.records).find(
       (plugin) => plugin.collection === collection,
     )

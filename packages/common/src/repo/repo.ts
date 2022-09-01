@@ -42,11 +42,14 @@ export class Repo {
     did: string,
     authStore: auth.AuthStore,
   ): Promise<Repo> {
-    const foundUcan = await authStore.findUcan(auth.maintenanceCap(did))
-    if (foundUcan === null) {
-      throw new Error(`No valid Ucan for creating repo`)
+    let tokenCid: CID | null = null
+    if (!(await authStore.canSignForDid(did))) {
+      const foundUcan = await authStore.findUcan(auth.maintenanceCap(did))
+      if (foundUcan === null) {
+        throw new Error(`No valid Ucan for creating repo`)
+      }
+      tokenCid = await blockstore.put(auth.encodeUcan(foundUcan))
     }
-    const tokenCid = await blockstore.put(auth.encodeUcan(foundUcan))
 
     const data = await MST.create(blockstore)
     const dataCid = await data.save()
@@ -149,10 +152,9 @@ export class Repo {
     const currentCommit = this.cid
     const updatedData = await mutation(this.data)
     // if we're signing with the root key, we don't need an auth token
-    const tokenCid =
-      (await this.authStore.did()) === this.did()
-        ? null
-        : await this.ucanForOperation(updatedData)
+    const tokenCid = (await this.authStore.canSignForDid(this.did()))
+      ? null
+      : await this.ucanForOperation(updatedData)
     const dataCid = await updatedData.save()
     const root: RepoRoot = {
       did: this.did(),
@@ -175,7 +177,7 @@ export class Repo {
   }
 
   async batchWrite(writes: BatchWrite[]) {
-    this.safeCommit(async (data: DataStore) => {
+    await this.safeCommit(async (data: DataStore) => {
       for (const write of writes) {
         if (write.action === 'create') {
           const dataKey = write.collection + '/' + TID.next().toString()

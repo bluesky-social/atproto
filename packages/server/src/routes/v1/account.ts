@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
 
   const { db, blockstore, keypair } = util.getLocals(res)
   const did = `did:example:${username}`
-  await db.setUserDid(username, did)
+  await db.registerUser(username, did)
 
   const authStore = await auth.AuthStore.fromTokens(keypair, [])
   const repo = await Repo.create(blockstore, did, authStore)
