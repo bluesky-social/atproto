@@ -1,9 +1,17 @@
 import { isPost } from '@adxp/microblog'
 import axios from 'axios'
-const url = 'http://localhost:2583/.adx/v1'
+import * as uint8arrays from 'uint8arrays'
 
+const url = 'http://localhost:2583/.adx/v1'
 const aliceDid = `did:example:alice`
 const bobDid = `did:example:bob`
+
+const makeViewParams = (params: Record<string, unknown>) => {
+  return uint8arrays.toString(
+    uint8arrays.fromString(JSON.stringify(params), 'utf8'),
+    'base64url',
+  )
+}
 
 describe('server', () => {
   it('register', async () => {
@@ -53,8 +61,8 @@ describe('server', () => {
   })
 
   it('fetches liked by view', async () => {
-    console.log(postUri)
-    const res = await axios.get(`${url}/api/view/likedBy`)
+    const params = makeViewParams({ uri: postUri })
+    const res = await axios.get(`${url}/api/view/likedBy?params=${params}`)
     console.log(res.data)
   })
 })

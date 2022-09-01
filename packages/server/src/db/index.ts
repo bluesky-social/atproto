@@ -110,6 +110,7 @@ export class Database {
     const table = this.db.getRepository(UserDid)
     const user = new UserDid()
     user.username = username
+    user.displayName = username
     user.did = did
     await table.save(user)
   }

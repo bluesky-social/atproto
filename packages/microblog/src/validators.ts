@@ -1,9 +1,20 @@
-import { recordSchemas } from './schemas/defs'
+import { recordSchemas, viewSchemas } from './schemas/defs'
 import { AdxSchemas } from '@adxp/schemas'
-import { Badge, Follow, Like, Post, Profile, Repost } from './types'
+import {
+  Badge,
+  Follow,
+  Like,
+  LikedByView,
+  Post,
+  Profile,
+  Repost,
+} from './types'
 
 const s = new AdxSchemas()
 for (const schema of recordSchemas) {
+  s.add(schema)
+}
+for (const schema of viewSchemas) {
   s.add(schema)
 }
 
@@ -47,4 +58,11 @@ export const profileRecordValidator = s.createRecordValidator(
 )
 export const isProfile = (obj: unknown): obj is Profile.Record => {
   return profileRecordValidator.isValid(obj)
+}
+
+export const likedByViewValidator = s.createViewValidator(
+  'blueskyweb.xyz:LikedByView',
+)
+export const isLikedByParams = (obj: unknown): obj is LikedByView.Params => {
+  return likedByViewValidator.isParamsValid(obj)
 }
