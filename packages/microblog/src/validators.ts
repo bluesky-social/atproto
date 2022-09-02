@@ -7,6 +7,7 @@ import {
   LikedByView,
   Post,
   Profile,
+  ProfileView,
   Repost,
   UserFollowersView,
   UserFollowsView,
@@ -85,4 +86,11 @@ export const isUserFollowersParams = (
   obj: unknown,
 ): obj is UserFollowersView.Params => {
   return userFollowersViewValidator.isParamsValid(obj)
+}
+
+export const profileViewValidator = s.createViewValidator(
+  'blueskyweb.xyz:ProfileView',
+)
+export const isProfileParams = (obj: unknown): obj is ProfileView.Params => {
+  return profileViewValidator.isParamsValid(obj)
 }

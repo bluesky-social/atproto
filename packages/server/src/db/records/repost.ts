@@ -12,6 +12,7 @@ import {
   ManyToOne,
 } from 'typeorm'
 import { DbPlugin } from '../types'
+import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 import { PostIndex } from './post'
 
@@ -23,6 +24,11 @@ export class RepostIndex {
   @PrimaryColumn('varchar')
   uri: string
 
+  @Column('varchar')
+  @ManyToOne(() => UserDid, (user) => user.did)
+  creator: string
+
+  @Column('varchar')
   @ManyToOne(() => PostIndex, (post) => post.uri)
   subject: string
 
@@ -56,6 +62,7 @@ const setFn =
     }
     const repost = new RepostIndex()
     repost.uri = uri.toString()
+    repost.creator = uri.host
     repost.subject = obj.subject
     repost.createdAt = obj.createdAt
 

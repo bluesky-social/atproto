@@ -9,8 +9,10 @@ import {
   Repository,
   In,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm'
 import { DbPlugin } from '../types'
+import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 
 const collection = 'bsky/posts'
@@ -25,6 +27,10 @@ type Labeled<T> = T & {
 export class PostIndex {
   @PrimaryColumn('varchar')
   uri: string
+
+  @Column('varchar')
+  @ManyToOne(() => UserDid, (user) => user.did)
+  creator: string
 
   @Column('text')
   text: string
@@ -65,6 +71,7 @@ const setFn =
     }
     const post = new PostIndex()
     post.uri = uri.toString()
+    post.creator = uri.host
     post.text = obj.text
     post.createdAt = obj.createdAt
     post.replyRoot = obj.reply?.root

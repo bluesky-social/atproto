@@ -9,8 +9,10 @@ import {
   Repository,
   In,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm'
 import { DbPlugin } from '../types'
+import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 
 const collection = 'bsky/likes'
@@ -20,6 +22,10 @@ const tableName = collectionToTableName(collection)
 export class LikeIndex {
   @PrimaryColumn('varchar')
   uri: string
+
+  @Column('varchar')
+  @ManyToOne(() => UserDid, (user) => user.did)
+  creator: string
 
   @Column('varchar')
   subject: string
@@ -54,6 +60,7 @@ const setFn =
     }
     const like = new LikeIndex()
     like.uri = uri.toString()
+    like.creator = uri.host
     like.subject = obj.subject
     like.createdAt = obj.createdAt
     await repo.save(like)

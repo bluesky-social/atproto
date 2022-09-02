@@ -10,8 +10,10 @@ import {
   Repository,
   In,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm'
 import { DbPlugin } from '../types'
+import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 
 const collection = 'bsky/badges'
@@ -21,6 +23,10 @@ const tableName = collectionToTableName(collection)
 export class BadgeIndex {
   @PrimaryColumn('varchar')
   uri: string
+
+  @Column('varchar')
+  @ManyToOne(() => UserDid, (user) => user.did)
+  creator: string
 
   @Column('varchar')
   subject: string
@@ -61,6 +67,7 @@ const setFn =
     }
     const badge = new BadgeIndex()
     badge.uri = uri.toString()
+    badge.creator = uri.host
     badge.subject = obj.subject.did
     badge.assertionType = obj.assertion.type
     badge.assertionTag = (obj.assertion as TagAssertion).tag

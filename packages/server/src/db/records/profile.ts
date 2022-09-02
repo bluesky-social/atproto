@@ -10,8 +10,10 @@ import {
   In,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
 } from 'typeorm'
 import { DbPlugin } from '../types'
+import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 import { BadgeIndex } from './badge'
 
@@ -22,6 +24,10 @@ const tableName = collectionToTableName(collection)
 export class ProfileIndex {
   @PrimaryColumn('varchar')
   uri: string
+
+  @Column('varchar')
+  @ManyToOne(() => UserDid, (user) => user.did)
+  creator: string
 
   @Column('varchar')
   displayName: string
@@ -59,6 +65,7 @@ const setFn =
     }
     const profile = new ProfileIndex()
     profile.uri = uri.toString()
+    profile.creator = uri.host
     profile.displayName = obj.displayName
     profile.description = obj.description
     profile.badges = (obj.badges || []).map((ref) => ref.uri)

@@ -1,12 +1,4 @@
-import {
-  Badge,
-  Follow,
-  Like,
-  LikedByView,
-  Post,
-  Profile,
-  Repost,
-} from '@adxp/microblog'
+import { Badge, Follow, Like, Post, Profile, Repost } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { DbPlugin, ViewFn } from './types'
 import postPlugin, { PostIndex } from './records/post'
@@ -15,9 +7,7 @@ import followPlugin, { FollowIndex } from './records/follow'
 import badgePlugin, { BadgeIndex } from './records/badge'
 import profilePlugin, { ProfileIndex } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-import likedByView from './views/likedBy'
-import userFollowsView from './views/userFollows'
-import userFollowersView from './views/userFollows'
+import * as views from './views'
 import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
@@ -47,9 +37,10 @@ export class Database {
       reposts: repostPlugin(db),
     }
     this.views = {}
-    this.views['blueskyweb.xyz:LikedByView'] = likedByView(db)
-    this.views['blueskyweb.xyz:UserFollowsView'] = userFollowsView(db)
-    this.views['blueskyweb.xyz:UserFollowersView'] = userFollowersView(db)
+    this.views['blueskyweb.xyz:LikedByView'] = views.likedBy(db)
+    this.views['blueskyweb.xyz:UserFollowsView'] = views.userFollows(db)
+    this.views['blueskyweb.xyz:UserFollowersView'] = views.userFollowers(db)
+    this.views['blueskyweb.xyz:ProfileView'] = views.profile(db)
     this.db.synchronize()
   }
 
@@ -111,7 +102,6 @@ export class Database {
     const table = this.db.getRepository(UserDid)
     const user = new UserDid()
     user.username = username
-    user.displayName = username
     user.did = did
     await table.save(user)
   }

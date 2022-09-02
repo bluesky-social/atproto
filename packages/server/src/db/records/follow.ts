@@ -9,8 +9,10 @@ import {
   Repository,
   In,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm'
 import { DbPlugin } from '../types'
+import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 
 const collection = 'bsky/follows'
@@ -20,6 +22,10 @@ const tableName = collectionToTableName(collection)
 export class FollowIndex {
   @PrimaryColumn('varchar')
   uri: string
+
+  @Column('varchar')
+  @ManyToOne(() => UserDid, (user) => user.did)
+  creator: string
 
   @Column('varchar')
   subject: string
@@ -57,6 +63,7 @@ const setFn =
     }
     const follow = new FollowIndex()
     follow.uri = uri.toString()
+    follow.creator = uri.host
     follow.subject = obj.subject.did
     follow.subjectName = obj.subject.name
     follow.createdAt = obj.createdAt

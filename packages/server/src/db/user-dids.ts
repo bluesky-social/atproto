@@ -8,7 +8,4 @@ export class UserDid {
   @Column({ type: 'varchar', unique: true })
   @Index()
   username: string
-
-  @Column('varchar')
-  displayName: string
 }
