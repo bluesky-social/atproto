@@ -12,7 +12,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
-import { DbPlugin } from '../types'
+import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 
@@ -96,7 +96,7 @@ const translateDbObj = (dbObj: BadgeIndex): Badge.Record => {
 
 export const makePlugin = (
   db: DataSource,
-): DbPlugin<Badge.Record, BadgeIndex> => {
+): DbRecordPlugin<Badge.Record, BadgeIndex> => {
   const repository = db.getRepository(BadgeIndex)
   return {
     collection,

@@ -12,7 +12,7 @@ import {
   OneToMany,
   ManyToOne,
 } from 'typeorm'
-import { DbPlugin } from '../types'
+import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 import { BadgeIndex } from './badge'
@@ -89,7 +89,7 @@ const translateDbObj = (dbObj: ProfileIndex): Profile.Record => {
 
 export const makePlugin = (
   db: DataSource,
-): DbPlugin<Profile.Record, ProfileIndex> => {
+): DbRecordPlugin<Profile.Record, ProfileIndex> => {
   const repository = db.getRepository(ProfileIndex)
   return {
     collection,

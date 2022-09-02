@@ -1,39 +1,43 @@
-import { isUserFollowsParams, UserFollowsView } from '@adxp/microblog'
+import { UserFollowsView } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { AdxRecord } from '../record'
 import { FollowIndex } from '../records/follow'
 import { ProfileIndex } from '../records/profile'
 import { UserDid } from '../user-dids'
+import * as util from './util'
+import schemas from '../schemas'
+import { DbViewPlugin } from '../types'
 
-export const userFollows =
+const viewId = 'blueskyweb.xyz:UserFollowsView'
+const validator = schemas.createViewValidator(viewId)
+const validParams = (obj: unknown): obj is UserFollowsView.Params => {
+  return validator.isParamsValid(obj)
+}
+
+export const viewFn =
   (db: DataSource) =>
   async (params: unknown): Promise<UserFollowsView.Response> => {
-    if (!isUserFollowsParams(params)) {
-      throw new Error('Invalid params for blueskyweb.xyz:UserFollowsView')
+    if (!validParams(params)) {
+      throw new Error(`Invalid params for ${viewId}`)
     }
     const { user, limit, before } = params
 
-    const subjectReq = db
-      .createQueryBuilder()
-      .select(['user.did', 'user.username', 'profile.displayName'])
-      .from(UserDid, 'user')
-      .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
+    const creator = await util.getUserInfo(db, user)
 
     const followsReq = db
       .createQueryBuilder()
       .select([
-        'subject.did',
-        'subject.username',
-        'profile.displayName',
-        'follow.createdAt',
-        'record.indexedAt',
+        'subject.did AS did',
+        'subject.username AS name',
+        'profile.displayName AS displayName',
+        'follow.createdAt AS createdAt',
+        'record.indexedAt AS indexedAt',
       ])
       .from(FollowIndex, 'follow')
       .innerJoin(AdxRecord, 'record', 'follow.uri = record.uri')
-      .innerJoin(UserDid, 'creator', 'creator.did = record.did')
       .innerJoin(UserDid, 'subject', 'follow.subject = subject.did')
       .leftJoin(ProfileIndex, 'profile', 'profile.creator = follow.subject')
-      .where('creator.username = :user', { user })
+      .where('follow.creator = :creator', { creator: creator.did })
       .orderBy('follow.createdAt')
 
     if (before !== undefined) {
@@ -43,31 +47,17 @@ export const userFollows =
       followsReq.limit(limit)
     }
 
-    const [subjectRes, followsRes] = await Promise.all([
-      subjectReq.getRawOne(),
-      followsReq.getRawMany(),
-    ])
-
-    const follows = followsRes.map((row) => ({
-      did: row.subject_did,
-      name: row.subject_username,
-      displayName: row.profile_displayName || undefined,
-      createdAt: row.follow_createdAt,
-      indexedAt: row.record_indexedAt,
-    }))
-
-    if (!subjectRes) {
-      throw new Error(`Could not find subject: ${user}`)
-    }
+    const follows = await followsReq.getRawMany()
 
     return {
-      subject: {
-        did: subjectRes.user_did,
-        name: subjectRes.user_username,
-        displayName: subjectRes.profile_displayName || undefined,
-      },
+      subject: creator,
       follows,
     }
   }
 
-export default userFollows
+const plugin: DbViewPlugin = {
+  id: viewId,
+  fn: viewFn,
+}
+
+export default plugin

@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
-import { DbPlugin } from '../types'
+import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 
@@ -88,7 +88,7 @@ const translateDbObj = (dbObj: FollowIndex): Follow.Record => {
 
 export const makePlugin = (
   db: DataSource,
-): DbPlugin<Follow.Record, FollowIndex> => {
+): DbRecordPlugin<Follow.Record, FollowIndex> => {
   const repository = db.getRepository(FollowIndex)
   return {
     collection,

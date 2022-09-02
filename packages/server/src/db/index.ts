@@ -1,13 +1,13 @@
 import { Badge, Follow, Like, Post, Profile, Repost } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
-import { DbPlugin, ViewFn } from './types'
+import { DbRecordPlugin, ViewFn } from './types'
 import postPlugin, { PostIndex } from './records/post'
 import likePlugin, { LikeIndex } from './records/like'
 import followPlugin, { FollowIndex } from './records/follow'
 import badgePlugin, { BadgeIndex } from './records/badge'
 import profilePlugin, { ProfileIndex } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-import * as views from './views'
+import views from './views'
 import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
@@ -17,12 +17,12 @@ import { UserDid } from './user-dids'
 export class Database {
   db: DataSource
   records: {
-    posts: DbPlugin<Post.Record, PostIndex>
-    likes: DbPlugin<Like.Record, LikeIndex>
-    follows: DbPlugin<Follow.Record, FollowIndex>
-    badges: DbPlugin<Badge.Record, BadgeIndex>
-    profiles: DbPlugin<Profile.Record, ProfileIndex>
-    reposts: DbPlugin<Repost.Record, RepostIndex>
+    posts: DbRecordPlugin<Post.Record, PostIndex>
+    likes: DbRecordPlugin<Like.Record, LikeIndex>
+    follows: DbRecordPlugin<Follow.Record, FollowIndex>
+    badges: DbRecordPlugin<Badge.Record, BadgeIndex>
+    profiles: DbRecordPlugin<Profile.Record, ProfileIndex>
+    reposts: DbRecordPlugin<Repost.Record, RepostIndex>
   }
   views: Record<string, ViewFn>
 
@@ -37,10 +37,9 @@ export class Database {
       reposts: repostPlugin(db),
     }
     this.views = {}
-    this.views['blueskyweb.xyz:LikedByView'] = views.likedBy(db)
-    this.views['blueskyweb.xyz:UserFollowsView'] = views.userFollows(db)
-    this.views['blueskyweb.xyz:UserFollowersView'] = views.userFollowers(db)
-    this.views['blueskyweb.xyz:ProfileView'] = views.profile(db)
+    for (const view of views) {
+      this.views[view.id] = view.fn(db)
+    }
     this.db.synchronize()
   }
 
@@ -150,7 +149,7 @@ export class Database {
     did: string,
     collection: string,
     limit: number,
-    before?: string, // 14 z's is larger than any TID
+    before?: string,
   ): Promise<unknown[]> {
     const builder = await this.db
       .createQueryBuilder()

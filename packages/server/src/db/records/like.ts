@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
-import { DbPlugin } from '../types'
+import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
 import { collectionToTableName } from '../util'
 
@@ -81,7 +81,7 @@ const translateDbObj = (dbObj: LikeIndex): Like.Record => {
 
 export const makePlugin = (
   db: DataSource,
-): DbPlugin<Like.Record, LikeIndex> => {
+): DbRecordPlugin<Like.Record, LikeIndex> => {
   const repository = db.getRepository(LikeIndex)
   return {
     collection,

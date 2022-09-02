@@ -1,4 +1,4 @@
-import { LikedByView } from '@adxp/microblog'
+import { RepostedByView } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { AdxRecord } from '../record'
 import { LikeIndex } from '../records/like'
@@ -7,15 +7,15 @@ import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { DbViewPlugin } from '../types'
 
-const viewId = 'blueskyweb.xyz:LikedByView'
+const viewId = 'blueskyweb.xyz:RepostedByView'
 const validator = schemas.createViewValidator(viewId)
-const validParams = (obj: unknown): obj is LikedByView.Params => {
+const validParams = (obj: unknown): obj is RepostedByView.Params => {
   return validator.isParamsValid(obj)
 }
 
-const viewFn =
+export const viewFn =
   (db: DataSource) =>
-  async (params: unknown): Promise<LikedByView.Response> => {
+  async (params: unknown): Promise<RepostedByView.Response> => {
     if (!validParams(params)) {
       throw new Error(`Invalid params for ${viewId}`)
     }
@@ -27,27 +27,27 @@ const viewFn =
         'user.did AS did',
         'user.username AS name',
         'profile.displayName AS displayName',
-        'like.createdAt AS createdAt',
+        'repost.createdAt AS createdAt',
         'record.indexedAt AS indexedAt',
       ])
-      .from(LikeIndex, 'like')
+      .from(LikeIndex, 'repost')
       .leftJoin(AdxRecord, 'record', 'like.uri = record.uri')
-      .leftJoin(UserDid, 'user', 'like.creator = user.did')
+      .leftJoin(UserDid, 'user', 'repost.creator = user.did')
       .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
-      .where('like.subject = :uri', { uri })
-      .orderBy('like.createdAt')
+      .where('repost.subject = :uri', { uri })
+      .orderBy('repost.createdAt')
 
     if (before !== undefined) {
-      builder.andWhere('like.createdAt < :before', { before })
+      builder.andWhere('repost.createdAt < :before', { before })
     }
     if (limit !== undefined) {
       builder.limit(limit)
     }
-    const likedBy = await builder.getRawMany()
+    const repostedBy = await builder.getRawMany()
 
     return {
       uri,
-      likedBy,
+      repostedBy,
     }
   }
 

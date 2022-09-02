@@ -1,22 +1,23 @@
-import {
-  isLikedByParams,
-  isProfileParams,
-  LikedByView,
-  ProfileView,
-} from '@adxp/microblog'
+import { ProfileView } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
-import { AdxRecord } from '../record'
 import { FollowIndex } from '../records/follow'
-import { LikeIndex } from '../records/like'
 import { PostIndex } from '../records/post'
 import { ProfileIndex } from '../records/profile'
 import { UserDid } from '../user-dids'
+import schemas from '../schemas'
+import { DbViewPlugin } from '../types'
 
-export const profile =
+const viewId = 'blueskyweb.xyz:ProfileView'
+const validator = schemas.createViewValidator(viewId)
+const validParams = (obj: unknown): obj is ProfileView.Params => {
+  return validator.isParamsValid(obj)
+}
+
+export const viewFn =
   (db: DataSource) =>
   async (params: unknown): Promise<ProfileView.Response> => {
-    if (!isProfileParams(params)) {
-      throw new Error('Invalid params for blueskyweb.xyz:ProfileView')
+    if (!validParams(params)) {
+      throw new Error(`Invalid params for ${viewId}`)
     }
     const { user } = params
 
@@ -64,4 +65,9 @@ export const profile =
     }
   }
 
-export default profile
+const plugin: DbViewPlugin = {
+  id: viewId,
+  fn: viewFn,
+}
+
+export default plugin
