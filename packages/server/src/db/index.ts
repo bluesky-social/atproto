@@ -8,7 +8,7 @@ import {
   Repost,
 } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
-import { DbPlugin } from './types'
+import { DbPlugin, ViewFn } from './types'
 import postPlugin, { PostIndex } from './records/post'
 import likePlugin, { LikeIndex } from './records/like'
 import followPlugin, { FollowIndex } from './records/follow'
@@ -16,6 +16,8 @@ import badgePlugin, { BadgeIndex } from './records/badge'
 import profilePlugin, { ProfileIndex } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
 import likedByView from './views/likedBy'
+import userFollowsView from './views/userFollows'
+import userFollowersView from './views/userFollows'
 import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
@@ -32,9 +34,7 @@ export class Database {
     profiles: DbPlugin<Profile.Record, ProfileIndex>
     reposts: DbPlugin<Repost.Record, RepostIndex>
   }
-  views: {
-    likedBy: (params: LikedByView.Params) => Promise<LikedByView.Response>
-  }
+  views: Record<string, ViewFn>
 
   constructor(db: DataSource) {
     this.db = db
@@ -46,9 +46,10 @@ export class Database {
       profiles: profilePlugin(db),
       reposts: repostPlugin(db),
     }
-    this.views = {
-      likedBy: likedByView(db),
-    }
+    this.views = {}
+    this.views['blueskyweb.xyz:LikedByView'] = likedByView(db)
+    this.views['blueskyweb.xyz:UserFollowsView'] = userFollowsView(db)
+    this.views['blueskyweb.xyz:UserFollowersView'] = userFollowersView(db)
     this.db.synchronize()
   }
 
@@ -158,19 +159,22 @@ export class Database {
   async listRecordsForCollection(
     did: string,
     collection: string,
-    count: number,
-    from = 'zzzzzzzzzzzzz', // 14 z's is larger than any TID
+    limit: number,
+    before?: string, // 14 z's is larger than any TID
   ): Promise<unknown[]> {
-    const res = await this.db
+    const builder = await this.db
       .createQueryBuilder()
       .select('record.uri')
       .from(AdxRecord, 'record')
       .where('record.did = :did', { did })
       .andWhere('record.collection = :collection', { collection })
-      .andWhere('record.tid <= :from', { from })
       .orderBy('record.tid', 'DESC')
-      .limit(count)
-      .getRawMany()
+      .limit(limit)
+
+    if (before !== undefined) {
+      builder.andWhere('record.tid <= :before', { before })
+    }
+    const res = await builder.getRawMany()
 
     const uris: string[] = res.map((row) => row.record_uri)
 

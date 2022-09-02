@@ -2,7 +2,6 @@ import { isLikedByParams, LikedByView } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { AdxRecord } from '../record'
 import { LikeIndex } from '../records/like'
-import { PostIndex } from '../records/post'
 import { UserDid } from '../user-dids'
 
 export const likedBy =
@@ -11,9 +10,9 @@ export const likedBy =
     if (!isLikedByParams(params)) {
       throw new Error('Invalid params for blueskyweb.xyz:LikedByView')
     }
-    const { uri } = params
+    const { uri, limit, before } = params
 
-    const res = await db
+    const builder = db
       .createQueryBuilder()
       .select([
         'user.did',
@@ -22,12 +21,19 @@ export const likedBy =
         'record.indexedAt',
         'like.createdAt',
       ])
-      .from(PostIndex, 'post')
-      .where('post.uri = :uri', { uri })
-      .leftJoin(LikeIndex, 'like', 'like.subject = post.uri')
+      .from(LikeIndex, 'like')
       .leftJoin(AdxRecord, 'record', 'like.uri = record.uri')
       .leftJoin(UserDid, 'user', 'record.did = user.did')
-      .getRawMany()
+      .where('like.subject = :uri', { uri })
+      .orderBy('like.createdAt')
+
+    if (before !== undefined) {
+      builder.andWhere('like.createdAt < :before', { before })
+    }
+    if (limit !== undefined) {
+      builder.limit(limit)
+    }
+    const res = await builder.getRawMany()
 
     const likedBy = res.map((row) => ({
       did: row.user_did,

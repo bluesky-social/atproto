@@ -8,6 +8,8 @@ import {
   Post,
   Profile,
   Repost,
+  UserFollowersView,
+  UserFollowsView,
 } from './types'
 
 const s = new AdxSchemas()
@@ -65,4 +67,22 @@ export const likedByViewValidator = s.createViewValidator(
 )
 export const isLikedByParams = (obj: unknown): obj is LikedByView.Params => {
   return likedByViewValidator.isParamsValid(obj)
+}
+
+export const userFollowsViewValidator = s.createViewValidator(
+  'blueskyweb.xyz:UserFollowsView',
+)
+export const isUserFollowsParams = (
+  obj: unknown,
+): obj is UserFollowsView.Params => {
+  return userFollowsViewValidator.isParamsValid(obj)
+}
+
+export const userFollowersViewValidator = s.createViewValidator(
+  'blueskyweb.xyz:UserFollowersView',
+)
+export const isUserFollowersParams = (
+  obj: unknown,
+): obj is UserFollowersView.Params => {
+  return userFollowersViewValidator.isParamsValid(obj)
 }

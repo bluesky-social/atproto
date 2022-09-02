@@ -9,3 +9,5 @@ export type DbPlugin<T, S> = {
   delete: (uri: AdxUri) => Promise<void>
   translateDbObj: (dbObj: S) => T
 }
+
+export type ViewFn = (params: Record<string, unknown>) => unknown
