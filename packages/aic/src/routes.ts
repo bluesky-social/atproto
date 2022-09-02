@@ -3,7 +3,6 @@ import { tid } from './tid'
 import { updateTick } from './document'
 import { sign } from './signature'
 import * as crypto from '@adxp/crypto'
-import { z } from 'zod'
 
 // Note: do not use the dev/test key in production
 //       pull the prod key from the secret store
@@ -23,8 +22,8 @@ export const CONSORTIUM_KEYPAIR = crypto.EcdsaKeypair.import(
   },
 )
 
-let consortiumCrypto = async () => {
-  let key = await CONSORTIUM_KEYPAIR
+const consortiumCrypto = async () => {
+  const key = await CONSORTIUM_KEYPAIR
   return {
     did: (): string => {
       return key.did()
@@ -80,10 +79,10 @@ router.get(
   async function (req, res) {
     // AIC get
     //
-    // Retreve the latest tick from the databace
-    // pass the tick and curent tid to the aic lib for signing
+    // Retrieve the latest tick from the database
+    // pass the tick and current tid to the aic lib for signing
     const did = 'did:aic:' + req.params.pid
-    const row = await res.locals.db.tickForDid(did) // retreve latest tick
+    const row = await res.locals.db.tickForDid(did) // retrieve latest tick
     const prev_tick = row ? JSON.parse(row.tick) : null
     const signedDoc = await updateTick(
       did,
@@ -106,14 +105,14 @@ router.post(
     // extract from DB
     const row = await res.locals.db.tickForDid(did)
     const prevTid = row ? row.tid : null
-    const prev_tick = row ? JSON.parse(row.tick) : null
+    const prevTick = row ? JSON.parse(row.tick) : null
 
     // aic lib will do the doc update
     const newTick = await updateTick(
       did, // did from the URL
-      tid(), // curent time (tid)
+      tid(), // current time (tid)
       candidateDiff, // diff that was posted/put
-      prev_tick, // tick from db for did:aic
+      prevTick, // tick from db for did:aic
       await consortiumCrypto(), // server's aic key
     )
 
@@ -126,7 +125,7 @@ router.post(
       res.type('json').send({
         tid: tid(),
         did: `did:aic:${req.params.pid}`,
-        tick: prev_tick,
+        tick: prevTick,
         error: 'error return from updateTick',
         cause: newTick,
       })
@@ -142,7 +141,7 @@ router.post(
       JSON.stringify(newTick),
     )
 
-    // we reload the tick from the databace if the put failed/pending we return the last tick
+    // we reload the tick from the database if the put failed/pending we return the last tick
     const storedTick = (await res.locals.db.tickForDid(did)).tick
     res.status(200)
     res.type('json').send(storedTick)

@@ -23,7 +23,7 @@ export type Diff = {
   key: DidKeyString
   sig: Signature
 }
-export type Diffs = { [index: string]: Document | Diff } // the first diff is arbatrary JSON object initial value
+export type Diffs = { [index: string]: Document | Diff } // the first diff is arbitrary JSON object initial value
 export type Tick = {
   tid: TidString
   did: string
@@ -35,7 +35,7 @@ export type Tick = {
 export type Document = { [key: string]: Value }
 
 export type Asymmetric = {
-  did: () => DidKeyString // publkey
+  did: () => DidKeyString // public key
   verifyDidSig: (
     did: DidKeyString,
     data: Uint8Array,

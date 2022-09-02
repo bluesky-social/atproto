@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
-import {pid} from '../src/pid'
-import { sign, validateSig, canonicaliseDocumentToUint8Array} from '../src/signature'
-import {Asymmetric} from '../src/types'
+import { pid } from '../src/pid'
+import { sign, validateSig } from '../src/signature'
+import { Asymmetric } from '../src/types'
 
-const USE_TEST_SERVER = false
+// const USE_TEST_SERVER = false
 
 const PORT = 26979
 const HOST = 'localhost'
@@ -14,7 +14,7 @@ let testPid = ''
 const keyAccount = EcdsaKeypair.import(
   {
     // did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV
-    key_ops: [ 'sign' ],
+    key_ops: ['sign'],
     ext: true,
     kty: 'EC',
     x: '7PdxOiABSKrek0it0485i1l6qwL7Mjbw_IChbeCNMsg',
@@ -66,17 +66,23 @@ describe('aic client', () => {
     // if (USE_TEST_SERVER) {
     //   await runTestServer(PORT)
     // }
-    const key = ( await keyAccount )
+    const key = await keyAccount
     accountCrypto = {
-      did: (): string => {return key.did()},
-      sign: async (msg:Uint8Array): Promise<Uint8Array> => { return await (await keyAccount).sign(msg) },
+      did: (): string => {
+        return key.did()
+      },
+      sign: async (msg: Uint8Array): Promise<Uint8Array> => {
+        return await (await keyAccount).sign(msg)
+      },
       verifyDidSig: verifyDidSig,
     }
   })
 
   it('get tid', async () => {
     const resp = await axios.get(`http://${HOST}:${PORT}/${PATH}tid`)
-    expect(await validateSig(resp.data, accountCrypto as Asymmetric)).toBeTruthy()
+    expect(
+      await validateSig(resp.data, accountCrypto as Asymmetric),
+    ).toBeTruthy()
   })
 
   it('post init data', async () => {

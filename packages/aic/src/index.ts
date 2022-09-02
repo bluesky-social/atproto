@@ -1,7 +1,7 @@
 import * as crypto from '@adxp/crypto'
 import { database, Database } from './db'
 import { server } from './server'
-import {dbLoc, port} from './config'
+import { dbLoc, port } from './config'
 
 const run = async () => {
   // create or open db

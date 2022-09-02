@@ -47,7 +47,7 @@ export { pid, sign, validateSig }
     "key": "did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh",
     "sig": "z3naShLa1KV5ZV5raHbuAAC2zjjyBbTp4htmCA42GKVLDQi7kSnFCteg7n5ap5uJMpsjdxLgL8E6kRR9cqyt6zqK6"
   }
-makes
+  makes
   {
     'adx/recovery_keys': [ 'did:key:zDnaeYHbbWiaCwAXvHXRyVqENDv8Sr3fwHW8P5eakkz4MqsTa'],
     id: 'did:aic:zrr5lxhs4rjlowv5',
@@ -57,38 +57,38 @@ makes
 
 export const updateTick = async (
   did: string, // the did:aic: being updated
-  tid: TidString, // the consenus time of the tick's generation
+  tid: TidString, // the consensus time of the tick's generation
   candidateDiff: Diff | Document | null, // null when only updating tid
-  stored_tick: Tick | null, // null when there is not db entry (did init)
+  storedTick: Tick | null, // null when there is not db entry (did init)
   key: Asymmetric, // the consortium passes in the key
 ): Promise<Tick | ErrorMessage> => {
   // @TODO validate that tid > all tids in the diffs
-  if (stored_tick === null) {
+  if (storedTick === null) {
     // this is the  initial registration of a did:aic
     return registerNewDid(did, tid, candidateDiff, key)
   }
 
   // since stored_tick is not null this is an update
   // of a registered did:aic
-  if (!(await validateSig(stored_tick, key))) {
-    // this means the consortium data base has been corupted
+  if (!(await validateSig(storedTick, key))) {
+    // this means the consortium database has been corrupted
     return { error: 'bad signature: stored tick' }
   }
-  if (stored_tick.key !== key.did()) {
-    // the consortium should not update a tick signed by a difrent consortium
+  if (storedTick.key !== key.did()) {
+    // the consortium should not update a tick signed by a different consortium
     // this logic may get more complicated if the consortium is mid key rotation
     return { error: 'mismatch: consortium key, stored tick key' }
   }
-  if (stored_tick.did !== did) {
-    // databace index is coruptend
+  if (storedTick.did !== did) {
+    // database index is corrupted
     return {
       error: 'stored tick not for did',
       did: did,
-      stored_tick_did: stored_tick.did,
+      stored_tick_did: storedTick.did,
     }
   }
   // stored_tick is now validated by consortium key and url
-  return updateExistingValidatedDid(tid, candidateDiff, stored_tick, key)
+  return updateExistingValidatedDid(tid, candidateDiff, storedTick, key)
 }
 
 const registerNewDid = async (
@@ -99,8 +99,8 @@ const registerNewDid = async (
 ): Promise<Tick | ErrorMessage> => {
   if (candidateDiff === null) {
     // since candidateDiff is null
-    // this is a request for a fresh tick of a non-exixtant did
-    // return a signed affirmation that the did dose not exist
+    // this is a request for a fresh tick of a non-existent did
+    // return a signed affirmation that the did does not exist
     return (await sign(
       {
         tid: tid,
@@ -112,15 +112,15 @@ const registerNewDid = async (
       key,
     )) as Tick
   }
-  // since the candidateDiff is not null it is the inital state
-  // calulate the did:aic from the inital state if they match make the inital tick
+  // since the candidateDiff is not null it is the initial state
+  // calculate the did:aic from the initial state if they match make the initial tick
   const calculated_did = `did:aic:${await pid(candidateDiff)}`
   if (did !== calculated_did) {
-    // client must caulate did corectly to acsept, mostly an integraty check
+    // client must calculate did correctly to accept, mostly an integrity check
     return {
       tid: tid,
       did: did,
-      error: 'calculated did dose not match url',
+      error: 'calculated did does not match url',
       calculated_did: calculated_did,
     }
   }
@@ -130,7 +130,7 @@ const registerNewDid = async (
 }
 
 const updateExistingValidatedDid = async (
-  tid: TidString, // the consenus time of the tick's generation
+  tid: TidString, // the consensus time of the tick's generation
   candidateDiff: Diff | Document | null, // null when only updating tid
   stored_tick: Tick, // null when there is not db entry (did init)
   key: Asymmetric, // the consortium passes in the key
@@ -166,9 +166,10 @@ const updateExistingValidatedDid = async (
   return tickFromDiffs(diffs, tid, key)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const validateKeyInDocForDiffs = async (key: DidKeyString, diffs: Diffs) => {
   return true // @TODO write this
-  // the 72 hour key prioraty window gos here :)
+  // the 72 hour key priority window goes here :)
 }
 
 export const tickFromDiffs = async (
@@ -176,7 +177,7 @@ export const tickFromDiffs = async (
   tid: TidString,
   key: Asymmetric,
 ): Promise<Tick | ErrorMessage> => {
-  // This function dose not validate the diffs remember to do that first
+  // This function does not validate the diffs remember to do that first
   const tids = Object.keys(diffs).sort()
   if (tids.length < 1) {
     return { error: 'no diffs' }
@@ -188,7 +189,7 @@ export const tickFromDiffs = async (
       did: 'did:aic:' + (await pid(initialState)),
       diffs,
       key: key.did(),
-      sig: '', // sig will be filld in by call to sign
+      sig: '', // sig will be filled-in by call to sign()
     },
     key,
   )) as Tick
@@ -213,13 +214,13 @@ const keyIn = (
   return (
     keyList in doc &&
     Array.isArray(doc[keyList]) &&
-    (doc[keyList] as String[]).includes(didKey)
+    (doc[keyList] as string[]).includes(didKey)
   )
 }
 
 const patchesKeysOnly = (patches: Patch[]): boolean => {
   // check that the diff.patches[*][2]
-  // the recovey key is only authorised to update account or recovery keys
+  // the recovery key is only authorized to update account or recovery keys
   // only changes 'adx/account_keys' or 'adx/recovery_keys'
   return patches.every((patch: Patch) => {
     const pathSegment = patch[1][0]
@@ -254,8 +255,8 @@ export const diffsToDidDoc = async (
   key: Asymmetric,
   asOf?: TidString,
 ) => {
-  // the consortium dose not build doc for the client
-  // but it still needs to build the docs to authorise_keys as of the time the diff was signed
+  // the consortium does not build doc for the client
+  // but it still needs to build the docs to authorize keys as of the time the diff was signed
   if (typeof diffs !== 'object') {
     return null
   }
@@ -266,23 +267,23 @@ export const diffsToDidDoc = async (
   let last = tids[0]
   let doc = JSON.parse(JSON.stringify(diffs[last])) as Document // the first tid is the initial state
 
-  // add the id feild
-  doc['id'] = 'did:aic:' + (await pid(diffs[last])) // we calculate and add the id automaticly
+  // add the id field
+  doc['id'] = 'did:aic:' + (await pid(diffs[last])) // we calculate and add the id automatically
 
   for (const tid of tids.slice(1)) {
     const diff = diffs[tid] as Diff // after the first the rest are Diffs
     if (!(await validateSig(diff, key))) {
-      console.log('INFO: ignoreing: bad sig', diff)
+      console.log('INFO: ignoring: bad sig', diff)
       continue // not valid ignore it
     }
     if (!authoriseKey(doc, diff)) {
-      console.log('INFO: ignoreing: bad key')
+      console.log('INFO: ignoring: bad key')
       continue // not valid ignore it
     }
 
     const { prev, patches } = diff
     if (prev !== last) {
-      console.log('INFO: ignoreing: fork')
+      console.log('INFO: ignoring: fork')
       continue
     }
     if (asOf && tid > asOf) {
@@ -302,7 +303,7 @@ const patch = (doc: Document, patches: Patch[]): Document => {
     let node = new_doc as Value
     for (const segment of path.slice(0, -1)) {
       if (op !== 'put' && op !== 'del') {
-        throw Error("unrecognised op")
+        throw Error('unrecognised op')
       }
       if (typeof node !== 'object' || node === null) {
         if (op === 'put') {
@@ -312,7 +313,7 @@ const patch = (doc: Document, patches: Patch[]): Document => {
         }
       }
       if (Array.isArray(node) || typeof segment === 'number') {
-        console.log('Warning: patch dose not support Array traversal')
+        console.log('Warning: patch does not support Array traversal')
         return new_doc
       }
       if (op === 'put' && !(segment in node)) {
@@ -329,7 +330,7 @@ const patch = (doc: Document, patches: Patch[]): Document => {
       }
     }
     if (Array.isArray(node) || typeof segment === 'number') {
-      console.log('Warning: patch dose not support Array traversal')
+      console.log('Warning: patch does not support Array traversal')
       return new_doc
     }
     if (op === 'put') {

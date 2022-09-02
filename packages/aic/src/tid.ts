@@ -17,7 +17,7 @@ const CLOCK_ID = '2' + S32_CHAR[(Math.random() * 32) | 0] // clock '2*'
 let latest = 0 // microseconds since 1970 UTC
 
 export const tid = (): TidString => {
-  let now = Number(Date.now()) * 1000
+  const now = Number(Date.now()) * 1000
   latest = now > latest ? now : latest + 1
   let microseconds = latest
   let id = ''
