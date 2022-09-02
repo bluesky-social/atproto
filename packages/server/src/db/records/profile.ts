@@ -35,6 +35,7 @@ export class ProfileIndex {
   @Column({ type: 'text', nullable: true })
   description?: string
 
+  @Column('varchar')
   @OneToMany(() => BadgeIndex, (badge) => badge.uri)
   badges: string[]
 

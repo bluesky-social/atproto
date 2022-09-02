@@ -17,7 +17,7 @@ export const userFollows =
       .createQueryBuilder()
       .select(['user.did', 'user.username', 'profile.displayName'])
       .from(UserDid, 'user')
-      .innerJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
+      .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
 
     const followsReq = db
       .createQueryBuilder()
@@ -31,8 +31,8 @@ export const userFollows =
       .from(FollowIndex, 'follow')
       .innerJoin(AdxRecord, 'record', 'follow.uri = record.uri')
       .innerJoin(UserDid, 'creator', 'creator.did = record.did')
-      .innerJoin(ProfileIndex, 'profile', 'profile.creator = follow.subject')
       .innerJoin(UserDid, 'subject', 'follow.subject = subject.did')
+      .leftJoin(ProfileIndex, 'profile', 'profile.creator = follow.subject')
       .where('creator.username = :user', { user })
       .orderBy('follow.createdAt')
 
@@ -51,7 +51,7 @@ export const userFollows =
     const follows = followsRes.map((row) => ({
       did: row.subject_did,
       name: row.subject_username,
-      displayName: row.profile_displayName,
+      displayName: row.profile_displayName || undefined,
       createdAt: row.follow_createdAt,
       indexedAt: row.record_indexedAt,
     }))
@@ -62,9 +62,9 @@ export const userFollows =
 
     return {
       subject: {
-        did: subjectRes.did,
-        name: subjectRes.username,
-        displayName: subjectRes.displayName,
+        did: subjectRes.user_did,
+        name: subjectRes.user_username,
+        displayName: subjectRes.profile_displayName || undefined,
       },
       follows,
     }

@@ -1,68 +1,74 @@
 import { isPost } from '@adxp/microblog'
-import axios from 'axios'
-import * as uint8arrays from 'uint8arrays'
+import MicroblogClient from './client'
 
-const url = 'http://localhost:2583/.adx/v1'
-const aliceDid = `did:example:alice`
-const bobDid = `did:example:bob`
-
-const makeViewParams = (params: Record<string, unknown>) => {
-  return uint8arrays.toString(
-    uint8arrays.fromString(JSON.stringify(params), 'utf8'),
-    'base64url',
-  )
-}
+const url = 'http://localhost:2583'
+const alice = new MicroblogClient(url, 'did:example:alice')
+const bob = new MicroblogClient(url, 'did:example:bob')
+const carol = new MicroblogClient(url, 'did:example:carol')
+const dan = new MicroblogClient(url, 'did:example:dan')
 
 describe('server', () => {
-  it('register', async () => {
-    await axios.post(`${url}/account`, { username: 'alice' })
-    await axios.post(`${url}/account`, { username: 'bob' })
-    expect(true)
+  it('register users', async () => {
+    await alice.register('alice')
+    await bob.register('bob')
+    await carol.register('carol')
+    await dan.register('dan')
   })
 
-  it('makes a post', async () => {
-    await axios.post(`${url}/api/repo/${aliceDid}`, {
-      writes: [
-        {
-          action: 'create',
-          collection: 'bsky/posts',
-          value: {
-            $type: 'blueskyweb.xyz:Post',
-            text: 'hey there',
-            createdAt: new Date().toISOString(),
-          },
-        },
-      ],
-    })
+  it('creates profiles', async () => {
+    await alice.createProfile('ali', 'its me!')
+    await bob.createProfile('bobby', 'hi im bob')
   })
+
+  it('follow people', async () => {
+    await alice.followUser(bob.did)
+    await alice.followUser(carol.did)
+    await alice.followUser(dan.did)
+    await bob.followUser(alice.did)
+  })
+
+  it('makes some posts', async () => {
+    await alice.createPost('hey there')
+    await alice.createPost('again')
+    await alice.createPost('yoohoo')
+  })
+
+  it('fetches followers', async () => {
+    const followers = await alice.getFollowers('alice')
+    console.log(followers)
+  })
+
+  it('fetches follows', async () => {
+    const follows = await alice.getFollows('alice')
+    console.log(follows)
+  })
+
+  it('fetches profile', async () => {
+    const profile = await alice.getProfile('alice')
+    console.log(profile)
+  })
+
+  return
 
   let postUri: string
 
-  it('retreives posts', async () => {
-    const res = await axios.get(`${url}/api/repo/${aliceDid}/c/bsky/posts`)
-    expect(isPost(res.data[0])).toBeTruthy()
-    postUri = res.data[0].uri
+  it('retrieves posts', async () => {
+    const posts = await alice.listPosts()
+    expect(isPost(posts[0])).toBeTruthy()
+    postUri = posts[0].uri
   })
 
   it('likes a post', async () => {
-    await axios.post(`${url}/api/repo/${bobDid}`, {
-      writes: [
-        {
-          action: 'create',
-          collection: 'bsky/likes',
-          value: {
-            $type: 'blueskyweb.xyz:Like',
-            subject: postUri,
-            createdAt: new Date().toISOString(),
-          },
-        },
-      ],
-    })
+    await bob.likePost(postUri)
   })
 
   it('fetches liked by view', async () => {
-    const params = makeViewParams({ uri: postUri })
-    const res = await axios.get(`${url}/api/view/likedBy?params=${params}`)
-    console.log(res.data)
+    const view = await alice.getLikesForPost(postUri)
+    console.log(view)
+  })
+
+  it('fetches liked by view', async () => {
+    const view = await alice.getLikesForPost(postUri)
+    console.log(view)
   })
 })

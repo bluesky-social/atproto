@@ -1,6 +1,6 @@
 import { AdxUri } from '@adxp/common'
 import * as microblog from '@adxp/microblog'
-import { Post } from '@adxp/microblog'
+import { Post, Labeled } from '@adxp/microblog'
 import {
   DataSource,
   Entity,
@@ -17,11 +17,6 @@ import { collectionToTableName } from '../util'
 
 const collection = 'bsky/posts'
 const tableName = collectionToTableName(collection)
-
-type Labeled<T> = T & {
-  $type: string
-  uri: string
-}
 
 @Entity({ name: tableName })
 export class PostIndex {

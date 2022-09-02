@@ -1,54 +1,66 @@
-import { isLikedByParams, isProfileParams, LikedByView } from '@adxp/microblog'
+import {
+  isLikedByParams,
+  isProfileParams,
+  LikedByView,
+  ProfileView,
+} from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { AdxRecord } from '../record'
+import { FollowIndex } from '../records/follow'
 import { LikeIndex } from '../records/like'
+import { PostIndex } from '../records/post'
 import { ProfileIndex } from '../records/profile'
 import { UserDid } from '../user-dids'
 
 export const profile =
   (db: DataSource) =>
-  async (params: unknown): Promise<LikedByView.Response> => {
+  async (params: unknown): Promise<ProfileView.Response> => {
     if (!isProfileParams(params)) {
       throw new Error('Invalid params for blueskyweb.xyz:ProfileView')
     }
     const { user } = params
 
-    const builder = db
+    const baseProfile = await db
       .createQueryBuilder()
       .select([
-        'user.did',
-        'user.username',
-        'profile.displayName',
-        'profile.description',
-        'record.indexedAt',
-        'like.createdAt',
+        'user.did AS did',
+        'user.username AS name',
+        'profile.displayName AS displayName',
+        'profile.description AS description',
+        'profile.badges AS badgeRefs',
       ])
       .from(UserDid, 'user')
       .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
-      .leftJoin(AdxRecord, 'record', 'like.uri = record.uri')
-      .leftJoin(UserDid, 'user', 'record.did = user.did')
-      .where('like.subject = :uri', { uri })
-      .orderBy('like.createdAt')
+      .where('user.username = :user', { user })
+      .getRawOne()
 
-    if (before !== undefined) {
-      builder.andWhere('like.createdAt < :before', { before })
+    if (!baseProfile) {
+      throw new Error('Could not find user profile')
     }
-    if (limit !== undefined) {
-      builder.limit(limit)
-    }
-    const res = await builder.getRawMany()
 
-    const likedBy = res.map((row) => ({
-      did: row.user_did,
-      name: row.user_username,
-      displayName: row.user_displayName,
-      createdAt: row.like_createdAt,
-      indexedAt: row.record_indexedAt,
-    }))
+    const followersCount = await db
+      .getRepository(FollowIndex)
+      .countBy({ subject: baseProfile.did })
+
+    const followsCount = await db
+      .getRepository(FollowIndex)
+      .countBy({ creator: baseProfile.did })
+
+    const postsCount = await db
+      .getRepository(PostIndex)
+      .countBy({ creator: baseProfile.did })
+
+    // @TODO add `myState.hasFollowed` & resolve badge refs
 
     return {
-      uri,
-      likedBy,
+      did: baseProfile.did,
+      name: baseProfile.name,
+      displayName: baseProfile.displayName,
+      description: baseProfile.description,
+      followersCount,
+      followsCount,
+      postsCount,
+      badges: [],
     }
   }
 
