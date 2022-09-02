@@ -2,39 +2,8 @@ import express from 'express'
 import { tid } from './tid'
 import { updateTick } from './document'
 import { sign } from './signature'
-import * as crypto from '@adxp/crypto'
 import { Locals } from './server'
 
-// Note: do not use the dev/test key in production
-//       pull the prod key from the secret store
-export const CONSORTIUM_KEYPAIR = crypto.EcdsaKeypair.import(
-  {
-    // did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh
-    key_ops: ['sign'],
-    ext: true,
-    kty: 'EC',
-    x: 'zn_OWx4zJM5zy8E_WUAJH9OS75K5t6q74D7lMf7AmnQ',
-    y: 'trzc_f9i_nOuYRCLMyXxBcpc3OVlylmxdESQ0zdKHeQ',
-    crv: 'P-256',
-    d: 'Ii__doqqQ5YYZLfKh-LSh1Vm6AqCWHGMrBTDYKaEWfU',
-  },
-  {
-    exportable: true,
-  },
-)
-
-const consortiumCrypto = async () => {
-  const key = await CONSORTIUM_KEYPAIR
-  return {
-    did: (): string => {
-      return key.did()
-    },
-    sign: async (msg: Uint8Array): Promise<Uint8Array> => {
-      return await key.sign(msg)
-    },
-    verifyDidSig: crypto.verifyDidSig,
-  }
-}
 // const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()])
 // type Literal = z.infer<typeof literalSchema>
 // type Json = Literal | { [key: string]: Json } | Json[]
@@ -63,14 +32,15 @@ const router = express.Router()
 router.use(express.static('static'))
 
 router.all('/tid', async (req, res) => {
+  const { crypto } = res.locals as Locals
   res.send(
     await sign(
       {
         tid: tid(),
-        key: (await consortiumCrypto()).did(),
+        key: crypto.did(),
         sig: '',
       },
-      await consortiumCrypto(),
+      crypto,
     ),
   )
 })
@@ -78,7 +48,7 @@ router.all('/tid', async (req, res) => {
 router.get(
   '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
   async function (req, res) {
-    const { db } = res.locals as Locals
+    const { db, crypto } = res.locals as Locals
     // AIC get
     //
     // Retrieve the latest tick from the database
@@ -91,7 +61,7 @@ router.get(
       tid(),
       null, // candidateDiff: this is a get no updates
       prevTick,
-      await consortiumCrypto(),
+      crypto,
     )
     res.type('json').send(signedDoc)
   },
@@ -100,7 +70,7 @@ router.get(
 router.post(
   '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
   async function (req, res) {
-    const { db } = res.locals as Locals
+    const { db, crypto } = res.locals as Locals
 
     // extract from post
     const did = 'did:aic:' + req.params.pid
@@ -119,7 +89,7 @@ router.post(
       tid(), // current time (tid)
       candidateDiff, // diff that was posted/put
       prevTick, // tick from db for did:aic
-      await consortiumCrypto(), // server's aic key
+      crypto, // server's aic key
     )
 
     await db.putTickForDid(

@@ -1,3 +1,5 @@
+import { EcdsaKeypair } from '@adxp/crypto'
+
 export type Value =
   | null
   | boolean
@@ -29,6 +31,7 @@ export type Tick = {
 export type Document = { [key: string]: Value }
 
 export type Asymmetric = {
+  key: EcdsaKeypair
   did: () => DidKeyString // public key
   verifyDidSig: (
     did: DidKeyString,

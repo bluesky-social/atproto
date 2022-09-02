@@ -10,25 +10,18 @@ import { EcdsaKeypair, verifyDidSig } from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
 import { Diff, Document, Asymmetric } from '../src/types'
 import { tid, tidDifferenceHours } from '../src/tid'
+import { createAsymmetric } from '../src/crypto'
 
-const keyConsortium = EcdsaKeypair.import(
-  {
-    // did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh
-    key_ops: ['sign'],
-    ext: true,
-    kty: 'EC',
-    x: 'zn_OWx4zJM5zy8E_WUAJH9OS75K5t6q74D7lMf7AmnQ',
-    y: 'trzc_f9i_nOuYRCLMyXxBcpc3OVlylmxdESQ0zdKHeQ',
-    crv: 'P-256',
-    d: 'Ii__doqqQ5YYZLfKh-LSh1Vm6AqCWHGMrBTDYKaEWfU',
-  },
-  {
-    exportable: true,
-  },
-)
-
-let consortiumCrypto: Asymmetric | null = null
-let accountCrypto: Asymmetric | null = null
+const consortiumJwk = {
+  // did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh
+  key_ops: ['sign'],
+  ext: true,
+  kty: 'EC',
+  x: 'zn_OWx4zJM5zy8E_WUAJH9OS75K5t6q74D7lMf7AmnQ',
+  y: 'trzc_f9i_nOuYRCLMyXxBcpc3OVlylmxdESQ0zdKHeQ',
+  crv: 'P-256',
+  d: 'Ii__doqqQ5YYZLfKh-LSh1Vm6AqCWHGMrBTDYKaEWfU',
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const keyTick = EcdsaKeypair.import(
@@ -47,21 +40,16 @@ const keyTick = EcdsaKeypair.import(
   },
 )
 
-const keyAccount = EcdsaKeypair.import(
-  {
-    // did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV
-    key_ops: ['sign'],
-    ext: true,
-    kty: 'EC',
-    x: '7PdxOiABSKrek0it0485i1l6qwL7Mjbw_IChbeCNMsg',
-    y: 'Ir1RRiNCrxLCcKMSsvaKBiA8Lt5NNyea5WcgqCR1OM8',
-    crv: 'P-256',
-    d: 'URhLRG1NE10xz0HCWUESwaT8KahrHsX4KNW7sLKsQxw',
-  },
-  {
-    exportable: true,
-  },
-)
+const accountJwk = {
+  // did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV
+  key_ops: ['sign'],
+  ext: true,
+  kty: 'EC',
+  x: '7PdxOiABSKrek0it0485i1l6qwL7Mjbw_IChbeCNMsg',
+  y: 'Ir1RRiNCrxLCcKMSsvaKBiA8Lt5NNyea5WcgqCR1OM8',
+  crv: 'P-256',
+  d: 'URhLRG1NE10xz0HCWUESwaT8KahrHsX4KNW7sLKsQxw',
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const keyRecovery = EcdsaKeypair.import(
@@ -81,28 +69,12 @@ const keyRecovery = EcdsaKeypair.import(
 )
 
 describe('aic test test', () => {
+  let consortiumCrypto: Asymmetric | null = null
+  let accountCrypto: Asymmetric | null = null
+
   beforeAll(async () => {
-    const keyc = await keyConsortium
-    consortiumCrypto = {
-      did: (): string => {
-        return keyc.did()
-      },
-      sign: async (msg: Uint8Array): Promise<Uint8Array> => {
-        return await (await keyConsortium).sign(msg)
-      },
-      verifyDidSig: verifyDidSig,
-    }
-    const key2 = await keyAccount
-    accountCrypto = {
-      did: (): string => {
-        return key2.did()
-      },
-      sign: async (msg: Uint8Array): Promise<Uint8Array> => {
-        return await (await keyAccount).sign(msg)
-      },
-      verifyDidSig: verifyDidSig,
-    }
-    keyAccount
+    consortiumCrypto = await createAsymmetric(consortiumJwk)
+    accountCrypto = await createAsymmetric(accountJwk)
   })
 
   it('works', async () => {
@@ -291,6 +263,7 @@ describe('aic test test', () => {
     //gen key
     const key = await EcdsaKeypair.create({ exportable: true })
     const crypto = {
+      key,
       did: (): string => {
         return key.did()
       },
@@ -351,7 +324,7 @@ describe('aic test test', () => {
       {
         prev: '3j2b-pul-dlia-22',
         patches: [],
-        key: (await keyAccount).did(),
+        key: accountCrypto.did(),
         sig: '',
       },
       accountCrypto,
@@ -501,7 +474,7 @@ describe('aic test test', () => {
         {
           prev: tids1.slice(-1).pop(),
           patches: [['put', ['name'], 'aaron.blueskyweb.xyz']],
-          key: (await keyAccount).did(),
+          key: accountCrypto.did(),
           sig: '',
         },
         await accountCrypto, // only the client has this key
@@ -532,7 +505,7 @@ describe('aic test test', () => {
         {
           prev: tids2.slice(-1).pop(),
           patches: [['del', ['adx/account_keys']]],
-          key: (await keyAccount).did(),
+          key: accountCrypto.did(),
           sig: '',
         },
         accountCrypto,
@@ -562,7 +535,7 @@ describe('aic test test', () => {
         {
           prev: tids3.slice(-1).pop(),
           patches: [['put', ['hello'], 'world']],
-          key: (await keyAccount).did(),
+          key: accountCrypto.did(),
           sig: '',
         },
         await accountCrypto,
