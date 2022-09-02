@@ -317,7 +317,7 @@ describe('aic test test', () => {
     // parse message
     const recv = JSON.parse(msg)
     if (recv.sig[0] !== 'z') {
-      throw Error("signatures must be 'z'+ base58btc")
+      throw new Error("signatures must be 'z'+ base58btc")
     }
     const recvSig = uint8arrays.fromString(recv.sig.slice(1), 'base58btc')
     recv.sig = ''

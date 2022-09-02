@@ -1,7 +1,6 @@
 import { sign, validateSig } from './signature'
 import { pid } from './pid'
 import {
-  ErrorMessage,
   Value,
   TidString,
   DidKeyString,
@@ -16,6 +15,7 @@ import {
 export { pid, sign, validateSig }
 
 /*
+  @TODO move this into tests
   Example identity tick
   {
     "tid": "3j5r-ts5-ojpm-2c",
@@ -61,33 +61,34 @@ export const updateTick = async (
   candidateDiff: Diff | Document | null, // null when only updating tid
   storedTick: Tick | null, // null when there is not db entry (did init)
   key: Asymmetric, // the consortium passes in the key
-): Promise<Tick | ErrorMessage> => {
+): Promise<Tick> => {
   // @TODO validate that tid > all tids in the diffs
   if (storedTick === null) {
     // this is the  initial registration of a did:aic
     return registerNewDid(did, tid, candidateDiff, key)
   }
 
-  // since stored_tick is not null this is an update
+  // since storedTick is not null this is an update
   // of a registered did:aic
   if (!(await validateSig(storedTick, key))) {
     // this means the consortium database has been corrupted
-    return { error: 'bad signature: stored tick' }
+    throw new Error('bad signature: stored tick')
   }
   if (storedTick.key !== key.did()) {
     // the consortium should not update a tick signed by a different consortium
     // this logic may get more complicated if the consortium is mid key rotation
-    return { error: 'mismatch: consortium key, stored tick key' }
+    throw new Error('mismatch: consortium key, stored tick key')
   }
   if (storedTick.did !== did) {
     // database index is corrupted
-    return {
-      error: 'stored tick not for did',
+    const error = new Error('stored tick not for did')
+    Object.assign(error, {
       did: did,
-      stored_tick_did: storedTick.did,
-    }
+      storedTickDid: storedTick.did,
+    })
+    throw error
   }
-  // stored_tick is now validated by consortium key and url
+  // storedTick is now validated by consortium key and url
   return updateExistingValidatedDid(tid, candidateDiff, storedTick, key)
 }
 
@@ -96,7 +97,7 @@ const registerNewDid = async (
   tid: TidString,
   candidateDiff: Document | null,
   key: Asymmetric,
-): Promise<Tick | ErrorMessage> => {
+): Promise<Tick> => {
   if (candidateDiff === null) {
     // since candidateDiff is null
     // this is a request for a fresh tick of a non-existent did
@@ -114,15 +115,16 @@ const registerNewDid = async (
   }
   // since the candidateDiff is not null it is the initial state
   // calculate the did:aic from the initial state if they match make the initial tick
-  const calculated_did = `did:aic:${await pid(candidateDiff)}`
-  if (did !== calculated_did) {
+  const calculatedDid = `did:aic:${await pid(candidateDiff)}`
+  if (did !== calculatedDid) {
     // client must calculate did correctly to accept, mostly an integrity check
-    return {
+    const error = new Error('calculated did does not match url')
+    Object.assign(error, {
       tid: tid,
       did: did,
-      error: 'calculated did does not match url',
-      calculated_did: calculated_did,
-    }
+      calculatedDid: calculatedDid,
+    })
+    throw error
   }
   const diffs: Diffs = {}
   diffs[tid] = candidateDiff
@@ -132,17 +134,17 @@ const registerNewDid = async (
 const updateExistingValidatedDid = async (
   tid: TidString, // the consensus time of the tick's generation
   candidateDiff: Diff | Document | null, // null when only updating tid
-  stored_tick: Tick, // null when there is not db entry (did init)
+  storedTick: Tick, // null when there is not db entry (did init)
   key: Asymmetric, // the consortium passes in the key
-): Promise<Tick | ErrorMessage> => {
+): Promise<Tick> => {
   if (candidateDiff === null) {
     // nothing to update return the old tick but with new tid
     return (await sign(
       {
         tid: tid,
-        did: stored_tick.did,
-        diffs: stored_tick.diffs,
-        key: stored_tick.key,
+        did: storedTick.did,
+        diffs: storedTick.diffs,
+        key: storedTick.key,
         sig: '',
       },
       key,
@@ -151,17 +153,17 @@ const updateExistingValidatedDid = async (
   // there is a validated stored_tick and a candidateDiff
   // this is a update of the did document
   if (!(await validateSig(candidateDiff, key))) {
-    return { error: 'diff has bad signature' }
+    throw new Error('diff has bad signature')
   }
   if (
     'key' in candidateDiff &&
     typeof candidateDiff.key === 'string' &&
-    !validateKeyInDocForDiffs(candidateDiff.key, stored_tick.diffs)
+    !validateKeyInDocForDiffs(candidateDiff.key, storedTick.diffs)
   ) {
-    return { error: 'diff signed by key not in did doc' }
+    throw new Error('diff signed by key not in did doc')
   }
   // there is a validated stored_tick and a valid candidateDiff
-  const diffs: Diffs = stored_tick.diffs
+  const diffs: Diffs = storedTick.diffs
   diffs[tid] = candidateDiff
   return tickFromDiffs(diffs, tid, key)
 }
@@ -176,11 +178,11 @@ export const tickFromDiffs = async (
   diffs: Diffs,
   tid: TidString,
   key: Asymmetric,
-): Promise<Tick | ErrorMessage> => {
+): Promise<Tick> => {
   // This function does not validate the diffs remember to do that first
   const tids = Object.keys(diffs).sort()
   if (tids.length < 1) {
-    return { error: 'no diffs' }
+    throw new Error('no diffs')
   }
   const initialState = diffs[tids[0]]
   return (await sign(
@@ -238,16 +240,16 @@ export const tickToDidDoc = async (
 ): Promise<Document> => {
   const valid = await validateSig(tick, key)
   if (!valid) {
-    return { error: 'tick has bad signature' }
+    throw new Error('tick has bad signature')
   }
   if (tick.key !== consortiumDid) {
-    return { error: 'not signed by consortium' }
+    throw new Error('not signed by consortium')
   }
   const doc = await diffsToDidDoc(tick.diffs, key, asOf)
   if (doc !== null) {
     return doc
   }
-  return { error: 'malformed diffs' }
+  throw new Error('malformed diffs')
 }
 
 export const diffsToDidDoc = async (
@@ -297,24 +299,23 @@ export const diffsToDidDoc = async (
 
 const patch = (doc: Document, patches: Patch[]): Document => {
   // @TODO this needs more testing
-  const new_doc = JSON.parse(JSON.stringify(doc)) as Document
+  const updatedDoc = JSON.parse(JSON.stringify(doc)) as Document
   for (const p of patches) {
     const [op, path, value] = p
-    let node = new_doc as Value
+    let node = updatedDoc as Value
     for (const segment of path.slice(0, -1)) {
       if (op !== 'put' && op !== 'del') {
-        throw Error('unrecognised op')
+        throw new Error('unrecognised op')
       }
       if (typeof node !== 'object' || node === null) {
         if (op === 'put') {
           node = {}
         } else {
-          return new_doc
+          return updatedDoc
         }
       }
       if (Array.isArray(node) || typeof segment === 'number') {
-        console.log('Warning: patch does not support Array traversal')
-        return new_doc
+        throw new Error('patch does not support array traversal')
       }
       if (op === 'put' && !(segment in node)) {
         node[segment] = {}
@@ -326,12 +327,11 @@ const patch = (doc: Document, patches: Patch[]): Document => {
       if (op === 'put') {
         node = {}
       } else {
-        return new_doc
+        return updatedDoc
       }
     }
     if (Array.isArray(node) || typeof segment === 'number') {
-      console.log('Warning: patch does not support Array traversal')
-      return new_doc
+      throw new Error('patch does not support array traversal')
     }
     if (op === 'put') {
       node[segment] = value
@@ -340,5 +340,5 @@ const patch = (doc: Document, patches: Patch[]): Document => {
       delete node[segment]
     }
   }
-  return new_doc
+  return updatedDoc
 }

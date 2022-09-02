@@ -22,8 +22,8 @@ export const server = (
   app.use(cors())
 
   app.use((_req, res, next) => {
-    res.locals.db = db
-    res.locals.crypto = crypto
+    const locals: Locals = { db, crypto }
+    Object.assign(res.locals, locals)
     next()
   })
 
@@ -31,4 +31,9 @@ export const server = (
   // app.use(error.handler)
 
   return app.listen(port)
+}
+
+export interface Locals {
+  db: Database
+  crypto: Asymmetric
 }

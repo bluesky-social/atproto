@@ -1,5 +1,5 @@
 import * as uint8arrays from 'uint8arrays'
-import { Document, ErrorMessage, Asymmetric } from './types'
+import { Document, Asymmetric } from './types'
 
 export const canonicaliseDocumentToUint8Array = (
   document: Document,
@@ -12,7 +12,7 @@ export const canonicaliseDocumentToUint8Array = (
 
 export const sign = async (doc: Document, key: Asymmetric) => {
   if (doc.key !== key.did()) {
-    throw Error('Info: passed in secret key and did do not match')
+    throw new Error('Info: passed in secret key and did do not match')
   }
   const unsignedDoc = { ...doc, sig: '' }
   const data = canonicaliseDocumentToUint8Array(unsignedDoc)
@@ -25,7 +25,7 @@ export const sign = async (doc: Document, key: Asymmetric) => {
 export const validateSig = async (
   doc: Document,
   key: Asymmetric,
-): Promise<boolean | ErrorMessage> => {
+): Promise<boolean> => {
   if (
     typeof doc.sig !== 'string' ||
     typeof doc.key !== 'string' ||

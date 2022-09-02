@@ -9,7 +9,7 @@ export type Database = {
   putTickForDid: (
     did: string,
     tid: string, // the new tid must me larger then the previous tid
-    prevTid: string, // gard: if the prevTid has changed the tick from the db is stale
+    prevTid: string | null, // gard: if the prevTid has changed the tick from the db is stale
     tick: string, // the tick is a json string
   ) => Promise<void>
 }

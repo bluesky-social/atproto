@@ -106,9 +106,10 @@ describe('aic client', () => {
     const data = '{}'
     const headers = { 'Content-Type': 'application/json' }
 
-    const resp = await axios.post(url, data, { headers })
+    await expect(axios.post(url, data, { headers })).rejects.toThrow(
+      'Request failed with status code 500',
+    )
     // console.log('update bad signature', resp.status, resp.data)
-    expect(resp.status).toEqual(200)
   })
 
   it('valid update 1 add d', async () => {

@@ -1,9 +1,3 @@
-export type ErrorMessage = {
-  error: string
-  cause?: ErrorMessage
-  [key: string]: Value
-}
-
 export type Value =
   | null
   | boolean

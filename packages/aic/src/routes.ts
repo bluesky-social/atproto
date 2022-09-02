@@ -3,6 +3,7 @@ import { tid } from './tid'
 import { updateTick } from './document'
 import { sign } from './signature'
 import * as crypto from '@adxp/crypto'
+import { Locals } from './server'
 
 // Note: do not use the dev/test key in production
 //       pull the prod key from the secret store
@@ -77,18 +78,19 @@ router.all('/tid', async (req, res) => {
 router.get(
   '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
   async function (req, res) {
+    const { db } = res.locals as Locals
     // AIC get
     //
     // Retrieve the latest tick from the database
     // pass the tick and current tid to the aic lib for signing
     const did = 'did:aic:' + req.params.pid
-    const row = await res.locals.db.tickForDid(did) // retrieve latest tick
-    const prev_tick = row ? JSON.parse(row.tick) : null
+    const row = await db.tickForDid(did) // retrieve latest tick
+    const prevTick = row ? JSON.parse(row.tick) : null
     const signedDoc = await updateTick(
       did,
       tid(),
       null, // candidateDiff: this is a get no updates
-      prev_tick,
+      prevTick,
       await consortiumCrypto(),
     )
     res.type('json').send(signedDoc)
@@ -98,16 +100,20 @@ router.get(
 router.post(
   '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
   async function (req, res) {
+    const { db } = res.locals as Locals
+
     // extract from post
     const did = 'did:aic:' + req.params.pid
-    const candidateDiff = req.body
+    const candidateDiff = req.body // @TODO add input validation with zod
 
     // extract from DB
-    const row = await res.locals.db.tickForDid(did)
+    const row = await db.tickForDid(did)
     const prevTid = row ? row.tid : null
     const prevTick = row ? JSON.parse(row.tick) : null
 
     // aic lib will do the doc update
+    // @TODO distinguish any errors whose reasoning we can share with the user,
+    // make them non-500s. Also, consider using bounce to hard-throw system errors.
     const newTick = await updateTick(
       did, // did from the URL
       tid(), // current time (tid)
@@ -116,25 +122,7 @@ router.post(
       await consortiumCrypto(), // server's aic key
     )
 
-    if ('error' in newTick) {
-      // error return from updateTick
-      // type ErrorMessage = { error: string; cause?: ErrorMessage; [index: string]: Value }
-      // if there is an error property it is an error don't store in DB
-      // also send the last tick that is still valid
-      res.status(200)
-      res.type('json').send({
-        tid: tid(),
-        did: `did:aic:${req.params.pid}`,
-        tick: prevTick,
-        error: 'error return from updateTick',
-        cause: newTick,
-      })
-      return
-    }
-
-    // if the output of updateTick is not an error put in db
-    console.log(`Saving ${newTick.did} to AIC at ${newTick.tid}`)
-    await res.locals.db.putTickForDid(
+    await db.putTickForDid(
       newTick.did,
       newTick.tid,
       prevTid, // gard: if the prevTid has changed the tick from the db is stale
@@ -142,9 +130,15 @@ router.post(
     )
 
     // we reload the tick from the database if the put failed/pending we return the last tick
-    const storedTick = (await res.locals.db.tickForDid(did)).tick
+    const result = await db.tickForDid(did)
+    if (typeof result === 'undefined') {
+      throw new Error(
+        'tick should exist since it was just successfully updated, but does not',
+      )
+    }
+
     res.status(200)
-    res.type('json').send(storedTick)
+    res.type('json').send(result.tick)
   },
 )
 
