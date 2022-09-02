@@ -52,6 +52,7 @@ export const database = async (location: string): Promise<Database> => {
       prevTid: string | null, // the did for the tick being superseded
       tick: string, // the new tick
     ) => {
+      // @TODO could use returning('*') here to avoid refetch and reflect exact result of the insert
       // This is just a db wrapper confirm that the tick is valid before calling
       // whereJsonPath('diff', '$.prev', '=', )
       if (prevTid === null) {

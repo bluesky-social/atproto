@@ -9,7 +9,6 @@ import { createAsymmetric } from '../src/crypto'
 const PORT = 26979
 const HOST = 'localhost'
 const PATH = ''
-let testPid = ''
 
 const accountJwk = {
   // did:key:zDnaeycJUNQugcrag1WmLePtK9agLYLyXvscnQM4FHm1ASiRV
@@ -24,12 +23,23 @@ const accountJwk = {
 
 describe('aic client', () => {
   let accountCrypto: Asymmetric | null = null
+  let testPid = '' // will be pid for initialDoc
+  let initialDoc
+  let initialTick
 
   beforeAll(async () => {
     // if (USE_TEST_SERVER) {
     //   await runTestServer(PORT)
     // }
     accountCrypto = await createAsymmetric(accountJwk)
+    initialDoc = {
+      nonce: Math.random() * (Number.MAX_SAFE_INTEGER + 1),
+      a: 1,
+      b: 2,
+      c: 3,
+      'adx/account_keys': [accountCrypto.did()],
+    }
+    testPid = await pid(initialDoc)
   })
 
   it('get tid', async () => {
@@ -39,24 +49,32 @@ describe('aic client', () => {
     ).toBeTruthy()
   })
 
-  it('post init data', async () => {
+  it('post initial doc', async () => {
     if (accountCrypto === null) {
       throw new Error('bad test initialization')
     }
 
-    const data = {
-      nonce: Math.random() * (Number.MAX_SAFE_INTEGER + 1),
-      a: 1,
-      b: 2,
-      c: 3,
-      'adx/account_keys': [accountCrypto.did()],
-    }
-    testPid = await pid(data)
     const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
     const headers = { 'Content-Type': 'application/json' }
-    const resp = await axios.post(url, data, { headers })
+    const resp = await axios.post(url, initialDoc, { headers })
     // console.log('post init data', resp.status, resp.data)
     expect(resp.status).toEqual(200)
+    initialTick = resp.data
+  })
+
+  it('get initial doc', async () => {
+    if (accountCrypto === null) {
+      throw new Error('bad test initialization')
+    }
+
+    const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
+    const resp = await axios.get(url)
+
+    expect(resp.status).toEqual(200)
+    expect(resp.data).toEqual({
+      ...initialDoc,
+      id: initialTick.did,
+    })
   })
 
   it('post an update bad signature', async () => {
@@ -72,7 +90,7 @@ describe('aic client', () => {
 
   it('valid update 1 add d', async () => {
     const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
-    const respGet = await axios.get(url)
+    const respGet = await axios.get(`${url}/tick`)
     // console.log('get an update last tid', respGet.data)
     const data = await sign(
       {
@@ -88,9 +106,10 @@ describe('aic client', () => {
     // console.log('post an update last tid', resp.status, resp.data, 'for', data)
     expect(resp.status).toEqual(200)
   })
+
   it('valid update 2 del b', async () => {
     const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
-    const respGet = await axios.get(url)
+    const respGet = await axios.get(`${url}/tick`)
     // console.log('get an update last tid', respGet.data)
     const data = await sign(
       {
@@ -109,7 +128,7 @@ describe('aic client', () => {
 
   it('valid update 3 put each level', async () => {
     const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
-    const respGet = await axios.get(url)
+    const respGet = await axios.get(`${url}/tick`)
     // console.log('get an update last tid', respGet.data)
     const data = await sign(
       {
@@ -128,7 +147,7 @@ describe('aic client', () => {
 
   it('invalid update 4 reject fork', async () => {
     const url = `http://${HOST}:${PORT}/${PATH}${testPid}`
-    const respGet = await axios.get(url)
+    const respGet = await axios.get(`${url}/tick`)
     // console.log('get an update last tid', respGet.data)
     const data = await sign(
       {

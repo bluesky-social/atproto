@@ -1,6 +1,6 @@
 import express from 'express'
 import { tid } from './tid'
-import { updateTick } from './document'
+import { tickToDidDoc, updateTick } from './document'
 import { sign } from './signature'
 import { Locals } from './server'
 
@@ -31,6 +31,8 @@ const router = express.Router()
 // router.use('/favicon.ico', express.static('static/favicon.ico'))
 router.use(express.static('static'))
 
+const pidMatch = '[234567abcdefghijklmnopqrstuvwxyz]{16}'
+
 router.all('/tid', async (req, res) => {
   const { crypto } = res.locals as Locals
   res.send(
@@ -45,72 +47,89 @@ router.all('/tid', async (req, res) => {
   )
 })
 
-router.get(
-  '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
-  async function (req, res) {
-    const { db, crypto } = res.locals as Locals
-    // AIC get
-    //
-    // Retrieve the latest tick from the database
-    // pass the tick and current tid to the aic lib for signing
-    const did = 'did:aic:' + req.params.pid
-    const row = await db.tickForDid(did) // retrieve latest tick
-    const prevTick = row ? JSON.parse(row.tick) : null
-    const signedDoc = await updateTick(
-      did,
-      tid(),
-      null, // candidateDiff: this is a get no updates
-      prevTick,
-      crypto,
+// Get a DID doc
+router.get(`/:pid(${pidMatch})`, async function (req, res) {
+  const { db, crypto } = res.locals as Locals
+
+  const did = 'did:aic:' + req.params.pid
+  const row = await db.tickForDid(did) // retrieve latest tick
+  const prevTick = row ? JSON.parse(row.tick) : null
+  const now = tid()
+  const signedDoc = await updateTick(
+    did,
+    now,
+    null, // candidateDiff: this is a get no updates
+    prevTick,
+    crypto,
+  )
+
+  const didDoc = await tickToDidDoc(signedDoc, crypto.did(), crypto, now)
+
+  res.type('json').send(didDoc)
+})
+
+// Get a DID tick
+router.get(`/:pid(${pidMatch})/tick`, async function (req, res) {
+  const { db, crypto } = res.locals as Locals
+  // AIC get
+  //
+  // Retrieve the latest tick from the database
+  // pass the tick and current tid to the aic lib for signing
+  const did = 'did:aic:' + req.params.pid
+  const row = await db.tickForDid(did) // retrieve latest tick
+  const prevTick = row ? JSON.parse(row.tick) : null
+  const signedDoc = await updateTick(
+    did,
+    tid(),
+    null, // candidateDiff: this is a get no updates
+    prevTick,
+    crypto,
+  )
+  res.type('json').send(signedDoc)
+})
+
+// Update or create a DID doc
+router.post(`/:pid(${pidMatch})`, async function (req, res) {
+  const { db, crypto } = res.locals as Locals
+
+  // extract from post
+  const did = 'did:aic:' + req.params.pid
+  const candidateDiff = req.body // @TODO add input validation with zod
+
+  // extract from DB
+  const row = await db.tickForDid(did)
+  const prevTid = row ? row.tid : null
+  const prevTick = row ? JSON.parse(row.tick) : null
+
+  // aic lib will do the doc update
+  // @TODO distinguish any errors whose reasoning we can share with the user,
+  // make them non-500s. Also, consider using bounce to hard-throw system errors.
+  const newTick = await updateTick(
+    did, // did from the URL
+    tid(), // current time (tid)
+    candidateDiff, // diff that was posted/put
+    prevTick, // tick from db for did:aic
+    crypto, // server's aic key
+  )
+
+  await db.putTickForDid(
+    newTick.did,
+    newTick.tid,
+    prevTid, // gard: if the prevTid has changed the tick from the db is stale
+    JSON.stringify(newTick),
+  )
+
+  // we reload the tick from the database if the put failed/pending we return the last tick
+  const result = await db.tickForDid(did)
+  if (typeof result === 'undefined') {
+    throw new Error(
+      'tick should exist since it was just successfully updated, but does not',
     )
-    res.type('json').send(signedDoc)
-  },
-)
+  }
 
-router.post(
-  '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
-  async function (req, res) {
-    const { db, crypto } = res.locals as Locals
-
-    // extract from post
-    const did = 'did:aic:' + req.params.pid
-    const candidateDiff = req.body // @TODO add input validation with zod
-
-    // extract from DB
-    const row = await db.tickForDid(did)
-    const prevTid = row ? row.tid : null
-    const prevTick = row ? JSON.parse(row.tick) : null
-
-    // aic lib will do the doc update
-    // @TODO distinguish any errors whose reasoning we can share with the user,
-    // make them non-500s. Also, consider using bounce to hard-throw system errors.
-    const newTick = await updateTick(
-      did, // did from the URL
-      tid(), // current time (tid)
-      candidateDiff, // diff that was posted/put
-      prevTick, // tick from db for did:aic
-      crypto, // server's aic key
-    )
-
-    await db.putTickForDid(
-      newTick.did,
-      newTick.tid,
-      prevTid, // gard: if the prevTid has changed the tick from the db is stale
-      JSON.stringify(newTick),
-    )
-
-    // we reload the tick from the database if the put failed/pending we return the last tick
-    const result = await db.tickForDid(did)
-    if (typeof result === 'undefined') {
-      throw new Error(
-        'tick should exist since it was just successfully updated, but does not',
-      )
-    }
-
-    res.status(200)
-    res.type('json').send(result.tick)
-  },
-)
+  res.status(200)
+  res.type('json').send(result.tick)
+})
 
 router.get('/lobby', async (req, res) => {
   res.send(`
