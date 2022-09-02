@@ -14,8 +14,8 @@ export const sign = async (doc: Document, key: Asymmetric) => {
   if (doc.key !== key.did()) {
     throw Error('Info: passed in secret key and did do not match')
   }
-  doc.sig = ''
-  const data = canonicaliseDocumentToUint8Array(doc)
+  const unsignedDoc = { ...doc, sig: '' }
+  const data = canonicaliseDocumentToUint8Array(unsignedDoc)
   const sig = await key.sign(data)
   // https://github.com/multiformats/multihash
   doc.sig = 'z' + uint8arrays.toString(sig, 'base58btc')
@@ -34,15 +34,15 @@ export const validateSig = async (
     return false
   }
 
-  const docCopy = JSON.parse(JSON.stringify(doc))
-  if (docCopy.sig[0] !== 'z') {
+  if (doc.sig[0] !== 'z') {
     // check the multibase https://github.com/multiformats/multibase
-    throw Error("signatures must be 'z'+ base58btc") // maybe just return false?
+    throw new Error("signatures must be 'z'+ base58btc") // maybe just return false?
   }
-  docCopy.sig = ''
-  const data = canonicaliseDocumentToUint8Array(docCopy)
 
+  const unsignedDoc = { ...doc, sig: '' }
+  const canonicalDoc = canonicaliseDocumentToUint8Array(unsignedDoc)
   const sig = uint8arrays.fromString(doc.sig.slice(1), 'base58btc')
-  const valid = await key.verifyDidSig(doc.key, data, sig)
+
+  const valid = await key.verifyDidSig(doc.key, canonicalDoc, sig)
   return valid // @TODO check that the key is in the did doc
 }
