@@ -25,12 +25,27 @@ describe('server', () => {
     await alice.followUser(carol.did)
     await alice.followUser(dan.did)
     await bob.followUser(alice.did)
+    await bob.followUser(carol.did)
   })
 
   it('makes some posts', async () => {
     await alice.createPost('hey there')
+    await carol.createPost('hi im carol')
+    await dan.createPost('dan here')
     await alice.createPost('again')
     await alice.createPost('yoohoo')
+  })
+
+  let postUri: string
+
+  it('retrieves posts', async () => {
+    const posts = await alice.listPosts()
+    expect(isPost(posts[0])).toBeTruthy()
+    postUri = posts[0].uri
+  })
+
+  it('likes a post', async () => {
+    await bob.likePost(postUri)
   })
 
   it('fetches followers', async () => {
@@ -48,19 +63,12 @@ describe('server', () => {
     console.log(profile)
   })
 
+  it('fetches feed', async () => {
+    const feed = await bob.getFeed()
+    console.log(feed)
+  })
+
   return
-
-  let postUri: string
-
-  it('retrieves posts', async () => {
-    const posts = await alice.listPosts()
-    expect(isPost(posts[0])).toBeTruthy()
-    postUri = posts[0].uri
-  })
-
-  it('likes a post', async () => {
-    await bob.likePost(postUri)
-  })
 
   it('fetches liked by view', async () => {
     const view = await alice.getLikesForPost(postUri)

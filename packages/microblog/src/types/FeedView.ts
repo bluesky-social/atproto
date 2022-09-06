@@ -18,6 +18,7 @@ export interface FeedItem {
   likeCount: number
   indexedAt: string
   myState?: {
+    //@TODO Should this be required?
     hasReposted: boolean
     hasLiked: boolean
   }

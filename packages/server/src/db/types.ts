@@ -16,4 +16,7 @@ export type DbViewPlugin = {
   fn: (db: DataSource) => ViewFn
 }
 
-export type ViewFn = (params: Record<string, unknown>) => unknown
+export type ViewFn = (
+  params: Record<string, unknown>,
+  requesterDid: string,
+) => unknown
