@@ -121,6 +121,7 @@ export class Database {
     if (record.tid.length < 1) {
       throw new Error('Expected indexed URI to contain a record TID')
     }
+    record.raw = JSON.stringify(obj)
 
     const table = this.findTableForCollection(uri.collection)
     await table.set(uri, obj)
@@ -153,7 +154,7 @@ export class Database {
   ): Promise<unknown[]> {
     const builder = await this.db
       .createQueryBuilder()
-      .select('record.uri')
+      .select(['record.uri AS uri, record.raw AS raw'])
       .from(AdxRecord, 'record')
       .where('record.did = :did', { did })
       .andWhere('record.collection = :collection', { collection })
@@ -164,11 +165,19 @@ export class Database {
       builder.andWhere('record.tid <= :before', { before })
     }
     const res = await builder.getRawMany()
+    return res.map((row) => {
+      return {
+        ...JSON.parse(row.raw),
+        uri: row.uri,
+      }
+    })
 
-    const uris: string[] = res.map((row) => row.record_uri)
+    // @TODO delete?
 
-    const table = this.findTableForCollection(collection)
-    return table.getMany(uris)
+    // const uris: string[] = res.map((row) => row.record_uri)
+
+    // const table = this.findTableForCollection(collection)
+    // return table.getMany(uris)
   }
 
   async getRecord(uri: AdxUri): Promise<unknown | null> {

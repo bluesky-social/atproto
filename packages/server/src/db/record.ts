@@ -20,6 +20,9 @@ export class AdxRecord {
   @Column('varchar')
   tid: string
 
+  @Column('text')
+  raw: string
+
   @CreateDateColumn()
   receivedAt: Date
 

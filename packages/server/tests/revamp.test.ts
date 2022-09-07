@@ -1,3 +1,4 @@
+import { AdxUri } from '@adxp/common'
 import { isPost } from '@adxp/microblog'
 import MicroblogClient from './client'
 
@@ -6,6 +7,9 @@ const alice = new MicroblogClient(url, 'did:example:alice')
 const bob = new MicroblogClient(url, 'did:example:bob')
 const carol = new MicroblogClient(url, 'did:example:carol')
 const dan = new MicroblogClient(url, 'did:example:dan')
+
+let alicePosts: AdxUri[] = []
+let danPosts: AdxUri[] = []
 
 describe('server', () => {
   it('register users', async () => {
@@ -29,23 +33,23 @@ describe('server', () => {
   })
 
   it('makes some posts', async () => {
-    await alice.createPost('hey there')
+    const alice1 = await alice.createPost('hey there')
     await carol.createPost('hi im carol')
-    await dan.createPost('dan here')
-    await alice.createPost('again')
-    await alice.createPost('yoohoo')
-  })
-
-  let postUri: string
-
-  it('retrieves posts', async () => {
-    const posts = await alice.listPosts()
-    expect(isPost(posts[0])).toBeTruthy()
-    postUri = posts[0].uri
+    const dan1 = await dan.createPost('dan here')
+    const dan2 = await dan.createPost('carol is the best!')
+    const alice2 = await alice.createPost('again')
+    const alice3 = await alice.createPost('yoohoo')
+    alicePosts = [alice1, alice2, alice3]
+    danPosts = [dan1, dan2]
   })
 
   it('likes a post', async () => {
-    await bob.likePost(postUri)
+    await bob.likePost(alicePosts[1])
+    await bob.likePost(alicePosts[1])
+  })
+
+  it('reposts a post', async () => {
+    await carol.repost(danPosts[1])
   })
 
   it('fetches followers', async () => {
@@ -68,15 +72,20 @@ describe('server', () => {
     console.log(feed)
   })
 
+  it('fetches postThread', async () => {
+    const feed = await bob.getPostThread(alicePosts[0])
+    console.log(feed)
+  })
+
   return
 
-  it('fetches liked by view', async () => {
-    const view = await alice.getLikesForPost(postUri)
-    console.log(view)
-  })
+  // it('fetches liked by view', async () => {
+  //   const view = await alice.getLikesForPost(postUri)
+  //   console.log(view)
+  // })
 
-  it('fetches liked by view', async () => {
-    const view = await alice.getLikesForPost(postUri)
-    console.log(view)
-  })
+  // it('fetches liked by view', async () => {
+  //   const view = await alice.getLikesForPost(postUri)
+  //   console.log(view)
+  // })
 })

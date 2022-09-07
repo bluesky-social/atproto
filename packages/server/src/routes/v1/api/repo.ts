@@ -17,8 +17,9 @@ import { ServerError } from '../../../error'
 
 const router = express.Router()
 
-// EXECUTE TRANSACTION
+// EXECUTE TRANSACTIONS
 // -------------------
+// @TODO add `verify?` & `atomic?` flags to route
 router.post('/:did', async (req, res) => {
   const { did } = req.params
   const tx = util.checkReqBody(req.body, batchWriteParams)
@@ -32,8 +33,28 @@ router.post('/:did', async (req, res) => {
   const diff = await repo.verifySetOfUpdates(prevCid, repo.cid)
   const db = util.getDB(res)
   await repoDiff.processDiff(db, repo, diff)
+  await db.setRepoRoot(did, repo.cid)
   res.status(200).send()
 })
+
+router.post('/:did/c/:namespace/:dataset', async (req, res) => {
+  const { did, namespace, dataset } = req.params
+  if (!req.body) {
+    throw new ServerError(400, 'Record expected in request body')
+  }
+  const serverKey = util.getKeypair(res)
+  const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+  const repo = await util.loadRepo(res, did, authStore)
+  const tid = await repo
+    .getCollection(`${namespace}/${dataset}`)
+    .createRecord(req.body)
+  const uri = new AdxUri(`${did}/${namespace}/${dataset}/${tid.toString()}`)
+  const db = util.getDB(res)
+  await db.indexRecord(uri, req.body)
+  await db.setRepoRoot(did, repo.cid)
+  res.status(200).send({ uri: uri.toString() })
+})
+// @TODO add PUT & DELETE routes
 
 // DESCRIBE REPO
 // -------------

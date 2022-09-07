@@ -18,6 +18,7 @@ const validParams = (obj: unknown): obj is FeedView.Params => {
   return validator.isParamsValid(obj)
 }
 
+// @TODO filter out replies??
 export const viewFn =
   (db: DataSource) =>
   async (params: unknown, requester: string): Promise<FeedView.Response> => {
@@ -25,7 +26,6 @@ export const viewFn =
       throw new Error(`Invalid params for ${viewId}`)
     }
 
-    // @TODO use params
     const { author, limit, before } = params
 
     const builder = db.createQueryBuilder()
@@ -34,12 +34,19 @@ export const viewFn =
       builder
         .from(UserDid, 'user')
         .innerJoin(FollowIndex, 'follow', 'follow.creator = user.did')
-        .innerJoin(PostIndex, 'post', 'post.creator = follow.subject')
+        .leftJoin(RepostIndex, 'repost', 'repost.creator = follow.subject')
+        .innerJoin(
+          PostIndex,
+          'post',
+          'post.creator = follow.subject OR post.uri = repost.subject',
+        )
         .where('user.did = :did', { did: requester })
     } else {
       builder
         .from(PostIndex, 'post')
+        .leftJoin(RepostIndex, 'repost', 'repost.subject = post.uri')
         .where('post.creator = :author', { author })
+        .orWhere('repost.creator = :author', { author })
     }
 
     builder
@@ -48,6 +55,9 @@ export const viewFn =
         'author.did AS authorDid',
         'author.username AS authorName',
         'author_profile.displayName AS authorDisplayName',
+        'reposted_by.did AS repostedByDid',
+        'reposted_by.username AS repostedByName',
+        'reposted_by_profile.displayName AS repostedByDisplayName',
         'like_count.count AS likeCount',
         'repost_count.count AS repostCount',
         'reply_count.count AS replyCount',
@@ -60,6 +70,12 @@ export const viewFn =
         ProfileIndex,
         'author_profile',
         'author_profile.creator = author.did',
+      )
+      .leftJoin(UserDid, 'reposted_by', 'reposted_by.did = repost.creator')
+      .leftJoin(
+        ProfileIndex,
+        'reposted_by_profile',
+        'reposted_by_profile.creator = reposted_by.did',
       )
       .leftJoin(AdxRecord, 'record', 'record.uri = post.uri')
       .leftJoin(
@@ -97,7 +113,7 @@ export const viewFn =
 
     const res = await builder.getRawMany()
 
-    // @TODO add embeds & reposts
+    // @TODO add embeds
     const feed: FeedItem[] = res.map((row) => ({
       uri: row.uri,
       author: {
@@ -105,6 +121,13 @@ export const viewFn =
         name: row.authorName,
         displayName: row.authorDisplayName,
       },
+      repostedBy: row.repostedByDid
+        ? {
+            did: row.repostedByDid,
+            name: row.repostedByName,
+            displayName: row.repostedByDisplayName,
+          }
+        : undefined,
       record: {}, // @TODO get raw record
       replyCount: row.replyCount || 0,
       repostCount: row.repostCount || 0,
