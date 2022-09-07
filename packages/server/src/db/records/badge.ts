@@ -51,6 +51,7 @@ const getFn =
     return found === null ? null : translateDbObj(found)
   }
 
+// @TODO don't think we need these anymore
 const getManyFn =
   (repo: Repository<BadgeIndex>) =>
   async (uris: AdxUri[] | string[]): Promise<Badge.Record[]> => {

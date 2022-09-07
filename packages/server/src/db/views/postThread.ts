@@ -26,7 +26,6 @@ export const viewFn =
       throw new Error(`Invalid params for ${viewId}`)
     }
 
-    // @TODO use params
     const { uri, depth = 1 } = params
 
     const res = await postInfoBuilder(db, requester)

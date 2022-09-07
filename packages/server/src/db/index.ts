@@ -171,13 +171,6 @@ export class Database {
         uri: row.uri,
       }
     })
-
-    // @TODO delete?
-
-    // const uris: string[] = res.map((row) => row.record_uri)
-
-    // const table = this.findTableForCollection(collection)
-    // return table.getMany(uris)
   }
 
   async getRecord(uri: AdxUri): Promise<unknown | null> {

@@ -8,7 +8,7 @@ export interface Response {
   subject: {
     did: string
     name: string
-    displayName?: string //@TODO should displayName be optional?
+    displayName?: string
   }
   followers: {
     did: string

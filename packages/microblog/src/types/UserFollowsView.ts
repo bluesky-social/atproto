@@ -1,5 +1,5 @@
 export interface Params {
-  user: string // @TODO should this be username or did?
+  user: string
   limit?: number
   before?: string
 }

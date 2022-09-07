@@ -60,8 +60,6 @@ export const viewFn =
       .where(util.userWhereClause(user), { user })
       .getRawOne()
 
-    // @TODO add `myState.hasFollowed` & resolve badge refs
-
     return {
       did: res.did,
       name: res.name,
@@ -70,7 +68,7 @@ export const viewFn =
       followsCount: res.followsCount || 0,
       followersCount: res.followersCount || 0,
       postsCount: res.postsCount || 0,
-      badges: [], // @TODO add in badges
+      badges: [], // @TODO resolve badge refs
       myState: {
         hasFollowed: Boolean(res.requesterHasFollowed),
       },

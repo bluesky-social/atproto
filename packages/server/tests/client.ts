@@ -1,6 +1,7 @@
 import { AdxUri } from '@adxp/common'
-import { Labeled, LikedByView, Post } from '@adxp/microblog'
+import { Labeled, LikedByView, Post, RepostedByView } from '@adxp/microblog'
 import axios from 'axios'
+import { number } from 'zod'
 
 const makeViewQueryStr = (
   params: Record<string, string | number | undefined>,
@@ -146,8 +147,12 @@ export class MicroblogClient {
     return new AdxUri(res.data.uri)
   }
 
-  async getLikesForPost(uri: string): Promise<LikedByView.Response> {
-    const qs = makeViewQueryStr({ uri })
+  async getLikedBy(
+    uri: string,
+    limit?: number,
+    before?: string,
+  ): Promise<LikedByView.Response> {
+    const qs = makeViewQueryStr({ uri, limit, before })
     const res = await axios.get(
       `${this.api}/api/view/blueskyweb.xyz:LikedByView?${qs}`,
       this.config(),
@@ -155,8 +160,25 @@ export class MicroblogClient {
     return res.data
   }
 
-  async getFollows(user: string): Promise<LikedByView.Response> {
-    const qs = makeViewQueryStr({ user })
+  async getRepostedBy(
+    uri: string,
+    limit?: number,
+    before?: string,
+  ): Promise<RepostedByView.Response> {
+    const qs = makeViewQueryStr({ uri, limit, before })
+    const res = await axios.get(
+      `${this.api}/api/view/blueskyweb.xyz:RepostedByView?${qs}`,
+      this.config(),
+    )
+    return res.data
+  }
+
+  async getFollows(
+    user: string,
+    limit?: string,
+    before?: string,
+  ): Promise<LikedByView.Response> {
+    const qs = makeViewQueryStr({ user, limit, before })
     const res = await axios.get(
       `${this.api}/api/view/blueskyweb.xyz:UserFollowsView?${qs}`,
       this.config(),
@@ -164,8 +186,12 @@ export class MicroblogClient {
     return res.data
   }
 
-  async getFollowers(user: string): Promise<LikedByView.Response> {
-    const qs = makeViewQueryStr({ user })
+  async getFollowers(
+    user: string,
+    limit?: number,
+    before?: string,
+  ): Promise<LikedByView.Response> {
+    const qs = makeViewQueryStr({ user, limit, before })
     const res = await axios.get(
       `${this.api}/api/view/blueskyweb.xyz:UserFollowersView?${qs}`,
       this.config(),
@@ -182,10 +208,26 @@ export class MicroblogClient {
     return res.data
   }
 
-  async getFeed(): Promise<LikedByView.Response> {
-    // const qs = makeViewQueryStr({ user })
+  async getFeed(
+    limit?: number,
+    before?: string,
+  ): Promise<LikedByView.Response> {
+    const qs = makeViewQueryStr({ limit, before })
     const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:FeedView`,
+      `${this.api}/api/view/blueskyweb.xyz:FeedView${qs}`,
+      this.config(),
+    )
+    return res.data
+  }
+
+  async getUserFeed(
+    user: string,
+    limit?: number,
+    before?: string,
+  ): Promise<LikedByView.Response> {
+    const qs = makeViewQueryStr({ user, limit, before })
+    const res = await axios.get(
+      `${this.api}/api/view/blueskyweb.xyz:FeedView?${qs}`,
       this.config(),
     )
     return res.data

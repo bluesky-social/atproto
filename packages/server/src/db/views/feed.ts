@@ -58,6 +58,7 @@ export const viewFn =
         'reposted_by.did AS repostedByDid',
         'reposted_by.username AS repostedByName',
         'reposted_by_profile.displayName AS repostedByDisplayName',
+        'record.raw AS rawRecord',
         'like_count.count AS likeCount',
         'repost_count.count AS repostCount',
         'reply_count.count AS replyCount',
@@ -128,7 +129,7 @@ export const viewFn =
             displayName: row.repostedByDisplayName,
           }
         : undefined,
-      record: {}, // @TODO get raw record
+      record: JSON.parse(row.rawRecord),
       replyCount: row.replyCount || 0,
       repostCount: row.repostCount || 0,
       likeCount: row.likeCount || 0,
