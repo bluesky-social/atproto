@@ -26,6 +26,19 @@ export const checkReqBody = <T>(body: unknown, schema: check.Schema<T>): T => {
   }
 }
 
+export const parseBooleanParam = (
+  param: unknown,
+  defaultTrue = false,
+): boolean => {
+  if (defaultTrue) {
+    if (param === 'false' || param === 'f') return false
+    return true
+  } else {
+    if (param === 'true' || param === 't') return true
+    return false
+  }
+}
+
 export const getBlockstore = (res: Response): IpldStore => {
   const blockstore = res.locals.blockstore
   if (!blockstore) {

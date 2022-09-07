@@ -14,9 +14,11 @@ import {
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
+import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 import { BadgeIndex } from './badge'
 
+const schemaId = 'blueskyweb.xyz:Badge'
 const collection = 'bsky/profile'
 const tableName = collectionToTableName(collection)
 
@@ -58,11 +60,16 @@ const getManyFn =
     return found.map(translateDbObj)
   }
 
+const validator = schemas.createRecordValidator(schemaId)
+const isValidSchema = (obj: unknown): obj is Profile.Record => {
+  return validator.isValid(obj)
+}
+
 const setFn =
   (repo: Repository<ProfileIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!microblog.isProfile(obj)) {
-      throw new Error('Not a valid profile record')
+    if (!isValidSchema(obj)) {
+      throw new Error(`Record does not match schema: ${schemaId}`)
     }
     const profile = new ProfileIndex()
     profile.uri = uri.toString()
@@ -95,7 +102,7 @@ export const makePlugin = (
     collection,
     tableName,
     get: getFn(repository),
-    getMany: getManyFn(repository),
+    isValidSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,

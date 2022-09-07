@@ -5,7 +5,7 @@ export type DbRecordPlugin<T, S> = {
   collection: string
   tableName: string
   get: (uri: AdxUri) => Promise<T | null>
-  getMany: (uris: AdxUri[] | string[]) => Promise<T[]>
+  isValidSchema: (obj: unknown) => boolean
   set: (uri: AdxUri, obj: unknown) => Promise<void>
   delete: (uri: AdxUri) => Promise<void>
   translateDbObj: (dbObj: S) => T

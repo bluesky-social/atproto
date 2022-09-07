@@ -1,5 +1,4 @@
 import { AdxUri } from '@adxp/common'
-import * as microblog from '@adxp/microblog'
 import { Follow } from '@adxp/microblog'
 import {
   DataSource,
@@ -7,14 +6,15 @@ import {
   Column,
   PrimaryColumn,
   Repository,
-  In,
   UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
+import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
+const schemaId = 'blueskyweb.xyz:Follow'
 const collection = 'bsky/follows'
 const tableName = collectionToTableName(collection)
 
@@ -47,19 +47,16 @@ const getFn =
     return found === null ? null : translateDbObj(found)
   }
 
-const getManyFn =
-  (repo: Repository<FollowIndex>) =>
-  async (uris: AdxUri[] | string[]): Promise<Follow.Record[]> => {
-    const uriStrs = uris.map((u) => u.toString())
-    const found = await repo.findBy({ uri: In(uriStrs) })
-    return found.map(translateDbObj)
-  }
+const validator = schemas.createRecordValidator(schemaId)
+const isValidSchema = (obj: unknown): obj is Follow.Record => {
+  return validator.isValid(obj)
+}
 
 const setFn =
   (repo: Repository<FollowIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!microblog.isFollow(obj)) {
-      throw new Error('Not a valid follow record')
+    if (!isValidSchema(obj)) {
+      throw new Error(`Record does not match schema: ${schemaId}`)
     }
     const follow = new FollowIndex()
     follow.uri = uri.toString()
@@ -94,7 +91,7 @@ export const makePlugin = (
     collection,
     tableName,
     get: getFn(repository),
-    getMany: getManyFn(repository),
+    isValidSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,

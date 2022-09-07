@@ -105,6 +105,11 @@ export class Database {
     await table.save(user)
   }
 
+  canIndexRecord(collection: string, obj: unknown): boolean {
+    const table = this.findTableForCollection(collection)
+    return table.isValidSchema(obj)
+  }
+
   async indexRecord(uri: AdxUri, obj: unknown) {
     const record = new AdxRecord()
     record.uri = uri.toString()

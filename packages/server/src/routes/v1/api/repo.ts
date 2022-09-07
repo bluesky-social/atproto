@@ -7,7 +7,7 @@ import {
   listRecordsParams,
   batchWriteParams,
 } from '@adxp/api'
-import { resolveName, AdxUri } from '@adxp/common'
+import { resolveName, AdxUri, BatchWrite } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
 
@@ -19,10 +19,23 @@ const router = express.Router()
 
 // EXECUTE TRANSACTIONS
 // -------------------
-// @TODO add `verify?` & `atomic?` flags to route
 router.post('/:did', async (req, res) => {
+  const validate = util.parseBooleanParam(req.query.validate, true)
   const { did } = req.params
   const tx = util.checkReqBody(req.body, batchWriteParams)
+  const db = util.getDB(res)
+  if (validate) {
+    for (const write of tx.writes) {
+      if (write.action === 'create' || write.action === 'update') {
+        if (!db.canIndexRecord(write.collection, write.value)) {
+          throw new ServerError(
+            400,
+            `Not a valid record for collection: ${write.collection}`,
+          )
+        }
+      }
+    }
+  }
   // @TODO add user auth here!
   const serverKey = util.getKeypair(res)
   const authStore = await auth.AuthStore.fromTokens(serverKey, [])
@@ -31,27 +44,47 @@ router.post('/:did', async (req, res) => {
   await repo.batchWrite(tx.writes)
   // @TODO: do something better here instead of rescanning for diff
   const diff = await repo.verifySetOfUpdates(prevCid, repo.cid)
-  const db = util.getDB(res)
-  await repoDiff.processDiff(db, repo, diff)
+  try {
+    await repoDiff.processDiff(db, repo, diff)
+  } catch (err) {
+    if (validate) {
+      throw new ServerError(400, `Could not index record: ${err}`)
+    }
+  }
   await db.setRepoRoot(did, repo.cid)
   res.status(200).send()
 })
 
 router.post('/:did/c/:namespace/:dataset', async (req, res) => {
+  const validate = util.parseBooleanParam(req.query.validate, true)
   const { did, namespace, dataset } = req.params
+  const collection = `${namespace}/${dataset}`
   if (!req.body) {
     throw new ServerError(400, 'Record expected in request body')
+  }
+  const db = util.getDB(res)
+  if (validate) {
+    if (!db.canIndexRecord(collection, req.body)) {
+      throw new ServerError(
+        400,
+        `Not a valid record for collection: ${collection}`,
+      )
+    }
   }
   const serverKey = util.getKeypair(res)
   const authStore = await auth.AuthStore.fromTokens(serverKey, [])
   const repo = await util.loadRepo(res, did, authStore)
-  const tid = await repo
-    .getCollection(`${namespace}/${dataset}`)
-    .createRecord(req.body)
-  const uri = new AdxUri(`${did}/${namespace}/${dataset}/${tid.toString()}`)
-  const db = util.getDB(res)
-  await db.indexRecord(uri, req.body)
+  const tid = await repo.getCollection(collection).createRecord(req.body)
+  const uri = new AdxUri(`${did}/${collection}/${tid.toString()}`)
+  try {
+    await db.indexRecord(uri, req.body)
+  } catch (err) {
+    if (validate) {
+      throw new ServerError(400, `Could not index record: ${err}`)
+    }
+  }
   await db.setRepoRoot(did, repo.cid)
+  // @TODO update subscribers
   res.status(200).send({ uri: uri.toString() })
 })
 // @TODO add PUT & DELETE routes

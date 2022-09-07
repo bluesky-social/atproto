@@ -13,9 +13,11 @@ import {
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
+import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 import { PostIndex } from './post'
 
+const schemaId = 'blueskyweb.xyz:Repost'
 const collection = 'bsky/reposts'
 const tableName = collectionToTableName(collection)
 
@@ -46,19 +48,16 @@ const getFn =
     return found === null ? null : translateDbObj(found)
   }
 
-const getManyFn =
-  (repo: Repository<RepostIndex>) =>
-  async (uris: AdxUri[] | string[]): Promise<Repost.Record[]> => {
-    const uriStrs = uris.map((u) => u.toString())
-    const found = await repo.findBy({ uri: In(uriStrs) })
-    return found.map(translateDbObj)
-  }
+const validator = schemas.createRecordValidator(schemaId)
+const isValidSchema = (obj: unknown): obj is Repost.Record => {
+  return validator.isValid(obj)
+}
 
 const setFn =
   (repo: Repository<RepostIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!microblog.isRepost(obj)) {
-      throw new Error('Not a valid repost record')
+    if (!isValidSchema(obj)) {
+      throw new Error(`Record does not match schema: ${schemaId}`)
     }
     const repost = new RepostIndex()
     repost.uri = uri.toString()
@@ -90,7 +89,7 @@ export const makePlugin = (
     collection,
     tableName,
     get: getFn(repository),
-    getMany: getManyFn(repository),
+    isValidSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,

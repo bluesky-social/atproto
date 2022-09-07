@@ -1,5 +1,4 @@
 import { AdxUri } from '@adxp/common'
-import * as microblog from '@adxp/microblog'
 import { Badge } from '@adxp/microblog'
 import { TagAssertion } from '@adxp/microblog/src/types/Badge'
 import {
@@ -14,8 +13,10 @@ import {
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
+import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
+const schemaId = 'blueskyweb.xyz:Badge'
 const collection = 'bsky/badges'
 const tableName = collectionToTableName(collection)
 
@@ -51,20 +52,16 @@ const getFn =
     return found === null ? null : translateDbObj(found)
   }
 
-// @TODO don't think we need these anymore
-const getManyFn =
-  (repo: Repository<BadgeIndex>) =>
-  async (uris: AdxUri[] | string[]): Promise<Badge.Record[]> => {
-    const uriStrs = uris.map((u) => u.toString())
-    const found = await repo.findBy({ uri: In(uriStrs) })
-    return found.map(translateDbObj)
-  }
+const validator = schemas.createRecordValidator(schemaId)
+const isValidSchema = (obj: unknown): obj is Badge.Record => {
+  return validator.isValid(obj)
+}
 
 const setFn =
   (repo: Repository<BadgeIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!microblog.isBadge(obj)) {
-      throw new Error('Not a valid badge record')
+    if (!isValidSchema(obj)) {
+      throw new Error(`Record does not match schema: ${schemaId}`)
     }
     const badge = new BadgeIndex()
     badge.uri = uri.toString()
@@ -103,7 +100,7 @@ export const makePlugin = (
     collection,
     tableName,
     get: getFn(repository),
-    getMany: getManyFn(repository),
+    isValidSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,
