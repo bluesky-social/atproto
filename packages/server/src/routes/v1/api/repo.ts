@@ -7,7 +7,7 @@ import {
   listRecordsParams,
   batchWriteParams,
 } from '@adxp/api'
-import { resolveName, AdxUri, BatchWrite } from '@adxp/common'
+import { resolveName, AdxUri, BatchWrite, TID } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
 
@@ -87,7 +87,54 @@ router.post('/:did/c/:namespace/:dataset', async (req, res) => {
   // @TODO update subscribers
   res.status(200).send({ uri: uri.toString() })
 })
-// @TODO add PUT & DELETE routes
+
+router.put('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
+  const validate = util.parseBooleanParam(req.query.validate, true)
+  const { did, namespace, dataset, tid } = req.params
+  const collection = `${namespace}/${dataset}`
+  if (!req.body) {
+    throw new ServerError(400, 'Record expected in request body')
+  }
+  const db = util.getDB(res)
+  if (validate) {
+    if (!db.canIndexRecord(collection, req.body)) {
+      throw new ServerError(
+        400,
+        `Not a valid record for collection: ${collection}`,
+      )
+    }
+  }
+  const serverKey = util.getKeypair(res)
+  const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+  const repo = await util.loadRepo(res, did, authStore)
+  await repo.getCollection(collection).updateRecord(TID.fromStr(tid), req.body)
+  const uri = new AdxUri(`${did}/${collection}/${tid.toString()}`)
+  try {
+    await db.indexRecord(uri, req.body)
+  } catch (err) {
+    if (validate) {
+      throw new ServerError(400, `Could not index record: ${err}`)
+    }
+  }
+  await db.setRepoRoot(did, repo.cid)
+  // @TODO update subscribers
+  res.status(200).send({ uri: uri.toString() })
+})
+
+router.delete('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
+  const { did, namespace, dataset, tid } = req.params
+  const collection = `${namespace}/${dataset}`
+  const db = util.getDB(res)
+  const serverKey = util.getKeypair(res)
+  const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+  const repo = await util.loadRepo(res, did, authStore)
+  await repo.getCollection(collection).deleteRecord(TID.fromStr(tid))
+  const uri = new AdxUri(`${did}/${collection}/${tid.toString()}`)
+  await db.indexRecord(uri, req.body)
+  await db.setRepoRoot(did, repo.cid)
+  // @TODO update subscribers
+  res.status(200).send({ uri: uri.toString() })
+})
 
 // DESCRIBE REPO
 // -------------
@@ -170,24 +217,21 @@ router.get('/:nameOrDid/c/:namespace/:dataset', async (req, res) => {
 // GET RECORD
 // ----------
 
-router.get(
-  '/:nameOrDid/c/:namespace/:dataset/r/:recordKey',
-  async (req, res) => {
-    const { nameOrDid, namespace, dataset, recordKey } = req.params
-    const coll = namespace + '/' + dataset
+router.get('/:nameOrDid/c/:namespace/:dataset/r/:tid', async (req, res) => {
+  const { nameOrDid, namespace, dataset, tid } = req.params
+  const coll = namespace + '/' + dataset
 
-    const did = nameOrDid.startsWith('did:')
-      ? nameOrDid
-      : await resolveNameWrapped(nameOrDid)
-    const uri = new AdxUri(`${did}/${coll}/${recordKey}`)
+  const did = nameOrDid.startsWith('did:')
+    ? nameOrDid
+    : await resolveNameWrapped(nameOrDid)
+  const uri = new AdxUri(`${did}/${coll}/${tid}`)
 
-    const db = util.getDB(res)
-    const record = await db.getRecord(uri)
-    if (record === null) {
-      throw new ServerError(404, `Could not locate record: ${uri}`)
-    }
-    res.status(200).send(record)
-  },
-)
+  const db = util.getDB(res)
+  const record = await db.getRecord(uri)
+  if (record === null) {
+    throw new ServerError(404, `Could not locate record: ${uri}`)
+  }
+  res.status(200).send(record)
+})
 
 export default router
