@@ -1,7 +1,6 @@
 import { AdxUri } from '@adxp/common'
 import {
   FeedView,
-  Labeled,
   LikedByView,
   Post,
   PostThreadView,
@@ -89,7 +88,7 @@ export class MicroblogClient {
     return new AdxUri(res.data.uri)
   }
 
-  async listPosts(did: string = this.did): Promise<Labeled<Post.Record>[]> {
+  async listPosts(did: string = this.did): Promise<Post.Record[]> {
     const res = await axios.get(
       `${this.api}/api/repo/${did}/c/bsky/posts`,
       this.config(),
@@ -218,7 +217,7 @@ export class MicroblogClient {
     return res.data
   }
 
-  async getFeed(limit?: number, before?: string): Promise<FeedView.Response> {
+  async getFeed(limit?: number, before?: string): Promise<FeedView.FeedItem[]> {
     const qs = makeViewQueryStr({ limit, before })
     const res = await axios.get(
       `${this.api}/api/view/blueskyweb.xyz:FeedView${qs}`,

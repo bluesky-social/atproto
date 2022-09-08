@@ -2,7 +2,7 @@ import { ProfileView } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { FollowIndex } from '../records/follow'
 import { PostIndex } from '../records/post'
-import { ProfileIndex } from '../records/profile'
+import { ProfileBadgeIndex, ProfileIndex } from '../records/profile'
 import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { DbViewPlugin } from '../types'
@@ -32,7 +32,7 @@ export const viewFn =
         'follows_count.count AS followsCount',
         'followers_count.count AS followersCount',
         'posts_count.count AS postsCount',
-        'profile.badges AS badgeRefs',
+        'profile_badge.badge AS badgeRef',
         'requester_follows.doesExist AS requesterHasFollowed',
       ])
       .from(UserDid, 'user')
@@ -60,6 +60,14 @@ export const viewFn =
       .where(util.userWhereClause(user), { user })
       .getRawOne()
 
+    const badges = await db
+      .createQueryBuilder()
+      .select('badge.badge as badgeRef')
+      .from(ProfileIndex, 'profile')
+      .leftJoin(ProfileBadgeIndex, 'badge', 'badge.profile = profile.uri')
+      .where('profile.creator = :did', { did: res.did })
+      .getRawMany()
+
     return {
       did: res.did,
       name: res.name,
@@ -68,7 +76,7 @@ export const viewFn =
       followsCount: res.followsCount || 0,
       followersCount: res.followersCount || 0,
       postsCount: res.postsCount || 0,
-      badges: [], // @TODO resolve badge refs
+      badges: badges.map((row) => row.badgeRef),
       myState: {
         hasFollowed: Boolean(res.requesterHasFollowed),
       },

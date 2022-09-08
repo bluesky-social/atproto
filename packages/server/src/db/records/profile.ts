@@ -1,5 +1,4 @@
 import { AdxUri } from '@adxp/common'
-import * as microblog from '@adxp/microblog'
 import { Profile } from '@adxp/microblog'
 import {
   DataSource,
@@ -11,6 +10,7 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToOne,
+  JoinTable,
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
@@ -37,12 +37,24 @@ export class ProfileIndex {
   @Column({ type: 'text', nullable: true })
   description?: string
 
-  @Column('varchar')
-  @OneToMany(() => BadgeIndex, (badge) => badge.uri)
-  badges: string[]
+  @OneToMany(() => ProfileBadgeIndex, (badge) => badge.profile, {
+    cascade: true,
+  })
+  @JoinTable()
+  badges: ProfileBadgeIndex[]
 
   @UpdateDateColumn()
   indexedAt: Date
+}
+
+@Entity({ name: `${tableName}_badges` })
+export class ProfileBadgeIndex {
+  @ManyToOne(() => ProfileIndex, (profile) => profile.badges)
+  @PrimaryColumn('varchar')
+  profile: string
+
+  @Column({ type: 'varchar', unique: true })
+  badge: string
 }
 
 const getFn =
@@ -50,14 +62,6 @@ const getFn =
   async (uri: AdxUri): Promise<Profile.Record | null> => {
     const found = await repo.findOneBy({ uri: uri.toString() })
     return found === null ? null : translateDbObj(found)
-  }
-
-const getManyFn =
-  (repo: Repository<ProfileIndex>) =>
-  async (uris: AdxUri[] | string[]): Promise<Profile.Record[]> => {
-    const uriStrs = uris.map((u) => u.toString())
-    const found = await repo.findBy({ uri: In(uriStrs) })
-    return found.map(translateDbObj)
   }
 
 const validator = schemas.createRecordValidator(schemaId)
@@ -76,7 +80,12 @@ const setFn =
     profile.creator = uri.host
     profile.displayName = obj.displayName
     profile.description = obj.description
-    profile.badges = (obj.badges || []).map((ref) => ref.uri)
+    profile.badges = (obj.badges || []).map((ref) => {
+      const badge = new ProfileBadgeIndex()
+      badge.profile = uri.toString()
+      badge.badge = ref.uri
+      return badge
+    })
     await repo.save(profile)
   }
 
@@ -90,7 +99,7 @@ const translateDbObj = (dbObj: ProfileIndex): Profile.Record => {
   return {
     displayName: dbObj.displayName,
     description: dbObj.description,
-    badges: dbObj.badges.map((uri) => ({ uri })),
+    badges: dbObj.badges.map((badge) => ({ uri: badge.badge })),
   }
 }
 

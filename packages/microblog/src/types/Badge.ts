@@ -1,4 +1,3 @@
-// @TODO: should we have `name` on subject here?
 export interface Record {
   assertion:
     | InviteAssertion
@@ -19,7 +18,7 @@ export interface EmployeeAssertion {
 }
 export interface TagAssertion {
   type: 'tag'
-  tag: string // @TODO is the a more general way to describe "tag"? ie "info"
+  tag: string
 }
 export interface UnknownAssertion {
   type: string

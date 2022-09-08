@@ -11,14 +11,13 @@ export interface FeedItem {
   uri: string
   author: User
   repostedBy?: User
-  record: {} //@TODO i dont think this got parsed correctly
+  record: {}
   embed?: RecordEmbed | ExternalEmbed | UnknownEmbed
   replyCount: number
   repostCount: number
   likeCount: number
   indexedAt: string
   myState?: {
-    //@TODO Should this be required?
     hasReposted: boolean
     hasLiked: boolean
   }

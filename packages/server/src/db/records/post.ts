@@ -1,6 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import * as microblog from '@adxp/microblog'
-import { Post, Labeled } from '@adxp/microblog'
+import { Post } from '@adxp/microblog'
 import {
   DataSource,
   Entity,
@@ -47,7 +46,7 @@ export class PostIndex {
 
 const getFn =
   (repo: Repository<PostIndex>) =>
-  async (uri: AdxUri): Promise<Labeled<Post.Record> | null> => {
+  async (uri: AdxUri): Promise<Post.Record | null> => {
     const found = await repo.findOneBy({ uri: uri.toString() })
     return found === null ? null : translateDbObj(found)
   }
@@ -80,7 +79,7 @@ const deleteFn =
     await repo.delete({ uri: uri.toString() })
   }
 
-const translateDbObj = (dbObj: PostIndex): Labeled<Post.Record> => {
+const translateDbObj = (dbObj: PostIndex): Post.Record => {
   const reply = dbObj.replyRoot
     ? {
         root: dbObj.replyRoot,
@@ -88,8 +87,6 @@ const translateDbObj = (dbObj: PostIndex): Labeled<Post.Record> => {
       }
     : undefined
   return {
-    $type: 'blueskyweb.xyz:Post',
-    uri: dbObj.uri,
     text: dbObj.text,
     reply: reply,
     createdAt: dbObj.createdAt,

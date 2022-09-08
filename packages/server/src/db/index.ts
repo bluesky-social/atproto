@@ -5,7 +5,10 @@ import postPlugin, { PostIndex } from './records/post'
 import likePlugin, { LikeIndex } from './records/like'
 import followPlugin, { FollowIndex } from './records/follow'
 import badgePlugin, { BadgeIndex } from './records/badge'
-import profilePlugin, { ProfileIndex } from './records/profile'
+import profilePlugin, {
+  ProfileBadgeIndex,
+  ProfileIndex,
+} from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
 import views from './views'
 import { AdxUri } from '@adxp/common'
@@ -55,6 +58,7 @@ export class Database {
         FollowIndex,
         BadgeIndex,
         ProfileIndex,
+        ProfileBadgeIndex,
         RepostIndex,
         UserDid,
       ],
