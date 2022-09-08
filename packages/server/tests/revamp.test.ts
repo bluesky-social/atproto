@@ -1,5 +1,4 @@
 import { AdxUri } from '@adxp/common'
-import { isPost } from '@adxp/microblog'
 import MicroblogClient from './client'
 
 const url = 'http://localhost:2583'
@@ -45,7 +44,12 @@ describe('server', () => {
 
   it('likes a post', async () => {
     await bob.likePost(alicePosts[1])
-    await bob.likePost(alicePosts[1])
+    await bob.likePost(alicePosts[2])
+  })
+
+  it('replies to a post', async () => {
+    await bob.reply(alicePosts[1], alicePosts[1], 'hear that')
+    await carol.reply(alicePosts[1], alicePosts[1], 'of course')
   })
 
   it('reposts a post', async () => {
@@ -73,8 +77,8 @@ describe('server', () => {
   })
 
   it('fetches postThread', async () => {
-    const feed = await bob.getPostThread(alicePosts[0])
-    console.log(feed)
+    const thread = await bob.getPostThread(alicePosts[1])
+    console.log(thread.replies)
   })
 
   return

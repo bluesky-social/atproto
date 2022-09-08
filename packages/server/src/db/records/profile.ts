@@ -18,7 +18,7 @@ import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 import { BadgeIndex } from './badge'
 
-const schemaId = 'blueskyweb.xyz:Badge'
+const schemaId = 'blueskyweb.xyz:Profile'
 const collection = 'bsky/profile'
 const tableName = collectionToTableName(collection)
 

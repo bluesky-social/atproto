@@ -19,6 +19,7 @@ const router = express.Router()
 
 // EXECUTE TRANSACTIONS
 // -------------------
+
 router.post('/:did', async (req, res) => {
   const validate = util.parseBooleanParam(req.query.validate, true)
   const { did } = req.params

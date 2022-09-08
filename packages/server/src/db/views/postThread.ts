@@ -53,7 +53,7 @@ const getReplies = async (
   const res = await postInfoBuilder(db, requester)
     .where('post.replyParent = :uri', { uri: parent.uri })
     .getRawMany()
-  return Promise.all(
+  const got = await Promise.all(
     res.map(async (row) => {
       const post = rowToPost(row, parent)
       if (depth > 0) {
@@ -62,6 +62,8 @@ const getReplies = async (
       return post
     }),
   )
+  console.log(got)
+  return got
 }
 
 // selects all the needed info about a post, just need to supply the `where` clause
@@ -84,7 +86,11 @@ const postInfoBuilder = (db: DataSource, requester: string) => {
     .from(PostIndex, 'post')
     .innerJoin(AdxRecord, 'record', 'record.uri = post.uri')
     .innerJoin(UserDid, 'author', 'author.did = post.creator')
-    .leftJoin(ProfileIndex, 'author_profile', 'author.did = post.creator')
+    .leftJoin(
+      ProfileIndex,
+      'author_profile',
+      'author.did = author_profile.creator',
+    )
     .leftJoin(
       util.countSubquery(LikeIndex, 'subject'),
       'like_count',
@@ -126,7 +132,7 @@ const rowToPost = (
       displayName: row.authorDisplayName,
     },
     record: JSON.parse(row.rawRecord),
-    parent,
+    parent: parent ? { ...parent } : undefined,
     replyCount: row.replyCount,
     likeCount: row.likeCount,
     repostCount: row.repostCount,
@@ -138,6 +144,7 @@ const rowToPost = (
   }
 }
 
+// @TODO use or delete
 // parents were set without replies set yet, so we recurse back through updating the parent
 const setParents = (
   root: PostThreadView.Post,
@@ -145,7 +152,7 @@ const setParents = (
 ) => {
   const updatedRoot = {
     ...root,
-    parent,
+    parent: parent ? { ...parent } : undefined,
   }
   return {
     ...updatedRoot,

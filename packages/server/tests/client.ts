@@ -1,5 +1,15 @@
 import { AdxUri } from '@adxp/common'
-import { Labeled, LikedByView, Post, RepostedByView } from '@adxp/microblog'
+import {
+  FeedView,
+  Labeled,
+  LikedByView,
+  Post,
+  PostThreadView,
+  ProfileView,
+  RepostedByView,
+  UserFollowersView,
+  UserFollowsView,
+} from '@adxp/microblog'
 import axios from 'axios'
 import { number } from 'zod'
 
@@ -177,7 +187,7 @@ export class MicroblogClient {
     user: string,
     limit?: string,
     before?: string,
-  ): Promise<LikedByView.Response> {
+  ): Promise<UserFollowsView.Response> {
     const qs = makeViewQueryStr({ user, limit, before })
     const res = await axios.get(
       `${this.api}/api/view/blueskyweb.xyz:UserFollowsView?${qs}`,
@@ -190,7 +200,7 @@ export class MicroblogClient {
     user: string,
     limit?: number,
     before?: string,
-  ): Promise<LikedByView.Response> {
+  ): Promise<UserFollowersView.Response> {
     const qs = makeViewQueryStr({ user, limit, before })
     const res = await axios.get(
       `${this.api}/api/view/blueskyweb.xyz:UserFollowersView?${qs}`,
@@ -199,7 +209,7 @@ export class MicroblogClient {
     return res.data
   }
 
-  async getProfile(user: string): Promise<LikedByView.Response> {
+  async getProfile(user: string): Promise<ProfileView.Response> {
     const qs = makeViewQueryStr({ user })
     const res = await axios.get(
       `${this.api}/api/view/blueskyweb.xyz:ProfileView?${qs}`,
@@ -208,10 +218,7 @@ export class MicroblogClient {
     return res.data
   }
 
-  async getFeed(
-    limit?: number,
-    before?: string,
-  ): Promise<LikedByView.Response> {
+  async getFeed(limit?: number, before?: string): Promise<FeedView.Response> {
     const qs = makeViewQueryStr({ limit, before })
     const res = await axios.get(
       `${this.api}/api/view/blueskyweb.xyz:FeedView${qs}`,
@@ -224,25 +231,25 @@ export class MicroblogClient {
     user: string,
     limit?: number,
     before?: string,
-  ): Promise<LikedByView.Response> {
+  ): Promise<FeedView.FeedItem[]> {
     const qs = makeViewQueryStr({ user, limit, before })
     const res = await axios.get(
       `${this.api}/api/view/blueskyweb.xyz:FeedView?${qs}`,
       this.config(),
     )
-    return res.data
+    return res.data.feed
   }
 
   async getPostThread(
     uri: AdxUri,
     depth?: number,
-  ): Promise<LikedByView.Response> {
+  ): Promise<PostThreadView.Post> {
     const qs = makeViewQueryStr({ uri: uri.toString(), depth })
     const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:PostThreadView`,
+      `${this.api}/api/view/blueskyweb.xyz:PostThreadView?${qs}`,
       this.config(),
     )
-    return res.data
+    return res.data.thread
   }
 }
 
