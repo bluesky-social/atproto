@@ -52,3 +52,8 @@ export const batchWriteParams = z.object({
   writes: z.array(def.repo.batchWrite),
 })
 export type BatchWriteParams = z.infer<typeof batchWriteParams>
+
+export const createRecordResponse = z.object({
+  uri: z.string(),
+})
+export type CreateRecordResponse = z.infer<typeof createRecordResponse>

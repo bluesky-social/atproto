@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import { resolveName } from '@adxp/common'
+import { AdxUri, resolveName } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import { AdxSchemas, AdxRecordValidator, AdxViewValidator } from '@adxp/schemas'
 import * as t from './types'
@@ -221,25 +221,14 @@ export class AdxRepoClient {
   /**
    * Execute a batch of writes. WARNING: does not validate schemas!
    */
-  async _batchWrite(writes: t.BatchWrite[]): Promise<ht.BatchWriteReponse> {
+  async _batchWrite(writes: t.BatchWrite[]): Promise<void> {
     if (!this.writable || !this.authStore) {
       throw new err.WritePermissionError()
     }
-    const pdsDid = await this.pds.getDid()
-    const authedWrites: ht.BatchWriteParams['writes'] = []
-    for (const write of writes) {
-      const ucan = await this.authStore.createUcan(
-        pdsDid,
-        auth.writeCap(this.did, write.collection, write.key),
-      )
-      const token = auth.encodeUcan(ucan)
-      authedWrites.push(Object.assign({}, write, { auth: token }))
-    }
-    const body = ht.batchWriteParams.parse({ writes: authedWrites })
-    const res = await axios
+    const body = ht.batchWriteParams.parse({ writes })
+    await axios
       .post(this.pds.url(PdsEndpoint.Repo, [this.did]), body)
       .catch(toAPIError)
-    return ht.batchWriteReponse.parse(res.data)
   }
 }
 
@@ -272,7 +261,7 @@ class AdxRepoCollectionClient {
           value: record.value,
           valid: validation.valid,
           fullySupported: validation.fullySupported,
-          incompatible: validation.incompatible,
+          compatible: validation.compatible,
           error: validation.error,
           fallbacks: validation.fallbacks,
         }
@@ -304,7 +293,7 @@ class AdxRepoCollectionClient {
       value: resSafe.value,
       valid: validation.valid,
       fullySupported: validation.fullySupported,
-      incompatible: validation.incompatible,
+      compatible: validation.compatible,
       error: validation.error,
       fallbacks: validation.fallbacks,
     }
@@ -313,7 +302,7 @@ class AdxRepoCollectionClient {
   /**
    * Create a new record.
    */
-  async create(schema: t.SchemaOpt, value: any) {
+  async create(schema: t.SchemaOpt, value: any): Promise<AdxUri> {
     if (!this.repo.writable) {
       throw new err.WritePermissionError()
     }
@@ -321,10 +310,14 @@ class AdxRepoCollectionClient {
       const validator = getRecordValidator(schema, this.repo.pds.client)
       validator.assertValid(value)
     }
-    const res = await this.repo._batchWrite([
-      { action: 'create', collection: this.id, value },
-    ])
-    return res.writes[0]
+    const url = this.repo.pds.url(
+      PdsEndpoint.RepoCollection,
+      [this.repo.did, this.id],
+      { verified: true },
+    )
+    const res = await axios.post(url, value).catch(toAPIError)
+    const { uri } = ht.createRecordResponse.parse(res)
+    return new AdxUri(uri)
   }
 
   /**
@@ -338,10 +331,14 @@ class AdxRepoCollectionClient {
       const validator = getRecordValidator(schema, this.repo.pds.client)
       validator.assertValid(value)
     }
-    const res = await this.repo._batchWrite([
-      { action: 'put', collection: this.id, key, value },
-    ])
-    return res.writes[0]
+    const url = this.repo.pds.url(
+      PdsEndpoint.RepoRecord,
+      [this.repo.did, this.id, key],
+      { verified: true },
+    )
+    const res = await axios.put(url, value).catch(toAPIError)
+    const { uri } = ht.createRecordResponse.parse(res)
+    return new AdxUri(uri)
   }
 
   /**
@@ -351,10 +348,12 @@ class AdxRepoCollectionClient {
     if (!this.repo.writable) {
       throw new err.WritePermissionError()
     }
-    const res = await this.repo._batchWrite([
-      { action: 'del', collection: this.id, key },
-    ])
-    return res.writes[0]
+    const url = this.repo.pds.url(
+      PdsEndpoint.RepoRecord,
+      [this.repo.did, this.id, key],
+      { verified: true },
+    )
+    await axios.delete(url).catch(toAPIError)
   }
 }
 

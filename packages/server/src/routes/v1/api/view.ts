@@ -4,7 +4,6 @@ import { ServerError } from '../../../error'
 
 const router = express.Router()
 
-// @TODO should viewId be case-insensitve??
 router.get('/:viewId', async (req, res) => {
   const { viewId } = req.params
   const query = req.query
@@ -15,7 +14,7 @@ router.get('/:viewId', async (req, res) => {
     query[key] = decodeURIComponent(val)
   }
 
-  // @TODO switch out for actual auth?
+  // @TODO switch out for actual auth
   const requester = req.headers.authorization
   if (!requester) {
     throw new ServerError(401, 'No user token')

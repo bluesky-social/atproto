@@ -134,7 +134,7 @@ router.delete('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
   await db.indexRecord(uri, req.body)
   await db.setRepoRoot(did, repo.cid)
   // @TODO update subscribers
-  res.status(200).send({ uri: uri.toString() })
+  res.status(200).send()
 })
 
 // DESCRIBE REPO

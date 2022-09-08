@@ -27,7 +27,7 @@ export interface RegisterRepoParams {
 export interface GetRecordResponseValidated extends GetRecordResponse {
   valid?: boolean
   fullySupported?: boolean
-  incompatible?: boolean
+  compatible?: boolean
   error?: string | undefined
   fallbacks?: string[] | undefined
 }
