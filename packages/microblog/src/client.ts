@@ -3,7 +3,6 @@ import { AdxClient, AdxPdsClient, AdxRepoClient } from '@adxp/api'
 import {
   FeedView,
   LikedByView,
-  Post,
   PostThreadView,
   ProfileView,
   RepostedByView,
@@ -63,6 +62,10 @@ export class MicroblogClient {
     return uri
   }
 
+  async deleteObject(uri: AdxUri): Promise<void> {
+    await this.repo.collection(uri.collection).del(uri.recordKey)
+  }
+
   async reply(root: AdxUri, parent: AdxUri, text: string): Promise<AdxUri> {
     const uri = await this.repo
       .collection('bsky/posts')
@@ -88,18 +91,6 @@ export class MicroblogClient {
       })
     return likeUri
   }
-
-  // async unlikePost(uri: AdxUri): Promise<AdxUri> {
-  //   const likeRecord = await this.repo.collection('bsky/likes').list('blueskyweb.xyz:Like', { count: 1, from: })
-  //   const likeUri = await this.repo
-  //     .collection('bsky/likes')
-  //     .create('blueskyweb.xyz:Like', {
-  //       $type: 'blueskyweb.xyz:Like',
-  //       subject: uri.toString(),
-  //       createdAt: new Date().toISOString(),
-  //     })
-  //   return likeUri
-  // }
 
   async repost(uri: AdxUri): Promise<AdxUri> {
     const repostUri = await this.repo

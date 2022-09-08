@@ -80,14 +80,18 @@ const deleteFn =
   }
 
 const translateDbObj = (dbObj: BadgeIndex): Badge.Record => {
-  return {
+  const badge = {
     assertion: {
       type: dbObj.assertionType,
-      // tag: dbObj.assertionTag, @TODO include this
+      tag: dbObj.assertionTag,
     },
     subject: dbObj.subject,
     createdAt: dbObj.createdAt,
   }
+  if (badge.assertion.type === 'tag') {
+    badge.assertion.tag = dbObj.assertionTag
+  }
+  return badge
 }
 
 export const makePlugin = (

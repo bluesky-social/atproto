@@ -18,7 +18,6 @@ const validParams = (obj: unknown): obj is FeedView.Params => {
   return validator.isParamsValid(obj)
 }
 
-// @TODO filter out replies??
 export const viewFn =
   (db: DataSource) =>
   async (params: unknown, requester: string): Promise<FeedView.Response> => {
