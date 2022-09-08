@@ -1,5 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import MicroblogClient from './client'
+import { MicroblogClient } from '@adxp/microblog'
 
 const url = 'http://localhost:2583'
 const alice = new MicroblogClient(url, 'did:example:alice')
@@ -57,31 +57,29 @@ describe('server', () => {
   })
 
   it('fetches followers', async () => {
-    const followers = await alice.getFollowers('alice')
+    const followers = await alice.userFollowersView('alice')
     console.log(followers)
   })
 
   it('fetches follows', async () => {
-    const follows = await alice.getFollows('alice')
+    const follows = await alice.userFollowsView('alice')
     console.log(follows)
   })
 
   it('fetches profile', async () => {
-    const profile = await alice.getProfile('alice')
+    const profile = await alice.profileView('alice')
     console.log(profile)
   })
 
   it('fetches feed', async () => {
-    const feed = await bob.getFeed()
+    const feed = await bob.feedView()
     console.log(feed)
   })
 
   it('fetches postThread', async () => {
-    const thread = await bob.getPostThread(alicePosts[1])
+    const thread = await bob.postThreadView(alicePosts[1])
     console.log(thread.replies)
   })
-
-  return
 
   // it('fetches liked by view', async () => {
   //   const view = await alice.getLikesForPost(postUri)

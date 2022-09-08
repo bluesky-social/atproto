@@ -120,13 +120,13 @@ export const viewFn =
       author: {
         did: row.authorDid,
         name: row.authorName,
-        displayName: row.authorDisplayName,
+        displayName: row.authorDisplayName || undefined,
       },
       repostedBy: row.repostedByDid
         ? {
             did: row.repostedByDid,
             name: row.repostedByName,
-            displayName: row.repostedByDisplayName,
+            displayName: row.repostedByDisplayName || undefined,
           }
         : undefined,
       record: JSON.parse(row.rawRecord),

@@ -324,7 +324,7 @@ export const feedView = {
       },
       user: {
         type: 'object',
-        required: ['did', 'name', 'displayName'],
+        required: ['did', 'name'],
         properties: {
           did: {
             type: 'string',
@@ -996,7 +996,7 @@ export const postThreadView = {
       },
       user: {
         type: 'object',
-        required: ['did', 'name', 'displayName'],
+        required: ['did', 'name'],
         properties: {
           did: {
             type: 'string',

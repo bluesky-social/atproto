@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm'
 import { ProfileIndex } from '../records/profile'
 import { UserDid } from '../user-dids'
+import * as util from '../util'
 
 type UserInfo = {
   did: string
@@ -10,9 +11,9 @@ type UserInfo = {
 
 export const getUserInfo = async (
   db: DataSource,
-  userNameOrDid: string,
+  user: string,
 ): Promise<UserInfo> => {
-  const builder = db
+  const userInfo = await db
     .createQueryBuilder()
     .select([
       'user.did AS did',
@@ -21,20 +22,14 @@ export const getUserInfo = async (
     ])
     .from(UserDid, 'user')
     .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
-
-  if (userNameOrDid.startsWith('did:')) {
-    builder.where('user.did = :did', { did: userNameOrDid })
-  } else {
-    builder.where('user.username = :username', { username: userNameOrDid })
-  }
-  const userInfo = await builder.getRawOne()
-
+    .where(util.userWhereClause(user), { user })
+    .getRawOne()
   if (!userInfo) {
-    throw new Error(`Could not find entry for user: ${userNameOrDid}`)
+    throw new Error(`Could not find entry for user: ${user}`)
   }
   return {
     did: userInfo.did,
-    name: userInfo.username,
+    name: userInfo.name,
     displayName: userInfo.displayName || undefined,
   }
 }

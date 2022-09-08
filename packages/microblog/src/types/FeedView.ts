@@ -25,7 +25,7 @@ export interface FeedItem {
 export interface User {
   did: string
   name: string
-  displayName: string
+  displayName?: string
 }
 export interface RecordEmbed {
   type: 'record'

@@ -47,7 +47,14 @@ export const viewFn =
       followersReq.limit(limit)
     }
 
-    const followers = await followersReq.getRawMany()
+    const followersRes = await followersReq.getRawMany()
+    const followers = followersRes.map((row) => ({
+      did: row.did,
+      name: row.name,
+      displayName: row.displayName || undefined,
+      createdAt: row.createdAt,
+      indexedAt: row.indexedAt,
+    }))
 
     return {
       subject,

@@ -47,7 +47,14 @@ export const viewFn =
       followsReq.limit(limit)
     }
 
-    const follows = await followsReq.getRawMany()
+    const followsRes = await followsReq.getRawMany()
+    const follows = followsRes.map((row) => ({
+      did: row.did,
+      name: row.name,
+      displayName: row.displayName || undefined,
+      createdAt: row.createdAt,
+      indexedAt: row.indexedAt,
+    }))
 
     return {
       subject: creator,

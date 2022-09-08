@@ -16,7 +16,6 @@ import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
-import { BadgeIndex } from './badge'
 
 const schemaId = 'blueskyweb.xyz:Profile'
 const collection = 'bsky/profile'

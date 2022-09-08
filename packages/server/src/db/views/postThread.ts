@@ -62,7 +62,6 @@ const getReplies = async (
       return post
     }),
   )
-  console.log(got)
   return got
 }
 
@@ -129,17 +128,17 @@ const rowToPost = (
     author: {
       did: row.authorDid,
       name: row.authorName,
-      displayName: row.authorDisplayName,
+      displayName: row.authorDisplayName || undefined,
     },
     record: JSON.parse(row.rawRecord),
     parent: parent ? { ...parent } : undefined,
-    replyCount: row.replyCount,
-    likeCount: row.likeCount,
-    repostCount: row.repostCount,
+    replyCount: row.replyCount || 0,
+    likeCount: row.likeCount || 0,
+    repostCount: row.repostCount || 0,
     indexedAt: row.indexedAt,
     myState: {
-      hasReposted: row.requesterHasReposted,
-      hasLiked: row.requesterHasLiked,
+      hasReposted: Boolean(row.requesterHasReposted),
+      hasLiked: Boolean(row.requesterHasLiked),
     },
   }
 }

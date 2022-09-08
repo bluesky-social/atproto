@@ -7,6 +7,7 @@ import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { DbViewPlugin } from '../types'
 import * as util from '../util'
+import { BadgeIndex } from '../records/badge'
 
 const viewId = 'blueskyweb.xyz:ProfileView'
 const validator = schemas.createViewValidator(viewId)
@@ -32,7 +33,6 @@ export const viewFn =
         'follows_count.count AS followsCount',
         'followers_count.count AS followersCount',
         'posts_count.count AS postsCount',
-        'profile_badge.badge AS badgeRef',
         'requester_follows.doesExist AS requesterHasFollowed',
       ])
       .from(UserDid, 'user')
@@ -60,13 +60,42 @@ export const viewFn =
       .where(util.userWhereClause(user), { user })
       .getRawOne()
 
-    const badges = await db
+    const badgesRes = await db
       .createQueryBuilder()
-      .select('badge.badge as badgeRef')
+      .select([
+        'badge.uri AS uri',
+        'badge.assertionType AS assertionType',
+        'issuer.did AS issuerDid',
+        'issuer.username AS issuerName',
+        'issuer_profile.displayName AS issuerDisplayName',
+        'badge.createdAt AS createdAt',
+      ])
       .from(ProfileIndex, 'profile')
-      .leftJoin(ProfileBadgeIndex, 'badge', 'badge.profile = profile.uri')
+      .innerJoin(
+        ProfileBadgeIndex,
+        'profile_badge',
+        'profile_badge.profile = profile.uri',
+      )
+      .innerJoin(BadgeIndex, 'badge', 'badge.uri = profile_badge.badge')
+      .leftJoin(UserDid, 'issuer', 'issuer.did = badge.creator')
+      .leftJoin(
+        ProfileIndex,
+        'issuer_profile',
+        'issuer_profile.creator = issuer.did',
+      )
       .where('profile.creator = :did', { did: res.did })
       .getRawMany()
+
+    const badges = badgesRes.map((row) => ({
+      uri: row.uri,
+      issuer: {
+        did: row.issuerDid,
+        name: row.issuerName,
+        displayName: row.issuerDisplayName || undefined,
+      },
+      assertion: row.assertionType ? { type: row.assertionType } : undefined,
+      createdAt: row.createdAt,
+    }))
 
     return {
       did: res.did,
@@ -76,7 +105,7 @@ export const viewFn =
       followsCount: res.followsCount || 0,
       followersCount: res.followersCount || 0,
       postsCount: res.postsCount || 0,
-      badges: badges.map((row) => row.badgeRef),
+      badges: badges,
       myState: {
         hasFollowed: Boolean(res.requesterHasFollowed),
       },

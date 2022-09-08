@@ -1,5 +1,4 @@
 import { EntityTarget, SelectQueryBuilder } from 'typeorm'
-import { SelectQuery } from 'typeorm/query-builder/SelectQuery'
 
 export const collectionToTableName = (collection: string): string => {
   return `record_${collection.split('/').join('_')}`

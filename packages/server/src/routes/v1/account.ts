@@ -11,6 +11,7 @@ import { ServerError } from '../../error'
 const router = express.Router()
 
 export const registerReq = z.object({
+  did: z.string(),
   username: z.string(),
 })
 export type RegisterReq = z.infer<typeof registerReq>
@@ -22,16 +23,21 @@ router.get('/', async (req, res) => {
 
 // @TODO fix this whole route lol
 router.post('/', async (req, res) => {
-  const { username } = util.checkReqBody(req.body, registerReq)
+  const { did, username } = util.checkReqBody(req.body, registerReq)
   if (username.startsWith('did:')) {
     throw new ServerError(
       400,
       'Cannot register a username that starts with `did:`',
     )
   }
+  if (!did.startsWith('did:')) {
+    throw new ServerError(
+      400,
+      'Cannot register a did that does not start with `did:`',
+    )
+  }
 
   const { db, blockstore, keypair } = util.getLocals(res)
-  const did = `did:example:${username}`
   await db.registerUser(username, did)
 
   const authStore = await auth.AuthStore.fromTokens(keypair, [])

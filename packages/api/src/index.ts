@@ -103,30 +103,31 @@ export class AdxPdsClient {
    * Registers a repository with a PDS.
    */
   async registerRepo(params: t.RegisterRepoParams): Promise<AdxRepoClient> {
-    const pdsDid = await this.getDid()
-    const token = await params.authStore.createUcan(
-      pdsDid,
-      auth.maintenanceCap(params.did),
-    )
+    // const pdsDid = await this.getDid()
+    // const token = await params.authStore.createUcan(
+    //   pdsDid,
+    //   auth.maintenanceCap(params.did),
+    // )
     const reqBody = {
       did: params.did,
       username: params.username,
     }
     await axios
-      .post(this.url(PdsEndpoint.Account), reqBody, requestCfg(token))
+      .post(this.url(PdsEndpoint.Account), reqBody, requestCfg(params.did))
       .catch(toAPIError)
-    return new AdxRepoClient(this, params.did, params.authStore)
+    return new AdxRepoClient(this, params.did)
   }
 
   /**
    * Query a view.
    */
-  async view(view: string, params: QP) {
+  async view(view: string, did: string, params: QP) {
     const validator = getViewValidator(view, this.client)
     // TODO - validate params?
     const res = await axios
-      .get(this.url(PdsEndpoint.View, [view], params))
+      .get(this.url(PdsEndpoint.View, [view], params), requestCfg(did))
       .catch(toAPIError)
+
     validator.assertResponseValid(res.data)
     return res.data
   }
@@ -180,7 +181,13 @@ export class AdxPdsClient {
     let url = this.origin + (pathname || '')
     if (qp) {
       if (!(qp instanceof URLSearchParams)) {
-        qp = new URLSearchParams(qp)
+        const safeParams = {}
+        for (const entry of Object.entries(qp)) {
+          if (entry[1] !== undefined) {
+            safeParams[entry[0]] = encodeURIComponent(entry[1])
+          }
+        }
+        qp = new URLSearchParams(safeParams)
       }
       url += '?' + qp.toString()
     }
@@ -316,7 +323,7 @@ class AdxRepoCollectionClient {
       { verified: true },
     )
     const res = await axios.post(url, value).catch(toAPIError)
-    const { uri } = ht.createRecordResponse.parse(res)
+    const { uri } = ht.createRecordResponse.parse(res.data)
     return new AdxUri(uri)
   }
 
@@ -337,7 +344,7 @@ class AdxRepoCollectionClient {
       { verified: true },
     )
     const res = await axios.put(url, value).catch(toAPIError)
-    const { uri } = ht.createRecordResponse.parse(res)
+    const { uri } = ht.createRecordResponse.parse(res.data)
     return new AdxUri(uri)
   }
 
@@ -357,11 +364,16 @@ class AdxRepoCollectionClient {
   }
 }
 
-function requestCfg(token?: auth.Ucan): AxiosRequestConfig {
+function requestCfg(did?: string): AxiosRequestConfig {
+  // @TODO add back in real auth
   const headers: Record<string, string> = {}
-  if (token) {
-    headers['Authorization'] = `Bearer ${auth.encodeUcan(token)}`
+  if (did) {
+    headers['Authorization'] = did
   }
+  // if (token) {
+  //   headers['Authorization'] = `Bearer ${auth.encodeUcan(token)}`
+  // }
+
   return { headers }
 }
 

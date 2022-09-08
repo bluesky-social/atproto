@@ -1,4 +1,5 @@
 import { AdxUri } from '@adxp/common'
+import { AdxClient, AdxPdsClient, AdxRepoClient } from '@adxp/api'
 import {
   FeedView,
   LikedByView,
@@ -9,7 +10,7 @@ import {
   UserFollowersView,
   UserFollowsView,
 } from '@adxp/microblog'
-import axios from 'axios'
+import { schemas } from './schemas/defs'
 
 const makeViewQueryStr = (
   params: Record<string, string | number | undefined>,
@@ -24,9 +25,17 @@ const makeViewQueryStr = (
 }
 
 export class MicroblogClient {
-  public api: string
-  constructor(public pds: string, public did: string) {
-    this.api = `${pds}/.adx/v1`
+  public client: AdxClient
+  public pds: AdxPdsClient
+  public repo: AdxRepoClient
+
+  constructor(public pdsUrl: string, public did: string) {
+    this.client = new AdxClient({
+      pds: pdsUrl,
+      schemas,
+    })
+    this.pds = this.client.mainPds
+    this.repo = this.client.repo(did)
   }
 
   config() {
@@ -38,42 +47,38 @@ export class MicroblogClient {
   }
 
   async register(username: string) {
-    await axios.post(`${this.api}/account`, { username })
+    await this.pds.registerRepo({ username, did: this.did })
   }
 
   async createProfile(
     displayName: string,
     description?: string,
   ): Promise<AdxUri> {
-    const res = await axios.post(
-      `${this.api}/api/repo/${this.did}/c/bsky/profile`,
-      {
+    const uri = await this.repo
+      .collection('bsky/profile')
+      .create('blueskyweb.xyz:Profile', {
         $type: 'blueskyweb.xyz:Profile',
         displayName,
         description,
-      },
-      this.config(),
-    )
-    return new AdxUri(res.data.uri)
+      })
+    return uri
   }
 
   async createPost(text: string): Promise<AdxUri> {
-    const res = await axios.post(
-      `${this.api}/api/repo/${this.did}/c/bsky/posts`,
-      {
+    const uri = await this.repo
+      .collection('bsky/posts')
+      .create('blueskyweb.xyz:Post', {
         $type: 'blueskyweb.xyz:Post',
         text,
         createdAt: new Date().toISOString(),
-      },
-      this.config(),
-    )
-    return new AdxUri(res.data.uri)
+      })
+    return uri
   }
 
   async reply(root: AdxUri, parent: AdxUri, text: string): Promise<AdxUri> {
-    const res = await axios.post(
-      `${this.api}/api/repo/${this.did}/c/bsky/posts`,
-      {
+    const uri = await this.repo
+      .collection('bsky/posts')
+      .create('blueskyweb.xyz:Post', {
         $type: 'blueskyweb.xyz:Post',
         text,
         reply: {
@@ -81,65 +86,57 @@ export class MicroblogClient {
           parent: parent.toString(),
         },
         createdAt: new Date().toISOString(),
-      },
-      this.config(),
-    )
-    return new AdxUri(res.data.uri)
+      })
+    return uri
   }
 
-  async listPosts(did: string = this.did): Promise<Post.Record[]> {
-    const res = await axios.get(
-      `${this.api}/api/repo/${did}/c/bsky/posts`,
-      this.config(),
-    )
-    return res.data
-  }
+  // async listPosts(did: string = this.did): Promise<Post.Record[]> {
+  //   const res = await axios.get(
+  //     `${this.api}/api/repo/${did}/c/bsky/posts`,
+  //     this.config(),
+  //   )
+  //   return res.data
+  // }
 
   async likePost(uri: AdxUri): Promise<AdxUri> {
-    const res = await axios.post(
-      `${this.api}/api/repo/${this.did}/c/bsky/likes`,
-      {
+    const likeUri = await this.repo
+      .collection('bsky/likes')
+      .create('blueskyweb.xyz:Like', {
         $type: 'blueskyweb.xyz:Like',
         subject: uri.toString(),
         createdAt: new Date().toISOString(),
-      },
-      this.config(),
-    )
-    return new AdxUri(res.data.uri)
+      })
+    return likeUri
   }
 
   async repost(uri: AdxUri): Promise<AdxUri> {
-    const res = await axios.post(
-      `${this.api}/api/repo/${this.did}/c/bsky/reposts`,
-      {
+    const repostUri = await this.repo
+      .collection('bsky/reposts')
+      .create('blueskyweb.xyz:Repost', {
         $type: 'blueskyweb.xyz:Repost',
         subject: uri.toString(),
         createdAt: new Date().toISOString(),
-      },
-      this.config(),
-    )
-    return new AdxUri(res.data.uri)
+      })
+    return repostUri
   }
 
   async followUser(did: string): Promise<AdxUri> {
-    const res = await axios.post(
-      `${this.api}/api/repo/${this.did}/c/bsky/follows`,
-      {
+    const uri = await this.repo
+      .collection('bsky/follows')
+      .create('blueskyweb.xyz:Follow', {
         $type: 'blueskyweb.xyz:Follow',
         subject: {
           did,
         },
         createdAt: new Date().toISOString(),
-      },
-      this.config(),
-    )
-    return new AdxUri(res.data.uri)
+      })
+    return uri
   }
 
   async giveBadge(did: string, type: string, tag?: string): Promise<AdxUri> {
-    const res = await axios.post(
-      `${this.api}/api/repo/${this.did}/c/bsky/badges`,
-      {
+    const uri = await this.repo
+      .collection('bsky/badges')
+      .create('blueskyweb.xyz:Badge', {
         $type: 'blueskyweb.xyz:Badge',
         assertion: {
           type,
@@ -149,105 +146,91 @@ export class MicroblogClient {
           did,
         },
         createdAt: new Date().toISOString(),
-      },
-      this.config(),
-    )
-    return new AdxUri(res.data.uri)
+      })
+    return uri
   }
 
-  async getLikedBy(
-    uri: string,
+  async likedByView(
+    uri: AdxUri,
     limit?: number,
     before?: string,
   ): Promise<LikedByView.Response> {
-    const qs = makeViewQueryStr({ uri, limit, before })
-    const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:LikedByView?${qs}`,
-      this.config(),
-    )
-    return res.data
+    return this.pds.view('blueskyweb.xyz:LikedByView', this.did, {
+      uri: uri.toString(),
+      limit,
+      before,
+    })
   }
 
-  async getRepostedBy(
-    uri: string,
+  async repostedByView(
+    uri: AdxUri,
     limit?: number,
     before?: string,
   ): Promise<RepostedByView.Response> {
-    const qs = makeViewQueryStr({ uri, limit, before })
-    const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:RepostedByView?${qs}`,
-      this.config(),
-    )
-    return res.data
+    return this.pds.view('blueskyweb.xyz:RepostedByView', this.did, {
+      uri: uri.toString(),
+      limit,
+      before,
+    })
   }
 
-  async getFollows(
+  async userFollowsView(
     user: string,
     limit?: string,
     before?: string,
   ): Promise<UserFollowsView.Response> {
-    const qs = makeViewQueryStr({ user, limit, before })
-    const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:UserFollowsView?${qs}`,
-      this.config(),
-    )
-    return res.data
+    return this.pds.view('blueskyweb.xyz:UserFollowsView', this.did, {
+      user,
+      limit,
+      before,
+    })
   }
 
-  async getFollowers(
+  async userFollowersView(
     user: string,
     limit?: number,
     before?: string,
   ): Promise<UserFollowersView.Response> {
-    const qs = makeViewQueryStr({ user, limit, before })
-    const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:UserFollowersView?${qs}`,
-      this.config(),
-    )
-    return res.data
+    return this.pds.view('blueskyweb.xyz:UserFollowersView', this.did, {
+      user,
+      limit,
+      before,
+    })
   }
 
-  async getProfile(user: string): Promise<ProfileView.Response> {
-    const qs = makeViewQueryStr({ user })
-    const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:ProfileView?${qs}`,
-      this.config(),
-    )
-    return res.data
+  async profileView(user: string): Promise<ProfileView.Response> {
+    return this.pds.view('blueskyweb.xyz:ProfileView', this.did, {
+      user,
+    })
   }
 
-  async getFeed(limit?: number, before?: string): Promise<FeedView.FeedItem[]> {
-    const qs = makeViewQueryStr({ limit, before })
-    const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:FeedView${qs}`,
-      this.config(),
-    )
-    return res.data
+  async feedView(limit?: number, before?: string): Promise<FeedView.Response> {
+    return this.pds.view('blueskyweb.xyz:FeedView', this.did, {
+      limit,
+      before,
+    })
   }
 
-  async getUserFeed(
+  async userFeedView(
     user: string,
     limit?: number,
     before?: string,
-  ): Promise<FeedView.FeedItem[]> {
-    const qs = makeViewQueryStr({ user, limit, before })
-    const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:FeedView?${qs}`,
-      this.config(),
-    )
-    return res.data.feed
+  ): Promise<FeedView.Response> {
+    return this.pds.view('blueskyweb.xyz:FeedView', this.did, {
+      user,
+      limit,
+      before,
+    })
   }
 
-  async getPostThread(
+  async postThreadView(
     uri: AdxUri,
     depth?: number,
   ): Promise<PostThreadView.Post> {
-    const qs = makeViewQueryStr({ uri: uri.toString(), depth })
-    const res = await axios.get(
-      `${this.api}/api/view/blueskyweb.xyz:PostThreadView?${qs}`,
-      this.config(),
-    )
-    return res.data.thread
+    return this.pds.view('blueskyweb.xyz:PostThreadView', this.did, {
+      uri: uri.toString(),
+      depth,
+    })
   }
 }
 
