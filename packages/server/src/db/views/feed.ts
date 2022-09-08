@@ -62,8 +62,8 @@ export const viewFn =
         'like_count.count AS likeCount',
         'repost_count.count AS repostCount',
         'reply_count.count AS replyCount',
-        'requester_repost.doesExist AS requesterHasReposted',
-        'requester_like.doesExist AS requesterHasLiked',
+        'requester_repost.uri AS requesterRepost',
+        'requester_like.uri AS requesterLike',
         'record.indexedAt AS indexedAt',
       ])
       .leftJoin(UserDid, 'author', 'author.did = post.creator')
@@ -95,14 +95,16 @@ export const viewFn =
         'reply_count.subject = post.uri',
       )
       .leftJoin(
-        util.existsByCreatorSubquery(RepostIndex, 'subject', requester),
+        RepostIndex,
         'requester_repost',
-        'requester_repost.subject = post.uri',
+        `requester_repost.creator = :requester AND requester_repost.subject = post.uri`,
+        { requester },
       )
       .leftJoin(
-        util.existsByCreatorSubquery(LikeIndex, 'subject', requester),
+        RepostIndex,
         'requester_like',
-        'requester_like.subject = post.uri',
+        `requester_like.creator = :requester AND requester_like.subject = post.uri`,
+        { requester },
       )
 
     if (before !== undefined) {
@@ -135,8 +137,8 @@ export const viewFn =
       likeCount: row.likeCount || 0,
       indexedAt: row.indexedAt,
       myState: {
-        hasReposted: Boolean(row.requesterHasReposted),
-        hasLiked: Boolean(row.requesterHasLiked),
+        repost: row.requesterRepost || undefined,
+        like: row.requesterLike || undefined,
       },
     }))
 

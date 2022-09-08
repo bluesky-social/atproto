@@ -117,9 +117,7 @@ export class MicroblogClient {
       .collection('bsky/follows')
       .create('blueskyweb.xyz:Follow', {
         $type: 'blueskyweb.xyz:Follow',
-        subject: {
-          did,
-        },
+        subject: did,
         createdAt: new Date().toISOString(),
       })
     return uri
@@ -134,9 +132,7 @@ export class MicroblogClient {
           type,
           tag,
         },
-        subject: {
-          did,
-        },
+        subject: did,
         createdAt: new Date().toISOString(),
       })
     return uri

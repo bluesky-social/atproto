@@ -30,9 +30,6 @@ export class FollowIndex {
   @Column('varchar')
   subject: string
 
-  @Column({ type: 'varchar', nullable: true })
-  subjectName?: string
-
   @Column('datetime')
   createdAt: string
 
@@ -61,8 +58,7 @@ const setFn =
     const follow = new FollowIndex()
     follow.uri = uri.toString()
     follow.creator = uri.host
-    follow.subject = obj.subject.did
-    follow.subjectName = obj.subject.name
+    follow.subject = obj.subject
     follow.createdAt = obj.createdAt
     await repo.save(follow)
   }
@@ -75,10 +71,7 @@ const deleteFn =
 
 const translateDbObj = (dbObj: FollowIndex): Follow.Record => {
   return {
-    subject: {
-      did: dbObj.subject,
-      name: dbObj.subjectName,
-    },
+    subject: dbObj.subject,
     createdAt: dbObj.createdAt,
   }
 }

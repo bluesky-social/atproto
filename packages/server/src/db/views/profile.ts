@@ -33,7 +33,7 @@ export const viewFn =
         'follows_count.count AS followsCount',
         'followers_count.count AS followersCount',
         'posts_count.count AS postsCount',
-        'requester_follows.doesExist AS requesterHasFollowed',
+        'requester_follow.uri AS requesterFollow',
       ])
       .from(UserDid, 'user')
       .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
@@ -53,9 +53,10 @@ export const viewFn =
         'posts_count.subject = user.did',
       )
       .leftJoin(
-        util.existsByCreatorSubquery(FollowIndex, 'subject', requester),
-        'requester_follows',
-        'requester_follows.subject = user.did',
+        FollowIndex,
+        'requester_follow',
+        `requester_follow.creator = :requester AND requester_follow.subject = user.did`,
+        { requester },
       )
       .where(util.userWhereClause(user), { user })
       .getRawOne()
@@ -107,7 +108,7 @@ export const viewFn =
       postsCount: res.postsCount || 0,
       badges: badges,
       myState: {
-        hasFollowed: Boolean(res.requesterHasFollowed),
+        follow: res.requesterFollow || undefined,
       },
     }
   }

@@ -18,8 +18,8 @@ export interface FeedItem {
   likeCount: number;
   indexedAt: string;
   myState?: {
-    hasReposted?: string;
-    hasLiked?: string;
+    repost?: string;
+    like?: string;
   };
 }
 export interface User {

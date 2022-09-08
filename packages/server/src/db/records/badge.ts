@@ -66,7 +66,7 @@ const setFn =
     const badge = new BadgeIndex()
     badge.uri = uri.toString()
     badge.creator = uri.host
-    badge.subject = obj.subject.did
+    badge.subject = obj.subject
     badge.assertionType = obj.assertion.type
     badge.assertionTag = (obj.assertion as TagAssertion).tag
     badge.createdAt = obj.createdAt
@@ -85,9 +85,7 @@ const translateDbObj = (dbObj: BadgeIndex): Badge.Record => {
       type: dbObj.assertionType,
       // tag: dbObj.assertionTag, @TODO include this
     },
-    subject: {
-      did: dbObj.subject,
-    },
+    subject: dbObj.subject,
     createdAt: dbObj.createdAt,
   }
 }

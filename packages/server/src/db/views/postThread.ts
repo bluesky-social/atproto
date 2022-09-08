@@ -79,8 +79,8 @@ const postInfoBuilder = (db: DataSource, requester: string) => {
       'like_count.count AS likeCount',
       'repost_count.count AS repostCount',
       'record.indexedAt AS indexedAt',
-      'requester_repost.doesExist AS requesterHasReposted',
-      'requester_like.doesExist AS requesterHasLiked',
+      'requester_repost.uri AS requesterRepost',
+      'requester_like.uri AS requesterLike',
     ])
     .from(PostIndex, 'post')
     .innerJoin(AdxRecord, 'record', 'record.uri = post.uri')
@@ -106,14 +106,16 @@ const postInfoBuilder = (db: DataSource, requester: string) => {
       'reply_count.subject = post.uri',
     )
     .leftJoin(
-      util.existsByCreatorSubquery(RepostIndex, 'subject', requester),
+      RepostIndex,
       'requester_repost',
-      'requester_repost.subject = post.uri',
+      `requester_repost.creator = :requester AND requester_repost.subject = post.uri`,
+      { requester },
     )
     .leftJoin(
-      util.existsByCreatorSubquery(LikeIndex, 'subject', requester),
+      RepostIndex,
       'requester_like',
-      'requester_like.subject = post.uri',
+      `requester_like.creator = :requester AND requester_like.subject = post.uri`,
+      { requester },
     )
 }
 
@@ -137,8 +139,8 @@ const rowToPost = (
     repostCount: row.repostCount || 0,
     indexedAt: row.indexedAt,
     myState: {
-      hasReposted: Boolean(row.requesterHasReposted),
-      hasLiked: Boolean(row.requesterHasLiked),
+      repost: row.requesterRepost || undefined,
+      like: row.requesterLike || undefined,
     },
   }
 }
