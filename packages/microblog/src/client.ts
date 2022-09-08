@@ -12,18 +12,6 @@ import {
 } from '@adxp/microblog'
 import { schemas } from './schemas/defs'
 
-const makeViewQueryStr = (
-  params: Record<string, string | number | undefined>,
-) => {
-  const strs: string[] = []
-  for (const entry of Object.entries(params)) {
-    if (entry[1] !== undefined) {
-      strs.push(`${entry[0]}=${encodeURIComponent(entry[1])}`)
-    }
-  }
-  return strs.join('&')
-}
-
 export class MicroblogClient {
   public client: AdxClient
   public pds: AdxPdsClient
@@ -90,14 +78,6 @@ export class MicroblogClient {
     return uri
   }
 
-  // async listPosts(did: string = this.did): Promise<Post.Record[]> {
-  //   const res = await axios.get(
-  //     `${this.api}/api/repo/${did}/c/bsky/posts`,
-  //     this.config(),
-  //   )
-  //   return res.data
-  // }
-
   async likePost(uri: AdxUri): Promise<AdxUri> {
     const likeUri = await this.repo
       .collection('bsky/likes')
@@ -108,6 +88,18 @@ export class MicroblogClient {
       })
     return likeUri
   }
+
+  // async unlikePost(uri: AdxUri): Promise<AdxUri> {
+  //   const likeRecord = await this.repo.collection('bsky/likes').list('blueskyweb.xyz:Like', { count: 1, from: })
+  //   const likeUri = await this.repo
+  //     .collection('bsky/likes')
+  //     .create('blueskyweb.xyz:Like', {
+  //       $type: 'blueskyweb.xyz:Like',
+  //       subject: uri.toString(),
+  //       createdAt: new Date().toISOString(),
+  //     })
+  //   return likeUri
+  // }
 
   async repost(uri: AdxUri): Promise<AdxUri> {
     const repostUri = await this.repo

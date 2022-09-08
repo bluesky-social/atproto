@@ -12,7 +12,7 @@ export interface Response {
   postsCount: number;
   badges: Badge[];
   myState?: {
-    hasFollowed: boolean;
+    hasFollowed?: string;
   };
 }
 export interface Badge {

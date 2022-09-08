@@ -24,7 +24,7 @@ router.post('/:did', async (req, res) => {
 
   const db = util.getDB(res)
 
-  // @TODO Add fix something here
+  // @TODO add something back here. new route for repos not on server?
   // check to see if we have their username in DB, for indexed queries
   // const haveUsername = await db.isDidRegistered(did)
   // if (!haveUsername) {
