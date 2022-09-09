@@ -163,6 +163,26 @@ export class MicroblogClient {
     return uri
   }
 
+  async acceptBadge(badgeUri: AdxUri): Promise<AdxUri> {
+    const profiles = await this.repo
+      .collection('bsky/profile')
+      .list('blueskyweb.xyz:Profile')
+    // find the first valid profile
+    const found = profiles.records.find((row) => row.valid)
+    if (!found) {
+      throw new Error('Could not accept badge')
+    }
+    const recordKey = new AdxUri(found.uri).recordKey
+    const profile: Profile.Record = found.value
+    const uri = await this.repo
+      .collection('bsky/profile')
+      .put('blueskyweb.xyz:Profile', recordKey, {
+        ...profile,
+        badges: [...(profile.badges || []), { uri: badgeUri.toString() }],
+      })
+    return uri
+  }
+
   async deleteObject(uri: AdxUri): Promise<void> {
     await this.repo.collection(uri.collection).del(uri.recordKey)
   }

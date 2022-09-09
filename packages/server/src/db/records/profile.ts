@@ -5,15 +5,9 @@ import {
   Entity,
   Column,
   PrimaryColumn,
-  Repository,
-  In,
   UpdateDateColumn,
-  OneToMany,
-  ManyToOne,
-  JoinTable,
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
-import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
@@ -26,8 +20,7 @@ export class ProfileIndex {
   @PrimaryColumn('varchar')
   uri: string
 
-  @Column('varchar')
-  @ManyToOne(() => UserDid, (user) => user.did)
+  @Column({ type: 'varchar', unique: true })
   creator: string
 
   @Column('varchar')
@@ -36,19 +29,12 @@ export class ProfileIndex {
   @Column({ type: 'text', nullable: true })
   description?: string
 
-  @OneToMany(() => ProfileBadgeIndex, (badge) => badge.profile, {
-    cascade: true,
-  })
-  @JoinTable()
-  badges: ProfileBadgeIndex[]
-
   @UpdateDateColumn()
   indexedAt: Date
 }
 
 @Entity({ name: `${tableName}_badges` })
 export class ProfileBadgeIndex {
-  @ManyToOne(() => ProfileIndex, (profile) => profile.badges)
   @PrimaryColumn('varchar')
   profile: string
 
@@ -57,10 +43,20 @@ export class ProfileBadgeIndex {
 }
 
 const getFn =
-  (repo: Repository<ProfileIndex>) =>
+  (db: DataSource) =>
   async (uri: AdxUri): Promise<Profile.Record | null> => {
-    const found = await repo.findOneBy({ uri: uri.toString() })
-    return found === null ? null : translateDbObj(found)
+    const found = await db
+      .getRepository(ProfileIndex)
+      .findOneBy({ uri: uri.toString() })
+    if (found === null) return null
+    const obj = translateDbObj(found)
+    const badges = await db
+      .getRepository(ProfileBadgeIndex)
+      .findBy({ profile: uri.toString() })
+    obj.badges = badges.map((row) => ({
+      uri: row.badge,
+    }))
+    return obj
   }
 
 const validator = schemas.createRecordValidator(schemaId)
@@ -69,36 +65,41 @@ const isValidSchema = (obj: unknown): obj is Profile.Record => {
 }
 
 const setFn =
-  (repo: Repository<ProfileIndex>) =>
+  (db: DataSource) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${schemaId}`)
     }
+
+    const badges = (obj.badges || []).map((badge) => {
+      const entry = new ProfileBadgeIndex()
+      entry.badge = badge.uri
+      entry.profile = uri.toString()
+      return entry
+    })
+    await db.getRepository(ProfileBadgeIndex).save(badges)
+
     const profile = new ProfileIndex()
     profile.uri = uri.toString()
     profile.creator = uri.host
     profile.displayName = obj.displayName
     profile.description = obj.description
-    profile.badges = (obj.badges || []).map((ref) => {
-      const badge = new ProfileBadgeIndex()
-      badge.profile = uri.toString()
-      badge.badge = ref.uri
-      return badge
-    })
-    await repo.save(profile)
+    await db.getRepository(ProfileIndex).save(profile)
   }
 
 const deleteFn =
-  (repo: Repository<ProfileIndex>) =>
+  (db: DataSource) =>
   async (uri: AdxUri): Promise<void> => {
-    await repo.delete({ uri: uri.toString() })
+    await db.getRepository(ProfileIndex).delete({ uri: uri.toString() })
+    await db
+      .getRepository(ProfileBadgeIndex)
+      .delete({ profile: uri.toString() })
   }
 
 const translateDbObj = (dbObj: ProfileIndex): Profile.Record => {
   return {
     displayName: dbObj.displayName,
     description: dbObj.description,
-    badges: dbObj.badges.map((badge) => ({ uri: badge.badge })),
   }
 }
 
@@ -109,10 +110,10 @@ export const makePlugin = (
   return {
     collection,
     tableName,
-    get: getFn(repository),
+    get: getFn(db),
     isValidSchema,
-    set: setFn(repository),
-    delete: deleteFn(repository),
+    set: setFn(db),
+    delete: deleteFn(db),
     translateDbObj,
   }
 }

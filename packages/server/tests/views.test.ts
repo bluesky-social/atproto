@@ -15,6 +15,7 @@ let carolPosts: AdxUri[] = []
 let danPosts: AdxUri[] = []
 let bobFollows: Record<string, AdxUri> = {}
 let bobLikes: Record<string, AdxUri> = {}
+let badges: AdxUri[] = []
 
 describe('server', () => {
   it('register users', async () => {
@@ -80,6 +81,16 @@ describe('server', () => {
 
   it('reposts a post', async () => {
     await carol.repost(danPosts[1])
+  })
+
+  it('gives badges', async () => {
+    const badge0 = await bob.giveBadge(users.alice.did, 'tag', 'tech')
+    const badge1 = await bob.giveBadge(users.alice.did, 'invite')
+    badges = [badge0, badge1]
+  })
+
+  it('accepts badges', async () => {
+    await alice.acceptBadge(badges[0])
   })
 
   it('fetches liked by view', async () => {
@@ -161,7 +172,14 @@ describe('server', () => {
     expect(aliceProf.followersCount).toEqual(2)
     expect(aliceProf.followsCount).toEqual(3)
     expect(aliceProf.postsCount).toEqual(4)
-    expect(aliceProf.badges).toEqual([])
+    expect(aliceProf.badges.length).toEqual(1)
+    expect(aliceProf.badges[0].uri).toEqual(badges[0].toString())
+    expect(aliceProf.badges[0].assertion?.type).toEqual('tag')
+    expect(aliceProf.badges[0].issuer?.did).toEqual(users.bob.did)
+    expect(aliceProf.badges[0].issuer?.name).toEqual(users.bob.name)
+    expect(aliceProf.badges[0].issuer?.displayName).toEqual(
+      users.bob.displayName,
+    )
     expect(aliceProf.myState?.follow).toEqual(bobFollows[alice.did]?.toString())
 
     const danProf = await bob.profileView('dan')

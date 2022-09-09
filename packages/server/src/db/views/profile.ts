@@ -94,7 +94,7 @@ export const viewFn =
         name: row.issuerName,
         displayName: row.issuerDisplayName || undefined,
       },
-      assertion: row.assertionType ? { type: row.assertionType } : undefined,
+      assertion: row.assertionType ? { type: row.assertionType } : undefined, //@TODO add in tag here
       createdAt: row.createdAt,
     }))
 

@@ -90,8 +90,7 @@ const setFn =
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${schemaId}`)
     }
-    const entityIndex = db.getRepository(PostEntityIndex)
-    const entries = (obj.entities || []).map((entity) => {
+    const entities = (obj.entities || []).map((entity) => {
       const entry = new PostEntityIndex()
       entry.post_uri = uri.toString()
       entry.startIndex = entity.index[0]
@@ -101,7 +100,7 @@ const setFn =
       entry.post_uri = uri.toString()
       return entry
     })
-    await entityIndex.save(entries)
+    await db.getRepository(PostEntityIndex).save(entities)
 
     const post = new PostIndex()
     post.uri = uri.toString()
