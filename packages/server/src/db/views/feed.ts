@@ -39,13 +39,21 @@ export const viewFn =
           'post',
           'post.creator = follow.subject OR post.uri = repost.subject',
         )
+        .leftJoin(UserDid, 'author', 'author.did = post.creator')
         .where('user.did = :did', { did: requester })
     } else {
+      const authorWhere = author.startsWith('did:')
+        ? 'author.did'
+        : 'author.username'
       builder
         .from(PostIndex, 'post')
         .leftJoin(RepostIndex, 'repost', 'repost.subject = post.uri')
-        .where('post.creator = :author', { author })
-        .orWhere('repost.creator = :author', { author })
+        .leftJoin(
+          UserDid,
+          'author',
+          'author.did = post.creator OR author.did = repost.creator',
+        )
+        .where(`${authorWhere} = :author`, { author })
     }
 
     builder
@@ -65,7 +73,6 @@ export const viewFn =
         'requester_like.uri AS requesterLike',
         'record.indexedAt AS indexedAt',
       ])
-      .leftJoin(UserDid, 'author', 'author.did = post.creator')
       .leftJoin(
         ProfileIndex,
         'author_profile',
@@ -105,6 +112,7 @@ export const viewFn =
         `requester_like.creator = :requester AND requester_like.subject = post.uri`,
         { requester },
       )
+      .orderBy('post.createdAt', 'DESC')
 
     if (before !== undefined) {
       builder.andWhere('post.createdAt < :before', { before })

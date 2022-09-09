@@ -183,33 +183,43 @@ export class MicroblogClient {
     })
   }
 
-  async feedView(limit?: number, before?: string): Promise<FeedView.Response> {
-    return this.pds.view('blueskyweb.xyz:FeedView', this.did, {
+  async feedView(
+    limit?: number,
+    before?: string,
+  ): Promise<FeedView.FeedItem[]> {
+    const view = await this.pds.view('blueskyweb.xyz:FeedView', this.did, {
       limit,
       before,
     })
+    return view.feed
   }
 
   async userFeedView(
-    user: string,
+    author: string,
     limit?: number,
     before?: string,
-  ): Promise<FeedView.Response> {
-    return this.pds.view('blueskyweb.xyz:FeedView', this.did, {
-      user,
+  ): Promise<FeedView.FeedItem[]> {
+    const view = await this.pds.view('blueskyweb.xyz:FeedView', this.did, {
+      author,
       limit,
       before,
     })
+    return view.feed
   }
 
   async postThreadView(
     uri: AdxUri,
     depth?: number,
   ): Promise<PostThreadView.Post> {
-    return this.pds.view('blueskyweb.xyz:PostThreadView', this.did, {
-      uri: uri.toString(),
-      depth,
-    })
+    const view = await this.pds.view(
+      'blueskyweb.xyz:PostThreadView',
+      this.did,
+      {
+        uri: uri.toString(),
+        depth,
+      },
+    )
+    return view.thread
   }
 }
 

@@ -38,12 +38,12 @@ export const viewFn =
       .from(UserDid, 'user')
       .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
       .leftJoin(
-        util.countSubquery(FollowIndex, 'subject'),
+        util.countSubquery(FollowIndex, 'creator'),
         'follows_count',
         'follows_count.subject = user.did',
       )
       .leftJoin(
-        util.countSubquery(FollowIndex, 'creator'),
+        util.countSubquery(FollowIndex, 'subject'),
         'followers_count',
         'followers_count.subject = user.did',
       )

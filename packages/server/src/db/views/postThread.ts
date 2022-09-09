@@ -19,9 +19,12 @@ const validParams = (obj: unknown): obj is PostThreadView.Params => {
 export const viewFn =
   (db: DataSource) =>
   async (
-    params: unknown,
+    params: Record<string, unknown>,
     requester: string,
   ): Promise<PostThreadView.Response> => {
+    if (params['depth']) {
+      params['depth'] = parseInt(params['depth'] as string)
+    }
     if (!validParams(params)) {
       throw new Error(`Invalid params for ${viewId}`)
     }
@@ -52,6 +55,7 @@ const getReplies = async (
 ): Promise<PostThreadView.Post[]> => {
   const res = await postInfoBuilder(db, requester)
     .where('post.replyParent = :uri', { uri: parent.uri })
+    .orderBy('post.createdAt', 'DESC')
     .getRawMany()
   const got = await Promise.all(
     res.map(async (row) => {
