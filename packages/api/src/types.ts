@@ -32,6 +32,10 @@ export interface GetRecordResponseValidated extends GetRecordResponse {
   fallbacks?: string[] | undefined
 }
 
+export interface ListRecordsResponseValidated {
+  records: GetRecordResponseValidated[]
+}
+
 export interface BatchWrite {
   action: 'create' | 'put' | 'del'
   collection: string

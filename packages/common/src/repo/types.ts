@@ -76,7 +76,7 @@ export interface DataStore {
   update(key: string, value: CID): Promise<DataStore>
   delete(key: string): Promise<DataStore>
   get(key: string): Promise<CID | null>
-  list(from: string, count: number): Promise<DataValue[]>
+  list(count: number, after?: string, before?: string): Promise<DataValue[]>
   listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
   diff(other: DataStore): Promise<DataDiff>
   save(): Promise<CID>

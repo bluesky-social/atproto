@@ -133,16 +133,17 @@ export class Database {
     }
     record.raw = JSON.stringify(obj)
 
-    const table = this.findTableForCollection(uri.collection)
-    await table.set(uri, obj)
     const recordTable = this.db.getRepository(AdxRecord)
     await recordTable.save(record)
+
+    const table = this.findTableForCollection(uri.collection)
+    await table.set(uri, obj)
   }
 
   async deleteRecord(uri: AdxUri) {
     const table = this.findTableForCollection(uri.collection)
     const recordTable = this.db.getRepository(AdxRecord)
-    await Promise.all([table.delete(uri), recordTable.delete(uri)])
+    await Promise.all([table.delete(uri), recordTable.delete(uri.toString())])
   }
 
   async listCollectionsForDid(did: string): Promise<string[]> {
@@ -160,32 +161,41 @@ export class Database {
     did: string,
     collection: string,
     limit: number,
+    reverse: boolean,
     before?: string,
-  ): Promise<unknown[]> {
+    after?: string,
+  ): Promise<{ uri: string; value: unknown }[]> {
     const builder = await this.db
       .createQueryBuilder()
       .select(['record.uri AS uri, record.raw AS raw'])
       .from(AdxRecord, 'record')
       .where('record.did = :did', { did })
       .andWhere('record.collection = :collection', { collection })
-      .orderBy('record.tid', 'DESC')
+      .orderBy('record.tid', reverse ? 'DESC' : 'ASC')
       .limit(limit)
 
     if (before !== undefined) {
-      builder.andWhere('record.tid <= :before', { before })
+      builder.andWhere('record.tid < :before', { before })
     }
+    if (after !== undefined) {
+      builder.andWhere('record.tid > :after', { after })
+    }
+
     const res = await builder.getRawMany()
     return res.map((row) => {
       return {
-        ...JSON.parse(row.raw),
         uri: row.uri,
+        value: JSON.parse(row.raw),
       }
     })
   }
 
   async getRecord(uri: AdxUri): Promise<unknown | null> {
-    const table = this.findTableForCollection(uri.collection)
-    return table.get(uri)
+    const record = await this.db
+      .getRepository(AdxRecord)
+      .findOneBy({ uri: uri.toString() })
+    if (record === null) return null
+    return JSON.parse(record.raw)
   }
 
   findTableForCollection(collection: string) {

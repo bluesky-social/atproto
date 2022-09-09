@@ -38,6 +38,8 @@ const strToInt = z
   })
   .transform((str) => parseInt(str))
 
+const strToBool = z.string().transform((str) => str === 'true' || str === 't')
+
 export const def = {
   string: z.string(),
   cid,
@@ -45,4 +47,5 @@ export const def = {
   did,
   bytes,
   strToInt,
+  strToBool,
 }

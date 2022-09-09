@@ -248,7 +248,7 @@ class AdxRepoCollectionClient {
   async list(
     schema: t.SchemaOpt,
     params?: ht.ListRecordsParams,
-  ): Promise<ht.ListRecordsResponse> {
+  ): Promise<t.ListRecordsResponseValidated> {
     const url = this.repo.pds.url(
       PdsEndpoint.RepoCollection,
       [this.repo.did, this.id],
@@ -264,7 +264,7 @@ class AdxRepoCollectionClient {
       records: resSafe.records.map((record) => {
         const validation = validator.validate(record.value)
         return {
-          key: record.key,
+          uri: record.uri,
           value: record.value,
           valid: validation.valid,
           fullySupported: validation.fullySupported,
@@ -296,7 +296,7 @@ class AdxRepoCollectionClient {
     const validator = getRecordValidator(schema, this.repo.pds.client)
     const validation = validator.validate(resSafe.value)
     return {
-      key: resSafe.key,
+      uri: resSafe.uri,
       value: resSafe.value,
       valid: validation.valid,
       fullySupported: validation.fullySupported,
@@ -309,7 +309,11 @@ class AdxRepoCollectionClient {
   /**
    * Create a new record.
    */
-  async create(schema: t.SchemaOpt, value: any): Promise<AdxUri> {
+  async create(
+    schema: t.SchemaOpt,
+    value: any,
+    validate = true,
+  ): Promise<AdxUri> {
     if (!this.repo.writable) {
       throw new err.WritePermissionError()
     }
@@ -320,7 +324,7 @@ class AdxRepoCollectionClient {
     const url = this.repo.pds.url(
       PdsEndpoint.RepoCollection,
       [this.repo.did, this.id],
-      { verified: true },
+      { validate },
     )
     const res = await axios.post(url, value).catch(toAPIError)
     const { uri } = ht.createRecordResponse.parse(res.data)
@@ -330,7 +334,7 @@ class AdxRepoCollectionClient {
   /**
    * Write the record.
    */
-  async put(schema: t.SchemaOpt, key: string, value: any) {
+  async put(schema: t.SchemaOpt, key: string, value: any, validate = true) {
     if (!this.repo.writable) {
       throw new err.WritePermissionError()
     }
@@ -341,7 +345,7 @@ class AdxRepoCollectionClient {
     const url = this.repo.pds.url(
       PdsEndpoint.RepoRecord,
       [this.repo.did, this.id, key],
-      { verified: true },
+      { validate },
     )
     const res = await axios.put(url, value).catch(toAPIError)
     const { uri } = ht.createRecordResponse.parse(res.data)

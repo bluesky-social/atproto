@@ -628,10 +628,12 @@ export class MST implements DataStore {
     }
   }
 
-  async list(from: string, count: number): Promise<Leaf[]> {
+  async list(count: number, after?: string, before?: string): Promise<Leaf[]> {
     const vals: Leaf[] = []
-    for await (const leaf of this.walkLeavesFrom(from)) {
+    for await (const leaf of this.walkLeavesFrom(after || '')) {
+      if (leaf.key === after) continue
       if (vals.length >= count) break
+      if (before && leaf.key >= before) break
       vals.push(leaf)
     }
     return vals

@@ -27,15 +27,17 @@ export const describeRepoResponse = z.object({
 export type DescribeRepoResponse = z.infer<typeof describeRepoResponse>
 
 export const listRecordsParams = z.object({
-  count: z.number().optional(),
-  from: z.string().optional(),
+  limit: z.union([z.number(), def.common.strToInt]).optional(),
+  before: z.string().optional(),
+  after: z.string().optional(),
+  reverse: def.common.strToBool.optional(),
 })
 export type ListRecordsParams = z.infer<typeof listRecordsParams>
 
 export const listRecordsResponse = z.object({
   records: z.array(
     z.object({
-      key: z.string(),
+      uri: z.string(),
       value: z.any(),
     }),
   ),
@@ -43,7 +45,7 @@ export const listRecordsResponse = z.object({
 export type ListRecordsResponse = z.infer<typeof listRecordsResponse>
 
 export const getRecordResponse = z.object({
-  key: z.string(),
+  uri: z.string(),
   value: z.any(),
 })
 export type GetRecordResponse = z.infer<typeof getRecordResponse>

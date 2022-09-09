@@ -6,6 +6,8 @@ import {
   DescribeRepoResponse,
   listRecordsParams,
   batchWriteParams,
+  ListRecordsResponse,
+  GetRecordResponse,
 } from '@adxp/api'
 import { resolveName, AdxUri, BatchWrite, TID } from '@adxp/common'
 import * as auth from '@adxp/auth'
@@ -53,7 +55,7 @@ router.post('/:did', async (req, res) => {
     }
   }
   await db.setRepoRoot(did, repo.cid)
-  res.status(200).send()
+  res.sendStatus(200)
 })
 
 router.post('/:did/c/:namespace/:dataset', async (req, res) => {
@@ -86,7 +88,7 @@ router.post('/:did/c/:namespace/:dataset', async (req, res) => {
   }
   await db.setRepoRoot(did, repo.cid)
   // @TODO update subscribers
-  res.status(200).send({ uri: uri.toString() })
+  res.json({ uri: uri.toString() })
 })
 
 router.put('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
@@ -119,7 +121,7 @@ router.put('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
   }
   await db.setRepoRoot(did, repo.cid)
   // @TODO update subscribers
-  res.status(200).send({ uri: uri.toString() })
+  res.json({ uri: uri.toString() })
 })
 
 router.delete('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
@@ -131,10 +133,10 @@ router.delete('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
   const repo = await util.loadRepo(res, did, authStore)
   await repo.getCollection(collection).deleteRecord(TID.fromStr(tid))
   const uri = new AdxUri(`${did}/${collection}/${tid.toString()}`)
-  await db.indexRecord(uri, req.body)
+  await db.deleteRecord(uri)
   await db.setRepoRoot(did, repo.cid)
   // @TODO update subscribers
-  res.status(200).send()
+  res.sendStatus(200)
 })
 
 // DESCRIBE REPO
@@ -167,25 +169,44 @@ router.get('/:nameOrDid', async (req, res) => {
   let didDoc: didSdk.DIDDocument
   let nameIsCorrect: boolean | undefined
 
-  if (nameOrDid.startsWith('did:')) {
-    did = nameOrDid
-    didDoc = await resolveDidWrapped(did)
-    name = 'undefined' // TODO: need to decide how username gets published in the did doc
-    if (confirmName) {
-      const namesDeclaredDid = await resolveNameWrapped(name)
-      nameIsCorrect = did === namesDeclaredDid
-    }
-  } else {
-    name = nameOrDid
-    did = await resolveNameWrapped(name)
-    didDoc = await resolveDidWrapped(did)
-    if (confirmName) {
-      const didsDeclaredName = 'undefined' // TODO: need to decide how username gets published in the did doc
-      nameIsCorrect = name === didsDeclaredName
-    }
-  }
+  // @TODO add back once we have a did network
+  // if (nameOrDid.startsWith('did:')) {
+  //   did = nameOrDid
+  //   didDoc = await resolveDidWrapped(did)
+  //   name = 'undefined' // TODO: need to decide how username gets published in the did doc
+  //   if (confirmName) {
+  //     const namesDeclaredDid = await resolveNameWrapped(name)
+  //     nameIsCorrect = did === namesDeclaredDid
+  //   }
+  // } else {
+  //   name = nameOrDid
+  //   did = await resolveNameWrapped(name)
+  //   didDoc = await resolveDidWrapped(did)
+  //   if (confirmName) {
+  //     const didsDeclaredName = 'undefined' // TODO: need to decide how username gets published in the did doc
+  //     nameIsCorrect = name === didsDeclaredName
+  //   }
+  // }
 
   const db = util.getDB(res)
+  if (nameOrDid.startsWith('did:')) {
+    did = nameOrDid
+    const found = await db.getUsernameForDid(did)
+    if (found === null) {
+      throw new ServerError(404, 'Could not find username for did')
+    }
+    name = found
+  } else {
+    name = nameOrDid
+    const found = await db.getDidForUsername(name)
+    if (found === null) {
+      throw new ServerError(404, 'Could not find did for username')
+    }
+    did = found
+  }
+  didDoc = {} as any
+  nameIsCorrect = true
+
   const collections = await db.listCollectionsForDid(did)
 
   const resBody: DescribeRepoResponse = {
@@ -195,7 +216,6 @@ router.get('/:nameOrDid', async (req, res) => {
     collections,
     nameIsCorrect,
   }
-  res.status(200)
   res.json(resBody)
 })
 
@@ -205,14 +225,31 @@ router.get('/:nameOrDid', async (req, res) => {
 router.get('/:nameOrDid/c/:namespace/:dataset', async (req, res) => {
   const { nameOrDid, namespace, dataset } = req.params
   const coll = namespace + '/' + dataset
-  const { count = 50, from } = util.checkReqBody(req.query, listRecordsParams)
+  const {
+    limit = 50,
+    before,
+    after,
+    reverse = false,
+  } = util.checkReqBody(req.query, listRecordsParams)
+
   const db = util.getDB(res)
   const did = nameOrDid.startsWith('did:')
     ? nameOrDid
-    : await resolveNameWrapped(nameOrDid)
+    : await db.getDidForUsername(nameOrDid)
+  if (!did) {
+    throw new ServerError(404, `Could not find did for ${nameOrDid}`)
+  }
 
-  const records = await db.listRecordsForCollection(did, coll, count, from)
-  res.status(200).send(records)
+  const records = await db.listRecordsForCollection(
+    did,
+    coll,
+    limit,
+    reverse,
+    before,
+    after,
+  )
+
+  res.json({ records } as ListRecordsResponse)
 })
 
 // GET RECORD
@@ -232,7 +269,7 @@ router.get('/:nameOrDid/c/:namespace/:dataset/r/:tid', async (req, res) => {
   if (record === null) {
     throw new ServerError(404, `Could not locate record: ${uri}`)
   }
-  res.status(200).send(record)
+  res.json({ uri: uri.toString(), value: record } as GetRecordResponse)
 })
 
 export default router
