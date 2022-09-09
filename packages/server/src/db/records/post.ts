@@ -5,8 +5,6 @@ import {
   Entity,
   Column,
   PrimaryColumn,
-  Repository,
-  In,
   UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
@@ -44,11 +42,41 @@ export class PostIndex {
   indexedAt: Date
 }
 
+@Entity({ name: `${tableName}_entities` })
+export class PostEntityIndex {
+  @PrimaryColumn('varchar')
+  post_uri: string
+
+  @Column('int')
+  startIndex: number
+
+  @Column('int')
+  endIndex: number
+
+  @Column('varchar')
+  type: string
+
+  @Column('varchar')
+  value: string
+}
+
 const getFn =
-  (repo: Repository<PostIndex>) =>
+  (db: DataSource) =>
   async (uri: AdxUri): Promise<Post.Record | null> => {
-    const found = await repo.findOneBy({ uri: uri.toString() })
-    return found === null ? null : translateDbObj(found)
+    const found = await db
+      .getRepository(PostIndex)
+      .findOneBy({ uri: uri.toString() })
+    if (found === null) return null
+    const obj = translateDbObj(found)
+    const entities = await db
+      .getRepository(PostEntityIndex)
+      .findBy({ post_uri: uri.toString() })
+    obj.entities = entities.map((row) => ({
+      index: [row.startIndex, row.endIndex],
+      type: row.type,
+      value: row.value,
+    }))
+    return obj
   }
 
 const validator = schemas.createRecordValidator(schemaId)
@@ -57,11 +85,24 @@ const isValidSchema = (obj: unknown): obj is Post.Record => {
 }
 
 const setFn =
-  (repo: Repository<PostIndex>) =>
+  (db: DataSource) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${schemaId}`)
     }
+    const entityIndex = db.getRepository(PostEntityIndex)
+    const entries = (obj.entities || []).map((entity) => {
+      const entry = new PostEntityIndex()
+      entry.post_uri = uri.toString()
+      entry.startIndex = entity.index[0]
+      entry.endIndex = entity.index[1]
+      entry.type = entity.type
+      entry.value = entity.value
+      entry.post_uri = uri.toString()
+      return entry
+    })
+    await entityIndex.save(entries)
+
     const post = new PostIndex()
     post.uri = uri.toString()
     post.creator = uri.host
@@ -70,13 +111,14 @@ const setFn =
     post.replyRoot = obj.reply?.root
     post.replyParent = obj.reply?.parent
 
-    await repo.save(post)
+    await db.getRepository(PostIndex).save(post)
   }
 
 const deleteFn =
-  (repo: Repository<PostIndex>) =>
+  (db: DataSource) =>
   async (uri: AdxUri): Promise<void> => {
-    await repo.delete({ uri: uri.toString() })
+    await db.getRepository(PostIndex).delete({ uri: uri.toString() })
+    await db.getRepository(PostEntityIndex).delete({ post_uri: uri.toString() })
   }
 
 const translateDbObj = (dbObj: PostIndex): Post.Record => {
@@ -100,10 +142,10 @@ export const makePlugin = (
   return {
     collection,
     tableName,
-    get: getFn(repository),
+    get: getFn(db),
     isValidSchema,
-    set: setFn(repository),
-    delete: deleteFn(repository),
+    set: setFn(db),
+    delete: deleteFn(db),
     translateDbObj,
   }
 }

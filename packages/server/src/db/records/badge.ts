@@ -1,13 +1,11 @@
 import { AdxUri } from '@adxp/common'
 import { Badge } from '@adxp/microblog'
-import { TagAssertion } from '@adxp/microblog/src/types/Badge'
 import {
   DataSource,
   Entity,
   Column,
   PrimaryColumn,
   Repository,
-  In,
   UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
@@ -68,7 +66,7 @@ const setFn =
     badge.creator = uri.host
     badge.subject = obj.subject
     badge.assertionType = obj.assertion.type
-    badge.assertionTag = (obj.assertion as TagAssertion).tag
+    badge.assertionTag = (obj.assertion as Badge.TagAssertion).tag
     badge.createdAt = obj.createdAt
     await repo.save(badge)
   }

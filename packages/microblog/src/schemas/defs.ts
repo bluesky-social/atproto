@@ -829,6 +829,29 @@ export const schemas = [{
         "maxLength": 256
       },
       "entities": {
+        "$ref": "#/$defs/entity"
+      },
+      "reply": {
+        "type": "object",
+        "required": [
+          "root"
+        ],
+        "properties": {
+          "root": {
+            "type": "string"
+          },
+          "parent": {
+            "type": "string"
+          }
+        }
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "$defs": {
+      "entity": {
         "type": "array",
         "items": {
           "type": "object",
@@ -851,26 +874,6 @@ export const schemas = [{
           }
         }
       },
-      "reply": {
-        "type": "object",
-        "required": [
-          "root"
-        ],
-        "properties": {
-          "root": {
-            "type": "string"
-          },
-          "parent": {
-            "type": "string"
-          }
-        }
-      },
-      "createdAt": {
-        "type": "string",
-        "format": "date-time"
-      }
-    },
-    "$defs": {
       "textSlice": {
         "type": "array",
         "items": [

@@ -1,7 +1,7 @@
 import { Badge, Follow, Like, Post, Profile, Repost } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { DbRecordPlugin, ViewFn } from './types'
-import postPlugin, { PostIndex } from './records/post'
+import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
 import likePlugin, { LikeIndex } from './records/like'
 import followPlugin, { FollowIndex } from './records/follow'
 import badgePlugin, { BadgeIndex } from './records/badge'
@@ -54,6 +54,7 @@ export class Database {
         RepoRoot,
         AdxRecord,
         PostIndex,
+        PostEntityIndex,
         LikeIndex,
         FollowIndex,
         BadgeIndex,

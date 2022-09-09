@@ -1,6 +1,7 @@
 import { AdxUri } from '@adxp/common'
 import { AdxClient, AdxPdsClient, AdxRepoClient } from '@adxp/api'
 import {
+  Post,
   FeedView,
   LikedByView,
   PostThreadView,
@@ -51,12 +52,13 @@ export class MicroblogClient {
     return uri
   }
 
-  async createPost(text: string): Promise<AdxUri> {
+  async createPost(text: string, entities?: Post.Entity[]): Promise<AdxUri> {
     const uri = await this.repo
       .collection('bsky/posts')
       .create('blueskyweb.xyz:Post', {
         $type: 'blueskyweb.xyz:Post',
         text,
+        entities,
         createdAt: new Date().toISOString(),
       })
     return uri

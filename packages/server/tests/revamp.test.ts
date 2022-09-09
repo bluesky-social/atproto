@@ -1,5 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import { MicroblogClient } from '@adxp/microblog'
+import { MicroblogClient, Post } from '@adxp/microblog'
 import { users, posts, replies } from './test-data'
 
 const url = 'http://localhost:2583'
@@ -43,7 +43,13 @@ describe('server', () => {
     const bob0 = await bob.createPost(posts.bob[0])
     const carol0 = await carol.createPost(posts.carol[0])
     const dan0 = await dan.createPost(posts.dan[0])
-    const dan1 = await dan.createPost(posts.dan[1])
+    const dan1 = await dan.createPost(posts.dan[1], [
+      {
+        index: [0, 18],
+        type: 'mention',
+        value: users.carol.did,
+      } as any, //@TODO remove any
+    ])
     const alice1 = await alice.createPost(posts.alice[1])
     const bob1 = await bob.createPost(posts.bob[1])
     const alice2 = await alice.createPost(posts.alice[2])
@@ -139,15 +145,14 @@ describe('server', () => {
 
   it('fetches timeline', async () => {
     const aliceFeed: any = await alice.feedView()
-    expect(aliceFeed.length).toBe(8)
+    expect(aliceFeed.length).toBe(7)
     expect(aliceFeed[0].record.text).toEqual(replies.carol[0])
     expect(aliceFeed[1].record.text).toEqual(replies.bob[0])
     expect(aliceFeed[2].record.text).toEqual(posts.bob[1])
     expect(aliceFeed[3].record.text).toEqual(posts.dan[1])
-    expect(aliceFeed[4].record.text).toEqual(posts.dan[1])
-    expect(aliceFeed[5].record.text).toEqual(posts.dan[0])
-    expect(aliceFeed[6].record.text).toEqual(posts.carol[0])
-    expect(aliceFeed[7].record.text).toEqual(posts.bob[0])
+    expect(aliceFeed[4].record.text).toEqual(posts.dan[0])
+    expect(aliceFeed[5].record.text).toEqual(posts.carol[0])
+    expect(aliceFeed[6].record.text).toEqual(posts.bob[0])
     expect(aliceFeed[3].repostCount).toEqual(1)
 
     const bobFeed: any = await bob.feedView()

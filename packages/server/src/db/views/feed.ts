@@ -113,6 +113,7 @@ export const viewFn =
         { requester },
       )
       .orderBy('post.createdAt', 'DESC')
+      .groupBy('post.uri')
 
     if (before !== undefined) {
       builder.andWhere('post.createdAt < :before', { before })
