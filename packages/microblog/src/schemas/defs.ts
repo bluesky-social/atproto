@@ -1359,8 +1359,6 @@ export const schemas = [{
     "required": [
       "did",
       "name",
-      "displayName",
-      "description",
       "followersCount",
       "followsCount",
       "postsCount",

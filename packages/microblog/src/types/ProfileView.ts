@@ -5,8 +5,8 @@ export interface Params {
 export interface Response {
   did: string;
   name: string;
-  displayName: string;
-  description: string;
+  displayName?: string;
+  description?: string;
   followersCount: number;
   followsCount: number;
   postsCount: number;
