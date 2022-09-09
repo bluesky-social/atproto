@@ -9,7 +9,7 @@ export interface Response {
   repostedBy: {
     did: string;
     name: string;
-    displayName: string;
+    displayName?: string;
     createdAt?: string;
     indexedAt: string;
   }[];

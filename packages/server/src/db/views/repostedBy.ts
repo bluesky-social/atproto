@@ -1,11 +1,11 @@
 import { RepostedByView } from '@adxp/microblog'
 import { DataSource } from 'typeorm'
 import { AdxRecord } from '../record'
-import { LikeIndex } from '../records/like'
 import { ProfileIndex } from '../records/profile'
 import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { DbViewPlugin } from '../types'
+import { RepostIndex } from '../records/repost'
 
 const viewId = 'blueskyweb.xyz:RepostedByView'
 const validator = schemas.createViewValidator(viewId)
@@ -30,8 +30,8 @@ export const viewFn =
         'repost.createdAt AS createdAt',
         'record.indexedAt AS indexedAt',
       ])
-      .from(LikeIndex, 'repost')
-      .leftJoin(AdxRecord, 'record', 'like.uri = record.uri')
+      .from(RepostIndex, 'repost')
+      .leftJoin(AdxRecord, 'record', 'repost.uri = record.uri')
       .leftJoin(UserDid, 'user', 'repost.creator = user.did')
       .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
       .where('repost.subject = :uri', { uri })
@@ -43,7 +43,15 @@ export const viewFn =
     if (limit !== undefined) {
       builder.limit(limit)
     }
-    const repostedBy = await builder.getRawMany()
+    const repostedByRes = await builder.getRawMany()
+
+    const repostedBy = repostedByRes.map((row) => ({
+      did: row.did,
+      name: row.name,
+      displayName: row.displayName || undefined,
+      createdAt: row.createdAt,
+      indexedAt: row.indexedAt,
+    }))
 
     return {
       uri,

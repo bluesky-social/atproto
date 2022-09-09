@@ -668,7 +668,6 @@ export const schemas = [{
           "required": [
             "did",
             "name",
-            "displayName",
             "indexedAt"
           ],
           "properties": {
@@ -1592,7 +1591,6 @@ export const schemas = [{
           "required": [
             "did",
             "name",
-            "displayName",
             "indexedAt"
           ],
           "properties": {

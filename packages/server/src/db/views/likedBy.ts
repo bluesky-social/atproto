@@ -43,7 +43,15 @@ const viewFn =
     if (limit !== undefined) {
       builder.limit(limit)
     }
-    const likedBy = await builder.getRawMany()
+    const likedByRes = await builder.getRawMany()
+
+    const likedBy = likedByRes.map((row) => ({
+      did: row.did,
+      name: row.name,
+      displayName: row.displayName || undefined,
+      createdAt: row.createdAt,
+      indexedAt: row.indexedAt,
+    }))
 
     return {
       uri,

@@ -1,6 +1,7 @@
 import { AdxUri } from '@adxp/common'
 import { MicroblogClient, Post } from '@adxp/microblog'
 import { users, posts, replies } from './test-data'
+import util from 'util'
 
 const url = 'http://localhost:2583'
 const alice = new MicroblogClient(url, users.alice.did)
@@ -79,6 +80,38 @@ describe('server', () => {
 
   it('reposts a post', async () => {
     await carol.repost(danPosts[1])
+  })
+
+  it('fetches liked by view', async () => {
+    const view = await alice.likedByView(alicePosts[1])
+    expect(view.uri).toEqual(alicePosts[1].toString())
+    expect(view.likedBy.length).toBe(3)
+    const bobLike = view.likedBy.find((l) => l.name === users.bob.name)
+    expect(bobLike?.did).toEqual(users.bob.did)
+    expect(bobLike?.displayName).toEqual(users.bob.displayName)
+    expect(bobLike?.createdAt).toBeDefined()
+    expect(bobLike?.indexedAt).toBeDefined()
+    const carolLike = view.likedBy.find((l) => l.name === users.carol.name)
+    expect(carolLike?.did).toEqual(users.carol.did)
+    expect(carolLike?.displayName).toEqual(users.carol.displayName)
+    expect(carolLike?.createdAt).toBeDefined()
+    expect(carolLike?.indexedAt).toBeDefined()
+    const danLike = view.likedBy.find((l) => l.name === users.dan.name)
+    expect(danLike?.did).toEqual(users.dan.did)
+    expect(danLike?.displayName).toEqual(users.dan.displayName)
+    expect(danLike?.createdAt).toBeDefined()
+    expect(danLike?.indexedAt).toBeDefined()
+  })
+
+  it('fetches reposted by view', async () => {
+    const view = await alice.repostedByView(danPosts[1])
+    expect(view.uri).toEqual(danPosts[1].toString())
+    expect(view.repostedBy.length).toBe(1)
+    const repost = view.repostedBy[0]
+    expect(repost.did).toEqual(users.carol.did)
+    expect(repost.displayName).toEqual(users.carol.displayName)
+    expect(repost.createdAt).toBeDefined()
+    expect(repost.indexedAt).toBeDefined()
   })
 
   it('fetches followers', async () => {
@@ -197,14 +230,4 @@ describe('server', () => {
     expect(thread.replies[1].parent.record.text).toEqual(posts.alice[1])
     expect(thread.replies[1].replies[0].record.text).toEqual(replies.alice[0])
   })
-
-  // it('fetches liked by view', async () => {
-  //   const view = await alice.getLikesForPost(postUri)
-  //   console.log(view)
-  // })
-
-  // it('fetches liked by view', async () => {
-  //   const view = await alice.getLikesForPost(postUri)
-  //   console.log(view)
-  // })
 })

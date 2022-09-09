@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node ./build.js",
     "start": "node dist/index.js",
-    "test": "jest tests/crud.test.ts",
+    "test": "jest tests/views.test.ts",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
