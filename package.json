@@ -26,6 +26,7 @@
     "babel-jest": "^28.1.2",
     "esbuild": "^0.14.48",
     "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.5.0",
     "jest": "^28.1.2",
     "lerna": "^4.0.0",
     "nodemon": "^2.0.19",

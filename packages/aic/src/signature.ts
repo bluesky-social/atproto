@@ -1,10 +1,10 @@
 import * as uint8arrays from 'uint8arrays'
-import { Document, ErrorMessage, Asymmetric } from './types'
+import { Document, Asymmetric } from './types'
 
 export const canonicaliseDocumentToUint8Array = (
   document: Document,
 ): Uint8Array => {
-  // @TODO canonicalise json/cbor?
+  // @TODO canonicalize json/cbor?
   // JSON Canonicalization Scheme (JCS)
   // https://datatracker.ietf.org/doc/html/rfc8785
   return uint8arrays.fromString(JSON.stringify(document))
@@ -12,20 +12,20 @@ export const canonicaliseDocumentToUint8Array = (
 
 export const sign = async (doc: Document, key: Asymmetric) => {
   if (doc.key !== key.did()) {
-    throw Error('Info: passed in secret key and did do not match')
+    throw new Error('Info: passed in secret key and did do not match')
   }
-  doc['sig'] = ''
-  const data = canonicaliseDocumentToUint8Array(doc)
+  const unsignedDoc = { ...doc, sig: '' }
+  const data = canonicaliseDocumentToUint8Array(unsignedDoc)
   const sig = await key.sign(data)
   // https://github.com/multiformats/multihash
-  doc['sig'] = 'z' + uint8arrays.toString(sig, 'base58btc')
+  doc.sig = 'z' + uint8arrays.toString(sig, 'base58btc')
   return doc
 }
 
 export const validateSig = async (
   doc: Document,
   key: Asymmetric,
-): Promise<boolean | ErrorMessage> => {
+): Promise<boolean> => {
   if (
     typeof doc.sig !== 'string' ||
     typeof doc.key !== 'string' ||
@@ -34,15 +34,15 @@ export const validateSig = async (
     return false
   }
 
-  const doc_copy = JSON.parse(JSON.stringify(doc))
-  if (doc_copy.sig[0] !== 'z') {
+  if (doc.sig[0] !== 'z') {
     // check the multibase https://github.com/multiformats/multibase
-    throw Error("signatures must be 'z'+ base58btc") // maby just retuen false?
+    throw new Error("signatures must be 'z'+ base58btc") // maybe just return false?
   }
-  doc_copy.sig = ''
-  const data = canonicaliseDocumentToUint8Array(doc_copy)
 
+  const unsignedDoc = { ...doc, sig: '' }
+  const canonicalDoc = canonicaliseDocumentToUint8Array(unsignedDoc)
   const sig = uint8arrays.fromString(doc.sig.slice(1), 'base58btc')
-  let valid = await key.verifyDidSig(doc.key, data, sig)
+
+  const valid = await key.verifyDidSig(doc.key, canonicalDoc, sig)
   return valid // @TODO check that the key is in the did doc
 }

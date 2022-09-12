@@ -1,7 +1,7 @@
 import { sha256 } from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
 import { canonicaliseDocumentToUint8Array } from './signature'
-import { Document, TidString } from './types'
+import { Document } from './types'
 
 const S32_CHAR = '234567abcdefghijklmnopqrstuvwxyz'
 

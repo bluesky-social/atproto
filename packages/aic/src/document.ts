@@ -1,7 +1,6 @@
 import { sign, validateSig } from './signature'
 import { pid } from './pid'
 import {
-  ErrorMessage,
   Value,
   TidString,
   DidKeyString,
@@ -16,6 +15,7 @@ import {
 export { pid, sign, validateSig }
 
 /*
+  @TODO move this into tests
   Example identity tick
   {
     "tid": "3j5r-ts5-ojpm-2c",
@@ -47,7 +47,7 @@ export { pid, sign, validateSig }
     "key": "did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh",
     "sig": "z3naShLa1KV5ZV5raHbuAAC2zjjyBbTp4htmCA42GKVLDQi7kSnFCteg7n5ap5uJMpsjdxLgL8E6kRR9cqyt6zqK6"
   }
-makes
+  makes
   {
     'adx/recovery_keys': [ 'did:key:zDnaeYHbbWiaCwAXvHXRyVqENDv8Sr3fwHW8P5eakkz4MqsTa'],
     id: 'did:aic:zrr5lxhs4rjlowv5',
@@ -57,38 +57,39 @@ makes
 
 export const updateTick = async (
   did: string, // the did:aic: being updated
-  tid: TidString, // the consenus time of the tick's generation
+  tid: TidString, // the consensus time of the tick's generation
   candidateDiff: Diff | Document | null, // null when only updating tid
-  stored_tick: Tick | null, // null when there is not db entry (did init)
+  storedTick: Tick | null, // null when there is not db entry (did init)
   key: Asymmetric, // the consortium passes in the key
-): Promise<Tick | ErrorMessage> => {
+): Promise<Tick> => {
   // @TODO validate that tid > all tids in the diffs
-  if (stored_tick === null) {
+  if (storedTick === null) {
     // this is the  initial registration of a did:aic
     return registerNewDid(did, tid, candidateDiff, key)
   }
 
-  // since stored_tick is not null this is an update
+  // since storedTick is not null this is an update
   // of a registered did:aic
-  if (!(await validateSig(stored_tick, key))) {
-    // this means the consortium data base has been corupted
-    return { error: 'bad signature: stored tick' }
+  if (!(await validateSig(storedTick, key))) {
+    // this means the consortium database has been corrupted
+    throw new Error('bad signature: stored tick')
   }
-  if (stored_tick.key !== key.did()) {
-    // the consortium should not update a tick signed by a difrent consortium
+  if (storedTick.key !== key.did()) {
+    // the consortium should not update a tick signed by a different consortium
     // this logic may get more complicated if the consortium is mid key rotation
-    return { error: 'mismatch: consortium key, stored tick key' }
+    throw new Error('mismatch: consortium key, stored tick key')
   }
-  if (stored_tick.did !== did) {
-    // databace index is coruptend
-    return {
-      error: 'stored tick not for did',
+  if (storedTick.did !== did) {
+    // database index is corrupted
+    const error = new Error('stored tick not for did')
+    Object.assign(error, {
       did: did,
-      stored_tick_did: stored_tick.did,
-    }
+      storedTickDid: storedTick.did,
+    })
+    throw error
   }
-  // stored_tick is now validated by consortium key and url
-  return updateExistingValidatedDid(tid, candidateDiff, stored_tick, key)
+  // storedTick is now validated by consortium key and url
+  return updateExistingValidatedDid(tid, candidateDiff, storedTick, key)
 }
 
 const registerNewDid = async (
@@ -96,11 +97,11 @@ const registerNewDid = async (
   tid: TidString,
   candidateDiff: Document | null,
   key: Asymmetric,
-): Promise<Tick | ErrorMessage> => {
+): Promise<Tick> => {
   if (candidateDiff === null) {
     // since candidateDiff is null
-    // this is a request for a fresh tick of a non-exixtant did
-    // return a signed affirmation that the did dose not exist
+    // this is a request for a fresh tick of a non-existent did
+    // return a signed affirmation that the did does not exist
     return (await sign(
       {
         tid: tid,
@@ -112,17 +113,18 @@ const registerNewDid = async (
       key,
     )) as Tick
   }
-  // since the candidateDiff is not null it is the inital state
-  // calulate the did:aic from the inital state if they match make the inital tick
-  const calculated_did = `did:aic:${await pid(candidateDiff)}`
-  if (did !== calculated_did) {
-    // client must caulate did corectly to acsept, mostly an integraty check
-    return {
+  // since the candidateDiff is not null it is the initial state
+  // calculate the did:aic from the initial state if they match make the initial tick
+  const calculatedDid = `did:aic:${await pid(candidateDiff)}`
+  if (did !== calculatedDid) {
+    // client must calculate did correctly to accept, mostly an integrity check
+    const error = new Error('calculated did does not match url')
+    Object.assign(error, {
       tid: tid,
       did: did,
-      error: 'calculated did dose not match url',
-      calculated_did: calculated_did,
-    }
+      calculatedDid: calculatedDid,
+    })
+    throw error
   }
   const diffs: Diffs = {}
   diffs[tid] = candidateDiff
@@ -130,19 +132,19 @@ const registerNewDid = async (
 }
 
 const updateExistingValidatedDid = async (
-  tid: TidString, // the consenus time of the tick's generation
+  tid: TidString, // the consensus time of the tick's generation
   candidateDiff: Diff | Document | null, // null when only updating tid
-  stored_tick: Tick, // null when there is not db entry (did init)
+  storedTick: Tick, // null when there is not db entry (did init)
   key: Asymmetric, // the consortium passes in the key
-): Promise<Tick | ErrorMessage> => {
+): Promise<Tick> => {
   if (candidateDiff === null) {
     // nothing to update return the old tick but with new tid
     return (await sign(
       {
         tid: tid,
-        did: stored_tick.did,
-        diffs: stored_tick.diffs,
-        key: stored_tick.key,
+        did: storedTick.did,
+        diffs: storedTick.diffs,
+        key: storedTick.key,
         sig: '',
       },
       key,
@@ -151,35 +153,36 @@ const updateExistingValidatedDid = async (
   // there is a validated stored_tick and a candidateDiff
   // this is a update of the did document
   if (!(await validateSig(candidateDiff, key))) {
-    return { error: 'diff has bad signature' }
+    throw new Error('diff has bad signature')
   }
   if (
     'key' in candidateDiff &&
     typeof candidateDiff.key === 'string' &&
-    !validateKeyInDocForDiffs(candidateDiff.key, stored_tick.diffs)
+    !validateKeyInDocForDiffs(candidateDiff.key, storedTick.diffs)
   ) {
-    return { error: 'diff signed by key not in did doc' }
+    throw new Error('diff signed by key not in did doc')
   }
   // there is a validated stored_tick and a valid candidateDiff
-  const diffs: Diffs = stored_tick.diffs
+  const diffs: Diffs = storedTick.diffs
   diffs[tid] = candidateDiff
   return tickFromDiffs(diffs, tid, key)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const validateKeyInDocForDiffs = async (key: DidKeyString, diffs: Diffs) => {
   return true // @TODO write this
-  // the 72 hour key prioraty window gos here :)
+  // the 72 hour key priority window goes here :)
 }
 
 export const tickFromDiffs = async (
   diffs: Diffs,
   tid: TidString,
   key: Asymmetric,
-): Promise<Tick | ErrorMessage> => {
-  // This function dose not validate the diffs remember to do that first
+): Promise<Tick> => {
+  // This function does not validate the diffs remember to do that first
   const tids = Object.keys(diffs).sort()
   if (tids.length < 1) {
-    return { error: 'no diffs' }
+    throw new Error('no diffs')
   }
   const initialState = diffs[tids[0]]
   return (await sign(
@@ -188,7 +191,7 @@ export const tickFromDiffs = async (
       did: 'did:aic:' + (await pid(initialState)),
       diffs,
       key: key.did(),
-      sig: '', // sig will be filld in by call to sign
+      sig: '', // sig will be filled-in by call to sign()
     },
     key,
   )) as Tick
@@ -213,13 +216,13 @@ const keyIn = (
   return (
     keyList in doc &&
     Array.isArray(doc[keyList]) &&
-    (doc[keyList] as String[]).includes(didKey)
+    (doc[keyList] as string[]).includes(didKey)
   )
 }
 
 const patchesKeysOnly = (patches: Patch[]): boolean => {
   // check that the diff.patches[*][2]
-  // the recovey key is only authorised to update account or recovery keys
+  // the recovery key is only authorized to update account or recovery keys
   // only changes 'adx/account_keys' or 'adx/recovery_keys'
   return patches.every((patch: Patch) => {
     const pathSegment = patch[1][0]
@@ -237,16 +240,16 @@ export const tickToDidDoc = async (
 ): Promise<Document> => {
   const valid = await validateSig(tick, key)
   if (!valid) {
-    return { error: 'tick has bad signature' }
+    throw new Error('tick has bad signature')
   }
   if (tick.key !== consortiumDid) {
-    return { error: 'not signed by consortium' }
+    throw new Error('not signed by consortium')
   }
   const doc = await diffsToDidDoc(tick.diffs, key, asOf)
   if (doc !== null) {
     return doc
   }
-  return { error: 'malformed diffs' }
+  throw new Error('malformed diffs')
 }
 
 export const diffsToDidDoc = async (
@@ -254,8 +257,8 @@ export const diffsToDidDoc = async (
   key: Asymmetric,
   asOf?: TidString,
 ) => {
-  // the consortium dose not build doc for the client
-  // but it still needs to build the docs to authorise_keys as of the time the diff was signed
+  // the consortium does not build doc for the client
+  // but it still needs to build the docs to authorize keys as of the time the diff was signed
   if (typeof diffs !== 'object') {
     return null
   }
@@ -266,23 +269,23 @@ export const diffsToDidDoc = async (
   let last = tids[0]
   let doc = JSON.parse(JSON.stringify(diffs[last])) as Document // the first tid is the initial state
 
-  // add the id feild
-  doc['id'] = 'did:aic:' + (await pid(diffs[last])) // we calculate and add the id automaticly
+  // add the id field
+  doc['id'] = 'did:aic:' + (await pid(diffs[last])) // we calculate and add the id automatically
 
   for (const tid of tids.slice(1)) {
     const diff = diffs[tid] as Diff // after the first the rest are Diffs
     if (!(await validateSig(diff, key))) {
-      console.log('INFO: ignoreing: bad sig', diff)
+      console.log('INFO: ignoring: bad sig', diff)
       continue // not valid ignore it
     }
     if (!authoriseKey(doc, diff)) {
-      console.log('INFO: ignoreing: bad key')
+      console.log('INFO: ignoring: bad key')
       continue // not valid ignore it
     }
 
     const { prev, patches } = diff
     if (prev !== last) {
-      console.log('INFO: ignoreing: fork')
+      console.log('INFO: ignoring: fork')
       continue
     }
     if (asOf && tid > asOf) {
@@ -296,24 +299,23 @@ export const diffsToDidDoc = async (
 
 const patch = (doc: Document, patches: Patch[]): Document => {
   // @TODO this needs more testing
-  const new_doc = JSON.parse(JSON.stringify(doc)) as Document
+  const updatedDoc = JSON.parse(JSON.stringify(doc)) as Document
   for (const p of patches) {
     const [op, path, value] = p
-    let node = new_doc as Value
+    let node = updatedDoc as Value
     for (const segment of path.slice(0, -1)) {
       if (op !== 'put' && op !== 'del') {
-        throw Error("unrecognised op")
+        throw new Error('unrecognised op')
       }
       if (typeof node !== 'object' || node === null) {
         if (op === 'put') {
           node = {}
         } else {
-          return new_doc
+          return updatedDoc
         }
       }
       if (Array.isArray(node) || typeof segment === 'number') {
-        console.log('Warning: patch dose not support Array traversal')
-        return new_doc
+        throw new Error('patch does not support array traversal')
       }
       if (op === 'put' && !(segment in node)) {
         node[segment] = {}
@@ -325,12 +327,11 @@ const patch = (doc: Document, patches: Patch[]): Document => {
       if (op === 'put') {
         node = {}
       } else {
-        return new_doc
+        return updatedDoc
       }
     }
     if (Array.isArray(node) || typeof segment === 'number') {
-      console.log('Warning: patch dose not support Array traversal')
-      return new_doc
+      throw new Error('patch does not support array traversal')
     }
     if (op === 'put') {
       node[segment] = value
@@ -339,5 +340,5 @@ const patch = (doc: Document, patches: Patch[]): Document => {
       delete node[segment]
     }
   }
-  return new_doc
+  return updatedDoc
 }

@@ -1,40 +1,9 @@
 import express from 'express'
 import { tid } from './tid'
-import { updateTick } from './document'
+import { tickToDidDoc, updateTick } from './document'
 import { sign } from './signature'
-import * as crypto from '@adxp/crypto'
-import { z } from 'zod'
+import { Locals } from './server'
 
-// Note: do not use the dev/test key in production
-//       pull the prod key from the secret store
-export const CONSORTIUM_KEYPAIR = crypto.EcdsaKeypair.import(
-  {
-    // did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh
-    key_ops: ['sign'],
-    ext: true,
-    kty: 'EC',
-    x: 'zn_OWx4zJM5zy8E_WUAJH9OS75K5t6q74D7lMf7AmnQ',
-    y: 'trzc_f9i_nOuYRCLMyXxBcpc3OVlylmxdESQ0zdKHeQ',
-    crv: 'P-256',
-    d: 'Ii__doqqQ5YYZLfKh-LSh1Vm6AqCWHGMrBTDYKaEWfU',
-  },
-  {
-    exportable: true,
-  },
-)
-
-let consortiumCrypto = async () => {
-  let key = await CONSORTIUM_KEYPAIR
-  return {
-    did: (): string => {
-      return key.did()
-    },
-    sign: async (msg: Uint8Array): Promise<Uint8Array> => {
-      return await key.sign(msg)
-    },
-    verifyDidSig: crypto.verifyDidSig,
-  }
-}
 // const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()])
 // type Literal = z.infer<typeof literalSchema>
 // type Json = Literal | { [key: string]: Json } | Json[]
@@ -62,92 +31,105 @@ const router = express.Router()
 // router.use('/favicon.ico', express.static('static/favicon.ico'))
 router.use(express.static('static'))
 
+const pidMatch = '[234567abcdefghijklmnopqrstuvwxyz]{16}'
+
 router.all('/tid', async (req, res) => {
+  const { crypto } = res.locals as Locals
   res.send(
     await sign(
       {
         tid: tid(),
-        key: (await consortiumCrypto()).did(),
+        key: crypto.did(),
         sig: '',
       },
-      await consortiumCrypto(),
+      crypto,
     ),
   )
 })
 
-router.get(
-  '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
-  async function (req, res) {
-    // AIC get
-    //
-    // Retreve the latest tick from the databace
-    // pass the tick and curent tid to the aic lib for signing
-    const did = 'did:aic:' + req.params.pid
-    const row = await res.locals.db.tickForDid(did) // retreve latest tick
-    const prev_tick = row ? JSON.parse(row.tick) : null
-    const signedDoc = await updateTick(
-      did,
-      tid(),
-      null, // candidateDiff: this is a get no updates
-      prev_tick,
-      await consortiumCrypto(),
+// Get a DID doc
+router.get(`/:pid(${pidMatch})`, async function (req, res) {
+  const { db, crypto } = res.locals as Locals
+
+  const did = 'did:aic:' + req.params.pid
+  const row = await db.tickForDid(did) // retrieve latest tick
+  const prevTick = row ? JSON.parse(row.tick) : null
+  const now = tid()
+  const signedDoc = await updateTick(
+    did,
+    now,
+    null, // candidateDiff: this is a get no updates
+    prevTick,
+    crypto,
+  )
+
+  const didDoc = await tickToDidDoc(signedDoc, crypto.did(), crypto, now)
+
+  res.type('json').send(didDoc)
+})
+
+// Get a DID tick
+router.get(`/:pid(${pidMatch})/tick`, async function (req, res) {
+  const { db, crypto } = res.locals as Locals
+  // AIC get
+  //
+  // Retrieve the latest tick from the database
+  // pass the tick and current tid to the aic lib for signing
+  const did = 'did:aic:' + req.params.pid
+  const row = await db.tickForDid(did) // retrieve latest tick
+  const prevTick = row ? JSON.parse(row.tick) : null
+  const signedDoc = await updateTick(
+    did,
+    tid(),
+    null, // candidateDiff: this is a get no updates
+    prevTick,
+    crypto,
+  )
+  res.type('json').send(signedDoc)
+})
+
+// Update or create a DID doc
+router.post(`/:pid(${pidMatch})`, async function (req, res) {
+  const { db, crypto } = res.locals as Locals
+
+  // extract from post
+  const did = 'did:aic:' + req.params.pid
+  const candidateDiff = req.body // @TODO add input validation with zod
+
+  // extract from DB
+  const row = await db.tickForDid(did)
+  const prevTid = row ? row.tid : null
+  const prevTick = row ? JSON.parse(row.tick) : null
+
+  // aic lib will do the doc update
+  // @TODO distinguish any errors whose reasoning we can share with the user,
+  // make them non-500s. Also, consider using bounce to hard-throw system errors.
+  const newTick = await updateTick(
+    did, // did from the URL
+    tid(), // current time (tid)
+    candidateDiff, // diff that was posted/put
+    prevTick, // tick from db for did:aic
+    crypto, // server's aic key
+  )
+
+  await db.putTickForDid(
+    newTick.did,
+    newTick.tid,
+    prevTid, // gard: if the prevTid has changed the tick from the db is stale
+    JSON.stringify(newTick),
+  )
+
+  // we reload the tick from the database if the put failed/pending we return the last tick
+  const result = await db.tickForDid(did)
+  if (typeof result === 'undefined') {
+    throw new Error(
+      'tick should exist since it was just successfully updated, but does not',
     )
-    res.type('json').send(signedDoc)
-  },
-)
+  }
 
-router.post(
-  '/:pid([234567abcdefghijklmnopqrstuvwxyz]{16})/',
-  async function (req, res) {
-    // extract from post
-    const did = 'did:aic:' + req.params.pid
-    const candidateDiff = req.body
-
-    // extract from DB
-    const row = await res.locals.db.tickForDid(did)
-    const prevTid = row ? row.tid : null
-    const prev_tick = row ? JSON.parse(row.tick) : null
-
-    // aic lib will do the doc update
-    const newTick = await updateTick(
-      did, // did from the URL
-      tid(), // curent time (tid)
-      candidateDiff, // diff that was posted/put
-      prev_tick, // tick from db for did:aic
-      await consortiumCrypto(), // server's aic key
-    )
-
-    if ('error' in newTick) {
-      // error return from updateTick
-      // type ErrorMessage = { error: string; cause?: ErrorMessage; [index: string]: Value }
-      // if there is an error property it is an error don't store in DB
-      // also send the last tick that is still valid
-      res.status(200)
-      res.type('json').send({
-        tid: tid(),
-        did: `did:aic:${req.params.pid}`,
-        tick: prev_tick,
-        error: 'error return from updateTick',
-        cause: newTick,
-      })
-      return
-    }
-
-    // if the output of updateTick is not an error put in db
-    console.log(`Saving ${newTick.did} to AIC at ${newTick.tid}`)
-    await res.locals.db.putTickForDid(
-      newTick.did,
-      newTick.tid,
-      prevTid, // gard: if the prevTid has changed the tick from the db is stale
-      JSON.stringify(newTick),
-    )
-
-    // we reload the tick from the databace if the put failed/pending we return the last tick
-    const storedTick = (await res.locals.db.tickForDid(did)).tick
-    res.status(200)
-    res.type('json').send(storedTick)
-  },
-)
+  res.status(200)
+  res.type('json').send(result.tick)
+})
 
 router.get('/lobby', async (req, res) => {
   res.send(`
