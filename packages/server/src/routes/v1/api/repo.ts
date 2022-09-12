@@ -189,29 +189,18 @@ router.get('/:nameOrDid', async (req, res) => {
   // }
 
   const db = util.getDB(res)
-  if (nameOrDid.startsWith('did:')) {
-    did = nameOrDid
-    const found = await db.getUsernameForDid(did)
-    if (found === null) {
-      throw new ServerError(404, 'Could not find username for did')
-    }
-    name = found
-  } else {
-    name = nameOrDid
-    const found = await db.getDidForUsername(name)
-    if (found === null) {
-      throw new ServerError(404, 'Could not find did for username')
-    }
-    did = found
+  const user = await db.getUser(nameOrDid)
+  if (user === null) {
+    throw new ServerError(404, `Could not find user: ${nameOrDid}`)
   }
   didDoc = {} as any
   nameIsCorrect = true
 
-  const collections = await db.listCollectionsForDid(did)
+  const collections = await db.listCollectionsForDid(user.did)
 
   const resBody: DescribeRepoResponse = {
-    name,
-    did,
+    name: user.username,
+    did: user.did,
     didDoc,
     collections,
     nameIsCorrect,
@@ -235,7 +224,7 @@ router.get('/:nameOrDid/c/:namespace/:dataset', async (req, res) => {
   const db = util.getDB(res)
   const did = nameOrDid.startsWith('did:')
     ? nameOrDid
-    : await db.getDidForUsername(nameOrDid)
+    : (await db.getUser(nameOrDid))?.did
   if (!did) {
     throw new ServerError(404, `Could not find did for ${nameOrDid}`)
   }

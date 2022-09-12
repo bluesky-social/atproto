@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node ./build.js",
     "start": "node dist/index.js",
-    "test": "jest tests/views.test.ts",
+    "test": "jest",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
@@ -34,6 +34,7 @@
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "axios": "^0.26.1",
+    "get-port": "^6.1.2",
     "nodemon": "^2.0.15",
     "rimraf": "^3.0.2"
   }

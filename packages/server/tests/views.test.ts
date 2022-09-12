@@ -1,13 +1,10 @@
 import { AdxUri } from '@adxp/common'
 import { MicroblogClient, Post } from '@adxp/microblog'
 import { users, posts, replies } from './test-data'
-import util from 'util'
+import getPort from 'get-port'
+import * as util from './_util'
 
-const url = 'http://localhost:2583'
-const alice = new MicroblogClient(url, users.alice.did)
-const bob = new MicroblogClient(url, users.bob.did)
-const carol = new MicroblogClient(url, users.carol.did)
-const dan = new MicroblogClient(url, users.dan.did)
+const USE_TEST_SERVER = true
 
 let alicePosts: AdxUri[] = []
 let bobPosts: AdxUri[] = []
@@ -17,7 +14,25 @@ let bobFollows: Record<string, AdxUri> = {}
 let bobLikes: Record<string, AdxUri> = {}
 let badges: AdxUri[] = []
 
-describe('server', () => {
+describe('pds views', () => {
+  let alice, bob, carol, dan: MicroblogClient
+  let closeFn: util.CloseFn
+
+  beforeAll(async () => {
+    const port = USE_TEST_SERVER ? await getPort() : 2583
+    closeFn = await util.runTestServer(port)
+
+    const url = `http://localhost:${port}`
+    alice = new MicroblogClient(url, users.alice.did)
+    bob = new MicroblogClient(url, users.bob.did)
+    carol = new MicroblogClient(url, users.carol.did)
+    dan = new MicroblogClient(url, users.dan.did)
+  })
+
+  afterAll(async () => {
+    await closeFn()
+  })
+
   it('register users', async () => {
     await alice.register(users.alice.name)
     await bob.register(users.bob.name)

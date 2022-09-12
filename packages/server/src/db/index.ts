@@ -43,7 +43,6 @@ export class Database {
     for (const view of views) {
       this.views[view.id] = view.fn(db)
     }
-    this.db.synchronize()
   }
 
   static async sqlite(location: string): Promise<Database> {
@@ -63,6 +62,7 @@ export class Database {
         RepostIndex,
         UserDid,
       ],
+      synchronize: true,
     })
     await db.initialize()
     return new Database(db)
@@ -70,6 +70,10 @@ export class Database {
 
   static async memory(): Promise<Database> {
     return Database.sqlite(':memory:')
+  }
+
+  async close(): Promise<void> {
+    await this.db.destroy()
   }
 
   async getRepoRoot(did: string): Promise<CID | null> {
@@ -90,16 +94,13 @@ export class Database {
     await table.save(newRoot)
   }
 
-  async getDidForUsername(username: string): Promise<string | null> {
+  async getUser(user: string): Promise<UserDid | null> {
     const table = this.db.getRepository(UserDid)
-    const found = await table.findOneBy({ username })
-    return found ? found.did : null
-  }
-
-  async getUsernameForDid(did: string): Promise<string | null> {
-    const table = this.db.getRepository(UserDid)
-    const found = await table.findOneBy({ did })
-    return found ? found.username : null
+    if (user.startsWith('did:')) {
+      return table.findOneBy({ did: user })
+    } else {
+      return table.findOneBy({ username: user })
+    }
   }
 
   async registerUser(username: string, did: string) {

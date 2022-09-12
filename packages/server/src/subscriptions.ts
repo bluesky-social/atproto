@@ -1,6 +1,8 @@
 import { Repo, service } from '@adxp/common'
 import Database from './db'
 
+// @TODO revamp all subscriber logic
+
 export const attemptNotify = async (
   host: string,
   repo: Repo,
@@ -24,8 +26,8 @@ export const notifySubscribers = async (
   db: Database,
   repo: Repo,
 ): Promise<void> => {
-  const hosts = await db.getSubscriptionsForUser(repo.did)
-  await notifyHosts(hosts, repo)
+  // const hosts = await db.getSubscriptionsForUser(repo.did)
+  // await notifyHosts(hosts, repo)
 }
 
 export const isSubscriber = async (
@@ -33,8 +35,9 @@ export const isSubscriber = async (
   host: string,
   user: string,
 ): Promise<boolean> => {
-  const hosts = await db.getSubscriptionsForUser(user)
-  return hosts.indexOf(host) > -1
+  // const hosts = await db.getSubscriptionsForUser(user)
+  // return hosts.indexOf(host) > -1
+  return true
 }
 
 export const notifyOneOff = async (
@@ -53,7 +56,7 @@ export const notifyOneOff = async (
 
   const baseUrl = `http://${host}`
   // if it's a subscriber, we'll be notifying anyway
-  if (!(await isSubscriber(db, host, repo.did))) {
-    await attemptNotify(baseUrl, repo)
-  }
+  // if (!(await isSubscriber(db, host, repo.did))) {
+  //   await attemptNotify(baseUrl, repo)
+  // }
 }

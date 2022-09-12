@@ -1,15 +1,32 @@
 import { AdxClient, AdxUri } from '@adxp/api'
 import { schemas } from '@adxp/microblog'
+import * as util from './_util'
+import getPort from 'get-port'
 
-const url = 'http://localhost:2583'
-const adx = new AdxClient({
-  pds: url,
-  schemas: schemas,
-})
+const USE_TEST_SERVER = true
+
 const alice = { username: 'alice', did: 'did:example:alice' }
 const bob = { username: 'bob', did: 'did:example:bob' }
 
 describe('crud operations', () => {
+  let adx: AdxClient
+  let closeFn: util.CloseFn
+
+  beforeAll(async () => {
+    const port = USE_TEST_SERVER ? await getPort() : 2583
+    closeFn = await util.runTestServer(port)
+
+    const url = `http://localhost:${port}`
+    adx = new AdxClient({
+      pds: url,
+      schemas: schemas,
+    })
+  })
+
+  afterAll(async () => {
+    await closeFn()
+  })
+
   it('registers users', async () => {
     await adx.mainPds.registerRepo(alice)
     await adx.mainPds.registerRepo(bob)
@@ -151,9 +168,10 @@ describe('crud operations', () => {
     await feed.del(uri3.recordKey)
     await feed.del(uri4.recordKey)
   })
-})
 
-describe('validation', () => {
+  // Validation
+  // --------------
+
   it('requires a $type on records', async () => {
     const feed = adx.mainPds.repo(alice.did).collection('bsky/posts')
     await expect(feed.create('Post', {})).rejects.toThrow(

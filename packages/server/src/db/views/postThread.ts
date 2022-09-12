@@ -42,8 +42,6 @@ export const viewFn =
       thread.replies = await getReplies(db, thread, depth - 1, requester)
     }
 
-    thread = setParents(thread)
-
     return { thread }
   }
 
@@ -149,6 +147,7 @@ const rowToPost = (
   }
 }
 
+// @TODO use or delete?
 // parents were set without replies set yet, so we recurse back through updating the parent
 const setParents = (
   root: PostThreadView.Post,
