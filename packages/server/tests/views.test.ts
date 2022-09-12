@@ -65,7 +65,7 @@ describe('pds views', () => {
         index: [0, 18],
         type: 'mention',
         value: users.carol.did,
-      } as any, //@TODO remove any
+      } as any,
     ])
     const alice1 = await alice.createPost(posts.alice[1])
     const bob1 = await bob.createPost(posts.bob[1])

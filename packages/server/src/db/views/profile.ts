@@ -66,6 +66,7 @@ export const viewFn =
       .select([
         'badge.uri AS uri',
         'badge.assertionType AS assertionType',
+        'badge.assertionTag AS assertionTag',
         'issuer.did AS issuerDid',
         'issuer.username AS issuerName',
         'issuer_profile.displayName AS issuerDisplayName',
@@ -94,7 +95,9 @@ export const viewFn =
         name: row.issuerName,
         displayName: row.issuerDisplayName || undefined,
       },
-      assertion: row.assertionType ? { type: row.assertionType } : undefined, //@TODO add in tag here
+      assertion: row.assertionType
+        ? { type: row.assertionType, tag: row.assertionTag || undefined }
+        : undefined,
       createdAt: row.createdAt,
     }))
 

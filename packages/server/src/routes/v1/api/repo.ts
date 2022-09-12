@@ -143,7 +143,7 @@ router.delete('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
 // -------------
 
 // @TODO move to a utility file
-// @TODO: don't think we want to call out to did sdk here 🤔
+// @TODO: do we want to call out to did sdk here? 🤔
 async function resolveDidWrapped(did: string) {
   try {
     return (await didSdk.resolve(did)).didDoc
