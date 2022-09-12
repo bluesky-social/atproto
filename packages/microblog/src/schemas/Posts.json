@@ -1,0 +1,12 @@
+{
+  "$type": "adxs-collection",
+  "author": "blueskyweb.xyz",
+  "name": "Posts",
+  "$comment": "Where you put posts and reposts.",
+  "locale": {
+    "en-US": {
+      "nameSingular": "Posts",
+      "namePlural": "Posts Collections"
+    }
+  }
+}

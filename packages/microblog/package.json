@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
+    "schemas-compile": "node ./scripts/compile.js src",
+    "schemas-docs": "node ./scripts/docs.js",
+    "schemas-validate": "node ./scripts/validate.js",
+    "schemas-ifaces": "node ./scripts/ifaces.js src/types",
+    "schemas-build": "yarn schemas-compile && yarn schemas-ifaces",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
@@ -14,5 +19,10 @@
   },
   "dependencies": {
     "@adxp/schemas": "*"
+  },
+  "devDependencies": {
+    "ajv": "^8.11.0",
+    "ajv-formats": "^2.1.1",
+    "json-schema-to-typescript": "^11.0.2"
   }
 }

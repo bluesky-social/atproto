@@ -1,0 +1,50 @@
+{
+  "$type": "adxs-view",
+  "author": "blueskyweb.xyz",
+  "name": "NotificationsView",
+  "reads": [
+    "blueskyweb.xyz:Feed",
+    "blueskyweb.xyz:SocialGraph"
+  ],
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "limit": {"type": "number", "maximum": 100},
+      "before": {"type": "string", "format": "date-time"}
+    }
+  },
+  "response": {
+    "type": "object",
+    "required": ["notifications"],
+    "properties": {
+      "notifications": {
+        "type": "array",
+        "items": {"$ref": "#/$defs/notification"}
+      }
+    },
+    "$defs": {
+      "notification": {
+        "type": "object",
+        "required": ["uri", "author", "record", "isRead", "indexedAt"],
+        "properties": {
+          "uri": {"type": "string", "format": "uri"},
+          "author": {
+            "type": "object",
+            "required": ["did", "name", "displayName"],
+            "properties": {
+              "did": {"type": "string"},
+              "name": {"type": "string"},
+              "displayName": {
+                "type": "string",
+                "maxLength": 64
+              }
+            }
+          },
+          "record": {"type": "object"},
+          "isRead": {"type": "boolean"},
+          "indexedAt": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  }
+}

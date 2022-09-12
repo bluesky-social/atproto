@@ -1,3 +1,3 @@
-export * from './schemas/defs'
+export * from './defs'
 export * from './types'
 export * from './client'

@@ -1,0 +1,95 @@
+{
+  "$type": "adxs-record",
+  "author": "blueskyweb.xyz",
+  "name": "Badge",
+  "$comment": "An assertion about the subject by this user.",
+  "locale": {
+    "en-US": {
+      "nameSingular": "Badge",
+      "namePlural": "Badges"
+    }
+  },
+  "schema": {
+    "type": "object",
+    "required": ["assertion", "subject", "createdAt"],
+    "properties": {
+      "assertion": {
+        "oneOf": [
+          {"$ref": "#/$defs/inviteAssertion"},
+          {"$ref": "#/$defs/employeeAssertion"},
+          {"$ref": "#/$defs/tagAssertion"},
+          {"$ref": "#/$defs/unknownAssertion"}
+        ]
+      },
+      "subject": { "type": "string" },
+      "createdAt": {"type": "string", "format": "date-time"}
+    },
+    "$defs": {
+      "inviteAssertion": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {"const": "invite"}
+        }
+      },
+      "employeeAssertion": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {"const": "employee"}
+        }
+      },
+      "tagAssertion": {
+        "type": "object",
+        "required": ["type", "tag"],
+        "properties": {
+          "type": {"const": "tag"},
+          "tag": {"type": "string", "maxLength": 64}
+        }
+      },
+      "unknownAssertion": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "not": {"enum": ["invite", "employee", "tag"]}
+          }
+        }
+      }
+    }
+  },
+  "$ext": {
+    "adxs-doc": {
+      "examples": [
+        {
+          "$type": "blueskyweb.xyz:Badge",
+          "assertion": {"type": "employee"},
+          "subject": {
+            "did": "did:example:1234",
+            "name": "alice.com"
+          },
+          "createdAt": "2010-01-01T19:23:24Z"
+        },
+        {
+          "$type": "blueskyweb.xyz:Badge",
+          "assertion": {"type": "tag", "tag": "tech"},
+          "subject": {
+            "did": "did:example:1234",
+            "name": "alice.com"
+          },
+          "createdAt": "2010-01-01T19:23:24Z"
+        },
+        {
+          "$type": "blueskyweb.xyz:Badge",
+          "assertion": {"type": "something-else", "param": "allowed"},
+          "subject": {
+            "did": "did:example:1234",
+            "name": "alice.com"
+          },
+          "createdAt": "2010-01-01T19:23:24Z"
+        }
+      ]
+    }
+  }
+}

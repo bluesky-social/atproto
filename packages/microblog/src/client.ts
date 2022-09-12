@@ -15,7 +15,7 @@ import {
   UserFollowersView,
   UserFollowsView,
 } from '@adxp/microblog'
-import { schemas } from './schemas/defs'
+import { schemas } from './defs'
 
 export class MicroblogClient {
   public client: AdxClient
