@@ -21,7 +21,6 @@ export interface AdxClientOpts {
 export interface RegisterRepoParams {
   did: string
   username: string
-  // authStore: auth.AuthStore
 }
 
 export interface GetRecordResponseValidated extends GetRecordResponse {

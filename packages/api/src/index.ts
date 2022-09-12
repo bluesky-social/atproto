@@ -103,11 +103,6 @@ export class AdxPdsClient {
    * Registers a repository with a PDS.
    */
   async registerRepo(params: t.RegisterRepoParams): Promise<AdxRepoClient> {
-    // const pdsDid = await this.getDid()
-    // const token = await params.authStore.createUcan(
-    //   pdsDid,
-    //   auth.maintenanceCap(params.did),
-    // )
     const reqBody = {
       did: params.did,
       username: params.username,
@@ -374,9 +369,6 @@ function requestCfg(did?: string): AxiosRequestConfig {
   if (did) {
     headers['Authorization'] = did
   }
-  // if (token) {
-  //   headers['Authorization'] = `Bearer ${auth.encodeUcan(token)}`
-  // }
 
   return { headers }
 }
