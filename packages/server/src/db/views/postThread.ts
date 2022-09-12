@@ -147,24 +147,6 @@ const rowToPost = (
   }
 }
 
-// @TODO use or delete?
-// parents were set without replies set yet, so we recurse back through updating the parent
-const setParents = (
-  root: PostThreadView.Post,
-  parent?: PostThreadView.Post,
-) => {
-  const updatedRoot = {
-    ...root,
-    parent: parent ? { ...parent } : undefined,
-  }
-  return {
-    ...updatedRoot,
-    replies: updatedRoot.replies
-      ? updatedRoot.replies.map((reply) => setParents(reply, updatedRoot))
-      : undefined,
-  }
-}
-
 const plugin: DbViewPlugin = {
   id: viewId,
   fn: viewFn,
