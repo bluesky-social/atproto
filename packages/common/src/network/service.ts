@@ -2,7 +2,7 @@ import axios from 'axios'
 import { CID } from 'multiformats'
 import { authCfg, didNetworkUrl, parseAxiosError } from './util'
 import * as check from '../common/check'
-import { def as repoSchema } from '../repo/types'
+import { def } from '../common/types'
 import * as uint8arrays from 'uint8arrays'
 import * as auth from '@adxp/auth'
 
@@ -66,7 +66,7 @@ export const lookupDid = async (
     const res = await axios.get(`${url}/.well-known/webfinger`, {
       params,
     })
-    return check.assure(repoSchema.did, res.data.id)
+    return check.assure(def.string, res.data.id)
   } catch (e) {
     const err = parseAxiosError(e)
     if (err.code === 404) {

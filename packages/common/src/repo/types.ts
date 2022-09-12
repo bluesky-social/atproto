@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { BlockWriter } from '@ipld/car/writer'
 import { def as common } from '../common/types'
 import TID from './tid'
-import CidSet from './cid-set'
 import { CID } from 'multiformats'
 import { DataDiff } from './mst'
 
@@ -14,7 +13,7 @@ const strToTid = z
   .transform(TID.fromStr)
 
 const repoRoot = z.object({
-  did: common.did,
+  did: z.string(),
   prev: common.cid.nullable(),
   auth_token: common.cid.nullable(),
   data: common.cid,

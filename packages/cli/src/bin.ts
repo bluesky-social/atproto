@@ -2,7 +2,7 @@
 
 import minimist from 'minimist'
 import chalk from 'chalk'
-import './commands/index.js'
+// import './commands/index.js'
 import { matchCommand, runCommand } from './lib/command'
 import { usage, commandUsage } from './lib/usage'
 
