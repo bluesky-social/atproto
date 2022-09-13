@@ -19,6 +19,7 @@
     "@adxp/common": "*",
     "@adxp/crypto": "*",
     "@adxp/microblog": "*",
+    "@adxp/repo": "*",
     "@adxp/schemas": "*",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",

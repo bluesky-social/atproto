@@ -4,10 +4,9 @@ import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
 import { BlockWriter } from '@ipld/car/writer'
 
-import * as check from '../common/check'
-import * as util from '../common/util'
+import { check, util } from '@adxp/common'
 import { BlockReader } from '@ipld/car/api'
-import CidSet from '../repo/cid-set'
+import CidSet from '../cid-set'
 
 type AllowedIpldRecordVal = string | number | CID | CID[] | Uint8Array | null
 
@@ -33,7 +32,7 @@ export abstract class IpldStore {
     return block.cid
   }
 
-  async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
+  async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
     const value = await this.getUnchecked(cid)
     try {
       return check.assure(schema, value)

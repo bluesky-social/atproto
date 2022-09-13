@@ -2,7 +2,6 @@ import {
   AdxRecordValidator,
   AdxRecordValidatorDescription,
 } from '@adxp/schemas'
-import * as auth from '@adxp/auth'
 import { GetRecordResponse } from './http-types.js'
 
 export type SchemaOpt =

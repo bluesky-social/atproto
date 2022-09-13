@@ -1,8 +1,8 @@
 import z from 'zod'
 import { CID } from 'multiformats'
 
-import IpldStore from '../../blockstore/ipld-store'
-import { def } from '../../common/types'
+import IpldStore from '../blockstore/ipld-store'
+import { def } from '@adxp/common'
 import { DataDiff } from './diff'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'

@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { IpldStore, MemoryBlockstore, PersistentBlockstore } from '@adxp/common'
+import { IpldStore, MemoryBlockstore, PersistentBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
 import Database from './db'
 import server from './server'

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
-import { IpldStore, Repo, check } from '@adxp/common'
+import { check } from '@adxp/common'
+import { IpldStore, Repo } from '@adxp/repo'
 import * as auth from '@adxp/auth'
 import { Database } from './db'
 import { ServerError } from './error'
@@ -18,7 +19,7 @@ export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   })
 }
 
-export const checkReqBody = <T>(body: unknown, schema: check.Schema<T>): T => {
+export const checkReqBody = <T>(body: unknown, schema: check.Def<T>): T => {
   try {
     return check.assure(schema, body)
   } catch (err) {

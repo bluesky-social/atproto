@@ -1,4 +1,4 @@
-import { s32encode, s32decode } from '../common/util'
+import { s32encode, s32decode } from './util'
 let lastTimestamp = 0
 let timestampCount = 0
 let clockid: number | null = null

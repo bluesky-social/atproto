@@ -1,5 +1,5 @@
+import { TID } from '@adxp/common'
 import Repo from './repo'
-import TID from './tid'
 
 export class Collection {
   repo: Repo

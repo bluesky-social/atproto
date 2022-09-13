@@ -1,4 +1,5 @@
-import { AdxUri, DataDiff, Repo } from '@adxp/common'
+import { AdxUri } from '@adxp/common'
+import { DataDiff, Repo } from '@adxp/repo'
 import Database from './db'
 
 export const processDiff = async (

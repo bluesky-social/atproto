@@ -3,15 +3,12 @@ import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
 import { RepoRoot, Commit, def, BatchWrite, DataStore } from './types'
-import * as check from '../common/check'
-import IpldStore, { AllowedIpldVal } from '../blockstore/ipld-store'
-import { streamToArray } from '../common/util'
+import { check, streamToArray, TID } from '@adxp/common'
+import IpldStore, { AllowedIpldVal } from './blockstore/ipld-store'
 import * as auth from '@adxp/auth'
-import * as service from '../network/service'
 import { AuthStore } from '@adxp/auth'
 import { DataDiff, MST } from './mst'
 import Collection from './collection'
-import TID from './tid'
 
 export class Repo {
   blockstore: IpldStore
@@ -234,7 +231,7 @@ export class Repo {
     return this.blockstore.put(value)
   }
 
-  async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
+  async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
     return this.blockstore.get(cid, schema)
   }
 
@@ -260,27 +257,6 @@ export class Repo {
       throw new Error('No keypair provided. Repo is read-only.')
     }
     return this.authStore.createUcan(forDid, auth.maintenanceCap(this.did()))
-  }
-
-  // PUSH/PULL TO REMOTE
-  // -----------
-
-  async push(url: string): Promise<void> {
-    const remoteRoot = await service.getRemoteRoot(url, this.did())
-    if (this.cid.equals(remoteRoot)) {
-      // already up to date
-      return
-    }
-    const car = await this.getDiffCar(remoteRoot)
-    await service.pushRepo(url, this.did(), car)
-  }
-
-  async pull(url: string): Promise<void> {
-    const car = await service.pullRepo(url, this.did(), this.cid)
-    if (car === null) {
-      throw new Error(`Could not find repo for did: ${this.did()}`)
-    }
-    await this.loadAndVerifyDiff(car)
   }
 
   // VERIFYING UPDATES

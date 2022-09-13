@@ -1,9 +1,10 @@
-import { def } from '@adxp/common'
+import { def as common } from '@adxp/common'
+import { def as repo } from '@adxp/repo'
 import { z } from 'zod'
 
 export const getRepoRequest = z.object({
   did: z.string(),
-  from: def.common.strToCid.optional(),
+  from: common.strToCid.optional(),
 })
 export type GetRepoRequest = z.infer<typeof getRepoRequest>
 
@@ -27,10 +28,10 @@ export const describeRepoResponse = z.object({
 export type DescribeRepoResponse = z.infer<typeof describeRepoResponse>
 
 export const listRecordsParams = z.object({
-  limit: z.union([z.number(), def.common.strToInt]).optional(),
+  limit: z.union([z.number(), common.strToInt]).optional(),
   before: z.string().optional(),
   after: z.string().optional(),
-  reverse: def.common.strToBool.optional(),
+  reverse: common.strToBool.optional(),
 })
 export type ListRecordsParams = z.infer<typeof listRecordsParams>
 
@@ -51,7 +52,7 @@ export const getRecordResponse = z.object({
 export type GetRecordResponse = z.infer<typeof getRecordResponse>
 
 export const batchWriteParams = z.object({
-  writes: z.array(def.repo.batchWrite),
+  writes: z.array(repo.batchWrite),
 })
 export type BatchWriteParams = z.infer<typeof batchWriteParams>
 

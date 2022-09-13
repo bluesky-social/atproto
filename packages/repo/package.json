@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/common",
+  "name": "@adxp/repo",
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
@@ -17,8 +17,14 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "axios": "^0.24.0",
+    "@adxp/auth": "*",
+    "@adxp/common": "*",
+    "@ipld/car": "^3.2.3",
+    "@ipld/dag-cbor": "^7.0.0",
+    "ipld-hashmap": "^2.1.10",
+    "level": "^8.0.0",
     "multiformats": "^9.6.4",
+    "uint8arrays": "^3.0.0",
     "zod": "^3.14.2"
   }
 }
