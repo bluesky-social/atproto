@@ -4,15 +4,12 @@ import { MemoryBlockstore } from '@adxp/repo'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
 import { DidWebDb, DidWebServer } from '@adxp/did-sdk'
-import KeyManagerServer from './key-manager/index.js'
-import KeyManagerDb from './key-manager/db.js'
 import DidWebClient from './did-web/client.js'
-import KeyManagerClient from './key-manager/client.js'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
 export class DevEnvServer {
   inst?: http.Server | DidWebServer
-  client?: DidWebClient | KeyManagerClient
+  client?: DidWebClient
 
   constructor(public type: ServerType, public port: number) {}
 
@@ -20,7 +17,6 @@ export class DevEnvServer {
     return {
       [ServerType.PersonalDataServer]: '🌞 ADX Data server',
       [ServerType.DidWebHost]: '📰 did:web server',
-      [ServerType.KeyManager]: '🔑 Key management server',
     }[this.type]
   }
 
@@ -70,12 +66,6 @@ export class DevEnvServer {
           )
         }
         this.client = new DidWebClient(this.url)
-        break
-      }
-      case ServerType.KeyManager: {
-        const db = KeyManagerDb.memory()
-        this.inst = await onServerReady(KeyManagerServer(db, this.port))
-        this.client = new KeyManagerClient(this.url)
         break
       }
       default:

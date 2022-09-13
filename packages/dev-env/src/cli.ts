@@ -8,8 +8,6 @@ import getPort, { portNumbers } from 'get-port'
 import { DevEnv, DevEnvServer } from './index.js'
 import * as env from './env.js'
 import { PORTS, ServerType, ServerConfig, SERVER_TYPE_LABELS } from './types.js'
-import DidWebClient from './did-web/client.js'
-import KeyManagerClient from './key-manager/client.js'
 
 const pkg = JSON.parse(
   fs.readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'),
@@ -79,15 +77,6 @@ async function createREPL(): Promise<REPLServer> {
     },
   })
 
-  inst.defineCommand('start-keymanager', {
-    help: 'Start a key manager.',
-    async action(port: string) {
-      this.clearBufferedCommand()
-      await devEnv.add(await cfg(port, ServerType.KeyManager))
-      this.displayPrompt()
-    },
-  })
-
   inst.defineCommand('stop', {
     help: 'Stop the server at the given port.',
     async action(portStr: string) {
@@ -112,64 +101,25 @@ async function createREPL(): Promise<REPLServer> {
     help: 'Create a new user.',
     async action() {
       this.clearBufferedCommand()
-      if (!devEnv.hasType(ServerType.KeyManager)) {
-        console.error('You must run a key manager server.')
-      } else if (!devEnv.hasType(ServerType.PersonalDataServer)) {
+      if (!devEnv.hasType(ServerType.PersonalDataServer)) {
         console.error('You must run a personal data server.')
       } else if (!devEnv.hasType(ServerType.DidWebHost)) {
         console.error('You must run a did:web host.')
       } else {
         await pauseREPL(async () => {
-          const keymanager = await promptChooseServer(ServerType.KeyManager)
-          if (!keymanager.client) throw new Error('Keymanager client not found')
-          const kmClient = keymanager.client as KeyManagerClient
-
-          const pds = await promptChooseServer(ServerType.PersonalDataServer)
+          const pds = await promptChooseServer(
+            devEnv,
+            ServerType.PersonalDataServer,
+          )
           if (!pds.client) throw new Error('PDS client not found')
 
-          const didweb = await promptChooseServer(ServerType.DidWebHost)
-          if (!didweb.client) throw new Error('did:web client not found')
-          const dwClient = didweb.client as DidWebClient
-
           const username = await promptGeneral('Choose a username:')
-          console.log(`Creating ${username} on...`)
-          console.log('  ', keymanager.description)
-          console.log('  ', pds.description)
-          console.log('  ', didweb.description)
-
-          // create keypair
-          const keyRes1 = await kmClient.createAccount({
-            username,
-            didServer: didweb.url,
-          })
-          console.log(keyRes1)
-
-          // register the DID
-          const didRes1 = await dwClient.put(keyRes1.didDoc)
-          console.log(didRes1)
+          console.log(`Creating ${username} on ${pds.description}`)
 
           // create the PDS account
-          const pdsRes = await pds.client?.createAccount(username, keyRes1.did)
-          console.log(pdsRes)
-
-          // update the did doc to contain the service and username
-          keyRes1.didDoc.alsoKnownAs = keyRes1.didDoc.alsoKnownAs || []
-          keyRes1.didDoc.alsoKnownAs.push(pdsRes.url)
-          keyRes1.didDoc.service = keyRes1.didDoc.service || []
-          keyRes1.didDoc.service.push({
-            id: '#adx-home-server',
-            type: 'AdxHomeServer',
-            serviceEndpoint: pds.url,
-          })
-          const keyRes2 = await kmClient.signDidDocUpdate(
-            keyRes1.did,
-            keyRes1.didDoc,
-          )
-          console.log(keyRes2)
-
-          // publish the updated did doc
-          const didRes2 = await dwClient.put(keyRes2.didDoc)
-          console.log(didRes2)
+          // TODO
+          // const pdsRes = await pds.client?.createAccount(username, keyRes1.did)
+          // console.log(pdsRes)
         })
       }
       this.displayPrompt()
@@ -192,7 +142,10 @@ async function cfg(portStr: string, type: ServerType): Promise<ServerConfig> {
   }
 }
 
-async function promptChooseServer(type: ServerType): Promise<DevEnvServer> {
+async function promptChooseServer(
+  devEnv: DevEnv,
+  type: ServerType,
+): Promise<DevEnvServer> {
   const servers = devEnv.listOfType(type)
   if (servers.length === 1) {
     return servers[0]

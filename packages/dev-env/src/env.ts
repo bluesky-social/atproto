@@ -18,7 +18,6 @@ export function load(): StartParams {
     servers: [
       ...getPorts(ServerType.PersonalDataServer, 'PERSONAL_DATA_SERVERS'),
       ...getPorts(ServerType.DidWebHost, 'DID_WEB_HOST'),
-      ...getPorts(ServerType.KeyManager, 'KEY_MANAGER'),
     ],
   }
 }
