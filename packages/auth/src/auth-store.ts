@@ -8,9 +8,9 @@ import { vaguerCap, writeCap } from './capabilities'
 
 export class AuthStore implements Signer {
   protected keypair: DidableKey
-  protected ucanStore: ucan.Store
+  protected ucanStore: ucan.StoreI
 
-  constructor(keypair: DidableKey, ucanStore: ucan.Store) {
+  constructor(keypair: DidableKey, ucanStore: ucan.StoreI) {
     this.keypair = keypair
     this.ucanStore = ucanStore
   }
@@ -19,7 +19,7 @@ export class AuthStore implements Signer {
     keypair: DidableKey,
     tokens: string[],
   ): Promise<AuthStore> {
-    const ucanStore = await ucan.storeFromTokens(adxSemantics, tokens)
+    const ucanStore = await ucan.Store.fromTokens(adxSemantics, tokens)
     return new AuthStore(keypair, ucanStore)
   }
 
@@ -34,7 +34,7 @@ export class AuthStore implements Signer {
     await this.ucanStore.add(token)
   }
 
-  async getUcanStore(): Promise<ucan.Store> {
+  async getUcanStore(): Promise<ucan.StoreI> {
     return this.ucanStore
   }
 
@@ -99,8 +99,7 @@ export class AuthStore implements Signer {
   ): Promise<ucan.Ucan> {
     const keypair = await this.getKeypair()
     const ucanStore = await this.getUcanStore()
-    return ucan
-      .createBuilder()
+    return ucan.Builder.create()
       .issuedBy(keypair)
       .toAudience(audience)
       .withLifetimeInSeconds(lifetime)
@@ -127,8 +126,7 @@ export class AuthStore implements Signer {
 
     const keypair = await this.getKeypair()
 
-    let builder = ucan
-      .createBuilder()
+    let builder = ucan.Builder.create()
       .issuedBy(keypair)
       .toAudience(audience)
       .withLifetimeInSeconds(lifetime)
@@ -157,8 +155,7 @@ export class AuthStore implements Signer {
   async claimFull(): Promise<ucan.Ucan> {
     const keypair = await this.getKeypair()
     const ownDid = await this.did()
-    const token = await ucan
-      .createBuilder()
+    const token = await ucan.Builder.create()
       .issuedBy(keypair)
       .toAudience(ownDid)
       .withLifetimeInSeconds(YEAR_IN_SEC)
