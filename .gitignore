@@ -6,3 +6,4 @@ packages/*/dist
 .idea
 packages/*/coverage
 .vscode/
+test.sqlite

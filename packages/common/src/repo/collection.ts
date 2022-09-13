@@ -26,10 +26,24 @@ export class Collection {
     return this.repo.blockstore.getUnchecked(cid)
   }
 
-  async listRecords(count?: number): Promise<unknown[]> {
-    const vals = await this.repo.data.listWithPrefix(this.name(), count)
+  async listRecords(
+    count?: number,
+    after?: TID,
+    before?: TID,
+  ): Promise<{ key: TID; value: unknown }[]> {
+    count = count || Number.MAX_SAFE_INTEGER
+    const afterKey = after ? this.dataIdForRecord(after) : this.name()
+    const beforeKey = before ? this.dataIdForRecord(before) : this.name() + 'a'
+    const vals = await this.repo.data.list(count, afterKey, beforeKey)
     return Promise.all(
-      vals.map((val) => this.repo.blockstore.getUnchecked(val.value)),
+      vals.map(async (val) => {
+        const parts = val.key.split('/')
+        const tid = TID.fromStr(parts[parts.length - 1])
+        return {
+          key: tid,
+          value: await this.repo.blockstore.getUnchecked(val.value),
+        }
+      }),
     )
   }
 

@@ -21,15 +21,18 @@ export interface AdxClientOpts {
 export interface RegisterRepoParams {
   did: string
   username: string
-  authStore: auth.AuthStore
 }
 
 export interface GetRecordResponseValidated extends GetRecordResponse {
   valid?: boolean
   fullySupported?: boolean
-  incompatible?: boolean
+  compatible?: boolean
   error?: string | undefined
   fallbacks?: string[] | undefined
+}
+
+export interface ListRecordsResponseValidated {
+  records: GetRecordResponseValidated[]
 }
 
 export interface BatchWrite {

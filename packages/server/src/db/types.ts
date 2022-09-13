@@ -1,4 +1,22 @@
-import { Knex } from 'knex'
+import { AdxUri } from '@adxp/common'
+import { DataSource } from 'typeorm'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type KnexDB = Knex<any, unknown[]>
+export type DbRecordPlugin<T, S> = {
+  collection: string
+  tableName: string
+  get: (uri: AdxUri) => Promise<T | null>
+  isValidSchema: (obj: unknown) => boolean
+  set: (uri: AdxUri, obj: unknown) => Promise<void>
+  delete: (uri: AdxUri) => Promise<void>
+  translateDbObj: (dbObj: S) => T
+}
+
+export type DbViewPlugin = {
+  id: string
+  fn: (db: DataSource) => ViewFn
+}
+
+export type ViewFn = (
+  params: Record<string, unknown>,
+  requesterDid: string,
+) => unknown

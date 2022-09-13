@@ -1,6 +1,7 @@
 import Ajv from 'ajv'
 import ajvAddFormats from 'ajv-formats'
 import { adxFallbackStrings } from './types'
+import * as util from './util'
 
 import AdxSchema from './schema'
 import AdxSchemas from './schemas'
@@ -31,11 +32,11 @@ export class AdxRecordValidator {
   /**
    * Returns detailed information about validity and compatibility.
    */
-  validate(value: Record<string, unknown>): AdxValidationResult {
+  validate(value: unknown): AdxValidationResult {
     const res = new AdxValidationResult()
 
     // basic validation
-    if (!value || typeof value !== 'object') {
+    if (!util.isRecord(value)) {
       res._t(
         AdxValidationResultCode.Invalid,
         `The passed value is not an object`,
@@ -120,7 +121,7 @@ export class AdxRecordValidator {
   /**
    * Provides a simple boolean check of validity.
    */
-  isValid(value: any) {
+  isValid(value: unknown) {
     const res = this.validate(value)
     return res.valid
   }
@@ -128,7 +129,7 @@ export class AdxRecordValidator {
   /**
    * Like validate() but throws if validation fails.
    */
-  assertValid(value: any) {
+  assertValid(value: unknown) {
     const res = this.validate(value)
     if (!res.valid) {
       throw new AdxValidationError(res)

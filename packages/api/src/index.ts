@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import { resolveName } from '@adxp/common'
+import { AdxUri, resolveName } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import { AdxSchemas, AdxRecordValidator, AdxViewValidator } from '@adxp/schemas'
 import * as t from './types'
@@ -103,30 +103,26 @@ export class AdxPdsClient {
    * Registers a repository with a PDS.
    */
   async registerRepo(params: t.RegisterRepoParams): Promise<AdxRepoClient> {
-    const pdsDid = await this.getDid()
-    const token = await params.authStore.createUcan(
-      pdsDid,
-      auth.maintenanceCap(params.did),
-    )
     const reqBody = {
       did: params.did,
       username: params.username,
     }
     await axios
-      .post(this.url(PdsEndpoint.Account), reqBody, requestCfg(token))
+      .post(this.url(PdsEndpoint.Account), reqBody, requestCfg(params.did))
       .catch(toAPIError)
-    return new AdxRepoClient(this, params.did, params.authStore)
+    return new AdxRepoClient(this, params.did)
   }
 
   /**
    * Query a view.
    */
-  async view(view: string, params: QP) {
+  async view(view: string, did: string, params: QP) {
     const validator = getViewValidator(view, this.client)
     // TODO - validate params?
     const res = await axios
-      .get(this.url(PdsEndpoint.View, [view], params))
+      .get(this.url(PdsEndpoint.View, [view], params), requestCfg(did))
       .catch(toAPIError)
+
     validator.assertResponseValid(res.data)
     return res.data
   }
@@ -180,7 +176,13 @@ export class AdxPdsClient {
     let url = this.origin + (pathname || '')
     if (qp) {
       if (!(qp instanceof URLSearchParams)) {
-        qp = new URLSearchParams(qp)
+        const safeParams = {}
+        for (const entry of Object.entries(qp)) {
+          if (entry[1] !== undefined) {
+            safeParams[entry[0]] = encodeURIComponent(entry[1])
+          }
+        }
+        qp = new URLSearchParams(safeParams)
       }
       url += '?' + qp.toString()
     }
@@ -221,25 +223,14 @@ export class AdxRepoClient {
   /**
    * Execute a batch of writes. WARNING: does not validate schemas!
    */
-  async _batchWrite(writes: t.BatchWrite[]): Promise<ht.BatchWriteReponse> {
+  async _batchWrite(writes: t.BatchWrite[]): Promise<void> {
     if (!this.writable || !this.authStore) {
       throw new err.WritePermissionError()
     }
-    const pdsDid = await this.pds.getDid()
-    const authedWrites: ht.BatchWriteParams['writes'] = []
-    for (const write of writes) {
-      const ucan = await this.authStore.createUcan(
-        pdsDid,
-        auth.writeCap(this.did, write.collection, write.key),
-      )
-      const token = auth.encodeUcan(ucan)
-      authedWrites.push(Object.assign({}, write, { auth: token }))
-    }
-    const body = ht.batchWriteParams.parse({ writes: authedWrites })
-    const res = await axios
+    const body = ht.batchWriteParams.parse({ writes })
+    await axios
       .post(this.pds.url(PdsEndpoint.Repo, [this.did]), body)
       .catch(toAPIError)
-    return ht.batchWriteReponse.parse(res.data)
   }
 }
 
@@ -252,7 +243,7 @@ class AdxRepoCollectionClient {
   async list(
     schema: t.SchemaOpt,
     params?: ht.ListRecordsParams,
-  ): Promise<ht.ListRecordsResponse> {
+  ): Promise<t.ListRecordsResponseValidated> {
     const url = this.repo.pds.url(
       PdsEndpoint.RepoCollection,
       [this.repo.did, this.id],
@@ -268,11 +259,11 @@ class AdxRepoCollectionClient {
       records: resSafe.records.map((record) => {
         const validation = validator.validate(record.value)
         return {
-          key: record.key,
+          uri: record.uri,
           value: record.value,
           valid: validation.valid,
           fullySupported: validation.fullySupported,
-          incompatible: validation.incompatible,
+          compatible: validation.compatible,
           error: validation.error,
           fallbacks: validation.fallbacks,
         }
@@ -300,11 +291,11 @@ class AdxRepoCollectionClient {
     const validator = getRecordValidator(schema, this.repo.pds.client)
     const validation = validator.validate(resSafe.value)
     return {
-      key: resSafe.key,
+      uri: resSafe.uri,
       value: resSafe.value,
       valid: validation.valid,
       fullySupported: validation.fullySupported,
-      incompatible: validation.incompatible,
+      compatible: validation.compatible,
       error: validation.error,
       fallbacks: validation.fallbacks,
     }
@@ -313,7 +304,11 @@ class AdxRepoCollectionClient {
   /**
    * Create a new record.
    */
-  async create(schema: t.SchemaOpt, value: any) {
+  async create(
+    schema: t.SchemaOpt,
+    value: any,
+    validate = true,
+  ): Promise<AdxUri> {
     if (!this.repo.writable) {
       throw new err.WritePermissionError()
     }
@@ -321,16 +316,20 @@ class AdxRepoCollectionClient {
       const validator = getRecordValidator(schema, this.repo.pds.client)
       validator.assertValid(value)
     }
-    const res = await this.repo._batchWrite([
-      { action: 'create', collection: this.id, value },
-    ])
-    return res.writes[0]
+    const url = this.repo.pds.url(
+      PdsEndpoint.RepoCollection,
+      [this.repo.did, this.id],
+      { validate },
+    )
+    const res = await axios.post(url, value).catch(toAPIError)
+    const { uri } = ht.createRecordResponse.parse(res.data)
+    return new AdxUri(uri)
   }
 
   /**
    * Write the record.
    */
-  async put(schema: t.SchemaOpt, key: string, value: any) {
+  async put(schema: t.SchemaOpt, key: string, value: any, validate = true) {
     if (!this.repo.writable) {
       throw new err.WritePermissionError()
     }
@@ -338,10 +337,14 @@ class AdxRepoCollectionClient {
       const validator = getRecordValidator(schema, this.repo.pds.client)
       validator.assertValid(value)
     }
-    const res = await this.repo._batchWrite([
-      { action: 'put', collection: this.id, key, value },
-    ])
-    return res.writes[0]
+    const url = this.repo.pds.url(
+      PdsEndpoint.RepoRecord,
+      [this.repo.did, this.id, key],
+      { validate },
+    )
+    const res = await axios.put(url, value).catch(toAPIError)
+    const { uri } = ht.createRecordResponse.parse(res.data)
+    return new AdxUri(uri)
   }
 
   /**
@@ -351,18 +354,22 @@ class AdxRepoCollectionClient {
     if (!this.repo.writable) {
       throw new err.WritePermissionError()
     }
-    const res = await this.repo._batchWrite([
-      { action: 'del', collection: this.id, key },
-    ])
-    return res.writes[0]
+    const url = this.repo.pds.url(
+      PdsEndpoint.RepoRecord,
+      [this.repo.did, this.id, key],
+      { verified: true },
+    )
+    await axios.delete(url).catch(toAPIError)
   }
 }
 
-function requestCfg(token?: auth.Ucan): AxiosRequestConfig {
+function requestCfg(did?: string): AxiosRequestConfig {
+  // @TODO add back in real auth
   const headers: Record<string, string> = {}
-  if (token) {
-    headers['Authorization'] = `Bearer ${auth.encodeUcan(token)}`
+  if (did) {
+    headers['Authorization'] = did
   }
+
   return { headers }
 }
 

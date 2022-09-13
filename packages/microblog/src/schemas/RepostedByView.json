@@ -1,0 +1,60 @@
+{
+  "$type": "adxs-view",
+  "author": "blueskyweb.xyz",
+  "name": "RepostedByView",
+  "reads": [
+    "blueskyweb.xyz:Feed",
+    "blueskyweb.xyz:SocialGraph"
+  ],
+  "parameters": {
+    "type": "object",
+    "required": ["uri"],
+    "properties": {
+      "uri": {"type": "string"},
+      "limit": {"type": "number", "maximum": 100},
+      "before": {"type": "string", "format": "date-time"}
+    }
+  },
+  "response": {
+    "type": "object",
+    "required": ["uri", "repostedBy"],
+    "properties": {
+      "uri": {"type": "string"},
+      "repostedBy": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["did", "name", "indexedAt"],
+          "properties": {
+            "did": {"type": "string"},
+            "name": {"type": "string"},
+            "displayName": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "createdAt": {"type": "string", "format": "date-time"},
+            "indexedAt": {"type": "string", "format": "date-time"}
+          }
+        }
+      }
+    }
+  },
+  "$ext": {
+    "adxs-doc": {
+      "examples": [
+        {
+          "uri": "adx://alice.com/blueskyweb.xyz:Feed/1234",
+          "repostedBy": [
+            {
+              "did": "did:example:1234",
+              "name": "bob.com",
+              "displayName": "Bob",
+              "createdAt": "2022-07-11T21:55:36.553Z",
+              "indexedAt": "2022-07-11T21:55:36.553Z"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

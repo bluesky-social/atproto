@@ -45,7 +45,9 @@
     ],
     "nohoist": [
       "**/ipld-hashmap",
-      "**/ipld-hashmap/**"
+      "**/ipld-hashmap/**",
+      "**/sqlite3",
+      "**/sqlite3/**"
     ]
   }
 }

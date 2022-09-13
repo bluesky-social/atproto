@@ -1,412 +1,212 @@
-import {
-  Like,
-  Post,
-  Timeline,
-  AccountInfo,
-  TimelinePost,
-  Follow,
-} from '@adxp/common'
-import knex from 'knex'
-import { CID } from 'multiformats'
-import * as schema from './schema'
-import { KnexDB } from './types'
-import { ServerError } from '../error'
+import { Badge, Follow, Like, Post, Profile, Repost } from '@adxp/microblog'
+import { DataSource } from 'typeorm'
+import { DbRecordPlugin, ViewFn } from './types'
+import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
+import likePlugin, { LikeIndex } from './records/like'
+import followPlugin, { FollowIndex } from './records/follow'
+import badgePlugin, { BadgeIndex } from './records/badge'
+import profilePlugin, {
+  ProfileBadgeIndex,
+  ProfileIndex,
+} from './records/profile'
+import repostPlugin, { RepostIndex } from './records/repost'
+import views from './views'
+import { AdxUri } from '@adxp/common'
+import { CID } from 'multiformats/cid'
+import { RepoRoot } from './repo-root'
+import { AdxRecord } from './record'
+import { UserDid } from './user-dids'
 
 export class Database {
-  private db: KnexDB
+  db: DataSource
+  records: {
+    posts: DbRecordPlugin<Post.Record, PostIndex>
+    likes: DbRecordPlugin<Like.Record, LikeIndex>
+    follows: DbRecordPlugin<Follow.Record, FollowIndex>
+    badges: DbRecordPlugin<Badge.Record, BadgeIndex>
+    profiles: DbRecordPlugin<Profile.Record, ProfileIndex>
+    reposts: DbRecordPlugin<Repost.Record, RepostIndex>
+  }
+  views: Record<string, ViewFn>
 
-  constructor(db: KnexDB) {
+  constructor(db: DataSource) {
     this.db = db
+    this.records = {
+      posts: postPlugin(db),
+      likes: likePlugin(db),
+      follows: followPlugin(db),
+      badges: badgePlugin(db),
+      profiles: profilePlugin(db),
+      reposts: repostPlugin(db),
+    }
+    this.views = {}
+    for (const view of views) {
+      this.views[view.id] = view.fn(db)
+    }
   }
 
-  static sqlite(location: string): Database {
-    const db = knex({
-      client: 'sqlite3',
-      connection: {
-        filename: location,
-      },
+  static async sqlite(location: string): Promise<Database> {
+    const db = new DataSource({
+      type: 'sqlite',
+      database: location,
+      entities: [
+        RepoRoot,
+        AdxRecord,
+        PostIndex,
+        PostEntityIndex,
+        LikeIndex,
+        FollowIndex,
+        BadgeIndex,
+        ProfileIndex,
+        ProfileBadgeIndex,
+        RepostIndex,
+        UserDid,
+      ],
+      synchronize: true,
     })
+    await db.initialize()
     return new Database(db)
   }
 
-  static memory(): Database {
+  static async memory(): Promise<Database> {
     return Database.sqlite(':memory:')
-  }
-
-  async createTables(): Promise<void> {
-    await schema.createTables(this.db)
-  }
-
-  async dropTables(): Promise<void> {
-    await schema.dropAll(this.db)
   }
 
   async close(): Promise<void> {
     await this.db.destroy()
   }
 
-  // DID NETWORK
-  // -----------
-
-  async registerOnDidNetwork(
-    username: string,
-    did: string,
-    host: string,
-  ): Promise<void> {
-    await this.db.insert({ username, did, host }).into('did_network')
-  }
-
-  async getUsernameFromDidNetwork(did: string): Promise<string | null> {
-    const row = await this.db.select('*').from('did_network').where({ did })
-    if (row.length < 1) return null
-    return `${row[0].username}@${row[0].host}`
-  }
-
-  // USER DIDS
-  // -----------
-
-  async registerDid(
-    username: string,
-    did: string,
-    host: string,
-  ): Promise<void> {
-    await this.db
-      .insert({ username, did, host })
-      .into('user_dids')
-      .onConflict()
-      .ignore()
-  }
-
-  async getDidForUser(username: string, host: string): Promise<string | null> {
-    const row = await this.db
-      .select('did')
-      .from('user_dids')
-      .where({ username, host })
-    if (row.length < 1) return null
-    return row[0].did
-  }
-
-  async getUsername(did: string): Promise<string | null> {
-    const row = await this.db.select('*').from('user_dids').where({ did })
-    if (row.length < 1) return null
-    return `${row[0].username}@${row[0].host}`
-  }
-
-  async isDidRegistered(did: string): Promise<boolean> {
-    const un = await this.getUsername(did)
-    return un !== null
-  }
-
-  async isNameRegistered(username: string, host: string): Promise<boolean> {
-    const did = await this.getDidForUser(username, host)
-    return did !== null
-  }
-
-  // REPO ROOTS
-  // -----------
-
-  async createRepoRoot(did: string, cid: CID): Promise<void> {
-    await this.db.insert({ did, root: cid.toString() }).into('repo_roots')
-  }
-
-  async updateRepoRoot(did: string, cid: CID): Promise<void> {
-    await this.db('repo_roots').where({ did }).update({ root: cid.toString() })
-  }
-
   async getRepoRoot(did: string): Promise<CID | null> {
-    const row = await this.db
-      .select('root')
-      .from('repo_roots')
-      .where('did', did)
-    return row.length < 1 ? null : CID.parse(row[0].root)
+    const table = this.db.getRepository(RepoRoot)
+    const found = await table.findOneBy({ did })
+    if (found === null) return null
+    return CID.parse(found.root)
   }
 
-  // SERVER SUBSCRIPTIONS
-  // -----------
-
-  async createSubscription(host: string, user: string): Promise<void> {
-    await this.db.insert({ host, user }).into('subscriptions')
+  async setRepoRoot(did: string, root: CID) {
+    const table = this.db.getRepository(RepoRoot)
+    let newRoot = await table.findOneBy({ did })
+    if (newRoot === null) {
+      newRoot = new RepoRoot()
+      newRoot.did = did
+    }
+    newRoot.root = root.toString()
+    await table.save(newRoot)
   }
 
-  async getSubscriptionsForUser(user: string): Promise<string[]> {
-    const res = await this.db
-      .select('host')
-      .from('subscriptions')
-      .where({ user })
-    return res.map((row) => row.host)
+  async getUser(user: string): Promise<UserDid | null> {
+    const table = this.db.getRepository(UserDid)
+    if (user.startsWith('did:')) {
+      return table.findOneBy({ did: user })
+    } else {
+      return table.findOneBy({ username: user })
+    }
   }
 
-  // POSTS
-  // -----------
-
-  async getPost(
-    tid: string,
-    author: string,
-    namespace: string,
-  ): Promise<Post | null> {
-    const row = await this.db('posts')
-      .select('*')
-      .where({ tid, author, namespace })
-    if (row.length < 1) return null
-    return row[0]
+  async registerUser(username: string, did: string) {
+    const table = this.db.getRepository(UserDid)
+    const user = new UserDid()
+    user.username = username
+    user.did = did
+    await table.save(user)
   }
 
-  async createPost(post: Post, cid: CID): Promise<void> {
-    await this.db('posts').insert({
-      ...post,
-      cid: cid.toString(),
+  canIndexRecord(collection: string, obj: unknown): boolean {
+    const table = this.findTableForCollection(collection)
+    return table.isValidSchema(obj)
+  }
+
+  async indexRecord(uri: AdxUri, obj: unknown) {
+    const record = new AdxRecord()
+    record.uri = uri.toString()
+
+    record.did = uri.host
+    if (!record.did.startsWith('did:')) {
+      throw new Error('Expected indexed URI to contain DID')
+    }
+    record.collection = uri.collection
+    if (record.collection.length < 1) {
+      throw new Error('Expected indexed URI to contain a collection')
+    }
+    record.tid = uri.recordKey
+    if (record.tid.length < 1) {
+      throw new Error('Expected indexed URI to contain a record TID')
+    }
+    record.raw = JSON.stringify(obj)
+
+    const recordTable = this.db.getRepository(AdxRecord)
+    await recordTable.save(record)
+
+    const table = this.findTableForCollection(uri.collection)
+    await table.set(uri, obj)
+  }
+
+  async deleteRecord(uri: AdxUri) {
+    const table = this.findTableForCollection(uri.collection)
+    const recordTable = this.db.getRepository(AdxRecord)
+    await Promise.all([table.delete(uri), recordTable.delete(uri.toString())])
+  }
+
+  async listCollectionsForDid(did: string): Promise<string[]> {
+    const recordTable = await this.db
+      .getRepository(AdxRecord)
+      .createQueryBuilder('record')
+      .select('record.collection')
+      .where('record.did = :did', { did })
+      .getRawMany()
+
+    return recordTable
+  }
+
+  async listRecordsForCollection(
+    did: string,
+    collection: string,
+    limit: number,
+    reverse: boolean,
+    before?: string,
+    after?: string,
+  ): Promise<{ uri: string; value: unknown }[]> {
+    const builder = await this.db
+      .createQueryBuilder()
+      .select(['record.uri AS uri, record.raw AS raw'])
+      .from(AdxRecord, 'record')
+      .where('record.did = :did', { did })
+      .andWhere('record.collection = :collection', { collection })
+      .orderBy('record.tid', reverse ? 'DESC' : 'ASC')
+      .limit(limit)
+
+    if (before !== undefined) {
+      builder.andWhere('record.tid < :before', { before })
+    }
+    if (after !== undefined) {
+      builder.andWhere('record.tid > :after', { after })
+    }
+
+    const res = await builder.getRawMany()
+    return res.map((row) => {
+      return {
+        uri: row.uri,
+        value: JSON.parse(row.raw),
+      }
     })
   }
 
-  async updatePost(post: Post, cid: CID): Promise<void> {
-    const { tid, author, namespace, text, time } = post
-    await this.db('posts')
-      .where({ tid, author, namespace })
-      .update({ text, time, cid: cid.toString() })
+  async getRecord(uri: AdxUri): Promise<unknown | null> {
+    const record = await this.db
+      .getRepository(AdxRecord)
+      .findOneBy({ uri: uri.toString() })
+    if (record === null) return null
+    return JSON.parse(record.raw)
   }
 
-  async deletePost(
-    tid: string,
-    author: string,
-    namespace: string,
-  ): Promise<void> {
-    await this.db('posts').where({ tid, author, namespace }).del()
-  }
-
-  async postCount(author: string): Promise<number> {
-    const res = await this.db('posts').count('*').where({ author })
-    const count = (res[0] || {})['count(*)']
-    if (typeof count !== 'number') {
-      throw new ServerError(500, 'Unable to retrieve post count')
-    }
-    return count
-  }
-
-  // LIKES
-  // -----------
-
-  async getLike(
-    tid: string,
-    author: string,
-    namespace: string,
-  ): Promise<Like | null> {
-    const row = await this.db('likes')
-      .select('*')
-      .where({ tid, author, namespace })
-    if (row.length < 1) return null
-    return row[0]
-  }
-
-  async getLikeByPost(
-    author: string,
-    post_tid: string,
-    post_author: string,
-    post_namespace: string,
-  ): Promise<Like | null> {
-    const row = await this.db('likes')
-      .select('*')
-      .where({ author, post_tid, post_author, post_namespace })
-    if (row.length < 1) return null
-    return row[0]
-  }
-
-  async createLike(like: Like, cid: CID): Promise<void> {
-    await this.db('likes').insert({
-      ...like,
-      cid: cid.toString(),
-    })
-  }
-
-  async deleteLike(
-    tid: string,
-    author: string,
-    namespace: string,
-  ): Promise<void> {
-    await this.db('likes').where({ tid, author, namespace }).delete()
-  }
-
-  // FOLLOWS
-  // -----------
-
-  async createFollow(creator: string, target: string): Promise<void> {
-    await this.db('follows').insert({
-      creator,
-      target,
-    })
-  }
-
-  async deleteFollow(creator: string, target: string): Promise<void> {
-    await this.db('follows')
-      .where({
-        creator,
-        target,
-      })
-      .delete()
-  }
-
-  async listFollows(creator: string): Promise<Follow[]> {
-    const list = await this.db('follows')
-      .join('user_dids', 'follows.target', '=', 'user_dids.did')
-      .select('follows.target', 'user_dids.username', 'user_dids.host')
-      .where('follows.creator', creator)
-    return list.map((f) => ({
-      did: f.target,
-      username: `${f.username}@${f.host}`,
-    }))
-  }
-
-  async listFollowers(target: string): Promise<Follow[]> {
-    const list = await this.db('follows')
-      .join('user_dids', 'follows.creator', '=', 'user_dids.did')
-      .select('follows.creator', 'user_dids.username', 'user_dids.host')
-      .where('follows.target', target)
-    return list.map((f) => ({
-      did: f.creator,
-      username: `${f.username}@${f.host}`,
-    }))
-  }
-
-  async followCount(creator: string): Promise<number> {
-    const res = await this.db('follows')
-      .count('*')
-      .where('follows.creator', creator)
-    const count = (res[0] || {})['count(*)']
-    if (typeof count !== 'number') {
-      throw new ServerError(500, 'Unable to retrieve follows count')
-    }
-    return count
-  }
-
-  async followerCount(target: string): Promise<number> {
-    const res = await this.db('follows')
-      .count('*')
-      .where('follows.target', target)
-    const count = (res[0] || {})['count(*)']
-    if (typeof count !== 'number') {
-      throw new ServerError(500, 'Unable to retrieve followers count')
-    }
-    return count
-  }
-
-  // INDEXER
-  // -----------
-
-  async retrievePostInfo(
-    tid: string,
-    author: string,
-    namespace: string,
-  ): Promise<TimelinePost | null> {
-    const row = await this.db('posts')
-      .join('user_dids', 'posts.author', '=', 'user_dids.did')
-      .select('*')
-      .where({ tid, author, namespace })
-    if (row.length < 1) return null
-    const p = row[0]
-    return {
-      tid: p.tid,
-      author: p.author,
-      author_name: `${p.username}@${p.host}`,
-      text: p.text,
-      time: p.time,
-      likes: await this.likeCount(p.author, p.namespace, p.tid),
-    }
-  }
-
-  async retrieveFeed(
-    user: string,
-    count: number,
-    from?: string,
-  ): Promise<Timeline> {
-    // fallback to a fake TID that is larger than any possible
-    const username = await this.getUsername(user)
-    if (!username) {
-      throw new ServerError(404, `Could not find user ${user}`)
-    }
-    const olderThan = from || 'zzzzzzzzzzzzz'
-    const feed = await this.db('posts')
-      .where('posts.author', user)
-      .where('posts.tid', '<', olderThan)
-      .select('*')
-      .orderBy('posts.tid', 'desc')
-      .limit(count)
-
-    return Promise.all(
-      feed.map(async (p) => ({
-        tid: p.tid,
-        author: p.author,
-        author_name: username,
-        text: p.text,
-        time: p.time,
-        likes: await this.likeCount(p.author, p.namespace, p.tid),
-      })),
+  findTableForCollection(collection: string) {
+    const found = Object.values(this.records).find(
+      (plugin) => plugin.collection === collection,
     )
-  }
-
-  async retrieveTimeline(
-    user: string,
-    count: number,
-    from?: string,
-  ): Promise<Timeline> {
-    // fallback to a fake TID that is larger than any possible
-    const olderThan = from || 'zzzzzzzzzzzzz'
-    const timeline = await this.db('posts')
-      .join('user_dids', 'posts.author', '=', 'user_dids.did')
-      .leftJoin('follows', 'posts.author', '=', 'follows.target')
-      .where(function () {
-        this.where('follows.creator', user).orWhere('posts.author', user)
-      })
-      .where('posts.tid', '<', olderThan)
-      .select('posts.*', 'user_dids.username', 'user_dids.host')
-      .orderBy('posts.tid', 'desc')
-      .limit(count)
-    return Promise.all(
-      timeline.map(async (p) => ({
-        tid: p.tid,
-        author: p.author,
-        author_name: `${p.username}@${p.host}`,
-        text: p.text,
-        time: p.time,
-        likes: await this.likeCount(p.author, p.namespace, p.tid),
-      })),
-    )
-  }
-
-  async likeCount(
-    author: string,
-    namespace: string,
-    tid: string,
-  ): Promise<number> {
-    const res = await this.db('likes').count('*').where({
-      post_author: author,
-      post_namespace: namespace,
-      post_tid: tid,
-    })
-    const count = (res[0] || {})['count(*)']
-    if (typeof count !== 'number') {
-      throw new ServerError(500, 'Unable to retrieve like count on post')
+    if (!found) {
+      throw new Error('Could not find table for collection')
     }
-    return count
-  }
-
-  async getAccountInfo(did: string): Promise<AccountInfo> {
-    const [username, postCount, followerCount, followCount] = await Promise.all(
-      [
-        this.getUsername(did),
-        this.postCount(did),
-        this.followerCount(did),
-        this.followCount(did),
-      ],
-    )
-    if (username === null) {
-      throw new ServerError(404, 'Could not find user')
-    }
-    return {
-      did,
-      username,
-      postCount,
-      followerCount,
-      followCount,
-    }
+    return found
   }
 }
 

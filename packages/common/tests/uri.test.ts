@@ -261,13 +261,24 @@ describe('Adx Uris', () => {
       expect(urip.recordKey).toBe('')
     }
     {
-      const urip = new AdxUri('adx://foo.com/coll')
-      expect(urip.collection).toBe('coll')
+      const urip = new AdxUri('adx://foo.com/namespace')
+      expect(urip.namespace).toBe('namespace')
+      expect(urip.dataset).toBe('')
+      expect(urip.collection).toBe('namespace/')
       expect(urip.recordKey).toBe('')
     }
     {
-      const urip = new AdxUri('adx://foo.com/coll/123')
-      expect(urip.collection).toBe('coll')
+      const urip = new AdxUri('adx://foo.com/namespace/dataset')
+      expect(urip.namespace).toBe('namespace')
+      expect(urip.dataset).toBe('dataset')
+      expect(urip.collection).toBe('namespace/dataset')
+      expect(urip.recordKey).toBe('')
+    }
+    {
+      const urip = new AdxUri('adx://foo.com/namespace/dataset/123')
+      expect(urip.namespace).toBe('namespace')
+      expect(urip.dataset).toBe('dataset')
+      expect(urip.collection).toBe('namespace/dataset')
       expect(urip.recordKey).toBe('123')
     }
   })
@@ -289,16 +300,16 @@ describe('Adx Uris', () => {
     urip.pathname = 'foo'
     expect(urip.toString()).toBe('adx://foo.com/foo')
 
-    urip.collection = 'coll'
+    urip.collection = 'namespace/dataset'
     urip.recordKey = '123'
-    expect(urip.toString()).toBe('adx://foo.com/coll/123')
+    expect(urip.toString()).toBe('adx://foo.com/namespace/dataset/123')
     urip.recordKey = '124'
-    expect(urip.toString()).toBe('adx://foo.com/coll/124')
-    urip.collection = 'other'
-    expect(urip.toString()).toBe('adx://foo.com/other/124')
+    expect(urip.toString()).toBe('adx://foo.com/namespace/dataset/124')
+    urip.collection = 'other/data'
+    expect(urip.toString()).toBe('adx://foo.com/other/data/124')
     urip.pathname = ''
     urip.recordKey = '123'
-    expect(urip.toString()).toBe('adx://foo.com/undefined/123')
+    expect(urip.toString()).toBe('adx://foo.com/undefined/undefined/123')
     urip.pathname = 'foo'
 
     urip.search = '?foo=bar'

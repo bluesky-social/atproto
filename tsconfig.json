@@ -32,6 +32,7 @@
     { "path": "./packages/dev-env" },
     { "path": "./packages/did-sdk/tsconfig.build.json" },
     { "path": "./packages/example-app" },
+    { "path": "./packages/microblog/tsconfig.build.json" },
     { "path": "./packages/schemas/tsconfig.build.json" },
     { "path": "./packages/ws-relay" },
   ]

@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist", // Your outDir,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "strictPropertyInitialization": false
   },
   "module": "nodenext",
   "include": ["./src","__tests__/**/**.ts"],
@@ -10,6 +11,8 @@
     { "path": "../api/tsconfig.build.json" },
     { "path": "../auth/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },
-    { "path": "../crypto/tsconfig.build.json" }
+    { "path": "../crypto/tsconfig.build.json" },
+    { "path": "../microblog/tsconfig.build.json" },
+    { "path": "../schemas/tsconfig.build.json" }
   ]
 }

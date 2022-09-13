@@ -1,0 +1,12 @@
+{
+  "$type": "adxs-collection",
+  "author": "blueskyweb.xyz",
+  "name": "Follows",
+  "$comment": "Where you put follows.",
+  "locale": {
+    "en-US": {
+      "nameSingular": "Follows",
+      "namePlural": "Follows Collections"
+    }
+  }
+}

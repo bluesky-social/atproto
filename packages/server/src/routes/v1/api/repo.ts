@@ -1,5 +1,4 @@
 import express from 'express'
-import { z } from 'zod'
 import {
   NameResolutionFailed,
   DidResolutionFailed,
@@ -7,26 +6,144 @@ import {
   DescribeRepoResponse,
   listRecordsParams,
   batchWriteParams,
-  BatchWriteReponse,
+  ListRecordsResponse,
+  GetRecordResponse,
 } from '@adxp/api'
-import { flattenPost, schema, TID, resolveName } from '@adxp/common'
+import { resolveName, AdxUri, BatchWrite, TID } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
 
-import * as serverAuth from '../../../auth'
+import * as repoDiff from '../../../repo-diff'
 import * as util from '../../../util'
 import { ServerError } from '../../../error'
-import * as subscriptions from '../../../subscriptions'
 
 const router = express.Router()
+
+// EXECUTE TRANSACTIONS
+// -------------------
+
+router.post('/:did', async (req, res) => {
+  const validate = util.parseBooleanParam(req.query.validate, true)
+  const { did } = req.params
+  const tx = util.checkReqBody(req.body, batchWriteParams)
+  const db = util.getDB(res)
+  if (validate) {
+    for (const write of tx.writes) {
+      if (write.action === 'create' || write.action === 'update') {
+        if (!db.canIndexRecord(write.collection, write.value)) {
+          throw new ServerError(
+            400,
+            `Not a valid record for collection: ${write.collection}`,
+          )
+        }
+      }
+    }
+  }
+  // @TODO add user auth here!
+  const serverKey = util.getKeypair(res)
+  const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+  const repo = await util.loadRepo(res, did, authStore)
+  const prevCid = repo.cid
+  await repo.batchWrite(tx.writes)
+  // @TODO: do something better here instead of rescanning for diff
+  const diff = await repo.verifySetOfUpdates(prevCid, repo.cid)
+  try {
+    await repoDiff.processDiff(db, repo, diff)
+  } catch (err) {
+    if (validate) {
+      throw new ServerError(400, `Could not index record: ${err}`)
+    }
+  }
+  await db.setRepoRoot(did, repo.cid)
+  res.sendStatus(200)
+})
+
+router.post('/:did/c/:namespace/:dataset', async (req, res) => {
+  const validate = util.parseBooleanParam(req.query.validate, true)
+  const { did, namespace, dataset } = req.params
+  const collection = `${namespace}/${dataset}`
+  if (!req.body) {
+    throw new ServerError(400, 'Record expected in request body')
+  }
+  const db = util.getDB(res)
+  if (validate) {
+    if (!db.canIndexRecord(collection, req.body)) {
+      throw new ServerError(
+        400,
+        `Not a valid record for collection: ${collection}`,
+      )
+    }
+  }
+  const serverKey = util.getKeypair(res)
+  const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+  const repo = await util.loadRepo(res, did, authStore)
+  const tid = await repo.getCollection(collection).createRecord(req.body)
+  const uri = new AdxUri(`${did}/${collection}/${tid.toString()}`)
+  try {
+    await db.indexRecord(uri, req.body)
+  } catch (err) {
+    if (validate) {
+      throw new ServerError(400, `Could not index record: ${err}`)
+    }
+  }
+  await db.setRepoRoot(did, repo.cid)
+  // @TODO update subscribers
+  res.json({ uri: uri.toString() })
+})
+
+router.put('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
+  const validate = util.parseBooleanParam(req.query.validate, true)
+  const { did, namespace, dataset, tid } = req.params
+  const collection = `${namespace}/${dataset}`
+  if (!req.body) {
+    throw new ServerError(400, 'Record expected in request body')
+  }
+  const db = util.getDB(res)
+  if (validate) {
+    if (!db.canIndexRecord(collection, req.body)) {
+      throw new ServerError(
+        400,
+        `Not a valid record for collection: ${collection}`,
+      )
+    }
+  }
+  const serverKey = util.getKeypair(res)
+  const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+  const repo = await util.loadRepo(res, did, authStore)
+  await repo.getCollection(collection).updateRecord(TID.fromStr(tid), req.body)
+  const uri = new AdxUri(`${did}/${collection}/${tid.toString()}`)
+  try {
+    await db.indexRecord(uri, req.body)
+  } catch (err) {
+    if (validate) {
+      throw new ServerError(400, `Could not index record: ${err}`)
+    }
+  }
+  await db.setRepoRoot(did, repo.cid)
+  // @TODO update subscribers
+  res.json({ uri: uri.toString() })
+})
+
+router.delete('/:did/c/:namespace/:dataset/r/:tid', async (req, res) => {
+  const { did, namespace, dataset, tid } = req.params
+  const collection = `${namespace}/${dataset}`
+  const db = util.getDB(res)
+  const serverKey = util.getKeypair(res)
+  const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+  const repo = await util.loadRepo(res, did, authStore)
+  await repo.getCollection(collection).deleteRecord(TID.fromStr(tid))
+  const uri = new AdxUri(`${did}/${collection}/${tid.toString()}`)
+  await db.deleteRecord(uri)
+  await db.setRepoRoot(did, repo.cid)
+  // @TODO update subscribers
+  res.sendStatus(200)
+})
 
 // DESCRIBE REPO
 // -------------
 
-export const getPathParams = z.object({
-  nameOrDid: z.string(),
-})
-
+// @TODO move to a utility file
+// @TODO: do we want to call out to did sdk here? 🤔
 async function resolveDidWrapped(did: string) {
   try {
     return (await didSdk.resolve(did)).didDoc
@@ -47,180 +164,101 @@ router.get('/:nameOrDid', async (req, res) => {
   const { nameOrDid } = req.params
   const { confirmName } = util.checkReqBody(req.query, describeRepoParams)
 
-  let name: string | undefined
+  let name: string
   let did: string
   let didDoc: didSdk.DIDDocument
   let nameIsCorrect: boolean | undefined
 
-  if (nameOrDid.startsWith('did:')) {
-    did = nameOrDid
-    didDoc = await resolveDidWrapped(did)
-    name = 'undefined' // TODO: need to decide how username gets published in the did doc
-    if (confirmName) {
-      const namesDeclaredDid = await resolveNameWrapped(name)
-      nameIsCorrect = did === namesDeclaredDid
-    }
-  } else {
-    name = nameOrDid
-    did = await resolveNameWrapped(name)
-    didDoc = await resolveDidWrapped(did)
-    if (confirmName) {
-      const didsDeclaredName = 'undefined' // TODO: need to decide how username gets published in the did doc
-      nameIsCorrect = name === didsDeclaredName
-    }
+  // @TODO add back once we have a did network
+  // if (nameOrDid.startsWith('did:')) {
+  //   did = nameOrDid
+  //   didDoc = await resolveDidWrapped(did)
+  //   name = 'undefined' // TODO: need to decide how username gets published in the did doc
+  //   if (confirmName) {
+  //     const namesDeclaredDid = await resolveNameWrapped(name)
+  //     nameIsCorrect = did === namesDeclaredDid
+  //   }
+  // } else {
+  //   name = nameOrDid
+  //   did = await resolveNameWrapped(name)
+  //   didDoc = await resolveDidWrapped(did)
+  //   if (confirmName) {
+  //     const didsDeclaredName = 'undefined' // TODO: need to decide how username gets published in the did doc
+  //     nameIsCorrect = name === didsDeclaredName
+  //   }
+  // }
+
+  const db = util.getDB(res)
+  const user = await db.getUser(nameOrDid)
+  if (user === null) {
+    throw new ServerError(404, `Could not find user: ${nameOrDid}`)
   }
+  didDoc = {} as any
+  nameIsCorrect = true
 
-  // TODO: list collections
+  const collections = await db.listCollectionsForDid(user.did)
 
-  const resBody: DescribeRepoResponse = { name, did, didDoc, nameIsCorrect }
-  res.status(200)
+  const resBody: DescribeRepoResponse = {
+    name: user.username,
+    did: user.did,
+    didDoc,
+    collections,
+    nameIsCorrect,
+  }
   res.json(resBody)
 })
-
-// EXECUTE TRANSACTION
-// -------------------
-router.post('/:did', async (req, res) => {
-  const { did } = req.params
-  const tx = util.checkReqBody(req.body, batchWriteParams)
-  // auth token is in the request data not in http header
-
-  const serverKey = util.getKeypair(res)
-
-  const tokens = tx.writes.map((op) => op.auth)
-  const authStore = await auth.AuthStore.fromTokens(serverKey, tokens)
-  const repo = await util.loadRepo(res, did, authStore)
-  for (const op of tx.writes) {
-    await repo.runOnNamespace(op.collection, async (store) => {})
-    const token = await auth.validateUcan(op.auth)
-    try {
-      await auth.verifyAdxUcan(
-        token,
-        serverKey.did(),
-        auth.writeCap(did, op.collection),
-      )
-    } catch (err) {
-      // @TODO make this a real error
-      throw new Error('UNAUTHORIZED')
-    }
-
-    await repo.runOnNamespace(op.collection, async (store) => {})
-  }
-
-  // const authStore = await serverAuth.checkReq(
-  //   req,
-  //   res,
-  //   auth.writeCap(post.author, post.namespace, 'posts', post.tid.toString()),
-  // )
-  // const repo = await util.loadRepo(res, post.author, authStore)
-  // const postCid = await repo.put(flattenPost(post))
-  // await repo.runOnNamespace(post.namespace, async (store) => {
-  //   return store.posts.addEntry(post.tid, postCid)
-  // })
-  // const db = util.getDB(res)
-  // await db.createPost(post, postCid)
-  // await db.updateRepoRoot(post.author, repo.cid)
-  // await subscriptions.notifySubscribers(db, repo)
-  // res.status(200).send()
-})
-/*
-
-// UPDATE RECORD
-// -------------
-
-export const editPostReq = schema.microblog.post
-export type EditPostReq = z.infer<typeof editPostReq>
-
-router.put('/:did/c/:coll/r/:key', async (req, res) => {
-  const post = util.checkReqBody(req.body, editPostReq)
-  const authStore = await checkReq(
-    req,
-    res,
-    auth.writeCap(post.author, post.namespace, 'posts', post.tid.toString()),
-  )
-  const repo = await util.loadRepo(res, post.author, authStore)
-  const postCid = await repo.put(flattenPost(post))
-  await repo.runOnNamespace(post.namespace, async (store) => {
-    return store.posts.editEntry(post.tid, postCid)
-  })
-  const db = util.getDB(res)
-  await db.updatePost(post, postCid)
-  await db.updateRepoRoot(post.author, repo.cid)
-  await subscriptions.notifySubscribers(db, repo)
-  res.status(200).send()
-})
-
-// DELETE RECORD
-// -------------
-
-export const deletePostReq = z.object({
-  did: z.string(),
-  namespace: z.string(),
-  tid: schema.repo.strToTid,
-})
-export type DeletePostReq = z.infer<typeof deletePostReq>
-
-router.delete('/:did/c/:coll/r/:key', async (req, res) => {
-  const { did, namespace, tid } = util.checkReqBody(req.body, deletePostReq)
-  const authStore = await checkReq(
-    req,
-    res,
-    auth.writeCap(did, namespace, 'posts', tid.toString()),
-  )
-  const repo = await util.loadRepo(res, did, authStore)
-  await repo.runOnNamespace(namespace, async (store) => {
-    return store.posts.deleteEntry(tid)
-  })
-  const db = util.getDB(res)
-  await db.deletePost(tid.toString(), did, namespace)
-  await db.updateRepoRoot(did, repo.cid)
-  await subscriptions.notifySubscribers(db, repo)
-  res.status(200).send()
-})
-
-*/
 
 // LIST RECORDS
 // ------------
 
-router.get('/:nameOrDid/c/:coll', async (req, res) => {
-  const { nameOrDid, coll } = req.params
-  const { count = 50, from } = util.checkReqBody(req.query, listRecordsParams)
-  const fromTid = from ? TID.fromStr(from) : undefined
-  const repo = await util.loadRepo(res, nameOrDid)
-  const entries = await repo.runOnNamespace(coll, async (store) => {
-    return store.posts.getEntries(count, fromTid)
-  })
-  const posts = await Promise.all(
-    entries.map((entry) => repo.get(entry.cid, schema.microblog.post)),
+router.get('/:nameOrDid/c/:namespace/:dataset', async (req, res) => {
+  const { nameOrDid, namespace, dataset } = req.params
+  const coll = namespace + '/' + dataset
+  const {
+    limit = 50,
+    before,
+    after,
+    reverse = false,
+  } = util.checkReqBody(req.query, listRecordsParams)
+
+  const db = util.getDB(res)
+  const did = nameOrDid.startsWith('did:')
+    ? nameOrDid
+    : (await db.getUser(nameOrDid))?.did
+  if (!did) {
+    throw new ServerError(404, `Could not find did for ${nameOrDid}`)
+  }
+
+  const records = await db.listRecordsForCollection(
+    did,
+    coll,
+    limit,
+    reverse,
+    before,
+    after,
   )
-  const flattened = posts.map(flattenPost)
-  res.status(200).send(flattened)
+
+  res.json({ records } as ListRecordsResponse)
 })
 
 // GET RECORD
 // ----------
 
-export const getPostReq = z.object({
-  nameOrDid: z.string(),
-  coll: z.string(),
-  recordKey: schema.repo.strToTid,
-})
-export type GetPostReq = z.infer<typeof getPostReq>
+router.get('/:nameOrDid/c/:namespace/:dataset/r/:tid', async (req, res) => {
+  const { nameOrDid, namespace, dataset, tid } = req.params
+  const coll = namespace + '/' + dataset
 
-router.get('/:nameOrDid/c/:coll/r/:recordKey', async (req, res) => {
-  const { nameOrDid, coll, recordKey } = util.checkReqBody(
-    req.params,
-    getPostReq,
-  )
-  const repo = await util.loadRepo(res, nameOrDid)
-  const postCid = await repo.runOnNamespace(coll, async (store) => {
-    return store.posts.getEntry(recordKey)
-  })
-  if (postCid === null) {
-    throw new ServerError(404, 'Could not find post')
+  const did = nameOrDid.startsWith('did:')
+    ? nameOrDid
+    : await resolveNameWrapped(nameOrDid)
+  const uri = new AdxUri(`${did}/${coll}/${tid}`)
+
+  const db = util.getDB(res)
+  const record = await db.getRecord(uri)
+  if (record === null) {
+    throw new ServerError(404, `Could not locate record: ${uri}`)
   }
-  const post = await repo.get(postCid, schema.microblog.post)
-  res.status(200).send(flattenPost(post))
+  res.json({ uri: uri.toString(), value: record } as GetRecordResponse)
 })
 
 export default router

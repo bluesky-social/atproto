@@ -1,0 +1,109 @@
+{
+  "$type": "adxs-view",
+  "author": "blueskyweb.xyz",
+  "name": "ProfileView",
+  "reads": [
+    "blueskyweb.xyz:Feed",
+    "blueskyweb.xyz:SocialGraph"
+  ],
+  "parameters": {
+    "type": "object",
+    "required": ["user"],
+    "properties": {
+      "user": {"type": "string"}
+    }
+  },
+  "response": {
+    "type": "object",
+    "required": ["did", "name", "followersCount", "followsCount", "postsCount", "badges"],
+    "properties": {
+      "did": {"type": "string"},
+      "name": {"type": "string"},
+      "displayName": {
+        "type": "string",
+        "maxLength": 64
+      },
+      "description": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "followersCount": {"type": "number"},
+      "followsCount": {"type": "number"},
+      "postsCount": {"type": "number"},
+      "badges": {"type": "array", "items": {"$ref":"#/$defs/badge"}},
+      "myState": {
+        "type": "object",
+        "properties": {
+          "follow": {"type": "string"}
+        }
+      }
+    },
+    "$defs": {
+      "badge": {
+        "type": "object",
+        "required": ["uri"],
+        "properties": {
+          "uri": {"type": "string"},
+          "error": {"type": "string"},
+          "issuer": {
+            "type": "object",
+            "required": ["did", "name", "displayName"],
+            "properties": {
+              "did": {"type": "string"},
+              "name": {"type": "string"},
+              "displayName": {
+                "type": "string",
+                "maxLength": 64
+              }
+            }
+          },
+          "assertion": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {"type": "string"}
+            }
+          },
+          "createdAt": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  },
+  "$ext": {
+    "adxs-doc": {
+      "examples": [
+        {
+          "did": "did:example:1234",
+          "name": "alice.com",
+          "displayName": "Alice",
+          "description": "A cool hacker chick",
+          "followersCount": 1000,
+          "followsCount": 100,
+          "postsCount": 250,
+          "badges": [
+            {
+              "uri": "adx://work.com/blueskyweb.xyz:Social/1234",
+              "issuer": {
+                "did": "did:example:4321",
+                "name": "work.com",
+                "displayName": "Work"
+              },
+              "assertion": {"type": "employee"},
+              "createdAt": "2010-01-01T19:23:24Z"
+            },
+            {
+              "uri": "adx://bob.com/blueskyweb.xyz:Social/2222",
+              "issuer": {
+                "did": "did:example:5555",
+                "name": "bob.com",
+                "displayName": "Bob"
+              },
+              "assertion": {"type": "tag", "tag": "tech"},
+              "createdAt": "2010-01-01T19:23:24Z"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

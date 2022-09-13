@@ -1,0 +1,49 @@
+{
+  "$type": "adxs-record",
+  "author": "blueskyweb.xyz",
+  "name": "Profile",
+  "locale": {
+    "en-US": {
+      "nameSingular": "Profile",
+      "namePlural": "Profiles"
+    }
+  },
+  "schema": {
+    "type": "object",
+    "required": ["displayName"],
+    "properties": {
+      "displayName": {
+        "type": "string",
+        "maxLength": 64
+      },
+      "description": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "badges": {"type": "array", "items": {"$ref": "#/$defs/badgeRef"}}
+    },
+    "$defs": {
+      "badgeRef": {
+        "type": "object",
+        "required": ["uri"],
+        "properties": {
+          "uri": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$ext": {
+    "adxs-doc": {
+      "examples": [
+        {
+          "$type": "blueskyweb.xyz:Profile",
+          "displayName": "Alice",
+          "description": "A cool hacker chick",
+          "badges": [{
+            "uri": "adx://bob.com/blueskyweb.xyz:Social/1234"
+          }]
+        }
+      ]
+    }
+  }
+}

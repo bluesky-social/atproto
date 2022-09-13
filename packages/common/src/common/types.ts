@@ -25,10 +25,6 @@ const strToCid = z
   .refine(isCid, { message: 'Not a valid CID' })
   .transform((str: string) => mf.CID.parse(str))
 
-// @TODO improve our DID representation
-const did = z.string()
-export type DID = z.infer<typeof did>
-
 const bytes = z.instanceof(Uint8Array)
 export type Bytes = z.infer<typeof bytes>
 
@@ -39,11 +35,13 @@ const strToInt = z
   })
   .transform((str) => parseInt(str))
 
-export const schema = {
+const strToBool = z.string().transform((str) => str === 'true' || str === 't')
+
+export const def = {
   string: z.string(),
   cid,
   strToCid,
-  did,
   bytes,
   strToInt,
+  strToBool,
 }
