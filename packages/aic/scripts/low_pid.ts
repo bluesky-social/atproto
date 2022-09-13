@@ -1,5 +1,6 @@
-import { pid } from '../pid'
+import { pid } from '../src/pid'
 
+//@TODO put this in a bench file
 const run = async () => {
   let min_p = 'z'
   const tic = Number(new Date())
