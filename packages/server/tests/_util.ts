@@ -1,4 +1,4 @@
-import { MemoryBlockstore } from '@adxp/common'
+import { MemoryBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
 
 import server from '../src/server'

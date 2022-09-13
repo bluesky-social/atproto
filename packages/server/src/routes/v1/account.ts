@@ -1,10 +1,9 @@
 import express from 'express'
 import { z } from 'zod'
 
-import { Repo } from '@adxp/common'
+import { Repo } from '@adxp/repo'
 import * as auth from '@adxp/auth'
 
-import * as serverAuth from '../../auth'
 import * as util from '../../util'
 import { ServerError } from '../../error'
 

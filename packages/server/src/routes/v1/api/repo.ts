@@ -9,7 +9,7 @@ import {
   ListRecordsResponse,
   GetRecordResponse,
 } from '@adxp/api'
-import { resolveName, AdxUri, BatchWrite, TID } from '@adxp/common'
+import { resolveName, AdxUri, TID } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
 

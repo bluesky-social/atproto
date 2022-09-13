@@ -9,7 +9,7 @@ import cors from 'cors'
 import http from 'http'
 import * as auth from '@adxp/auth'
 import Routes from './routes'
-import { IpldStore } from '@adxp/common'
+import { IpldStore } from '@adxp/repo'
 import Database from './db'
 import * as error from './error'
 

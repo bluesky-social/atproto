@@ -1,10 +1,7 @@
 import express from 'express'
 import * as util from '../../../util'
 import { getRepoRequest, postRepoRequest } from '@adxp/api'
-import { AdxUri, DataDiff, Repo, service } from '@adxp/common'
-import Database from '../../../db/index'
-import { ServerError } from '../../../error'
-import * as subscriptions from '../../../subscriptions'
+import { DataDiff, Repo } from '@adxp/repo'
 import * as repoDiff from '../../../repo-diff'
 
 const router = express.Router()
@@ -54,7 +51,7 @@ router.post('/:did', async (req, res) => {
 
   await repoDiff.processDiff(db, repo, diff)
 
-  await subscriptions.notifySubscribers(db, repo)
+  // await subscriptions.notifySubscribers(db, repo)
 
   await db.setRepoRoot(did, repo.cid)
 
