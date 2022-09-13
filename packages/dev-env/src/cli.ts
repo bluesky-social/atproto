@@ -70,15 +70,6 @@ async function createREPL(): Promise<REPLServer> {
     },
   })
 
-  inst.defineCommand('start-wsrelay', {
-    help: 'Start a websocket relay.',
-    async action(port: string) {
-      this.clearBufferedCommand()
-      await devEnv.add(await cfg(port, ServerType.WebSocketRelay))
-      this.displayPrompt()
-    },
-  })
-
   inst.defineCommand('start-didweb', {
     help: 'Start a did:web host.',
     async action(port: string) {
@@ -93,24 +84,6 @@ async function createREPL(): Promise<REPLServer> {
     async action(port: string) {
       this.clearBufferedCommand()
       await devEnv.add(await cfg(port, ServerType.KeyManager))
-      this.displayPrompt()
-    },
-  })
-
-  inst.defineCommand('start-auth', {
-    help: 'Start an auth lobby.',
-    async action(port: string) {
-      this.clearBufferedCommand()
-      await devEnv.add(await cfg(port, ServerType.AuthLobby))
-      this.displayPrompt()
-    },
-  })
-
-  inst.defineCommand('start-example-app', {
-    help: 'Start an example app.',
-    async action(port: string) {
-      this.clearBufferedCommand()
-      await devEnv.add(await cfg(port, ServerType.ExampleApp))
       this.displayPrompt()
     },
   })

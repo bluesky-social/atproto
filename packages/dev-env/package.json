@@ -14,13 +14,10 @@
     "verify:fix": "yarn prettier:fix && yarn lint:fix"
   },
   "dependencies": {
-    "@adxp/auth-lobby": "*",
     "@adxp/common": "*",
     "@adxp/crypto": "*",
     "@adxp/did-sdk": "*",
-    "@adxp/example-app": "*",
     "@adxp/server": "*",
-    "@adxp/ws-relay": "*",
     "axios": "^0.27.2",
     "chalk": "^5.0.1",
     "cors": "^2.8.5",
