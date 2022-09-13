@@ -68,15 +68,6 @@ async function createREPL(): Promise<REPLServer> {
     },
   })
 
-  inst.defineCommand('start-didweb', {
-    help: 'Start a did:web host.',
-    async action(port: string) {
-      this.clearBufferedCommand()
-      await devEnv.add(await cfg(port, ServerType.DidWebHost))
-      this.displayPrompt()
-    },
-  })
-
   inst.defineCommand('stop', {
     help: 'Stop the server at the given port.',
     async action(portStr: string) {
@@ -103,8 +94,6 @@ async function createREPL(): Promise<REPLServer> {
       this.clearBufferedCommand()
       if (!devEnv.hasType(ServerType.PersonalDataServer)) {
         console.error('You must run a personal data server.')
-      } else if (!devEnv.hasType(ServerType.DidWebHost)) {
-        console.error('You must run a did:web host.')
       } else {
         await pauseREPL(async () => {
           const pds = await promptChooseServer(

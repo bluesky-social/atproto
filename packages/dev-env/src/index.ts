@@ -3,20 +3,17 @@ import chalk from 'chalk'
 import { MemoryBlockstore } from '@adxp/repo'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
-import { DidWebDb, DidWebServer } from '@adxp/did-sdk'
-import DidWebClient from './did-web/client.js'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
 export class DevEnvServer {
-  inst?: http.Server | DidWebServer
-  client?: DidWebClient
+  inst?: http.Server
+  // client?: DidWebClient TODO
 
   constructor(public type: ServerType, public port: number) {}
 
   get name() {
     return {
-      [ServerType.PersonalDataServer]: '🌞 ADX Data server',
-      [ServerType.DidWebHost]: '📰 did:web server',
+      [ServerType.PersonalDataServer]: '🌞 Personal Data server',
     }[this.type]
   }
 
@@ -55,19 +52,6 @@ export class DevEnvServer {
         )
         break
       }
-      case ServerType.DidWebHost: {
-        const db = DidWebDb.memory()
-        this.inst = DidWebServer.create(db, this.port)
-        if (this.inst._httpServer) {
-          await onServerReady(this.inst._httpServer)
-        } else {
-          throw new Error(
-            `did:web server at port ${this.port} failed to start a server`,
-          )
-        }
-        this.client = new DidWebClient(this.url)
-        break
-      }
       default:
         throw new Error(`Unsupported server type: ${this.type}`)
     }
@@ -81,11 +65,7 @@ export class DevEnvServer {
       })
     }
 
-    if (this.inst instanceof DidWebServer) {
-      if (this.inst._httpServer) {
-        await closeServer(this.inst._httpServer)
-      }
-    } else if (this.inst) {
+    if (this.inst) {
       await closeServer(this.inst)
     }
   }
