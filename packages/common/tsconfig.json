@@ -7,5 +7,6 @@
   "include": ["./src","__tests__/**/**.ts"],
   "references": [
     { "path": "../auth/tsconfig.build.json" },
+    { "path": "../schemas/tsconfig.build.json" },
   ]
 }

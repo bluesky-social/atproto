@@ -1,9 +1,4 @@
-import axios, {
-  AxiosError,
-  AxiosRequestConfig,
-  AxiosRequestHeaders,
-} from 'axios'
-import * as auth from '@adxp/auth'
+import axios, { AxiosError } from 'axios'
 
 export const assureAxiosError = (err: unknown): AxiosError => {
   if (axios.isAxiosError(err)) return err
@@ -19,18 +14,6 @@ export const parseAxiosError = (
     code: err.response?.status || 500,
     msg,
     err,
-  }
-}
-
-export const authHeader = (token: auth.Ucan): AxiosRequestHeaders => {
-  return {
-    Authorization: `Bearer ${auth.encodeUcan(token)}`,
-  }
-}
-
-export const authCfg = (token: auth.Ucan): AxiosRequestConfig => {
-  return {
-    headers: authHeader(token),
   }
 }
 

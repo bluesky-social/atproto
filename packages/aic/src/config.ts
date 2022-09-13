@@ -1,4 +1,4 @@
-export const dbLoc = 'adx.sqlite'
+export const dbLoc = 'test.sqlite'
 export const port = 26979
 
 // did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh

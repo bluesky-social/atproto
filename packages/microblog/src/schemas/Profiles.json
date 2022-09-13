@@ -1,0 +1,12 @@
+{
+  "$type": "adxs-collection",
+  "author": "blueskyweb.xyz",
+  "name": "Profiles",
+  "$comment": "Where you put your profile.",
+  "locale": {
+    "en-US": {
+      "nameSingular": "Profiles",
+      "namePlural": "Profiles Collections"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@adxp/microblog",
+  "version": "0.0.1",
+  "main": "src/index.ts",
+  "scripts": {
+    "schemas-compile": "node ./scripts/compile.js src",
+    "schemas-docs": "node ./scripts/docs.js",
+    "schemas-validate": "node ./scripts/validate.js",
+    "schemas-ifaces": "node ./scripts/ifaces.js src/types",
+    "schemas-build": "yarn schemas-compile && yarn schemas-ifaces",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "postbuild": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@adxp/schemas": "*"
+  },
+  "devDependencies": {
+    "ajv": "^8.11.0",
+    "ajv-formats": "^2.1.1",
+    "json-schema-to-typescript": "^11.0.2"
+  }
+}

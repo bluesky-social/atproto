@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
-import { IpldStore, Repo, check } from '@adxp/common'
+import { check } from '@adxp/common'
+import { IpldStore, Repo } from '@adxp/repo'
 import * as auth from '@adxp/auth'
 import { Database } from './db'
 import { ServerError } from './error'
@@ -18,11 +19,24 @@ export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   })
 }
 
-export const checkReqBody = <T>(body: unknown, schema: check.Schema<T>): T => {
+export const checkReqBody = <T>(body: unknown, schema: check.Def<T>): T => {
   try {
     return check.assure(schema, body)
   } catch (err) {
     throw new ServerError(400, `Poorly formatted request: ${err}`)
+  }
+}
+
+export const parseBooleanParam = (
+  param: unknown,
+  defaultTrue = false,
+): boolean => {
+  if (defaultTrue) {
+    if (param === 'false' || param === 'f') return false
+    return true
+  } else {
+    if (param === 'true' || param === 't') return true
+    return false
   }
 }
 

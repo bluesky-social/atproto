@@ -7,6 +7,6 @@ const router = express.Router()
 
 router.use('/root', Root)
 router.use('/repo', Repo)
-router.use('/subscribe', Subscribe)
+// router.use('/subscribe', Subscribe)
 
 export default router
