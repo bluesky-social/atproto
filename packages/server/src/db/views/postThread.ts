@@ -41,6 +41,13 @@ export const viewFn =
     if (depth > 0) {
       thread.replies = await getReplies(db, thread, depth - 1, requester)
     }
+    if (res.parent !== null) {
+      const parentRes = await postInfoBuilder(db, requester).where(
+        'post.uri = :uri',
+        { uri: res.parent },
+      )
+      thread.parent = rowToPost(parentRes)
+    }
 
     return { thread }
   }
@@ -73,6 +80,7 @@ const postInfoBuilder = (db: DataSource, requester: string) => {
     .createQueryBuilder()
     .select([
       'post.uri AS uri',
+      'post.replyParent AS parent',
       'author.did AS authorDid',
       'author.username AS authorName',
       'author_profile.displayName AS authorDisplayName',

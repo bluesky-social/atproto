@@ -46,7 +46,6 @@ export class MicroblogClient {
   async createProfile(
     displayName: string,
     description?: string,
-    hardcode: Partial<Profile.Record> = {},
   ): Promise<AdxUri> {
     const uri = await this.repo
       .collection('bsky/profile')
@@ -54,16 +53,11 @@ export class MicroblogClient {
         $type: 'blueskyweb.xyz:Profile',
         displayName,
         description,
-        ...hardcode,
       })
     return uri
   }
 
-  async createPost(
-    text: string,
-    entities?: Post.Entity[],
-    hardcode: Partial<Post.Record> = {},
-  ): Promise<AdxUri> {
+  async createPost(text: string, entities?: Post.Entity[]): Promise<AdxUri> {
     const uri = await this.repo
       .collection('bsky/posts')
       .create('blueskyweb.xyz:Post', {
@@ -71,17 +65,11 @@ export class MicroblogClient {
         text,
         entities,
         createdAt: new Date().toISOString(),
-        ...hardcode,
       })
     return uri
   }
 
-  async reply(
-    root: AdxUri,
-    parent: AdxUri,
-    text: string,
-    hardcode: Partial<Post.Record> = {},
-  ): Promise<AdxUri> {
+  async reply(root: AdxUri, parent: AdxUri, text: string): Promise<AdxUri> {
     const uri = await this.repo
       .collection('bsky/posts')
       .create('blueskyweb.xyz:Post', {
@@ -92,62 +80,44 @@ export class MicroblogClient {
           parent: parent.toString(),
         },
         createdAt: new Date().toISOString(),
-        ...hardcode,
       })
     return uri
   }
 
-  async likePost(
-    uri: AdxUri,
-    hardcode: Partial<Like.Record> = {},
-  ): Promise<AdxUri> {
+  async likePost(uri: AdxUri): Promise<AdxUri> {
     const likeUri = await this.repo
       .collection('bsky/likes')
       .create('blueskyweb.xyz:Like', {
         $type: 'blueskyweb.xyz:Like',
         subject: uri.toString(),
         createdAt: new Date().toISOString(),
-        ...hardcode,
       })
     return likeUri
   }
 
-  async repost(
-    uri: AdxUri,
-    hardcode: Partial<Repost.Record> = {},
-  ): Promise<AdxUri> {
+  async repost(uri: AdxUri): Promise<AdxUri> {
     const repostUri = await this.repo
       .collection('bsky/reposts')
       .create('blueskyweb.xyz:Repost', {
         $type: 'blueskyweb.xyz:Repost',
         subject: uri.toString(),
         createdAt: new Date().toISOString(),
-        ...hardcode,
       })
     return repostUri
   }
 
-  async followUser(
-    did: string,
-    hardcode: Partial<Follow.Record> = {},
-  ): Promise<AdxUri> {
+  async followUser(did: string): Promise<AdxUri> {
     const uri = await this.repo
       .collection('bsky/follows')
       .create('blueskyweb.xyz:Follow', {
         $type: 'blueskyweb.xyz:Follow',
         subject: did,
         createdAt: new Date().toISOString(),
-        ...hardcode,
       })
     return uri
   }
 
-  async giveBadge(
-    did: string,
-    type: string,
-    tag?: string,
-    hardcode: Partial<Badge.Record> = {},
-  ): Promise<AdxUri> {
+  async giveBadge(did: string, type: string, tag?: string): Promise<AdxUri> {
     const uri = await this.repo
       .collection('bsky/badges')
       .create('blueskyweb.xyz:Badge', {
@@ -158,7 +128,6 @@ export class MicroblogClient {
         },
         subject: did,
         createdAt: new Date().toISOString(),
-        ...hardcode,
       })
     return uri
   }
