@@ -32,7 +32,7 @@ export abstract class IpldStore {
     return block.cid
   }
 
-  async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
+  async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
     const value = await this.getUnchecked(cid)
     try {
       return check.assure(schema, value)

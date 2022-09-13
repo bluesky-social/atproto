@@ -231,7 +231,7 @@ export class Repo {
     return this.blockstore.put(value)
   }
 
-  async get<T>(cid: CID, schema: check.Schema<T>): Promise<T> {
+  async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
     return this.blockstore.get(cid, schema)
   }
 
