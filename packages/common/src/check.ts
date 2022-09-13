@@ -1,14 +1,14 @@
-export interface Schema<T> {
+export interface Def<T> {
   parse: (obj: unknown) => T
   safeParse: (obj: unknown) => { success: boolean }
 }
 
-export const is = <T>(obj: unknown, schema: Schema<T>): obj is T => {
-  return schema.safeParse(obj).success
+export const is = <T>(obj: unknown, def: Def<T>): obj is T => {
+  return def.safeParse(obj).success
 }
 
-export const assure = <T>(schema: Schema<T>, obj: unknown): T => {
-  return schema.parse(obj)
+export const assure = <T>(def: Def<T>, obj: unknown): T => {
+  return def.parse(obj)
 }
 
 export const isObject = (obj: unknown): obj is Record<string, unknown> => {
