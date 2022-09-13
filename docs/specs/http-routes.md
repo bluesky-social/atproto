@@ -1,155 +1,135 @@
 # ADX HTTP Routes
+
+**Version: 0.0.0**
+
 ADX exchanges data using HTTP/S. This document enumerates the routes and their expected behaviors.
 
-## Version: 0.0.0
-
-**License:** MIT
-
 [Learn more about ADX](https://github.com/bluesky-social/adx/)
-### /.well-known/adx-did
 
-#### GET
-##### Summary
+## /.well-known/adx-did
 
+### GET
 Provides the DID of the repo indicated by the Host parameter.
 
-### /.adx/v1/data/root
+#### Responses
 
-#### GET
-##### Summary
+| Code | Description |
+| ---- | ----------- |
+| 200 | Successful operation | text/plain: string |
 
+## /.adx/v1/data/root
+
+### GET
 Gets the current root CID of a repo.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
 | did | query | The DID of the repo to request. | Yes | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
-| 200 | Successful operation |
+| 200 | Successful operation | application/json: object |
 
-### /.adx/v1/data/repo
+## /.adx/v1/data/repo
 
-#### GET
-##### Summary
-
+### GET
 Gets the repo state as a CAR file.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
 | did | query | The DID of the repo to request. | Yes | string |
 | from | query | The CID of a previous commit. | No | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
-| 200 | Successful operation |
+| 200 | Successful operation | application/octet-stream: binary |
 
-### /.adx/v1/data/repo/{did}
+## /.adx/v1/data/repo/{did}
 
-#### POST
-##### Summary
-
+### POST
 Writes commits to a repo.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
 | did | path | The DID of the repo to modify. | Yes | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
 | 200 | Successful operation |
 
-### /.adx/v1/account
+## /.adx/v1/account
 
-#### GET
-##### Summary
-
+### GET
 Get information about the account.
 
-#### POST
-##### Summary
-
+### POST
 Create an account.
 
-#### DELETE
-##### Summary
-
+### DELETE
 Delete an account.
 
-### /.adx/v1/session
+## /.adx/v1/session
 
-#### GET
-##### Summary
-
+### GET
 Get information about the current session.
 
-#### POST
-##### Summary
-
+### POST
 Create an session.
 
-#### DELETE
-##### Summary
-
+### DELETE
 Delete the current session.
 
-### /.adx/v1/api/repo/{did}
+## /.adx/v1/api/repo/{did}
 
-#### GET
-##### Summary
-
+### GET
 Get information about the repo, including the list of collections.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
 | did | path | The DID of the repo to request. | Yes | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
 | 200 | Successful operation |
 
-#### POST
-##### Summary
-
+### POST
 Apply a batch transaction of creates, puts, and deletes.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
 | did | path | The DID of the repo to modify. | Yes | string |
 | validate | query | Validate the record? Defaults to true. | No | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
 | 200 | Successful operation |
 
-### /.adx/v1/api/repo/{did}/c/{namespace}/{dataset}
+## /.adx/v1/api/repo/{did}/c/{namespace}/{dataset}
 
-#### GET
-##### Summary
-
+### GET
 Get information about the repo, including the list of collections.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
@@ -160,18 +140,16 @@ Get information about the repo, including the list of collections.
 | before | query | A TID to filter the range of records returned. | No | string |
 | after | query | A TID to filter the range of records returned. | No | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
 | 200 | Successful operation |
 
-#### POST
-##### Summary
-
+### POST
 Create a new record.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
@@ -180,20 +158,18 @@ Create a new record.
 | dataset | path | The name of the collection to write to. | Yes | string |
 | validate | query | Validate the record? Defaults to true. | No | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
 | 200 | Successful operation |
 
-### /.adx/v1/api/repo/{did}/c/{namespace}/{dataset}/r/{tid}
+## /.adx/v1/api/repo/{did}/c/{namespace}/{dataset}/r/{tid}
 
-#### GET
-##### Summary
-
+### GET
 Get information about the repo, including the list of collections.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
@@ -202,18 +178,16 @@ Get information about the repo, including the list of collections.
 | dataset | path | The name of the collection to request. | Yes | string |
 | tid | path | The TID of the record to request. | Yes | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
 | 200 | Successful operation |
 
-#### PUT
-##### Summary
-
+### PUT
 Write a record.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
@@ -223,18 +197,16 @@ Write a record.
 | tid | path | The TID of the record to write to. | Yes | string |
 | validate | query | Validate the record? Defaults to true. | No | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
 | 200 | Successful operation |
 
-#### DELETE
-##### Summary
-
+### DELETE
 Delete a record.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
@@ -243,26 +215,24 @@ Delete a record.
 | dataset | path | The name of the collection to write to. | Yes | string |
 | tid | path | The TID of the record to write to. | Yes | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
 | 200 | Successful operation |
 
-### /.adx/v1/api/view/{viewId}
+## /.adx/v1/api/view/{viewId}
 
-#### GET
-##### Summary
-
+### GET
 Fetch a view.
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
 | viewId | path | The ID of the view to request. | Yes | string |
 
-##### Responses
+#### Responses
 
 | Code | Description |
 | ---- | ----------- |
@@ -274,35 +244,35 @@ Fetch a view.
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| root | string |  | No |
+| root | string |  | Yes |
 
 #### BatchWrite
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| writes | [  ] |  | No |
+| writes | [  ] |  | Yes |
 
 #### BatchWriteCreate
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| action | string | _Enum:_ `"create"` | No |
-| collection | string |  | No |
-| value |  |  | No |
+| action | string | _Enum:_ `"create"` | Yes |
+| collection | string |  | Yes |
+| value |  |  | Yes |
 
 #### BatchWriteUpdate
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| action | string | _Enum:_ `"update"` | No |
-| collection | string |  | No |
-| tid | string |  | No |
-| value |  |  | No |
+| action | string | _Enum:_ `"update"` | Yes |
+| collection | string |  | Yes |
+| tid | string |  | Yes |
+| value |  |  | Yes |
 
 #### BatchWriteDelete
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| action | string | _Enum:_ `"delete"` | No |
-| collection | string |  | No |
-| tid | string |  | No |
+| action | string | _Enum:_ `"delete"` | Yes |
+| collection | string |  | Yes |
+| tid | string |  | Yes |

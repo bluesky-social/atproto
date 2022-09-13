@@ -28,6 +28,13 @@ paths:
       tags:
         - protocol
       summary: Provides the DID of the repo indicated by the Host parameter.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
   /.adx/v1/data/root:
     get:
       tags:
@@ -390,11 +397,13 @@ components:
   schemas:
     RepoRoot:
       type: object
+      required: [root]
       properties:
         root:
           type: string
     BatchWrite:
       type: object
+      required: [writes]
       properties:
         writes:
           type: array
@@ -405,6 +414,7 @@ components:
               - $ref: '#/components/schemas/BatchWriteDelete'
     BatchWriteCreate:
       type: object
+      required: [action, collection, value]
       properties:
         action:
           type: string
@@ -414,6 +424,7 @@ components:
         value: {}
     BatchWriteUpdate:
       type: object
+      required: [action, collection, tid, value]
       properties:
         action:
           type: string
@@ -425,6 +436,7 @@ components:
         value: {}
     BatchWriteDelete:
       type: object
+      required: [action, collection, tid]
       properties:
         action:
           type: string
