@@ -25,15 +25,11 @@
   "references": [
     { "path": "./packages/api/tsconfig.build.json" },
     { "path": "./packages/auth/tsconfig.build.json" },
-    { "path": "./packages/auth-lobby" },
-    { "path": "./packages/awake/tsconfig.build.json" },
     { "path": "./packages/common/tsconfig.build.json" },
     { "path": "./packages/crypto/tsconfig.build.json" },
     { "path": "./packages/dev-env" },
     { "path": "./packages/did-sdk/tsconfig.build.json" },
-    { "path": "./packages/example-app" },
     { "path": "./packages/microblog/tsconfig.build.json" },
     { "path": "./packages/schemas/tsconfig.build.json" },
-    { "path": "./packages/ws-relay" },
   ]
 }
