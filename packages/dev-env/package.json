@@ -32,7 +32,6 @@
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/inquirer": "^8.2.1",
-    "@types/node-fetch": "^2.6.2",
     "ts-node": "^10.8.1"
   }
 }
