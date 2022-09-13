@@ -152,24 +152,6 @@ export class AuthStore implements Signer {
     return vaugerPrf
   }
 
-  async createAwakeProof(
-    audience: string,
-    cap: ucan.Capability,
-  ): Promise<ucan.Ucan> {
-    const keypair = await this.getKeypair()
-    const fullUcan = await this.findUcan(cap)
-    if (!fullUcan) {
-      throw new Error("Couldn't find ucan")
-    }
-    // gotta do the old fashioned API to build a token with no att
-    return ucan.build({
-      issuer: keypair,
-      audience: audience,
-      lifetimeInSeconds: 60,
-      proofs: [ucan.encode(fullUcan)],
-    })
-  }
-
   // Claim a fully permissioned Ucan & add to store
   // Mainly for dev purposes
   async claimFull(): Promise<ucan.Ucan> {

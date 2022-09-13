@@ -17,11 +17,8 @@ export function load(): StartParams {
   return {
     servers: [
       ...getPorts(ServerType.PersonalDataServer, 'PERSONAL_DATA_SERVERS'),
-      ...getPorts(ServerType.WebSocketRelay, 'WEB_SOCKET_RELAY'),
       ...getPorts(ServerType.DidWebHost, 'DID_WEB_HOST'),
       ...getPorts(ServerType.KeyManager, 'KEY_MANAGER'),
-      ...getPorts(ServerType.AuthLobby, 'AUTH_LOBBYS'),
-      ...getPorts(ServerType.ExampleApp, 'EXAMPLE_APPS'),
     ],
   }
 }

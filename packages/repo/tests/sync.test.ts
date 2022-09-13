@@ -1,14 +1,14 @@
 import * as auth from '@adxp/auth'
-import { Repo, RepoRoot, TID } from '../src/repo'
+import { TID } from '@adxp/common'
+import { Repo, RepoRoot } from '../src'
 import { MemoryBlockstore } from '../src/blockstore'
 
 import * as util from './_util'
-import { AuthStore } from '@adxp/auth'
 
 describe('Sync', () => {
   let aliceBlockstore, bobBlockstore: MemoryBlockstore
   let aliceRepo: Repo
-  let aliceAuth: AuthStore
+  let aliceAuth: auth.AuthStore
   let repoData: util.RepoData
 
   beforeAll(async () => {
@@ -26,7 +26,7 @@ describe('Sync', () => {
   it('syncs an empty repo', async () => {
     const car = await aliceRepo.getFullHistory()
     const repoBob = await Repo.fromCarFile(car, bobBlockstore)
-    const data = await repoBob.data.list('', 10)
+    const data = await repoBob.data.list(10)
     expect(data.length).toBe(0)
   })
 

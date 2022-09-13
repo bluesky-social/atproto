@@ -3,9 +3,6 @@ import chalk from 'chalk'
 import { MemoryBlockstore } from '@adxp/repo'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
-import WSRelayServer from '@adxp/ws-relay/dist/index.js'
-import AuthLobbyServer from '@adxp/auth-lobby'
-import ExampleApp from '@adxp/example-app'
 import { DidWebDb, DidWebServer } from '@adxp/did-sdk'
 import KeyManagerServer from './key-manager/index.js'
 import KeyManagerDb from './key-manager/db.js'
@@ -22,11 +19,8 @@ export class DevEnvServer {
   get name() {
     return {
       [ServerType.PersonalDataServer]: '🌞 ADX Data server',
-      [ServerType.WebSocketRelay]: '🔁 Relay server',
       [ServerType.DidWebHost]: '📰 did:web server',
       [ServerType.KeyManager]: '🔑 Key management server',
-      [ServerType.AuthLobby]: '🧘 Auth lobby',
-      [ServerType.ExampleApp]: '💻 Example app',
     }[this.type]
   }
 
@@ -65,10 +59,6 @@ export class DevEnvServer {
         )
         break
       }
-      case ServerType.WebSocketRelay: {
-        this.inst = await onServerReady(WSRelayServer(this.port))
-        break
-      }
       case ServerType.DidWebHost: {
         const db = DidWebDb.memory()
         this.inst = DidWebServer.create(db, this.port)
@@ -86,14 +76,6 @@ export class DevEnvServer {
         const db = KeyManagerDb.memory()
         this.inst = await onServerReady(KeyManagerServer(db, this.port))
         this.client = new KeyManagerClient(this.url)
-        break
-      }
-      case ServerType.AuthLobby: {
-        this.inst = await onServerReady(AuthLobbyServer(this.port))
-        break
-      }
-      case ServerType.ExampleApp: {
-        this.inst = await onServerReady(ExampleApp(this.port))
         break
       }
       default:
