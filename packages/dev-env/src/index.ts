@@ -46,7 +46,7 @@ export class DevEnvServer {
 
     switch (this.type) {
       case ServerType.PersonalDataServer: {
-        const db = PDSDatabase.memory()
+        const db = await PDSDatabase.memory()
         const serverBlockstore = new MemoryBlockstore()
         const keypair = await crypto.EcdsaKeypair.create()
         this.inst = await onServerReady(

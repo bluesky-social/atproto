@@ -28,16 +28,25 @@ console.log(`
 
 Initializing...`)
 console.log('Type .help if you get lost')
-let replInst = createREPL()
 let isReplPaused = false
+const users: Map<string, DevEnvServer> = new Map()
+async function start() {
+  const devEnv = await DevEnv.create(env.load())
+  createREPL(devEnv)
+}
+start()
 
 // commands
 // =
 
-async function createREPL(): Promise<REPLServer> {
-  const devEnv = await DevEnv.create(env.load())
-  const inst = repl.start('adx $ ')
+async function createREPL(devEnv: DevEnv): Promise<REPLServer> {
+  let inst = repl.start('adx $ ')
   inst.context.env = devEnv
+  inst.context.user = (name: string) => {
+    const pds = users.get(name)
+    if (!pds) throw new Error('User not found')
+    return pds.getClient(`did:example:${name}`)
+  }
   inst.setupHistory(join(os.homedir(), '.adx-dev-env-history'), () => {})
   inst.on('exit', async () => {
     if (!isReplPaused) {
@@ -95,7 +104,7 @@ async function createREPL(): Promise<REPLServer> {
       if (!devEnv.hasType(ServerType.PersonalDataServer)) {
         console.error('You must run a personal data server.')
       } else {
-        await pauseREPL(async () => {
+        inst = await pauseREPL(inst, devEnv, async () => {
           const pds = await promptChooseServer(
             devEnv,
             ServerType.PersonalDataServer,
@@ -107,7 +116,7 @@ async function createREPL(): Promise<REPLServer> {
           // create the PDS account
           const client = pds.getClient(`did:example:${username}`)
           const pdsRes = await client.register(username)
-          console.log(pdsRes)
+          users.set(username, pds)
         })
       }
       this.displayPrompt()
@@ -163,12 +172,17 @@ async function promptGeneral(message: string, fallback?: string) {
 // If you need to do something with readline (like use Inquirer) then do so within a closure
 // passed into this function.
 // -prf
-async function pauseREPL(fn: () => Promise<void>): Promise<void> {
+async function pauseREPL(
+  inst: REPLServer,
+  env: DevEnv,
+  fn: () => Promise<void>,
+): Promise<REPLServer> {
   isReplPaused = true
-  const p = new Promise((r) => replInst.once('exit', r))
-  replInst.close()
+  const p = new Promise((r) => inst.once('exit', r))
+  inst.close()
   await p
   await fn()
-  replInst = await createREPL()
+  inst = await createREPL(env)
   isReplPaused = false
+  return inst
 }
