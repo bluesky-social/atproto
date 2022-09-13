@@ -6,5 +6,5 @@ packages/*/dist
 .idea
 packages/*/coverage
 .vscode/
-.DS_Store
 test.sqlite
+.DS_Store

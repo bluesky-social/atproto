@@ -1,5 +1,5 @@
 import { DIDDocument, parse } from 'did-resolver'
-import fetch from 'node-fetch'
+import axios from 'axios'
 import { ReadOnlyDidDocAPI } from '../did-documents'
 
 export const DOC_PATH = '/.well-known/did.json'
@@ -10,7 +10,10 @@ async function get(url: string, timeout = 5000): Promise<any> {
 
   let res
   try {
-    res = await fetch(url, { signal: controller.signal })
+    res = await axios.get(url, {
+      responseType: 'json',
+      signal: controller.signal,
+    })
   } catch (err) {
     clearTimeout(timeoutId)
     throw err
@@ -20,7 +23,7 @@ async function get(url: string, timeout = 5000): Promise<any> {
   if (res.status >= 400) {
     throw new Error(`Bad response ${res.statusText}`)
   }
-  return res.json()
+  return res.data
 }
 
 export async function resolve(
