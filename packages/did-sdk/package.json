@@ -14,9 +14,6 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@transmute/did-key-ed25519": "^0.3.0-unstable.5",
-    "@transmute/did-key-secp256k1": "^0.3.0-unstable.5",
-    "@transmute/did-key.js": "^0.3.0-unstable.8",
     "axios": "^0.24.0",
     "core-js": "2.6.5",
     "cors": "^2.8.5",
