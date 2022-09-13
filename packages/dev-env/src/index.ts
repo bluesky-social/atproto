@@ -3,24 +3,18 @@ import chalk from 'chalk'
 import { MemoryBlockstore } from '@adxp/repo'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
-import { DidWebDb, DidWebServer } from '@adxp/did-sdk'
-import KeyManagerServer from './key-manager/index.js'
-import KeyManagerDb from './key-manager/db.js'
-import DidWebClient from './did-web/client.js'
-import KeyManagerClient from './key-manager/client.js'
+import * as crypto from '@adxp/crypto'
+import { MicroblogClient } from '@adxp/microblog'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
 export class DevEnvServer {
-  inst?: http.Server | DidWebServer
-  client?: DidWebClient | KeyManagerClient
+  inst?: http.Server
 
   constructor(public type: ServerType, public port: number) {}
 
   get name() {
     return {
-      [ServerType.PersonalDataServer]: '🌞 ADX Data server',
-      [ServerType.DidWebHost]: '📰 did:web server',
-      [ServerType.KeyManager]: '🔑 Key management server',
+      [ServerType.PersonalDataServer]: '🌞 Personal Data server',
     }[this.type]
   }
 
@@ -52,30 +46,12 @@ export class DevEnvServer {
 
     switch (this.type) {
       case ServerType.PersonalDataServer: {
-        const db = PDSDatabase.memory()
+        const db = await PDSDatabase.memory()
         const serverBlockstore = new MemoryBlockstore()
+        const keypair = await crypto.EcdsaKeypair.create()
         this.inst = await onServerReady(
-          PDSServer(serverBlockstore, db, this.port),
+          PDSServer(serverBlockstore, db, keypair, this.port),
         )
-        break
-      }
-      case ServerType.DidWebHost: {
-        const db = DidWebDb.memory()
-        this.inst = DidWebServer.create(db, this.port)
-        if (this.inst._httpServer) {
-          await onServerReady(this.inst._httpServer)
-        } else {
-          throw new Error(
-            `did:web server at port ${this.port} failed to start a server`,
-          )
-        }
-        this.client = new DidWebClient(this.url)
-        break
-      }
-      case ServerType.KeyManager: {
-        const db = KeyManagerDb.memory()
-        this.inst = await onServerReady(KeyManagerServer(db, this.port))
-        this.client = new KeyManagerClient(this.url)
         break
       }
       default:
@@ -91,13 +67,13 @@ export class DevEnvServer {
       })
     }
 
-    if (this.inst instanceof DidWebServer) {
-      if (this.inst._httpServer) {
-        await closeServer(this.inst._httpServer)
-      }
-    } else if (this.inst) {
+    if (this.inst) {
       await closeServer(this.inst)
     }
+  }
+
+  getClient(userDid: string): MicroblogClient {
+    return new MicroblogClient(`http://localhost:${this.port}`, userDid)
   }
 }
 
