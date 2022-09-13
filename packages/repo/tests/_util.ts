@@ -1,9 +1,9 @@
 import { CID } from 'multiformats'
+import { TID } from '@adxp/common'
 import IpldStore from '../src/blockstore/ipld-store'
-import TID from '../src/repo/tid'
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/blockstore'
-import { DataDiff, MST } from '../src/repo/mst'
+import { DataDiff, MST } from '../src/mst'
 import fs from 'fs'
 
 type IdMapping = Record<string, CID>

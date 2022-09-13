@@ -8,6 +8,5 @@
   "references": [
     { "path": "../auth/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },
-    { "path": "../schemas/tsconfig.build.json" },
   ]
 }
