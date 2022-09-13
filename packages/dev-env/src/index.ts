@@ -1,6 +1,6 @@
 import http from 'http'
 import chalk from 'chalk'
-import { IpldStore } from '@adxp/common'
+import { MemoryBlockstore } from '@adxp/repo'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
 import WSRelayServer from '@adxp/ws-relay/dist/index.js'
@@ -59,7 +59,7 @@ export class DevEnvServer {
     switch (this.type) {
       case ServerType.PersonalDataServer: {
         const db = PDSDatabase.memory()
-        const serverBlockstore = IpldStore.createInMemory()
+        const serverBlockstore = new MemoryBlockstore()
         this.inst = await onServerReady(
           PDSServer(serverBlockstore, db, this.port),
         )
