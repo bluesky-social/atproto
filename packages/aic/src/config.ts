@@ -1,9 +1,8 @@
-import { JsonWebKey } from 'crypto'
-
 export const dbLoc = 'adx.sqlite'
 export const port = 26979
-export const defaultConsortiumJwk: JsonWebKey = {
-  // did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh
+
+// did:key:zDnaeeL44gSLMViH9khhTbngNd9r72MhUPo4WKPeSfB8xiDTh
+export const defaultConsortiumJwk = {
   key_ops: ['sign'],
   ext: true,
   kty: 'EC',

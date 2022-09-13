@@ -9,12 +9,13 @@ import cors from 'cors'
 import http from 'http'
 import { Database } from './db'
 // import * as error from './error'
-import { Asymmetric } from './types'
+import * as crypto from '@adxp/crypto'
 import router from './routes'
+import { Locals } from './locals'
 
 export const server = (
   db: Database,
-  crypto: Asymmetric,
+  keypair: crypto.DidableKey,
   port: number,
 ): http.Server => {
   const app = express()
@@ -22,7 +23,7 @@ export const server = (
   app.use(cors())
 
   app.use((_req, res, next) => {
-    const locals: Locals = { db, crypto }
+    const locals: Locals = { db, keypair }
     Object.assign(res.locals, locals)
     next()
   })
@@ -31,9 +32,4 @@ export const server = (
   // app.use(error.handler)
 
   return app.listen(port)
-}
-
-export interface Locals {
-  db: Database
-  crypto: Asymmetric
 }

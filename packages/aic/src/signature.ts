@@ -1,5 +1,6 @@
 import * as uint8arrays from 'uint8arrays'
-import { Document, Asymmetric } from './types'
+import * as crypto from '@adxp/crypto'
+import { Document } from './types'
 
 export const canonicaliseDocumentToUint8Array = (
   document: Document,
@@ -10,7 +11,7 @@ export const canonicaliseDocumentToUint8Array = (
   return uint8arrays.fromString(JSON.stringify(document))
 }
 
-export const sign = async (doc: Document, key: Asymmetric) => {
+export const sign = async (doc: Document, key: crypto.DidableKey) => {
   if (doc.key !== key.did()) {
     throw new Error('Info: passed in secret key and did do not match')
   }
@@ -22,10 +23,7 @@ export const sign = async (doc: Document, key: Asymmetric) => {
   return doc
 }
 
-export const validateSig = async (
-  doc: Document,
-  key: Asymmetric,
-): Promise<boolean> => {
+export const validateSig = async (doc: Document): Promise<boolean> => {
   if (
     typeof doc.sig !== 'string' ||
     typeof doc.key !== 'string' ||
@@ -43,6 +41,6 @@ export const validateSig = async (
   const canonicalDoc = canonicaliseDocumentToUint8Array(unsignedDoc)
   const sig = uint8arrays.fromString(doc.sig.slice(1), 'base58btc')
 
-  const valid = await key.verifyDidSig(doc.key, canonicalDoc, sig)
+  const valid = await crypto.verifyDidSig(doc.key, canonicalDoc, sig)
   return valid // @TODO check that the key is in the did doc
 }

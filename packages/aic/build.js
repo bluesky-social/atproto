@@ -4,8 +4,7 @@ require('esbuild')
     entryPoints: [
       'src/index.ts',
       'src/server.ts',
-      'src/db.ts',
-      'src/scripts/low_pid.ts',
+      'src/db/index.ts',
     ],
     bundle: true,
     treeShaking: true,
@@ -13,8 +12,7 @@ require('esbuild')
     platform: 'node',
     assetNames: 'src/static',
     external: [
-      '../../node_modules/knex/*',
-      '../../node_modules/@vscode/sqlite3/*',
+      '../../node_modules/sqlite3/*',
       '../../node_modules/level/*',
       '../../node_modules/classic-level/*',
     ],

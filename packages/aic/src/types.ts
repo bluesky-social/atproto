@@ -29,14 +29,3 @@ export type Tick = {
 }
 
 export type Document = { [key: string]: Value }
-
-export type Asymmetric = {
-  key: EcdsaKeypair
-  did: () => DidKeyString // public key
-  verifyDidSig: (
-    did: DidKeyString,
-    data: Uint8Array,
-    sig: Uint8Array,
-  ) => Promise<boolean>
-  sign: (msg: Uint8Array) => Promise<Uint8Array> // closure over secret key
-}

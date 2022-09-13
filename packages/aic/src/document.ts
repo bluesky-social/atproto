@@ -1,5 +1,6 @@
 import { sign, validateSig } from './signature'
 import { pid } from './pid'
+import * as crypto from '@adxp/crypto'
 import {
   Value,
   TidString,
@@ -9,7 +10,6 @@ import {
   Diffs,
   Document,
   Tick,
-  Asymmetric,
 } from './types'
 
 export { pid, sign, validateSig }
@@ -60,7 +60,7 @@ export const updateTick = async (
   tid: TidString, // the consensus time of the tick's generation
   candidateDiff: Diff | Document | null, // null when only updating tid
   storedTick: Tick | null, // null when there is not db entry (did init)
-  key: Asymmetric, // the consortium passes in the key
+  key: crypto.DidableKey, // the consortium passes in the key
 ): Promise<Tick> => {
   // @TODO validate that tid > all tids in the diffs
   if (storedTick === null) {
@@ -70,7 +70,7 @@ export const updateTick = async (
 
   // since storedTick is not null this is an update
   // of a registered did:aic
-  if (!(await validateSig(storedTick, key))) {
+  if (!(await validateSig(storedTick))) {
     // this means the consortium database has been corrupted
     throw new Error('bad signature: stored tick')
   }
@@ -96,7 +96,7 @@ const registerNewDid = async (
   did: string,
   tid: TidString,
   candidateDiff: Document | null,
-  key: Asymmetric,
+  key: crypto.DidableKey,
 ): Promise<Tick> => {
   if (candidateDiff === null) {
     // since candidateDiff is null
@@ -135,7 +135,7 @@ const updateExistingValidatedDid = async (
   tid: TidString, // the consensus time of the tick's generation
   candidateDiff: Diff | Document | null, // null when only updating tid
   storedTick: Tick, // null when there is not db entry (did init)
-  key: Asymmetric, // the consortium passes in the key
+  key: crypto.DidableKey, // the consortium passes in the key
 ): Promise<Tick> => {
   if (candidateDiff === null) {
     // nothing to update return the old tick but with new tid
@@ -152,7 +152,7 @@ const updateExistingValidatedDid = async (
   }
   // there is a validated stored_tick and a candidateDiff
   // this is a update of the did document
-  if (!(await validateSig(candidateDiff, key))) {
+  if (!(await validateSig(candidateDiff))) {
     throw new Error('diff has bad signature')
   }
   if (
@@ -177,7 +177,7 @@ const validateKeyInDocForDiffs = async (key: DidKeyString, diffs: Diffs) => {
 export const tickFromDiffs = async (
   diffs: Diffs,
   tid: TidString,
-  key: Asymmetric,
+  key: crypto.DidableKey,
 ): Promise<Tick> => {
   // This function does not validate the diffs remember to do that first
   const tids = Object.keys(diffs).sort()
@@ -235,10 +235,10 @@ const patchesKeysOnly = (patches: Patch[]): boolean => {
 export const tickToDidDoc = async (
   tick: Tick,
   consortiumDid: string,
-  key: Asymmetric,
+  key: crypto.DidableKey,
   asOf?: TidString,
 ): Promise<Document> => {
-  const valid = await validateSig(tick, key)
+  const valid = await validateSig(tick)
   if (!valid) {
     throw new Error('tick has bad signature')
   }
@@ -254,7 +254,7 @@ export const tickToDidDoc = async (
 
 export const diffsToDidDoc = async (
   diffs: Diffs,
-  key: Asymmetric,
+  key: crypto.DidableKey,
   asOf?: TidString,
 ) => {
   // the consortium does not build doc for the client
@@ -274,7 +274,7 @@ export const diffsToDidDoc = async (
 
   for (const tid of tids.slice(1)) {
     const diff = diffs[tid] as Diff // after the first the rest are Diffs
-    if (!(await validateSig(diff, key))) {
+    if (!(await validateSig(diff))) {
       console.log('INFO: ignoring: bad sig', diff)
       continue // not valid ignore it
     }

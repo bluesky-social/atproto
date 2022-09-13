@@ -2,7 +2,7 @@ import express from 'express'
 import { tid } from './tid'
 import { tickToDidDoc, updateTick } from './document'
 import { sign } from './signature'
-import { Locals } from './server'
+import * as locals from './locals'
 
 // const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()])
 // type Literal = z.infer<typeof literalSchema>
@@ -34,22 +34,22 @@ router.use(express.static('static'))
 const pidMatch = '[234567abcdefghijklmnopqrstuvwxyz]{16}'
 
 router.all('/tid', async (req, res) => {
-  const { crypto } = res.locals as Locals
+  const { keypair } = locals.get(res)
   res.send(
     await sign(
       {
         tid: tid(),
-        key: crypto.did(),
+        key: keypair.did(),
         sig: '',
       },
-      crypto,
+      keypair,
     ),
   )
 })
 
 // Get a DID doc
 router.get(`/:pid(${pidMatch})`, async function (req, res) {
-  const { db, crypto } = res.locals as Locals
+  const { db, keypair } = locals.get(res)
 
   const did = 'did:aic:' + req.params.pid
   const row = await db.tickForDid(did) // retrieve latest tick
@@ -60,17 +60,17 @@ router.get(`/:pid(${pidMatch})`, async function (req, res) {
     now,
     null, // candidateDiff: this is a get no updates
     prevTick,
-    crypto,
+    keypair,
   )
 
-  const didDoc = await tickToDidDoc(signedDoc, crypto.did(), crypto, now)
+  const didDoc = await tickToDidDoc(signedDoc, keypair.did(), keypair, now)
 
   res.type('json').send(didDoc)
 })
 
 // Get a DID tick
 router.get(`/:pid(${pidMatch})/tick`, async function (req, res) {
-  const { db, crypto } = res.locals as Locals
+  const { db, keypair } = locals.get(res)
   // AIC get
   //
   // Retrieve the latest tick from the database
@@ -83,14 +83,14 @@ router.get(`/:pid(${pidMatch})/tick`, async function (req, res) {
     tid(),
     null, // candidateDiff: this is a get no updates
     prevTick,
-    crypto,
+    keypair,
   )
   res.type('json').send(signedDoc)
 })
 
 // Update or create a DID doc
 router.post(`/:pid(${pidMatch})`, async function (req, res) {
-  const { db, crypto } = res.locals as Locals
+  const { db, keypair } = locals.get(res)
 
   // extract from post
   const did = 'did:aic:' + req.params.pid
@@ -109,7 +109,7 @@ router.post(`/:pid(${pidMatch})`, async function (req, res) {
     tid(), // current time (tid)
     candidateDiff, // diff that was posted/put
     prevTick, // tick from db for did:aic
-    crypto, // server's aic key
+    keypair, // server's aic key
   )
 
   await db.putTickForDid(
@@ -121,7 +121,7 @@ router.post(`/:pid(${pidMatch})`, async function (req, res) {
 
   // we reload the tick from the database if the put failed/pending we return the last tick
   const result = await db.tickForDid(did)
-  if (typeof result === 'undefined') {
+  if (result === null) {
     throw new Error(
       'tick should exist since it was just successfully updated, but does not',
     )
