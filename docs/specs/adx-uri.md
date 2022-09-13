@@ -21,8 +21,6 @@ record-id = 1*pchar
 
 `fragment` is defined in [https://www.rfc-editor.org/rfc/rfc3986#section-3.5](https://www.rfc-editor.org/rfc/rfc3986#section-3.5). 
 
-`schema-id` is defined in "Schema IDs."
-
 The fragment segment only has meaning if the URL references a record. Its value maps to a subrecord with the matching `"id"` value.
 
 Some example `adx` URLs:

@@ -6,7 +6,7 @@
 
 Here is the algorithm in pseudo-javascript:
 
-```
+```js
 const WELL_KNOWN_PATH = '/.well-known/adx-did'
 
 function resolveName(name: string) {
