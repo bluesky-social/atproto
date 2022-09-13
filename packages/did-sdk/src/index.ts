@@ -1,6 +1,5 @@
 import * as web from './web/web'
 import * as key from './key/key'
-import * as ion from './ion/ion'
 import { ReadOnlyDidDocAPI } from './did-documents'
 
 export async function resolve(didUri: string): Promise<ReadOnlyDidDocAPI> {
@@ -11,9 +10,6 @@ export async function resolve(didUri: string): Promise<ReadOnlyDidDocAPI> {
   if (didMethod === 'key') {
     return key.resolve(didUri)
   }
-  if (didMethod === 'ion') {
-    return ion.resolve(didUri)
-  }
   throw new Error(`Unsupported did method (${didMethod}) ${didUri}`)
 }
 
@@ -23,4 +19,3 @@ export { DidWebServer } from './web/server'
 export * from './web/db'
 export * as web from './web/web'
 export * as key from './key/key'
-export * as ion from './ion/ion'
