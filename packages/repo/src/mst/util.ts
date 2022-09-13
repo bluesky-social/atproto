@@ -3,7 +3,7 @@ import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
 import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
-import IpldStore from '../../blockstore/ipld-store'
+import IpldStore from '../blockstore/ipld-store'
 import { sha256 } from '@adxp/crypto'
 import { MST, Leaf, NodeEntry, NodeData, MstOpts, Fanout } from './mst'
 

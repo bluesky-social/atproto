@@ -1,0 +1,33 @@
+{
+  "name": "@adxp/common",
+  "version": "0.0.1",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "jest",
+    "test:profile": "node --inspect ../../node_modules/.bin/jest",
+    "bench": "jest --config jest.bench.config.js ",
+    "bench:profile": "node --inspect ../../node_modules/.bin/jest --config jest.bench.config.js",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "postbuild": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@adxp/auth": "*",
+    "@adxp/common": "*",
+    "@adxp/schemas": "*",
+    "@ipld/car": "^3.2.3",
+    "@ipld/dag-cbor": "^7.0.0",
+    "@ucans/core": "0.0.1-alpha2",
+    "axios": "^0.24.0",
+    "ipld-hashmap": "^2.1.10",
+    "level": "^8.0.0",
+    "multiformats": "^9.6.4",
+    "uint8arrays": "^3.0.0",
+    "zod": "^3.14.2"
+  }
+}

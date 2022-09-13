@@ -4,10 +4,9 @@ import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as blockCodec from '@ipld/dag-cbor'
 import { BlockWriter } from '@ipld/car/writer'
 
-import * as check from '../common/check'
-import * as util from '../common/util'
+import { check, util } from '@adxp/common'
 import { BlockReader } from '@ipld/car/api'
-import CidSet from '../repo/cid-set'
+import CidSet from '../cid-set'
 
 type AllowedIpldRecordVal = string | number | CID | CID[] | Uint8Array | null
 
