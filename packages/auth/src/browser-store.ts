@@ -8,7 +8,7 @@ export class BrowserStore extends AuthStore {
     const keypair = await BrowserStore.loadOrCreateKeypair()
 
     const storedUcans = BrowserStore.getStoredUcanStrs()
-    const ucanStore = await ucan.storeFromTokens(adxSemantics, storedUcans)
+    const ucanStore = await ucan.Store.fromTokens(adxSemantics, storedUcans)
 
     return new BrowserStore(keypair, ucanStore)
   }
@@ -35,7 +35,7 @@ export class BrowserStore extends AuthStore {
     })
     localStorage.setItem('adxKey', JSON.stringify(jwk))
     const storedUcans = BrowserStore.getStoredUcanStrs()
-    const ucanStore = await ucan.storeFromTokens(adxSemantics, storedUcans)
+    const ucanStore = await ucan.Store.fromTokens(adxSemantics, storedUcans)
     const authStore = new BrowserStore(keypair, ucanStore)
     if (storedUcans.length === 0) {
       // since this is the root device, we claim full authority
@@ -60,7 +60,7 @@ export class BrowserStore extends AuthStore {
     await this.ucanStore.add(token)
   }
 
-  async getUcanStore(): Promise<ucan.Store> {
+  async getUcanStore(): Promise<ucan.StoreI> {
     return this.ucanStore
   }
 
@@ -71,7 +71,7 @@ export class BrowserStore extends AuthStore {
   async reset(): Promise<void> {
     this.clear()
     this.keypair = await BrowserStore.loadOrCreateKeypair()
-    this.ucanStore = await ucan.storeFromTokens(adxSemantics, [])
+    this.ucanStore = await ucan.Store.fromTokens(adxSemantics, [])
   }
 }
 
