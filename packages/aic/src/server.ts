@@ -8,7 +8,7 @@ import express from 'express'
 import cors from 'cors'
 import http from 'http'
 import { Database } from './db'
-// import * as error from './error'
+import * as error from './error'
 import * as crypto from '@adxp/crypto'
 import router from './routes'
 import { Locals } from './locals'
@@ -29,7 +29,7 @@ export const server = (
   })
 
   app.use('/', router)
-  // app.use(error.handler)
+  app.use(error.handler)
 
   return app.listen(port)
 }
