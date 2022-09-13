@@ -3,11 +3,12 @@ import chalk from 'chalk'
 import { MemoryBlockstore } from '@adxp/repo'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
+import * as crypto from '@adxp/crypto'
+import { MicroblogClient } from '@adxp/microblog'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
 export class DevEnvServer {
   inst?: http.Server
-  // client?: DidWebClient TODO
 
   constructor(public type: ServerType, public port: number) {}
 
@@ -47,8 +48,9 @@ export class DevEnvServer {
       case ServerType.PersonalDataServer: {
         const db = PDSDatabase.memory()
         const serverBlockstore = new MemoryBlockstore()
+        const keypair = await crypto.EcdsaKeypair.create()
         this.inst = await onServerReady(
-          PDSServer(serverBlockstore, db, this.port),
+          PDSServer(serverBlockstore, db, keypair, this.port),
         )
         break
       }
@@ -68,6 +70,10 @@ export class DevEnvServer {
     if (this.inst) {
       await closeServer(this.inst)
     }
+  }
+
+  getClient(userDid: string): MicroblogClient {
+    return new MicroblogClient(`http://localhost:${this.port}`, userDid)
   }
 }
 

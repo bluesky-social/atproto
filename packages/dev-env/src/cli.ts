@@ -100,15 +100,14 @@ async function createREPL(): Promise<REPLServer> {
             devEnv,
             ServerType.PersonalDataServer,
           )
-          if (!pds.client) throw new Error('PDS client not found')
 
           const username = await promptGeneral('Choose a username:')
           console.log(`Creating ${username} on ${pds.description}`)
 
           // create the PDS account
-          // TODO
-          // const pdsRes = await pds.client?.createAccount(username, keyRes1.did)
-          // console.log(pdsRes)
+          const client = pds.getClient(`did:example:${username}`)
+          const pdsRes = await client.register(username)
+          console.log(pdsRes)
         })
       }
       this.displayPrompt()
