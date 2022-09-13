@@ -1,5 +1,5 @@
-import { MST, DataAdd, DataUpdate, DataDelete } from '../src/repo/mst'
-import { countPrefixLen } from '../src/repo/mst/util'
+import { MST, DataAdd, DataUpdate, DataDelete } from '../src/mst'
+import { countPrefixLen } from '../src/mst/util'
 
 import { MemoryBlockstore } from '../src/blockstore'
 import * as util from './_util'
