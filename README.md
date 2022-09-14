@@ -22,9 +22,10 @@ To learn more about ADX, see:
 
 - [The Architecture document](docs/architecture.md)
 - Specs
-  - [Name Resolution](docs/specs/name-resolution.md)
   - [Wire Protocol](docs/specs/wire-protocol.md)
+  - [Name Resolution](docs/specs/name-resolution.md)
   - [ADX URI Scheme](docs/specs/adx-uri.md)
+  - [Repository Structure](docs/specs/repo.md)
 - The [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
 ## 📺 Demo recording
