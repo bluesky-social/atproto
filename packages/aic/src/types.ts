@@ -1,5 +1,3 @@
-import { EcdsaKeypair } from '@adxp/crypto'
-
 export type Value =
   | null
   | boolean

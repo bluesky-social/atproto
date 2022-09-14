@@ -3,13 +3,13 @@ import * as uint8arrays from 'uint8arrays'
 import { canonicaliseDocumentToUint8Array } from './signature'
 import { Document } from './types'
 
-const S32_CHAR = '234567abcdefghijklmnopqrstuvwxyz'
+export const S32_CHAR = '234567abcdefghijklmnopqrstuvwxyz'
 
 export const pid = async (
   data: Uint8Array | string | Document,
 ): Promise<string> => {
   if (data instanceof Uint8Array) {
-    // return the pid120 a 24 char pid
+    // return the pid80 of some data
     const hash = s32encode(await sha256(data))
     let twos = 0
     for (twos = 0; twos < 32; twos++) {
@@ -25,6 +25,15 @@ export const pid = async (
     return pid(uint8arrays.fromString(data))
   }
   return pid(canonicaliseDocumentToUint8Array(data))
+}
+
+export const bitStrength = (pid: string): number => {
+  const baseStrength = 75
+  const index = S32_CHAR.indexOf(pid[0])
+  if (index < 0) {
+    throw new Error(`Not a valid PID: ${pid}`)
+  }
+  return baseStrength + 5 * (31 - index)
 }
 
 const s32encode = (data: Uint8Array) => {

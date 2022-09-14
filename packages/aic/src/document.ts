@@ -256,15 +256,12 @@ export const diffsToDidDoc = async (
   diffs: Diffs,
   key: crypto.DidableKey,
   asOf?: TidString,
-) => {
+): Promise<Document> => {
   // the consortium does not build doc for the client
   // but it still needs to build the docs to authorize keys as of the time the diff was signed
-  if (typeof diffs !== 'object') {
-    return null
-  }
   const tids = Object.keys(diffs).sort() // need to visit diffs in tid order
   if (tids.length < 1) {
-    return null // there is no initial state this is invalid
+    throw new Error('no initial state')
   }
   let last = tids[0]
   let doc = JSON.parse(JSON.stringify(diffs[last])) as Document // the first tid is the initial state
