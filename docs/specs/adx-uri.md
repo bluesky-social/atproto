@@ -51,3 +51,22 @@ Some example `adx` URLs:
    </td>
   </tr>
 </table>
+
+### Field pathing
+
+All fields in ADX records are addressed using [JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901) in the fragment section of the URL.
+
+```javascript
+const obj = {
+  "foo": 10,
+  "arr": [
+    { "key": "value1" },
+    { "key": "value2" }
+  ]
+}
+
+get(obj, '#/foo') // => 10
+get(obj, '#/arr') // => [Object, Object]
+get(obj, '#/arr/0/key') // => "value1"
+get(obj, '#/arr/1/key') // => "value2"
+```
