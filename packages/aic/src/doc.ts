@@ -1,7 +1,7 @@
 import * as uint8arrays from 'uint8arrays'
 import * as cbor from '@ipld/dag-cbor'
 import { check } from '@adxp/common'
-import { verifyDidSig } from '@adxp/crypto'
+import { sha256, verifyDidSig } from '@adxp/crypto'
 import {
   Operation,
   operation,
@@ -13,6 +13,7 @@ import {
 } from './operations'
 
 type Document = {
+  did: string
   signingKey: string
   recoveryKey: string
   username: string
@@ -20,11 +21,17 @@ type Document = {
 }
 
 export const validateOperations = async (
+  did: string,
   ops: Operation[],
 ): Promise<Document> => {
   for (const op of ops) {
     if (!check.is(op, operation)) {
       throw new Error(`Improperly formatted operation: ${op}`)
+    }
+  }
+  for (const i in ops) {
+    if (ops[i].num !== i) {
+      throw new Error(`Misordered operation at index ${i}: ${ops[i]}`)
     }
   }
 
@@ -34,7 +41,19 @@ export const validateOperations = async (
   }
   await assureValidSig([first.signingKey], first)
 
+  if (!did.startsWith('did:aic:')) {
+    throw new Error('Expected DID to start with `did:aic:`')
+  }
+
+  const didIdentifier = did.slice(8)
+  const hashOfGenesis = await sha256(cbor.encode(first))
+  const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
+  if (!hashB32.startsWith(didIdentifier)) {
+    throw new Error('Hash of genesis operation does not match DID identifier')
+  }
+
   const doc: Document = {
+    did,
     signingKey: first.signingKey,
     recoveryKey: first.recoveryKey,
     username: first.username,
@@ -42,12 +61,11 @@ export const validateOperations = async (
   }
 
   for (const op of rest) {
-    if (check.is(op, create)) {
-      throw new Error('Unexpected `create` after DID genesis')
-    }
     // @TODO should signing key be able to rotate reocvery key??
     await assureValidSig([doc.signingKey, doc.recoveryKey], op)
-    if (check.is(op, rotateSigningKey)) {
+    if (check.is(op, create)) {
+      throw new Error('Unexpected `create` after DID genesis')
+    } else if (check.is(op, rotateSigningKey)) {
       doc.signingKey = op.key
     } else if (check.is(op, rotateRecoveryKey)) {
       doc.recoveryKey = op.key

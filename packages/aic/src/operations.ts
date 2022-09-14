@@ -2,7 +2,7 @@
 import * as z from 'zod'
 
 export const opBase = z.object({
-  time: z.string(),
+  num: z.number(),
   sig: z.string(),
 })
 
