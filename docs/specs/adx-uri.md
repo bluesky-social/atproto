@@ -25,7 +25,6 @@ The fragment segment only has meaning if the URL references a record. Its value 
 
 Some example `adx` URLs:
 
-
 <table>
   <tr>
    <td>Repository

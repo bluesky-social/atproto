@@ -4,7 +4,6 @@
     "build": "node scripts/gen.js"
   },
   "dependencies": {
-    "widdershins": "^4.0.1",
     "yaml": "^2.1.1"
   }
 }

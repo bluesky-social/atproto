@@ -1,33 +1,28 @@
 openapi: 3.0.3
 info:
-  title: ADX HTTP Routes
+  title: ADX Wire Protocol
   description: |-
     ADX exchanges data using HTTP/S. This document enumerates the routes and their expected behaviors.
-  license:
-    name: MIT
   version: 0.0.0
-externalDocs:
-  description: Learn more about ADX
-  url: https://github.com/bluesky-social/adx/
-servers:
-  - url: http://localhost:2583
 tags:
-  - name: protocol
-    description: Server-to-server protocol operations.
-  - name: account
-    description: Account management API.
-  - name: session
-    description: Session management API.
+  - name: names
+    description: Name Resolution
+  - name: sync
+    description: Data Sync
   - name: repo
-    description: Repository API.
+    description: Repository API
   - name: view
-    description: View API.
+    description: View API
+  - name: account
+    description: Account Management API
+  - name: session
+    description: Session Management API
 paths:
   /.well-known/adx-did:
     get:
       operationId: resolveName
       tags:
-        - protocol
+        - names
       summary: Provides the DID of the repo indicated by the Host parameter.
       responses:
         '200':
@@ -40,7 +35,7 @@ paths:
     get:
       operationId: getRepoRoot
       tags:
-        - protocol
+        - sync
       summary: Gets the current root CID of a repo.
       parameters:
         - name: did
@@ -60,7 +55,7 @@ paths:
     get:
       operationId: getRepoState
       tags:
-        - protocol
+        - sync
       summary: Gets the repo state as a CAR file.
       parameters:
         - name: did
@@ -87,7 +82,7 @@ paths:
     post:
       operationId: writeRepoState
       tags:
-        - protocol
+        - sync
       summary: Writes commits to a repo.
       parameters:
         - name: did
@@ -427,39 +422,33 @@ components:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/BatchWriteCreate'
-              - $ref: '#/components/schemas/BatchWriteUpdate'
-              - $ref: '#/components/schemas/BatchWriteDelete'
-    BatchWriteCreate:
-      type: object
-      required: [action, collection, value]
-      properties:
-        action:
-          type: string
-          enum: [create]
-        collection:
-          type: string
-        value: {}
-    BatchWriteUpdate:
-      type: object
-      required: [action, collection, tid, value]
-      properties:
-        action:
-          type: string
-          enum: [update]
-        collection:
-          type: string
-        tid:
-          type: string
-        value: {}
-    BatchWriteDelete:
-      type: object
-      required: [action, collection, tid]
-      properties:
-        action:
-          type: string
-          enum: [delete]
-        collection:
-          type: string
-        tid:
-          type: string
+              - type: object
+                required: [action, collection, value]
+                properties:
+                  action:
+                    type: string
+                    enum: [create]
+                  collection:
+                    type: string
+                  value: {}
+              - type: object
+                required: [action, collection, tid, value]
+                properties:
+                  action:
+                    type: string
+                    enum: [update]
+                  collection:
+                    type: string
+                  tid:
+                    type: string
+                  value: {}
+              - type: object
+                required: [action, collection, tid]
+                properties:
+                  action:
+                    type: string
+                    enum: [delete]
+                  collection:
+                    type: string
+                  tid:
+                    type: string
