@@ -26,6 +26,7 @@ To learn more about ADX, see:
   - [Name Resolution](docs/specs/name-resolution.md)
   - [ADX URI Scheme](docs/specs/adx-uri.md)
   - [Repository Structure](docs/specs/repo.md)
+  - [Schemas](docs/specs/schemas.md)
 - The [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
 ## 📺 Demo recording
