@@ -5,15 +5,16 @@ The `adx` URL scheme is used to address records in the ADX network.
 ```
 adx-url   = "adx://" authority path [ "?" query ] [ "#" fragment ]
 authority = reg-name / did
-path      = [ "/" coll-ns "/" coll-id [ "/" record-id ] ]
-coll-ns   = reg-name
-coll-id   = 1*pchar
+path      = [ "/" coll-nsid [ "/" record-id ] ]
+coll-nsid = nsid
 record-id = 1*pchar
 ```
 
 `did` is defined in [https://w3c.github.io/did-core/#did-syntax](https://w3c.github.io/did-core/#did-syntax).
 
 `reg-name` is defined in [https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2](https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2).
+
+`nsid` is defined in [NameSpaced IDs (NSID)](../nsid.md).
 
 `pchar` is defined in [https://www.rfc-editor.org/rfc/rfc3986#section-3.3](https://www.rfc-editor.org/rfc/rfc3986#section-3.3).
 
@@ -27,28 +28,24 @@ Some example `adx` URLs:
 
 <table>
   <tr>
-   <td>Repository
-   </td>
-   <td><code>adx://bob.com</code>
-   </td>
+    <td>Repository</td>
+    <td><code>adx://bob.com</code></td>
   </tr>
   <tr>
-   <td>Repository
-   </td>
-   <td><code>adx://did:web:bob.com</code>
-   </td>
+    <td>Repository</td>
+    <td><code>adx://did:web:bob.com</code></td>
   </tr>
   <tr>
-   <td>Collection
-   </td>
-   <td><code>adx://bob.com/example.com/songs</code>
-   </td>
+    <td>Collection</td>
+    <td><code>adx://bob.com/com.example.song</code></td>
   </tr>
   <tr>
-   <td>Record
-   </td>
-   <td><code>adx://bob.com/example.com/songs/3yI5-c1z-cc2p-1a</code>
-   </td>
+    <td>Record</td>
+    <td><code>adx://bob.com/com.example.song/3yI5-c1z-cc2p-1a</code></td>
+  </tr>
+  <tr>
+    <td>Record Field</td>
+    <td><code>adx://bob.com/com.example.song/3yI5-c1z-cc2p-1a#/title</code></td>
   </tr>
 </table>
 
