@@ -14,6 +14,7 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
+    "@ipld/dag-cbor": "^7.0.3",
     "axios": "^0.24.0",
     "multiformats": "^9.6.4",
     "zod": "^3.14.2"

@@ -2,11 +2,12 @@
 import * as z from 'zod'
 
 export const opBase = z.object({
-  num: z.number(),
+  prev: z.string(),
   sig: z.string(),
 })
 
 export const create = opBase.extend({
+  prev: z.null(),
   type: z.literal('create'),
   signingKey: z.string(),
   recoveryKey: z.string(),

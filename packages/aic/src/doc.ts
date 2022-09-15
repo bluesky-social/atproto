@@ -1,6 +1,7 @@
 import * as uint8arrays from 'uint8arrays'
 import * as cbor from '@ipld/dag-cbor'
-import { check } from '@adxp/common'
+import { check, cidForData } from '@adxp/common'
+import { CID } from 'multiformats/cid'
 import { sha256, verifyDidSig } from '@adxp/crypto'
 import {
   Operation,
@@ -24,27 +25,24 @@ export const validateOperations = async (
   did: string,
   ops: Operation[],
 ): Promise<Document> => {
+  // make sure they're all validly formatted operations
   for (const op of ops) {
     if (!check.is(op, operation)) {
       throw new Error(`Improperly formatted operation: ${op}`)
     }
   }
-  for (const i in ops) {
-    if (ops[i].num !== i) {
-      throw new Error(`Misordered operation at index ${i}: ${ops[i]}`)
-    }
-  }
 
+  // ensure the first op is a valid & signed create operation
   const [first, ...rest] = ops
   if (!check.is(first, create)) {
     throw new Error('Expected first operation to be `create`')
   }
   await assureValidSig([first.signingKey], first)
 
+  // ensure that the DID matches the hash of the genesis operation
   if (!did.startsWith('did:aic:')) {
     throw new Error('Expected DID to start with `did:aic:`')
   }
-
   const didIdentifier = did.slice(8)
   const hashOfGenesis = await sha256(cbor.encode(first))
   const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
@@ -52,6 +50,7 @@ export const validateOperations = async (
     throw new Error('Hash of genesis operation does not match DID identifier')
   }
 
+  // iterate through operations to reconstruct the current state of the document
   const doc: Document = {
     did,
     signingKey: first.signingKey,
@@ -59,9 +58,13 @@ export const validateOperations = async (
     username: first.username,
     service: first.service,
   }
+  let prev = await cidForData(first)
 
   for (const op of rest) {
     // @TODO should signing key be able to rotate reocvery key??
+    if (!op.prev || CID.parse(op.prev).equals(prev)) {
+      throw new Error('Operations not correctly ordered')
+    }
     await assureValidSig([doc.signingKey, doc.recoveryKey], op)
     if (check.is(op, create)) {
       throw new Error('Unexpected `create` after DID genesis')
@@ -76,6 +79,7 @@ export const validateOperations = async (
     } else {
       throw new Error('Unknown operation')
     }
+    prev = await cidForData(op)
   }
 
   return doc

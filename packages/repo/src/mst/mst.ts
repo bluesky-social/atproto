@@ -2,7 +2,7 @@ import z from 'zod'
 import { CID } from 'multiformats'
 
 import IpldStore from '../blockstore/ipld-store'
-import { def } from '@adxp/common'
+import { def, cidForData } from '@adxp/common'
 import { DataDiff } from './diff'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
@@ -100,7 +100,7 @@ export class MST implements DataStore {
   ): Promise<MST> {
     const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     const entries = await util.deserializeNodeData(blockstore, data, opts)
-    const pointer = await util.cidForNodeData(data)
+    const pointer = await cidForData(data)
     return new MST(blockstore, fanout, pointer, entries, layer)
   }
 

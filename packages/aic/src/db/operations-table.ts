@@ -14,8 +14,8 @@ export class OperationsTable {
   @Column('text')
   operation: string
 
-  @Column('int')
-  num: number
+  @PrimaryColumn('varchar')
+  cid: string
 
   @CreateDateColumn()
   createdAt: Date
@@ -23,3 +23,5 @@ export class OperationsTable {
   @UpdateDateColumn()
   updatedAt: Date
 }
+
+export default OperationsTable
