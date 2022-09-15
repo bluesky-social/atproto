@@ -69,7 +69,154 @@ The data layout establishes the units of network-transmissable data. It includes
 
 |Grouping|Description|
 |-|-|
-|**Repository**|Repositories are the dataset of a single "actor" (ie user) in the ADX network. Every user has a single repository which is identified by a [DID](https://w3c.github.io/did-core/).|
-|**Collection**|A collection is an ordered list of records. Every collection has a type and is identified by a schema ID. Collections may contain records of any type and cannot enforce any constraints on them.|
-|**Record**|A record is a key/value document. It is the smallest unit of data which can be transmitted over the network. Every record has a type and is identified by a key which is chosen by the writing software.|
+|**Repository**|Repositories are the dataset of a single "user" in the ADX network. Every user has a single repository which is identified by a [DID](https://w3c.github.io/did-core/).|
+|**Collection**|A collection is an ordered list of records. Every collection is identified by an [NSID](../nsid.md). Collections only contain records of the type identified by their NSID.|
+|**Record**|A record is a key/value document. It is the smallest unit of data which can be transmitted over the network. Every record has a type and is identified by a [TID](#timestamp-ids-tid).|
 
+## Identifiers
+
+The following identifiers are used in repositories:
+
+|Identifier|Usage|
+|-|-|
+|Username|A domain name which weakly identify repositories.|
+|DID|A unique global identifier which strongly identify repositories.|
+|TID|A timestamp-based ID which identifies records.|
+|Schema ID|An [NSID](../nsid.md) which identifies record types.|
+
+### Usernames
+
+Usernames are domain names which "weakly" identify repositories. They are a convenience which should be used in UIs but rarely used within records to reference data. See [Name Resolution](./name-resolution.md) for more information.
+
+The reason that usernames are considered "weak" references is that they may change at any time. Therefore the repo DID is preferred to provide a stable identifier.
+
+### DIDs
+
+DIDs are unique global identifiers which "strongly" identify repositories. They are considered "strong" because they should never change during the lifecycle of a user. They should rarely be used in UIs, but should *always* be used in records to reference data.
+
+ADX supports two DID methods:
+
+- [Web (`did:web`)](https://w3c-ccg.github.io/did-method-web/). Should be used only when the user is "self-hosting" and therefore directly controls the domain name & server. May also be used during testing.
+- [Placeholder (`did:pch`)](../did-pch.md). A method developed in conjunction with ADX to provide global secure IDs which are host-independent.
+
+DIDs resolve to "DID Documents" which provide the address of the repo's host and the public key used to sign the repo's updates. See [DID Resolution](./did-resolution.md) for more information.
+
+## Timestamp IDs (TID)
+
+TODO
+
+### Schema IDs
+
+Schemas are identified using [NSIDs](../nsid.md), a form of [Reverse Domain-Name Notation](https://en.wikipedia.org/wiki/Reverse_domain_name_notation). In the repository, the Schema NSID has many usages:
+
+- In the `$type` field of records to identify its schema.
+- To identify collections of records of a given `$type`.
+- In permissioning to identify the types of records an application make access.
+
+Some example schema IDs:
+
+```
+com.example.profile
+io.social.post
+net.users.bob.comment
+```
+
+## Schemas
+
+Schemas define the possible values of a record. Every record has a "type" which maps to a schema. Schemas are also used to distinguish collections of records, and are used to drive permissioning.
+
+### Schema distribution
+
+Schemas are designed to be machine-readable and network-accessible. While it is not current _required_ that a schema is available on the network, it is strongly advised to publish schemas so that a single canonical & authoritative representation is available to consumers of the method.
+
+To fetch a schema, a request must be sent to the fedrpc [`getSchema`](../fedrpc.md#getschema) method. This request is sent to the authority of the NSID.
+
+### Schema structure
+
+Record schemas are encoded in JSON and adhere to the following interface:
+
+```typescript
+interface RecordSchema {
+  adx: 1
+  id: string
+  revision?: number // a versioning counter
+  description?: string
+  record: JSONSchema
+}
+```
+
+Here is an example schema:
+
+```json
+{
+  "adx": 1,
+  "id": "com.example.post",
+  "schema": {
+    "type": "object",
+    "required": ["text", "createdAt"],
+    "properties": {
+      "text": {"type": "string", "maxLength": 256},
+      "createdAt": {"type": "string", "format": "date-time"}
+    }
+  }
+}
+```
+
+And here is a record using this example schema:
+
+```json
+{
+  "$type": "com.example.post",
+  "text": "Hello, world!",
+  "createdAt": "2022-09-15T16:37:17.131Z"
+}
+```
+
+### Reserved field names
+
+There are a set of fields which are reserved in ADX and shouldn't be used by schemas.
+
+|Field|Usage|
+|-|-|
+|`$type`|Declares the type of a record.|
+|`$ext`|Contains extensions to a record's base schema.|
+|`$required`|Used by extensions to flag whether their support is required.|
+|`$fallback`|Used by extensions to give a description of the missing data.|
+
+Generally it's wise to avoid `$` prefixes in your fieldnames.
+
+### Schema validation
+
+Constraints are structural: they apply constraints to fields under object path (eg `#/text`) to establish permissable values for that field. The constraints they can apply are value-type and valid values of the type (eg numbers within a range, strings of a certain format or pattern, etc). These constraints are described using [JSON Schema](https://json-schema.org/draft/2020-12/json-schema-core.html).
+
+Unconstrained fields are ignored during validation, but should be avoided in case future versions of the schema apply constraints.
+
+### Schema versioning
+
+Once a field constraint is published, it can never change. Loosening a constraint (adding possible values) will cause old software to fail validation for new data, and tightening a constraint (removing possible values) will cause new software to fail validation for old data. As a consequence, schemas may only add constraints to previously unconstrained fields.
+
+A "revision" field is used to indicate this change, but it has no enforced meaning. It simply is used to help developers track revisions. If a schema must change a previously-published constraint, it should be published as a new schema under a new NSID.
+
+### Schema extension
+
+Records may introduce additional schemas using the `#/$ext` field. This is a standard field which encodes a map of schema NSIDs to "extension objects."
+
+Extension objects use two standard fields: `$required` and `$fallback`. The `$required` field tells us if the extension *must* be understood by the software to use it properly. Meanwhile the `$fallback` field gives us a string instructing the software how to tell the user what's wrong.
+
+Here is an example of a record with an optional extension:
+
+```json
+{
+  "$type": "com.example.post",
+  "text": "Hello, world!",
+  "createdAt": "2022-09-15T16:37:17.131Z",
+  "$ext": {
+    "com.example.poll": {
+      "$required": false,
+      "$fallback": "This post includes a poll which your app can't render.",
+      "question": "How are you today?",
+      "options": ["Good", "Meh", "Bad"]
+    }
+  }
+}
+```

@@ -37,15 +37,15 @@ Some example `adx` URLs:
   </tr>
   <tr>
     <td>Collection</td>
-    <td><code>adx://bob.com/com.example.song</code></td>
+    <td><code>adx://bob.com/io.example.song</code></td>
   </tr>
   <tr>
     <td>Record</td>
-    <td><code>adx://bob.com/com.example.song/3yI5-c1z-cc2p-1a</code></td>
+    <td><code>adx://bob.com/io.example.song/3yI5-c1z-cc2p-1a</code></td>
   </tr>
   <tr>
     <td>Record Field</td>
-    <td><code>adx://bob.com/com.example.song/3yI5-c1z-cc2p-1a#/title</code></td>
+    <td><code>adx://bob.com/io.example.song/3yI5-c1z-cc2p-1a#/title</code></td>
   </tr>
 </table>
 
