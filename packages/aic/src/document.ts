@@ -11,6 +11,7 @@ import {
   updateUsername,
   updateService,
   rotateRecoveryKey,
+  Create,
 } from './operations'
 
 type Document = {
@@ -21,7 +22,29 @@ type Document = {
   service: string
 }
 
-export const validateOperations = async (
+export const assureValidNextOp = async (
+  did: string,
+  ops: Operation[],
+  proposed: Operation,
+) => {
+  // special case if account creation
+  if (ops.length === 0) {
+    if (!check.is(proposed, create)) {
+      throw new Error('Expected first operation to be `create`')
+    }
+    await assureValidCreationOp(did, proposed)
+    return
+  }
+
+  const doc = await validateOperationLog(did, ops)
+  await assureValidSig([doc.signingKey, doc.recoveryKey], proposed)
+  const prev = await cidForData(ops[ops.length - 1])
+  if (!proposed.prev || CID.parse(proposed.prev).equals(prev)) {
+    throw new Error('Operations not correctly ordered')
+  }
+}
+
+export const validateOperationLog = async (
   did: string,
   ops: Operation[],
 ): Promise<Document> => {
@@ -37,18 +60,7 @@ export const validateOperations = async (
   if (!check.is(first, create)) {
     throw new Error('Expected first operation to be `create`')
   }
-  await assureValidSig([first.signingKey], first)
-
-  // ensure that the DID matches the hash of the genesis operation
-  if (!did.startsWith('did:aic:')) {
-    throw new Error('Expected DID to start with `did:aic:`')
-  }
-  const didIdentifier = did.slice(8)
-  const hashOfGenesis = await sha256(cbor.encode(first))
-  const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
-  if (!hashB32.startsWith(didIdentifier)) {
-    throw new Error('Hash of genesis operation does not match DID identifier')
-  }
+  await assureValidCreationOp(did, first)
 
   // iterate through operations to reconstruct the current state of the document
   const doc: Document = {
@@ -83,6 +95,21 @@ export const validateOperations = async (
   }
 
   return doc
+}
+
+export const assureValidCreationOp = async (did: string, op: Create) => {
+  await assureValidSig([op.signingKey], op)
+
+  // ensure that the DID matches the hash of the genesis operation
+  if (!did.startsWith('did:aic:')) {
+    throw new Error('Expected DID to start with `did:aic:`')
+  }
+  const didIdentifier = did.slice(8)
+  const hashOfGenesis = await sha256(cbor.encode(op))
+  const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
+  if (!hashB32.startsWith(didIdentifier)) {
+    throw new Error('Hash of genesis operation does not match DID identifier')
+  }
 }
 
 export const assureValidSig = async (allowedDids: string[], op: Operation) => {

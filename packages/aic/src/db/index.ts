@@ -1,5 +1,6 @@
 import { cidForData } from '@adxp/common'
-import { DataSource } from 'typeorm'
+import { DataSource, SelectQueryBuilder } from 'typeorm'
+import * as document from '../document'
 import { Operation } from '../operations'
 import { OperationsTable } from './operations-table'
 
@@ -24,43 +25,40 @@ export class Database {
   }
 
   async opsForDid(did: string): Promise<Operation[]> {
-    const found = await this.db
-      .createQueryBuilder()
-      .select()
-      .from(OperationsTable, 'op')
-      .where('op.did = :did', { did })
-      .orderBy('op.createdAt', 'ASC')
-      .getMany()
-
-    return found.map((row) => JSON.parse(row.operation))
+    const query = this.db.createQueryBuilder()
+    return this.opsForDidComposer(query, did)
   }
 
-  async addOpForDid(did: string, op: Operation): Promise<void> {
+  async validateAndAddOp(did: string, proposed: Operation): Promise<void> {
     await this.db.manager.transaction(async (tx) => {
-      const mostRecent = await tx
-        .createQueryBuilder()
-        .select()
-        .from(OperationsTable, 'op')
-        .where('op.did = :did', { did })
-        .orderBy('op.createdAt', 'DESC')
-        .getOne()
-      if (op.prev === null && mostRecent !== null) {
-        throw new Error(`Genesis operation already exists for did`)
-      }
-      if (op.prev !== null && mostRecent?.cid !== op.prev) {
-        throw new Error(`Operation not in order. Expected ${mostRecent?.cid}`)
-      }
-      const cid = await cidForData(op)
+      const query = tx.createQueryBuilder()
+      const ops = await this.opsForDidComposer(query, did)
+      // throws if invalid
+      await document.assureValidNextOp(did, ops, proposed)
+      const cid = await cidForData(proposed)
       await tx
         .createQueryBuilder()
         .insert()
         .into(OperationsTable)
         .values({
           did,
-          operation: JSON.stringify(op),
+          operation: JSON.stringify(proposed),
           cid: cid.toString(),
         })
         .execute()
     })
+  }
+
+  async opsForDidComposer(
+    query: SelectQueryBuilder<any>,
+    did: string,
+  ): Promise<Operation[]> {
+    const res = await query
+      .select()
+      .from(OperationsTable, 'op')
+      .where('op.did = :did', { did })
+      .orderBy('op.createdAt', 'ASC')
+      .getMany()
+    return res.map((row) => JSON.parse(row.operation))
   }
 }
