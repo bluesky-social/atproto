@@ -18,9 +18,9 @@ FedRPC is a general purpose server-to-server messaging protocol. It was created 
 
 Features:
 
-- **Contract-oriented**. All "procedures" in FedRPC are declared by schemas which define the accepted inputs and outputs. Schemas are globally identified and published as machine-readable documents. This helps ensure correctness and consistency across an open network of services.
-- **HTTP-based**. FedRPC procedures are transported using HTTP/S, using GET or POST methods depending on the behavior. This makes FedRPC easy to understand and easy to integrate into existing tech stacks.
-- **Cacheable**. FedRPC's "query" procedures are designed to cache well with common HTTP-based caching techniques.
+- **Contract-oriented**. All "methods" in FedRPC are declared by schemas which define the accepted inputs and outputs. Schemas are globally identified and published as machine-readable documents. This helps ensure correctness and consistency across an open network of services.
+- **HTTP-based**. FedRPC methods are transported using HTTP/S, using GET or POST methods depending on the behavior. This makes FedRPC easy to understand and easy to integrate into existing tech stacks.
+- **Cacheable**. FedRPC's "query" methods are designed to cache well with common HTTP-based caching techniques.
 - **Support for multiple encodings**. FedRPC supports structured data (JSON) and unstructured binary blobs.
 
 ## Specification
@@ -28,12 +28,12 @@ Features:
 FedRPC supports client-to-server and server-to-server messaging over HTTP/S. Each user has a "Personal Data Server (PDS)" which acts as their agent in the network, meaning most (if not all) of their communication is routed through their PDS.
 
 ```
-┌────────┐            ┌────────┐
-│ Server │ ◀──FRPC──▶ │ Server │
-└────────┘            └────────┘
+┌────────┐              ┌────────┐
+│ Server │ ◀──FedRPC──▶ │ Server │
+└────────┘              └────────┘
     ▲
     │
-   FPRC
+  FedPRC
     │
     ▼
 ┌────────┐
@@ -53,7 +53,7 @@ FedRPC "Methods" possess the following attributes:
 
 #### Method IDs
 
-Methods are identified using [Reverse Domain-Name Notation](https://en.wikipedia.org/wiki/Reverse_domain_name_notation) with the additional constraint that the segments prior to the final segment *must* map to a valid domain name. For instance, the owner of `example.com` could use the ID of `com.example.foo` but could not use `com.example.foo.bar` unless they also control `foo.example.com`. These rules are to ensure that schemas are globally unique, have a clear authority mapping (to a registered domain), and can potentially be resolved by request (see [Schema distribution](#schema-distribution)).
+Methods are identified using [NSIDs](./nsid.md), a form of [Reverse Domain-Name Notation](https://en.wikipedia.org/wiki/Reverse_domain_name_notation).
 
 Some example method IDs:
 
@@ -146,28 +146,7 @@ An example procedure-method schema:
 
 Method schemas are designed to be machine-readable and network-accessible. While it is not current _required_ that a schema is available on the network, it is strongly advised to publish schemas so that a single canonical & authoritative representation is available to consumers of the method.
 
-To fetch a schema, a request must be sent to the builtin [`getSchema`](#getschema) method. This request is sent to the authoritative server of the schema which is determined through the following algorithm (in pseudo-javascript):
-
-```js
-function getSchemaHostname (id) {
-  // split the id into segments
-  const parts = id.split('.')
-  // remove the last segment
-  parts.pop()
-  // reverse the order of the segments
-  parts.reverse()
-  // rejoin the segments
-  return parts.join('.')
-}
-```
-
-Some example resolutions of IDs to hostnames:
-
-```
-com.example.status -> example.com
-io.social.getFeed  -> social.io
-net.users.bob.ping -> bob.user.net
-```
+To fetch a schema, a request must be sent to the builtin [`getSchema`](#getschema) method. This request is sent to the authority of the NSID.
 
 ### Built-in methods
 
