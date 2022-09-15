@@ -22,7 +22,21 @@ segment   = alpha *( alpha / number / "-" )
 authority = segment *( delim segment )
 name      = segment
 nsid      = authority delim name
+nsid-ns   = authority delim "*"
 ```
+
+The `nsid-ns` (a "namespace") can be used in certain situations to designate all names under a namespace, eg `com.example.*`.
+
+## Authority model
+
+Every NSID asserts a single authority which is identified as the segments prior to the final segment which are then reversed.
+
+```
+com.example.thing
+^^^^^^^^^^^--------> example.com
+```
+
+The authority controls the namespace of all names within it, however there is no hierarchy or relationship between authorities. That is, the domain `example.com` does not hold any authority over `sub.example.com`, and therefore `com.example.*` is considered completely independent of `com.example.sub.*`.
 
 ## Parsing
 
