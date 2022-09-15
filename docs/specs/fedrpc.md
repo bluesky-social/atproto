@@ -57,6 +57,8 @@ FedRPC "Methods" possess the following attributes:
 - **Input**: The request body.
 - **Output**: The response body.
 
+Calls to a method must specify the ID, Parameters, Input, and certain HTTP Headers for the request. Likewise the return value must provide some information about the HTTP response. Therefore FedRPC does not fully abstract away the semantics of HTTP when used in APIs.
+
 #### Method IDs
 
 Methods are identified using [NSIDs](./nsid.md), a form of [Reverse Domain-Name Notation](https://en.wikipedia.org/wiki/Reverse_domain_name_notation).
