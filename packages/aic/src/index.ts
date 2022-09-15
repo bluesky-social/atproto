@@ -1,7 +1,6 @@
 import { Database } from './db'
 import { server } from './server'
-import { dbLoc, defaultConsortiumJwk, port } from './config'
-import * as crypto from '@adxp/crypto'
+import { dbLoc, port } from './config'
 
 const run = async () => {
   const db =
@@ -9,10 +8,7 @@ const run = async () => {
       ? await Database.sqlite(dbLoc)
       : await Database.memory()
 
-  const key = await crypto.EcdsaKeypair.import(defaultConsortiumJwk, {
-    exportable: true,
-  })
-  const s = server(db, key, port)
+  const s = server(db, port)
   s.on('listening', () => {
     console.log(`🌞 ADX AIC server is running at http://localhost:${port}`)
   })
