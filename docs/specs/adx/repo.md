@@ -127,7 +127,7 @@ Schemas define the possible values of a record. Every record has a "type" which 
 
 ### Schema distribution
 
-Schemas are designed to be machine-readable and network-accessible. While it is not current _required_ that a schema is available on the network, it is strongly advised to publish schemas so that a single canonical & authoritative representation is available to consumers of the method.
+Schemas are designed to be machine-readable and network-accessible. While it is not currently _required_ that a schema is available on the network, it is strongly advised to publish schemas so that a single canonical & authoritative representation is available to consumers of the method.
 
 To fetch a schema, a request must be sent to the fedrpc [`getSchema`](../fedrpc.md#getschema) method. This request is sent to the authority of the NSID.
 
@@ -193,7 +193,7 @@ Unconstrained fields are ignored during validation, but should be avoided in cas
 
 ### Schema versioning
 
-Once a field constraint is published, it can never change. Loosening a constraint (adding possible values) will cause old software to fail validation for new data, and tightening a constraint (removing possible values) will cause new software to fail validation for old data. As a consequence, schemas may only add constraints to previously unconstrained fields.
+Once a field constraint is published, it can never change. Loosening a constraint (adding possible values) will cause old software to fail validation for new data, and tightening a constraint (removing possible values) will cause new software to fail validation for old data. As a consequence, schemas may only add optional constraints, and only to previously unconstrained fields.
 
 A "revision" field is used to indicate this change, but it has no enforced meaning. It simply is used to help developers track revisions. If a schema must change a previously-published constraint, it should be published as a new schema under a new NSID.
 
