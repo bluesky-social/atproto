@@ -24,10 +24,11 @@ To learn more about ADX, see:
 - Specs
   - [Namespaced IDs (NSID)](docs/specs/nsid.md)
   - [Federated RPC (FedRPC)](docs/specs/fedrpc.md)
-  - [Name Resolution](docs/specs/name-resolution.md)
-  - [ADX URI Scheme](docs/specs/adx-uri.md)
-  - [Repository Structure](docs/specs/repo.md)
-  - [Schemas](docs/specs/schemas.md)
+  - ADX
+    - [Name Resolution](docs/specs/adx/name-resolution.md)
+    - [ADX URI Scheme](docs/specs/adx/uri-scheme.md)
+    - [Repository Structure](docs/specs/adx/repo.md)
+    - [Schemas](docs/specs/adx/schemas.md)
 - The [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
 ## 📺 Demo recording
