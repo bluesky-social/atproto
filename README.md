@@ -21,16 +21,7 @@ We encourage you to [open discussions](https://github.com/bluesky-social/adx/dis
 To learn more about ADX, see:
 
 - [The Architecture document](docs/architecture.md)
-- Specs
-  - [Namespaced IDs (NSID)](docs/specs/nsid.md)
-  - [Federated RPC (FedRPC)](docs/specs/fedrpc.md)
-  - [DID Placeholder (did:pch)](docs/specs/did-pch.md)
-  - ADX
-    - [Repository Structure](docs/specs/adx/repo.md)
-    - [FedRPC Methods](docs/specs/adx/methods.md)
-    - [Name Resolution](docs/specs/adx/name-resolution.md)
-    - [DID Resolution](docs/specs/adx/did-resolution.md)
-    - [ADX URI Scheme](docs/specs/adx/uri-scheme.md)
+- [Specification docs](docs/specs/README.md)
 - The [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
 ## 📺 Demo recording
