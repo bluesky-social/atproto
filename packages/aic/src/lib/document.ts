@@ -1,7 +1,7 @@
+import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import * as cbor from '@ipld/dag-cbor'
 import { check, cidForData } from '@adxp/common'
-import { CID } from 'multiformats/cid'
 import { sha256, verifyDidSig } from '@adxp/crypto'
 import * as t from './types'
 

@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
-    "start": "node dist/index.js",
-    "test": "jest tests/server.test.ts",
+    "start": "node dist/server/index.js",
+    "test": "jest",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",

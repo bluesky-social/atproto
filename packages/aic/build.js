@@ -2,9 +2,10 @@ require('esbuild')
   .build({
     logLevel: 'info',
     entryPoints: [
-      'src/index.ts',
-      'src/server.ts',
-      'src/db/index.ts',
+      'src/server/index.ts',
+      'src/server/server.ts',
+      'src/server/db.ts',
+      'src/client/index.ts',
     ],
     bundle: true,
     treeShaking: true,

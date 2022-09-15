@@ -1,8 +1,8 @@
 import express from 'express'
-import * as locals from './locals'
-import * as document from './document'
 import { check } from '@adxp/common'
-import * as t from './types'
+import * as document from '../lib/document'
+import * as t from '../lib/types'
+import * as locals from './locals'
 import { ServerError } from './error'
 
 const router = express.Router()

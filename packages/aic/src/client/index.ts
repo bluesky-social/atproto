@@ -1,9 +1,9 @@
-import { DidableKey } from '@adxp/crypto'
 import axios from 'axios'
-import * as operations from './operations'
-import * as t from './types'
 import { CID } from 'multiformats/cid'
+import { DidableKey } from '@adxp/crypto'
 import { check, cidForData } from '@adxp/common'
+import * as operations from '../lib/operations'
+import * as t from '../lib/types'
 
 export class AicClient {
   constructor(public url: string) {}

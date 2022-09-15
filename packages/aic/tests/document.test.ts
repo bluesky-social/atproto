@@ -1,8 +1,8 @@
 import { check, cidForData } from '@adxp/common'
 import { EcdsaKeypair } from '@adxp/crypto'
-import * as document from '../src/document'
-import * as operations from '../src/operations'
-import * as t from '../src/types'
+import * as document from '../src/lib/document'
+import * as operations from '../src/lib/operations'
+import * as t from '../src/lib/types'
 
 describe('aic DID document', () => {
   const ops: t.Operation[] = []
@@ -28,7 +28,7 @@ describe('aic DID document', () => {
       username,
       service,
     )
-    const isValid = check.is(createOp, t.createOp)
+    const isValid = check.is(createOp, t.def.createOp)
     expect(isValid).toBeTruthy()
     ops.push(createOp)
     did = await operations.didForCreateOp(createOp as any)

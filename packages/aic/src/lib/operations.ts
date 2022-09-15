@@ -1,18 +1,9 @@
 import * as cbor from '@ipld/dag-cbor'
 import * as uint8arrays from 'uint8arrays'
 import { DidableKey, sha256 } from '@adxp/crypto'
-import {
-  CreateOp,
-  Operation,
-  UnsignedCreateOp,
-  UnsignedOperation,
-  UnsignedRotateRecoveryKeyOp,
-  UnsignedRotateSigningKeyOp,
-  UnsignedUpdateServiceOp,
-  UnsignedUpdateUsernameOp,
-} from './types'
+import * as t from './types'
 
-export const didForCreateOp = async (op: CreateOp, truncate = 24) => {
+export const didForCreateOp = async (op: t.CreateOp, truncate = 24) => {
   const hashOfGenesis = await sha256(cbor.encode(op))
   const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
   const truncated = hashB32.slice(0, truncate)
@@ -20,9 +11,9 @@ export const didForCreateOp = async (op: CreateOp, truncate = 24) => {
 }
 
 export const signOperation = async (
-  op: UnsignedOperation,
+  op: t.UnsignedOperation,
   signingKey: DidableKey,
-): Promise<Operation> => {
+): Promise<t.Operation> => {
   const data = new Uint8Array(cbor.encode(op))
   const sig = await signingKey.sign(data)
   return {
@@ -36,8 +27,8 @@ export const create = async (
   recoveryKey: string,
   username: string,
   service: string,
-): Promise<Operation> => {
-  const op: UnsignedCreateOp = {
+): Promise<t.Operation> => {
+  const op: t.UnsignedCreateOp = {
     type: 'create',
     signingKey: signingKey.did(),
     recoveryKey,
@@ -52,8 +43,8 @@ export const rotateSigningKey = async (
   newKey: string,
   prev: string,
   signingKey: DidableKey,
-): Promise<Operation> => {
-  const op: UnsignedRotateSigningKeyOp = {
+): Promise<t.Operation> => {
+  const op: t.UnsignedRotateSigningKeyOp = {
     type: 'rotate_signing_key',
     key: newKey,
     prev,
@@ -65,8 +56,8 @@ export const rotateRecoveryKey = async (
   newKey: string,
   prev: string,
   signingKey: DidableKey,
-): Promise<Operation> => {
-  const op: UnsignedRotateRecoveryKeyOp = {
+): Promise<t.Operation> => {
+  const op: t.UnsignedRotateRecoveryKeyOp = {
     type: 'rotate_recovery_key',
     key: newKey,
     prev,
@@ -78,8 +69,8 @@ export const updateUsername = async (
   username: string,
   prev: string,
   signingKey: DidableKey,
-): Promise<Operation> => {
-  const op: UnsignedUpdateUsernameOp = {
+): Promise<t.Operation> => {
+  const op: t.UnsignedUpdateUsernameOp = {
     type: 'update_username',
     username,
     prev,
@@ -91,8 +82,8 @@ export const updateService = async (
   service: string,
   prev: string,
   signingKey: DidableKey,
-): Promise<Operation> => {
-  const op: UnsignedUpdateServiceOp = {
+): Promise<t.Operation> => {
+  const op: t.UnsignedUpdateServiceOp = {
     type: 'update_service',
     service,
     prev,

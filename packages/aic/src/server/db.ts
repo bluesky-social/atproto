@@ -1,8 +1,13 @@
 import { cidForData } from '@adxp/common'
-import { DataSource, SelectQueryBuilder } from 'typeorm'
-import * as document from '../document'
-import { Operation } from '../types'
-import { OperationsTable } from './operations-table'
+import {
+  DataSource,
+  SelectQueryBuilder,
+  Entity,
+  Column,
+  PrimaryColumn,
+} from 'typeorm'
+import * as document from '../lib/document'
+import { Operation } from '../lib/types'
 
 export class Database {
   db: DataSource
@@ -33,7 +38,6 @@ export class Database {
     await this.db.manager.transaction(async (tx) => {
       const query = tx.createQueryBuilder()
       const ops = await this.opsForDidComposer(query, did)
-      console.log('OPS: ', ops)
       // throws if invalid
       await document.assureValidNextOp(did, ops, proposed)
       const cid = await cidForData(proposed)
@@ -61,7 +65,21 @@ export class Database {
       .where('op.did = :did', { did })
       .orderBy('op.createdAt', 'ASC')
       .getMany()
-    console.log('RES: ', res)
     return res.map((row) => JSON.parse(row.operation))
   }
+}
+
+@Entity({ name: 'operations' })
+export class OperationsTable {
+  @PrimaryColumn('varchar')
+  did: string
+
+  @Column('text')
+  operation: string
+
+  @PrimaryColumn('varchar')
+  cid: string
+
+  @Column('datetime')
+  createdAt: Date
 }
