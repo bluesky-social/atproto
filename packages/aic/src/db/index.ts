@@ -1,7 +1,7 @@
 import { cidForData } from '@adxp/common'
 import { DataSource, SelectQueryBuilder } from 'typeorm'
 import * as document from '../document'
-import { Operation } from '../operations'
+import { Operation } from '../types'
 import { OperationsTable } from './operations-table'
 
 export class Database {

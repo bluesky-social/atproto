@@ -6,15 +6,15 @@ import { sha256, verifyDidSig } from '@adxp/crypto'
 import {
   Operation,
   operation,
-  create,
-  rotateSigningKey,
-  updateUsername,
-  updateService,
-  rotateRecoveryKey,
-  Create,
-} from './operations'
+  createOp,
+  rotateSigningKeyOp,
+  updateUsernameOp,
+  updateServiceOp,
+  rotateRecoveryKeyOp,
+  CreateOp,
+} from './types'
 
-type Document = {
+export type Document = {
   did: string
   signingKey: string
   recoveryKey: string
@@ -29,7 +29,7 @@ export const assureValidNextOp = async (
 ) => {
   // special case if account creation
   if (ops.length === 0) {
-    if (!check.is(proposed, create)) {
+    if (!check.is(proposed, createOp)) {
       throw new Error('Expected first operation to be `create`')
     }
     await assureValidCreationOp(did, proposed)
@@ -57,7 +57,7 @@ export const validateOperationLog = async (
 
   // ensure the first op is a valid & signed create operation
   const [first, ...rest] = ops
-  if (!check.is(first, create)) {
+  if (!check.is(first, createOp)) {
     throw new Error('Expected first operation to be `create`')
   }
   await assureValidCreationOp(did, first)
@@ -78,15 +78,15 @@ export const validateOperationLog = async (
       throw new Error('Operations not correctly ordered')
     }
     await assureValidSig([doc.signingKey, doc.recoveryKey], op)
-    if (check.is(op, create)) {
+    if (check.is(op, createOp)) {
       throw new Error('Unexpected `create` after DID genesis')
-    } else if (check.is(op, rotateSigningKey)) {
+    } else if (check.is(op, rotateSigningKeyOp)) {
       doc.signingKey = op.key
-    } else if (check.is(op, rotateRecoveryKey)) {
+    } else if (check.is(op, rotateRecoveryKeyOp)) {
       doc.recoveryKey = op.key
-    } else if (check.is(op, updateUsername)) {
+    } else if (check.is(op, updateUsernameOp)) {
       doc.username = op.username
-    } else if (check.is(op, updateService)) {
+    } else if (check.is(op, updateServiceOp)) {
       doc.service = op.service
     } else {
       throw new Error('Unknown operation')
@@ -97,17 +97,17 @@ export const validateOperationLog = async (
   return doc
 }
 
-export const assureValidCreationOp = async (did: string, op: Create) => {
-  await assureValidSig([op.signingKey], op)
-
-  // ensure that the DID matches the hash of the genesis operation
-  if (!did.startsWith('did:aic:')) {
-    throw new Error('Expected DID to start with `did:aic:`')
-  }
-  const didIdentifier = did.slice(8)
+export const hashAndFindDid = async (op: CreateOp, truncate = 24) => {
   const hashOfGenesis = await sha256(cbor.encode(op))
   const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
-  if (!hashB32.startsWith(didIdentifier)) {
+  const truncated = hashB32.slice(0, truncate)
+  return `did:aic:${truncated}`
+}
+
+export const assureValidCreationOp = async (did: string, op: CreateOp) => {
+  await assureValidSig([op.signingKey], op)
+  const expectedDid = await hashAndFindDid(op, 64)
+  if (!expectedDid.startsWith(did)) {
     throw new Error('Hash of genesis operation does not match DID identifier')
   }
 }

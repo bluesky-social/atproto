@@ -2,7 +2,7 @@ import express from 'express'
 import * as locals from './locals'
 import * as document from './document'
 import { check } from '@adxp/common'
-import { operation } from './operations'
+import { operation } from './types'
 import { ServerError } from './error'
 
 const router = express.Router()
@@ -20,7 +20,7 @@ router.get(`/:did`, async function (req, res) {
   res.send(doc)
 })
 
-// Get a DID tick
+// Get operation log for a DID
 router.get(`/log/:did`, async function (req, res) {
   const { did } = req.params
   const { db } = locals.get(res)

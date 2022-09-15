@@ -1,51 +1,101 @@
-// @TODO what else here? Freeze & Resolve?
-import * as z from 'zod'
+import * as cbor from '@ipld/dag-cbor'
+import * as uint8arrays from 'uint8arrays'
+import { DidableKey, sha256 } from '@adxp/crypto'
+import {
+  CreateOp,
+  Operation,
+  UnsignedCreateOp,
+  UnsignedOperation,
+  UnsignedRotateRecoveryKeyOp,
+  UnsignedRotateSigningKeyOp,
+  UnsignedUpdateServiceOp,
+  UnsignedUpdateUsernameOp,
+} from './types'
 
-export const opBase = z.object({
-  prev: z.string(),
-  sig: z.string(),
-})
+export const didForCreateOp = async (op: CreateOp, truncate = 24) => {
+  const hashOfGenesis = await sha256(cbor.encode(op))
+  const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
+  const truncated = hashB32.slice(0, truncate)
+  return `did:aic:${truncated}`
+}
 
-export const create = opBase.extend({
-  prev: z.null(),
-  type: z.literal('create'),
-  signingKey: z.string(),
-  recoveryKey: z.string(),
-  username: z.string(),
-  service: z.string(),
-})
-export type Create = z.infer<typeof create>
+export const signOperation = async (
+  op: UnsignedOperation,
+  signingKey: DidableKey,
+): Promise<Operation> => {
+  const data = cbor.encode(op)
+  const sig = await signingKey.sign(data)
+  return {
+    ...op,
+    sig: uint8arrays.toString(sig, 'base64url'),
+  }
+}
 
-export const rotateSigningKey = opBase.extend({
-  type: z.literal('rotate_signing_key'),
-  key: z.string(),
-})
-export type RotateSigningKey = z.infer<typeof rotateSigningKey>
+export const create = async (
+  signingKey: DidableKey,
+  recoveryKey: string,
+  username: string,
+  service: string,
+): Promise<Operation> => {
+  const op: UnsignedCreateOp = {
+    type: 'create',
+    signingKey: signingKey.did(),
+    recoveryKey,
+    username,
+    service,
+    prev: null,
+  }
+  return signOperation(op, signingKey)
+}
 
-export const rotateRecoveryKey = opBase.extend({
-  type: z.literal('rotate_recovery_key'),
-  key: z.string(),
-})
-export type RotateRecoveryKey = z.infer<typeof rotateRecoveryKey>
+export const rotateSigningKey = async (
+  newKey: string,
+  prev: string,
+  signingKey: DidableKey,
+): Promise<Operation> => {
+  const op: UnsignedRotateSigningKeyOp = {
+    type: 'rotate_signing_key',
+    key: newKey,
+    prev,
+  }
+  return signOperation(op, signingKey)
+}
 
-export const updateUsername = opBase.extend({
-  type: z.literal('update_username'),
-  username: z.string(),
-})
-export type UpdateUsername = z.infer<typeof updateUsername>
+export const rotateRecoveryKey = async (
+  newKey: string,
+  prev: string,
+  signingKey: DidableKey,
+): Promise<Operation> => {
+  const op: UnsignedRotateRecoveryKeyOp = {
+    type: 'rotate_recovery_key',
+    key: newKey,
+    prev,
+  }
+  return signOperation(op, signingKey)
+}
 
-export const updateService = opBase.extend({
-  type: z.literal('update_service'),
-  service: z.string(),
-})
-export type UpdateService = z.infer<typeof updateService>
+export const updateUsername = async (
+  username: string,
+  prev: string,
+  signingKey: DidableKey,
+): Promise<Operation> => {
+  const op: UnsignedUpdateUsernameOp = {
+    type: 'update_username',
+    username,
+    prev,
+  }
+  return signOperation(op, signingKey)
+}
 
-export const operation = z.union([
-  create,
-  rotateSigningKey,
-  rotateRecoveryKey,
-  updateUsername,
-  updateService,
-])
-
-export type Operation = z.infer<typeof operation>
+export const updateService = async (
+  service: string,
+  prev: string,
+  signingKey: DidableKey,
+): Promise<Operation> => {
+  const op: UnsignedUpdateServiceOp = {
+    type: 'update_service',
+    service,
+    prev,
+  }
+  return signOperation(op, signingKey)
+}
