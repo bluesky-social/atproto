@@ -2,7 +2,7 @@ import express from 'express'
 import * as locals from './locals'
 import * as document from './document'
 import { check } from '@adxp/common'
-import { operation } from './types'
+import * as t from './types'
 import { ServerError } from './error'
 
 const router = express.Router()
@@ -16,7 +16,7 @@ router.get(`/:did`, async function (req, res) {
   if (log.length === 0) {
     throw new ServerError(404, `DID not registered: ${did}`)
   }
-  const doc = document.validateOperationLog(did, log)
+  const doc = await document.validateOperationLog(did, log)
   res.send(doc)
 })
 
@@ -35,7 +35,7 @@ router.get(`/log/:did`, async function (req, res) {
 router.post(`/:did`, async function (req, res) {
   const { did } = req.params
   const op = req.body
-  if (!check.is(op, operation)) {
+  if (!check.is(op, t.def.operation)) {
     throw new Error('Not a valid operation')
   }
   const { db } = locals.get(res)

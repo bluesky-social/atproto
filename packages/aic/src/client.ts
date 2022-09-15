@@ -1,20 +1,19 @@
 import { DidableKey } from '@adxp/crypto'
 import axios from 'axios'
-import { Document, hashAndFindDid } from './document'
-import { Create, create, Operation, UpdateOperation } from './types'
-import * as cbor from '@ipld/dag-cbor'
-import * as uint8arrays from 'uint8arrays'
+import * as operations from './operations'
+import * as t from './types'
+import { CID } from 'multiformats/cid'
 import { check, cidForData } from '@adxp/common'
 
 export class AicClient {
   constructor(public url: string) {}
 
-  async getDocument(did: string): Promise<Document> {
+  async getDocument(did: string): Promise<t.DocumentData> {
     const res = await axios.get(`${this.url}/${did}`)
     return res.data
   }
 
-  async getOperationLog(did: string): Promise<Operation[]> {
+  async getOperationLog(did: string): Promise<t.Operation[]> {
     const res = await axios.get(`${this.url}/log/${did}`)
     return res.data.log
   }
@@ -25,69 +24,66 @@ export class AicClient {
     username: string,
     service: string,
   ): Promise<string> {
-    const op: Partial<Create> = {
-      type: 'create',
-      signingKey: signingKey.did(),
+    const op = await operations.create(
+      signingKey,
       recoveryKey,
       username,
       service,
-      prev: null,
-    }
-    const signedOp = await this.signOperation(op, signingKey)
-    if (!check.is(signedOp, create)) {
+    )
+    if (!check.is(op, t.def.createOp)) {
       throw new Error('Not a valid create operation')
     }
-    const did = await hashAndFindDid(signedOp)
-    await axios.post(`${this.url}/${did}`, signedOp)
+    const did = await operations.didForCreateOp(op)
+    await axios.post(`${this.url}/${did}`, op)
     return did
   }
 
-  async makeUpdate(
-    did: string,
-    op: Partial<UpdateOperation>,
-    signingKey: DidableKey,
-  ) {
+  async getPrev(did): Promise<CID> {
     const log = await this.getOperationLog(did)
     if (log.length === 0) {
       throw new Error(`Could not make update: DID does not exist: ${did}`)
     }
-    const prev = await cidForData(log[log.length - 1])
-    const signedOp = this.signOperation(
-      {
-        ...op,
-        prev: prev.toString(),
-      },
-      signingKey,
-    )
-    await axios.post(`${this.url}/${did}`, signedOp)
+    return cidForData(log[log.length - 1])
   }
 
   async rotateSigningKey(did: string, newKey: string, signingKey: DidableKey) {
-    return this.makeUpdate(
-      did,
-      { type: 'rotate_signing_key', key: newKey },
+    const prev = await this.getPrev(did)
+    const op = await operations.rotateSigningKey(
+      newKey,
+      prev.toString(),
       signingKey,
     )
+    await axios.post(`${this.url}/${did}`, op)
   }
 
   async rotateRecoveryKey(did: string, newKey: string, signingKey: DidableKey) {
-    return this.makeUpdate(
-      did,
-      { type: 'rotate_recovery_key', key: newKey },
+    const prev = await this.getPrev(did)
+    const op = await operations.rotateRecoveryKey(
+      newKey,
+      prev.toString(),
       signingKey,
     )
+    await axios.post(`${this.url}/${did}`, op)
   }
 
-  async udpateUsername(did: string, username: string, signingKey: DidableKey) {
-    return this.makeUpdate(
-      did,
-      { type: 'update_username', username },
+  async updateUsername(did: string, username: string, signingKey: DidableKey) {
+    const prev = await this.getPrev(did)
+    const op = await operations.updateUsername(
+      username,
+      prev.toString(),
       signingKey,
     )
+    await axios.post(`${this.url}/${did}`, op)
   }
 
   async updateService(did: string, service: string, signingKey: DidableKey) {
-    return this.makeUpdate(did, { type: 'update_service', service }, signingKey)
+    const prev = await this.getPrev(did)
+    const op = await operations.updateService(
+      service,
+      prev.toString(),
+      signingKey,
+    )
+    await axios.post(`${this.url}/${did}`, op)
   }
 }
 

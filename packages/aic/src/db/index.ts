@@ -33,6 +33,7 @@ export class Database {
     await this.db.manager.transaction(async (tx) => {
       const query = tx.createQueryBuilder()
       const ops = await this.opsForDidComposer(query, did)
+      console.log('OPS: ', ops)
       // throws if invalid
       await document.assureValidNextOp(did, ops, proposed)
       const cid = await cidForData(proposed)
@@ -44,6 +45,7 @@ export class Database {
           did,
           operation: JSON.stringify(proposed),
           cid: cid.toString(),
+          createdAt: new Date().toISOString(),
         })
         .execute()
     })
@@ -54,11 +56,12 @@ export class Database {
     did: string,
   ): Promise<Operation[]> {
     const res = await query
-      .select()
+      .select('op')
       .from(OperationsTable, 'op')
       .where('op.did = :did', { did })
       .orderBy('op.createdAt', 'ASC')
       .getMany()
+    console.log('RES: ', res)
     return res.map((row) => JSON.parse(row.operation))
   }
 }

@@ -3,33 +3,16 @@ import * as cbor from '@ipld/dag-cbor'
 import { check, cidForData } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { sha256, verifyDidSig } from '@adxp/crypto'
-import {
-  Operation,
-  operation,
-  createOp,
-  rotateSigningKeyOp,
-  updateUsernameOp,
-  updateServiceOp,
-  rotateRecoveryKeyOp,
-  CreateOp,
-} from './types'
-
-export type Document = {
-  did: string
-  signingKey: string
-  recoveryKey: string
-  username: string
-  service: string
-}
+import * as t from './types'
 
 export const assureValidNextOp = async (
   did: string,
-  ops: Operation[],
-  proposed: Operation,
+  ops: t.Operation[],
+  proposed: t.Operation,
 ) => {
   // special case if account creation
   if (ops.length === 0) {
-    if (!check.is(proposed, createOp)) {
+    if (!check.is(proposed, t.def.createOp)) {
       throw new Error('Expected first operation to be `create`')
     }
     await assureValidCreationOp(did, proposed)
@@ -39,31 +22,31 @@ export const assureValidNextOp = async (
   const doc = await validateOperationLog(did, ops)
   await assureValidSig([doc.signingKey, doc.recoveryKey], proposed)
   const prev = await cidForData(ops[ops.length - 1])
-  if (!proposed.prev || CID.parse(proposed.prev).equals(prev)) {
+  if (!proposed.prev || !CID.parse(proposed.prev).equals(prev)) {
     throw new Error('Operations not correctly ordered')
   }
 }
 
 export const validateOperationLog = async (
   did: string,
-  ops: Operation[],
-): Promise<Document> => {
+  ops: t.Operation[],
+): Promise<t.DocumentData> => {
   // make sure they're all validly formatted operations
   for (const op of ops) {
-    if (!check.is(op, operation)) {
+    if (!check.is(op, t.def.operation)) {
       throw new Error(`Improperly formatted operation: ${op}`)
     }
   }
 
   // ensure the first op is a valid & signed create operation
   const [first, ...rest] = ops
-  if (!check.is(first, createOp)) {
+  if (!check.is(first, t.def.createOp)) {
     throw new Error('Expected first operation to be `create`')
   }
   await assureValidCreationOp(did, first)
 
   // iterate through operations to reconstruct the current state of the document
-  const doc: Document = {
+  const doc: t.DocumentData = {
     did,
     signingKey: first.signingKey,
     recoveryKey: first.recoveryKey,
@@ -78,18 +61,18 @@ export const validateOperationLog = async (
       throw new Error('Operations not correctly ordered')
     }
 
-    if (check.is(op, createOp)) {
+    if (check.is(op, t.def.createOp)) {
       throw new Error('Unexpected `create` after DID genesis')
-    } else if (check.is(op, rotateSigningKeyOp)) {
+    } else if (check.is(op, t.def.rotateSigningKeyOp)) {
       await assureValidSig([doc.signingKey, doc.recoveryKey], op)
       doc.signingKey = op.key
-    } else if (check.is(op, rotateRecoveryKeyOp)) {
+    } else if (check.is(op, t.def.rotateRecoveryKeyOp)) {
       await assureValidSig([doc.signingKey, doc.recoveryKey], op)
       doc.recoveryKey = op.key
-    } else if (check.is(op, updateUsernameOp)) {
+    } else if (check.is(op, t.def.updateUsernameOp)) {
       await assureValidSig([doc.signingKey], op)
       doc.username = op.username
-    } else if (check.is(op, updateServiceOp)) {
+    } else if (check.is(op, t.def.updateServiceOp)) {
       await assureValidSig([doc.signingKey], op)
       doc.service = op.service
     } else {
@@ -101,14 +84,14 @@ export const validateOperationLog = async (
   return doc
 }
 
-export const hashAndFindDid = async (op: CreateOp, truncate = 24) => {
+export const hashAndFindDid = async (op: t.CreateOp, truncate = 24) => {
   const hashOfGenesis = await sha256(cbor.encode(op))
   const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
   const truncated = hashB32.slice(0, truncate)
   return `did:aic:${truncated}`
 }
 
-export const assureValidCreationOp = async (did: string, op: CreateOp) => {
+export const assureValidCreationOp = async (did: string, op: t.CreateOp) => {
   await assureValidSig([op.signingKey], op)
   const expectedDid = await hashAndFindDid(op, 64)
   if (!expectedDid.startsWith(did)) {
@@ -116,7 +99,10 @@ export const assureValidCreationOp = async (did: string, op: CreateOp) => {
   }
 }
 
-export const assureValidSig = async (allowedDids: string[], op: Operation) => {
+export const assureValidSig = async (
+  allowedDids: string[],
+  op: t.Operation,
+) => {
   const { sig, ...opData } = op
   const sigBytes = uint8arrays.fromString(sig, 'base64url')
   const dataBytes = new Uint8Array(cbor.encode(opData))

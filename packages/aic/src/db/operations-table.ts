@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryColumn,
-  UpdateDateColumn,
-  CreateDateColumn,
-} from 'typeorm'
+import { Entity, Column, PrimaryColumn } from 'typeorm'
 
 @Entity({ name: 'operations' })
 export class OperationsTable {
@@ -17,11 +11,8 @@ export class OperationsTable {
   @PrimaryColumn('varchar')
   cid: string
 
-  @CreateDateColumn()
+  @Column('datetime')
   createdAt: Date
-
-  @UpdateDateColumn()
-  updatedAt: Date
 }
 
 export default OperationsTable
