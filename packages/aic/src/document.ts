@@ -73,20 +73,24 @@ export const validateOperationLog = async (
   let prev = await cidForData(first)
 
   for (const op of rest) {
-    // @TODO should signing key be able to rotate reocvery key??
-    if (!op.prev || CID.parse(op.prev).equals(prev)) {
+    // @TODO should signing key be able to rotate reocvery key?? & should reocvery key be able to change username/service
+    if (!op.prev || !CID.parse(op.prev).equals(prev)) {
       throw new Error('Operations not correctly ordered')
     }
-    await assureValidSig([doc.signingKey, doc.recoveryKey], op)
+
     if (check.is(op, createOp)) {
       throw new Error('Unexpected `create` after DID genesis')
     } else if (check.is(op, rotateSigningKeyOp)) {
+      await assureValidSig([doc.signingKey, doc.recoveryKey], op)
       doc.signingKey = op.key
     } else if (check.is(op, rotateRecoveryKeyOp)) {
+      await assureValidSig([doc.signingKey, doc.recoveryKey], op)
       doc.recoveryKey = op.key
     } else if (check.is(op, updateUsernameOp)) {
+      await assureValidSig([doc.signingKey], op)
       doc.username = op.username
     } else if (check.is(op, updateServiceOp)) {
+      await assureValidSig([doc.signingKey], op)
       doc.service = op.service
     } else {
       throw new Error('Unknown operation')
@@ -116,12 +120,9 @@ export const assureValidSig = async (allowedDids: string[], op: Operation) => {
   const { sig, ...opData } = op
   const sigBytes = uint8arrays.fromString(sig, 'base64url')
   const dataBytes = new Uint8Array(cbor.encode(opData))
-  console.log('VERIFYING DATA: ', dataBytes)
-  console.log('VERIFYING SIG: ', sigBytes)
   let isValid = true
   for (const did of allowedDids) {
     isValid = await verifyDidSig(did, dataBytes, sigBytes)
-    console.log(`${did}: ${isValid}`)
     if (isValid) return
   }
   throw new Error(`Invalid signature on op: ${op}`)
