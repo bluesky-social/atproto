@@ -32,7 +32,7 @@ It’s not possible to have a usable social network without moderation. Decentra
 
 Our model is that _speech_ and _reach_ should be two separate layers, built to work with each other. The “speech” layer should remain neutral, distributing authority and designed to ensure everyone has a voice. The “reach” layer lives on top, built for flexibility and designed to scale.
 
-![Speech vs Reach](docs/architecture/speech-reach-layers.png)
+![Speech vs Reach](img/architecture/speech-reach-layers.png)
 
 The base layer of ADX (Personal Data Repositories and Federated Networking) creates a common space for speech where everyone is free to participate, analogous to the Web where anyone can put up a website. The Crawling Indexer services then enable reach by aggregating content from the network. Moderation occurs in multiple layers through the system, including in aggregation algorithms, thresholds based on reputation, and end-user choice. There's no one company that can decide what gets published; instead there is a marketplace of companies deciding what to carry to their audiences.
 
@@ -58,7 +58,7 @@ Adopting this system should give applications the tools for end-to-end encryptio
 
 We use two interrelated forms of identifiers: the _username_ and the _DID_. Usernames are email-like IDs which are resolved using [Webfinger](https://webfinger.net/) while DIDs are an [emerging W3C standard](https://www.w3.org/TR/did-core/) which act as secure & stable IDs.
 
-![Username & DID diagram](docs/architecture/username-did-diagram.png)
+![Username & DID diagram](img/architecture/username-did-diagram.png)
 
 The email-style username is a user-facing identifier — it should be shown in UIs and promoted as a way to find users. Applications resolve usernames to DIDs and then use the DID as the stable canonical identifier. The DID can then be securely resolved to a DID document which includes public keys and user services.
 
@@ -119,7 +119,7 @@ While we believe supporting the existing methods which meet these criteria is a 
 
 The (currently-unnamed) DID Consortium will securely host user IDs. It will be operated by multiple different organizations who share ownership of the service.
 
-![Consortium diagram](docs/architecture/consortium-diagram.png)
+![Consortium diagram](img/architecture/consortium-diagram.png)
 
 The design of the consortium software is still under development, but the current thinking follows the above diagram. Consortium members will operate nodes which coordinate under a control plane run by the consortium governance. They will coordinate reads and writes to a secure append-only log which can be monitored externally, through a technique similar to [Certificate Transparency](https://certificate.transparency.dev/).
 
@@ -188,7 +188,7 @@ Multiple types of identifiers are used within a Personal Data Repository.
 
 Each Data Repository is laid out in a Merkle DAG which can be visualized as the following layout:
 
-![Repo hierarchy](docs/architecture/repo-hierarchy.png)
+![Repo hierarchy](img/architecture/repo-hierarchy.png)
 
 Every node is an[ IPLD](https://ipld.io/) object ([dag-cbor](https://ipld.io/docs/codecs/known/dag-cbor/) to be specific) which is referenced by a[ CID](https://github.com/multiformats/cid) hash. The arrows in the diagram above represent a CID reference.
 
@@ -296,7 +296,7 @@ The master keypair requires strong security and should not be duplicated to mult
 
 This leads to a tree of authorized keypairs such as the one in this diagram:
 
-![Key tree](docs/architecture/key-tree.png)
+![Key tree](img/architecture/key-tree.png)
 
 ### Commits
 
@@ -310,7 +310,7 @@ To validate a data repository’s current state, the full history of commits mus
 
 Every Root node includes the CID of the previous Commit. This produces a linked list which represents the history of changes in a Repository.
 
-![Repo history](docs/architecture/repo-history.png)
+![Repo history](img/architecture/repo-history.png)
 
 #### Validation
 
@@ -367,7 +367,7 @@ While our use of authenticated data shares many properties with peer-to-peer net
 
 The following diagram illustrates the expected flows of data through the network:
 
-![System topology](docs/architecture/system-topology.png)
+![System topology](img/architecture/system-topology.png)
 
 In this section, we're specifically examining "System C," the data hosting layer.
 
@@ -508,7 +508,7 @@ Each of these models are still being evaluated. It’s likely that the final arc
 
 The act of moderation is split into two distinct concepts. The first is labeling, and the second is actioning. In a centralized system the process of content review can lead directly to a moderation decision to remove content across the site. In a distributed system the content reviewers can provide information but cannot force every moderator in the system to take action.
 
-![Moderation flow](docs/architecture/moderation.png)
+![Moderation flow](img/architecture/moderation.png)
 
 ### Labels
 

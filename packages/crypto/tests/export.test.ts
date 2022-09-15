@@ -18,9 +18,8 @@ describe('exports and reimports keys', () => {
     const data = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8])
     const sig = await imported.sign(data)
 
-    const keyBytes = encoding.pubkeyBytesFromDid(keypair.did())
+    const validSig = await p256.verifyDidSig(keypair.did(), data, sig)
 
-    const validSig = await p256.verify(keyBytes, data, sig)
     expect(validSig).toBeTruthy()
   })
 })

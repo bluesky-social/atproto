@@ -6,14 +6,14 @@ import { adxSemantics } from './semantics'
 export class MemoryStore extends AuthStore {
   static async load(): Promise<MemoryStore> {
     const keypair = await crypto.EcdsaKeypair.create({ exportable: true })
-    const ucanStore = await ucan.storeFromTokens(adxSemantics, [])
+    const ucanStore = await ucan.Store.fromTokens(adxSemantics, [])
     return new MemoryStore(keypair, ucanStore)
   }
 
   async reset(): Promise<void> {
     this.clear()
     this.keypair = await crypto.EcdsaKeypair.create({ exportable: true })
-    this.ucanStore = await ucan.storeFromTokens(adxSemantics, [])
+    this.ucanStore = await ucan.Store.fromTokens(adxSemantics, [])
   }
 }
 

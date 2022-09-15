@@ -115,11 +115,14 @@ export const assureValidCreationOp = async (did: string, op: CreateOp) => {
 export const assureValidSig = async (allowedDids: string[], op: Operation) => {
   const { sig, ...opData } = op
   const sigBytes = uint8arrays.fromString(sig, 'base64url')
-  const dataBytes = cbor.encode(opData)
+  const dataBytes = new Uint8Array(cbor.encode(opData))
+  console.log('VERIFYING DATA: ', dataBytes)
+  console.log('VERIFYING SIG: ', sigBytes)
   let isValid = true
   for (const did of allowedDids) {
     isValid = await verifyDidSig(did, dataBytes, sigBytes)
-    if (isValid) break
+    console.log(`${did}: ${isValid}`)
+    if (isValid) return
   }
   throw new Error(`Invalid signature on op: ${op}`)
 }

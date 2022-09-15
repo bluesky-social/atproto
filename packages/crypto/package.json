@@ -14,10 +14,10 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@ucans/core": "^0.0.1-alpha",
+    "@ucans/core": "0.11.0-alpha",
     "big-integer": "^1.6.51",
     "multiformats": "^9.6.4",
     "one-webcrypto": "^1.0.3",
-    "uint8arrays": "^3.0.0"
+    "uint8arrays": "3.0.0"
   }
 }

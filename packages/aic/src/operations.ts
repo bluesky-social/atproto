@@ -23,8 +23,11 @@ export const signOperation = async (
   op: UnsignedOperation,
   signingKey: DidableKey,
 ): Promise<Operation> => {
-  const data = cbor.encode(op)
+  const data = new Uint8Array(cbor.encode(op))
+  console.log('SIGNING: ', data)
   const sig = await signingKey.sign(data)
+  console.log('SIG: ', sig)
+  console.log('SIGNING DID: ', signingKey.did())
   return {
     ...op,
     sig: uint8arrays.toString(sig, 'base64url'),
