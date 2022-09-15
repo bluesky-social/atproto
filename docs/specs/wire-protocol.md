@@ -1,5 +1,7 @@
 # ADX Wire Protocol v0.0.0
 
+TODO: this document is deprecated by the FedRPC-based system
+
 ADX exchanges data using HTTP/S. This document enumerates the routes and their expected behaviors.
 
 ## `GET /.well-known/adx-did`

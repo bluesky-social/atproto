@@ -1,9 +1,0 @@
-{
-  "private": true,
-  "scripts": {
-    "build": "node scripts/gen.js"
-  },
-  "dependencies": {
-    "yaml": "^2.1.1"
-  }
-}
