@@ -15,15 +15,12 @@ These specs can be organize into three layers of dependency:
 ┌───────────────┐
 │  TODO         │  Application semantics
 └─┰──────────┰──┘
-  ┃          ┃
 --╂----------╂-------------------------------------
-  ┃          ┃
-  ┃       ┌──▽──┐
-  ┃       │ ADX │  Block & record storage, identity
+  ┃          ▽
+  ┃       ┌─────┐
+  ┃       │ ADX │  Identity, Block & record storage
   ┃       └──┰──┘
-  ┃          ┃
 --╂----------╂-------------------------------------
-  ┃          ┃
   ▽          ▽
  ┌──────────────┐ 
  │    FedRPC    │  Wire protocol
