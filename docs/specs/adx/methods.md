@@ -4,7 +4,10 @@
 
 Provides the DID of the repo indicated by the Host parameter.
 
-TODO
+- Params
+  - `name` Required string. The name to resolve.
+- Output
+  - `json` [NameResolution](#nameresolution)
 
 ## `todo.adx.sync.getRoot`
 
@@ -156,6 +159,18 @@ Delete a record.
   - `json` TODO
 
 ## Schemas
+
+### NameResolution
+
+```json
+{
+  "type": "object",
+  "required": ["did"],
+  "properties": {
+    "did": {"type": "string"}
+  }
+}
+```
 
 ### RepoRoot
 
