@@ -22,7 +22,8 @@ To learn more about ADX, see:
 
 - [The Architecture document](docs/architecture.md)
 - Specs
-  - [Wire Protocol](docs/specs/wire-protocol.md)
+  - [Namespaced IDs (NSID)](docs/specs/nsid.md)
+  - [Federated RPC (FedRPC)](docs/specs/fedrpc.md)
   - [Name Resolution](docs/specs/name-resolution.md)
   - [ADX URI Scheme](docs/specs/adx-uri.md)
   - [Repository Structure](docs/specs/repo.md)

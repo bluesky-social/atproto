@@ -23,6 +23,12 @@ Features:
 - **Cacheable**. FedRPC's "query" methods are designed to cache well with common HTTP-based caching techniques.
 - **Support for multiple encodings**. FedRPC supports structured data (JSON) and unstructured binary blobs.
 
+## TODOs
+
+- Authentication
+- Schema versioning & extensibility
+- Define `getSchema`
+
 ## Specification
 
 FedRPC supports client-to-server and server-to-server messaging over HTTP/S. Each user has a "Personal Data Server (PDS)" which acts as their agent in the network, meaning most (if not all) of their communication is routed through their PDS.
