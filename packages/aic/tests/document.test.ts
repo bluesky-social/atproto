@@ -212,4 +212,11 @@ describe('aic DID document', () => {
     const [first, ...rest] = ops
     expect(document.validateOperationLog(did, rest)).rejects.toThrow()
   })
+
+  it('returns a valid DID document', async () => {
+    const data = await document.validateOperationLog(did, ops)
+    const didDoc = await document.formatDidDoc(data)
+    console.log(data)
+    console.log(didDoc)
+  })
 })

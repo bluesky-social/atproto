@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import * as cbor from '@ipld/dag-cbor'
 import { check, cidForData } from '@adxp/common'
-import { sha256, verifyDidSig } from '@adxp/crypto'
+import * as crypto from '@adxp/crypto'
 import * as t from './types'
 
 export const assureValidNextOp = async (
@@ -85,7 +85,7 @@ export const validateOperationLog = async (
 }
 
 export const hashAndFindDid = async (op: t.CreateOp, truncate = 24) => {
-  const hashOfGenesis = await sha256(cbor.encode(op))
+  const hashOfGenesis = await crypto.sha256(cbor.encode(op))
   const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
   const truncated = hashB32.slice(0, truncate)
   return `did:aic:${truncated}`
@@ -108,8 +108,87 @@ export const assureValidSig = async (
   const dataBytes = new Uint8Array(cbor.encode(opData))
   let isValid = true
   for (const did of allowedDids) {
-    isValid = await verifyDidSig(did, dataBytes, sigBytes)
+    isValid = await crypto.verifyDidSig(did, dataBytes, sigBytes)
     if (isValid) return
   }
   throw new Error(`Invalid signature on op: ${op}`)
+}
+
+export const formatDidDoc = async (data: t.DocumentData) => {
+  const context = ['https://www.w3.org/ns/did/v1']
+
+  const signingKeyInfo = formatKeyAndContext(data.signingKey)
+  const recoveryKeyInfo = formatKeyAndContext(data.recoveryKey)
+  const verificationMethods = [signingKeyInfo, recoveryKeyInfo]
+  verificationMethods.forEach((method) => {
+    if (!context.includes(method.context)) {
+      context.push(method.context)
+    }
+  })
+
+  return {
+    '@context': context,
+    id: data.did,
+    alsoKnownAs: `https://${data.username}`,
+    verificationMethod: [
+      {
+        id: `${data.did}#signingKey`,
+        type: signingKeyInfo.type,
+        controller: data.did,
+        publicKeyMultibase: signingKeyInfo.publicKeyMultibase,
+      },
+      {
+        id: `${data.did}#recoveryKey`,
+        type: recoveryKeyInfo.type,
+        controller: data.did,
+        publicKeyMultibase: recoveryKeyInfo.publicKeyMultibase,
+      },
+    ],
+    assertionMethod: [`${data.did}#signingKey`],
+    service: [
+      {
+        id: `${data.did}#pds`,
+        type: 'AtpPersonalDataServer',
+        serviceEndpoint: data.service,
+      },
+    ],
+  }
+}
+
+type KeyAndContext = {
+  context: string
+  type: string
+  publicKeyMultibase
+}
+
+const formatKeyAndContext = (key: string): KeyAndContext => {
+  const DID_KEY_PREFIX = 'did:key:z'
+  const plugins = [crypto.p256Plugin]
+
+  if (!key.startsWith(DID_KEY_PREFIX)) {
+    throw new Error(`Not a valid did:key: ${key}`)
+  }
+  const prefixedBytes = uint8arrays.fromString(
+    key.slice(DID_KEY_PREFIX.length),
+    'base58btc',
+  )
+  const plugin = plugins.find((p) => hasPrefix(prefixedBytes, p.prefix))
+  if (!plugin) {
+    throw new Error('Unsupported key type')
+  }
+
+  if (plugin.jwtAlg === 'ES256') {
+    const compressedKeyBytes = prefixedBytes.slice(plugin.prefix.length)
+    const keyBytes = crypto.decompressPubkey(compressedKeyBytes)
+    return {
+      context: 'https://w3id.org/security/suites/ecdsa-2019/v1',
+      type: 'EcdsaSecp256r1VerificationKey2019',
+      publicKeyMultibase: `z${uint8arrays.toString(keyBytes, 'base58btc')}`,
+    }
+  }
+  throw new Error('Unsupported key type')
+}
+
+const hasPrefix = (bytes: Uint8Array, prefix: Uint8Array): boolean => {
+  return uint8arrays.equals(prefix, bytes.subarray(0, prefix.byteLength))
 }
