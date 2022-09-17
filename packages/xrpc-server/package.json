@@ -15,6 +15,8 @@
   },
   "license": "MIT",
   "dependencies": {
+    "ajv": "^8.11.0",
+    "ajv-formats": "^2.1.1",
     "express": "^4.17.2",
     "mime-types": "^2.1.35",
     "zod": "^3.14.2"

@@ -78,7 +78,7 @@ export function constructMethodCallHeaders(
     if (opts?.encoding) {
       headers['Content-Type'] = opts.encoding
     }
-    if (opts?.body && typeof opts.body === 'object') {
+    if (opts?.data && typeof opts.data === 'object') {
       if (!headers['Content-Type']) {
         headers['Content-Type'] = 'application/json'
       }

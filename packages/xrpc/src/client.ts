@@ -88,7 +88,7 @@ export class ServiceClient {
         method: httpMethod,
         url: httpUri,
         headers: httpHeaders,
-        data: opts?.body,
+        data: opts?.data,
         responseType: 'arraybuffer',
       })
     } catch (e: any) {

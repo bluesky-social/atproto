@@ -1,7 +1,9 @@
 import express from 'express'
+import { ValidateFunction } from 'ajv'
 import { MethodSchema, methodSchema, isValidMethodSchema } from '@adxp/xrpc'
 import { XRPCHandler, XRPCError, InvalidRequestError } from './types'
 import {
+  ajv,
   validateReqParams,
   validateInput,
   validateOutput,
@@ -16,6 +18,8 @@ export class Server {
   router = express.Router()
   handlers: Map<string, XRPCHandler> = new Map()
   schemas: Map<string, MethodSchema> = new Map()
+  inputValidators: Map<string, ValidateFunction> = new Map()
+  outputValidators: Map<string, ValidateFunction> = new Map()
 
   constructor(schemas?: unknown[]) {
     if (schemas) {
@@ -48,6 +52,12 @@ export class Server {
   addSchema(schema: unknown) {
     if (isValidMethodSchema(schema)) {
       this.schemas.set(schema.id, schema)
+      if (schema.input?.schema) {
+        this.inputValidators.set(schema.id, ajv.compile(schema.input.schema))
+      }
+      if (schema.output?.schema) {
+        this.outputValidators.set(schema.id, ajv.compile(schema.output.schema))
+      }
     } else {
       methodSchema.parse(schema) // will throw with the validation error
     }
@@ -61,6 +71,8 @@ export class Server {
 
   removeSchema(nsid: string) {
     this.schemas.delete(nsid)
+    this.inputValidators.delete(nsid)
+    this.outputValidators.delete(nsid)
   }
 
   // http
@@ -91,13 +103,22 @@ export class Server {
 
       // validate request
       const params = validateReqParams(schema, req.query)
-      const input = validateInput(schema, req, inputBody)
+      const input = validateInput(
+        schema,
+        req,
+        inputBody,
+        this.inputValidators.get(schema.id),
+      )
 
       // run the handler
       const outputUnvalidated = await handler(params, input, req, res)
 
       // validate response
-      const output = validateOutput(schema, outputUnvalidated)
+      const output = validateOutput(
+        schema,
+        outputUnvalidated,
+        this.outputValidators.get(schema.id),
+      )
 
       // send response
       if (

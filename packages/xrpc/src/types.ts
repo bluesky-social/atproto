@@ -42,7 +42,7 @@ export const errorResponseBody = z.object({
 export type ErrorResponseBody = z.infer<typeof errorResponseBody>
 
 export interface CallOptions {
-  body?: any
+  data?: any
   encoding?: string
   headers?: Headers
 }

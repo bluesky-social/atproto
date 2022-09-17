@@ -1,6 +1,8 @@
 import express from 'express'
 import { MethodSchema, MethodSchemaParam } from '@adxp/xrpc'
 import mime from 'mime-types'
+import Ajv, { ValidateFunction } from 'ajv'
+import addFormats from 'ajv-formats'
 import {
   Params,
   HandlerInput,
@@ -9,6 +11,9 @@ import {
   InvalidRequestError,
   InternalServerError,
 } from './types'
+
+export const ajv = new Ajv()
+addFormats(ajv)
 
 type ReqQuery = typeof express.request['query']
 type SchemaParams = MethodSchema['parameters']
@@ -93,15 +98,16 @@ export function validateInput(
   schema: MethodSchema,
   req: express.Request,
   inputBodyBuf: Uint8Array,
+  jsonValidator?: ValidateFunction,
 ): HandlerInput | undefined {
   // request expectation
   if (inputBodyBuf?.byteLength && !schema.input) {
-    throw new InternalServerError(
+    throw new InvalidRequestError(
       `A request body was provided when none was expected`,
     )
   }
   if (!inputBodyBuf?.byteLength && schema.input) {
-    throw new InternalServerError(
+    throw new InvalidRequestError(
       `A request body is expected but none was provided`,
     )
   }
@@ -112,7 +118,7 @@ export function validateInput(
     schema.input?.encoding &&
     (!inputEncoding || !isValidEncoding(schema.input?.encoding, inputEncoding))
   ) {
-    throw new InternalServerError(`Invalid request encoding: ${inputEncoding}`)
+    throw new InvalidRequestError(`Invalid request encoding: ${inputEncoding}`)
   }
 
   if (!inputEncoding) {
@@ -124,8 +130,10 @@ export function validateInput(
   const inputBody = parseInputBodyBuf(inputBodyBuf, inputEncoding)
 
   // json schema
-  if (schema.input?.schema) {
-    assertJSONShemaValidation(schema.input?.schema, inputBody)
+  if (jsonValidator) {
+    if (!jsonValidator(inputBody)) {
+      throw new InvalidRequestError(ajv.errorsText(jsonValidator.errors))
+    }
   }
 
   return {
@@ -137,6 +145,7 @@ export function validateInput(
 export function validateOutput(
   schema: MethodSchema,
   output: HandlerOutput | undefined,
+  jsonValidator?: ValidateFunction,
 ): HandlerOutput | undefined {
   // initial validation
   if (output) {
@@ -167,15 +176,13 @@ export function validateOutput(
   }
 
   // json schema
-  if (schema.output?.schema) {
-    assertJSONShemaValidation(schema.output?.schema, output?.body)
+  if (jsonValidator) {
+    if (!jsonValidator(output?.body)) {
+      throw new InternalServerError(ajv.errorsText(jsonValidator.errors))
+    }
   }
 
   return output
-}
-
-export function assertJSONShemaValidation(jsonSchema: any, value: any) {
-  // TODO
 }
 
 export function normalizeMime(v: string) {

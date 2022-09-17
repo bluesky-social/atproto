@@ -106,7 +106,7 @@ describe('Procedures', () => {
     const res2 = await client.call(
       'io.example.ping2',
       {},
-      { encoding: 'text/plain', body: 'hello world' },
+      { encoding: 'text/plain', data: 'hello world' },
     )
     expect(res2.success).toBeTruthy()
     expect(res2.error).toBeFalsy()
@@ -118,7 +118,7 @@ describe('Procedures', () => {
       {},
       {
         encoding: 'application/octet-stream',
-        body: new TextEncoder().encode('hello world'),
+        data: new TextEncoder().encode('hello world'),
       },
     )
     expect(res3.success).toBeTruthy()
@@ -131,7 +131,7 @@ describe('Procedures', () => {
       {},
       {
         encoding: 'application/json',
-        body: {
+        data: {
           message: 'hello world',
         },
       },
