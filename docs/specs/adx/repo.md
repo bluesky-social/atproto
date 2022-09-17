@@ -129,7 +129,7 @@ Schemas define the possible values of a record. Every record has a "type" which 
 
 Schemas are designed to be machine-readable and network-accessible. While it is not currently _required_ that a schema is available on the network, it is strongly advised to publish schemas so that a single canonical & authoritative representation is available to consumers of the method.
 
-To fetch a schema, a request must be sent to the fedrpc [`getSchema`](../fedrpc.md#getschema) method. This request is sent to the authority of the NSID.
+To fetch a schema, a request must be sent to the xrpc [`getSchema`](../xrpc.md#getschema) method. This request is sent to the authority of the NSID.
 
 ### Schema structure
 
