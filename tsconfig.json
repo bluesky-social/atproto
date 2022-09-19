@@ -32,5 +32,7 @@
     { "path": "./packages/microblog/tsconfig.build.json" },
     { "path": "./packages/nsid/tsconfig.build.json" },
     { "path": "./packages/schemas/tsconfig.build.json" },
+    { "path": "./packages/xrpc/tsconfig.build.json" },
+    { "path": "./packages/xrpc-server/tsconfig.build.json" },
   ]
 }
