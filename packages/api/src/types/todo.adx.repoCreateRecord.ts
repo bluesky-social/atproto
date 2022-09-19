@@ -1,0 +1,32 @@
+/**
+* GENERATED CODE - DO NOT MODIFY
+* Created Mon Sep 19 2022
+*/
+import { Headers } from '@adxp/xrpc'
+
+export interface QueryParams {
+  did: string;
+  type: string;
+  validate?: boolean;
+}
+
+export interface CallOptions {
+  headers?: Headers;
+  encoding: 'application/json';
+  data: InputSchema;
+}
+
+export interface InputSchema {
+  [k: string]: unknown;
+}
+
+export interface OutputSchema {
+  uri: string;
+}
+
+export interface Response {
+  success: boolean;
+  error: boolean;
+  headers: Headers;
+  data: OutputSchema;
+}
