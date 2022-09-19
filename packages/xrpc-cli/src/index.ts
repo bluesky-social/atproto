@@ -4,9 +4,10 @@ import path from 'path'
 import fs from 'fs'
 import { Command, InvalidArgumentError } from 'commander'
 import yesno from 'yesno'
-import * as nsidLib from '@adxp/nsid'
+import { NSID } from '@adxp/nsid'
 import { schemaTemplate, readAllSchemas, genMd, genTsObj } from './util'
-import { genApi } from './gen-api'
+import { genClientApi } from './codegen/client'
+import { genServerApi } from './codegen/server'
 
 const program = new Command()
 program.name('xrpc-cli').description('XRPC utilities').version('0.0.0')
@@ -21,7 +22,7 @@ program
   .action(
     (nsid: string, outfile?: string, options?: Record<string, string>) => {
       if (!outfile) {
-        outfile = path.join(process.cwd(), `${nsidLib.parse(nsid).name}.json`)
+        outfile = path.join(process.cwd(), `${NSID.parse(nsid).name}.json`)
       }
       if (!outfile.endsWith('.json')) {
         outfile = outfile + '.json'
@@ -59,7 +60,7 @@ program
   .argument('<schemas...>', 'paths of the schema files to include', toPaths)
   .action(async (outDir: string, schemaPaths: string[]) => {
     const schemas = readAllSchemas(schemaPaths)
-    const api = await genApi(schemas)
+    const api = await genClientApi(schemas)
     console.log('This will write the following files:')
     for (const file of api.files) {
       file.path = path.join(outDir, file.path)
@@ -70,6 +71,35 @@ program
       defaultValue: false,
     })
     if (!ok) {
+      console.log('Aborted.')
+      process.exit(0)
+    }
+    for (const file of api.files) {
+      fs.mkdirSync(path.join(file.path, '..'), { recursive: true })
+      fs.writeFileSync(file.path, file.content, 'utf8')
+    }
+    console.log('API generated.')
+  })
+
+program
+  .command('gen-server')
+  .description('Generate a TS server API')
+  .argument('<outdir>', 'path of the directory to write to', toPath)
+  .argument('<schemas...>', 'paths of the schema files to include', toPaths)
+  .action(async (outDir: string, schemaPaths: string[]) => {
+    const schemas = readAllSchemas(schemaPaths)
+    const api = await genServerApi(schemas)
+    console.log('This will write the following files:')
+    for (const file of api.files) {
+      file.path = path.join(outDir, file.path)
+      console.log('-', file.path)
+    }
+    const ok = await yesno({
+      question: 'Are you sure you want to continue? [y/N]',
+      defaultValue: false,
+    })
+    if (!ok) {
+      console.log('Aborted.')
       process.exit(0)
     }
     for (const file of api.files) {
@@ -82,7 +112,7 @@ program
 program.parse()
 
 function toNsid(v: string) {
-  if (!nsidLib.isValid(v)) {
+  if (!NSID.isValid(v)) {
     throw new InvalidArgumentError(
       'Must follow the reverse-DNS syntax of NSID.',
     )
