@@ -17,6 +17,24 @@ const SEGMENT_RE = /^[a-zA-Z]([a-zA-Z0-9-])*$/
 export class NSID {
   segments: string[] = []
 
+  static parse(nsid: string): NSID {
+    return new NSID(nsid)
+  }
+
+  static create(authority: string, name: string): NSID {
+    const segments = [...authority.split('.').reverse(), name].join('.')
+    return new NSID(segments)
+  }
+
+  static isValid(nsid: string): boolean {
+    try {
+      NSID.parse(nsid)
+      return true
+    } catch (e: any) {
+      return false
+    }
+  }
+
   constructor(nsid: string) {
     const segments = nsid.split('.')
     if (segments.length <= 1) {
@@ -48,23 +66,5 @@ export class NSID {
 
   toString() {
     return this.segments.join('.')
-  }
-}
-
-export function parse(nsid: string): NSID {
-  return new NSID(nsid)
-}
-
-export function create(authority: string, name: string): NSID {
-  const segments = [...authority.split('.').reverse(), name].join('.')
-  return new NSID(segments)
-}
-
-export function isValid(nsid: string): boolean {
-  try {
-    parse(nsid)
-    return true
-  } catch (e: any) {
-    return false
   }
 }

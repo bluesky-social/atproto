@@ -1,41 +1,43 @@
-import { parse, create, isValid, NSID } from '../src'
+import { NSID } from '../src'
 
 describe('NSID parsing, creation, and validation', () => {
   it('parses valid NSIDs', () => {
-    expect(parse('com.example.foo').authority).toBe('example.com')
-    expect(parse('com.example.foo').name).toBe('foo')
-    expect(parse('com.example.foo').toString()).toBe('com.example.foo')
-    expect(parse('com.example.*').authority).toBe('example.com')
-    expect(parse('com.example.*').name).toBe('*')
-    expect(parse('com.example.*').toString()).toBe('com.example.*')
-    expect(parse('com.long-thing1.cool.fooBarBaz').authority).toBe(
+    expect(NSID.parse('com.example.foo').authority).toBe('example.com')
+    expect(NSID.parse('com.example.foo').name).toBe('foo')
+    expect(NSID.parse('com.example.foo').toString()).toBe('com.example.foo')
+    expect(NSID.parse('com.example.*').authority).toBe('example.com')
+    expect(NSID.parse('com.example.*').name).toBe('*')
+    expect(NSID.parse('com.example.*').toString()).toBe('com.example.*')
+    expect(NSID.parse('com.long-thing1.cool.fooBarBaz').authority).toBe(
       'cool.long-thing1.com',
     )
-    expect(parse('com.long-thing1.cool.fooBarBaz').name).toBe('fooBarBaz')
-    expect(parse('com.long-thing1.cool.fooBarBaz').toString()).toBe(
+    expect(NSID.parse('com.long-thing1.cool.fooBarBaz').name).toBe('fooBarBaz')
+    expect(NSID.parse('com.long-thing1.cool.fooBarBaz').toString()).toBe(
       'com.long-thing1.cool.fooBarBaz',
     )
   })
   it('creates valid NSIDs', () => {
-    expect(create('example.com', 'foo').authority).toBe('example.com')
-    expect(create('example.com', 'foo').name).toBe('foo')
-    expect(create('example.com', 'foo').toString()).toBe('com.example.foo')
-    expect(create('example.com', '*').authority).toBe('example.com')
-    expect(create('example.com', '*').name).toBe('*')
-    expect(create('example.com', '*').toString()).toBe('com.example.*')
-    expect(create('cool.long-thing1.com', 'fooBarBaz').authority).toBe(
+    expect(NSID.create('example.com', 'foo').authority).toBe('example.com')
+    expect(NSID.create('example.com', 'foo').name).toBe('foo')
+    expect(NSID.create('example.com', 'foo').toString()).toBe('com.example.foo')
+    expect(NSID.create('example.com', '*').authority).toBe('example.com')
+    expect(NSID.create('example.com', '*').name).toBe('*')
+    expect(NSID.create('example.com', '*').toString()).toBe('com.example.*')
+    expect(NSID.create('cool.long-thing1.com', 'fooBarBaz').authority).toBe(
       'cool.long-thing1.com',
     )
-    expect(create('cool.long-thing1.com', 'fooBarBaz').name).toBe('fooBarBaz')
-    expect(create('cool.long-thing1.com', 'fooBarBaz').toString()).toBe(
+    expect(NSID.create('cool.long-thing1.com', 'fooBarBaz').name).toBe(
+      'fooBarBaz',
+    )
+    expect(NSID.create('cool.long-thing1.com', 'fooBarBaz').toString()).toBe(
       'com.long-thing1.cool.fooBarBaz',
     )
   })
   it('validates', () => {
-    expect(isValid('com.1example.foo')).toBeFalsy()
-    expect(isValid('com.example!.foo')).toBeFalsy()
-    expect(isValid('com.example.*.foo')).toBeFalsy()
-    expect(isValid('foo')).toBeFalsy()
-    expect(isValid('foo/bar')).toBeFalsy()
+    expect(NSID.isValid('com.1example.foo')).toBeFalsy()
+    expect(NSID.isValid('com.example!.foo')).toBeFalsy()
+    expect(NSID.isValid('com.example.*.foo')).toBeFalsy()
+    expect(NSID.isValid('foo')).toBeFalsy()
+    expect(NSID.isValid('foo/bar')).toBeFalsy()
   })
 })
