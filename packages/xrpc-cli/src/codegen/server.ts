@@ -270,7 +270,7 @@ const schemaTs = (project, schema: MethodSchema) =>
       file.addTypeAlias({
         isExported: true,
         name: 'HandlerOutput',
-        type: 'undefined',
+        type: 'void',
       })
     }
 
