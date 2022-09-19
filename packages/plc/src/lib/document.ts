@@ -7,23 +7,56 @@ import * as t from './types'
 
 export const assureValidNextOp = async (
   did: string,
-  ops: t.Operation[],
+  ops: t.IndexedOperation[],
   proposed: t.Operation,
-) => {
+): Promise<{ nullified: CID[] }> => {
   // special case if account creation
   if (ops.length === 0) {
     if (!check.is(proposed, t.def.createOp)) {
       throw new Error('Expected first operation to be `create`')
     }
     await assureValidCreationOp(did, proposed)
-    return
+    return { nullified: [] }
+  }
+  const proposedPrev = proposed.prev ? CID.parse(proposed.prev) : undefined
+  if (!proposedPrev) {
+    throw new Error('Operations not correctly ordered')
   }
 
-  const doc = await validateOperationLog(did, ops)
-  await assureValidSig([doc.signingKey, doc.recoveryKey], proposed)
-  const prev = await cidForData(ops[ops.length - 1])
-  if (!proposed.prev || !CID.parse(proposed.prev).equals(prev)) {
+  const indexOfPrev = ops.findIndex((op) => proposedPrev.equals(op.cid))
+  if (indexOfPrev < 0) {
     throw new Error('Operations not correctly ordered')
+  }
+
+  // if we are forking history, these are the ops still in the proposed canonical history
+  const opsInHistory = ops.slice(0, indexOfPrev + 1)
+  const nullified = ops.slice(indexOfPrev + 1)
+
+  const doc = await validateOperationLog(
+    did,
+    opsInHistory.map((op) => op.operation),
+  )
+  const allowedKeys =
+    nullified.length === 0
+      ? [doc.signingKey, doc.recoveryKey]
+      : [doc.recoveryKey] // only the recovery key is allowed to do historical re-writes
+
+  await assureValidSig(allowedKeys, proposed)
+
+  // recovery key gets a 72hr window to do historical re-wrties
+  if (nullified.length > 0) {
+    const RECOVERY_WINDOW = 1000 * 60 * 60 * 72
+    const lastOp = opsInHistory[opsInHistory.length - 1]
+    const timeLapsed = Date.now() - lastOp.createdAt.getTime()
+    if (timeLapsed > RECOVERY_WINDOW) {
+      throw new Error(
+        'Recovery operation occured outside of the allowed 72 hr recovery window',
+      )
+    }
+  }
+
+  return {
+    nullified: nullified.map((op) => op.cid),
   }
 }
 

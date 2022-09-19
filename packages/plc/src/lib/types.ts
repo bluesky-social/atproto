@@ -1,4 +1,13 @@
 import * as z from 'zod'
+import * as mf from 'multiformats/cid'
+
+const cid = z
+  .any()
+  .refine((obj: unknown) => mf.CID.asCID(obj) !== null, {
+    message: 'Not a CID',
+  })
+  .transform((obj: unknown) => mf.CID.asCID(obj) as mf.CID)
+export type CID = z.infer<typeof cid>
 
 const documentData = z.object({
   did: z.string(),
@@ -90,6 +99,15 @@ export type UnsignedUpdateOperation = z.infer<typeof unsignedUpdateOperation>
 const unsignedOperation = z.union([unsignedCreateOp, unsignedUpdateOperation])
 export type UnsignedOperation = z.infer<typeof unsignedOperation>
 
+export const indexedOperation = z.object({
+  did: z.string(),
+  operation: operation,
+  cid: cid,
+  nullified: z.boolean(),
+  createdAt: z.date(),
+})
+export type IndexedOperation = z.infer<typeof indexedOperation>
+
 export const def = {
   documentData,
   unsignedCreateOp,
@@ -106,4 +124,5 @@ export const def = {
   operation,
   unsignedUpdateOperation,
   unsignedOperation,
+  indexedOperation,
 }
