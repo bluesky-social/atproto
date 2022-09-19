@@ -106,7 +106,7 @@ export function httpResponseCodeToEnum(status: number): ResponseType {
 }
 
 export function httpResponseBodyParse(
-  mimeType: string,
+  mimeType: string | undefined,
   data: ArrayBuffer | undefined,
 ): any {
   if (mimeType) {
