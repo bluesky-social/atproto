@@ -4,7 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import { Command, InvalidArgumentError } from 'commander'
 import * as nsidLib from '@adxp/nsid'
-import { schemaTemplate, readAllSchemas, genMd } from './util'
+import { schemaTemplate, readAllSchemas, genMd, genTsObj } from './util'
 
 const program = new Command()
 program.name('xrpc-cli').description('XRPC utilities').version('0.0.0')
@@ -35,10 +35,19 @@ program
 program
   .command('gen-md')
   .description('Generate markdown documentation')
-  .argument('<schemas...>', 'paths of the schema files to generate', toPaths)
+  .argument('<schemas...>', 'paths of the schema files to include', toPaths)
   .action((schemaPaths: string[]) => {
     const schemas = readAllSchemas(schemaPaths)
     console.log(genMd(schemas))
+  })
+
+program
+  .command('gen-ts-obj')
+  .description('Generate a TS file that exports an array of schemas')
+  .argument('<schemas...>', 'paths of the schema files to include', toPaths)
+  .action((schemaPaths: string[]) => {
+    const schemas = readAllSchemas(schemaPaths)
+    console.log(genTsObj(schemas))
   })
 
 program.parse()

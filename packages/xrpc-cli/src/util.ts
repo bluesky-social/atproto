@@ -141,6 +141,10 @@ export function genSchemaMd(schema: MethodSchema): StringTree {
   return doc
 }
 
+export function genTsObj(schemas: MethodSchema[]): string {
+  return `export const schemas = ${JSON.stringify(schemas, null, 2)}`
+}
+
 type StringTree = (StringTree | string | undefined)[]
 function merge(arr: StringTree): string {
   return arr
