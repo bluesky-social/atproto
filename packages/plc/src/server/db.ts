@@ -29,6 +29,10 @@ export class Database {
     return Database.sqlite(':memory:')
   }
 
+  async close(): Promise<void> {
+    await this.db.destroy()
+  }
+
   async opsForDid(did: string): Promise<Operation[]> {
     const query = this.db.createQueryBuilder()
     return this.opsForDidComposer(query, did)
@@ -83,3 +87,5 @@ export class OperationsTable {
   @Column('datetime')
   createdAt: Date
 }
+
+export default Database

@@ -20,6 +20,7 @@
     "@ipld/dag-cbor": "^7.0.3",
     "axios": "^0.27.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.0.2",
     "express": "^4.17.2",
     "express-async-errors": "^3.1.1",
     "knex": "^1.0.4",
@@ -29,6 +30,7 @@
     "zod": "^3.14.2"
   },
   "devDependencies": {
-    "eslint-plugin-prettier": "^4.2.1"
+    "eslint-plugin-prettier": "^4.2.1",
+    "get-port": "^6.1.2"
   }
 }

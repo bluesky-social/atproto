@@ -1,18 +1,42 @@
 import { EcdsaKeypair } from '@adxp/crypto'
 import PlcClient from '../src/client'
 import * as document from '../src/lib/document'
+import getPort from 'get-port'
+import * as util from './util'
+
+const USE_TEST_SERVER = true
 
 describe('PLC server', () => {
-  const client = new PlcClient('http://localhost:26979')
-  let signingKey: EcdsaKeypair
-  let recoveryKey: EcdsaKeypair
-  let did: string
   let username = 'alice.example.com'
   let atpPds = 'example.com'
 
+  let closeFn: util.CloseFn | null = null
+  let client: PlcClient
+
+  let signingKey: EcdsaKeypair
+  let recoveryKey: EcdsaKeypair
+
+  let did: string
+
   beforeAll(async () => {
+    let port: number
+    if (USE_TEST_SERVER) {
+      port = await getPort()
+      closeFn = await util.runTestServer(port)
+    } else {
+      port = 2582
+    }
+
+    client = new PlcClient(`http://localhost:${port}`)
+
     signingKey = await EcdsaKeypair.create()
     recoveryKey = await EcdsaKeypair.create()
+  })
+
+  afterAll(async () => {
+    if (closeFn) {
+      await closeFn()
+    }
   })
 
   it('registers a did', async () => {

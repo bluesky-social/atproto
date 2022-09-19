@@ -10,11 +10,17 @@ const bob = { username: 'bob', did: 'did:example:bob' }
 
 describe('crud operations', () => {
   let adx: AdxClient
-  let closeFn: util.CloseFn
+  let closeFn: util.CloseFn | null = null
 
   beforeAll(async () => {
-    const port = USE_TEST_SERVER ? await getPort() : 2583
-    closeFn = await util.runTestServer(port)
+    let port: number
+
+    if (USE_TEST_SERVER) {
+      port = await getPort()
+      closeFn = await util.runTestServer(port)
+    } else {
+      port = 2583
+    }
 
     const url = `http://localhost:${port}`
     adx = new AdxClient({
@@ -24,7 +30,9 @@ describe('crud operations', () => {
   })
 
   afterAll(async () => {
-    await closeFn()
+    if (closeFn) {
+      await closeFn()
+    }
   })
 
   it('registers users', async () => {

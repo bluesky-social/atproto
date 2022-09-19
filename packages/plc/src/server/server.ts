@@ -28,3 +28,5 @@ export const server = (db: Database, port: number): http.Server => {
 
   return app.listen(port)
 }
+
+export default server

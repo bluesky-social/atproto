@@ -9,7 +9,7 @@ export class PlcClient {
   constructor(public url: string) {}
 
   async getDocumentData(did: string): Promise<t.DocumentData> {
-    const res = await axios.get(`${this.url}/${did}`)
+    const res = await axios.get(`${this.url}/data/${did}`)
     return res.data
   }
 
