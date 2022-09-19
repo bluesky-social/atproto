@@ -37,7 +37,7 @@ export class NSID {
 
   constructor(nsid: string) {
     const segments = nsid.split('.')
-    if (segments.length <= 1) {
+    if (segments.length <= 2) {
       throw new Error(`Invalid NSID: ${nsid}`)
     }
     for (let i = 0; i < segments.length; i++) {
