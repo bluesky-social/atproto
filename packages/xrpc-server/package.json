@@ -1,0 +1,27 @@
+{
+  "name": "@adxp/xrpc-server",
+  "version": "0.0.1",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "jest",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "postbuild": "tsc --build tsconfig.build.json"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "^8.11.0",
+    "ajv-formats": "^2.1.1",
+    "express": "^4.17.2",
+    "mime-types": "^2.1.35",
+    "zod": "^3.14.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13"
+  }
+}

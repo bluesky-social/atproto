@@ -1,4 +1,4 @@
-# ADX FedRPC Methods
+# ADX XRPC Methods
 
 ## `todo.adx.resolveName`
 

@@ -1,6 +1,6 @@
-# Federated Remote Procedure Calls (FedRPC)
+# XRPC
 
-FedRPC is a general purpose server-to-server messaging protocol. It was created for the ADX protocol but is a generic communications layer which can be applied to multiple use-cases (and which does not include any ADX-specific semantics). The [repository data layer](./repo.md) and social applications operate as layers atop FedRPC.
+XRPC is a general purpose server-to-server messaging protocol. It was created for the ADX protocol but is a generic communications layer which can be applied to multiple use-cases (and which does not include any ADX-specific semantics). The [repository data layer](./repo.md) and social applications operate as layers atop XRPC.
 
 ```
 ┌─────────────────────┐
@@ -12,16 +12,16 @@ FedRPC is a general purpose server-to-server messaging protocol. It was created 
   ┃  └───────┰────────┘
   ┃          ┃
 ┌─▽──────────▽────────┐
-│       FedRPC        │  Wire protocol
+│        XRPC         │  Wire protocol
 └─────────────────────┘
 ```
 
 Features:
 
-- **Contract-oriented**. All "methods" in FedRPC are declared by schemas which define the accepted inputs and outputs. Schemas are globally identified and published as machine-readable documents. This helps ensure correctness and consistency across an open network of services.
-- **HTTP-based**. FedRPC methods are transported using HTTP/S, using GET or POST methods depending on the behavior. This makes FedRPC easy to understand and easy to integrate into existing tech stacks.
-- **Cacheable**. FedRPC's "query" methods are designed to cache well with common HTTP-based caching techniques.
-- **Support for multiple encodings**. FedRPC supports structured data (JSON) and unstructured binary blobs.
+- **Contract-oriented**. All "methods" in XRPC are declared by schemas which define the accepted inputs and outputs. Schemas are globally identified and published as machine-readable documents. This helps ensure correctness and consistency across an open network of services.
+- **HTTP-based**. XRPC methods are transported using HTTP/S, using GET or POST methods depending on the behavior. This makes XRPC easy to understand and easy to integrate into existing tech stacks.
+- **Cacheable**. XRPC's "query" methods are designed to cache well with common HTTP-based caching techniques.
+- **Support for multiple encodings**. XRPC supports structured data (JSON) and unstructured binary blobs.
 
 ## TODOs
 
@@ -31,15 +31,15 @@ Features:
 
 ## Specification
 
-FedRPC supports client-to-server and server-to-server messaging over HTTP/S. Each user has a "Personal Data Server (PDS)" which acts as their agent in the network, meaning most (if not all) of their communication is routed through their PDS.
+XRPC supports client-to-server and server-to-server messaging over HTTP/S. Each user has a "Personal Data Server (PDS)" which acts as their agent in the network, meaning most (if not all) of their communication is routed through their PDS.
 
 ```
-┌────────┐              ┌────────┐
-│ Server │ ◀──FedRPC──▶ │ Server │
-└────────┘              └────────┘
+┌────────┐            ┌────────┐
+│ Server │ ◀──XRPC──▶ │ Server │
+└────────┘            └────────┘
     ▲
     │
-  FedPRC
+   XRPC
     │
     ▼
 ┌────────┐
@@ -49,7 +49,7 @@ FedRPC supports client-to-server and server-to-server messaging over HTTP/S. Eac
 
 ### Methods
 
-FedRPC "Methods" possess the following attributes:
+XRPC "Methods" possess the following attributes:
 
 - **ID**: The ID of the schema for the method's inputs and outputs.
 - **Type**: Query (non-effectful, cacheable) or Procedure (effectful, non-cacheable).
@@ -57,7 +57,7 @@ FedRPC "Methods" possess the following attributes:
 - **Input**: The request body.
 - **Output**: The response body.
 
-Calls to a method must specify the ID, Parameters, Input, and certain HTTP Headers for the request. Likewise the return value must provide some information about the HTTP response. Therefore FedRPC does not fully abstract away the semantics of HTTP when used in APIs.
+Calls to a method must specify the ID, Parameters, Input, and certain HTTP Headers for the request. Likewise the return value must provide some information about the HTTP response. Therefore XRPC does not fully abstract away the semantics of HTTP when used in APIs.
 
 #### Method IDs
 
@@ -77,7 +77,7 @@ Method schemas are encoded in JSON and adhere to the following interface:
 
 ```typescript
 interface MethodSchema {
-  fedrpc: 1
+  xrpc: 1
   id: string
   type: 'query' | 'procedure'
   description?: string
@@ -107,7 +107,7 @@ An example query-method schema:
 
 ```json
 {
-  "fedrpc": 1,
+  "xrpc": 1,
   "id": "io.social.getFeed",
   "type": "query",
   "description": "Fetch the user's latest feed.",
@@ -140,7 +140,7 @@ An example procedure-method schema:
 
 ```json
 {
-  "fedrpc": 1,
+  "xrpc": 1,
   "id": "io.social.setProfilePicture",
   "type": "procedure",
   "description": "Set the user's avatar.",
@@ -175,7 +175,7 @@ The HTTP Method used depends on the `type` specified by the method schema.
 
 #### Path
 
-All requests are sent to the `/fedrpc/{methodId}` path on the target server. For example, a call to the `io.social.getFeed` method would be sent to `/fedrpc/io.social.getFeed` path.
+All requests are sent to the `/xrpc/{methodId}` path on the target server. For example, a call to the `io.social.getFeed` method would be sent to `/xrpc/io.social.getFeed` path.
 
 The parameters (as specified in the [Method schema](#method-schemas)) are encoded as query parameters. The values should be encoded using the following algorithm in pseudo-javascript:
 
@@ -226,9 +226,9 @@ The request cannot be processed without authentication. Expectations:
 
 The user lacks the needed permissions to access the method.
 
-#### `404` FedRPC not supported
+#### `404` XRPC not supported
 
-The interpretation of a `404` response is somewhat unique for FedRPC. A `404` indicates that the server does not provide a resource at the given location (`/fedrpc`) meaning the server does not support FedRPC.
+The interpretation of a `404` response is somewhat unique for XRPC. A `404` indicates that the server does not provide a resource at the given location (`/xrpc`) meaning the server does not support XRPC.
 
 To indicate that the given procedure is not implemented, use the `501` response.
 
@@ -249,9 +249,9 @@ The server reached an unexpected condition during processing. Expecations:
 - `Content-Type` header must be `application/json`.
 - Response body must match the [InternalError](#internalerror) schema.
 
-#### `501` Procedure not implemented
+#### `501` Method not implemented
 
-The server does not implement the requested procedure.
+The server does not implement the requested method.
 
 #### `502` A request to upstream failed
 
@@ -287,7 +287,7 @@ TODO
 
 ### Response schemas
 
-The following schemas are used within the FedRPC protocol.
+The following schemas are used within the XRPC protocol.
 
 #### `InvalidRequest`
 
