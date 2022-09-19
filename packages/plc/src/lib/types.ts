@@ -1,4 +1,3 @@
-// @TODO what else here? Freeze & Resolve?
 import * as z from 'zod'
 
 const documentData = z.object({
@@ -6,7 +5,7 @@ const documentData = z.object({
   signingKey: z.string(),
   recoveryKey: z.string(),
   username: z.string(),
-  service: z.string(),
+  atpPds: z.string(),
 })
 export type DocumentData = z.infer<typeof documentData>
 
@@ -59,22 +58,22 @@ const updateUsernameOp = unsignedUpdateUsernameOp.extend({
 })
 export type UpdateUsernameOp = z.infer<typeof updateUsernameOp>
 
-const unsignedUpdateServiceOp = z.object({
-  type: z.literal('update_service'),
+const unsignedUpdateAtpPdsOp = z.object({
+  type: z.literal('update_atp_pds'),
   service: z.string(),
   prev: z.string(),
 })
-export type UnsignedUpdateServiceOp = z.infer<typeof unsignedUpdateServiceOp>
-const updateServiceOp = unsignedUpdateServiceOp.extend({
+export type UnsignedUpdateAtpPdsOp = z.infer<typeof unsignedUpdateAtpPdsOp>
+const updateAtpPdsOp = unsignedUpdateAtpPdsOp.extend({
   sig: z.string(),
 })
-export type UpdateServiceOp = z.infer<typeof updateServiceOp>
+export type UpdateAtpPdsOp = z.infer<typeof updateAtpPdsOp>
 
 const updateOperation = z.union([
   rotateSigningKeyOp,
   rotateRecoveryKeyOp,
   updateUsernameOp,
-  updateServiceOp,
+  updateAtpPdsOp,
 ])
 export type UpdateOperation = z.infer<typeof updateOperation>
 
@@ -85,7 +84,7 @@ const unsignedUpdateOperation = z.union([
   unsignedRotateSigningKeyOp,
   unsignedRotateRecoveryKeyOp,
   unsignedUpdateUsernameOp,
-  unsignedUpdateServiceOp,
+  unsignedUpdateAtpPdsOp,
 ])
 export type UnsignedUpdateOperation = z.infer<typeof unsignedUpdateOperation>
 const unsignedOperation = z.union([unsignedCreateOp, unsignedUpdateOperation])
@@ -101,8 +100,8 @@ export const def = {
   rotateRecoveryKeyOp,
   unsignedUpdateUsernameOp,
   updateUsernameOp,
-  unsignedUpdateServiceOp,
-  updateServiceOp,
+  unsignedUpdateAtpPdsOp,
+  updateAtpPdsOp,
   updateOperation,
   operation,
   unsignedUpdateOperation,

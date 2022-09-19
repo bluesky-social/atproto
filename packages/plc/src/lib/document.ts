@@ -51,7 +51,7 @@ export const validateOperationLog = async (
     signingKey: first.signingKey,
     recoveryKey: first.recoveryKey,
     username: first.username,
-    service: first.service,
+    atpPds: first.service,
   }
   let prev = await cidForData(first)
 
@@ -72,9 +72,9 @@ export const validateOperationLog = async (
     } else if (check.is(op, t.def.updateUsernameOp)) {
       await assureValidSig([doc.signingKey], op)
       doc.username = op.username
-    } else if (check.is(op, t.def.updateServiceOp)) {
+    } else if (check.is(op, t.def.updateAtpPdsOp)) {
       await assureValidSig([doc.signingKey], op)
-      doc.service = op.service
+      doc.atpPds = op.service
     } else {
       throw new Error('Unknown operation')
     }
@@ -145,11 +145,13 @@ export const formatDidDoc = async (data: t.DocumentData) => {
       },
     ],
     assertionMethod: [`${data.did}#signingKey`],
+    capabilityInvocation: [`${data.did}#signingKey`],
+    capabilityDelegation: [`${data.did}#signingKey`],
     service: [
       {
         id: `${data.did}#atpPds`,
         type: 'AtpPersonalDataServer',
-        serviceEndpoint: data.service,
+        serviceEndpoint: `https://${data.atpPds}`,
       },
     ],
   }

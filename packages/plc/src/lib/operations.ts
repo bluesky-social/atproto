@@ -78,13 +78,13 @@ export const updateUsername = async (
   return signOperation(op, signingKey)
 }
 
-export const updateService = async (
+export const updateAtpPds = async (
   service: string,
   prev: string,
   signingKey: DidableKey,
 ): Promise<t.Operation> => {
-  const op: t.UnsignedUpdateServiceOp = {
-    type: 'update_service',
+  const op: t.UnsignedUpdateAtpPdsOp = {
+    type: 'update_atp_pds',
     service,
     prev,
   }

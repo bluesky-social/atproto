@@ -8,7 +8,7 @@ describe('PLC server', () => {
   let recoveryKey: EcdsaKeypair
   let did: string
   let username = 'alice.example.com'
-  let service = 'example.com'
+  let atpPds = 'example.com'
 
   beforeAll(async () => {
     signingKey = await EcdsaKeypair.create()
@@ -20,17 +20,17 @@ describe('PLC server', () => {
       signingKey,
       recoveryKey.did(),
       username,
-      service,
+      atpPds,
     )
   })
 
   it('retrieves the did doc', async () => {
-    const doc = await client.getDocument(did)
+    const doc = await client.getDocumentData(did)
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
     expect(doc.username).toEqual(username)
-    expect(doc.service).toEqual(service)
+    expect(doc.atpPds).toEqual(atpPds)
   })
 
   it('can perform some updates', async () => {
@@ -46,19 +46,19 @@ describe('PLC server', () => {
     username = 'ali.example2.com'
     await client.updateUsername(did, username, signingKey)
 
-    service = 'example2.com'
-    await client.updateService(did, service, signingKey)
+    atpPds = 'example2.com'
+    await client.updateAtpPds(did, atpPds, signingKey)
 
-    const doc = await client.getDocument(did)
+    const doc = await client.getDocumentData(did)
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
     expect(doc.username).toEqual(username)
-    expect(doc.service).toEqual(service)
+    expect(doc.atpPds).toEqual(atpPds)
   })
 
   it('retrieves the operation log', async () => {
-    const doc = await client.getDocument(did)
+    const doc = await client.getDocumentData(did)
     const ops = await client.getOperationLog(did)
     const computedDoc = await document.validateOperationLog(did, ops)
     expect(computedDoc).toEqual(doc)

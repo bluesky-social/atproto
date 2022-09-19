@@ -11,7 +11,7 @@ describe('plc DID document', () => {
   let recoveryKey: EcdsaKeypair
   let did: string
   let username = 'alice.example.com'
-  let service = 'example.com'
+  let atpPds = 'example.com'
 
   let oldSigningKey: EcdsaKeypair
   let oldRecoveryKey: EcdsaKeypair
@@ -26,7 +26,7 @@ describe('plc DID document', () => {
       signingKey,
       recoveryKey.did(),
       username,
-      service,
+      atpPds,
     )
     const isValid = check.is(createOp, t.def.createOp)
     expect(isValid).toBeTruthy()
@@ -41,7 +41,7 @@ describe('plc DID document', () => {
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
     expect(doc.username).toEqual(username)
-    expect(doc.service).toEqual(service)
+    expect(doc.atpPds).toEqual(atpPds)
   })
 
   it('allows for updating username', async () => {
@@ -59,14 +59,14 @@ describe('plc DID document', () => {
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
     expect(doc.username).toEqual(username)
-    expect(doc.service).toEqual(service)
+    expect(doc.atpPds).toEqual(atpPds)
   })
 
-  it('allows for updating service', async () => {
-    service = 'example2.com'
+  it('allows for updating atpPds', async () => {
+    atpPds = 'example2.com'
     const prev = await cidForData(ops[ops.length - 1])
-    const op = await operations.updateService(
-      service,
+    const op = await operations.updateAtpPds(
+      atpPds,
       prev.toString(),
       signingKey,
     )
@@ -77,7 +77,7 @@ describe('plc DID document', () => {
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
     expect(doc.username).toEqual(username)
-    expect(doc.service).toEqual(service)
+    expect(doc.atpPds).toEqual(atpPds)
   })
 
   it('allows for rotating signingKey', async () => {
@@ -97,7 +97,7 @@ describe('plc DID document', () => {
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
     expect(doc.username).toEqual(username)
-    expect(doc.service).toEqual(service)
+    expect(doc.atpPds).toEqual(atpPds)
   })
 
   it('no longer allows operations from old signing key', async () => {
@@ -127,7 +127,7 @@ describe('plc DID document', () => {
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
     expect(doc.username).toEqual(username)
-    expect(doc.service).toEqual(service)
+    expect(doc.atpPds).toEqual(atpPds)
   })
 
   it('no longer allows operations from old recovery key', async () => {
@@ -178,9 +178,9 @@ describe('plc DID document', () => {
     expect(document.validateOperationLog(did, [...ops, op])).rejects.toThrow()
   })
 
-  it('it does not allow recovery key to update service', async () => {
+  it('it does not allow recovery key to update atpPds', async () => {
     const prev = await cidForData(ops[ops.length - 1])
-    const op = await operations.updateService(
+    const op = await operations.updateAtpPds(
       'foobar.com',
       prev.toString(),
       recoveryKey,
@@ -190,7 +190,7 @@ describe('plc DID document', () => {
 
   it('requires operations to be in order', async () => {
     const prev = await cidForData(ops[ops.length - 2])
-    const op = await operations.updateService(
+    const op = await operations.updateAtpPds(
       'foobar.com',
       prev.toString(),
       signingKey,
@@ -203,7 +203,7 @@ describe('plc DID document', () => {
       signingKey,
       recoveryKey.did(),
       username,
-      service,
+      atpPds,
     )
     expect(document.validateOperationLog(did, [...ops, op])).rejects.toThrow()
   })

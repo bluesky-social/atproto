@@ -8,7 +8,7 @@ import * as t from '../lib/types'
 export class PlcClient {
   constructor(public url: string) {}
 
-  async getDocument(did: string): Promise<t.DocumentData> {
+  async getDocumentData(did: string): Promise<t.DocumentData> {
     const res = await axios.get(`${this.url}/${did}`)
     return res.data
   }
@@ -76,9 +76,9 @@ export class PlcClient {
     await axios.post(`${this.url}/${did}`, op)
   }
 
-  async updateService(did: string, service: string, signingKey: DidableKey) {
+  async updateAtpPds(did: string, service: string, signingKey: DidableKey) {
     const prev = await this.getPrev(did)
-    const op = await operations.updateService(
+    const op = await operations.updateAtpPds(
       service,
       prev.toString(),
       signingKey,

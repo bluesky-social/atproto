@@ -7,7 +7,7 @@ import { ServerError } from './error'
 
 const router = express.Router()
 
-// Get a DID doc
+// Get data for a DID document
 router.get(`/:did`, async function (req, res) {
   const { did } = req.params
   const { db } = locals.get(res)
@@ -15,8 +15,21 @@ router.get(`/:did`, async function (req, res) {
   if (log.length === 0) {
     throw new ServerError(404, `DID not registered: ${did}`)
   }
-  const doc = await document.validateOperationLog(did, log)
+  const data = await document.validateOperationLog(did, log)
+  const doc = await document.formatDidDoc(data)
   res.send(doc)
+})
+
+// Get data for a DID document
+router.get(`/data/:did`, async function (req, res) {
+  const { did } = req.params
+  const { db } = locals.get(res)
+  const log = await db.opsForDid(did)
+  if (log.length === 0) {
+    throw new ServerError(404, `DID not registered: ${did}`)
+  }
+  const data = await document.validateOperationLog(did, log)
+  res.send(data)
 })
 
 // Get operation log for a DID
