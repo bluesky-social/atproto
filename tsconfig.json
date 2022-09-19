@@ -34,5 +34,6 @@
     { "path": "./packages/schemas/tsconfig.build.json" },
     { "path": "./packages/xrpc/tsconfig.build.json" },
     { "path": "./packages/xrpc-server/tsconfig.build.json" },
+    { "path": "./packages/xrpc-cli/tsconfig.build.json" },
   ]
 }
