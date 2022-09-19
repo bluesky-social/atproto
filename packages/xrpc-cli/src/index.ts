@@ -3,8 +3,10 @@
 import path from 'path'
 import fs from 'fs'
 import { Command, InvalidArgumentError } from 'commander'
+import yesno from 'yesno'
 import * as nsidLib from '@adxp/nsid'
 import { schemaTemplate, readAllSchemas, genMd, genTsObj } from './util'
+import { genApi } from './gen-api'
 
 const program = new Command()
 program.name('xrpc-cli').description('XRPC utilities').version('0.0.0')
@@ -48,6 +50,33 @@ program
   .action((schemaPaths: string[]) => {
     const schemas = readAllSchemas(schemaPaths)
     console.log(genTsObj(schemas))
+  })
+
+program
+  .command('gen-api')
+  .description('Generate a TS client API')
+  .argument('<outdir>', 'path of the directory to write to', toPath)
+  .argument('<schemas...>', 'paths of the schema files to include', toPaths)
+  .action(async (outDir: string, schemaPaths: string[]) => {
+    const schemas = readAllSchemas(schemaPaths)
+    const api = await genApi(schemas)
+    console.log('This will write the following files:')
+    for (const file of api.files) {
+      file.path = path.join(outDir, file.path)
+      console.log('-', file.path)
+    }
+    const ok = await yesno({
+      question: 'Are you sure you want to continue? [y/N]',
+      defaultValue: false,
+    })
+    if (!ok) {
+      process.exit(0)
+    }
+    for (const file of api.files) {
+      fs.mkdirSync(path.join(file.path, '..'), { recursive: true })
+      fs.writeFileSync(file.path, file.content, 'utf8')
+    }
+    console.log('API generated.')
   })
 
 program.parse()
