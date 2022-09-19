@@ -4,7 +4,7 @@ import * as document from '../src/lib/document'
 import * as operations from '../src/lib/operations'
 import * as t from '../src/lib/types'
 
-describe('aic DID document', () => {
+describe('plc DID document', () => {
   const ops: t.Operation[] = []
 
   let signingKey: EcdsaKeypair
@@ -209,7 +209,7 @@ describe('aic DID document', () => {
   })
 
   it('requires that the log start with a create operation', async () => {
-    const [first, ...rest] = ops
+    const [_first, ...rest] = ops
     expect(document.validateOperationLog(did, rest)).rejects.toThrow()
   })
 

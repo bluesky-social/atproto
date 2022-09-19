@@ -97,7 +97,7 @@ DIDs are unique global identifiers which "strongly" identify repositories. They 
 ADX supports two DID methods:
 
 - [Web (`did:web`)](https://w3c-ccg.github.io/did-method-web/). Should be used only when the user is "self-hosting" and therefore directly controls the domain name & server. May also be used during testing.
-- [Placeholder (`did:pch`)](../did-pch.md). A method developed in conjunction with ADX to provide global secure IDs which are host-independent.
+- [Placeholder (`did:plc`)](../did-plc.md). A method developed in conjunction with ADX to provide global secure IDs which are host-independent.
 
 DIDs resolve to "DID Documents" which provide the address of the repo's host and the public key used to sign the repo's updates. See [DID Resolution](./did-resolution.md) for more information.
 

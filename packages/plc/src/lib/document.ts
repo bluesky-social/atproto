@@ -88,7 +88,7 @@ export const hashAndFindDid = async (op: t.CreateOp, truncate = 24) => {
   const hashOfGenesis = await crypto.sha256(cbor.encode(op))
   const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
   const truncated = hashB32.slice(0, truncate)
-  return `did:aic:${truncated}`
+  return `did:plc:${truncated}`
 }
 
 export const assureValidCreationOp = async (did: string, op: t.CreateOp) => {
@@ -147,7 +147,7 @@ export const formatDidDoc = async (data: t.DocumentData) => {
     assertionMethod: [`${data.did}#signingKey`],
     service: [
       {
-        id: `${data.did}#pds`,
+        id: `${data.did}#atpPds`,
         type: 'AtpPersonalDataServer',
         serviceEndpoint: data.service,
       },

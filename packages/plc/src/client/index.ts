@@ -5,7 +5,7 @@ import { check, cidForData } from '@adxp/common'
 import * as operations from '../lib/operations'
 import * as t from '../lib/types'
 
-export class AicClient {
+export class PlcClient {
   constructor(public url: string) {}
 
   async getDocument(did: string): Promise<t.DocumentData> {
@@ -87,4 +87,4 @@ export class AicClient {
   }
 }
 
-export default AicClient
+export default PlcClient

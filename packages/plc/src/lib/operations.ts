@@ -7,7 +7,7 @@ export const didForCreateOp = async (op: t.CreateOp, truncate = 24) => {
   const hashOfGenesis = await sha256(cbor.encode(op))
   const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
   const truncated = hashB32.slice(0, truncate)
-  return `did:aic:${truncated}`
+  return `did:plc:${truncated}`
 }
 
 export const signOperation = async (

@@ -10,7 +10,7 @@ const run = async () => {
 
   const s = server(db, port)
   s.on('listening', () => {
-    console.log(`🌞 ADX AIC server is running at http://localhost:${port}`)
+    console.log(`🌞 PLC server is running at http://localhost:${port}`)
   })
 }
 

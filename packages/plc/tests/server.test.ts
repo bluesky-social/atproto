@@ -1,9 +1,9 @@
 import { EcdsaKeypair } from '@adxp/crypto'
-import AicClient from '../src/client'
+import PlcClient from '../src/client'
 import * as document from '../src/lib/document'
 
-describe('AIC server', () => {
-  const client = new AicClient('http://localhost:26979')
+describe('PLC server', () => {
+  const client = new PlcClient('http://localhost:26979')
   let signingKey: EcdsaKeypair
   let recoveryKey: EcdsaKeypair
   let did: string

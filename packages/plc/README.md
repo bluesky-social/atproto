@@ -1,7 +1,5 @@
-# AIC
-An Identifier Consortium (AIC)
-
-The use of “**an**” rather than “the” to emphasize the optional use of the AIC as your DID registry.
+# did:plc
+DID Placeholder (PLC)
 
 **Identifier** because the did:cid: are keys that can be used to identify repositories.
 
@@ -44,11 +42,11 @@ We believe the 72 hour window is a good default window to balance this tradeoff.
 This means that the consortium's consensus algorithm must provide not just a consensus order but consensus timestamps.
 
 ### Resolution
-We also want to be able to resolve DID strings to DID documents. If a repository owner wishes to use a `did:aic:` string as their repository DID they will need to submit their origin DID document to the consortium as part of their repo init. 
+We also want to be able to resolve DID strings to DID documents. If a repository owner wishes to use a `did:plc:` string as their repository DID they will need to submit their origin DID document to the consortium as part of their repo init. 
 Each DID method specifies its own way to resolve a DID string to its respective DID document.
-AIC acts as a DID registry for the `did:aic:` did method. The consortium members operate nodes that both perform the consensus and answer queries for the latest DID documents for a given did string.
+PLC acts as a DID registry for the `did:plc:` did method. The consortium members operate nodes that both perform the consensus and answer queries for the latest DID documents for a given did string.
 
-Each member of the consortium should be able to resolve any `did:aic:` to a DID document without needing to send traffic to the other consortium members. A consortium member has consensus as of some timestamp. When a consortium member receives a query it responds with the state of the DID Document as of the last consensus timestamp. This still applies when the consortium member responds that there is no such DID document for that DID string. There may be a document as of later consensus time but as of the returned consensus time there will never be a DID document for that DID string. This means that any node can answer immediately.
+Each member of the consortium should be able to resolve any `did:plc:` to a DID document without needing to send traffic to the other consortium members. A consortium member has consensus as of some timestamp. When a consortium member receives a query it responds with the state of the DID Document as of the last consensus timestamp. This still applies when the consortium member responds that there is no such DID document for that DID string. There may be a document as of later consensus time but as of the returned consensus time there will never be a DID document for that DID string. This means that any node can answer immediately.
 
 ### The need for total order
 Whether the application is trying to resolve the latest version of the doc or to transfer the control of the DID the application is depending on the consortium to provide a total ordering and consensus timestamps.
@@ -70,13 +68,13 @@ Do to the fact that it takes ⌊⅔⌋ +1 of the consortium members to accept a 
 
 ## The DID
 ### DID String Format
-`did:aic:<pid>`
+`did:plc:<pid>`
 
 E.g.
 
-`did:aic:vbazpoyabpjpebvnxrrpq7bv`
+`did:plc:vbazpoyabpjpebvnxrrpq7bv`
 
-`did:aic:<pid>?k=did:key:123&h=`[`<ip>:<port>`](https://multiformats.io/multiaddr/)
+`did:plc:<pid>?k=did:key:123&h=`[`<ip>:<port>`](https://multiformats.io/multiaddr/)
 
 The DID string is the root of trust for a DID. 
 The DID string can be parameterised to send the resolver to a consortium that has the DID document. 
@@ -90,8 +88,8 @@ The DID string can be parameterised to send the resolver to a consortium that ha
     * First look in the config for the corresponding consortium key
     * Else trust any identity tick whose retrieval can be validated i.g. https
 * In order to have an authoritative current version of the DID document we need a consensus group to serve as the authority. The parameters k,h specifies the authority for the atomic updates of the consortium.
-* If k or h are not specified then the AIC(An Identity Consortium) is used.
-  * A server may choose to limit the did:aic keys that they will allow.
+* If k or h are not specified then the default PLC server is used.
+  * A server may choose to limit the did:plc keys that they will allow.
 * initialState-param
   * See https://www.w3.org/TR/did-spec-registries/#initialState-param
   * Used when a DID is not yet registered
@@ -109,7 +107,7 @@ The DID string can be parameterised to send the resolver to a consortium that ha
        "https://adx.example.com/",
        "https://w3id.org/security/suites/ed25519-2018/v1",
    ],
-   "id": "did:aic:vbazpoyabpjpebvnxrrpq7bv",
+   "id": "did:plc:vbazpoyabpjpebvnxrrpq7bv",
    "controller":"",
    "service": [
        {
@@ -135,7 +133,7 @@ The DID string can be parameterised to send the resolver to a consortium that ha
 ```
 
 ### Resolution
-The DID string is the prefix `did:aic:` and a suffix that is a hash of the DID documents origin diff.
+The DID string is the prefix `did:plc:` and a suffix that is a hash of the DID documents origin diff.
 The Origin diff is the first diff.
 
 #### Phase 1: Retrieve the diff list.
@@ -180,7 +178,7 @@ Out[4]: vbazpoyabpjpebvn
 Once the origin diff is validated we apply the diff to add the id itself to the DID document.
   * apply the origin diff itself to the document
   * add the id
-    * `[“put”, “id”, “did:aic:<origin diff pid>”]`
+    * `[“put”, “id”, “did:plc:<origin diff pid>”]`
 
 #### Phase 4: Apply the signed diffs
 The rest of the diffs in the list are signed by a key.
@@ -242,10 +240,10 @@ The first diff is the origin diff; it is not validated with a signature but with
 ```
 The second diff is implied.
 Once we have the original state of the document.
-We implicitly apply a diff that puts the `did:aic:<pid>` in the document as the ID field
+We implicitly apply a diff that puts the `did:plc:<pid>` in the document as the ID field
 ```json
 "patches":[
-    ["put", "id", did:aic:<pid of origin diff>]
+    ["put", "id", did:plc:<pid of origin diff>]
 ]
 ```
 All subsequent diffs are validated by an account_key in the current DID document.
@@ -321,7 +319,7 @@ In the event that two ticks disagree the one with the higher tid is controlling.
 ```json
 {
     "tid": "3j6c-moo-3wh2-22",
-    "did": "did:aic:z357qfujmr5mgy3k",
+    "did": "did:plc:z357qfujmr5mgy3k",
     "diffs": {
         "3j6c-mds-hptk-22": {
             "nonce": 517206044397114,
@@ -402,7 +400,7 @@ This would allow the single leader to be replaced if it failed.
 
 ## Membership responsibilities 
 Each member of the consortium is responsible for: 
-1. Storing a complete copy of the current state of the AIC repository.
+1. Storing a complete copy of the current state of the PLC repository.
 2. Answering queries for the latest state of a DID’s diff set. (id_tick)
 3. Signing the answers with the highest tid to ever come out of the consensus algorithm
    * The TID in the identity tick is the latest tid for the consensus algorithm reaching finality. It not the latest tid from the diff set. If a did doc has not been updated for years the returned tick should still have a near current time for a tid.
