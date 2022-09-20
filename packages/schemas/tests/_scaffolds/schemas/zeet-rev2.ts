@@ -1,15 +1,8 @@
 export default {
-  $type: 'adxs-record',
-  author: 'blueskyweb.xyz',
-  name: 'Zeet',
+  adx: 1,
+  id: 'com.example.zeet',
   revision: 2,
-  locale: {
-    'en-US': {
-      nameSingular: 'Zeet',
-      namePlural: 'Zeets',
-    },
-  },
-  schema: {
+  record: {
     type: 'object',
     required: ['text', 'createdAt'],
     properties: {

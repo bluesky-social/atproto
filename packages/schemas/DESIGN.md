@@ -1,5 +1,7 @@
 # ADX Schemas, draft 2
 
+TODO: update or remove me
+
 ## Background
 
 In [draft 1](https://gist.github.com/pfrazee/0c51dc1afceac83d984ebfd555fe6340#), we discussed the broad goals and background thinking for ADX's schemas and introduced a basic set of mechanisms. This included a number of ideas which didn't hold up to scrutiny, including the use of CBOR's tagged value types and no defined approach to schema versioning.

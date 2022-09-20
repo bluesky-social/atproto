@@ -1,37 +1,18 @@
 import { z } from 'zod'
-
-const adxSchemaDefinitionType = z.enum([
-  'adxs-collection',
-  'adxs-record',
-  'adxs-view',
-])
-export type AdxSchemaDefinitionType = z.infer<typeof adxSchemaDefinitionType>
-
-const adxSchemaDefinitionLocalizedStrings = z.record(
-  z.object({
-    nameSingular: z.string(),
-    namePlural: z.string(),
-  }),
-)
-export type AdxSchemaDefinitionLocalizedStrings = z.infer<
-  typeof adxSchemaDefinitionLocalizedStrings
->
+import { NSID } from '@adxp/nsid'
 
 export const adxSchemaDefinition = z.object({
-  $type: adxSchemaDefinitionType,
-  author: z.string(),
-  name: z.string(),
+  adx: z.literal(1),
+  id: z
+    .string()
+    .refine((v: string) => NSID.isValid(v), {
+      message: 'Must be a valid NSID',
+    }),
   revision: z.number().optional(),
-  locale: adxSchemaDefinitionLocalizedStrings.optional(),
-  reads: z.string().array().optional(),
-  schema: z.any().optional(),
-  parameters: z.any().optional(),
-  response: z.any().optional(),
+  description: z.string().optional(),
+  record: z.any().optional(),
 })
 export type AdxSchemaDefinition = z.infer<typeof adxSchemaDefinition>
-
-export const adxFallbackStrings = z.record(z.string())
-export type AdxFallbackStrings = z.infer<typeof adxFallbackStrings>
 
 export class AdxSchemaDefinitionMalformedError extends Error {
   constructor(
@@ -46,4 +27,3 @@ export class AdxSchemaDefinitionMalformedError extends Error {
 }
 
 export class SchemaNotFoundError extends Error {}
-export class WrongSchemaTypeError extends Error {}

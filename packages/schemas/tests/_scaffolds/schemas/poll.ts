@@ -1,14 +1,7 @@
 export default {
-  $type: 'adxs-record',
-  author: 'blueskyweb.xyz',
-  name: 'Poll',
-  locale: {
-    'en-US': {
-      nameSingular: 'Poll',
-      namePlural: 'Polls',
-    },
-  },
-  schema: {
+  adx: 1,
+  id: 'com.example.poll',
+  record: {
     type: 'object',
     required: ['question', 'answers'],
     properties: {
