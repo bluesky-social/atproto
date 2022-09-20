@@ -16,16 +16,23 @@ let badges: AdxUri[] = []
 
 describe('pds views', () => {
   let client: AdxServiceClient
-  let closeFn: util.CloseFn
+  let closeFn: util.CloseFn | null = null
 
   beforeAll(async () => {
-    const port = USE_TEST_SERVER ? await getPort() : 2583
-    closeFn = await util.runTestServer(port)
+    let port: number
+    if (USE_TEST_SERVER) {
+      port = await getPort()
+      closeFn = await util.runTestServer(port)
+    } else {
+      port = 2583
+    }
     client = AdxApi.service(`http://localhost:${port}`)
   })
 
   afterAll(async () => {
-    await closeFn()
+    if (closeFn) {
+      await closeFn()
+    }
   })
 
   it('register users', async () => {
@@ -419,7 +426,6 @@ describe('pds views', () => {
         },
       },
     )
-    console.log(JSON.stringify(thread.data.thread, null, 2))
     /** @ts-ignore TODO */
     expect(thread.data.thread.record.text).toEqual(posts.alice[1])
     expect(thread.data.thread.replyCount).toEqual(2)

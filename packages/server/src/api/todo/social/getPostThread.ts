@@ -14,7 +14,7 @@ import { getLocals } from '../../../util'
 export default function (server: Server) {
   server.todo.social.getPostThread(
     async (params: GetPostThread.QueryParams, _input, req, res) => {
-      const { uri, depth = 1 } = params
+      const { uri, depth = 6 } = params
       const { db } = getLocals(res)
 
       // @TODO switch out for actual auth
