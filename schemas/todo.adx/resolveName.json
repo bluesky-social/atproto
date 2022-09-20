@@ -1,0 +1,19 @@
+{
+  "xrpc": 1,
+  "id": "todo.adx.resolveName",
+  "type": "query",
+  "description": "Provides the DID of the repo indicated by the Host parameter.",
+  "parameters": {
+    "name": {"type": "string", "required": true, "description": "The name to resolve."}
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {"type": "string"}
+      }
+    }
+  }
+}

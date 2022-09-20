@@ -1,0 +1,18 @@
+{
+  "xrpc": 1,
+  "id": "todo.adx.createAccount",
+  "type": "procedure",
+  "description": "Create an account.",
+  "parameters": {},
+  "input": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["username", "did"],
+      "properties": {
+        "username": {"type": "string"},
+        "did": {"type": "string"}
+      }
+    }
+  }
+}

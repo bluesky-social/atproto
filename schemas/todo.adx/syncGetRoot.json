@@ -1,0 +1,19 @@
+{
+  "xrpc": 1,
+  "id": "todo.adx.syncGetRoot",
+  "type": "query",
+  "description": "Gets the current root CID of a repo.",
+  "parameters": {
+    "did": {"type": "string", "required": true, "description": "The DID of the repo."}
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["root"],
+      "properties": {
+        "root": {"type": "string"}
+      }
+    }
+  }
+}

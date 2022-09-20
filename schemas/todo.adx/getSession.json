@@ -1,0 +1,15 @@
+{
+  "xrpc": 1,
+  "id": "todo.adx.getSession",
+  "type": "query",
+  "description": "Get information about the current session.",
+  "parameters": {},
+  "input": {
+    "encoding": "",
+    "schema": {}
+  },
+  "output": {
+    "encoding": "",
+    "schema": {}
+  }
+}
