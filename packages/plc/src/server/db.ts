@@ -9,9 +9,10 @@ import {
   In,
   Not,
 } from 'typeorm'
+import { Mutex } from 'async-mutex'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
-import { Mutex } from 'async-mutex'
+import { ServerError } from './error'
 
 export class Database {
   db: SafeDB
@@ -36,7 +37,7 @@ export class Database {
 
   async validateAndAddOp(did: string, proposed: t.Operation): Promise<void> {
     const ops = await this.db.readOperation(async (manager) => {
-      return await this._opsForDid(manager, did)
+      return this._opsForDid(manager, did)
     })
     // throws if invalid
     const { nullified, prev } = await document.assureValidNextOp(
@@ -53,8 +54,9 @@ export class Database {
         (prev && prev.equals(mostRecent))
 
       if (!isMatch) {
-        throw new Error(
-          'Proposed prev does not match the most recent operation',
+        throw new ServerError(
+          409,
+          `Proposed prev does not match the most recent operation: ${mostRecent?.toString()}`,
         )
       }
 
@@ -130,8 +132,8 @@ export class Database {
 // This is needed because sqlite does not offer a connection pool & transactions can end up getting nested
 // and either fail or return successful but then get rolledback if the outer tx fails
 class SafeDB {
-  db: DataSource
-  lock: Mutex
+  private db: DataSource
+  private lock: Mutex
 
   constructor(db: DataSource) {
     this.db = db

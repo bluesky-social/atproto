@@ -1,6 +1,11 @@
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction } from 'express'
 
-export const handler = (err: Error, _req: Request, res: Response) => {
+export const handler = (
+  err: Error,
+  _req: Request,
+  res: Response,
+  _next: NextFunction,
+) => {
   let status
   if (ServerError.is(err)) {
     status = err.status

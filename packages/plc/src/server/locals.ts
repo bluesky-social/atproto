@@ -1,5 +1,6 @@
-import { Database } from './db'
 import { Response } from 'express'
+import { Database } from './db'
+import { ServerError } from './error'
 
 export interface Locals {
   db: Database
@@ -7,7 +8,7 @@ export interface Locals {
 
 export const get = (res: Response): Locals => {
   if (!res.locals.db) {
-    throw new Error('No database provided')
+    throw new ServerError(500, 'Could not connect to database')
   }
   return {
     db: res.locals.db,

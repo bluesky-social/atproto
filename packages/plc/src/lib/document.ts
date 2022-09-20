@@ -4,6 +4,7 @@ import * as cbor from '@ipld/dag-cbor'
 import { check, cidForData } from '@adxp/common'
 import * as crypto from '@adxp/crypto'
 import * as t from './types'
+import { ServerError } from '../server/error'
 
 export const assureValidNextOp = async (
   did: string,
@@ -13,19 +14,19 @@ export const assureValidNextOp = async (
   // special case if account creation
   if (ops.length === 0) {
     if (!check.is(proposed, t.def.createOp)) {
-      throw new Error('Expected first operation to be `create`')
+      throw new ServerError(400, 'Expected first operation to be `create`')
     }
     await assureValidCreationOp(did, proposed)
     return { nullified: [], prev: null }
   }
   const proposedPrev = proposed.prev ? CID.parse(proposed.prev) : undefined
   if (!proposedPrev) {
-    throw new Error('Operations not correctly ordered')
+    throw new ServerError(400, `Invalid prev on operation: ${proposed.prev}`)
   }
 
   const indexOfPrev = ops.findIndex((op) => proposedPrev.equals(op.cid))
   if (indexOfPrev < 0) {
-    throw new Error('Operations not correctly ordered')
+    throw new ServerError(409, 'Operations not correctly ordered')
   }
 
   // if we are forking history, these are the ops still in the proposed canonical history
@@ -49,7 +50,8 @@ export const assureValidNextOp = async (
     const lastOp = opsInHistory[opsInHistory.length - 1]
     const timeLapsed = Date.now() - lastOp.createdAt.getTime()
     if (timeLapsed > RECOVERY_WINDOW) {
-      throw new Error(
+      throw new ServerError(
+        400,
         'Recovery operation occured outside of the allowed 72 hr recovery window',
       )
     }
@@ -68,14 +70,14 @@ export const validateOperationLog = async (
   // make sure they're all validly formatted operations
   for (const op of ops) {
     if (!check.is(op, t.def.operation)) {
-      throw new Error(`Improperly formatted operation: ${op}`)
+      throw new ServerError(400, `Improperly formatted operation: ${op}`)
     }
   }
 
   // ensure the first op is a valid & signed create operation
   const [first, ...rest] = ops
   if (!check.is(first, t.def.createOp)) {
-    throw new Error('Expected first operation to be `create`')
+    throw new ServerError(400, 'Expected first operation to be `create`')
   }
   await assureValidCreationOp(did, first)
 
@@ -92,11 +94,11 @@ export const validateOperationLog = async (
   for (const op of rest) {
     // @TODO should signing key be able to rotate reocvery key?? & should reocvery key be able to change username/service
     if (!op.prev || !CID.parse(op.prev).equals(prev)) {
-      throw new Error('Operations not correctly ordered')
+      throw new ServerError(400, 'Operations not correctly ordered')
     }
 
     if (check.is(op, t.def.createOp)) {
-      throw new Error('Unexpected `create` after DID genesis')
+      throw new ServerError(400, 'Unexpected `create` after DID genesis')
     } else if (check.is(op, t.def.rotateSigningKeyOp)) {
       await assureValidSig([doc.signingKey, doc.recoveryKey], op)
       doc.signingKey = op.key
@@ -110,7 +112,7 @@ export const validateOperationLog = async (
       await assureValidSig([doc.signingKey], op)
       doc.atpPds = op.service
     } else {
-      throw new Error('Unknown operation')
+      throw new ServerError(400, `Unknown operation: ${JSON.stringify(op)}`)
     }
     prev = await cidForData(op)
   }
@@ -129,7 +131,10 @@ export const assureValidCreationOp = async (did: string, op: t.CreateOp) => {
   await assureValidSig([op.signingKey], op)
   const expectedDid = await hashAndFindDid(op, 64)
   if (!expectedDid.startsWith(did)) {
-    throw new Error('Hash of genesis operation does not match DID identifier')
+    throw new ServerError(
+      400,
+      `Hash of genesis operation does not match DID identifier: ${expect}`,
+    )
   }
 }
 
@@ -145,7 +150,7 @@ export const assureValidSig = async (
     isValid = await crypto.verifyDidSig(did, dataBytes, sigBytes)
     if (isValid) return
   }
-  throw new Error(`Invalid signature on op: ${op}`)
+  throw new ServerError(400, `Invalid signature on op: ${JSON.stringify(op)}`)
 }
 
 export const formatDidDoc = (data: t.DocumentData): t.DidDocument => {
@@ -198,7 +203,13 @@ type KeyAndContext = {
 }
 
 const formatKeyAndContext = (key: string): KeyAndContext => {
-  const { jwtAlg, keyBytes } = crypto.parseDidKey(key)
+  let keyInfo
+  try {
+    keyInfo = crypto.parseDidKey(key)
+  } catch (err) {
+    throw new ServerError(400, `Could not parse did:key: ${err}`)
+  }
+  const { jwtAlg, keyBytes } = keyInfo
 
   if (jwtAlg === 'ES256') {
     return {
@@ -207,5 +218,5 @@ const formatKeyAndContext = (key: string): KeyAndContext => {
       publicKeyMultibase: `z${uint8arrays.toString(keyBytes, 'base58btc')}`,
     }
   }
-  throw new Error('Unsupported key type')
+  throw new ServerError(400, `Unsupported key type: ${jwtAlg}`)
 }

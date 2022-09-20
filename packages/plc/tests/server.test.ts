@@ -5,7 +5,7 @@ import getPort from 'get-port'
 import * as util from './util'
 import { cidForData } from '@adxp/common'
 
-const USE_TEST_SERVER = false
+const USE_TEST_SERVER = true
 
 describe('PLC server', () => {
   let username = 'alice.example.com'

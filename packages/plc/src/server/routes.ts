@@ -48,7 +48,7 @@ router.post(`/:did`, async function (req, res) {
   const { did } = req.params
   const op = req.body
   if (!check.is(op, t.def.operation)) {
-    throw new Error('Not a valid operation')
+    throw new ServerError(400, `Not a valid operation: ${JSON.stringify(op)}`)
   }
   const { db } = locals.get(res)
   await db.validateAndAddOp(did, op)
