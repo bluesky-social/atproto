@@ -125,17 +125,7 @@ export class Repo {
         `Collection names may not be longer than 256 chars: ${name}`,
       )
     }
-    const parts = name.split('/')
-    if (parts.length > 2) {
-      throw new Error(
-        `Only one level of namespacing allowed in collection names: ${name}`,
-      )
-    } else if (parts.length < 2) {
-      throw new Error(
-        `Expected at least one level of namespacing in collection name: ${name}`,
-      )
-    }
-    return new Collection(this, parts[0], parts[1])
+    return new Collection(this, name)
   }
 
   // The repo is mutable & things can change while you perform an operation

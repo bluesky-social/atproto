@@ -1,23 +1,22 @@
 import { TID } from '@adxp/common'
+import { NSID } from '@adxp/nsid'
 import Repo from './repo'
 
 export class Collection {
   repo: Repo
-  namespace: string
-  dataset: string
+  nsid: NSID
 
-  constructor(repo: Repo, namespace: string, dataset: string) {
+  constructor(repo: Repo, nsid: NSID | string) {
     this.repo = repo
-    this.namespace = namespace
-    this.dataset = dataset
+    this.nsid = typeof nsid === 'string' ? NSID.parse(nsid) : nsid
+  }
+
+  name(): string {
+    return this.nsid.toString()
   }
 
   dataIdForRecord(tid: TID): string {
     return `${this.name()}/${tid.toString()}`
-  }
-
-  name(): string {
-    return `${this.namespace}/${this.dataset}`
   }
 
   async getRecord(tid: TID): Promise<unknown | null> {

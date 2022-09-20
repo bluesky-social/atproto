@@ -83,10 +83,10 @@ export class DataDiff {
   neededCapabilities(rootDid: string): auth.ucans.Capability[] {
     return this.updatedKeys().map((key) => {
       const parts = key.split('/')
-      if (parts.length !== 3) {
+      if (parts.length !== 2) {
         throw new Error(`Invalid record id: ${key}`)
       }
-      return auth.writeCap(rootDid, parts[0], parts[1], parts[2])
+      return auth.writeCap(rootDid, parts[0], parts[1])
     })
   }
 }
