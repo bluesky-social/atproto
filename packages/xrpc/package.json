@@ -14,6 +14,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@adxp/lexicon": "*",
     "axios": "^0.24.0",
     "zod": "^3.14.2"
   }

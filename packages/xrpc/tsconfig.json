@@ -5,4 +5,7 @@
     "emitDeclarationOnly": true
   },
   "include": ["./src","__tests__/**/**.ts"],
+  "references": [
+    { "path": "../lexicon/tsconfig.build.json" }
+  ]
 }

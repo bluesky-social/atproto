@@ -1,10 +1,9 @@
 import { IndentationText, Project, SourceFile } from 'ts-morph'
-import { MethodSchema } from '@adxp/xrpc'
-import { AdxSchemaDefinition } from '@adxp/schemas'
+import { Schema, MethodSchema, RecordSchema } from '@adxp/lexicon'
 import { NSID } from '@adxp/nsid'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
 import { gen, schemasTs } from './common'
-import { Schema, GeneratedAPI } from '../types'
+import { GeneratedAPI } from '../types'
 import { schemasToNsidTree, NsidNS, toCamelCase, toTitleCase } from './util'
 
 export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
@@ -15,9 +14,9 @@ export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
   const api: GeneratedAPI = { files: [] }
   const nsidTree = schemasToNsidTree(schemas)
   for (const schema of schemas) {
-    if ('xrpc' in schema) {
+    if (schema.type === 'query' || schema.type === 'procedure') {
       api.files.push(await methodSchemaTs(project, schema))
-    } else if ('adx' in schema) {
+    } else if (schema.type === 'record') {
       api.files.push(await recordSchemaTs(project, schema))
     }
   }
@@ -51,7 +50,7 @@ const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
 
     // generate type imports
     for (const schema of schemas) {
-      if (!('xrpc' in schema)) {
+      if (schema.type !== 'query' && schema.type !== 'procedure') {
         continue
       }
       file
@@ -151,7 +150,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
 
   // methods
   for (const schema of ns.schemas) {
-    if (!('xrpc' in schema)) {
+    if (schema.type !== 'query' && schema.type !== 'procedure') {
       continue
     }
     const moduleName = toTitleCase(schema.id)
@@ -305,7 +304,7 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
     })
   })
 
-const recordSchemaTs = (project, schema: AdxSchemaDefinition) =>
+const recordSchemaTs = (project, schema: RecordSchema) =>
   gen(project, `/types/${schema.id.split('.').join('/')}.ts`, async (file) => {
     //= export interface Record {...}
     file.insertText(

@@ -1,20 +1,30 @@
-# ADX Schemas Library
+# Lexicon
 
-This is a toolkit for validating ADX Schemas. See [DESIGN.md](./DESIGN.md) for more information about how ADX Schemas work.
+Lexicon is the semantic schemas & contracts system for ADX. This library provides definitions and APIs for ADX software.
 
 ```
-npm install @adxp/schemas
+npm install @adxp/lexicon
 ```
 
 ## Usage
 
+### XRPC method schemas
+
+TODO
+
+### Record schemas
+
 ```typescript
-import { AdxSchemas } from '@adxp/schemas'
+import { RecordSchemas } from '@adxp/lexicon'
+
+// create your schemas collection
+const schemas = new RecordSchemas()
 
 // example schema: "posts"
-const postSchema = {
-  adx: 1,
+schemas.add({
+  lex: 1,
   id: 'com.example.post',
+  type: 'record',
   record: {
     type: 'object',
     required: ['text', 'createdAt'],
@@ -23,15 +33,11 @@ const postSchema = {
       createdAt: { type: 'string', format: 'date-time' }
     }
   }
-}
-
-// create your schemas collection
-const schemas = new AdxSchemas()
-schemas.add(postSchema)
+})
 schemas.add(pollSchema) // pollSchema's definition not included for brevity
 
 // create a validator
-const postValidator = schemas.createRecordValidator({
+const postValidator = schemas.createValidator({
   type: 'com.example.post', // base type (required). Can be an array.
   ext: ['com.example.poll'] // extension types (optional)
 })

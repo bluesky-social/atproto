@@ -1,11 +1,11 @@
 import { AdxUri } from '@adxp/common'
-import { AdxValidationResult } from '@adxp/schemas'
+import { ValidationResult } from '@adxp/lexicon'
 
 export type DbRecordPlugin<T, S> = {
   collection: string
   tableName: string
   get: (uri: AdxUri) => Promise<T | null>
-  validateSchema: (obj: unknown) => AdxValidationResult
+  validateSchema: (obj: unknown) => ValidationResult
   set: (uri: AdxUri, obj: unknown) => Promise<void>
   delete: (uri: AdxUri) => Promise<void>
   translateDbObj: (dbObj: S) => T

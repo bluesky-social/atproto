@@ -1,13 +1,13 @@
-# XRPC CLI
+# Lexicon CLI Tool
 
-Command-line tool to generate client & server APIs for XRPC.
+Command-line tool to generate Lexicon schemas and APIs.
 
 ## Usage
 
 ```
-Usage: xrpc-cli [options] [command]
+Usage: lex [options] [command]
 
-XRPC utilities
+Lexicon CLI
 
 Options:
   -V, --version                     output the version number
@@ -25,13 +25,13 @@ Commands:
 **Example 1:** Generate an api
 
 ```
-$ xrpc-cli gen-api ./api/src ./schemas/com/service/*.json ./schemas/com/another/*.json
+$ lex gen-api ./api/src ./schemas/com/service/*.json ./schemas/com/another/*.json
 ```
 
 **Example 2:** Generate a server
 
 ```
-$ xrpc-cli gen-server ./server/src/xrpc ./schemas/com/service/*.json ./schemas/com/another/*.json
+$ lex gen-server ./server/src/xrpc ./schemas/com/service/*.json ./schemas/com/another/*.json
 ```
 
 ## License

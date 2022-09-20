@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
-    "codegen": "xrpc-cli gen-api ./src ../../schemas/todo.adx/*",
+    "codegen": "lex gen-api ./src ../../schemas/todo.adx/* ../../schemas/todo.social/*",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
@@ -18,6 +18,6 @@
     "@adxp/xrpc": "*"
   },
   "devDependencies": {
-    "@adxp/xrpc-cli": "*"
+    "@adxp/lex-cli": "*"
   }
 }

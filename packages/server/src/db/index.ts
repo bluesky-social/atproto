@@ -5,7 +5,7 @@ import * as Post from '../xrpc/types/todo/social/post'
 import * as Profile from '../xrpc/types/todo/social/profile'
 import * as Repost from '../xrpc/types/todo/social/repost'
 import { DataSource } from 'typeorm'
-import { AdxValidationResult, AdxValidationResultCode } from '@adxp/schemas'
+import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
 import { DbRecordPlugin } from './types'
 import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
 import likePlugin, { LikeIndex } from './records/like'
@@ -111,13 +111,13 @@ export class Database {
     await table.save(user)
   }
 
-  validateRecord(collection: string, obj: unknown): AdxValidationResult {
+  validateRecord(collection: string, obj: unknown): ValidationResult {
     let table
     try {
       table = this.findTableForCollection(collection)
     } catch (e) {
-      const result = new AdxValidationResult()
-      result._t(AdxValidationResultCode.Incompatible, `Schema not found`)
+      const result = new ValidationResult()
+      result._t(ValidationResultCode.Incompatible, `Schema not found`)
       return result
     }
     return table.validateSchema(obj)

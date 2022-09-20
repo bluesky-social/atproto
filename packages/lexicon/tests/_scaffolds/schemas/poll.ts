@@ -1,6 +1,7 @@
 export default {
-  adx: 1,
+  lexicon: 1,
   id: 'com.example.poll',
+  type: 'record',
   record: {
     type: 'object',
     required: ['question', 'answers'],
