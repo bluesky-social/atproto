@@ -176,15 +176,19 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
       type: 'string',
     })
     method.addParameter({
-      name: 'params?',
+      name: 'params',
       type: `${moduleName}.QueryParams`,
+    })
+    method.addParameter({
+      name: 'data?',
+      type: `${moduleName}.InputSchema`,
     })
     method.addParameter({
       name: 'opts?',
       type: `${moduleName}.CallOptions`,
     })
     method.setBodyText(
-      `return this.api.xrpc.call(serviceUri, '${schema.id}', params, opts)`,
+      `return this.api.xrpc.call(serviceUri, '${schema.id}', params, data, opts)`,
     )
   }
 
@@ -291,7 +295,7 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
       [
         `params.type = '${schema.id}'`,
         `record.$type = '${schema.id}'`,
-        `const res = await this.api.xrpc.call(serviceUri, '${ADX_METHODS.create}', params, {encoding: 'application/json', data: record})`,
+        `const res = await this.api.xrpc.call(serviceUri, '${ADX_METHODS.create}', params, record, {encoding: 'application/json'})`,
         `return res.data`,
       ].join('\n'),
     )
@@ -319,7 +323,7 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
       [
         `params.type = '${schema.id}'`,
         `record.$type = '${schema.id}'`,
-        `const res = await this.api.xrpc.call(serviceUri, '${ADX_METHODS.put}', params, {encoding: 'application/json', data: record})`,
+        `const res = await this.api.xrpc.call(serviceUri, '${ADX_METHODS.put}', params, record, {encoding: 'application/json'})`,
         `return res.data`,
       ].join('\n'),
     )
@@ -390,15 +394,6 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
           type: `'${schema.input.encoding}'`,
         })
       }
-      if (schema.input.schema) {
-        if (Array.isArray(schema.input.encoding)) {
-          opts.addProperty({ name: 'data', type: 'InputSchema | Uint8Array' })
-        } else {
-          opts.addProperty({ name: 'data', type: 'InputSchema' })
-        }
-      } else if (schema.input.encoding) {
-        opts.addProperty({ name: 'data', type: 'Uint8Array' })
-      }
     }
 
     //= export interface InputSchema {...}
@@ -411,6 +406,18 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
             additionalProperties: false,
           })),
       )
+    } else if (schema.input?.encoding) {
+      file.addTypeAlias({
+        isExported: true,
+        name: 'InputSchema',
+        type: 'string | Uint8Array',
+      })
+    } else {
+      file.addTypeAlias({
+        isExported: true,
+        name: 'InputSchema',
+        type: 'undefined',
+      })
     }
 
     //= export interface OutputSchema {...}
