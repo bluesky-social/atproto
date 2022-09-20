@@ -3,16 +3,12 @@ import * as ucan from './ucans/index'
 
 export const writeCap = (
   did: string,
-  namespace?: string,
-  dataset?: string,
+  collection?: string,
   record?: string,
 ): ucan.Capability => {
   let resource = did
-  if (namespace) {
-    resource += '/' + namespace
-  }
-  if (dataset) {
-    resource += '/' + dataset
+  if (collection) {
+    resource += '/' + collection
   }
   if (record) {
     resource += '/' + record
@@ -27,9 +23,8 @@ export const maintenanceCap = (did: string): ucan.Capability => {
 export const vaguerCap = (cap: ucan.Capability): ucan.Capability | null => {
   const rsc = parseAdxResource(cap.with)
   if (rsc === null) return null
-  // can't go vaguer than every namespace
-  if (rsc.namespace === '*') return null
-  if (rsc.dataset === '*') return writeCap(rsc.did)
-  if (rsc.record === '*') return writeCap(rsc.did, rsc.namespace)
-  return writeCap(rsc.did, rsc.namespace, rsc.dataset)
+  // can't go vaguer than every collection
+  if (rsc.collection === '*') return null
+  if (rsc.record === '*') return writeCap(rsc.did)
+  return writeCap(rsc.did, rsc.collection)
 }
