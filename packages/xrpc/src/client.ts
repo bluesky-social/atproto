@@ -29,9 +29,10 @@ export class Client {
     serviceUri: string | URL,
     methodNsid: string,
     params?: QueryParams,
+    data?: any,
     opts?: CallOptions,
   ) {
-    return this.service(serviceUri).call(methodNsid, params, opts)
+    return this.service(serviceUri).call(methodNsid, params, data, opts)
   }
 
   service(serviceUri: string | URL) {
@@ -73,14 +74,19 @@ export class ServiceClient {
     this.uri = typeof serviceUri === 'string' ? new URL(serviceUri) : serviceUri
   }
 
-  async call(methodNsid: string, params?: QueryParams, opts?: CallOptions) {
+  async call(
+    methodNsid: string,
+    params?: QueryParams,
+    data?: any,
+    opts?: CallOptions,
+  ) {
     const schema = this.baseClient.schemas.get(methodNsid)
     if (!schema) {
       throw new Error(`Method schema not found: ${methodNsid}`)
     }
     const httpMethod = getMethodSchemaHTTPMethod(schema)
     const httpUri = constructMethodCallUri(schema, this.uri, params)
-    const httpHeaders = constructMethodCallHeaders(schema, opts)
+    const httpHeaders = constructMethodCallHeaders(schema, data, opts)
 
     let res
     try {
@@ -88,7 +94,7 @@ export class ServiceClient {
         method: httpMethod,
         url: httpUri,
         headers: httpHeaders,
-        data: opts?.data,
+        data,
         responseType: 'arraybuffer',
       })
     } catch (e: any) {
