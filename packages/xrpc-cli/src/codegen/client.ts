@@ -1,4 +1,9 @@
-import { IndentationText, Project, SourceFile } from 'ts-morph'
+import {
+  IndentationText,
+  Project,
+  SourceFile,
+  VariableDeclarationKind,
+} from 'ts-morph'
 import { MethodSchema } from '@adxp/xrpc'
 import { AdxSchemaDefinition } from '@adxp/schemas'
 import { NSID } from '@adxp/nsid'
@@ -36,14 +41,14 @@ export async function genClientApi(schemas: Schema[]): Promise<GeneratedAPI> {
 
 const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
   gen(project, '/index.ts', async (file) => {
-    //= import {Client as XrpcClients} from '@adxp/xrpc'
+    //= import {Client as XrpcClient, ServiceClient as XrpcServiceClient} from '@adxp/xrpc'
     const xrpcImport = file.addImportDeclaration({
       moduleSpecifier: '@adxp/xrpc',
     })
-    xrpcImport.addNamedImport({
-      name: 'Client',
-      alias: 'XrpcClient',
-    })
+    xrpcImport.addNamedImports([
+      { name: 'Client', alias: 'XrpcClient' },
+      { name: 'ServiceClient', alias: 'XrpcServiceClient' },
+    ])
     //= import {methodSchemas, recordSchemas} from './schemas'
     file
       .addImportDeclaration({ moduleSpecifier: './schemas' })
@@ -58,44 +63,94 @@ const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
         .setNamespaceImport(toTitleCase(schema.id))
     }
 
-    //= export class API {...}
-    const apiCls = file.addClass({
-      name: 'API',
+    //= export class Client {...}
+    const clientCls = file.addClass({
+      name: 'Client',
       isExported: true,
     })
     //= xrpc: XrpcClient = new XrpcClient()
-    apiCls.addProperty({
+    clientCls.addProperty({
       name: 'xrpc',
       type: 'XrpcClient',
       initializer: 'new XrpcClient()',
     })
+    //= constructor () {
+    //=   this.xrpc.addSchemas(methodSchemas)
+    //= }
+    clientCls
+      .addConstructor()
+      .setBodyText(`this.xrpc.addSchemas(methodSchemas)`)
+    //= service(serviceUri: string | URL): ServiceClient {
+    //=   return new ServiceClient(this, this.xrpc.service(serviceUri))
+    //= }
+    clientCls
+      .addMethod({
+        name: 'service',
+        parameters: [{ name: 'serviceUri', type: 'string | URL' }],
+        returnType: 'ServiceClient',
+      })
+      .setBodyText(
+        `return new ServiceClient(this, this.xrpc.service(serviceUri))`,
+      )
 
-    // generate classes for the schemas
+    //= const defaultInst = new Client()
+    //= export default defaultInst
+    file.addVariableStatement({
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: 'defaultInst',
+          initializer: 'new Client()',
+        },
+      ],
+    })
+    file.insertText(file.getFullText().length, `export default defaultInst`)
+
+    //= export class ServiceClient {...}
+    const serviceClientCls = file.addClass({
+      name: 'ServiceClient',
+      isExported: true,
+    })
+    //= _baseClient: Client
+    serviceClientCls.addProperty({ name: '_baseClient', type: 'Client' })
+    //= xrpc: XrpcServiceClient
+    serviceClientCls.addProperty({
+      name: 'xrpc',
+      type: 'XrpcServiceClient',
+    })
     for (const ns of nsidTree) {
       //= ns: NS
-      apiCls.addProperty({
+      serviceClientCls.addProperty({
         name: ns.propName,
         type: ns.className,
       })
-
-      // class...
-      genNamespaceCls(file, ns)
     }
-
-    //= constructor () {
-    //=  this.xrpc.addSchemas(methodSchemas)
-    //=  {namespace declarations}
+    //= constructor (baseClient: Client, xrpcService: XrpcServiceClient) {
+    //=   this.baseClient = baseClient
+    //=   this.xrpcService = xrpcService
+    //=   {namespace declarations}
     //= }
-    apiCls
-      .addConstructor()
+    serviceClientCls
+      .addConstructor({
+        parameters: [
+          { name: 'baseClient', type: 'Client' },
+          { name: 'xrpcService', type: 'XrpcServiceClient' },
+        ],
+      })
       .setBodyText(
         [
-          `this.xrpc.addSchemas(methodSchemas)`,
+          `this._baseClient = baseClient`,
+          `this.xrpc = xrpcService`,
           ...nsidTree.map(
             (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
           ),
         ].join('\n'),
       )
+
+    // generate classes for the schemas
+    for (const ns of nsidTree) {
+      genNamespaceCls(file, ns)
+    }
   })
 
 function genNamespaceCls(file: SourceFile, ns: NsidNS) {
@@ -104,10 +159,10 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
     name: ns.className,
     isExported: true,
   })
-  //= api: API
+  //= _service: ServiceClient
   cls.addProperty({
-    name: 'api',
-    type: 'API',
+    name: '_service',
+    type: 'ServiceClient',
   })
 
   for (const schema of ns.schemas) {
@@ -133,21 +188,21 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
     genNamespaceCls(file, child)
   }
 
-  //= constructor(api: API) {
-  //=  this.api = api
+  //= constructor(service: ServiceClient) {
+  //=  this._service = service
   //=  {child namespace prop declarations}
   //=  {record prop declarations}
   //= }
   const cons = cls.addConstructor()
   cons.addParameter({
-    name: 'api',
-    type: 'API',
+    name: 'service',
+    type: 'ServiceClient',
   })
   cons.setBodyText(
     [
-      `this.api = api`,
+      `this._service = service`,
       ...ns.children.map(
-        (ns) => `this.${ns.propName} = new ${ns.className}(api)`,
+        (ns) => `this.${ns.propName} = new ${ns.className}(service)`,
       ),
       ...ns.schemas
         .filter((s) => 'adx' in s)
@@ -155,7 +210,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
           const name = NSID.parse(schema.id).name || ''
           return `this.${toCamelCase(name)} = new ${toTitleCase(
             name,
-          )}Record(api)`
+          )}Record(service)`
         }),
     ].join('\n'),
   )
@@ -172,10 +227,6 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
       returnType: `Promise<${moduleName}.Response>`,
     })
     method.addParameter({
-      name: 'serviceUri',
-      type: 'string',
-    })
-    method.addParameter({
       name: 'params',
       type: `${moduleName}.QueryParams`,
     })
@@ -188,7 +239,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
       type: `${moduleName}.CallOptions`,
     })
     method.setBodyText(
-      `return this.api.xrpc.call(serviceUri, '${schema.id}', params, data, opts)`,
+      `return this._service.xrpc.call('${schema.id}', params, data, opts)`,
     )
   }
 
@@ -208,21 +259,21 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
     name: `${toTitleCase(name)}Record`,
     isExported: true,
   })
-  //= api: API
+  //= _service: ServiceClient
   cls.addProperty({
-    name: 'api',
-    type: 'API',
+    name: '_service',
+    type: 'ServiceClient',
   })
 
-  //= constructor(api: API) {
-  //=  this.api = api
+  //= constructor(service: ServiceClient) {
+  //=  this._service = service
   //= }
   const cons = cls.addConstructor()
   cons.addParameter({
-    name: 'api',
-    type: 'API',
+    name: 'service',
+    type: 'ServiceClient',
   })
-  cons.setBodyText(`this.api = api`)
+  cons.setBodyText(`this._service = service`)
 
   // methods
   const typeModule = toTitleCase(schema.id)
@@ -234,16 +285,12 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
       returnType: `Promise<{records: ({uri: string, value: ${typeModule}.Record})[]}>`,
     })
     method.addParameter({
-      name: 'serviceUri',
-      type: 'string',
-    })
-    method.addParameter({
       name: 'params',
       type: `Omit<${toTitleCase(ADX_METHODS.list)}.QueryParams, "type">`,
     })
     method.setBodyText(
       [
-        `const res = await this.api.xrpc.call(serviceUri, '${ADX_METHODS.list}', { type: '${schema.id}', ...params })`,
+        `const res = await this._service.xrpc.call('${ADX_METHODS.list}', { type: '${schema.id}', ...params })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -256,16 +303,12 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
       returnType: `Promise<{uri: string, value: ${typeModule}.Record}>`,
     })
     method.addParameter({
-      name: 'serviceUri',
-      type: 'string',
-    })
-    method.addParameter({
       name: 'params',
       type: `Omit<${toTitleCase(ADX_METHODS.get)}.QueryParams, "type">`,
     })
     method.setBodyText(
       [
-        `const res = await this.api.xrpc.call(serviceUri, '${ADX_METHODS.get}', { type: '${schema.id}', ...params })`,
+        `const res = await this._service.xrpc.call('${ADX_METHODS.get}', { type: '${schema.id}', ...params })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -278,10 +321,6 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
       returnType: 'Promise<{uri: string}>',
     })
     method.addParameter({
-      name: 'serviceUri',
-      type: 'string',
-    })
-    method.addParameter({
       name: 'params',
       type: `Omit<${toTitleCase(ADX_METHODS.create)}.QueryParams, "type">`,
     })
@@ -292,7 +331,7 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
     method.setBodyText(
       [
         `record.$type = '${schema.id}'`,
-        `const res = await this.api.xrpc.call(serviceUri, '${ADX_METHODS.create}', { type: '${schema.id}', ...params }, record, {encoding: 'application/json'})`,
+        `const res = await this._service.xrpc.call('${ADX_METHODS.create}', { type: '${schema.id}', ...params }, record, {encoding: 'application/json'})`,
         `return res.data`,
       ].join('\n'),
     )
@@ -305,10 +344,6 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
       returnType: 'Promise<{uri: string}>',
     })
     method.addParameter({
-      name: 'serviceUri',
-      type: 'string',
-    })
-    method.addParameter({
       name: 'params',
       type: `Omit<${toTitleCase(ADX_METHODS.put)}.QueryParams, "type">`,
     })
@@ -319,7 +354,7 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
     method.setBodyText(
       [
         `record.$type = '${schema.id}'`,
-        `const res = await this.api.xrpc.call(serviceUri, '${ADX_METHODS.put}', { type: '${schema.id}', ...params }, record, {encoding: 'application/json'})`,
+        `const res = await this._service.xrpc.call('${ADX_METHODS.put}', { type: '${schema.id}', ...params }, record, {encoding: 'application/json'})`,
         `return res.data`,
       ].join('\n'),
     )
@@ -332,16 +367,12 @@ function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
       returnType: 'Promise<void>',
     })
     method.addParameter({
-      name: 'serviceUri',
-      type: 'string',
-    })
-    method.addParameter({
       name: 'params',
       type: `Omit<${toTitleCase(ADX_METHODS.delete)}.QueryParams, "type">`,
     })
     method.setBodyText(
       [
-        `await this.api.xrpc.call(serviceUri, '${ADX_METHODS.delete}', { type: '${schema.id}', ...params })`,
+        `await this._service.xrpc.call('${ADX_METHODS.delete}', { type: '${schema.id}', ...params })`,
       ].join('\n'),
     )
   }
