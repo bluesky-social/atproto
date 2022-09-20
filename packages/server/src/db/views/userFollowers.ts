@@ -1,4 +1,4 @@
-import { UserFollowersView } from '@adxp/microblog'
+import * as UserFollowersView from '../../xrpc/types/todo/social/getUserFollowersView'
 import { DataSource } from 'typeorm'
 import { AdxRecord } from '../record'
 import { FollowIndex } from '../records/follow'

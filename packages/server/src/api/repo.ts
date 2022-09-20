@@ -85,7 +85,7 @@ export default function (server: Server) {
 
     return {
       encoding: 'application/json',
-      body: { records },
+      body: { records: records as { uri: string; value: {} }[] },
     }
   })
 

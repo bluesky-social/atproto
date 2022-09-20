@@ -1,4 +1,4 @@
-import { PostThreadView } from '@adxp/microblog'
+import * as PostThreadView from '../../xrpc/types/todo/social/getPostThreadView'
 import { DataSource } from 'typeorm'
 import { PostIndex } from '../records/post'
 import { ProfileIndex } from '../records/profile'

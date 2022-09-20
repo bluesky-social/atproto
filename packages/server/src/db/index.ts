@@ -1,4 +1,9 @@
-import { Badge, Follow, Like, Post, Profile, Repost } from '@adxp/microblog'
+import * as Badge from '../xrpc/types/todo/social/badge'
+import * as Follow from '../xrpc/types/todo/social/follow'
+import * as Like from '../xrpc/types/todo/social/like'
+import * as Post from '../xrpc/types/todo/social/post'
+import * as Profile from '../xrpc/types/todo/social/profile'
+import * as Repost from '../xrpc/types/todo/social/repost'
 import { DataSource } from 'typeorm'
 import { DbRecordPlugin, ViewFn } from './types'
 import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
@@ -10,7 +15,7 @@ import profilePlugin, {
   ProfileIndex,
 } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-import views from './views'
+// import views from './views' TODO
 import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
@@ -40,9 +45,10 @@ export class Database {
       reposts: repostPlugin(db),
     }
     this.views = {}
-    for (const view of views) {
-      this.views[view.id] = view.fn(db)
-    }
+    // TODO
+    // for (const view of views) {
+    //   this.views[view.id] = view.fn(db)
+    // }
   }
 
   static async sqlite(location: string): Promise<Database> {

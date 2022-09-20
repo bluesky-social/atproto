@@ -1,4 +1,4 @@
-import { ProfileView } from '@adxp/microblog'
+import * as ProfileView from '../../xrpc/types/todo/social/getProfileView'
 import { DataSource } from 'typeorm'
 import { FollowIndex } from '../records/follow'
 import { PostIndex } from '../records/post'

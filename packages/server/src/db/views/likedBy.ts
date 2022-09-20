@@ -1,4 +1,4 @@
-import { LikedByView } from '@adxp/microblog'
+import * as LikedByView from '../../xrpc/types/todo/social/getLikedByView'
 import { DataSource } from 'typeorm'
 import { AdxRecord } from '../record'
 import { LikeIndex } from '../records/like'

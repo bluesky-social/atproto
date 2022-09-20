@@ -20,7 +20,7 @@ const runServer = (
   port: number,
 ): http.Server => {
   const app = express()
-  app.use(express.json())
+  // app.use(express.json())
   app.use(cors())
 
   app.use((_req, res, next) => {
@@ -31,7 +31,7 @@ const runServer = (
   })
 
   const apiServer = API()
-  app.use(apiServer.xrpc.handle)
+  app.use(apiServer.xrpc.router)
   app.use(error.handler)
 
   return app.listen(port)

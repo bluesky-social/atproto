@@ -1,4 +1,4 @@
-import { RepostedByView } from '@adxp/microblog'
+import * as RepostedByView from '../../xrpc/types/todo/social/getRepostedByView'
 import { DataSource } from 'typeorm'
 import { AdxRecord } from '../record'
 import { ProfileIndex } from '../records/profile'

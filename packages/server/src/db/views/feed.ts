@@ -1,4 +1,4 @@
-import { FeedView } from '@adxp/microblog'
+import * as FeedView from '../../xrpc/types/todo/social/getFeedView'
 import { DataSource, Like } from 'typeorm'
 import { FollowIndex } from '../records/follow'
 import { PostIndex } from '../records/post'
@@ -10,7 +10,6 @@ import { DbViewPlugin } from '../types'
 import { LikeIndex } from '../records/like'
 import { RepostIndex } from '../records/repost'
 import { AdxRecord } from '../record'
-import { FeedItem } from '@adxp/microblog/src/types/FeedView'
 
 const viewId = 'blueskyweb.xyz:FeedView'
 const validator = schemas.createViewValidator(viewId)
