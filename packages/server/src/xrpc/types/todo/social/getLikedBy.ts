@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Mon Sep 19 2022
+* Created Tue Sep 20 2022
 */
 import express from 'express'
 
@@ -19,7 +19,7 @@ export interface HandlerOutput {
 
 export interface OutputSchema {
   uri: string;
-  repostedBy: {
+  likedBy: {
     did: string,
     name: string,
     displayName?: string,

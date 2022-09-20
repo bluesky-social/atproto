@@ -1,6 +1,6 @@
 {
   "xrpc": 1,
-  "id": "todo.social.getProfileView",
+  "id": "todo.social.getProfile",
   "type": "query",
   "parameters": {
     "user": {"type": "string", "required": true}

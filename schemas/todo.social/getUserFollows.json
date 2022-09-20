@@ -1,8 +1,8 @@
 {
   "xrpc": 1,
-  "id": "todo.social.getUserFollowersView",
+  "id": "todo.social.getUserFollows",
   "type": "query",
-  "description": "Who is following a user?",
+  "description": "Who is a user following?",
   "parameters": {
     "user": {"type": "string", "required": true},
     "limit": {"type": "number", "maximum": 100},
@@ -12,7 +12,7 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["subject", "followers"],
+      "required": ["subject", "follows"],
       "properties": {
         "subject": {
           "type": "object",
@@ -26,7 +26,7 @@
             }
           }
         },
-        "followers": {
+        "follows": {
           "type": "array",
           "items": {
             "type": "object",

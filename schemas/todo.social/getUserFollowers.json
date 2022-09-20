@@ -1,9 +1,10 @@
 {
   "xrpc": 1,
-  "id": "todo.social.getLikedByView",
+  "id": "todo.social.getUserFollowers",
   "type": "query",
+  "description": "Who is following a user?",
   "parameters": {
-    "uri": {"type": "string", "required": true},
+    "user": {"type": "string", "required": true},
     "limit": {"type": "number", "maximum": 100},
     "before": {"type": "string"}
   },
@@ -11,10 +12,21 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["uri", "likedBy"],
+      "required": ["subject", "followers"],
       "properties": {
-        "uri": {"type": "string"},
-        "likedBy": {
+        "subject": {
+          "type": "object",
+          "required": ["did", "name"],
+          "properties": {
+            "did": {"type": "string"},
+            "name": {"type": "string"},
+            "displayName": {
+              "type": "string",
+              "maxLength": 64
+            }
+          }
+        },
+        "followers": {
           "type": "array",
           "items": {
             "type": "object",

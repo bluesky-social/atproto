@@ -26,14 +26,14 @@ import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
 import * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
 import * as TodoSocialBadge from './types/todo/social/badge'
 import * as TodoSocialFollow from './types/todo/social/follow'
-import * as TodoSocialGetFeedView from './types/todo/social/getFeedView'
-import * as TodoSocialGetLikedByView from './types/todo/social/getLikedByView'
-import * as TodoSocialGetNotificationsView from './types/todo/social/getNotificationsView'
-import * as TodoSocialGetPostThreadView from './types/todo/social/getPostThreadView'
-import * as TodoSocialGetProfileView from './types/todo/social/getProfileView'
-import * as TodoSocialGetRepostedByView from './types/todo/social/getRepostedByView'
-import * as TodoSocialGetUserFollowersView from './types/todo/social/getUserFollowersView'
-import * as TodoSocialGetUserFollowsView from './types/todo/social/getUserFollowsView'
+import * as TodoSocialGetFeed from './types/todo/social/getFeed'
+import * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
+import * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
+import * as TodoSocialGetPostThread from './types/todo/social/getPostThread'
+import * as TodoSocialGetProfile from './types/todo/social/getProfile'
+import * as TodoSocialGetRepostedBy from './types/todo/social/getRepostedBy'
+import * as TodoSocialGetUserFollowers from './types/todo/social/getUserFollowers'
+import * as TodoSocialGetUserFollows from './types/todo/social/getUserFollows'
 import * as TodoSocialLike from './types/todo/social/like'
 import * as TodoSocialMediaEmbed from './types/todo/social/mediaEmbed'
 import * as TodoSocialPost from './types/todo/social/post'
@@ -269,104 +269,89 @@ export class SocialNS {
     this.repost = new RepostRecord(service)
   }
 
-  getFeedView(
-    params: TodoSocialGetFeedView.QueryParams,
-    data?: TodoSocialGetFeedView.InputSchema,
-    opts?: TodoSocialGetFeedView.CallOptions
-  ): Promise<TodoSocialGetFeedView.Response> {
+  getFeed(
+    params: TodoSocialGetFeed.QueryParams,
+    data?: TodoSocialGetFeed.InputSchema,
+    opts?: TodoSocialGetFeed.CallOptions
+  ): Promise<TodoSocialGetFeed.Response> {
+    return this._service.xrpc.call('todo.social.getFeed', params, data, opts)
+  }
+
+  getLikedBy(
+    params: TodoSocialGetLikedBy.QueryParams,
+    data?: TodoSocialGetLikedBy.InputSchema,
+    opts?: TodoSocialGetLikedBy.CallOptions
+  ): Promise<TodoSocialGetLikedBy.Response> {
+    return this._service.xrpc.call('todo.social.getLikedBy', params, data, opts)
+  }
+
+  getNotifications(
+    params: TodoSocialGetNotifications.QueryParams,
+    data?: TodoSocialGetNotifications.InputSchema,
+    opts?: TodoSocialGetNotifications.CallOptions
+  ): Promise<TodoSocialGetNotifications.Response> {
     return this._service.xrpc.call(
-      'todo.social.getFeedView',
+      'todo.social.getNotifications',
       params,
       data,
       opts
     )
   }
 
-  getLikedByView(
-    params: TodoSocialGetLikedByView.QueryParams,
-    data?: TodoSocialGetLikedByView.InputSchema,
-    opts?: TodoSocialGetLikedByView.CallOptions
-  ): Promise<TodoSocialGetLikedByView.Response> {
+  getPostThread(
+    params: TodoSocialGetPostThread.QueryParams,
+    data?: TodoSocialGetPostThread.InputSchema,
+    opts?: TodoSocialGetPostThread.CallOptions
+  ): Promise<TodoSocialGetPostThread.Response> {
     return this._service.xrpc.call(
-      'todo.social.getLikedByView',
+      'todo.social.getPostThread',
       params,
       data,
       opts
     )
   }
 
-  getNotificationsView(
-    params: TodoSocialGetNotificationsView.QueryParams,
-    data?: TodoSocialGetNotificationsView.InputSchema,
-    opts?: TodoSocialGetNotificationsView.CallOptions
-  ): Promise<TodoSocialGetNotificationsView.Response> {
+  getProfile(
+    params: TodoSocialGetProfile.QueryParams,
+    data?: TodoSocialGetProfile.InputSchema,
+    opts?: TodoSocialGetProfile.CallOptions
+  ): Promise<TodoSocialGetProfile.Response> {
+    return this._service.xrpc.call('todo.social.getProfile', params, data, opts)
+  }
+
+  getRepostedBy(
+    params: TodoSocialGetRepostedBy.QueryParams,
+    data?: TodoSocialGetRepostedBy.InputSchema,
+    opts?: TodoSocialGetRepostedBy.CallOptions
+  ): Promise<TodoSocialGetRepostedBy.Response> {
     return this._service.xrpc.call(
-      'todo.social.getNotificationsView',
+      'todo.social.getRepostedBy',
       params,
       data,
       opts
     )
   }
 
-  getPostThreadView(
-    params: TodoSocialGetPostThreadView.QueryParams,
-    data?: TodoSocialGetPostThreadView.InputSchema,
-    opts?: TodoSocialGetPostThreadView.CallOptions
-  ): Promise<TodoSocialGetPostThreadView.Response> {
+  getUserFollowers(
+    params: TodoSocialGetUserFollowers.QueryParams,
+    data?: TodoSocialGetUserFollowers.InputSchema,
+    opts?: TodoSocialGetUserFollowers.CallOptions
+  ): Promise<TodoSocialGetUserFollowers.Response> {
     return this._service.xrpc.call(
-      'todo.social.getPostThreadView',
+      'todo.social.getUserFollowers',
       params,
       data,
       opts
     )
   }
 
-  getProfileView(
-    params: TodoSocialGetProfileView.QueryParams,
-    data?: TodoSocialGetProfileView.InputSchema,
-    opts?: TodoSocialGetProfileView.CallOptions
-  ): Promise<TodoSocialGetProfileView.Response> {
+  getUserFollows(
+    params: TodoSocialGetUserFollows.QueryParams,
+    data?: TodoSocialGetUserFollows.InputSchema,
+    opts?: TodoSocialGetUserFollows.CallOptions
+  ): Promise<TodoSocialGetUserFollows.Response> {
     return this._service.xrpc.call(
-      'todo.social.getProfileView',
-      params,
-      data,
-      opts
-    )
-  }
-
-  getRepostedByView(
-    params: TodoSocialGetRepostedByView.QueryParams,
-    data?: TodoSocialGetRepostedByView.InputSchema,
-    opts?: TodoSocialGetRepostedByView.CallOptions
-  ): Promise<TodoSocialGetRepostedByView.Response> {
-    return this._service.xrpc.call(
-      'todo.social.getRepostedByView',
-      params,
-      data,
-      opts
-    )
-  }
-
-  getUserFollowersView(
-    params: TodoSocialGetUserFollowersView.QueryParams,
-    data?: TodoSocialGetUserFollowersView.InputSchema,
-    opts?: TodoSocialGetUserFollowersView.CallOptions
-  ): Promise<TodoSocialGetUserFollowersView.Response> {
-    return this._service.xrpc.call(
-      'todo.social.getUserFollowersView',
-      params,
-      data,
-      opts
-    )
-  }
-
-  getUserFollowsView(
-    params: TodoSocialGetUserFollowsView.QueryParams,
-    data?: TodoSocialGetUserFollowsView.InputSchema,
-    opts?: TodoSocialGetUserFollowsView.CallOptions
-  ): Promise<TodoSocialGetUserFollowsView.Response> {
-    return this._service.xrpc.call(
-      'todo.social.getUserFollowsView',
+      'todo.social.getUserFollows',
       params,
       data,
       opts

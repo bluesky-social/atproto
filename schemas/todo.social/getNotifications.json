@@ -1,6 +1,6 @@
 {
   "xrpc": 1,
-  "id": "todo.social.getNotificationsView",
+  "id": "todo.social.getNotifications",
   "type": "query",
   "parameters": {
     "limit": {"type": "number", "maximum": 100},

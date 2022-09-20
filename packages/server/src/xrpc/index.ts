@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Mon Sep 19 2022
+* Created Tue Sep 20 2022
 */
 import {
   createServer as createXrpcServer,
@@ -24,14 +24,14 @@ import * as TodoAdxResolveName from './types/todo/adx/resolveName'
 import * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
 import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
 import * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
-import * as TodoSocialGetFeedView from './types/todo/social/getFeedView'
-import * as TodoSocialGetLikedByView from './types/todo/social/getLikedByView'
-import * as TodoSocialGetNotificationsView from './types/todo/social/getNotificationsView'
-import * as TodoSocialGetPostThreadView from './types/todo/social/getPostThreadView'
-import * as TodoSocialGetProfileView from './types/todo/social/getProfileView'
-import * as TodoSocialGetRepostedByView from './types/todo/social/getRepostedByView'
-import * as TodoSocialGetUserFollowersView from './types/todo/social/getUserFollowersView'
-import * as TodoSocialGetUserFollowsView from './types/todo/social/getUserFollowsView'
+import * as TodoSocialGetFeed from './types/todo/social/getFeed'
+import * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
+import * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
+import * as TodoSocialGetPostThread from './types/todo/social/getPostThread'
+import * as TodoSocialGetProfile from './types/todo/social/getProfile'
+import * as TodoSocialGetRepostedBy from './types/todo/social/getRepostedBy'
+import * as TodoSocialGetUserFollowers from './types/todo/social/getUserFollowers'
+import * as TodoSocialGetUserFollows from './types/todo/social/getUserFollows'
 
 export function createServer(): Server {
   return new Server()
@@ -158,43 +158,43 @@ export class SocialNS {
     this.server = server
   }
 
-  getFeedView(handler: TodoSocialGetFeedView.Handler) {
+  getFeed(handler: TodoSocialGetFeed.Handler) {
     /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getFeedView', handler)
+    return this.server.xrpc.method('todo.social.getFeed', handler)
   }
 
-  getLikedByView(handler: TodoSocialGetLikedByView.Handler) {
+  getLikedBy(handler: TodoSocialGetLikedBy.Handler) {
     /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getLikedByView', handler)
+    return this.server.xrpc.method('todo.social.getLikedBy', handler)
   }
 
-  getNotificationsView(handler: TodoSocialGetNotificationsView.Handler) {
+  getNotifications(handler: TodoSocialGetNotifications.Handler) {
     /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getNotificationsView', handler)
+    return this.server.xrpc.method('todo.social.getNotifications', handler)
   }
 
-  getPostThreadView(handler: TodoSocialGetPostThreadView.Handler) {
+  getPostThread(handler: TodoSocialGetPostThread.Handler) {
     /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getPostThreadView', handler)
+    return this.server.xrpc.method('todo.social.getPostThread', handler)
   }
 
-  getProfileView(handler: TodoSocialGetProfileView.Handler) {
+  getProfile(handler: TodoSocialGetProfile.Handler) {
     /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getProfileView', handler)
+    return this.server.xrpc.method('todo.social.getProfile', handler)
   }
 
-  getRepostedByView(handler: TodoSocialGetRepostedByView.Handler) {
+  getRepostedBy(handler: TodoSocialGetRepostedBy.Handler) {
     /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getRepostedByView', handler)
+    return this.server.xrpc.method('todo.social.getRepostedBy', handler)
   }
 
-  getUserFollowersView(handler: TodoSocialGetUserFollowersView.Handler) {
+  getUserFollowers(handler: TodoSocialGetUserFollowers.Handler) {
     /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getUserFollowersView', handler)
+    return this.server.xrpc.method('todo.social.getUserFollowers', handler)
   }
 
-  getUserFollowsView(handler: TodoSocialGetUserFollowsView.Handler) {
+  getUserFollows(handler: TodoSocialGetUserFollows.Handler) {
     /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getUserFollowsView', handler)
+    return this.server.xrpc.method('todo.social.getUserFollows', handler)
   }
 }

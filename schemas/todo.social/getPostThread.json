@@ -1,6 +1,6 @@
 {
   "xrpc": 1,
-  "id": "todo.social.getPostThreadView",
+  "id": "todo.social.getPostThread",
   "type": "query",
   "parameters": {
     "uri": {"type": "string", "required": true},

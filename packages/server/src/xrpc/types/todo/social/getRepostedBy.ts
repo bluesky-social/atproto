@@ -1,11 +1,11 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Mon Sep 19 2022
+* Created Tue Sep 20 2022
 */
 import express from 'express'
 
 export interface QueryParams {
-  user: string;
+  uri: string;
   limit?: number;
   before?: string;
 }
@@ -18,12 +18,8 @@ export interface HandlerOutput {
 }
 
 export interface OutputSchema {
-  subject: {
-    did: string,
-    name: string,
-    displayName?: string,
-  };
-  followers: {
+  uri: string;
+  repostedBy: {
     did: string,
     name: string,
     displayName?: string,

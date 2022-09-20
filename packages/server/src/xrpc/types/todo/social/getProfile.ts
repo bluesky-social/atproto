@@ -1,13 +1,11 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Mon Sep 19 2022
+* Created Tue Sep 20 2022
 */
 import express from 'express'
 
 export interface QueryParams {
-  uri: string;
-  limit?: number;
-  before?: string;
+  user: string;
 }
 
 export type HandlerInput = undefined
@@ -18,14 +16,30 @@ export interface HandlerOutput {
 }
 
 export interface OutputSchema {
+  did: string;
+  name: string;
+  displayName?: string;
+  description?: string;
+  followersCount: number;
+  followsCount: number;
+  postsCount: number;
+  badges: Badge[];
+  myState?: {
+    follow?: string,
+  };
+}
+export interface Badge {
   uri: string;
-  likedBy: {
+  error?: string;
+  issuer?: {
     did: string,
     name: string,
-    displayName?: string,
-    createdAt?: string,
-    indexedAt: string,
-  }[];
+    displayName: string,
+  };
+  assertion?: {
+    type: string,
+  };
+  createdAt?: string;
 }
 
 export type Handler = (

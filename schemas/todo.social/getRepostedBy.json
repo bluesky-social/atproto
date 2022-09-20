@@ -1,6 +1,6 @@
 {
   "xrpc": 1,
-  "id": "todo.social.getRepostedByView",
+  "id": "todo.social.getRepostedBy",
   "type": "query",
   "parameters": {
     "uri": {"type": "string", "required": true},

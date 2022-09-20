@@ -523,7 +523,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     xrpc: 1,
-    id: 'todo.social.getFeedView',
+    id: 'todo.social.getFeed',
     type: 'query',
     description: "A computed view of the home feed or a user's feed",
     parameters: {
@@ -685,7 +685,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     xrpc: 1,
-    id: 'todo.social.getLikedByView',
+    id: 'todo.social.getLikedBy',
     type: 'query',
     parameters: {
       uri: {
@@ -742,7 +742,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     xrpc: 1,
-    id: 'todo.social.getNotificationsView',
+    id: 'todo.social.getNotifications',
     type: 'query',
     parameters: {
       limit: {
@@ -809,7 +809,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     xrpc: 1,
-    id: 'todo.social.getPostThreadView',
+    id: 'todo.social.getPostThread',
     type: 'query',
     parameters: {
       uri: {
@@ -970,7 +970,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     xrpc: 1,
-    id: 'todo.social.getProfileView',
+    id: 'todo.social.getProfile',
     type: 'query',
     parameters: {
       user: {
@@ -1077,7 +1077,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     xrpc: 1,
-    id: 'todo.social.getRepostedByView',
+    id: 'todo.social.getRepostedBy',
     type: 'query',
     parameters: {
       uri: {
@@ -1134,7 +1134,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     xrpc: 1,
-    id: 'todo.social.getUserFollowersView',
+    id: 'todo.social.getUserFollowers',
     type: 'query',
     description: 'Who is following a user?',
     parameters: {
@@ -1205,7 +1205,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     xrpc: 1,
-    id: 'todo.social.getUserFollowsView',
+    id: 'todo.social.getUserFollows',
     type: 'query',
     description: 'Who is a user following?',
     parameters: {

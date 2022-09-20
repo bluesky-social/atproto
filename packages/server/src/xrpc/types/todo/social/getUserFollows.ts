@@ -1,10 +1,11 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Mon Sep 19 2022
+* Created Tue Sep 20 2022
 */
 import express from 'express'
 
 export interface QueryParams {
+  user: string;
   limit?: number;
   before?: string;
 }
@@ -17,18 +18,18 @@ export interface HandlerOutput {
 }
 
 export interface OutputSchema {
-  notifications: Notification[];
-}
-export interface Notification {
-  uri: string;
-  author: {
+  subject: {
     did: string,
     name: string,
-    displayName: string,
+    displayName?: string,
   };
-  record: {};
-  isRead: boolean;
-  indexedAt: string;
+  follows: {
+    did: string,
+    name: string,
+    displayName?: string,
+    createdAt?: string,
+    indexedAt: string,
+  }[];
 }
 
 export type Handler = (
