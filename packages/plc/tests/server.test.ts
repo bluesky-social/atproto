@@ -3,8 +3,9 @@ import PlcClient from '../src/client'
 import * as document from '../src/lib/document'
 import getPort from 'get-port'
 import * as util from './util'
+import { cidForData } from '@adxp/common'
 
-const USE_TEST_SERVER = true
+const USE_TEST_SERVER = false
 
 describe('PLC server', () => {
   let username = 'alice.example.com'
@@ -91,6 +92,39 @@ describe('PLC server', () => {
   it('rejects on bad updates', async () => {
     const newKey = await EcdsaKeypair.create()
     const operation = client.rotateRecoveryKey(did, newKey.did(), newKey)
-    expect(operation).rejects.toThrow()
+    await expect(operation).rejects.toThrow()
+  })
+
+  it('allows for recovery through a forked history', async () => {
+    const attackerKey = await EcdsaKeypair.create()
+    await client.rotateSigningKey(did, attackerKey.did(), signingKey)
+    await client.rotateRecoveryKey(did, attackerKey.did(), attackerKey)
+
+    const newKey = await EcdsaKeypair.create()
+    const ops = await client.getOperationLog(did)
+    const forkPoint = ops[ops.length - 3]
+    const forkCid = await cidForData(forkPoint)
+    await client.rotateSigningKey(did, newKey.did(), recoveryKey, forkCid)
+    signingKey = newKey
+
+    const doc = await client.getDocumentData(did)
+    expect(doc.did).toEqual(did)
+    expect(doc.signingKey).toEqual(signingKey.did())
+    expect(doc.recoveryKey).toEqual(recoveryKey.did())
+    expect(doc.username).toEqual(username)
+    expect(doc.atpPds).toEqual(atpPds)
+  })
+
+  it('handles concurrent requests', async () => {
+    const COUNT = 100
+    const keys: EcdsaKeypair[] = []
+    for (let i = 0; i < COUNT; i++) {
+      keys.push(await EcdsaKeypair.create())
+    }
+    await Promise.all(
+      keys.map(async (key, index) => {
+        await client.createDid(key, key.did(), `user${index}`, `example.com`)
+      }),
+    )
   })
 })

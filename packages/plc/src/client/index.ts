@@ -46,8 +46,13 @@ export class PlcClient {
     return cidForData(log[log.length - 1])
   }
 
-  async rotateSigningKey(did: string, newKey: string, signingKey: DidableKey) {
-    const prev = await this.getPrev(did)
+  async rotateSigningKey(
+    did: string,
+    newKey: string,
+    signingKey: DidableKey,
+    prev?: CID,
+  ) {
+    prev = prev ? prev : await this.getPrev(did)
     const op = await operations.rotateSigningKey(
       newKey,
       prev.toString(),
@@ -56,8 +61,13 @@ export class PlcClient {
     await axios.post(`${this.url}/${did}`, op)
   }
 
-  async rotateRecoveryKey(did: string, newKey: string, signingKey: DidableKey) {
-    const prev = await this.getPrev(did)
+  async rotateRecoveryKey(
+    did: string,
+    newKey: string,
+    signingKey: DidableKey,
+    prev?: CID,
+  ) {
+    prev = prev ? prev : await this.getPrev(did)
     const op = await operations.rotateRecoveryKey(
       newKey,
       prev.toString(),

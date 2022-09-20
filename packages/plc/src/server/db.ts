@@ -1,21 +1,106 @@
 import { CID } from 'multiformats/cid'
 import { cidForData } from '@adxp/common'
 import {
+  EntityManager,
   DataSource,
-  SelectQueryBuilder,
   Entity,
   Column,
   PrimaryColumn,
+  In,
 } from 'typeorm'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
+import { Mutex } from 'async-mutex'
 
 export class Database {
-  db: DataSource
-  constructor(db: DataSource) {
+  db: SafeDB
+
+  constructor(db: SafeDB) {
     this.db = db
   }
+
   static async sqlite(location: string): Promise<Database> {
+    const db = await SafeDB.sqlite(location)
+    return new Database(db)
+  }
+
+  static async memory(): Promise<Database> {
+    const db = await SafeDB.memory()
+    return new Database(db)
+  }
+
+  async close(): Promise<void> {
+    await this.db.close()
+  }
+
+  async validateAndAddOp(did: string, proposed: t.Operation): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      const ops = await this._opsForDid(tx, did)
+      // throws if invalid
+      const { nullified } = await document.assureValidNextOp(did, ops, proposed)
+      const cid = await cidForData(proposed)
+
+      const toInsert = new OperationsTable()
+      toInsert.did = did
+      toInsert.operation = JSON.stringify(proposed)
+      toInsert.cid = cid.toString()
+      toInsert.createdAt = new Date()
+      await tx.save(toInsert)
+
+      if (nullified.length > 0) {
+        const nullfiedStrs = nullified.map((cid) => cid.toString())
+        await tx.update(
+          OperationsTable,
+          { did, cid: In(nullfiedStrs) },
+          { nullified: true },
+        )
+      }
+    })
+  }
+
+  async opsForDid(did: string): Promise<t.Operation[]> {
+    return this.db.readOperation(async (manager) => {
+      const res = await this._opsForDid(manager, did)
+      return res.map((row) => row.operation)
+    })
+  }
+
+  // helper fn that returns additional information
+  async _opsForDid(
+    manager: EntityManager,
+    did: string,
+  ): Promise<t.IndexedOperation[]> {
+    const res = await manager.findBy(OperationsTable, {
+      did,
+      nullified: false,
+    })
+    return res
+      .map((row) => ({
+        did: row.did,
+        operation: JSON.parse(row.operation),
+        cid: CID.parse(row.cid),
+        nullified: row.nullified,
+        createdAt: row.createdAt,
+      }))
+      .sort((a, b) => {
+        return a.createdAt.getTime() - b.createdAt.getTime()
+      })
+  }
+}
+
+// It is VERY IMPORTANT that any writes go through the `transaction` method on the underlying SafeDB
+// This is needed because sqlite does not offer a connection pool & transactions can end up getting nested
+// and either fail or return successful but then get rolledback if the outer tx fails
+class SafeDB {
+  db: DataSource
+  lock: Mutex
+
+  constructor(db: DataSource) {
+    this.db = db
+    this.lock = new Mutex()
+  }
+
+  static async sqlite(location: string): Promise<SafeDB> {
     const db = new DataSource({
       type: 'sqlite',
       database: location,
@@ -23,73 +108,36 @@ export class Database {
       synchronize: true,
     })
     await db.initialize()
-    return new Database(db)
+    return new SafeDB(db)
   }
 
-  static async memory(): Promise<Database> {
-    return Database.sqlite(':memory:')
+  static async memory(): Promise<SafeDB> {
+    return SafeDB.sqlite(':memory:')
   }
 
   async close(): Promise<void> {
     await this.db.destroy()
   }
 
-  async opsForDid(did: string): Promise<t.Operation[]> {
-    const query = this.db.createQueryBuilder()
-    const res = await this.opsForDidComposer(query, did)
-    return res.map((row) => row.operation)
+  async transaction<T>(fn: (manager: EntityManager) => Promise<T>): Promise<T> {
+    const release = await this.lock.acquire()
+    let res: T
+    try {
+      res = await this.db.manager.transaction(async (tx) => {
+        return fn(this.db.manager)
+      })
+    } catch (err) {
+      release()
+      throw err
+    }
+    release()
+    return res
   }
 
-  async validateAndAddOp(did: string, proposed: t.Operation): Promise<void> {
-    await this.db.manager.transaction(async (tx) => {
-      const query = tx.createQueryBuilder()
-      const ops = await this.opsForDidComposer(query, did)
-      // throws if invalid
-      const { nullified } = await document.assureValidNextOp(did, ops, proposed)
-      const cid = await cidForData(proposed)
-      await tx
-        .createQueryBuilder()
-        .insert()
-        .into(OperationsTable)
-        .values({
-          did,
-          operation: JSON.stringify(proposed),
-          cid: cid.toString(),
-          nullified: false,
-          createdAt: new Date().toISOString(),
-        })
-        .execute()
-      if (nullified.length > 0) {
-        await tx
-          .createQueryBuilder()
-          .update(OperationsTable)
-          .set({ nullified: true })
-          .where('did = :did', { did })
-          .andWhere('cid = IN (:...cids)', {
-            cids: nullified.map((cid) => cid.toString()),
-          })
-      }
-    })
-  }
-
-  async opsForDidComposer(
-    query: SelectQueryBuilder<any>,
-    did: string,
-  ): Promise<t.IndexedOperation[]> {
-    const res = await query
-      .select('op')
-      .from(OperationsTable, 'op')
-      .where('op.did = :did', { did })
-      .andWhere('op.nullified = :nullified', { nullified: false })
-      .orderBy('op.createdAt', 'ASC')
-      .getMany()
-    return res.map((row) => ({
-      did: row.did,
-      operation: JSON.parse(row.operation),
-      cid: CID.parse(row.cid),
-      nullified: row.nullified,
-      createdAt: row.createdAt,
-    }))
+  async readOperation<T>(
+    fn: (manager: EntityManager) => Promise<T>,
+  ): Promise<T> {
+    return fn(this.db.manager)
   }
 }
 
