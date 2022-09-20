@@ -1,4 +1,5 @@
 import { API as AdxApi } from '@adxp/api'
+import * as Post from '@adxp/api/src/types/todo/social/post'
 import { AdxUri } from '@adxp/common'
 import * as util from './_util'
 import getPort from 'get-port'
@@ -59,29 +60,43 @@ describe('crud operations', () => {
   })
 
   it('lists records', async () => {
-    const res = await client.todo.adx.repoListRecords(url, {
+    const res1 = await client.todo.adx.repoListRecords(url, {
       nameOrDid: alice.did,
       type: 'todo.social.post',
     })
-    expect(res.data.records.length).toBe(1)
-    expect(res.data.records[0].uri).toBe(uri.toString())
-    /** @ts-ignore TODO!!! */
-    expect(res.data.records[0].value.text).toBe('Hello, world!')
+    expect(res1.data.records.length).toBe(1)
+    expect(res1.data.records[0].uri).toBe(uri.toString())
+    expect((res1.data.records[0].value as Post.Record).text).toBe(
+      'Hello, world!',
+    )
+
+    const res2 = await client.todo.social.post.list(url, {
+      nameOrDid: alice.did,
+    })
+    expect(res2.records.length).toBe(1)
+    expect(res2.records[0].uri).toBe(uri.toString())
+    expect(res2.records[0].value.text).toBe('Hello, world!')
   })
 
   it('gets records', async () => {
-    const res = await client.todo.adx.repoGetRecord(url, {
+    const res1 = await client.todo.adx.repoGetRecord(url, {
       nameOrDid: alice.did,
       type: 'todo.social.post',
       tid: uri.recordKey,
     })
-    expect(res.data.uri).toBe(uri.toString())
-    /** @ts-ignore TODO!!! */
-    expect(res.data.value.text).toBe('Hello, world!')
+    expect(res1.data.uri).toBe(uri.toString())
+    expect((res1.data.value as Post.Record).text).toBe('Hello, world!')
+
+    const res2 = await client.todo.social.post.get(url, {
+      nameOrDid: alice.did,
+      tid: uri.recordKey,
+    })
+    expect(res2.uri).toBe(uri.toString())
+    expect(res2.value.text).toBe('Hello, world!')
   })
 
   it('puts records', async () => {
-    const res = await client.todo.adx.repoPutRecord(
+    const res1 = await client.todo.adx.repoPutRecord(
       url,
       { did: alice.did, type: 'todo.social.post', tid: uri.recordKey },
       {
@@ -90,7 +105,7 @@ describe('crud operations', () => {
         createdAt: new Date().toISOString(),
       },
     )
-    expect(res.data.uri).toBe(uri.toString())
+    expect(res1.data.uri).toBe(uri.toString())
 
     const res2 = await client.todo.adx.repoGetRecord(url, {
       nameOrDid: alice.did,
@@ -98,8 +113,25 @@ describe('crud operations', () => {
       tid: uri.recordKey,
     })
     expect(res2.data.uri).toBe(uri.toString())
-    /** @ts-ignore TODO!!! */
-    expect(res2.data.value.text).toBe('Hello, universe!')
+    expect((res2.data.value as Post.Record).text).toBe('Hello, universe!')
+
+    const res3 = await client.todo.social.post.put(
+      url,
+      { did: alice.did, tid: uri.recordKey },
+      {
+        $type: 'todo.social.post',
+        text: 'Hello, universe!!!',
+        createdAt: new Date().toISOString(),
+      },
+    )
+    expect(res3.uri).toBe(uri.toString())
+
+    const res4 = await client.todo.social.post.get(url, {
+      nameOrDid: alice.did,
+      tid: uri.recordKey,
+    })
+    expect(res4.uri).toBe(uri.toString())
+    expect(res4.value.text).toBe('Hello, universe!!!')
   })
 
   it('deletes records', async () => {
@@ -108,35 +140,60 @@ describe('crud operations', () => {
       type: 'todo.social.post',
       tid: uri.recordKey,
     })
-    const res = await client.todo.adx.repoListRecords(url, {
+    const res1 = await client.todo.adx.repoListRecords(url, {
       nameOrDid: alice.did,
       type: 'todo.social.post',
     })
-    expect(res.data.records.length).toBe(0)
+    expect(res1.data.records.length).toBe(0)
+  })
+
+  it('CRUDs records with the semantic sugars', async () => {
+    const res1 = await client.todo.social.post.create(
+      url,
+      { did: alice.did },
+      {
+        $type: 'todo.social.post',
+        text: 'Hello, world!',
+        createdAt: new Date().toISOString(),
+      },
+    )
+    const uri = new AdxUri(res1.uri)
+
+    const res2 = await client.todo.social.post.list(url, {
+      nameOrDid: alice.did,
+    })
+    expect(res2.records.length).toBe(1)
+
+    await client.todo.social.post.delete(url, {
+      did: alice.did,
+      tid: uri.recordKey,
+    })
+
+    const res3 = await client.todo.social.post.list(url, {
+      nameOrDid: alice.did,
+    })
+    expect(res3.records.length).toBe(0)
   })
 
   it('lists records with pagination', async () => {
     const doCreate = async (text: string) => {
-      const res = await client.todo.adx.repoCreateRecord(
+      const res = await client.todo.social.post.create(
         url,
-        { did: alice.did, type: 'todo.social.post' },
+        { did: alice.did },
         {
           $type: 'todo.social.post',
           text,
           createdAt: new Date().toISOString(),
         },
       )
-      return new AdxUri(res.data.uri)
+      return new AdxUri(res.uri)
     }
     const doList = async (params: any) => {
-      const res = await client.todo.adx.repoListRecords(
-        url,
-        Object.assign(
-          { nameOrDid: alice.did, type: 'todo.social.post' },
-          params,
-        ),
-      )
-      return res.data
+      const res = await client.todo.social.post.list(url, {
+        nameOrDid: alice.did,
+        ...params,
+      })
+      return res
     }
     const uri1 = await doCreate('Post 1')
     const uri2 = await doCreate('Post 2')
@@ -145,34 +202,26 @@ describe('crud operations', () => {
     {
       const list = await doList({ limit: 2 })
       expect(list.records.length).toBe(2)
-      /** @ts-ignore TODO!!! */
       expect(list.records[0].value.text).toBe('Post 1')
-      /** @ts-ignore TODO!!! */
       expect(list.records[1].value.text).toBe('Post 2')
     }
     {
       const list = await doList({ limit: 2, reverse: true })
       expect(list.records.length).toBe(2)
-      /** @ts-ignore TODO!!! */
       expect(list.records[0].value.text).toBe('Post 4')
-      /** @ts-ignore TODO!!! */
       expect(list.records[1].value.text).toBe('Post 3')
     }
 
     {
       const list = await doList({ after: uri2.recordKey })
       expect(list.records.length).toBe(2)
-      /** @ts-ignore TODO!!! */
       expect(list.records[0].value.text).toBe('Post 3')
-      /** @ts-ignore TODO!!! */
       expect(list.records[1].value.text).toBe('Post 4')
     }
     {
       const list = await doList({ before: uri3.recordKey })
       expect(list.records.length).toBe(2)
-      /** @ts-ignore TODO!!! */
       expect(list.records[0].value.text).toBe('Post 1')
-      /** @ts-ignore TODO!!! */
       expect(list.records[1].value.text).toBe('Post 2')
     }
     {
@@ -181,30 +230,24 @@ describe('crud operations', () => {
         after: uri1.recordKey,
       })
       expect(list.records.length).toBe(2)
-      /** @ts-ignore TODO!!! */
       expect(list.records[0].value.text).toBe('Post 2')
-      /** @ts-ignore TODO!!! */
       expect(list.records[1].value.text).toBe('Post 3')
     }
 
-    await client.todo.adx.repoDeleteRecord(url, {
+    await client.todo.social.post.delete(url, {
       did: alice.did,
-      type: 'todo.social.post',
       tid: uri1.recordKey,
     })
-    await client.todo.adx.repoDeleteRecord(url, {
+    await client.todo.social.post.delete(url, {
       did: alice.did,
-      type: 'todo.social.post',
       tid: uri2.recordKey,
     })
-    await client.todo.adx.repoDeleteRecord(url, {
+    await client.todo.social.post.delete(url, {
       did: alice.did,
-      type: 'todo.social.post',
       tid: uri3.recordKey,
     })
-    await client.todo.adx.repoDeleteRecord(url, {
+    await client.todo.social.post.delete(url, {
       did: alice.did,
-      type: 'todo.social.post',
       tid: uri4.recordKey,
     })
   })
