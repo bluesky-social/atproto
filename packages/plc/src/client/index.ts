@@ -8,6 +8,11 @@ import * as t from '../lib/types'
 export class PlcClient {
   constructor(public url: string) {}
 
+  async getDocument(did: string): Promise<t.DidDocument> {
+    const res = await axios.get(`${this.url}/${did}`)
+    return res.data
+  }
+
   async getDocumentData(did: string): Promise<t.DocumentData> {
     const res = await axios.get(`${this.url}/data/${did}`)
     return res.data

@@ -1,5 +1,6 @@
 import { check, cidForData } from '@adxp/common'
-import { EcdsaKeypair } from '@adxp/crypto'
+import { EcdsaKeypair, parseDidKey } from '@adxp/crypto'
+import * as uint8arrays from 'uint8arrays'
 import * as document from '../src/lib/document'
 import * as operations from '../src/lib/operations'
 import * as t from '../src/lib/types'
@@ -11,7 +12,7 @@ describe('plc DID document', () => {
   let recoveryKey: EcdsaKeypair
   let did: string
   let username = 'alice.example.com'
-  let atpPds = 'example.com'
+  let atpPds = 'https://example.com'
 
   let oldSigningKey: EcdsaKeypair
   let oldRecoveryKey: EcdsaKeypair
@@ -63,7 +64,7 @@ describe('plc DID document', () => {
   })
 
   it('allows for updating atpPds', async () => {
-    atpPds = 'example2.com'
+    atpPds = 'https://example2.com'
     const prev = await cidForData(ops[ops.length - 1])
     const op = await operations.updateAtpPds(
       atpPds,
@@ -213,10 +214,46 @@ describe('plc DID document', () => {
     expect(document.validateOperationLog(did, rest)).rejects.toThrow()
   })
 
-  it('returns a valid DID document', async () => {
+  it('formats a valid DID document', async () => {
     const data = await document.validateOperationLog(did, ops)
-    const didDoc = await document.formatDidDoc(data)
-    console.log(data)
-    console.log(didDoc)
+    const doc = await document.formatDidDoc(data)
+    expect(doc['@context']).toEqual([
+      'https://www.w3.org/ns/did/v1',
+      'https://w3id.org/security/suites/ecdsa-2019/v1',
+    ])
+    expect(doc.id).toEqual(did)
+    expect(doc.alsoKnownAs).toEqual([`https://${username}`])
+
+    expect(doc.verificationMethod.length).toBe(2)
+    expect(doc.verificationMethod[0].id).toEqual(`${did}#signingKey`)
+    expect(doc.verificationMethod[0].type).toEqual(
+      'EcdsaSecp256r1VerificationKey2019',
+    )
+    expect(doc.verificationMethod[0].controller).toEqual(did)
+    const parsedSigningKey = parseDidKey(signingKey.did())
+    const signingKeyMultibase =
+      'z' + uint8arrays.toString(parsedSigningKey.keyBytes, 'base58btc')
+    expect(doc.verificationMethod[0].publicKeyMultibase).toEqual(
+      signingKeyMultibase,
+    )
+    expect(doc.verificationMethod[1].id).toEqual(`${did}#recoveryKey`)
+    expect(doc.verificationMethod[1].type).toEqual(
+      'EcdsaSecp256r1VerificationKey2019',
+    )
+    expect(doc.verificationMethod[1].controller).toEqual(did)
+    const parsedRecoveryKey = parseDidKey(recoveryKey.did())
+    const recoveryKeyMultibase =
+      'z' + uint8arrays.toString(parsedRecoveryKey.keyBytes, 'base58btc')
+    expect(doc.verificationMethod[1].publicKeyMultibase).toEqual(
+      recoveryKeyMultibase,
+    )
+
+    expect(doc.assertionMethod).toEqual([`${did}#signingKey`])
+    expect(doc.capabilityInvocation).toEqual([`${did}#signingKey`])
+    expect(doc.capabilityDelegation).toEqual([`${did}#signingKey`])
+    expect(doc.service.length).toBe(1)
+    expect(doc.service[0].id).toEqual(`${did}#atpPds`)
+    expect(doc.service[0].type).toEqual('AtpPersonalDataServer')
+    expect(doc.service[0].serviceEndpoint).toEqual(atpPds)
   })
 })

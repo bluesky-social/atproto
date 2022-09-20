@@ -147,7 +147,7 @@ export const assureValidSig = async (
   throw new Error(`Invalid signature on op: ${op}`)
 }
 
-export const formatDidDoc = async (data: t.DocumentData) => {
+export const formatDidDoc = (data: t.DocumentData): t.DidDocument => {
   const context = ['https://www.w3.org/ns/did/v1']
 
   const signingKeyInfo = formatKeyAndContext(data.signingKey)
@@ -162,7 +162,7 @@ export const formatDidDoc = async (data: t.DocumentData) => {
   return {
     '@context': context,
     id: data.did,
-    alsoKnownAs: `https://${data.username}`,
+    alsoKnownAs: [`https://${data.username}`],
     verificationMethod: [
       {
         id: `${data.did}#signingKey`,
@@ -184,7 +184,7 @@ export const formatDidDoc = async (data: t.DocumentData) => {
       {
         id: `${data.did}#atpPds`,
         type: 'AtpPersonalDataServer',
-        serviceEndpoint: `https://${data.atpPds}`,
+        serviceEndpoint: data.atpPds,
       },
     ],
   }
@@ -197,24 +197,9 @@ type KeyAndContext = {
 }
 
 const formatKeyAndContext = (key: string): KeyAndContext => {
-  const DID_KEY_PREFIX = 'did:key:z'
-  const plugins = [crypto.p256Plugin]
+  const { jwtAlg, keyBytes } = crypto.parseDidKey(key)
 
-  if (!key.startsWith(DID_KEY_PREFIX)) {
-    throw new Error(`Not a valid did:key: ${key}`)
-  }
-  const prefixedBytes = uint8arrays.fromString(
-    key.slice(DID_KEY_PREFIX.length),
-    'base58btc',
-  )
-  const plugin = plugins.find((p) => hasPrefix(prefixedBytes, p.prefix))
-  if (!plugin) {
-    throw new Error('Unsupported key type')
-  }
-
-  if (plugin.jwtAlg === 'ES256') {
-    const compressedKeyBytes = prefixedBytes.slice(plugin.prefix.length)
-    const keyBytes = crypto.decompressPubkey(compressedKeyBytes)
+  if (jwtAlg === 'ES256') {
     return {
       context: 'https://w3id.org/security/suites/ecdsa-2019/v1',
       type: 'EcdsaSecp256r1VerificationKey2019',
@@ -222,8 +207,4 @@ const formatKeyAndContext = (key: string): KeyAndContext => {
     }
   }
   throw new Error('Unsupported key type')
-}
-
-const hasPrefix = (bytes: Uint8Array, prefix: Uint8Array): boolean => {
-  return uint8arrays.equals(prefix, bytes.subarray(0, prefix.byteLength))
 }

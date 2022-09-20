@@ -5,7 +5,7 @@ import getPort from 'get-port'
 import * as util from './util'
 import { cidForData } from '@adxp/common'
 
-const USE_TEST_SERVER = false
+const USE_TEST_SERVER = true
 
 describe('PLC server', () => {
   let username = 'alice.example.com'
@@ -49,7 +49,7 @@ describe('PLC server', () => {
     )
   })
 
-  it('retrieves the did doc', async () => {
+  it('retrieves did doc data', async () => {
     const doc = await client.getDocumentData(did)
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
@@ -113,6 +113,12 @@ describe('PLC server', () => {
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
     expect(doc.username).toEqual(username)
     expect(doc.atpPds).toEqual(atpPds)
+  })
+
+  it('retrieves the did doc', async () => {
+    const data = await client.getDocumentData(did)
+    const doc = await client.getDocument(did)
+    expect(doc).toEqual(document.formatDidDoc(data))
   })
 
   it('handles concurrent requests', async () => {

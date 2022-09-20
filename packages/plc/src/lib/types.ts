@@ -108,6 +108,31 @@ export const indexedOperation = z.object({
 })
 export type IndexedOperation = z.infer<typeof indexedOperation>
 
+export const didDocVerificationMethod = z.object({
+  id: z.string(),
+  type: z.string(),
+  controller: z.string(),
+  publicKeyMultibase: z.string(),
+})
+
+export const didDocService = z.object({
+  id: z.string(),
+  type: z.string(),
+  serviceEndpoint: z.string(),
+})
+
+export const didDocument = z.object({
+  '@context': z.array(z.string()),
+  id: z.string(),
+  alsoKnownAs: z.array(z.string()),
+  verificationMethod: z.array(didDocVerificationMethod),
+  assertionMethod: z.array(z.string()),
+  capabilityInvocation: z.array(z.string()),
+  capabilityDelegation: z.array(z.string()),
+  service: z.array(didDocService),
+})
+export type DidDocument = z.infer<typeof didDocument>
+
 export const def = {
   documentData,
   unsignedCreateOp,
@@ -125,4 +150,5 @@ export const def = {
   unsignedUpdateOperation,
   unsignedOperation,
   indexedOperation,
+  didDocument,
 }
