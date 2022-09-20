@@ -53,7 +53,9 @@ const indexTs = (
     // generate type imports
     for (const schema of schemas) {
       file
-        .addImportDeclaration({ moduleSpecifier: `./types/${schema.id}` })
+        .addImportDeclaration({
+          moduleSpecifier: `./types/${schema.id.split('.').join('/')}`,
+        })
         .setNamespaceImport(toTitleCase(schema.id))
     }
 
@@ -166,7 +168,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
 }
 
 const schemaTs = (project, schema: MethodSchema) =>
-  gen(project, `/types/${schema.id}.ts`, async (file) => {
+  gen(project, `/types/${schema.id.split('.').join('/')}.ts`, async (file) => {
     //= import express from 'express'
     file.addImportDeclaration({
       moduleSpecifier: 'express',
