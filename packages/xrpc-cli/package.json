@@ -17,6 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "@adxp/nsid": "*",
+    "@adxp/schemas": "*",
     "@adxp/xrpc": "*",
     "ajv": "^8.11.0",
     "ajv-formats": "^2.1.1",

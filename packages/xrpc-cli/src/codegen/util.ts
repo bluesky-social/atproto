@@ -1,14 +1,14 @@
-import { MethodSchema } from '@adxp/xrpc'
+import { Schema } from '../types'
 
 export interface NsidNS {
   name: string
   className: string
   propName: string
   children: NsidNS[]
-  schemas: MethodSchema[]
+  schemas: Schema[]
 }
 
-export function schemasToNsidTree(schemas: MethodSchema[]): NsidNS[] {
+export function schemasToNsidTree(schemas: Schema[]): NsidNS[] {
   const tree: NsidNS[] = []
   for (const schema of schemas) {
     const node = getOrCreateNode(tree, schema.id.split('.').slice(0, -1))

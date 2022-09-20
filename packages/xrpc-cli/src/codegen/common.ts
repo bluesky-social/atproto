@@ -1,7 +1,7 @@
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
 import { MethodSchema } from '@adxp/xrpc'
 import prettier from 'prettier'
-import { GeneratedFile } from '../types'
+import { Schema, GeneratedFile } from '../types'
 
 const PRETTIER_OPTS = {
   parser: 'babel',
@@ -10,7 +10,7 @@ const PRETTIER_OPTS = {
   singleQuote: true,
 }
 
-export const schemasTs = (project, schemas: MethodSchema[]) =>
+export const schemasTs = (project, schemas: Schema[]) =>
   gen(project, '/schemas.ts', async (file) => {
     //= import {MethodSchema} from '@adxp/xrpc'
     file
@@ -20,15 +20,43 @@ export const schemasTs = (project, schemas: MethodSchema[]) =>
       .addNamedImport({
         name: 'MethodSchema',
       })
-    //= export const schemas: MethodSchema[] = [...]
+    //= import {AdxSchemaDefinition} from '@adxp/schemas'
+    file
+      .addImportDeclaration({
+        moduleSpecifier: '@adxp/schemas',
+      })
+      .addNamedImport({
+        name: 'AdxSchemaDefinition',
+      })
+    //= export const methodSchemas: MethodSchema[] = [...]
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
-          name: 'schemas',
+          name: 'methodSchemas',
           type: 'MethodSchema[]',
-          initializer: JSON.stringify(schemas, null, 2),
+          initializer: JSON.stringify(
+            schemas.filter((s) => 'xrpc' in s),
+            null,
+            2,
+          ),
+        },
+      ],
+    })
+    //= export const recordSchemas: AdxSchemaDefinition[] = [...]
+    file.addVariableStatement({
+      isExported: true,
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: 'recordSchemas',
+          type: 'AdxSchemaDefinition[]',
+          initializer: JSON.stringify(
+            schemas.filter((s) => 'adx' in s),
+            null,
+            2,
+          ),
         },
       ],
     })

@@ -1,14 +1,13 @@
 import { IndentationText, Project, SourceFile } from 'ts-morph'
 import { MethodSchema } from '@adxp/xrpc'
+import { AdxSchemaDefinition } from '@adxp/schemas'
 import { NSID } from '@adxp/nsid'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
 import { gen, schemasTs } from './common'
-import { GeneratedAPI } from '../types'
+import { Schema, GeneratedAPI } from '../types'
 import { schemasToNsidTree, NsidNS, toCamelCase, toTitleCase } from './util'
 
-export async function genServerApi(
-  schemas: MethodSchema[],
-): Promise<GeneratedAPI> {
+export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
   const project = new Project({
     useInMemoryFileSystem: true,
     manipulationSettings: { indentationText: IndentationText.TwoSpaces },
@@ -16,18 +15,18 @@ export async function genServerApi(
   const api: GeneratedAPI = { files: [] }
   const nsidTree = schemasToNsidTree(schemas)
   for (const schema of schemas) {
-    api.files.push(await schemaTs(project, schema))
+    if ('xrpc' in schema) {
+      api.files.push(await methodSchemaTs(project, schema))
+    } else if ('adx' in schema) {
+      api.files.push(await recordSchemaTs(project, schema))
+    }
   }
   api.files.push(await schemasTs(project, schemas))
   api.files.push(await indexTs(project, schemas, nsidTree))
   return api
 }
 
-const indexTs = (
-  project: Project,
-  schemas: MethodSchema[],
-  nsidTree: NsidNS[],
-) =>
+const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
   gen(project, '/index.ts', async (file) => {
     //= import {createServer as createXrpcServer, Server as XrpcServer} from '@adxp/xrpc-server'
     const xrpcImport = file.addImportDeclaration({
@@ -41,17 +40,20 @@ const indexTs = (
       name: 'Server',
       alias: 'XrpcServer',
     })
-    //= import {schemas} from './schemas'
+    //= import {methodSchemas} from './schemas'
     file
       .addImportDeclaration({
         moduleSpecifier: './schemas',
       })
       .addNamedImport({
-        name: 'schemas',
+        name: 'methodSchemas',
       })
 
     // generate type imports
     for (const schema of schemas) {
+      if (!('xrpc' in schema)) {
+        continue
+      }
       file
         .addImportDeclaration({
           moduleSpecifier: `./types/${schema.id.split('.').join('/')}`,
@@ -72,11 +74,11 @@ const indexTs = (
       name: 'Server',
       isExported: true,
     })
-    //= xrpc: XrpcServer = createXrpcServer(schemas)
+    //= xrpc: XrpcServer = createXrpcServer(methodSchemas)
     serverCls.addProperty({
       name: 'xrpc',
       type: 'XrpcServer',
-      initializer: 'createXrpcServer(schemas)',
+      initializer: 'createXrpcServer(methodSchemas)',
     })
 
     // generate classes for the schemas
@@ -149,6 +151,9 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
 
   // methods
   for (const schema of ns.schemas) {
+    if (!('xrpc' in schema)) {
+      continue
+    }
     const moduleName = toTitleCase(schema.id)
     const name = toCamelCase(NSID.parse(schema.id).name || '')
     const method = cls.addMethod({
@@ -167,7 +172,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
   }
 }
 
-const schemaTs = (project, schema: MethodSchema) =>
+const methodSchemaTs = (project, schema: MethodSchema) =>
   gen(project, `/types/${schema.id.split('.').join('/')}.ts`, async (file) => {
     //= import express from 'express'
     file.addImportDeclaration({
@@ -300,25 +305,15 @@ const schemaTs = (project, schema: MethodSchema) =>
     })
   })
 
-/*
-
-export type Params = Record<string, string | number | boolean>
-
-export const handlerInput = zod.object({
-  encoding: zod.string(),
-  body: zod.any(),
-})
-export type HandlerInput = zod.infer<typeof handlerInput>
-
-export const handlerOutput = zod.object({
-  encoding: zod.string(),
-  body: zod.any(),
-})
-export type HandlerOutput = zod.infer<typeof handlerOutput>
-
-export type XRPCHandler = (
-  params: Params,
-  input: HandlerInput | undefined,
-  req: express.Request,
-  res: express.Response,
-) => Promise<HandlerOutput> | HandlerOutput | undefined*/
+const recordSchemaTs = (project, schema: AdxSchemaDefinition) =>
+  gen(project, `/types/${schema.id.split('.').join('/')}.ts`, async (file) => {
+    //= export interface Record {...}
+    file.insertText(
+      file.getFullText().length,
+      '\n' +
+        (await jsonSchemaToTs.compile(schema.record || {}, 'Record', {
+          bannerComment: '',
+          additionalProperties: true,
+        })),
+    )
+  })

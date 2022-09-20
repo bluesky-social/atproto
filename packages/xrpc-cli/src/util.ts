@@ -1,5 +1,7 @@
 import fs from 'fs'
 import { methodSchema, MethodSchema } from '@adxp/xrpc'
+import { adxSchemaDefinition, AdxSchemaDefinition } from '@adxp/schemas'
+import { Schema } from './types'
 
 export function schemaTemplate(nsid: string, options?: Record<string, string>) {
   return {
@@ -19,7 +21,7 @@ export function schemaTemplate(nsid: string, options?: Record<string, string>) {
   }
 }
 
-export function readAllSchemas(paths: string[]): MethodSchema[] {
+export function readAllSchemas(paths: string[]): Schema[] {
   const schemas: any[] = []
   for (const path of paths) {
     if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
@@ -34,7 +36,7 @@ export function readAllSchemas(paths: string[]): MethodSchema[] {
   return schemas
 }
 
-export function readSchema(path: string): MethodSchema {
+export function readSchema(path: string): Schema {
   let str: string
   let obj: any
   try {
@@ -49,27 +51,39 @@ export function readSchema(path: string): MethodSchema {
     console.error(`Failed to parse JSON in file`, path)
     throw e
   }
-  if (obj.xrpc !== 1) {
-    console.error(`Not an xrpc schema`, path)
-    throw new Error(`Not an xrpc schema`)
-  }
-  try {
-    return methodSchema.parse(obj)
-  } catch (e) {
-    console.error(`Invalid XRPC schema in file`, path)
-    throw e
+  if (obj.xrpc === 1) {
+    try {
+      return methodSchema.parse(obj)
+    } catch (e) {
+      console.error(`Invalid XRPC schema in file`, path)
+      throw e
+    }
+  } else if (obj.adx === 1) {
+    try {
+      return adxSchemaDefinition.parse(obj)
+    } catch (e) {
+      console.error(`Invalid ADX schema in file`, path)
+      throw e
+    }
+  } else {
+    console.error(`Not an xrpc or adx schema`, path)
+    throw new Error(`Not an xrpc or adx schema`)
   }
 }
 
-export function genMd(schemas: MethodSchema[]) {
+export function genMd(schemas: Schema[]) {
   let doc: StringTree = []
   for (const schema of schemas) {
-    doc = doc.concat(genSchemaMd(schema))
+    if (methodSchema.parse(schema)) {
+      doc = doc.concat(genMethodSchemaMd(schema as MethodSchema))
+    } else if (adxSchemaDefinition.parse(schema)) {
+      // TODO
+    }
   }
   return merge(doc)
 }
 
-export function genSchemaMd(schema: MethodSchema): StringTree {
+export function genMethodSchemaMd(schema: MethodSchema): StringTree {
   const desc: StringTree = []
   const params: StringTree = []
   const input: StringTree = []
@@ -152,7 +166,7 @@ export function genSchemaMd(schema: MethodSchema): StringTree {
   return doc
 }
 
-export function genTsObj(schemas: MethodSchema[]): string {
+export function genTsObj(schemas: Schema[]): string {
   return `export const schemas = ${JSON.stringify(schemas, null, 2)}`
 }
 
