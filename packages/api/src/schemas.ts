@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Mon Sep 19 2022
+* Created Tue Sep 20 2022
 */
 import { MethodSchema } from '@adxp/xrpc'
 import { AdxSchemaDefinition } from '@adxp/schemas'

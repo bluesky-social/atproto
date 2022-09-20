@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Mon Sep 19 2022
+* Created Tue Sep 20 2022
 */
 import { Client as XrpcClient } from '@adxp/xrpc'
 import { methodSchemas, recordSchemas } from './schemas'
@@ -68,191 +68,255 @@ export class AdxNS {
 
   createAccount(
     serviceUri: string,
-    params?: TodoAdxCreateAccount.QueryParams,
+    params: TodoAdxCreateAccount.QueryParams,
+    data?: TodoAdxCreateAccount.InputSchema,
     opts?: TodoAdxCreateAccount.CallOptions
   ): Promise<TodoAdxCreateAccount.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.createAccount',
       params,
+      data,
       opts
     )
   }
 
   createSession(
     serviceUri: string,
-    params?: TodoAdxCreateSession.QueryParams,
+    params: TodoAdxCreateSession.QueryParams,
+    data?: TodoAdxCreateSession.InputSchema,
     opts?: TodoAdxCreateSession.CallOptions
   ): Promise<TodoAdxCreateSession.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.createSession',
       params,
+      data,
       opts
     )
   }
 
   deleteAccount(
     serviceUri: string,
-    params?: TodoAdxDeleteAccount.QueryParams,
+    params: TodoAdxDeleteAccount.QueryParams,
+    data?: TodoAdxDeleteAccount.InputSchema,
     opts?: TodoAdxDeleteAccount.CallOptions
   ): Promise<TodoAdxDeleteAccount.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.deleteAccount',
       params,
+      data,
       opts
     )
   }
 
   deleteSession(
     serviceUri: string,
-    params?: TodoAdxDeleteSession.QueryParams,
+    params: TodoAdxDeleteSession.QueryParams,
+    data?: TodoAdxDeleteSession.InputSchema,
     opts?: TodoAdxDeleteSession.CallOptions
   ): Promise<TodoAdxDeleteSession.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.deleteSession',
       params,
+      data,
       opts
     )
   }
 
   getAccount(
     serviceUri: string,
-    params?: TodoAdxGetAccount.QueryParams,
+    params: TodoAdxGetAccount.QueryParams,
+    data?: TodoAdxGetAccount.InputSchema,
     opts?: TodoAdxGetAccount.CallOptions
   ): Promise<TodoAdxGetAccount.Response> {
-    return this.api.xrpc.call(serviceUri, 'todo.adx.getAccount', params, opts)
+    return this.api.xrpc.call(
+      serviceUri,
+      'todo.adx.getAccount',
+      params,
+      data,
+      opts
+    )
   }
 
   getSession(
     serviceUri: string,
-    params?: TodoAdxGetSession.QueryParams,
+    params: TodoAdxGetSession.QueryParams,
+    data?: TodoAdxGetSession.InputSchema,
     opts?: TodoAdxGetSession.CallOptions
   ): Promise<TodoAdxGetSession.Response> {
-    return this.api.xrpc.call(serviceUri, 'todo.adx.getSession', params, opts)
+    return this.api.xrpc.call(
+      serviceUri,
+      'todo.adx.getSession',
+      params,
+      data,
+      opts
+    )
   }
 
   repoBatchWrite(
     serviceUri: string,
-    params?: TodoAdxRepoBatchWrite.QueryParams,
+    params: TodoAdxRepoBatchWrite.QueryParams,
+    data?: TodoAdxRepoBatchWrite.InputSchema,
     opts?: TodoAdxRepoBatchWrite.CallOptions
   ): Promise<TodoAdxRepoBatchWrite.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.repoBatchWrite',
       params,
+      data,
       opts
     )
   }
 
   repoCreateRecord(
     serviceUri: string,
-    params?: TodoAdxRepoCreateRecord.QueryParams,
+    params: TodoAdxRepoCreateRecord.QueryParams,
+    data?: TodoAdxRepoCreateRecord.InputSchema,
     opts?: TodoAdxRepoCreateRecord.CallOptions
   ): Promise<TodoAdxRepoCreateRecord.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.repoCreateRecord',
       params,
+      data,
       opts
     )
   }
 
   repoDeleteRecord(
     serviceUri: string,
-    params?: TodoAdxRepoDeleteRecord.QueryParams,
+    params: TodoAdxRepoDeleteRecord.QueryParams,
+    data?: TodoAdxRepoDeleteRecord.InputSchema,
     opts?: TodoAdxRepoDeleteRecord.CallOptions
   ): Promise<TodoAdxRepoDeleteRecord.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.repoDeleteRecord',
       params,
+      data,
       opts
     )
   }
 
   repoDescribe(
     serviceUri: string,
-    params?: TodoAdxRepoDescribe.QueryParams,
+    params: TodoAdxRepoDescribe.QueryParams,
+    data?: TodoAdxRepoDescribe.InputSchema,
     opts?: TodoAdxRepoDescribe.CallOptions
   ): Promise<TodoAdxRepoDescribe.Response> {
-    return this.api.xrpc.call(serviceUri, 'todo.adx.repoDescribe', params, opts)
+    return this.api.xrpc.call(
+      serviceUri,
+      'todo.adx.repoDescribe',
+      params,
+      data,
+      opts
+    )
   }
 
   repoGetRecord(
     serviceUri: string,
-    params?: TodoAdxRepoGetRecord.QueryParams,
+    params: TodoAdxRepoGetRecord.QueryParams,
+    data?: TodoAdxRepoGetRecord.InputSchema,
     opts?: TodoAdxRepoGetRecord.CallOptions
   ): Promise<TodoAdxRepoGetRecord.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.repoGetRecord',
       params,
+      data,
       opts
     )
   }
 
   repoListRecords(
     serviceUri: string,
-    params?: TodoAdxRepoListRecords.QueryParams,
+    params: TodoAdxRepoListRecords.QueryParams,
+    data?: TodoAdxRepoListRecords.InputSchema,
     opts?: TodoAdxRepoListRecords.CallOptions
   ): Promise<TodoAdxRepoListRecords.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.repoListRecords',
       params,
+      data,
       opts
     )
   }
 
   repoPutRecord(
     serviceUri: string,
-    params?: TodoAdxRepoPutRecord.QueryParams,
+    params: TodoAdxRepoPutRecord.QueryParams,
+    data?: TodoAdxRepoPutRecord.InputSchema,
     opts?: TodoAdxRepoPutRecord.CallOptions
   ): Promise<TodoAdxRepoPutRecord.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.repoPutRecord',
       params,
+      data,
       opts
     )
   }
 
   resolveName(
     serviceUri: string,
-    params?: TodoAdxResolveName.QueryParams,
+    params: TodoAdxResolveName.QueryParams,
+    data?: TodoAdxResolveName.InputSchema,
     opts?: TodoAdxResolveName.CallOptions
   ): Promise<TodoAdxResolveName.Response> {
-    return this.api.xrpc.call(serviceUri, 'todo.adx.resolveName', params, opts)
+    return this.api.xrpc.call(
+      serviceUri,
+      'todo.adx.resolveName',
+      params,
+      data,
+      opts
+    )
   }
 
   syncGetRepo(
     serviceUri: string,
-    params?: TodoAdxSyncGetRepo.QueryParams,
+    params: TodoAdxSyncGetRepo.QueryParams,
+    data?: TodoAdxSyncGetRepo.InputSchema,
     opts?: TodoAdxSyncGetRepo.CallOptions
   ): Promise<TodoAdxSyncGetRepo.Response> {
-    return this.api.xrpc.call(serviceUri, 'todo.adx.syncGetRepo', params, opts)
+    return this.api.xrpc.call(
+      serviceUri,
+      'todo.adx.syncGetRepo',
+      params,
+      data,
+      opts
+    )
   }
 
   syncGetRoot(
     serviceUri: string,
-    params?: TodoAdxSyncGetRoot.QueryParams,
+    params: TodoAdxSyncGetRoot.QueryParams,
+    data?: TodoAdxSyncGetRoot.InputSchema,
     opts?: TodoAdxSyncGetRoot.CallOptions
   ): Promise<TodoAdxSyncGetRoot.Response> {
-    return this.api.xrpc.call(serviceUri, 'todo.adx.syncGetRoot', params, opts)
+    return this.api.xrpc.call(
+      serviceUri,
+      'todo.adx.syncGetRoot',
+      params,
+      data,
+      opts
+    )
   }
 
   syncUpdateRepo(
     serviceUri: string,
-    params?: TodoAdxSyncUpdateRepo.QueryParams,
+    params: TodoAdxSyncUpdateRepo.QueryParams,
+    data?: TodoAdxSyncUpdateRepo.InputSchema,
     opts?: TodoAdxSyncUpdateRepo.CallOptions
   ): Promise<TodoAdxSyncUpdateRepo.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.adx.syncUpdateRepo',
       params,
+      data,
       opts
     )
   }
@@ -281,104 +345,120 @@ export class SocialNS {
 
   getFeedView(
     serviceUri: string,
-    params?: TodoSocialGetFeedView.QueryParams,
+    params: TodoSocialGetFeedView.QueryParams,
+    data?: TodoSocialGetFeedView.InputSchema,
     opts?: TodoSocialGetFeedView.CallOptions
   ): Promise<TodoSocialGetFeedView.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.social.getFeedView',
       params,
+      data,
       opts
     )
   }
 
   getLikedByView(
     serviceUri: string,
-    params?: TodoSocialGetLikedByView.QueryParams,
+    params: TodoSocialGetLikedByView.QueryParams,
+    data?: TodoSocialGetLikedByView.InputSchema,
     opts?: TodoSocialGetLikedByView.CallOptions
   ): Promise<TodoSocialGetLikedByView.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.social.getLikedByView',
       params,
+      data,
       opts
     )
   }
 
   getNotificationsView(
     serviceUri: string,
-    params?: TodoSocialGetNotificationsView.QueryParams,
+    params: TodoSocialGetNotificationsView.QueryParams,
+    data?: TodoSocialGetNotificationsView.InputSchema,
     opts?: TodoSocialGetNotificationsView.CallOptions
   ): Promise<TodoSocialGetNotificationsView.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.social.getNotificationsView',
       params,
+      data,
       opts
     )
   }
 
   getPostThreadView(
     serviceUri: string,
-    params?: TodoSocialGetPostThreadView.QueryParams,
+    params: TodoSocialGetPostThreadView.QueryParams,
+    data?: TodoSocialGetPostThreadView.InputSchema,
     opts?: TodoSocialGetPostThreadView.CallOptions
   ): Promise<TodoSocialGetPostThreadView.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.social.getPostThreadView',
       params,
+      data,
       opts
     )
   }
 
   getProfileView(
     serviceUri: string,
-    params?: TodoSocialGetProfileView.QueryParams,
+    params: TodoSocialGetProfileView.QueryParams,
+    data?: TodoSocialGetProfileView.InputSchema,
     opts?: TodoSocialGetProfileView.CallOptions
   ): Promise<TodoSocialGetProfileView.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.social.getProfileView',
       params,
+      data,
       opts
     )
   }
 
   getRepostedByView(
     serviceUri: string,
-    params?: TodoSocialGetRepostedByView.QueryParams,
+    params: TodoSocialGetRepostedByView.QueryParams,
+    data?: TodoSocialGetRepostedByView.InputSchema,
     opts?: TodoSocialGetRepostedByView.CallOptions
   ): Promise<TodoSocialGetRepostedByView.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.social.getRepostedByView',
       params,
+      data,
       opts
     )
   }
 
   getUserFollowersView(
     serviceUri: string,
-    params?: TodoSocialGetUserFollowersView.QueryParams,
+    params: TodoSocialGetUserFollowersView.QueryParams,
+    data?: TodoSocialGetUserFollowersView.InputSchema,
     opts?: TodoSocialGetUserFollowersView.CallOptions
   ): Promise<TodoSocialGetUserFollowersView.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.social.getUserFollowersView',
       params,
+      data,
       opts
     )
   }
 
   getUserFollowsView(
     serviceUri: string,
-    params?: TodoSocialGetUserFollowsView.QueryParams,
+    params: TodoSocialGetUserFollowsView.QueryParams,
+    data?: TodoSocialGetUserFollowsView.InputSchema,
     opts?: TodoSocialGetUserFollowsView.CallOptions
   ): Promise<TodoSocialGetUserFollowsView.Response> {
     return this.api.xrpc.call(
       serviceUri,
       'todo.social.getUserFollowsView',
       params,
+      data,
       opts
     )
   }
@@ -428,7 +508,8 @@ export class BadgeRecord {
       serviceUri,
       'todo.adx.repoCreateRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -444,7 +525,8 @@ export class BadgeRecord {
       serviceUri,
       'todo.adx.repoPutRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -502,7 +584,8 @@ export class FollowRecord {
       serviceUri,
       'todo.adx.repoCreateRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -518,7 +601,8 @@ export class FollowRecord {
       serviceUri,
       'todo.adx.repoPutRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -576,7 +660,8 @@ export class LikeRecord {
       serviceUri,
       'todo.adx.repoCreateRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -592,7 +677,8 @@ export class LikeRecord {
       serviceUri,
       'todo.adx.repoPutRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -652,7 +738,8 @@ export class MediaEmbedRecord {
       serviceUri,
       'todo.adx.repoCreateRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -668,7 +755,8 @@ export class MediaEmbedRecord {
       serviceUri,
       'todo.adx.repoPutRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -726,7 +814,8 @@ export class PostRecord {
       serviceUri,
       'todo.adx.repoCreateRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -742,7 +831,8 @@ export class PostRecord {
       serviceUri,
       'todo.adx.repoPutRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -800,7 +890,8 @@ export class ProfileRecord {
       serviceUri,
       'todo.adx.repoCreateRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -816,7 +907,8 @@ export class ProfileRecord {
       serviceUri,
       'todo.adx.repoPutRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -874,7 +966,8 @@ export class RepostRecord {
       serviceUri,
       'todo.adx.repoCreateRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }
@@ -890,7 +983,8 @@ export class RepostRecord {
       serviceUri,
       'todo.adx.repoPutRecord',
       params,
-      { encoding: 'application/json', data: record }
+      record,
+      { encoding: 'application/json' }
     )
     return res.data
   }

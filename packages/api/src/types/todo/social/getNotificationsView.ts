@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Mon Sep 19 2022
+* Created Tue Sep 20 2022
 */
 import { Headers } from '@adxp/xrpc'
 
@@ -12,6 +12,8 @@ export interface QueryParams {
 export interface CallOptions {
   headers?: Headers;
 }
+
+export type InputSchema = undefined
 
 export interface OutputSchema {
   notifications: Notification[];

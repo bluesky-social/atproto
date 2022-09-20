@@ -24,16 +24,8 @@ describe('crud operations', () => {
   })
 
   it('registers users', async () => {
-    await client.todo.adx.createAccount(
-      url,
-      {},
-      { encoding: 'application/json', data: alice },
-    )
-    await client.todo.adx.createAccount(
-      url,
-      {},
-      { encoding: 'application/json', data: bob },
-    )
+    await client.todo.adx.createAccount(url, {}, alice)
+    await client.todo.adx.createAccount(url, {}, bob)
   })
 
   it('describes repo', async () => {
@@ -55,12 +47,9 @@ describe('crud operations', () => {
       url,
       { did: alice.did, type: 'todo.social.post' },
       {
-        encoding: 'application/json',
-        data: {
-          $type: 'todo.social.post',
-          text: 'Hello, world!',
-          createdAt: new Date().toISOString(),
-        },
+        $type: 'todo.social.post',
+        text: 'Hello, world!',
+        createdAt: new Date().toISOString(),
       },
     )
     uri = new AdxUri(res.data.uri)
@@ -96,12 +85,9 @@ describe('crud operations', () => {
       url,
       { did: alice.did, type: 'todo.social.post', tid: uri.recordKey },
       {
-        encoding: 'application/json',
-        data: {
-          $type: 'todo.social.post',
-          text: 'Hello, universe!',
-          createdAt: new Date().toISOString(),
-        },
+        $type: 'todo.social.post',
+        text: 'Hello, universe!',
+        createdAt: new Date().toISOString(),
       },
     )
     expect(res.data.uri).toBe(uri.toString())
@@ -135,12 +121,9 @@ describe('crud operations', () => {
         url,
         { did: alice.did, type: 'todo.social.post' },
         {
-          encoding: 'application/json',
-          data: {
-            $type: 'todo.social.post',
-            text,
-            createdAt: new Date().toISOString(),
-          },
+          $type: 'todo.social.post',
+          text,
+          createdAt: new Date().toISOString(),
         },
       )
       return new AdxUri(res.data.uri)
@@ -233,10 +216,7 @@ describe('crud operations', () => {
     const prom1 = client.todo.adx.repoCreateRecord(
       url,
       { did: alice.did, type: 'todo.social.post' },
-      {
-        encoding: 'application/json',
-        data: {},
-      },
+      {},
     )
     await expect(prom1).rejects.toThrow(
       'The passed value does not declare a $type',
@@ -244,10 +224,7 @@ describe('crud operations', () => {
     const prom2 = client.todo.adx.repoPutRecord(
       url,
       { did: alice.did, type: 'todo.social.post', tid: 'foo' },
-      {
-        encoding: 'application/json',
-        data: {},
-      },
+      {},
     )
     await expect(prom2).rejects.toThrow(
       'The passed value does not declare a $type',
@@ -263,19 +240,13 @@ describe('crud operations', () => {
     const prom2 = client.todo.adx.repoCreateRecord(
       url,
       { did: alice.did, type: 'com.example.foobar' },
-      {
-        encoding: 'application/json',
-        data: { $type: 'com.example.foobar' },
-      },
+      { $type: 'com.example.foobar' },
     )
     await expect(prom2).rejects.toThrow('Schema not found')
     const prom3 = client.todo.adx.repoPutRecord(
       url,
       { did: alice.did, type: 'com.example.foobar', tid: 'foo' },
-      {
-        encoding: 'application/json',
-        data: { $type: 'com.example.foobar' },
-      },
+      { $type: 'com.example.foobar' },
     )
     await expect(prom3).rejects.toThrow('Schema not found')
   })
@@ -285,20 +256,14 @@ describe('crud operations', () => {
       client.todo.adx.repoCreateRecord(
         url,
         { did: alice.did, type: 'todo.social.post' },
-        {
-          encoding: 'application/json',
-          data: { $type: 'todo.social.like' },
-        },
+        { $type: 'todo.social.like' },
       ),
     ).rejects.toThrow('Record type todo.social.like is not supported')
     await expect(
       client.todo.adx.repoPutRecord(
         url,
         { did: alice.did, type: 'todo.social.post', tid: 'foo' },
-        {
-          encoding: 'application/json',
-          data: { $type: 'todo.social.like' },
-        },
+        { $type: 'todo.social.like' },
       ),
     ).rejects.toThrow('Record type todo.social.like is not supported')
   })
@@ -308,10 +273,7 @@ describe('crud operations', () => {
       client.todo.adx.repoCreateRecord(
         url,
         { did: alice.did, type: 'todo.social.post' },
-        {
-          encoding: 'application/json',
-          data: { $type: 'todo.social.post' },
-        },
+        { $type: 'todo.social.post' },
       ),
     ).rejects.toThrow(
       "Failed todo.social.post validation for #/required: must have required property 'text'",
@@ -320,10 +282,7 @@ describe('crud operations', () => {
       client.todo.adx.repoPutRecord(
         url,
         { did: alice.did, type: 'todo.social.post', tid: 'foo' },
-        {
-          encoding: 'application/json',
-          data: { $type: 'todo.social.post' },
-        },
+        { $type: 'todo.social.post' },
       ),
     ).rejects.toThrow(
       "Failed todo.social.post validation for #/required: must have required property 'text'",
