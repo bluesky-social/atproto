@@ -1,6 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import * as microblog from '@adxp/microblog'
-import { Repost } from '@adxp/microblog'
+import * as Repost from '../../xrpc/types/todo/social/repost'
 import {
   DataSource,
   Entity,
@@ -17,9 +16,8 @@ import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 import { PostIndex } from './post'
 
-const schemaId = 'blueskyweb.xyz:Repost'
-const collection = 'bsky/reposts'
-const tableName = collectionToTableName(collection)
+const type = 'todo.social.repost'
+const tableName = collectionToTableName(type)
 
 @Entity({ name: tableName })
 export class RepostIndex {
@@ -48,16 +46,17 @@ const getFn =
     return found === null ? null : translateDbObj(found)
   }
 
-const validator = schemas.createRecordValidator(schemaId)
+const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Repost.Record => {
   return validator.isValid(obj)
 }
+const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const setFn =
   (repo: Repository<RepostIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${schemaId}`)
+      throw new Error(`Record does not match schema: ${type}`)
     }
     const repost = new RepostIndex()
     repost.uri = uri.toString()
@@ -86,10 +85,10 @@ export const makePlugin = (
 ): DbRecordPlugin<Repost.Record, RepostIndex> => {
   const repository = db.getRepository(RepostIndex)
   return {
-    collection,
+    collection: type,
     tableName,
     get: getFn(repository),
-    isValidSchema,
+    validateSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,

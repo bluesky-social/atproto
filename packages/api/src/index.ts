@@ -1,404 +1,817 @@
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import { AdxUri, resolveName } from '@adxp/common'
-import * as auth from '@adxp/auth'
-import { AdxSchemas, AdxRecordValidator, AdxViewValidator } from '@adxp/schemas'
-import * as t from './types'
-import * as err from './errors'
-import * as ht from './http-types'
-
-export type QP = Record<string, any> | URLSearchParams
-
-export enum PdsEndpoint {
-  GetDid,
-  Account,
-  Session,
-  Repo,
-  RepoCollection,
-  RepoRecord,
-  View,
-}
-
-export class AdxClient {
-  private _mainPds: AdxPdsClient | undefined
-
-  /**
-   * The default PDS to transact with. Configured with configure().
-   */
-  get mainPds(): AdxPdsClient {
-    if (!this._mainPds) {
-      throw new Error(`No PDS configured`)
-    }
-    return this._mainPds
-  }
-
-  /**
-   * Schemas used for validating records and views.
-   */
-  schemas = new AdxSchemas()
-
-  constructor(opts: t.AdxClientOpts) {
-    this.configure(opts)
-  }
-
-  /**
-   * Configure the client.
-   */
-  configure(opts: t.AdxClientOpts) {
-    if (opts.pds) {
-      this._mainPds = this.pds(opts.pds)
-    }
-    if (opts.schemas) {
-      this.schemas.schemas = new Map() // reset
-      for (const schema of opts.schemas) {
-        this.schemas.add(schema)
-      }
-    }
-    if (opts.locale) {
-      this.schemas.locale = opts.locale
-    }
-  }
-
-  /**
-   * Instantiates an AdxPdsClient object.
-   */
-  pds(url: string) {
-    return new AdxPdsClient(this, url)
-  }
-
-  /**
-   * Instantiates an AdxRepoClient object.
-   */
-  repo(did: string, authStore?: auth.AuthStore): AdxRepoClient {
-    return this.mainPds.repo(did, authStore)
-  }
-
-  /**
-   * Instantiates a validator for one or more schemas.
-   */
-  schema(schema: t.SchemaOpt): AdxRecordValidator {
-    return getRecordValidator(schema, this)
-  }
-}
-
 /**
- * ADX API.
- */
-export const adx = new AdxClient({})
+* GENERATED CODE - DO NOT MODIFY
+* Created Tue Sep 20 2022
+*/
+import {
+  Client as XrpcClient,
+  ServiceClient as XrpcServiceClient,
+} from '@adxp/xrpc'
+import { methodSchemas, recordSchemas } from './schemas'
+import * as TodoAdxCreateAccount from './types/todo/adx/createAccount'
+import * as TodoAdxCreateSession from './types/todo/adx/createSession'
+import * as TodoAdxDeleteAccount from './types/todo/adx/deleteAccount'
+import * as TodoAdxDeleteSession from './types/todo/adx/deleteSession'
+import * as TodoAdxGetAccount from './types/todo/adx/getAccount'
+import * as TodoAdxGetSession from './types/todo/adx/getSession'
+import * as TodoAdxRepoBatchWrite from './types/todo/adx/repoBatchWrite'
+import * as TodoAdxRepoCreateRecord from './types/todo/adx/repoCreateRecord'
+import * as TodoAdxRepoDeleteRecord from './types/todo/adx/repoDeleteRecord'
+import * as TodoAdxRepoDescribe from './types/todo/adx/repoDescribe'
+import * as TodoAdxRepoGetRecord from './types/todo/adx/repoGetRecord'
+import * as TodoAdxRepoListRecords from './types/todo/adx/repoListRecords'
+import * as TodoAdxRepoPutRecord from './types/todo/adx/repoPutRecord'
+import * as TodoAdxResolveName from './types/todo/adx/resolveName'
+import * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
+import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
+import * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
+import * as TodoSocialBadge from './types/todo/social/badge'
+import * as TodoSocialFollow from './types/todo/social/follow'
+import * as TodoSocialGetFeed from './types/todo/social/getFeed'
+import * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
+import * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
+import * as TodoSocialGetPostThread from './types/todo/social/getPostThread'
+import * as TodoSocialGetProfile from './types/todo/social/getProfile'
+import * as TodoSocialGetRepostedBy from './types/todo/social/getRepostedBy'
+import * as TodoSocialGetUserFollowers from './types/todo/social/getUserFollowers'
+import * as TodoSocialGetUserFollows from './types/todo/social/getUserFollows'
+import * as TodoSocialLike from './types/todo/social/like'
+import * as TodoSocialMediaEmbed from './types/todo/social/mediaEmbed'
+import * as TodoSocialPost from './types/todo/social/post'
+import * as TodoSocialProfile from './types/todo/social/profile'
+import * as TodoSocialRepost from './types/todo/social/repost'
 
-export class AdxPdsClient {
-  origin: string
-  private _did: string | undefined
-  constructor(public client: AdxClient, url: string) {
-    this.origin = new URL(url).origin
+export class Client {
+  xrpc: XrpcClient = new XrpcClient()
+
+  constructor() {
+    this.xrpc.addSchemas(methodSchemas)
   }
 
-  /**
-   * Instantiates an AdxRepoClient object.
-   */
-  repo(did: string, authStore?: auth.AuthStore): AdxRepoClient {
-    return new AdxRepoClient(this, did, authStore)
+  service(serviceUri: string | URL): ServiceClient {
+    return new ServiceClient(this, this.xrpc.service(serviceUri))
+  }
+}
+
+const defaultInst = new Client()
+export default defaultInst
+
+export class ServiceClient {
+  _baseClient: Client
+  xrpc: XrpcServiceClient
+  todo: TodoNS
+
+  constructor(baseClient: Client, xrpcService: XrpcServiceClient) {
+    this._baseClient = baseClient
+    this.xrpc = xrpcService
+    this.todo = new TodoNS(this)
+  }
+}
+
+export class TodoNS {
+  _service: ServiceClient
+  adx: AdxNS
+  social: SocialNS
+
+  constructor(service: ServiceClient) {
+    this._service = service
+    this.adx = new AdxNS(service)
+    this.social = new SocialNS(service)
+  }
+}
+
+export class AdxNS {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
   }
 
-  /**
-   * Registers a repository with a PDS.
-   */
-  async registerRepo(params: t.RegisterRepoParams): Promise<AdxRepoClient> {
-    const reqBody = {
-      did: params.did,
-      username: params.username,
-    }
-    await axios
-      .post(this.url(PdsEndpoint.Account), reqBody, requestCfg(params.did))
-      .catch(toAPIError)
-    return new AdxRepoClient(this, params.did)
+  createAccount(
+    params: TodoAdxCreateAccount.QueryParams,
+    data?: TodoAdxCreateAccount.InputSchema,
+    opts?: TodoAdxCreateAccount.CallOptions
+  ): Promise<TodoAdxCreateAccount.Response> {
+    return this._service.xrpc.call('todo.adx.createAccount', params, data, opts)
   }
 
-  /**
-   * Query a view.
-   */
-  async view(view: string, did: string, params: QP) {
-    const validator = getViewValidator(view, this.client)
-    // TODO - validate params?
-    const res = await axios
-      .get(this.url(PdsEndpoint.View, [view], params), requestCfg(did))
-      .catch(toAPIError)
+  createSession(
+    params: TodoAdxCreateSession.QueryParams,
+    data?: TodoAdxCreateSession.InputSchema,
+    opts?: TodoAdxCreateSession.CallOptions
+  ): Promise<TodoAdxCreateSession.Response> {
+    return this._service.xrpc.call('todo.adx.createSession', params, data, opts)
+  }
 
-    validator.assertResponseValid(res.data)
+  deleteAccount(
+    params: TodoAdxDeleteAccount.QueryParams,
+    data?: TodoAdxDeleteAccount.InputSchema,
+    opts?: TodoAdxDeleteAccount.CallOptions
+  ): Promise<TodoAdxDeleteAccount.Response> {
+    return this._service.xrpc.call('todo.adx.deleteAccount', params, data, opts)
+  }
+
+  deleteSession(
+    params: TodoAdxDeleteSession.QueryParams,
+    data?: TodoAdxDeleteSession.InputSchema,
+    opts?: TodoAdxDeleteSession.CallOptions
+  ): Promise<TodoAdxDeleteSession.Response> {
+    return this._service.xrpc.call('todo.adx.deleteSession', params, data, opts)
+  }
+
+  getAccount(
+    params: TodoAdxGetAccount.QueryParams,
+    data?: TodoAdxGetAccount.InputSchema,
+    opts?: TodoAdxGetAccount.CallOptions
+  ): Promise<TodoAdxGetAccount.Response> {
+    return this._service.xrpc.call('todo.adx.getAccount', params, data, opts)
+  }
+
+  getSession(
+    params: TodoAdxGetSession.QueryParams,
+    data?: TodoAdxGetSession.InputSchema,
+    opts?: TodoAdxGetSession.CallOptions
+  ): Promise<TodoAdxGetSession.Response> {
+    return this._service.xrpc.call('todo.adx.getSession', params, data, opts)
+  }
+
+  repoBatchWrite(
+    params: TodoAdxRepoBatchWrite.QueryParams,
+    data?: TodoAdxRepoBatchWrite.InputSchema,
+    opts?: TodoAdxRepoBatchWrite.CallOptions
+  ): Promise<TodoAdxRepoBatchWrite.Response> {
+    return this._service.xrpc.call(
+      'todo.adx.repoBatchWrite',
+      params,
+      data,
+      opts
+    )
+  }
+
+  repoCreateRecord(
+    params: TodoAdxRepoCreateRecord.QueryParams,
+    data?: TodoAdxRepoCreateRecord.InputSchema,
+    opts?: TodoAdxRepoCreateRecord.CallOptions
+  ): Promise<TodoAdxRepoCreateRecord.Response> {
+    return this._service.xrpc.call(
+      'todo.adx.repoCreateRecord',
+      params,
+      data,
+      opts
+    )
+  }
+
+  repoDeleteRecord(
+    params: TodoAdxRepoDeleteRecord.QueryParams,
+    data?: TodoAdxRepoDeleteRecord.InputSchema,
+    opts?: TodoAdxRepoDeleteRecord.CallOptions
+  ): Promise<TodoAdxRepoDeleteRecord.Response> {
+    return this._service.xrpc.call(
+      'todo.adx.repoDeleteRecord',
+      params,
+      data,
+      opts
+    )
+  }
+
+  repoDescribe(
+    params: TodoAdxRepoDescribe.QueryParams,
+    data?: TodoAdxRepoDescribe.InputSchema,
+    opts?: TodoAdxRepoDescribe.CallOptions
+  ): Promise<TodoAdxRepoDescribe.Response> {
+    return this._service.xrpc.call('todo.adx.repoDescribe', params, data, opts)
+  }
+
+  repoGetRecord(
+    params: TodoAdxRepoGetRecord.QueryParams,
+    data?: TodoAdxRepoGetRecord.InputSchema,
+    opts?: TodoAdxRepoGetRecord.CallOptions
+  ): Promise<TodoAdxRepoGetRecord.Response> {
+    return this._service.xrpc.call('todo.adx.repoGetRecord', params, data, opts)
+  }
+
+  repoListRecords(
+    params: TodoAdxRepoListRecords.QueryParams,
+    data?: TodoAdxRepoListRecords.InputSchema,
+    opts?: TodoAdxRepoListRecords.CallOptions
+  ): Promise<TodoAdxRepoListRecords.Response> {
+    return this._service.xrpc.call(
+      'todo.adx.repoListRecords',
+      params,
+      data,
+      opts
+    )
+  }
+
+  repoPutRecord(
+    params: TodoAdxRepoPutRecord.QueryParams,
+    data?: TodoAdxRepoPutRecord.InputSchema,
+    opts?: TodoAdxRepoPutRecord.CallOptions
+  ): Promise<TodoAdxRepoPutRecord.Response> {
+    return this._service.xrpc.call('todo.adx.repoPutRecord', params, data, opts)
+  }
+
+  resolveName(
+    params: TodoAdxResolveName.QueryParams,
+    data?: TodoAdxResolveName.InputSchema,
+    opts?: TodoAdxResolveName.CallOptions
+  ): Promise<TodoAdxResolveName.Response> {
+    return this._service.xrpc.call('todo.adx.resolveName', params, data, opts)
+  }
+
+  syncGetRepo(
+    params: TodoAdxSyncGetRepo.QueryParams,
+    data?: TodoAdxSyncGetRepo.InputSchema,
+    opts?: TodoAdxSyncGetRepo.CallOptions
+  ): Promise<TodoAdxSyncGetRepo.Response> {
+    return this._service.xrpc.call('todo.adx.syncGetRepo', params, data, opts)
+  }
+
+  syncGetRoot(
+    params: TodoAdxSyncGetRoot.QueryParams,
+    data?: TodoAdxSyncGetRoot.InputSchema,
+    opts?: TodoAdxSyncGetRoot.CallOptions
+  ): Promise<TodoAdxSyncGetRoot.Response> {
+    return this._service.xrpc.call('todo.adx.syncGetRoot', params, data, opts)
+  }
+
+  syncUpdateRepo(
+    params: TodoAdxSyncUpdateRepo.QueryParams,
+    data?: TodoAdxSyncUpdateRepo.InputSchema,
+    opts?: TodoAdxSyncUpdateRepo.CallOptions
+  ): Promise<TodoAdxSyncUpdateRepo.Response> {
+    return this._service.xrpc.call(
+      'todo.adx.syncUpdateRepo',
+      params,
+      data,
+      opts
+    )
+  }
+}
+
+export class SocialNS {
+  _service: ServiceClient
+  badge: BadgeRecord
+  follow: FollowRecord
+  like: LikeRecord
+  mediaEmbed: MediaEmbedRecord
+  post: PostRecord
+  profile: ProfileRecord
+  repost: RepostRecord
+
+  constructor(service: ServiceClient) {
+    this._service = service
+    this.badge = new BadgeRecord(service)
+    this.follow = new FollowRecord(service)
+    this.like = new LikeRecord(service)
+    this.mediaEmbed = new MediaEmbedRecord(service)
+    this.post = new PostRecord(service)
+    this.profile = new ProfileRecord(service)
+    this.repost = new RepostRecord(service)
+  }
+
+  getFeed(
+    params: TodoSocialGetFeed.QueryParams,
+    data?: TodoSocialGetFeed.InputSchema,
+    opts?: TodoSocialGetFeed.CallOptions
+  ): Promise<TodoSocialGetFeed.Response> {
+    return this._service.xrpc.call('todo.social.getFeed', params, data, opts)
+  }
+
+  getLikedBy(
+    params: TodoSocialGetLikedBy.QueryParams,
+    data?: TodoSocialGetLikedBy.InputSchema,
+    opts?: TodoSocialGetLikedBy.CallOptions
+  ): Promise<TodoSocialGetLikedBy.Response> {
+    return this._service.xrpc.call('todo.social.getLikedBy', params, data, opts)
+  }
+
+  getNotifications(
+    params: TodoSocialGetNotifications.QueryParams,
+    data?: TodoSocialGetNotifications.InputSchema,
+    opts?: TodoSocialGetNotifications.CallOptions
+  ): Promise<TodoSocialGetNotifications.Response> {
+    return this._service.xrpc.call(
+      'todo.social.getNotifications',
+      params,
+      data,
+      opts
+    )
+  }
+
+  getPostThread(
+    params: TodoSocialGetPostThread.QueryParams,
+    data?: TodoSocialGetPostThread.InputSchema,
+    opts?: TodoSocialGetPostThread.CallOptions
+  ): Promise<TodoSocialGetPostThread.Response> {
+    return this._service.xrpc.call(
+      'todo.social.getPostThread',
+      params,
+      data,
+      opts
+    )
+  }
+
+  getProfile(
+    params: TodoSocialGetProfile.QueryParams,
+    data?: TodoSocialGetProfile.InputSchema,
+    opts?: TodoSocialGetProfile.CallOptions
+  ): Promise<TodoSocialGetProfile.Response> {
+    return this._service.xrpc.call('todo.social.getProfile', params, data, opts)
+  }
+
+  getRepostedBy(
+    params: TodoSocialGetRepostedBy.QueryParams,
+    data?: TodoSocialGetRepostedBy.InputSchema,
+    opts?: TodoSocialGetRepostedBy.CallOptions
+  ): Promise<TodoSocialGetRepostedBy.Response> {
+    return this._service.xrpc.call(
+      'todo.social.getRepostedBy',
+      params,
+      data,
+      opts
+    )
+  }
+
+  getUserFollowers(
+    params: TodoSocialGetUserFollowers.QueryParams,
+    data?: TodoSocialGetUserFollowers.InputSchema,
+    opts?: TodoSocialGetUserFollowers.CallOptions
+  ): Promise<TodoSocialGetUserFollowers.Response> {
+    return this._service.xrpc.call(
+      'todo.social.getUserFollowers',
+      params,
+      data,
+      opts
+    )
+  }
+
+  getUserFollows(
+    params: TodoSocialGetUserFollows.QueryParams,
+    data?: TodoSocialGetUserFollows.InputSchema,
+    opts?: TodoSocialGetUserFollows.CallOptions
+  ): Promise<TodoSocialGetUserFollows.Response> {
+    return this._service.xrpc.call(
+      'todo.social.getUserFollows',
+      params,
+      data,
+      opts
+    )
+  }
+}
+
+export class BadgeRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: TodoSocialBadge.Record }[] }> {
+    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
+      type: 'todo.social.badge',
+      ...params,
+    })
     return res.data
   }
 
-  /**
-   * Get the PDS's DID.
-   */
-  async getDid(): Promise<string> {
-    if (this._did) return this._did
-    const did = (this._did = await resolveName(new URL(this.origin).hostname))
-    return did
-  }
-
-  /**
-   * Construct the URL for a known endpoint.
-   */
-  url(endpoint: PdsEndpoint, params?: any[], qp?: QP): string {
-    let pathname: string
-    switch (endpoint) {
-      case PdsEndpoint.GetDid:
-        if (params?.length) throw new Error('0 URL parameters expected')
-        pathname = '/.well-known/adx-did'
-        break
-      case PdsEndpoint.Account:
-        if (params?.length) throw new Error('0 URL parameters expected')
-        pathname = '/.adx/v1/account'
-        break
-      case PdsEndpoint.Session:
-        if (params?.length) throw new Error('0 URL parameters expected')
-        pathname = '/.adx/v1/session'
-        break
-      case PdsEndpoint.Repo:
-        if (params?.length !== 1) throw new Error('1 URL parameter expected')
-        pathname = `/.adx/v1/api/repo/${params?.[0]}`
-        break
-      case PdsEndpoint.RepoCollection:
-        if (params?.length !== 2) throw new Error('2 URL parameters expected')
-        pathname = `/.adx/v1/api/repo/${params?.[0]}/c/${params?.[1]}`
-        break
-      case PdsEndpoint.RepoRecord:
-        if (params?.length !== 3) throw new Error('3 URL parameters expected')
-        pathname = `/.adx/v1/api/repo/${params?.[0]}/c/${params?.[1]}/r/${params?.[2]}`
-        break
-      case PdsEndpoint.View:
-        if (params?.length !== 1) throw new Error('1 URL parameter expected')
-        pathname = `/.adx/v1/api/view/${params?.[0]}`
-        break
-      default:
-        throw new Error(`Unsupported endpoint code: ${endpoint}`)
-    }
-    let url = this.origin + (pathname || '')
-    if (qp) {
-      if (!(qp instanceof URLSearchParams)) {
-        const safeParams = {}
-        for (const entry of Object.entries(qp)) {
-          if (entry[1] !== undefined) {
-            safeParams[entry[0]] = encodeURIComponent(entry[1])
-          }
-        }
-        qp = new URLSearchParams(safeParams)
-      }
-      url += '?' + qp.toString()
-    }
-    return url
-  }
-}
-
-export class AdxRepoClient {
-  constructor(
-    public pds: AdxPdsClient,
-    public did: string,
-    public authStore?: auth.AuthStore,
-  ) {}
-
-  get writable() {
-    return !this.authStore
-  }
-
-  /**
-   * Describe the repo.
-   */
-  async describe(
-    params?: ht.DescribeRepoParams,
-  ): Promise<ht.DescribeRepoResponse> {
-    const res = await axios
-      .get(this.pds.url(PdsEndpoint.Repo, [this.did], params))
-      .catch(toAPIError)
-    return ht.describeRepoResponse.parse(res.data)
-  }
-
-  /**
-   * Instantiates a AdxRepoCollectionClient object.
-   */
-  collection(collectionId: string) {
-    return new AdxRepoCollectionClient(this, collectionId)
-  }
-
-  /**
-   * Execute a batch of writes. WARNING: does not validate schemas!
-   */
-  async _batchWrite(writes: t.BatchWrite[]): Promise<void> {
-    if (!this.writable || !this.authStore) {
-      throw new err.WritePermissionError()
-    }
-    const body = ht.batchWriteParams.parse({ writes })
-    await axios
-      .post(this.pds.url(PdsEndpoint.Repo, [this.did]), body)
-      .catch(toAPIError)
-  }
-}
-
-class AdxRepoCollectionClient {
-  constructor(public repo: AdxRepoClient, public id: string) {}
-
-  /**
-   * List the records in the repo collection.
-   */
-  async list(
-    schema: t.SchemaOpt,
-    params?: ht.ListRecordsParams,
-  ): Promise<t.ListRecordsResponseValidated> {
-    const url = this.repo.pds.url(
-      PdsEndpoint.RepoCollection,
-      [this.repo.did, this.id],
-      params,
-    )
-    const res = await axios.get(url).catch(toAPIError)
-    const resSafe = ht.listRecordsResponse.parse(res.data)
-    if (schema === '*') {
-      return resSafe
-    }
-    const validator = getRecordValidator(schema, this.repo.pds.client)
-    return {
-      records: resSafe.records.map((record) => {
-        const validation = validator.validate(record.value)
-        return {
-          uri: record.uri,
-          value: record.value,
-          valid: validation.valid,
-          fullySupported: validation.fullySupported,
-          compatible: validation.compatible,
-          error: validation.error,
-          fallbacks: validation.fallbacks,
-        }
-      }),
-    }
-  }
-
-  /**
-   * Get a record in the repo.
-   */
   async get(
-    schema: t.SchemaOpt,
-    key: string,
-  ): Promise<t.GetRecordResponseValidated> {
-    const url = this.repo.pds.url(PdsEndpoint.RepoRecord, [
-      this.repo.did,
-      this.id,
-      key,
-    ])
-    const res = await axios.get(url).catch(toAPIError)
-    const resSafe = ht.getRecordResponse.parse(res.data)
-    if (schema === '*') {
-      return resSafe
-    }
-    const validator = getRecordValidator(schema, this.repo.pds.client)
-    const validation = validator.validate(resSafe.value)
-    return {
-      uri: resSafe.uri,
-      value: resSafe.value,
-      valid: validation.valid,
-      fullySupported: validation.fullySupported,
-      compatible: validation.compatible,
-      error: validation.error,
-      fallbacks: validation.fallbacks,
-    }
+    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: TodoSocialBadge.Record }> {
+    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
+      type: 'todo.social.badge',
+      ...params,
+    })
+    return res.data
   }
 
-  /**
-   * Create a new record.
-   */
   async create(
-    schema: t.SchemaOpt,
-    value: any,
-    validate = true,
-  ): Promise<AdxUri> {
-    if (!this.repo.writable) {
-      throw new err.WritePermissionError()
-    }
-    if (schema !== '*') {
-      const validator = getRecordValidator(schema, this.repo.pds.client)
-      validator.assertValid(value)
-    }
-    const url = this.repo.pds.url(
-      PdsEndpoint.RepoCollection,
-      [this.repo.did, this.id],
-      { validate },
+    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
+    record: TodoSocialBadge.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.badge'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoCreateRecord',
+      { type: 'todo.social.badge', ...params },
+      record,
+      { encoding: 'application/json' }
     )
-    const res = await axios.post(url, value).catch(toAPIError)
-    const { uri } = ht.createRecordResponse.parse(res.data)
-    return new AdxUri(uri)
+    return res.data
   }
 
-  /**
-   * Write the record.
-   */
-  async put(schema: t.SchemaOpt, key: string, value: any, validate = true) {
-    if (!this.repo.writable) {
-      throw new err.WritePermissionError()
-    }
-    if (schema !== '*') {
-      const validator = getRecordValidator(schema, this.repo.pds.client)
-      validator.assertValid(value)
-    }
-    const url = this.repo.pds.url(
-      PdsEndpoint.RepoRecord,
-      [this.repo.did, this.id, key],
-      { validate },
+  async put(
+    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
+    record: TodoSocialBadge.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.badge'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoPutRecord',
+      { type: 'todo.social.badge', ...params },
+      record,
+      { encoding: 'application/json' }
     )
-    const res = await axios.put(url, value).catch(toAPIError)
-    const { uri } = ht.createRecordResponse.parse(res.data)
-    return new AdxUri(uri)
+    return res.data
   }
 
-  /**
-   * Delete the record.
-   */
-  async del(key: string) {
-    if (!this.repo.writable) {
-      throw new err.WritePermissionError()
-    }
-    const url = this.repo.pds.url(
-      PdsEndpoint.RepoRecord,
-      [this.repo.did, this.id, key],
-      { verified: true },
+  async delete(
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+  ): Promise<void> {
+    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
+      type: 'todo.social.badge',
+      ...params,
+    })
+  }
+}
+
+export class FollowRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: TodoSocialFollow.Record }[] }> {
+    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
+      type: 'todo.social.follow',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: TodoSocialFollow.Record }> {
+    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
+      type: 'todo.social.follow',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
+    record: TodoSocialFollow.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.follow'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoCreateRecord',
+      { type: 'todo.social.follow', ...params },
+      record,
+      { encoding: 'application/json' }
     )
-    await axios.delete(url).catch(toAPIError)
+    return res.data
+  }
+
+  async put(
+    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
+    record: TodoSocialFollow.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.follow'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoPutRecord',
+      { type: 'todo.social.follow', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+  ): Promise<void> {
+    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
+      type: 'todo.social.follow',
+      ...params,
+    })
   }
 }
 
-function requestCfg(did?: string): AxiosRequestConfig {
-  // @TODO add back in real auth
-  const headers: Record<string, string> = {}
-  if (did) {
-    headers['Authorization'] = did
+export class LikeRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
   }
 
-  return { headers }
+  async list(
+    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: TodoSocialLike.Record }[] }> {
+    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
+      type: 'todo.social.like',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: TodoSocialLike.Record }> {
+    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
+      type: 'todo.social.like',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
+    record: TodoSocialLike.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.like'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoCreateRecord',
+      { type: 'todo.social.like', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async put(
+    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
+    record: TodoSocialLike.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.like'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoPutRecord',
+      { type: 'todo.social.like', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+  ): Promise<void> {
+    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
+      type: 'todo.social.like',
+      ...params,
+    })
+  }
 }
 
-function toAPIError(error: AxiosError): AxiosResponse {
-  throw new err.APIResponseError(
-    error.response?.status || 0,
-    error.response?.statusText || 'Request failed',
-    error.response?.headers,
-    error.response?.data,
-  )
+export class MediaEmbedRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
+  ): Promise<{
+    records: { uri: string, value: TodoSocialMediaEmbed.Record }[],
+  }> {
+    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
+      type: 'todo.social.mediaEmbed',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: TodoSocialMediaEmbed.Record }> {
+    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
+      type: 'todo.social.mediaEmbed',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
+    record: TodoSocialMediaEmbed.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.mediaEmbed'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoCreateRecord',
+      { type: 'todo.social.mediaEmbed', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async put(
+    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
+    record: TodoSocialMediaEmbed.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.mediaEmbed'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoPutRecord',
+      { type: 'todo.social.mediaEmbed', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+  ): Promise<void> {
+    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
+      type: 'todo.social.mediaEmbed',
+      ...params,
+    })
+  }
 }
 
-function getRecordValidator(schema: t.SchemaOpt, client: AdxClient) {
-  return schema instanceof AdxRecordValidator
-    ? schema
-    : client.schemas.createRecordValidator(schema)
+export class PostRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: TodoSocialPost.Record }[] }> {
+    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
+      type: 'todo.social.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: TodoSocialPost.Record }> {
+    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
+      type: 'todo.social.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
+    record: TodoSocialPost.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.post'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoCreateRecord',
+      { type: 'todo.social.post', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async put(
+    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
+    record: TodoSocialPost.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.post'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoPutRecord',
+      { type: 'todo.social.post', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+  ): Promise<void> {
+    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
+      type: 'todo.social.post',
+      ...params,
+    })
+  }
 }
 
-function getViewValidator(
-  schema: string | AdxViewValidator,
-  client: AdxClient,
-) {
-  return schema instanceof AdxViewValidator
-    ? schema
-    : client.schemas.createViewValidator(schema)
+export class ProfileRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: TodoSocialProfile.Record }[] }> {
+    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
+      type: 'todo.social.profile',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: TodoSocialProfile.Record }> {
+    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
+      type: 'todo.social.profile',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
+    record: TodoSocialProfile.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.profile'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoCreateRecord',
+      { type: 'todo.social.profile', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async put(
+    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
+    record: TodoSocialProfile.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.profile'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoPutRecord',
+      { type: 'todo.social.profile', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+  ): Promise<void> {
+    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
+      type: 'todo.social.profile',
+      ...params,
+    })
+  }
 }
 
-export * as did from '@adxp/did-sdk'
-export { resolveName, AdxUri } from '@adxp/common'
-export * from './types'
-export * from './http-types'
-export * from './errors'
+export class RepostRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: TodoSocialRepost.Record }[] }> {
+    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
+      type: 'todo.social.repost',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: TodoSocialRepost.Record }> {
+    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
+      type: 'todo.social.repost',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
+    record: TodoSocialRepost.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.repost'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoCreateRecord',
+      { type: 'todo.social.repost', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async put(
+    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
+    record: TodoSocialRepost.Record
+  ): Promise<{ uri: string }> {
+    record.$type = 'todo.social.repost'
+    const res = await this._service.xrpc.call(
+      'todo.adx.repoPutRecord',
+      { type: 'todo.social.repost', ...params },
+      record,
+      { encoding: 'application/json' }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+  ): Promise<void> {
+    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
+      type: 'todo.social.repost',
+      ...params,
+    })
+  }
+}

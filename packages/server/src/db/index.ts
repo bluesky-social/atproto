@@ -1,6 +1,12 @@
-import { Badge, Follow, Like, Post, Profile, Repost } from '@adxp/microblog'
+import * as Badge from '../xrpc/types/todo/social/badge'
+import * as Follow from '../xrpc/types/todo/social/follow'
+import * as Like from '../xrpc/types/todo/social/like'
+import * as Post from '../xrpc/types/todo/social/post'
+import * as Profile from '../xrpc/types/todo/social/profile'
+import * as Repost from '../xrpc/types/todo/social/repost'
 import { DataSource } from 'typeorm'
-import { DbRecordPlugin, ViewFn } from './types'
+import { AdxValidationResult, AdxValidationResultCode } from '@adxp/schemas'
+import { DbRecordPlugin } from './types'
 import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
 import likePlugin, { LikeIndex } from './records/like'
 import followPlugin, { FollowIndex } from './records/follow'
@@ -10,7 +16,6 @@ import profilePlugin, {
   ProfileIndex,
 } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-import views from './views'
 import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
@@ -27,7 +32,6 @@ export class Database {
     profiles: DbRecordPlugin<Profile.Record, ProfileIndex>
     reposts: DbRecordPlugin<Repost.Record, RepostIndex>
   }
-  views: Record<string, ViewFn>
 
   constructor(db: DataSource) {
     this.db = db
@@ -38,10 +42,6 @@ export class Database {
       badges: badgePlugin(db),
       profiles: profilePlugin(db),
       reposts: repostPlugin(db),
-    }
-    this.views = {}
-    for (const view of views) {
-      this.views[view.id] = view.fn(db)
     }
   }
 
@@ -111,9 +111,21 @@ export class Database {
     await table.save(user)
   }
 
+  validateRecord(collection: string, obj: unknown): AdxValidationResult {
+    let table
+    try {
+      table = this.findTableForCollection(collection)
+    } catch (e) {
+      const result = new AdxValidationResult()
+      result._t(AdxValidationResultCode.Incompatible, `Schema not found`)
+      return result
+    }
+    return table.validateSchema(obj)
+  }
+
   canIndexRecord(collection: string, obj: unknown): boolean {
     const table = this.findTableForCollection(collection)
-    return table.isValidSchema(obj)
+    return table.validateSchema(obj).valid
   }
 
   async indexRecord(uri: AdxUri, obj: unknown) {

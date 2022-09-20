@@ -1,0 +1,15 @@
+{
+  "xrpc": 1,
+  "id": "todo.adx.deleteSession",
+  "type": "procedure",
+  "description": "Delete the current session.",
+  "parameters": {},
+  "input": {
+    "encoding": "",
+    "schema": {}
+  },
+  "output": {
+    "encoding": "",
+    "schema": {}
+  }
+}

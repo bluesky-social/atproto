@@ -1,0 +1,12 @@
+{
+  "xrpc": 1,
+  "id": "todo.adx.syncUpdateRepo",
+  "type": "procedure",
+  "description": "Writes commits to a repo.",
+  "parameters": {
+    "did": {"type": "string", "required": true, "description": "The DID of the repo."}
+  },
+  "input": {
+    "encoding": "application/cbor"
+  }
+}

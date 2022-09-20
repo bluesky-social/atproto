@@ -1,5 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import { Follow } from '@adxp/microblog'
+import * as Follow from '../../xrpc/types/todo/social/follow'
 import {
   DataSource,
   Entity,
@@ -14,9 +14,8 @@ import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
-const schemaId = 'blueskyweb.xyz:Follow'
-const collection = 'bsky/follows'
-const tableName = collectionToTableName(collection)
+const type = 'todo.social.follow'
+const tableName = collectionToTableName(type)
 
 @Entity({ name: tableName })
 export class FollowIndex {
@@ -44,16 +43,17 @@ const getFn =
     return found === null ? null : translateDbObj(found)
   }
 
-const validator = schemas.createRecordValidator(schemaId)
+const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Follow.Record => {
   return validator.isValid(obj)
 }
+const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const setFn =
   (repo: Repository<FollowIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${schemaId}`)
+      throw new Error(`Record does not match schema: ${type}`)
     }
     const follow = new FollowIndex()
     follow.uri = uri.toString()
@@ -81,10 +81,10 @@ export const makePlugin = (
 ): DbRecordPlugin<Follow.Record, FollowIndex> => {
   const repository = db.getRepository(FollowIndex)
   return {
-    collection,
+    collection: type,
     tableName,
     get: getFn(repository),
-    isValidSchema,
+    validateSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,

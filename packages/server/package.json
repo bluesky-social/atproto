@@ -3,6 +3,7 @@
   "version": "0.0.2",
   "main": "src/index.ts",
   "scripts": {
+    "codegen": "xrpc-cli gen-server ./src/xrpc ../../schemas/todo.adx/*",
     "build": "node ./build.js",
     "start": "node dist/index.js",
     "test": "jest",
@@ -18,7 +19,6 @@
     "@adxp/auth": "*",
     "@adxp/common": "*",
     "@adxp/crypto": "*",
-    "@adxp/microblog": "*",
     "@adxp/repo": "*",
     "@adxp/schemas": "*",
     "cors": "^2.8.5",

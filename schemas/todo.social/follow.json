@@ -1,0 +1,13 @@
+{
+  "adx": 1,
+  "id": "todo.social.follow",
+  "description": "A social follow",
+  "record": {
+    "type": "object",
+    "required": ["subject", "createdAt"],
+    "properties": {
+      "subject": { "type": "string" },
+      "createdAt": {"type": "string", "format": "date-time"}
+    }
+  }
+}

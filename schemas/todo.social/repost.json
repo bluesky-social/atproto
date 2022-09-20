@@ -1,0 +1,12 @@
+{
+  "adx": 1,
+  "id": "todo.social.repost",
+  "record": {
+    "type": "object",
+    "required": ["subject", "createdAt"],
+    "properties": {
+      "subject": {"type": "string"},
+      "createdAt": {"type": "string", "format": "date-time"}
+    }
+  }
+}

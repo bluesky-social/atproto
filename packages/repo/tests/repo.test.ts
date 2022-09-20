@@ -18,7 +18,7 @@ describe('Repo', () => {
   })
 
   it('does basic operations', async () => {
-    const collection = repo.getCollection('bsky/posts')
+    const collection = repo.getCollection('com.example.posts')
 
     const obj = util.generateObject()
     const tid = await collection.createRecord(obj)

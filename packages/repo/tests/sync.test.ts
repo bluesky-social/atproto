@@ -66,7 +66,10 @@ describe('Sync', () => {
   it('throws an error on invalid UCANs', async () => {
     const obj = util.generateObject()
     const cid = await aliceBlockstore.put(obj)
-    const updatedData = await aliceRepo.data.add(`test/coll/${TID.next()}`, cid)
+    const updatedData = await aliceRepo.data.add(
+      `com.example.test/${TID.next()}`,
+      cid,
+    )
     // we create an unrelated token for bob & try to permission alice's repo commit with it
     const bobAuth = await auth.MemoryStore.load()
     const badUcan = await bobAuth.claimFull()
@@ -93,7 +96,10 @@ describe('Sync', () => {
   it('throws on a bad signature', async () => {
     const obj = util.generateObject()
     const cid = await aliceBlockstore.put(obj)
-    const updatedData = await aliceRepo.data.add(`test/coll/${TID.next()}`, cid)
+    const updatedData = await aliceRepo.data.add(
+      `com.example.test/${TID.next()}`,
+      cid,
+    )
     const auth_token = await aliceRepo.ucanForOperation(updatedData)
     const dataCid = await updatedData.save()
     const root: RepoRoot = {

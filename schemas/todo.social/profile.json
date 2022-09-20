@@ -1,0 +1,28 @@
+{
+  "adx": 1,
+  "id": "todo.social.profile",
+  "record": {
+    "type": "object",
+    "required": ["displayName"],
+    "properties": {
+      "displayName": {
+        "type": "string",
+        "maxLength": 64
+      },
+      "description": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "badges": {"type": "array", "items": {"$ref": "#/$defs/badgeRef"}}
+    },
+    "$defs": {
+      "badgeRef": {
+        "type": "object",
+        "required": ["uri"],
+        "properties": {
+          "uri": {"type": "string"}
+        }
+      }
+    }
+  }
+}

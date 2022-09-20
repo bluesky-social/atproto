@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
+    "codegen": "xrpc-cli gen-api ./src ../../schemas/todo.adx/*",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
@@ -14,8 +15,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@adxp/auth": "*",
-    "@adxp/common": "*",
-    "@adxp/schemas": "*"
+    "@adxp/xrpc": "*"
+  },
+  "devDependencies": {
+    "@adxp/xrpc-cli": "*"
   }
 }

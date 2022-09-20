@@ -1,0 +1,49 @@
+{
+  "xrpc": 1,
+  "id": "todo.social.getUserFollowers",
+  "type": "query",
+  "description": "Who is following a user?",
+  "parameters": {
+    "user": {"type": "string", "required": true},
+    "limit": {"type": "number", "maximum": 100},
+    "before": {"type": "string"}
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["subject", "followers"],
+      "properties": {
+        "subject": {
+          "type": "object",
+          "required": ["did", "name"],
+          "properties": {
+            "did": {"type": "string"},
+            "name": {"type": "string"},
+            "displayName": {
+              "type": "string",
+              "maxLength": 64
+            }
+          }
+        },
+        "followers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["did", "name", "indexedAt"],
+            "properties": {
+              "did": {"type": "string"},
+              "name": {"type": "string"},
+              "displayName": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "createdAt": {"type": "string", "format": "date-time"},
+              "indexedAt": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

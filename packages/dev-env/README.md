@@ -22,6 +22,6 @@ Stop the server at the given port.
 
 Create a new user.
 
-### `user(username: string): MicroblogClient`
+### `user(username: string): ServiceClient`
 
-Get the `MicroblogClient` for the given user.
+Get the `ServiceClient` for the given user.

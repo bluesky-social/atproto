@@ -1,0 +1,67 @@
+{
+  "xrpc": 1,
+  "id": "todo.social.getProfile",
+  "type": "query",
+  "parameters": {
+    "user": {"type": "string", "required": true}
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["did", "name", "followersCount", "followsCount", "postsCount", "badges"],
+      "properties": {
+        "did": {"type": "string"},
+        "name": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "followersCount": {"type": "number"},
+        "followsCount": {"type": "number"},
+        "postsCount": {"type": "number"},
+        "badges": {"type": "array", "items": {"$ref":"#/$defs/badge"}},
+        "myState": {
+          "type": "object",
+          "properties": {
+            "follow": {"type": "string"}
+          }
+        }
+      },
+      "$defs": {
+        "badge": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": {"type": "string"},
+            "error": {"type": "string"},
+            "issuer": {
+              "type": "object",
+              "required": ["did", "name", "displayName"],
+              "properties": {
+                "did": {"type": "string"},
+                "name": {"type": "string"},
+                "displayName": {
+                  "type": "string",
+                  "maxLength": 64
+                }
+              }
+            },
+            "assertion": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {"type": "string"}
+              }
+            },
+            "createdAt": {"type": "string", "format": "date-time"}
+          }
+        }
+      }
+    }
+  }
+}

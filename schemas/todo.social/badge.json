@@ -1,0 +1,55 @@
+{
+  "adx": 1,
+  "id": "todo.social.badge",
+  "description": "An assertion about the subject by this user.",
+  "record": {
+    "type": "object",
+    "required": ["assertion", "subject", "createdAt"],
+    "properties": {
+      "assertion": {
+        "oneOf": [
+          {"$ref": "#/$defs/inviteAssertion"},
+          {"$ref": "#/$defs/employeeAssertion"},
+          {"$ref": "#/$defs/tagAssertion"},
+          {"$ref": "#/$defs/unknownAssertion"}
+        ]
+      },
+      "subject": { "type": "string" },
+      "createdAt": {"type": "string", "format": "date-time"}
+    },
+    "$defs": {
+      "inviteAssertion": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {"const": "invite"}
+        }
+      },
+      "employeeAssertion": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {"const": "employee"}
+        }
+      },
+      "tagAssertion": {
+        "type": "object",
+        "required": ["type", "tag"],
+        "properties": {
+          "type": {"const": "tag"},
+          "tag": {"type": "string", "maxLength": 64}
+        }
+      },
+      "unknownAssertion": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "not": {"enum": ["invite", "employee", "tag"]}
+          }
+        }
+      }
+    }
+  }
+}

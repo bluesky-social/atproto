@@ -1,6 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import * as microblog from '@adxp/microblog'
-import { Like } from '@adxp/microblog'
+import * as Like from '../../xrpc/types/todo/social/like'
 import {
   DataSource,
   Entity,
@@ -16,9 +15,8 @@ import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
-const schemaId = 'blueskyweb.xyz:Like'
-const collection = 'bsky/likes'
-const tableName = collectionToTableName(collection)
+const type = 'todo.social.like'
+const tableName = collectionToTableName(type)
 
 @Entity({ name: tableName })
 export class LikeIndex {
@@ -46,16 +44,17 @@ const getFn =
     return found === null ? null : translateDbObj(found)
   }
 
-const validator = schemas.createRecordValidator(schemaId)
+const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Like.Record => {
   return validator.isValid(obj)
 }
+const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const setFn =
   (repo: Repository<LikeIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${schemaId}`)
+      throw new Error(`Record does not match schema: ${type}`)
     }
     const like = new LikeIndex()
     like.uri = uri.toString()
@@ -83,10 +82,10 @@ export const makePlugin = (
 ): DbRecordPlugin<Like.Record, LikeIndex> => {
   const repository = db.getRepository(LikeIndex)
   return {
-    collection,
+    collection: type,
     tableName,
     get: getFn(repository),
-    isValidSchema,
+    validateSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,

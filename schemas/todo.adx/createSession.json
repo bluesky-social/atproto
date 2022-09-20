@@ -1,0 +1,15 @@
+{
+  "xrpc": 1,
+  "id": "todo.adx.createSession",
+  "type": "procedure",
+  "description": "Create an authentication session.",
+  "parameters": {},
+  "input": {
+    "encoding": "",
+    "schema": {}
+  },
+  "output": {
+    "encoding": "",
+    "schema": {}
+  }
+}

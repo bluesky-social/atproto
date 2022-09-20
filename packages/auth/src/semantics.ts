@@ -7,16 +7,14 @@ Resource name: 'adx'
 
 - Full permission for account: 
     adx://did:example:userDid/*
-- Permission to write to particular application namespace: 
-    adx://did:example:userDid/namespace/*
-- Permission to write objects within a particular collection (namespace + dataset): 
-    adx://did:example:userDid/namespace/post/*
+- Permission to write to particular application collection: 
+    adx://did:example:userDid/com.foo.post/*
 - Permission to create a single interaction on user's behalf: 
-    adx://did:example:userDid/namespace/post/234567abcdefg
+    adx://did:example:userDid/com.foo.post/234567abcdefg
 
 Example: 
 {
-  with: { scheme: "adx", hierPart: "did:example:userDid/microblog/*" },
+  with: { scheme: "adx", hierPart: "did:example:userDid/com.foo.post/*" },
   can: { namespace: "adx", segments: [ "WRITE" ] }
 }
 
@@ -67,8 +65,7 @@ export const adxCapability = (
 }
 export interface AdxResourcePointer {
   did: string
-  namespace: string
-  dataset: string
+  collection: string
   record: string
 }
 
@@ -79,15 +76,13 @@ export const parseAdxResource = (
   if (pointer.scheme !== 'adx') return null
 
   const parts = pointer.hierPart.split('/')
-  let [did, namespace, dataset, record] = parts
+  let [did, collection, record] = parts
   if (!did) return null
-  if (!namespace) namespace = '*'
-  if (!dataset) dataset = '*'
+  if (!collection) collection = '*'
   if (!record) record = '*'
   return {
     did,
-    namespace,
-    dataset,
+    collection,
     record,
   }
 }
@@ -100,11 +95,8 @@ export const adxSemantics: ucans.DelegationSemantics = {
     if (parent == null || child == null) return false
     if (parent.did !== child.did) return false
 
-    if (parent.namespace === '*') return true
-    if (parent.namespace !== child.namespace) return false
-
-    if (parent.dataset === '*') return true
-    if (parent.dataset !== child.dataset) return false
+    if (parent.collection === '*') return true
+    if (parent.collection !== child.collection) return false
 
     if (parent.record === '*') return true
 

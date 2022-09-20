@@ -72,7 +72,7 @@ export const generateObject = (): Record<string, string> => {
 // Mass repo mutations & checking
 // -------------------------------
 
-export const testCollections = ['bsky/posts', 'bsky/likes']
+export const testCollections = ['com.example.posts', 'com.example.likes']
 
 export type CollectionData = Record<string, unknown>
 export type RepoData = Record<string, CollectionData>
@@ -157,8 +157,8 @@ export const checkRepoDiff = async (
     data: RepoData,
   ): Promise<CID | undefined> => {
     const parts = key.split('/')
-    const collection = parts.slice(0, 2).join('/')
-    const obj = (data[collection] || {})[parts[2]]
+    const collection = parts[0]
+    const obj = (data[collection] || {})[parts[1]]
     return obj === undefined ? undefined : fakeStore.put(obj as any)
   }
 
