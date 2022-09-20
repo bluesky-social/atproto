@@ -1,5 +1,5 @@
 {
-  "xrpc": 1,
+  "lexicon": 1,
   "id": "todo.adx.syncGetRoot",
   "type": "query",
   "description": "Gets the current root CID of a repo.",

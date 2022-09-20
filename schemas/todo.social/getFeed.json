@@ -1,5 +1,5 @@
 {
-  "xrpc": 1,
+  "lexicon": 1,
   "id": "todo.social.getFeed",
   "type": "query",
   "description": "A computed view of the home feed or a user's feed",

@@ -1,6 +1,7 @@
 {
-  "adx": 1,
+  "lexicon": 1,
   "id": "todo.social.badge",
+  "type": "record",
   "description": "An assertion about the subject by this user.",
   "record": {
     "type": "object",

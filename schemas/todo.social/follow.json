@@ -1,6 +1,7 @@
 {
-  "adx": 1,
+  "lexicon": 1,
   "id": "todo.social.follow",
+  "type": "record",
   "description": "A social follow",
   "record": {
     "type": "object",
