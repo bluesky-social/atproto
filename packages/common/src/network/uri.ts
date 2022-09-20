@@ -59,46 +59,24 @@ export class AdxUri {
     this.searchParams = new URLSearchParams(v)
   }
 
-  get namespace() {
+  get collection() {
     return this.pathname.split('/').filter(Boolean)[0] || ''
   }
 
-  set namespace(v: string) {
+  set collection(v: string) {
     const parts = this.pathname.split('/').filter(Boolean)
     parts[0] = v
     this.pathname = parts.join('/')
   }
 
-  get dataset() {
-    return this.pathname.split('/').filter(Boolean)[1] || ''
-  }
-
-  set dataset(v: string) {
-    const parts = this.pathname.split('/').filter(Boolean)
-    parts[1] = v
-    this.pathname = parts.join('/')
-  }
-
-  get collection() {
-    if (!this.namespace && !this.dataset) return ''
-    return [this.namespace, this.dataset].join('/')
-  }
-
-  set collection(v: string) {
-    const [namespace = '', dataset = ''] = v.split('/')
-    this.namespace = namespace
-    this.dataset = dataset
-  }
-
   get recordKey() {
-    return this.pathname.split('/').filter(Boolean)[2] || ''
+    return this.pathname.split('/').filter(Boolean)[1] || ''
   }
 
   set recordKey(v: string) {
     const parts = this.pathname.split('/').filter(Boolean)
     if (!parts[0]) parts[0] = 'undefined'
-    if (!parts[1]) parts[1] = 'undefined'
-    parts[2] = v
+    parts[1] = v
     this.pathname = parts.join('/')
   }
 
