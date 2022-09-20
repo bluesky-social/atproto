@@ -1,6 +1,7 @@
 {
-  "adx": 1,
+  "lexicon": 1,
   "id": "todo.social.mediaEmbed",
+  "type": "record",
   "description": "A list of media embedded in a post or document.",
   "record": {
     "type": "object",

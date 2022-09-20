@@ -4,12 +4,11 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import { MethodSchema } from '@adxp/xrpc'
-import { AdxSchemaDefinition } from '@adxp/schemas'
+import { MethodSchema, RecordSchema, Schema } from '@adxp/lexicon'
 import { NSID } from '@adxp/nsid'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
 import { gen, schemasTs } from './common'
-import { GeneratedAPI, Schema } from '../types'
+import { GeneratedAPI } from '../types'
 import { schemasToNsidTree, NsidNS, toCamelCase, toTitleCase } from './util'
 
 const ADX_METHODS = {
@@ -28,9 +27,9 @@ export async function genClientApi(schemas: Schema[]): Promise<GeneratedAPI> {
   const api: GeneratedAPI = { files: [] }
   const nsidTree = schemasToNsidTree(schemas)
   for (const schema of schemas) {
-    if ('xrpc' in schema) {
+    if (schema.type === 'query' || schema.type === 'procedure') {
       api.files.push(await methodSchemaTs(project, schema))
-    } else if ('adx' in schema) {
+    } else if (schema.type === 'record') {
       api.files.push(await recordSchemaTs(project, schema))
     }
   }
@@ -166,7 +165,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
   })
 
   for (const schema of ns.schemas) {
-    if (!('adx' in schema)) {
+    if (schema.type !== 'record') {
       continue
     }
     //= type: TypeRecord
@@ -205,7 +204,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
         (ns) => `this.${ns.propName} = new ${ns.className}(service)`,
       ),
       ...ns.schemas
-        .filter((s) => 'adx' in s)
+        .filter((s) => s.type === 'record')
         .map((schema) => {
           const name = NSID.parse(schema.id).name || ''
           return `this.${toCamelCase(name)} = new ${toTitleCase(
@@ -217,7 +216,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
 
   // methods
   for (const schema of ns.schemas) {
-    if (!('xrpc' in schema)) {
+    if (schema.type !== 'query' && schema.type !== 'procedure') {
       continue
     }
     const moduleName = toTitleCase(schema.id)
@@ -245,14 +244,14 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
 
   // record api classes
   for (const schema of ns.schemas) {
-    if (!('adx' in schema)) {
+    if (schema.type !== 'record') {
       continue
     }
     genRecordCls(file, schema)
   }
 }
 
-function genRecordCls(file: SourceFile, schema: AdxSchemaDefinition) {
+function genRecordCls(file: SourceFile, schema: RecordSchema) {
   //= export class {type}Record {...}
   const name = NSID.parse(schema.id).name || ''
   const cls = file.addClass({
@@ -477,7 +476,7 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
     }
   })
 
-const recordSchemaTs = (project, schema: AdxSchemaDefinition) =>
+const recordSchemaTs = (project, schema: RecordSchema) =>
   gen(project, `/types/${schema.id.split('.').join('/')}.ts`, async (file) => {
     //= export interface Record {...}
     file.insertText(

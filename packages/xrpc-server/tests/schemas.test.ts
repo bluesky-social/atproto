@@ -14,12 +14,12 @@ describe('Schemas', () => {
 
   it('accepts valid method schemas', () => {
     server.addSchema({
-      xrpc: 1,
+      lexicon: 1,
       id: 'io.example.query1',
       type: 'query',
     })
     server.addSchema({
-      xrpc: 1,
+      lexicon: 1,
       id: 'io.example.query2',
       type: 'query',
       parameters: { message: { type: 'string' } },
@@ -33,7 +33,7 @@ describe('Schemas', () => {
       },
     })
     server.addSchema({
-      xrpc: 1,
+      lexicon: 1,
       id: 'io.example.query3',
       type: 'query',
       parameters: {
@@ -47,12 +47,12 @@ describe('Schemas', () => {
       },
     })
     server.addSchema({
-      xrpc: 1,
+      lexicon: 1,
       id: 'io.example.proc1',
       type: 'procedure',
     })
     server.addSchema({
-      xrpc: 1,
+      lexicon: 1,
       id: 'io.example.proc2',
       type: 'procedure',
       input: {
@@ -73,7 +73,7 @@ describe('Schemas', () => {
       },
     })
     server.addSchema({
-      xrpc: 1,
+      lexicon: 1,
       id: 'io.example.query3',
       type: 'procedure',
       parameters: {
@@ -109,26 +109,26 @@ describe('Schemas', () => {
     }).toThrow()
     expect(() => {
       server.addSchema({
-        xrpc: 1,
+        lexicon: 1,
         type: 'query',
       })
     }).toThrow()
     expect(() => {
       server.addSchema({
-        xrpc: 1,
+        lexicon: 1,
         id: 'io.example.foo',
       })
     }).toThrow()
     expect(() => {
       server.addSchema({
-        xrpc: 1,
+        lexicon: 1,
         id: 'io.example.foo',
         type: 'wrong',
       })
     }).toThrow()
     expect(() => {
       server.addSchema({
-        xrpc: 1,
+        lexicon: 1,
         id: 'io.example.foo',
         type: 'query',
         parameters: { message: { type: 'bad' } },

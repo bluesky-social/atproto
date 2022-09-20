@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { methodSchema, MethodSchema, isValidMethodSchema } from '@adxp/lexicon'
 import {
   getMethodSchemaHTTPMethod,
   constructMethodCallUri,
@@ -7,9 +8,6 @@ import {
   httpResponseBodyParse,
 } from './util'
 import {
-  methodSchema,
-  MethodSchema,
-  isValidMethodSchema,
   CallOptions,
   QueryParams,
   ResponseType,

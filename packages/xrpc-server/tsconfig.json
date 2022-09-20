@@ -6,6 +6,7 @@
   },
   "include": ["./src","__tests__/**/**.ts"],
   "references": [
+    { "path": "../lexicon/tsconfig.build.json" },
     { "path": "../xrpc/tsconfig.build.json" },
   ]
 }

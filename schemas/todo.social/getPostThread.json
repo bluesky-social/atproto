@@ -1,5 +1,5 @@
 {
-  "xrpc": 1,
+  "lexicon": 1,
   "id": "todo.social.getPostThread",
   "type": "query",
   "parameters": {

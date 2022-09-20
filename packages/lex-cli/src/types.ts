@@ -1,6 +1,3 @@
-import { MethodSchema } from '@adxp/xrpc'
-import { AdxSchemaDefinition } from '@adxp/schemas'
-
 export interface GeneratedFile {
   path: string
   content: string
@@ -9,5 +6,3 @@ export interface GeneratedFile {
 export interface GeneratedAPI {
   files: GeneratedFile[]
 }
-
-export type Schema = MethodSchema | AdxSchemaDefinition

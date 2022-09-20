@@ -1,26 +1,26 @@
 import { ValidateFunction } from 'ajv'
-import AdxSchema from './schema'
+import CompiledRecordSchema from './schema'
 
-export class AdxValidationError extends Error {
-  code: AdxValidationResultCode
+export class ValidationError extends Error {
+  code: ValidationResultCode
   messages: string[]
 
-  constructor(res: AdxValidationResult) {
+  constructor(res: ValidationResult) {
     super(res.error)
     this.code = res.code
     this.messages = res.messages
   }
 }
 
-export enum AdxValidationResultCode {
+export enum ValidationResultCode {
   Full = 'full',
   Partial = 'partial',
   Incompatible = 'incompatible',
   Invalid = 'invalid',
 }
 
-export class AdxValidationResult {
-  code = AdxValidationResultCode.Full
+export class ValidationResult {
+  code = ValidationResultCode.Full
 
   /**
    * The error message (if fatal)
@@ -39,36 +39,36 @@ export class AdxValidationResult {
 
   get valid() {
     return (
-      this.code === AdxValidationResultCode.Full ||
-      this.code === AdxValidationResultCode.Partial
+      this.code === ValidationResultCode.Full ||
+      this.code === ValidationResultCode.Partial
     )
   }
 
   get fullySupported() {
-    return this.code === AdxValidationResultCode.Full
+    return this.code === ValidationResultCode.Full
   }
 
   get compatible() {
-    return this.code !== AdxValidationResultCode.Incompatible
+    return this.code !== ValidationResultCode.Incompatible
   }
 
   /**
    * Internal - used to transition the state machine.
    */
-  _t(to: AdxValidationResultCode, message?: string) {
-    if (to === AdxValidationResultCode.Partial) {
+  _t(to: ValidationResultCode, message?: string) {
+    if (to === ValidationResultCode.Partial) {
       // can -> 'partial' if currently 'full'
-      if (this.code === AdxValidationResultCode.Full) {
+      if (this.code === ValidationResultCode.Full) {
         this.code = to
       }
       if (message) {
         this.fallbacks.push(message)
       }
-    } else if (to === AdxValidationResultCode.Incompatible) {
+    } else if (to === ValidationResultCode.Incompatible) {
       // can -> 'incompatible' if currently 'full' or 'partial'
       if (
-        this.code === AdxValidationResultCode.Full ||
-        this.code === AdxValidationResultCode.Partial
+        this.code === ValidationResultCode.Full ||
+        this.code === ValidationResultCode.Partial
       ) {
         this.code = to
         if (message && !this.error) {
@@ -76,7 +76,7 @@ export class AdxValidationResult {
           this.error = message
         }
       }
-    } else if (to === AdxValidationResultCode.Invalid) {
+    } else if (to === ValidationResultCode.Invalid) {
       // can always -> 'invalid'
       this.code = to
       if (message && !this.error) {
@@ -93,18 +93,18 @@ export class AdxValidationResult {
   /**
    * Internal - used to transition the state machine.
    */
-  _fail(schema: AdxSchema, validator: ValidateFunction) {
+  _fail(schema: CompiledRecordSchema, validator: ValidateFunction) {
     if (validator.errors) {
       for (const err of validator.errors) {
         this._t(
-          AdxValidationResultCode.Invalid,
+          ValidationResultCode.Invalid,
           `Failed ${schema.id} validation for ${err.schemaPath}: ${
             err.message || `Invalid value`
           }`,
         )
       }
     } else {
-      this._t(AdxValidationResultCode.Invalid, `Failed ${schema.id} validation`)
+      this._t(ValidationResultCode.Invalid, `Failed ${schema.id} validation`)
     }
   }
 }

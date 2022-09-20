@@ -1,7 +1,7 @@
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import { MethodSchema } from '@adxp/xrpc'
+import { Schema } from '@adxp/lexicon'
 import prettier from 'prettier'
-import { Schema, GeneratedFile } from '../types'
+import { GeneratedFile } from '../types'
 
 const PRETTIER_OPTS = {
   parser: 'babel',
@@ -12,22 +12,12 @@ const PRETTIER_OPTS = {
 
 export const schemasTs = (project, schemas: Schema[]) =>
   gen(project, '/schemas.ts', async (file) => {
-    //= import {MethodSchema} from '@adxp/xrpc'
+    //= import {RecordSchema, MethodSchema} from '@adxp/lexicon'
     file
       .addImportDeclaration({
-        moduleSpecifier: '@adxp/xrpc',
+        moduleSpecifier: '@adxp/lexicon',
       })
-      .addNamedImport({
-        name: 'MethodSchema',
-      })
-    //= import {AdxSchemaDefinition} from '@adxp/schemas'
-    file
-      .addImportDeclaration({
-        moduleSpecifier: '@adxp/schemas',
-      })
-      .addNamedImport({
-        name: 'AdxSchemaDefinition',
-      })
+      .addNamedImports([{ name: 'MethodSchema' }, { name: 'RecordSchema' }])
     //= export const methodSchemas: MethodSchema[] = [...]
     file.addVariableStatement({
       isExported: true,
@@ -37,23 +27,23 @@ export const schemasTs = (project, schemas: Schema[]) =>
           name: 'methodSchemas',
           type: 'MethodSchema[]',
           initializer: JSON.stringify(
-            schemas.filter((s) => 'xrpc' in s),
+            schemas.filter((s) => s.type === 'query' || s.type === 'procedure'),
             null,
             2,
           ),
         },
       ],
     })
-    //= export const recordSchemas: AdxSchemaDefinition[] = [...]
+    //= export const recordSchemas: RecordSchema[] = [...]
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
           name: 'recordSchemas',
-          type: 'AdxSchemaDefinition[]',
+          type: 'RecordSchema[]',
           initializer: JSON.stringify(
-            schemas.filter((s) => 'adx' in s),
+            schemas.filter((s) => s.type === 'record'),
             null,
             2,
           ),
@@ -71,7 +61,6 @@ export async function gen(
   await gen(file)
   file.saveSync()
   const src = project.getFileSystem().readFileSync(path)
-  // TODO run prettier on the output
   return {
     path: path,
     content: `${banner()}${prettier.format(src, PRETTIER_OPTS)}`,

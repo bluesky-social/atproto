@@ -1,5 +1,5 @@
+import { MethodSchema } from '@adxp/lexicon'
 import {
-  MethodSchema,
   CallOptions,
   Headers,
   QueryParams,

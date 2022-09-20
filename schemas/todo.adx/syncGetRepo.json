@@ -1,5 +1,5 @@
 {
-  "xrpc": 1,
+  "lexicon": 1,
   "id": "todo.adx.syncGetRepo",
   "type": "query",
   "description": "Gets the repo state.",

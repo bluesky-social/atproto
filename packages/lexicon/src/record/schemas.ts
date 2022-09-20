@@ -1,35 +1,33 @@
-import AdxSchema from './schema'
-import AdxRecordValidator, {
-  AdxRecordValidatorDescription,
-} from './record-validator'
+import CompiledRecordSchema from './schema'
+import RecordValidator, { RecordValidatorDescription } from './validator'
 
 import {
-  AdxSchemaDefinition,
-  adxSchemaDefinition,
-  AdxSchemaDefinitionMalformedError,
+  RecordSchema,
+  recordSchema,
+  RecordSchemaMalformedError,
   SchemaNotFoundError,
-} from './types'
+} from '../types'
 
 /**
  * A collection of compiled schemas.
  */
-export class AdxSchemas {
-  schemas: Map<string, AdxSchema> = new Map()
+export class RecordSchemas {
+  schemas: Map<string, CompiledRecordSchema> = new Map()
 
   /**
    * Add a schema definition.
    */
   add(schemaDef: unknown): void {
     try {
-      adxSchemaDefinition.parse(schemaDef)
+      recordSchema.parse(schemaDef)
     } catch (e: any) {
-      throw new AdxSchemaDefinitionMalformedError(
+      throw new RecordSchemaMalformedError(
         `Failed to parse schema definition`,
         schemaDef,
         e.issues,
       )
     }
-    const schema = new AdxSchema(schemaDef as AdxSchemaDefinition)
+    const schema = new CompiledRecordSchema(schemaDef as RecordSchema)
     if (this.schemas.has(schema.id)) {
       throw new Error(`${schema.id} has already been registered`)
     }
@@ -50,7 +48,7 @@ export class AdxSchemas {
   /**
    * Get a schema definition.
    */
-  get(key: string): AdxSchema | undefined {
+  get(key: string): CompiledRecordSchema | undefined {
     return this.schemas.get(key)
   }
 
@@ -58,8 +56,8 @@ export class AdxSchemas {
    * Create a record validator out of one or more schemas.
    */
   createRecordValidator(
-    desc: string | string[] | AdxRecordValidatorDescription,
-  ): AdxRecordValidator {
+    desc: string | string[] | RecordValidatorDescription,
+  ): RecordValidator {
     let type: string[]
     let ext: string[] = []
     if (typeof desc === 'string' || Array.isArray(desc)) {
@@ -70,7 +68,7 @@ export class AdxSchemas {
         ext = Array.isArray(desc.ext) ? desc.ext : [desc.ext]
       }
     }
-    return new AdxRecordValidator(
+    return new RecordValidator(
       this,
       type.map(mapGetSchema(this)),
       ext.map(mapGetSchema(this)),
@@ -78,7 +76,7 @@ export class AdxSchemas {
   }
 }
 
-function mapGetSchema(schemas: AdxSchemas) {
+function mapGetSchema(schemas: RecordSchemas) {
   return (t: string) => {
     const schema = schemas.get(t)
     if (!schema) {
@@ -88,4 +86,4 @@ function mapGetSchema(schemas: AdxSchemas) {
   }
 }
 
-export default AdxSchemas
+export default RecordSchemas

@@ -1,5 +1,5 @@
 {
-  "xrpc": 1,
+  "lexicon": 1,
   "id": "todo.social.getUserFollowers",
   "type": "query",
   "description": "Who is following a user?",

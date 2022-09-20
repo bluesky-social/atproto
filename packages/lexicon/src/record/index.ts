@@ -1,5 +1,4 @@
 export * from './schema'
 export * from './schemas'
-export * from './record-validator'
+export * from './validator'
 export * from './validation'
-export * from './types'
