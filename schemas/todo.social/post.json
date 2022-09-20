@@ -1,0 +1,44 @@
+{
+  "adx": 1,
+  "id": "todo.social.post",
+  "record": {
+    "type": "object",
+    "required": ["text", "createdAt"],
+    "properties": {
+      "text": {"type": "string", "maxLength": 256},
+      "entities": {"$ref": "#/$defs/entity"},
+      "reply": {
+        "type": "object",
+        "required": ["root"],
+        "properties": {
+          "root": {"type": "string"},
+          "parent": {"type": "string"}
+        }
+      },
+      "createdAt": {"type": "string", "format": "date-time"}
+    },
+    "$defs": {
+      "entity": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["index", "type", "value"],
+          "properties": {
+            "index": {"$ref": "#/$defs/textSlice"},
+            "type": {
+              "type": "string",
+              "$comment": "Expected values are 'mention', 'hashtag', and 'link'."
+            },
+            "value": {"type": "string"}
+          }
+        }
+      },
+      "textSlice": {
+        "type": "array",
+        "items": [{"type": "number"}, {"type": "number"}],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  }
+}

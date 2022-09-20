@@ -151,7 +151,7 @@ Here is an example schema:
 {
   "adx": 1,
   "id": "com.example.post",
-  "schema": {
+  "record": {
     "type": "object",
     "required": ["text", "createdAt"],
     "properties": {
