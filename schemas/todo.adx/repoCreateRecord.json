@@ -1,5 +1,5 @@
 {
-  "xrpc": 1,
+  "lexicon": 1,
   "id": "todo.adx.repoCreateRecord",
   "type": "procedure",
   "description": "Create a new record.",

@@ -1,5 +1,5 @@
 {
-  "xrpc": 1,
+  "lexicon": 1,
   "id": "todo.adx.repoListRecords",
   "type": "query",
   "description": "List a range of records in a collection.",

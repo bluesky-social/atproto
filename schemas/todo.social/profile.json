@@ -1,6 +1,7 @@
 {
-  "adx": 1,
+  "lexicon": 1,
   "id": "todo.social.profile",
+  "type": "record",
   "record": {
     "type": "object",
     "required": ["displayName"],
