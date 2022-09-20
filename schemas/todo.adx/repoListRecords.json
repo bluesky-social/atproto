@@ -15,7 +15,7 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": "records",
+      "required": ["records"],
       "properties": {
         "records": {
           "type": "array",

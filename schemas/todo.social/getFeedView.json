@@ -10,7 +10,7 @@
   },
   "output": {
     "encoding": "application/json",
-    "body": {
+    "schema": {
       "type": "object",
       "required": ["feed"],
       "properties": {
