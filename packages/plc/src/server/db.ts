@@ -7,6 +7,7 @@ import {
   Column,
   PrimaryColumn,
   In,
+  Not,
 } from 'typeorm'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
@@ -34,11 +35,28 @@ export class Database {
   }
 
   async validateAndAddOp(did: string, proposed: t.Operation): Promise<void> {
+    const ops = await this.db.readOperation(async (manager) => {
+      return await this._opsForDid(manager, did)
+    })
+    // throws if invalid
+    const { nullified, prev } = await document.assureValidNextOp(
+      did,
+      ops,
+      proposed,
+    )
+    const cid = await cidForData(proposed)
+
     await this.db.transaction(async (tx) => {
-      const ops = await this._opsForDid(tx, did)
-      // throws if invalid
-      const { nullified } = await document.assureValidNextOp(did, ops, proposed)
-      const cid = await cidForData(proposed)
+      const mostRecent = await this._mostRecentCid(tx, did, nullified)
+      const isMatch =
+        (prev === null && mostRecent === null) ||
+        (prev && prev.equals(mostRecent))
+
+      if (!isMatch) {
+        throw new Error(
+          'Proposed prev does not match the most recent operation',
+        )
+      }
 
       const toInsert = new OperationsTable()
       toInsert.did = did
@@ -56,6 +74,26 @@ export class Database {
         )
       }
     })
+  }
+
+  async mostRecentCid(did: string): Promise<CID | null> {
+    return this.db.readOperation(async (manager) => {
+      return this._mostRecentCid(manager, did, [])
+    })
+  }
+
+  async _mostRecentCid(
+    manager: EntityManager,
+    did: string,
+    notIncluded: CID[],
+  ): Promise<CID | null> {
+    const notIncludedStr = notIncluded.map((cid) => cid.toString())
+    const found = await manager.find(OperationsTable, {
+      where: { did, nullified: false, cid: Not(In(notIncludedStr)) },
+      order: { createdAt: 'DESC' },
+      take: 1,
+    })
+    return found[0] ? CID.parse(found[0].cid) : null
   }
 
   async opsForDid(did: string): Promise<t.Operation[]> {

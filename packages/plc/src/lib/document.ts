@@ -9,14 +9,14 @@ export const assureValidNextOp = async (
   did: string,
   ops: t.IndexedOperation[],
   proposed: t.Operation,
-): Promise<{ nullified: CID[] }> => {
+): Promise<{ nullified: CID[]; prev: CID | null }> => {
   // special case if account creation
   if (ops.length === 0) {
     if (!check.is(proposed, t.def.createOp)) {
       throw new Error('Expected first operation to be `create`')
     }
     await assureValidCreationOp(did, proposed)
-    return { nullified: [] }
+    return { nullified: [], prev: null }
   }
   const proposedPrev = proposed.prev ? CID.parse(proposed.prev) : undefined
   if (!proposedPrev) {
@@ -57,6 +57,7 @@ export const assureValidNextOp = async (
 
   return {
     nullified: nullified.map((op) => op.cid),
+    prev: proposedPrev,
   }
 }
 
