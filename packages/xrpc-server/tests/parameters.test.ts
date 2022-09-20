@@ -5,7 +5,7 @@ import xrpc from '@adxp/xrpc'
 
 const SCHEMAS = [
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'io.example.paramTest',
     type: 'query',
     parameters: {

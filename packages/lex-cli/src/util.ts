@@ -1,7 +1,5 @@
 import fs from 'fs'
-import { methodSchema, MethodSchema } from '@adxp/xrpc'
-import { adxSchemaDefinition, AdxSchemaDefinition } from '@adxp/schemas'
-import { Schema } from './types'
+import { methodSchema, MethodSchema, recordSchema, Schema } from '@adxp/lexicon'
 
 export function schemaTemplate(nsid: string, options?: Record<string, string>) {
   return {
@@ -51,23 +49,23 @@ export function readSchema(path: string): Schema {
     console.error(`Failed to parse JSON in file`, path)
     throw e
   }
-  if (obj.xrpc === 1) {
+  if (obj.type === 'query' || obj.type === 'procedure') {
     try {
       return methodSchema.parse(obj)
     } catch (e) {
-      console.error(`Invalid XRPC schema in file`, path)
+      console.error(`Invalid method schema in file`, path)
       throw e
     }
-  } else if (obj.adx === 1) {
+  } else if (obj.type === 'record') {
     try {
-      return adxSchemaDefinition.parse(obj)
+      return recordSchema.parse(obj)
     } catch (e) {
-      console.error(`Invalid ADX schema in file`, path)
+      console.error(`Invalid record schema in file`, path)
       throw e
     }
   } else {
-    console.error(`Not an xrpc or adx schema`, path)
-    throw new Error(`Not an xrpc or adx schema`)
+    console.error(`Not lexicon schema`, path)
+    throw new Error(`Not lexicon schema`)
   }
 }
 
@@ -76,7 +74,7 @@ export function genMd(schemas: Schema[]) {
   for (const schema of schemas) {
     if (methodSchema.parse(schema)) {
       doc = doc.concat(genMethodSchemaMd(schema as MethodSchema))
-    } else if (adxSchemaDefinition.parse(schema)) {
+    } else if (recordSchema.parse(schema)) {
       // TODO
     }
   }

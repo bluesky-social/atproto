@@ -1,7 +1,9 @@
 {
-  "name": "@adxp/xrpc-cli",
+  "name": "@adxp/lex-cli",
   "version": "0.0.1",
-  "bin": "dist/index.js",
+  "bin": {
+    "lex": "dist/index.js"
+  },
   "main": "src/index.ts",
   "scripts": {
     "prettier": "prettier --check src/",
@@ -15,9 +17,8 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@adxp/lexicon": "*",
     "@adxp/nsid": "*",
-    "@adxp/schemas": "*",
-    "@adxp/xrpc": "*",
     "ajv": "^8.11.0",
     "ajv-formats": "^2.1.1",
     "commander": "^9.4.0",

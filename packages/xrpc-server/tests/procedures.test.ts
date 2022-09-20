@@ -5,7 +5,7 @@ import xrpc from '@adxp/xrpc'
 
 const SCHEMAS = [
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'io.example.ping1',
     type: 'procedure',
     parameters: { message: { type: 'string' } },
@@ -14,7 +14,7 @@ const SCHEMAS = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'io.example.ping2',
     type: 'procedure',
     input: {
@@ -25,7 +25,7 @@ const SCHEMAS = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'io.example.ping3',
     type: 'procedure',
     input: {
@@ -36,7 +36,7 @@ const SCHEMAS = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'io.example.ping4',
     type: 'procedure',
     input: {

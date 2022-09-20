@@ -2,12 +2,11 @@
 * GENERATED CODE - DO NOT MODIFY
 * Created Tue Sep 20 2022
 */
-import { MethodSchema } from '@adxp/xrpc'
-import { AdxSchemaDefinition } from '@adxp/schemas'
+import { MethodSchema, RecordSchema } from '@adxp/lexicon'
 
 export const methodSchemas: MethodSchema[] = [
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.createAccount',
     type: 'procedure',
     description: 'Create an account.',
@@ -29,7 +28,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.createSession',
     type: 'procedure',
     description: 'Create an authentication session.',
@@ -44,7 +43,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.deleteAccount',
     type: 'procedure',
     description: 'Delete an account.',
@@ -59,7 +58,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.deleteSession',
     type: 'procedure',
     description: 'Delete the current session.',
@@ -74,7 +73,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.getAccount',
     type: 'query',
     description: 'Get information about an account.',
@@ -89,7 +88,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.getSession',
     type: 'query',
     description: 'Get information about the current session.',
@@ -104,7 +103,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.repoBatchWrite',
     type: 'procedure',
     description: 'Apply a batch transaction of creates, puts, and deletes.',
@@ -189,7 +188,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.repoCreateRecord',
     type: 'procedure',
     description: 'Create a new record.',
@@ -228,7 +227,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.repoDeleteRecord',
     type: 'procedure',
     description: 'Delete a record.',
@@ -251,7 +250,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.repoDescribe',
     type: 'query',
     description:
@@ -292,7 +291,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.repoGetRecord',
     type: 'query',
     description: 'Fetch a record.',
@@ -330,7 +329,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.repoListRecords',
     type: 'query',
     description: 'List a range of records in a collection.',
@@ -391,7 +390,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.repoPutRecord',
     type: 'procedure',
     description: 'Write a record.',
@@ -435,7 +434,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.resolveName',
     type: 'query',
     description:
@@ -461,7 +460,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.syncGetRepo',
     type: 'query',
     description: 'Gets the repo state.',
@@ -481,7 +480,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.syncGetRoot',
     type: 'query',
     description: 'Gets the current root CID of a repo.',
@@ -506,7 +505,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.adx.syncUpdateRepo',
     type: 'procedure',
     description: 'Writes commits to a repo.',
@@ -522,7 +521,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.social.getFeed',
     type: 'query',
     description: "A computed view of the home feed or a user's feed",
@@ -684,7 +683,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.social.getLikedBy',
     type: 'query',
     parameters: {
@@ -741,7 +740,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.social.getNotifications',
     type: 'query',
     parameters: {
@@ -808,7 +807,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.social.getPostThread',
     type: 'query',
     parameters: {
@@ -969,7 +968,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.social.getProfile',
     type: 'query',
     parameters: {
@@ -1076,7 +1075,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.social.getRepostedBy',
     type: 'query',
     parameters: {
@@ -1133,7 +1132,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.social.getUserFollowers',
     type: 'query',
     description: 'Who is following a user?',
@@ -1204,7 +1203,7 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
   {
-    xrpc: 1,
+    lexicon: 1,
     id: 'todo.social.getUserFollows',
     type: 'query',
     description: 'Who is a user following?',
@@ -1275,10 +1274,11 @@ export const methodSchemas: MethodSchema[] = [
     },
   },
 ]
-export const recordSchemas: AdxSchemaDefinition[] = [
+export const recordSchemas: RecordSchema[] = [
   {
-    adx: 1,
+    lexicon: 1,
     id: 'todo.social.badge',
+    type: 'record',
     description: 'An assertion about the subject by this user.',
     record: {
       type: 'object',
@@ -1356,8 +1356,9 @@ export const recordSchemas: AdxSchemaDefinition[] = [
     },
   },
   {
-    adx: 1,
+    lexicon: 1,
     id: 'todo.social.follow',
+    type: 'record',
     description: 'A social follow',
     record: {
       type: 'object',
@@ -1374,8 +1375,9 @@ export const recordSchemas: AdxSchemaDefinition[] = [
     },
   },
   {
-    adx: 1,
+    lexicon: 1,
     id: 'todo.social.like',
+    type: 'record',
     record: {
       type: 'object',
       required: ['subject', 'createdAt'],
@@ -1391,8 +1393,9 @@ export const recordSchemas: AdxSchemaDefinition[] = [
     },
   },
   {
-    adx: 1,
+    lexicon: 1,
     id: 'todo.social.mediaEmbed',
+    type: 'record',
     description: 'A list of media embedded in a post or document.',
     record: {
       type: 'object',
@@ -1437,8 +1440,9 @@ export const recordSchemas: AdxSchemaDefinition[] = [
     },
   },
   {
-    adx: 1,
+    lexicon: 1,
     id: 'todo.social.post',
+    type: 'record',
     record: {
       type: 'object',
       required: ['text', 'createdAt'],
@@ -1505,8 +1509,9 @@ export const recordSchemas: AdxSchemaDefinition[] = [
     },
   },
   {
-    adx: 1,
+    lexicon: 1,
     id: 'todo.social.profile',
+    type: 'record',
     record: {
       type: 'object',
       required: ['displayName'],
@@ -1540,8 +1545,9 @@ export const recordSchemas: AdxSchemaDefinition[] = [
     },
   },
   {
-    adx: 1,
+    lexicon: 1,
     id: 'todo.social.repost',
+    type: 'record',
     record: {
       type: 'object',
       required: ['subject', 'createdAt'],

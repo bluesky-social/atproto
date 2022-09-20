@@ -10,7 +10,7 @@ import { genClientApi } from './codegen/client'
 import { genServerApi } from './codegen/server'
 
 const program = new Command()
-program.name('xrpc-cli').description('XRPC utilities').version('0.0.0')
+program.name('lex').description('Lexicon CLI').version('0.0.0')
 
 program
   .command('new')

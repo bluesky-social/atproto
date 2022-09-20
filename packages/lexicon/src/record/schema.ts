@@ -1,6 +1,6 @@
 import Ajv, { ValidateFunction } from 'ajv'
 import ajvAddFormats from 'ajv-formats'
-import { AdxSchemaDefinition, AdxSchemaDefinitionMalformedError } from './types'
+import { RecordSchema, RecordSchemaMalformedError } from '../types'
 
 const ajv = new Ajv()
 ajvAddFormats(ajv)
@@ -8,11 +8,11 @@ ajvAddFormats(ajv)
 /**
  * A compiled schema.
  */
-export class AdxSchema {
+export class CompiledRecordSchema {
   id: string
-  validateRecord?: ValidateFunction
+  validate?: ValidateFunction
 
-  constructor(public def: AdxSchemaDefinition) {
+  constructor(public def: RecordSchema) {
     this.id = def.id
 
     // .record
@@ -21,10 +21,10 @@ export class AdxSchema {
         if (def.record.type !== 'object') {
           throw new Error('The base .type must be an "object"')
         }
-        this.validateRecord = ajv.compile(def.record)
+        this.validate = ajv.compile(def.record)
       }
     } catch (e: any) {
-      throw new AdxSchemaDefinitionMalformedError(
+      throw new RecordSchemaMalformedError(
         `The "${this.id}" .record failed to compile: ${e.message}`,
         def,
       )
@@ -32,4 +32,4 @@ export class AdxSchema {
   }
 }
 
-export default AdxSchema
+export default CompiledRecordSchema

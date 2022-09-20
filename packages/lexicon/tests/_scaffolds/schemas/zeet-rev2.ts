@@ -1,6 +1,7 @@
 export default {
-  adx: 1,
+  lexicon: 1,
   id: 'com.example.zeet',
+  type: 'record',
   revision: 2,
   record: {
     type: 'object',

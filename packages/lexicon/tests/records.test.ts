@@ -1,15 +1,15 @@
 import {
-  AdxSchemas,
-  AdxSchemaDefinitionMalformedError,
+  RecordSchemas,
+  RecordSchemaMalformedError,
   SchemaNotFoundError,
-  AdxValidationError,
+  ValidationError,
 } from '../src/index'
 import ZeetSchema from './_scaffolds/schemas/zeet'
 import ZeetRev2Schema from './_scaffolds/schemas/zeet-rev2'
 import PollSchema from './_scaffolds/schemas/poll'
 
 describe('Create schema collections and validators', () => {
-  const s = new AdxSchemas()
+  const s = new RecordSchemas()
 
   it('Adds schemas', () => {
     s.add(ZeetSchema)
@@ -42,11 +42,11 @@ describe('Create schema collections and validators', () => {
 })
 
 describe('Validates schemas', () => {
-  const s = new AdxSchemas()
-  expect(() => s.add({})).toThrow(AdxSchemaDefinitionMalformedError)
-  expect(() => s.add({ adx: 1 })).toThrow(AdxSchemaDefinitionMalformedError)
+  const s = new RecordSchemas()
+  expect(() => s.add({})).toThrow(RecordSchemaMalformedError)
+  expect(() => s.add({ adx: 1 })).toThrow(RecordSchemaMalformedError)
   expect(() => s.add({ adx: 1, id: 'bad-nsid' })).toThrow(
-    AdxSchemaDefinitionMalformedError,
+    RecordSchemaMalformedError,
   )
   expect(() =>
     s.add({
@@ -54,7 +54,7 @@ describe('Validates schemas', () => {
       id: 'com.example.test',
       record: 'wrong',
     }),
-  ).toThrow(AdxSchemaDefinitionMalformedError)
+  ).toThrow(RecordSchemaMalformedError)
   expect(() =>
     s.add({
       adx: 1,
@@ -63,7 +63,7 @@ describe('Validates schemas', () => {
         type: 'array',
       },
     }),
-  ).toThrow(AdxSchemaDefinitionMalformedError)
+  ).toThrow(RecordSchemaMalformedError)
   expect(() =>
     s.add({
       adx: 1,
@@ -73,11 +73,11 @@ describe('Validates schemas', () => {
         unsupportedField: 'ohno',
       },
     }),
-  ).toThrow(AdxSchemaDefinitionMalformedError)
+  ).toThrow(RecordSchemaMalformedError)
 })
 
 describe('Validates record types', () => {
-  const s = new AdxSchemas()
+  const s = new RecordSchemas()
   s.add(ZeetSchema)
 
   {
@@ -150,7 +150,7 @@ describe('Validates record types', () => {
 })
 
 describe('Validates extension types', () => {
-  const s = new AdxSchemas()
+  const s = new RecordSchemas()
   s.add(ZeetSchema)
   s.add(PollSchema)
 
@@ -295,7 +295,7 @@ describe('Validates extension types', () => {
 })
 
 describe('isValid()', () => {
-  const s = new AdxSchemas()
+  const s = new RecordSchemas()
   s.add(ZeetSchema)
 
   {
@@ -337,7 +337,7 @@ describe('isValid()', () => {
 })
 
 describe('assertValid()', () => {
-  const s = new AdxSchemas()
+  const s = new RecordSchemas()
   s.add(ZeetSchema)
 
   {
@@ -361,7 +361,7 @@ describe('assertValid()', () => {
           $type: 'com.example.zeet',
           text: 'Hello, world!',
         }),
-      ).toThrow(AdxValidationError)
+      ).toThrow(ValidationError)
     }
   }
 })

@@ -1,6 +1,7 @@
 export default {
-  adx: 1,
+  lexicon: 1,
   id: 'com.example.zeet',
+  type: 'record',
   record: {
     type: 'object',
     required: ['text', 'createdAt'],
