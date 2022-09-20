@@ -47,6 +47,7 @@ const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Follow.Record => {
   return validator.isValid(obj)
 }
+const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const setFn =
   (repo: Repository<FollowIndex>) =>
@@ -83,7 +84,7 @@ export const makePlugin = (
     collection: type,
     tableName,
     get: getFn(repository),
-    isValidSchema,
+    validateSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,

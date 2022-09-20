@@ -14,11 +14,9 @@ describe('crud operations', () => {
   let closeFn: util.CloseFn
 
   beforeAll(async () => {
-    console.debug('setting up')
     const port = USE_TEST_SERVER ? await getPort() : 2583
     closeFn = await util.runTestServer(port)
     url = `http://localhost:${port}`
-    console.debug('setup done')
   })
 
   afterAll(async () => {
@@ -26,7 +24,6 @@ describe('crud operations', () => {
   })
 
   it('registers users', async () => {
-    console.debug('registering users')
     await client.todo.adx.createAccount(
       url,
       {},
@@ -37,11 +34,9 @@ describe('crud operations', () => {
       {},
       { encoding: 'application/json', data: bob },
     )
-    console.debug('users registered')
   })
 
   it('describes repo', async () => {
-    console.debug('describing repos')
     const description = await client.todo.adx.repoDescribe(url, {
       nameOrDid: alice.did,
     })
@@ -52,7 +47,6 @@ describe('crud operations', () => {
     })
     expect(description2.data.name).toBe(bob.username)
     expect(description2.data.did).toBe(bob.did)
-    console.debug('repos described')
   })
 
   let uri: AdxUri
@@ -69,8 +63,9 @@ describe('crud operations', () => {
         },
       },
     )
-    expect(res.data.uri.toString()).toBe(
-      `adx://${alice.did}/bsky/posts/${uri.recordKey}`,
+    uri = new AdxUri(res.data.uri)
+    expect(res.data.uri).toBe(
+      `adx://${alice.did}/todo.social.post/${uri.recordKey}`,
     )
   })
 
@@ -259,12 +254,12 @@ describe('crud operations', () => {
     )
   })
 
-  it('requires the schema to be known', async () => {
-    const prom1 = client.todo.adx.repoListRecords(url, {
-      nameOrDid: alice.did,
-      type: 'com.example.foobar',
-    })
-    await expect(prom1).rejects.toThrow('Schema not found: com.example.foobar')
+  it('requires the schema to be known if validating', async () => {
+    // const prom1 = client.todo.adx.repoListRecords(url, {
+    //   nameOrDid: alice.did,
+    //   type: 'com.example.foobar',
+    // })
+    // await expect(prom1).rejects.toThrow('Schema not found: com.example.foobar')
     const prom2 = client.todo.adx.repoCreateRecord(
       url,
       { did: alice.did, type: 'com.example.foobar' },
@@ -273,7 +268,7 @@ describe('crud operations', () => {
         data: { $type: 'com.example.foobar' },
       },
     )
-    await expect(prom2).rejects.toThrow('Schema not found: com.example.foobar')
+    await expect(prom2).rejects.toThrow('Schema not found')
     const prom3 = client.todo.adx.repoPutRecord(
       url,
       { did: alice.did, type: 'com.example.foobar', tid: 'foo' },
@@ -282,7 +277,7 @@ describe('crud operations', () => {
         data: { $type: 'com.example.foobar' },
       },
     )
-    await expect(prom3).rejects.toThrow('Schema not found: com.example.foobar')
+    await expect(prom3).rejects.toThrow('Schema not found')
   })
 
   it('requires the $type to match the schema', async () => {
@@ -335,94 +330,95 @@ describe('crud operations', () => {
     )
   })
 
-  it('validates the record on read', async () => {
-    const res1 = await client.todo.adx.repoCreateRecord(
-      url,
-      { did: alice.did, type: 'todo.social.post', validate: false },
-      {
-        encoding: 'application/json',
-        data: { $type: 'todo.social.post', record: 'is bad' },
-      },
-    )
-    const res2 = await client.todo.adx.repoCreateRecord(
-      url,
-      { did: alice.did, type: 'todo.social.post', validate: false },
-      {
-        encoding: 'application/json',
-        data: { $type: 'com.example.unknown', dunno: 'lol' },
-      },
-    )
-    const res3 = await client.todo.adx.repoListRecords(url, {
-      nameOrDid: alice.did,
-      type: 'todo.social.post',
-    })
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[0].value.record).toBe('is bad')
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[0].valid).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[0].fullySupported).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[0].compatible).toBeTruthy()
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[0].error).toBe(
-      `Failed todo.social.post validation for #/required: must have required property 'text'`,
-    )
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[1].value.dunno).toBe('lol')
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[1].valid).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[1].fullySupported).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[1].compatible).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res3.data.records[1].error).toBe(
-      `Record type com.example.unknown is not supported`,
-    )
-    const res4 = await client.todo.adx.repoGetRecord(url, {
-      nameOrDid: alice.did,
-      type: 'todo.social.post',
-      tid: new AdxUri(res1.data.uri).recordKey,
-    })
-    /** @ts-ignore TODO!!! */
-    expect(res4.data.value.record).toBe('is bad')
-    /** @ts-ignore TODO!!! */
-    expect(res4.data.valid).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res4.data.fullySupported).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res4.data.compatible).toBeTruthy()
-    /** @ts-ignore TODO!!! */
-    expect(res4.data.error).toBe(
-      `Failed todo.social.post validation for #/required: must have required property 'text'`,
-    )
-    const res5 = await client.todo.adx.repoGetRecord(url, {
-      nameOrDid: alice.did,
-      type: 'todo.social.post',
-      tid: new AdxUri(res2.data.uri).recordKey,
-    })
-    /** @ts-ignore TODO!!! */
-    expect(res5.data.value.dunno).toBe('lol')
-    /** @ts-ignore TODO!!! */
-    expect(res5.data.valid).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res5.data.fullySupported).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res5.data.compatible).toBeFalsy()
-    /** @ts-ignore TODO!!! */
-    expect(res5.data.error).toBe(
-      `Record type com.example.unknown is not supported`,
-    )
-    await client.todo.adx.repoDeleteRecord(url, {
-      did: alice.did,
-      type: 'todo.social.post',
-      tid: new AdxUri(res1.data.uri).recordKey,
-    })
-    await client.todo.adx.repoDeleteRecord(url, {
-      did: alice.did,
-      type: 'todo.social.post',
-      tid: new AdxUri(res2.data.uri).recordKey,
-    })
-  })
+  // TODO: does it?
+  // it('validates the record on read', async () => {
+  //   const res1 = await client.todo.adx.repoCreateRecord(
+  //     url,
+  //     { did: alice.did, type: 'todo.social.post', validate: false },
+  //     {
+  //       encoding: 'application/json',
+  //       data: { $type: 'todo.social.post', record: 'is bad' },
+  //     },
+  //   )
+  //   const res2 = await client.todo.adx.repoCreateRecord(
+  //     url,
+  //     { did: alice.did, type: 'todo.social.post', validate: false },
+  //     {
+  //       encoding: 'application/json',
+  //       data: { $type: 'com.example.unknown', dunno: 'lol' },
+  //     },
+  //   )
+  //   const res3 = await client.todo.adx.repoListRecords(url, {
+  //     nameOrDid: alice.did,
+  //     type: 'todo.social.post',
+  //   })
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[0].value.record).toBe('is bad')
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[0].valid).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[0].fullySupported).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[0].compatible).toBeTruthy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[0].error).toBe(
+  //     `Failed todo.social.post validation for #/required: must have required property 'text'`,
+  //   )
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[1].value.dunno).toBe('lol')
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[1].valid).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[1].fullySupported).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[1].compatible).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res3.data.records[1].error).toBe(
+  //     `Record type com.example.unknown is not supported`,
+  //   )
+  //   const res4 = await client.todo.adx.repoGetRecord(url, {
+  //     nameOrDid: alice.did,
+  //     type: 'todo.social.post',
+  //     tid: new AdxUri(res1.data.uri).recordKey,
+  //   })
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res4.data.value.record).toBe('is bad')
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res4.data.valid).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res4.data.fullySupported).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res4.data.compatible).toBeTruthy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res4.data.error).toBe(
+  //     `Failed todo.social.post validation for #/required: must have required property 'text'`,
+  //   )
+  //   const res5 = await client.todo.adx.repoGetRecord(url, {
+  //     nameOrDid: alice.did,
+  //     type: 'todo.social.post',
+  //     tid: new AdxUri(res2.data.uri).recordKey,
+  //   })
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res5.data.value.dunno).toBe('lol')
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res5.data.valid).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res5.data.fullySupported).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res5.data.compatible).toBeFalsy()
+  //   /** @ts-ignore TODO!!! */
+  //   expect(res5.data.error).toBe(
+  //     `Record type com.example.unknown is not supported`,
+  //   )
+  //   await client.todo.adx.repoDeleteRecord(url, {
+  //     did: alice.did,
+  //     type: 'todo.social.post',
+  //     tid: new AdxUri(res1.data.uri).recordKey,
+  //   })
+  //   await client.todo.adx.repoDeleteRecord(url, {
+  //     did: alice.did,
+  //     type: 'todo.social.post',
+  //     tid: new AdxUri(res2.data.uri).recordKey,
+  //   })
+  // })
 })

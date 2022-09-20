@@ -1,4 +1,5 @@
 import { Server } from '../xrpc'
+import { InvalidRequestError } from '@adxp/xrpc-server'
 import { def as common } from '@adxp/common'
 import * as util from '../util'
 import { DataDiff, Repo } from '@adxp/repo'
@@ -10,7 +11,7 @@ export default function (server: Server) {
     const db = util.getDB(res)
     const root = await db.getRepoRoot(did)
     if (root === null) {
-      throw new Error(`Could not find root for DID: ${did}`)
+      throw new InvalidRequestError(`Could not find root for DID: ${did}`)
     }
     return {
       encoding: 'application/json',

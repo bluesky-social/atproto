@@ -1,4 +1,5 @@
 import { Server } from '../xrpc'
+import { InvalidRequestError } from '@adxp/xrpc-server'
 import { resolveName, AdxUri, TID } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
@@ -9,7 +10,7 @@ async function resolveNameWrapped(name: string) {
   try {
     return await resolveName(name)
   } catch (e) {
-    throw new Error(`Failed to resolve name: ${name}`)
+    throw new InvalidRequestError(`Failed to resolve name: ${name}`)
   }
 }
 
@@ -44,7 +45,7 @@ export default function (server: Server) {
     const db = util.getDB(res)
     const user = await db.getUser(nameOrDid)
     if (user === null) {
-      throw new Error(`Could not find user: ${nameOrDid}`)
+      throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
     }
     didDoc = {} as any
     nameIsCorrect = true
@@ -71,7 +72,7 @@ export default function (server: Server) {
       ? nameOrDid
       : (await db.getUser(nameOrDid))?.did
     if (!did) {
-      throw new Error(`Could not find did for ${nameOrDid}`)
+      throw new InvalidRequestError(`Could not find did for ${nameOrDid}`)
     }
 
     const records = await db.listRecordsForCollection(
@@ -100,7 +101,7 @@ export default function (server: Server) {
     const db = util.getDB(res)
     const record = await db.getRecord(uri)
     if (!record) {
-      throw new Error(`Could not locate record: ${uri}`)
+      throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
     return {
       encoding: 'application/json',
@@ -115,9 +116,10 @@ export default function (server: Server) {
     if (validate) {
       for (const write of tx.writes) {
         if (write.action === 'create' || write.action === 'update') {
-          if (!db.canIndexRecord(write.collection, write.value)) {
-            throw new Error(
-              `Not a valid record for collection: ${write.collection}`,
+          const validation = db.validateRecord(write.collection, write.value)
+          if (!validation.valid) {
+            throw new InvalidRequestError(
+              `Invalid ${write.collection} record: ${validation.error}`,
             )
           }
         }
@@ -135,7 +137,7 @@ export default function (server: Server) {
       await repoDiff.processDiff(db, repo, diff)
     } catch (err) {
       if (validate) {
-        throw new Error(`Could not index record: ${err}`)
+        throw new InvalidRequestError(`Could not index record: ${err}`)
       }
     }
     await db.setRepoRoot(did, repo.cid)
@@ -150,8 +152,11 @@ export default function (server: Server) {
     const { did, type, validate } = params
     const db = util.getDB(res)
     if (validate) {
-      if (!db.canIndexRecord(type, input.body)) {
-        throw new Error(`Not a valid record for collection: ${type}`)
+      const validation = db.validateRecord(type, input.body)
+      if (!validation.valid) {
+        throw new InvalidRequestError(
+          `Invalid ${type} record: ${validation.error}`,
+        )
       }
     }
     const serverKey = util.getKeypair(res)
@@ -163,7 +168,7 @@ export default function (server: Server) {
       await db.indexRecord(uri, input.body)
     } catch (err) {
       if (validate) {
-        throw new Error(`Could not index record: ${err}`)
+        throw new InvalidRequestError(`Could not index record: ${err}`)
       }
     }
     await db.setRepoRoot(did, repo.cid)
@@ -179,8 +184,11 @@ export default function (server: Server) {
     const { did, type, tid, validate } = params
     const db = util.getDB(res)
     if (validate) {
-      if (!db.canIndexRecord(type, input.body)) {
-        throw new Error(`Not a valid record for collection: ${type}`)
+      const validation = db.validateRecord(type, input.body)
+      if (!validation.valid) {
+        throw new InvalidRequestError(
+          `Invalid ${type} record: ${validation.error}`,
+        )
       }
     }
     const serverKey = util.getKeypair(res)
@@ -192,7 +200,7 @@ export default function (server: Server) {
       await db.indexRecord(uri, input.body)
     } catch (err) {
       if (validate) {
-        throw new Error(`Could not index record: ${err}`)
+        throw new InvalidRequestError(`Could not index record: ${err}`)
       }
     }
     await db.setRepoRoot(did, repo.cid)

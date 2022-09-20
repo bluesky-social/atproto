@@ -1,4 +1,5 @@
 import { Server } from '../xrpc'
+import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as util from '../util'
 import { Repo } from '@adxp/repo'
 import * as auth from '@adxp/auth'
@@ -12,10 +13,14 @@ export default function (server: Server) {
   server.todo.adx.createAccount(async (_params, input, _req, res) => {
     const { did, username } = input.body
     if (username.startsWith('did:')) {
-      throw new Error('Cannot register a username that starts with `did:`')
+      throw new InvalidRequestError(
+        'Cannot register a username that starts with `did:`',
+      )
     }
     if (!did.startsWith('did:')) {
-      throw new Error('Cannot register a did that does not start with `did:`')
+      throw new InvalidRequestError(
+        'Cannot register a did that does not start with `did:`',
+      )
     }
 
     const { db, blockstore, keypair } = util.getLocals(res)

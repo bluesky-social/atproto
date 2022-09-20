@@ -53,6 +53,7 @@ const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Badge.Record => {
   return validator.isValid(obj)
 }
+const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const setFn =
   (repo: Repository<BadgeIndex>) =>
@@ -99,7 +100,7 @@ export const makePlugin = (
     collection: type,
     tableName,
     get: getFn(repository),
-    isValidSchema,
+    validateSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,

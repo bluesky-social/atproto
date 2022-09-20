@@ -62,6 +62,7 @@ const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Profile.Record => {
   return validator.isValid(obj)
 }
+const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const setFn =
   (db: DataSource) =>
@@ -110,7 +111,7 @@ export const makePlugin = (
     collection: type,
     tableName,
     get: getFn(db),
-    isValidSchema,
+    validateSchema,
     set: setFn(db),
     delete: deleteFn(db),
     translateDbObj,
