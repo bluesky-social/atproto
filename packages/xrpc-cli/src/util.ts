@@ -22,7 +22,14 @@ export function schemaTemplate(nsid: string, options?: Record<string, string>) {
 export function readAllSchemas(paths: string[]): MethodSchema[] {
   const schemas: any[] = []
   for (const path of paths) {
-    schemas.push(readSchema(path))
+    if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
+      continue
+    }
+    try {
+      schemas.push(readSchema(path))
+    } catch (e: any) {
+      // skip
+    }
   }
   return schemas
 }
@@ -41,6 +48,10 @@ export function readSchema(path: string): MethodSchema {
   } catch (e) {
     console.error(`Failed to parse JSON in file`, path)
     throw e
+  }
+  if (obj.xrpc !== 1) {
+    console.error(`Not an xrpc schema`, path)
+    throw new Error(`Not an xrpc schema`)
   }
   try {
     return methodSchema.parse(obj)
