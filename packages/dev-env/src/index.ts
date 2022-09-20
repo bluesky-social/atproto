@@ -4,7 +4,7 @@ import { MemoryBlockstore } from '@adxp/repo'
 import PDSServer from '@adxp/server/dist/server.js'
 import PDSDatabase from '@adxp/server/dist/db/index.js'
 import * as crypto from '@adxp/crypto'
-import { MicroblogClient } from '@adxp/microblog'
+import AdxApi, { ServiceClient } from '@adxp/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
 export class DevEnvServer {
@@ -72,8 +72,8 @@ export class DevEnvServer {
     }
   }
 
-  getClient(userDid: string): MicroblogClient {
-    return new MicroblogClient(`http://localhost:${this.port}`, userDid)
+  getClient(userDid: string): ServiceClient {
+    return AdxApi.service(`http://localhost:${this.port}`)
   }
 }
 

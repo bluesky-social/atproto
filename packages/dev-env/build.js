@@ -7,8 +7,9 @@ require('esbuild')
     platform: 'node',
     external: [
       './node_modules/sqlite3/*',
+      '../server/node_modules/@mapbox/*',
+      '../../node_modules/sqlite3/*',
       '../../node_modules/level/*',
-      '../../../node_modules/level/*',
       '../../node_modules/classic-level/*',
     ],
   })

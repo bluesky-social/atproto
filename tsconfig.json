@@ -29,7 +29,6 @@
     { "path": "./packages/crypto/tsconfig.build.json" },
     { "path": "./packages/dev-env" },
     { "path": "./packages/did-sdk/tsconfig.build.json" },
-    { "path": "./packages/microblog/tsconfig.build.json" },
     { "path": "./packages/nsid/tsconfig.build.json" },
     { "path": "./packages/schemas/tsconfig.build.json" },
     { "path": "./packages/xrpc/tsconfig.build.json" },
