@@ -1,10 +1,10 @@
-import { Server } from '../xrpc'
+import { Server } from '../../../xrpc'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import { resolveName, AdxUri, TID } from '@adxp/common'
 import * as auth from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
-import * as repoDiff from '../repo-diff'
-import * as util from '../util'
+import * as repoDiff from '../../../repo-diff'
+import * as util from '../../../util'
 
 async function resolveNameWrapped(name: string) {
   try {

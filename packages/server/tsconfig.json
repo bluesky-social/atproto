@@ -7,6 +7,11 @@
   },
   "module": "nodenext",
   "include": ["./src","__tests__/**/**.ts"],
+  "paths": {
+    "@root/*": ["*"],
+    "@xrpc/*": ["xrpc/*"],
+    "@db/*": ["db/*"],
+  },
   "references": [
     { "path": "../api/tsconfig.build.json" },
     { "path": "../auth/tsconfig.build.json" },

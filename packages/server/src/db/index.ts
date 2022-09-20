@@ -6,7 +6,7 @@ import * as Profile from '../xrpc/types/todo/social/profile'
 import * as Repost from '../xrpc/types/todo/social/repost'
 import { DataSource } from 'typeorm'
 import { AdxValidationResult, AdxValidationResultCode } from '@adxp/schemas'
-import { DbRecordPlugin, ViewFn } from './types'
+import { DbRecordPlugin } from './types'
 import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
 import likePlugin, { LikeIndex } from './records/like'
 import followPlugin, { FollowIndex } from './records/follow'
@@ -16,7 +16,6 @@ import profilePlugin, {
   ProfileIndex,
 } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-// import views from './views' TODO
 import { AdxUri } from '@adxp/common'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
@@ -33,7 +32,6 @@ export class Database {
     profiles: DbRecordPlugin<Profile.Record, ProfileIndex>
     reposts: DbRecordPlugin<Repost.Record, RepostIndex>
   }
-  views: Record<string, ViewFn>
 
   constructor(db: DataSource) {
     this.db = db
@@ -45,11 +43,6 @@ export class Database {
       profiles: profilePlugin(db),
       reposts: repostPlugin(db),
     }
-    this.views = {}
-    // TODO
-    // for (const view of views) {
-    //   this.views[view.id] = view.fn(db)
-    // }
   }
 
   static async sqlite(location: string): Promise<Database> {

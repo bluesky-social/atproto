@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm'
-import { ProfileIndex } from '../records/profile'
-import { UserDid } from '../user-dids'
-import * as util from '../util'
+import { ProfileIndex } from '../../../db/records/profile'
+import { UserDid } from '../../../db/user-dids'
+import * as util from '../../../db/util'
 
 type UserInfo = {
   did: string

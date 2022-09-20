@@ -1,9 +1,9 @@
-import { Server } from '../xrpc'
+import { Server } from '../../../xrpc'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import { def as common } from '@adxp/common'
-import * as util from '../util'
+import * as util from '../../../util'
 import { DataDiff, Repo } from '@adxp/repo'
-import * as repoDiff from '../repo-diff'
+import * as repoDiff from '../../../repo-diff'
 
 export default function (server: Server) {
   server.todo.adx.syncGetRoot(async (params, _in, _req, res) => {

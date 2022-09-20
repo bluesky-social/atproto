@@ -1,6 +1,6 @@
-import { Server } from '../xrpc'
+import { Server } from '../../../xrpc'
 import { InvalidRequestError } from '@adxp/xrpc-server'
-import * as util from '../util'
+import * as util from '../../../util'
 import { Repo } from '@adxp/repo'
 import * as auth from '@adxp/auth'
 

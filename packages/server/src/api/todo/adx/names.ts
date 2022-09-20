@@ -1,5 +1,5 @@
-import { Server } from '../xrpc'
-import * as util from '../util'
+import { Server } from '../../../xrpc'
+import * as util from '../../../util'
 
 export default function (server: Server) {
   server.todo.adx.resolveName((_params, _in, _req, res) => {

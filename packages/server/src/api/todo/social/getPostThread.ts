@@ -1,63 +1,60 @@
-import * as PostThreadView from '../../xrpc/types/todo/social/getPostThreadView'
+import { Server } from '../../../xrpc'
+import { AuthRequiredError } from '@adxp/xrpc-server'
 import { DataSource } from 'typeorm'
-import { PostIndex } from '../records/post'
-import { ProfileIndex } from '../records/profile'
-import { UserDid } from '../user-dids'
-import schemas from '../schemas'
-import * as util from '../util'
-import { DbViewPlugin } from '../types'
-import { LikeIndex } from '../records/like'
-import { RepostIndex } from '../records/repost'
-import { AdxRecord } from '../record'
+import * as GetPostThread from '../../../xrpc/types/todo/social/getPostThread'
+import { PostIndex } from '../../../db/records/post'
+import { ProfileIndex } from '../../../db/records/profile'
+import { UserDid } from '../../../db/user-dids'
+import * as util from '../../../db/util'
+import { LikeIndex } from '../../../db/records/like'
+import { RepostIndex } from '../../../db/records/repost'
+import { AdxRecord } from '../../../db/record'
+import { getLocals } from '../../../util'
 
-const viewId = 'blueskyweb.xyz:PostThreadView'
-const validator = schemas.createViewValidator(viewId)
-const validParams = (obj: unknown): obj is PostThreadView.Params => {
-  return validator.isParamsValid(obj)
+export default function (server: Server) {
+  server.todo.social.getPostThread(
+    async (params: GetPostThread.QueryParams, _input, req, res) => {
+      const { uri, depth = 1 } = params
+      const { db } = getLocals(res)
+
+      // @TODO switch out for actual auth
+      const requester = req.headers.authorization
+      if (!requester) {
+        throw new AuthRequiredError()
+      }
+
+      const queryRes = await postInfoBuilder(db.db, requester)
+        .where('post.uri = :uri', {
+          uri,
+        })
+        .getRawOne()
+
+      let thread = rowToPost(queryRes)
+      if (depth > 0) {
+        thread.replies = await getReplies(db.db, thread, depth - 1, requester)
+      }
+      if (queryRes.parent !== null) {
+        const parentRes = await postInfoBuilder(db.db, requester).where(
+          'post.uri = :uri',
+          { uri: queryRes.parent },
+        )
+        thread.parent = rowToPost(parentRes)
+      }
+
+      return {
+        encoding: 'application/json',
+        body: { thread },
+      }
+    },
+  )
 }
-
-export const viewFn =
-  (db: DataSource) =>
-  async (
-    params: Record<string, unknown>,
-    requester: string,
-  ): Promise<PostThreadView.Response> => {
-    if (params['depth']) {
-      params['depth'] = parseInt(params['depth'] as string)
-    }
-    if (!validParams(params)) {
-      throw new Error(`Invalid params for ${viewId}`)
-    }
-
-    const { uri, depth = 1 } = params
-
-    const res = await postInfoBuilder(db, requester)
-      .where('post.uri = :uri', {
-        uri,
-      })
-      .getRawOne()
-
-    let thread = rowToPost(res)
-    if (depth > 0) {
-      thread.replies = await getReplies(db, thread, depth - 1, requester)
-    }
-    if (res.parent !== null) {
-      const parentRes = await postInfoBuilder(db, requester).where(
-        'post.uri = :uri',
-        { uri: res.parent },
-      )
-      thread.parent = rowToPost(parentRes)
-    }
-
-    return { thread }
-  }
 
 const getReplies = async (
   db: DataSource,
-  parent: PostThreadView.Post,
+  parent: GetPostThread.Post,
   depth: number,
   requester: string,
-): Promise<PostThreadView.Post[]> => {
+): Promise<GetPostThread.Post[]> => {
   const res = await postInfoBuilder(db, requester)
     .where('post.replyParent = :uri', { uri: parent.uri })
     .orderBy('post.createdAt', 'DESC')
@@ -133,8 +130,8 @@ const postInfoBuilder = (db: DataSource, requester: string) => {
 // unfortunately not type-checked since we're dealing with raw SQL, so change with caution!
 const rowToPost = (
   row: any,
-  parent?: PostThreadView.Post,
-): PostThreadView.Post => {
+  parent?: GetPostThread.Post,
+): GetPostThread.Post => {
   return {
     uri: row.uri,
     author: {
@@ -154,10 +151,3 @@ const rowToPost = (
     },
   }
 }
-
-const plugin: DbViewPlugin = {
-  id: viewId,
-  fn: viewFn,
-}
-
-export default plugin

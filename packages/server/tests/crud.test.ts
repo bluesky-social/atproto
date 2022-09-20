@@ -10,15 +10,13 @@ const alice = { username: 'alice', did: 'did:example:alice' }
 const bob = { username: 'bob', did: 'did:example:bob' }
 
 describe('crud operations', () => {
-  let url: string
   let client: AdxServiceClient
   let closeFn: util.CloseFn
 
   beforeAll(async () => {
     const port = USE_TEST_SERVER ? await getPort() : 2583
     closeFn = await util.runTestServer(port)
-    url = `http://localhost:${port}`
-    client = AdxApi.service(url)
+    client = AdxApi.service(`http://localhost:${port}`)
   })
 
   afterAll(async () => {
