@@ -11,18 +11,11 @@ npm install @adxp/schemas
 ```typescript
 import { AdxSchemas } from '@adxp/schemas'
 
-// example schema: "Zeets"
-const ublogSchema = {
-  $type: 'adxs-record',
-  author: 'blueskyweb.xyz',
-  name: 'Ublog',
-  locale: {
-    en: {
-      nameSingular: 'Micro-blog Post',
-      namePlural: 'Micro-blog Posts',
-    }
-  },
-  schema: {
+// example schema: "posts"
+const postSchema = {
+  adx: 1,
+  id: 'com.example.post',
+  record: {
     type: 'object',
     required: ['text', 'createdAt'],
     properties: {
@@ -34,19 +27,19 @@ const ublogSchema = {
 
 // create your schemas collection
 const schemas = new AdxSchemas()
-schemas.add(ublogSchema)
+schemas.add(postSchema)
 schemas.add(pollSchema) // pollSchema's definition not included for brevity
 
 // create a validator
-const ublogValidator = schemas.createRecordValidator({
-  type: 'UBlog', // base type (required). Can be an array.
-  ext: ['Poll'] // extension types (optional)
+const postValidator = schemas.createRecordValidator({
+  type: 'com.example.post', // base type (required). Can be an array.
+  ext: ['com.example.poll'] // extension types (optional)
 })
 
 // now we can validate records with...
-ublogValidator.validate({/*..*/}) // => returns a result
-ublogValidator.isValid({/*..*/}) // => returns a boolean
-ublogValidator.assertValid({/*..*/}) // => returns a result on success, throws on fail
+postValidator.validate({/*..*/}) // => returns a result
+postValidator.isValid({/*..*/}) // => returns a boolean
+postValidator.assertValid({/*..*/}) // => returns a result on success, throws on fail
 ```
 
 Some examples of validation:
@@ -54,8 +47,8 @@ Some examples of validation:
 ```typescript
 // a valid record
 // --------------
-const res1 = ublogValidator.validate({
-  $type: 'blueskyweb.xyz:UBlog',
+const res1 = postValidator.validate({
+  $type: 'com.example.post',
   text: 'Hello, world!',
   createdAt: '2022-06-28T22:17:33.459Z'
 })
@@ -67,42 +60,40 @@ res1.fallbacks      // => []
 
 // an invalid record
 // -----------------
-const res2 = ublogValidator.validate({
-  $type: 'blueskyweb.xyz:UBlog',
+const res2 = postValidator.validate({
+  $type: 'com.example.post',
   text: 'Hello, world!',
   createdAt: 12345 // <-- wrong type!
 })
 res2.compatible     // => true
 res2.valid          // => false
 res2.fullySupported // => false
-res2.error          // => `Failed blueskyweb.xyz:UBlog validation for #/properties/createdAt/type: must be string`
+res2.error          // => `Failed com.example.post validation for #/properties/createdAt/type: must be string`
 res2.fallbacks      // => []
 
 // an unsupported record type
 // --------------------------
-const res3 = ublogValidator.validate({
-  $type: 'other.org:Fret', // <-- not one of our declared schemas!
+const res3 = postValidator.validate({
+  $type: 'org.other.post', // <-- not one of our declared schemas!
   text: 'Hello, world!',
   createdAt: '2022-06-28T22:17:33.459Z'
 })
 res3.compatible     // => false
 res3.valid          // => false
 res3.fullySupported // => false
-res3.error          // => `Record type other.org:Fret is not supported`
+res3.error          // => `Record type org.other.post is not supported`
 res3.fallbacks      // => []
 
 // a valid record with an extension
 // --------------------------------
-const res4 = ublogValidator.validate({
-  $type: 'blueskyweb.xyz:UBlog',
+const res4 = postValidator.validate({
+  $type: 'com.example.post',
   text: 'Hello, world!',
   createdAt: '2022-06-28T22:17:33.459Z',
   $ext: {
-    'blueskyweb.xyz:Poll': {
+    'com.example.poll': {
       $required: true,
-      $fallback: {
-        en: 'This zeet includes a poll which this application does not support.',
-      },
+      $fallback: 'This post includes a poll which this application does not support.',
       question: "Do you like ADX's schemas system?",
       answers: ['yes', 'no', 'eh'],
     },
@@ -116,16 +107,14 @@ res4.fallbacks      // => []
 
 // a valid record with an unsupported-but-optional extension
 // ---------------------------------------------------------
-const res5 = ublogValidator.validate({
-  $type: 'blueskyweb.xyz:UBlog',
+const res5 = postValidator.validate({
+  $type: 'com.example.post',
   text: 'Hello, world!',
   createdAt: '2022-06-28T22:17:33.459Z',
   $ext: {
-    'other.org:Poll': { // <-- we don't understand this type
+    'org.other.poll': { // <-- we don't understand this type
       $required: false, // <-- ...but it's not required
-      $fallback: {
-        en: 'This zeet includes a poll which this application does not support.',
-      },
+      $fallback: 'This post includes a poll which this application does not support.',
       question: "Do you like ADX's schemas system?",
       answers: ['yes', 'no', 'eh'],
     },
@@ -135,5 +124,5 @@ res5.compatible     // => true
 res5.valid          // => true
 res5.fullySupported // => false
 res5.error          // => undefined
-res5.fallbacks      // => ['This zeet includes a poll which this application does not support.']
+res5.fallbacks      // => ['This post includes a poll which this application does not support.']
 ```

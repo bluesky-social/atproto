@@ -2,10 +2,8 @@ import {
   AdxSchemas,
   AdxSchemaDefinitionMalformedError,
   SchemaNotFoundError,
-  WrongSchemaTypeError,
   AdxValidationError,
 } from '../src/index'
-import FeedViewSchema from './_scaffolds/schemas/feed-view'
 import ZeetSchema from './_scaffolds/schemas/zeet'
 import ZeetRev2Schema from './_scaffolds/schemas/zeet-rev2'
 import PollSchema from './_scaffolds/schemas/poll'
@@ -14,40 +12,30 @@ describe('Create schema collections and validators', () => {
   const s = new AdxSchemas()
 
   it('Adds schemas', () => {
-    s.add(FeedViewSchema)
     s.add(ZeetSchema)
     expect(() => s.add(ZeetRev2Schema)).toThrow()
     s.add(PollSchema)
-    expect(s.schemas.size).toBe(6) // 2 for each because we register twice under name and id
+    expect(s.schemas.size).toBe(2)
   })
 
-  it('Creates record validators by shortnames', () => {
-    const v = s.createRecordValidator('Zeet')
-    expect(v.type.length).toBe(1)
-    expect(v.ext.length).toBe(0)
-  })
-  it('Creates record validators by longnames', () => {
-    const v = s.createRecordValidator('blueskyweb.xyz:Zeet')
+  it('Creates record simple validators', () => {
+    const v = s.createRecordValidator('com.example.zeet')
     expect(v.type.length).toBe(1)
     expect(v.ext.length).toBe(0)
   })
   it('Creates complex record validators', () => {
     const v = s.createRecordValidator({
-      type: 'Zeet',
-      ext: 'Poll',
+      type: 'com.example.zeet',
+      ext: 'com.example.poll',
     })
     expect(v.type.length).toBe(1)
     expect(v.ext.length).toBe(1)
   })
 
   it('Throws for invalid conditions', () => {
-    expect(() => s.createRecordValidator('FeedView')).toThrow(
-      WrongSchemaTypeError,
-    )
-    expect(() => s.createRecordValidator('Foo')).toThrow(SchemaNotFoundError)
-    s.remove('Zeet')
-    expect(() => s.createRecordValidator('Zeet')).toThrow(SchemaNotFoundError)
-    expect(() => s.createRecordValidator('blueskyweb.xyz:Zeet')).toThrow(
+    expect(() => s.createRecordValidator('foo')).toThrow(SchemaNotFoundError)
+    s.remove('com.example.zeet')
+    expect(() => s.createRecordValidator('com.example.zeet')).toThrow(
       SchemaNotFoundError,
     )
   })
@@ -56,36 +44,31 @@ describe('Create schema collections and validators', () => {
 describe('Validates schemas', () => {
   const s = new AdxSchemas()
   expect(() => s.add({})).toThrow(AdxSchemaDefinitionMalformedError)
-  expect(() => s.add({ $type: 'wrong' })).toThrow(
-    AdxSchemaDefinitionMalformedError,
-  )
-  expect(() => s.add({ $type: 'adxs-record' })).toThrow(
+  expect(() => s.add({ adx: 1 })).toThrow(AdxSchemaDefinitionMalformedError)
+  expect(() => s.add({ adx: 1, id: 'bad-nsid' })).toThrow(
     AdxSchemaDefinitionMalformedError,
   )
   expect(() =>
     s.add({
-      $type: 'adxs-record',
-      author: 'blueskyweb.xyz',
-      name: 'Test',
-      schema: 'wrong',
+      adx: 1,
+      id: 'com.example.test',
+      record: 'wrong',
     }),
   ).toThrow(AdxSchemaDefinitionMalformedError)
   expect(() =>
     s.add({
-      $type: 'adxs-record',
-      author: 'blueskyweb.xyz',
-      name: 'Test',
-      schema: {
+      adx: 1,
+      id: 'com.example.test',
+      record: {
         type: 'array',
       },
     }),
   ).toThrow(AdxSchemaDefinitionMalformedError)
   expect(() =>
     s.add({
-      $type: 'adxs-record',
-      author: 'blueskyweb.xyz',
-      name: 'Test',
-      schema: {
+      adx: 1,
+      id: 'com.example.test',
+      record: {
         type: 'object',
         unsupportedField: 'ohno',
       },
@@ -98,11 +81,11 @@ describe('Validates record types', () => {
   s.add(ZeetSchema)
 
   {
-    const v = s.createRecordValidator({ type: 'Zeet' })
+    const v = s.createRecordValidator({ type: 'com.example.zeet' })
     {
       // valid
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       })
@@ -114,7 +97,7 @@ describe('Validates record types', () => {
     {
       // valid w/extra field
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         extraField: 'foo',
         createdAt: new Date().toISOString(),
@@ -127,20 +110,20 @@ describe('Validates record types', () => {
     {
       // invalid - missing createdAt
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
       })
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
       expect(res.compatible).toBeTruthy()
       expect(res.error).toBe(
-        `Failed blueskyweb.xyz:Zeet validation for #/required: must have required property 'createdAt'`,
+        `Failed com.example.zeet validation for #/required: must have required property 'createdAt'`,
       )
     }
     {
       // invalid - wrong type for createdAt
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: 1234,
       })
@@ -148,22 +131,20 @@ describe('Validates record types', () => {
       expect(res.fullySupported).toBeFalsy()
       expect(res.compatible).toBeTruthy()
       expect(res.error).toBe(
-        `Failed blueskyweb.xyz:Zeet validation for #/properties/createdAt/type: must be string`,
+        `Failed com.example.zeet validation for #/properties/createdAt/type: must be string`,
       )
     }
     {
       // invalid - unknown type
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Invalid',
+        $type: 'com.example.invalid',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       })
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
       expect(res.compatible).toBeFalsy()
-      expect(res.error).toBe(
-        'Record type blueskyweb.xyz:Invalid is not supported',
-      )
+      expect(res.error).toBe('Record type com.example.invalid is not supported')
     }
   }
 })
@@ -174,20 +155,21 @@ describe('Validates extension types', () => {
   s.add(PollSchema)
 
   {
-    const v = s.createRecordValidator({ type: 'Zeet', ext: 'Poll' })
+    const v = s.createRecordValidator({
+      type: 'com.example.zeet',
+      ext: 'com.example.poll',
+    })
     {
       // valid
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
         $ext: {
-          'blueskyweb.xyz:Poll': {
+          'com.example.poll': {
             $required: true,
-            $fallback: {
-              'en-US':
-                'This zeet includes a poll which this application does not support.',
-            },
+            $fallback:
+              'This zeet includes a poll which this application does not support.',
             question: "Do you like ADX's schemas system?",
             answers: ['yes', 'no', 'eh'],
           },
@@ -201,16 +183,14 @@ describe('Validates extension types', () => {
     {
       // valid w/extra field
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
         $ext: {
-          'blueskyweb.xyz:Poll': {
+          'com.example.poll': {
             $required: true,
-            $fallback: {
-              'en-US':
-                'This zeet includes a poll which this application does not support.',
-            },
+            $fallback:
+              'This zeet includes a poll which this application does not support.',
             question: "Do you like ADX's schemas system?",
             answers: ['yes', 'no', 'eh'],
             extraField: 'foo',
@@ -225,16 +205,14 @@ describe('Validates extension types', () => {
     {
       // valid but partial support
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
         $ext: {
-          'other.org:Poll': {
+          'org.other.poll': {
             $required: false,
-            $fallback: {
-              'en-US':
-                'This zeet includes a poll which this application does not support.',
-            },
+            $fallback:
+              'This zeet includes a poll which this application does not support.',
             question: "Do you like ADX's schemas system?",
             answers: ['yes', 'no', 'eh'],
           },
@@ -251,11 +229,11 @@ describe('Validates extension types', () => {
     {
       // valid but partial support, no fallback provided
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
         $ext: {
-          'other.org:Poll': {
+          'org.other.poll': {
             $required: false,
             question: "Do you like ADX's schemas system?",
             answers: ['yes', 'no', 'eh'],
@@ -271,16 +249,14 @@ describe('Validates extension types', () => {
     {
       // invalid - extension object is missing answers
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
         $ext: {
-          'blueskyweb.xyz:Poll': {
+          'com.example.poll': {
             $required: true,
-            $fallback: {
-              'en-US':
-                'This zeet includes a poll which this application does not support.',
-            },
+            $fallback:
+              'This zeet includes a poll which this application does not support.',
             question: "Do you like ADX's schemas system?",
           },
         },
@@ -289,17 +265,17 @@ describe('Validates extension types', () => {
       expect(res.fullySupported).toBeFalsy()
       expect(res.compatible).toBeTruthy()
       expect(res.error).toBe(
-        "Failed blueskyweb.xyz:Poll validation for #/required: must have required property 'answers'",
+        "Failed com.example.poll validation for #/required: must have required property 'answers'",
       )
     }
     {
       // unsupported
       const res = v.validate({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
         $ext: {
-          'other.org:Poll': {
+          'org.other.poll': {
             $required: true,
             $fallback: {
               'en-US':
@@ -313,91 +289,7 @@ describe('Validates extension types', () => {
       expect(res.valid).toBeFalsy()
       expect(res.fullySupported).toBeFalsy()
       expect(res.compatible).toBeFalsy()
-      expect(res.error).toBe('Record extension other.org:Poll is not supported')
-    }
-  }
-})
-
-describe('Validates views', () => {
-  const s = new AdxSchemas()
-  s.add(FeedViewSchema)
-
-  {
-    const v = s.createViewValidator('FeedView')
-    {
-      // valid
-      const res = v.validateResponse({
-        feed: [
-          {
-            uri: 'adx://bob.com/blueskyweb.xyz:Feed/123',
-            author: {
-              username: 'bob.com',
-              displayName: 'Bob',
-            },
-            zeet: {
-              $type: 'blueskyweb.xyz:Zeet',
-              text: 'Hello, world!',
-              createdAt: new Date().toISOString(),
-            },
-            replyCount: 0,
-            likeCount: 0,
-            indexedAt: new Date().toISOString(),
-          },
-        ],
-      })
-      expect(res.valid).toBeTruthy()
-      expect(res.fullySupported).toBeTruthy()
-      expect(res.compatible).toBeTruthy()
-      expect(res.error).toBeFalsy()
-    }
-    {
-      // valid w/extra field
-      const res = v.validateResponse({
-        extra: true,
-        feed: [
-          {
-            uri: 'adx://bob.com/blueskyweb.xyz:Feed/123',
-            author: {
-              username: 'bob.com',
-              displayName: 'Bob',
-            },
-            zeet: {
-              $type: 'blueskyweb.xyz:Zeet',
-              text: 'Hello, world!',
-              createdAt: new Date().toISOString(),
-            },
-            replyCount: 0,
-            likeCount: 0,
-            indexedAt: new Date().toISOString(),
-          },
-        ],
-      })
-      expect(res.valid).toBeTruthy()
-      expect(res.fullySupported).toBeTruthy()
-      expect(res.compatible).toBeTruthy()
-      expect(res.error).toBeFalsy()
-    }
-    {
-      // invalid - missing feed
-      const res = v.validateResponse({})
-      expect(res.valid).toBeFalsy()
-      expect(res.fullySupported).toBeFalsy()
-      expect(res.compatible).toBeTruthy()
-      expect(res.error).toBe(
-        `Failed blueskyweb.xyz:FeedView validation for #/required: must have required property 'feed'`,
-      )
-    }
-    {
-      // invalid - wrong type for feed
-      const res = v.validateResponse({
-        feed: true,
-      })
-      expect(res.valid).toBeFalsy()
-      expect(res.fullySupported).toBeFalsy()
-      expect(res.compatible).toBeTruthy()
-      expect(res.error).toBe(
-        `Failed blueskyweb.xyz:FeedView validation for #/properties/feed/type: must be array`,
-      )
+      expect(res.error).toBe('Record extension org.other.poll is not supported')
     }
   }
 })
@@ -407,11 +299,11 @@ describe('isValid()', () => {
   s.add(ZeetSchema)
 
   {
-    const v = s.createRecordValidator({ type: 'Zeet' })
+    const v = s.createRecordValidator({ type: 'com.example.zeet' })
     {
       // valid
       const res = v.isValid({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       })
@@ -420,15 +312,13 @@ describe('isValid()', () => {
     {
       // valid w/partial support
       const res = v.isValid({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
-        'blueskyweb.xyz:Poll': {
+        'com.example.poll': {
           $required: false,
-          $fallback: {
-            'en-US':
-              'This zeet includes a poll which this application does not support.',
-          },
+          $fallback:
+            'This zeet includes a poll which this application does not support.',
           question: "Do you like ADX's schemas system?",
           answers: ['yes', 'no', 'eh'],
         },
@@ -438,7 +328,7 @@ describe('isValid()', () => {
     {
       // invalid - missing createdAt
       const res = v.isValid({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
       })
       expect(res).toBeFalsy()
@@ -451,11 +341,11 @@ describe('assertValid()', () => {
   s.add(ZeetSchema)
 
   {
-    const v = s.createRecordValidator({ type: 'Zeet' })
+    const v = s.createRecordValidator({ type: 'com.example.zeet' })
     {
       // valid
       const res = v.assertValid({
-        $type: 'blueskyweb.xyz:Zeet',
+        $type: 'com.example.zeet',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       })
@@ -468,66 +358,10 @@ describe('assertValid()', () => {
       // invalid - missing createdAt
       expect(() =>
         v.assertValid({
-          $type: 'blueskyweb.xyz:Zeet',
+          $type: 'com.example.zeet',
           text: 'Hello, world!',
         }),
       ).toThrow(AdxValidationError)
     }
-  }
-})
-
-describe('Fallback localization', () => {
-  const s = new AdxSchemas()
-  s.add(ZeetSchema)
-  s.add(PollSchema)
-
-  {
-    s.locale = 'en'
-    const v = s.createRecordValidator({ type: 'Zeet', ext: 'Poll' })
-    const res = v.validate({
-      $type: 'blueskyweb.xyz:Zeet',
-      text: 'Hello, world!',
-      createdAt: new Date().toISOString(),
-      $ext: {
-        'other.org:Poll': {
-          $required: false,
-          $fallback: {
-            'en-US':
-              'This zeet includes a poll which this application does not support.',
-            es: 'Este zeet incluye una encuesta que esta aplicación no admite.',
-          },
-          question: "Do you like ADX's schemas system?",
-          answers: ['yes', 'no', 'eh'],
-        },
-      },
-    })
-    expect(res.fallbacks[0]).toBe(
-      'This zeet includes a poll which this application does not support.',
-    )
-  }
-
-  {
-    s.locale = 'es'
-    const v = s.createRecordValidator({ type: 'Zeet', ext: 'Poll' })
-    const res = v.validate({
-      $type: 'blueskyweb.xyz:Zeet',
-      text: 'Hello, world!',
-      createdAt: new Date().toISOString(),
-      $ext: {
-        'other.org:Poll': {
-          $required: false,
-          $fallback: {
-            'en-US':
-              'This zeet includes a poll which this application does not support.',
-            es: 'Este zeet incluye una encuesta que esta aplicación no admite.',
-          },
-          question: "Do you like ADX's schemas system?",
-          answers: ['yes', 'no', 'eh'],
-        },
-      },
-    })
-    expect(res.fallbacks[0]).toBe(
-      'Este zeet incluye una encuesta que esta aplicación no admite.',
-    )
   }
 })

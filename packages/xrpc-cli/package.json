@@ -1,6 +1,7 @@
 {
-  "name": "@adxp/schemas",
+  "name": "@adxp/xrpc-cli",
   "version": "0.0.1",
+  "bin": "dist/index.js",
   "main": "src/index.ts",
   "scripts": {
     "test": "jest",
@@ -11,13 +12,18 @@
     "verify": "run-p prettier lint",
     "verify:fix": "yarn prettier:fix && yarn lint:fix",
     "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
-    "postbuild" : "tsc --build tsconfig.build.json"
+    "postbuild": "tsc --build tsconfig.build.json"
   },
   "license": "MIT",
   "dependencies": {
     "@adxp/nsid": "*",
+    "@adxp/schemas": "*",
+    "@adxp/xrpc": "*",
     "ajv": "^8.11.0",
     "ajv-formats": "^2.1.1",
-    "zod": "^3.14.2"
+    "commander": "^9.4.0",
+    "json-schema-to-typescript": "^11.0.2",
+    "ts-morph": "^16.0.0",
+    "yesno": "^0.4.0"
   }
 }

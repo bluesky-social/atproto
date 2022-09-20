@@ -3,6 +3,11 @@ import { z } from 'zod'
 export type QueryParams = Record<string, any>
 export type Headers = Record<string, string>
 
+export interface CallOptions {
+  encoding?: string
+  headers?: Headers
+}
+
 export const methodSchemaBody = z.object({
   encoding: z.union([z.string(), z.string().array()]),
   schema: z.any().optional(),
@@ -40,12 +45,6 @@ export const errorResponseBody = z.object({
   message: z.string().optional(),
 })
 export type ErrorResponseBody = z.infer<typeof errorResponseBody>
-
-export interface CallOptions {
-  data?: any
-  encoding?: string
-  headers?: Headers
-}
 
 export enum ResponseType {
   Unknown = 1,

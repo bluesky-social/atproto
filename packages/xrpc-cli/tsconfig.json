@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist", // Your outDir,
+    "emitDeclarationOnly": true
+  },
+  "include": ["./src","__tests__/**/**.ts"],
+  "references": [
+    { "path": "../nsid/tsconfig.build.json" },
+    { "path": "../schemas/tsconfig.build.json" },
+    { "path": "../xrpc/tsconfig.build.json" }
+  ]
+}

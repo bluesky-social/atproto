@@ -1,6 +1,5 @@
 import Ajv from 'ajv'
 import ajvAddFormats from 'ajv-formats'
-import { adxFallbackStrings } from './types'
 import * as util from './util'
 
 import AdxSchema from './schema'
@@ -84,14 +83,8 @@ export class AdxRecordValidator {
             : false
 
         let extFallback
-        if ('$fallback' in extObj) {
-          const parseRes = adxFallbackStrings.safeParse(extObj.$fallback)
-          if (parseRes.success) {
-            extFallback = chooseFallbackLocalized(
-              this.schemas.locale,
-              parseRes.data,
-            )
-          }
+        if ('$fallback' in extObj && typeof extObj.$fallback === 'string') {
+          extFallback = extObj.$fallback
         }
 
         // lookup extension
@@ -141,24 +134,5 @@ export class AdxRecordValidator {
 // helpers
 
 const schemaIdFilter = (schemaId: string) => (s: AdxSchema) => s.id === schemaId
-
-function chooseFallbackLocalized(
-  locale: string,
-  fallbacks: Record<string, string>,
-) {
-  // exact match
-  if (fallbacks[locale]) {
-    return fallbacks[locale]
-  }
-  // use the language only (drop the region)
-  for (const fallbackLocale of Object.keys(fallbacks)) {
-    const fallbackLocaleShort = fallbackLocale.split('-')[0]
-    if (fallbackLocaleShort === locale) {
-      return fallbacks[fallbackLocale]
-    }
-  }
-  // fallback to any available
-  return fallbacks[Object.keys(fallbacks)[0]]
-}
 
 export default AdxRecordValidator

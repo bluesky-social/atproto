@@ -4,5 +4,8 @@
     "outDir": "./dist", // Your outDir,
     "emitDeclarationOnly": true
   },
-  "include": ["./src"]
+  "include": ["./src"],
+  "references": [
+    { "path": "../nsid/tsconfig.build.json" }
+  ]
 }

@@ -103,11 +103,9 @@ describe('Procedures', () => {
     expect(res1.headers['content-type']).toBe('text/plain; charset=utf-8')
     expect(res1.data).toBe('hello world')
 
-    const res2 = await client.call(
-      'io.example.ping2',
-      {},
-      { encoding: 'text/plain', data: 'hello world' },
-    )
+    const res2 = await client.call('io.example.ping2', {}, 'hello world', {
+      encoding: 'text/plain',
+    })
     expect(res2.success).toBeTruthy()
     expect(res2.error).toBeFalsy()
     expect(res2.headers['content-type']).toBe('text/plain; charset=utf-8')
@@ -116,10 +114,8 @@ describe('Procedures', () => {
     const res3 = await client.call(
       'io.example.ping3',
       {},
-      {
-        encoding: 'application/octet-stream',
-        data: new TextEncoder().encode('hello world'),
-      },
+      new TextEncoder().encode('hello world'),
+      { encoding: 'application/octet-stream' },
     )
     expect(res3.success).toBeTruthy()
     expect(res3.error).toBeFalsy()
@@ -129,12 +125,7 @@ describe('Procedures', () => {
     const res4 = await client.call(
       'io.example.ping4',
       {},
-      {
-        encoding: 'application/json',
-        data: {
-          message: 'hello world',
-        },
-      },
+      { message: 'hello world' },
     )
     expect(res4.success).toBeTruthy()
     expect(res4.error).toBeFalsy()

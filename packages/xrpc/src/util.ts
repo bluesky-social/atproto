@@ -1,5 +1,4 @@
 import {
-  methodSchema,
   MethodSchema,
   CallOptions,
   Headers,
@@ -71,6 +70,7 @@ export function encodeQueryParam(
 
 export function constructMethodCallHeaders(
   schema: MethodSchema,
+  data?: any,
   opts?: CallOptions,
 ): Headers {
   const headers: Headers = opts?.headers || {}
@@ -78,7 +78,7 @@ export function constructMethodCallHeaders(
     if (opts?.encoding) {
       headers['Content-Type'] = opts.encoding
     }
-    if (opts?.data && typeof opts.data === 'object') {
+    if (data && typeof data === 'object') {
       if (!headers['Content-Type']) {
         headers['Content-Type'] = 'application/json'
       }

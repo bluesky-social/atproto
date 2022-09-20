@@ -77,10 +77,8 @@ describe('Parameters', () => {
       'io.example.validationTest',
       {},
       {
-        data: {
-          foo: 'hello',
-          bar: 123,
-        },
+        foo: 'hello',
+        bar: 123,
       },
     )
     expect(res1.success).toBeTruthy()
@@ -91,10 +89,10 @@ describe('Parameters', () => {
       `A request body is expected but none was provided`,
     )
     await expect(
-      client.call('io.example.validationTest', {}, { data: {} }),
+      client.call('io.example.validationTest', {}, {}),
     ).rejects.toThrow(`data must have required property 'foo'`)
     await expect(
-      client.call('io.example.validationTest', {}, { data: { foo: 123 } }),
+      client.call('io.example.validationTest', {}, { foo: 123 }),
     ).rejects.toThrow(`data/foo must be string`)
 
     await expect(client.call('io.example.validationTest2')).rejects.toThrow(
