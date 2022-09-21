@@ -4,6 +4,7 @@ import { IpldStore, Repo } from '@adxp/repo'
 import * as auth from '@adxp/auth'
 import { Database } from './db'
 import { ServerError } from './error'
+import { ServerConfig } from './config'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -64,10 +65,19 @@ export const getKeypair = (res: Response): auth.DidableKey => {
   return keypair as auth.DidableKey
 }
 
+export const getConfig = (res: Response): ServerConfig => {
+  const config = res.locals.config
+  if (!config) {
+    throw new ServerError(500, 'No Config object attached to server')
+  }
+  return config as ServerConfig
+}
+
 export type Locals = {
   blockstore: IpldStore
   db: Database
   keypair: auth.DidableKey
+  config: ServerConfig
 }
 
 export const getLocals = (res: Response): Locals => {
@@ -75,6 +85,7 @@ export const getLocals = (res: Response): Locals => {
     blockstore: getBlockstore(res),
     db: getDB(res),
     keypair: getKeypair(res),
+    config: getConfig(res),
   }
 }
 

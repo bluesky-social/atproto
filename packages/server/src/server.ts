@@ -12,21 +12,24 @@ import API from './api'
 import { IpldStore } from '@adxp/repo'
 import Database from './db'
 import * as error from './error'
+import { ServerConfig, ServerConfigValues } from './config'
 
 const runServer = (
   blockstore: IpldStore,
   db: Database,
   keypair: auth.DidableKey,
-  port: number,
+  cfg: ServerConfigValues,
 ): http.Server => {
+  const config = new ServerConfig(cfg)
+
   const app = express()
-  // app.use(express.json())
   app.use(cors())
 
   app.use((_req, res, next) => {
     res.locals.blockstore = blockstore
     res.locals.db = db
     res.locals.keypair = keypair
+    res.locals.config = config
     next()
   })
 
@@ -34,7 +37,7 @@ const runServer = (
   app.use(apiServer.xrpc.router)
   app.use(error.handler)
 
-  return app.listen(port)
+  return app.listen(config.port)
 }
 
 export default runServer

@@ -3,6 +3,7 @@ import { IpldStore, MemoryBlockstore, PersistentBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
 import Database from './db'
 import server from './server'
+import { ServerConfig } from './config'
 
 const run = async () => {
   const env = process.env.ENV
@@ -15,29 +16,25 @@ const run = async () => {
   let blockstore: IpldStore
   let db: Database
 
-  const bsLoc = process.env.BLOCKSTORE_LOC
-  const dbLoc = process.env.DATABASE_LOC
+  const cfg = ServerConfig.readEnv()
 
-  if (bsLoc) {
-    blockstore = new PersistentBlockstore(bsLoc)
+  if (cfg.blockstoreLocation) {
+    blockstore = new PersistentBlockstore(cfg.blockstoreLocation)
   } else {
     blockstore = new MemoryBlockstore()
   }
 
-  if (dbLoc) {
-    db = await Database.sqlite(dbLoc)
+  if (cfg.databaseLocation) {
+    db = await Database.sqlite(cfg.databaseLocation)
   } else {
     db = await Database.memory()
   }
 
   const keypair = await crypto.EcdsaKeypair.create()
 
-  const envPort = parseInt(process.env.PORT || '')
-  const port = isNaN(envPort) ? 2583 : envPort
-
-  const s = server(blockstore, db, keypair, port)
+  const s = server(blockstore, db, keypair, cfg)
   s.on('listening', () => {
-    console.log(`🌞 ADX Data server is running at http://localhost:${port}`)
+    console.log(`🌞 ADX Data server is running at ${cfg.origin}`)
   })
 }
 
