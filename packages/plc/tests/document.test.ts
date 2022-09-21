@@ -169,24 +169,30 @@ describe('plc DID document', () => {
     expect(doc.recoveryKey).toEqual(newKey.did())
   })
 
-  it('it does not allow recovery key to update username', async () => {
+  it('it allows recovery key to update username', async () => {
+    username = 'ally.example3.com'
     const prev = await cidForData(ops[ops.length - 1])
     const op = await operations.updateUsername(
-      'bob',
+      username,
       prev.toString(),
       recoveryKey,
     )
-    expect(document.validateOperationLog(did, [...ops, op])).rejects.toThrow()
+    ops.push(op)
+    const doc = await document.validateOperationLog(did, ops)
+    expect(doc.username).toEqual(username)
   })
 
-  it('it does not allow recovery key to update atpPds', async () => {
+  it('it allows recovery key to update atpPds', async () => {
+    atpPds = 'https://example3.com'
     const prev = await cidForData(ops[ops.length - 1])
     const op = await operations.updateAtpPds(
-      'foobar.com',
+      atpPds,
       prev.toString(),
       recoveryKey,
     )
-    expect(document.validateOperationLog(did, [...ops, op])).rejects.toThrow()
+    ops.push(op)
+    const doc = await document.validateOperationLog(did, ops)
+    expect(doc.atpPds).toEqual(atpPds)
   })
 
   it('requires operations to be in order', async () => {

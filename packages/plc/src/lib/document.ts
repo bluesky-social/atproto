@@ -47,8 +47,8 @@ export const assureValidNextOp = async (
   // recovery key gets a 72hr window to do historical re-wrties
   if (nullified.length > 0) {
     const RECOVERY_WINDOW = 1000 * 60 * 60 * 72
-    const lastOp = opsInHistory[opsInHistory.length - 1]
-    const timeLapsed = Date.now() - lastOp.createdAt.getTime()
+    const firstNullfied = nullified[0]
+    const timeLapsed = Date.now() - firstNullfied.createdAt.getTime()
     if (timeLapsed > RECOVERY_WINDOW) {
       throw new ServerError(
         400,
@@ -97,19 +97,16 @@ export const validateOperationLog = async (
       throw new ServerError(400, 'Operations not correctly ordered')
     }
 
+      await assureValidSig([doc.signingKey, doc.recoveryKey], op)
     if (check.is(op, t.def.createOp)) {
       throw new ServerError(400, 'Unexpected `create` after DID genesis')
     } else if (check.is(op, t.def.rotateSigningKeyOp)) {
-      await assureValidSig([doc.signingKey, doc.recoveryKey], op)
       doc.signingKey = op.key
     } else if (check.is(op, t.def.rotateRecoveryKeyOp)) {
-      await assureValidSig([doc.signingKey, doc.recoveryKey], op)
       doc.recoveryKey = op.key
     } else if (check.is(op, t.def.updateUsernameOp)) {
-      await assureValidSig([doc.signingKey], op)
       doc.username = op.username
     } else if (check.is(op, t.def.updateAtpPdsOp)) {
-      await assureValidSig([doc.signingKey], op)
       doc.atpPds = op.service
     } else {
       throw new ServerError(400, `Unknown operation: ${JSON.stringify(op)}`)
