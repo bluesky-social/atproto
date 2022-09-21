@@ -20,6 +20,10 @@ const users: Map<string, DevEnvServer> = new Map()
 // =
 
 const envApi = {
+  get env() {
+    return devEnv
+  },
+
   status() {
     assert(devEnv)
     console.log(chalk.bold(' port  server'))
@@ -47,8 +51,15 @@ const envApi = {
     assert(devEnv)
     assert(username && typeof username === 'string', 'Username is required')
 
+    if (!username.endsWith('.test')) {
+      username += '.test'
+    }
+    if (users.has(username)) {
+      throw new Error(`${username} already exists`)
+    }
+
     const servers = devEnv.listOfType(ServerType.PersonalDataServer)
-    let pds
+    let pds: DevEnvServer
     if (!serverPort) {
       if (servers.length > 0) {
         pds = servers[0]
@@ -56,22 +67,29 @@ const envApi = {
         throw new Error('Start a PDS first')
       }
     } else {
-      pds = servers.find((s) => s.port === serverPort)
-      if (!pds) throw new Error(`No PDS running on port ${serverPort}`)
+      const inst = servers.find((s) => s.port === serverPort)
+      if (!inst) throw new Error(`No PDS running on port ${serverPort}`)
+      pds = inst
     }
 
     console.log(`Creating ${username} on ${pds.description}`)
 
     // create the PDS account
-    const client = pds.getClient(`did:example:${username}`)
-    const pdsRes = await client.register(username)
+    const client = pds.getClient()
+    const pdsRes = await client.todo.adx.createAccount(
+      {},
+      {
+        username,
+        did: `did:test:${username.slice(0, -5)}`,
+      },
+    )
     users.set(username, pds)
   },
 
   user(name: string) {
     const pds = users.get(name)
     if (!pds) throw new Error('User not found')
-    return pds.getClient(`did:example:${name}`)
+    return pds.getClient()
   },
 }
 
@@ -94,7 +112,7 @@ async function start() {
   devEnv = await DevEnv.create(env.load())
 
   // create repl
-  let inst = repl.start('adx $ ')
+  let inst = repl.start() //'adx $ ')
   Object.assign(inst.context, envApi)
   inst.setupHistory(join(os.homedir(), '.adx-dev-env-history'), () => {})
   inst.on('exit', async () => {

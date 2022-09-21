@@ -1,7 +1,6 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as util from '../../../util'
-import { didTest } from '../../../lib/did'
 import { Repo } from '@adxp/repo'
 import * as auth from '@adxp/auth'
 
@@ -28,7 +27,7 @@ export default function (server: Server) {
 
     let isTestUser = false
     if (username.endsWith('.test') || did.startsWith('did:test:')) {
-      if (!cfg.debugMode) {
+      if (!cfg.debugMode || !cfg.didTestRegistry) {
         throw new InvalidRequestError(
           'Cannot register a test user if debug mode is not enabled',
         )
@@ -50,11 +49,10 @@ export default function (server: Server) {
     await db.setRepoRoot(did, repo.cid)
 
     if (isTestUser) {
-      didTest.set(username.slice(0, -5), {
+      cfg.didTestRegistry?.set(username.slice(0, -5), {
         name: username,
         service: cfg.origin,
       })
-      console.log(didTest.resolve('did:test:' + username.slice(0, -5)))
     }
 
     // const authStore = await serverAuth.checkReq(

@@ -10,22 +10,21 @@ export type TestEntry = z.infer<typeof testEntry>
 // globals
 // =
 
-const entries: Map<string, TestEntry> = new Map()
+export class DidTestRegistry {
+  entries: Map<string, TestEntry> = new Map()
 
-// exported api
-// =
-
-export function resolve(did: string) {
-  const name = did.split(':')[2] || ''
-  const entry = entries.get(name)
-  if (!entry) {
-    throw new Error(`Entry not found: ${did}`)
+  resolve(did: string) {
+    const name = did.split(':')[2] || ''
+    const entry = this.entries.get(name)
+    if (!entry) {
+      throw new Error(`Entry not found: ${did}`)
+    }
+    return toDidDocument(did, entry)
   }
-  return toDidDocument(did, entry)
-}
 
-export function set(name: string, entry: TestEntry) {
-  entries.set(name, entry)
+  set(name: string, entry: TestEntry) {
+    this.entries.set(name, entry)
+  }
 }
 
 // helpers

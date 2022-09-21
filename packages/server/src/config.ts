@@ -1,3 +1,5 @@
+import { DidTestRegistry } from './lib/did/did-test'
+
 export interface ServerConfigValues {
   debugMode?: boolean
 
@@ -7,6 +9,8 @@ export interface ServerConfigValues {
 
   blockstoreLocation?: string
   databaseLocation?: string
+
+  didTestRegistry?: DidTestRegistry
 }
 
 export class ServerConfig {
@@ -28,6 +32,8 @@ export class ServerConfig {
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
 
+    const didTestRegistry = debugMode ? new DidTestRegistry() : undefined
+
     return new ServerConfig({
       debugMode,
       scheme,
@@ -35,6 +41,7 @@ export class ServerConfig {
       port,
       blockstoreLocation,
       databaseLocation,
+      didTestRegistry,
     })
   }
 
@@ -73,5 +80,9 @@ export class ServerConfig {
 
   get useMemoryDatabase() {
     return !this.databaseLocation
+  }
+
+  get didTestRegistry() {
+    return this.cfg.didTestRegistry
   }
 }

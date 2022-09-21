@@ -14,6 +14,9 @@ import Database from './db'
 import * as error from './error'
 import { ServerConfig, ServerConfigValues } from './config'
 
+export { DidTestRegistry } from './lib/did/did-test'
+export type { ServerConfigValues } from './config'
+
 const runServer = (
   blockstore: IpldStore,
   db: Database,

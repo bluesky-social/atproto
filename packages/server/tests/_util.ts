@@ -1,7 +1,7 @@
 import { MemoryBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
 
-import server from '../src/server'
+import server, { DidTestRegistry } from '../src/server'
 import Database from '../src/db'
 import { ServerConfig } from '../src/config'
 
@@ -20,6 +20,7 @@ export const runTestServer = async (port: number): Promise<CloseFn> => {
       scheme: 'http',
       hostname: 'localhost',
       port,
+      didTestRegistry: new DidTestRegistry(),
     }),
   )
   return async () => {

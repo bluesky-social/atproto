@@ -1,10 +1,8 @@
-import * as didTest from './did-test'
+import { ServerConfig } from '../../config'
 
-export function resolve(did: string) {
-  if (did.startsWith('did:test:')) {
-    return didTest.resolve(did)
+export function resolve(did: string, cfg: ServerConfig) {
+  if (did.startsWith('did:test:') && cfg.didTestRegistry) {
+    return cfg.didTestRegistry.resolve(did)
   }
   throw new Error(`Unsupported did method: ${did}`)
 }
-
-export * as didTest from './did-test'
