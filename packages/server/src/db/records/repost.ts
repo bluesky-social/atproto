@@ -1,5 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import * as Repost from '../../xrpc/types/todo/social/repost'
+import * as Repost from '../../lexicon/types/todo/social/repost'
 import {
   DataSource,
   Entity,

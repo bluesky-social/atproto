@@ -1,4 +1,4 @@
-import { createServer } from '../xrpc'
+import { createServer } from '../lexicon'
 import todoAdx from './todo/adx'
 import todoSocial from './todo/social'
 

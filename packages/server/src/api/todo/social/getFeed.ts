@@ -1,6 +1,6 @@
-import { Server } from '../../../xrpc'
+import { Server } from '../../../lexicon'
 import { AuthRequiredError } from '@adxp/xrpc-server'
-import * as GetFeed from '../../../xrpc/types/todo/social/getFeed'
+import * as GetFeed from '../../../lexicon/types/todo/social/getFeed'
 import { FollowIndex } from '../../../db/records/follow'
 import { PostIndex } from '../../../db/records/post'
 import { ProfileIndex } from '../../../db/records/profile'

@@ -1,4 +1,4 @@
-import { Server } from '../../../xrpc'
+import { Server } from '../../../lexicon'
 import getFeed from './getFeed'
 import getLikedBy from './getLikedBy'
 import getPostThread from './getPostThread'

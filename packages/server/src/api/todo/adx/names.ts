@@ -1,4 +1,4 @@
-import { Server } from '../../../xrpc'
+import { Server } from '../../../lexicon'
 import * as util from '../../../util'
 
 export default function (server: Server) {

@@ -1,5 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import * as Profile from '../../xrpc/types/todo/social/profile'
+import * as Profile from '../../lexicon/types/todo/social/profile'
 import {
   DataSource,
   Entity,

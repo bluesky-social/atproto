@@ -1,4 +1,4 @@
-import { Server } from '../../../xrpc'
+import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as util from '../../../util'
 import { Repo } from '@adxp/repo'

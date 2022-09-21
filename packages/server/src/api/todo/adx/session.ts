@@ -1,4 +1,4 @@
-import { Server } from '../../../xrpc'
+import { Server } from '../../../lexicon'
 
 export default function (server: Server) {
   server.todo.adx.getSession(() => {
