@@ -1,4 +1,4 @@
-import { Server } from '../../../xrpc'
+import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import { resolveName, AdxUri, TID } from '@adxp/common'
 import * as auth from '@adxp/auth'

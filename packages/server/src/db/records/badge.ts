@@ -1,5 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import * as Badge from '../../xrpc/types/todo/social/badge'
+import * as Badge from '../../lexicon/types/todo/social/badge'
 import {
   DataSource,
   Entity,

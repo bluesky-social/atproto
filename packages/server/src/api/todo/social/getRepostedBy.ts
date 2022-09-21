@@ -1,5 +1,5 @@
-import { Server } from '../../../xrpc'
-import * as GetRepostedBy from '../../../xrpc/types/todo/social/getRepostedBy'
+import { Server } from '../../../lexicon'
+import * as GetRepostedBy from '../../../lexicon/types/todo/social/getRepostedBy'
 import { AdxRecord } from '../../../db/record'
 import { ProfileIndex } from '../../../db/records/profile'
 import { UserDid } from '../../../db/user-dids'

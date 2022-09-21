@@ -1,5 +1,5 @@
 import { RecordSchemas } from '@adxp/lexicon'
-import { recordSchemas } from '../xrpc/schemas'
+import { recordSchemas } from '../lexicon/schemas'
 
 export const schemas = new RecordSchemas()
 

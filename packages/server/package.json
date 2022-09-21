@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "main": "src/index.ts",
   "scripts": {
-    "codegen": "lex gen-server ./src/xrpc ../../schemas/todo.adx/* ../../schemas/todo.social/*",
+    "codegen": "lex gen-server ./src/lexicon ../../schemas/todo.adx/* ../../schemas/todo.social/*",
     "build": "node ./build.js",
     "start": "node dist/index.js",
     "test": "jest",

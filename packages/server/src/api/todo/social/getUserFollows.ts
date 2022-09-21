@@ -1,5 +1,5 @@
-import { Server } from '../../../xrpc'
-import * as GetUserFollows from '../../../xrpc/types/todo/social/getUserFollows'
+import { Server } from '../../../lexicon'
+import * as GetUserFollows from '../../../lexicon/types/todo/social/getUserFollows'
 import { AdxRecord } from '../../../db/record'
 import { FollowIndex } from '../../../db/records/follow'
 import { ProfileIndex } from '../../../db/records/profile'
