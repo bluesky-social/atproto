@@ -6,6 +6,7 @@ import * as uint8arrays from 'uint8arrays'
 import IpldStore from '../blockstore/ipld-store'
 import { sha256 } from '@adxp/crypto'
 import { MST, Leaf, NodeEntry, NodeData, MstOpts, Fanout } from './mst'
+import { cidForData } from '@adxp/common'
 
 type SupportedBases = 'base2' | 'base8' | 'base16' | 'base32' | 'base64'
 
@@ -118,16 +119,7 @@ export const countPrefixLen = (a: string, b: string): number => {
   return i
 }
 
-export const cidForNodeData = async (data: NodeData): Promise<CID> => {
-  const block = await Block.encode({
-    value: data as any,
-    codec: blockCodec,
-    hasher: blockHasher,
-  })
-  return block.cid
-}
-
 export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
   const data = serializeNodeData(entries)
-  return cidForNodeData(data)
+  return cidForData(data)
 }

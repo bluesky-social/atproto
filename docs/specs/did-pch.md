@@ -1,3 +1,3 @@
-# DID Placeholder (did:pch)
+# DID Placeholder (did:plc)
 
 TODO
