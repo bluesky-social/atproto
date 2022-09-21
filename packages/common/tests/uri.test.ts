@@ -23,113 +23,113 @@ describe('Adx Uris', () => {
       ['adx://foo.com?foo=bar#hash', 'foo.com', '', 'foo=bar', '#hash'],
 
       [
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '',
         '',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '',
         '',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/',
         '',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/foo',
         '',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo/',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo/',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/foo/',
         '',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo/bar',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo/bar',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/foo/bar',
         '',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw?foo=bar',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw?foo=bar',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '',
         'foo=bar',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw?foo=bar&baz=buux',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw?foo=bar&baz=buux',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '',
         'foo=bar&baz=buux',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/?foo=bar',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/?foo=bar',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/',
         'foo=bar',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo?foo=bar',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo?foo=bar',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/foo',
         'foo=bar',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo/?foo=bar',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo/?foo=bar',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/foo/',
         'foo=bar',
         '',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw#hash',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw#hash',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '',
         '',
         '#hash',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/#hash',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/#hash',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/',
         '',
         '#hash',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo#hash',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo#hash',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/foo',
         '',
         '#hash',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo/#hash',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw/foo/#hash',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '/foo/',
         '',
         '#hash',
       ],
       [
-        'adx://did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw?foo=bar#hash',
-        'did:ion:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
+        'adx://did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw?foo=bar#hash',
+        'did:example:EiAnKD8-jfdd0MDcZUjAbRgaThBrMxPTFOxcnfJhI7Ukaw',
         '',
         'foo=bar',
         '#hash',
@@ -261,24 +261,13 @@ describe('Adx Uris', () => {
       expect(urip.recordKey).toBe('')
     }
     {
-      const urip = new AdxUri('adx://foo.com/namespace')
-      expect(urip.namespace).toBe('namespace')
-      expect(urip.dataset).toBe('')
-      expect(urip.collection).toBe('namespace/')
+      const urip = new AdxUri('adx://foo.com/com.example.foo')
+      expect(urip.collection).toBe('com.example.foo')
       expect(urip.recordKey).toBe('')
     }
     {
-      const urip = new AdxUri('adx://foo.com/namespace/dataset')
-      expect(urip.namespace).toBe('namespace')
-      expect(urip.dataset).toBe('dataset')
-      expect(urip.collection).toBe('namespace/dataset')
-      expect(urip.recordKey).toBe('')
-    }
-    {
-      const urip = new AdxUri('adx://foo.com/namespace/dataset/123')
-      expect(urip.namespace).toBe('namespace')
-      expect(urip.dataset).toBe('dataset')
-      expect(urip.collection).toBe('namespace/dataset')
+      const urip = new AdxUri('adx://foo.com/com.example.foo/123')
+      expect(urip.collection).toBe('com.example.foo')
       expect(urip.recordKey).toBe('123')
     }
   })
@@ -300,16 +289,16 @@ describe('Adx Uris', () => {
     urip.pathname = 'foo'
     expect(urip.toString()).toBe('adx://foo.com/foo')
 
-    urip.collection = 'namespace/dataset'
+    urip.collection = 'com.example.foo'
     urip.recordKey = '123'
-    expect(urip.toString()).toBe('adx://foo.com/namespace/dataset/123')
+    expect(urip.toString()).toBe('adx://foo.com/com.example.foo/123')
     urip.recordKey = '124'
-    expect(urip.toString()).toBe('adx://foo.com/namespace/dataset/124')
-    urip.collection = 'other/data'
-    expect(urip.toString()).toBe('adx://foo.com/other/data/124')
+    expect(urip.toString()).toBe('adx://foo.com/com.example.foo/124')
+    urip.collection = 'com.other.foo'
+    expect(urip.toString()).toBe('adx://foo.com/com.other.foo/124')
     urip.pathname = ''
     urip.recordKey = '123'
-    expect(urip.toString()).toBe('adx://foo.com/undefined/undefined/123')
+    expect(urip.toString()).toBe('adx://foo.com/undefined/123')
     urip.pathname = 'foo'
 
     urip.search = '?foo=bar'

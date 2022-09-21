@@ -2,8 +2,7 @@ import { writeCap } from '../src/capabilities'
 import { AuthStore, MemoryStore, Ucan, ucans, verifyAdxUcan } from '../src'
 
 describe('tokens for post', () => {
-  const collection = 'did:example:microblog'
-  const schema = 'did:example:like'
+  const collection = 'com.example.microblog'
   const record = '3iwc-gvs-ehpk-2s'
   const serverDid = 'did:example:fakeServerDid'
 
@@ -18,7 +17,7 @@ describe('tokens for post', () => {
     fullUcan = await authStore.claimFull()
     rootDid = await authStore.did()
 
-    cap = writeCap(rootDid, collection, schema, record)
+    cap = writeCap(rootDid, collection, record)
 
     await verifyAdxUcan(fullUcan, fullUcan.payload.aud, cap)
   })
@@ -31,8 +30,7 @@ describe('tokens for post', () => {
   it('throws an error for the wrong collection', async () => {
     const collectionCap = writeCap(
       rootDid,
-      'did:example:otherCollection',
-      schema,
+      'com.example.otherCollection',
       record,
     )
     try {
@@ -44,7 +42,7 @@ describe('tokens for post', () => {
   })
 
   it('throws an error for the wrong record name', async () => {
-    const recordCap = writeCap(rootDid, collection, schema, '3iwc-gvs-ehpk-2z')
+    const recordCap = writeCap(rootDid, collection, '3iwc-gvs-ehpk-2z')
     try {
       const res = await verifyAdxUcan(token, serverDid, recordCap)
       expect(res).toBe(null)

@@ -19,6 +19,7 @@
   "dependencies": {
     "@adxp/auth": "*",
     "@adxp/common": "*",
+    "@adxp/nsid": "*",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
     "ipld-hashmap": "^2.1.10",

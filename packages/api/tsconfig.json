@@ -6,8 +6,7 @@
   },
   "include": ["./src"],
   "references": [
-    { "path": "../auth/tsconfig.build.json" },
-    { "path": "../common/tsconfig.build.json" },
-    { "path": "../schemas/tsconfig.build.json" },
+    { "path": "../xrpc/tsconfig.build.json" },
+    { "path": "../xrpc-cli/tsconfig.build.json" },
   ]
 }

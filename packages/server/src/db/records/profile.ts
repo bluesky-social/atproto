@@ -1,5 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import { Profile } from '@adxp/microblog'
+import * as Profile from '../../xrpc/types/todo/social/profile'
 import {
   DataSource,
   Entity,
@@ -11,9 +11,8 @@ import { DbRecordPlugin } from '../types'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
-const schemaId = 'blueskyweb.xyz:Profile'
-const collection = 'bsky/profile'
-const tableName = collectionToTableName(collection)
+const type = 'todo.social.profile'
+const tableName = collectionToTableName(type)
 
 @Entity({ name: tableName })
 export class ProfileIndex {
@@ -59,16 +58,17 @@ const getFn =
     return obj
   }
 
-const validator = schemas.createRecordValidator(schemaId)
+const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Profile.Record => {
   return validator.isValid(obj)
 }
+const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const setFn =
   (db: DataSource) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${schemaId}`)
+      throw new Error(`Record does not match schema: ${type}`)
     }
 
     const badges = (obj.badges || []).map((badge) => {
@@ -108,10 +108,10 @@ export const makePlugin = (
 ): DbRecordPlugin<Profile.Record, ProfileIndex> => {
   const repository = db.getRepository(ProfileIndex)
   return {
-    collection,
+    collection: type,
     tableName,
     get: getFn(db),
-    isValidSchema,
+    validateSchema,
     set: setFn(db),
     delete: deleteFn(db),
     translateDbObj,

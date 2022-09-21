@@ -1,5 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import { Badge } from '@adxp/microblog'
+import * as Badge from '../../xrpc/types/todo/social/badge'
 import {
   DataSource,
   Entity,
@@ -14,9 +14,8 @@ import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
-const schemaId = 'blueskyweb.xyz:Badge'
-const collection = 'bsky/badges'
-const tableName = collectionToTableName(collection)
+const type = 'todo.social.badge'
+const tableName = collectionToTableName(type)
 
 @Entity({ name: tableName })
 export class BadgeIndex {
@@ -50,16 +49,17 @@ const getFn =
     return found === null ? null : translateDbObj(found)
   }
 
-const validator = schemas.createRecordValidator(schemaId)
+const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Badge.Record => {
   return validator.isValid(obj)
 }
+const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const setFn =
   (repo: Repository<BadgeIndex>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${schemaId}`)
+      throw new Error(`Record does not match schema: ${type}`)
     }
     const badge = new BadgeIndex()
     badge.uri = uri.toString()
@@ -97,10 +97,10 @@ export const makePlugin = (
 ): DbRecordPlugin<Badge.Record, BadgeIndex> => {
   const repository = db.getRepository(BadgeIndex)
   return {
-    collection,
+    collection: type,
     tableName,
     get: getFn(repository),
-    isValidSchema,
+    validateSchema,
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,

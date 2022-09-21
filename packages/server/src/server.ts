@@ -8,7 +8,7 @@ import express from 'express'
 import cors from 'cors'
 import http from 'http'
 import * as auth from '@adxp/auth'
-import Routes from './routes'
+import API from './api'
 import { IpldStore } from '@adxp/repo'
 import Database from './db'
 import * as error from './error'
@@ -20,7 +20,7 @@ const runServer = (
   port: number,
 ): http.Server => {
   const app = express()
-  app.use(express.json())
+  // app.use(express.json())
   app.use(cors())
 
   app.use((_req, res, next) => {
@@ -30,7 +30,8 @@ const runServer = (
     next()
   })
 
-  app.use('/', Routes)
+  const apiServer = API()
+  app.use(apiServer.xrpc.router)
   app.use(error.handler)
 
   return app.listen(port)

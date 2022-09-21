@@ -114,8 +114,8 @@ export class AuthStore implements Signer {
     caps: ucan.Capability[],
     lifetime = MONTH_IN_SEC,
   ): Promise<ucan.Ucan> {
+    // @TODO make sure to dedupe proofs
     const proofs: CapWithProof[] = []
-    const encodedTokens = new Set()
     for (const cap of caps) {
       const proof = await this.vaguestProofForCap(cap)
       if (proof === null) {

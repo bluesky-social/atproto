@@ -1,9 +1,9 @@
-import { AdxSchemas } from '@adxp/schemas'
-import { schemas as schemaDefs } from '@adxp/microblog'
+import { RecordSchemas } from '@adxp/lexicon'
+import { recordSchemas } from '../xrpc/schemas'
 
-export const schemas = new AdxSchemas()
+export const schemas = new RecordSchemas()
 
-for (const schema of schemaDefs) {
+for (const schema of recordSchemas) {
   schemas.add(schema)
 }
 

@@ -1,5 +1,5 @@
 import { AdxUri } from '@adxp/common'
-import { Post } from '@adxp/microblog'
+import * as Post from '../../xrpc/types/todo/social/post'
 import {
   DataSource,
   Entity,
@@ -13,9 +13,8 @@ import { UserDid } from '../user-dids'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
-const schemaId = 'blueskyweb.xyz:Post'
-const collection = 'bsky/posts'
-const tableName = collectionToTableName(collection)
+const type = 'todo.social.post'
+const tableName = collectionToTableName(type)
 
 @Entity({ name: tableName })
 export class PostIndex {
@@ -79,16 +78,17 @@ const getFn =
     return obj
   }
 
-const validator = schemas.createRecordValidator(schemaId)
+const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Post.Record => {
   return validator.isValid(obj)
 }
+const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const setFn =
   (db: DataSource) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${schemaId}`)
+      throw new Error(`Record does not match schema: ${type}`)
     }
     const entities = (obj.entities || []).map((entity) => {
       const entry = new PostEntityIndex()
@@ -139,10 +139,10 @@ export const makePlugin = (
 ): DbRecordPlugin<Post.Record, PostIndex> => {
   const repository = db.getRepository(PostIndex)
   return {
-    collection,
+    collection: type,
     tableName,
     get: getFn(db),
-    isValidSchema,
+    validateSchema,
     set: setFn(db),
     delete: deleteFn(db),
     translateDbObj,
