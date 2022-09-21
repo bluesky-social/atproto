@@ -1,11 +1,11 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Tue Sep 20 2022
+* Created Wed Sep 21 2022
 */
 import express from 'express'
 
 export interface QueryParams {
-  name: string;
+  name?: string;
 }
 
 export type HandlerInput = undefined
