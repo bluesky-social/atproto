@@ -228,7 +228,7 @@ describe('pds views', () => {
 
   it('fetches followers', async () => {
     const view = await client.todo.social.getUserFollowers({
-      user: 'alice',
+      user: 'alice.test',
     })
     expect(view.data.subject.did).toEqual(users.alice.did)
     expect(view.data.subject.name).toEqual(users.alice.name)
@@ -251,7 +251,7 @@ describe('pds views', () => {
 
   it('fetches follows', async () => {
     const view = await client.todo.social.getUserFollows({
-      user: 'bob',
+      user: 'bob.test',
     })
     expect(view.data.subject.did).toEqual(users.bob.did)
     expect(view.data.subject.name).toEqual(users.bob.name)
@@ -275,7 +275,7 @@ describe('pds views', () => {
   it('fetches profile', async () => {
     const aliceProf = await client.todo.social.getProfile(
       {
-        user: 'alice',
+        user: 'alice.test',
       },
       undefined,
       {
@@ -306,7 +306,7 @@ describe('pds views', () => {
 
     const danProf = await client.todo.social.getProfile(
       {
-        user: 'dan',
+        user: 'dan.test',
       },
       undefined,
       {
@@ -382,7 +382,7 @@ describe('pds views', () => {
 
   it('fetches user feed', async () => {
     const aliceFeed = await client.todo.social.getFeed(
-      { author: 'alice' },
+      { author: 'alice.test' },
       undefined,
       {
         headers: {
@@ -400,7 +400,7 @@ describe('pds views', () => {
     expect(aliceFeed.data.feed[3].record.text).toEqual(posts.alice[0])
 
     const carolFeed = await client.todo.social.getFeed(
-      { author: 'carol' },
+      { author: 'carol.test' },
       undefined,
       {
         headers: {

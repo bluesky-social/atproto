@@ -1,4 +1,5 @@
 import { Server } from '../../../lexicon'
+import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetUserFollows from '../../../lexicon/types/todo/social/getUserFollows'
 import { AdxRecord } from '../../../db/record'
 import { FollowIndex } from '../../../db/records/follow'
@@ -13,7 +14,9 @@ export default function (server: Server) {
       const { user, limit, before } = params
       const { db } = getLocals(res)
 
-      const creator = await util.getUserInfo(db.db, user)
+      const creator = await util.getUserInfo(db.db, user).catch((e) => {
+        throw new InvalidRequestError(`User not found: ${user}`)
+      })
 
       const followsReq = db.db
         .createQueryBuilder()

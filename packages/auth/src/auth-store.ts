@@ -55,7 +55,7 @@ export class AuthStore implements Signer {
 
   async canSignForDid(did: string): Promise<boolean> {
     // for dev purposes
-    if (did.startsWith('did:example')) {
+    if (did.startsWith('did:test:')) {
       return true
     }
     if (did === (await this.did())) {

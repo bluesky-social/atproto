@@ -1,4 +1,6 @@
 export interface ServerConfigValues {
+  debugMode?: boolean
+
   scheme: string
   port: number
   hostname: string
@@ -11,6 +13,8 @@ export class ServerConfig {
   constructor(private cfg: ServerConfigValues) {}
 
   static readEnv() {
+    const debugMode = process.env.DEBUG_MODE === '1'
+
     const hostname = process.env.HOSTNAME || 'localhost'
     let scheme
     if ('TLS' in process.env) {
@@ -25,12 +29,17 @@ export class ServerConfig {
     const databaseLocation = process.env.DATABASE_LOC
 
     return new ServerConfig({
+      debugMode,
       scheme,
       hostname,
       port,
       blockstoreLocation,
       databaseLocation,
     })
+  }
+
+  get debugMode() {
+    return this.cfg.debugMode
   }
 
   get scheme() {
@@ -46,10 +55,7 @@ export class ServerConfig {
   }
 
   get origin() {
-    const u = new URL('')
-    u.protocol = 'http:'
-    u.hostname = this.hostname
-    u.port = String(this.port)
+    const u = new URL(`${this.scheme}://${this.hostname}:${this.port}`)
     return u.origin
   }
 
