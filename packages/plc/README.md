@@ -11,6 +11,10 @@ We cheekily titled the method "Placeholder", because we _don't_ want it to stick
 We expect a method to emerge that fits the bill within the next few years, likely a permissioned DID consortium. 
 
 ## How it works
+This is not a fully-expressive DID format.
+Though it adheres to the DID spec, it is domain-specific and only allows for representing specific data types in a specific manner.
+There is the possibility that it could be extended to be more general in the future.
+
 Each DID document is made up of just four pieces of data (for now): 
 - `signingKey`
 - `recoveryKey`
@@ -47,6 +51,25 @@ The operation logs are fully self-certifying, with the exception of their orderi
 Therefore, the PLC server's attacks are limited to:
 - Denial of service: rejecting valid operations, or refusing to serve some information about the DID
 - Misordering: In the event of a fork in DID document history, the server could choose to serve the "wrong" fork
+
+### Signing and Recovery Keys
+
+Both the `signingKey` and the `recoveryKey` are permissioned to make changes to the DID document.
+However, these keys are not equal.
+
+As can be seen in the example document (below), only the `signingKey` is granted the ability to make assertions and invoke/delegate capabilities.
+
+The recovery key on the other hand is capable of performing a "recovery operation"
+
+### Account Recovery
+
+The PLC server provides a 72hr window during which the `recoveryKey` can "rewrite" history.
+
+This is to be used in adversarial situations in which a user's `signingKey` leaks or is being held by some custodian who turns out to be a bad actor.
+
+In a situation such as this, the `signingKey` may be used to rotate both the `signingKey` and `recoveryKey`.
+
+If a user wishes to recovery from this situation, they sign a new operation rotating the `signingKey` to a key that they hold and set the `prev` of that operation to point to the most recent pre-attack operation.
 
 ## Example
 
@@ -135,27 +158,3 @@ And the following DID document:
   ]
 }
 ```
-
-## DID Document
-It's worthwhile to note that this is not a fully-expressive DID document.
-Though it adheres to the DID spec, it is domain-specific and only allows for representing specific data types in a specific manner.
-There is the possibility that it could be extended to be more general in the future.
-
-## Signing and Recovery Keys
-
-Both the `signingKey` and the `recoveryKey` are permissioned to make changes to the DID document.
-However, these keys are not equal.
-
-As can be seen in the example document, only the `signingKey` is granted the ability to make assertions and invoke/delegate capabilities.
-
-The recovery key on the other hand is capability of performing a "recovery operation"
-
-### Account Recovery
-
-The PLC server provides a 72hr window during which the `recoveryKey` can "rewrite" history.
-
-This is to be used in adversarial situations in which a user's `signingKey` leaks or is being held by some custodian who turns out to be a bad actor.
-
-In a situation such as this, the `signingKey` may be used to rotate both the `signingKey` and `recoveryKey`.
-
-If a user wishes to recovery from this situation, they sign a new operation rotating the `signingKey` to a key that they hold and set the `prev` of that operation to point to the most recent pre-attack operation.
