@@ -8,10 +8,21 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["username", "did"],
+      "required": ["username", "did", "password"],
       "properties": {
         "username": {"type": "string"},
-        "did": {"type": "string"}
+        "did": {"type": "string"},
+        "password": {"type": "string"}
+      }
+    }
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["jwt"],
+      "properties": {
+        "jwt": { "type": "string" }
       }
     }
   }

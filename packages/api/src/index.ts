@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Wed Sep 21 2022
+* Created Thu Sep 22 2022
 */
 import {
   Client as XrpcClient,
@@ -64,6 +64,10 @@ export class ServiceClient {
     this._baseClient = baseClient
     this.xrpc = xrpcService
     this.todo = new TodoNS(this)
+  }
+
+  setHeader(key: string, value: string): void {
+    this.xrpc.setHeader(key, value)
   }
 }
 

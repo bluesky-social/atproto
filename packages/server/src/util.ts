@@ -5,6 +5,7 @@ import * as auth from '@adxp/auth'
 import { Database } from './db'
 import { ServerError } from './error'
 import { ServerConfig } from './config'
+import ServerAuth from './auth'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -73,10 +74,19 @@ export const getConfig = (res: Response): ServerConfig => {
   return config as ServerConfig
 }
 
+export const getAuth = (res: Response): ServerAuth => {
+  const auth = res.locals.auth
+  if (!auth) {
+    throw new ServerError(500, 'No Auth object attached to server')
+  }
+  return auth as ServerAuth
+}
+
 export type Locals = {
   blockstore: IpldStore
   db: Database
   keypair: auth.DidableKey
+  auth: ServerAuth
   config: ServerConfig
 }
 
@@ -85,6 +95,7 @@ export const getLocals = (res: Response): Locals => {
     blockstore: getBlockstore(res),
     db: getDB(res),
     keypair: getKeypair(res),
+    auth: getAuth(res),
     config: getConfig(res),
   }
 }

@@ -1,12 +1,13 @@
+import { DataSource } from 'typeorm'
+import * as bcrypt from 'bcryptjs'
+import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
+import { DbRecordPlugin } from './types'
 import * as Badge from '../lexicon/types/todo/social/badge'
 import * as Follow from '../lexicon/types/todo/social/follow'
 import * as Like from '../lexicon/types/todo/social/like'
 import * as Post from '../lexicon/types/todo/social/post'
 import * as Profile from '../lexicon/types/todo/social/profile'
 import * as Repost from '../lexicon/types/todo/social/repost'
-import { DataSource } from 'typeorm'
-import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
-import { DbRecordPlugin } from './types'
 import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
 import likePlugin, { LikeIndex } from './records/like'
 import followPlugin, { FollowIndex } from './records/follow'
@@ -94,21 +95,35 @@ export class Database {
     await table.save(newRoot)
   }
 
-  async getUser(user: string): Promise<UserDid | null> {
+  async getUser(
+    user: string,
+  ): Promise<{ username: string; did: string } | null> {
     const table = this.db.getRepository(UserDid)
-    if (user.startsWith('did:')) {
-      return table.findOneBy({ did: user })
-    } else {
-      return table.findOneBy({ username: user })
-    }
+    const found = user.startsWith('did:')
+      ? await table.findOneBy({ did: user })
+      : await table.findOneBy({ username: user })
+
+    return found ? { username: found.username, did: found.did } : null
   }
 
-  async registerUser(username: string, did: string) {
+  async registerUser(username: string, did: string, password: string) {
     const table = this.db.getRepository(UserDid)
     const user = new UserDid()
     user.username = username
     user.did = did
+    user.password = await bcrypt.hash(password, 10)
     await table.save(user)
+  }
+
+  async verifyUserPassword(
+    username: string,
+    password: string,
+  ): Promise<string | null> {
+    const found = await this.db.getRepository(UserDid).findOneBy({ username })
+    if (!found) return null
+    const validPass = await bcrypt.compare(password, found.password)
+    if (!validPass) return null
+    return found.did
   }
 
   validateRecord(collection: string, obj: unknown): ValidationResult {

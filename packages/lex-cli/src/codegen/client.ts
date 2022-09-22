@@ -146,6 +146,23 @@ const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
         ].join('\n'),
       )
 
+    //= setHeader(key: string, value: string): void {
+    //=   this.xrpc.setHeader(key, value)
+    //= }
+    const setHeaderMethod = serviceClientCls.addMethod({
+      name: 'setHeader',
+      returnType: 'void',
+    })
+    setHeaderMethod.addParameter({
+      name: 'key',
+      type: 'string',
+    })
+    setHeaderMethod.addParameter({
+      name: 'value',
+      type: 'string',
+    })
+    setHeaderMethod.setBodyText('this.xrpc.setHeader(key, value)')
+
     // generate classes for the schemas
     for (const ns of nsidTree) {
       genNamespaceCls(file, ns)

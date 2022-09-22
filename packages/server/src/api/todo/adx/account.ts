@@ -2,7 +2,7 @@ import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as util from '../../../util'
 import { Repo } from '@adxp/repo'
-import * as auth from '@adxp/auth'
+import { AuthStore } from '@adxp/auth'
 
 export default function (server: Server) {
   server.todo.adx.getAccount(() => {
@@ -11,7 +11,7 @@ export default function (server: Server) {
   })
 
   server.todo.adx.createAccount(async (_params, input, _req, res) => {
-    const { did, username } = input.body
+    const { did, username, password } = input.body
     const cfg = util.getConfig(res)
 
     if (username.startsWith('did:')) {
@@ -41,10 +41,10 @@ export default function (server: Server) {
       isTestUser = true
     }
 
-    const { db, blockstore, keypair } = util.getLocals(res)
-    await db.registerUser(username, did)
+    const { db, blockstore, keypair, auth } = util.getLocals(res)
+    await db.registerUser(username, did, password)
 
-    const authStore = await auth.AuthStore.fromTokens(keypair, [])
+    const authStore = await AuthStore.fromTokens(keypair, [])
     const repo = await Repo.create(blockstore, did, authStore)
     await db.setRepoRoot(did, repo.cid)
 
@@ -55,25 +55,8 @@ export default function (server: Server) {
       })
     }
 
-    // const authStore = await serverAuth.checkReq(
-    //   req,
-    //   res,
-    //   auth.maintenanceCap(did),
-    // )
-    // const host = util.getOwnHost(req)
-
-    // if (await db.isNameRegistered(username, host)) {
-    //   throw new ServerError(409, 'Username already taken')
-    // } else if (await db.isDidRegistered(did)) {
-    //   throw new ServerError(409, 'Did already registered')
-    // }
-
-    // await db.registerDid(username, did, host)
-    // // create empty repo
-    // if (createRepo) {
-    //   const repo = await Repo.create(blockstore, did, authStore)
-    //   await db.createRepoRoot(did, repo.cid)
-    // }
+    const jwt = auth.createToken(did)
+    return { encoding: 'application/json', body: { jwt } }
   })
 
   server.todo.adx.deleteAccount(() => {
