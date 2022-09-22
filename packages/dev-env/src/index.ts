@@ -1,8 +1,10 @@
 import http from 'http'
 import chalk from 'chalk'
 import { MemoryBlockstore } from '@adxp/repo'
-import PDSServer, { DidTestRegistry } from '@adxp/server/src/server.js'
-import PDSDatabase from '@adxp/server/src/db/index.js'
+import PDSServer, {
+  DidTestRegistry,
+  Database as PDSDatabase,
+} from '@adxp/server'
 import * as crypto from '@adxp/crypto'
 import AdxApi, { ServiceClient } from '@adxp/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
