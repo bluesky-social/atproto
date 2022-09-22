@@ -6,8 +6,8 @@ import getPort from 'get-port'
 
 const USE_TEST_SERVER = true
 
-const alice = { username: 'alice', did: 'did:example:alice' }
-const bob = { username: 'bob', did: 'did:example:bob' }
+const alice = { username: 'alice.test', did: 'did:test:alice' }
+const bob = { username: 'bob.test', did: 'did:test:bob' }
 
 describe('crud operations', () => {
   let client: AdxServiceClient

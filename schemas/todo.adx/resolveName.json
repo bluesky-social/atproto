@@ -2,9 +2,9 @@
   "lexicon": 1,
   "id": "todo.adx.resolveName",
   "type": "query",
-  "description": "Provides the DID of the repo indicated by the Host parameter.",
+  "description": "Provides the DID of a repo.",
   "parameters": {
-    "name": {"type": "string", "required": true, "description": "The name to resolve."}
+    "name": {"type": "string", "description": "The name to resolve. If not supplied, will resolve the host's own name."}
   },
   "output": {
     "encoding": "application/json",

@@ -128,7 +128,12 @@ export default function (server: Server) {
     // @TODO add user auth here!
     const serverKey = util.getKeypair(res)
     const authStore = await auth.AuthStore.fromTokens(serverKey, [])
-    const repo = await util.loadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did, authStore)
+    if (!repo) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
     const prevCid = repo.cid
     await repo.batchWrite(tx.writes)
     // @TODO: do something better here instead of rescanning for diff
@@ -161,7 +166,12 @@ export default function (server: Server) {
     }
     const serverKey = util.getKeypair(res)
     const authStore = await auth.AuthStore.fromTokens(serverKey, [])
-    const repo = await util.loadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did, authStore)
+    if (!repo) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
     const tid = await repo.getCollection(type).createRecord(input.body)
     const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
     try {
@@ -193,7 +203,12 @@ export default function (server: Server) {
     }
     const serverKey = util.getKeypair(res)
     const authStore = await auth.AuthStore.fromTokens(serverKey, [])
-    const repo = await util.loadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did, authStore)
+    if (!repo) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
     await repo.getCollection(type).updateRecord(TID.fromStr(tid), input.body)
     const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
     try {
@@ -216,7 +231,12 @@ export default function (server: Server) {
     const db = util.getDB(res)
     const serverKey = util.getKeypair(res)
     const authStore = await auth.AuthStore.fromTokens(serverKey, [])
-    const repo = await util.loadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did, authStore)
+    if (!repo) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
     await repo.getCollection(type).deleteRecord(TID.fromStr(tid))
     const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
     await db.deleteRecord(uri)

@@ -1,8 +1,10 @@
 import http from 'http'
 import chalk from 'chalk'
 import { MemoryBlockstore } from '@adxp/repo'
-import PDSServer from '@adxp/server/dist/server.js'
-import PDSDatabase from '@adxp/server/dist/db/index.js'
+import PDSServer, {
+  DidTestRegistry,
+  Database as PDSDatabase,
+} from '@adxp/server'
 import * as crypto from '@adxp/crypto'
 import AdxApi, { ServiceClient } from '@adxp/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
@@ -10,7 +12,11 @@ import { ServerType, ServerConfig, StartParams } from './types.js'
 export class DevEnvServer {
   inst?: http.Server
 
-  constructor(public type: ServerType, public port: number) {}
+  constructor(
+    private env: DevEnv,
+    public type: ServerType,
+    public port: number,
+  ) {}
 
   get name() {
     return {
@@ -50,7 +56,13 @@ export class DevEnvServer {
         const serverBlockstore = new MemoryBlockstore()
         const keypair = await crypto.EcdsaKeypair.create()
         this.inst = await onServerReady(
-          PDSServer(serverBlockstore, db, keypair, this.port),
+          PDSServer(serverBlockstore, db, keypair, {
+            debugMode: true,
+            scheme: 'http',
+            hostname: 'localhost',
+            port: this.port,
+            didTestRegistry: this.env.didTestRegistry,
+          }),
         )
         break
       }
@@ -72,13 +84,14 @@ export class DevEnvServer {
     }
   }
 
-  getClient(userDid: string): ServiceClient {
+  getClient(): ServiceClient {
     return AdxApi.service(`http://localhost:${this.port}`)
   }
 }
 
 export class DevEnv {
   servers: Map<number, DevEnvServer> = new Map()
+  didTestRegistry = new DidTestRegistry()
 
   static async create(params: StartParams): Promise<DevEnv> {
     const devEnv = new DevEnv()
@@ -92,7 +105,7 @@ export class DevEnv {
     if (this.servers.has(cfg.port)) {
       throw new Error(`Port ${cfg.port} is in use`)
     }
-    const server = new DevEnvServer(cfg.type, cfg.port)
+    const server = new DevEnvServer(this, cfg.type, cfg.port)
     await server.start()
     this.servers.set(cfg.port, server)
   }

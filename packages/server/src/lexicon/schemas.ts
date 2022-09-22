@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Tue Sep 20 2022
+* Created Wed Sep 21 2022
 */
 import { MethodSchema, RecordSchema } from '@adxp/lexicon'
 
@@ -437,13 +437,12 @@ export const methodSchemas: MethodSchema[] = [
     lexicon: 1,
     id: 'todo.adx.resolveName',
     type: 'query',
-    description:
-      'Provides the DID of the repo indicated by the Host parameter.',
+    description: 'Provides the DID of a repo.',
     parameters: {
       name: {
         type: 'string',
-        description: 'The name to resolve.',
-        required: true,
+        description:
+          "The name to resolve. If not supplied, will resolve the host's own name.",
       },
     },
     output: {

@@ -1,25 +1,25 @@
 export const users = {
   alice: {
-    name: 'alice',
-    did: 'did:example:alice',
+    name: 'alice.test',
+    did: 'did:test:alice',
     displayName: 'ali',
     description: 'its me!',
   },
   bob: {
-    name: 'bob',
-    did: 'did:example:bob',
+    name: 'bob.test',
+    did: 'did:test:bob',
     displayName: 'bobby',
     description: 'hi im bob',
   },
   carol: {
-    name: 'carol',
-    did: 'did:example:carol',
+    name: 'carol.test',
+    did: 'did:test:carol',
     displayName: undefined,
     description: undefined,
   },
   dan: {
-    name: 'dan',
-    did: 'did:example:dan',
+    name: 'dan.test',
+    did: 'did:test:dan',
     displayName: undefined,
     description: undefined,
   },
