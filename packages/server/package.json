@@ -2,10 +2,11 @@
   "name": "@adxp/server",
   "version": "0.0.2",
   "main": "src/index.ts",
+  "bin": "dist/bin.ts",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../schemas/todo.adx/* ../../schemas/todo.social/*",
     "build": "node ./build.js",
-    "start": "node dist/index.js",
+    "start": "node dist/bin.js",
     "test": "jest",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",

@@ -1,9 +1,7 @@
 import { MemoryBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
 
-import server, { DidTestRegistry } from '../src/server'
-import Database from '../src/db'
-import { ServerConfig } from '../src/config'
+import server, { DidTestRegistry, ServerConfig, Database } from '../src/index'
 
 export type CloseFn = () => Promise<void>
 

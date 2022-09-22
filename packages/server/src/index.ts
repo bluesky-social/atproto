@@ -1,41 +1,48 @@
-import dotenv from 'dotenv'
-import { IpldStore, MemoryBlockstore, PersistentBlockstore } from '@adxp/repo'
-import * as crypto from '@adxp/crypto'
+// catch errors that get thrown in async route handlers
+// this is a relatively non-invasive change to express
+// they get handled in the error.handler middleware
+// leave at top of file before importing Routes
+import 'express-async-errors'
+
+import express from 'express'
+import cors from 'cors'
+import http from 'http'
+import * as auth from '@adxp/auth'
+import API from './api'
+import { IpldStore } from '@adxp/repo'
 import Database from './db'
-import server from './server'
-import { ServerConfig } from './config'
+import * as error from './error'
+import { ServerConfig, ServerConfigValues } from './config'
 
-const run = async () => {
-  const env = process.env.ENV
-  if (env) {
-    dotenv.config({ path: `./.${env}.env` })
-  } else {
-    dotenv.config()
-  }
+export { DidTestRegistry } from './lib/did/did-test'
+export type { ServerConfigValues } from './config'
+export { ServerConfig } from './config'
+export { Database } from './db'
 
-  let blockstore: IpldStore
-  let db: Database
+const runServer = (
+  blockstore: IpldStore,
+  db: Database,
+  keypair: auth.DidableKey,
+  cfg: ServerConfigValues,
+): http.Server => {
+  const config = new ServerConfig(cfg)
 
-  const cfg = ServerConfig.readEnv()
+  const app = express()
+  app.use(cors())
 
-  if (cfg.blockstoreLocation) {
-    blockstore = new PersistentBlockstore(cfg.blockstoreLocation)
-  } else {
-    blockstore = new MemoryBlockstore()
-  }
-
-  if (cfg.databaseLocation) {
-    db = await Database.sqlite(cfg.databaseLocation)
-  } else {
-    db = await Database.memory()
-  }
-
-  const keypair = await crypto.EcdsaKeypair.create()
-
-  const s = server(blockstore, db, keypair, cfg)
-  s.on('listening', () => {
-    console.log(`🌞 ADX Data server is running at ${cfg.origin}`)
+  app.use((_req, res, next) => {
+    res.locals.blockstore = blockstore
+    res.locals.db = db
+    res.locals.keypair = keypair
+    res.locals.config = config
+    next()
   })
+
+  const apiServer = API()
+  app.use(apiServer.xrpc.router)
+  app.use(error.handler)
+
+  return app.listen(config.port)
 }
 
-run()
+export default runServer
