@@ -4,10 +4,11 @@ import fs from 'fs'
 import os from 'os'
 import { join } from 'path'
 import chalk from 'chalk'
-import getPort, { portNumbers } from 'get-port'
 import { DevEnv, DevEnvServer } from './index.js'
 import * as env from './env.js'
-import { PORTS, ServerType, ServerConfig } from './types.js'
+import { ServerType } from './types.js'
+import { genServerCfg } from './util'
+import { generateMockSetup } from './mock'
 
 const pkg = JSON.parse(
   fs.readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'),
@@ -24,6 +25,16 @@ const envApi = {
     return devEnv
   },
 
+  get api() {
+    const client = devEnv
+      ?.listOfType(ServerType.PersonalDataServer)[0]
+      .getClient()
+    if (!client) {
+      throw new Error('No PDS is active')
+    }
+    return client
+  },
+
   status() {
     assert(devEnv)
     console.log(chalk.bold(' port  server'))
@@ -34,7 +45,7 @@ const envApi = {
 
   async startPds(port?: number) {
     assert(devEnv)
-    await devEnv.add(await cfg(ServerType.PersonalDataServer, port))
+    await devEnv.add(await genServerCfg(ServerType.PersonalDataServer, port))
   },
 
   async stop(port: number) {
@@ -107,9 +118,11 @@ console.log(`
 [  v${pkg.version}  | created by Bluesky ]
 
 Initializing...`)
-console.log('Type .help if you get lost')
 async function start() {
   devEnv = await DevEnv.create(env.load())
+  await generateMockSetup(devEnv)
+  console.log('Test environment generated.')
+  console.log('Type .help if you get lost')
 
   // create repl
   let inst = repl.start() //'adx $ ')
@@ -124,14 +137,3 @@ async function start() {
   return inst
 }
 start()
-
-// helpers
-// =
-
-async function cfg(type: ServerType, port?: number): Promise<ServerConfig> {
-  const basePort = PORTS[type]
-  return {
-    type,
-    port: port || (await getPort({ port: portNumbers(basePort, 65535) })),
-  }
-}
