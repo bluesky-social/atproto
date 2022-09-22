@@ -13,12 +13,13 @@ export interface InputSchema {
 }
 
 export interface HandlerOutput {
-  encoding: '';
+  encoding: 'application/json';
   body: OutputSchema;
 }
 
 export interface OutputSchema {
-  [k: string]: unknown;
+  name: string;
+  did: string;
 }
 
 export type Handler = (

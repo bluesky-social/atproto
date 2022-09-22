@@ -49,12 +49,31 @@ export const methodSchemas: MethodSchema[] = [
     description: 'Create an authentication session.',
     parameters: {},
     input: {
-      encoding: '',
-      schema: {},
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['username', 'password'],
+        properties: {
+          username: {
+            type: 'string',
+          },
+          password: {
+            type: 'string',
+          },
+        },
+      },
     },
     output: {
-      encoding: '',
-      schema: {},
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['jwt'],
+        properties: {
+          jwt: {
+            type: 'string',
+          },
+        },
+      },
     },
   },
   {
@@ -113,8 +132,19 @@ export const methodSchemas: MethodSchema[] = [
       schema: {},
     },
     output: {
-      encoding: '',
-      schema: {},
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['name', 'did'],
+        properties: {
+          name: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+          },
+        },
+      },
     },
   },
   {

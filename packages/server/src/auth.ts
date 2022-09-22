@@ -28,6 +28,11 @@ export class ServerAuth {
     return sub
   }
 
+  verifyUser(req: express.Request, did: string): boolean {
+    const authorized = this.getUserDid(req)
+    return authorized === did
+  }
+
   toString(): string {
     return 'Server auth: JWT'
   }

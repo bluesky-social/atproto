@@ -16,7 +16,8 @@ export interface InputSchema {
 }
 
 export interface OutputSchema {
-  [k: string]: unknown;
+  name: string;
+  did: string;
 }
 
 export interface Response {

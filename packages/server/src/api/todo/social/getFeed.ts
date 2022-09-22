@@ -16,13 +16,13 @@ export default function (server: Server) {
     async (params: GetFeed.QueryParams, _input, req, res) => {
       const { author, limit, before } = params
 
+      const { auth, db } = getLocals(res)
       // @TODO switch out for actual auth
-      const requester = req.headers.authorization
+      const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()
       }
 
-      const { db } = getLocals(res)
       const builder = db.db.createQueryBuilder()
 
       if (author === undefined) {
