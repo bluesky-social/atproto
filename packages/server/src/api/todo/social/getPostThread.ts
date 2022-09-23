@@ -15,10 +15,9 @@ export default function (server: Server) {
   server.todo.social.getPostThread(
     async (params: GetPostThread.QueryParams, _input, req, res) => {
       const { uri, depth = 6 } = params
-      const { db } = getLocals(res)
+      const { auth, db } = getLocals(res)
 
-      // @TODO switch out for actual auth
-      const requester = req.headers.authorization
+      const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()
       }

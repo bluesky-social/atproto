@@ -1,24 +1,28 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Wed Sep 21 2022
+* Created Thu Sep 22 2022
 */
 import express from 'express'
 
 export interface QueryParams {}
 
-export type HandlerInput = undefined
+export interface HandlerInput {
+  encoding: 'application/json';
+  body: InputSchema;
+}
 
 export interface InputSchema {
-  [k: string]: unknown;
+  username: string;
+  password: string;
 }
 
 export interface HandlerOutput {
-  encoding: '';
+  encoding: 'application/json';
   body: OutputSchema;
 }
 
 export interface OutputSchema {
-  [k: string]: unknown;
+  jwt: string;
 }
 
 export type Handler = (

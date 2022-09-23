@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Wed Sep 21 2022
+* Created Thu Sep 22 2022
 */
 import { Headers } from '@adxp/xrpc'
 
@@ -16,7 +16,8 @@ export interface InputSchema {
 }
 
 export interface OutputSchema {
-  [k: string]: unknown;
+  name: string;
+  did: string;
 }
 
 export interface Response {

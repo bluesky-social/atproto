@@ -1,35 +1,41 @@
-import { Request, Response } from 'express'
-import * as auth from '@adxp/auth'
-import { ServerError } from './error'
-import * as util from './util'
+import express from 'express'
+import * as jwt from 'jsonwebtoken'
 
-export const checkReq = async (
-  req: Request,
-  res: Response,
-  cap: auth.ucans.Capability,
-): Promise<auth.AuthStore> => {
-  const header = req.headers.authorization
-  if (!header) {
-    throw new ServerError(403, 'No UCAN found in message headers')
+const BEARER = 'Bearer '
+export class ServerAuth {
+  private _secret
+  constructor(secret: string) {
+    this._secret = secret
   }
-  let token: auth.Ucan
-  try {
-    const stripped = header.replace('Bearer ', '')
-    token = await auth.validateUcan(stripped)
-  } catch (err) {
-    throw new ServerError(
-      403,
-      `Could not parse a proper UCAN from req header: ${err}`,
+
+  createToken(did: string): string {
+    return jwt.sign(
+      {
+        sub: did,
+      },
+      this._secret,
     )
   }
-  const serverKey = util.getKeypair(res)
-  try {
-    await auth.verifyAdxUcan(token, serverKey.did(), cap)
-  } catch (err) {
-    throw new ServerError(
-      403,
-      `Attached UCAN does not allow the requested operation: ${err}`,
-    )
+
+  getUserDid(req: express.Request): string | null {
+    const header = req.headers.authorization || ''
+    if (!header.startsWith(BEARER)) return null
+    const token = header.slice(BEARER.length)
+    const payload = jwt.verify(token, this._secret)
+    const sub = payload.sub
+    if (typeof sub !== 'string') return null
+    if (!sub.startsWith('did:')) return null
+    return sub
   }
-  return auth.AuthStore.fromTokens(serverKey, [auth.encodeUcan(token)])
+
+  verifyUser(req: express.Request, did: string): boolean {
+    const authorized = this.getUserDid(req)
+    return authorized === did
+  }
+
+  toString(): string {
+    return 'Server auth: JWT'
+  }
 }
+
+export default ServerAuth

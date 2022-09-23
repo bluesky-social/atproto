@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Wed Sep 21 2022
+* Created Thu Sep 22 2022
 */
 import { MethodSchema, RecordSchema } from '@adxp/lexicon'
 
@@ -15,12 +15,27 @@ export const methodSchemas: MethodSchema[] = [
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['username', 'did'],
+        required: ['username', 'did', 'password'],
         properties: {
           username: {
             type: 'string',
           },
           did: {
+            type: 'string',
+          },
+          password: {
+            type: 'string',
+          },
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['jwt'],
+        properties: {
+          jwt: {
             type: 'string',
           },
         },
@@ -34,12 +49,31 @@ export const methodSchemas: MethodSchema[] = [
     description: 'Create an authentication session.',
     parameters: {},
     input: {
-      encoding: '',
-      schema: {},
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['username', 'password'],
+        properties: {
+          username: {
+            type: 'string',
+          },
+          password: {
+            type: 'string',
+          },
+        },
+      },
     },
     output: {
-      encoding: '',
-      schema: {},
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['jwt'],
+        properties: {
+          jwt: {
+            type: 'string',
+          },
+        },
+      },
     },
   },
   {
@@ -98,8 +132,19 @@ export const methodSchemas: MethodSchema[] = [
       schema: {},
     },
     output: {
-      encoding: '',
-      schema: {},
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['name', 'did'],
+        properties: {
+          name: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+          },
+        },
+      },
     },
   },
   {

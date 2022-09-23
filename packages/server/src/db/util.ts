@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { EntityTarget, SelectQueryBuilder } from 'typeorm'
 
 export const collectionToTableName = (collection: string): string => {
@@ -37,4 +38,27 @@ export const existsByCreatorSubquery = (
       .from(table, 'table')
       .where('table.creator = :creator', { creator })
   }
+}
+
+export const scryptHash = (password: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const salt = crypto.randomBytes(16).toString('hex')
+    crypto.scrypt(password, salt, 64, (err, hash) => {
+      if (err) reject(err)
+      resolve(salt + ':' + hash.toString('hex'))
+    })
+  })
+}
+
+export const scryptVerify = (
+  password: string,
+  storedHash: string,
+): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    const [salt, hash] = storedHash.split(':')
+    crypto.scrypt(password, salt, 64, (err, derivedHash) => {
+      if (err) reject(err)
+      resolve(hash === derivedHash.toString('hex'))
+    })
+  })
 }

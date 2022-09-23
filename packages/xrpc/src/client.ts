@@ -66,10 +66,15 @@ export class Client {
 export class ServiceClient {
   baseClient: Client
   uri: URL
+  headers: Record<string, string> = {}
 
   constructor(baseClient: Client, serviceUri: string | URL) {
     this.baseClient = baseClient
     this.uri = typeof serviceUri === 'string' ? new URL(serviceUri) : serviceUri
+  }
+
+  setHeader(key: string, value: string): void {
+    this.headers[key] = value
   }
 
   async call(
@@ -84,7 +89,13 @@ export class ServiceClient {
     }
     const httpMethod = getMethodSchemaHTTPMethod(schema)
     const httpUri = constructMethodCallUri(schema, this.uri, params)
-    const httpHeaders = constructMethodCallHeaders(schema, data, opts)
+    const httpHeaders = constructMethodCallHeaders(schema, data, {
+      headers: {
+        ...this.headers,
+        ...opts?.headers,
+      },
+      encoding: opts?.encoding,
+    })
 
     let res
     try {

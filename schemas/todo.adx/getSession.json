@@ -9,7 +9,14 @@
     "schema": {}
   },
   "output": {
-    "encoding": "",
-    "schema": {}
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["name", "did"],
+      "properties": {
+        "name": {"type": "string"},
+        "did": {"type": "string"}
+      }
+    }
   }
 }

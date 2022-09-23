@@ -1,7 +1,7 @@
 import { Server } from '../../../lexicon'
-import { InvalidRequestError } from '@adxp/xrpc-server'
+import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
 import { resolveName, AdxUri, TID } from '@adxp/common'
-import * as auth from '@adxp/auth'
+import { AuthStore } from '@adxp/auth'
 import * as didSdk from '@adxp/did-sdk'
 import * as repoDiff from '../../../repo-diff'
 import * as util from '../../../util'
@@ -109,10 +109,13 @@ export default function (server: Server) {
     }
   })
 
-  server.todo.adx.repoBatchWrite(async (params, input, _req, res) => {
+  server.todo.adx.repoBatchWrite(async (params, input, req, res) => {
     const { did, validate } = params
+    const { auth, db } = util.getLocals(res)
+    if (!auth.verifyUser(req, did)) {
+      throw new AuthRequiredError()
+    }
     const tx = input.body
-    const db = util.getDB(res)
     if (validate) {
       for (const write of tx.writes) {
         if (write.action === 'create' || write.action === 'update') {
@@ -125,9 +128,7 @@ export default function (server: Server) {
         }
       }
     }
-    // @TODO add user auth here!
-    const serverKey = util.getKeypair(res)
-    const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+    const authStore = await util.getAuthstore(res)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(
@@ -153,9 +154,12 @@ export default function (server: Server) {
     }
   })
 
-  server.todo.adx.repoCreateRecord(async (params, input, _req, res) => {
+  server.todo.adx.repoCreateRecord(async (params, input, req, res) => {
     const { did, type, validate } = params
-    const db = util.getDB(res)
+    const { auth, db } = util.getLocals(res)
+    if (!auth.verifyUser(req, did)) {
+      throw new AuthRequiredError()
+    }
     if (validate) {
       const validation = db.validateRecord(type, input.body)
       if (!validation.valid) {
@@ -164,8 +168,7 @@ export default function (server: Server) {
         )
       }
     }
-    const serverKey = util.getKeypair(res)
-    const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+    const authStore = await util.getAuthstore(res)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(
@@ -190,9 +193,12 @@ export default function (server: Server) {
     }
   })
 
-  server.todo.adx.repoPutRecord(async (params, input, _req, res) => {
+  server.todo.adx.repoPutRecord(async (params, input, req, res) => {
     const { did, type, tid, validate } = params
-    const db = util.getDB(res)
+    const { auth, db } = util.getLocals(res)
+    if (!auth.verifyUser(req, did)) {
+      throw new AuthRequiredError()
+    }
     if (validate) {
       const validation = db.validateRecord(type, input.body)
       if (!validation.valid) {
@@ -201,8 +207,7 @@ export default function (server: Server) {
         )
       }
     }
-    const serverKey = util.getKeypair(res)
-    const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+    const authStore = await util.getAuthstore(res)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(
@@ -226,11 +231,13 @@ export default function (server: Server) {
     }
   })
 
-  server.todo.adx.repoDeleteRecord(async (params, _input, _req, res) => {
+  server.todo.adx.repoDeleteRecord(async (params, _input, req, res) => {
     const { did, type, tid } = params
-    const db = util.getDB(res)
-    const serverKey = util.getKeypair(res)
-    const authStore = await auth.AuthStore.fromTokens(serverKey, [])
+    const { auth, db } = util.getLocals(res)
+    if (!auth.verifyUser(req, did)) {
+      throw new AuthRequiredError()
+    }
+    const authStore = await util.getAuthstore(res)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(

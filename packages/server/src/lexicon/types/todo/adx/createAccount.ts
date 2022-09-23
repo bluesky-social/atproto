@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Wed Sep 21 2022
+* Created Thu Sep 22 2022
 */
 import express from 'express'
 
@@ -14,9 +14,18 @@ export interface HandlerInput {
 export interface InputSchema {
   username: string;
   did: string;
+  password: string;
 }
 
-export type HandlerOutput = void
+export interface HandlerOutput {
+  encoding: 'application/json';
+  body: OutputSchema;
+}
+
+export interface OutputSchema {
+  jwt: string;
+}
+
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

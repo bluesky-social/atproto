@@ -11,6 +11,7 @@ import * as auth from '@adxp/auth'
 import API from './api'
 import { IpldStore } from '@adxp/repo'
 import Database from './db'
+import ServerAuth from './auth'
 import * as error from './error'
 import { ServerConfig, ServerConfigValues } from './config'
 
@@ -26,6 +27,7 @@ const runServer = (
   cfg: ServerConfigValues,
 ): http.Server => {
   const config = new ServerConfig(cfg)
+  const auth = new ServerAuth(cfg.jwtSecret)
 
   const app = express()
   app.use(cors())
@@ -34,6 +36,7 @@ const runServer = (
     res.locals.blockstore = blockstore
     res.locals.db = db
     res.locals.keypair = keypair
+    res.locals.auth = auth
     res.locals.config = config
     next()
   })

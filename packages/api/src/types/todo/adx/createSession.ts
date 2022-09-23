@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Wed Sep 21 2022
+* Created Thu Sep 22 2022
 */
 import { Headers } from '@adxp/xrpc'
 
@@ -8,15 +8,16 @@ export interface QueryParams {}
 
 export interface CallOptions {
   headers?: Headers;
-  encoding: '';
+  encoding: 'application/json';
 }
 
 export interface InputSchema {
-  [k: string]: unknown;
+  username: string;
+  password: string;
 }
 
 export interface OutputSchema {
-  [k: string]: unknown;
+  jwt: string;
 }
 
 export interface Response {

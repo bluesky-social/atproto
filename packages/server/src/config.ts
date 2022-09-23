@@ -7,6 +7,8 @@ export interface ServerConfigValues {
   port: number
   hostname: string
 
+  jwtSecret: string
+
   blockstoreLocation?: string
   databaseLocation?: string
 
@@ -29,6 +31,8 @@ export class ServerConfig {
     const envPort = parseInt(process.env.PORT || '')
     const port = isNaN(envPort) ? 2583 : envPort
 
+    const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
+
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
 
@@ -39,6 +43,7 @@ export class ServerConfig {
       scheme,
       hostname,
       port,
+      jwtSecret,
       blockstoreLocation,
       databaseLocation,
       didTestRegistry,
@@ -64,6 +69,11 @@ export class ServerConfig {
   get origin() {
     const u = new URL(`${this.scheme}://${this.hostname}:${this.port}`)
     return u.origin
+  }
+
+  // @TODO should protect this better
+  get jwtSecret() {
+    return this.cfg.jwtSecret
   }
 
   get blockstoreLocation() {

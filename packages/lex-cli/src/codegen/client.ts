@@ -146,6 +146,23 @@ const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
         ].join('\n'),
       )
 
+    //= setHeader(key: string, value: string): void {
+    //=   this.xrpc.setHeader(key, value)
+    //= }
+    const setHeaderMethod = serviceClientCls.addMethod({
+      name: 'setHeader',
+      returnType: 'void',
+    })
+    setHeaderMethod.addParameter({
+      name: 'key',
+      type: 'string',
+    })
+    setHeaderMethod.addParameter({
+      name: 'value',
+      type: 'string',
+    })
+    setHeaderMethod.setBodyText('this.xrpc.setHeader(key, value)')
+
     // generate classes for the schemas
     for (const ns of nsidTree) {
       genNamespaceCls(file, ns)
@@ -327,10 +344,14 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
       name: 'record',
       type: `${typeModule}.Record`,
     })
+    method.addParameter({
+      name: 'headers?',
+      type: `Record<string, string>`,
+    })
     method.setBodyText(
       [
         `record.$type = '${schema.id}'`,
-        `const res = await this._service.xrpc.call('${ADX_METHODS.create}', { type: '${schema.id}', ...params }, record, {encoding: 'application/json'})`,
+        `const res = await this._service.xrpc.call('${ADX_METHODS.create}', { type: '${schema.id}', ...params }, record, {encoding: 'application/json', headers })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -350,10 +371,14 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
       name: 'record',
       type: `${typeModule}.Record`,
     })
+    method.addParameter({
+      name: 'headers?',
+      type: `Record<string, string>`,
+    })
     method.setBodyText(
       [
         `record.$type = '${schema.id}'`,
-        `const res = await this._service.xrpc.call('${ADX_METHODS.put}', { type: '${schema.id}', ...params }, record, {encoding: 'application/json'})`,
+        `const res = await this._service.xrpc.call('${ADX_METHODS.put}', { type: '${schema.id}', ...params }, record, {encoding: 'application/json', headers})`,
         `return res.data`,
       ].join('\n'),
     )
@@ -369,9 +394,14 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
       name: 'params',
       type: `Omit<${toTitleCase(ADX_METHODS.delete)}.QueryParams, "type">`,
     })
+    method.addParameter({
+      name: 'headers?',
+      type: `Record<string, string>`,
+    })
+
     method.setBodyText(
       [
-        `await this._service.xrpc.call('${ADX_METHODS.delete}', { type: '${schema.id}', ...params })`,
+        `await this._service.xrpc.call('${ADX_METHODS.delete}', { type: '${schema.id}', ...params }, undefined, { headers })`,
       ].join('\n'),
     )
   }

@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Wed Sep 21 2022
+* Created Thu Sep 22 2022
 */
 import { Headers } from '@adxp/xrpc'
 
@@ -14,10 +14,16 @@ export interface CallOptions {
 export interface InputSchema {
   username: string;
   did: string;
+  password: string;
+}
+
+export interface OutputSchema {
+  jwt: string;
 }
 
 export interface Response {
   success: boolean;
   error: boolean;
   headers: Headers;
+  data: OutputSchema;
 }
