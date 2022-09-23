@@ -5,7 +5,7 @@ const username = 'alice.test'
 const did = 'did:test:alice'
 const password = 'test123'
 
-describe('auth', () => {
+describe('account', () => {
   let client: AdxServiceClient
   let close: util.CloseFn
 

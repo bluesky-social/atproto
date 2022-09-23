@@ -31,6 +31,7 @@ export const runTestServer = async (): Promise<{
       scheme: 'http',
       hostname: 'localhost',
       port,
+      didPlcUrl: 'http://localhost:2582',
       jwtSecret: 'jwt-secret',
       didTestRegistry: new DidTestRegistry(),
     }),

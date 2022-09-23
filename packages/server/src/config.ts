@@ -9,6 +9,9 @@ export interface ServerConfigValues {
 
   jwtSecret: string
 
+  didPlcUrl: string
+  serverDid: string
+
   blockstoreLocation?: string
   databaseLocation?: string
 
@@ -33,6 +36,9 @@ export class ServerConfig {
 
     const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
 
+    const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
+    const serverDid = process.env.SERVER_DID || ''
+
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
 
@@ -44,6 +50,8 @@ export class ServerConfig {
       hostname,
       port,
       jwtSecret,
+      serverDid,
+      didPlcUrl,
       blockstoreLocation,
       databaseLocation,
       didTestRegistry,
@@ -74,6 +82,14 @@ export class ServerConfig {
   // @TODO should protect this better
   get jwtSecret() {
     return this.cfg.jwtSecret
+  }
+
+  get didPlcUrl() {
+    return this.cfg.didPlcUrl
+  }
+
+  get serverDid() {
+    return this.cfg.serverDid
   }
 
   get blockstoreLocation() {
