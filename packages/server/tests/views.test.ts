@@ -1,10 +1,7 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import { AdxUri } from '@adxp/common'
 import { users, posts, replies } from './test-data'
-import getPort from 'get-port'
 import * as util from './_util'
-
-const USE_TEST_SERVER = true
 
 let alicePosts: AdxUri[] = []
 let bobPosts: AdxUri[] = []
@@ -13,61 +10,88 @@ let danPosts: AdxUri[] = []
 let bobFollows: Record<string, AdxUri> = {}
 let bobLikes: Record<string, AdxUri> = {}
 let badges: AdxUri[] = []
+let authTokens: Record<string, string> = {}
+
+const getHeaders = (did: string) => {
+  return { authorization: `Bearer ${authTokens[did]}` }
+}
 
 describe('pds views', () => {
   let client: AdxServiceClient
-  let closeFn: util.CloseFn | null = null
+  let close: util.CloseFn
 
   beforeAll(async () => {
-    let port: number
-    if (USE_TEST_SERVER) {
-      port = await getPort()
-      closeFn = await util.runTestServer(port)
-    } else {
-      port = 2583
-    }
-    client = AdxApi.service(`http://localhost:${port}`)
+    const server = await util.runTestServer()
+    close = server.close
+    client = AdxApi.service(server.url)
   })
 
   afterAll(async () => {
-    if (closeFn) {
-      await closeFn()
-    }
+    await close()
   })
 
   it('register users', async () => {
-    await client.todo.adx.createAccount(
+    const res1 = await client.todo.adx.createAccount(
       {},
-      { username: users.alice.name, did: users.alice.did },
+      {
+        username: users.alice.name,
+        did: users.alice.did,
+        password: users.alice.password,
+      },
     )
-    await client.todo.adx.createAccount(
+    const res2 = await client.todo.adx.createAccount(
       {},
-      { username: users.bob.name, did: users.bob.did },
+      {
+        username: users.bob.name,
+        did: users.bob.did,
+        password: users.bob.password,
+      },
     )
-    await client.todo.adx.createAccount(
+    const res3 = await client.todo.adx.createAccount(
       {},
-      { username: users.carol.name, did: users.carol.did },
+      {
+        username: users.carol.name,
+        did: users.carol.did,
+        password: users.carol.password,
+      },
     )
-    await client.todo.adx.createAccount(
+    const res4 = await client.todo.adx.createAccount(
       {},
-      { username: users.dan.name, did: users.dan.did },
+      {
+        username: users.dan.name,
+        did: users.dan.did,
+        password: users.dan.password,
+      },
     )
+    authTokens = {
+      [users.alice.did]: res1.data.jwt,
+      [users.bob.did]: res2.data.jwt,
+      [users.carol.did]: res3.data.jwt,
+      [users.dan.did]: res4.data.jwt,
+    }
   })
 
   it('creates profiles', async () => {
-    await client.todo.social.profile.create(
-      { did: users.alice.did },
-      {
-        displayName: users.alice.displayName,
-        description: users.alice.description,
-      },
+    const createProfile = async (
+      by: string,
+      displayName: string,
+      description: string,
+    ) => {
+      await client.todo.social.profile.create(
+        { did: by },
+        { displayName, description },
+        getHeaders(by),
+      )
+    }
+    await createProfile(
+      users.alice.did,
+      users.alice.displayName,
+      users.alice.description,
     )
-    await client.todo.social.profile.create(
-      { did: users.bob.did },
-      {
-        displayName: users.bob.displayName,
-        description: users.bob.description,
-      },
+    await createProfile(
+      users.bob.did,
+      users.bob.displayName,
+      users.bob.description,
     )
   })
 
@@ -76,6 +100,7 @@ describe('pds views', () => {
       const res = await client.todo.social.follow.create(
         { did: from },
         { subject: to, createdAt: new Date().toISOString() },
+        getHeaders(from),
       )
       return new AdxUri(res.uri)
     }
@@ -93,6 +118,7 @@ describe('pds views', () => {
       const res = await client.todo.social.post.create(
         { did: by },
         { text: text, entities, createdAt: new Date().toISOString() },
+        getHeaders(by),
       )
       return new AdxUri(res.uri)
     }
@@ -121,6 +147,7 @@ describe('pds views', () => {
       const res = await client.todo.social.like.create(
         { did: by },
         { subject, createdAt: new Date().toISOString() },
+        getHeaders(by),
       )
       return new AdxUri(res.uri)
     }
@@ -154,6 +181,7 @@ describe('pds views', () => {
           },
           createdAt: new Date().toISOString(),
         },
+        getHeaders(by),
       )
       return new AdxUri(res.uri)
     }
@@ -172,6 +200,7 @@ describe('pds views', () => {
       const res = await client.todo.social.repost.create(
         { did: by },
         { subject, createdAt: new Date().toISOString() },
+        getHeaders(by),
       )
       return new AdxUri(res.uri)
     }
@@ -279,9 +308,7 @@ describe('pds views', () => {
       },
       undefined,
       {
-        headers: {
-          Authorization: users.bob.did,
-        },
+        headers: getHeaders(users.bob.did),
       },
     )
     expect(aliceProf.data.did).toEqual(users.alice.did)
@@ -310,9 +337,7 @@ describe('pds views', () => {
       },
       undefined,
       {
-        headers: {
-          Authorization: users.bob.did,
-        },
+        headers: getHeaders(users.bob.did),
       },
     )
     expect(danProf.data.did).toEqual(users.dan.did)
@@ -330,9 +355,7 @@ describe('pds views', () => {
 
   it('fetches timeline', async () => {
     const aliceFeed = await client.todo.social.getFeed({}, undefined, {
-      headers: {
-        Authorization: users.alice.did,
-      },
+      headers: getHeaders(users.alice.did),
     })
     expect(aliceFeed.data.feed.length).toBe(7)
     /** @ts-ignore TODO */
@@ -352,9 +375,7 @@ describe('pds views', () => {
     expect(aliceFeed.data.feed[3].repostCount).toEqual(1)
 
     const bobFeed = await client.todo.social.getFeed({}, undefined, {
-      headers: {
-        Authorization: users.bob.did,
-      },
+      headers: getHeaders(users.bob.did),
     })
     expect(bobFeed.data.feed.length).toBe(7)
     /** @ts-ignore TODO */
@@ -385,9 +406,7 @@ describe('pds views', () => {
       { author: 'alice.test' },
       undefined,
       {
-        headers: {
-          Authorization: users.bob.did,
-        },
+        headers: getHeaders(users.bob.did),
       },
     )
     /** @ts-ignore TODO */
@@ -403,9 +422,7 @@ describe('pds views', () => {
       { author: 'carol.test' },
       undefined,
       {
-        headers: {
-          Authorization: users.bob.did,
-        },
+        headers: getHeaders(users.bob.did),
       },
     )
     /** @ts-ignore TODO */
@@ -421,9 +438,7 @@ describe('pds views', () => {
       { uri: alicePosts[1].toString() },
       undefined,
       {
-        headers: {
-          Authorization: users.bob.did,
-        },
+        headers: getHeaders(users.bob.did),
       },
     )
     /** @ts-ignore TODO */

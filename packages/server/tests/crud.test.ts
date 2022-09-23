@@ -2,36 +2,33 @@ import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import * as Post from '@adxp/api/src/types/todo/social/post'
 import { AdxUri } from '@adxp/common'
 import * as util from './_util'
-import getPort from 'get-port'
 
-const USE_TEST_SERVER = true
-
-const alice = { username: 'alice.test', did: 'did:test:alice' }
-const bob = { username: 'bob.test', did: 'did:test:bob' }
+const alice = {
+  username: 'alice.test',
+  did: 'did:test:alice',
+  password: 'alice-pass',
+}
+const bob = { username: 'bob.test', did: 'did:test:bob', password: 'bob-pass' }
 
 describe('crud operations', () => {
   let client: AdxServiceClient
-  let closeFn: util.CloseFn | null = null
+  let aliceClient: AdxServiceClient
+  let close: util.CloseFn
 
   beforeAll(async () => {
-    let port: number
-    if (USE_TEST_SERVER) {
-      port = await getPort()
-      closeFn = await util.runTestServer(port)
-    } else {
-      port = 2583
-    }
-    client = AdxApi.service(`http://localhost:${port}`)
+    const server = await util.runTestServer()
+    close = server.close
+    client = AdxApi.service(server.url)
+    aliceClient = AdxApi.service(server.url)
   })
 
   afterAll(async () => {
-    if (closeFn) {
-      await closeFn()
-    }
+    await close()
   })
 
   it('registers users', async () => {
-    await client.todo.adx.createAccount({}, alice)
+    const res = await client.todo.adx.createAccount({}, alice)
+    aliceClient.setHeader('authorization', `Bearer ${res.data.jwt}`)
     await client.todo.adx.createAccount({}, bob)
   })
 
@@ -50,7 +47,7 @@ describe('crud operations', () => {
 
   let uri: AdxUri
   it('creates records', async () => {
-    const res = await client.todo.adx.repoCreateRecord(
+    const res = await aliceClient.todo.adx.repoCreateRecord(
       { did: alice.did, type: 'todo.social.post' },
       {
         $type: 'todo.social.post',
@@ -101,7 +98,7 @@ describe('crud operations', () => {
   })
 
   it('puts records', async () => {
-    const res1 = await client.todo.adx.repoPutRecord(
+    const res1 = await aliceClient.todo.adx.repoPutRecord(
       { did: alice.did, type: 'todo.social.post', tid: uri.recordKey },
       {
         $type: 'todo.social.post',
@@ -119,7 +116,7 @@ describe('crud operations', () => {
     expect(res2.data.uri).toBe(uri.toString())
     expect((res2.data.value as Post.Record).text).toBe('Hello, universe!')
 
-    const res3 = await client.todo.social.post.put(
+    const res3 = await aliceClient.todo.social.post.put(
       { did: alice.did, tid: uri.recordKey },
       {
         $type: 'todo.social.post',
@@ -138,7 +135,7 @@ describe('crud operations', () => {
   })
 
   it('deletes records', async () => {
-    await client.todo.adx.repoDeleteRecord({
+    await aliceClient.todo.adx.repoDeleteRecord({
       did: alice.did,
       type: 'todo.social.post',
       tid: uri.recordKey,
@@ -151,7 +148,7 @@ describe('crud operations', () => {
   })
 
   it('CRUDs records with the semantic sugars', async () => {
-    const res1 = await client.todo.social.post.create(
+    const res1 = await aliceClient.todo.social.post.create(
       { did: alice.did },
       {
         $type: 'todo.social.post',
@@ -166,7 +163,7 @@ describe('crud operations', () => {
     })
     expect(res2.records.length).toBe(1)
 
-    await client.todo.social.post.delete({
+    await aliceClient.todo.social.post.delete({
       did: alice.did,
       tid: uri.recordKey,
     })
@@ -179,7 +176,7 @@ describe('crud operations', () => {
 
   it('lists records with pagination', async () => {
     const doCreate = async (text: string) => {
-      const res = await client.todo.social.post.create(
+      const res = await aliceClient.todo.social.post.create(
         { did: alice.did },
         {
           $type: 'todo.social.post',
@@ -235,19 +232,19 @@ describe('crud operations', () => {
       expect(list.records[1].value.text).toBe('Post 3')
     }
 
-    await client.todo.social.post.delete({
+    await aliceClient.todo.social.post.delete({
       did: alice.did,
       tid: uri1.recordKey,
     })
-    await client.todo.social.post.delete({
+    await aliceClient.todo.social.post.delete({
       did: alice.did,
       tid: uri2.recordKey,
     })
-    await client.todo.social.post.delete({
+    await aliceClient.todo.social.post.delete({
       did: alice.did,
       tid: uri3.recordKey,
     })
-    await client.todo.social.post.delete({
+    await aliceClient.todo.social.post.delete({
       did: alice.did,
       tid: uri4.recordKey,
     })
@@ -257,14 +254,14 @@ describe('crud operations', () => {
   // --------------
 
   it('requires a $type on records', async () => {
-    const prom1 = client.todo.adx.repoCreateRecord(
+    const prom1 = aliceClient.todo.adx.repoCreateRecord(
       { did: alice.did, type: 'todo.social.post' },
       {},
     )
     await expect(prom1).rejects.toThrow(
       'The passed value does not declare a $type',
     )
-    const prom2 = client.todo.adx.repoPutRecord(
+    const prom2 = aliceClient.todo.adx.repoPutRecord(
       { did: alice.did, type: 'todo.social.post', tid: 'foo' },
       {},
     )
@@ -279,12 +276,12 @@ describe('crud operations', () => {
     //   type: 'com.example.foobar',
     // })
     // await expect(prom1).rejects.toThrow('Schema not found: com.example.foobar')
-    const prom2 = client.todo.adx.repoCreateRecord(
+    const prom2 = aliceClient.todo.adx.repoCreateRecord(
       { did: alice.did, type: 'com.example.foobar' },
       { $type: 'com.example.foobar' },
     )
     await expect(prom2).rejects.toThrow('Schema not found')
-    const prom3 = client.todo.adx.repoPutRecord(
+    const prom3 = aliceClient.todo.adx.repoPutRecord(
       { did: alice.did, type: 'com.example.foobar', tid: 'foo' },
       { $type: 'com.example.foobar' },
     )
@@ -293,13 +290,13 @@ describe('crud operations', () => {
 
   it('requires the $type to match the schema', async () => {
     await expect(
-      client.todo.adx.repoCreateRecord(
+      aliceClient.todo.adx.repoCreateRecord(
         { did: alice.did, type: 'todo.social.post' },
         { $type: 'todo.social.like' },
       ),
     ).rejects.toThrow('Record type todo.social.like is not supported')
     await expect(
-      client.todo.adx.repoPutRecord(
+      aliceClient.todo.adx.repoPutRecord(
         { did: alice.did, type: 'todo.social.post', tid: 'foo' },
         { $type: 'todo.social.like' },
       ),
@@ -308,7 +305,7 @@ describe('crud operations', () => {
 
   it('validates the record on write', async () => {
     await expect(
-      client.todo.adx.repoCreateRecord(
+      aliceClient.todo.adx.repoCreateRecord(
         { did: alice.did, type: 'todo.social.post' },
         { $type: 'todo.social.post' },
       ),
@@ -316,7 +313,7 @@ describe('crud operations', () => {
       "Failed todo.social.post validation for #/required: must have required property 'text'",
     )
     await expect(
-      client.todo.adx.repoPutRecord(
+      aliceClient.todo.adx.repoPutRecord(
         { did: alice.did, type: 'todo.social.post', tid: 'foo' },
         { $type: 'todo.social.post' },
       ),

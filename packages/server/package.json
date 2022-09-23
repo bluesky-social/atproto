@@ -7,7 +7,7 @@
     "codegen": "lex gen-server ./src/lexicon ../../schemas/todo.adx/* ../../schemas/todo.social/*",
     "build": "node ./build.js",
     "start": "node dist/bin.js",
-    "test": "jest tests/auth.test.ts",
+    "test": "jest",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",

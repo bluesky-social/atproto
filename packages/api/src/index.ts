@@ -392,39 +392,44 @@ export class BadgeRecord {
 
   async create(
     params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialBadge.Record
+    record: TodoSocialBadge.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.badge'
     const res = await this._service.xrpc.call(
       'todo.adx.repoCreateRecord',
       { type: 'todo.social.badge', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async put(
     params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialBadge.Record
+    record: TodoSocialBadge.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.badge'
     const res = await this._service.xrpc.call(
       'todo.adx.repoPutRecord',
       { type: 'todo.social.badge', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    headers?: Record<string, string>
   ): Promise<void> {
-    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
-      type: 'todo.social.badge',
-      ...params,
-    })
+    await this._service.xrpc.call(
+      'todo.adx.repoDeleteRecord',
+      { type: 'todo.social.badge', ...params },
+      undefined,
+      { headers }
+    )
   }
 }
 
@@ -457,39 +462,44 @@ export class FollowRecord {
 
   async create(
     params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialFollow.Record
+    record: TodoSocialFollow.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.follow'
     const res = await this._service.xrpc.call(
       'todo.adx.repoCreateRecord',
       { type: 'todo.social.follow', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async put(
     params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialFollow.Record
+    record: TodoSocialFollow.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.follow'
     const res = await this._service.xrpc.call(
       'todo.adx.repoPutRecord',
       { type: 'todo.social.follow', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    headers?: Record<string, string>
   ): Promise<void> {
-    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
-      type: 'todo.social.follow',
-      ...params,
-    })
+    await this._service.xrpc.call(
+      'todo.adx.repoDeleteRecord',
+      { type: 'todo.social.follow', ...params },
+      undefined,
+      { headers }
+    )
   }
 }
 
@@ -522,39 +532,44 @@ export class LikeRecord {
 
   async create(
     params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialLike.Record
+    record: TodoSocialLike.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.like'
     const res = await this._service.xrpc.call(
       'todo.adx.repoCreateRecord',
       { type: 'todo.social.like', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async put(
     params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialLike.Record
+    record: TodoSocialLike.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.like'
     const res = await this._service.xrpc.call(
       'todo.adx.repoPutRecord',
       { type: 'todo.social.like', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    headers?: Record<string, string>
   ): Promise<void> {
-    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
-      type: 'todo.social.like',
-      ...params,
-    })
+    await this._service.xrpc.call(
+      'todo.adx.repoDeleteRecord',
+      { type: 'todo.social.like', ...params },
+      undefined,
+      { headers }
+    )
   }
 }
 
@@ -589,39 +604,44 @@ export class MediaEmbedRecord {
 
   async create(
     params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialMediaEmbed.Record
+    record: TodoSocialMediaEmbed.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.mediaEmbed'
     const res = await this._service.xrpc.call(
       'todo.adx.repoCreateRecord',
       { type: 'todo.social.mediaEmbed', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async put(
     params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialMediaEmbed.Record
+    record: TodoSocialMediaEmbed.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.mediaEmbed'
     const res = await this._service.xrpc.call(
       'todo.adx.repoPutRecord',
       { type: 'todo.social.mediaEmbed', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    headers?: Record<string, string>
   ): Promise<void> {
-    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
-      type: 'todo.social.mediaEmbed',
-      ...params,
-    })
+    await this._service.xrpc.call(
+      'todo.adx.repoDeleteRecord',
+      { type: 'todo.social.mediaEmbed', ...params },
+      undefined,
+      { headers }
+    )
   }
 }
 
@@ -654,39 +674,44 @@ export class PostRecord {
 
   async create(
     params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialPost.Record
+    record: TodoSocialPost.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.post'
     const res = await this._service.xrpc.call(
       'todo.adx.repoCreateRecord',
       { type: 'todo.social.post', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async put(
     params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialPost.Record
+    record: TodoSocialPost.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.post'
     const res = await this._service.xrpc.call(
       'todo.adx.repoPutRecord',
       { type: 'todo.social.post', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    headers?: Record<string, string>
   ): Promise<void> {
-    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
-      type: 'todo.social.post',
-      ...params,
-    })
+    await this._service.xrpc.call(
+      'todo.adx.repoDeleteRecord',
+      { type: 'todo.social.post', ...params },
+      undefined,
+      { headers }
+    )
   }
 }
 
@@ -719,39 +744,44 @@ export class ProfileRecord {
 
   async create(
     params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialProfile.Record
+    record: TodoSocialProfile.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.profile'
     const res = await this._service.xrpc.call(
       'todo.adx.repoCreateRecord',
       { type: 'todo.social.profile', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async put(
     params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialProfile.Record
+    record: TodoSocialProfile.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.profile'
     const res = await this._service.xrpc.call(
       'todo.adx.repoPutRecord',
       { type: 'todo.social.profile', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    headers?: Record<string, string>
   ): Promise<void> {
-    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
-      type: 'todo.social.profile',
-      ...params,
-    })
+    await this._service.xrpc.call(
+      'todo.adx.repoDeleteRecord',
+      { type: 'todo.social.profile', ...params },
+      undefined,
+      { headers }
+    )
   }
 }
 
@@ -784,38 +814,43 @@ export class RepostRecord {
 
   async create(
     params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialRepost.Record
+    record: TodoSocialRepost.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.repost'
     const res = await this._service.xrpc.call(
       'todo.adx.repoCreateRecord',
       { type: 'todo.social.repost', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async put(
     params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialRepost.Record
+    record: TodoSocialRepost.Record,
+    headers?: Record<string, string>
   ): Promise<{ uri: string }> {
     record.$type = 'todo.social.repost'
     const res = await this._service.xrpc.call(
       'todo.adx.repoPutRecord',
       { type: 'todo.social.repost', ...params },
       record,
-      { encoding: 'application/json' }
+      { encoding: 'application/json', headers }
     )
     return res.data
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>
+    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    headers?: Record<string, string>
   ): Promise<void> {
-    await this._service.xrpc.call('todo.adx.repoDeleteRecord', {
-      type: 'todo.social.repost',
-      ...params,
-    })
+    await this._service.xrpc.call(
+      'todo.adx.repoDeleteRecord',
+      { type: 'todo.social.repost', ...params },
+      undefined,
+      { headers }
+    )
   }
 }

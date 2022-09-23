@@ -94,7 +94,7 @@ export class ServiceClient {
         ...this.headers,
         ...opts?.headers,
       },
-      ...opts,
+      encoding: opts?.encoding,
     })
 
     let res
