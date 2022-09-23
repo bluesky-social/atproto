@@ -16,7 +16,7 @@ import profilePlugin, {
   ProfileIndex,
 } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
 import { AdxRecord } from './record'
@@ -160,6 +160,9 @@ export class Database {
       throw new Error('Expected indexed URI to contain a record TID')
     }
     record.raw = JSON.stringify(obj)
+
+    record.indexedAt = new Date().toISOString()
+    record.receivedAt = record.indexedAt
 
     const recordTable = this.db.getRepository(AdxRecord)
     await recordTable.save(record)

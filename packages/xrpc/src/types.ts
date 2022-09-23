@@ -8,6 +8,19 @@ export interface CallOptions {
   headers?: Headers
 }
 
+export interface FetchHandlerResponse {
+  status: number
+  headers: Headers
+  body: ArrayBuffer | undefined
+}
+
+export type FetchHandler = (
+  httpUri: string,
+  httpMethod: string,
+  httpHeaders: Headers,
+  httpReqBody: any,
+) => Promise<FetchHandlerResponse>
+
 export const errorResponseBody = z.object({
   message: z.string().optional(),
 })

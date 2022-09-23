@@ -1,4 +1,4 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import { ValidationResult } from '@adxp/lexicon'
 
 export type DbRecordPlugin<T, S> = {

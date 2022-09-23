@@ -1,4 +1,4 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import * as Like from '../../lexicon/types/todo/social/like'
 import {
   DataSource,
@@ -6,8 +6,6 @@ import {
   Column,
   PrimaryColumn,
   Repository,
-  In,
-  UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
@@ -33,8 +31,8 @@ export class LikeIndex {
   @Column('datetime')
   createdAt: string
 
-  @UpdateDateColumn()
-  indexedAt: Date
+  @Column('varchar')
+  indexedAt: string
 }
 
 const getFn =
@@ -61,6 +59,7 @@ const setFn =
     like.creator = uri.host
     like.subject = obj.subject
     like.createdAt = obj.createdAt
+    like.indexedAt = new Date().toISOString()
     await repo.save(like)
   }
 

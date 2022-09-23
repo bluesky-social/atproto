@@ -1,12 +1,6 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import * as Profile from '../../lexicon/types/todo/social/profile'
-import {
-  DataSource,
-  Entity,
-  Column,
-  PrimaryColumn,
-  UpdateDateColumn,
-} from 'typeorm'
+import { DataSource, Entity, Column, PrimaryColumn } from 'typeorm'
 import { DbRecordPlugin } from '../types'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
@@ -28,8 +22,8 @@ export class ProfileIndex {
   @Column({ type: 'text', nullable: true })
   description?: string
 
-  @UpdateDateColumn()
-  indexedAt: Date
+  @Column('varchar')
+  indexedAt: string
 }
 
 @Entity({ name: `${tableName}_badges` })
@@ -84,6 +78,7 @@ const setFn =
     profile.creator = uri.host
     profile.displayName = obj.displayName
     profile.description = obj.description
+    profile.indexedAt = new Date().toISOString()
     await db.getRepository(ProfileIndex).save(profile)
   }
 

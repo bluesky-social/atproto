@@ -23,9 +23,9 @@ export class AdxRecord {
   @Column('text')
   raw: string
 
-  @CreateDateColumn()
-  receivedAt: Date
+  @Column('varchar')
+  receivedAt: string
 
-  @UpdateDateColumn()
-  indexedAt: Date
+  @Column('varchar')
+  indexedAt: string
 }

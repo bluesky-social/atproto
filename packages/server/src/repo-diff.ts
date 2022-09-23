@@ -1,4 +1,4 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import { DataDiff, Repo } from '@adxp/repo'
 import Database from './db'
 

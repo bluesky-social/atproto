@@ -1,13 +1,16 @@
-import axios from 'axios'
 import { methodSchema, MethodSchema, isValidMethodSchema } from '@adxp/lexicon'
 import {
   getMethodSchemaHTTPMethod,
   constructMethodCallUri,
   constructMethodCallHeaders,
+  encodeMethodCallBody,
   httpResponseCodeToEnum,
   httpResponseBodyParse,
 } from './util'
 import {
+  FetchHandler,
+  FetchHandlerResponse,
+  Headers,
   CallOptions,
   QueryParams,
   ResponseType,
@@ -18,6 +21,7 @@ import {
 } from './types'
 
 export class Client {
+  fetch: FetchHandler = defaultFetchHandler
   schemas: Map<string, MethodSchema> = new Map()
 
   // method calls
@@ -97,34 +101,46 @@ export class ServiceClient {
       encoding: opts?.encoding,
     })
 
-    let res
-    try {
-      res = await axios({
-        method: httpMethod,
-        url: httpUri,
-        headers: httpHeaders,
-        data,
-        responseType: 'arraybuffer',
-      })
-    } catch (e: any) {
-      if (e.response) {
-        res = e.response
-      } else {
-        throw new XRPCError(ResponseType.Unknown, e.toString())
-      }
-    }
+    const res = await this.baseClient.fetch(
+      httpUri,
+      httpMethod,
+      httpHeaders,
+      data,
+    )
 
     const resCode = httpResponseCodeToEnum(res.status)
-    const jsonOut = httpResponseBodyParse(res.headers['content-type'], res.data)
     if (resCode === ResponseType.Success) {
-      return new XRPCResponse(jsonOut || res.data, res.headers)
+      return new XRPCResponse(res.body, res.headers)
     } else {
-      if (jsonOut && isErrorResponseBody(jsonOut)) {
-        throw new XRPCError(resCode, jsonOut.message)
+      if (res.body && isErrorResponseBody(res.body)) {
+        throw new XRPCError(resCode, res.body.message)
       } else {
         throw new XRPCError(resCode)
       }
     }
+  }
+}
+
+async function defaultFetchHandler(
+  httpUri: string,
+  httpMethod: string,
+  httpHeaders: Headers,
+  httpReqBody: any,
+): Promise<FetchHandlerResponse> {
+  try {
+    const res = await fetch(httpUri, {
+      method: httpMethod,
+      headers: httpHeaders,
+      body: encodeMethodCallBody(httpHeaders, httpReqBody),
+    })
+    const resBody = await res.arrayBuffer()
+    return {
+      status: res.status,
+      headers: Object.fromEntries(res.headers.entries()),
+      body: httpResponseBodyParse(res.headers.get('content-type'), resBody),
+    }
+  } catch (e: any) {
+    throw new XRPCError(ResponseType.Unknown, e.toString())
   }
 }
 

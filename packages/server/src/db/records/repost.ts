@@ -1,4 +1,4 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import * as Repost from '../../lexicon/types/todo/social/repost'
 import {
   DataSource,
@@ -6,8 +6,6 @@ import {
   Column,
   PrimaryColumn,
   Repository,
-  In,
-  UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
@@ -35,8 +33,8 @@ export class RepostIndex {
   @Column('datetime')
   createdAt: string
 
-  @UpdateDateColumn()
-  indexedAt: Date
+  @Column('varchar')
+  indexedAt: string
 }
 
 const getFn =
@@ -63,6 +61,7 @@ const setFn =
     repost.creator = uri.host
     repost.subject = obj.subject
     repost.createdAt = obj.createdAt
+    repost.indexedAt = new Date().toISOString()
 
     await repo.save(repost)
   }

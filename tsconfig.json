@@ -30,10 +30,11 @@
     { "path": "./packages/crypto/tsconfig.build.json" },
     { "path": "./packages/dev-env" },
     { "path": "./packages/did-sdk/tsconfig.build.json" },
+    { "path": "./packages/lexicon/tsconfig.build.json" },
+    { "path": "./packages/lex-cli/tsconfig.build.json" },
     { "path": "./packages/nsid/tsconfig.build.json" },
-    { "path": "./packages/schemas/tsconfig.build.json" },
+    { "path": "./packages/uri/tsconfig.build.json" },
     { "path": "./packages/xrpc/tsconfig.build.json" },
     { "path": "./packages/xrpc-server/tsconfig.build.json" },
-    { "path": "./packages/xrpc-cli/tsconfig.build.json" },
   ]
 }

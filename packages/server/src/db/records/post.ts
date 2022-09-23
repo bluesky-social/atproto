@@ -1,13 +1,6 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import * as Post from '../../lexicon/types/todo/social/post'
-import {
-  DataSource,
-  Entity,
-  Column,
-  PrimaryColumn,
-  UpdateDateColumn,
-  ManyToOne,
-} from 'typeorm'
+import { DataSource, Entity, Column, PrimaryColumn, ManyToOne } from 'typeorm'
 import { DbRecordPlugin } from '../types'
 import { UserDid } from '../user-dids'
 import schemas from '../schemas'
@@ -37,8 +30,8 @@ export class PostIndex {
   @Column('datetime')
   createdAt: string
 
-  @UpdateDateColumn()
-  indexedAt: Date
+  @Column('varchar')
+  indexedAt: string
 }
 
 @Entity({ name: `${tableName}_entities` })
@@ -109,6 +102,7 @@ const setFn =
     post.createdAt = obj.createdAt
     post.replyRoot = obj.reply?.root
     post.replyParent = obj.reply?.parent
+    post.indexedAt = new Date().toISOString()
 
     await db.getRepository(PostIndex).save(post)
   }

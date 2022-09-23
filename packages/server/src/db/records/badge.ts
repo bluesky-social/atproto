@@ -1,4 +1,4 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import * as Badge from '../../lexicon/types/todo/social/badge'
 import {
   DataSource,
@@ -6,7 +6,6 @@ import {
   Column,
   PrimaryColumn,
   Repository,
-  UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
@@ -38,8 +37,8 @@ export class BadgeIndex {
   @Column('datetime')
   createdAt: string
 
-  @UpdateDateColumn()
-  indexedAt: Date
+  @Column('varchar')
+  indexedAt: string
 }
 
 const getFn =
@@ -68,6 +67,7 @@ const setFn =
     badge.assertionType = obj.assertion.type
     badge.assertionTag = (obj.assertion as Badge.TagAssertion).tag
     badge.createdAt = obj.createdAt
+    badge.indexedAt = new Date().toISOString()
     await repo.save(badge)
   }
 
