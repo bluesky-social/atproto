@@ -17,7 +17,6 @@ export default function (server: Server) {
       const { author, limit, before } = params
 
       const { auth, db } = getLocals(res)
-      // @TODO switch out for actual auth
       const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()
