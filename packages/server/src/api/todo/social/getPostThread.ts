@@ -1,5 +1,5 @@
 import { Server } from '../../../lexicon'
-import { AuthRequiredError } from '@adxp/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
 import { DataSource } from 'typeorm'
 import * as GetPostThread from '../../../lexicon/types/todo/social/getPostThread'
 import { PostIndex } from '../../../db/records/post'
@@ -27,16 +27,18 @@ export default function (server: Server) {
           uri,
         })
         .getRawOne()
+      if (!queryRes) {
+        throw new InvalidRequestError(`Post not found: ${uri}`)
+      }
 
-      let thread = rowToPost(queryRes)
+      const thread = rowToPost(queryRes)
       if (depth > 0) {
         thread.replies = await getReplies(db.db, thread, depth - 1, requester)
       }
       if (queryRes.parent !== null) {
-        const parentRes = await postInfoBuilder(db.db, requester).where(
-          'post.uri = :uri',
-          { uri: queryRes.parent },
-        )
+        const parentRes = await postInfoBuilder(db.db, requester)
+          .where('post.uri = :uri', { uri: queryRes.parent })
+          .getRawOne()
         thread.parent = rowToPost(parentRes)
       }
 
