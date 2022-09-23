@@ -161,6 +161,9 @@ export class Database {
     }
     record.raw = JSON.stringify(obj)
 
+    record.indexedAt = new Date().toISOString()
+    record.receivedAt = record.indexedAt
+
     const recordTable = this.db.getRepository(AdxRecord)
     await recordTable.save(record)
 

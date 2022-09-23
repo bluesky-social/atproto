@@ -6,7 +6,6 @@ import {
   Column,
   PrimaryColumn,
   Repository,
-  UpdateDateColumn,
   ManyToOne,
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
@@ -32,8 +31,8 @@ export class FollowIndex {
   @Column('datetime')
   createdAt: string
 
-  @UpdateDateColumn()
-  indexedAt: Date
+  @Column('varchar')
+  indexedAt: string
 }
 
 const getFn =
@@ -60,6 +59,7 @@ const setFn =
     follow.creator = uri.host
     follow.subject = obj.subject
     follow.createdAt = obj.createdAt
+    follow.indexedAt = new Date().toISOString()
     await repo.save(follow)
   }
 
