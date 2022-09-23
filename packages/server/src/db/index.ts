@@ -1,5 +1,4 @@
 import { DataSource } from 'typeorm'
-import * as bcrypt from 'bcryptjs'
 import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
 import { DbRecordPlugin } from './types'
 import * as Badge from '../lexicon/types/todo/social/badge'
@@ -22,6 +21,7 @@ import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
 import { AdxRecord } from './record'
 import { UserDid } from './user-dids'
+import * as util from './util'
 
 export class Database {
   db: DataSource
@@ -111,7 +111,7 @@ export class Database {
     const user = new UserDid()
     user.username = username
     user.did = did
-    user.password = await bcrypt.hash(password, 10)
+    user.password = await util.scryptHash(password)
     await table.save(user)
   }
 
@@ -121,7 +121,7 @@ export class Database {
   ): Promise<string | null> {
     const found = await this.db.getRepository(UserDid).findOneBy({ username })
     if (!found) return null
-    const validPass = await bcrypt.compare(password, found.password)
+    const validPass = await util.scryptVerify(password, found.password)
     if (!validPass) return null
     return found.did
   }
