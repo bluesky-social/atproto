@@ -1,6 +1,6 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import * as Post from '@adxp/api/src/types/todo/social/post'
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import * as util from './_util'
 
 const alice = {

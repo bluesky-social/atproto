@@ -16,7 +16,7 @@ import profilePlugin, {
   ProfileIndex,
 } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
 import { AdxRecord } from './record'

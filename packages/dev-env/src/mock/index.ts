@@ -1,7 +1,7 @@
 import { DevEnv } from '../index'
 import { ServerType } from '../types'
 import { genServerCfg } from '../util'
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import { postTexts, replyTexts } from './data'
 
 // NOTE

@@ -1,4 +1,4 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import * as Badge from '../../lexicon/types/todo/social/badge'
 import {
   DataSource,

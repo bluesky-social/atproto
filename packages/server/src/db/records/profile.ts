@@ -1,4 +1,4 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import * as Profile from '../../lexicon/types/todo/social/profile'
 import {
   DataSource,

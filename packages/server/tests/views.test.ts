@@ -1,5 +1,5 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import { users, posts, replies } from './test-data'
 import * as util from './_util'
 

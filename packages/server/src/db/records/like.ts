@@ -1,4 +1,4 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import * as Like from '../../lexicon/types/todo/social/like'
 import {
   DataSource,
