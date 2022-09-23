@@ -128,8 +128,7 @@ export default function (server: Server) {
         }
       }
     }
-    const serverKey = util.getKeypair(res)
-    const authStore = await AuthStore.fromTokens(serverKey, [])
+    const authStore = await util.getAuthstore(res)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(
@@ -169,8 +168,7 @@ export default function (server: Server) {
         )
       }
     }
-    const serverKey = util.getKeypair(res)
-    const authStore = await AuthStore.fromTokens(serverKey, [])
+    const authStore = await util.getAuthstore(res)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(
@@ -209,8 +207,7 @@ export default function (server: Server) {
         )
       }
     }
-    const serverKey = util.getKeypair(res)
-    const authStore = await AuthStore.fromTokens(serverKey, [])
+    const authStore = await util.getAuthstore(res)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(
@@ -240,8 +237,7 @@ export default function (server: Server) {
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
-    const serverKey = util.getKeypair(res)
-    const authStore = await AuthStore.fromTokens(serverKey, [])
+    const authStore = await util.getAuthstore(res)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(

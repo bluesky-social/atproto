@@ -100,6 +100,11 @@ export const getLocals = (res: Response): Locals => {
   }
 }
 
+export const getAuthstore = async (res: Response): Promise<auth.AuthStore> => {
+  const keypair = getKeypair(res)
+  return auth.AuthStore.fromTokens(keypair, [])
+}
+
 export const maybeLoadRepo = async (
   res: Response,
   did: string,
