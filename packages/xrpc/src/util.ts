@@ -87,6 +87,25 @@ export function constructMethodCallHeaders(
   return headers
 }
 
+export function encodeMethodCallBody(
+  headers: Headers,
+  data?: any,
+): ArrayBuffer | undefined {
+  if (!headers['Content-Type'] || typeof data === 'undefined') {
+    return undefined
+  }
+  if (data instanceof ArrayBuffer) {
+    return data
+  }
+  if (headers['Content-Type'].startsWith('text/')) {
+    return new TextEncoder().encode(data.toString())
+  }
+  if (headers['Content-Type'].startsWith('application/json')) {
+    return new TextEncoder().encode(JSON.stringify(data))
+  }
+  return data
+}
+
 export function httpResponseCodeToEnum(status: number): ResponseType {
   let resCode: ResponseType
   if (status in ResponseType) {
@@ -106,7 +125,7 @@ export function httpResponseCodeToEnum(status: number): ResponseType {
 }
 
 export function httpResponseBodyParse(
-  mimeType: string | undefined,
+  mimeType: string | null,
   data: ArrayBuffer | undefined,
 ): any {
   if (mimeType) {
