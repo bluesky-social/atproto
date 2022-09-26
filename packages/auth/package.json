@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@adxp/crypto": "*",
-    "@ucans/core": "^0.11.0-alpha",
+    "@ucans/core": "0.11.0",
     "uint8arrays": "3.0.0"
   }
 }
