@@ -2541,10 +2541,10 @@
     "@typescript-eslint/types" "4.33.0"
     eslint-visitor-keys "^2.0.0"
 
-"@ucans/core@0.11.0-alpha", "@ucans/core@^0.11.0-alpha":
-  version "0.11.0-alpha"
-  resolved "https://registry.yarnpkg.com/@ucans/core/-/core-0.11.0-alpha.tgz#e4f3b4f4034ff5929b89ad8e966340802dd264ad"
-  integrity sha512-QCAButW62jwBuMtneM0ac7qFIML0F4YMwj/EahhWYWBxonI+k8yIZGhNL4BPJ2daP862qJetLwCoHEnnwL07pg==
+"@ucans/core@0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@ucans/core/-/core-0.11.0.tgz#8201680294d980f2b1f5edfaf77b42a86d3a5688"
+  integrity sha512-SHX67e313kKBaur5Cp+6WFeOLC7aBhkf1i1jIFpFb9f0f1cvM/lC3mjzOyUBeDg3QwmcN5QSZzaogVFvuVvzvg==
   dependencies:
     uint8arrays "3.0.0"
 
