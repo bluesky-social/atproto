@@ -1,5 +1,6 @@
 export * from './aes'
 export * from './did'
+export * from './multibase'
 export * from './random'
 export * from './sha'
 

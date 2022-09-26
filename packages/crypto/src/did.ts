@@ -31,6 +31,20 @@ export const parseDidKey = (did: string): ParsedDidKey => {
   }
 }
 
+export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
+  const plugin = plugins.find((p) => p.jwtAlg === jwtAlg)
+  if (!plugin) {
+    throw new Error('Unsupported key type')
+  }
+  if (jwtAlg === 'ES256') {
+    keyBytes = p256.compressPubkey(keyBytes)
+  }
+  const prefixedBytes = uint8arrays.concat([plugin.prefix, keyBytes])
+  return (
+    DID_KEY_BASE58_PREFIX + uint8arrays.toString(prefixedBytes, 'base58btc')
+  )
+}
+
 const hasPrefix = (bytes: Uint8Array, prefix: Uint8Array): boolean => {
   return uint8arrays.equals(prefix, bytes.subarray(0, prefix.byteLength))
 }

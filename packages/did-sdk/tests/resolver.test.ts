@@ -88,13 +88,11 @@ describe('resolver', () => {
     expect(atpData).toEqual(didWebData)
   })
 
-  it('Resolve throws on malformed did:webs', async () => {
+  it('throws on malformed did:webs', async () => {
     await expect(resolver.ensureResolveDid(`did:web:asdf`)).rejects.toThrow()
     await expect(resolver.ensureResolveDid(`did:web:`)).rejects.toThrow()
     await expect(resolver.ensureResolveDid(``)).rejects.toThrow()
   })
-
-  return
 
   it('resolve valid did:plc', async () => {
     const didRes = await resolver.ensureResolveDid(plcDid)
@@ -104,5 +102,10 @@ describe('resolver', () => {
   it('resolve valid atpData from did:plc', async () => {
     const atpData = await resolver.resolveAtpData(plcDid)
     expect(atpData).toEqual(didPlcData)
+  })
+
+  it('throws on malformed did:plc', async () => {
+    await expect(resolver.ensureResolveDid(`did:plc:asdf`)).rejects.toThrow()
+    await expect(resolver.ensureResolveDid(`did:plc`)).rejects.toThrow()
   })
 })

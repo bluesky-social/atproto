@@ -1,4 +1,5 @@
 import { DIDDocument } from 'did-resolver'
+import * as crypto from '@adxp/crypto'
 
 export type AtpData = {
   did: string
@@ -26,18 +27,27 @@ export const getKey = (doc: DIDDocument, id: string): string | undefined => {
   const found = keys.find((key) => key.id === id)
   if (!found) return undefined
 
-  // @TODO convert this to did:key
-  return found.publicKeyMultibase
+  // @TODO support jwk
+  // should we be surfacing errors here or returning undefined?
+  if (!found.publicKeyMultibase) return undefined
+  let didKey: string | undefined = undefined
+  if (found.type === 'EcdsaSecp256r1VerificationKey2019') {
+    const keyBytes = crypto.multibaseToBytes(found.publicKeyMultibase)
+    didKey = crypto.formatDidKey('ES256', keyBytes)
+  }
+  return didKey
 }
 
 export const getUsername = (doc: DIDDocument): string | undefined => {
   const aka = doc.alsoKnownAs
   if (!aka) return undefined
-  if (typeof aka === 'string') return aka
+  let found: string | undefined
+  if (typeof aka === 'string') found = aka
   if (Array.isArray(aka) && typeof aka[0] === 'string') {
-    return aka[0]
+    found = aka[0]
   }
-  return undefined
+  if (!found) return undefined
+  return new URL(found).host
 }
 
 export const getAtpPds = (doc: DIDDocument): string | undefined => {
