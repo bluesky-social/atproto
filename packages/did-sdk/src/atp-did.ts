@@ -1,24 +1,6 @@
-type VerificationMethod = {
-  id: string
-  type: string
-  controller: string
-  publicKeyMultibase: string
-}
+import { DIDDocument } from 'did-resolver'
 
-type Service = {
-  id: string
-  type: string
-  serviceEndpoint: string
-}
-
-type Document = {
-  id: string
-  alsoKnownAs: string[] | string
-  verificationMethod: VerificationMethod[] | VerificationMethod
-  service: Service[] | Service
-}
-
-type DocumentData = {
+export type DocumentData = {
   id: string
   signingKey: string
   recoveryKey: string
@@ -26,7 +8,7 @@ type DocumentData = {
   atpPds: string
 }
 
-export const getId = (doc: Document): string => {
+export const getId = (doc: DIDDocument): string => {
   const id = doc.id
   if (typeof id !== 'string') {
     throw new Error('No `id` on document')
@@ -34,7 +16,7 @@ export const getId = (doc: Document): string => {
   return id
 }
 
-export const getKey = (doc: Document, id: string): string | undefined => {
+export const getKey = (doc: DIDDocument, id: string): string | undefined => {
   let keys = doc.verificationMethod
   if (!keys) return undefined
   if (typeof keys !== 'object') return undefined
@@ -48,7 +30,7 @@ export const getKey = (doc: Document, id: string): string | undefined => {
   return found.publicKeyMultibase
 }
 
-export const getUsername = (doc: Document): string | undefined => {
+export const getUsername = (doc: DIDDocument): string | undefined => {
   const aka = doc.alsoKnownAs
   if (!aka) return undefined
   if (typeof aka === 'string') return aka
@@ -58,7 +40,7 @@ export const getUsername = (doc: Document): string | undefined => {
   return undefined
 }
 
-export const getAtpPds = (doc: Document): string | undefined => {
+export const getAtpPds = (doc: DIDDocument): string | undefined => {
   let services = doc.service
   if (!services) return undefined
   if (typeof services !== 'object') return undefined
@@ -69,10 +51,19 @@ export const getAtpPds = (doc: Document): string | undefined => {
     (service) => service.type === 'AtpPersonalDataServer',
   )
   if (!found) return undefined
-  return found.serviceEndpoint
+  if (typeof found.serviceEndpoint === 'string') {
+    return found.serviceEndpoint
+  } else if (
+    Array.isArray(found.serviceEndpoint) &&
+    typeof found.serviceEndpoint[0] === 'string'
+  ) {
+    return found.serviceEndpoint[0]
+  } else {
+    return undefined
+  }
 }
 
-export const parseToAtpDocument = (doc: Document): Partial<DocumentData> => {
+export const parseToAtpDocument = (doc: DIDDocument): Partial<DocumentData> => {
   const id = getId(doc)
   return {
     id,
@@ -83,7 +74,7 @@ export const parseToAtpDocument = (doc: Document): Partial<DocumentData> => {
   }
 }
 
-export const ensureAtpDocument = (doc: Document): DocumentData => {
+export const ensureAtpDocument = (doc: DIDDocument): DocumentData => {
   const { id, signingKey, recoveryKey, username, atpPds } =
     parseToAtpDocument(doc)
   if (!id) {
