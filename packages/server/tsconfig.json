@@ -3,7 +3,6 @@
   "compilerOptions": {
     "outDir": "./dist", // Your outDir,
     "emitDeclarationOnly": true,
-    "strictPropertyInitialization": false
   },
   "module": "nodenext",
   "include": ["./src","__tests__/**/**.ts"],

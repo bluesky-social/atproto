@@ -23,6 +23,7 @@
     "one-webcrypto": "^1.0.3"
   },
   "devDependencies": {
+    "@adxp/plc": "*",
     "get-port": "^6.1.2"
   }
 }

@@ -1,14 +1,14 @@
 import { DIDDocument } from 'did-resolver'
 
-export type DocumentData = {
-  id: string
+export type AtpData = {
+  did: string
   signingKey: string
   recoveryKey: string
   username: string
   atpPds: string
 }
 
-export const getId = (doc: DIDDocument): string => {
+export const getDid = (doc: DIDDocument): string => {
   const id = doc.id
   if (typeof id !== 'string') {
     throw new Error('No `id` on document')
@@ -63,21 +63,21 @@ export const getAtpPds = (doc: DIDDocument): string | undefined => {
   }
 }
 
-export const parseToAtpDocument = (doc: DIDDocument): Partial<DocumentData> => {
-  const id = getId(doc)
+export const parseToAtpDocument = (doc: DIDDocument): Partial<AtpData> => {
+  const did = getDid(doc)
   return {
-    id,
-    signingKey: getKey(doc, `${id}#signingKey`),
-    recoveryKey: getKey(doc, `${id}#recoveryKey`),
+    did,
+    signingKey: getKey(doc, '#signingKey'),
+    recoveryKey: getKey(doc, '#recoveryKey'),
     username: getUsername(doc),
     atpPds: getAtpPds(doc),
   }
 }
 
-export const ensureAtpDocument = (doc: DIDDocument): DocumentData => {
-  const { id, signingKey, recoveryKey, username, atpPds } =
+export const ensureAtpDocument = (doc: DIDDocument): AtpData => {
+  const { did, signingKey, recoveryKey, username, atpPds } =
     parseToAtpDocument(doc)
-  if (!id) {
+  if (!did) {
     throw new Error(`Could not parse id from doc: ${doc}`)
   }
   if (!signingKey) {
@@ -92,5 +92,5 @@ export const ensureAtpDocument = (doc: DIDDocument): DocumentData => {
   if (!atpPds) {
     throw new Error(`Could not parse atpPds from doc: ${doc}`)
   }
-  return { id, signingKey, recoveryKey, username, atpPds }
+  return { did, signingKey, recoveryKey, username, atpPds }
 }

@@ -1,4 +1,3 @@
-import axios from 'axios'
 import {
   ParsedDID,
   DIDResolutionOptions,
@@ -7,31 +6,44 @@ import {
   Resolvable,
   DIDDocument,
 } from 'did-resolver'
+import axios from 'axios'
 import * as errors from '../errors'
 
-const PLC_URL = 'http://localhost:2582'
+export type PlcResolverOptions = {
+  timeout: number
+  plcUrl: string
+}
 
-export const resolve: DIDResolver = async (
-  did: string,
-  parsed: ParsedDID,
-  _didResolver: Resolvable,
-  _options: DIDResolutionOptions,
-): Promise<DIDResolutionResult> => {
-  if (parsed.method !== 'plc') {
-    return errors.unsupported()
-  }
+export const makeResolver = (opts: PlcResolverOptions): DIDResolver => {
+  return async (
+    did: string,
+    parsed: ParsedDID,
+    _didResolver: Resolvable,
+    _options: DIDResolutionOptions,
+  ): Promise<DIDResolutionResult> => {
+    if (parsed.method !== 'plc') {
+      return errors.unsupported()
+    }
 
-  let didDocument: DIDDocument
-  try {
-    const res = await axios.get(`${PLC_URL}/${did}`)
-    didDocument = res.data
-  } catch (err) {
-    return errors.notFound()
-  }
+    let didDocument: DIDDocument
+    try {
+      const res = await axios.get(`${opts.plcUrl}/${did}`, {
+        timeout: opts.timeout,
+      })
+      didDocument = res.data
+    } catch (err) {
+      return errors.notFound()
+    }
 
-  return {
-    didResolutionMetadata: { contentType: 'application/did+ld+json' },
-    didDocument,
-    didDocumentMetadata: {},
+    const docIdMatchesDid = didDocument?.id === did
+    if (!docIdMatchesDid) {
+      return errors.invalidDid()
+    }
+
+    return {
+      didResolutionMetadata: { contentType: 'application/did+ld+json' },
+      didDocument,
+      didDocumentMetadata: {},
+    }
   }
 }

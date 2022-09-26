@@ -1,8 +1,6 @@
 import {
   Resolver,
-  DIDResolver,
   DIDDocument,
-  parse,
   DIDResolutionOptions,
   DIDResolutionResult,
 } from 'did-resolver'
@@ -10,33 +8,48 @@ import * as web from './web/resolver'
 import * as plc from './plc/resolver'
 import * as atpDid from './atp-did'
 
-export const resolver = new Resolver({
-  plc: plc.resolve,
-  web: web.resolve,
-})
-
-export const resolveDid = (
-  did: string,
-  options: DIDResolutionOptions = {},
-): Promise<DIDResolutionResult> => {
-  return resolver.resolve(did, options)
+export type DidResolverOptions = {
+  timeout: number
+  plcUrl: string
 }
 
-export const ensureResolveDid = async (
-  did: string,
-  options: DIDResolutionOptions = {},
-): Promise<DIDDocument> => {
-  const result = await resolveDid(did, options)
-  if (result.didResolutionMetadata.error || result.didDocument === null) {
-    // @TODO better error handling
-    throw new Error('Could not resolve did')
+export class DidResolver {
+  resolver: Resolver
+  constructor(opts: Partial<DidResolverOptions> = {}) {
+    // @TODO change to production url
+    const { timeout = 3000, plcUrl = 'localhost:2582' } = opts
+    this.resolver = new Resolver({
+      plc: plc.makeResolver({
+        timeout,
+        plcUrl,
+      }),
+      web: web.makeResolver({ timeout }),
+    })
   }
-  return result.didDocument
+
+  async resolveDid(
+    did: string,
+    options: DIDResolutionOptions = {},
+  ): Promise<DIDResolutionResult> {
+    return this.resolver.resolve(did, options)
+  }
+
+  async ensureResolveDid(
+    did: string,
+    options: DIDResolutionOptions = {},
+  ): Promise<DIDDocument> {
+    const result = await this.resolveDid(did, options)
+    if (result.didResolutionMetadata.error || result.didDocument === null) {
+      let err = result.didResolutionMetadata.error || 'notFound'
+      throw new Error(`Could not resolve DID (${did}): ${err}`)
+    }
+    return result.didDocument
+  }
+
+  async resolveAtpData(did: string): Promise<atpDid.AtpData> {
+    const didDocument = await this.ensureResolveDid(did)
+    return atpDid.ensureAtpDocument(didDocument)
+  }
 }
 
-export const resolveAtpDid = async (
-  did: string,
-): Promise<atpDid.DocumentData> => {
-  const didDocument = await ensureResolveDid(did)
-  return atpDid.ensureAtpDocument(didDocument)
-}
+export const resolver = new DidResolver()

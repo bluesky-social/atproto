@@ -97,7 +97,7 @@ export const validateOperationLog = async (
       throw new ServerError(400, 'Operations not correctly ordered')
     }
 
-      await assureValidSig([doc.signingKey, doc.recoveryKey], op)
+    await assureValidSig([doc.signingKey, doc.recoveryKey], op)
     if (check.is(op, t.def.createOp)) {
       throw new ServerError(400, 'Unexpected `create` after DID genesis')
     } else if (check.is(op, t.def.rotateSigningKeyOp)) {
@@ -168,24 +168,24 @@ export const formatDidDoc = (data: t.DocumentData): t.DidDocument => {
     alsoKnownAs: [`https://${data.username}`],
     verificationMethod: [
       {
-        id: `${data.did}#signingKey`,
+        id: `#signingKey`,
         type: signingKeyInfo.type,
         controller: data.did,
         publicKeyMultibase: signingKeyInfo.publicKeyMultibase,
       },
       {
-        id: `${data.did}#recoveryKey`,
+        id: `#recoveryKey`,
         type: recoveryKeyInfo.type,
         controller: data.did,
         publicKeyMultibase: recoveryKeyInfo.publicKeyMultibase,
       },
     ],
-    assertionMethod: [`${data.did}#signingKey`],
-    capabilityInvocation: [`${data.did}#signingKey`],
-    capabilityDelegation: [`${data.did}#signingKey`],
+    assertionMethod: [`#signingKey`],
+    capabilityInvocation: [`#signingKey`],
+    capabilityDelegation: [`#signingKey`],
     service: [
       {
-        id: `${data.did}#atpPds`,
+        id: `#atpPds`,
         type: 'AtpPersonalDataServer',
         serviceEndpoint: data.atpPds,
       },

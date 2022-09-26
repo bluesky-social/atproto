@@ -17,7 +17,8 @@ router.get(`/:did`, async function (req, res) {
   }
   const data = await document.validateOperationLog(did, log)
   const doc = await document.formatDidDoc(data)
-  res.send(doc)
+  res.type('application/did+ld+json')
+  res.send(JSON.stringify(doc))
 })
 
 // Get data for a DID document
