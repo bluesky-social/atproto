@@ -30,8 +30,18 @@ export default function (server: Server) {
       throw new AuthRequiredError('Invalid username or password')
     }
 
+    const user = await db.getUser(did)
+    if (!user) {
+      throw new InvalidRequestError(
+        `Could not find user info for account: ${did}`,
+      )
+    }
+
     const jwt = auth.createToken(did)
-    return { encoding: 'application/json', body: { jwt } }
+    return {
+      encoding: 'application/json',
+      body: { jwt, name: user.username, did: user.did },
+    }
   })
 
   server.todo.adx.deleteSession(() => {

@@ -37,6 +37,8 @@ describe('auth', () => {
     const res = await client.todo.adx.createSession({}, { username, password })
     jwt = res.data.jwt
     expect(typeof jwt).toBe('string')
+    expect(res.data.name).toBe('alice.test')
+    expect(res.data.did).toBe('did:test:alice')
   })
 
   it('can perform authenticated requests', async () => {

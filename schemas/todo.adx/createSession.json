@@ -19,9 +19,11 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["jwt"],
+      "required": ["jwt", "name", "did"],
       "properties": {
-        "jwt": { "type": "string" }
+        "jwt": { "type": "string" },
+        "name": {"type": "string"},
+        "did": {"type": "string"}
       }
     }
   }

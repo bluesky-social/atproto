@@ -67,9 +67,15 @@ export const methodSchemas: MethodSchema[] = [
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['jwt'],
+        required: ['jwt', 'name', 'did'],
         properties: {
           jwt: {
+            type: 'string',
+          },
+          name: {
+            type: 'string',
+          },
+          did: {
             type: 'string',
           },
         },
@@ -127,10 +133,6 @@ export const methodSchemas: MethodSchema[] = [
     type: 'query',
     description: 'Get information about the current session.',
     parameters: {},
-    input: {
-      encoding: '',
-      schema: {},
-    },
     output: {
       encoding: 'application/json',
       schema: {

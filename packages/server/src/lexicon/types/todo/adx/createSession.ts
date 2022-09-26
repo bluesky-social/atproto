@@ -23,6 +23,8 @@ export interface HandlerOutput {
 
 export interface OutputSchema {
   jwt: string;
+  name: string;
+  did: string;
 }
 
 export type Handler = (

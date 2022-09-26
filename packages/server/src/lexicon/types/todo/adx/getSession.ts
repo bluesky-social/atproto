@@ -8,10 +8,6 @@ export interface QueryParams {}
 
 export type HandlerInput = undefined
 
-export interface InputSchema {
-  [k: string]: unknown;
-}
-
 export interface HandlerOutput {
   encoding: 'application/json';
   body: OutputSchema;

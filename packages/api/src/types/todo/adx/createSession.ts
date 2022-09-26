@@ -18,6 +18,8 @@ export interface InputSchema {
 
 export interface OutputSchema {
   jwt: string;
+  name: string;
+  did: string;
 }
 
 export interface Response {
