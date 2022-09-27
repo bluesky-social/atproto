@@ -2,7 +2,7 @@ import { Server } from '../../../lexicon'
 import * as GetRepostedBy from '../../../lexicon/types/todo/social/getRepostedBy'
 import { AdxRecord } from '../../../db/record'
 import { ProfileIndex } from '../../../db/records/profile'
-import { UserDid } from '../../../db/user-dids'
+import { User } from '../../../db/user'
 import { RepostIndex } from '../../../db/records/repost'
 import { getLocals } from '../../../util'
 
@@ -23,7 +23,7 @@ export default function (server: Server) {
         ])
         .from(RepostIndex, 'repost')
         .leftJoin(AdxRecord, 'record', 'repost.uri = record.uri')
-        .leftJoin(UserDid, 'user', 'repost.creator = user.did')
+        .leftJoin(User, 'user', 'repost.creator = user.did')
         .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
         .where('repost.subject = :uri', { uri })
         .orderBy('repost.createdAt')

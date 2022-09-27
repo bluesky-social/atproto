@@ -4,7 +4,7 @@ import * as GetUserFollows from '../../../lexicon/types/todo/social/getUserFollo
 import { AdxRecord } from '../../../db/record'
 import { FollowIndex } from '../../../db/records/follow'
 import { ProfileIndex } from '../../../db/records/profile'
-import { UserDid } from '../../../db/user-dids'
+import { User } from '../../../db/user'
 import * as util from './util'
 import { getLocals } from '../../../util'
 
@@ -29,7 +29,7 @@ export default function (server: Server) {
         ])
         .from(FollowIndex, 'follow')
         .innerJoin(AdxRecord, 'record', 'follow.uri = record.uri')
-        .innerJoin(UserDid, 'subject', 'follow.subject = subject.did')
+        .innerJoin(User, 'subject', 'follow.subject = subject.did')
         .leftJoin(ProfileIndex, 'profile', 'profile.creator = follow.subject')
         .where('follow.creator = :creator', { creator: creator.did })
         .orderBy('follow.createdAt')

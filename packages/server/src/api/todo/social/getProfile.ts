@@ -4,7 +4,7 @@ import * as GetProfile from '../../../lexicon/types/todo/social/getProfile'
 import { FollowIndex } from '../../../db/records/follow'
 import { PostIndex } from '../../../db/records/post'
 import { ProfileBadgeIndex, ProfileIndex } from '../../../db/records/profile'
-import { UserDid } from '../../../db/user-dids'
+import { User } from '../../../db/user'
 import * as util from '../../../db/util'
 import { BadgeIndex } from '../../../db/records/badge'
 import { getLocals } from '../../../util'
@@ -32,7 +32,7 @@ export default function (server: Server) {
           'posts_count.count AS postsCount',
           'requester_follow.uri AS requesterFollow',
         ])
-        .from(UserDid, 'user')
+        .from(User, 'user')
         .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
         .leftJoin(
           util.countSubquery(FollowIndex, 'creator'),
@@ -80,7 +80,7 @@ export default function (server: Server) {
           'profile_badge.profile = profile.uri',
         )
         .innerJoin(BadgeIndex, 'badge', 'badge.uri = profile_badge.badge')
-        .leftJoin(UserDid, 'issuer', 'issuer.did = badge.creator')
+        .leftJoin(User, 'issuer', 'issuer.did = badge.creator')
         .leftJoin(
           ProfileIndex,
           'issuer_profile',

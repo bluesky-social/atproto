@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { check } from '@adxp/common'
 import { IpldStore, Repo } from '@adxp/repo'
 import * as auth from '@adxp/auth'
+import * as plc from '@adxp/plc'
 import { Database } from './db'
 import { ServerError } from './error'
 import { ServerConfig } from './config'
@@ -103,6 +104,11 @@ export const getLocals = (res: Response): Locals => {
 export const getAuthstore = async (res: Response): Promise<auth.AuthStore> => {
   const keypair = getKeypair(res)
   return auth.AuthStore.fromTokens(keypair, [])
+}
+
+export const getPlcClient = (res: Response): plc.PlcClient => {
+  const cfg = getConfig(res)
+  return new plc.PlcClient(cfg.didPlcUrl)
 }
 
 export const maybeLoadRepo = async (

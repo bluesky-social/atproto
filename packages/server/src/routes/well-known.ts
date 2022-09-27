@@ -1,6 +1,6 @@
 import express from 'express'
 import * as util from '../util'
-import { UserDid } from '../db/user-dids'
+import { User } from '../db/user'
 
 const router = express.Router()
 
@@ -9,19 +9,19 @@ router.get('/did.json', async (req, res) => {
   const { db, config } = util.getLocals(res)
   const hostname = req.hostname
 
-  let userDidRecord: UserDid | null = null
+  let userRecord: { username: string; did: string } | null = null
   try {
-    userDidRecord = await db.getUser(hostname)
+    userRecord = await db.getUser(hostname)
   } catch (e) {
     console.error(`Error looking up user in did:web route`)
     console.error(e)
     return res.status(500).end()
   }
 
-  if (!userDidRecord) {
+  if (!userRecord) {
     return res.status(404).end()
   }
-  if (userDidRecord.did !== `did:web:${hostname}`) {
+  if (userRecord.did !== `did:web:${hostname}`) {
     return res.status(404).end()
   }
   // TODO
@@ -31,14 +31,14 @@ router.get('/did.json', async (req, res) => {
 
   return res.json({
     '@context': ['https://www.w3.org/ns/did/v1'],
-    id: userDidRecord.did,
-    alsoKnownAs: `https://${userDidRecord.username}`,
+    id: userRecord.did,
+    alsoKnownAs: `https://${userRecord.username}`,
     verificationMethod: [
       // TODO
     ],
     service: [
       {
-        id: `${userDidRecord.did}#atpPds`,
+        id: `${userRecord.did}#atpPds`,
         type: 'AtpPersonalDataServer',
         serviceEndpoint: config.origin,
       },

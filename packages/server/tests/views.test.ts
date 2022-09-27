@@ -7,9 +7,9 @@ let alicePosts: AdxUri[] = []
 let bobPosts: AdxUri[] = []
 let carolPosts: AdxUri[] = []
 let danPosts: AdxUri[] = []
-let bobFollows: Record<string, AdxUri> = {}
-let bobLikes: Record<string, AdxUri> = {}
-let badges: AdxUri[] = []
+const bobFollows: Record<string, AdxUri> = {}
+const bobLikes: Record<string, AdxUri> = {}
+const badges: AdxUri[] = []
 let authTokens: Record<string, string> = {}
 
 const getHeaders = (did: string) => {
@@ -35,7 +35,7 @@ describe('pds views', () => {
       {},
       {
         username: users.alice.name,
-        did: users.alice.did,
+        email: users.alice.email,
         password: users.alice.password,
       },
     )
@@ -43,7 +43,7 @@ describe('pds views', () => {
       {},
       {
         username: users.bob.name,
-        did: users.bob.did,
+        email: users.bob.email,
         password: users.bob.password,
       },
     )
@@ -51,7 +51,7 @@ describe('pds views', () => {
       {},
       {
         username: users.carol.name,
-        did: users.carol.did,
+        email: users.carol.email,
         password: users.carol.password,
       },
     )
@@ -59,7 +59,7 @@ describe('pds views', () => {
       {},
       {
         username: users.dan.name,
-        did: users.dan.did,
+        email: users.dan.email,
         password: users.dan.password,
       },
     )

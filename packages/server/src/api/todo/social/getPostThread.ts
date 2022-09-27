@@ -4,7 +4,7 @@ import { DataSource } from 'typeorm'
 import * as GetPostThread from '../../../lexicon/types/todo/social/getPostThread'
 import { PostIndex } from '../../../db/records/post'
 import { ProfileIndex } from '../../../db/records/profile'
-import { UserDid } from '../../../db/user-dids'
+import { User } from '../../../db/user'
 import * as util from '../../../db/util'
 import { LikeIndex } from '../../../db/records/like'
 import { RepostIndex } from '../../../db/records/repost'
@@ -92,7 +92,7 @@ const postInfoBuilder = (db: DataSource, requester: string) => {
     ])
     .from(PostIndex, 'post')
     .innerJoin(AdxRecord, 'record', 'record.uri = post.uri')
-    .innerJoin(UserDid, 'author', 'author.did = post.creator')
+    .innerJoin(User, 'author', 'author.did = post.creator')
     .leftJoin(
       ProfileIndex,
       'author_profile',

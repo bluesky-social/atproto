@@ -28,7 +28,7 @@ describe('account', () => {
   it('creates an account', async () => {
     const res = await client.todo.adx.createAccount(
       {},
-      { username, did, password },
+      { email: 'alice@test.com', username, password },
     )
     expect(typeof res.data.jwt).toBe('string')
   })

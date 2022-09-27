@@ -2,7 +2,7 @@ import { AdxUri } from '@adxp/uri'
 import * as Post from '../../lexicon/types/todo/social/post'
 import { DataSource, Entity, Column, PrimaryColumn, ManyToOne } from 'typeorm'
 import { DbRecordPlugin } from '../types'
-import { UserDid } from '../user-dids'
+import { User } from '../user'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
@@ -15,7 +15,7 @@ export class PostIndex {
   uri: string
 
   @Column('varchar')
-  @ManyToOne(() => UserDid, (user) => user.did)
+  @ManyToOne(() => User, (user) => user.did)
   creator: string
 
   @Column('text')

@@ -9,7 +9,7 @@ import {
   ManyToOne,
 } from 'typeorm'
 import { DbRecordPlugin } from '../types'
-import { UserDid } from '../user-dids'
+import { User } from '../user'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 import { PostIndex } from './post'
@@ -23,7 +23,7 @@ export class RepostIndex {
   uri: string
 
   @Column('varchar')
-  @ManyToOne(() => UserDid, (user) => user.did)
+  @ManyToOne(() => User, (user) => user.did)
   creator: string
 
   @Column('varchar')
