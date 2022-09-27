@@ -231,7 +231,7 @@ describe('plc DID document', () => {
     expect(doc.alsoKnownAs).toEqual([`https://${username}`])
 
     expect(doc.verificationMethod.length).toBe(2)
-    expect(doc.verificationMethod[0].id).toEqual(`${did}#signingKey`)
+    expect(doc.verificationMethod[0].id).toEqual('#signingKey')
     expect(doc.verificationMethod[0].type).toEqual(
       'EcdsaSecp256r1VerificationKey2019',
     )
@@ -242,7 +242,7 @@ describe('plc DID document', () => {
     expect(doc.verificationMethod[0].publicKeyMultibase).toEqual(
       signingKeyMultibase,
     )
-    expect(doc.verificationMethod[1].id).toEqual(`${did}#recoveryKey`)
+    expect(doc.verificationMethod[1].id).toEqual('#recoveryKey')
     expect(doc.verificationMethod[1].type).toEqual(
       'EcdsaSecp256r1VerificationKey2019',
     )
@@ -254,11 +254,11 @@ describe('plc DID document', () => {
       recoveryKeyMultibase,
     )
 
-    expect(doc.assertionMethod).toEqual([`${did}#signingKey`])
-    expect(doc.capabilityInvocation).toEqual([`${did}#signingKey`])
-    expect(doc.capabilityDelegation).toEqual([`${did}#signingKey`])
+    expect(doc.assertionMethod).toEqual(['#signingKey'])
+    expect(doc.capabilityInvocation).toEqual(['#signingKey'])
+    expect(doc.capabilityDelegation).toEqual(['#signingKey'])
     expect(doc.service.length).toBe(1)
-    expect(doc.service[0].id).toEqual(`${did}#atpPds`)
+    expect(doc.service[0].id).toEqual('#atpPds')
     expect(doc.service[0].type).toEqual('AtpPersonalDataServer')
     expect(doc.service[0].serviceEndpoint).toEqual(atpPds)
   })

@@ -20,7 +20,7 @@ export default function (server: Server) {
 
     let name: string
     let did: string
-    let didDoc: didSdk.DIDDocument
+    // let didDoc: didSdk.DIDDocument
     let nameIsCorrect: boolean | undefined
 
     // @TODO add back once we have a did network
@@ -47,7 +47,7 @@ export default function (server: Server) {
     if (user === null) {
       throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
     }
-    didDoc = {} as any
+    const didDoc = {} as any
     nameIsCorrect = true
 
     const collections = await db.listCollectionsForDid(user.did)

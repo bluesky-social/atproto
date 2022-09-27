@@ -11,6 +11,7 @@
     "module": "commonjs",
     "jsx": "preserve",
     "strict": true,
+    "strictPropertyInitialization": false,
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
