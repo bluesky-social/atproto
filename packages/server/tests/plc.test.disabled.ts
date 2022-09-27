@@ -17,6 +17,7 @@ describe('plc integration', () => {
     )
     const db = await Database.memory()
     const serverBlockstore = new MemoryBlockstore()
+    console.log('before server')
     const s = runServer(
       serverBlockstore,
       db,
@@ -31,6 +32,8 @@ describe('plc integration', () => {
         jwtSecret: 'jwt-secret',
       }),
     )
+
+    console.log('after server')
 
     close = async () => {
       await db.close()

@@ -1,5 +1,7 @@
+import http from 'http'
 import { MemoryBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
+import * as plc from '@adxp/plc'
 import getPort from 'get-port'
 
 import server, { DidTestRegistry, ServerConfig, Database } from '../src/index'
@@ -8,7 +10,13 @@ const USE_TEST_SERVER = true
 
 export type CloseFn = () => Promise<void>
 
-export const runTestServer = async (): Promise<{
+export type TestServerConfig = {
+  usePlc: boolean
+}
+
+export const runTestServer = async (
+  config: Partial<TestServerConfig> = {},
+): Promise<{
   url: string
   close: CloseFn
 }> => {
@@ -18,10 +26,36 @@ export const runTestServer = async (): Promise<{
       close: async () => {},
     }
   }
-  const port = await getPort()
+  const pdsPort = await getPort()
+  const keypair = await crypto.EcdsaKeypair.create()
+
+  let plcServer: http.Server | undefined
+  let plcDb: plc.Database | undefined
+  let plcUrl = ''
+  let serverDid: string
+  let didTestRegistry: DidTestRegistry | undefined
+  if (config.usePlc) {
+    // run plc server
+    const plcPort = await getPort()
+    plcUrl = `http://localhost:${plcPort}`
+    plcDb = await plc.Database.memory()
+    plcServer = plc.server(plcDb, plcPort)
+
+    // setup server did
+    const plcClient = new plc.PlcClient(plcUrl)
+    serverDid = await plcClient.createDid(
+      keypair,
+      keypair.did(),
+      'pds.test',
+      `http://localhost:${pdsPort}`,
+    )
+  } else {
+    serverDid = 'did:test:pds'
+    didTestRegistry = new DidTestRegistry()
+  }
+
   const db = await Database.memory()
   const serverBlockstore = new MemoryBlockstore()
-  const keypair = await crypto.EcdsaKeypair.create()
   const s = server(
     serverBlockstore,
     db,
@@ -30,17 +64,21 @@ export const runTestServer = async (): Promise<{
       debugMode: true,
       scheme: 'http',
       hostname: 'localhost',
-      port,
-      didPlcUrl: 'http://localhost:2582',
+      port: pdsPort,
+      serverDid,
+      didPlcUrl: plcUrl,
       jwtSecret: 'jwt-secret',
-      didTestRegistry: new DidTestRegistry(),
+      didTestRegistry,
     }),
   )
+
   return {
-    url: `http://localhost:${port}`,
+    url: `http://localhost:${pdsPort}`,
     close: async () => {
       await db.close()
       s.close()
+      plcServer?.close()
+      await plcDb?.close()
     },
   }
 }
