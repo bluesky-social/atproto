@@ -52,6 +52,12 @@ export default function (server: Server) {
       isTestUser = true
     }
 
+    // verify username is available
+    const found = await db.getUser(username)
+    if (found !== null) {
+      throw new InvalidRequestError(`Username already taken: ${username}`)
+    }
+
     // check user-supplied DID
     let did: string
     if (isTestUser) {
@@ -68,7 +74,7 @@ export default function (server: Server) {
       )
     }
 
-    await db.registerUser(username, did, password)
+    await db.registerUser(email, username, did, password)
 
     const authStore = await AuthStore.fromTokens(keypair, [])
     const repo = await Repo.create(blockstore, did, authStore)

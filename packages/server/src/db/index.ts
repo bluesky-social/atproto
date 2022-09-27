@@ -106,9 +106,15 @@ export class Database {
     return found ? { username: found.username, did: found.did } : null
   }
 
-  async registerUser(username: string, did: string, password: string) {
+  async registerUser(
+    email: string,
+    username: string,
+    did: string,
+    password: string,
+  ) {
     const table = this.db.getRepository(User)
     const user = new User()
+    user.email = email
     user.username = username
     user.did = did
     user.password = await util.scryptHash(password)
