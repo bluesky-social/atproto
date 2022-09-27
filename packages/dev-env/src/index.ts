@@ -1,5 +1,6 @@
 import http from 'http'
 import chalk from 'chalk'
+import crytpo from 'crypto'
 import { MemoryBlockstore } from '@adxp/repo'
 import PDSServer, {
   DidTestRegistry,
@@ -62,6 +63,7 @@ export class DevEnvServer {
             hostname: 'localhost',
             port: this.port,
             didTestRegistry: this.env.didTestRegistry,
+            jwtSecret: crytpo.randomBytes(8).toString('base64'),
           }),
         )
         break

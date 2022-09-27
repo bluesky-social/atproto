@@ -70,7 +70,6 @@ export async function gen(
 function banner() {
   return `/**
 * GENERATED CODE - DO NOT MODIFY
-* Created ${new Date().toDateString()}
 */
 `
 }

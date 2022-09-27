@@ -5,6 +5,24 @@ import { Repo } from '@adxp/repo'
 import { AuthStore } from '@adxp/auth'
 
 export default function (server: Server) {
+  server.todo.adx.getAccountsConfig((_params, _input, _req, res) => {
+    const cfg = util.getConfig(res)
+
+    let availableUserDomains: string[]
+    if (cfg.debugMode && cfg.didTestRegistry) {
+      availableUserDomains = ['test']
+    } else {
+      throw new Error('TODO')
+    }
+
+    const inviteCodeRequired = true // TODO
+
+    return {
+      encoding: 'application/json',
+      body: { availableUserDomains, inviteCodeRequired },
+    }
+  })
+
   server.todo.adx.getAccount(() => {
     // TODO
     return { encoding: '', body: {} }

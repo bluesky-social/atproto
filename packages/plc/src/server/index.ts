@@ -12,6 +12,8 @@ import * as error from './error'
 import router from './routes'
 import { Locals } from './locals'
 
+export * from './db'
+
 export const server = (db: Database, port: number): http.Server => {
   const app = express()
   app.use(express.json())

@@ -1,6 +1,5 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Thu Sep 22 2022
 */
 import { Headers } from '@adxp/xrpc'
 

@@ -1,6 +1,5 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Thu Sep 22 2022
 */
 import express from 'express'
 
@@ -23,6 +22,8 @@ export interface HandlerOutput {
 
 export interface OutputSchema {
   jwt: string;
+  name: string;
+  did: string;
 }
 
 export type Handler = (

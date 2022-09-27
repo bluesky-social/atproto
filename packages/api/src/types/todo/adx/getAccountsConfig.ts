@@ -3,9 +3,7 @@
 */
 import { Headers } from '@adxp/xrpc'
 
-export interface QueryParams {
-  did: string;
-}
+export interface QueryParams {}
 
 export interface CallOptions {
   headers?: Headers;
@@ -14,7 +12,8 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  root: string;
+  inviteCodeRequired?: boolean;
+  availableUserDomains: string[];
 }
 
 export interface Response {

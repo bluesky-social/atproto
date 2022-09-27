@@ -3,14 +3,7 @@
 */
 import express from 'express'
 
-export interface QueryParams {
-  nameOrDid: string;
-  type: string;
-  limit?: number;
-  before?: string;
-  after?: string;
-  reverse?: boolean;
-}
+export interface QueryParams {}
 
 export type HandlerInput = undefined
 
@@ -20,10 +13,8 @@ export interface HandlerOutput {
 }
 
 export interface OutputSchema {
-  records: {
-    uri: string,
-    value: {},
-  }[];
+  inviteCodeRequired?: boolean;
+  availableUserDomains: string[];
 }
 
 export type Handler = (

@@ -2,6 +2,7 @@ import { DevEnv } from '../index'
 import { ServerType } from '../types'
 import { genServerCfg } from '../util'
 import { AdxUri } from '@adxp/uri'
+import { ServiceClient } from '@adxp/api'
 import { postTexts, replyTexts } from './data'
 
 // NOTE
@@ -28,8 +29,6 @@ export async function generateMockSetup(env: DevEnv) {
   const date = dateGen()
   await createNeededServers(env)
 
-  const client = env.listOfType(ServerType.PersonalDataServer)[0].getClient()
-
   const rand = (n: number) => Math.floor(Math.random() * n)
   const picka = <T>(arr: Array<T>): T => {
     if (arr.length) {
@@ -38,47 +37,81 @@ export async function generateMockSetup(env: DevEnv) {
     throw new Error('Not found')
   }
 
-  const users = [
-    { did: `did:test:alice`, username: `alice.test` },
-    { did: `did:test:bob`, username: `bob.test` },
-    { did: `did:test:carla`, username: `carla.test` },
+  const clients = {
+    loggedout: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
+    alice: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
+    bob: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
+    carla: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
+  }
+  interface User {
+    did: string
+    username: string
+    password: string
+    api: ServiceClient
+  }
+  const users: User[] = [
+    {
+      did: `did:test:alice`,
+      username: `alice.test`,
+      password: 'hunter2',
+      api: clients.alice,
+    },
+    {
+      did: `did:test:bob`,
+      username: `bob.test`,
+      password: 'hunter2',
+      api: clients.bob,
+    },
+    {
+      did: `did:test:carla`,
+      username: `carla.test`,
+      password: 'hunter2',
+      api: clients.carla,
+    },
   ]
+  const alice = users[0]
+  const bob = users[1]
+  const carla = users[2]
 
   let _i = 1
   for (const user of users) {
-    await client.todo.adx.createAccount({}, user)
-    await client.todo.social.profile.create(
+    const res = await clients.loggedout.todo.adx.createAccount(
+      {},
+      { did: user.did, username: user.username, password: user.password },
+    )
+    user.api.setHeader('Authorization', `Bearer ${res.data.jwt}`)
+    await user.api.todo.social.profile.create(
       { did: user.did },
       {
-        displayName: ucfirst(user.username),
+        displayName: ucfirst(user.username).slice(0, -5),
         description: `Test user ${_i++}`,
       },
     )
   }
 
   // everybody follows everybody
-  const follow = async (author: string, subject: string) => {
-    await client.todo.social.follow.create(
-      { did: author },
+  const follow = async (author: User, subject: string) => {
+    await author.api.todo.social.follow.create(
+      { did: author.did },
       {
         subject,
         createdAt: date.next().value,
       },
     )
   }
-  await follow('did:test:alice', 'did:test:bob')
-  await follow('did:test:alice', 'did:test:carla')
-  await follow('did:test:bob', 'did:test:alice')
-  await follow('did:test:bob', 'did:test:carla')
-  await follow('did:test:carla', 'did:test:alice')
-  await follow('did:test:carla', 'did:test:bob')
+  await follow(alice, 'did:test:bob')
+  await follow(alice, 'did:test:carla')
+  await follow(bob, 'did:test:alice')
+  await follow(bob, 'did:test:carla')
+  await follow(carla, 'did:test:alice')
+  await follow(carla, 'did:test:bob')
 
   // a set of posts and reposts
   const posts: { uri: string }[] = []
   for (let i = 0; i < postTexts.length; i++) {
     const author = picka(users)
     posts.push(
-      await client.todo.social.post.create(
+      await author.api.todo.social.post.create(
         { did: author.did },
         {
           text: postTexts[i],
@@ -88,7 +121,7 @@ export async function generateMockSetup(env: DevEnv) {
     )
     if (rand(10) === 0) {
       let reposter = picka(users)
-      await client.todo.social.repost.create(
+      await reposter.api.todo.social.repost.create(
         { did: reposter.did },
         {
           subject: picka(posts).uri,
@@ -102,13 +135,13 @@ export async function generateMockSetup(env: DevEnv) {
   for (let i = 0; i < 100; i++) {
     const targetUri = picka(posts).uri
     const urip = new AdxUri(targetUri)
-    const target = await client.todo.social.post.get({
+    const target = await alice.api.todo.social.post.get({
       nameOrDid: urip.host,
       tid: urip.recordKey,
     })
     const author = picka(users)
     posts.push(
-      await client.todo.social.post.create(
+      await author.api.todo.social.post.create(
         { did: author.did },
         {
           text: picka(replyTexts),
@@ -126,7 +159,7 @@ export async function generateMockSetup(env: DevEnv) {
   for (const post of posts) {
     for (const user of users) {
       if (rand(3) === 0) {
-        await client.todo.social.like.create(
+        await user.api.todo.social.like.create(
           { did: user.did },
           {
             subject: post.uri,

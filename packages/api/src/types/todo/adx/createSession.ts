@@ -1,6 +1,5 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Thu Sep 22 2022
 */
 import { Headers } from '@adxp/xrpc'
 
@@ -18,6 +17,8 @@ export interface InputSchema {
 
 export interface OutputSchema {
   jwt: string;
+  name: string;
+  did: string;
 }
 
 export interface Response {
