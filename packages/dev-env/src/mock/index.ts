@@ -44,6 +44,7 @@ export async function generateMockSetup(env: DevEnv) {
     carla: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
   }
   interface User {
+    email: string
     did: string
     username: string
     password: string
@@ -51,18 +52,21 @@ export async function generateMockSetup(env: DevEnv) {
   }
   const users: User[] = [
     {
+      email: 'alice@test.com',
       did: `did:test:alice`,
       username: `alice.test`,
       password: 'hunter2',
       api: clients.alice,
     },
     {
+      email: 'bob@test.com',
       did: `did:test:bob`,
       username: `bob.test`,
       password: 'hunter2',
       api: clients.bob,
     },
     {
+      email: 'carla@test.com',
       did: `did:test:carla`,
       username: `carla.test`,
       password: 'hunter2',
@@ -77,7 +81,7 @@ export async function generateMockSetup(env: DevEnv) {
   for (const user of users) {
     const res = await clients.loggedout.todo.adx.createAccount(
       {},
-      { did: user.did, username: user.username, password: user.password },
+      { email: user.email, username: user.username, password: user.password },
     )
     user.api.setHeader('Authorization', `Bearer ${res.data.jwt}`)
     await user.api.todo.social.profile.create(

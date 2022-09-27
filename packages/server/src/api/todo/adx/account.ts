@@ -29,7 +29,7 @@ export default function (server: Server) {
   })
 
   server.todo.adx.createAccount(async (_params, input, _req, res) => {
-    const { did, username, password } = input.body
+    const { username, password } = input.body
     const cfg = util.getConfig(res)
 
     if (username.startsWith('did:')) {
@@ -37,26 +37,19 @@ export default function (server: Server) {
         'Cannot register a username that starts with `did:`',
       )
     }
-    if (!did.startsWith('did:')) {
-      throw new InvalidRequestError(
-        'Cannot register a did that does not start with `did:`',
-      )
-    }
 
+    let did
     let isTestUser = false
-    if (username.endsWith('.test') || did.startsWith('did:test:')) {
+    if (username.endsWith('.test')) {
       if (!cfg.debugMode || !cfg.didTestRegistry) {
         throw new InvalidRequestError(
           'Cannot register a test user if debug mode is not enabled',
         )
       }
-      if (!username.endsWith('.test')) {
-        throw new Error(`Cannot use did:test with non-*.test username`)
-      }
-      if (!did.startsWith('did:test:')) {
-        throw new Error(`Cannot use *.test with a non did:test:* DID`)
-      }
+      did = `did:test:${username.replace(/\.test$/, '')}`
       isTestUser = true
+    } else {
+      throw new Error('Not yet able to allocate DIDs')
     }
 
     const { db, blockstore, keypair, auth } = util.getLocals(res)
@@ -74,7 +67,7 @@ export default function (server: Server) {
     }
 
     const jwt = auth.createToken(did)
-    return { encoding: 'application/json', body: { jwt } }
+    return { encoding: 'application/json', body: { jwt, name: username, did } }
   })
 
   server.todo.adx.deleteAccount(() => {

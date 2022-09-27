@@ -4,11 +4,17 @@ import { AdxUri } from '@adxp/uri'
 import * as util from './_util'
 
 const alice = {
+  email: 'alice@test.com',
   username: 'alice.test',
   did: 'did:test:alice',
   password: 'alice-pass',
 }
-const bob = { username: 'bob.test', did: 'did:test:bob', password: 'bob-pass' }
+const bob = {
+  email: 'bob@test.com',
+  username: 'bob.test',
+  did: 'did:test:bob',
+  password: 'bob-pass',
+}
 
 describe('crud operations', () => {
   let client: AdxServiceClient
@@ -27,9 +33,23 @@ describe('crud operations', () => {
   })
 
   it('registers users', async () => {
-    const res = await client.todo.adx.createAccount({}, alice)
+    const res = await client.todo.adx.createAccount(
+      {},
+      {
+        email: alice.email,
+        username: alice.username,
+        password: alice.password,
+      },
+    )
     aliceClient.setHeader('authorization', `Bearer ${res.data.jwt}`)
-    await client.todo.adx.createAccount({}, bob)
+    await client.todo.adx.createAccount(
+      {},
+      {
+        email: bob.email,
+        username: bob.username,
+        password: bob.password,
+      },
+    )
   })
 
   it('describes repo', async () => {

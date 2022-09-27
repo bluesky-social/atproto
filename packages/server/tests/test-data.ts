@@ -1,5 +1,6 @@
 export const users = {
   alice: {
+    email: 'alice@test.com',
     name: 'alice.test',
     did: 'did:test:alice',
     password: 'alice-pass',
@@ -7,6 +8,7 @@ export const users = {
     description: 'its me!',
   },
   bob: {
+    email: 'bob@test.com',
     name: 'bob.test',
     did: 'did:test:bob',
     password: 'bob-pass',
@@ -14,6 +16,7 @@ export const users = {
     description: 'hi im bob',
   },
   carol: {
+    email: 'carol@test.com',
     name: 'carol.test',
     did: 'did:test:carol',
     password: 'carol-pass',
@@ -21,6 +24,7 @@ export const users = {
     description: undefined,
   },
   dan: {
+    email: 'dan@test.com',
     name: 'dan.test',
     did: 'did:test:dan',
     password: 'dan-pass',

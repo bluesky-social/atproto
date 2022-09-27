@@ -14,12 +14,15 @@ export const methodSchemas: MethodSchema[] = [
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['username', 'did', 'password'],
+        required: ['email', 'username', 'password'],
         properties: {
+          email: {
+            type: 'string',
+          },
           username: {
             type: 'string',
           },
-          did: {
+          inviteCode: {
             type: 'string',
           },
           password: {
@@ -32,9 +35,15 @@ export const methodSchemas: MethodSchema[] = [
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['jwt'],
+        required: ['jwt', 'name', 'did'],
         properties: {
           jwt: {
+            type: 'string',
+          },
+          name: {
+            type: 'string',
+          },
+          did: {
             type: 'string',
           },
         },

@@ -28,9 +28,11 @@ describe('auth', () => {
   it('creates an account', async () => {
     const res = await client.todo.adx.createAccount(
       {},
-      { username, did, password },
+      { email: 'alice@test.com', username, password },
     )
     expect(typeof res.data.jwt).toBe('string')
+    expect(res.data.name).toBe(username)
+    expect(res.data.did).toBe(did)
   })
 
   it('fails on authenticated requests', async () => {
