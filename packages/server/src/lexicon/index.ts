@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Thu Sep 22 2022
+* Created Tue Sep 27 2022
 */
 import {
   createServer as createXrpcServer,
@@ -12,6 +12,7 @@ import * as TodoAdxCreateSession from './types/todo/adx/createSession'
 import * as TodoAdxDeleteAccount from './types/todo/adx/deleteAccount'
 import * as TodoAdxDeleteSession from './types/todo/adx/deleteSession'
 import * as TodoAdxGetAccount from './types/todo/adx/getAccount'
+import * as TodoAdxGetAccountsConfig from './types/todo/adx/getAccountsConfig'
 import * as TodoAdxGetSession from './types/todo/adx/getSession'
 import * as TodoAdxRepoBatchWrite from './types/todo/adx/repoBatchWrite'
 import * as TodoAdxRepoCreateRecord from './types/todo/adx/repoCreateRecord'
@@ -88,6 +89,11 @@ export class AdxNS {
   getAccount(handler: TodoAdxGetAccount.Handler) {
     /** @ts-ignore */
     return this.server.xrpc.method('todo.adx.getAccount', handler)
+  }
+
+  getAccountsConfig(handler: TodoAdxGetAccountsConfig.Handler) {
+    /** @ts-ignore */
+    return this.server.xrpc.method('todo.adx.getAccountsConfig', handler)
   }
 
   getSession(handler: TodoAdxGetSession.Handler) {

@@ -19,6 +19,12 @@ describe('auth', () => {
     await close()
   })
 
+  it('servers the accounts system config', async () => {
+    const res = await client.todo.adx.getAccountsConfig({})
+    expect(res.data.availableUserDomains[0]).toBe('test')
+    expect(typeof res.data.inviteCodeRequired).toBe('boolean')
+  })
+
   it('creates an account', async () => {
     const res = await client.todo.adx.createAccount(
       {},
@@ -28,7 +34,7 @@ describe('auth', () => {
   })
 
   it('fails on authenticated requests', async () => {
-    await expect(client.todo.adx.getSession({}, {})).rejects.toThrow()
+    await expect(client.todo.adx.getSession({})).rejects.toThrow()
   })
 
   let jwt: string
@@ -43,7 +49,7 @@ describe('auth', () => {
 
   it('can perform authenticated requests', async () => {
     client.setHeader('authorization', `Bearer ${jwt}`)
-    const res = await client.todo.adx.getSession({}, {})
+    const res = await client.todo.adx.getSession({})
     expect(res.data.did).toBe(did)
     expect(res.data.name).toBe(username)
   })

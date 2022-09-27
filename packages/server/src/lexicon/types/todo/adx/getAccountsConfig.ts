@@ -4,10 +4,7 @@
 */
 import express from 'express'
 
-export interface QueryParams {
-  limit?: number;
-  before?: string;
-}
+export interface QueryParams {}
 
 export type HandlerInput = undefined
 
@@ -17,18 +14,8 @@ export interface HandlerOutput {
 }
 
 export interface OutputSchema {
-  notifications: Notification[];
-}
-export interface Notification {
-  uri: string;
-  author: {
-    did: string,
-    name: string,
-    displayName: string,
-  };
-  record: {};
-  isRead: boolean;
-  indexedAt: string;
+  inviteCodeRequired?: boolean;
+  availableUserDomains: string[];
 }
 
 export type Handler = (

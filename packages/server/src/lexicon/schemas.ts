@@ -1,6 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Thu Sep 22 2022
+* Created Tue Sep 27 2022
 */
 import { MethodSchema, RecordSchema } from '@adxp/lexicon'
 
@@ -125,6 +125,32 @@ export const methodSchemas: MethodSchema[] = [
     output: {
       encoding: '',
       schema: {},
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'todo.adx.getAccountsConfig',
+    type: 'query',
+    description:
+      "Get a document describing the service's accounts configuration.",
+    parameters: {},
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['availableUserDomains'],
+        properties: {
+          inviteCodeRequired: {
+            type: 'boolean',
+          },
+          availableUserDomains: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
     },
   },
   {
