@@ -39,6 +39,7 @@ describe('pds views', () => {
         password: users.alice.password,
       },
     )
+    users.alice.did = res1.data.did
     const res2 = await client.todo.adx.createAccount(
       {},
       {
@@ -47,6 +48,7 @@ describe('pds views', () => {
         password: users.bob.password,
       },
     )
+    users.bob.did = res2.data.did
     const res3 = await client.todo.adx.createAccount(
       {},
       {
@@ -55,6 +57,7 @@ describe('pds views', () => {
         password: users.carol.password,
       },
     )
+    users.carol.did = res3.data.did
     const res4 = await client.todo.adx.createAccount(
       {},
       {
@@ -63,6 +66,7 @@ describe('pds views', () => {
         password: users.dan.password,
       },
     )
+    users.dan.did = res4.data.did
     authTokens = {
       [users.alice.did]: res1.data.jwt,
       [users.bob.did]: res2.data.jwt,

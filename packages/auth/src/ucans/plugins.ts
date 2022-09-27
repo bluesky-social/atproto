@@ -12,4 +12,5 @@ const didExamplePlugin: ucans.DidMethodPlugin = {
 
 export const didPlugins = new ucans.Plugins([p256Plugin], {
   example: didExamplePlugin,
+  plc: didExamplePlugin, // @TODO write this plugin
 })

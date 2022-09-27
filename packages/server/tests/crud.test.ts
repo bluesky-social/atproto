@@ -6,13 +6,13 @@ import * as util from './_util'
 const alice = {
   email: 'alice@test.com',
   username: 'alice.test',
-  did: 'did:test:alice',
+  did: '',
   password: 'alice-pass',
 }
 const bob = {
   email: 'alice@test.com',
   username: 'bob.test',
-  did: 'did:test:bob',
+  did: '',
   password: 'bob-pass',
 }
 
@@ -42,7 +42,8 @@ describe('crud operations', () => {
       },
     )
     aliceClient.setHeader('authorization', `Bearer ${res.data.jwt}`)
-    await client.todo.adx.createAccount(
+    alice.did = res.data.did
+    const res2 = await client.todo.adx.createAccount(
       {},
       {
         email: bob.email,
@@ -50,6 +51,7 @@ describe('crud operations', () => {
         password: bob.password,
       },
     )
+    bob.did = res2.data.did
   })
 
   it('describes repo', async () => {

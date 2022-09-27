@@ -2,7 +2,7 @@ export const users = {
   alice: {
     email: 'alice@test.com',
     name: 'alice.test',
-    did: 'did:test:alice',
+    did: '',
     password: 'alice-pass',
     displayName: 'ali',
     description: 'its me!',
@@ -10,7 +10,7 @@ export const users = {
   bob: {
     email: 'bob@test.com',
     name: 'bob.test',
-    did: 'did:test:bob',
+    did: '',
     password: 'bob-pass',
     displayName: 'bobby',
     description: 'hi im bob',
@@ -18,7 +18,7 @@ export const users = {
   carol: {
     email: 'carol@test.com',
     name: 'carol.test',
-    did: 'did:test:carol',
+    did: '',
     password: 'carol-pass',
     displayName: undefined,
     description: undefined,
@@ -26,7 +26,7 @@ export const users = {
   dan: {
     email: 'dan@test.com',
     name: 'dan.test',
-    did: 'did:test:dan',
+    did: '',
     password: 'dan-pass',
     displayName: undefined,
     description: undefined,

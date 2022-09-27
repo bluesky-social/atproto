@@ -10,7 +10,7 @@ export default function (server: Server) {
     const cfg = util.getConfig(res)
 
     let availableUserDomains: string[]
-    if (cfg.debugMode && cfg.didTestRegistry) {
+    if (cfg.debugMode && !!cfg.testNameRegistry) {
       availableUserDomains = ['test']
     } else {
       throw new Error('TODO')
@@ -41,13 +41,10 @@ export default function (server: Server) {
 
     let isTestUser = false
     if (username.endsWith('.test')) {
-      if (!config.debugMode || !config.didTestRegistry) {
+      if (!config.debugMode || !config.testNameRegistry) {
         throw new InvalidRequestError(
           'Cannot register a test user if debug mode is not enabled',
         )
-      }
-      if (!username.endsWith('.test')) {
-        throw new Error(`Cannot use did:test with non-*.test username`)
       }
       isTestUser = true
     }
@@ -58,21 +55,14 @@ export default function (server: Server) {
       throw new InvalidRequestError(`Username already taken: ${username}`)
     }
 
-    // check user-supplied DID
-    let did: string
-    if (isTestUser) {
-      const name = username.slice(0, username.length - '.test'.length)
-      did = 'did:test:' + name
-    } else {
-      const plcClient = new PlcClient(config.didPlcUrl)
-      // @TODO real service name
-      did = await plcClient.createDid(
-        keypair,
-        keypair.did(),
-        username,
-        config.origin,
-      )
-    }
+    const plcClient = new PlcClient(config.didPlcUrl)
+    // @TODO real service name
+    const did = await plcClient.createDid(
+      keypair,
+      keypair.did(),
+      username,
+      config.origin,
+    )
 
     await db.registerUser(email, username, did, password)
 
@@ -80,11 +70,8 @@ export default function (server: Server) {
     const repo = await Repo.create(blockstore, did, authStore)
     await db.setRepoRoot(did, repo.cid)
 
-    if (isTestUser) {
-      config.didTestRegistry?.set(username.slice(0, -5), {
-        name: username,
-        service: config.origin,
-      })
+    if (isTestUser && config.testNameRegistry) {
+      config.testNameRegistry['username'] = did
     }
 
     const jwt = auth.createToken(did)

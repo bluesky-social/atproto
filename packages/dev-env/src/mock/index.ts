@@ -53,21 +53,21 @@ export async function generateMockSetup(env: DevEnv) {
   const users: User[] = [
     {
       email: 'alice@test.com',
-      did: `did:test:alice`,
+      did: '',
       username: `alice.test`,
       password: 'hunter2',
       api: clients.alice,
     },
     {
       email: 'bob@test.com',
-      did: `did:test:bob`,
+      did: '',
       username: `bob.test`,
       password: 'hunter2',
       api: clients.bob,
     },
     {
       email: 'carla@test.com',
-      did: `did:test:carla`,
+      did: '',
       username: `carla.test`,
       password: 'hunter2',
       api: clients.carla,
@@ -83,6 +83,7 @@ export async function generateMockSetup(env: DevEnv) {
       {},
       { email: user.email, username: user.username, password: user.password },
     )
+    user.did = res.data.did
     user.api.setHeader('Authorization', `Bearer ${res.data.jwt}`)
     await user.api.todo.social.profile.create(
       { did: user.did },
@@ -103,12 +104,12 @@ export async function generateMockSetup(env: DevEnv) {
       },
     )
   }
-  await follow(alice, 'did:test:bob')
-  await follow(alice, 'did:test:carla')
-  await follow(bob, 'did:test:alice')
-  await follow(bob, 'did:test:carla')
-  await follow(carla, 'did:test:alice')
-  await follow(carla, 'did:test:bob')
+  await follow(alice, bob.did)
+  await follow(alice, carla.did)
+  await follow(bob, alice.did)
+  await follow(bob, carla.did)
+  await follow(carla, alice.did)
+  await follow(carla, bob.did)
 
   // a set of posts and reposts
   const posts: { uri: string }[] = []

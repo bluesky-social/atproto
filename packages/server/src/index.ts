@@ -15,7 +15,6 @@ import ServerAuth from './auth'
 import * as error from './error'
 import { ServerConfig, ServerConfigValues } from './config'
 
-export { DidTestRegistry } from './lib/did/did-test'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'

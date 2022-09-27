@@ -2,7 +2,6 @@ import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import * as util from './_util'
 
 const username = 'alice.test'
-const did = 'did:test:alice'
 const password = 'test123'
 
 describe('account', () => {
@@ -19,32 +18,38 @@ describe('account', () => {
     await close()
   })
 
-  it('servers the accounts system config', async () => {
+  it('serves the accounts system config', async () => {
     const res = await client.todo.adx.getAccountsConfig({})
     expect(res.data.availableUserDomains[0]).toBe('test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
   })
+
+  let did: string
+  let jwt: string
 
   it('creates an account', async () => {
     const res = await client.todo.adx.createAccount(
       {},
       { email: 'alice@test.com', username, password },
     )
-    expect(typeof res.data.jwt).toBe('string')
+    did = res.data.did
+    jwt = res.data.jwt
+
+    expect(typeof jwt).toBe('string')
+    expect(did.startsWith('did:plc:')).toBeTruthy()
+    expect(res.data.username).toEqual(username)
   })
 
   it('fails on authenticated requests', async () => {
     await expect(client.todo.adx.getSession({})).rejects.toThrow()
   })
 
-  let jwt: string
-
   it('logs in', async () => {
     const res = await client.todo.adx.createSession({}, { username, password })
     jwt = res.data.jwt
     expect(typeof jwt).toBe('string')
     expect(res.data.name).toBe('alice.test')
-    expect(res.data.did).toBe('did:test:alice')
+    expect(res.data.did).toBe(did)
   })
 
   it('can perform authenticated requests', async () => {
