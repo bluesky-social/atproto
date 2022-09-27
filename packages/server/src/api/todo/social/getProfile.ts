@@ -1,5 +1,5 @@
 import { Server } from '../../../lexicon'
-import { AuthRequiredError } from '@adxp/xrpc-server'
+import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetProfile from '../../../lexicon/types/todo/social/getProfile'
 import { FollowIndex } from '../../../db/records/follow'
 import { PostIndex } from '../../../db/records/post'
@@ -57,6 +57,10 @@ export default function (server: Server) {
         )
         .where(util.userWhereClause(user), { user })
         .getRawOne()
+
+      if (!queryRes) {
+        throw new InvalidRequestError(`Profile not found`)
+      }
 
       const badgesRes = await db.db
         .createQueryBuilder()

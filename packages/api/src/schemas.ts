@@ -1,6 +1,5 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Thu Sep 22 2022
 */
 import { MethodSchema, RecordSchema } from '@adxp/lexicon'
 
@@ -67,9 +66,15 @@ export const methodSchemas: MethodSchema[] = [
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['jwt'],
+        required: ['jwt', 'name', 'did'],
         properties: {
           jwt: {
+            type: 'string',
+          },
+          name: {
+            type: 'string',
+          },
+          did: {
             type: 'string',
           },
         },
@@ -123,14 +128,36 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
+    id: 'todo.adx.getAccountsConfig',
+    type: 'query',
+    description:
+      "Get a document describing the service's accounts configuration.",
+    parameters: {},
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['availableUserDomains'],
+        properties: {
+          inviteCodeRequired: {
+            type: 'boolean',
+          },
+          availableUserDomains: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'todo.adx.getSession',
     type: 'query',
     description: 'Get information about the current session.',
     parameters: {},
-    input: {
-      encoding: '',
-      schema: {},
-    },
     output: {
       encoding: 'application/json',
       schema: {
