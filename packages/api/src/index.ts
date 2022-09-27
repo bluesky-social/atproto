@@ -1,6 +1,5 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
-* Created Tue Sep 27 2022
 */
 import {
   Client as XrpcClient,
