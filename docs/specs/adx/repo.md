@@ -133,44 +133,7 @@ To fetch a schema, a request must be sent to the xrpc [`getSchema`](../xrpc.md#g
 
 ### Schema structure
 
-Record schemas are encoded in JSON and adhere to the following interface:
-
-```typescript
-interface RecordSchema {
-  adx: 1
-  id: string
-  revision?: number // a versioning counter
-  description?: string
-  record: JSONSchema
-}
-```
-
-Here is an example schema:
-
-```json
-{
-  "adx": 1,
-  "id": "com.example.post",
-  "record": {
-    "type": "object",
-    "required": ["text", "createdAt"],
-    "properties": {
-      "text": {"type": "string", "maxLength": 256},
-      "createdAt": {"type": "string", "format": "date-time"}
-    }
-  }
-}
-```
-
-And here is a record using this example schema:
-
-```json
-{
-  "$type": "com.example.post",
-  "text": "Hello, world!",
-  "createdAt": "2022-09-15T16:37:17.131Z"
-}
-```
+Record schemas are encoded in JSON using [Lexicon Schema Documents](../lexicon.md).
 
 ### Reserved field names
 

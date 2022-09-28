@@ -73,82 +73,7 @@ net.users.bob.ping
 
 #### Method schemas
 
-Method schemas are encoded in JSON and adhere to the following interface:
-
-```typescript
-interface MethodSchema {
-  xrpc: 1
-  id: string
-  type: 'query' | 'procedure'
-  description?: string
-  parameters?: Record<string, MethodParam> // a map of param names to their definitions
-  input?: MethodBody
-  output?: MethodBody
-}
-
-interface MethodParam {
-  type: 'string' | 'number' | 'integer' | 'boolean'
-  description?: string
-  default?: string | number | boolean
-  required?: boolean
-  minLength?: number // string only
-  maxLength?: number // string only
-  minimum?: number // number and integer only
-  maximum?: number // number and integer only
-}
-
-interface MethodBody {
-  encoding: string | string[] // must be a valid mimetype
-  schema?: JSONSchema // json only
-}
-```
-
-An example query-method schema:
-
-```json
-{
-  "xrpc": 1,
-  "id": "io.social.getFeed",
-  "type": "query",
-  "description": "Fetch the user's latest feed.",
-  "parameters": {
-    "limit": {"type": "integer", "minimum": 1, "maximum": 50},
-    "cursor": {"type": "string"},
-    "reverse": {"type": "boolean", "default": true}
-  },
-  "output": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["entries", "totalCount"],
-      "properties": {
-        "entries": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "description": "Entry items will vary and are not constrained at the method level"
-          }
-        },
-        "totalCount": {"type": "number"}
-      }
-    }
-  }
-}
-```
-
-An example procedure-method schema:
-
-```json
-{
-  "xrpc": 1,
-  "id": "io.social.setProfilePicture",
-  "type": "procedure",
-  "description": "Set the user's avatar.",
-  "input": {
-    "encoding": ["image/png", "image/jpg"],
-  }
-}
-```
+Method schemas are encoded in JSON using [Lexicon Schema Documents](./lexicon.md).
 
 #### Schema distribution
 
@@ -211,10 +136,7 @@ The request has succeeded. Expectations:
 
 #### `400` Invalid request
 
-The request is invalid and was not processed. Expecations:
-
-- `Content-Type` header must be `application/json`.
-- Response body must match the [InvalidRequest](#invalidrequest) schema.
+The request is invalid and was not processed.
 
 #### `401` Authentication required
 
@@ -244,10 +166,7 @@ The client has sent too many requests. Rate-limits are decided by each server. E
 
 #### `500` Internal server error
 
-The server reached an unexpected condition during processing. Expecations:
-
-- `Content-Type` header must be `application/json`.
-- Response body must match the [InternalError](#internalerror) schema.
+The server reached an unexpected condition during processing.
 
 #### `501` Method not implemented
 
@@ -255,10 +174,7 @@ The server does not implement the requested method.
 
 #### `502` A request to upstream failed
 
-The execution of the procedure depends on a call to another server which has failed. Expecations:
-
-- `Content-Type` header must be `application/json`.
-- Response body must match the [UpstreamError](#upstreamerror) schema.
+The execution of the procedure depends on a call to another server which has failed.
 
 #### `503` Not enough resources
 
@@ -266,10 +182,7 @@ The server is under heavy load and can't complete the request.
 
 #### `504` A request to upstream timed out
 
-The execution of the procedure depends on a call to another server which timed out. Expecations:
-
-- `Content-Type` header must be `application/json`.
-- Response body must match the [UpstreamError](#upstreamerror) schema.
+The execution of the procedure depends on a call to another server which timed out.
 
 #### Remaining codes
 
@@ -285,36 +198,15 @@ Any response code not explicitly enumerated should be handled as follows:
 
 TODO
 
-### Response schemas
+### Custom error codes and descriptions
 
-The following schemas are used within the XRPC protocol.
-
-#### `InvalidRequest`
+In non-200 (error) responses, services may respond with a JSON body which matches the following schema:
 
 ```typescript
-interface InvalidRequest {
-  error: true
-  type: 'InvalidRequest'
-  message: string
+interface XrpcErrorDescription {
+  error?: string
+  message?: string
 }
 ```
 
-#### `InternalError`
-
-```typescript
-interface InternalError {
-  error: true
-  type: 'InternalError'
-  message: string
-}
-```
-
-#### `UpstreamError`
-
-```typescript
-interface UpstreamError {
-  error: true
-  type: 'UpstreamError'
-  message: string
-}
-```
+The `error` field of the response body should map to an error name defined in the method's [Lexicon schema](./lexicon.md). This enables more specific error-handling by client software. This is especially advised on 400, 500, and 502 responses where further information will be useful.

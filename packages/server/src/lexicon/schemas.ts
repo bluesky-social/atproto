@@ -40,6 +40,17 @@ export const methodSchemas: MethodSchema[] = [
         },
       },
     },
+    errors: [
+      {
+        name: 'InvalidUsername',
+      },
+      {
+        name: 'InvalidPassword',
+      },
+      {
+        name: 'UsernameNotAvailable',
+      },
+    ],
   },
   {
     lexicon: 1,

@@ -113,7 +113,7 @@ export class ServiceClient {
       return new XRPCResponse(res.body, res.headers)
     } else {
       if (res.body && isErrorResponseBody(res.body)) {
-        throw new XRPCError(resCode, res.body.message)
+        throw new XRPCError(resCode, res.body.error, res.body.message)
       } else {
         throw new XRPCError(resCode)
       }

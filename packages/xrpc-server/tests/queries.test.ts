@@ -67,7 +67,6 @@ describe('Queries', () => {
       message: 'hello world',
     })
     expect(res1.success).toBeTruthy()
-    expect(res1.error).toBeFalsy()
     expect(res1.headers['content-type']).toBe('text/plain; charset=utf-8')
     expect(res1.data).toBe('hello world')
 
@@ -75,7 +74,6 @@ describe('Queries', () => {
       message: 'hello world',
     })
     expect(res2.success).toBeTruthy()
-    expect(res2.error).toBeFalsy()
     expect(res2.headers['content-type']).toBe('application/octet-stream')
     expect(new TextDecoder().decode(res2.data)).toBe('hello world')
 
@@ -83,7 +81,6 @@ describe('Queries', () => {
       message: 'hello world',
     })
     expect(res3.success).toBeTruthy()
-    expect(res3.error).toBeFalsy()
     expect(res3.headers['content-type']).toBe('application/json; charset=utf-8')
     expect(res3.data?.message).toBe('hello world')
   })

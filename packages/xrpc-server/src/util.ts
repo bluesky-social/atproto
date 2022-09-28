@@ -6,8 +6,8 @@ import addFormats from 'ajv-formats'
 import {
   Params,
   HandlerInput,
-  HandlerOutput,
-  handlerOutput,
+  HandlerSuccess,
+  handlerSuccess,
   InvalidRequestError,
   InternalServerError,
 } from './types'
@@ -144,12 +144,12 @@ export function validateInput(
 
 export function validateOutput(
   schema: MethodSchema,
-  output: HandlerOutput | undefined,
+  output: HandlerSuccess | undefined,
   jsonValidator?: ValidateFunction,
-): HandlerOutput | undefined {
+): HandlerSuccess | undefined {
   // initial validation
   if (output) {
-    handlerOutput.parse(output)
+    handlerSuccess.parse(output)
   }
 
   // response expectation
