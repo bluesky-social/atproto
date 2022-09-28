@@ -243,42 +243,61 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
       )
     }
 
-    // export interface HandlerOutput {...}
+    // export interface HandlerSuccess {...}
+    let hasHandlerSuccess = false
     if (schema.output?.schema || schema.output?.encoding) {
-      const handlerOutput = file.addInterface({
-        name: 'HandlerOutput',
+      hasHandlerSuccess = true
+      const handlerSuccess = file.addInterface({
+        name: 'HandlerSuccess',
         isExported: true,
       })
       if (Array.isArray(schema.output.encoding)) {
-        handlerOutput.addProperty({
+        handlerSuccess.addProperty({
           name: 'encoding',
           type: schema.output.encoding.map((v) => `'${v}'`).join(' | '),
         })
       } else if (typeof schema.output.encoding === 'string') {
-        handlerOutput.addProperty({
+        handlerSuccess.addProperty({
           name: 'encoding',
           type: `'${schema.output.encoding}'`,
         })
       }
       if (schema.output?.schema) {
         if (Array.isArray(schema.output.encoding)) {
-          handlerOutput.addProperty({
+          handlerSuccess.addProperty({
             name: 'body',
             type: 'OutputSchema | Uint8Array',
           })
         } else {
-          handlerOutput.addProperty({ name: 'body', type: 'OutputSchema' })
+          handlerSuccess.addProperty({ name: 'body', type: 'OutputSchema' })
         }
       } else if (schema.output?.encoding) {
-        handlerOutput.addProperty({ name: 'body', type: 'Uint8Array' })
+        handlerSuccess.addProperty({ name: 'body', type: 'Uint8Array' })
       }
-    } else {
-      file.addTypeAlias({
-        isExported: true,
-        name: 'HandlerOutput',
-        type: 'void',
+    }
+
+    // export interface HandlerError {...}
+    const handlerError = file.addInterface({
+      name: 'HandlerError',
+      isExported: true,
+    })
+    handlerError.addProperties([
+      { name: 'status', type: 'number' },
+      { name: 'message?', type: 'string' },
+    ])
+    if (schema.errors?.length) {
+      handlerError.addProperty({
+        name: 'error?',
+        type: schema.errors.map((err) => `'${err.name}'`).join(' | '),
       })
     }
+
+    // export type HandlerOutput = ...
+    file.addTypeAlias({
+      isExported: true,
+      name: 'HandlerOutput',
+      type: `HandlerError | ${hasHandlerSuccess ? 'HandlerSuccess' : 'void'}`,
+    })
 
     //= export interface OutputSchema {...}
     if (schema.output?.schema) {

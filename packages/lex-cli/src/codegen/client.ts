@@ -53,13 +53,15 @@ const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
       .addImportDeclaration({ moduleSpecifier: './schemas' })
       .addNamedImports([{ name: 'methodSchemas' }, { name: 'recordSchemas' }])
 
-    // generate type imports
+    // generate type imports and re-exports
     for (const schema of schemas) {
+      const moduleSpecifier = `./types/${schema.id.split('.').join('/')}`
       file
-        .addImportDeclaration({
-          moduleSpecifier: `./types/${schema.id.split('.').join('/')}`,
-        })
+        .addImportDeclaration({ moduleSpecifier })
         .setNamespaceImport(toTitleCase(schema.id))
+      file
+        .addExportDeclaration({ moduleSpecifier })
+        .setNamespaceExport(toTitleCase(schema.id))
     }
 
     //= export class Client {...}
@@ -255,7 +257,13 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
       type: `${moduleName}.CallOptions`,
     })
     method.setBodyText(
-      `return this._service.xrpc.call('${schema.id}', params, data, opts)`,
+      [
+        `return this._service.xrpc`,
+        `  .call('${schema.id}', params, data, opts)`,
+        `  .catch((e) => {`,
+        `    throw ${moduleName}.toKnownErr(e)`,
+        `  })`,
+      ].join('\n'),
     )
   }
 
@@ -409,13 +417,11 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
 
 const methodSchemaTs = (project, schema: MethodSchema) =>
   gen(project, `/types/${schema.id.split('.').join('/')}.ts`, async (file) => {
-    //= import {Headers} from '@adxp/xrpc'
+    //= import {Headers, XRPCError} from '@adxp/xrpc'
     const xrpcImport = file.addImportDeclaration({
       moduleSpecifier: '@adxp/xrpc',
     })
-    xrpcImport.addNamedImport({
-      name: 'Headers',
-    })
+    xrpcImport.addNamedImports([{ name: 'Headers' }, { name: 'XRPCError' }])
 
     //= export interface QueryParams {...}
     const qp = file.addInterface({
@@ -493,7 +499,6 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
       isExported: true,
     })
     res.addProperty({ name: 'success', type: 'boolean' })
-    res.addProperty({ name: 'error', type: 'boolean' })
     res.addProperty({ name: 'headers', type: 'Headers' })
     if (schema.output?.schema) {
       if (Array.isArray(schema.output.encoding)) {
@@ -504,6 +509,41 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
     } else if (schema.output?.encoding) {
       res.addProperty({ name: 'data', type: 'Uint8Array' })
     }
+
+    // export class {errcode}Error {...}
+    const customErrors: { name: string; cls: string }[] = []
+    for (const error of schema.errors || []) {
+      let name = toTitleCase(error.name)
+      if (!name.endsWith('Error')) name += 'Error'
+      const errCls = file.addClass({
+        name,
+        extends: 'XRPCError',
+        isExported: true,
+      })
+      errCls
+        .addConstructor({
+          parameters: [{ name: 'src', type: 'XRPCError' }],
+        })
+        .setBodyText(`super(src.status, src.error, src.message)`)
+      customErrors.push({ name: error.name, cls: name })
+    }
+
+    // export function toKnownErr(err: any) {...}
+    const toKnownErrFn = file.addFunction({
+      name: 'toKnownErr',
+      isExported: true,
+    })
+    toKnownErrFn.addParameter({ name: 'e', type: 'any' })
+    toKnownErrFn.setBodyText(
+      [
+        `if (e instanceof XRPCError) {`,
+        ...customErrors.map(
+          (err) => `if (e.error === '${err.name}') return new ${err.cls}(e)`,
+        ),
+        `}`,
+        `return e`,
+      ].join('\n'),
+    )
   })
 
 const recordSchemaTs = (project, schema: RecordSchema) =>
