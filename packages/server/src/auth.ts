@@ -1,11 +1,23 @@
+import * as auth from '@adxp/auth'
+import { DidResolver } from '@adxp/did-sdk'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
 
 const BEARER = 'Bearer '
+
+export type ServerAuthOpts = {
+  jwtSecret: string
+  didResolver: DidResolver
+}
 export class ServerAuth {
   private _secret
-  constructor(secret: string) {
-    this._secret = secret
+  didResolver: DidResolver
+  verifier: auth.Verifier
+
+  constructor(opts: ServerAuthOpts) {
+    this._secret = opts.jwtSecret
+    this.didResolver = opts.didResolver
+    this.verifier = new auth.Verifier({ didResolver: opts.didResolver })
   }
 
   createToken(did: string): string {

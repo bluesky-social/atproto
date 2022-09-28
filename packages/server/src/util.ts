@@ -102,9 +102,9 @@ export const getLocals = (res: Response): Locals => {
 }
 
 export const getAuthstore = (res: Response, did: string): auth.AuthStore => {
-  const keypair = getKeypair(res)
+  const { auth, keypair } = getLocals(res)
   // @TODO check that we can sign on behalf of this DID
-  return new auth.AuthStore(keypair, [], did)
+  return auth.verifier.loadAuthStore(keypair, [], did)
 }
 
 export const getPlcClient = (res: Response): plc.PlcClient => {
@@ -115,22 +115,18 @@ export const getPlcClient = (res: Response): plc.PlcClient => {
 export const maybeLoadRepo = async (
   res: Response,
   did: string,
-  authStore?: auth.AuthStore,
 ): Promise<Repo | null> => {
-  const { db, blockstore } = getLocals(res)
+  const { db, blockstore, auth } = getLocals(res)
   const currRoot = await db.getRepoRoot(did)
   if (!currRoot) {
     return null
   }
-  return Repo.load(blockstore, currRoot, authStore)
+  const authStore = getAuthstore(res, did)
+  return Repo.load(blockstore, currRoot, auth.verifier, authStore)
 }
 
-export const loadRepo = async (
-  res: Response,
-  did: string,
-  authStore?: auth.AuthStore,
-): Promise<Repo> => {
-  const maybeRepo = await maybeLoadRepo(res, did, authStore)
+export const loadRepo = async (res: Response, did: string): Promise<Repo> => {
+  const maybeRepo = await maybeLoadRepo(res, did)
   if (!maybeRepo) {
     throw new ServerError(404, `User has not registered a repo root: ${did}`)
   }

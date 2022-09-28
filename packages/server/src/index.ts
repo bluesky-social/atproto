@@ -14,6 +14,7 @@ import Database from './db'
 import ServerAuth from './auth'
 import * as error from './error'
 import { ServerConfig, ServerConfigValues } from './config'
+import { DidResolver } from '@adxp/did-sdk'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -26,7 +27,8 @@ const runServer = (
   cfg: ServerConfigValues,
 ): http.Server => {
   const config = new ServerConfig(cfg)
-  const auth = new ServerAuth(cfg.jwtSecret)
+  const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
+  const auth = new ServerAuth({ jwtSecret: cfg.jwtSecret, didResolver })
 
   const app = express()
   app.use(cors())

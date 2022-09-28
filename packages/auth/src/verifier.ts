@@ -5,22 +5,24 @@ import { PluginInjectedApi } from './plugins'
 import { verifySignature, verifySignatureUtf8 } from './signatures'
 import { verifyUcan, verifyAdxUcan, verifyFullWritePermission } from './verify'
 import AuthStore from './auth-store'
+import { DidResolver } from '@adxp/did-sdk'
 
 export const DID_KEY_PLUGINS = [p256Plugin]
 
-export type AuthLibOptions = {
+export type VerifierOpts = {
+  didResolver: DidResolver
   plcUrl: string
   resolutionTimeout: number
   additionalDidMethods: Record<string, ucans.DidMethodPlugin>
   additionalDidKeys: [ucans.DidKeyPlugin]
 }
 
-export class AuthLib {
+export class Verifier {
   didResolver: didSdk.DidResolver
   plugins: ucans.Plugins
   ucanApi: PluginInjectedApi
 
-  constructor(opts: Partial<AuthLibOptions> = {}) {
+  constructor(opts: Partial<VerifierOpts> = {}) {
     const {
       additionalDidKeys = [],
       additionalDidMethods = {},
@@ -28,10 +30,12 @@ export class AuthLib {
       resolutionTimeout,
     } = opts
 
-    const resolver = new didSdk.DidResolver({
-      plcUrl,
-      timeout: resolutionTimeout,
-    })
+    const resolver =
+      opts.didResolver ??
+      new didSdk.DidResolver({
+        plcUrl,
+        timeout: resolutionTimeout,
+      })
 
     // handles did:web & did:plc
     const methodPlugins: ucans.DidMethodPlugin = {
@@ -108,6 +112,13 @@ export class AuthLib {
   ): Promise<ucans.Ucan> {
     return verifyFullWritePermission(this.ucanApi)(token, audience, repoDid)
   }
+
+  async validateUcan(
+    encodedUcan: string,
+    opts?: Partial<ucans.ValidateOptions>,
+  ): Promise<ucans.Ucan> {
+    return this.ucanApi.validate(encodedUcan, opts)
+  }
 }
 
-export default AuthLib
+export default Verifier

@@ -1,12 +1,12 @@
 import { writeCap } from '../src/adx-capabilities'
-import { AuthLib, AuthStore, Ucan, ucans } from '../src'
+import { Verifier, AuthStore, Ucan, ucans } from '../src'
 
 describe('tokens for post', () => {
   const collection = 'com.example.microblog'
   const record = '3iwc-gvs-ehpk-2s'
   const serverDid = 'did:example:fakeServerDid'
 
-  const auth = new AuthLib()
+  const verifier = new Verifier()
 
   let authStore: AuthStore
   let token: Ucan
@@ -15,18 +15,18 @@ describe('tokens for post', () => {
   let fullUcan: Ucan
 
   it('validates a fully claimed ucan from the root DID', async () => {
-    authStore = await auth.createTempAuthStore()
+    authStore = await verifier.createTempAuthStore()
     fullUcan = await authStore.claimFull()
     rootDid = await authStore.did()
 
     cap = writeCap(rootDid, collection, record)
 
-    await auth.verifyAdxUcan(fullUcan, fullUcan.payload.aud, cap)
+    await verifier.verifyAdxUcan(fullUcan, fullUcan.payload.aud, cap)
   })
 
   it('creates a valid token for a post', async () => {
     token = await authStore.createUcan(serverDid, cap, 30)
-    await auth.verifyAdxUcan(token, serverDid, cap)
+    await verifier.verifyAdxUcan(token, serverDid, cap)
   })
 
   it('throws an error for the wrong collection', async () => {
@@ -36,7 +36,7 @@ describe('tokens for post', () => {
       record,
     )
     try {
-      const res = await auth.verifyAdxUcan(token, serverDid, collectionCap)
+      const res = await verifier.verifyAdxUcan(token, serverDid, collectionCap)
       expect(res).toBe(null)
     } catch (err) {
       expect(err).toBeTruthy()
@@ -46,7 +46,7 @@ describe('tokens for post', () => {
   it('throws an error for the wrong record name', async () => {
     const recordCap = writeCap(rootDid, collection, '3iwc-gvs-ehpk-2z')
     try {
-      const res = await auth.verifyAdxUcan(token, serverDid, recordCap)
+      const res = await verifier.verifyAdxUcan(token, serverDid, recordCap)
       expect(res).toBe(null)
     } catch (err) {
       expect(err).toBeTruthy()
