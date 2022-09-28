@@ -1,30 +1,34 @@
-import dotenv from 'dotenv'
+// catch errors that get thrown in async route handlers
+// this is a relatively non-invasive change to express
+// they get handled in the error.handler middleware
+// leave at top of file before importing Routes
+import 'express-async-errors'
+
+import express from 'express'
+import cors from 'cors'
+import http from 'http'
 import { Database } from './db'
-import { server } from './server'
+import * as error from './error'
+import router from './routes'
+import { Locals } from './locals'
 
-const run = async () => {
-  const env = process.env.ENV
-  if (env) {
-    dotenv.config({ path: `./.${env}.env` })
-  } else {
-    dotenv.config()
-  }
+export * from './db'
 
-  let db: Database
-  const dbLoc = process.env.DATABASE_LOC
-  if (dbLoc) {
-    db = await Database.sqlite(dbLoc)
-  } else {
-    db = await Database.memory()
-  }
+export const server = (db: Database, port: number): http.Server => {
+  const app = express()
+  app.use(express.json())
+  app.use(cors())
 
-  const envPort = parseInt(process.env.PORT || '')
-  const port = isNaN(envPort) ? 2582 : envPort
-
-  const s = server(db, port)
-  s.on('listening', () => {
-    console.log(`🌞 PLC server is running at http://localhost:${port}`)
+  app.use((_req, res, next) => {
+    const locals: Locals = { db }
+    Object.assign(res.locals, locals)
+    next()
   })
+
+  app.use('/', router)
+  app.use(error.handler)
+
+  return app.listen(port)
 }
 
-run()
+export default server

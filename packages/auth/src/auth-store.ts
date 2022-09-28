@@ -8,19 +8,14 @@ import { vaguerCap, writeCap } from './capabilities'
 
 export class AuthStore implements Signer {
   protected keypair: DidableKey
-  protected ucanStore: ucan.StoreI
+  protected ucanStore: ucan.StoreI | null = null
+  protected tokens: string[]
+  protected controlledDid: string | null
 
-  constructor(keypair: DidableKey, ucanStore: ucan.StoreI) {
+  constructor(keypair: DidableKey, tokens: string[], controlledDid?: string) {
     this.keypair = keypair
-    this.ucanStore = ucanStore
-  }
-
-  static async fromTokens(
-    keypair: DidableKey,
-    tokens: string[],
-  ): Promise<AuthStore> {
-    const ucanStore = await ucan.Store.fromTokens(adxSemantics, tokens)
-    return new AuthStore(keypair, ucanStore)
+    this.tokens = tokens
+    this.controlledDid = controlledDid || null
   }
 
   // Update these for sub classes
@@ -31,10 +26,14 @@ export class AuthStore implements Signer {
   }
 
   async addUcan(token: ucan.Ucan): Promise<void> {
-    await this.ucanStore.add(token)
+    const ucanStore = await this.getUcanStore()
+    await ucanStore.add(token)
   }
 
   async getUcanStore(): Promise<ucan.StoreI> {
+    if (!this.ucanStore) {
+      this.ucanStore = await ucan.Store.fromTokens(adxSemantics, this.tokens)
+    }
     return this.ucanStore
   }
 
@@ -48,19 +47,21 @@ export class AuthStore implements Signer {
 
   // ----------------
 
-  async did(): Promise<string> {
+  async keypairDid(): Promise<string> {
     const keypair = await this.getKeypair()
     return keypair.did()
   }
 
+  async did(): Promise<string> {
+    if (this.controlledDid) {
+      return this.controlledDid
+    }
+    return this.keypairDid()
+  }
+
   async canSignForDid(did: string): Promise<boolean> {
-    // for dev purposes
-    if (did.startsWith('did:test:')) {
-      return true
-    }
-    if (did === (await this.did())) {
-      return true
-    }
+    if (did === this.controlledDid) return true
+    if (did === (await this.keypairDid())) return true
     return false
   }
 

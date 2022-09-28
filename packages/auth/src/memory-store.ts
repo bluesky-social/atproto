@@ -1,19 +1,17 @@
 import * as crypto from '@adxp/crypto'
-import * as ucan from './ucans/index'
 import AuthStore from './auth-store'
-import { adxSemantics } from './semantics'
 
 export class MemoryStore extends AuthStore {
   static async load(): Promise<MemoryStore> {
     const keypair = await crypto.EcdsaKeypair.create({ exportable: true })
-    const ucanStore = await ucan.Store.fromTokens(adxSemantics, [])
-    return new MemoryStore(keypair, ucanStore)
+    return new MemoryStore(keypair, [])
   }
 
   async reset(): Promise<void> {
     this.clear()
     this.keypair = await crypto.EcdsaKeypair.create({ exportable: true })
-    this.ucanStore = await ucan.Store.fromTokens(adxSemantics, [])
+    this.tokens = []
+    this.ucanStore = null
   }
 }
 

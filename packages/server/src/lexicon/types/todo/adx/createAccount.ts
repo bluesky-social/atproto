@@ -11,8 +11,9 @@ export interface HandlerInput {
 }
 
 export interface InputSchema {
+  email: string;
   username: string;
-  did: string;
+  inviteCode?: string;
   password: string;
 }
 
@@ -31,6 +32,8 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
   jwt: string;
+  username: string;
+  did: string;
 }
 
 export type Handler = (

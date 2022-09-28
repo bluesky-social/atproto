@@ -3,7 +3,7 @@ import * as GetLikedBy from '../../../lexicon/types/todo/social/getLikedBy'
 import { AdxRecord } from '../../../db/record'
 import { LikeIndex } from '../../../db/records/like'
 import { ProfileIndex } from '../../../db/records/profile'
-import { UserDid } from '../../../db/user-dids'
+import { User } from '../../../db/user'
 import { getLocals } from '../../../util'
 
 export default function (server: Server) {
@@ -23,7 +23,7 @@ export default function (server: Server) {
         ])
         .from(LikeIndex, 'like')
         .leftJoin(AdxRecord, 'record', 'like.uri = record.uri')
-        .leftJoin(UserDid, 'user', 'like.creator = user.did')
+        .leftJoin(User, 'user', 'like.creator = user.did')
         .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
         .where('like.subject = :uri', { uri })
         .orderBy('like.createdAt')

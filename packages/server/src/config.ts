@@ -1,5 +1,3 @@
-import { DidTestRegistry } from './lib/did/did-test'
-
 export interface ServerConfigValues {
   debugMode?: boolean
 
@@ -9,10 +7,13 @@ export interface ServerConfigValues {
 
   jwtSecret: string
 
+  didPlcUrl: string
+  serverDid: string
+
   blockstoreLocation?: string
   databaseLocation?: string
 
-  didTestRegistry?: DidTestRegistry
+  testNameRegistry?: Record<string, string>
 }
 
 export class ServerConfig {
@@ -33,10 +34,13 @@ export class ServerConfig {
 
     const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
 
+    const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
+    const serverDid = process.env.SERVER_DID || ''
+
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
 
-    const didTestRegistry = debugMode ? new DidTestRegistry() : undefined
+    const testNameRegistry = debugMode ? {} : undefined
 
     return new ServerConfig({
       debugMode,
@@ -44,9 +48,11 @@ export class ServerConfig {
       hostname,
       port,
       jwtSecret,
+      serverDid,
+      didPlcUrl,
       blockstoreLocation,
       databaseLocation,
-      didTestRegistry,
+      testNameRegistry,
     })
   }
 
@@ -76,6 +82,14 @@ export class ServerConfig {
     return this.cfg.jwtSecret
   }
 
+  get didPlcUrl() {
+    return this.cfg.didPlcUrl
+  }
+
+  get serverDid() {
+    return this.cfg.serverDid
+  }
+
   get blockstoreLocation() {
     return this.cfg.blockstoreLocation
   }
@@ -92,7 +106,7 @@ export class ServerConfig {
     return !this.databaseLocation
   }
 
-  get didTestRegistry() {
-    return this.cfg.didTestRegistry
+  get testNameRegistry() {
+    return this.cfg.testNameRegistry
   }
 }

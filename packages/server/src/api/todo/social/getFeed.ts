@@ -4,7 +4,7 @@ import * as GetFeed from '../../../lexicon/types/todo/social/getFeed'
 import { FollowIndex } from '../../../db/records/follow'
 import { PostIndex } from '../../../db/records/post'
 import { ProfileIndex } from '../../../db/records/profile'
-import { UserDid } from '../../../db/user-dids'
+import { User } from '../../../db/user'
 import * as util from '../../../db/util'
 import { LikeIndex } from '../../../db/records/like'
 import { RepostIndex } from '../../../db/records/repost'
@@ -26,7 +26,7 @@ export default function (server: Server) {
 
       if (author === undefined) {
         builder
-          .from(UserDid, 'user')
+          .from(User, 'user')
           .innerJoin(FollowIndex, 'follow', 'follow.creator = user.did')
           .leftJoin(RepostIndex, 'repost', 'repost.creator = follow.subject')
           .innerJoin(
@@ -34,7 +34,7 @@ export default function (server: Server) {
             'post',
             'post.creator = follow.subject OR post.uri = repost.subject',
           )
-          .leftJoin(UserDid, 'author', 'author.did = post.creator')
+          .leftJoin(User, 'author', 'author.did = post.creator')
           .where('user.did = :did', { did: requester })
       } else {
         const authorWhere = author.startsWith('did:')
@@ -44,7 +44,7 @@ export default function (server: Server) {
           .from(PostIndex, 'post')
           .leftJoin(RepostIndex, 'repost', 'repost.subject = post.uri')
           .leftJoin(
-            UserDid,
+            User,
             'author',
             'author.did = post.creator OR author.did = repost.creator',
           )
@@ -73,7 +73,7 @@ export default function (server: Server) {
           'author_profile',
           'author_profile.creator = author.did',
         )
-        .leftJoin(UserDid, 'reposted_by', 'reposted_by.did = repost.creator')
+        .leftJoin(User, 'reposted_by', 'reposted_by.did = repost.creator')
         .leftJoin(
           ProfileIndex,
           'reposted_by_profile',

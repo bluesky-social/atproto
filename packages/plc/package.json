@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
-    "start": "node dist/server/index.js",
+    "start": "node dist/bin.js",
     "test": "jest",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",

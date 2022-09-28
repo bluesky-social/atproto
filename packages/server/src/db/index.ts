@@ -20,7 +20,7 @@ import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
 import { AdxRecord } from './record'
-import { UserDid } from './user-dids'
+import { User } from './user'
 import * as util from './util'
 
 export class Database {
@@ -61,7 +61,7 @@ export class Database {
         ProfileIndex,
         ProfileBadgeIndex,
         RepostIndex,
-        UserDid,
+        User,
       ],
       synchronize: true,
     })
@@ -96,19 +96,25 @@ export class Database {
   }
 
   async getUser(
-    user: string,
+    usernameOrDid: string,
   ): Promise<{ username: string; did: string } | null> {
-    const table = this.db.getRepository(UserDid)
-    const found = user.startsWith('did:')
-      ? await table.findOneBy({ did: user })
-      : await table.findOneBy({ username: user })
+    const table = this.db.getRepository(User)
+    const found = usernameOrDid.startsWith('did:')
+      ? await table.findOneBy({ did: usernameOrDid })
+      : await table.findOneBy({ username: usernameOrDid })
 
     return found ? { username: found.username, did: found.did } : null
   }
 
-  async registerUser(username: string, did: string, password: string) {
-    const table = this.db.getRepository(UserDid)
-    const user = new UserDid()
+  async registerUser(
+    email: string,
+    username: string,
+    did: string,
+    password: string,
+  ) {
+    const table = this.db.getRepository(User)
+    const user = new User()
+    user.email = email
     user.username = username
     user.did = did
     user.password = await util.scryptHash(password)
@@ -119,7 +125,7 @@ export class Database {
     username: string,
     password: string,
   ): Promise<string | null> {
-    const found = await this.db.getRepository(UserDid).findOneBy({ username })
+    const found = await this.db.getRepository(User).findOneBy({ username })
     if (!found) return null
     const validPass = await util.scryptVerify(password, found.password)
     if (!validPass) return null

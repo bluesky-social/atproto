@@ -21,7 +21,7 @@ export default function (server: Server) {
     let name: string
     let did: string
     // let didDoc: didSdk.DIDDocument
-    let nameIsCorrect: boolean | undefined
+    // let nameIsCorrect: boolean | undefined
 
     // @TODO add back once we have a did network
     // if (nameOrDid.startsWith('did:')) {
@@ -48,7 +48,7 @@ export default function (server: Server) {
       throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
     }
     const didDoc = {} as any
-    nameIsCorrect = true
+    const nameIsCorrect = true
 
     const collections = await db.listCollectionsForDid(user.did)
 
@@ -86,7 +86,9 @@ export default function (server: Server) {
 
     return {
       encoding: 'application/json',
-      body: { records: records as { uri: string; value: {} }[] },
+      body: {
+        records: records as { uri: string; value: Record<string, unknown> }[],
+      },
     }
   })
 
@@ -128,7 +130,7 @@ export default function (server: Server) {
         }
       }
     }
-    const authStore = await util.getAuthstore(res)
+    const authStore = await util.getAuthstore(res, did)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(
@@ -168,7 +170,7 @@ export default function (server: Server) {
         )
       }
     }
-    const authStore = await util.getAuthstore(res)
+    const authStore = await util.getAuthstore(res, did)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(
@@ -207,7 +209,7 @@ export default function (server: Server) {
         )
       }
     }
-    const authStore = await util.getAuthstore(res)
+    const authStore = await util.getAuthstore(res, did)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(
@@ -237,7 +239,7 @@ export default function (server: Server) {
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
-    const authStore = await util.getAuthstore(res)
+    const authStore = await util.getAuthstore(res, did)
     const repo = await util.maybeLoadRepo(res, did, authStore)
     if (!repo) {
       throw new InvalidRequestError(

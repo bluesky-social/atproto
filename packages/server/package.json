@@ -21,6 +21,7 @@
     "@adxp/common": "*",
     "@adxp/crypto": "*",
     "@adxp/lexicon": "*",
+    "@adxp/plc": "*",
     "@adxp/repo": "*",
     "@adxp/uri": "*",
     "cors": "^2.8.5",

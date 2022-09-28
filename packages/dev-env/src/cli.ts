@@ -68,6 +68,7 @@ const envApi = {
     if (users.has(username)) {
       throw new Error(`${username} already exists`)
     }
+    const usernameNoTld = username.slice(0, username.length - '.test'.length)
 
     const servers = devEnv.listOfType(ServerType.PersonalDataServer)
     let pds: DevEnvServer
@@ -90,8 +91,9 @@ const envApi = {
     const pdsRes = await client.todo.adx.createAccount(
       {},
       {
+        email: usernameNoTld + '@test.com',
         username,
-        did: `did:test:${username.slice(0, -5)}`,
+        password: usernameNoTld + '-pass',
       },
     )
     users.set(username, pds)
@@ -125,7 +127,7 @@ async function start() {
   console.log('Type .help if you get lost')
 
   // create repl
-  let inst = repl.start() //'adx $ ')
+  const inst = repl.start() //'adx $ ')
   Object.assign(inst.context, envApi)
   inst.setupHistory(join(os.homedir(), '.adx-dev-env-history'), () => {})
   inst.on('exit', async () => {

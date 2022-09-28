@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm'
 import { ProfileIndex } from '../../../db/records/profile'
-import { UserDid } from '../../../db/user-dids'
+import { User } from '../../../db/user'
 import * as util from '../../../db/util'
 
 type UserInfo = {
@@ -20,7 +20,7 @@ export const getUserInfo = async (
       'user.username AS name',
       'profile.displayName AS displayName',
     ])
-    .from(UserDid, 'user')
+    .from(User, 'user')
     .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
     .where(util.userWhereClause(user), { user })
     .getRawOne()

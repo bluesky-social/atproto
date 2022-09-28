@@ -7,9 +7,9 @@ let alicePosts: AdxUri[] = []
 let bobPosts: AdxUri[] = []
 let carolPosts: AdxUri[] = []
 let danPosts: AdxUri[] = []
-let bobFollows: Record<string, AdxUri> = {}
-let bobLikes: Record<string, AdxUri> = {}
-let badges: AdxUri[] = []
+const bobFollows: Record<string, AdxUri> = {}
+const bobLikes: Record<string, AdxUri> = {}
+const badges: AdxUri[] = []
 let authTokens: Record<string, string> = {}
 
 const getHeaders = (did: string) => {
@@ -35,34 +35,38 @@ describe('pds views', () => {
       {},
       {
         username: users.alice.name,
-        did: users.alice.did,
+        email: users.alice.email,
         password: users.alice.password,
       },
     )
+    users.alice.did = res1.data.did
     const res2 = await client.todo.adx.createAccount(
       {},
       {
         username: users.bob.name,
-        did: users.bob.did,
+        email: users.bob.email,
         password: users.bob.password,
       },
     )
+    users.bob.did = res2.data.did
     const res3 = await client.todo.adx.createAccount(
       {},
       {
         username: users.carol.name,
-        did: users.carol.did,
+        email: users.carol.email,
         password: users.carol.password,
       },
     )
+    users.carol.did = res3.data.did
     const res4 = await client.todo.adx.createAccount(
       {},
       {
         username: users.dan.name,
-        did: users.dan.did,
+        email: users.dan.email,
         password: users.dan.password,
       },
     )
+    users.dan.did = res4.data.did
     authTokens = {
       [users.alice.did]: res1.data.jwt,
       [users.bob.did]: res2.data.jwt,

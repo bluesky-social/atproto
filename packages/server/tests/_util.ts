@@ -1,8 +1,9 @@
 import { MemoryBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
+import * as plc from '@adxp/plc'
 import getPort from 'get-port'
 
-import server, { DidTestRegistry, ServerConfig, Database } from '../src/index'
+import server, { ServerConfig, Database } from '../src/index'
 
 const USE_TEST_SERVER = true
 
@@ -18,10 +19,26 @@ export const runTestServer = async (): Promise<{
       close: async () => {},
     }
   }
-  const port = await getPort()
+  const pdsPort = await getPort()
+  const keypair = await crypto.EcdsaKeypair.create()
+
+  // run plc server
+  const plcPort = await getPort()
+  const plcUrl = `http://localhost:${plcPort}`
+  const plcDb = await plc.Database.memory()
+  const plcServer = plc.server(plcDb, plcPort)
+
+  // setup server did
+  const plcClient = new plc.PlcClient(plcUrl)
+  const serverDid = await plcClient.createDid(
+    keypair,
+    keypair.did(),
+    'pds.test',
+    `http://localhost:${pdsPort}`,
+  )
+
   const db = await Database.memory()
   const serverBlockstore = new MemoryBlockstore()
-  const keypair = await crypto.EcdsaKeypair.create()
   const s = server(
     serverBlockstore,
     db,
@@ -30,16 +47,23 @@ export const runTestServer = async (): Promise<{
       debugMode: true,
       scheme: 'http',
       hostname: 'localhost',
-      port,
+      port: pdsPort,
+      serverDid,
+      didPlcUrl: plcUrl,
       jwtSecret: 'jwt-secret',
-      didTestRegistry: new DidTestRegistry(),
+      testNameRegistry: {},
     }),
   )
+
   return {
-    url: `http://localhost:${port}`,
+    url: `http://localhost:${pdsPort}`,
     close: async () => {
-      await db.close()
-      s.close()
+      await Promise.all([
+        db.close(),
+        s.close(),
+        plcServer?.close(),
+        plcDb?.close(),
+      ])
     },
   }
 }

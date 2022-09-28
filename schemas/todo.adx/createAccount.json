@@ -8,10 +8,11 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["username", "did", "password"],
+      "required": ["username", "email", "password"],
       "properties": {
+        "email": {"type": "string"},
         "username": {"type": "string"},
-        "did": {"type": "string"},
+        "inviteCode": {"type": "string"},
         "password": {"type": "string"}
       }
     }
@@ -20,9 +21,11 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["jwt"],
+      "required": ["jwt", "username", "did"],
       "properties": {
-        "jwt": { "type": "string" }
+        "jwt": { "type": "string" },
+        "username": { "type": "string" },
+        "did": { "type": "string" }
       }
     }
   },

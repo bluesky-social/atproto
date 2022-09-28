@@ -1,16 +1,14 @@
 import * as crypto from '@adxp/crypto'
 import * as ucan from './ucans'
 import AuthStore from './auth-store'
-import { adxSemantics } from './semantics'
 
 export class BrowserStore extends AuthStore {
   static async load(): Promise<BrowserStore> {
     const keypair = await BrowserStore.loadOrCreateKeypair()
 
     const storedUcans = BrowserStore.getStoredUcanStrs()
-    const ucanStore = await ucan.Store.fromTokens(adxSemantics, storedUcans)
 
-    return new BrowserStore(keypair, ucanStore)
+    return new BrowserStore(keypair, storedUcans)
   }
 
   static async loadOrCreateKeypair(): Promise<crypto.EcdsaKeypair> {
@@ -35,8 +33,7 @@ export class BrowserStore extends AuthStore {
     })
     localStorage.setItem('adxKey', JSON.stringify(jwk))
     const storedUcans = BrowserStore.getStoredUcanStrs()
-    const ucanStore = await ucan.Store.fromTokens(adxSemantics, storedUcans)
-    const authStore = new BrowserStore(keypair, ucanStore)
+    const authStore = new BrowserStore(keypair, storedUcans)
     if (storedUcans.length === 0) {
       // since this is the root device, we claim full authority
       await authStore.claimFull()
@@ -57,11 +54,8 @@ export class BrowserStore extends AuthStore {
   async addUcan(token: ucan.Ucan): Promise<void> {
     const storedUcans = BrowserStore.getStoredUcanStrs()
     BrowserStore.setStoredUcanStrs([...storedUcans, ucan.encode(token)])
-    await this.ucanStore.add(token)
-  }
-
-  async getUcanStore(): Promise<ucan.StoreI> {
-    return this.ucanStore
+    const store = await this.getUcanStore()
+    await store.add(token)
   }
 
   async clear(): Promise<void> {
@@ -71,7 +65,8 @@ export class BrowserStore extends AuthStore {
   async reset(): Promise<void> {
     this.clear()
     this.keypair = await BrowserStore.loadOrCreateKeypair()
-    this.ucanStore = await ucan.Store.fromTokens(adxSemantics, [])
+    this.tokens = []
+    this.ucanStore = null
   }
 }
 

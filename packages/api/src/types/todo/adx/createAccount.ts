@@ -11,13 +11,16 @@ export interface CallOptions {
 }
 
 export interface InputSchema {
+  email: string;
   username: string;
-  did: string;
+  inviteCode?: string;
   password: string;
 }
 
 export interface OutputSchema {
   jwt: string;
+  username: string;
+  did: string;
 }
 
 export interface Response {
