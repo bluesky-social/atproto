@@ -21,6 +21,7 @@ interface XrpcLexiconDoc extends LexiconDoc {
   parameters?: Record<string, XrpcParameter>
   input?: XrpcBody
   output?: XrpcBody
+  errors?: XrpcError[]
 }
 
 interface XrpcParameter {
@@ -37,6 +38,11 @@ interface XrpcParameter {
 interface XrpcBody {
   encoding: string|string[]
   schema: JSONSchema
+}
+
+interface XrpcError {
+  name: string
+  description?: string
 }
 ```
 
@@ -75,7 +81,14 @@ interface XrpcBody {
         "did": {"type": "string"}
       }
     }
-  }
+  },
+  "errors": [
+    {"name": "InvalidEmail"},
+    {"name": "InvalidUsername"},
+    {"name": "InvalidPassword"},
+    {"name": "InvalidInviteCode"},
+    {"name": "UsernameTaken"},
+  ]
 }
 ```
 
