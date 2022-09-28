@@ -2,10 +2,8 @@ import http from 'http'
 import chalk from 'chalk'
 import crytpo from 'crypto'
 import { MemoryBlockstore } from '@adxp/repo'
-import PDSServer, {
-  DidTestRegistry,
-  Database as PDSDatabase,
-} from '@adxp/server'
+import PDSServer, { Database as PDSDatabase } from '@adxp/server'
+import * as plc from '@adxp/plc'
 import * as crypto from '@adxp/crypto'
 import AdxApi, { ServiceClient } from '@adxp/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
@@ -22,6 +20,7 @@ export class DevEnvServer {
   get name() {
     return {
       [ServerType.PersonalDataServer]: '🌞 Personal Data server',
+      [ServerType.DidPlaceholder]: '👤 DID Placeholder server',
     }[this.type]
   }
 
@@ -53,19 +52,39 @@ export class DevEnvServer {
 
     switch (this.type) {
       case ServerType.PersonalDataServer: {
+        if (!this.env.plcUrl) {
+          throw new Error('Must be running a PLC server to start a PDS')
+        }
+
         const db = await PDSDatabase.memory()
         const serverBlockstore = new MemoryBlockstore()
         const keypair = await crypto.EcdsaKeypair.create()
+
+        const plcClient = new plc.PlcClient(this.env.plcUrl)
+        const serverDid = await plcClient.createDid(
+          keypair,
+          keypair.did(),
+          'pds.test',
+          `http://localhost:${this.port}`,
+        )
+
         this.inst = await onServerReady(
           PDSServer(serverBlockstore, db, keypair, {
             debugMode: true,
             scheme: 'http',
             hostname: 'localhost',
             port: this.port,
-            didTestRegistry: this.env.didTestRegistry,
+            didPlcUrl: this.env.plcUrl,
+            serverDid: serverDid,
+            testNameRegistry: this.env.testNameRegistry,
             jwtSecret: crytpo.randomBytes(8).toString('base64'),
           }),
         )
+        break
+      }
+      case ServerType.DidPlaceholder: {
+        const db = await plc.Database.memory()
+        this.inst = await onServerReady(plc.server(db, this.port))
         break
       }
       default:
@@ -92,8 +111,9 @@ export class DevEnvServer {
 }
 
 export class DevEnv {
+  plcUrl: string | undefined
   servers: Map<number, DevEnvServer> = new Map()
-  didTestRegistry = new DidTestRegistry()
+  testNameRegistry: Record<string, string> = {}
 
   static async create(params: StartParams): Promise<DevEnv> {
     const devEnv = new DevEnv()
@@ -106,10 +126,15 @@ export class DevEnv {
   async add(cfg: ServerConfig) {
     if (this.servers.has(cfg.port)) {
       throw new Error(`Port ${cfg.port} is in use`)
+    } else if (cfg.type === ServerType.DidPlaceholder && this.plcUrl) {
+      throw new Error('There should only be one plc server')
     }
     const server = new DevEnvServer(this, cfg.type, cfg.port)
     await server.start()
     this.servers.set(cfg.port, server)
+    if (cfg.type === ServerType.DidPlaceholder) {
+      this.plcUrl = `http://localhost:${cfg.port}`
+    }
   }
 
   async remove(server: number | DevEnvServer) {

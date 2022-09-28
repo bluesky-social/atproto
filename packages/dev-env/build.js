@@ -8,6 +8,7 @@ require('esbuild')
     external: [
       './node_modules/sqlite3/*',
       '../server/node_modules/@mapbox/node-pre-gyp/*',
+      '../plc/node_modules/@mapbox/node-pre-gyp/*',
       '../server/node_modules/sqlite3/*',
       '../../node_modules/classic-level/*',
     ],
