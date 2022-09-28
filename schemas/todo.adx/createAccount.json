@@ -25,5 +25,10 @@
         "jwt": { "type": "string" }
       }
     }
-  }
+  },
+  "errors": [
+    {"name": "InvalidUsername"},
+    {"name": "InvalidPassword"},
+    {"name": "UsernameNotAvailable"}
+  ]
 }

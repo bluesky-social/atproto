@@ -1,7 +1,7 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-import { Headers } from '@adxp/xrpc'
+import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {}
 
@@ -22,7 +22,34 @@ export interface OutputSchema {
 
 export interface Response {
   success: boolean;
-  error: boolean;
   headers: Headers;
   data: OutputSchema;
+}
+
+export class InvalidUsernameError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class InvalidPasswordError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class UsernameNotAvailableError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'InvalidUsername') return new InvalidUsernameError(e)
+    if (e.error === 'InvalidPassword') return new InvalidPasswordError(e)
+    if (e.error === 'UsernameNotAvailable')
+      return new UsernameNotAvailableError(e)
+  }
+  return e
 }

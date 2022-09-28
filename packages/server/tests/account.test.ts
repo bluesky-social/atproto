@@ -1,4 +1,7 @@
-import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
+import AdxApi, {
+  ServiceClient as AdxServiceClient,
+  TodoAdxCreateAccount,
+} from '@adxp/api'
 import * as util from './_util'
 
 const username = 'alice.test'
@@ -31,6 +34,24 @@ describe('auth', () => {
       { username, did, password },
     )
     expect(typeof res.data.jwt).toBe('string')
+  })
+
+  it('fails on invalid usernames', async () => {
+    try {
+      await client.todo.adx.createAccount(
+        {},
+        {
+          username: 'did:bad-username.test',
+          did: 'bad.test',
+          password: 'asdf',
+        },
+      )
+      throw new Error('Didnt throw')
+    } catch (e: any) {
+      expect(
+        e instanceof TodoAdxCreateAccount.InvalidUsernameError,
+      ).toBeTruthy()
+    }
   })
 
   it('fails on authenticated requests', async () => {

@@ -1,4 +1,5 @@
 import { Server } from '../../../lexicon'
+import * as CreateAccount from '../../../lexicon/types/todo/adx/createAccount'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as util from '../../../util'
 import { Repo } from '@adxp/repo'
@@ -33,14 +34,17 @@ export default function (server: Server) {
     const cfg = util.getConfig(res)
 
     if (username.startsWith('did:')) {
-      throw new InvalidRequestError(
-        'Cannot register a username that starts with `did:`',
-      )
+      return {
+        status: 400,
+        error: 'InvalidUsername',
+        message: 'Cannot register a username that starts with `did:`',
+      }
     }
     if (!did.startsWith('did:')) {
-      throw new InvalidRequestError(
-        'Cannot register a did that does not start with `did:`',
-      )
+      return {
+        status: 400,
+        message: 'Cannot register a did that does not start with `did:`',
+      }
     }
 
     let isTestUser = false
