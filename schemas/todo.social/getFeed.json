@@ -24,6 +24,7 @@
           "type": "object",
           "required": ["uri", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt"],
           "properties": {
+            "cursor": {"type": "string"},
             "uri": {"type": "string"},
             "author": {"$ref": "#/$defs/user"},
             "repostedBy": {"$ref": "#/$defs/user"},
