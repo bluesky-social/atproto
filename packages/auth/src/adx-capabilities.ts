@@ -1,5 +1,5 @@
-import { adxCapability, parseAdxResource } from './semantics'
-import * as ucan from './ucans/index'
+import { adxCapability, parseAdxResource } from './adx-semantics'
+import * as ucan from '@ucans/core'
 
 export const writeCap = (
   did: string,

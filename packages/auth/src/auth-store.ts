@@ -1,10 +1,10 @@
 import * as ucan from './ucans'
 import { DidableKey } from './ucans'
 
-import { adxSemantics, parseAdxResource } from './semantics'
+import { adxSemantics, parseAdxResource } from './adx-semantics'
 import { MONTH_IN_SEC, YEAR_IN_SEC } from './consts'
 import { CapWithProof, Signer } from './types'
-import { vaguerCap, writeCap } from './capabilities'
+import { vaguerCap, writeCap } from './adx-capabilities'
 
 export class AuthStore implements Signer {
   protected keypair: DidableKey
