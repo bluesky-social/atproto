@@ -101,9 +101,10 @@ export const getLocals = (res: Response): Locals => {
   }
 }
 
-export const getAuthstore = async (res: Response): Promise<auth.AuthStore> => {
+export const getAuthstore = (res: Response, did: string): auth.AuthStore => {
   const keypair = getKeypair(res)
-  return auth.AuthStore.fromTokens(keypair, [])
+  // @TODO check that we can sign on behalf of this DID
+  return new auth.AuthStore(keypair, [], did)
 }
 
 export const getPlcClient = (res: Response): plc.PlcClient => {

@@ -28,7 +28,7 @@ export const writeCfg = async (
   }
 
   const keypair = await auth.EcdsaKeypair.create({ exportable: true })
-  const authStore = await auth.AuthStore.fromTokens(keypair, [])
+  const authStore = new auth.AuthStore(keypair, [])
   const fullToken = await authStore.claimFull()
 
   const exportedKey = JSON.stringify(await keypair.export())
@@ -68,7 +68,7 @@ export const loadCfg = async (repoPath: string): Promise<Config> => {
   const jwk = JSON.parse(jwkStr)
   const keypair = await auth.EcdsaKeypair.import(jwk)
   const tokenStr = (await readFile(repoPath, 'full.ucan', 'utf-8')) as string
-  const authStore = await auth.AuthStore.fromTokens(keypair, [tokenStr])
+  const authStore = new auth.AuthStore(keypair, [tokenStr])
   const root = await readRoot(repoPath)
   return {
     account,

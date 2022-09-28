@@ -66,7 +66,7 @@ export default function (server: Server) {
 
     await db.registerUser(email, username, did, password)
 
-    const authStore = await AuthStore.fromTokens(keypair, [])
+    const authStore = new AuthStore(keypair, [], did)
     const repo = await Repo.create(blockstore, did, authStore)
     await db.setRepoRoot(did, repo.cid)
 
