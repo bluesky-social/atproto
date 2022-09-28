@@ -40,6 +40,40 @@ import * as TodoSocialPost from './types/todo/social/post'
 import * as TodoSocialProfile from './types/todo/social/profile'
 import * as TodoSocialRepost from './types/todo/social/repost'
 
+export * as TodoAdxCreateAccount from './types/todo/adx/createAccount'
+export * as TodoAdxCreateSession from './types/todo/adx/createSession'
+export * as TodoAdxDeleteAccount from './types/todo/adx/deleteAccount'
+export * as TodoAdxDeleteSession from './types/todo/adx/deleteSession'
+export * as TodoAdxGetAccount from './types/todo/adx/getAccount'
+export * as TodoAdxGetAccountsConfig from './types/todo/adx/getAccountsConfig'
+export * as TodoAdxGetSession from './types/todo/adx/getSession'
+export * as TodoAdxRepoBatchWrite from './types/todo/adx/repoBatchWrite'
+export * as TodoAdxRepoCreateRecord from './types/todo/adx/repoCreateRecord'
+export * as TodoAdxRepoDeleteRecord from './types/todo/adx/repoDeleteRecord'
+export * as TodoAdxRepoDescribe from './types/todo/adx/repoDescribe'
+export * as TodoAdxRepoGetRecord from './types/todo/adx/repoGetRecord'
+export * as TodoAdxRepoListRecords from './types/todo/adx/repoListRecords'
+export * as TodoAdxRepoPutRecord from './types/todo/adx/repoPutRecord'
+export * as TodoAdxResolveName from './types/todo/adx/resolveName'
+export * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
+export * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
+export * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
+export * as TodoSocialBadge from './types/todo/social/badge'
+export * as TodoSocialFollow from './types/todo/social/follow'
+export * as TodoSocialGetFeed from './types/todo/social/getFeed'
+export * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
+export * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
+export * as TodoSocialGetPostThread from './types/todo/social/getPostThread'
+export * as TodoSocialGetProfile from './types/todo/social/getProfile'
+export * as TodoSocialGetRepostedBy from './types/todo/social/getRepostedBy'
+export * as TodoSocialGetUserFollowers from './types/todo/social/getUserFollowers'
+export * as TodoSocialGetUserFollows from './types/todo/social/getUserFollows'
+export * as TodoSocialLike from './types/todo/social/like'
+export * as TodoSocialMediaEmbed from './types/todo/social/mediaEmbed'
+export * as TodoSocialPost from './types/todo/social/post'
+export * as TodoSocialProfile from './types/todo/social/profile'
+export * as TodoSocialRepost from './types/todo/social/repost'
+
 export class Client {
   xrpc: XrpcClient = new XrpcClient()
 
@@ -95,7 +129,11 @@ export class AdxNS {
     data?: TodoAdxCreateAccount.InputSchema,
     opts?: TodoAdxCreateAccount.CallOptions
   ): Promise<TodoAdxCreateAccount.Response> {
-    return this._service.xrpc.call('todo.adx.createAccount', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.createAccount', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxCreateAccount.toKnownErr(e)
+      })
   }
 
   createSession(
@@ -103,7 +141,11 @@ export class AdxNS {
     data?: TodoAdxCreateSession.InputSchema,
     opts?: TodoAdxCreateSession.CallOptions
   ): Promise<TodoAdxCreateSession.Response> {
-    return this._service.xrpc.call('todo.adx.createSession', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.createSession', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxCreateSession.toKnownErr(e)
+      })
   }
 
   deleteAccount(
@@ -111,7 +153,11 @@ export class AdxNS {
     data?: TodoAdxDeleteAccount.InputSchema,
     opts?: TodoAdxDeleteAccount.CallOptions
   ): Promise<TodoAdxDeleteAccount.Response> {
-    return this._service.xrpc.call('todo.adx.deleteAccount', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.deleteAccount', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxDeleteAccount.toKnownErr(e)
+      })
   }
 
   deleteSession(
@@ -119,7 +165,11 @@ export class AdxNS {
     data?: TodoAdxDeleteSession.InputSchema,
     opts?: TodoAdxDeleteSession.CallOptions
   ): Promise<TodoAdxDeleteSession.Response> {
-    return this._service.xrpc.call('todo.adx.deleteSession', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.deleteSession', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxDeleteSession.toKnownErr(e)
+      })
   }
 
   getAccount(
@@ -127,7 +177,11 @@ export class AdxNS {
     data?: TodoAdxGetAccount.InputSchema,
     opts?: TodoAdxGetAccount.CallOptions
   ): Promise<TodoAdxGetAccount.Response> {
-    return this._service.xrpc.call('todo.adx.getAccount', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.getAccount', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxGetAccount.toKnownErr(e)
+      })
   }
 
   getAccountsConfig(
@@ -135,12 +189,11 @@ export class AdxNS {
     data?: TodoAdxGetAccountsConfig.InputSchema,
     opts?: TodoAdxGetAccountsConfig.CallOptions
   ): Promise<TodoAdxGetAccountsConfig.Response> {
-    return this._service.xrpc.call(
-      'todo.adx.getAccountsConfig',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.adx.getAccountsConfig', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxGetAccountsConfig.toKnownErr(e)
+      })
   }
 
   getSession(
@@ -148,7 +201,11 @@ export class AdxNS {
     data?: TodoAdxGetSession.InputSchema,
     opts?: TodoAdxGetSession.CallOptions
   ): Promise<TodoAdxGetSession.Response> {
-    return this._service.xrpc.call('todo.adx.getSession', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.getSession', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxGetSession.toKnownErr(e)
+      })
   }
 
   repoBatchWrite(
@@ -156,12 +213,11 @@ export class AdxNS {
     data?: TodoAdxRepoBatchWrite.InputSchema,
     opts?: TodoAdxRepoBatchWrite.CallOptions
   ): Promise<TodoAdxRepoBatchWrite.Response> {
-    return this._service.xrpc.call(
-      'todo.adx.repoBatchWrite',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.adx.repoBatchWrite', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxRepoBatchWrite.toKnownErr(e)
+      })
   }
 
   repoCreateRecord(
@@ -169,12 +225,11 @@ export class AdxNS {
     data?: TodoAdxRepoCreateRecord.InputSchema,
     opts?: TodoAdxRepoCreateRecord.CallOptions
   ): Promise<TodoAdxRepoCreateRecord.Response> {
-    return this._service.xrpc.call(
-      'todo.adx.repoCreateRecord',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.adx.repoCreateRecord', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxRepoCreateRecord.toKnownErr(e)
+      })
   }
 
   repoDeleteRecord(
@@ -182,12 +237,11 @@ export class AdxNS {
     data?: TodoAdxRepoDeleteRecord.InputSchema,
     opts?: TodoAdxRepoDeleteRecord.CallOptions
   ): Promise<TodoAdxRepoDeleteRecord.Response> {
-    return this._service.xrpc.call(
-      'todo.adx.repoDeleteRecord',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.adx.repoDeleteRecord', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxRepoDeleteRecord.toKnownErr(e)
+      })
   }
 
   repoDescribe(
@@ -195,7 +249,11 @@ export class AdxNS {
     data?: TodoAdxRepoDescribe.InputSchema,
     opts?: TodoAdxRepoDescribe.CallOptions
   ): Promise<TodoAdxRepoDescribe.Response> {
-    return this._service.xrpc.call('todo.adx.repoDescribe', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.repoDescribe', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxRepoDescribe.toKnownErr(e)
+      })
   }
 
   repoGetRecord(
@@ -203,7 +261,11 @@ export class AdxNS {
     data?: TodoAdxRepoGetRecord.InputSchema,
     opts?: TodoAdxRepoGetRecord.CallOptions
   ): Promise<TodoAdxRepoGetRecord.Response> {
-    return this._service.xrpc.call('todo.adx.repoGetRecord', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.repoGetRecord', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxRepoGetRecord.toKnownErr(e)
+      })
   }
 
   repoListRecords(
@@ -211,12 +273,11 @@ export class AdxNS {
     data?: TodoAdxRepoListRecords.InputSchema,
     opts?: TodoAdxRepoListRecords.CallOptions
   ): Promise<TodoAdxRepoListRecords.Response> {
-    return this._service.xrpc.call(
-      'todo.adx.repoListRecords',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.adx.repoListRecords', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxRepoListRecords.toKnownErr(e)
+      })
   }
 
   repoPutRecord(
@@ -224,7 +285,11 @@ export class AdxNS {
     data?: TodoAdxRepoPutRecord.InputSchema,
     opts?: TodoAdxRepoPutRecord.CallOptions
   ): Promise<TodoAdxRepoPutRecord.Response> {
-    return this._service.xrpc.call('todo.adx.repoPutRecord', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.repoPutRecord', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxRepoPutRecord.toKnownErr(e)
+      })
   }
 
   resolveName(
@@ -232,7 +297,11 @@ export class AdxNS {
     data?: TodoAdxResolveName.InputSchema,
     opts?: TodoAdxResolveName.CallOptions
   ): Promise<TodoAdxResolveName.Response> {
-    return this._service.xrpc.call('todo.adx.resolveName', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.resolveName', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxResolveName.toKnownErr(e)
+      })
   }
 
   syncGetRepo(
@@ -240,7 +309,11 @@ export class AdxNS {
     data?: TodoAdxSyncGetRepo.InputSchema,
     opts?: TodoAdxSyncGetRepo.CallOptions
   ): Promise<TodoAdxSyncGetRepo.Response> {
-    return this._service.xrpc.call('todo.adx.syncGetRepo', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.syncGetRepo', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxSyncGetRepo.toKnownErr(e)
+      })
   }
 
   syncGetRoot(
@@ -248,7 +321,11 @@ export class AdxNS {
     data?: TodoAdxSyncGetRoot.InputSchema,
     opts?: TodoAdxSyncGetRoot.CallOptions
   ): Promise<TodoAdxSyncGetRoot.Response> {
-    return this._service.xrpc.call('todo.adx.syncGetRoot', params, data, opts)
+    return this._service.xrpc
+      .call('todo.adx.syncGetRoot', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxSyncGetRoot.toKnownErr(e)
+      })
   }
 
   syncUpdateRepo(
@@ -256,12 +333,11 @@ export class AdxNS {
     data?: TodoAdxSyncUpdateRepo.InputSchema,
     opts?: TodoAdxSyncUpdateRepo.CallOptions
   ): Promise<TodoAdxSyncUpdateRepo.Response> {
-    return this._service.xrpc.call(
-      'todo.adx.syncUpdateRepo',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.adx.syncUpdateRepo', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxSyncUpdateRepo.toKnownErr(e)
+      })
   }
 }
 
@@ -291,7 +367,11 @@ export class SocialNS {
     data?: TodoSocialGetFeed.InputSchema,
     opts?: TodoSocialGetFeed.CallOptions
   ): Promise<TodoSocialGetFeed.Response> {
-    return this._service.xrpc.call('todo.social.getFeed', params, data, opts)
+    return this._service.xrpc
+      .call('todo.social.getFeed', params, data, opts)
+      .catch((e) => {
+        throw TodoSocialGetFeed.toKnownErr(e)
+      })
   }
 
   getLikedBy(
@@ -299,7 +379,11 @@ export class SocialNS {
     data?: TodoSocialGetLikedBy.InputSchema,
     opts?: TodoSocialGetLikedBy.CallOptions
   ): Promise<TodoSocialGetLikedBy.Response> {
-    return this._service.xrpc.call('todo.social.getLikedBy', params, data, opts)
+    return this._service.xrpc
+      .call('todo.social.getLikedBy', params, data, opts)
+      .catch((e) => {
+        throw TodoSocialGetLikedBy.toKnownErr(e)
+      })
   }
 
   getNotifications(
@@ -307,12 +391,11 @@ export class SocialNS {
     data?: TodoSocialGetNotifications.InputSchema,
     opts?: TodoSocialGetNotifications.CallOptions
   ): Promise<TodoSocialGetNotifications.Response> {
-    return this._service.xrpc.call(
-      'todo.social.getNotifications',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.social.getNotifications', params, data, opts)
+      .catch((e) => {
+        throw TodoSocialGetNotifications.toKnownErr(e)
+      })
   }
 
   getPostThread(
@@ -320,12 +403,11 @@ export class SocialNS {
     data?: TodoSocialGetPostThread.InputSchema,
     opts?: TodoSocialGetPostThread.CallOptions
   ): Promise<TodoSocialGetPostThread.Response> {
-    return this._service.xrpc.call(
-      'todo.social.getPostThread',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.social.getPostThread', params, data, opts)
+      .catch((e) => {
+        throw TodoSocialGetPostThread.toKnownErr(e)
+      })
   }
 
   getProfile(
@@ -333,7 +415,11 @@ export class SocialNS {
     data?: TodoSocialGetProfile.InputSchema,
     opts?: TodoSocialGetProfile.CallOptions
   ): Promise<TodoSocialGetProfile.Response> {
-    return this._service.xrpc.call('todo.social.getProfile', params, data, opts)
+    return this._service.xrpc
+      .call('todo.social.getProfile', params, data, opts)
+      .catch((e) => {
+        throw TodoSocialGetProfile.toKnownErr(e)
+      })
   }
 
   getRepostedBy(
@@ -341,12 +427,11 @@ export class SocialNS {
     data?: TodoSocialGetRepostedBy.InputSchema,
     opts?: TodoSocialGetRepostedBy.CallOptions
   ): Promise<TodoSocialGetRepostedBy.Response> {
-    return this._service.xrpc.call(
-      'todo.social.getRepostedBy',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.social.getRepostedBy', params, data, opts)
+      .catch((e) => {
+        throw TodoSocialGetRepostedBy.toKnownErr(e)
+      })
   }
 
   getUserFollowers(
@@ -354,12 +439,11 @@ export class SocialNS {
     data?: TodoSocialGetUserFollowers.InputSchema,
     opts?: TodoSocialGetUserFollowers.CallOptions
   ): Promise<TodoSocialGetUserFollowers.Response> {
-    return this._service.xrpc.call(
-      'todo.social.getUserFollowers',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.social.getUserFollowers', params, data, opts)
+      .catch((e) => {
+        throw TodoSocialGetUserFollowers.toKnownErr(e)
+      })
   }
 
   getUserFollows(
@@ -367,12 +451,11 @@ export class SocialNS {
     data?: TodoSocialGetUserFollows.InputSchema,
     opts?: TodoSocialGetUserFollows.CallOptions
   ): Promise<TodoSocialGetUserFollows.Response> {
-    return this._service.xrpc.call(
-      'todo.social.getUserFollows',
-      params,
-      data,
-      opts
-    )
+    return this._service.xrpc
+      .call('todo.social.getUserFollows', params, data, opts)
+      .catch((e) => {
+        throw TodoSocialGetUserFollows.toKnownErr(e)
+      })
   }
 }
 

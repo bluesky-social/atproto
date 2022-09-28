@@ -10,11 +10,17 @@ export interface QueryParams {
 
 export type HandlerInput = undefined
 
-export interface HandlerOutput {
+export interface HandlerSuccess {
   encoding: 'application/cbor';
   body: Uint8Array;
 }
 
+export interface HandlerError {
+  status: number;
+  message?: string;
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

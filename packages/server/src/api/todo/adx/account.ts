@@ -2,7 +2,6 @@ import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as util from '../../../util'
 import { Repo } from '@adxp/repo'
-import { AuthStore } from '@adxp/auth'
 import { PlcClient } from '@adxp/plc'
 
 export default function (server: Server) {
@@ -34,9 +33,11 @@ export default function (server: Server) {
     const { db, blockstore, auth, config, keypair } = util.getLocals(res)
 
     if (username.startsWith('did:')) {
-      throw new InvalidRequestError(
-        'Cannot register a username that starts with `did:`',
-      )
+      return {
+        status: 400,
+        error: 'InvalidUsername',
+        message: 'Cannot register a username that starts with `did:`',
+      }
     }
 
     let isTestUser = false

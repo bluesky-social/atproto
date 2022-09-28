@@ -34,10 +34,17 @@ export interface InputSchema {
   )[];
 }
 
-export interface HandlerOutput {
+export interface HandlerSuccess {
   encoding: 'application/json';
   body: OutputSchema;
 }
+
+export interface HandlerError {
+  status: number;
+  message?: string;
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
   [k: string]: unknown;

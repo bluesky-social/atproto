@@ -1,7 +1,7 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-import { Headers } from '@adxp/xrpc'
+import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
   did: string;
@@ -16,6 +16,11 @@ export type InputSchema = string | Uint8Array
 
 export interface Response {
   success: boolean;
-  error: boolean;
   headers: Headers;
+}
+
+export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+  }
+  return e
 }

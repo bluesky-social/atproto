@@ -11,10 +11,17 @@ export interface InputSchema {
   [k: string]: unknown;
 }
 
-export interface HandlerOutput {
+export interface HandlerSuccess {
   encoding: '';
   body: OutputSchema;
 }
+
+export interface HandlerError {
+  status: number;
+  message?: string;
+}
+
+export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
   [k: string]: unknown;

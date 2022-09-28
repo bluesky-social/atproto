@@ -43,6 +43,12 @@ export const methodSchemaParam = z.object({
 })
 export type MethodSchemaParam = z.infer<typeof methodSchemaParam>
 
+export const methodSchemaError = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+})
+export type MethodSchemaError = z.infer<typeof methodSchemaError>
+
 export const methodSchema = z.object({
   lexicon: z.literal(1),
   id: z.string(),
@@ -51,6 +57,7 @@ export const methodSchema = z.object({
   parameters: z.record(methodSchemaParam).optional(),
   input: methodSchemaBody.optional(),
   output: methodSchemaBody.optional(),
+  errors: methodSchemaError.array().optional(),
 })
 export type MethodSchema = z.infer<typeof methodSchema>
 
