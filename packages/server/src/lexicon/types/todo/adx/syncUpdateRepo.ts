@@ -12,7 +12,12 @@ export interface HandlerInput {
   body: Uint8Array;
 }
 
-export type HandlerOutput = void
+export interface HandlerError {
+  status: number;
+  message?: string;
+}
+
+export type HandlerOutput = HandlerError | void
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

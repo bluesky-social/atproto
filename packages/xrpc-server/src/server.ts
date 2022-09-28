@@ -1,7 +1,16 @@
 import express from 'express'
 import { ValidateFunction } from 'ajv'
 import { MethodSchema, methodSchema, isValidMethodSchema } from '@adxp/lexicon'
-import { XRPCHandler, XRPCError, InvalidRequestError } from './types'
+import {
+  XRPCHandler,
+  XRPCError,
+  InvalidRequestError,
+  HandlerOutput,
+  HandlerSuccess,
+  handlerSuccess,
+  HandlerError,
+  handlerError,
+} from './types'
 import {
   ajv,
   validateReqParams,
@@ -113,37 +122,43 @@ export class Server {
       // run the handler
       const outputUnvalidated = await handler(params, input, req, res)
 
-      // validate response
-      const output = validateOutput(
-        schema,
-        outputUnvalidated,
-        this.outputValidators.get(schema.id),
-      )
+      if (!outputUnvalidated || isHandlerSuccess(outputUnvalidated)) {
+        // validate response
+        const output = validateOutput(
+          schema,
+          outputUnvalidated,
+          this.outputValidators.get(schema.id),
+        )
 
-      // send response
-      if (
-        output?.encoding === 'application/json' ||
-        output?.encoding === 'json'
-      ) {
-        res.status(200).json(output.body)
-      } else if (output) {
-        res.header('Content-Type', output.encoding)
-        res
-          .status(200)
-          .send(
-            output.body instanceof Uint8Array
-              ? Buffer.from(output.body)
-              : output.body,
-          )
-      } else {
-        res.status(200).end()
+        // send response
+        if (
+          output?.encoding === 'application/json' ||
+          output?.encoding === 'json'
+        ) {
+          res.status(200).json(output.body)
+        } else if (output) {
+          res.header('Content-Type', output.encoding)
+          res
+            .status(200)
+            .send(
+              output.body instanceof Uint8Array
+                ? Buffer.from(output.body)
+                : output.body,
+            )
+        } else {
+          res.status(200).end()
+        }
+      } else if (isHandlerError(outputUnvalidated)) {
+        return res.status(outputUnvalidated.status).json({
+          error: outputUnvalidated.error,
+          message: outputUnvalidated.message,
+        })
       }
     } catch (e: any) {
       if (e instanceof XRPCError) {
         res.status(e.type).json({
-          error: true,
-          type: e.typeStr,
-          message: e.message || e.typeStr,
+          error: e.customErrorName,
+          message: e.errorMessage || e.typeStr,
         })
       } else {
         console.error(
@@ -151,11 +166,17 @@ export class Server {
         )
         console.error(e)
         res.status(500).json({
-          error: true,
-          type: 'InternalError',
           message: 'Unexpected internal server error',
         })
       }
     }
   }
+}
+
+function isHandlerSuccess(v: HandlerOutput): v is HandlerSuccess {
+  return handlerSuccess.safeParse(v).success
+}
+
+function isHandlerError(v: HandlerOutput): v is HandlerError {
+  return handlerError.safeParse(v).success
 }

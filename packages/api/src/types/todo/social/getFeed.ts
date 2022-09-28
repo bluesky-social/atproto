@@ -1,7 +1,7 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-import { Headers } from '@adxp/xrpc'
+import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
   author?: string;
@@ -19,6 +19,7 @@ export interface OutputSchema {
   feed: FeedItem[];
 }
 export interface FeedItem {
+  cursor?: string;
   uri: string;
   author: User;
   repostedBy?: User;
@@ -56,7 +57,12 @@ export interface UnknownEmbed {
 
 export interface Response {
   success: boolean;
-  error: boolean;
   headers: Headers;
   data: OutputSchema;
+}
+
+export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+  }
+  return e
 }

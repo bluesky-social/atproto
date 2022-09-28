@@ -49,6 +49,17 @@ export const methodSchemas: MethodSchema[] = [
         },
       },
     },
+    errors: [
+      {
+        name: 'InvalidUsername',
+      },
+      {
+        name: 'InvalidPassword',
+      },
+      {
+        name: 'UsernameNotAvailable',
+      },
+    ],
   },
   {
     lexicon: 1,
@@ -643,6 +654,9 @@ export const methodSchemas: MethodSchema[] = [
               'indexedAt',
             ],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               uri: {
                 type: 'string',
               },

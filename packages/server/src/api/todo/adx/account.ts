@@ -34,9 +34,11 @@ export default function (server: Server) {
     const { db, blockstore, auth, config, keypair } = util.getLocals(res)
 
     if (username.startsWith('did:')) {
-      throw new InvalidRequestError(
-        'Cannot register a username that starts with `did:`',
-      )
+      return {
+        status: 400,
+        error: 'InvalidUsername',
+        message: 'Cannot register a username that starts with `did:`',
+      }
     }
 
     let isTestUser = false
