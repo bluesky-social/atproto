@@ -10,11 +10,20 @@ export const handlerInput = zod.object({
 })
 export type HandlerInput = zod.infer<typeof handlerInput>
 
-export const handlerOutput = zod.object({
+export const handlerSuccess = zod.object({
   encoding: zod.string(),
   body: zod.any(),
 })
-export type HandlerOutput = zod.infer<typeof handlerOutput>
+export type HandlerSuccess = zod.infer<typeof handlerSuccess>
+
+export const handlerError = zod.object({
+  status: zod.number(),
+  error: zod.string().optional(),
+  message: zod.string().optional(),
+})
+export type HandlerError = zod.infer<typeof handlerError>
+
+export type HandlerOutput = HandlerSuccess | HandlerError
 
 export type XRPCHandler = (
   params: Params,
@@ -24,8 +33,12 @@ export type XRPCHandler = (
 ) => Promise<HandlerOutput> | HandlerOutput | undefined
 
 export class XRPCError extends Error {
-  constructor(public type: ResponseType, message?: string) {
-    super(message)
+  constructor(
+    public type: ResponseType,
+    public errorMessage?: string,
+    public customErrorName?: string,
+  ) {
+    super(errorMessage)
   }
 
   get typeStr() {
@@ -34,43 +47,43 @@ export class XRPCError extends Error {
 }
 
 export class InvalidRequestError extends XRPCError {
-  constructor(message?: string) {
-    super(ResponseType.InvalidRequest, message)
+  constructor(errorMessage?: string, customErrorName?: string) {
+    super(ResponseType.InvalidRequest, errorMessage, customErrorName)
   }
 }
 
 export class AuthRequiredError extends XRPCError {
-  constructor(message?: string) {
-    super(ResponseType.AuthRequired, message)
+  constructor(errorMessage?: string, customErrorName?: string) {
+    super(ResponseType.AuthRequired, errorMessage, customErrorName)
   }
 }
 
 export class ForbiddenError extends XRPCError {
-  constructor(message?: string) {
-    super(ResponseType.Forbidden, message)
+  constructor(errorMessage?: string, customErrorName?: string) {
+    super(ResponseType.Forbidden, errorMessage, customErrorName)
   }
 }
 
 export class InternalServerError extends XRPCError {
-  constructor(message?: string) {
-    super(ResponseType.InternalServerError, message)
+  constructor(errorMessage?: string, customErrorName?: string) {
+    super(ResponseType.InternalServerError, errorMessage, customErrorName)
   }
 }
 
 export class UpstreamFailureError extends XRPCError {
-  constructor(message?: string) {
-    super(ResponseType.UpstreamFailure, message)
+  constructor(errorMessage?: string, customErrorName?: string) {
+    super(ResponseType.UpstreamFailure, errorMessage, customErrorName)
   }
 }
 
 export class NotEnoughResoucesError extends XRPCError {
-  constructor(message?: string) {
-    super(ResponseType.NotEnoughResouces, message)
+  constructor(errorMessage?: string, customErrorName?: string) {
+    super(ResponseType.NotEnoughResouces, errorMessage, customErrorName)
   }
 }
 
 export class UpstreamTimeoutError extends XRPCError {
-  constructor(message?: string) {
-    super(ResponseType.UpstreamTimeout, message)
+  constructor(errorMessage?: string, customErrorName?: string) {
+    super(ResponseType.UpstreamTimeout, errorMessage, customErrorName)
   }
 }

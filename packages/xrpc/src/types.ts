@@ -22,6 +22,7 @@ export type FetchHandler = (
 ) => Promise<FetchHandlerResponse>
 
 export const errorResponseBody = z.object({
+  error: z.string().optional(),
   message: z.string().optional(),
 })
 export type ErrorResponseBody = z.infer<typeof errorResponseBody>
@@ -43,6 +44,22 @@ export enum ResponseType {
   UpstreamTimeout = 504,
 }
 
+export const ResponseTypeNames = {
+  [ResponseType.InvalidResponse]: 'InvalidResponse',
+  [ResponseType.Success]: 'Success',
+  [ResponseType.InvalidRequest]: 'InvalidRequest',
+  [ResponseType.AuthRequired]: 'AuthenticationRequired',
+  [ResponseType.Forbidden]: 'Forbidden',
+  [ResponseType.XRPCNotSupported]: 'XRPCNotSupported',
+  [ResponseType.PayloadTooLarge]: 'PayloadTooLarge',
+  [ResponseType.RateLimitExceeded]: 'RateLimitExceeded',
+  [ResponseType.InternalServerError]: 'InternalServerError',
+  [ResponseType.MethodNotImplemented]: 'MethodNotImplemented',
+  [ResponseType.UpstreamFailure]: 'UpstreamFailure',
+  [ResponseType.NotEnoughResouces]: 'NotEnoughResouces',
+  [ResponseType.UpstreamTimeout]: 'UpstreamTimeout',
+}
+
 export const ResponseTypeStrings = {
   [ResponseType.InvalidResponse]: 'Invalid Response',
   [ResponseType.Success]: 'Success',
@@ -61,20 +78,21 @@ export const ResponseTypeStrings = {
 
 export class XRPCResponse {
   success = true
-  error = false
 
   constructor(public data: any, public headers: Headers) {}
 }
 
 export class XRPCError extends Error {
   success = false
-  error = true
 
-  constructor(public code: ResponseType, message?: string) {
-    super(
-      message
-        ? `${ResponseTypeStrings[code]}: ${message}`
-        : ResponseTypeStrings[code],
-    )
+  constructor(
+    public status: ResponseType,
+    public error?: string,
+    message?: string,
+  ) {
+    super(message || error || ResponseTypeStrings[status])
+    if (!this.error) {
+      this.error = ResponseTypeNames[status]
+    }
   }
 }
