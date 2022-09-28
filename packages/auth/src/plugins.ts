@@ -1,37 +1,13 @@
 import * as ucans from '@ucans/core'
 
-// const didExamplePlugin: ucans.DidMethodPlugin = {
-//   checkJwtAlg: (did, jwtAlg) => {
-//     return true
-//   },
-//   verifySignature: async (did, data, sig) => {
-//     return true
-//   },
-// }
-
-// export const didPlugins = new ucans.Plugins([p256Plugin], {
-//   example: didExamplePlugin,
-//   plc: didExamplePlugin, // @TODO write this plugin
-// })
-// import { Capability } from './capability'
-// import { ValidateOptions, ValidateProofsOptions } from './token'
-// import { DidableKey, Fact, Keypair, Ucan, UcanPayload } from './types'
-// import {} from './'
-
+// @TODO move to ucan package
 export type BuildFn = (params: {
-  // from/to
   issuer: ucans.DidableKey
   audience: string
-
-  // capabilities
   capabilities?: Array<ucans.Capability>
-
-  // time bounds
-  lifetimeInSeconds?: number // expiration overrides lifetimeInSeconds
+  lifetimeInSeconds?: number
   expiration?: number
   notBefore?: number
-
-  // proofs / other info
   facts?: Array<ucans.Fact>
   proofs?: Array<string>
   addNonce?: boolean
