@@ -2,7 +2,7 @@ import * as crypto from '@adxp/crypto'
 import AuthStore from './auth-store'
 
 export class MemoryStore extends AuthStore {
-  static async load(): Promise<MemoryStore> {
+  static async create(): Promise<MemoryStore> {
     const keypair = await crypto.EcdsaKeypair.create({ exportable: true })
     return new MemoryStore(keypair, [])
   }

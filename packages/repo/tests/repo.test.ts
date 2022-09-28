@@ -12,7 +12,7 @@ describe('Repo', () => {
 
   it('creates repo', async () => {
     blockstore = new MemoryBlockstore()
-    authStore = await auth.MemoryStore.load()
+    authStore = await auth.MemoryStore.create()
     await authStore.claimFull()
     repo = await Repo.create(blockstore, await authStore.did(), authStore)
   })
