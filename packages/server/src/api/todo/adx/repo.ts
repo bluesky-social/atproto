@@ -106,8 +106,7 @@ export default function (server: Server) {
         }
       }
     }
-    const authStore = await util.getAuthstore(res, did)
-    const repo = await util.maybeLoadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -146,8 +145,7 @@ export default function (server: Server) {
         )
       }
     }
-    const authStore = await util.getAuthstore(res, did)
-    const repo = await util.maybeLoadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -185,8 +183,7 @@ export default function (server: Server) {
         )
       }
     }
-    const authStore = await util.getAuthstore(res, did)
-    const repo = await util.maybeLoadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -215,8 +212,7 @@ export default function (server: Server) {
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
-    const authStore = await util.getAuthstore(res, did)
-    const repo = await util.maybeLoadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
