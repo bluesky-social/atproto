@@ -1,4 +1,4 @@
-import * as ucans from './ucans'
+import * as ucans from '@ucans/core'
 
 /*
 ADX Ucans:

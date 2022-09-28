@@ -1,9 +1,10 @@
 import * as ucans from '@ucans/core'
 import * as didSdk from '@adxp/did-sdk'
-import { p256Plugin } from '@adxp/crypto'
-import { PluginInjectedApi } from './ucans/plugins'
+import { DidableKey, EcdsaKeypair, p256Plugin } from '@adxp/crypto'
+import { PluginInjectedApi } from './plugins'
 import { verifySignature, verifySignatureUtf8 } from './signatures'
 import { verifyUcan, verifyAdxUcan, verifyFullWritePermission } from './verify'
+import AuthStore from './auth-store'
 
 export const DID_KEY_PLUGINS = [p256Plugin]
 
@@ -51,8 +52,22 @@ export class AuthLib {
         web: methodPlugins,
       },
     )
+
     this.ucanApi = ucans.getPluginInjectedApi(plugins)
     this.plugins = plugins
+  }
+
+  loadAuthStore(
+    keypair: DidableKey,
+    tokens: string[],
+    controlledDid?: string,
+  ): AuthStore {
+    return new AuthStore(this.ucanApi, keypair, tokens, controlledDid)
+  }
+
+  async createTempAuthStore(tokens: string[] = []): Promise<AuthStore> {
+    const keypair = await EcdsaKeypair.create()
+    return this.loadAuthStore(keypair, tokens)
   }
 
   async verifySignature(

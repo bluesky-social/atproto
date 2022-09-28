@@ -1,7 +1,7 @@
+import * as ucans from '@ucans/core'
 import { writeCap } from './adx-capabilities'
 import { adxSemantics, parseAdxResource } from './adx-semantics'
-import * as ucans from './ucans'
-import { PluginInjectedApi } from './ucans/plugins'
+import { PluginInjectedApi } from './plugins'
 
 export const verifyUcan =
   (ucanApi: PluginInjectedApi) =>
