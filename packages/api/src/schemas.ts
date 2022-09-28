@@ -645,6 +645,9 @@ export const methodSchemas: MethodSchema[] = [
               'indexedAt',
             ],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               uri: {
                 type: 'string',
               },

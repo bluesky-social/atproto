@@ -107,11 +107,11 @@ export default function (server: Server) {
           `requester_like.creator = :requester AND requester_like.subject = post.uri`,
           { requester },
         )
-        .orderBy('post.createdAt', 'DESC')
+        .orderBy('post.indexedAt', 'DESC')
         .groupBy('post.uri')
 
       if (before !== undefined) {
-        builder.andWhere('post.createdAt < :before', { before })
+        builder.andWhere('post.indexedAt < :before', { before })
       }
       if (limit !== undefined) {
         builder.limit(limit)
@@ -121,6 +121,7 @@ export default function (server: Server) {
 
       // @TODO add embeds
       const feed: GetFeed.FeedItem[] = queryRes.map((row) => ({
+        cursor: row.indexedAt,
         uri: row.uri,
         author: {
           did: row.authorDid,

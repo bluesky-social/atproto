@@ -374,6 +374,17 @@ describe('pds views', () => {
     expect(aliceFeed.data.feed[6].record.text).toEqual(posts.bob[0])
     expect(aliceFeed.data.feed[3].repostCount).toEqual(1)
 
+    const aliceFeed2 = await client.todo.social.getFeed(
+      { before: aliceFeed.data.feed[0].cursor, limit: 1 },
+      undefined,
+      {
+        headers: getHeaders(users.alice.did),
+      },
+    )
+    expect(aliceFeed2.data.feed.length).toBe(1)
+    /** @ts-ignore TODO */
+    expect(aliceFeed2.data.feed[0].record.text).toEqual(replies.bob[0])
+
     const bobFeed = await client.todo.social.getFeed({}, undefined, {
       headers: getHeaders(users.bob.did),
     })
@@ -417,6 +428,16 @@ describe('pds views', () => {
     expect(aliceFeed.data.feed[2].record.text).toEqual(posts.alice[1])
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed[3].record.text).toEqual(posts.alice[0])
+
+    const aliceFeed2 = await client.todo.social.getFeed(
+      { author: 'alice.test', before: aliceFeed.data.feed[0].cursor, limit: 1 },
+      undefined,
+      {
+        headers: getHeaders(users.bob.did),
+      },
+    )
+    /** @ts-ignore TODO */
+    expect(aliceFeed2.data.feed[0].record.text).toEqual(posts.alice[2])
 
     const carolFeed = await client.todo.social.getFeed(
       { author: 'carol.test' },
