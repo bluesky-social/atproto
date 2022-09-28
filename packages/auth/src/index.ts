@@ -1,17 +1,14 @@
-export * from './semantics'
-export * from './capabilities'
+export * from './verifier'
+export * from './adx-semantics'
+export * from './adx-capabilities'
 export * from './auth-store'
-export * from './memory-store'
-export * from './browser-store'
 export * from './verify'
 export * from './types'
 export * from './signatures'
-export * from './ucans/plugins'
-
-export * as ucans from './ucans'
+export * from './plugins'
 
 export { EcdsaKeypair } from '@adxp/crypto'
 
-export { encode as encodeUcan, validate as validateUcan } from './ucans'
-
-export type { Ucan, DidableKey } from './ucans'
+export * as ucans from '@ucans/core'
+export { encode as encodeUcan } from '@ucans/core'
+export type { Ucan, DidableKey } from '@ucans/core'

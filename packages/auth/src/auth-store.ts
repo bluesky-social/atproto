@@ -1,18 +1,26 @@
-import * as ucan from './ucans'
-import { DidableKey } from './ucans'
+import * as ucan from '@ucans/core'
+import { DidableKey } from '@ucans/core'
 
-import { adxSemantics, parseAdxResource } from './semantics'
+import { adxSemantics, parseAdxResource } from './adx-semantics'
 import { MONTH_IN_SEC, YEAR_IN_SEC } from './consts'
 import { CapWithProof, Signer } from './types'
-import { vaguerCap, writeCap } from './capabilities'
+import { vaguerCap, writeCap } from './adx-capabilities'
+import { PluginInjectedApi } from './plugins'
 
 export class AuthStore implements Signer {
   protected keypair: DidableKey
   protected ucanStore: ucan.StoreI | null = null
   protected tokens: string[]
   protected controlledDid: string | null
+  protected ucanApi: PluginInjectedApi
 
-  constructor(keypair: DidableKey, tokens: string[], controlledDid?: string) {
+  constructor(
+    ucanApi: PluginInjectedApi,
+    keypair: DidableKey,
+    tokens: string[],
+    controlledDid?: string,
+  ) {
+    this.ucanApi = ucanApi
     this.keypair = keypair
     this.tokens = tokens
     this.controlledDid = controlledDid || null
@@ -32,9 +40,12 @@ export class AuthStore implements Signer {
 
   async getUcanStore(): Promise<ucan.StoreI> {
     if (!this.ucanStore) {
-      this.ucanStore = await ucan.Store.fromTokens(adxSemantics, this.tokens)
+      this.ucanStore = await this.ucanApi.Store.fromTokens(
+        adxSemantics,
+        this.tokens,
+      )
     }
-    return this.ucanStore
+    return this.ucanStore as ucan.StoreI
   }
 
   async clear(): Promise<void> {
@@ -100,7 +111,7 @@ export class AuthStore implements Signer {
   ): Promise<ucan.Ucan> {
     const keypair = await this.getKeypair()
     const ucanStore = await this.getUcanStore()
-    return ucan.Builder.create()
+    return this.ucanApi.Builder.create()
       .issuedBy(keypair)
       .toAudience(audience)
       .withLifetimeInSeconds(lifetime)
@@ -127,7 +138,7 @@ export class AuthStore implements Signer {
 
     const keypair = await this.getKeypair()
 
-    let builder = ucan.Builder.create()
+    let builder = this.ucanApi.Builder.create()
       .issuedBy(keypair)
       .toAudience(audience)
       .withLifetimeInSeconds(lifetime)
@@ -156,7 +167,7 @@ export class AuthStore implements Signer {
   async claimFull(): Promise<ucan.Ucan> {
     const keypair = await this.getKeypair()
     const ownDid = await this.did()
-    const token = await ucan.Builder.create()
+    const token = await this.ucanApi.Builder.create()
       .issuedBy(keypair)
       .toAudience(ownDid)
       .withLifetimeInSeconds(YEAR_IN_SEC)

@@ -48,13 +48,13 @@ describe('account', () => {
       await client.todo.adx.createAccount(
         {},
         {
+          email: 'bad-username@test.com',
           username: 'did:bad-username.test',
-          did: 'bad.test',
           password: 'asdf',
         },
       )
       throw new Error('Didnt throw')
-    } catch (e: any) {
+    } catch (e) {
       expect(
         e instanceof TodoAdxCreateAccount.InvalidUsernameError,
       ).toBeTruthy()

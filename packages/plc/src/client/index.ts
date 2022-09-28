@@ -9,18 +9,22 @@ export class PlcClient {
   constructor(public url: string) {}
 
   async getDocument(did: string): Promise<t.DidDocument> {
-    const res = await axios.get(`${this.url}/${did}`)
+    const res = await axios.get(`${this.url}/${encodeURIComponent(did)}`)
     return res.data
   }
 
   async getDocumentData(did: string): Promise<t.DocumentData> {
-    const res = await axios.get(`${this.url}/data/${did}`)
+    const res = await axios.get(`${this.url}/data/${encodeURIComponent(did)}`)
     return res.data
   }
 
   async getOperationLog(did: string): Promise<t.Operation[]> {
-    const res = await axios.get(`${this.url}/log/${did}`)
+    const res = await axios.get(`${this.url}/log/${encodeURIComponent(did)}`)
     return res.data.log
+  }
+
+  postOpUrl(did: string): string {
+    return `${this.url}/${encodeURIComponent(did)}`
   }
 
   async createDid(
@@ -39,7 +43,7 @@ export class PlcClient {
       throw new Error('Not a valid create operation')
     }
     const did = await operations.didForCreateOp(op)
-    await axios.post(`${this.url}/${did}`, op)
+    await axios.post(this.postOpUrl(did), op)
     return did
   }
 
@@ -63,7 +67,7 @@ export class PlcClient {
       prev.toString(),
       signingKey,
     )
-    await axios.post(`${this.url}/${did}`, op)
+    await axios.post(this.postOpUrl(did), op)
   }
 
   async rotateRecoveryKey(
@@ -78,7 +82,7 @@ export class PlcClient {
       prev.toString(),
       signingKey,
     )
-    await axios.post(`${this.url}/${did}`, op)
+    await axios.post(this.postOpUrl(did), op)
   }
 
   async updateUsername(did: string, username: string, signingKey: DidableKey) {
@@ -88,7 +92,7 @@ export class PlcClient {
       prev.toString(),
       signingKey,
     )
-    await axios.post(`${this.url}/${did}`, op)
+    await axios.post(this.postOpUrl(did), op)
   }
 
   async updateAtpPds(did: string, service: string, signingKey: DidableKey) {
@@ -98,7 +102,7 @@ export class PlcClient {
       prev.toString(),
       signingKey,
     )
-    await axios.post(`${this.url}/${did}`, op)
+    await axios.post(this.postOpUrl(did), op)
   }
 }
 

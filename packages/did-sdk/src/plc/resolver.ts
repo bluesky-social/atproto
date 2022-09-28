@@ -27,7 +27,7 @@ export const makeResolver = (opts: PlcResolverOptions): DIDResolver => {
 
     let didDocument: DIDDocument
     try {
-      const res = await axios.get(`${opts.plcUrl}/${did}`, {
+      const res = await axios.get(`${opts.plcUrl}/${encodeURIComponent(did)}`, {
         timeout: opts.timeout,
       })
       didDocument = res.data

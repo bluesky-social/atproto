@@ -1,4 +1,4 @@
-import server from '../src/server/server'
+import server from '../src/server'
 import Database from '../src/server/db'
 
 export type CloseFn = () => Promise<void>

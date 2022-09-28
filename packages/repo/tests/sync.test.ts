@@ -6,6 +6,8 @@ import { MemoryBlockstore } from '../src/blockstore'
 import * as util from './_util'
 
 describe('Sync', () => {
+  const verifier = new auth.Verifier()
+
   let aliceBlockstore, bobBlockstore: MemoryBlockstore
   let aliceRepo: Repo
   let aliceAuth: auth.AuthStore
@@ -13,7 +15,7 @@ describe('Sync', () => {
 
   beforeAll(async () => {
     aliceBlockstore = new MemoryBlockstore()
-    aliceAuth = await auth.MemoryStore.load()
+    aliceAuth = await verifier.createTempAuthStore()
     await aliceAuth.claimFull()
     aliceRepo = await Repo.create(
       aliceBlockstore,
@@ -71,7 +73,7 @@ describe('Sync', () => {
       cid,
     )
     // we create an unrelated token for bob & try to permission alice's repo commit with it
-    const bobAuth = await auth.MemoryStore.load()
+    const bobAuth = await verifier.createTempAuthStore()
     const badUcan = await bobAuth.claimFull()
     const auth_token = await aliceBlockstore.put(auth.encodeUcan(badUcan))
     const dataCid = await updatedData.save()

@@ -5,6 +5,8 @@ import { MemoryBlockstore } from '../src/blockstore'
 import * as util from './_util'
 
 describe('Repo', () => {
+  const verifier = new auth.Verifier()
+
   let blockstore: MemoryBlockstore
   let authStore: auth.AuthStore
   let repo: Repo
@@ -12,7 +14,7 @@ describe('Repo', () => {
 
   it('creates repo', async () => {
     blockstore = new MemoryBlockstore()
-    authStore = await auth.MemoryStore.load()
+    authStore = await verifier.createTempAuthStore()
     await authStore.claimFull()
     repo = await Repo.create(blockstore, await authStore.did(), authStore)
   })
@@ -51,7 +53,7 @@ describe('Repo', () => {
 
   it('adds a valid signature to commit', async () => {
     const commit = await repo.getCommit()
-    const verified = await auth.verifySignature(
+    const verified = await verifier.verifySignature(
       repo.did(),
       commit.root.bytes,
       commit.sig,
@@ -64,7 +66,12 @@ describe('Repo', () => {
   })
 
   it('loads from blockstore', async () => {
-    const reloadedRepo = await Repo.load(blockstore, repo.cid, authStore)
+    const reloadedRepo = await Repo.load(
+      blockstore,
+      repo.cid,
+      verifier,
+      authStore,
+    )
 
     await util.checkRepo(reloadedRepo, repoData)
   })

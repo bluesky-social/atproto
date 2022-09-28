@@ -6,7 +6,11 @@ require('esbuild')
     outdir: 'dist',
     platform: 'node',
     external: [
+      'mock-aws-s3',
+      'aws-sdk',
+      'nock',
       './node_modules/sqlite3/*',
+      '../node_modules/sqlite3/*',
       '../../node_modules/sqlite3/*',
       '../../node_modules/level/*',
       '../../node_modules/classic-level/*',

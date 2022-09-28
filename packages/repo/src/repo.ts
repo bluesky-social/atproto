@@ -6,7 +6,6 @@ import { RepoRoot, Commit, def, BatchWrite, DataStore } from './types'
 import { check, streamToArray, TID } from '@adxp/common'
 import IpldStore, { AllowedIpldVal } from './blockstore/ipld-store'
 import * as auth from '@adxp/auth'
-import { AuthStore } from '@adxp/auth'
 import { DataDiff, MST } from './mst'
 import Collection from './collection'
 
@@ -17,6 +16,7 @@ export class Repo {
   root: RepoRoot
   cid: CID
   authStore: auth.AuthStore | null
+  verifier: auth.Verifier
 
   constructor(params: {
     blockstore: IpldStore
@@ -24,20 +24,23 @@ export class Repo {
     commit: Commit
     root: RepoRoot
     cid: CID
-    authStore: auth.AuthStore | null
+    authStore: auth.AuthStore | undefined
+    verifier: auth.Verifier | undefined
   }) {
     this.blockstore = params.blockstore
     this.data = params.data
     this.commit = params.commit
     this.root = params.root
     this.cid = params.cid
-    this.authStore = params.authStore
+    this.authStore = params.authStore || null
+    this.verifier = params.verifier ?? new auth.Verifier()
   }
 
   static async create(
     blockstore: IpldStore,
     did: string,
     authStore: auth.AuthStore,
+    verifier?: auth.Verifier,
   ): Promise<Repo> {
     let tokenCid: CID | null = null
     if (!(await authStore.canSignForDid(did))) {
@@ -73,10 +76,16 @@ export class Repo {
       root,
       cid,
       authStore,
+      verifier,
     })
   }
 
-  static async load(blockstore: IpldStore, cid: CID, authStore?: AuthStore) {
+  static async load(
+    blockstore: IpldStore,
+    cid: CID,
+    verifier?: auth.Verifier,
+    authStore?: auth.AuthStore,
+  ) {
     const commit = await blockstore.get(cid, def.commit)
     const root = await blockstore.get(commit.root, def.repoRoot)
     const data = await MST.load(blockstore, root.data)
@@ -86,13 +95,15 @@ export class Repo {
       commit,
       root,
       cid,
-      authStore: authStore || null,
+      authStore,
+      verifier,
     })
   }
 
   static async fromCarFile(
     buf: Uint8Array,
     blockstore: IpldStore,
+    verifier?: auth.Verifier,
     verifyAuthority = true,
     authStore?: auth.AuthStore,
   ) {
@@ -108,7 +119,7 @@ export class Repo {
       await blockstore.putBytes(block.cid, block.bytes)
     }
 
-    const repo = await Repo.load(blockstore, root, authStore)
+    const repo = await Repo.load(blockstore, root, verifier, authStore)
     if (verifyAuthority) {
       await repo.verifySetOfUpdates(null, repo.cid)
     }
@@ -283,10 +294,10 @@ export class Repo {
           nextRepo.root.auth_token,
           def.string,
         )
-        const token = await auth.validateUcan(encodedToken)
+        const token = await this.verifier.validateUcan(encodedToken)
         const neededCaps = diff.neededCapabilities(this.did())
         for (const cap of neededCaps) {
-          await auth.verifyAdxUcan(token, this.did(), cap)
+          await this.verifier.verifyAdxUcan(token, this.did(), cap)
         }
         didForSignature = token.payload.iss
       } else {
@@ -295,7 +306,7 @@ export class Repo {
 
       // verify signature matches repo root + auth token
       // const commit = await toRepo.getCommit()
-      const validSig = await auth.verifySignature(
+      const validSig = await this.verifier.verifySignature(
         didForSignature,
         nextRepo.commit.root.bytes,
         nextRepo.commit.sig,

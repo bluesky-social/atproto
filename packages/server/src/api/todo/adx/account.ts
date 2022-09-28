@@ -2,7 +2,6 @@ import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as util from '../../../util'
 import { Repo } from '@adxp/repo'
-import { AuthStore } from '@adxp/auth'
 import { PlcClient } from '@adxp/plc'
 
 export default function (server: Server) {
@@ -68,7 +67,7 @@ export default function (server: Server) {
 
     await db.registerUser(email, username, did, password)
 
-    const authStore = new AuthStore(keypair, [], did)
+    const authStore = util.getAuthstore(res, did)
     const repo = await Repo.create(blockstore, did, authStore)
     await db.setRepoRoot(did, repo.cid)
 

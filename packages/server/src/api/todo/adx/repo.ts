@@ -1,54 +1,30 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
-import { resolveName, TID } from '@adxp/common'
+import { TID } from '@adxp/common'
 import { AdxUri } from '@adxp/uri'
 import * as didSdk from '@adxp/did-sdk'
 import * as repoDiff from '../../../repo-diff'
 import * as util from '../../../util'
 
-async function resolveNameWrapped(name: string) {
-  try {
-    return await resolveName(name)
-  } catch (e) {
-    throw new InvalidRequestError(`Failed to resolve name: ${name}`)
-  }
-}
-
 export default function (server: Server) {
   server.todo.adx.repoDescribe(async (params, _in, _req, res) => {
     const { nameOrDid } = params
 
-    let name: string
-    let did: string
-    // let didDoc: didSdk.DIDDocument
-    // let nameIsCorrect: boolean | undefined
-
-    // @TODO add back once we have a did network
-    // if (nameOrDid.startsWith('did:')) {
-    //   did = nameOrDid
-    //   didDoc = await resolveDidWrapped(did)
-    //   name = 'undefined' // TODO: need to decide how username gets published in the did doc
-    //   if (confirmName) {
-    //     const namesDeclaredDid = await resolveNameWrapped(name)
-    //     nameIsCorrect = did === namesDeclaredDid
-    //   }
-    // } else {
-    //   name = nameOrDid
-    //   did = await resolveNameWrapped(name)
-    //   didDoc = await resolveDidWrapped(did)
-    //   if (confirmName) {
-    //     const didsDeclaredName = 'undefined' // TODO: need to decide how username gets published in the did doc
-    //     nameIsCorrect = name === didsDeclaredName
-    //   }
-    // }
-
-    const db = util.getDB(res)
+    const { db, auth } = util.getLocals(res)
     const user = await db.getUser(nameOrDid)
     if (user === null) {
       throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
     }
-    const didDoc = {} as any
-    const nameIsCorrect = true
+
+    let didDoc
+    try {
+      didDoc = await auth.didResolver.ensureResolveDid(user.did)
+    } catch (err) {
+      throw new InvalidRequestError(`Could not resolve DID: ${err}`)
+    }
+
+    const username = didSdk.getUsername(didDoc)
+    const nameIsCorrect = username === user.username
 
     const collections = await db.listCollectionsForDid(user.did)
 
@@ -68,11 +44,9 @@ export default function (server: Server) {
     const { nameOrDid, type, limit, before, after, reverse } = params
 
     const db = util.getDB(res)
-    const did = nameOrDid.startsWith('did:')
-      ? nameOrDid
-      : (await db.getUser(nameOrDid))?.did
+    const did = await db.getUserDid(nameOrDid)
     if (!did) {
-      throw new InvalidRequestError(`Could not find did for ${nameOrDid}`)
+      throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
     }
 
     const records = await db.listRecordsForCollection(
@@ -94,13 +68,15 @@ export default function (server: Server) {
 
   server.todo.adx.repoGetRecord(async (params, _in, _req, res) => {
     const { nameOrDid, type, tid } = params
+    const db = util.getDB(res)
 
-    const did = nameOrDid.startsWith('did:')
-      ? nameOrDid
-      : await resolveNameWrapped(nameOrDid)
+    const did = await db.getUserDid(nameOrDid)
+    if (!did) {
+      throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
+    }
+
     const uri = new AdxUri(`${did}/${type}/${tid}`)
 
-    const db = util.getDB(res)
     const record = await db.getRecord(uri)
     if (!record) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
@@ -130,8 +106,7 @@ export default function (server: Server) {
         }
       }
     }
-    const authStore = await util.getAuthstore(res, did)
-    const repo = await util.maybeLoadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -170,8 +145,7 @@ export default function (server: Server) {
         )
       }
     }
-    const authStore = await util.getAuthstore(res, did)
-    const repo = await util.maybeLoadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -209,8 +183,7 @@ export default function (server: Server) {
         )
       }
     }
-    const authStore = await util.getAuthstore(res, did)
-    const repo = await util.maybeLoadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -239,8 +212,7 @@ export default function (server: Server) {
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
-    const authStore = await util.getAuthstore(res, did)
-    const repo = await util.maybeLoadRepo(res, did, authStore)
+    const repo = await util.maybeLoadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
