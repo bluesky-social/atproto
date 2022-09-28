@@ -9,7 +9,7 @@ const router = express.Router()
 
 // Get data for a DID document
 router.get(`/:did`, async function (req, res) {
-  const { did } = req.params
+  const did = decodeURIComponent(req.params.did)
   const { db } = locals.get(res)
   const log = await db.opsForDid(did)
   if (log.length === 0) {
@@ -23,7 +23,7 @@ router.get(`/:did`, async function (req, res) {
 
 // Get data for a DID document
 router.get(`/data/:did`, async function (req, res) {
-  const { did } = req.params
+  const did = decodeURIComponent(req.params.did)
   const { db } = locals.get(res)
   const log = await db.opsForDid(did)
   if (log.length === 0) {
@@ -35,7 +35,7 @@ router.get(`/data/:did`, async function (req, res) {
 
 // Get operation log for a DID
 router.get(`/log/:did`, async function (req, res) {
-  const { did } = req.params
+  const did = decodeURIComponent(req.params.did)
   const { db } = locals.get(res)
   const log = await db.opsForDid(did)
   if (log.length === 0) {
@@ -46,7 +46,7 @@ router.get(`/log/:did`, async function (req, res) {
 
 // Update or create a DID doc
 router.post(`/:did`, async function (req, res) {
-  const { did } = req.params
+  const did = decodeURIComponent(req.params.did)
   const op = req.body
   if (!check.is(op, t.def.operation)) {
     throw new ServerError(400, `Not a valid operation: ${JSON.stringify(op)}`)

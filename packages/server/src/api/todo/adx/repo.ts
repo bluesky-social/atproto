@@ -10,7 +10,7 @@ export default function (server: Server) {
   server.todo.adx.repoDescribe(async (params, _in, _req, res) => {
     const { nameOrDid } = params
 
-    const db = util.getDB(res)
+    const { db, auth } = util.getLocals(res)
     const user = await db.getUser(nameOrDid)
     if (user === null) {
       throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
@@ -18,7 +18,7 @@ export default function (server: Server) {
 
     let didDoc
     try {
-      didDoc = await didSdk.resolver.ensureResolveDid(user.did)
+      didDoc = await auth.didResolver.ensureResolveDid(user.did)
     } catch (err) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }

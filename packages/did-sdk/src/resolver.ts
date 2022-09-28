@@ -17,7 +17,7 @@ export class DidResolver {
   resolver: Resolver
   constructor(opts: Partial<DidResolverOptions> = {}) {
     // @TODO change to production url
-    const { timeout = 3000, plcUrl = 'localhost:2582' } = opts
+    const { timeout = 3000, plcUrl = 'http://localhost:2582' } = opts
     this.resolver = new Resolver({
       plc: plc.makeResolver({
         timeout,
