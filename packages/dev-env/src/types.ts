@@ -1,5 +1,6 @@
 export enum ServerType {
   PersonalDataServer = 'pds',
+  DidPlaceholder = 'plc',
 }
 
 export interface ServerConfig {
@@ -13,6 +14,7 @@ export interface StartParams {
 
 export const PORTS = {
   [ServerType.PersonalDataServer]: 2583,
+  [ServerType.DidPlaceholder]: 2582,
 }
 
 export const SERVER_TYPE_LABELS = {

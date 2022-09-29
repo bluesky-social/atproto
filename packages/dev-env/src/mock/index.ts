@@ -20,6 +20,7 @@ function* dateGen() {
 }
 
 async function createNeededServers(env: DevEnv, numNeeded = 1) {
+  await env.add(await genServerCfg(ServerType.DidPlaceholder))
   while (env.listOfType(ServerType.PersonalDataServer).length < numNeeded) {
     await env.add(await genServerCfg(ServerType.PersonalDataServer))
   }
