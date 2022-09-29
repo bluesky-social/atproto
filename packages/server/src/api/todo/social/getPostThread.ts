@@ -120,7 +120,7 @@ const postInfoBuilder = (db: DataSource, requester: string) => {
       { requester },
     )
     .leftJoin(
-      RepostIndex,
+      LikeIndex,
       'requester_like',
       `requester_like.creator = :requester AND requester_like.subject = post.uri`,
       { requester },
