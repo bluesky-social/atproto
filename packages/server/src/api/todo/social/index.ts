@@ -8,6 +8,7 @@ import getUserFollowers from './getUserFollowers'
 import getUserFollows from './getUserFollows'
 import getNotifications from './getNotifications'
 import getNotificationCount from './getNotificationCount'
+import postNotificationsSeen from './postNotificationsSeen'
 
 export default function (server: Server) {
   getFeed(server)
@@ -19,4 +20,5 @@ export default function (server: Server) {
   getUserFollows(server)
   getNotifications(server)
   getNotificationCount(server)
+  postNotificationsSeen(server)
 }
