@@ -155,7 +155,7 @@ describe('pds views', () => {
       )
       return new AdxUri(res.uri)
     }
-    bobLikes[alicePosts[2].toString()] = await like(
+    bobLikes[alicePosts[1].toString()] = await like(
       users.bob.did,
       alicePosts[1].toString(),
     )
@@ -411,7 +411,7 @@ describe('pds views', () => {
     expect(bobFeed.data.feed[3].likeCount).toEqual(3)
     expect(bobFeed.data.feed[2].likeCount).toEqual(2)
     expect(bobFeed.data.feed[3]?.myState?.like).toEqual(
-      bobLikes[alicePosts[1].toString()],
+      bobLikes[alicePosts[1].toString()].toString(),
     )
     expect(bobFeed.data.feed[6]?.myState?.like).toBeUndefined()
   })
