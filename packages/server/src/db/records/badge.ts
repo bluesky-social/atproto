@@ -8,7 +8,7 @@ import {
   Repository,
   ManyToOne,
 } from 'typeorm'
-import { DbRecordPlugin } from '../types'
+import { DbRecordPlugin, Notification } from '../types'
 import { User } from '../user'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
@@ -92,6 +92,19 @@ const translateDbObj = (dbObj: BadgeIndex): Badge.Record => {
   return badge
 }
 
+const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+  if (!isValidSchema(obj)) {
+    throw new Error(`Record does not match schema: ${type}`)
+  }
+  const notif = {
+    userDid: obj.subject,
+    author: uri.host,
+    recordUri: uri.toString(),
+    reason: 'badge',
+  }
+  return [notif]
+}
+
 export const makePlugin = (
   db: DataSource,
 ): DbRecordPlugin<Badge.Record, BadgeIndex> => {
@@ -104,6 +117,7 @@ export const makePlugin = (
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,
+    notifsForRecord,
   }
 }
 

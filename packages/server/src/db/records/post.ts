@@ -1,7 +1,7 @@
 import { AdxUri } from '@adxp/uri'
 import * as Post from '../../lexicon/types/todo/social/post'
 import { DataSource, Entity, Column, PrimaryColumn, ManyToOne } from 'typeorm'
-import { DbRecordPlugin } from '../types'
+import { DbRecordPlugin, Notification } from '../types'
 import { User } from '../user'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
@@ -128,10 +128,37 @@ const translateDbObj = (dbObj: PostIndex): Post.Record => {
   }
 }
 
+const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+  if (!isValidSchema(obj)) {
+    throw new Error(`Record does not match schema: ${type}`)
+  }
+  const notifs: Notification[] = []
+  for (const entity of obj.entities || []) {
+    if (entity.type === 'mention') {
+      notifs.push({
+        userDid: entity.value,
+        author: uri.host,
+        recordUri: uri.toString(),
+        reason: 'mention',
+      })
+    }
+  }
+  if (obj.reply?.parent) {
+    const parentUri = new AdxUri(obj.reply.parent)
+    notifs.push({
+      userDid: parentUri.host,
+      author: uri.host,
+      recordUri: uri.toString(),
+      reason: 'reply',
+      reasonSubject: parentUri.toString(),
+    })
+  }
+  return notifs
+}
+
 export const makePlugin = (
   db: DataSource,
 ): DbRecordPlugin<Post.Record, PostIndex> => {
-  const repository = db.getRepository(PostIndex)
   return {
     collection: type,
     tableName,
@@ -140,6 +167,7 @@ export const makePlugin = (
     set: setFn(db),
     delete: deleteFn(db),
     translateDbObj,
+    notifsForRecord,
   }
 }
 

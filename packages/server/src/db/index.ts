@@ -181,6 +181,8 @@ export class Database {
 
     const table = this.findTableForCollection(uri.collection)
     await table.set(uri, obj)
+
+    const notifs = table.notifsForRecord(uri, obj)
   }
 
   async deleteRecord(uri: AdxUri) {
