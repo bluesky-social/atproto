@@ -16,6 +16,10 @@ import profilePlugin, {
   ProfileIndex,
 } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
+import {
+  UserNotification,
+  processNotifications,
+} from './notifications/user-notifications'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
@@ -51,6 +55,7 @@ export class Database {
       type: 'sqlite',
       database: location,
       entities: [
+        User,
         RepoRoot,
         AdxRecord,
         PostIndex,
@@ -61,7 +66,7 @@ export class Database {
         ProfileIndex,
         ProfileBadgeIndex,
         RepostIndex,
-        User,
+        UserNotification,
       ],
       synchronize: true,
     })
@@ -183,6 +188,7 @@ export class Database {
     await table.set(uri, obj)
 
     const notifs = table.notifsForRecord(uri, obj)
+    await processNotifications(this.db, notifs)
   }
 
   async deleteRecord(uri: AdxUri) {

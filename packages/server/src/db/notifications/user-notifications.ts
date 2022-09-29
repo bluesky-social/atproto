@@ -1,6 +1,5 @@
-import { AdxUri } from '@adxp/common'
-import { Entity, Column, PrimaryColumn } from 'typeorm'
-import * as post from '../records/post'
+import { Entity, Column, PrimaryColumn, DataSource } from 'typeorm'
+import { Notification } from '../types'
 
 @Entity({ name: 'user_notifications' })
 export class UserNotification {
@@ -11,16 +10,26 @@ export class UserNotification {
   recordUri: string
 
   @Column('varchar')
-  reason: string
+  author: string
 
   @Column('varchar')
-  reasonSubject: string
+  reason: string
+
+  @Column({ type: 'varchar', nullable: true })
+  reasonSubject?: string
 
   @Column('varchar')
   createdAt: string
 }
 
-export const processRecordNotifications = async (uri: AdxUri, obj: unknown) => {
-  if (post.isValidSchema(obj)) {
-  } else if(post.)
+export const processNotifications = async (
+  db: DataSource,
+  notifs: Notification[],
+) => {
+  await db.getRepository(UserNotification).insert(
+    notifs.map((notif) => ({
+      ...notif,
+      createdAt: new Date().toISOString(),
+    })),
+  )
 }
