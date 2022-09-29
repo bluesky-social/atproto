@@ -12,6 +12,12 @@ export type DbRecordPlugin<T, S> = {
   notifsForRecord: (uri: AdxUri, obj: unknown) => Notification[]
 }
 
+export type NotificationsPlugin = {
+  process: (notifs: Notification[]) => Promise<void>
+  deleteForRecord: (uri: AdxUri) => Promise<void>
+  registerSeen: (user: string) => Promise<void>
+}
+
 export type Notification = {
   userDid: string
   author: string

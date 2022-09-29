@@ -14,4 +14,10 @@ export class User {
 
   @Column('varchar')
   password: string
+
+  @Column('varchar')
+  lastSeenNotifs: string
+
+  @Column('varchar')
+  createdAt: string
 }

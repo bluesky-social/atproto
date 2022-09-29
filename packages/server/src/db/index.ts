@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm'
 import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
-import { DbRecordPlugin } from './types'
+import { DbRecordPlugin, NotificationsPlugin } from './types'
 import * as Badge from '../lexicon/types/todo/social/badge'
 import * as Follow from '../lexicon/types/todo/social/follow'
 import * as Like from '../lexicon/types/todo/social/like'
@@ -16,10 +16,7 @@ import profilePlugin, {
   ProfileIndex,
 } from './records/profile'
 import repostPlugin, { RepostIndex } from './records/repost'
-import {
-  UserNotification,
-  processNotifications,
-} from './notifications/user-notifications'
+import notificationsPlugin, { UserNotification } from './user-notifications'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from './repo-root'
@@ -37,6 +34,7 @@ export class Database {
     profiles: DbRecordPlugin<Profile.Record, ProfileIndex>
     reposts: DbRecordPlugin<Repost.Record, RepostIndex>
   }
+  notifications: NotificationsPlugin
 
   constructor(db: DataSource) {
     this.db = db
@@ -48,6 +46,7 @@ export class Database {
       profiles: profilePlugin(db),
       reposts: repostPlugin(db),
     }
+    this.notifications = notificationsPlugin(db)
   }
 
   static async sqlite(location: string): Promise<Database> {
@@ -123,13 +122,14 @@ export class Database {
     did: string,
     password: string,
   ) {
-    const table = this.db.getRepository(User)
     const user = new User()
     user.email = email
     user.username = username
     user.did = did
     user.password = await util.scryptHash(password)
-    await table.save(user)
+    user.createdAt = new Date().toISOString()
+    user.lastSeenNotifs = new Date().toISOString()
+    await this.db.getRepository(User).save(user)
   }
 
   async verifyUserPassword(
@@ -141,6 +141,10 @@ export class Database {
     const validPass = await util.scryptVerify(password, found.password)
     if (!validPass) return null
     return found.did
+  }
+
+  async registerSeenNotifs(user: string): Promise<void> {
+    await this.notifications.registerSeen(user)
   }
 
   validateRecord(collection: string, obj: unknown): ValidationResult {
@@ -188,13 +192,17 @@ export class Database {
     await table.set(uri, obj)
 
     const notifs = table.notifsForRecord(uri, obj)
-    await processNotifications(this.db, notifs)
+    await this.notifications.process(notifs)
   }
 
   async deleteRecord(uri: AdxUri) {
     const table = this.findTableForCollection(uri.collection)
     const recordTable = this.db.getRepository(AdxRecord)
-    await Promise.all([table.delete(uri), recordTable.delete(uri.toString())])
+    await Promise.all([
+      table.delete(uri),
+      recordTable.delete(uri.toString()),
+      this.notifications.deleteForRecord(uri),
+    ])
   }
 
   async listCollectionsForDid(did: string): Promise<string[]> {
