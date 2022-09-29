@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryColumn,
-  UpdateDateColumn,
-  CreateDateColumn,
-} from 'typeorm'
+import { Entity, Column, PrimaryColumn } from 'typeorm'
 
 @Entity({ name: 'records' })
 export class AdxRecord {
