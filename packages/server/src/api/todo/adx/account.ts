@@ -72,7 +72,7 @@ export default function (server: Server) {
     await db.setRepoRoot(did, repo.cid)
 
     if (isTestUser && config.testNameRegistry) {
-      config.testNameRegistry['username'] = did
+      config.testNameRegistry[username] = did
     }
 
     const jwt = auth.createToken(did)
