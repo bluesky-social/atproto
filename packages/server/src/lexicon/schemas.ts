@@ -835,6 +835,24 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
+    id: 'todo.social.getNotificationCount',
+    type: 'query',
+    parameters: {},
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['notifications'],
+        properties: {
+          count: {
+            type: 'number',
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'todo.social.getNotifications',
     type: 'query',
     parameters: {
@@ -862,7 +880,14 @@ export const methodSchemas: MethodSchema[] = [
         $defs: {
           notification: {
             type: 'object',
-            required: ['uri', 'author', 'record', 'isRead', 'indexedAt'],
+            required: [
+              'uri',
+              'author',
+              'reason',
+              'record',
+              'isRead',
+              'indexedAt',
+            ],
             properties: {
               uri: {
                 type: 'string',
@@ -870,7 +895,7 @@ export const methodSchemas: MethodSchema[] = [
               },
               author: {
                 type: 'object',
-                required: ['did', 'name', 'displayName'],
+                required: ['did', 'name'],
                 properties: {
                   did: {
                     type: 'string',
@@ -883,6 +908,14 @@ export const methodSchemas: MethodSchema[] = [
                     maxLength: 64,
                   },
                 },
+              },
+              reason: {
+                type: 'string',
+                $comment:
+                  "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'.",
+              },
+              reasonSubject: {
+                type: 'string',
               },
               record: {
                 type: 'object',
