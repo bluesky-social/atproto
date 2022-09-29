@@ -33,6 +33,7 @@ import * as TodoSocialGetProfile from './types/todo/social/getProfile'
 import * as TodoSocialGetRepostedBy from './types/todo/social/getRepostedBy'
 import * as TodoSocialGetUserFollowers from './types/todo/social/getUserFollowers'
 import * as TodoSocialGetUserFollows from './types/todo/social/getUserFollows'
+import * as TodoSocialPostNotificationsSeen from './types/todo/social/postNotificationsSeen'
 
 export function createServer(): Server {
   return new Server()
@@ -207,5 +208,10 @@ export class SocialNS {
   getUserFollows(handler: TodoSocialGetUserFollows.Handler) {
     /** @ts-ignore */
     return this.server.xrpc.method('todo.social.getUserFollows', handler)
+  }
+
+  postNotificationsSeen(handler: TodoSocialPostNotificationsSeen.Handler) {
+    /** @ts-ignore */
+    return this.server.xrpc.method('todo.social.postNotificationsSeen', handler)
   }
 }

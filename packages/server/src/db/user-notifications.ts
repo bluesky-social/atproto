@@ -41,7 +41,7 @@ export const registerSeen = (db: DataSource) => async (user: string) => {
   const where = user.startsWith('did:') ? { did: user } : { username: user }
   await db
     .getRepository(User)
-    .update({ lastSeenNotifs: new Date().toISOString() }, where)
+    .update(where, { lastSeenNotifs: new Date().toISOString() })
 }
 
 export default (db: DataSource): NotificationsPlugin => ({

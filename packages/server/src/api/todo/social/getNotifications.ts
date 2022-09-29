@@ -1,5 +1,5 @@
 import { Server } from '../../../lexicon'
-import { AuthRequiredError } from '@adxp/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetNotifications from '../../../lexicon/types/todo/social/getNotifications'
 import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
@@ -57,8 +57,7 @@ export default function (server: Server) {
       ])
 
       if (!user) {
-        // @TODO cleanup
-        throw new Error('could not find user')
+        throw new InvalidRequestError(`Could not find user: ${user}`)
       }
 
       const notifications = notifs.map((notif) => ({

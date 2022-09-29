@@ -1400,6 +1400,30 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'todo.social.postNotificationsSeen',
+    type: 'procedure',
+    description: 'Notify server that the user has seen notifications',
+    parameters: {},
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['seenAt'],
+        properties: {
+          seenAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {},
+    },
+  },
 ]
 export const recordSchemas: RecordSchema[] = [
   {

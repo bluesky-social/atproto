@@ -1,9 +1,7 @@
 import { Server } from '../../../lexicon'
 import { AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetNotificationCount from '../../../lexicon/types/todo/social/getNotificationCount'
-import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
-import { AdxRecord } from '../../../db/record'
 import { getLocals } from '../../../util'
 import { UserNotification } from '../../../db/user-notifications'
 
