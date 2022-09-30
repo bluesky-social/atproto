@@ -155,7 +155,7 @@ describe('pds views', () => {
       )
       return new AdxUri(res.uri)
     }
-    bobLikes[alicePosts[2].toString()] = await like(
+    bobLikes[alicePosts[1].toString()] = await like(
       users.bob.did,
       alicePosts[1].toString(),
     )
@@ -377,7 +377,15 @@ describe('pds views', () => {
     expect(aliceFeed.data.feed[5].record.text).toEqual(posts.carol[0])
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed[6].record.text).toEqual(posts.bob[0])
-    expect(aliceFeed.data.feed[3].repostCount).toEqual(1)
+    for (let i = 0; i < aliceFeed.data.feed.length; i++) {
+      if (i === 3) {
+        expect(aliceFeed.data.feed[i].repostCount).toEqual(1)
+        expect(aliceFeed.data.feed[i].repostedBy?.name).toBe('carol.test')
+      } else {
+        expect(aliceFeed.data.feed[i].repostCount).toEqual(0)
+        expect(aliceFeed.data.feed[i].repostedBy).toBeUndefined()
+      }
+    }
 
     const aliceFeed2 = await client.todo.social.getFeed(
       { before: aliceFeed.data.feed[0].cursor, limit: 1 },
@@ -412,7 +420,7 @@ describe('pds views', () => {
     expect(bobFeed.data.feed[3].likeCount).toEqual(3)
     expect(bobFeed.data.feed[2].likeCount).toEqual(2)
     expect(bobFeed.data.feed[3]?.myState?.like).toEqual(
-      bobLikes[alicePosts[1].toString()],
+      bobLikes[alicePosts[1].toString()].toString(),
     )
     expect(bobFeed.data.feed[6]?.myState?.like).toBeUndefined()
   })

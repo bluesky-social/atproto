@@ -39,16 +39,17 @@ export default function (server: Server) {
           .andWhere('post.creator != :requester', { requester })
       } else {
         const authorWhere = author.startsWith('did:')
-          ? 'author.did'
-          : 'author.username'
+          ? 'originator.did'
+          : 'originator.username'
         builder
           .from(PostIndex, 'post')
           .leftJoin(RepostIndex, 'repost', 'repost.subject = post.uri')
           .leftJoin(
             User,
-            'author',
-            'author.did = post.creator OR author.did = repost.creator',
+            'originator',
+            'originator.did = post.creator OR originator.did = repost.creator',
           )
+          .leftJoin(User, 'author', 'author.did = post.creator')
           .where(`${authorWhere} = :author`, { author })
       }
 
@@ -61,6 +62,9 @@ export default function (server: Server) {
           'reposted_by.did AS repostedByDid',
           'reposted_by.username AS repostedByName',
           'reposted_by_profile.displayName AS repostedByDisplayName',
+          author === undefined
+            ? 'follow.subject == post.creator AS isNotRepost'
+            : 'originator.did == post.creator as isNotRepost',
           'record.raw AS rawRecord',
           'like_count.count AS likeCount',
           'repost_count.count AS repostCount',
@@ -129,13 +133,14 @@ export default function (server: Server) {
           name: row.authorName,
           displayName: row.authorDisplayName || undefined,
         },
-        repostedBy: row.repostedByDid
-          ? {
-              did: row.repostedByDid,
-              name: row.repostedByName,
-              displayName: row.repostedByDisplayName || undefined,
-            }
-          : undefined,
+        repostedBy:
+          !row.isNotRepost && row.repostedByDid
+            ? {
+                did: row.repostedByDid,
+                name: row.repostedByName,
+                displayName: row.repostedByDisplayName || undefined,
+              }
+            : undefined,
         record: JSON.parse(row.rawRecord),
         replyCount: row.replyCount || 0,
         repostCount: row.repostCount || 0,
