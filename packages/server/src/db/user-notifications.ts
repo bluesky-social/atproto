@@ -8,7 +8,7 @@ export class UserNotification {
   @PrimaryColumn('varchar')
   userDid: string
 
-  @PrimaryColumn('vachar')
+  @PrimaryColumn('varchar')
   recordUri: string
 
   @Column('varchar')

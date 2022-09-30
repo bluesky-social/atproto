@@ -3,10 +3,7 @@
 */
 import { Headers, XRPCError } from '@adxp/xrpc'
 
-export interface QueryParams {
-  limit?: number;
-  before?: string;
-}
+export interface QueryParams {}
 
 export interface CallOptions {
   headers?: Headers;
@@ -15,20 +12,7 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  notifications: Notification[];
-}
-export interface Notification {
-  uri: string;
-  author: {
-    did: string,
-    name: string,
-    displayName?: string,
-  };
-  reason: string;
-  reasonSubject?: string;
-  record: {};
-  isRead: boolean;
-  indexedAt: string;
+  count: number;
 }
 
 export interface Response {

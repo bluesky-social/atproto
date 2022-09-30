@@ -134,7 +134,7 @@ describe('pds views', () => {
       {
         index: [0, 18],
         type: 'mention',
-        value: users.carol.did,
+        value: users.alice.did,
       },
     ])
     const alice1 = await post(users.alice.did, posts.alice[1])
@@ -209,6 +209,7 @@ describe('pds views', () => {
       return new AdxUri(res.uri)
     }
     await repost(users.carol.did, danPosts[1].toString())
+    await repost(users.dan.did, alicePosts[1].toString())
   })
 
   // TODO
@@ -486,5 +487,85 @@ describe('pds views', () => {
     expect(thread.data.thread.replies?.[1].replies?.[0].record.text).toEqual(
       replies.alice[0],
     )
+  })
+
+  it('fetches notifications', async () => {
+    const notifCount = await client.todo.social.getNotificationCount(
+      {},
+      undefined,
+      { headers: getHeaders(users.alice.did) },
+    )
+    expect(notifCount.data.count).toBe(11)
+
+    const notifRes = await client.todo.social.getNotifications({}, undefined, {
+      headers: getHeaders(users.alice.did),
+    })
+    const notifs = notifRes.data.notifications
+    expect(notifs.length).toBe(11)
+
+    expect(notifs[10].reason).toBe('follow')
+    expect(notifs[10].author.did).toBe(users.bob.did)
+
+    expect(notifs[9].reason).toBe('follow')
+    expect(notifs[9].author.did).toBe(users.carol.did)
+
+    expect(notifs[8].reason).toBe('mention')
+    expect(notifs[8].author.did).toBe(users.dan.did)
+
+    expect(notifs[7].reason).toBe('like')
+    expect(notifs[7].reasonSubject).toBe(alicePosts[1].toString())
+    expect(notifs[7].author.did).toBe(users.bob.did)
+
+    expect(notifs[6].reason).toBe('like')
+    expect(notifs[6].reasonSubject).toBe(alicePosts[2].toString())
+    expect(notifs[6].author.did).toBe(users.bob.did)
+
+    expect(notifs[5].reason).toBe('like')
+    expect(notifs[5].reasonSubject).toBe(alicePosts[1].toString())
+    expect(notifs[5].author.did).toBe(users.carol.did)
+
+    expect(notifs[4].reason).toBe('like')
+    expect(notifs[4].reasonSubject).toBe(alicePosts[2].toString())
+    expect(notifs[4].author.did).toBe(users.carol.did)
+
+    expect(notifs[3].reason).toBe('like')
+    expect(notifs[3].reasonSubject).toBe(alicePosts[1].toString())
+    expect(notifs[3].author.did).toBe(users.dan.did)
+
+    expect(notifs[2].reason).toBe('reply')
+    expect(notifs[2].reasonSubject).toBe(alicePosts[1].toString())
+    expect(notifs[2].author.did).toBe(users.bob.did)
+
+    expect(notifs[1].reason).toBe('reply')
+    expect(notifs[1].reasonSubject).toBe(alicePosts[1].toString())
+    expect(notifs[1].author.did).toBe(users.carol.did)
+
+    expect(notifs[0].reason).toBe('repost')
+    expect(notifs[0].reasonSubject).toBe(alicePosts[1].toString())
+    expect(notifs[0].author.did).toBe(users.dan.did)
+
+    const noneRead = notifs.every((notif) => !notif.isRead)
+    expect(noneRead).toBeTruthy()
+  })
+
+  it('updates notifications last seen', async () => {
+    await client.todo.social.postNotificationsSeen(
+      {},
+      { seenAt: new Date().toISOString() },
+      { encoding: 'application/json', headers: getHeaders(users.alice.did) },
+    )
+
+    const notifCount = await client.todo.social.getNotificationCount(
+      {},
+      undefined,
+      { headers: getHeaders(users.alice.did) },
+    )
+    expect(notifCount.data.count).toBe(0)
+
+    const notifs = await client.todo.social.getNotifications({}, undefined, {
+      headers: getHeaders(users.alice.did),
+    })
+    const allRead = notifs.data.notifications.every((notif) => notif.isRead)
+    expect(allRead).toBeTruthy()
   })
 })

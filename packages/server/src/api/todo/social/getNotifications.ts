@@ -65,12 +65,12 @@ export default function (server: Server) {
         author: {
           did: notif.authorDid,
           name: notif.authorName,
-          displayName: notif.authorDisplayName,
+          displayName: notif.authorDisplayName || undefined,
         },
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
         record: JSON.parse(notif.record),
-        isRead: notif.createdAt > user.lastSeenNotifs,
+        isRead: notif.createdAt <= user.lastSeenNotifs,
         indexedAt: notif.indexedAt,
       }))
       return {

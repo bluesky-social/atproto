@@ -37,7 +37,7 @@ export const posts = {
   alice: ['hey there', 'again', 'yoohoo'],
   bob: ['bob back at it again!', 'bobby boy here', 'yoohoo'],
   carol: ['hi im carol'],
-  dan: ['dan here!', '@carol.bluesky.xyz is the best'],
+  dan: ['dan here!', '@alice.bluesky.xyz is the best'],
 }
 
 export const replies = {

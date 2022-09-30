@@ -842,7 +842,7 @@ export const methodSchemas: MethodSchema[] = [
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['notifications'],
+        required: ['count'],
         properties: {
           count: {
             type: 'number',
