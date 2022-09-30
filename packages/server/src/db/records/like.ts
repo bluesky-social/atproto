@@ -8,7 +8,7 @@ import {
   Repository,
   ManyToOne,
 } from 'typeorm'
-import { DbRecordPlugin } from '../types'
+import { DbRecordPlugin, Notification } from '../types'
 import { User } from '../user'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
@@ -76,6 +76,21 @@ const translateDbObj = (dbObj: LikeIndex): Like.Record => {
   }
 }
 
+const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+  if (!isValidSchema(obj)) {
+    throw new Error(`Record does not match schema: ${type}`)
+  }
+  const subjectUri = new AdxUri(obj.subject)
+  const notif = {
+    userDid: subjectUri.host,
+    author: uri.host,
+    recordUri: uri.toString(),
+    reason: 'like',
+    reasonSubject: subjectUri.toString(),
+  }
+  return [notif]
+}
+
 export const makePlugin = (
   db: DataSource,
 ): DbRecordPlugin<Like.Record, LikeIndex> => {
@@ -88,6 +103,7 @@ export const makePlugin = (
     set: setFn(repository),
     delete: deleteFn(repository),
     translateDbObj,
+    notifsForRecord,
   }
 }
 

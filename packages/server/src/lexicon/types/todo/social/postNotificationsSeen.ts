@@ -3,12 +3,16 @@
 */
 import express from 'express'
 
-export interface QueryParams {
-  limit?: number;
-  before?: string;
+export interface QueryParams {}
+
+export interface HandlerInput {
+  encoding: 'application/json';
+  body: InputSchema;
 }
 
-export type HandlerInput = undefined
+export interface InputSchema {
+  seenAt: string;
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json';
@@ -23,20 +27,7 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  notifications: Notification[];
-}
-export interface Notification {
-  uri: string;
-  author: {
-    did: string,
-    name: string,
-    displayName?: string,
-  };
-  reason: string;
-  reasonSubject?: string;
-  record: {};
-  isRead: boolean;
-  indexedAt: string;
+  [k: string]: unknown;
 }
 
 export type Handler = (

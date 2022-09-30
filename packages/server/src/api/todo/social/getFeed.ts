@@ -36,6 +36,7 @@ export default function (server: Server) {
           )
           .leftJoin(User, 'author', 'author.did = post.creator')
           .where('user.did = :did', { did: requester })
+          .andWhere('post.creator != :requester', { requester })
       } else {
         const authorWhere = author.startsWith('did:')
           ? 'author.did'

@@ -20,12 +20,12 @@
       "$defs": {
         "notification": {
           "type": "object",
-          "required": ["uri", "author", "record", "isRead", "indexedAt"],
+          "required": ["uri", "author", "reason", "record", "isRead", "indexedAt"],
           "properties": {
             "uri": {"type": "string", "format": "uri"},
             "author": {
               "type": "object",
-              "required": ["did", "name", "displayName"],
+              "required": ["did", "name"],
               "properties": {
                 "did": {"type": "string"},
                 "name": {"type": "string"},
@@ -35,6 +35,11 @@
                 }
               }
             },
+            "reason": {
+              "type": "string",
+              "$comment": "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'."
+            },
+            "reasonSubject": {"type": "string"},
             "record": {"type": "object"},
             "isRead": {"type": "boolean"},
             "indexedAt": {"type": "string", "format": "date-time"}

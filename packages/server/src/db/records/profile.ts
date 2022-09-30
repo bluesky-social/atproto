@@ -1,7 +1,7 @@
 import { AdxUri } from '@adxp/uri'
 import * as Profile from '../../lexicon/types/todo/social/profile'
 import { DataSource, Entity, Column, PrimaryColumn } from 'typeorm'
-import { DbRecordPlugin } from '../types'
+import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
 import { collectionToTableName } from '../util'
 
@@ -98,10 +98,13 @@ const translateDbObj = (dbObj: ProfileIndex): Profile.Record => {
   }
 }
 
+const notifsForRecord = (_uri: AdxUri, _obj: unknown): Notification[] => {
+  return []
+}
+
 export const makePlugin = (
   db: DataSource,
 ): DbRecordPlugin<Profile.Record, ProfileIndex> => {
-  const repository = db.getRepository(ProfileIndex)
   return {
     collection: type,
     tableName,
@@ -110,6 +113,7 @@ export const makePlugin = (
     set: setFn(db),
     delete: deleteFn(db),
     translateDbObj,
+    notifsForRecord,
   }
 }
 

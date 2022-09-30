@@ -9,4 +9,26 @@ export type DbRecordPlugin<T, S> = {
   set: (uri: AdxUri, obj: unknown) => Promise<void>
   delete: (uri: AdxUri) => Promise<void>
   translateDbObj: (dbObj: S) => T
+  notifsForRecord: (uri: AdxUri, obj: unknown) => Notification[]
 }
+
+export type NotificationsPlugin = {
+  process: (notifs: Notification[]) => Promise<void>
+  deleteForRecord: (uri: AdxUri) => Promise<void>
+}
+
+export type Notification = {
+  userDid: string
+  author: string
+  recordUri: string
+  reason: string
+  reasonSubject?: string
+}
+
+export type NotificationReason =
+  | 'like'
+  | 'repost'
+  | 'follow'
+  | 'badge'
+  | 'mention'
+  | 'reply'
