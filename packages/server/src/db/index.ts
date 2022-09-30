@@ -143,10 +143,6 @@ export class Database {
     return found.did
   }
 
-  async registerSeenNotifs(user: string): Promise<void> {
-    await this.notifications.registerSeen(user)
-  }
-
   validateRecord(collection: string, obj: unknown): ValidationResult {
     let table
     try {
