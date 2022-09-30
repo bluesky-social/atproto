@@ -376,7 +376,15 @@ describe('pds views', () => {
     expect(aliceFeed.data.feed[5].record.text).toEqual(posts.carol[0])
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed[6].record.text).toEqual(posts.bob[0])
-    expect(aliceFeed.data.feed[3].repostCount).toEqual(1)
+    for (let i = 0; i < aliceFeed.data.feed.length; i++) {
+      if (i === 3) {
+        expect(aliceFeed.data.feed[i].repostCount).toEqual(1)
+        expect(aliceFeed.data.feed[i].repostedBy?.name).toBe('carol.test')
+      } else {
+        expect(aliceFeed.data.feed[i].repostCount).toEqual(0)
+        expect(aliceFeed.data.feed[i].repostedBy).toBeUndefined()
+      }
+    }
 
     const aliceFeed2 = await client.todo.social.getFeed(
       { before: aliceFeed.data.feed[0].cursor, limit: 1 },
