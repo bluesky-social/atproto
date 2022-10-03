@@ -1,6 +1,13 @@
 import { AdxUri } from '@adxp/uri'
 import * as Post from '../../lexicon/types/todo/social/post'
-import { DataSource, Entity, Column, PrimaryColumn, ManyToOne } from 'typeorm'
+import {
+  DataSource,
+  Entity,
+  Column,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+} from 'typeorm'
 import { DbRecordPlugin, Notification } from '../types'
 import { User } from '../user'
 import schemas from '../schemas'
@@ -36,8 +43,11 @@ export class PostIndex {
 
 @Entity({ name: `${tableName}_entities` })
 export class PostEntityIndex {
-  @PrimaryColumn('varchar')
-  post_uri: string
+  @PrimaryGeneratedColumn()
+  id: number
+
+  @Column('varchar')
+  postUri: string
 
   @Column('int')
   startIndex: number
@@ -62,7 +72,7 @@ const getFn =
     const obj = translateDbObj(found)
     const entities = await db
       .getRepository(PostEntityIndex)
-      .findBy({ post_uri: uri.toString() })
+      .findBy({ postUri: uri.toString() })
     obj.entities = entities.map((row) => ({
       index: [row.startIndex, row.endIndex],
       type: row.type,
@@ -85,12 +95,11 @@ const setFn =
     }
     const entities = (obj.entities || []).map((entity) => {
       const entry = new PostEntityIndex()
-      entry.post_uri = uri.toString()
+      entry.postUri = uri.toString()
       entry.startIndex = entity.index[0]
       entry.endIndex = entity.index[1]
       entry.type = entity.type
       entry.value = entity.value
-      entry.post_uri = uri.toString()
       return entry
     })
     await db.getRepository(PostEntityIndex).save(entities)
@@ -111,7 +120,7 @@ const deleteFn =
   (db: DataSource) =>
   async (uri: AdxUri): Promise<void> => {
     await db.getRepository(PostIndex).delete({ uri: uri.toString() })
-    await db.getRepository(PostEntityIndex).delete({ post_uri: uri.toString() })
+    await db.getRepository(PostEntityIndex).delete({ postUri: uri.toString() })
   }
 
 const translateDbObj = (dbObj: PostIndex): Post.Record => {
