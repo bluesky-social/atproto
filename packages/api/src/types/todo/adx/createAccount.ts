@@ -41,6 +41,12 @@ export class InvalidPasswordError extends XRPCError {
   }
 }
 
+export class InvalidInviteCodeError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export class UsernameNotAvailableError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message)
@@ -51,6 +57,7 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'InvalidUsername') return new InvalidUsernameError(e)
     if (e.error === 'InvalidPassword') return new InvalidPasswordError(e)
+    if (e.error === 'InvalidInviteCode') return new InvalidInviteCodeError(e)
     if (e.error === 'UsernameNotAvailable')
       return new UsernameNotAvailableError(e)
   }

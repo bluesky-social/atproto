@@ -9,6 +9,9 @@ export interface ServerConfigValues {
 
   didPlcUrl: string
   serverDid: string
+  adminDids: string[]
+
+  inviteRequired: boolean
 
   blockstoreLocation?: string
   databaseLocation?: string
@@ -36,6 +39,11 @@ export class ServerConfig {
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
     const serverDid = process.env.SERVER_DID || ''
+    const adminDids = (process.env.ADMIN_DIDS || '')
+      .split(' ')
+      .filter((val) => val.length > 0)
+
+    const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
 
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
@@ -50,6 +58,8 @@ export class ServerConfig {
       jwtSecret,
       serverDid,
       didPlcUrl,
+      adminDids,
+      inviteRequired,
       blockstoreLocation,
       databaseLocation,
       testNameRegistry,
@@ -88,6 +98,14 @@ export class ServerConfig {
 
   get serverDid() {
     return this.cfg.serverDid
+  }
+
+  get adminDids() {
+    return this.cfg.adminDids
+  }
+
+  get inviteRequired() {
+    return this.cfg.inviteRequired
   }
 
   get blockstoreLocation() {

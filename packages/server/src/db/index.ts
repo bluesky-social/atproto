@@ -23,6 +23,7 @@ import { RepoRoot } from './repo-root'
 import { AdxRecord } from './record'
 import { User } from './user'
 import * as util from './util'
+import { InviteCode, InviteCodeUses } from './invite-codes'
 
 export class Database {
   db: DataSource
@@ -66,6 +67,8 @@ export class Database {
         ProfileBadgeIndex,
         RepostIndex,
         UserNotification,
+        InviteCode,
+        InviteCodeUses,
       ],
       synchronize: true,
     })
@@ -261,6 +264,22 @@ export class Database {
       throw new Error('Could not find table for collection')
     }
     return found
+  }
+
+  async getAvailableInviteCodeUses(code: string): Promise<number> {
+    const res = await this.db
+      .createQueryBuilder()
+      .select()
+      .from(InviteCode, 'invite')
+      .leftJoin(
+        util.countSubquery(InviteCodeUses, 'code'),
+        'use_count',
+        'use_count.subject = invite.code',
+      )
+      .where('invite.code = :inviteCode', { inviteCode })
+      .andWhere('invite.disabled = false')
+      .andWhere('invite.availableUses > use_count.count')
+      .getRawOne()
   }
 }
 
