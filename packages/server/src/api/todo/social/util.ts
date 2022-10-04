@@ -46,9 +46,6 @@ export const queryPostsWithReposts = (qb: SelectQueryBuilder<PostIndex>) => {
     .leftJoin(
       User,
       'originator',
-      // @TODO this combined with the groupBy('post.uri') makes the result not well-defined
-      // when a post and its repost both could appear in the feed. You may get just the post,
-      // or you may just get the repost.
       'originator.did = post.creator OR originator.did = repost.creator',
     )
 }
@@ -68,7 +65,7 @@ export const queryPostsAndRepostsAsFeedItems = (
       'reposted_by.did AS repostedByDid',
       'reposted_by.username AS repostedByName',
       'reposted_by_profile.displayName AS repostedByDisplayName',
-      'originator.did == post.creator AS isNotRepost',
+      `${util.isNotRepostClause} AS isNotRepost`,
       'record.raw AS rawRecord',
       'like_count.count AS likeCount',
       'repost_count.count AS repostCount',
