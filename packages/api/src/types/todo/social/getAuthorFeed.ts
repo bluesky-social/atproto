@@ -19,7 +19,7 @@ export interface OutputSchema {
   feed: FeedItem[];
 }
 export interface FeedItem {
-  cursor?: string;
+  cursor: string;
   uri: string;
   author: User;
   repostedBy?: User;

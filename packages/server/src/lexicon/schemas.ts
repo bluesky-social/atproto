@@ -646,6 +646,7 @@ export const methodSchemas: MethodSchema[] = [
           feedItem: {
             type: 'object',
             required: [
+              'cursor',
               'uri',
               'author',
               'record',
@@ -811,6 +812,7 @@ export const methodSchemas: MethodSchema[] = [
           feedItem: {
             type: 'object',
             required: [
+              'cursor',
               'uri',
               'author',
               'record',
