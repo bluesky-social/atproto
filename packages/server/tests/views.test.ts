@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import { AdxUri } from '@adxp/uri'
 import { users, posts, replies } from './test-data'
