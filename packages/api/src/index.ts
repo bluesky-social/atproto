@@ -7,6 +7,7 @@ import {
 } from '@adxp/xrpc'
 import { methodSchemas, recordSchemas } from './schemas'
 import * as TodoAdxCreateAccount from './types/todo/adx/createAccount'
+import * as TodoAdxCreateInviteCode from './types/todo/adx/createInviteCode'
 import * as TodoAdxCreateSession from './types/todo/adx/createSession'
 import * as TodoAdxDeleteAccount from './types/todo/adx/deleteAccount'
 import * as TodoAdxDeleteSession from './types/todo/adx/deleteSession'
@@ -44,6 +45,7 @@ import * as TodoSocialProfile from './types/todo/social/profile'
 import * as TodoSocialRepost from './types/todo/social/repost'
 
 export * as TodoAdxCreateAccount from './types/todo/adx/createAccount'
+export * as TodoAdxCreateInviteCode from './types/todo/adx/createInviteCode'
 export * as TodoAdxCreateSession from './types/todo/adx/createSession'
 export * as TodoAdxDeleteAccount from './types/todo/adx/deleteAccount'
 export * as TodoAdxDeleteSession from './types/todo/adx/deleteSession'
@@ -139,6 +141,18 @@ export class AdxNS {
       .call('todo.adx.createAccount', params, data, opts)
       .catch((e) => {
         throw TodoAdxCreateAccount.toKnownErr(e)
+      })
+  }
+
+  createInviteCode(
+    params: TodoAdxCreateInviteCode.QueryParams,
+    data?: TodoAdxCreateInviteCode.InputSchema,
+    opts?: TodoAdxCreateInviteCode.CallOptions
+  ): Promise<TodoAdxCreateInviteCode.Response> {
+    return this._service.xrpc
+      .call('todo.adx.createInviteCode', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxCreateInviteCode.toKnownErr(e)
       })
   }
 

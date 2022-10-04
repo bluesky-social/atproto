@@ -11,10 +11,7 @@ export interface HandlerInput {
 }
 
 export interface InputSchema {
-  email: string;
-  username: string;
-  inviteCode?: string;
-  password: string;
+  useCount: number;
 }
 
 export interface HandlerSuccess {
@@ -25,19 +22,12 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number;
   message?: string;
-  error?:
-    | 'InvalidUsername'
-    | 'InvalidPassword'
-    | 'InvalidInviteCode'
-    | 'UsernameNotAvailable';
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  jwt: string;
-  username: string;
-  did: string;
+  code: string;
 }
 
 export type Handler = (

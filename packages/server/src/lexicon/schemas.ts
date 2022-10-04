@@ -57,9 +57,43 @@ export const methodSchemas: MethodSchema[] = [
         name: 'InvalidPassword',
       },
       {
+        name: 'InvalidInviteCode',
+      },
+      {
         name: 'UsernameNotAvailable',
       },
     ],
+  },
+  {
+    lexicon: 1,
+    id: 'todo.adx.createInviteCode',
+    type: 'procedure',
+    description: 'Create an invite code.',
+    parameters: {},
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['useCount'],
+        properties: {
+          useCount: {
+            type: 'number',
+          },
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['code'],
+        properties: {
+          code: {
+            type: 'string',
+          },
+        },
+      },
+    },
   },
   {
     lexicon: 1,

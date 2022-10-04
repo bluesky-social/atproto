@@ -2,17 +2,23 @@ import { MemoryBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
 import * as plc from '@adxp/plc'
 import getPort from 'get-port'
+import * as uint8arrays from 'uint8arrays'
 
 import server, { ServerConfig, Database } from '../src/index'
 
 const USE_TEST_SERVER = true
 
-export type CloseFn = () => Promise<void>
+const ADMIN_PASSWORD = 'admin-pass'
 
-export const runTestServer = async (): Promise<{
+export type CloseFn = () => Promise<void>
+export type TestServerInfo = {
   url: string
   close: CloseFn
-}> => {
+}
+
+export const runTestServer = async (
+  params: Partial<ServerConfig> = {},
+): Promise<TestServerInfo> => {
   if (!USE_TEST_SERVER) {
     return {
       url: 'http://localhost:2583',
@@ -49,9 +55,12 @@ export const runTestServer = async (): Promise<{
       hostname: 'localhost',
       port: pdsPort,
       serverDid,
+      adminPassword: ADMIN_PASSWORD,
+      inviteRequired: false,
       didPlcUrl: plcUrl,
       jwtSecret: 'jwt-secret',
       testNameRegistry: {},
+      ...params,
     }),
   )
 
@@ -66,4 +75,14 @@ export const runTestServer = async (): Promise<{
       ])
     },
   }
+}
+
+export const adminAuth = () => {
+  return (
+    'Basic ' +
+    uint8arrays.toString(
+      uint8arrays.fromString('admin:' + ADMIN_PASSWORD, 'utf8'),
+      'base64pad',
+    )
+  )
 }

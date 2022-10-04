@@ -7,6 +7,7 @@ import {
 } from '@adxp/xrpc-server'
 import { methodSchemas } from './schemas'
 import * as TodoAdxCreateAccount from './types/todo/adx/createAccount'
+import * as TodoAdxCreateInviteCode from './types/todo/adx/createInviteCode'
 import * as TodoAdxCreateSession from './types/todo/adx/createSession'
 import * as TodoAdxDeleteAccount from './types/todo/adx/deleteAccount'
 import * as TodoAdxDeleteSession from './types/todo/adx/deleteSession'
@@ -71,6 +72,11 @@ export class AdxNS {
   createAccount(handler: TodoAdxCreateAccount.Handler) {
     /** @ts-ignore */
     return this.server.xrpc.method('todo.adx.createAccount', handler)
+  }
+
+  createInviteCode(handler: TodoAdxCreateInviteCode.Handler) {
+    /** @ts-ignore */
+    return this.server.xrpc.method('todo.adx.createInviteCode', handler)
   }
 
   createSession(handler: TodoAdxCreateSession.Handler) {

@@ -1,21 +1,26 @@
 import * as auth from '@adxp/auth'
+import * as uint8arrays from 'uint8arrays'
 import { DidResolver } from '@adxp/did-sdk'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
 
 const BEARER = 'Bearer '
+const BASIC = 'Basic '
 
 export type ServerAuthOpts = {
   jwtSecret: string
   didResolver: DidResolver
+  adminPass: string
 }
 export class ServerAuth {
-  private _secret
+  private _secret: string
+  private _adminPass: string
   didResolver: DidResolver
   verifier: auth.Verifier
 
   constructor(opts: ServerAuthOpts) {
     this._secret = opts.jwtSecret
+    this._adminPass = opts.adminPass
     this.didResolver = opts.didResolver
     this.verifier = new auth.Verifier({ didResolver: opts.didResolver })
   }
@@ -43,6 +48,18 @@ export class ServerAuth {
   verifyUser(req: express.Request, did: string): boolean {
     const authorized = this.getUserDid(req)
     return authorized === did
+  }
+
+  verifyAdmin(req: express.Request): boolean {
+    const header = req.headers.authorization || ''
+    if (!header.startsWith(BASIC)) return false
+    const token = header.slice(BASIC.length)
+    const [username, password] = uint8arrays
+      .toString(uint8arrays.fromString(token, 'base64pad'), 'utf8')
+      .split(':')
+    if (username !== 'admin') return false
+    if (password !== this._adminPass) return false
+    return true
   }
 
   toString(): string {

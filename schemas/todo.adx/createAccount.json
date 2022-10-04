@@ -32,6 +32,7 @@
   "errors": [
     {"name": "InvalidUsername"},
     {"name": "InvalidPassword"},
+    {"name": "InvalidInviteCode"},
     {"name": "UsernameNotAvailable"}
   ]
 }

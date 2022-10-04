@@ -28,7 +28,11 @@ const runServer = (
 ): http.Server => {
   const config = new ServerConfig(cfg)
   const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
-  const auth = new ServerAuth({ jwtSecret: cfg.jwtSecret, didResolver })
+  const auth = new ServerAuth({
+    jwtSecret: cfg.jwtSecret,
+    adminPass: cfg.adminPassword,
+    didResolver,
+  })
 
   const app = express()
   app.use(cors())

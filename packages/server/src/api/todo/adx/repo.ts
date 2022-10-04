@@ -87,6 +87,7 @@ export default function (server: Server) {
     }
   })
 
+  // @TODO all write methods should be transactional to ensure no forked histories
   server.todo.adx.repoBatchWrite(async (params, input, req, res) => {
     const { did, validate } = params
     const { auth, db } = util.getLocals(res)
