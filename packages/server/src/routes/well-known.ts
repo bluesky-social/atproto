@@ -1,12 +1,11 @@
 import express from 'express'
-import * as util from '../util'
-import { User } from '../db/user'
+import * as locals from '../locals'
 
 const router = express.Router()
 
 // did:web endpoint
 router.get('/did.json', async (req, res) => {
-  const { db, config } = util.getLocals(res)
+  const { db, config } = locals.get(res)
   const hostname = req.hostname
 
   let userRecord: { username: string; did: string } | null = null

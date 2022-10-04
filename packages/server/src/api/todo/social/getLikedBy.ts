@@ -4,13 +4,13 @@ import { AdxRecord } from '../../../db/record'
 import { LikeIndex } from '../../../db/records/like'
 import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
-import { getLocals } from '../../../util'
+import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.todo.social.getLikedBy(
     async (params: GetLikedBy.QueryParams, _input, _req, res) => {
       const { uri, limit, before } = params
-      const { db } = getLocals(res)
+      const { db } = locals.get(res)
 
       const builder = db.db
         .createQueryBuilder()

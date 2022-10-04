@@ -3,11 +3,11 @@ import * as crypto from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
 import { InviteCode } from '../../../db/invite-codes'
 import { Server } from '../../../lexicon'
-import * as util from '../../../util'
+import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.todo.adx.createInviteCode(async (_params, input, req, res) => {
-    const { auth, db, config } = util.getLocals(res)
+    const { auth, db, config } = locals.get(res)
     if (!auth.verifyAdmin(req)) {
       throw new ForbiddenError()
     }

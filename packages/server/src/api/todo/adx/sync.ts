@@ -1,14 +1,14 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import { def as common } from '@adxp/common'
-import * as util from '../../../util'
+import * as locals from '../../../locals'
 import { DataDiff, Repo } from '@adxp/repo'
 import * as repoDiff from '../../../repo-diff'
 
 export default function (server: Server) {
   server.todo.adx.syncGetRoot(async (params, _in, _req, res) => {
     const { did } = params
-    const db = util.getDB(res)
+    const db = locals.db(res)
     const root = await db.getRepoRoot(did)
     if (root === null) {
       throw new InvalidRequestError(`Could not find root for DID: ${did}`)
@@ -22,7 +22,10 @@ export default function (server: Server) {
   server.todo.adx.syncGetRepo(async (params, _in, _req, res) => {
     const { did, from = null } = params
     const fromCid = from ? common.strToCid.parse(from) : null
-    const repo = await util.loadRepo(res, did)
+    const repo = await locals.loadRepo(res, did)
+    if (repo === null) {
+      throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+    }
     const diff = await repo.getDiffCar(fromCid)
     return {
       encoding: 'application/cbor',
@@ -34,7 +37,7 @@ export default function (server: Server) {
     // we don't need auth here because the auth is on the data structure 😎
     const { did } = params
     const bytes = input.body
-    const db = util.getDB(res)
+    const db = locals.db(res)
 
     // @TODO add something back here. new route for repos not on server?
 
@@ -48,7 +51,7 @@ export default function (server: Server) {
     //   }
     // }
 
-    const maybeRepo = await util.maybeLoadRepo(res, did)
+    const maybeRepo = await locals.loadRepo(res, did)
     const isNewRepo = maybeRepo === null
     let repo: Repo
     let diff: DataDiff
@@ -59,7 +62,7 @@ export default function (server: Server) {
       await repo.loadAndVerifyDiff
       diff = await repo.loadAndVerifyDiff(bytes)
     } else {
-      const blockstore = util.getBlockstore(res)
+      const blockstore = locals.blockstore(res)
       repo = await Repo.fromCarFile(bytes, blockstore)
       diff = await repo.verifySetOfUpdates(null, repo.cid)
     }

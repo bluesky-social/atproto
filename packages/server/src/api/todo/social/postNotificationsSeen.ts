@@ -1,12 +1,12 @@
 import { Server } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
-import * as util from '../../../util'
+import * as locals from '../../../locals'
 import { User } from '../../../db/user'
 
 export default function (server: Server) {
   server.todo.social.postNotificationsSeen(async (_params, input, req, res) => {
     const { seenAt } = input.body
-    const { auth, db } = util.getLocals(res)
+    const { auth, db } = locals.get(res)
 
     const requester = auth.getUserDid(req)
     if (!requester) {

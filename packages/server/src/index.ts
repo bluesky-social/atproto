@@ -13,8 +13,10 @@ import { IpldStore } from '@adxp/repo'
 import Database from './db'
 import ServerAuth from './auth'
 import * as error from './error'
+import { loggerMiddleware } from './logger'
 import { ServerConfig, ServerConfigValues } from './config'
 import { DidResolver } from '@adxp/did-sdk'
+import { Locals } from './locals'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -36,13 +38,19 @@ const runServer = (
 
   const app = express()
   app.use(cors())
+  app.use(loggerMiddleware)
 
-  app.use((_req, res, next) => {
-    res.locals.blockstore = blockstore
-    res.locals.db = db
-    res.locals.keypair = keypair
-    res.locals.auth = auth
-    res.locals.config = config
+  app.use((req, res, next) => {
+    const locals: Locals = {
+      // @ts-ignore
+      logger: req.log,
+      blockstore,
+      db,
+      keypair,
+      auth,
+      config,
+    }
+    res.locals = locals
     next()
   })
 

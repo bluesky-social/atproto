@@ -6,13 +6,13 @@ import { FollowIndex } from '../../../db/records/follow'
 import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
 import * as util from './util'
-import { getLocals } from '../../../util'
+import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.todo.social.getUserFollowers(
     async (params: GetUserFollowers.QueryParams, _input, _req, res) => {
       const { user, limit, before } = params
-      const { db } = getLocals(res)
+      const { db } = locals.get(res)
 
       const subject = await util.getUserInfo(db.db, user).catch((e) => {
         throw new InvalidRequestError(`User not found: ${user}`)
