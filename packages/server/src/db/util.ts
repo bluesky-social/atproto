@@ -13,6 +13,9 @@ export const userWhereClause = (user: string): string => {
   }
 }
 
+export const postOrRepostIndexedAtClause =
+  'coalesce(repost.indexedAt, post.indexedAt)'
+
 type Subquery = (qb: SelectQueryBuilder<any>) => SelectQueryBuilder<any>
 
 export const countSubquery = (

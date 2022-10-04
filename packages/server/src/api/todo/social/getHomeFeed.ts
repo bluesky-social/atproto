@@ -12,6 +12,7 @@ import {
   queryPostsWithReposts,
   queryResultToFeedItem,
 } from './util'
+import { postOrRepostIndexedAtClause } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getHomeFeed(
@@ -58,13 +59,14 @@ export default function (server: Server) {
       }
 
       // Select data for presentation into FeedItem
-      queryPostsAndRepostsAsFeedItems(builder, { requester })
-        .orderBy('post.indexedAt', 'DESC')
-        .groupBy('post.uri')
+      queryPostsAndRepostsAsFeedItems(builder, { requester }).groupBy(
+        'post.uri',
+      )
 
       // Apply pagination
+      builder.orderBy(postOrRepostIndexedAtClause, 'DESC')
       if (before !== undefined) {
-        builder.andWhere('post.indexedAt < :before', { before })
+        builder.andWhere(`${postOrRepostIndexedAtClause} < :before`, { before })
       }
       if (limit !== undefined) {
         builder.limit(limit)

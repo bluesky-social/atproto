@@ -75,6 +75,7 @@ export const queryPostsAndRepostsAsFeedItems = (
       'requester_repost.uri AS requesterRepost',
       'requester_like.uri AS requesterLike',
       'record.indexedAt AS indexedAt',
+      `${util.postOrRepostIndexedAtClause} as cursor`,
     ])
     .leftJoin(User, 'author', 'author.did = post.creator')
     .leftJoin(
@@ -123,7 +124,7 @@ export const queryPostsAndRepostsAsFeedItems = (
 export const queryResultToFeedItem = (
   row,
 ): TodoSocialGetHomeFeed.FeedItem & TodoSocialGetAuthorFeed.FeedItem => ({
-  cursor: row.indexedAt,
+  cursor: row.cursor,
   uri: row.uri,
   author: {
     did: row.authorDid,
