@@ -1,7 +1,9 @@
+import fetch from 'node-fetch'
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import { AdxUri } from '@adxp/uri'
 import { users, posts, replies } from './test-data'
 import * as util from './_util'
+import { FeedAlgorithm } from '../src/api/todo/social/util'
 
 let alicePosts: AdxUri[] = []
 let bobPosts: AdxUri[] = []
@@ -358,25 +360,26 @@ describe('pds views', () => {
     )
   })
 
-  it('fetches timeline', async () => {
-    const aliceFeed = await client.todo.social.getFeed({}, undefined, {
-      headers: getHeaders(users.alice.did),
-    })
-    expect(aliceFeed.data.feed.length).toBe(7)
+  it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
+    const aliceFeed = await client.todo.social.getHomeFeed(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      undefined,
+      {
+        headers: getHeaders(users.alice.did),
+      },
+    )
+
     /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[0].record.text).toEqual(replies.carol[0])
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[1].record.text).toEqual(replies.bob[0])
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[2].record.text).toEqual(posts.bob[1])
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[3].record.text).toEqual(posts.dan[1])
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[4].record.text).toEqual(posts.dan[0])
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[5].record.text).toEqual(posts.carol[0])
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[6].record.text).toEqual(posts.bob[0])
+    expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
+      replies.carol[0],
+      replies.bob[0],
+      posts.bob[1],
+      posts.dan[1],
+      posts.dan[0],
+      posts.carol[0],
+      posts.bob[0],
+    ])
+
     for (let i = 0; i < aliceFeed.data.feed.length; i++) {
       if (i === 3) {
         expect(aliceFeed.data.feed[i].repostCount).toEqual(1)
@@ -387,8 +390,12 @@ describe('pds views', () => {
       }
     }
 
-    const aliceFeed2 = await client.todo.social.getFeed(
-      { before: aliceFeed.data.feed[0].cursor, limit: 1 },
+    const aliceFeed2 = await client.todo.social.getHomeFeed(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        before: aliceFeed.data.feed[0].cursor,
+        limit: 1,
+      },
       undefined,
       {
         headers: getHeaders(users.alice.did),
@@ -398,24 +405,25 @@ describe('pds views', () => {
     /** @ts-ignore TODO */
     expect(aliceFeed2.data.feed[0].record.text).toEqual(replies.bob[0])
 
-    const bobFeed = await client.todo.social.getFeed({}, undefined, {
-      headers: getHeaders(users.bob.did),
-    })
-    expect(bobFeed.data.feed.length).toBe(7)
+    const bobFeed = await client.todo.social.getHomeFeed(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      undefined,
+      {
+        headers: getHeaders(users.bob.did),
+      },
+    )
+
     /** @ts-ignore TODO */
-    expect(bobFeed.data.feed[0].record.text).toEqual(replies.alice[0])
-    /** @ts-ignore TODO */
-    expect(bobFeed.data.feed[1].record.text).toEqual(replies.carol[0])
-    /** @ts-ignore TODO */
-    expect(bobFeed.data.feed[2].record.text).toEqual(posts.alice[2])
-    /** @ts-ignore TODO */
-    expect(bobFeed.data.feed[3].record.text).toEqual(posts.alice[1])
-    /** @ts-ignore TODO */
-    expect(bobFeed.data.feed[4].record.text).toEqual(posts.dan[1])
-    /** @ts-ignore TODO */
-    expect(bobFeed.data.feed[5].record.text).toEqual(posts.carol[0])
-    /** @ts-ignore TODO */
-    expect(bobFeed.data.feed[6].record.text).toEqual(posts.alice[0])
+    expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
+      replies.alice[0],
+      replies.carol[0],
+      posts.alice[2],
+      posts.alice[1],
+      posts.dan[1],
+      posts.carol[0],
+      posts.alice[0],
+    ])
+
     expect(bobFeed.data.feed[3].replyCount).toEqual(2)
     expect(bobFeed.data.feed[3].likeCount).toEqual(3)
     expect(bobFeed.data.feed[2].likeCount).toEqual(2)
@@ -425,8 +433,54 @@ describe('pds views', () => {
     expect(bobFeed.data.feed[6]?.myState?.like).toBeUndefined()
   })
 
-  it('fetches user feed', async () => {
-    const aliceFeed = await client.todo.social.getFeed(
+  it("fetches authenticated user's home feed w/ firehose algorithm", async () => {
+    const aliceFeed = await client.todo.social.getHomeFeed(
+      { algorithm: FeedAlgorithm.Firehose },
+      undefined,
+      {
+        headers: getHeaders(users.alice.did),
+      },
+    )
+
+    /** @ts-ignore TODO */
+    expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
+      replies.alice[0],
+      replies.carol[0],
+      replies.bob[0],
+      posts.alice[2],
+      posts.bob[1],
+      posts.alice[1],
+      posts.dan[1],
+      posts.dan[0],
+      posts.carol[0],
+      posts.bob[0],
+      posts.alice[0],
+    ])
+
+    const indexedAts = aliceFeed.data.feed.map((item) => item.indexedAt)
+    const orderedIndexedAts = [...indexedAts].sort(
+      (a, b) => new Date(b).getTime() - new Date(a).getTime(),
+    )
+
+    expect(indexedAts).toEqual(orderedIndexedAts)
+  })
+
+  it("fetches authenticated user's home feed w/ default algorithm", async () => {
+    const defaultFeed = await client.todo.social.getHomeFeed({}, undefined, {
+      headers: getHeaders(users.alice.did),
+    })
+    const reverseChronologicalFeed = await client.todo.social.getHomeFeed(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      undefined,
+      {
+        headers: getHeaders(users.alice.did),
+      },
+    )
+    expect(defaultFeed.data.feed).toEqual(reverseChronologicalFeed.data.feed)
+  })
+
+  it('fetches author feed', async () => {
+    const aliceFeed = await client.todo.social.getAuthorFeed(
       { author: 'alice.test' },
       undefined,
       {
@@ -442,7 +496,7 @@ describe('pds views', () => {
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed[3].record.text).toEqual(posts.alice[0])
 
-    const aliceFeed2 = await client.todo.social.getFeed(
+    const aliceFeed2 = await client.todo.social.getAuthorFeed(
       { author: 'alice.test', before: aliceFeed.data.feed[0].cursor, limit: 1 },
       undefined,
       {
@@ -452,7 +506,7 @@ describe('pds views', () => {
     /** @ts-ignore TODO */
     expect(aliceFeed2.data.feed[0].record.text).toEqual(posts.alice[2])
 
-    const carolFeed = await client.todo.social.getFeed(
+    const carolFeed = await client.todo.social.getAuthorFeed(
       { author: 'carol.test' },
       undefined,
       {

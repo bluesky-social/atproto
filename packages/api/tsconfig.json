@@ -7,6 +7,6 @@
   "include": ["./src"],
   "references": [
     { "path": "../xrpc/tsconfig.build.json" },
-    { "path": "../xrpc-cli/tsconfig.build.json" },
+    { "path": "../lex-cli/tsconfig.build.json" }
   ]
 }

@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "todo.social.getFeed",
+  "id": "todo.social.getAuthorFeed",
   "type": "query",
-  "description": "A computed view of the home feed or a user's feed",
+  "description": "A view of a user's feed",
   "parameters": {
-    "author": {"type": "string"},
+    "author": {"type": "string", "required": true},
     "limit": {"type": "number", "maximum": 100},
     "before": {"type": "string"}
   },

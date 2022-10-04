@@ -1,27 +1,19 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-import express from 'express'
+import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
-  author?: string;
+  author: string;
   limit?: number;
   before?: string;
 }
 
-export type HandlerInput = undefined
-
-export interface HandlerSuccess {
-  encoding: 'application/json';
-  body: OutputSchema;
+export interface CallOptions {
+  headers?: Headers;
 }
 
-export interface HandlerError {
-  status: number;
-  message?: string;
-}
-
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type InputSchema = undefined
 
 export interface OutputSchema {
   feed: FeedItem[];
@@ -63,9 +55,14 @@ export interface UnknownEmbed {
   type: string;
 }
 
-export type Handler = (
-  params: QueryParams,
-  input: HandlerInput,
-  req: express.Request,
-  res: express.Response
-) => Promise<HandlerOutput> | HandlerOutput
+export interface Response {
+  success: boolean;
+  headers: Headers;
+  data: OutputSchema;
+}
+
+export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+  }
+  return e
+}
