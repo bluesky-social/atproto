@@ -87,7 +87,6 @@ export default function (server: Server) {
     }
 
     const plcClient = new PlcClient(config.didPlcUrl)
-    // @TODO real service name
     const did = await plcClient.createDid(
       keypair,
       keypair.did(),
@@ -97,6 +96,7 @@ export default function (server: Server) {
 
     await db.registerUser(email, username, did, password)
 
+    // @TODO this should be transactional to ensure no double use
     if (config.inviteRequired && inviteCode) {
       const inviteCodeUse = new InviteCodeUse()
       inviteCodeUse.code = inviteCode
