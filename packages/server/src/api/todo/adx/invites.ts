@@ -12,7 +12,8 @@ export default function (server: Server) {
       throw new ForbiddenError()
     }
 
-    // generate a 5 char b32 invite code
+    // generate a 5 char b32 invite code - preceeded by the hostname
+    // ex: bsky.app-abc12
     const code =
       config.hostname +
       '-' +
