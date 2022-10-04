@@ -26,6 +26,6 @@ export class InviteCodeUse {
   @PrimaryColumn('varchar')
   usedBy: string
 
-  @PrimaryColumn('varchar')
+  @Column('varchar')
   usedAt: string
 }

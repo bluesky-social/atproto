@@ -51,43 +51,33 @@ describe('account', () => {
   })
 
   it('fails on invalid usernames', async () => {
-    try {
-      await client.todo.adx.createAccount(
-        {},
-        {
-          email: 'bad-username@test.com',
-          username: 'did:bad-username.test',
-          password: 'asdf',
-          inviteCode,
-        },
-      )
-      throw new Error('Didnt throw')
-    } catch (e) {
-      console.log(e)
-      expect(
-        e instanceof TodoAdxCreateAccount.InvalidUsernameError,
-      ).toBeTruthy()
-    }
+    const promise = client.todo.adx.createAccount(
+      {},
+      {
+        email: 'bad-username@test.com',
+        username: 'did:bad-username.test',
+        password: 'asdf',
+        inviteCode,
+      },
+    )
+    await expect(promise).rejects.toThrow(
+      TodoAdxCreateAccount.InvalidUsernameError,
+    )
   })
 
   it('fails on bad invite code', async () => {
-    try {
-      await client.todo.adx.createAccount(
-        {},
-        {
-          email,
-          username,
-          password,
-          inviteCode: 'fake-invite',
-        },
-      )
-      throw new Error('Didnt throw')
-    } catch (e) {
-      console.log(e)
-      expect(
-        e instanceof TodoAdxCreateAccount.InvalidInviteCodeError,
-      ).toBeTruthy()
-    }
+    const promise = client.todo.adx.createAccount(
+      {},
+      {
+        email,
+        username,
+        password,
+        inviteCode: 'fake-invite',
+      },
+    )
+    await expect(promise).rejects.toThrow(
+      TodoAdxCreateAccount.InvalidInviteCodeError,
+    )
   })
 
   let did: string
@@ -107,23 +97,18 @@ describe('account', () => {
   })
 
   it('fails on used up invite code', async () => {
-    try {
-      await client.todo.adx.createAccount(
-        {},
-        {
-          email: 'bob@test.com',
-          username: 'bob.test',
-          password: 'asdf',
-          inviteCode,
-        },
-      )
-      throw new Error('Didnt throw')
-    } catch (e) {
-      console.log(e)
-      expect(
-        e instanceof TodoAdxCreateAccount.InvalidInviteCodeError,
-      ).toBeTruthy()
-    }
+    const promise = client.todo.adx.createAccount(
+      {},
+      {
+        email: 'bob@test.com',
+        username: 'bob.test',
+        password: 'asdf',
+        inviteCode,
+      },
+    )
+    await expect(promise).rejects.toThrow(
+      TodoAdxCreateAccount.InvalidInviteCodeError,
+    )
   })
 
   it('fails on unauthenticated requests', async () => {

@@ -55,7 +55,7 @@ export class ServerAuth {
     if (!header.startsWith(BASIC)) return false
     const token = header.slice(BASIC.length)
     const [username, password] = uint8arrays
-      .toString(uint8arrays.fromString(token, 'base64url'), 'utf8')
+      .toString(uint8arrays.fromString(token, 'base64pad'), 'utf8')
       .split(':')
     if (username !== 'admin') return false
     if (password !== this._adminPass) return false

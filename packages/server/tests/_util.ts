@@ -82,7 +82,7 @@ export const adminAuth = () => {
     'Basic ' +
     uint8arrays.toString(
       uint8arrays.fromString('admin:' + ADMIN_PASSWORD, 'utf8'),
-      'base64url',
+      'base64pad',
     )
   )
 }
