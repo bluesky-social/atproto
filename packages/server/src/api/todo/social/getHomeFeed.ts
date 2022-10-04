@@ -10,6 +10,7 @@ import { LikeIndex } from '../../../db/records/like'
 import { RepostIndex } from '../../../db/records/repost'
 import { AdxRecord } from '../../../db/record'
 import { getLocals } from '../../../util'
+import { SelectQueryBuilder } from 'typeorm'
 
 export default function (server: Server) {
   server.todo.social.getHomeFeed(
@@ -24,17 +25,29 @@ export default function (server: Server) {
 
       const builder = db.db.createQueryBuilder()
 
+      // Posts by or reposted by a follower of requester, and not by requester.
+
+      const followingIdsSubquery = (qb: SelectQueryBuilder<PostIndex>) => {
+        return qb
+          .subQuery()
+          .select('follow.subject')
+          .from(FollowIndex, 'follow')
+          .where('follow.creator = :did', { did: requester })
+          .getQuery()
+      }
+
       builder
-        .from(User, 'user')
-        .innerJoin(FollowIndex, 'follow', 'follow.creator = user.did')
-        .leftJoin(RepostIndex, 'repost', 'repost.creator = follow.subject')
-        .innerJoin(
-          PostIndex,
-          'post',
-          'post.creator = follow.subject OR post.uri = repost.subject',
+        .from(PostIndex, 'post')
+        .leftJoin(RepostIndex, 'repost', 'repost.subject = post.uri')
+        .leftJoin(
+          User,
+          'originator',
+          // @TODO this combined with the groupBy('post.uri') makes the result not well-defined
+          // when a post and its repost both could appear in the feed. You may get just the post,
+          // or you may just get the repost.
+          'originator.did = post.creator OR originator.did = repost.creator',
         )
-        .leftJoin(User, 'author', 'author.did = post.creator')
-        .where('user.did = :did', { did: requester })
+        .where((qb) => `originator.did IN ${followingIdsSubquery(qb)}`)
         .andWhere('post.creator != :requester', { requester })
 
       builder
@@ -46,7 +59,7 @@ export default function (server: Server) {
           'reposted_by.did AS repostedByDid',
           'reposted_by.username AS repostedByName',
           'reposted_by_profile.displayName AS repostedByDisplayName',
-          'follow.subject == post.creator AS isNotRepost',
+          'originator.did == post.creator AS isNotRepost',
           'record.raw AS rawRecord',
           'like_count.count AS likeCount',
           'repost_count.count AS repostCount',
@@ -55,6 +68,7 @@ export default function (server: Server) {
           'requester_like.uri AS requesterLike',
           'record.indexedAt AS indexedAt',
         ])
+        .leftJoin(User, 'author', 'author.did = post.creator')
         .leftJoin(
           ProfileIndex,
           'author_profile',
