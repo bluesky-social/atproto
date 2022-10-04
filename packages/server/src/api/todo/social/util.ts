@@ -53,7 +53,8 @@ export const queryPostsWithReposts = (qb: SelectQueryBuilder<PostIndex>) => {
     )
 }
 
-// Select data for presentation of posts and reposts into FeedItems
+// Select data for presentation of posts and reposts into FeedItems.
+// NOTE ensure each join matches 0 or 1 rows, does not cause duplication of (re-)posts.
 export const queryPostsAndRepostsAsFeedItems = (
   qb: SelectQueryBuilder<PostIndex>,
   { requester },

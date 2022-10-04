@@ -59,9 +59,11 @@ export default function (server: Server) {
       }
 
       // Select data for presentation into FeedItem
-      queryPostsAndRepostsAsFeedItems(builder, { requester }).groupBy(
-        'post.uri',
-      )
+      queryPostsAndRepostsAsFeedItems(builder, { requester })
+        // Grouping by post then originator preserves one row for each
+        // post or repost. Reposts of a given post only vary by originator.
+        .groupBy('post.uri')
+        .addGroupBy('originator.did')
 
       // Apply pagination
       builder.orderBy(postOrRepostIndexedAtClause, 'DESC')

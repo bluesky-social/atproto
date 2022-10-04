@@ -371,10 +371,11 @@ describe('pds views', () => {
 
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
-      posts.dan[1],
+      posts.dan[1], // Repost
       replies.carol[0],
       replies.bob[0],
       posts.bob[1],
+      posts.dan[1], // Original post
       posts.dan[0],
       posts.carol[0],
       posts.bob[0],
@@ -383,7 +384,10 @@ describe('pds views', () => {
     for (let i = 0; i < aliceFeed.data.feed.length; i++) {
       if (i === 0) {
         expect(aliceFeed.data.feed[i].repostCount).toEqual(1)
-        // @TODO fix groupBy() expect(aliceFeed.data.feed[i].repostedBy?.name).toBe('carol.test')
+        expect(aliceFeed.data.feed[i].repostedBy?.name).toBe('carol.test')
+      } else if (i === 4) {
+        expect(aliceFeed.data.feed[i].repostCount).toEqual(1)
+        expect(aliceFeed.data.feed[i].repostedBy).toBeUndefined()
       } else {
         expect(aliceFeed.data.feed[i].repostCount).toEqual(0)
         expect(aliceFeed.data.feed[i].repostedBy).toBeUndefined()
@@ -416,19 +420,19 @@ describe('pds views', () => {
 
     /** @ts-ignore TODO */
     expect(bobFeed.data.feed.map((item) => item.record.text)).toEqual([
-      posts.alice[1],
       posts.dan[1],
       replies.alice[0],
       replies.carol[0],
       posts.alice[2],
+      posts.alice[1],
       posts.carol[0],
       posts.alice[0],
     ])
 
-    expect(bobFeed.data.feed[0].replyCount).toEqual(2)
-    expect(bobFeed.data.feed[0].likeCount).toEqual(3)
-    expect(bobFeed.data.feed[4].likeCount).toEqual(2)
-    expect(bobFeed.data.feed[0]?.myState?.like).toEqual(
+    expect(bobFeed.data.feed[4].replyCount).toEqual(2)
+    expect(bobFeed.data.feed[4].likeCount).toEqual(3)
+    expect(bobFeed.data.feed[3].likeCount).toEqual(2)
+    expect(bobFeed.data.feed[4]?.myState?.like).toEqual(
       bobLikes[alicePosts[1].toString()].toString(),
     )
     expect(bobFeed.data.feed[6]?.myState?.like).toBeUndefined()
@@ -445,13 +449,15 @@ describe('pds views', () => {
 
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
-      posts.alice[1],
-      posts.dan[1],
+      posts.alice[1], // Repost
+      posts.dan[1], // Repost
       replies.alice[0],
       replies.carol[0],
       replies.bob[0],
       posts.alice[2],
       posts.bob[1],
+      posts.alice[1], // Original post
+      posts.dan[1], // Original post
       posts.dan[0],
       posts.carol[0],
       posts.bob[0],
@@ -490,9 +496,9 @@ describe('pds views', () => {
     )
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
-      posts.alice[1],
       replies.alice[0],
       posts.alice[2],
+      posts.alice[1],
       posts.alice[0],
     ])
 
@@ -505,7 +511,7 @@ describe('pds views', () => {
     )
     /** @ts-ignore TODO */
     expect(aliceFeed2.data.feed.map((item) => item.record.text)).toEqual([
-      replies.alice[0],
+      posts.alice[2],
     ])
 
     const carolFeed = await client.todo.social.getAuthorFeed(

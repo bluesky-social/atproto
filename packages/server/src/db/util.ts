@@ -14,7 +14,7 @@ export const userWhereClause = (user: string): string => {
 }
 
 export const postOrRepostIndexedAtClause =
-  'coalesce(repost.indexedAt, post.indexedAt)'
+  'iif(originator.did == post.creator, post.indexedAt, repost.indexedAt)'
 
 type Subquery = (qb: SelectQueryBuilder<any>) => SelectQueryBuilder<any>
 
