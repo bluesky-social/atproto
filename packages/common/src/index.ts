@@ -5,6 +5,8 @@ export * from './util'
 export * from './tid'
 export * from './cid'
 
+export * from './logger'
+
 export * from './network/names'
 export * from './network/uri'
 

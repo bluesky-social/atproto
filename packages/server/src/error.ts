@@ -1,14 +1,16 @@
 import { Request, Response } from 'express'
 import { check } from '@adxp/common'
+import log from './logger'
 
 export const handler = (err: Error, _req: Request, res: Response) => {
   let status
   if (ServerError.is(err)) {
     status = err.status
+    log.info({ err }, 'server error')
     console.log('Info: ', err.message)
   } else {
     status = 500
-    console.log('Error: ', err.message)
+    log.error({ err }, 'unknown internal server error')
   }
   res.status(status).send(err.message)
 }
