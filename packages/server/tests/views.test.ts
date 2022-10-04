@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import { AdxUri } from '@adxp/uri'
 import { users, posts, replies } from './test-data'
@@ -371,24 +370,39 @@ describe('pds views', () => {
 
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
+      posts.dan[1], // Repost
+      replies.alice[0],
       replies.carol[0],
       replies.bob[0],
+      posts.alice[2],
       posts.bob[1],
-      posts.dan[1],
+      posts.alice[1],
+      posts.dan[1], // Original post
       posts.dan[0],
       posts.carol[0],
       posts.bob[0],
+      posts.alice[0],
     ])
 
-    for (let i = 0; i < aliceFeed.data.feed.length; i++) {
-      if (i === 3) {
-        expect(aliceFeed.data.feed[i].repostCount).toEqual(1)
-        expect(aliceFeed.data.feed[i].repostedBy?.name).toBe('carol.test')
-      } else {
-        expect(aliceFeed.data.feed[i].repostCount).toEqual(0)
-        expect(aliceFeed.data.feed[i].repostedBy).toBeUndefined()
-      }
-    }
+    const toRepostInfo = (item) => ({
+      repostCount: item.repostCount,
+      repostedByName: item.repostedBy?.name,
+    })
+
+    expect(aliceFeed.data.feed.map(toRepostInfo)).toEqual([
+      { repostCount: 1, repostedByName: 'carol.test' },
+      { repostCount: 0 },
+      { repostCount: 0 },
+      { repostCount: 0 },
+      { repostCount: 0 },
+      { repostCount: 0 },
+      { repostCount: 1 },
+      { repostCount: 1 },
+      { repostCount: 0 },
+      { repostCount: 0 },
+      { repostCount: 0 },
+      { repostCount: 0 },
+    ])
 
     const aliceFeed2 = await client.todo.social.getHomeFeed(
       {
@@ -401,9 +415,10 @@ describe('pds views', () => {
         headers: getHeaders(users.alice.did),
       },
     )
-    expect(aliceFeed2.data.feed.length).toBe(1)
     /** @ts-ignore TODO */
-    expect(aliceFeed2.data.feed[0].record.text).toEqual(replies.bob[0])
+    expect(aliceFeed2.data.feed.map((item) => item.record.text)).toEqual([
+      replies.alice[0],
+    ])
 
     const bobFeed = await client.todo.social.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
@@ -414,23 +429,26 @@ describe('pds views', () => {
     )
 
     /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
+    expect(bobFeed.data.feed.map((item) => item.record.text)).toEqual([
+      posts.dan[1],
       replies.alice[0],
       replies.carol[0],
+      replies.bob[0],
       posts.alice[2],
+      posts.bob[1],
       posts.alice[1],
-      posts.dan[1],
       posts.carol[0],
+      posts.bob[0],
       posts.alice[0],
     ])
 
-    expect(bobFeed.data.feed[3].replyCount).toEqual(2)
-    expect(bobFeed.data.feed[3].likeCount).toEqual(3)
-    expect(bobFeed.data.feed[2].likeCount).toEqual(2)
-    expect(bobFeed.data.feed[3]?.myState?.like).toEqual(
+    expect(bobFeed.data.feed[6].replyCount).toEqual(2)
+    expect(bobFeed.data.feed[6].likeCount).toEqual(3)
+    expect(bobFeed.data.feed[4].likeCount).toEqual(2)
+    expect(bobFeed.data.feed[6]?.myState?.like).toEqual(
       bobLikes[alicePosts[1].toString()].toString(),
     )
-    expect(bobFeed.data.feed[6]?.myState?.like).toBeUndefined()
+    expect(bobFeed.data.feed[9]?.myState?.like).toBeUndefined()
   })
 
   it("fetches authenticated user's home feed w/ firehose algorithm", async () => {
@@ -444,25 +462,26 @@ describe('pds views', () => {
 
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
+      posts.dan[1], // Repost
       replies.alice[0],
       replies.carol[0],
       replies.bob[0],
       posts.alice[2],
       posts.bob[1],
-      posts.alice[1],
-      posts.dan[1],
+      posts.alice[1], // Original post
+      posts.dan[1], // Original post
       posts.dan[0],
       posts.carol[0],
       posts.bob[0],
       posts.alice[0],
     ])
 
-    const indexedAts = aliceFeed.data.feed.map((item) => item.indexedAt)
-    const orderedIndexedAts = [...indexedAts].sort(
+    const cursors = aliceFeed.data.feed.map((item) => item.cursor)
+    const orderedCursors = [...cursors].sort(
       (a, b) => new Date(b).getTime() - new Date(a).getTime(),
     )
 
-    expect(indexedAts).toEqual(orderedIndexedAts)
+    expect(cursors).toEqual(orderedCursors)
   })
 
   it("fetches authenticated user's home feed w/ default algorithm", async () => {
@@ -488,13 +507,12 @@ describe('pds views', () => {
       },
     )
     /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[0].record.text).toEqual(replies.alice[0])
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[1].record.text).toEqual(posts.alice[2])
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[2].record.text).toEqual(posts.alice[1])
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed[3].record.text).toEqual(posts.alice[0])
+    expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
+      replies.alice[0],
+      posts.alice[2],
+      posts.alice[1],
+      posts.alice[0],
+    ])
 
     const aliceFeed2 = await client.todo.social.getAuthorFeed(
       { author: 'alice.test', before: aliceFeed.data.feed[0].cursor, limit: 1 },
@@ -504,7 +522,9 @@ describe('pds views', () => {
       },
     )
     /** @ts-ignore TODO */
-    expect(aliceFeed2.data.feed[0].record.text).toEqual(posts.alice[2])
+    expect(aliceFeed2.data.feed.map((item) => item.record.text)).toEqual([
+      posts.alice[2],
+    ])
 
     const carolFeed = await client.todo.social.getAuthorFeed(
       { author: 'carol.test' },
@@ -514,11 +534,11 @@ describe('pds views', () => {
       },
     )
     /** @ts-ignore TODO */
-    expect(carolFeed.data.feed[0].record.text).toEqual(replies.carol[0])
-    /** @ts-ignore TODO */
-    expect(carolFeed.data.feed[1].record.text).toEqual(posts.dan[1])
-    /** @ts-ignore TODO */
-    expect(carolFeed.data.feed[2].record.text).toEqual(posts.carol[0])
+    expect(carolFeed.data.feed.map((item) => item.record.text)).toEqual([
+      posts.dan[1],
+      replies.carol[0],
+      posts.carol[0],
+    ])
   })
 
   it('fetches postThread', async () => {
