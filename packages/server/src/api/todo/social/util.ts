@@ -148,3 +148,15 @@ export const queryResultToFeedItem = (
     like: row.requesterLike || undefined,
   },
 })
+
+export enum FeedAlgorithm {
+  Firehose = 'firehose',
+  ReverseChronological = 'reverse-chronological',
+}
+
+export const isEnum = <T extends { [s: string]: unknown }>(
+  object: T,
+  possibleValue: unknown,
+): possibleValue is T[keyof T] => {
+  return Object.values(object).includes(possibleValue)
+}
