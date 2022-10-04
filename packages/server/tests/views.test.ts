@@ -1,3 +1,4 @@
+import fetch from 'node-fetch'
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import { AdxUri } from '@adxp/uri'
 import { users, posts, replies } from './test-data'
@@ -358,8 +359,8 @@ describe('pds views', () => {
     )
   })
 
-  it('fetches timeline', async () => {
-    const aliceFeed = await client.todo.social.getFeed({}, undefined, {
+  it("fetches authenticated user's home feed", async () => {
+    const aliceFeed = await client.todo.social.getHomeFeed({}, undefined, {
       headers: getHeaders(users.alice.did),
     })
     expect(aliceFeed.data.feed.length).toBe(7)
@@ -387,7 +388,7 @@ describe('pds views', () => {
       }
     }
 
-    const aliceFeed2 = await client.todo.social.getFeed(
+    const aliceFeed2 = await client.todo.social.getHomeFeed(
       { before: aliceFeed.data.feed[0].cursor, limit: 1 },
       undefined,
       {
@@ -398,7 +399,7 @@ describe('pds views', () => {
     /** @ts-ignore TODO */
     expect(aliceFeed2.data.feed[0].record.text).toEqual(replies.bob[0])
 
-    const bobFeed = await client.todo.social.getFeed({}, undefined, {
+    const bobFeed = await client.todo.social.getHomeFeed({}, undefined, {
       headers: getHeaders(users.bob.did),
     })
     expect(bobFeed.data.feed.length).toBe(7)
@@ -425,8 +426,8 @@ describe('pds views', () => {
     expect(bobFeed.data.feed[6]?.myState?.like).toBeUndefined()
   })
 
-  it('fetches user feed', async () => {
-    const aliceFeed = await client.todo.social.getFeed(
+  it('fetches author feed', async () => {
+    const aliceFeed = await client.todo.social.getAuthorFeed(
       { author: 'alice.test' },
       undefined,
       {
@@ -442,7 +443,7 @@ describe('pds views', () => {
     /** @ts-ignore TODO */
     expect(aliceFeed.data.feed[3].record.text).toEqual(posts.alice[0])
 
-    const aliceFeed2 = await client.todo.social.getFeed(
+    const aliceFeed2 = await client.todo.social.getAuthorFeed(
       { author: 'alice.test', before: aliceFeed.data.feed[0].cursor, limit: 1 },
       undefined,
       {
@@ -452,7 +453,7 @@ describe('pds views', () => {
     /** @ts-ignore TODO */
     expect(aliceFeed2.data.feed[0].record.text).toEqual(posts.alice[2])
 
-    const carolFeed = await client.todo.social.getFeed(
+    const carolFeed = await client.todo.social.getAuthorFeed(
       { author: 'carol.test' },
       undefined,
       {

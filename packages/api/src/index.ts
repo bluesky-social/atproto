@@ -26,7 +26,8 @@ import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
 import * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
 import * as TodoSocialBadge from './types/todo/social/badge'
 import * as TodoSocialFollow from './types/todo/social/follow'
-import * as TodoSocialGetFeed from './types/todo/social/getFeed'
+import * as TodoSocialGetAuthorFeed from './types/todo/social/getAuthorFeed'
+import * as TodoSocialGetHomeFeed from './types/todo/social/getHomeFeed'
 import * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
 import * as TodoSocialGetNotificationCount from './types/todo/social/getNotificationCount'
 import * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
@@ -62,7 +63,8 @@ export * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
 export * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
 export * as TodoSocialBadge from './types/todo/social/badge'
 export * as TodoSocialFollow from './types/todo/social/follow'
-export * as TodoSocialGetFeed from './types/todo/social/getFeed'
+export * as TodoSocialGetAuthorFeed from './types/todo/social/getAuthorFeed'
+export * as TodoSocialGetHomeFeed from './types/todo/social/getHomeFeed'
 export * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
 export * as TodoSocialGetNotificationCount from './types/todo/social/getNotificationCount'
 export * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
@@ -366,15 +368,27 @@ export class SocialNS {
     this.repost = new RepostRecord(service)
   }
 
-  getFeed(
-    params: TodoSocialGetFeed.QueryParams,
-    data?: TodoSocialGetFeed.InputSchema,
-    opts?: TodoSocialGetFeed.CallOptions
-  ): Promise<TodoSocialGetFeed.Response> {
+  getAuthorFeed(
+    params: TodoSocialGetAuthorFeed.QueryParams,
+    data?: TodoSocialGetAuthorFeed.InputSchema,
+    opts?: TodoSocialGetAuthorFeed.CallOptions
+  ): Promise<TodoSocialGetAuthorFeed.Response> {
     return this._service.xrpc
-      .call('todo.social.getFeed', params, data, opts)
+      .call('todo.social.getAuthorFeed', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetFeed.toKnownErr(e)
+        throw TodoSocialGetAuthorFeed.toKnownErr(e)
+      })
+  }
+
+  getHomeFeed(
+    params: TodoSocialGetHomeFeed.QueryParams,
+    data?: TodoSocialGetHomeFeed.InputSchema,
+    opts?: TodoSocialGetHomeFeed.CallOptions
+  ): Promise<TodoSocialGetHomeFeed.Response> {
+    return this._service.xrpc
+      .call('todo.social.getHomeFeed', params, data, opts)
+      .catch((e) => {
+        throw TodoSocialGetHomeFeed.toKnownErr(e)
       })
   }
 

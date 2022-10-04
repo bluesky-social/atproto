@@ -24,7 +24,8 @@ import * as TodoAdxResolveName from './types/todo/adx/resolveName'
 import * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
 import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
 import * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
-import * as TodoSocialGetFeed from './types/todo/social/getFeed'
+import * as TodoSocialGetAuthorFeed from './types/todo/social/getAuthorFeed'
+import * as TodoSocialGetHomeFeed from './types/todo/social/getHomeFeed'
 import * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
 import * as TodoSocialGetNotificationCount from './types/todo/social/getNotificationCount'
 import * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
@@ -165,9 +166,14 @@ export class SocialNS {
     this.server = server
   }
 
-  getFeed(handler: TodoSocialGetFeed.Handler) {
+  getAuthorFeed(handler: TodoSocialGetAuthorFeed.Handler) {
     /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getFeed', handler)
+    return this.server.xrpc.method('todo.social.getAuthorFeed', handler)
+  }
+
+  getHomeFeed(handler: TodoSocialGetHomeFeed.Handler) {
+    /** @ts-ignore */
+    return this.server.xrpc.method('todo.social.getHomeFeed', handler)
   }
 
   getLikedBy(handler: TodoSocialGetLikedBy.Handler) {

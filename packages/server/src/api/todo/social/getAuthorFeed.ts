@@ -1,7 +1,6 @@
 import { Server } from '../../../lexicon'
 import { AuthRequiredError } from '@adxp/xrpc-server'
-import * as GetFeed from '../../../lexicon/types/todo/social/getFeed'
-import { FollowIndex } from '../../../db/records/follow'
+import * as GetAuthorFeed from '../../../lexicon/types/todo/social/getAuthorFeed'
 import { PostIndex } from '../../../db/records/post'
 import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
@@ -12,8 +11,8 @@ import { AdxRecord } from '../../../db/record'
 import { getLocals } from '../../../util'
 
 export default function (server: Server) {
-  server.todo.social.getFeed(
-    async (params: GetFeed.QueryParams, _input, req, res) => {
+  server.todo.social.getAuthorFeed(
+    async (params: GetAuthorFeed.QueryParams, _input, req, res) => {
       const { author, limit, before } = params
 
       const { auth, db } = getLocals(res)
@@ -24,34 +23,19 @@ export default function (server: Server) {
 
       const builder = db.db.createQueryBuilder()
 
-      if (author === undefined) {
-        builder
-          .from(User, 'user')
-          .innerJoin(FollowIndex, 'follow', 'follow.creator = user.did')
-          .leftJoin(RepostIndex, 'repost', 'repost.creator = follow.subject')
-          .innerJoin(
-            PostIndex,
-            'post',
-            'post.creator = follow.subject OR post.uri = repost.subject',
-          )
-          .leftJoin(User, 'author', 'author.did = post.creator')
-          .where('user.did = :did', { did: requester })
-          .andWhere('post.creator != :requester', { requester })
-      } else {
-        const authorWhere = author.startsWith('did:')
-          ? 'originator.did'
-          : 'originator.username'
-        builder
-          .from(PostIndex, 'post')
-          .leftJoin(RepostIndex, 'repost', 'repost.subject = post.uri')
-          .leftJoin(
-            User,
-            'originator',
-            'originator.did = post.creator OR originator.did = repost.creator',
-          )
-          .leftJoin(User, 'author', 'author.did = post.creator')
-          .where(`${authorWhere} = :author`, { author })
-      }
+      const authorWhere = author.startsWith('did:')
+        ? 'originator.did'
+        : 'originator.username'
+      builder
+        .from(PostIndex, 'post')
+        .leftJoin(RepostIndex, 'repost', 'repost.subject = post.uri')
+        .leftJoin(
+          User,
+          'originator',
+          'originator.did = post.creator OR originator.did = repost.creator',
+        )
+        .leftJoin(User, 'author', 'author.did = post.creator')
+        .where(`${authorWhere} = :author`, { author })
 
       builder
         .select([
@@ -62,9 +46,7 @@ export default function (server: Server) {
           'reposted_by.did AS repostedByDid',
           'reposted_by.username AS repostedByName',
           'reposted_by_profile.displayName AS repostedByDisplayName',
-          author === undefined
-            ? 'follow.subject == post.creator AS isNotRepost'
-            : 'originator.did == post.creator as isNotRepost',
+          'originator.did == post.creator as isNotRepost',
           'record.raw AS rawRecord',
           'like_count.count AS likeCount',
           'repost_count.count AS repostCount',
@@ -125,7 +107,7 @@ export default function (server: Server) {
       const queryRes = await builder.getRawMany()
 
       // @TODO add embeds
-      const feed: GetFeed.FeedItem[] = queryRes.map((row) => ({
+      const feed: GetAuthorFeed.FeedItem[] = queryRes.map((row) => ({
         cursor: row.indexedAt,
         uri: row.uri,
         author: {
