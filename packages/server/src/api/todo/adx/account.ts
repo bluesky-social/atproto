@@ -3,7 +3,7 @@ import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as util from '../../../util'
 import { Repo } from '@adxp/repo'
 import { PlcClient } from '@adxp/plc'
-import { InviteCode, InviteCodeUses } from '../../../db/invite-codes'
+import { InviteCode, InviteCodeUse } from '../../../db/invite-codes'
 
 export default function (server: Server) {
   server.todo.adx.getAccountsConfig((_params, _input, _req, res) => {
@@ -46,10 +46,10 @@ export default function (server: Server) {
         .select([
           'invite.disabled AS disabled',
           'invite.availableUses as availableUses',
-          'COUNT(code_uses.usedBy) as useCount',
+          'COUNT(code_use.usedBy) as useCount',
         ])
         .from(InviteCode, 'invite')
-        .leftJoin(InviteCodeUses, 'code_uses', 'invite.code = code_uses.code')
+        .leftJoin(InviteCodeUse, 'code_use', 'invite.code = code_use.code')
         .where('invite.code = :inviteCode', { inviteCode })
         .groupBy('invite.code')
         .getRawOne()
@@ -98,11 +98,11 @@ export default function (server: Server) {
     await db.registerUser(email, username, did, password)
 
     if (config.inviteRequired && inviteCode) {
-      const inviteCodeUse = new InviteCodeUses()
+      const inviteCodeUse = new InviteCodeUse()
       inviteCodeUse.code = inviteCode
       inviteCodeUse.usedBy = did
       inviteCodeUse.usedAt = new Date().toISOString()
-      await db.db.getRepository(InviteCodeUses).insert(inviteCodeUse)
+      await db.db.getRepository(InviteCodeUse).insert(inviteCodeUse)
     }
 
     const authStore = util.getAuthstore(res, did)

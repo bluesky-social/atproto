@@ -23,7 +23,7 @@ import { RepoRoot } from './repo-root'
 import { AdxRecord } from './record'
 import { User } from './user'
 import * as util from './util'
-import { InviteCode, InviteCodeUses } from './invite-codes'
+import { InviteCode, InviteCodeUse } from './invite-codes'
 
 export class Database {
   db: DataSource
@@ -68,7 +68,7 @@ export class Database {
         RepostIndex,
         UserNotification,
         InviteCode,
-        InviteCodeUses,
+        InviteCodeUse,
       ],
       synchronize: true,
     })

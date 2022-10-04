@@ -19,7 +19,7 @@ export class InviteCode {
 }
 
 @Entity({ name: 'invite_codes_uses' })
-export class InviteCodeUses {
+export class InviteCodeUse {
   @PrimaryColumn('varchar')
   code: string
 
