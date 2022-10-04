@@ -265,22 +265,6 @@ export class Database {
     }
     return found
   }
-
-  async getAvailableInviteCodeUses(code: string): Promise<number> {
-    const res = await this.db
-      .createQueryBuilder()
-      .select()
-      .from(InviteCode, 'invite')
-      .leftJoin(
-        util.countSubquery(InviteCodeUses, 'code'),
-        'use_count',
-        'use_count.subject = invite.code',
-      )
-      .where('invite.code = :inviteCode', { inviteCode })
-      .andWhere('invite.disabled = false')
-      .andWhere('invite.availableUses > use_count.count')
-      .getRawOne()
-  }
 }
 
 export default Database

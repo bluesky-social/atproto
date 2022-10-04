@@ -1,7 +1,6 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as util from '../../../util'
-import * as dbUtil from '../../../db/util'
 import { Repo } from '@adxp/repo'
 import { PlcClient } from '@adxp/plc'
 import { InviteCode, InviteCodeUses } from '../../../db/invite-codes'
@@ -47,15 +46,12 @@ export default function (server: Server) {
         .select([
           'invite.disabled AS disabled',
           'invite.availableUses as availableUses',
-          'use_count.count as useCount',
+          'COUNT(code_uses.usedBy) as useCount',
         ])
         .from(InviteCode, 'invite')
-        .leftJoin(
-          dbUtil.countSubquery(InviteCodeUses, 'code'),
-          'use_count',
-          'use_count.subject = invite.code',
-        )
+        .leftJoin(InviteCodeUses, 'code_uses', 'invite.code = code_uses.code')
         .where('invite.code = :inviteCode', { inviteCode })
+        .groupBy('invite.code')
         .getRawOne()
       if (!found || found.disabled || found.useCount >= found.availableUses) {
         return {
@@ -101,7 +97,7 @@ export default function (server: Server) {
 
     await db.registerUser(email, username, did, password)
 
-    if (inviteCode) {
+    if (config.inviteRequired && inviteCode) {
       const inviteCodeUse = new InviteCodeUses()
       inviteCodeUse.code = inviteCode
       inviteCodeUse.usedBy = did

@@ -1,4 +1,4 @@
-import { AuthRequiredError, ForbiddenError } from '@adxp/xrpc-server'
+import { ForbiddenError } from '@adxp/xrpc-server'
 import * as crypto from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
 import { InviteCode } from '../../../db/invite-codes'
@@ -8,11 +8,7 @@ import * as util from '../../../util'
 export default function (server: Server) {
   server.todo.adx.createInviteCode(async (_params, input, req, res) => {
     const { auth, db, config } = util.getLocals(res)
-    const requester = auth.getUserDid(req)
-    if (!requester) {
-      throw new AuthRequiredError()
-    }
-    if (config.adminDids.indexOf(requester) < 0) {
+    if (!auth.verifyAdmin(req)) {
       throw new ForbiddenError()
     }
 
@@ -25,8 +21,8 @@ export default function (server: Server) {
     const invite = new InviteCode()
     invite.code = code
     invite.availableUses = input.body.useCount
-    invite.createdBy = requester
-    invite.forUser = requester
+    invite.createdBy = 'admin'
+    invite.forUser = 'admin'
 
     await db.db.getRepository(InviteCode).insert(invite)
 

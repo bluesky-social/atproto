@@ -4,6 +4,7 @@ import session from './session'
 import account from './account'
 import repo from './repo'
 import sync from './sync'
+import invites from './invites'
 
 export default function (server: Server) {
   names(server)
@@ -11,4 +12,5 @@ export default function (server: Server) {
   account(server)
   repo(server)
   sync(server)
+  invites(server)
 }
