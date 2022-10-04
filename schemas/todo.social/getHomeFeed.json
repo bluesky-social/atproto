@@ -22,7 +22,7 @@
       "$defs": {
         "feedItem": {
           "type": "object",
-          "required": ["uri", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt"],
+          "required": ["cursor", "uri", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt"],
           "properties": {
             "cursor": {"type": "string"},
             "uri": {"type": "string"},
