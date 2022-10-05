@@ -561,6 +561,69 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
+    id: 'todo.adx.requestAccountPasswordReset',
+    type: 'procedure',
+    description: 'Initiate a user account password reset via email',
+    parameters: {},
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: {
+            type: 'string',
+          },
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'todo.adx.resetAccountPassword',
+    type: 'procedure',
+    description: 'Reset a user account password using a token',
+    parameters: {},
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['token', 'password'],
+        properties: {
+          token: {
+            type: 'string',
+          },
+          password: {
+            type: 'string',
+          },
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        properties: {},
+      },
+    },
+    errors: [
+      {
+        name: 'ExpiredToken',
+      },
+      {
+        name: 'InvalidToken',
+      },
+    ],
+  },
+  {
+    lexicon: 1,
     id: 'todo.adx.resolveName',
     type: 'query',
     description: 'Provides the DID of a repo.',

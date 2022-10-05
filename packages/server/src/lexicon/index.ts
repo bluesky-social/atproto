@@ -21,6 +21,8 @@ import * as TodoAdxRepoDescribe from './types/todo/adx/repoDescribe'
 import * as TodoAdxRepoGetRecord from './types/todo/adx/repoGetRecord'
 import * as TodoAdxRepoListRecords from './types/todo/adx/repoListRecords'
 import * as TodoAdxRepoPutRecord from './types/todo/adx/repoPutRecord'
+import * as TodoAdxRequestAccountPasswordReset from './types/todo/adx/requestAccountPasswordReset'
+import * as TodoAdxResetAccountPassword from './types/todo/adx/resetAccountPassword'
 import * as TodoAdxResolveName from './types/todo/adx/resolveName'
 import * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
 import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
@@ -142,6 +144,21 @@ export class AdxNS {
   repoPutRecord(handler: TodoAdxRepoPutRecord.Handler) {
     /** @ts-ignore */
     return this.server.xrpc.method('todo.adx.repoPutRecord', handler)
+  }
+
+  requestAccountPasswordReset(
+    handler: TodoAdxRequestAccountPasswordReset.Handler
+  ) {
+    /** @ts-ignore */
+    return this.server.xrpc.method(
+      'todo.adx.requestAccountPasswordReset',
+      handler
+    )
+  }
+
+  resetAccountPassword(handler: TodoAdxResetAccountPassword.Handler) {
+    /** @ts-ignore */
+    return this.server.xrpc.method('todo.adx.resetAccountPassword', handler)
   }
 
   resolveName(handler: TodoAdxResolveName.Handler) {

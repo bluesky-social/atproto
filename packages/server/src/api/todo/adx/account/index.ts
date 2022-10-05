@@ -1,11 +1,14 @@
-import { Server } from '../../../lexicon'
+import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
-import * as util from '../../../util'
+import * as util from '../../../../util'
 import { Repo } from '@adxp/repo'
 import { PlcClient } from '@adxp/plc'
-import { InviteCode, InviteCodeUse } from '../../../db/invite-codes'
+import { InviteCode, InviteCodeUse } from '../../../../db/invite-codes'
+import passwordReset from './password-reset'
 
 export default function (server: Server) {
+  passwordReset(server)
+
   server.todo.adx.getAccountsConfig((_params, _input, _req, res) => {
     const cfg = util.getConfig(res)
 

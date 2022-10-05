@@ -21,6 +21,8 @@ import * as TodoAdxRepoDescribe from './types/todo/adx/repoDescribe'
 import * as TodoAdxRepoGetRecord from './types/todo/adx/repoGetRecord'
 import * as TodoAdxRepoListRecords from './types/todo/adx/repoListRecords'
 import * as TodoAdxRepoPutRecord from './types/todo/adx/repoPutRecord'
+import * as TodoAdxRequestAccountPasswordReset from './types/todo/adx/requestAccountPasswordReset'
+import * as TodoAdxResetAccountPassword from './types/todo/adx/resetAccountPassword'
 import * as TodoAdxResolveName from './types/todo/adx/resolveName'
 import * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
 import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
@@ -59,6 +61,8 @@ export * as TodoAdxRepoDescribe from './types/todo/adx/repoDescribe'
 export * as TodoAdxRepoGetRecord from './types/todo/adx/repoGetRecord'
 export * as TodoAdxRepoListRecords from './types/todo/adx/repoListRecords'
 export * as TodoAdxRepoPutRecord from './types/todo/adx/repoPutRecord'
+export * as TodoAdxRequestAccountPasswordReset from './types/todo/adx/requestAccountPasswordReset'
+export * as TodoAdxResetAccountPassword from './types/todo/adx/resetAccountPassword'
 export * as TodoAdxResolveName from './types/todo/adx/resolveName'
 export * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
 export * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
@@ -309,6 +313,30 @@ export class AdxNS {
       .call('todo.adx.repoPutRecord', params, data, opts)
       .catch((e) => {
         throw TodoAdxRepoPutRecord.toKnownErr(e)
+      })
+  }
+
+  requestAccountPasswordReset(
+    params: TodoAdxRequestAccountPasswordReset.QueryParams,
+    data?: TodoAdxRequestAccountPasswordReset.InputSchema,
+    opts?: TodoAdxRequestAccountPasswordReset.CallOptions
+  ): Promise<TodoAdxRequestAccountPasswordReset.Response> {
+    return this._service.xrpc
+      .call('todo.adx.requestAccountPasswordReset', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxRequestAccountPasswordReset.toKnownErr(e)
+      })
+  }
+
+  resetAccountPassword(
+    params: TodoAdxResetAccountPassword.QueryParams,
+    data?: TodoAdxResetAccountPassword.InputSchema,
+    opts?: TodoAdxResetAccountPassword.CallOptions
+  ): Promise<TodoAdxResetAccountPassword.Response> {
+    return this._service.xrpc
+      .call('todo.adx.resetAccountPassword', params, data, opts)
+      .catch((e) => {
+        throw TodoAdxResetAccountPassword.toKnownErr(e)
       })
   }
 
