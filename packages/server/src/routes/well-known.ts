@@ -12,8 +12,6 @@ router.get('/did.json', async (req, res) => {
   try {
     userRecord = await db.getUser(hostname)
   } catch (e) {
-    console.error(`Error looking up user in did:web route`)
-    console.error(e)
     return res.status(500).end()
   }
 

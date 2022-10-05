@@ -54,6 +54,7 @@ export default function (server: Server) {
         .groupBy('invite.code')
         .getRawOne()
       if (!found || found.disabled || found.useCount >= found.availableUses) {
+        logger.info({ username, email, inviteCode }, 'invalid invite code')
         return {
           status: 400,
           error: 'InvalidInviteCode',
@@ -87,12 +88,21 @@ export default function (server: Server) {
     }
 
     const plcClient = new PlcClient(config.didPlcUrl)
-    const did = await plcClient.createDid(
-      keypair,
-      keypair.did(),
-      username,
-      config.origin,
-    )
+    let did: string
+    try {
+      did = await plcClient.createDid(
+        keypair,
+        keypair.did(),
+        username,
+        config.origin,
+      )
+    } catch (err) {
+      logger.error(
+        { didKey: keypair.did(), username },
+        'failed to create did:plc',
+      )
+      throw err
+    }
 
     await db.registerUser(email, username, did, password)
 

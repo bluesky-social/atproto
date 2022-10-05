@@ -90,7 +90,7 @@ export default function (server: Server) {
   // @TODO all write methods should be transactional to ensure no forked histories
   server.todo.adx.repoBatchWrite(async (params, input, req, res) => {
     const { did, validate } = params
-    const { auth, db } = locals.get(res)
+    const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -120,6 +120,7 @@ export default function (server: Server) {
     try {
       await repoDiff.processDiff(db, repo, diff)
     } catch (err) {
+      logger.info({ did, err }, 'failed to index batch write')
       if (validate) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
@@ -134,7 +135,7 @@ export default function (server: Server) {
 
   server.todo.adx.repoCreateRecord(async (params, input, req, res) => {
     const { did, type, validate } = params
-    const { auth, db } = locals.get(res)
+    const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -157,6 +158,10 @@ export default function (server: Server) {
     try {
       await db.indexRecord(uri, input.body)
     } catch (err) {
+      logger.info(
+        { uri: uri.toString(), err, validate },
+        'failed to index new record',
+      )
       if (validate) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
@@ -172,7 +177,7 @@ export default function (server: Server) {
 
   server.todo.adx.repoPutRecord(async (params, input, req, res) => {
     const { did, type, tid, validate } = params
-    const { auth, db } = locals.get(res)
+    const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -195,6 +200,10 @@ export default function (server: Server) {
     try {
       await db.indexRecord(uri, input.body)
     } catch (err) {
+      logger.info(
+        { uri: uri.toString(), err, validate },
+        'failed to index updated record',
+      )
       if (validate) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
@@ -209,7 +218,7 @@ export default function (server: Server) {
 
   server.todo.adx.repoDeleteRecord(async (params, _input, req, res) => {
     const { did, type, tid } = params
-    const { auth, db } = locals.get(res)
+    const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -221,7 +230,14 @@ export default function (server: Server) {
     }
     await repo.getCollection(type).deleteRecord(TID.fromStr(tid))
     const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
-    await db.deleteRecord(uri)
+    try {
+      await db.deleteRecord(uri)
+    } catch (err) {
+      logger.info(
+        { uri: uri.toString(), err },
+        'failed to delete indexed record',
+      )
+    }
     await db.setRepoRoot(did, repo.cid)
     // @TODO update subscribers
   })

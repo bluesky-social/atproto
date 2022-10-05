@@ -8,6 +8,7 @@ import IpldStore, { AllowedIpldVal } from './blockstore/ipld-store'
 import * as auth from '@adxp/auth'
 import { DataDiff, MST } from './mst'
 import Collection from './collection'
+import log from './logger'
 
 export class Repo {
   blockstore: IpldStore
@@ -69,6 +70,7 @@ export class Repo {
 
     const cid = await blockstore.put(commit)
 
+    log.info({ did }, `created repo`)
     return new Repo({
       blockstore,
       data,
@@ -89,6 +91,7 @@ export class Repo {
     const commit = await blockstore.get(cid, def.commit)
     const root = await blockstore.get(commit.root, def.repoRoot)
     const data = await MST.load(blockstore, root.data)
+    log.info({ did: root.did }, 'loaded repo for')
     return new Repo({
       blockstore,
       data,
@@ -172,6 +175,15 @@ export class Repo {
     }
     this.cid = commitCid
     this.data = updatedData
+
+    log.info(
+      {
+        did: this.did(),
+        prev: currentCommit.toString(),
+        commit: commitCid.toString(),
+      },
+      'created commit',
+    )
   }
 
   async batchWrite(writes: BatchWrite[]) {
@@ -195,6 +207,7 @@ export class Repo {
   }
 
   async revert(count: number): Promise<void> {
+    const revertFrom = this.cid
     let revertTo = this.cid
     for (let i = 0; i < count; i++) {
       const commit = await this.blockstore.get(revertTo, def.commit)
@@ -205,6 +218,14 @@ export class Repo {
       revertTo = root.prev
     }
     await this.loadRoot(revertTo)
+    log.info(
+      {
+        did: this.did(),
+        from: revertFrom.toString(),
+        to: revertTo.toString(),
+      },
+      'revert repo',
+    )
   }
 
   // ROOT OPERATIONS
@@ -280,7 +301,7 @@ export class Repo {
     if (commitPath === null) {
       throw new Error('Could not find shared history')
     }
-    let fullDiff = new DataDiff()
+    const fullDiff = new DataDiff()
     if (commitPath.length === 0) return fullDiff
     let prevRepo = await Repo.load(this.blockstore, commitPath[0])
     for (const commit of commitPath.slice(1)) {
