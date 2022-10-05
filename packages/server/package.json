@@ -8,7 +8,7 @@
     "build": "node ./build.js",
     "start": "node dist/bin.js",
     "test": "jest tests/account.test.ts",
-    "test:logs": "cat test.log | pino-pretty",
+    "test:log": "cat test.log | pino-pretty",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
