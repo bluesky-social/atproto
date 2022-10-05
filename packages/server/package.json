@@ -7,7 +7,7 @@
     "codegen": "lex gen-server ./src/lexicon ../../schemas/todo.adx/* ../../schemas/todo.social/*",
     "build": "node ./build.js",
     "start": "node dist/bin.js",
-    "test": "jest tests/account.test.ts",
+    "test": "jest",
     "test:log": "cat test.log | pino-pretty",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
