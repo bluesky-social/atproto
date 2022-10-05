@@ -120,7 +120,7 @@ export default function (server: Server) {
     try {
       await repoDiff.processDiff(db, repo, diff)
     } catch (err) {
-      logger.info({ did, err }, 'failed to index batch write')
+      logger.warn({ did, err }, 'failed to index batch write')
       if (validate) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
@@ -158,7 +158,7 @@ export default function (server: Server) {
     try {
       await db.indexRecord(uri, input.body)
     } catch (err) {
-      logger.info(
+      logger.warn(
         { uri: uri.toString(), err, validate },
         'failed to index new record',
       )
@@ -200,7 +200,7 @@ export default function (server: Server) {
     try {
       await db.indexRecord(uri, input.body)
     } catch (err) {
-      logger.info(
+      logger.warn(
         { uri: uri.toString(), err, validate },
         'failed to index updated record',
       )
@@ -233,7 +233,7 @@ export default function (server: Server) {
     try {
       await db.deleteRecord(uri)
     } catch (err) {
-      logger.info(
+      logger.warn(
         { uri: uri.toString(), err },
         'failed to delete indexed record',
       )

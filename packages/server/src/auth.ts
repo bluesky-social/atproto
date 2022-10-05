@@ -78,6 +78,7 @@ export const parseBasicAuth = (
     return null
   }
   const [username, password] = parsed
+  if (!username || !password) return null
   return { username, password }
 }
 

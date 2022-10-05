@@ -30,7 +30,7 @@ export const subsystemLogger = (name: string): pino.Logger => {
   // can't disable child loggers, so we just set their level to fatal to effectively turn them off
   subsystems[name] = rootLogger.child(
     { name },
-    { level: subsystemEnabled ? level : 'fatal' },
+    { level: subsystemEnabled ? level : 'silent' },
   )
   return subsystems[name]
 }
