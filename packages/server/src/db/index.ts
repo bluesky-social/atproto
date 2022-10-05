@@ -135,6 +135,16 @@ export class Database {
     await this.db.getRepository(User).save(user)
   }
 
+  async updateUserPassword(did: string, password: string) {
+    const hashedPassword = await util.scryptHash(password)
+    return await this.db
+      .createQueryBuilder()
+      .update(User)
+      .set({ password: hashedPassword })
+      .where('did = :did', { did })
+      .execute()
+  }
+
   async verifyUserPassword(
     username: string,
     password: string,
