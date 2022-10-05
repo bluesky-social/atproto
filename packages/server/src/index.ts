@@ -15,7 +15,7 @@ import ServerAuth from './auth'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
 import { ServerConfig, ServerConfigValues } from './config'
-import { DidResolver } from '@adxp/did-sdk'
+import { DidResolver } from '@adxp/did-resolver'
 import { Locals } from './locals'
 
 export type { ServerConfigValues } from './config'

@@ -15,7 +15,7 @@
   "dependencies": {
     "@adxp/api": "*",
     "@adxp/crypto": "*",
-    "@adxp/did-sdk": "*",
+    "@adxp/did-resolver": "*",
     "@adxp/server": "*",
     "@adxp/uri": "*",
     "chalk": "^5.0.1",

@@ -1,6 +1,6 @@
 import * as auth from '@adxp/auth'
 import * as uint8arrays from 'uint8arrays'
-import { DidResolver } from '@adxp/did-sdk'
+import { DidResolver } from '@adxp/did-resolver'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
 
