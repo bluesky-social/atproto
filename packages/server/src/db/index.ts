@@ -24,6 +24,7 @@ import { AdxRecord } from './record'
 import { User } from './user'
 import * as util from './util'
 import { InviteCode, InviteCodeUse } from './invite-codes'
+import { dbLogger as log } from '../logger'
 
 export class Database {
   db: DataSource
@@ -92,6 +93,7 @@ export class Database {
   }
 
   async setRepoRoot(did: string, root: CID) {
+    log.debug({ did, root: root.toString() }, 'updating repo root')
     const table = this.db.getRepository(RepoRoot)
     let newRoot = await table.findOneBy({ did })
     if (newRoot === null) {
@@ -100,6 +102,7 @@ export class Database {
     }
     newRoot.root = root.toString()
     await table.save(newRoot)
+    log.info({ did, root: root.toString() }, 'updated repo root')
   }
 
   async getUser(
@@ -125,6 +128,7 @@ export class Database {
     did: string,
     password: string,
   ) {
+    log.debug({ username, did, email }, 'registering user')
     const user = new User()
     user.email = email
     user.username = username
@@ -133,6 +137,7 @@ export class Database {
     user.createdAt = new Date().toISOString()
     user.lastSeenNotifs = new Date().toISOString()
     await this.db.getRepository(User).save(user)
+    log.info({ username, did, email }, 'registered user')
   }
 
   async verifyUserPassword(
@@ -164,6 +169,7 @@ export class Database {
   }
 
   async indexRecord(uri: AdxUri, obj: unknown) {
+    log.debug({ uri }, 'indexing record')
     const record = new AdxRecord()
     record.uri = uri.toString()
 
@@ -192,9 +198,11 @@ export class Database {
 
     const notifs = table.notifsForRecord(uri, obj)
     await this.notifications.process(notifs)
+    log.info({ uri }, 'indexed record')
   }
 
   async deleteRecord(uri: AdxUri) {
+    log.debug({ uri }, 'deleting indexed record')
     const table = this.findTableForCollection(uri.collection)
     const recordTable = this.db.getRepository(AdxRecord)
     await Promise.all([
@@ -202,6 +210,7 @@ export class Database {
       recordTable.delete(uri.toString()),
       this.notifications.deleteForRecord(uri),
     ])
+    log.info({ uri }, 'deleted indexed record')
   }
 
   async listCollectionsForDid(did: string): Promise<string[]> {

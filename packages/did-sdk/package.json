@@ -14,6 +14,7 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
+    "@adxp/common": "*",
     "@adxp/crypto": "*",
     "axios": "^0.24.0",
     "core-js": "2.6.5",

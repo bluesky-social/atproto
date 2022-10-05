@@ -1,6 +1,7 @@
 import { TID } from '@adxp/common'
 import { NSID } from '@adxp/nsid'
 import Repo from './repo'
+import log from './logger'
 
 export class Collection {
   repo: Repo
@@ -52,6 +53,14 @@ export class Collection {
     await this.repo.safeCommit(async (data) => {
       return data.add(this.dataIdForRecord(tid), cid)
     })
+    log.info(
+      {
+        did: this.repo.did(),
+        collection: this.name(),
+        tid: tid.toString(),
+      },
+      'created record',
+    )
     return tid
   }
 
@@ -60,12 +69,28 @@ export class Collection {
     await this.repo.safeCommit(async (data) => {
       return data.update(this.dataIdForRecord(tid), cid)
     })
+    log.info(
+      {
+        did: this.repo.did(),
+        collection: this.name(),
+        tid: tid.toString(),
+      },
+      'updated record',
+    )
   }
 
   async deleteRecord(tid: TID): Promise<void> {
     await this.repo.safeCommit(async (data) => {
       return data.delete(this.dataIdForRecord(tid))
     })
+    log.info(
+      {
+        did: this.repo.did(),
+        collection: this.name(),
+        tid: tid.toString(),
+      },
+      'deleted record',
+    )
   }
 }
 

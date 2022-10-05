@@ -4,13 +4,13 @@ import { TID } from '@adxp/common'
 import { AdxUri } from '@adxp/uri'
 import * as didSdk from '@adxp/did-sdk'
 import * as repoDiff from '../../../repo-diff'
-import * as util from '../../../util'
+import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.todo.adx.repoDescribe(async (params, _in, _req, res) => {
     const { nameOrDid } = params
 
-    const { db, auth } = util.getLocals(res)
+    const { db, auth } = locals.get(res)
     const user = await db.getUser(nameOrDid)
     if (user === null) {
       throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
@@ -43,7 +43,7 @@ export default function (server: Server) {
   server.todo.adx.repoListRecords(async (params, _in, _req, res) => {
     const { nameOrDid, type, limit, before, after, reverse } = params
 
-    const db = util.getDB(res)
+    const db = locals.db(res)
     const did = await db.getUserDid(nameOrDid)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
@@ -68,7 +68,7 @@ export default function (server: Server) {
 
   server.todo.adx.repoGetRecord(async (params, _in, _req, res) => {
     const { nameOrDid, type, tid } = params
-    const db = util.getDB(res)
+    const db = locals.db(res)
 
     const did = await db.getUserDid(nameOrDid)
     if (!did) {
@@ -90,7 +90,7 @@ export default function (server: Server) {
   // @TODO all write methods should be transactional to ensure no forked histories
   server.todo.adx.repoBatchWrite(async (params, input, req, res) => {
     const { did, validate } = params
-    const { auth, db } = util.getLocals(res)
+    const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -107,7 +107,7 @@ export default function (server: Server) {
         }
       }
     }
-    const repo = await util.maybeLoadRepo(res, did)
+    const repo = await locals.loadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -120,6 +120,7 @@ export default function (server: Server) {
     try {
       await repoDiff.processDiff(db, repo, diff)
     } catch (err) {
+      logger.warn({ did, err }, 'failed to index batch write')
       if (validate) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
@@ -134,7 +135,7 @@ export default function (server: Server) {
 
   server.todo.adx.repoCreateRecord(async (params, input, req, res) => {
     const { did, type, validate } = params
-    const { auth, db } = util.getLocals(res)
+    const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -146,7 +147,7 @@ export default function (server: Server) {
         )
       }
     }
-    const repo = await util.maybeLoadRepo(res, did)
+    const repo = await locals.loadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -157,6 +158,10 @@ export default function (server: Server) {
     try {
       await db.indexRecord(uri, input.body)
     } catch (err) {
+      logger.warn(
+        { uri: uri.toString(), err, validate },
+        'failed to index new record',
+      )
       if (validate) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
@@ -172,7 +177,7 @@ export default function (server: Server) {
 
   server.todo.adx.repoPutRecord(async (params, input, req, res) => {
     const { did, type, tid, validate } = params
-    const { auth, db } = util.getLocals(res)
+    const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -184,7 +189,7 @@ export default function (server: Server) {
         )
       }
     }
-    const repo = await util.maybeLoadRepo(res, did)
+    const repo = await locals.loadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -195,6 +200,10 @@ export default function (server: Server) {
     try {
       await db.indexRecord(uri, input.body)
     } catch (err) {
+      logger.warn(
+        { uri: uri.toString(), err, validate },
+        'failed to index updated record',
+      )
       if (validate) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
@@ -209,11 +218,11 @@ export default function (server: Server) {
 
   server.todo.adx.repoDeleteRecord(async (params, _input, req, res) => {
     const { did, type, tid } = params
-    const { auth, db } = util.getLocals(res)
+    const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
-    const repo = await util.maybeLoadRepo(res, did)
+    const repo = await locals.loadRepo(res, did)
     if (!repo) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -221,7 +230,14 @@ export default function (server: Server) {
     }
     await repo.getCollection(type).deleteRecord(TID.fromStr(tid))
     const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
-    await db.deleteRecord(uri)
+    try {
+      await db.deleteRecord(uri)
+    } catch (err) {
+      logger.warn(
+        { uri: uri.toString(), err },
+        'failed to delete indexed record',
+      )
+    }
     await db.setRepoRoot(did, repo.cid)
     // @TODO update subscribers
   })

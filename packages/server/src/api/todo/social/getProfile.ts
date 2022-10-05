@@ -7,13 +7,13 @@ import { ProfileBadgeIndex, ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
 import * as util from '../../../db/util'
 import { BadgeIndex } from '../../../db/records/badge'
-import { getLocals } from '../../../util'
+import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.todo.social.getProfile(
     async (params: GetProfile.QueryParams, _input, req, res) => {
       const { user } = params
-      const { auth, db } = getLocals(res)
+      const { auth, db } = locals.get(res)
 
       const requester = auth.getUserDid(req)
       if (!requester) {

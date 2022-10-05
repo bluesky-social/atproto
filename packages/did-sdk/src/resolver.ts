@@ -7,6 +7,7 @@ import {
 import * as web from './web/resolver'
 import * as plc from './plc/resolver'
 import * as atpDid from './atp-did'
+import log from './logger'
 
 export type DidResolverOptions = {
   timeout: number
@@ -31,7 +32,10 @@ export class DidResolver {
     did: string,
     options: DIDResolutionOptions = {},
   ): Promise<DIDResolutionResult> {
-    return this.resolver.resolve(did, options)
+    log.info({ did }, 'resolving did')
+    const res = await this.resolver.resolve(did, options)
+    log.info({ did, res }, 'resolved did')
+    return res
   }
 
   async ensureResolveDid(
@@ -40,7 +44,8 @@ export class DidResolver {
   ): Promise<DIDDocument> {
     const result = await this.resolveDid(did, options)
     if (result.didResolutionMetadata.error || result.didDocument === null) {
-      let err = result.didResolutionMetadata.error || 'notFound'
+      const err = result.didResolutionMetadata.error || 'notFound'
+      log.info({ err, did }, 'could not resolve did')
       throw new Error(`Could not resolve DID (${did}): ${err}`)
     }
     return result.didDocument

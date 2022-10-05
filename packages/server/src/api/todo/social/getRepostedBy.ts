@@ -4,13 +4,13 @@ import { AdxRecord } from '../../../db/record'
 import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
 import { RepostIndex } from '../../../db/records/repost'
-import { getLocals } from '../../../util'
+import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.todo.social.getRepostedBy(
     async (params: GetRepostedBy.QueryParams, _input, _req, res) => {
       const { uri, limit, before } = params
-      const { db } = getLocals(res)
+      const { db } = locals.get(res)
 
       const builder = db.db
         .createQueryBuilder()

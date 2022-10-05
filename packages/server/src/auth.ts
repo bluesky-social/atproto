@@ -51,12 +51,9 @@ export class ServerAuth {
   }
 
   verifyAdmin(req: express.Request): boolean {
-    const header = req.headers.authorization || ''
-    if (!header.startsWith(BASIC)) return false
-    const token = header.slice(BASIC.length)
-    const [username, password] = uint8arrays
-      .toString(uint8arrays.fromString(token, 'base64pad'), 'utf8')
-      .split(':')
+    const parsed = parseBasicAuth(req.headers.authorization || '')
+    if (!parsed) return false
+    const { username, password } = parsed
     if (username !== 'admin') return false
     if (password !== this._adminPass) return false
     return true
@@ -65,6 +62,24 @@ export class ServerAuth {
   toString(): string {
     return 'Server auth: JWT'
   }
+}
+
+export const parseBasicAuth = (
+  token: string,
+): { username: string; password: string } | null => {
+  if (!token.startsWith(BASIC)) return null
+  const b64 = token.slice(BASIC.length)
+  let parsed: string[]
+  try {
+    parsed = uint8arrays
+      .toString(uint8arrays.fromString(b64, 'base64pad'), 'utf8')
+      .split(':')
+  } catch (err) {
+    return null
+  }
+  const [username, password] = parsed
+  if (!username || !password) return null
+  return { username, password }
 }
 
 export default ServerAuth
