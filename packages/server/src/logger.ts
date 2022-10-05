@@ -1,7 +1,7 @@
 import pinoHttp from 'pino-http'
-import { createLogger } from '@adxp/common'
+import { subsystemLogger } from '@adxp/common'
 
-export const logger = createLogger('pds')
+export const logger = subsystemLogger('pds')
 // @TODO config to strip out auth tokens
 export const loggerMiddleware = pinoHttp({
   logger,
