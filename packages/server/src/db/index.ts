@@ -93,7 +93,7 @@ export class Database {
   }
 
   async setRepoRoot(did: string, root: CID) {
-    log.info({ did, root: root.toString() }, 'updating repo root')
+    log.debug({ did, root: root.toString() }, 'updating repo root')
     const table = this.db.getRepository(RepoRoot)
     let newRoot = await table.findOneBy({ did })
     if (newRoot === null) {
@@ -128,7 +128,7 @@ export class Database {
     did: string,
     password: string,
   ) {
-    log.info({ username, did, email }, 'registering user')
+    log.debug({ username, did, email }, 'registering user')
     const user = new User()
     user.email = email
     user.username = username
@@ -169,7 +169,7 @@ export class Database {
   }
 
   async indexRecord(uri: AdxUri, obj: unknown) {
-    log.info({ uri }, 'indexing record')
+    log.debug({ uri }, 'indexing record')
     const record = new AdxRecord()
     record.uri = uri.toString()
 
@@ -202,7 +202,7 @@ export class Database {
   }
 
   async deleteRecord(uri: AdxUri) {
-    log.info({ uri }, 'deleting indexed record')
+    log.debug({ uri }, 'deleting indexed record')
     const table = this.findTableForCollection(uri.collection)
     const recordTable = this.db.getRepository(AdxRecord)
     await Promise.all([

@@ -12,6 +12,10 @@ import {
   queryPostsWithReposts,
   queryResultToFeedItem,
 } from './util'
+import {
+  isNotRepostClause,
+  postOrRepostIndexedAtClause,
+} from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getHomeFeed(
@@ -33,14 +37,17 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      // Posts by or reposted by a follower of requester, and not by requester.
-
       const builder = db.db.createQueryBuilder().from(PostIndex, 'post')
 
       // Determine result set of posts and reposts
       if (feedAlgorithm === FeedAlgorithm.Firehose) {
-        queryPostsWithReposts(builder)
+        // All posts, except requester's reposts
+        queryPostsWithReposts(builder).where(
+          `post.creator != :requester or ${isNotRepostClause}`,
+          { requester },
+        )
       } else if (feedAlgorithm === FeedAlgorithm.ReverseChronological) {
+        // Followee's posts and reposts, and requester's posts
         const followingIdsSubquery = (qb: SelectQueryBuilder<PostIndex>) => {
           return qb
             .subQuery()
@@ -50,8 +57,18 @@ export default function (server: Server) {
             .getQuery()
         }
         queryPostsWithReposts(builder)
-          .where((qb) => `originator.did IN ${followingIdsSubquery(qb)}`)
-          .andWhere('post.creator != :requester', { requester })
+          .where(`(post.creator != :requester or ${isNotRepostClause})`, {
+            requester,
+          })
+          .andWhere(
+            (qb) => {
+              return (
+                `(originator.did IN ${followingIdsSubquery(qb)} or ` +
+                `originator.did = :requester)`
+              )
+            },
+            { requester },
+          )
       } else {
         const exhaustiveCheck: never = feedAlgorithm
         throw new Error(`Unhandled case: ${exhaustiveCheck}`)
@@ -59,12 +76,15 @@ export default function (server: Server) {
 
       // Select data for presentation into FeedItem
       queryPostsAndRepostsAsFeedItems(builder, { requester })
-        .orderBy('post.indexedAt', 'DESC')
+        // Grouping by post then originator preserves one row for each
+        // post or repost. Reposts of a given post only vary by originator.
         .groupBy('post.uri')
+        .addGroupBy('originator.did')
 
       // Apply pagination
+      builder.orderBy(postOrRepostIndexedAtClause, 'DESC')
       if (before !== undefined) {
-        builder.andWhere('post.indexedAt < :before', { before })
+        builder.andWhere(`${postOrRepostIndexedAtClause} < :before`, { before })
       }
       if (limit !== undefined) {
         builder.limit(limit)

@@ -1,3 +1,3 @@
-# ADX DID SDK
+# ADX DID Resolver
 
-A library for interacting with ADX's Decentralized ID methods.
+A library for resolving ADX's Decentralized ID methods.
