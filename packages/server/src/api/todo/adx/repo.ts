@@ -2,7 +2,7 @@ import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
 import { TID } from '@adxp/common'
 import { AdxUri } from '@adxp/uri'
-import * as didSdk from '@adxp/did-sdk'
+import * as didResolver from '@adxp/did-resolver'
 import * as repoDiff from '../../../repo-diff'
 import * as locals from '../../../locals'
 
@@ -23,7 +23,7 @@ export default function (server: Server) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }
 
-    const username = didSdk.getUsername(didDoc)
+    const username = didResolver.getUsername(didDoc)
     const nameIsCorrect = username === user.username
 
     const collections = await db.listCollectionsForDid(user.did)

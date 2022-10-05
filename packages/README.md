@@ -12,6 +12,6 @@
 - [Auth](./auth): ADX's core permissioning library (based on UCANs).
 - [Common](./common): A library containing code which is shared between ADX packages.
 - [Crypto](./crypto): ADX's common cryptographic operations.
-- [DID SDK](./did-sdk): A library for interacting with ADX's Decentralized ID methods.
+- [DID Resolver](./did-resolver): A library for resolving ADX's Decentralized ID methods.
 - [Repo](./repo): The "ADX repository" core implementation (a Merkle Search Tree).
 - [Schemas](./schemas/): A library for validating data using ADX's schema system.

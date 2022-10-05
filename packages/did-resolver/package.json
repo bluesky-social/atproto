@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/did-sdk",
+  "name": "@adxp/did-resolver",
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {

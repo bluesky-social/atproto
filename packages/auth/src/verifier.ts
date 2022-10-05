@@ -1,11 +1,10 @@
 import * as ucans from '@ucans/core'
-import * as didSdk from '@adxp/did-sdk'
 import { DidableKey, EcdsaKeypair, p256Plugin } from '@adxp/crypto'
 import { PluginInjectedApi } from './plugins'
 import { verifySignature, verifySignatureUtf8 } from './signatures'
 import { verifyUcan, verifyAdxUcan, verifyFullWritePermission } from './verify'
 import AuthStore from './auth-store'
-import { DidResolver } from '@adxp/did-sdk'
+import { DidResolver } from '@adxp/did-resolver'
 
 export const DID_KEY_PLUGINS = [p256Plugin]
 
@@ -18,7 +17,7 @@ export type VerifierOpts = {
 }
 
 export class Verifier {
-  didResolver: didSdk.DidResolver
+  didResolver: DidResolver
   plugins: ucans.Plugins
   ucanApi: PluginInjectedApi
 
@@ -32,7 +31,7 @@ export class Verifier {
 
     const resolver =
       opts.didResolver ??
-      new didSdk.DidResolver({
+      new DidResolver({
         plcUrl,
         timeout: resolutionTimeout,
       })
