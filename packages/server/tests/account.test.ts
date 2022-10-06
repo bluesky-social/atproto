@@ -1,12 +1,18 @@
+import { once, EventEmitter } from 'events'
 import AdxApi, {
   ServiceClient as AdxServiceClient,
   TodoAdxCreateAccount,
 } from '@adxp/api'
-import EventEmitter, { once } from 'events'
+import {
+  ExpiredTokenError,
+  InvalidTokenError,
+} from '@adxp/api/src/types/todo/adx/resetAccountPassword'
+import { sign } from 'jsonwebtoken'
 import Mail from 'nodemailer/lib/mailer'
 import { App } from '../src'
 import { getLocals } from '../src/util'
 import * as util from './_util'
+import { User } from '../src/db/user'
 
 const email = 'alice@test.com'
 const username = 'alice.test'
@@ -18,6 +24,8 @@ describe('account', () => {
   let client: AdxServiceClient
   let close: util.CloseFn
   let app: App | undefined
+  const mailCatcher = new EventEmitter()
+  let _origSendMail
 
   beforeAll(async () => {
     const server = await util.runTestServer({ inviteRequired: true })
@@ -25,9 +33,24 @@ describe('account', () => {
     app = server.app
     serverUrl = server.url
     client = AdxApi.service(serverUrl)
+
+    if (app !== undefined) {
+      // Catch emails for use in tests
+      const { mailer } = getLocals(app)
+      _origSendMail = mailer.transporter.sendMail
+      mailer.transporter.sendMail = async (opts) => {
+        const result = await _origSendMail.call(mailer.transporter, opts)
+        mailCatcher.emit('mail', opts)
+        return result
+      }
+    }
   })
 
   afterAll(async () => {
+    if (app !== undefined) {
+      const { mailer } = getLocals(app)
+      mailer.transporter.sendMail = _origSendMail
+    }
     if (close) {
       await close()
     }
@@ -137,24 +160,16 @@ describe('account', () => {
     expect(res.data.name).toBe(username)
   })
 
-  it('resets account password', async () => {
-    if (app === undefined) throw new Error('Must run test server')
-    const { mailer } = getLocals(app)
+  const getMailFrom = async (promise): Promise<Mail.Options> => {
+    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
+    return result[0][0]
+  }
 
-    const mailCatcher = new EventEmitter()
-    const origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
-
-    const result = await Promise.all([
-      once(mailCatcher, 'mail'),
+  it('can reset account password', async () => {
+    const message = await getMailFrom(
       client.todo.adx.requestAccountPasswordReset({}, { email }),
-    ])
+    )
 
-    const message: Mail.Options = result[0][0]
     expect(message.to).toEqual(email)
     expect(message.html).toContain('Reset your password')
 
@@ -172,6 +187,7 @@ describe('account', () => {
       { token, password: updatedPassword },
     )
 
+    // Logs in with new password and not previous password
     await expect(
       client.todo.adx.createSession({}, { username, password }),
     ).rejects.toThrow('Invalid username or password')
@@ -182,7 +198,78 @@ describe('account', () => {
         { username, password: updatedPassword },
       ),
     ).resolves.toBeDefined()
+  })
 
-    mailer.transporter.sendMail = origSendMail
+  it('allows only single-use of password reset token', async () => {
+    const message = await getMailFrom(
+      client.todo.adx.requestAccountPasswordReset({}, { email }),
+    )
+
+    const token = message.html
+      ?.toString()
+      .match(/token=(.+?)'/)
+      ?.at(1)
+
+    if (token === undefined) {
+      return expect(token).toBeDefined()
+    }
+
+    // Reset back from updatedPassword to password
+    await client.todo.adx.resetAccountPassword({}, { token, password })
+
+    // Reuse of token fails
+    await expect(
+      client.todo.adx.resetAccountPassword({}, { token, password }),
+    ).rejects.toThrow(InvalidTokenError)
+
+    // Logs in with new password and not previous password
+    await expect(
+      client.todo.adx.createSession(
+        {},
+        { username, password: updatedPassword },
+      ),
+    ).rejects.toThrow('Invalid username or password')
+
+    await expect(
+      client.todo.adx.createSession({}, { username, password }),
+    ).resolves.toBeDefined()
+  })
+
+  it('allows only unexpired password reset tokens', async () => {
+    if (app === undefined) throw new Error()
+    const { config, db } = getLocals(app)
+
+    const table = db.db.getRepository(User)
+    const user = await table.findOneBy({ did })
+    if (!user) {
+      return expect(user).toBeTruthy()
+    }
+
+    const signingKey = `${config.jwtSecret}::${user.password}`
+    const expiredToken = await sign(
+      { sub: did, scope: 'todo.adx.resetAccountPassword' },
+      signingKey,
+      { expiresIn: -1 },
+    )
+
+    // Use of expired token fails
+    await expect(
+      client.todo.adx.resetAccountPassword(
+        {},
+        { token: expiredToken, password: updatedPassword },
+      ),
+    ).rejects.toThrow(ExpiredTokenError)
+
+    // Still logs in with previous password
+    await expect(
+      client.todo.adx.createSession(
+        {},
+        { username, password: updatedPassword },
+      ),
+    ).rejects.toThrow('Invalid username or password')
+
+    await expect(
+      client.todo.adx.createSession({}, { username, password }),
+    ).resolves.toBeDefined()
   })
 })
