@@ -25,19 +25,26 @@ export class ServerMailer {
     }
   }
 
+  // The returned config can be used inside email templates.
+  static getEmailConfig(config: ServerConfig) {
+    return {
+      appUrlPasswordReset: config.appUrlPasswordReset,
+    }
+  }
+
   async sendResetPassword(params: { token: string }, mailOpts: Mail.Options) {
     return this.sendTemplate('resetPassword', params, mailOpts)
   }
 
   private async sendTemplate(templateName, params, mailOpts: Mail.Options) {
-    const template = this.templates[templateName]({
+    const html = this.templates[templateName]({
       ...params,
-      config: this.config,
+      config: ServerMailer.getEmailConfig(this.config),
     })
     return await this.transporter.sendMail({
       ...mailOpts,
       from: mailOpts.from ?? this.config.emailNoReplyAddress,
-      html: template,
+      html,
     })
   }
 
