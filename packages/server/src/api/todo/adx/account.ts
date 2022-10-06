@@ -1,8 +1,8 @@
-import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
-import * as locals from '../../../locals'
 import { Repo } from '@adxp/repo'
 import { PlcClient } from '@adxp/plc'
+import { Server } from '../../../lexicon'
+import * as locals from '../../../locals'
 import { InviteCode, InviteCodeUse } from '../../../db/invite-codes'
 
 export default function (server: Server) {

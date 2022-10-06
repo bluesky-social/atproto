@@ -164,8 +164,10 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
     })
     method.setBodyText(
       [
-        `/** @ts-ignore */`,
-        `return this.server.xrpc.method('${schema.id}', handler)`,
+        // Placing schema on separate line, since the following one was being formatted
+        // into multiple lines and causing the ts-ignore to ignore the wrong line.
+        `const schema = '${schema.id}' // @ts-ignore`,
+        `return this.server.xrpc.method(schema, handler)`,
       ].join('\n'),
     )
   }

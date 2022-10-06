@@ -21,6 +21,8 @@ import * as TodoAdxRepoDescribe from './types/todo/adx/repoDescribe'
 import * as TodoAdxRepoGetRecord from './types/todo/adx/repoGetRecord'
 import * as TodoAdxRepoListRecords from './types/todo/adx/repoListRecords'
 import * as TodoAdxRepoPutRecord from './types/todo/adx/repoPutRecord'
+import * as TodoAdxRequestAccountPasswordReset from './types/todo/adx/requestAccountPasswordReset'
+import * as TodoAdxResetAccountPassword from './types/todo/adx/resetAccountPassword'
 import * as TodoAdxResolveName from './types/todo/adx/resolveName'
 import * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
 import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
@@ -70,98 +72,110 @@ export class AdxNS {
   }
 
   createAccount(handler: TodoAdxCreateAccount.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.createAccount', handler)
+    const schema = 'todo.adx.createAccount' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   createInviteCode(handler: TodoAdxCreateInviteCode.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.createInviteCode', handler)
+    const schema = 'todo.adx.createInviteCode' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   createSession(handler: TodoAdxCreateSession.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.createSession', handler)
+    const schema = 'todo.adx.createSession' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   deleteAccount(handler: TodoAdxDeleteAccount.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.deleteAccount', handler)
+    const schema = 'todo.adx.deleteAccount' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   deleteSession(handler: TodoAdxDeleteSession.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.deleteSession', handler)
+    const schema = 'todo.adx.deleteSession' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getAccount(handler: TodoAdxGetAccount.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.getAccount', handler)
+    const schema = 'todo.adx.getAccount' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getAccountsConfig(handler: TodoAdxGetAccountsConfig.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.getAccountsConfig', handler)
+    const schema = 'todo.adx.getAccountsConfig' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getSession(handler: TodoAdxGetSession.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.getSession', handler)
+    const schema = 'todo.adx.getSession' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   repoBatchWrite(handler: TodoAdxRepoBatchWrite.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.repoBatchWrite', handler)
+    const schema = 'todo.adx.repoBatchWrite' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   repoCreateRecord(handler: TodoAdxRepoCreateRecord.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.repoCreateRecord', handler)
+    const schema = 'todo.adx.repoCreateRecord' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   repoDeleteRecord(handler: TodoAdxRepoDeleteRecord.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.repoDeleteRecord', handler)
+    const schema = 'todo.adx.repoDeleteRecord' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   repoDescribe(handler: TodoAdxRepoDescribe.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.repoDescribe', handler)
+    const schema = 'todo.adx.repoDescribe' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   repoGetRecord(handler: TodoAdxRepoGetRecord.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.repoGetRecord', handler)
+    const schema = 'todo.adx.repoGetRecord' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   repoListRecords(handler: TodoAdxRepoListRecords.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.repoListRecords', handler)
+    const schema = 'todo.adx.repoListRecords' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   repoPutRecord(handler: TodoAdxRepoPutRecord.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.repoPutRecord', handler)
+    const schema = 'todo.adx.repoPutRecord' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
+  }
+
+  requestAccountPasswordReset(
+    handler: TodoAdxRequestAccountPasswordReset.Handler
+  ) {
+    const schema = 'todo.adx.requestAccountPasswordReset' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
+  }
+
+  resetAccountPassword(handler: TodoAdxResetAccountPassword.Handler) {
+    const schema = 'todo.adx.resetAccountPassword' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   resolveName(handler: TodoAdxResolveName.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.resolveName', handler)
+    const schema = 'todo.adx.resolveName' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   syncGetRepo(handler: TodoAdxSyncGetRepo.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.syncGetRepo', handler)
+    const schema = 'todo.adx.syncGetRepo' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   syncGetRoot(handler: TodoAdxSyncGetRoot.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.syncGetRoot', handler)
+    const schema = 'todo.adx.syncGetRoot' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   syncUpdateRepo(handler: TodoAdxSyncUpdateRepo.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.adx.syncUpdateRepo', handler)
+    const schema = 'todo.adx.syncUpdateRepo' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 }
 
@@ -173,57 +187,57 @@ export class SocialNS {
   }
 
   getAuthorFeed(handler: TodoSocialGetAuthorFeed.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getAuthorFeed', handler)
+    const schema = 'todo.social.getAuthorFeed' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getHomeFeed(handler: TodoSocialGetHomeFeed.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getHomeFeed', handler)
+    const schema = 'todo.social.getHomeFeed' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getLikedBy(handler: TodoSocialGetLikedBy.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getLikedBy', handler)
+    const schema = 'todo.social.getLikedBy' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getNotificationCount(handler: TodoSocialGetNotificationCount.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getNotificationCount', handler)
+    const schema = 'todo.social.getNotificationCount' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getNotifications(handler: TodoSocialGetNotifications.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getNotifications', handler)
+    const schema = 'todo.social.getNotifications' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getPostThread(handler: TodoSocialGetPostThread.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getPostThread', handler)
+    const schema = 'todo.social.getPostThread' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getProfile(handler: TodoSocialGetProfile.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getProfile', handler)
+    const schema = 'todo.social.getProfile' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getRepostedBy(handler: TodoSocialGetRepostedBy.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getRepostedBy', handler)
+    const schema = 'todo.social.getRepostedBy' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getUserFollowers(handler: TodoSocialGetUserFollowers.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getUserFollowers', handler)
+    const schema = 'todo.social.getUserFollowers' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getUserFollows(handler: TodoSocialGetUserFollows.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.getUserFollows', handler)
+    const schema = 'todo.social.getUserFollows' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   postNotificationsSeen(handler: TodoSocialPostNotificationsSeen.Handler) {
-    /** @ts-ignore */
-    return this.server.xrpc.method('todo.social.postNotificationsSeen', handler)
+    const schema = 'todo.social.postNotificationsSeen' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 }

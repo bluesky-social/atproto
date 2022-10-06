@@ -4,7 +4,7 @@ import * as plc from '@adxp/plc'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 
-import server, { ServerConfig, Database } from '../src/index'
+import server, { ServerConfig, Database, App } from '../src/index'
 
 const USE_TEST_SERVER = true
 
@@ -13,6 +13,7 @@ const ADMIN_PASSWORD = 'admin-pass'
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
+  app?: App
   close: CloseFn
 }
 
@@ -45,7 +46,7 @@ export const runTestServer = async (
 
   const db = await Database.memory()
   const serverBlockstore = new MemoryBlockstore()
-  const s = server(
+  const { app, listener } = server(
     serverBlockstore,
     db,
     keypair,
@@ -60,16 +61,19 @@ export const runTestServer = async (
       didPlcUrl: plcUrl,
       jwtSecret: 'jwt-secret',
       testNameRegistry: {},
+      appUrlPasswordReset: 'app://forgot-password',
+      emailNoReplyAddress: 'noreply@blueskyweb.xyz',
       ...params,
     }),
   )
 
   return {
     url: `http://localhost:${pdsPort}`,
+    app,
     close: async () => {
       await Promise.all([
         db.close(),
-        s.close(),
+        listener.close(),
         plcServer?.close(),
         plcDb?.close(),
       ])

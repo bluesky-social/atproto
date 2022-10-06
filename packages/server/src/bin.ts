@@ -32,8 +32,8 @@ const run = async () => {
 
   const keypair = await crypto.EcdsaKeypair.create()
 
-  const s = server(blockstore, db, keypair, cfg)
-  s.on('listening', () => {
+  const { listener } = server(blockstore, db, keypair, cfg)
+  listener.on('listening', () => {
     console.log(`🌞 ADX Data server is running at ${cfg.origin}`)
   })
 }

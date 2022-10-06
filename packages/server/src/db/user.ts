@@ -9,7 +9,7 @@ export class User {
   @Index()
   username: string
 
-  @Column('varchar')
+  @Column({ type: 'varchar', collation: 'nocase' })
   email: string
 
   @Column('varchar')

@@ -1,7 +1,6 @@
-import { AdxUri } from '@adxp/common'
+import { AdxUri } from '@adxp/uri'
 import { Entity, Column, PrimaryColumn, DataSource } from 'typeorm'
 import { Notification, NotificationsPlugin } from './types'
-import { User } from './user'
 
 @Entity({ name: 'user_notifications' })
 export class UserNotification {
