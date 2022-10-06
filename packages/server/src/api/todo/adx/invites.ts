@@ -3,14 +3,15 @@ import * as crypto from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
 import { InviteCode } from '../../../db/invite-codes'
 import { Server } from '../../../lexicon'
-import * as util from '../../../util'
+import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.todo.adx.createInviteCode(async (_params, input, req, res) => {
-    const { auth, db, config } = util.getLocals(res)
+    const { auth, db, config, logger } = locals.get(res)
     if (!auth.verifyAdmin(req)) {
       throw new ForbiddenError()
     }
+    const { useCount } = input.body
 
     // generate a 5 char b32 invite code - preceeded by the hostname
     // ex: bsky.app-abc12
@@ -21,11 +22,13 @@ export default function (server: Server) {
 
     const invite = new InviteCode()
     invite.code = code
-    invite.availableUses = input.body.useCount
+    invite.availableUses = useCount
     invite.createdBy = 'admin'
     invite.forUser = 'admin'
 
     await db.db.getRepository(InviteCode).insert(invite)
+
+    logger.info({ useCount, code }, 'created invite code')
 
     return {
       encoding: 'application/json',

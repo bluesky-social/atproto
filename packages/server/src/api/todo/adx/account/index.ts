@@ -1,6 +1,6 @@
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
-import * as util from '../../../../util'
+import * as locals from '../../../../locals'
 import { Repo } from '@adxp/repo'
 import { PlcClient } from '@adxp/plc'
 import { InviteCode, InviteCodeUse } from '../../../../db/invite-codes'
@@ -10,7 +10,7 @@ export default function (server: Server) {
   passwordReset(server)
 
   server.todo.adx.getAccountsConfig((_params, _input, _req, res) => {
-    const cfg = util.getConfig(res)
+    const cfg = locals.config(res)
 
     let availableUserDomains: string[]
     if (cfg.debugMode && !!cfg.testNameRegistry) {
@@ -34,7 +34,7 @@ export default function (server: Server) {
 
   server.todo.adx.createAccount(async (_params, input, _req, res) => {
     const { email, username, password, inviteCode } = input.body
-    const { db, blockstore, auth, config, keypair } = util.getLocals(res)
+    const { db, blockstore, auth, config, keypair, logger } = locals.get(res)
 
     if (config.inviteRequired) {
       if (!inviteCode) {
@@ -57,6 +57,7 @@ export default function (server: Server) {
         .groupBy('invite.code')
         .getRawOne()
       if (!found || found.disabled || found.useCount >= found.availableUses) {
+        logger.info({ username, email, inviteCode }, 'invalid invite code')
         return {
           status: 400,
           error: 'InvalidInviteCode',
@@ -90,12 +91,21 @@ export default function (server: Server) {
     }
 
     const plcClient = new PlcClient(config.didPlcUrl)
-    const did = await plcClient.createDid(
-      keypair,
-      keypair.did(),
-      username,
-      config.origin,
-    )
+    let did: string
+    try {
+      did = await plcClient.createDid(
+        keypair,
+        keypair.did(),
+        username,
+        config.origin,
+      )
+    } catch (err) {
+      logger.error(
+        { didKey: keypair.did(), username },
+        'failed to create did:plc',
+      )
+      throw err
+    }
 
     await db.registerUser(email, username, did, password)
 
@@ -108,7 +118,7 @@ export default function (server: Server) {
       await db.db.getRepository(InviteCodeUse).insert(inviteCodeUse)
     }
 
-    const authStore = util.getAuthstore(res, did)
+    const authStore = locals.getAuthstore(res, did)
     const repo = await Repo.create(blockstore, did, authStore)
     await db.setRepoRoot(did, repo.cid)
 

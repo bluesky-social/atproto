@@ -4,7 +4,7 @@ import * as GetNotifications from '../../../lexicon/types/todo/social/getNotific
 import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
 import { AdxRecord } from '../../../db/record'
-import { getLocals } from '../../../util'
+import * as locals from '../../../locals'
 import { UserNotification } from '../../../db/user-notifications'
 
 export default function (server: Server) {
@@ -12,7 +12,7 @@ export default function (server: Server) {
     async (params: GetNotifications.QueryParams, _input, req, res) => {
       const { limit, before } = params
 
-      const { auth, db } = getLocals(res)
+      const { auth, db } = locals.get(res)
       const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()

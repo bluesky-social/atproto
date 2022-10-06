@@ -14,6 +14,7 @@ module.exports = {
   transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
   testRegex: '(/tests/.*.(test|spec)).(jsx?|tsx?)$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  setupFiles: ["<rootDir>/../../test-setup.ts"],
   verbose: true,
   testTimeout: 30000
 }

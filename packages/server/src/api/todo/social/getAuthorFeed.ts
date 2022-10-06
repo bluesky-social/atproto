@@ -2,7 +2,7 @@ import { Server } from '../../../lexicon'
 import { AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetAuthorFeed from '../../../lexicon/types/todo/social/getAuthorFeed'
 import { PostIndex } from '../../../db/records/post'
-import { getLocals } from '../../../util'
+import * as locals from '../../../locals'
 import {
   queryPostsAndRepostsAsFeedItems,
   queryPostsWithReposts,
@@ -15,7 +15,7 @@ export default function (server: Server) {
     async (params: GetAuthorFeed.QueryParams, _input, req, res) => {
       const { author, limit, before } = params
 
-      const { auth, db } = getLocals(res)
+      const { auth, db } = locals.get(res)
       const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()

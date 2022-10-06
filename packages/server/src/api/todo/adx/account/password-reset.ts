@@ -2,14 +2,14 @@ import jwt from 'jsonwebtoken'
 import { ServerConfig } from '../../../../config'
 import { User } from '../../../../db/user'
 import { Server } from '../../../../lexicon'
-import * as util from '../../../../util'
+import * as locals from '../../../../locals'
 
 const PASSWORD_RESET_SCOPE = 'todo.adx.resetAccountPassword'
 
 export default function (server: Server) {
   server.todo.adx.requestAccountPasswordReset(
     async (_params, input, _req, res) => {
-      const { db, mailer, config } = util.getLocals(res)
+      const { db, mailer, config } = locals.get(res)
       const { email } = input.body
 
       // @TODO should multiple users be able to have the same email?
@@ -39,7 +39,7 @@ export default function (server: Server) {
   )
 
   server.todo.adx.resetAccountPassword(async (_params, input, _req, res) => {
-    const { db, config } = util.getLocals(res)
+    const { db, config } = locals.get(res)
     const { token, password } = input.body
 
     const tokenBody = jwt.decode(token)

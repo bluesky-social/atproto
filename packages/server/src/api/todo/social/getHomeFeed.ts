@@ -3,7 +3,7 @@ import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetHomeFeed from '../../../lexicon/types/todo/social/getHomeFeed'
 import { FollowIndex } from '../../../db/records/follow'
 import { PostIndex } from '../../../db/records/post'
-import { getLocals } from '../../../util'
+import * as locals from '../../../locals'
 import { SelectQueryBuilder } from 'typeorm'
 import {
   FeedAlgorithm,
@@ -22,7 +22,7 @@ export default function (server: Server) {
     async (params: GetHomeFeed.QueryParams, _input, req, res) => {
       const { algorithm, limit, before } = params
 
-      const { auth, db } = getLocals(res)
+      const { auth, db } = locals.get(res)
       const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()

@@ -12,8 +12,10 @@ import { IpldStore } from '@adxp/repo'
 import Database from './db'
 import ServerAuth from './auth'
 import * as error from './error'
+import { httpLogger, loggerMiddleware } from './logger'
 import { ServerConfig, ServerConfigValues } from './config'
-import { DidResolver } from '@adxp/did-sdk'
+import { DidResolver } from '@adxp/did-resolver'
+import { Locals } from './locals'
 import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
 
@@ -46,12 +48,27 @@ const runServer = (
 
   const app = express()
   app.use(cors())
+  app.use(loggerMiddleware)
 
-  const locals = { blockstore, db, keypair, auth, config, mailer }
+  const locals: Locals = {
+    logger: httpLogger,
+    blockstore,
+    db,
+    keypair,
+    auth,
+    config,
+    mailer,
+  }
+
   Object.assign(app.locals, locals)
 
-  app.use((_req, res, next) => {
-    Object.assign(res.locals, locals)
+  app.use((req, res, next) => {
+    const reqLocals: Locals = {
+      ...locals,
+      // @ts-ignore
+      logger: req.log,
+    }
+    res.locals = reqLocals
     next()
   })
 

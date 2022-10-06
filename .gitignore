@@ -8,3 +8,4 @@ packages/*/coverage
 .vscode/
 test.sqlite
 .DS_Store
+*.log

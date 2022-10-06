@@ -10,7 +10,7 @@ import {
 import { sign } from 'jsonwebtoken'
 import Mail from 'nodemailer/lib/mailer'
 import { App } from '../src'
-import { getLocals } from '../src/util'
+import * as locals from '../src/locals'
 import * as util from './_util'
 import { User } from '../src/db/user'
 
@@ -36,7 +36,7 @@ describe('account', () => {
 
     if (app !== undefined) {
       // Catch emails for use in tests
-      const { mailer } = getLocals(app)
+      const { mailer } = locals.get(app)
       _origSendMail = mailer.transporter.sendMail
       mailer.transporter.sendMail = async (opts) => {
         const result = await _origSendMail.call(mailer.transporter, opts)
@@ -48,7 +48,7 @@ describe('account', () => {
 
   afterAll(async () => {
     if (app !== undefined) {
-      const { mailer } = getLocals(app)
+      const { mailer } = locals.get(app)
       mailer.transporter.sendMail = _origSendMail
     }
     if (close) {
@@ -173,10 +173,7 @@ describe('account', () => {
     expect(message.to).toEqual(email)
     expect(message.html).toContain('Reset your password')
 
-    const token = message.html
-      ?.toString()
-      .match(/token=(.+?)'/)
-      ?.at(1)
+    const token = message.html?.toString().match(/token=(.+?)'/)?.[1]
 
     if (token === undefined) {
       return expect(token).toBeDefined()
@@ -205,10 +202,7 @@ describe('account', () => {
       client.todo.adx.requestAccountPasswordReset({}, { email }),
     )
 
-    const token = message.html
-      ?.toString()
-      .match(/token=(.+?)'/)
-      ?.at(1)
+    const token = message.html?.toString().match(/token=(.+?)'/)?.[1]
 
     if (token === undefined) {
       return expect(token).toBeDefined()
@@ -237,7 +231,7 @@ describe('account', () => {
 
   it('allows only unexpired password reset tokens', async () => {
     if (app === undefined) throw new Error()
-    const { config, db } = getLocals(app)
+    const { config, db } = locals.get(app)
 
     const table = db.db.getRepository(User)
     const user = await table.findOneBy({ did })

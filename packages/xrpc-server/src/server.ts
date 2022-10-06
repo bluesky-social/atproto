@@ -18,6 +18,7 @@ import {
   validateOutput,
   readReqBody,
 } from './util'
+import log from './logger'
 
 export function createServer(schemas?: unknown[]) {
   return new Server(schemas)
@@ -156,15 +157,16 @@ export class Server {
       }
     } catch (e: any) {
       if (e instanceof XRPCError) {
+        log.info(e, `error in xrpc method ${req.params.methodId}`)
         res.status(e.type).json({
           error: e.customErrorName,
           message: e.errorMessage || e.typeStr,
         })
       } else {
-        console.error(
+        log.error(
+          e,
           `Unhandled exception in ${req.params.methodId} xrpc handler:`,
         )
-        console.error(e)
         res.status(500).json({
           message: 'Unexpected internal server error',
         })
