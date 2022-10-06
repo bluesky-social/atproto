@@ -24,6 +24,7 @@
     "sqlite3": "^5.0.11"
   },
   "devDependencies": {
+    "esbuild-plugin-copy": "^1.3.0",
     "ts-node": "^10.8.1"
   }
 }
