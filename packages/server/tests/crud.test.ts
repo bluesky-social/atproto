@@ -10,7 +10,7 @@ const alice = {
   password: 'alice-pass',
 }
 const bob = {
-  email: 'alice@test.com',
+  email: 'bob@test.com',
   username: 'bob.test',
   did: '',
   password: 'bob-pass',

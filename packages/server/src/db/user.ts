@@ -5,11 +5,11 @@ export class User {
   @PrimaryColumn('varchar')
   did: string
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ type: 'varchar', unique: true, collation: 'nocase' })
   @Index()
   username: string
 
-  @Column({ type: 'varchar', collation: 'nocase' })
+  @Column({ type: 'varchar', unique: true, collation: 'nocase' })
   email: string
 
   @Column('varchar')

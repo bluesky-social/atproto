@@ -116,6 +116,14 @@ export class Database {
     return found ? { username: found.username, did: found.did } : null
   }
 
+  async getUserByEmail(
+    email: string,
+  ): Promise<{ username: string; did: string } | null> {
+    const table = this.db.getRepository(User)
+    const found = await table.findOneBy({ email })
+    return found ? { username: found.username, did: found.did } : null
+  }
+
   async getUserDid(usernameOrDid: string): Promise<string | null> {
     if (usernameOrDid.startsWith('did:')) return usernameOrDid
     const found = await this.getUser(usernameOrDid)
