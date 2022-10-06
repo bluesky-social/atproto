@@ -126,6 +126,49 @@ describe('account', () => {
     expect(res.data.username).toEqual(username)
   })
 
+  it('disallows duplicate email addresses and usernames', async () => {
+    const res = await client.todo.adx.createInviteCode(
+      {},
+      { useCount: 2 },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+    const inviteCode = res.data.code
+    const email = 'bob@test.com'
+    const username = 'bob.test'
+    const password = 'test123'
+    await client.todo.adx.createAccount(
+      {},
+      { email, username, password, inviteCode },
+    )
+
+    await expect(
+      client.todo.adx.createAccount(
+        {},
+        {
+          email: email.toUpperCase(),
+          username: 'carol.test',
+          password,
+          inviteCode,
+        },
+      ),
+    ).rejects.toThrow('Email already taken: BOB@TEST.COM')
+
+    await expect(
+      client.todo.adx.createAccount(
+        {},
+        {
+          email: 'carol@test.com',
+          username: username.toUpperCase(),
+          password,
+          inviteCode,
+        },
+      ),
+    ).rejects.toThrow('Username already taken: BOB.TEST')
+  })
+
   it('fails on used up invite code', async () => {
     const promise = client.todo.adx.createAccount(
       {},

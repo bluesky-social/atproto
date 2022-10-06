@@ -81,10 +81,20 @@ export default function (server: Server) {
       isTestUser = true
     }
 
-    // verify username is available
-    const found = await db.getUser(username)
-    if (found !== null) {
+    // verify username and email are available.
+
+    // @TODO consider pushing this to the db, and checking for a
+    // uniqueness error during registerUser(). Main blocker to doing
+    // that now is that we need to create a did prior to registration.
+
+    const foundUsername = await db.getUser(username)
+    if (foundUsername !== null) {
       throw new InvalidRequestError(`Username already taken: ${username}`)
+    }
+
+    const foundEmail = await db.getUserByEmail(email)
+    if (foundEmail !== null) {
+      throw new InvalidRequestError(`Email already taken: ${email}`)
     }
 
     const plcClient = new PlcClient(config.didPlcUrl)

@@ -12,11 +12,10 @@ export default function (server: Server) {
       const { db, mailer, config } = locals.get(res)
       const { email } = input.body
 
-      // @TODO should multiple users be able to have the same email?
       const table = db.db.getRepository(User)
-      const users = await table.findBy({ email })
+      const user = await table.findOneBy({ email })
 
-      for (const user of users) {
+      if (user) {
         // By signing with the password hash, this jwt becomes invalid once the user changes their password.
         // This allows us to ensure it's essentially single-use (combined with the jwt's short-livedness).
         const token = jwt.sign(
