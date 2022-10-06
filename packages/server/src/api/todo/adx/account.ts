@@ -4,11 +4,8 @@ import { PlcClient } from '@adxp/plc'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { InviteCode, InviteCodeUse } from '../../../db/invite-codes'
-import passwordReset from './password-reset'
 
 export default function (server: Server) {
-  passwordReset(server)
-
   server.todo.adx.getAccountsConfig((_params, _input, _req, res) => {
     const cfg = locals.config(res)
 
