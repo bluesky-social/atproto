@@ -60,7 +60,7 @@ const runServer = (
     mailer,
   }
 
-  Object.assign(app.locals, locals)
+  app.locals = locals
 
   app.use((req, res, next) => {
     const reqLocals: Locals = {

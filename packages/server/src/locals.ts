@@ -7,6 +7,7 @@ import { Database } from './db'
 import { ServerConfig } from './config'
 import ServerAuth from './auth'
 import { ServerMailer } from './mailer'
+import { App } from '.'
 
 export type Locals = {
   logger: pino.Logger
@@ -18,7 +19,7 @@ export type Locals = {
   mailer: ServerMailer
 }
 
-type HasLocals = { locals: Record<string, unknown> }
+type HasLocals = App | Response
 
 export const logger = (res: HasLocals): pino.Logger => {
   const logger = res.locals.logger

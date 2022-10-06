@@ -17,7 +17,7 @@ import { User } from '../src/db/user'
 const email = 'alice@test.com'
 const username = 'alice.test'
 const password = 'test123'
-const updatedPassword = 'test456'
+const passwordAlt = 'test456'
 
 describe('account', () => {
   let serverUrl: string
@@ -165,15 +165,18 @@ describe('account', () => {
     return result[0][0]
   }
 
+  const getTokenFromMail = (mail: Mail.Options) =>
+    mail.html?.toString().match(/token=(.+?)'/)?.[1]
+
   it('can reset account password', async () => {
-    const message = await getMailFrom(
+    const mail = await getMailFrom(
       client.todo.adx.requestAccountPasswordReset({}, { email }),
     )
 
-    expect(message.to).toEqual(email)
-    expect(message.html).toContain('Reset your password')
+    expect(mail.to).toEqual(email)
+    expect(mail.html).toContain('Reset your password')
 
-    const token = message.html?.toString().match(/token=(.+?)'/)?.[1]
+    const token = getTokenFromMail(mail)
 
     if (token === undefined) {
       return expect(token).toBeDefined()
@@ -181,7 +184,7 @@ describe('account', () => {
 
     await client.todo.adx.resetAccountPassword(
       {},
-      { token, password: updatedPassword },
+      { token, password: passwordAlt },
     )
 
     // Logs in with new password and not previous password
@@ -190,19 +193,16 @@ describe('account', () => {
     ).rejects.toThrow('Invalid username or password')
 
     await expect(
-      client.todo.adx.createSession(
-        {},
-        { username, password: updatedPassword },
-      ),
+      client.todo.adx.createSession({}, { username, password: passwordAlt }),
     ).resolves.toBeDefined()
   })
 
   it('allows only single-use of password reset token', async () => {
-    const message = await getMailFrom(
+    const mail = await getMailFrom(
       client.todo.adx.requestAccountPasswordReset({}, { email }),
     )
 
-    const token = message.html?.toString().match(/token=(.+?)'/)?.[1]
+    const token = getTokenFromMail(mail)
 
     if (token === undefined) {
       return expect(token).toBeDefined()
@@ -218,10 +218,7 @@ describe('account', () => {
 
     // Logs in with new password and not previous password
     await expect(
-      client.todo.adx.createSession(
-        {},
-        { username, password: updatedPassword },
-      ),
+      client.todo.adx.createSession({}, { username, password: passwordAlt }),
     ).rejects.toThrow('Invalid username or password')
 
     await expect(
@@ -250,16 +247,13 @@ describe('account', () => {
     await expect(
       client.todo.adx.resetAccountPassword(
         {},
-        { token: expiredToken, password: updatedPassword },
+        { token: expiredToken, password: passwordAlt },
       ),
     ).rejects.toThrow(ExpiredTokenError)
 
     // Still logs in with previous password
     await expect(
-      client.todo.adx.createSession(
-        {},
-        { username, password: updatedPassword },
-      ),
+      client.todo.adx.createSession({}, { username, password: passwordAlt }),
     ).rejects.toThrow('Invalid username or password')
 
     await expect(
