@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken'
-import { ServerConfig } from '../../../../config'
-import { User } from '../../../../db/user'
-import { Server } from '../../../../lexicon'
-import * as locals from '../../../../locals'
+import { ServerConfig } from '../../../config'
+import { User } from '../../../db/user'
+import { Server } from '../../../lexicon'
+import * as locals from '../../../locals'
 
 const PASSWORD_RESET_SCOPE = 'todo.adx.resetAccountPassword'
 

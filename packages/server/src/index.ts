@@ -66,7 +66,7 @@ const runServer = (
     const reqLocals: Locals = {
       ...locals,
       // @ts-ignore
-      logger: req.log,
+      logger: req.log, // This logger is request-specific
     }
     res.locals = reqLocals
     next()
