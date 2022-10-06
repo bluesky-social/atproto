@@ -9,7 +9,7 @@ const PASSWORD_RESET_SCOPE = 'todo.adx.resetAccountPassword'
 export default function (server: Server) {
   server.todo.adx.requestAccountPasswordReset(
     async (_params, input, _req, res) => {
-      const { db, config } = util.getLocals(res)
+      const { db, mailer, config } = util.getLocals(res)
       const { email } = input.body
 
       // @TODO should multiple users be able to have the same email?
@@ -27,8 +27,8 @@ export default function (server: Server) {
           getSigningKey(user, config),
           { expiresIn: '15mins' },
         )
-        // @TODO mail it!
-        console.log({ token, email: user.email })
+
+        await mailer.sendResetPassword({ token }, { to: user.email })
       }
 
       return {
@@ -47,7 +47,7 @@ export default function (server: Server) {
       return createInvalidTokenError('Malformed token')
     }
 
-    const { did, scope } = tokenBody
+    const { sub: did, scope } = tokenBody
     if (typeof did !== 'string' || scope !== PASSWORD_RESET_SCOPE) {
       return createInvalidTokenError('Malformed token')
     }

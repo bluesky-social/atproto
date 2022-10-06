@@ -2,20 +2,27 @@ import AdxApi, {
   ServiceClient as AdxServiceClient,
   TodoAdxCreateAccount,
 } from '@adxp/api'
+import EventEmitter, { once } from 'events'
+import Mail from 'nodemailer/lib/mailer'
+import { App } from '../src'
+import { getLocals } from '../src/util'
 import * as util from './_util'
 
 const email = 'alice@test.com'
 const username = 'alice.test'
 const password = 'test123'
+const updatedPassword = 'test456'
 
 describe('account', () => {
   let serverUrl: string
   let client: AdxServiceClient
   let close: util.CloseFn
+  let app: App | undefined
 
   beforeAll(async () => {
     const server = await util.runTestServer({ inviteRequired: true })
     close = server.close
+    app = server.app
     serverUrl = server.url
     client = AdxApi.service(serverUrl)
   })
@@ -128,5 +135,54 @@ describe('account', () => {
     const res = await client.todo.adx.getSession({})
     expect(res.data.did).toBe(did)
     expect(res.data.name).toBe(username)
+  })
+
+  it('resets account password', async () => {
+    if (app === undefined) throw new Error('Must run test server')
+    const { mailer } = getLocals(app)
+
+    const mailCatcher = new EventEmitter()
+    const origSendMail = mailer.transporter.sendMail
+    mailer.transporter.sendMail = async (opts) => {
+      const result = await origSendMail.call(mailer.transporter, opts)
+      mailCatcher.emit('mail', opts)
+      return result
+    }
+
+    const result = await Promise.all([
+      once(mailCatcher, 'mail'),
+      client.todo.adx.requestAccountPasswordReset({}, { email }),
+    ])
+
+    const message: Mail.Options = result[0][0]
+    expect(message.to).toEqual(email)
+    expect(message.html).toContain('Reset your password')
+
+    const token = message.html
+      ?.toString()
+      .match(/token=(.+?)'/)
+      ?.at(1)
+
+    if (token === undefined) {
+      return expect(token).toBeDefined()
+    }
+
+    await client.todo.adx.resetAccountPassword(
+      {},
+      { token, password: updatedPassword },
+    )
+
+    await expect(
+      client.todo.adx.createSession({}, { username, password }),
+    ).rejects.toThrow('Invalid username or password')
+
+    await expect(
+      client.todo.adx.createSession(
+        {},
+        { username, password: updatedPassword },
+      ),
+    ).resolves.toBeDefined()
+
+    mailer.transporter.sendMail = origSendMail
   })
 })
