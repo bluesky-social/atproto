@@ -12,7 +12,6 @@ export default function (server: Server) {
       const { db, mailer, config } = locals.get(res)
       const { email } = input.body
 
-      // @TODO should multiple users be able to have the same email?
       const table = db.db.getRepository(User)
       const user = await table.findOneBy({ email })
 
