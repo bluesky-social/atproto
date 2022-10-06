@@ -166,7 +166,7 @@ describe('account', () => {
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/token=(.+?)'/)?.[1]
+    mail.html?.toString().match(/token=(.+?)"/)?.[1]
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(

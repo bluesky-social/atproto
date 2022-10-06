@@ -47,6 +47,7 @@
     "@types/jsonwebtoken": "^8.5.9",
     "@types/nodemailer": "^6.4.6",
     "axios": "^0.26.1",
+    "esbuild-plugin-copy": "^1.3.0",
     "get-port": "^6.1.2",
     "nodemon": "^2.0.15",
     "rimraf": "^3.0.2"
