@@ -78,7 +78,12 @@ export class DevEnvServer {
             serverDid: serverDid,
             testNameRegistry: this.env.testNameRegistry,
             jwtSecret: crytpo.randomBytes(8).toString('base64'),
-          }),
+            appUrlPasswordReset: 'app://password-reset',
+            // @TODO setup ethereal.email creds and set emailSmtpUrl here
+            emailNoReplyAddress: 'noreply@blueskyweb.xyz',
+            adminPassword: 'password',
+            inviteRequired: false,
+          }).listener,
         )
         break
       }

@@ -18,6 +18,10 @@ export interface ServerConfigValues {
   databaseLocation?: string
 
   testNameRegistry?: Record<string, string>
+
+  appUrlPasswordReset: string
+  emailSmtpUrl?: string
+  emailNoReplyAddress: string
 }
 
 export class ServerConfig {
@@ -49,6 +53,14 @@ export class ServerConfig {
 
     const testNameRegistry = debugMode ? {} : undefined
 
+    const appUrlPasswordReset =
+      process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
+
+    const emailSmtpUrl = process.env.EMAIL_SMTP_URL || undefined
+
+    const emailNoReplyAddress =
+      process.env.EMAIL_NO_REPLY_ADDRESS || 'noreply@blueskyweb.xyz'
+
     return new ServerConfig({
       debugMode,
       scheme,
@@ -62,6 +74,9 @@ export class ServerConfig {
       blockstoreLocation,
       databaseLocation,
       testNameRegistry,
+      appUrlPasswordReset,
+      emailSmtpUrl,
+      emailNoReplyAddress,
     })
   }
 
@@ -125,5 +140,17 @@ export class ServerConfig {
 
   get testNameRegistry() {
     return this.cfg.testNameRegistry
+  }
+
+  get appUrlPasswordReset() {
+    return this.cfg.appUrlPasswordReset
+  }
+
+  get emailSmtpUrl() {
+    return this.cfg.emailSmtpUrl
+  }
+
+  get emailNoReplyAddress() {
+    return this.cfg.emailNoReplyAddress
   }
 }

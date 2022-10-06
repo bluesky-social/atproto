@@ -7,6 +7,7 @@ import { Database } from './db'
 import { ServerError } from './error'
 import { ServerConfig } from './config'
 import ServerAuth from './auth'
+import { ServerMailer } from './mailer'
 
 export const readReqBytes = async (req: Request): Promise<Uint8Array> => {
   return new Promise((resolve) => {
@@ -43,7 +44,9 @@ export const parseBooleanParam = (
   }
 }
 
-export const getBlockstore = (res: Response): IpldStore => {
+type HasLocals = { locals: Record<string, unknown> }
+
+export const getBlockstore = (res: HasLocals): IpldStore => {
   const blockstore = res.locals.blockstore
   if (!blockstore) {
     throw new ServerError(500, 'No Blockstore object attached to server')
@@ -51,7 +54,7 @@ export const getBlockstore = (res: Response): IpldStore => {
   return blockstore as IpldStore
 }
 
-export const getDB = (res: Response): Database => {
+export const getDB = (res: HasLocals): Database => {
   const db = res.locals.db
   if (!db) {
     throw new ServerError(500, 'No Database object attached to server')
@@ -59,7 +62,7 @@ export const getDB = (res: Response): Database => {
   return db as Database
 }
 
-export const getKeypair = (res: Response): auth.DidableKey => {
+export const getKeypair = (res: HasLocals): auth.DidableKey => {
   const keypair = res.locals.keypair
   if (!keypair) {
     throw new ServerError(500, 'No Keypair object attached to server')
@@ -67,7 +70,7 @@ export const getKeypair = (res: Response): auth.DidableKey => {
   return keypair as auth.DidableKey
 }
 
-export const getConfig = (res: Response): ServerConfig => {
+export const getConfig = (res: HasLocals): ServerConfig => {
   const config = res.locals.config
   if (!config) {
     throw new ServerError(500, 'No Config object attached to server')
@@ -75,7 +78,15 @@ export const getConfig = (res: Response): ServerConfig => {
   return config as ServerConfig
 }
 
-export const getAuth = (res: Response): ServerAuth => {
+export const getMailer = (res: HasLocals): ServerMailer => {
+  const mailer = res.locals.mailer
+  if (!mailer) {
+    throw new ServerError(500, 'No Mailer object attached to server')
+  }
+  return mailer as ServerMailer
+}
+
+export const getAuth = (res: HasLocals): ServerAuth => {
   const auth = res.locals.auth
   if (!auth) {
     throw new ServerError(500, 'No Auth object attached to server')
@@ -89,15 +100,17 @@ export type Locals = {
   keypair: auth.DidableKey
   auth: ServerAuth
   config: ServerConfig
+  mailer: ServerMailer
 }
 
-export const getLocals = (res: Response): Locals => {
+export const getLocals = (res: HasLocals): Locals => {
   return {
     blockstore: getBlockstore(res),
     db: getDB(res),
     keypair: getKeypair(res),
     auth: getAuth(res),
     config: getConfig(res),
+    mailer: getMailer(res),
   }
 }
 

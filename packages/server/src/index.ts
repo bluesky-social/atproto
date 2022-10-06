@@ -6,7 +6,6 @@ import 'express-async-errors'
 
 import express from 'express'
 import cors from 'cors'
-import http from 'http'
 import * as auth from '@adxp/auth'
 import API from './api'
 import { IpldStore } from '@adxp/repo'
@@ -15,17 +14,21 @@ import ServerAuth from './auth'
 import * as error from './error'
 import { ServerConfig, ServerConfigValues } from './config'
 import { DidResolver } from '@adxp/did-sdk'
+import { ServerMailer } from './mailer'
+import { createTransport } from 'nodemailer'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
+
+export type App = express.Application
 
 const runServer = (
   blockstore: IpldStore,
   db: Database,
   keypair: auth.DidableKey,
   cfg: ServerConfigValues,
-): http.Server => {
+) => {
   const config = new ServerConfig(cfg)
   const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
   const auth = new ServerAuth({
@@ -34,15 +37,21 @@ const runServer = (
     didResolver,
   })
 
+  const mailTransport =
+    config.emailSmtpUrl !== undefined
+      ? createTransport(config.emailSmtpUrl)
+      : createTransport({ jsonTransport: true })
+
+  const mailer = new ServerMailer(mailTransport, config)
+
   const app = express()
   app.use(cors())
 
+  const locals = { blockstore, db, keypair, auth, config, mailer }
+  Object.assign(app.locals, locals)
+
   app.use((_req, res, next) => {
-    res.locals.blockstore = blockstore
-    res.locals.db = db
-    res.locals.keypair = keypair
-    res.locals.auth = auth
-    res.locals.config = config
+    Object.assign(res.locals, locals)
     next()
   })
 
@@ -50,7 +59,8 @@ const runServer = (
   app.use(apiServer.xrpc.router)
   app.use(error.handler)
 
-  return app.listen(config.port)
+  const listener = app.listen(config.port)
+  return { app, listener }
 }
 
 export default runServer
