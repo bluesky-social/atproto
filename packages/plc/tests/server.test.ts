@@ -4,6 +4,7 @@ import * as document from '../src/lib/document'
 import getPort from 'get-port'
 import * as util from './util'
 import { cidForData } from '@adxp/common'
+import { AxiosError } from 'axios'
 
 const USE_TEST_SERVER = true
 
@@ -80,6 +81,15 @@ describe('PLC server', () => {
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
     expect(doc.username).toEqual(username)
     expect(doc.atpPds).toEqual(atpPds)
+  })
+
+  it('does not allow key types that we do not support', async () => {
+    // an ed25519 key which we don't yet support
+    const newSigningKey =
+      'did:key:z6MkjwbBXZnFqL8su24wGL2Fdjti6GSLv9SWdYGswfazUPm9'
+
+    const promise = client.rotateSigningKey(did, newSigningKey, signingKey)
+    await expect(promise).rejects.toThrow(AxiosError)
   })
 
   it('retrieves the operation log', async () => {

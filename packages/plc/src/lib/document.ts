@@ -19,6 +19,15 @@ export const assureValidNextOp = async (
     await assureValidCreationOp(did, proposed)
     return { nullified: [], prev: null }
   }
+
+  // ensure we support the proposed key type
+  if (
+    check.is(proposed, t.def.rotateSigningKeyOp) ||
+    check.is(proposed, t.def.rotateRecoveryKeyOp)
+  ) {
+    await crypto.parseDidKey(proposed.key)
+  }
+
   const proposedPrev = proposed.prev ? CID.parse(proposed.prev) : undefined
   if (!proposedPrev) {
     throw new ServerError(400, `Invalid prev on operation: ${proposed.prev}`)
