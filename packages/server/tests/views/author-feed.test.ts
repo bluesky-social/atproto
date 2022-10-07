@@ -130,9 +130,6 @@ describe('pds author feed views', () => {
       },
     )
 
-    console.log(paginated.data.feed.map((x) => x.uri))
-    console.log(full.data.feed.map((x) => x.uri))
-    console.log(full.data.feed.map((x) => x.uri).slice(1, 3))
     expect(paginated.data.feed).toEqual(full.data.feed.slice(1, 3))
   })
 })
