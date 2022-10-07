@@ -174,7 +174,7 @@ export const formatDidDoc = (data: t.DocumentData): t.DidDocument => {
   return {
     '@context': context,
     id: data.did,
-    alsoKnownAs: [`https://${data.username}`],
+    alsoKnownAs: [ensureHttpPrefix(data.username)],
     verificationMethod: [
       {
         id: `#signingKey`,
@@ -196,7 +196,7 @@ export const formatDidDoc = (data: t.DocumentData): t.DidDocument => {
       {
         id: `#atpPds`,
         type: 'AtpPersonalDataServer',
-        serviceEndpoint: data.atpPds,
+        serviceEndpoint: ensureHttpPrefix(data.atpPds),
       },
     ],
   }
@@ -225,4 +225,11 @@ const formatKeyAndContext = (key: string): KeyAndContext => {
     }
   }
   throw new ServerError(400, `Unsupported key type: ${jwtAlg}`)
+}
+
+export const ensureHttpPrefix = (str: string): string => {
+  if (str.startsWith('http://') || str.startsWith('https://')) {
+    return str
+  }
+  return `https://${str}`
 }
