@@ -1,13 +1,10 @@
 import { MemoryBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
 import * as plc from '@adxp/plc'
+import { AdxUri } from '@adxp/uri'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
-
 import server, { ServerConfig, Database, App } from '../src/index'
-import { FeedItem as HomeFeedItem } from '@adxp/api/src/types/todo/social/getHomeFeed'
-import { FeedItem as AuthorFeedItem } from '@adxp/api/src/types/todo/social/getAuthorFeed'
-import { Record as PostRecord } from '@adxp/api/src/types/todo/social/post'
 
 const USE_TEST_SERVER = true
 
@@ -94,42 +91,33 @@ export const adminAuth = () => {
   )
 }
 
-export function feedForSnapshot(feed: (HomeFeedItem & AuthorFeedItem)[]) {
-  const authors = {}
-  const posts = {}
-  const likes = {}
-  const reposts = {}
-  const entities = {}
-  return feed.map((item) => {
-    item = { ...item }
-    item.uri = take(posts, item.uri)
-    item.cursor = constantDate
-    item.indexedAt = constantDate
-    item.author = { ...item.author }
-    item.author.did = take(authors, item.author.did)
-    if (item.repostedBy) {
-      item.repostedBy = { ...item.repostedBy }
-      item.repostedBy.did = take(authors, item.repostedBy.did)
+// Swap out identifiers and dates with stable
+// values for the purpose of snapshot testing
+export const forSnapshot = (obj: unknown) => {
+  const records = { [kTake]: 'record' }
+  const collections = { [kTake]: 'collection' }
+  const users = { [kTake]: 'user' }
+  const unknown = { [kTake]: 'unknown' }
+  return mapLeafValues(obj, (item) => {
+    if (typeof item !== 'string') {
+      return item
     }
-    if (item.myState) {
-      item.myState = { ...item.myState }
-      item.myState.like = take(likes, item.myState.like)
-      item.myState.repost = take(reposts, item.myState.repost)
+    const str = item.startsWith('did:plc:') ? `adx://${item}` : item
+    if (str.startsWith('adx://')) {
+      const uri = new AdxUri(str)
+      if (uri.recordKey) {
+        return take(records, str)
+      }
+      if (uri.collection) {
+        return take(collections, str)
+      }
+      if (uri.hostname) {
+        return take(users, str)
+      }
+      return take(unknown, str)
     }
-    // @ts-ignore
-    const record: PostRecord = { ...item.record }
-    item.record = record
-    record.createdAt = constantDate
-    if (record.reply) {
-      record.reply = { ...record.reply }
-      record.reply.parent = take(posts, record.reply.parent)
-      record.reply.root = take(posts, record.reply.root)
-    }
-    if (record.entities) {
-      record.entities = record.entities.map((entity) => ({
-        ...entity,
-        value: take(entities, entity.value),
-      }))
+    if (str.match(/^\d{4}-\d{2}-\d{2}T/)) {
+      return constantDate
     }
     return item
   })
@@ -141,10 +129,11 @@ export function feedForSnapshot(feed: (HomeFeedItem & AuthorFeedItem)[]) {
 // to this:
 //   [{ uri: '0'}, { uri: '1' }, { uri: '0'}]
 
+const kTake = Symbol('take')
 export function take(obj, value: string): string
 export function take(obj, value: string | undefined): string | undefined
 export function take(
-  obj: { [s: string]: number },
+  obj: { [s: string]: number; [kTake]?: string },
   value: string | undefined,
 ): string | undefined {
   if (value === undefined) {
@@ -153,7 +142,24 @@ export function take(
   if (!(value in obj)) {
     obj[value] = Object.keys(obj).length
   }
-  return String(obj[value])
+  const kind = obj[kTake]
+  return typeof kind === 'string'
+    ? `${kind}(${obj[value]})`
+    : String(obj[value])
 }
 
 export const constantDate = new Date(0).toISOString()
+
+const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
+  if (Array.isArray(obj)) {
+    return obj.map((item) => mapLeafValues(item, fn))
+  }
+  if (obj && typeof obj === 'object') {
+    return Object.entries(obj).reduce(
+      (collect, [name, value]) =>
+        Object.assign(collect, { [name]: mapLeafValues(value, fn) }),
+      {},
+    )
+  }
+  return fn(obj)
+}

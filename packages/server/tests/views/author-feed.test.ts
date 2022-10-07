@@ -45,7 +45,7 @@ describe('pds author feed views', () => {
       },
     )
 
-    expect(util.feedForSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
+    expect(util.forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
     expect(getCursors(aliceForAlice.data.feed)).toEqual(
       getSortedCursors(aliceForAlice.data.feed),
     )
@@ -58,7 +58,7 @@ describe('pds author feed views', () => {
       },
     )
 
-    expect(util.feedForSnapshot(bobForBob.data.feed)).toMatchSnapshot()
+    expect(util.forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
     expect(getCursors(bobForBob.data.feed)).toEqual(
       getSortedCursors(bobForBob.data.feed),
     )
@@ -71,7 +71,7 @@ describe('pds author feed views', () => {
       },
     )
 
-    expect(util.feedForSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
+    expect(util.forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
     expect(getCursors(carolForCarol.data.feed)).toEqual(
       getSortedCursors(carolForCarol.data.feed),
     )
@@ -84,7 +84,7 @@ describe('pds author feed views', () => {
       },
     )
 
-    expect(util.feedForSnapshot(danForDan.data.feed)).toMatchSnapshot()
+    expect(util.forSnapshot(danForDan.data.feed)).toMatchSnapshot()
     expect(getCursors(danForDan.data.feed)).toEqual(
       getSortedCursors(danForDan.data.feed),
     )
@@ -104,7 +104,7 @@ describe('pds author feed views', () => {
       expect(myState?.repost).toEqual(sc.reposts[carol][uri]?.toString())
     })
 
-    expect(util.feedForSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
+    expect(util.forSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
   })
 
   it('paginates', async () => {
