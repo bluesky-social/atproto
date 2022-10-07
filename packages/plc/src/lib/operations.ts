@@ -27,7 +27,7 @@ export const create = async (
   recoveryKey: string,
   username: string,
   service: string,
-): Promise<t.Operation> => {
+): Promise<t.CreateOp> => {
   const op: t.UnsignedCreateOp = {
     type: 'create',
     signingKey: signingKey.did(),
@@ -36,7 +36,8 @@ export const create = async (
     service,
     prev: null,
   }
-  return signOperation(op, signingKey)
+  const signed = await signOperation(op, signingKey)
+  return signed as t.CreateOp
 }
 
 export const rotateSigningKey = async (

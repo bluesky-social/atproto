@@ -32,7 +32,7 @@ describe('plc DID document', () => {
     const isValid = check.is(createOp, t.def.createOp)
     expect(isValid).toBeTruthy()
     ops.push(createOp)
-    did = await operations.didForCreateOp(createOp as any)
+    did = await operations.didForCreateOp(createOp)
   })
 
   it('parses an operation log with no updates', async () => {
