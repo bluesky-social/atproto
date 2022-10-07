@@ -101,7 +101,6 @@ export const validateOperationLog = async (
   let prev = await cidForData(first)
 
   for (const op of rest) {
-    // @TODO should signing key be able to rotate reocvery key?? & should reocvery key be able to change username/service
     if (!op.prev || !CID.parse(op.prev).equals(prev)) {
       throw new ServerError(400, 'Operations not correctly ordered')
     }

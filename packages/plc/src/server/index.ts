@@ -11,6 +11,7 @@ import { Database } from './db'
 import * as error from './error'
 import router from './routes'
 import { Locals } from './locals'
+import { loggerMiddleware } from './logger'
 
 export * from './db'
 
@@ -19,9 +20,15 @@ export const server = (db: Database, port: number): http.Server => {
   app.use(express.json())
   app.use(cors())
 
-  app.use((_req, res, next) => {
-    const locals: Locals = { db }
-    Object.assign(res.locals, locals)
+  app.use(loggerMiddleware)
+
+  app.use((req, res, next) => {
+    const locals: Locals = {
+      // @ts-ignore
+      logger: req.log,
+      db,
+    }
+    res.locals = locals
     next()
   })
 
