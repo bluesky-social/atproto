@@ -4,7 +4,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "node dist/bin.js",
-    "test": "jest",
+    "test": "jest tests/server.test.ts",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",

@@ -131,7 +131,7 @@ describe('PLC server', () => {
     expect(doc).toEqual(document.formatDidDoc(data))
   })
 
-  it('handles concurrent requests', async () => {
+  it('handles concurrent requests to many docs', async () => {
     const COUNT = 100
     const keys: EcdsaKeypair[] = []
     for (let i = 0; i < COUNT; i++) {
@@ -142,5 +142,32 @@ describe('PLC server', () => {
         await client.createDid(key, key.did(), `user${index}`, `example.com`)
       }),
     )
+  })
+
+  it('resolves races into a coherent history with no forks', async () => {
+    const COUNT = 100
+    const keys: EcdsaKeypair[] = []
+    for (let i = 0; i < COUNT; i++) {
+      keys.push(await EcdsaKeypair.create())
+    }
+    const prev = await client.getPrev(did)
+
+    let successes = 0
+    let failures = 0
+    await Promise.all(
+      keys.map(async (key) => {
+        try {
+          await client.rotateSigningKey(did, key.did(), signingKey, prev)
+          successes++
+        } catch (err) {
+          failures++
+        }
+      }),
+    )
+    expect(successes).toBe(1)
+    expect(failures).toBe(99)
+
+    const ops = await client.getOperationLog(did)
+    await document.validateOperationLog(did, ops)
   })
 })
