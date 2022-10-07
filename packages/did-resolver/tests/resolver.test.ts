@@ -24,7 +24,8 @@ describe('resolver', () => {
       webServer._httpServer?.on('error', reject)
     })
 
-    const plcDB = await DidPlcDb.memory()
+    const plcDB = DidPlcDb.memory()
+    await plcDB.createTables()
     const plcPort = await getPort()
     const plcServer = await runPlcServer(plcDB, plcPort)
 
@@ -53,7 +54,7 @@ describe('resolver', () => {
     const signingKey = await EcdsaKeypair.create()
     const recoveryKey = await EcdsaKeypair.create()
     const username = 'alice.test'
-    const pds = 'service.test'
+    const pds = 'https://service.test'
     const client = new PlcClient(plcUrl)
     plcDid = await client.createDid(
       signingKey,
