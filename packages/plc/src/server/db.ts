@@ -21,7 +21,7 @@ interface DatabaseSchema {
 export class Database {
   constructor(public db: Kysely<DatabaseSchema>) {}
 
-  static async sqlite(location: string): Promise<Database> {
+  static sqlite(location: string): Database {
     const db = new Kysely<DatabaseSchema>({
       dialect: new SqliteDialect({
         database: new SqliteDB(location),
@@ -30,17 +30,15 @@ export class Database {
     return new Database(db)
   }
 
-  static async memory(): Promise<Database> {
-    const db = await Database.sqlite(':memory:')
-    await db.up()
-    return db
+  static memory(): Database {
+    return Database.sqlite(':memory:')
   }
 
   async close(): Promise<void> {
     await this.db.destroy()
   }
 
-  async up(): Promise<void> {
+  async createTables(): Promise<void> {
     await this.db.schema
       .createTable('operations')
       .addColumn('did', 'varchar', (col) => col.notNull())
@@ -50,6 +48,10 @@ export class Database {
       .addColumn('createdAt', 'varchar', (col) => col.notNull())
       .addPrimaryKeyConstraint('primary_key', ['did', 'cid'])
       .execute()
+  }
+
+  async dropTables(): Promise<void> {
+    await this.db.schema.dropTable('operations').execute()
   }
 
   async validateAndAddOp(did: string, proposed: t.Operation): Promise<void> {
