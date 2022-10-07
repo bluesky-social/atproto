@@ -1,12 +1,17 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as util from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  getCursors,
+  getSortedCursors,
+  CloseFn,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { FeedItem } from '@adxp/api/src/types/todo/social/getAuthorFeed'
 
 describe('pds author feed views', () => {
   let client: AdxServiceClient
-  let close: util.CloseFn
+  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -16,7 +21,7 @@ describe('pds author feed views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await util.runTestServer()
+    const server = await runTestServer()
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
@@ -31,11 +36,6 @@ describe('pds author feed views', () => {
     await close()
   })
 
-  const tstamp = (x: string) => new Date(x).getTime()
-  const getCursors = (feed: FeedItem[]) => feed.map((item) => item.cursor)
-  const getSortedCursors = (feed: FeedItem[]) =>
-    getCursors(feed).sort((a, b) => tstamp(b) - tstamp(a))
-
   it('fetches full author feeds for self (sorted, minimal myState).', async () => {
     const aliceForAlice = await client.todo.social.getAuthorFeed(
       { author: sc.accounts[alice].username },
@@ -45,7 +45,7 @@ describe('pds author feed views', () => {
       },
     )
 
-    expect(util.forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
+    expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
     expect(getCursors(aliceForAlice.data.feed)).toEqual(
       getSortedCursors(aliceForAlice.data.feed),
     )
@@ -58,7 +58,7 @@ describe('pds author feed views', () => {
       },
     )
 
-    expect(util.forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
+    expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
     expect(getCursors(bobForBob.data.feed)).toEqual(
       getSortedCursors(bobForBob.data.feed),
     )
@@ -71,7 +71,7 @@ describe('pds author feed views', () => {
       },
     )
 
-    expect(util.forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
+    expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
     expect(getCursors(carolForCarol.data.feed)).toEqual(
       getSortedCursors(carolForCarol.data.feed),
     )
@@ -84,7 +84,7 @@ describe('pds author feed views', () => {
       },
     )
 
-    expect(util.forSnapshot(danForDan.data.feed)).toMatchSnapshot()
+    expect(forSnapshot(danForDan.data.feed)).toMatchSnapshot()
     expect(getCursors(danForDan.data.feed)).toEqual(
       getSortedCursors(danForDan.data.feed),
     )
@@ -104,7 +104,7 @@ describe('pds author feed views', () => {
       expect(myState?.repost).toEqual(sc.reposts[carol][uri]?.toString())
     })
 
-    expect(util.forSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
+    expect(forSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
   })
 
   it('paginates', async () => {

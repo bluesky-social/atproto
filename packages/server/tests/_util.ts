@@ -5,6 +5,7 @@ import { AdxUri } from '@adxp/uri'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
+import { TodoSocialGetAuthorFeed, TodoSocialGetHomeFeed } from '@adxp/api'
 
 const USE_TEST_SERVER = true
 
@@ -123,12 +124,26 @@ export const forSnapshot = (obj: unknown) => {
   })
 }
 
+// Feed testing utils
+
+type FeedItem = TodoSocialGetAuthorFeed.FeedItem &
+  TodoSocialGetHomeFeed.FeedItem
+
+export const getCursors = (feed: FeedItem[]) => feed.map((item) => item.cursor)
+
+export const getSortedCursors = (feed: FeedItem[]) =>
+  getCursors(feed).sort((a, b) => tstamp(b) - tstamp(a))
+
+export const getOriginator = (item: FeedItem) =>
+  item.repostedBy ? item.repostedBy.did : item.author.did
+
+const tstamp = (x: string) => new Date(x).getTime()
+
 // Useful for remapping ids in snapshot testing, to make snapshots deterministic.
 // E.g. you may use this to map this:
 //   [{ uri: 'did://rad'}, { uri: 'did://bad' }, { uri: 'did://rad'}]
 // to this:
 //   [{ uri: '0'}, { uri: '1' }, { uri: '0'}]
-
 const kTake = Symbol('take')
 export function take(obj, value: string): string
 export function take(obj, value: string | undefined): string | undefined
