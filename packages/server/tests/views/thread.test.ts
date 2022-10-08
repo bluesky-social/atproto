@@ -1,64 +1,63 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as util from '../_util'
+import { runTestServer, forSnapshot, CloseFn } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds thread views', () => {
   let client: AdxServiceClient
-  let close: util.CloseFn
+  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
   let alice: string
   let bob: string
-  let carol: string
 
   beforeAll(async () => {
-    const server = await util.runTestServer()
+    const server = await runTestServer()
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    carol = sc.dids.carol
+  })
+
+  beforeAll(async () => {
+    // Add a repost of a reply so that we can confirm myState in the thread
+    await sc.repost(bob, sc.replies[alice][0].uriRaw)
   })
 
   afterAll(async () => {
     await close()
   })
 
-  // @TODO test badges
-
-  it('fetches postThread', async () => {
+  it('fetches deep post thread', async () => {
     const thread = await client.todo.social.getPostThread(
       { uri: sc.posts[alice][1].uriRaw },
       undefined,
-      {
-        headers: sc.getHeaders(bob),
-      },
+      { headers: sc.getHeaders(bob) },
     )
-    /** @ts-ignore TODO */
-    expect(thread.data.thread.record.text).toEqual(sc.posts[alice][1].text)
-    expect(thread.data.thread.replyCount).toEqual(2)
-    expect(thread.data.thread.likeCount).toEqual(3)
-    expect(thread.data.thread.replies?.length).toEqual(2)
-    /** @ts-ignore TODO */
-    expect(thread.data.thread.replies?.[0].record.text).toEqual(
-      sc.replies[carol][0].text,
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+  })
+
+  it('fetches shallow post thread', async () => {
+    const thread = await client.todo.social.getPostThread(
+      { depth: 1, uri: sc.posts[alice][1].uriRaw },
+      undefined,
+      { headers: sc.getHeaders(bob) },
     )
-    /** @ts-ignore TODO */
-    expect(thread.data.thread.replies?.[1].record.text).toEqual(
-      sc.replies[bob][0].text,
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+  })
+
+  it('fails for an unknown post', async () => {
+    const promise = client.todo.social.getPostThread(
+      { uri: 'does.not.exist' },
+      undefined,
+      { headers: sc.getHeaders(bob) },
     )
-    /** @ts-ignore TODO */
-    expect(thread.data.thread.replies?.[1].parent?.record.text).toEqual(
-      sc.posts[alice][1].text,
-    )
-    /** @ts-ignore TODO */
-    // TODO: this is failing -- not clear to me why
-    expect(thread.data.thread.replies?.[1].replies?.[0].record.text).toEqual(
-      sc.replies[alice][0].text,
-    )
+
+    await expect(promise).rejects.toThrow('Post not found: does.not.exist')
   })
 })
