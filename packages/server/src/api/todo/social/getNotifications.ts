@@ -30,7 +30,6 @@ export default function (server: Server) {
           'notif.createdAt AS createdAt',
           'record.raw AS record',
           'record.indexedAt AS indexedAt',
-
           'notif.recordUri AS uri',
         ])
         .from(UserNotification, 'notif')
@@ -72,6 +71,7 @@ export default function (server: Server) {
         record: JSON.parse(notif.record),
         isRead: notif.createdAt <= user.lastSeenNotifs,
         indexedAt: notif.indexedAt,
+        // @TODO do we need createdAt so that it can be used as a cursor?
       }))
       return {
         encoding: 'application/json',
