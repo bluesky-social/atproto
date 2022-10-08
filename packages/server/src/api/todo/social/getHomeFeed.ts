@@ -12,10 +12,7 @@ import {
   queryPostsWithReposts,
   queryResultToFeedItem,
 } from './util'
-import {
-  isNotRepostClause,
-  postOrRepostIndexedAtClause,
-} from '../../../db/util'
+import { postOrRepostIndexedAtClause } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getHomeFeed(
