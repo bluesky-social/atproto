@@ -139,7 +139,7 @@ describe('pds home feed views', () => {
     )
 
     expect(forSnapshot(carolFeed.data.feed)).toMatchSnapshot()
-    carolFeed.data.feed.forEach(expectNotOwnRepostsBy(bob))
+    carolFeed.data.feed.forEach(expectNotOwnRepostsBy(carol))
     expect(getCursors(carolFeed.data.feed)).toEqual(
       getSortedCursors(carolFeed.data.feed),
     )
