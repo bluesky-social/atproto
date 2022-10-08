@@ -5,6 +5,7 @@ import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
 import { RepostIndex } from '../../../db/records/repost'
 import * as locals from '../../../locals'
+import { dateFromDb, dateToDb } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getRepostedBy(
@@ -26,10 +27,12 @@ export default function (server: Server) {
         .leftJoin(User, 'user', 'repost.creator = user.did')
         .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
         .where('repost.subject = :uri', { uri })
-        .orderBy('repost.createdAt')
+        .orderBy('repost.createdAt', 'DESC')
 
       if (before !== undefined) {
-        builder.andWhere('repost.createdAt < :before', { before })
+        builder.andWhere('repost.createdAt < :before', {
+          before: dateToDb(before),
+        })
       }
       if (limit !== undefined) {
         builder.limit(limit)
@@ -40,7 +43,7 @@ export default function (server: Server) {
         did: row.did,
         name: row.name,
         displayName: row.displayName || undefined,
-        createdAt: row.createdAt,
+        createdAt: dateFromDb(row.createdAt),
         indexedAt: row.indexedAt,
       }))
 
