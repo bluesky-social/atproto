@@ -1,11 +1,17 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as util from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  getCursors,
+  getSortedCursors,
+  CloseFn,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds author feed views', () => {
   let client: AdxServiceClient
-  let close: util.CloseFn
+  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -15,7 +21,7 @@ describe('pds author feed views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await util.runTestServer()
+    const server = await runTestServer()
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
@@ -30,46 +36,100 @@ describe('pds author feed views', () => {
     await close()
   })
 
-  it('fetches author feed', async () => {
-    const aliceFeed = await client.todo.social.getAuthorFeed(
-      { author: 'alice.test' },
+  it('fetches full author feeds for self (sorted, minimal myState).', async () => {
+    const aliceForAlice = await client.todo.social.getAuthorFeed(
+      { author: sc.accounts[alice].username },
       undefined,
       {
-        headers: sc.getHeaders(bob),
+        headers: sc.getHeaders(alice),
       },
     )
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
-      sc.replies[alice][0].text,
-      sc.posts[alice][2].text,
-      sc.posts[alice][1].text,
-      sc.posts[alice][0].text,
-    ])
 
-    const aliceFeed2 = await client.todo.social.getAuthorFeed(
-      { author: 'alice.test', before: aliceFeed.data.feed[0].cursor, limit: 1 },
-      undefined,
-      {
-        headers: sc.getHeaders(bob),
-      },
+    expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
+    expect(getCursors(aliceForAlice.data.feed)).toEqual(
+      getSortedCursors(aliceForAlice.data.feed),
     )
-    /** @ts-ignore TODO */
-    expect(aliceFeed2.data.feed.map((item) => item.record.text)).toEqual([
-      sc.posts[alice][2].text,
-    ])
 
-    const carolFeed = await client.todo.social.getAuthorFeed(
-      { author: 'carol.test' },
+    const bobForBob = await client.todo.social.getAuthorFeed(
+      { author: sc.accounts[bob].username },
       undefined,
       {
         headers: sc.getHeaders(bob),
       },
     )
-    /** @ts-ignore TODO */
-    expect(carolFeed.data.feed.map((item) => item.record.text)).toEqual([
-      sc.posts[dan][1].text,
-      sc.replies[carol][0].text,
-      sc.posts[carol][0].text,
-    ])
+
+    expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
+    expect(getCursors(bobForBob.data.feed)).toEqual(
+      getSortedCursors(bobForBob.data.feed),
+    )
+
+    const carolForCarol = await client.todo.social.getAuthorFeed(
+      { author: sc.accounts[carol].username },
+      undefined,
+      {
+        headers: sc.getHeaders(carol),
+      },
+    )
+
+    expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
+    expect(getCursors(carolForCarol.data.feed)).toEqual(
+      getSortedCursors(carolForCarol.data.feed),
+    )
+
+    const danForDan = await client.todo.social.getAuthorFeed(
+      { author: sc.accounts[dan].username },
+      undefined,
+      {
+        headers: sc.getHeaders(dan),
+      },
+    )
+
+    expect(forSnapshot(danForDan.data.feed)).toMatchSnapshot()
+    expect(getCursors(danForDan.data.feed)).toEqual(
+      getSortedCursors(danForDan.data.feed),
+    )
+  })
+
+  it("reflects fetching user's state in the feed.", async () => {
+    const aliceForCarol = await client.todo.social.getAuthorFeed(
+      { author: sc.accounts[alice].username },
+      undefined,
+      {
+        headers: sc.getHeaders(carol),
+      },
+    )
+
+    aliceForCarol.data.feed.forEach(({ uri, myState }) => {
+      expect(myState?.like).toEqual(sc.likes[carol][uri]?.toString())
+      expect(myState?.repost).toEqual(sc.reposts[carol][uri]?.toString())
+    })
+
+    expect(forSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
+  })
+
+  it('paginates', async () => {
+    const full = await client.todo.social.getAuthorFeed(
+      { author: sc.accounts[alice].username },
+      undefined,
+      {
+        headers: sc.getHeaders(dan),
+      },
+    )
+
+    expect(full.data.feed.length).toEqual(4)
+
+    const paginated = await client.todo.social.getAuthorFeed(
+      {
+        author: sc.accounts[alice].username,
+        before: full.data.feed[0].cursor,
+        limit: 2,
+      },
+      undefined,
+      {
+        headers: sc.getHeaders(dan),
+      },
+    )
+
+    expect(paginated.data.feed).toEqual(full.data.feed.slice(1, 3))
   })
 })

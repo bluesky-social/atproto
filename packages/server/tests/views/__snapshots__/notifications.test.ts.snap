@@ -1,0 +1,401 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds notification views fetches notifications with a last-seen 1`] = `
+Array [
+  Object {
+    "author": Object {
+      "did": "user(0)",
+      "name": "dan.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "repost",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.repost",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(1)",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(1)",
+      "name": "carol.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "reply",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": "record(1)",
+        "root": "record(1)",
+      },
+      "text": "of course",
+    },
+    "uri": "record(2)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(2)",
+      "displayName": "bobby",
+      "name": "bob.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "reply",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": "record(1)",
+        "root": "record(1)",
+      },
+      "text": "hear that",
+    },
+    "uri": "record(3)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(0)",
+      "name": "dan.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "like",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(1)",
+    },
+    "uri": "record(4)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(1)",
+      "name": "carol.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "like",
+    "reasonSubject": "record(6)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(6)",
+    },
+    "uri": "record(5)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(1)",
+      "name": "carol.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "like",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(1)",
+    },
+    "uri": "record(7)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(2)",
+      "displayName": "bobby",
+      "name": "bob.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "like",
+    "reasonSubject": "record(6)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(6)",
+    },
+    "uri": "record(8)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(2)",
+      "displayName": "bobby",
+      "name": "bob.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "like",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(1)",
+    },
+    "uri": "record(9)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(0)",
+      "name": "dan.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "mention",
+    "record": Object {
+      "$type": "todo.social.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "entities": Array [
+        Object {
+          "index": Array [
+            0,
+            18,
+          ],
+          "type": "mention",
+          "value": "user(3)",
+        },
+      ],
+      "text": "@alice.bluesky.xyz is the best",
+    },
+    "uri": "record(10)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(2)",
+      "displayName": "bobby",
+      "name": "bob.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "follow",
+    "record": Object {
+      "$type": "todo.social.follow",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "user(3)",
+    },
+    "uri": "record(11)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(1)",
+      "name": "carol.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "follow",
+    "record": Object {
+      "$type": "todo.social.follow",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "user(3)",
+    },
+    "uri": "record(12)",
+  },
+]
+`;
+
+exports[`pds notification views fetches notifications without a last-seen 1`] = `
+Array [
+  Object {
+    "author": Object {
+      "did": "user(0)",
+      "name": "dan.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "repost",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.repost",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(1)",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(1)",
+      "name": "carol.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "reply",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": "record(1)",
+        "root": "record(1)",
+      },
+      "text": "of course",
+    },
+    "uri": "record(2)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(2)",
+      "displayName": "bobby",
+      "name": "bob.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "reply",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": "record(1)",
+        "root": "record(1)",
+      },
+      "text": "hear that",
+    },
+    "uri": "record(3)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(0)",
+      "name": "dan.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "like",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(1)",
+    },
+    "uri": "record(4)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(1)",
+      "name": "carol.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "like",
+    "reasonSubject": "record(6)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(6)",
+    },
+    "uri": "record(5)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(1)",
+      "name": "carol.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "like",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(1)",
+    },
+    "uri": "record(7)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(2)",
+      "displayName": "bobby",
+      "name": "bob.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "like",
+    "reasonSubject": "record(6)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(6)",
+    },
+    "uri": "record(8)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(2)",
+      "displayName": "bobby",
+      "name": "bob.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "like",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "todo.social.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "record(1)",
+    },
+    "uri": "record(9)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(0)",
+      "name": "dan.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "mention",
+    "record": Object {
+      "$type": "todo.social.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "entities": Array [
+        Object {
+          "index": Array [
+            0,
+            18,
+          ],
+          "type": "mention",
+          "value": "user(3)",
+        },
+      ],
+      "text": "@alice.bluesky.xyz is the best",
+    },
+    "uri": "record(10)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(2)",
+      "displayName": "bobby",
+      "name": "bob.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "follow",
+    "record": Object {
+      "$type": "todo.social.follow",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "user(3)",
+    },
+    "uri": "record(11)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(1)",
+      "name": "carol.test",
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "follow",
+    "record": Object {
+      "$type": "todo.social.follow",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "user(3)",
+    },
+    "uri": "record(12)",
+  },
+]
+`;

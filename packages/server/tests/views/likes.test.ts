@@ -1,28 +1,26 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as util from '../_util'
 import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
+import likesSeed from '../seeds/likes'
+import { CloseFn, constantDate, forSnapshot, runTestServer } from '../_util'
 
 describe('pds like views', () => {
   let client: AdxServiceClient
-  let close: util.CloseFn
+  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
   let alice: string
   let bob: string
-  let carol: string
   let dan: string
 
   beforeAll(async () => {
-    const server = await util.runTestServer()
+    const server = await runTestServer()
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
-    await basicSeed(sc)
+    await likesSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    carol = sc.dids.carol
     dan = sc.dids.dan
   })
 
@@ -30,32 +28,60 @@ describe('pds like views', () => {
     await close()
   })
 
-  it('fetches liked by view', async () => {
-    const view = await client.todo.social.getLikedBy({
+  const getCursors = (items: { createdAt?: string }[]) =>
+    items.map((item) => item.createdAt ?? constantDate)
+
+  const getSortedCursors = (items: { createdAt?: string }[]) =>
+    getCursors(items).sort((a, b) => tstamp(b) - tstamp(a))
+
+  const tstamp = (x: string) => new Date(x).getTime()
+
+  it('fetches liked by posts', async () => {
+    const alicePost = await client.todo.social.getLikedBy({
       uri: sc.posts[alice][1].uriRaw,
     })
-    expect(view.data.uri).toEqual(sc.posts[alice][1].uriRaw)
-    expect(view.data.likedBy.length).toBe(3)
-    const bobLike = view.data.likedBy.find(
-      (l) => l.name === sc.accounts[bob].username,
+
+    expect(forSnapshot(alicePost.data)).toMatchSnapshot()
+    expect(getCursors(alicePost.data.likedBy)).toEqual(
+      getSortedCursors(alicePost.data.likedBy),
     )
-    expect(bobLike?.did).toEqual(bob)
-    expect(bobLike?.displayName).toEqual(sc.profiles[bob].displayName)
-    expect(bobLike?.createdAt).toBeDefined()
-    expect(bobLike?.indexedAt).toBeDefined()
-    const carolLike = view.data.likedBy.find(
-      (l) => l.name === sc.accounts[carol].username,
+  })
+
+  it('fetches liked by replies', async () => {
+    const bobReply = await client.todo.social.getLikedBy({
+      uri: sc.replies[bob][0].uriRaw,
+    })
+
+    expect(forSnapshot(bobReply.data)).toMatchSnapshot()
+    expect(getCursors(bobReply.data.likedBy)).toEqual(
+      getSortedCursors(bobReply.data.likedBy),
     )
-    expect(carolLike?.did).toEqual(carol)
-    expect(carolLike?.displayName).toEqual(sc.profiles[carol]?.displayName)
-    expect(carolLike?.createdAt).toBeDefined()
-    expect(carolLike?.indexedAt).toBeDefined()
-    const danLike = view.data.likedBy.find(
-      (l) => l.name === sc.accounts[dan].username,
+  })
+
+  it('fetches liked by reposts', async () => {
+    const danReply = await client.todo.social.getLikedBy({
+      uri: sc.reposts[dan][0].toString(),
+    })
+
+    expect(forSnapshot(danReply.data)).toMatchSnapshot()
+    expect(getCursors(danReply.data.likedBy)).toEqual(
+      getSortedCursors(danReply.data.likedBy),
     )
-    expect(danLike?.did).toEqual(dan)
-    expect(danLike?.displayName).toEqual(sc.profiles[dan]?.displayName)
-    expect(danLike?.createdAt).toBeDefined()
-    expect(danLike?.indexedAt).toBeDefined()
+  })
+
+  it('paginates', async () => {
+    const full = await client.todo.social.getLikedBy({
+      uri: sc.posts[alice][1].uriRaw,
+    })
+
+    expect(full.data.likedBy.length).toEqual(4)
+
+    const paginated = await client.todo.social.getLikedBy({
+      uri: sc.posts[alice][1].uriRaw,
+      before: full.data.likedBy[0].createdAt,
+      limit: 2,
+    })
+
+    expect(paginated.data.likedBy).toEqual(full.data.likedBy.slice(1, 3))
   })
 })

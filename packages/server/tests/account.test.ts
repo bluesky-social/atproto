@@ -251,7 +251,7 @@ describe('account', () => {
       return expect(token).toBeDefined()
     }
 
-    // Reset back from updatedPassword to password
+    // Reset back from passwordAlt to password
     await client.todo.adx.resetAccountPassword({}, { token, password })
 
     // Reuse of token fails

@@ -5,6 +5,7 @@ import { LikeIndex } from '../../../db/records/like'
 import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
 import * as locals from '../../../locals'
+import { dateFromDb, dateToDb } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getLikedBy(
@@ -26,10 +27,12 @@ export default function (server: Server) {
         .leftJoin(User, 'user', 'like.creator = user.did')
         .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
         .where('like.subject = :uri', { uri })
-        .orderBy('like.createdAt')
+        .orderBy('like.createdAt', 'DESC')
 
       if (before !== undefined) {
-        builder.andWhere('like.createdAt < :before', { before })
+        builder.andWhere('like.createdAt < :before', {
+          before: dateToDb(before),
+        })
       }
       if (limit !== undefined) {
         builder.limit(limit)
@@ -40,7 +43,7 @@ export default function (server: Server) {
         did: row.did,
         name: row.name,
         displayName: row.displayName || undefined,
-        createdAt: row.createdAt,
+        createdAt: dateFromDb(row.createdAt),
         indexedAt: row.indexedAt,
       }))
 
