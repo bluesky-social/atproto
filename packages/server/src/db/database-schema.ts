@@ -27,6 +27,7 @@ export interface User {
   did: string
   username: string
   email: string
+  password: string
   lastSeenNotifs: string
   createdAt: string
 }

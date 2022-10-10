@@ -17,13 +17,9 @@ import profilePlugin, { TodoSocialProfile } from './records/profile'
 import notificationPlugin from './user-notification'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
-// import { RepoRoot } from './repo-root'
-// import { AdxRecord } from './record'
-// import { User } from './user'
-// import * as util from './util'
-// import { InviteCode, InviteCodeUse } from './invite-codes'
 import { dbLogger as log } from '../logger'
 import { DatabaseSchema } from './database-schema'
+import * as util from './util'
 
 export class Database {
   db: Kysely<DatabaseSchema>
@@ -68,52 +64,52 @@ export class Database {
   }
 
   async getRepoRoot(did: string): Promise<CID | null> {
-    // const table = this.db.getRepository(RepoRoot)
-    // const found = await table.findOneBy({ did })
-    // if (found === null) return null
-    // return CID.parse(found.root)
-    return {} as any
+    const found = await this.db
+      .selectFrom('repo_root')
+      .selectAll()
+      .where('did', '=', did)
+      .executeTakeFirst()
+    return found ? CID.parse(found.root) : null
   }
 
-  async setRepoRoot(did: string, root: CID) {
-    // log.debug({ did, root: root.toString() }, 'updating repo root')
-    // const table = this.db.getRepository(RepoRoot)
-    // let newRoot = await table.findOneBy({ did })
-    // if (newRoot === null) {
-    //   newRoot = new RepoRoot()
-    //   newRoot.did = did
-    // }
-    // newRoot.root = root.toString()
-    // await table.save(newRoot)
-    // log.info({ did, root: root.toString() }, 'updated repo root')
+  async updateRepoRoot(did: string, root: CID) {
+    log.debug({ did, root: root.toString() }, 'updating repo root')
+    await this.db
+      .updateTable('repo_root')
+      .set({ root: root.toString() })
+      .where('did', '=', did)
+      .execute()
+    log.info({ did, root: root.toString() }, 'updated repo root')
   }
 
   async getUser(
     usernameOrDid: string,
   ): Promise<{ username: string; did: string } | null> {
-    // const table = this.db.getRepository(User)
-    // const found = usernameOrDid.startsWith('did:')
-    //   ? await table.findOneBy({ did: usernameOrDid })
-    //   : await table.findOneBy({ username: usernameOrDid })
-
-    // return found ? { username: found.username, did: found.did } : null
-    return {} as any
+    const query = this.db.selectFrom('user').select(['username', 'did'])
+    if (usernameOrDid.startsWith('did:')) {
+      query.where('did', '=', usernameOrDid)
+    } else {
+      query.where('username', '=', usernameOrDid)
+    }
+    const found = await query.executeTakeFirst()
+    return found || null
   }
 
   async getUserByEmail(
     email: string,
   ): Promise<{ username: string; did: string } | null> {
-    // const table = this.db.getRepository(User)
-    // const found = await table.findOneBy({ email })
-    // return found ? { username: found.username, did: found.did } : null
-    return {} as any
+    const found = await this.db
+      .selectFrom('user')
+      .select(['username', 'did'])
+      .where('email', '=', email)
+      .executeTakeFirst()
+    return found || null
   }
 
   async getUserDid(usernameOrDid: string): Promise<string | null> {
-    // if (usernameOrDid.startsWith('did:')) return usernameOrDid
-    // const found = await this.getUser(usernameOrDid)
-    // return found ? found.did : null
-    return {} as any
+    if (usernameOrDid.startsWith('did:')) return usernameOrDid
+    const found = await this.getUser(usernameOrDid)
+    return found ? found.did : null
   }
 
   async registerUser(
@@ -122,38 +118,41 @@ export class Database {
     did: string,
     password: string,
   ) {
-    // log.debug({ username, did, email }, 'registering user')
-    // const user = new User()
-    // user.email = email
-    // user.username = username
-    // user.did = did
-    // user.password = await util.scryptHash(password)
-    // user.createdAt = new Date().toISOString()
-    // user.lastSeenNotifs = new Date().toISOString()
-    // await this.db.getRepository(User).save(user)
-    // log.info({ username, did, email }, 'registered user')
+    log.debug({ username, did, email }, 'registering user')
+    const user = {
+      email: email,
+      username: username,
+      did: did,
+      password: await util.scryptHash(password),
+      createdAt: new Date().toISOString(),
+      lastSeenNotifs: new Date().toISOString(),
+    }
+    await this.db.insertInto('user').values(user).execute()
+    log.info({ username, did, email }, 'registered user')
   }
 
   async updateUserPassword(did: string, password: string) {
-    // const hashedPassword = await util.scryptHash(password)
-    // return await this.db
-    //   .createQueryBuilder()
-    //   .update(User)
-    //   .set({ password: hashedPassword })
-    //   .where('did = :did', { did })
-    //   .execute()
+    const hashedPassword = await util.scryptHash(password)
+    await this.db
+      .updateTable('user')
+      .set({ password: hashedPassword })
+      .where('did', '=', did)
+      .execute()
   }
 
   async verifyUserPassword(
     username: string,
     password: string,
   ): Promise<string | null> {
-    // const found = await this.db.getRepository(User).findOneBy({ username })
-    // if (!found) return null
-    // const validPass = await util.scryptVerify(password, found.password)
-    // if (!validPass) return null
-    // return found.did
-    return {} as any
+    const found = await this.db
+      .selectFrom('user')
+      .selectAll()
+      .where('username', '=', username)
+      .executeTakeFirst()
+    if (!found) return null
+    const validPass = await util.scryptVerify(password, found.password)
+    if (!validPass) return null
+    return found.did
   }
 
   validateRecord(collection: string, obj: unknown): ValidationResult {
