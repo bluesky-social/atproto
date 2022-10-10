@@ -49,8 +49,6 @@
     "nohoist": [
       "**/ipld-hashmap",
       "**/ipld-hashmap/**",
-      "**/sqlite3",
-      "**/sqlite3/**",
       "**/better-sqlite3",
       "**/better-sqlite3/**"
     ]

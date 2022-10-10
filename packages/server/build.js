@@ -8,10 +8,8 @@ require('esbuild')
     outdir: 'dist',
     platform: 'node',
     external: [
+      // @TODO May be able to get rid of the mapbox externals
       '../plc/node_modules/@mapbox/node-pre-gyp/*',
-      './node_modules/sqlite3/*',
-      '../node_modules/sqlite3/*',
-      '../../node_modules/sqlite3/*',
       '../../node_modules/level/*',
       '../../node_modules/classic-level/*',
     ],
