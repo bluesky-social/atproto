@@ -12,10 +12,7 @@ import {
   queryPostsWithReposts,
   queryResultToFeedItem,
 } from './util'
-import {
-  isNotRepostClause,
-  postOrRepostIndexedAtClause,
-} from '../../../db/util'
+import { postOrRepostIndexedAtClause } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getHomeFeed(
@@ -43,7 +40,8 @@ export default function (server: Server) {
       if (feedAlgorithm === FeedAlgorithm.Firehose) {
         // All posts, except requester's reposts
         queryPostsWithReposts(builder).where(
-          `post.creator != :requester or ${isNotRepostClause}`,
+          // The null check handles ANSI nulls
+          '(repost.creator != :requester or repost.creator is null)',
           { requester },
         )
       } else if (feedAlgorithm === FeedAlgorithm.ReverseChronological) {
@@ -57,7 +55,7 @@ export default function (server: Server) {
             .getQuery()
         }
         queryPostsWithReposts(builder)
-          .where(`(post.creator != :requester or ${isNotRepostClause})`, {
+          .where(`(repost.creator != :requester or repost.creator is null)`, {
             requester,
           })
           .andWhere(

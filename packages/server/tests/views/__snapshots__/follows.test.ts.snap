@@ -1,0 +1,255 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds follow views fetches followers 1`] = `
+Object {
+  "followers": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "eve.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "dan.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(3)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "bob.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(4)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "carol.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "alice.test",
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 2`] = `
+Object {
+  "followers": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "dan.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "bob.test",
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 3`] = `
+Object {
+  "followers": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "eve.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "bob.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(3)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "carol.test",
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 4`] = `
+Object {
+  "followers": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "dan.test",
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 5`] = `
+Object {
+  "followers": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "dan.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "eve.test",
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 1`] = `
+Object {
+  "follows": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "eve.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "dan.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(3)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "carol.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(4)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "bob.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "alice.test",
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 2`] = `
+Object {
+  "follows": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "carol.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "bob.test",
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 3`] = `
+Object {
+  "follows": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "carol.test",
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 4`] = `
+Object {
+  "follows": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "eve.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "bob.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(3)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "dan.test",
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 5`] = `
+Object {
+  "follows": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "carol.test",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice.test",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "name": "eve.test",
+  },
+}
+`;

@@ -1,82 +1,180 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as util from '../_util'
+import { runTestServer, forSnapshot, CloseFn, constantDate } from '../_util'
 import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
+import followsSeed from '../seeds/follows'
 
 describe('pds follow views', () => {
   let client: AdxServiceClient
-  let close: util.CloseFn
+  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
   let alice: string
-  let bob: string
-  let carol: string
 
   beforeAll(async () => {
-    const server = await util.runTestServer()
+    const server = await runTestServer()
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
-    await basicSeed(sc)
+    await followsSeed(sc)
     alice = sc.dids.alice
-    bob = sc.dids.bob
-    carol = sc.dids.carol
   })
 
   afterAll(async () => {
     await close()
   })
 
+  const getCursors = (items: { createdAt?: string }[]) =>
+    items.map((item) => item.createdAt ?? constantDate)
+
+  const getSortedCursors = (items: { createdAt?: string }[]) =>
+    getCursors(items).sort((a, b) => tstamp(b) - tstamp(a))
+
+  const tstamp = (x: string) => new Date(x).getTime()
+
   it('fetches followers', async () => {
-    const view = await client.todo.social.getUserFollowers({
-      user: 'alice.test',
+    const aliceFollowers = await client.todo.social.getUserFollowers({
+      user: sc.dids.alice,
     })
-    expect(view.data.subject.did).toEqual(alice)
-    expect(view.data.subject.name).toEqual(sc.accounts[alice].username)
-    expect(view.data.subject.displayName).toEqual(
-      sc.profiles[alice].displayName,
+
+    expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
+    expect(getCursors(aliceFollowers.data.followers)).toEqual(
+      getSortedCursors(aliceFollowers.data.followers),
     )
-    const bobFollow = view.data.followers.find(
-      (f) => f.name === sc.accounts[bob].username,
+
+    const bobFollowers = await client.todo.social.getUserFollowers({
+      user: sc.dids.bob,
+    })
+
+    expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
+    expect(getCursors(bobFollowers.data.followers)).toEqual(
+      getSortedCursors(bobFollowers.data.followers),
     )
-    expect(bobFollow?.did).toEqual(bob)
-    expect(bobFollow?.name).toEqual(sc.accounts[bob].username)
-    expect(bobFollow?.displayName).toEqual(sc.profiles[bob].displayName)
-    expect(bobFollow?.createdAt).toBeDefined()
-    expect(bobFollow?.indexedAt).toBeDefined()
-    const carolFollow = view.data.followers.find(
-      (f) => f.name === sc.accounts[carol].username,
+
+    const carolFollowers = await client.todo.social.getUserFollowers({
+      user: sc.dids.carol,
+    })
+
+    expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
+    expect(getCursors(carolFollowers.data.followers)).toEqual(
+      getSortedCursors(carolFollowers.data.followers),
     )
-    expect(carolFollow?.did).toEqual(carol)
-    expect(carolFollow?.name).toEqual(sc.accounts[carol].username)
-    expect(carolFollow?.displayName).toEqual(sc.profiles[carol]?.displayName)
-    expect(carolFollow?.createdAt).toBeDefined()
-    expect(carolFollow?.indexedAt).toBeDefined()
+
+    const danFollowers = await client.todo.social.getUserFollowers({
+      user: sc.dids.dan,
+    })
+
+    expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
+    expect(getCursors(danFollowers.data.followers)).toEqual(
+      getSortedCursors(danFollowers.data.followers),
+    )
+
+    const eveFollowers = await client.todo.social.getUserFollowers({
+      user: sc.dids.eve,
+    })
+
+    expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
+    expect(getCursors(eveFollowers.data.followers)).toEqual(
+      getSortedCursors(eveFollowers.data.followers),
+    )
+  })
+
+  it('fetches followers by username', async () => {
+    const byDid = await client.todo.social.getUserFollowers({
+      user: sc.dids.alice,
+    })
+    const byUsername = await client.todo.social.getUserFollowers({
+      user: sc.accounts[alice].username,
+    })
+    expect(byUsername.data).toEqual(byDid.data)
+  })
+
+  it('paginates followers', async () => {
+    const full = await client.todo.social.getUserFollowers({
+      user: sc.dids.alice,
+    })
+
+    expect(full.data.followers.length).toEqual(4)
+
+    const paginated = await client.todo.social.getUserFollowers({
+      user: sc.dids.alice,
+      before: full.data.followers[0].createdAt,
+      limit: 2,
+    })
+
+    expect(paginated.data.followers).toEqual(full.data.followers.slice(1, 3))
   })
 
   it('fetches follows', async () => {
-    const view = await client.todo.social.getUserFollows({
-      user: 'bob.test',
+    const aliceFollowers = await client.todo.social.getUserFollows({
+      user: sc.dids.alice,
     })
-    expect(view.data.subject.did).toEqual(bob)
-    expect(view.data.subject.name).toEqual(sc.accounts[bob].username)
-    expect(view.data.subject.displayName).toEqual(sc.profiles[bob].displayName)
-    const aliceFollow = view.data.follows.find(
-      (f) => f.name === sc.accounts[alice].username,
+
+    expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
+    expect(getCursors(aliceFollowers.data.follows)).toEqual(
+      getSortedCursors(aliceFollowers.data.follows),
     )
-    expect(aliceFollow?.did).toEqual(alice)
-    expect(aliceFollow?.name).toEqual(sc.accounts[alice].username)
-    expect(aliceFollow?.displayName).toEqual(sc.profiles[alice].displayName)
-    expect(aliceFollow?.createdAt).toBeDefined()
-    expect(aliceFollow?.indexedAt).toBeDefined()
-    const carolFollow = view.data.follows.find(
-      (f) => f.name === sc.accounts[carol].username,
+
+    const bobFollowers = await client.todo.social.getUserFollows({
+      user: sc.dids.bob,
+    })
+
+    expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
+    expect(getCursors(bobFollowers.data.follows)).toEqual(
+      getSortedCursors(bobFollowers.data.follows),
     )
-    expect(carolFollow?.did).toEqual(carol)
-    expect(carolFollow?.name).toEqual(sc.accounts[carol].username)
-    expect(carolFollow?.displayName).toEqual(sc.profiles[carol]?.displayName)
-    expect(carolFollow?.createdAt).toBeDefined()
-    expect(carolFollow?.indexedAt).toBeDefined()
+
+    const carolFollowers = await client.todo.social.getUserFollows({
+      user: sc.dids.carol,
+    })
+
+    expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
+    expect(getCursors(carolFollowers.data.follows)).toEqual(
+      getSortedCursors(carolFollowers.data.follows),
+    )
+
+    const danFollowers = await client.todo.social.getUserFollows({
+      user: sc.dids.dan,
+    })
+
+    expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
+    expect(getCursors(danFollowers.data.follows)).toEqual(
+      getSortedCursors(danFollowers.data.follows),
+    )
+
+    const eveFollowers = await client.todo.social.getUserFollows({
+      user: sc.dids.eve,
+    })
+
+    expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
+    expect(getCursors(eveFollowers.data.follows)).toEqual(
+      getSortedCursors(eveFollowers.data.follows),
+    )
+  })
+
+  it('fetches follows by username', async () => {
+    const byDid = await client.todo.social.getUserFollows({
+      user: sc.dids.alice,
+    })
+    const byUsername = await client.todo.social.getUserFollows({
+      user: sc.accounts[alice].username,
+    })
+    expect(byUsername.data).toEqual(byDid.data)
+  })
+
+  it('paginates follows', async () => {
+    const full = await client.todo.social.getUserFollows({
+      user: sc.dids.alice,
+    })
+
+    expect(full.data.follows.length).toEqual(4)
+
+    const paginated = await client.todo.social.getUserFollows({
+      user: sc.dids.alice,
+      before: full.data.follows[0].createdAt,
+      limit: 2,
+    })
+
+    expect(paginated.data.follows).toEqual(full.data.follows.slice(1, 3))
   })
 })

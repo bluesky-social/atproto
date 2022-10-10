@@ -1,41 +1,74 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as util from '../_util'
+import { runTestServer, forSnapshot, constantDate, CloseFn } from '../_util'
 import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
+import repostsSeed from '../seeds/reposts'
 
 describe('pds repost views', () => {
   let client: AdxServiceClient
-  let close: util.CloseFn
+  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
-  let carol: string
-  let dan: string
+  let alice: string
+  let bob: string
 
   beforeAll(async () => {
-    const server = await util.runTestServer()
+    const server = await runTestServer()
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
-    await basicSeed(sc)
-    carol = sc.dids.carol
-    dan = sc.dids.dan
+    await repostsSeed(sc)
+    alice = sc.dids.alice
+    bob = sc.dids.bob
   })
 
   afterAll(async () => {
     await close()
   })
 
-  it('fetches reposted by view', async () => {
+  const getCursors = (items: { createdAt?: string }[]) =>
+    items.map((item) => item.createdAt ?? constantDate)
+
+  const getSortedCursors = (items: { createdAt?: string }[]) =>
+    getCursors(items).sort((a, b) => tstamp(b) - tstamp(a))
+
+  const tstamp = (x: string) => new Date(x).getTime()
+
+  it('fetches reposted-by for a post', async () => {
     const view = await client.todo.social.getRepostedBy({
-      uri: sc.posts[dan][1].uriRaw,
+      uri: sc.posts[alice][2].uriRaw,
     })
-    expect(view.data.uri).toEqual(sc.posts[dan][1].uriRaw)
-    expect(view.data.repostedBy.length).toBe(1)
-    const repost = view.data.repostedBy[0]
-    expect(repost.did).toEqual(carol)
-    expect(repost.displayName).toEqual(sc.profiles[carol]?.displayName)
-    expect(repost.createdAt).toBeDefined()
-    expect(repost.indexedAt).toBeDefined()
+    expect(view.data.uri).toEqual(sc.posts[sc.dids.alice][2].uriRaw)
+    expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
+    expect(getCursors(view.data.repostedBy)).toEqual(
+      getSortedCursors(view.data.repostedBy),
+    )
+  })
+
+  it('fetches reposted-by for a reply', async () => {
+    const view = await client.todo.social.getRepostedBy({
+      uri: sc.replies[bob][0].uriRaw,
+    })
+    expect(view.data.uri).toEqual(sc.replies[sc.dids.bob][0].uriRaw)
+    expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
+    expect(getCursors(view.data.repostedBy)).toEqual(
+      getSortedCursors(view.data.repostedBy),
+    )
+  })
+
+  it('paginates', async () => {
+    const full = await client.todo.social.getRepostedBy({
+      uri: sc.posts[alice][2].uriRaw,
+    })
+
+    expect(full.data.repostedBy.length).toEqual(4)
+
+    const paginated = await client.todo.social.getRepostedBy({
+      uri: sc.posts[alice][2].uriRaw,
+      before: full.data.repostedBy[0].createdAt,
+      limit: 2,
+    })
+
+    expect(paginated.data.repostedBy).toEqual(full.data.repostedBy.slice(1, 3))
   })
 })

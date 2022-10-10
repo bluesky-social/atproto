@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds profile views fetches other's profile, with a follow 1`] = `
+Object {
+  "badges": Array [],
+  "description": "its me!",
+  "did": "user(0)",
+  "displayName": "ali",
+  "followersCount": 2,
+  "followsCount": 3,
+  "myState": Object {
+    "follow": "record(0)",
+  },
+  "name": "alice.test",
+  "postsCount": 4,
+}
+`;
+
+exports[`pds profile views fetches other's profile, without a follow 1`] = `
+Object {
+  "badges": Array [],
+  "did": "user(0)",
+  "followersCount": 1,
+  "followsCount": 1,
+  "myState": Object {},
+  "name": "dan.test",
+  "postsCount": 2,
+}
+`;
+
+exports[`pds profile views fetches own profile 1`] = `
+Object {
+  "badges": Array [],
+  "description": "its me!",
+  "did": "user(0)",
+  "displayName": "ali",
+  "followersCount": 2,
+  "followsCount": 3,
+  "myState": Object {},
+  "name": "alice.test",
+  "postsCount": 4,
+}
+`;

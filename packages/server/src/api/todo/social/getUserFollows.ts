@@ -7,6 +7,7 @@ import { ProfileIndex } from '../../../db/records/profile'
 import { User } from '../../../db/user'
 import * as util from './util'
 import * as locals from '../../../locals'
+import { dateFromDb, dateToDb } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getUserFollows(
@@ -32,10 +33,12 @@ export default function (server: Server) {
         .innerJoin(User, 'subject', 'follow.subject = subject.did')
         .leftJoin(ProfileIndex, 'profile', 'profile.creator = follow.subject')
         .where('follow.creator = :creator', { creator: creator.did })
-        .orderBy('follow.createdAt')
+        .orderBy('follow.createdAt', 'DESC')
 
       if (before !== undefined) {
-        followsReq.andWhere('follow.createdAt < :before', { before })
+        followsReq.andWhere('follow.createdAt < :before', {
+          before: dateToDb(before),
+        })
       }
       if (limit !== undefined) {
         followsReq.limit(limit)
@@ -46,7 +49,7 @@ export default function (server: Server) {
         did: row.did,
         name: row.name,
         displayName: row.displayName || undefined,
-        createdAt: row.createdAt,
+        createdAt: dateFromDb(row.createdAt),
         indexedAt: row.indexedAt,
       }))
 

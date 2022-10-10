@@ -1,11 +1,11 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as util from '../_util'
+import { runTestServer, forSnapshot, CloseFn } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds profile views', () => {
   let client: AdxServiceClient
-  let close: util.CloseFn
+  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -14,7 +14,7 @@ describe('pds profile views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await util.runTestServer()
+    const server = await runTestServer()
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
@@ -28,55 +28,49 @@ describe('pds profile views', () => {
     await close()
   })
 
-  it('fetches profile', async () => {
-    const aliceProf = await client.todo.social.getProfile(
-      {
-        user: 'alice.test',
-      },
+  it('fetches own profile', async () => {
+    const aliceForAlice = await client.todo.social.getProfile(
+      { user: alice },
       undefined,
-      {
-        headers: sc.getHeaders(bob),
-      },
-    )
-    expect(aliceProf.data.did).toEqual(alice)
-    expect(aliceProf.data.name).toEqual(sc.accounts[alice].username)
-    expect(aliceProf.data.displayName).toEqual(sc.profiles[alice].displayName)
-    expect(aliceProf.data.description).toEqual(sc.profiles[alice].description)
-    expect(aliceProf.data.followersCount).toEqual(2)
-    expect(aliceProf.data.followsCount).toEqual(3)
-    expect(aliceProf.data.postsCount).toEqual(4)
-    // TODO
-    // expect(aliceProf.data.badges.length).toEqual(1)
-    // expect(aliceProf.data.badges[0].uri).toEqual(badges[0].toString())
-    // expect(aliceProf.data.badges[0].assertion?.type).toEqual('tag')
-    // expect(aliceProf.data.badges[0].issuer?.did).toEqual(bob)
-    // expect(aliceProf.data.badges[0].issuer?.name).toEqual(users.bob.name)
-    // expect(aliceProf.data.badges[0].issuer?.displayName).toEqual(
-    //   users.bob.displayName,
-    // )
-    expect(aliceProf.data.myState?.follow).toEqual(
-      sc.follows[bob][alice].toString(),
+      { headers: sc.getHeaders(alice) },
     )
 
-    const danProf = await client.todo.social.getProfile(
-      {
-        user: 'dan.test',
-      },
+    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
+  it("fetches other's profile, with a follow", async () => {
+    const aliceForBob = await client.todo.social.getProfile(
+      { user: alice },
       undefined,
-      {
-        headers: sc.getHeaders(bob),
-      },
+      { headers: sc.getHeaders(bob) },
     )
-    expect(danProf.data.did).toEqual(dan)
-    expect(danProf.data.name).toEqual(sc.accounts[dan].username)
-    expect(danProf.data.displayName).toEqual(sc.profiles[dan]?.displayName)
-    expect(danProf.data.description).toEqual(sc.profiles[dan]?.description)
-    expect(danProf.data.followersCount).toEqual(1)
-    expect(danProf.data.followsCount).toEqual(1)
-    expect(danProf.data.postsCount).toEqual(2)
-    expect(danProf.data.badges).toEqual([])
-    expect(danProf.data.myState?.follow).toEqual(
-      sc.follows[bob][dan]?.toString(),
+
+    expect(forSnapshot(aliceForBob.data)).toMatchSnapshot()
+  })
+
+  it("fetches other's profile, without a follow", async () => {
+    const danForBob = await client.todo.social.getProfile(
+      { user: dan },
+      undefined,
+      { headers: sc.getHeaders(bob) },
     )
+
+    expect(forSnapshot(danForBob.data)).toMatchSnapshot()
+  })
+
+  it('fetches profile by username', async () => {
+    const byDid = await client.todo.social.getProfile(
+      { user: alice },
+      undefined,
+      { headers: sc.getHeaders(bob) },
+    )
+
+    const byUsername = await client.todo.social.getProfile(
+      { user: sc.accounts[alice].username },
+      undefined,
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(byUsername.data).toEqual(byDid.data)
   })
 })

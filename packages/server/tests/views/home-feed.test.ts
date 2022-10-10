@@ -1,12 +1,20 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as util from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  getCursors,
+  getSortedCursors,
+  CloseFn,
+  getOriginator,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/todo/social/util'
+import { FeedItem } from '@adxp/api/src/types/todo/social/getHomeFeed'
 
 describe('pds home feed views', () => {
   let client: AdxServiceClient
-  let close: util.CloseFn
+  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -16,7 +24,7 @@ describe('pds home feed views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await util.runTestServer()
+    const server = await runTestServer()
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
@@ -32,6 +40,16 @@ describe('pds home feed views', () => {
   })
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
+    const expectOriginatorFollowedBy = (did) => (item: FeedItem) => {
+      const originator = getOriginator(item)
+      if (did === originator) {
+        // The user sees their own posts, but the user does not expect to see their reposts
+        return expect(item.repostedBy?.did).not.toEqual(did)
+      }
+      // Otherwise, we expect that the user follows the originator of the post
+      expect(sc.follows[did]).toHaveProperty(originator)
+    }
+
     const aliceFeed = await client.todo.social.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
       undefined,
@@ -40,57 +58,11 @@ describe('pds home feed views', () => {
       },
     )
 
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
-      sc.posts[dan][1].text, // Repost
-      sc.replies[alice][0].text,
-      sc.replies[carol][0].text,
-      sc.replies[bob][0].text,
-      sc.posts[alice][2].text,
-      sc.posts[bob][1].text,
-      sc.posts[alice][1].text,
-      sc.posts[dan][1].text, // Original post
-      sc.posts[dan][0].text,
-      sc.posts[carol][0].text,
-      sc.posts[bob][0].text,
-      sc.posts[alice][0].text,
-    ])
-
-    const toRepostInfo = (item) => ({
-      repostCount: item.repostCount,
-      repostedByName: item.repostedBy?.name,
-    })
-
-    expect(aliceFeed.data.feed.map(toRepostInfo)).toEqual([
-      { repostCount: 1, repostedByName: 'carol.test' },
-      { repostCount: 0 },
-      { repostCount: 0 },
-      { repostCount: 0 },
-      { repostCount: 0 },
-      { repostCount: 0 },
-      { repostCount: 1 },
-      { repostCount: 1 },
-      { repostCount: 0 },
-      { repostCount: 0 },
-      { repostCount: 0 },
-      { repostCount: 0 },
-    ])
-
-    const aliceFeed2 = await client.todo.social.getHomeFeed(
-      {
-        algorithm: FeedAlgorithm.ReverseChronological,
-        before: aliceFeed.data.feed[0].cursor,
-        limit: 1,
-      },
-      undefined,
-      {
-        headers: sc.getHeaders(alice),
-      },
+    expect(forSnapshot(aliceFeed.data.feed)).toMatchSnapshot()
+    aliceFeed.data.feed.forEach(expectOriginatorFollowedBy(alice))
+    expect(getCursors(aliceFeed.data.feed)).toEqual(
+      getSortedCursors(aliceFeed.data.feed),
     )
-    /** @ts-ignore TODO */
-    expect(aliceFeed2.data.feed.map((item) => item.record.text)).toEqual([
-      sc.replies[alice][0].text,
-    ])
 
     const bobFeed = await client.todo.social.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
@@ -100,30 +72,50 @@ describe('pds home feed views', () => {
       },
     )
 
-    /** @ts-ignore TODO */
-    expect(bobFeed.data.feed.map((item) => item.record.text)).toEqual([
-      sc.posts[dan][1].text,
-      sc.replies[alice][0].text,
-      sc.replies[carol][0].text,
-      sc.replies[bob][0].text,
-      sc.posts[alice][2].text,
-      sc.posts[bob][1].text,
-      sc.posts[alice][1].text,
-      sc.posts[carol][0].text,
-      sc.posts[bob][0].text,
-      sc.posts[alice][0].text,
-    ])
-
-    expect(bobFeed.data.feed[6].replyCount).toEqual(2)
-    expect(bobFeed.data.feed[6].likeCount).toEqual(3)
-    expect(bobFeed.data.feed[4].likeCount).toEqual(2)
-    expect(bobFeed.data.feed[6]?.myState?.like).toEqual(
-      sc.likes[bob][sc.posts[alice][1].uriRaw].toString(),
+    expect(forSnapshot(bobFeed.data.feed)).toMatchSnapshot()
+    bobFeed.data.feed.forEach(expectOriginatorFollowedBy(bob))
+    expect(getCursors(bobFeed.data.feed)).toEqual(
+      getSortedCursors(bobFeed.data.feed),
     )
-    expect(bobFeed.data.feed[9]?.myState?.like).toBeUndefined()
+
+    const carolFeed = await client.todo.social.getHomeFeed(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      undefined,
+      {
+        headers: sc.getHeaders(carol),
+      },
+    )
+
+    expect(forSnapshot(carolFeed.data.feed)).toMatchSnapshot()
+    carolFeed.data.feed.forEach(expectOriginatorFollowedBy(carol))
+    expect(getCursors(carolFeed.data.feed)).toEqual(
+      getSortedCursors(carolFeed.data.feed),
+    )
+
+    const danFeed = await client.todo.social.getHomeFeed(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      undefined,
+      {
+        headers: sc.getHeaders(dan),
+      },
+    )
+
+    expect(forSnapshot(danFeed.data.feed)).toMatchSnapshot()
+    danFeed.data.feed.forEach(expectOriginatorFollowedBy(dan))
+    expect(getCursors(danFeed.data.feed)).toEqual(
+      getSortedCursors(danFeed.data.feed),
+    )
   })
 
   it("fetches authenticated user's home feed w/ firehose algorithm", async () => {
+    const expectNotOwnRepostsBy = (did) => (item: FeedItem) => {
+      const originator = getOriginator(item)
+      if (did === originator) {
+        // The user sees their own posts, but the user does not expect to see their reposts
+        return expect(item.repostedBy?.did).not.toEqual(did)
+      }
+    }
+
     const aliceFeed = await client.todo.social.getHomeFeed(
       { algorithm: FeedAlgorithm.Firehose },
       undefined,
@@ -132,28 +124,25 @@ describe('pds home feed views', () => {
       },
     )
 
-    /** @ts-ignore TODO */
-    expect(aliceFeed.data.feed.map((item) => item.record.text)).toEqual([
-      sc.posts[dan][1].text, // Repost
-      sc.replies[alice][0].text,
-      sc.replies[carol][0].text,
-      sc.replies[bob][0].text,
-      sc.posts[alice][2].text,
-      sc.posts[bob][1].text,
-      sc.posts[alice][1].text, // Original post
-      sc.posts[dan][1].text, // Original post
-      sc.posts[dan][0].text,
-      sc.posts[carol][0].text,
-      sc.posts[bob][0].text,
-      sc.posts[alice][0].text,
-    ])
-
-    const cursors = aliceFeed.data.feed.map((item) => item.cursor)
-    const orderedCursors = [...cursors].sort(
-      (a, b) => new Date(b).getTime() - new Date(a).getTime(),
+    expect(forSnapshot(aliceFeed.data.feed)).toMatchSnapshot()
+    aliceFeed.data.feed.forEach(expectNotOwnRepostsBy(alice))
+    expect(getCursors(aliceFeed.data.feed)).toEqual(
+      getSortedCursors(aliceFeed.data.feed),
     )
 
-    expect(cursors).toEqual(orderedCursors)
+    const carolFeed = await client.todo.social.getHomeFeed(
+      { algorithm: FeedAlgorithm.Firehose },
+      undefined,
+      {
+        headers: sc.getHeaders(carol),
+      },
+    )
+
+    expect(forSnapshot(carolFeed.data.feed)).toMatchSnapshot()
+    carolFeed.data.feed.forEach(expectNotOwnRepostsBy(carol))
+    expect(getCursors(carolFeed.data.feed)).toEqual(
+      getSortedCursors(carolFeed.data.feed),
+    )
   })
 
   it("fetches authenticated user's home feed w/ default algorithm", async () => {
@@ -168,5 +157,57 @@ describe('pds home feed views', () => {
       },
     )
     expect(defaultFeed.data.feed).toEqual(reverseChronologicalFeed.data.feed)
+  })
+
+  it('paginates reverse-chronological feed', async () => {
+    const full = await client.todo.social.getHomeFeed(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      undefined,
+      {
+        headers: sc.getHeaders(carol),
+      },
+    )
+
+    expect(full.data.feed.length).toEqual(6)
+
+    const paginated = await client.todo.social.getHomeFeed(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        before: full.data.feed[1].cursor,
+        limit: 2,
+      },
+      undefined,
+      {
+        headers: sc.getHeaders(carol),
+      },
+    )
+
+    expect(paginated.data.feed).toEqual(full.data.feed.slice(2, 4))
+  })
+
+  it('paginates firehose feed', async () => {
+    const full = await client.todo.social.getHomeFeed(
+      { algorithm: FeedAlgorithm.Firehose },
+      undefined,
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+
+    expect(full.data.feed.length).toEqual(13)
+
+    const paginated = await client.todo.social.getHomeFeed(
+      {
+        algorithm: FeedAlgorithm.Firehose,
+        before: full.data.feed[1].cursor,
+        limit: 2,
+      },
+      undefined,
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+
+    expect(paginated.data.feed).toEqual(full.data.feed.slice(2, 4))
   })
 })
