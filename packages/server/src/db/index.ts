@@ -1,4 +1,4 @@
-import { Kysely, SqliteDialect } from 'kysely'
+import { Kysely, SqliteDialect, sql } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
@@ -20,6 +20,7 @@ import { CID } from 'multiformats/cid'
 import { dbLogger as log } from '../logger'
 import { DatabaseSchema, createTables } from './database-schema'
 import * as scrypt from './scrypt'
+import { User } from './tables/user'
 
 export class Database {
   db: Kysely<DatabaseSchema>
@@ -86,26 +87,26 @@ export class Database {
     log.info({ did, root: root.toString() }, 'updated repo root')
   }
 
-  async getUser(
-    usernameOrDid: string,
-  ): Promise<{ username: string; did: string } | null> {
-    const query = this.db.selectFrom('user').select(['username', 'did'])
+  async getUser(usernameOrDid: string): Promise<User | null> {
+    let query = this.db.selectFrom('user').selectAll()
     if (usernameOrDid.startsWith('did:')) {
-      query.where('did', '=', usernameOrDid)
+      query = query.where('did', '=', usernameOrDid)
     } else {
-      query.where('username', '=', usernameOrDid)
+      query = query.where(
+        sql`UPPER(username)`,
+        '=',
+        usernameOrDid.toUpperCase(),
+      )
     }
     const found = await query.executeTakeFirst()
     return found || null
   }
 
-  async getUserByEmail(
-    email: string,
-  ): Promise<{ username: string; did: string } | null> {
+  async getUserByEmail(email: string): Promise<User | null> {
     const found = await this.db
       .selectFrom('user')
-      .select(['username', 'did'])
-      .where('email', '=', email)
+      .selectAll()
+      .where(sql`UPPER(email)`, '=', email.toUpperCase())
       .executeTakeFirst()
     return found || null
   }

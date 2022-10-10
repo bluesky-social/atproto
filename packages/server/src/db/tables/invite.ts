@@ -6,6 +6,7 @@ export interface InviteCode {
   disabled: 0 | 1
   forUser: string
   createdBy: string
+  createdAt: string
 }
 
 export interface InviteCodeUse {
