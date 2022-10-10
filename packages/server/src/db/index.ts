@@ -1,16 +1,17 @@
 import { Kysely, SqliteDialect } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
-// import { DbRecordPlugin, NotificationsPlugin } from './types'
-// import * as Badge from '../lexicon/types/todo/social/badge'
-// import * as Follow from '../lexicon/types/todo/social/follow'
-// import * as Like from '../lexicon/types/todo/social/like'
-// import * as Post from '../lexicon/types/todo/social/post'
-// import * as Profile from '../lexicon/types/todo/social/profile'
-// import * as Repost from '../lexicon/types/todo/social/repost'
+import { DbRecordPlugin, NotificationsPlugin } from './types'
+import * as Badge from '../lexicon/types/todo/social/badge'
+import * as Follow from '../lexicon/types/todo/social/follow'
+import * as Like from '../lexicon/types/todo/social/like'
+import * as Post from '../lexicon/types/todo/social/post'
+import * as Profile from '../lexicon/types/todo/social/profile'
+import * as Repost from '../lexicon/types/todo/social/repost'
 // import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
 // import likePlugin, { LikeIndex } from './records/like'
 // import followPlugin, { FollowIndex } from './records/follow'
+import followPlugin, { TodoSocialFollow } from './records/follow'
 // import badgePlugin, { BadgeIndex } from './records/badge'
 // import profilePlugin, {
 //   ProfileBadgeIndex,
@@ -27,9 +28,23 @@ import { CID } from 'multiformats/cid'
 // import { InviteCode, InviteCodeUse } from './invite-codes'
 // import { dbLogger as log } from '../logger'
 import { DatabaseSchema } from './kysely-interfaces'
+import { TodoSocialPost } from '@adxp/api'
 
 export class Database {
-  constructor(public db: Kysely<DatabaseSchema>) {}
+  records: {
+    // posts: DbRecordPlugin<Post.Record, TodoSocialPost>
+    // likes: DbRecordPlugin<Like.Record, LikeIndex>
+    follows: DbRecordPlugin<Follow.Record, TodoSocialFollow>
+    // badges: DbRecordPlugin<Badge.Record, BadgeIndex>
+    // profiles: DbRecordPlugin<Profile.Record, ProfileIndex>
+    // reposts: DbRecordPlugin<Repost.Record, RepostIndex>
+  }
+
+  constructor(public db: Kysely<DatabaseSchema>) {
+    this.records = {
+      follows: followPlugin(db),
+    }
+  }
 
   static async sqlite(location: string): Promise<Database> {
     const db = new Kysely<DatabaseSchema>({
