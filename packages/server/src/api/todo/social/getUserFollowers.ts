@@ -17,6 +17,7 @@ export default function (server: Server) {
 
       let followersReq = db.db
         .selectFrom('todo_social_follow as follow')
+        .where('follow.subject', '=', subject.did)
         .innerJoin('record', 'record.uri', 'follow.uri')
         .innerJoin('user as creator', 'creator.did', 'record.did')
         .leftJoin(
@@ -24,7 +25,6 @@ export default function (server: Server) {
           'profile.creator',
           'record.did',
         )
-        .where('follow.subject', '=', subject.did)
         .select([
           'creator.did as did',
           'creator.username as name',
