@@ -14,11 +14,11 @@ import repostPlugin, { TodoSocialRepost } from './records/repost'
 import followPlugin, { TodoSocialFollow } from './records/follow'
 import badgePlugin, { TodoSocialBadge } from './records/badge'
 import profilePlugin, { TodoSocialProfile } from './records/profile'
-import notificationPlugin from './user-notification'
+import notificationPlugin from './tables/user-notification'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import { dbLogger as log } from '../logger'
-import { DatabaseSchema } from './database-schema'
+import { DatabaseSchema, createTables } from './database-schema'
 import * as util from './util'
 
 export class Database {
@@ -61,6 +61,10 @@ export class Database {
 
   async close(): Promise<void> {
     await this.db.destroy()
+  }
+
+  async createTables(): Promise<void> {
+    await createTables(this.db)
   }
 
   async getRepoRoot(did: string): Promise<CID | null> {

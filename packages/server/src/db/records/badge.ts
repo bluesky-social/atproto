@@ -17,6 +17,19 @@ export interface TodoSocialBadge {
   indexedAt: string
 }
 
+export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
+  await db.schema
+    .createTable(tableName)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('assertionType', 'varchar', (col) => col.notNull())
+    .addColumn('assertionTag', 'varchar')
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+}
+
 export type PartialDB = { [tableName]: TodoSocialBadge }
 
 const validator = schemas.createRecordValidator(type)

@@ -21,6 +21,24 @@ export interface TodoSocialProfileBadge {
   badgeUri: string
 }
 
+export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
+  await db.schema
+    .createTable(tableName)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('displayName', 'varchar', (col) => col.notNull())
+    .addColumn('description', 'varchar')
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+
+  await db.schema
+    .createTable(supportingTableName)
+    .addColumn('profileUri', 'varchar', (col) => col.notNull())
+    .addColumn('badgeUri', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint('primary_key', ['profileUri', 'badgeUri'])
+    .execute()
+}
+
 export type PartialDB = {
   [tableName]: TodoSocialProfile
   [supportingTableName]: TodoSocialProfileBadge
