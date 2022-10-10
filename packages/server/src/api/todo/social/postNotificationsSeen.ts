@@ -1,7 +1,6 @@
 import { Server } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
 import * as locals from '../../../locals'
-import { User } from '../../../db/user'
 
 export default function (server: Server) {
   server.todo.social.postNotificationsSeen(async (_params, input, req, res) => {
@@ -21,12 +20,15 @@ export default function (server: Server) {
     }
 
     const result = await db.db
-      .getRepository(User)
-      .update({ did: requester }, { lastSeenNotifs: parsed })
+      .updateTable('user')
+      .set({ lastSeenNotifs: parsed })
+      .where('did', '=', requester)
+      .executeTakeFirst()
 
-    if (!result.affected || result.affected < 1) {
-      throw new InvalidRequestError(`Could not find user:: ${requester}`)
+    if (Number(result.numUpdatedRows) < 1) {
+      throw new InvalidRequestError(`Could not find user: ${requester}`)
     }
+
     return { encoding: 'application/json', body: {} }
   })
 }
