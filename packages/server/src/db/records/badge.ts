@@ -17,7 +17,7 @@ export interface TodoSocialBadge {
   indexedAt: string
 }
 
-type PartialDB = Kysely<{ [tableName]: TodoSocialBadge }>
+export type PartialDB = { [tableName]: TodoSocialBadge }
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Badge.Record => {
@@ -41,7 +41,7 @@ const translateDbObj = (dbObj: TodoSocialBadge): Badge.Record => {
 }
 
 const getFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<Badge.Record | null> => {
     const found = await db
       .selectFrom('todo_social_badge')
@@ -52,7 +52,7 @@ const getFn =
   }
 
 const setFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
@@ -70,7 +70,7 @@ const setFn =
   }
 
 const deleteFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
     await db.deleteFrom('todo_social_badge').where('uri', '=', uri.toString())
   }
@@ -89,7 +89,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
 }
 
 export const makePlugin = (
-  db: PartialDB,
+  db: Kysely<PartialDB>,
 ): DbRecordPlugin<Badge.Record, TodoSocialBadge> => {
   return {
     collection: type,

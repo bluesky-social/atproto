@@ -8,17 +8,13 @@ import * as Like from '../lexicon/types/todo/social/like'
 import * as Post from '../lexicon/types/todo/social/post'
 import * as Profile from '../lexicon/types/todo/social/profile'
 import * as Repost from '../lexicon/types/todo/social/repost'
-// import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
-// import likePlugin, { LikeIndex } from './records/like'
-// import followPlugin, { FollowIndex } from './records/follow'
+import postPlugin, { TodoSocialPost } from './records/post'
+import likePlugin, { TodoSocialLike } from './records/like'
+import repostPlugin, { TodoSocialRepost } from './records/repost'
 import followPlugin, { TodoSocialFollow } from './records/follow'
-// import badgePlugin, { BadgeIndex } from './records/badge'
-// import profilePlugin, {
-//   ProfileBadgeIndex,
-//   ProfileIndex,
-// } from './records/profile'
-// import repostPlugin, { RepostIndex } from './records/repost'
-// import notificationsPlugin, { UserNotification } from './user-notifications'
+import badgePlugin, { TodoSocialBadge } from './records/badge'
+import profilePlugin, { TodoSocialProfile } from './records/profile'
+import notificationPlugin from './user-notification'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 // import { RepoRoot } from './repo-root'
@@ -27,23 +23,31 @@ import { CID } from 'multiformats/cid'
 // import * as util from './util'
 // import { InviteCode, InviteCodeUse } from './invite-codes'
 // import { dbLogger as log } from '../logger'
-import { DatabaseSchema } from './kysely-interfaces'
-import { TodoSocialPost } from '@adxp/api'
+import { DatabaseSchema } from './database-schema'
 
 export class Database {
+  db: Kysely<DatabaseSchema>
   records: {
-    // posts: DbRecordPlugin<Post.Record, TodoSocialPost>
-    // likes: DbRecordPlugin<Like.Record, LikeIndex>
-    follows: DbRecordPlugin<Follow.Record, TodoSocialFollow>
-    // badges: DbRecordPlugin<Badge.Record, BadgeIndex>
-    // profiles: DbRecordPlugin<Profile.Record, ProfileIndex>
-    // reposts: DbRecordPlugin<Repost.Record, RepostIndex>
+    post: DbRecordPlugin<Post.Record, TodoSocialPost>
+    like: DbRecordPlugin<Like.Record, TodoSocialLike>
+    repost: DbRecordPlugin<Repost.Record, TodoSocialRepost>
+    follow: DbRecordPlugin<Follow.Record, TodoSocialFollow>
+    profile: DbRecordPlugin<Profile.Record, TodoSocialProfile>
+    badge: DbRecordPlugin<Badge.Record, TodoSocialBadge>
   }
+  notifications: NotificationsPlugin
 
-  constructor(public db: Kysely<DatabaseSchema>) {
+  constructor(db: Kysely<DatabaseSchema>) {
+    this.db = db
     this.records = {
-      follows: followPlugin(db),
+      post: postPlugin(db),
+      like: likePlugin(db),
+      repost: repostPlugin(db),
+      follow: followPlugin(db),
+      badge: badgePlugin(db),
+      profile: profilePlugin(db),
     }
+    this.notifications = notificationPlugin(db)
   }
 
   static async sqlite(location: string): Promise<Database> {

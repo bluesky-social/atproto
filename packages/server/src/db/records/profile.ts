@@ -21,10 +21,10 @@ export interface TodoSocialProfileBadge {
   badgeUri: string
 }
 
-type PartialDB = Kysely<{
+export type PartialDB = {
   [tableName]: TodoSocialProfile
   [supportingTableName]: TodoSocialProfileBadge
-}>
+}
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Profile.Record => {
@@ -40,7 +40,7 @@ const translateDbObj = (dbObj: TodoSocialProfile): Profile.Record => {
 }
 
 const getFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<Profile.Record | null> => {
     const profileQuery = db
       .selectFrom('todo_social_profile')
@@ -60,7 +60,7 @@ const getFn =
   }
 
 const setFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
@@ -84,7 +84,7 @@ const setFn =
   }
 
 const deleteFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
     await Promise.all([
       db.deleteFrom('todo_social_profile').where('uri', '=', uri.toString()),
@@ -99,7 +99,7 @@ const notifsForRecord = (_uri: AdxUri, _obj: unknown): Notification[] => {
 }
 
 export const makePlugin = (
-  db: PartialDB,
+  db: Kysely<PartialDB>,
 ): DbRecordPlugin<Profile.Record, TodoSocialProfile> => {
   return {
     collection: type,

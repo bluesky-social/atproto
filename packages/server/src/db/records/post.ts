@@ -26,10 +26,10 @@ export interface TodoSocialPostEntity {
   value: string
 }
 
-type PartialDB = Kysely<{
+export type PartialDB = {
   [tableName]: TodoSocialPost
   [supportingTableName]: TodoSocialPostEntity
-}>
+}
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Post.Record => {
@@ -52,7 +52,7 @@ const translateDbObj = (dbObj: TodoSocialPost): Post.Record => {
 }
 
 const getFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<Post.Record | null> => {
     const postQuery = db
       .selectFrom('todo_social_post')
@@ -76,7 +76,7 @@ const getFn =
   }
 
 const setFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
@@ -104,7 +104,7 @@ const setFn =
   }
 
 const deleteFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
     await Promise.all([
       db.deleteFrom('todo_social_post').where('uri', '=', uri.toString()),
@@ -143,7 +143,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
 }
 
 export const makePlugin = (
-  db: PartialDB,
+  db: Kysely<PartialDB>,
 ): DbRecordPlugin<Post.Record, TodoSocialPost> => {
   return {
     collection: type,

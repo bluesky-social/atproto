@@ -15,7 +15,7 @@ export interface TodoSocialRepost {
   indexedAt: string
 }
 
-type PartialDB = Kysely<{ [tableName]: TodoSocialRepost }>
+export type PartialDB = { [tableName]: TodoSocialRepost }
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Repost.Record => {
@@ -31,7 +31,7 @@ const translateDbObj = (dbObj: TodoSocialRepost): Repost.Record => {
 }
 
 const getFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<Repost.Record | null> => {
     const found = await db
       .selectFrom('todo_social_repost')
@@ -42,7 +42,7 @@ const getFn =
   }
 
 const setFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
@@ -58,7 +58,7 @@ const setFn =
   }
 
 const deleteFn =
-  (db: PartialDB) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
     await db.deleteFrom('todo_social_repost').where('uri', '=', uri.toString())
   }
@@ -79,7 +79,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
 }
 
 export const makePlugin = (
-  db: PartialDB,
+  db: Kysely<PartialDB>,
 ): DbRecordPlugin<Repost.Record, TodoSocialRepost> => {
   return {
     collection: type,
