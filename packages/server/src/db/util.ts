@@ -15,7 +15,7 @@ export const userWhereClause = (user: string): string => {
 
 export const isNotRepostClause = 'originator.did == post.creator'
 
-export const postOrRepostIndexedAtClause = `iif(${isNotRepostClause}, post.indexedAt , repost.indexedAt)`
+export const postOrRepostIndexedAtClause = `iif(${isNotRepostClause}, post.indexedAt, repost.indexedAt)`
 
 type Subquery = (qb: SelectQueryBuilder<any>) => SelectQueryBuilder<any>
 
