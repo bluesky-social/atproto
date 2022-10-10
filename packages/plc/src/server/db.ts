@@ -38,7 +38,7 @@ export class Database {
     await this.db.destroy()
   }
 
-  async createTables(): Promise<void> {
+  async createTables(): Promise<this> {
     await this.db.schema
       .createTable('operations')
       .addColumn('did', 'varchar', (col) => col.notNull())
@@ -48,6 +48,7 @@ export class Database {
       .addColumn('createdAt', 'varchar', (col) => col.notNull())
       .addPrimaryKeyConstraint('primary_key', ['did', 'cid'])
       .execute()
+    return this
   }
 
   async dropTables(): Promise<void> {
