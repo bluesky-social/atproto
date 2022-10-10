@@ -1,9 +1,5 @@
 import { Server } from '../../../lexicon'
 import * as GetLikedBy from '../../../lexicon/types/todo/social/getLikedBy'
-import { AdxRecord } from '../../../db/record'
-import { LikeIndex } from '../../../db/records/like'
-import { ProfileIndex } from '../../../db/records/profile'
-import { User } from '../../../db/user'
 import * as locals from '../../../locals'
 import { dateFromDb, dateToDb } from '../../../db/util'
 
@@ -14,30 +10,33 @@ export default function (server: Server) {
       const { db } = locals.get(res)
 
       const builder = db.db
-        .createQueryBuilder()
+        .selectFrom('todo_social_like as like')
+        .where('like.subject', '=', uri)
+        .innerJoin('record', 'like.uri', 'record.uri')
+        .innerJoin('user', 'like.creator', 'user.did')
+        .leftJoin(
+          'todo_social_profile as profile',
+          'profile.creator',
+          'user.did',
+        )
         .select([
-          'user.did AS did',
-          'user.username AS name',
-          'profile.displayName AS displayName',
-          'like.createdAt AS createdAt',
-          'record.indexedAt AS indexedAt',
+          'user.did as did',
+          'user.username as name',
+          'profile.displayName as displayName',
+          'like.createdAt as createdAt',
+          'record.indexedAt as indexedAt',
         ])
-        .from(LikeIndex, 'like')
-        .leftJoin(AdxRecord, 'record', 'like.uri = record.uri')
-        .leftJoin(User, 'user', 'like.creator = user.did')
-        .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
-        .where('like.subject = :uri', { uri })
-        .orderBy('like.createdAt', 'DESC')
 
+      // Pagination
+      builder.orderBy('like.createdAt', 'desc')
       if (before !== undefined) {
-        builder.andWhere('like.createdAt < :before', {
-          before: dateToDb(before),
-        })
+        builder.where('like.createdAt', '<', dateToDb(before))
       }
       if (limit !== undefined) {
         builder.limit(limit)
       }
-      const likedByRes = await builder.getRawMany()
+
+      const likedByRes = await builder.execute()
 
       const likedBy = likedByRes.map((row) => ({
         did: row.did,
