@@ -51,6 +51,10 @@ export class EcdsaKeypair implements ucan.DidableKey {
     return new EcdsaKeypair(keypair, pubkeyBytes, exportable)
   }
 
+  publicKeyBytes(): Uint8Array {
+    return this.publicKey
+  }
+
   publicKeyStr(encoding: ucan.Encodings = 'base64pad'): string {
     return uint8arrays.toString(this.publicKey, encoding)
   }

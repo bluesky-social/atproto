@@ -1,44 +1,61 @@
+import { Kysely, SqliteDialect } from 'kysely'
+import SqliteDB from 'better-sqlite3'
 import { CID } from 'multiformats/cid'
 import { cidForData } from '@adxp/common'
-import {
-  EntityManager,
-  DataSource,
-  Entity,
-  Column,
-  PrimaryColumn,
-  In,
-  Not,
-} from 'typeorm'
-import { Mutex } from 'async-mutex'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
 import { ServerError } from './error'
 
+interface OperationsTable {
+  did: string
+  operation: string
+  cid: string
+  nullified: 0 | 1
+  createdAt: string
+}
+
+interface DatabaseSchema {
+  operations: OperationsTable
+}
+
 export class Database {
-  db: SafeDB
+  constructor(public db: Kysely<DatabaseSchema>) {}
 
-  constructor(db: SafeDB) {
-    this.db = db
-  }
-
-  static async sqlite(location: string): Promise<Database> {
-    const db = await SafeDB.sqlite(location)
+  static sqlite(location: string): Database {
+    const db = new Kysely<DatabaseSchema>({
+      dialect: new SqliteDialect({
+        database: new SqliteDB(location),
+      }),
+    })
     return new Database(db)
   }
 
-  static async memory(): Promise<Database> {
-    const db = await SafeDB.memory()
-    return new Database(db)
+  static memory(): Database {
+    return Database.sqlite(':memory:')
   }
 
   async close(): Promise<void> {
-    await this.db.close()
+    await this.db.destroy()
+  }
+
+  async createTables(): Promise<void> {
+    await this.db.schema
+      .createTable('operations')
+      .addColumn('did', 'varchar', (col) => col.notNull())
+      .addColumn('operation', 'text', (col) => col.notNull())
+      .addColumn('cid', 'varchar', (col) => col.notNull())
+      .addColumn('nullified', 'int2', (col) => col.defaultTo(0))
+      .addColumn('createdAt', 'varchar', (col) => col.notNull())
+      .addPrimaryKeyConstraint('primary_key', ['did', 'cid'])
+      .execute()
+  }
+
+  async dropTables(): Promise<void> {
+    await this.db.schema.dropTable('operations').execute()
   }
 
   async validateAndAddOp(did: string, proposed: t.Operation): Promise<void> {
-    const ops = await this.db.readOperation(async (manager) => {
-      return this._opsForDid(manager, did)
-    })
+    const ops = await this._opsForDid(did)
     // throws if invalid
     const { nullified, prev } = await document.assureValidNextOp(
       did,
@@ -47,158 +64,85 @@ export class Database {
     )
     const cid = await cidForData(proposed)
 
-    await this.db.transaction(async (tx) => {
-      const mostRecent = await this._mostRecentCid(tx, did, nullified)
-      const isMatch =
-        (prev === null && mostRecent === null) ||
-        (prev && prev.equals(mostRecent))
+    await this.db.transaction().execute(async (tx) => {
+      await tx
+        .insertInto('operations')
+        .values({
+          did,
+          operation: JSON.stringify(proposed),
+          cid: cid.toString(),
+          nullified: 0,
+          createdAt: new Date().toISOString(),
+        })
+        .execute()
 
+      if (nullified.length > 0) {
+        const nullfiedStrs = nullified.map((cid) => cid.toString())
+        await tx
+          .updateTable('operations')
+          .set({ nullified: 1 })
+          .where('did', '=', did)
+          .where('cid', 'in', nullfiedStrs)
+          .execute()
+      }
+
+      // verify that the 2nd to last tx matches the proposed prev
+      // otherwise rollback to prevent forks in history
+      const mostRecent = await tx
+        .selectFrom('operations')
+        .select('cid')
+        .where('did', '=', did)
+        .where('nullified', '=', 0)
+        .orderBy('createdAt', 'desc')
+        .limit(2)
+        .execute()
+      const isMatch =
+        (prev === null && !mostRecent[1]) ||
+        (prev && prev.equals(CID.parse(mostRecent[1].cid)))
       if (!isMatch) {
         throw new ServerError(
           409,
           `Proposed prev does not match the most recent operation: ${mostRecent?.toString()}`,
         )
       }
-
-      const toInsert = new OperationsTable()
-      toInsert.did = did
-      toInsert.operation = JSON.stringify(proposed)
-      toInsert.cid = cid.toString()
-      toInsert.createdAt = new Date()
-      await tx.save(toInsert)
-
-      if (nullified.length > 0) {
-        const nullfiedStrs = nullified.map((cid) => cid.toString())
-        await tx.update(
-          OperationsTable,
-          { did, cid: In(nullfiedStrs) },
-          { nullified: true },
-        )
-      }
     })
   }
 
-  async mostRecentCid(did: string): Promise<CID | null> {
-    return this.db.readOperation(async (manager) => {
-      return this._mostRecentCid(manager, did, [])
-    })
-  }
-
-  async _mostRecentCid(
-    manager: EntityManager,
-    did: string,
-    notIncluded: CID[],
-  ): Promise<CID | null> {
+  async mostRecentCid(did: string, notIncluded: CID[]): Promise<CID | null> {
     const notIncludedStr = notIncluded.map((cid) => cid.toString())
-    const found = await manager.find(OperationsTable, {
-      where: { did, nullified: false, cid: Not(In(notIncludedStr)) },
-      order: { createdAt: 'DESC' },
-      take: 1,
-    })
-    return found[0] ? CID.parse(found[0].cid) : null
+
+    const found = await this.db
+      .selectFrom('operations')
+      .select('cid')
+      .where('did', '=', did)
+      .where('nullified', '=', 0)
+      .where('cid', 'not in', notIncludedStr)
+      .orderBy('createdAt', 'desc')
+      .executeTakeFirst()
+    return found ? CID.parse(found.cid) : null
   }
 
   async opsForDid(did: string): Promise<t.Operation[]> {
-    return this.db.readOperation(async (manager) => {
-      const res = await this._opsForDid(manager, did)
-      return res.map((row) => row.operation)
-    })
+    const ops = await this._opsForDid(did)
+    return ops.filter((op) => !op.nullified).map((op) => op.operation)
   }
 
-  // helper fn that returns additional information
-  async _opsForDid(
-    manager: EntityManager,
-    did: string,
-  ): Promise<t.IndexedOperation[]> {
-    const res = await manager.findBy(OperationsTable, {
-      did,
-      nullified: false,
-    })
-    return res
-      .map((row) => ({
-        did: row.did,
-        operation: JSON.parse(row.operation),
-        cid: CID.parse(row.cid),
-        nullified: row.nullified,
-        createdAt: row.createdAt,
-      }))
-      .sort((a, b) => {
-        return a.createdAt.getTime() - b.createdAt.getTime()
-      })
+  async _opsForDid(did: string): Promise<t.IndexedOperation[]> {
+    const res = await this.db
+      .selectFrom('operations')
+      .selectAll()
+      .where('did', '=', did)
+      .orderBy('createdAt', 'asc')
+      .execute()
+
+    return res.map((row) => ({
+      did: row.did,
+      operation: JSON.parse(row.operation),
+      cid: CID.parse(row.cid),
+      nullified: row.nullified === 1,
+      createdAt: new Date(row.createdAt),
+    }))
   }
-}
-
-// It is VERY IMPORTANT that any writes go through the `transaction` method on the underlying SafeDB
-// This is needed because sqlite does not offer a connection pool & transactions can end up getting nested
-// and either fail or return successful but then get rolledback if the outer tx fails
-class SafeDB {
-  private db: DataSource
-  private lock: Mutex
-
-  constructor(db: DataSource) {
-    this.db = db
-    this.lock = new Mutex()
-  }
-
-  static async sqlite(location: string): Promise<SafeDB> {
-    const db = new DataSource({
-      type: 'sqlite',
-      database: location,
-      entities: [OperationsTable],
-      synchronize: true,
-    })
-    await db.initialize()
-    return new SafeDB(db)
-  }
-
-  static async memory(): Promise<SafeDB> {
-    return SafeDB.sqlite(':memory:')
-  }
-
-  async close(): Promise<void> {
-    await this.db.destroy()
-  }
-
-  async transaction<T>(fn: (manager: EntityManager) => Promise<T>): Promise<T> {
-    const release = await this.lock.acquire()
-    let res: T
-    try {
-      res = await this.db.manager.transaction(async (tx) => {
-        return fn(this.db.manager)
-      })
-    } catch (err) {
-      release()
-      throw err
-    }
-    release()
-    return res
-  }
-
-  async readOperation<T>(
-    fn: (manager: EntityManager) => Promise<T>,
-  ): Promise<T> {
-    return fn(this.db.manager)
-  }
-}
-
-@Entity({ name: 'operations' })
-export class OperationsTable {
-  @PrimaryColumn('varchar')
-  did: string
-
-  @Column('text')
-  operation: string
-
-  @PrimaryColumn('varchar')
-  cid: string
-
-  // used for operations that were on a historical fork of the DID doc that are no longer in the canonical history
-  // for instance after a recovery operation
-  @Column({ type: 'boolean', default: false })
-  nullified: boolean
-
-  @Column('datetime')
-  createdAt: Date
 }
 
 export default Database
