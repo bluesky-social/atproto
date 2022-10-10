@@ -4,11 +4,11 @@ import { ValidationResult } from '@adxp/lexicon'
 export type DbRecordPlugin<T, S> = {
   collection: string
   tableName: string
-  get: (uri: AdxUri) => Promise<T | null>
   validateSchema: (obj: unknown) => ValidationResult
+  translateDbObj: (dbObj: S) => T
+  get: (uri: AdxUri) => Promise<T | null>
   set: (uri: AdxUri, obj: unknown) => Promise<void>
   delete: (uri: AdxUri) => Promise<void>
-  translateDbObj: (dbObj: S) => T
   notifsForRecord: (uri: AdxUri, obj: unknown) => Notification[]
 }
 

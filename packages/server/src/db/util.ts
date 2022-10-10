@@ -2,10 +2,6 @@ import crypto from 'crypto'
 import { sql } from 'kysely'
 import { EntityTarget, SelectQueryBuilder } from 'typeorm'
 
-export const collectionToTableName = (collection: string): string => {
-  return `record_${collection.split('.').join('_')}`
-}
-
 export const userWhereClause = (user: string): string => {
   if (user.startsWith('did:')) {
     return 'user.did = :user'
