@@ -19,6 +19,15 @@ export const assureValidNextOp = async (
     await assureValidCreationOp(did, proposed)
     return { nullified: [], prev: null }
   }
+
+  // ensure we support the proposed key type
+  if (
+    check.is(proposed, t.def.rotateSigningKeyOp) ||
+    check.is(proposed, t.def.rotateRecoveryKeyOp)
+  ) {
+    await crypto.parseDidKey(proposed.key)
+  }
+
   const proposedPrev = proposed.prev ? CID.parse(proposed.prev) : undefined
   if (!proposedPrev) {
     throw new ServerError(400, `Invalid prev on operation: ${proposed.prev}`)
@@ -92,7 +101,6 @@ export const validateOperationLog = async (
   let prev = await cidForData(first)
 
   for (const op of rest) {
-    // @TODO should signing key be able to rotate reocvery key?? & should reocvery key be able to change username/service
     if (!op.prev || !CID.parse(op.prev).equals(prev)) {
       throw new ServerError(400, 'Operations not correctly ordered')
     }
@@ -165,7 +173,7 @@ export const formatDidDoc = (data: t.DocumentData): t.DidDocument => {
   return {
     '@context': context,
     id: data.did,
-    alsoKnownAs: [`https://${data.username}`],
+    alsoKnownAs: [ensureHttpPrefix(data.username)],
     verificationMethod: [
       {
         id: `#signingKey`,
@@ -187,7 +195,7 @@ export const formatDidDoc = (data: t.DocumentData): t.DidDocument => {
       {
         id: `#atpPds`,
         type: 'AtpPersonalDataServer',
-        serviceEndpoint: data.atpPds,
+        serviceEndpoint: ensureHttpPrefix(data.atpPds),
       },
     ],
   }
@@ -216,4 +224,11 @@ const formatKeyAndContext = (key: string): KeyAndContext => {
     }
   }
   throw new ServerError(400, `Unsupported key type: ${jwtAlg}`)
+}
+
+export const ensureHttpPrefix = (str: string): string => {
+  if (str.startsWith('http://') || str.startsWith('https://')) {
+    return str
+  }
+  return `https://${str}`
 }

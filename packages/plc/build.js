@@ -13,6 +13,8 @@ require('esbuild')
     platform: 'node',
     assetNames: 'src/static',
     external: [
+      './node_modules/better-sqlite3/*',
+      '../../node_modules/better-sqlite3/*',
       './node_modules/sqlite3/*',
       '../../node_modules/sqlite3/*',
       '../../node_modules/level/*',

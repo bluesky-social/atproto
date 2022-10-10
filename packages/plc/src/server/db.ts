@@ -124,7 +124,7 @@ export class Database {
 
   async opsForDid(did: string): Promise<t.Operation[]> {
     const ops = await this._opsForDid(did)
-    return ops.filter((op) => !op.nullified).map((op) => op.operation)
+    return ops.map((op) => op.operation)
   }
 
   async _opsForDid(did: string): Promise<t.IndexedOperation[]> {
@@ -132,6 +132,7 @@ export class Database {
       .selectFrom('operations')
       .selectAll()
       .where('did', '=', did)
+      .where('nullified', '=', 0)
       .orderBy('createdAt', 'asc')
       .execute()
 

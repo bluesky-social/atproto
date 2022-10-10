@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "scripts": {
     "test": "jest",
+    "test:log": "cat test.log | pino-pretty",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",

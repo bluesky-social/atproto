@@ -32,7 +32,7 @@ describe('plc DID document', () => {
     const isValid = check.is(createOp, t.def.createOp)
     expect(isValid).toBeTruthy()
     ops.push(createOp)
-    did = await operations.didForCreateOp(createOp as any)
+    did = await operations.didForCreateOp(createOp)
   })
 
   it('parses an operation log with no updates', async () => {
@@ -216,7 +216,7 @@ describe('plc DID document', () => {
   })
 
   it('requires that the log start with a create operation', async () => {
-    const [_first, ...rest] = ops
+    const rest = ops.slice(1)
     expect(document.validateOperationLog(did, rest)).rejects.toThrow()
   })
 
@@ -261,5 +261,28 @@ describe('plc DID document', () => {
     expect(doc.service[0].id).toEqual('#atpPds')
     expect(doc.service[0].type).toEqual('AtpPersonalDataServer')
     expect(doc.service[0].serviceEndpoint).toEqual(atpPds)
+  })
+
+  it('formats a valid DID document regardless of leading https://', async () => {
+    username = 'https://alice.example.com'
+    const prev = await cidForData(ops[ops.length - 1])
+    const op1 = await operations.updateUsername(
+      username,
+      prev.toString(),
+      signingKey,
+    )
+    atpPds = 'example.com'
+    const prev2 = await cidForData(op1)
+    const op2 = await operations.updateAtpPds(
+      atpPds,
+      prev2.toString(),
+      signingKey,
+    )
+    ops.push(op1)
+    ops.push(op2)
+    const data = await document.validateOperationLog(did, ops)
+    const doc = await document.formatDidDoc(data)
+    expect(doc.alsoKnownAs).toEqual([username])
+    expect(doc.service[0].serviceEndpoint).toEqual(`https://${atpPds}`)
   })
 })

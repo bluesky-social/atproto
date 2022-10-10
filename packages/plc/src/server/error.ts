@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
+import * as locals from './locals'
 
 export const handler = (
   err: Error,
@@ -6,13 +7,14 @@ export const handler = (
   res: Response,
   _next: NextFunction,
 ) => {
+  const { logger } = locals.get(res)
   let status
   if (ServerError.is(err)) {
     status = err.status
-    console.log('Info: ', err.message)
+    logger.info(err, 'handled server error')
   } else {
     status = 500
-    console.log('Error: ', err.message)
+    logger.error(err, 'unexpected internal server error')
   }
   res.status(status).send(err.message)
 }
@@ -25,7 +27,6 @@ export class ServerError extends Error {
   }
 
   static is(obj: unknown): obj is ServerError {
-    // @TODO would be nice to pull some of this out into an _actual_ `common` package
     return (
       !!obj &&
       typeof obj === 'object' &&
