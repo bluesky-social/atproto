@@ -22,7 +22,7 @@ export default function (server: Server) {
 
       const authorIsDid = author.startsWith('did:')
 
-      // @TODO break this query up, share parts with home feed
+      // @TODO break this query up, share parts with home feed and post thread
       const builder = db.db
         .selectFrom('todo_social_post as post')
         // Determine result set of posts and reposts

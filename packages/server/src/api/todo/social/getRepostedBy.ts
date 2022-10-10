@@ -1,9 +1,5 @@
 import { Server } from '../../../lexicon'
 import * as GetRepostedBy from '../../../lexicon/types/todo/social/getRepostedBy'
-import { AdxRecord } from '../../../db/record'
-import { ProfileIndex } from '../../../db/records/profile'
-import { User } from '../../../db/user'
-import { RepostIndex } from '../../../db/records/repost'
 import * as locals from '../../../locals'
 import { dateFromDb, dateToDb } from '../../../db/util'
 
@@ -13,31 +9,34 @@ export default function (server: Server) {
       const { uri, limit, before } = params
       const { db } = locals.get(res)
 
-      const builder = db.db
-        .createQueryBuilder()
+      let builder = db.db
+        .selectFrom('todo_social_repost as repost')
+        .where('repost.subject', '=', uri)
+        .innerJoin('record', 'repost.uri', 'record.uri')
+        .innerJoin('user', 'repost.creator', 'user.did')
+        .leftJoin(
+          'todo_social_profile as profile',
+          'profile.creator',
+          'user.did',
+        )
         .select([
-          'user.did AS did',
-          'user.username AS name',
-          'profile.displayName AS displayName',
-          'repost.createdAt AS createdAt',
-          'record.indexedAt AS indexedAt',
+          'user.did as did',
+          'user.username as name',
+          'profile.displayName as displayName',
+          'repost.createdAt as createdAt',
+          'record.indexedAt as indexedAt',
         ])
-        .from(RepostIndex, 'repost')
-        .leftJoin(AdxRecord, 'record', 'repost.uri = record.uri')
-        .leftJoin(User, 'user', 'repost.creator = user.did')
-        .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
-        .where('repost.subject = :uri', { uri })
-        .orderBy('repost.createdAt', 'DESC')
+        .orderBy('repost.createdAt', 'desc')
 
+      // Paginate
       if (before !== undefined) {
-        builder.andWhere('repost.createdAt < :before', {
-          before: dateToDb(before),
-        })
+        builder = builder.where('repost.createdAt', '<', dateToDb(before))
       }
       if (limit !== undefined) {
-        builder.limit(limit)
+        builder = builder.limit(limit)
       }
-      const repostedByRes = await builder.getRawMany()
+
+      const repostedByRes = await builder.execute()
 
       const repostedBy = repostedByRes.map((row) => ({
         did: row.did,

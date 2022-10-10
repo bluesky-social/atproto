@@ -1,7 +1,6 @@
+import { Kysely } from 'kysely'
 import { TodoSocialGetAuthorFeed, TodoSocialGetHomeFeed } from '@adxp/api'
-import { DataSource } from 'typeorm'
-import { ProfileIndex } from '../../../db/records/profile'
-import { User } from '../../../db/user'
+import { DatabaseSchema } from '../../../db/database-schema'
 import * as util from '../../../db/util'
 
 type UserInfo = {
@@ -11,20 +10,19 @@ type UserInfo = {
 }
 
 export const getUserInfo = async (
-  db: DataSource,
+  db: Kysely<DatabaseSchema>,
   user: string,
 ): Promise<UserInfo> => {
   const userInfo = await db
-    .createQueryBuilder()
+    .selectFrom('user')
+    .where(util.userWhereClause(user))
+    .leftJoin('todo_social_profile as profile', 'profile.creator', 'user.did')
     .select([
-      'user.did AS did',
-      'user.username AS name',
-      'profile.displayName AS displayName',
+      'user.did as did',
+      'user.username as name',
+      'profile.displayName as displayName',
     ])
-    .from(User, 'user')
-    .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
-    .where(util.userWhereClause(user), { user })
-    .getRawOne()
+    .executeTakeFirst()
   if (!userInfo) {
     throw new Error(`Could not find entry for user: ${user}`)
   }

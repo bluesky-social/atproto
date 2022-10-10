@@ -1,19 +1,16 @@
 import { sql } from 'kysely'
-import { EntityTarget, SelectQueryBuilder } from 'typeorm'
 
-export const userWhereClause = (user: string): string => {
+export const userWhereClause = (user: string) => {
   if (user.startsWith('did:')) {
-    return 'user.did = :user'
+    return sql<boolean>`user.did = ${user}`
   } else {
-    return 'user.username = :user'
+    return sql<boolean>`user.username = ${user}`
   }
 }
 
 export const isNotRepostClause = sql<boolean>`originator.did == post.creator`
 
 export const postOrRepostIndexedAtClause = sql<string>`iif(${isNotRepostClause}, post.indexedAt, repost.indexedAt)`
-
-type Subquery = (qb: SelectQueryBuilder<any>) => SelectQueryBuilder<any>
 
 // datetimes go to/from the database in the format 'YYYY-MM-DD HH:MM:SS'
 // whereas ISO datetimes take the format 'YYYY-MM-DDTHH:MM:SSZ', so we convert.
@@ -32,29 +29,4 @@ export const dateToDb = (date: string) => {
     return date
   }
   return date.replace('T', ' ').replace(/Z$/, '')
-}
-
-export const countSubquery = (
-  table: EntityTarget<any>,
-  subject: string,
-): Subquery => {
-  return (subquery: SelectQueryBuilder<any>) => {
-    return subquery
-      .select([`table.${subject} AS subject`, 'COUNT(table.uri) as count'])
-      .from(table, 'table')
-      .groupBy(`table.${subject}`)
-  }
-}
-
-export const existsByCreatorSubquery = (
-  table: EntityTarget<any>,
-  subject: string,
-  creator: string,
-): Subquery => {
-  return (subquery: SelectQueryBuilder<any>) => {
-    return subquery
-      .select([`table.${subject} AS subject`, 'COUNT(table.uri) as doesExist'])
-      .from(table, 'table')
-      .where('table.creator = :creator', { creator })
-  }
 }

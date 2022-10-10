@@ -29,7 +29,7 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      // @TODO break this query up, share parts with author feed
+      // @TODO break this query up, share parts with author feed and post thread
       const builder = db.db
         .selectFrom('todo_social_post as post')
         // Determine result set of posts and reposts
