@@ -1,9 +1,8 @@
+import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import { AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetNotificationCount from '../../../lexicon/types/todo/social/getNotificationCount'
-import { User } from '../../../db/user'
 import * as locals from '../../../locals'
-import { UserNotification } from '../../../db/user-notifications'
 
 export default function (server: Server) {
   server.todo.social.getNotificationCount(
@@ -15,15 +14,14 @@ export default function (server: Server) {
       }
 
       const result = await db.db
-        .createQueryBuilder()
-        .select('COUNT(*) as count')
-        .from(User, 'user')
-        .leftJoin(UserNotification, 'notif', 'notif.userDid = user.did')
-        .where('user.did = :requester', { requester })
-        .andWhere('notif.createdAt > user.lastSeenNotifs')
-        .getRawOne()
+        .selectFrom('user')
+        .select(sql<number>`count(*)`.as('count'))
+        .leftJoin('user_notification as notif', 'notif.userDid', 'user.did')
+        .where('user.did', '=', requester)
+        .where('notif.indexedAt', '>', 'user.lastSeenNotifs')
+        .executeTakeFirst()
 
-      const count = result?.count || 0
+      const count = result?.count ?? 0
 
       return {
         encoding: 'application/json',
@@ -32,3 +30,4 @@ export default function (server: Server) {
     },
   )
 }
+å
