@@ -1,12 +1,7 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetProfile from '../../../lexicon/types/todo/social/getProfile'
-import { FollowIndex } from '../../../db/records/follow'
-import { PostIndex } from '../../../db/records/post'
-import { ProfileBadgeIndex, ProfileIndex } from '../../../db/records/profile'
-import { User } from '../../../db/user'
 import * as util from '../../../db/util'
-import { BadgeIndex } from '../../../db/records/badge'
 import * as locals from '../../../locals'
 
 export default function (server: Server) {
@@ -21,86 +16,69 @@ export default function (server: Server) {
       }
 
       const queryRes = await db.db
-        .createQueryBuilder()
+        .selectFrom('user')
+        .where(util.userWhereClause(user))
+        .leftJoin(
+          'todo_social_profile as profile',
+          'profile.creator',
+          'user.did',
+        )
+        .leftJoin(
+          db.db
+            .selectFrom('todo_social_follow')
+            .select([
+              'todo_social_follow.creator as subject',
+              db.db.fn.count<number>('todo_social_follow.uri').as('count'),
+            ])
+            .groupBy('subject')
+            .as('follows_count'),
+          'follows_count.subject',
+          'user.did',
+        )
+        .leftJoin(
+          db.db
+            .selectFrom('todo_social_follow')
+            .select([
+              'todo_social_follow.subject as subject',
+              db.db.fn.count<number>('todo_social_follow.uri').as('count'),
+            ])
+            .groupBy('subject')
+            .as('followers_count'),
+          'followers_count.subject',
+          'user.did',
+        )
+        .leftJoin(
+          db.db
+            .selectFrom('todo_social_post')
+            .select([
+              'todo_social_post.creator as subject',
+              db.db.fn.count<number>('todo_social_post.uri').as('count'),
+            ])
+            .groupBy('subject')
+            .as('posts_count'),
+          'posts_count.subject',
+          'user.did',
+        )
+        .leftJoin('todo_social_follow as requester_follow', (join) =>
+          join
+            .on('requester_follow.creator', '=', requester)
+            .onRef('requester_follow.subject', '=', 'user.did'),
+        )
         .select([
-          'user.did AS did',
-          'user.username AS name',
-          'profile.displayName AS displayName',
-          'profile.description AS description',
-          'follows_count.count AS followsCount',
-          'followers_count.count AS followersCount',
-          'posts_count.count AS postsCount',
-          'requester_follow.uri AS requesterFollow',
+          'user.did as did',
+          'user.username as name',
+          'profile.displayName as displayName',
+          'profile.description as description',
+          'follows_count.count as followsCount',
+          'followers_count.count as followersCount',
+          'posts_count.count as postsCount',
+          'requester_follow.uri as requesterFollow',
         ])
-        .from(User, 'user')
-        .leftJoin(ProfileIndex, 'profile', 'profile.creator = user.did')
-        .leftJoin(
-          util.countSubquery(FollowIndex, 'creator'),
-          'follows_count',
-          'follows_count.subject = user.did',
-        )
-        .leftJoin(
-          util.countSubquery(FollowIndex, 'subject'),
-          'followers_count',
-          'followers_count.subject = user.did',
-        )
-        .leftJoin(
-          util.countSubquery(PostIndex, 'creator'),
-          'posts_count',
-          'posts_count.subject = user.did',
-        )
-        .leftJoin(
-          FollowIndex,
-          'requester_follow',
-          `requester_follow.creator = :requester AND requester_follow.subject = user.did`,
-          { requester },
-        )
-        .where(util.userWhereClause(user), { user })
-        .getRawOne()
+        .executeTakeFirst()
 
       if (!queryRes) {
         throw new InvalidRequestError(`Profile not found`)
       }
-
-      const badgesRes = await db.db
-        .createQueryBuilder()
-        .select([
-          'badge.uri AS uri',
-          'badge.assertionType AS assertionType',
-          'badge.assertionTag AS assertionTag',
-          'issuer.did AS issuerDid',
-          'issuer.username AS issuerName',
-          'issuer_profile.displayName AS issuerDisplayName',
-          'badge.createdAt AS createdAt',
-        ])
-        .from(ProfileIndex, 'profile')
-        .innerJoin(
-          ProfileBadgeIndex,
-          'profile_badge',
-          'profile_badge.profile = profile.uri',
-        )
-        .innerJoin(BadgeIndex, 'badge', 'badge.uri = profile_badge.badge')
-        .leftJoin(User, 'issuer', 'issuer.did = badge.creator')
-        .leftJoin(
-          ProfileIndex,
-          'issuer_profile',
-          'issuer_profile.creator = issuer.did',
-        )
-        .where('profile.creator = :did', { did: queryRes.did })
-        .getRawMany()
-
-      const badges = badgesRes.map((row) => ({
-        uri: row.uri,
-        issuer: {
-          did: row.issuerDid,
-          name: row.issuerName,
-          displayName: row.issuerDisplayName || undefined,
-        },
-        assertion: row.assertionType
-          ? { type: row.assertionType, tag: row.assertionTag || undefined }
-          : undefined,
-        createdAt: row.createdAt,
-      }))
 
       return {
         encoding: 'application/json',
@@ -112,7 +90,7 @@ export default function (server: Server) {
           followsCount: queryRes.followsCount || 0,
           followersCount: queryRes.followersCount || 0,
           postsCount: queryRes.postsCount || 0,
-          badges: badges,
+          badges: [], // @TODO map this when implementing badging
           myState: {
             follow: queryRes.requesterFollow || undefined,
           },
