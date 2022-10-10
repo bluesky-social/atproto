@@ -1,10 +1,6 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetUserFollowers from '../../../lexicon/types/todo/social/getUserFollowers'
-import { AdxRecord } from '../../../db/record'
-import { FollowIndex } from '../../../db/records/follow'
-import { ProfileIndex } from '../../../db/records/profile'
-import { User } from '../../../db/user'
 import * as util from './util'
 import * as locals from '../../../locals'
 import { dateFromDb, dateToDb } from '../../../db/util'
@@ -19,32 +15,38 @@ export default function (server: Server) {
         throw new InvalidRequestError(`User not found: ${user}`)
       })
 
-      const followersReq = db.db
-        .createQueryBuilder()
+      let followersReq = db.db
+        .selectFrom('todo_social_follow as follow')
+        .innerJoin('record', 'record.uri', 'follow.uri')
+        .innerJoin('user as creator', 'creator.did', 'record.did')
+        .leftJoin(
+          'todo_social_profile as profile',
+          'profile.creator',
+          'record.did',
+        )
+        .where('follow.subject', '=', subject.did)
         .select([
-          'creator.did AS did',
-          'creator.username AS name',
-          'profile.displayName AS displayName',
-          'follow.createdAt AS createdAt',
-          'record.indexedAt AS indexedAt',
+          'creator.did as did',
+          'creator.username as name',
+          'profile.displayName as displayName',
+          'follow.createdAt as createdAt',
+          'record.indexedAt as indexedAt',
         ])
-        .from(FollowIndex, 'follow')
-        .innerJoin(AdxRecord, 'record', 'record.uri = follow.uri')
-        .innerJoin(User, 'creator', 'creator.did = record.did')
-        .leftJoin(ProfileIndex, 'profile', 'profile.creator = record.did')
-        .where('follow.subject = :subject', { subject: subject.did })
-        .orderBy('follow.createdAt', 'DESC')
+        .orderBy('follow.createdAt', 'desc')
 
+      // Paginate
       if (before !== undefined) {
-        followersReq.andWhere('follow.createdAt < :before', {
-          before: dateToDb(before),
-        })
+        followersReq = followersReq.where(
+          'follow.createdAt',
+          '<',
+          dateToDb(before),
+        )
       }
       if (limit !== undefined) {
-        followersReq.limit(limit)
+        followersReq = followersReq.limit(limit)
       }
 
-      const followersRes = await followersReq.getRawMany()
+      const followersRes = await followersReq.execute()
       const followers = followersRes.map((row) => ({
         did: row.did,
         name: row.name,
