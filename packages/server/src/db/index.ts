@@ -19,7 +19,7 @@ import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import { dbLogger as log } from '../logger'
 import { DatabaseSchema, createTables } from './database-schema'
-import * as util from './util'
+import * as scrypt from './scrypt'
 
 export class Database {
   db: Kysely<DatabaseSchema>
@@ -127,7 +127,7 @@ export class Database {
       email: email,
       username: username,
       did: did,
-      password: await util.scryptHash(password),
+      password: await scrypt.hash(password),
       createdAt: new Date().toISOString(),
       lastSeenNotifs: new Date().toISOString(),
     }
@@ -136,7 +136,7 @@ export class Database {
   }
 
   async updateUserPassword(did: string, password: string) {
-    const hashedPassword = await util.scryptHash(password)
+    const hashedPassword = await scrypt.hash(password)
     await this.db
       .updateTable('user')
       .set({ password: hashedPassword })
@@ -154,7 +154,7 @@ export class Database {
       .where('username', '=', username)
       .executeTakeFirst()
     if (!found) return null
-    const validPass = await util.scryptVerify(password, found.password)
+    const validPass = await scrypt.verify(password, found.password)
     if (!validPass) return null
     return found.did
   }
