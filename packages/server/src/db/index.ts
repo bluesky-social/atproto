@@ -22,7 +22,7 @@ import { CID } from 'multiformats/cid'
 // import { User } from './user'
 // import * as util from './util'
 // import { InviteCode, InviteCodeUse } from './invite-codes'
-// import { dbLogger as log } from '../logger'
+import { dbLogger as log } from '../logger'
 import { DatabaseSchema } from './database-schema'
 
 export class Database {
@@ -169,61 +169,58 @@ export class Database {
   }
 
   canIndexRecord(collection: string, obj: unknown): boolean {
-    // const table = this.findTableForCollection(collection)
-    // return table.validateSchema(obj).valid
-    return {} as any
+    const table = this.findTableForCollection(collection)
+    return table.validateSchema(obj).valid
   }
 
   async indexRecord(uri: AdxUri, obj: unknown) {
-    // log.debug({ uri }, 'indexing record')
-    // const record = new AdxRecord()
-    // record.uri = uri.toString()
-    // record.did = uri.host
-    // if (!record.did.startsWith('did:')) {
-    //   throw new Error('Expected indexed URI to contain DID')
-    // }
-    // record.collection = uri.collection
-    // if (record.collection.length < 1) {
-    //   throw new Error('Expected indexed URI to contain a collection')
-    // }
-    // record.tid = uri.recordKey
-    // if (record.tid.length < 1) {
-    //   throw new Error('Expected indexed URI to contain a record TID')
-    // }
-    // record.raw = JSON.stringify(obj)
-    // record.indexedAt = new Date().toISOString()
-    // record.receivedAt = record.indexedAt
-    // const recordTable = this.db.getRepository(AdxRecord)
-    // await recordTable.save(record)
-    // const table = this.findTableForCollection(uri.collection)
-    // await table.set(uri, obj)
-    // const notifs = table.notifsForRecord(uri, obj)
-    // await this.notifications.process(notifs)
-    // log.info({ uri }, 'indexed record')
+    log.debug({ uri }, 'indexing record')
+    const record = {
+      uri: uri.toString(),
+      did: uri.host,
+      collection: uri.collection,
+      recordKey: uri.recordKey,
+      raw: JSON.stringify(obj),
+      indexedAt: new Date().toISOString(),
+      receivedAt: new Date().toISOString(),
+    }
+    if (!record.did.startsWith('did:')) {
+      throw new Error('Expected indexed URI to contain DID')
+    } else if (record.collection.length < 1) {
+      throw new Error('Expected indexed URI to contain a collection')
+    } else if (record.recordKey.length < 1) {
+      throw new Error('Expected indexed URI to contain a record key')
+    }
+    await this.db.insertInto('record').values(record).execute()
+    const table = this.findTableForCollection(uri.collection)
+    await table.set(uri, obj)
+    const notifs = table.notifsForRecord(uri, obj)
+    await this.notifications.process(notifs)
+    log.info({ uri }, 'indexed record')
   }
 
   async deleteRecord(uri: AdxUri) {
-    // log.debug({ uri }, 'deleting indexed record')
-    // const table = this.findTableForCollection(uri.collection)
-    // const recordTable = this.db.getRepository(AdxRecord)
-    // await Promise.all([
-    //   table.delete(uri),
-    //   recordTable.delete(uri.toString()),
-    //   this.notifications.deleteForRecord(uri),
-    // ])
-    // log.info({ uri }, 'deleted indexed record')
+    log.debug({ uri }, 'deleting indexed record')
+    const table = this.findTableForCollection(uri.collection)
+    const deleteQuery = this.db
+      .deleteFrom('record')
+      .where('uri', '=', uri.toString())
+    await Promise.all([
+      table.delete(uri),
+      deleteQuery,
+      this.notifications.deleteForRecord(uri),
+    ])
+    log.info({ uri }, 'deleted indexed record')
   }
 
   async listCollectionsForDid(did: string): Promise<string[]> {
-    // const recordTable = await this.db
-    //   .getRepository(AdxRecord)
-    //   .createQueryBuilder('record')
-    //   .select('record.collection')
-    //   .where('record.did = :did', { did })
-    //   .getRawMany()
+    const collections = await this.db
+      .selectFrom('record')
+      .select('collection')
+      .where('did', '=', did)
+      .execute()
 
-    // return recordTable
-    return {} as any
+    return collections.map((row) => row.collection)
   }
 
   async listRecordsForCollection(
@@ -234,48 +231,46 @@ export class Database {
     before?: string,
     after?: string,
   ): Promise<{ uri: string; value: unknown }[]> {
-    // const builder = await this.db
-    //   .createQueryBuilder()
-    //   .select(['record.uri AS uri, record.raw AS raw'])
-    //   .from(AdxRecord, 'record')
-    //   .where('record.did = :did', { did })
-    //   .andWhere('record.collection = :collection', { collection })
-    //   .orderBy('record.tid', reverse ? 'DESC' : 'ASC')
-    //   .limit(limit)
-    // if (before !== undefined) {
-    //   builder.andWhere('record.tid < :before', { before })
-    // }
-    // if (after !== undefined) {
-    //   builder.andWhere('record.tid > :after', { after })
-    // }
-    // const res = await builder.getRawMany()
-    // return res.map((row) => {
-    //   return {
-    //     uri: row.uri,
-    //     value: JSON.parse(row.raw),
-    //   }
-    // })
-    return {} as any
+    const builder = this.db
+      .selectFrom('record')
+      .selectAll()
+      .where('did', '=', did)
+      .where('collection', '=', collection)
+      .orderBy('recordKey', reverse ? 'desc' : 'asc')
+      .limit(limit)
+
+    if (before !== undefined) {
+      builder.where('recordKey', '<', before)
+    }
+    if (after !== undefined) {
+      builder.where('recordKey', '>', after)
+    }
+    const res = await builder.execute()
+    return res.map((row) => {
+      return {
+        uri: row.uri,
+        value: JSON.parse(row.raw),
+      }
+    })
   }
 
   async getRecord(uri: AdxUri): Promise<unknown | null> {
-    // const record = await this.db
-    //   .getRepository(AdxRecord)
-    //   .findOneBy({ uri: uri.toString() })
-    // if (record === null) return null
-    // return JSON.parse(record.raw)
-    return {} as any
+    const record = await this.db
+      .selectFrom('record')
+      .select('raw')
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    return record ? JSON.parse(record.raw) : null
   }
 
   findTableForCollection(collection: string) {
-    // const found = Object.values(this.records).find(
-    //   (plugin) => plugin.collection === collection,
-    // )
-    // if (!found) {
-    //   throw new Error('Could not find table for collection')
-    // }
-    // return found
-    return {} as any
+    const found = Object.values(this.records).find(
+      (plugin) => plugin.collection === collection,
+    )
+    if (!found) {
+      throw new Error('Could not find table for collection')
+    }
+    return found
   }
 }
 
