@@ -17,9 +17,10 @@
       "$defs": {
         "post": {
           "type": "object",
-          "required": ["uri", "author", "record", "replyCount", "likeCount", "repostCount", "indexedAt"],
+          "required": ["uri", "cid", "author", "record", "replyCount", "likeCount", "repostCount", "indexedAt"],
           "properties": {
             "uri": {"type": "string"},
+            "cid": {"type": "string"},
             "author": {"$ref": "#/$defs/user"},
             "record": {"type": "object"},
             "embed": {

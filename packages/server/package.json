@@ -6,6 +6,7 @@
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../schemas/todo.adx/* ../../schemas/todo.social/*",
     "build": "node ./build.js",
+    "build:typecheck": "tsc src/bin.ts",
     "start": "node dist/bin.js",
     "test": "jest",
     "test:log": "cat test.log | pino-pretty",

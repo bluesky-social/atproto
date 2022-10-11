@@ -19,6 +19,7 @@ export interface OutputSchema {
 }
 export interface Notification {
   uri: string;
+  cid: string;
   author: {
     did: string,
     name: string,

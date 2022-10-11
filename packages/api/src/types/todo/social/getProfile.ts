@@ -28,6 +28,7 @@ export interface OutputSchema {
 }
 export interface Badge {
   uri: string;
+  cid: string;
   error?: string;
   issuer?: {
     did: string,

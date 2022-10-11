@@ -4,9 +4,10 @@
   "type": "record",
   "record": {
     "type": "object",
-    "required": ["subject", "createdAt"],
+    "required": ["subject", "subjectCid", "createdAt"],
     "properties": {
       "subject": {"type": "string"},
+      "subjectCid": {"type": "string"},
       "createdAt": {"type": "string", "format": "date-time"}
     }
   }

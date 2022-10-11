@@ -9,5 +9,6 @@ export interface Record {
 }
 export interface BadgeRef {
   uri: string;
+  cid: string;
   [k: string]: unknown;
 }

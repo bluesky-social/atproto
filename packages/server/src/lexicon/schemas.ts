@@ -427,15 +427,21 @@ export const methodSchemas: MethodSchema[] = [
         description: 'The name or DID of the repo.',
         required: true,
       },
-      type: {
+      collection: {
         type: 'string',
-        description: 'The NSID of the record type.',
+        description: 'The NSID of the collection.',
         required: true,
       },
-      tid: {
+      recordKey: {
         type: 'string',
-        description: 'The TID of the record.',
+        description: 'The key of the record.',
         required: true,
+      },
+      cid: {
+        type: 'string',
+        description:
+          'The CID of the version of the record. If not specified, then return the most recent version.',
+        required: false,
       },
     },
     output: {
@@ -445,6 +451,9 @@ export const methodSchemas: MethodSchema[] = [
         required: ['uri', 'value'],
         properties: {
           uri: {
+            type: 'string',
+          },
+          cid: {
             type: 'string',
           },
           value: {
@@ -465,7 +474,7 @@ export const methodSchemas: MethodSchema[] = [
         description: 'The username or DID of the repo.',
         required: true,
       },
-      type: {
+      collection: {
         type: 'string',
         description: 'The NSID of the record type.',
         required: true,
@@ -505,6 +514,9 @@ export const methodSchemas: MethodSchema[] = [
                 uri: {
                   type: 'string',
                 },
+                cid: {
+                  type: 'string',
+                },
                 value: {
                   type: 'object',
                 },
@@ -526,12 +538,12 @@ export const methodSchemas: MethodSchema[] = [
         description: 'The DID of the repo.',
         required: true,
       },
-      type: {
+      collection: {
         type: 'string',
         description: 'The NSID of the record type.',
         required: true,
       },
-      tid: {
+      recordKey: {
         type: 'string',
         description: 'The TID of the record.',
         required: true,
@@ -745,6 +757,7 @@ export const methodSchemas: MethodSchema[] = [
             required: [
               'cursor',
               'uri',
+              'cid',
               'author',
               'record',
               'replyCount',
@@ -757,6 +770,9 @@ export const methodSchemas: MethodSchema[] = [
                 type: 'string',
               },
               uri: {
+                type: 'string',
+              },
+              cid: {
                 type: 'string',
               },
               author: {
@@ -911,6 +927,7 @@ export const methodSchemas: MethodSchema[] = [
             required: [
               'cursor',
               'uri',
+              'cid',
               'author',
               'record',
               'replyCount',
@@ -923,6 +940,9 @@ export const methodSchemas: MethodSchema[] = [
                 type: 'string',
               },
               uri: {
+                type: 'string',
+              },
+              cid: {
                 type: 'string',
               },
               author: {
@@ -1050,6 +1070,10 @@ export const methodSchemas: MethodSchema[] = [
         type: 'string',
         required: true,
       },
+      cid: {
+        type: 'string',
+        required: false,
+      },
       limit: {
         type: 'number',
         maximum: 100,
@@ -1065,6 +1089,9 @@ export const methodSchemas: MethodSchema[] = [
         required: ['uri', 'likedBy'],
         properties: {
           uri: {
+            type: 'string',
+          },
+          cid: {
             type: 'string',
           },
           likedBy: {
@@ -1147,6 +1174,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'object',
             required: [
               'uri',
+              'cid',
               'author',
               'reason',
               'record',
@@ -1157,6 +1185,9 @@ export const methodSchemas: MethodSchema[] = [
               uri: {
                 type: 'string',
                 format: 'uri',
+              },
+              cid: {
+                type: 'string',
               },
               author: {
                 type: 'object',
@@ -1226,6 +1257,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'object',
             required: [
               'uri',
+              'cid',
               'author',
               'record',
               'replyCount',
@@ -1235,6 +1267,9 @@ export const methodSchemas: MethodSchema[] = [
             ],
             properties: {
               uri: {
+                type: 'string',
+              },
+              cid: {
                 type: 'string',
               },
               author: {
@@ -1423,9 +1458,12 @@ export const methodSchemas: MethodSchema[] = [
         $defs: {
           badge: {
             type: 'object',
-            required: ['uri'],
+            required: ['uri', 'cid'],
             properties: {
               uri: {
+                type: 'string',
+              },
+              cid: {
                 type: 'string',
               },
               error: {
@@ -1474,6 +1512,10 @@ export const methodSchemas: MethodSchema[] = [
       uri: {
         type: 'string',
         required: true,
+      },
+      cid: {
+        type: 'string',
+        required: false,
       },
       limit: {
         type: 'number',
@@ -1778,9 +1820,12 @@ export const recordSchemas: RecordSchema[] = [
     description: 'A social follow',
     record: {
       type: 'object',
-      required: ['subject', 'createdAt'],
+      required: ['subject', 'subjectCid', 'createdAt'],
       properties: {
         subject: {
+          type: 'string',
+        },
+        subjectCid: {
           type: 'string',
         },
         createdAt: {
@@ -1796,9 +1841,12 @@ export const recordSchemas: RecordSchema[] = [
     type: 'record',
     record: {
       type: 'object',
-      required: ['subject', 'createdAt'],
+      required: ['subject', 'subjectCid', 'createdAt'],
       properties: {
         subject: {
+          type: 'string',
+        },
+        subjectCid: {
           type: 'string',
         },
         createdAt: {
@@ -1950,9 +1998,12 @@ export const recordSchemas: RecordSchema[] = [
       $defs: {
         badgeRef: {
           type: 'object',
-          required: ['uri'],
+          required: ['uri', 'cid'],
           properties: {
             uri: {
+              type: 'string',
+            },
+            cid: {
               type: 'string',
             },
           },
@@ -1966,9 +2017,12 @@ export const recordSchemas: RecordSchema[] = [
     type: 'record',
     record: {
       type: 'object',
-      required: ['subject', 'createdAt'],
+      required: ['subject', 'subjectCid', 'createdAt'],
       properties: {
         subject: {
+          type: 'string',
+        },
+        subjectCid: {
           type: 'string',
         },
         createdAt: {
