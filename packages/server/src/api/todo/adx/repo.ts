@@ -125,7 +125,7 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
     }
-    await db.setRepoRoot(did, repo.cid)
+    await db.updateRepoRoot(did, repo.cid)
 
     return {
       encoding: 'application/json',
@@ -166,7 +166,7 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
     }
-    await db.setRepoRoot(did, repo.cid)
+    await db.updateRepoRoot(did, repo.cid)
     // @TODO update subscribers
 
     return {
@@ -208,7 +208,7 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Could not index record: ${err}`)
       }
     }
-    await db.setRepoRoot(did, repo.cid)
+    await db.updateRepoRoot(did, repo.cid)
     // @TODO update subscribers
     return {
       encoding: 'application/json',
@@ -238,7 +238,7 @@ export default function (server: Server) {
         'failed to delete indexed record',
       )
     }
-    await db.setRepoRoot(did, repo.cid)
+    await db.updateRepoRoot(did, repo.cid)
     // @TODO update subscribers
   })
 }

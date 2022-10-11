@@ -1,4 +1,5 @@
-import { DataSource } from 'typeorm'
+import { Kysely, SqliteDialect, sql } from 'kysely'
+import SqliteDB from 'better-sqlite3'
 import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
 import * as Badge from '../lexicon/types/todo/social/badge'
@@ -7,73 +8,52 @@ import * as Like from '../lexicon/types/todo/social/like'
 import * as Post from '../lexicon/types/todo/social/post'
 import * as Profile from '../lexicon/types/todo/social/profile'
 import * as Repost from '../lexicon/types/todo/social/repost'
-import postPlugin, { PostEntityIndex, PostIndex } from './records/post'
-import likePlugin, { LikeIndex } from './records/like'
-import followPlugin, { FollowIndex } from './records/follow'
-import badgePlugin, { BadgeIndex } from './records/badge'
-import profilePlugin, {
-  ProfileBadgeIndex,
-  ProfileIndex,
-} from './records/profile'
-import repostPlugin, { RepostIndex } from './records/repost'
-import notificationsPlugin, { UserNotification } from './user-notifications'
+import postPlugin, { TodoSocialPost } from './records/post'
+import likePlugin, { TodoSocialLike } from './records/like'
+import repostPlugin, { TodoSocialRepost } from './records/repost'
+import followPlugin, { TodoSocialFollow } from './records/follow'
+import badgePlugin, { TodoSocialBadge } from './records/badge'
+import profilePlugin, { TodoSocialProfile } from './records/profile'
+import notificationPlugin from './tables/user-notification'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
-import { RepoRoot } from './repo-root'
-import { AdxRecord } from './record'
-import { User } from './user'
-import * as util from './util'
-import { InviteCode, InviteCodeUse } from './invite-codes'
 import { dbLogger as log } from '../logger'
+import { DatabaseSchema, createTables } from './database-schema'
+import * as scrypt from './scrypt'
+import { User } from './tables/user'
+import { dummyDialect } from './util'
 
 export class Database {
-  db: DataSource
+  db: Kysely<DatabaseSchema>
   records: {
-    posts: DbRecordPlugin<Post.Record, PostIndex>
-    likes: DbRecordPlugin<Like.Record, LikeIndex>
-    follows: DbRecordPlugin<Follow.Record, FollowIndex>
-    badges: DbRecordPlugin<Badge.Record, BadgeIndex>
-    profiles: DbRecordPlugin<Profile.Record, ProfileIndex>
-    reposts: DbRecordPlugin<Repost.Record, RepostIndex>
+    post: DbRecordPlugin<Post.Record, TodoSocialPost>
+    like: DbRecordPlugin<Like.Record, TodoSocialLike>
+    repost: DbRecordPlugin<Repost.Record, TodoSocialRepost>
+    follow: DbRecordPlugin<Follow.Record, TodoSocialFollow>
+    profile: DbRecordPlugin<Profile.Record, TodoSocialProfile>
+    badge: DbRecordPlugin<Badge.Record, TodoSocialBadge>
   }
   notifications: NotificationsPlugin
 
-  constructor(db: DataSource) {
+  constructor(db: Kysely<DatabaseSchema>) {
     this.db = db
     this.records = {
-      posts: postPlugin(db),
-      likes: likePlugin(db),
-      follows: followPlugin(db),
-      badges: badgePlugin(db),
-      profiles: profilePlugin(db),
-      reposts: repostPlugin(db),
+      post: postPlugin(db),
+      like: likePlugin(db),
+      repost: repostPlugin(db),
+      follow: followPlugin(db),
+      badge: badgePlugin(db),
+      profile: profilePlugin(db),
     }
-    this.notifications = notificationsPlugin(db)
+    this.notifications = notificationPlugin(db)
   }
 
   static async sqlite(location: string): Promise<Database> {
-    const db = new DataSource({
-      type: 'sqlite',
-      database: location,
-      entities: [
-        User,
-        RepoRoot,
-        AdxRecord,
-        PostIndex,
-        PostEntityIndex,
-        LikeIndex,
-        FollowIndex,
-        BadgeIndex,
-        ProfileIndex,
-        ProfileBadgeIndex,
-        RepostIndex,
-        UserNotification,
-        InviteCode,
-        InviteCodeUse,
-      ],
-      synchronize: true,
+    const db = new Kysely<DatabaseSchema>({
+      dialect: new SqliteDialect({
+        database: new SqliteDB(location),
+      }),
     })
-    await db.initialize()
     return new Database(db)
   }
 
@@ -85,43 +65,51 @@ export class Database {
     await this.db.destroy()
   }
 
-  async getRepoRoot(did: string): Promise<CID | null> {
-    const table = this.db.getRepository(RepoRoot)
-    const found = await table.findOneBy({ did })
-    if (found === null) return null
-    return CID.parse(found.root)
+  async createTables(): Promise<void> {
+    await createTables(this.db)
   }
 
-  async setRepoRoot(did: string, root: CID) {
+  async getRepoRoot(did: string): Promise<CID | null> {
+    const found = await this.db
+      .selectFrom('repo_root')
+      .selectAll()
+      .where('did', '=', did)
+      .executeTakeFirst()
+    return found ? CID.parse(found.root) : null
+  }
+
+  async updateRepoRoot(did: string, root: CID) {
     log.debug({ did, root: root.toString() }, 'updating repo root')
-    const table = this.db.getRepository(RepoRoot)
-    let newRoot = await table.findOneBy({ did })
-    if (newRoot === null) {
-      newRoot = new RepoRoot()
-      newRoot.did = did
-    }
-    newRoot.root = root.toString()
-    await table.save(newRoot)
+    await this.db
+      .updateTable('repo_root')
+      .set({ root: root.toString() })
+      .where('did', '=', did)
+      .execute()
     log.info({ did, root: root.toString() }, 'updated repo root')
   }
 
-  async getUser(
-    usernameOrDid: string,
-  ): Promise<{ username: string; did: string } | null> {
-    const table = this.db.getRepository(User)
-    const found = usernameOrDid.startsWith('did:')
-      ? await table.findOneBy({ did: usernameOrDid })
-      : await table.findOneBy({ username: usernameOrDid })
-
-    return found ? { username: found.username, did: found.did } : null
+  async getUser(usernameOrDid: string): Promise<User | null> {
+    let query = this.db.selectFrom('user').selectAll()
+    if (usernameOrDid.startsWith('did:')) {
+      query = query.where('did', '=', usernameOrDid)
+    } else {
+      query = query.where(
+        sql`UPPER(username)`,
+        '=',
+        usernameOrDid.toUpperCase(),
+      )
+    }
+    const found = await query.executeTakeFirst()
+    return found || null
   }
 
-  async getUserByEmail(
-    email: string,
-  ): Promise<{ username: string; did: string } | null> {
-    const table = this.db.getRepository(User)
-    const found = await table.findOneBy({ email })
-    return found ? { username: found.username, did: found.did } : null
+  async getUserByEmail(email: string): Promise<User | null> {
+    const found = await this.db
+      .selectFrom('user')
+      .selectAll()
+      .where(sql`UPPER(email)`, '=', email.toUpperCase())
+      .executeTakeFirst()
+    return found || null
   }
 
   async getUserDid(usernameOrDid: string): Promise<string | null> {
@@ -137,24 +125,24 @@ export class Database {
     password: string,
   ) {
     log.debug({ username, did, email }, 'registering user')
-    const user = new User()
-    user.email = email
-    user.username = username
-    user.did = did
-    user.password = await util.scryptHash(password)
-    user.createdAt = new Date().toISOString()
-    user.lastSeenNotifs = new Date().toISOString()
-    await this.db.getRepository(User).save(user)
+    const user = {
+      email: email,
+      username: username,
+      did: did,
+      password: await scrypt.hash(password),
+      createdAt: new Date().toISOString(),
+      lastSeenNotifs: new Date().toISOString(),
+    }
+    await this.db.insertInto('user').values(user).execute()
     log.info({ username, did, email }, 'registered user')
   }
 
   async updateUserPassword(did: string, password: string) {
-    const hashedPassword = await util.scryptHash(password)
-    return await this.db
-      .createQueryBuilder()
-      .update(User)
+    const hashedPassword = await scrypt.hash(password)
+    await this.db
+      .updateTable('user')
       .set({ password: hashedPassword })
-      .where('did = :did', { did })
+      .where('did', '=', did)
       .execute()
   }
 
@@ -162,9 +150,13 @@ export class Database {
     username: string,
     password: string,
   ): Promise<string | null> {
-    const found = await this.db.getRepository(User).findOneBy({ username })
+    const found = await this.db
+      .selectFrom('user')
+      .selectAll()
+      .where('username', '=', username)
+      .executeTakeFirst()
     if (!found) return null
-    const validPass = await util.scryptVerify(password, found.password)
+    const validPass = await scrypt.verify(password, found.password)
     if (!validPass) return null
     return found.did
   }
@@ -188,32 +180,25 @@ export class Database {
 
   async indexRecord(uri: AdxUri, obj: unknown) {
     log.debug({ uri }, 'indexing record')
-    const record = new AdxRecord()
-    record.uri = uri.toString()
-
-    record.did = uri.host
+    const record = {
+      uri: uri.toString(),
+      did: uri.host,
+      collection: uri.collection,
+      recordKey: uri.recordKey,
+      raw: JSON.stringify(obj),
+      indexedAt: new Date().toISOString(),
+      receivedAt: new Date().toISOString(),
+    }
     if (!record.did.startsWith('did:')) {
       throw new Error('Expected indexed URI to contain DID')
-    }
-    record.collection = uri.collection
-    if (record.collection.length < 1) {
+    } else if (record.collection.length < 1) {
       throw new Error('Expected indexed URI to contain a collection')
+    } else if (record.recordKey.length < 1) {
+      throw new Error('Expected indexed URI to contain a record key')
     }
-    record.tid = uri.recordKey
-    if (record.tid.length < 1) {
-      throw new Error('Expected indexed URI to contain a record TID')
-    }
-    record.raw = JSON.stringify(obj)
-
-    record.indexedAt = new Date().toISOString()
-    record.receivedAt = record.indexedAt
-
-    const recordTable = this.db.getRepository(AdxRecord)
-    await recordTable.save(record)
-
+    await this.db.insertInto('record').values(record).execute()
     const table = this.findTableForCollection(uri.collection)
-    await table.set(uri, obj)
-
+    await table.insert(uri, obj)
     const notifs = table.notifsForRecord(uri, obj)
     await this.notifications.process(notifs)
     log.info({ uri }, 'indexed record')
@@ -222,24 +207,26 @@ export class Database {
   async deleteRecord(uri: AdxUri) {
     log.debug({ uri }, 'deleting indexed record')
     const table = this.findTableForCollection(uri.collection)
-    const recordTable = this.db.getRepository(AdxRecord)
+    const deleteQuery = this.db
+      .deleteFrom('record')
+      .where('uri', '=', uri.toString())
+      .execute()
     await Promise.all([
       table.delete(uri),
-      recordTable.delete(uri.toString()),
+      deleteQuery,
       this.notifications.deleteForRecord(uri),
     ])
     log.info({ uri }, 'deleted indexed record')
   }
 
   async listCollectionsForDid(did: string): Promise<string[]> {
-    const recordTable = await this.db
-      .getRepository(AdxRecord)
-      .createQueryBuilder('record')
-      .select('record.collection')
-      .where('record.did = :did', { did })
-      .getRawMany()
+    const collections = await this.db
+      .selectFrom('record')
+      .select('collection')
+      .where('did', '=', did)
+      .execute()
 
-    return recordTable
+    return collections.map((row) => row.collection)
   }
 
   async listRecordsForCollection(
@@ -250,23 +237,21 @@ export class Database {
     before?: string,
     after?: string,
   ): Promise<{ uri: string; value: unknown }[]> {
-    const builder = await this.db
-      .createQueryBuilder()
-      .select(['record.uri AS uri, record.raw AS raw'])
-      .from(AdxRecord, 'record')
-      .where('record.did = :did', { did })
-      .andWhere('record.collection = :collection', { collection })
-      .orderBy('record.tid', reverse ? 'DESC' : 'ASC')
+    let builder = this.db
+      .selectFrom('record')
+      .selectAll()
+      .where('did', '=', did)
+      .where('collection', '=', collection)
+      .orderBy('recordKey', reverse ? 'desc' : 'asc')
       .limit(limit)
 
     if (before !== undefined) {
-      builder.andWhere('record.tid < :before', { before })
+      builder = builder.where('recordKey', '<', before)
     }
     if (after !== undefined) {
-      builder.andWhere('record.tid > :after', { after })
+      builder = builder.where('recordKey', '>', after)
     }
-
-    const res = await builder.getRawMany()
+    const res = await builder.execute()
     return res.map((row) => {
       return {
         uri: row.uri,
@@ -277,10 +262,11 @@ export class Database {
 
   async getRecord(uri: AdxUri): Promise<unknown | null> {
     const record = await this.db
-      .getRepository(AdxRecord)
-      .findOneBy({ uri: uri.toString() })
-    if (record === null) return null
-    return JSON.parse(record.raw)
+      .selectFrom('record')
+      .select('raw')
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    return record ? JSON.parse(record.raw) : null
   }
 
   findTableForCollection(collection: string) {
@@ -295,3 +281,6 @@ export class Database {
 }
 
 export default Database
+
+// Can use with typeof to get types for partial queries
+export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })

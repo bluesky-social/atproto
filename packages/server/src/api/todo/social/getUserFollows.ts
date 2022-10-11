@@ -1,13 +1,10 @@
+import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetUserFollows from '../../../lexicon/types/todo/social/getUserFollows'
-import { AdxRecord } from '../../../db/record'
-import { FollowIndex } from '../../../db/records/follow'
-import { ProfileIndex } from '../../../db/records/profile'
-import { User } from '../../../db/user'
 import * as util from './util'
 import * as locals from '../../../locals'
-import { dateFromDb, dateToDb } from '../../../db/util'
+import { paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getUserFollows(
@@ -19,37 +16,36 @@ export default function (server: Server) {
         throw new InvalidRequestError(`User not found: ${user}`)
       })
 
-      const followsReq = db.db
-        .createQueryBuilder()
+      let followsReq = db.db
+        .selectFrom('todo_social_follow as follow')
+        .where('follow.creator', '=', creator.did)
+        .innerJoin('record', 'record.uri', 'follow.uri')
+        .innerJoin('user as subject', 'subject.did', 'follow.subject')
+        .leftJoin(
+          'todo_social_profile as profile',
+          'profile.creator',
+          'follow.subject',
+        )
         .select([
-          'subject.did AS did',
-          'subject.username AS name',
-          'profile.displayName AS displayName',
-          'follow.createdAt AS createdAt',
-          'record.indexedAt AS indexedAt',
+          'subject.did as did',
+          'subject.username as name',
+          'profile.displayName as displayName',
+          'follow.createdAt as createdAt',
+          'record.indexedAt as indexedAt',
         ])
-        .from(FollowIndex, 'follow')
-        .innerJoin(AdxRecord, 'record', 'follow.uri = record.uri')
-        .innerJoin(User, 'subject', 'follow.subject = subject.did')
-        .leftJoin(ProfileIndex, 'profile', 'profile.creator = follow.subject')
-        .where('follow.creator = :creator', { creator: creator.did })
-        .orderBy('follow.createdAt', 'DESC')
 
-      if (before !== undefined) {
-        followsReq.andWhere('follow.createdAt < :before', {
-          before: dateToDb(before),
-        })
-      }
-      if (limit !== undefined) {
-        followsReq.limit(limit)
-      }
+      followsReq = paginate(followsReq, {
+        limit,
+        before,
+        by: sql`follow.createdAt`,
+      })
 
-      const followsRes = await followsReq.getRawMany()
+      const followsRes = await followsReq.execute()
       const follows = followsRes.map((row) => ({
         did: row.did,
         name: row.name,
-        displayName: row.displayName || undefined,
-        createdAt: dateFromDb(row.createdAt),
+        displayName: row.displayName ?? undefined,
+        createdAt: row.createdAt,
         indexedAt: row.indexedAt,
       }))
 

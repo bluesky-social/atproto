@@ -1,85 +1,57 @@
+import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import * as Post from '../../lexicon/types/todo/social/post'
-import {
-  DataSource,
-  Entity,
-  Column,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-} from 'typeorm'
 import { DbRecordPlugin, Notification } from '../types'
-import { User } from '../user'
 import schemas from '../schemas'
-import { collectionToTableName } from '../util'
 
 const type = 'todo.social.post'
-const tableName = collectionToTableName(type)
+const tableName = 'todo_social_post'
 
-@Entity({ name: tableName })
-export class PostIndex {
-  @PrimaryColumn('varchar')
+export interface TodoSocialPost {
   uri: string
-
-  @Column('varchar')
-  @ManyToOne(() => User, (user) => user.did)
   creator: string
-
-  @Column('text')
   text: string
-
-  @Column({ type: 'varchar', nullable: true })
-  replyRoot?: string
-
-  @Column({ type: 'varchar', nullable: true })
-  replyParent?: string
-
-  @Column('datetime')
+  replyRoot: string | null
+  replyParent: string | null
   createdAt: string
-
-  @Column('varchar')
   indexedAt: string
 }
 
-@Entity({ name: `${tableName}_entities` })
-export class PostEntityIndex {
-  @PrimaryGeneratedColumn()
-  id: number
-
-  @Column('varchar')
+const supportingTableName = 'todo_social_post_entity'
+export interface TodoSocialPostEntity {
   postUri: string
-
-  @Column('int')
   startIndex: number
-
-  @Column('int')
   endIndex: number
-
-  @Column('varchar')
   type: string
-
-  @Column('varchar')
   value: string
 }
 
-const getFn =
-  (db: DataSource) =>
-  async (uri: AdxUri): Promise<Post.Record | null> => {
-    const found = await db
-      .getRepository(PostIndex)
-      .findOneBy({ uri: uri.toString() })
-    if (found === null) return null
-    const obj = translateDbObj(found)
-    const entities = await db
-      .getRepository(PostEntityIndex)
-      .findBy({ postUri: uri.toString() })
-    obj.entities = entities.map((row) => ({
-      index: [row.startIndex, row.endIndex],
-      type: row.type,
-      value: row.value,
-    }))
-    return obj
-  }
+export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
+  await db.schema
+    .createTable(tableName)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('text', 'varchar', (col) => col.notNull())
+    .addColumn('replyRoot', 'varchar')
+    .addColumn('replyParent', 'varchar')
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+
+  await db.schema
+    .createTable(supportingTableName)
+    .addColumn('postUri', 'varchar', (col) => col.notNull())
+    .addColumn('startIndex', 'integer', (col) => col.notNull())
+    .addColumn('endIndex', 'integer', (col) => col.notNull())
+    .addColumn('type', 'varchar', (col) => col.notNull())
+    .addColumn('value', 'varchar', (col) => col.notNull())
+    .execute()
+}
+
+export type PartialDB = {
+  [tableName]: TodoSocialPost
+  [supportingTableName]: TodoSocialPostEntity
+}
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Post.Record => {
@@ -87,47 +59,11 @@ const isValidSchema = (obj: unknown): obj is Post.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const setFn =
-  (db: DataSource) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${type}`)
-    }
-    const entities = (obj.entities || []).map((entity) => {
-      const entry = new PostEntityIndex()
-      entry.postUri = uri.toString()
-      entry.startIndex = entity.index[0]
-      entry.endIndex = entity.index[1]
-      entry.type = entity.type
-      entry.value = entity.value
-      return entry
-    })
-    await db.getRepository(PostEntityIndex).save(entities)
-
-    const post = new PostIndex()
-    post.uri = uri.toString()
-    post.creator = uri.host
-    post.text = obj.text
-    post.createdAt = obj.createdAt
-    post.replyRoot = obj.reply?.root
-    post.replyParent = obj.reply?.parent
-    post.indexedAt = new Date().toISOString()
-
-    await db.getRepository(PostIndex).save(post)
-  }
-
-const deleteFn =
-  (db: DataSource) =>
-  async (uri: AdxUri): Promise<void> => {
-    await db.getRepository(PostIndex).delete({ uri: uri.toString() })
-    await db.getRepository(PostEntityIndex).delete({ postUri: uri.toString() })
-  }
-
-const translateDbObj = (dbObj: PostIndex): Post.Record => {
+const translateDbObj = (dbObj: TodoSocialPost): Post.Record => {
   const reply = dbObj.replyRoot
     ? {
         root: dbObj.replyRoot,
-        parent: dbObj.replyParent,
+        parent: dbObj.replyParent ?? undefined,
       }
     : undefined
   return {
@@ -136,6 +72,72 @@ const translateDbObj = (dbObj: PostIndex): Post.Record => {
     createdAt: dbObj.createdAt,
   }
 }
+
+const getFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<Post.Record | null> => {
+    const postQuery = db
+      .selectFrom('todo_social_post')
+      .selectAll()
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    const entitiesQuery = db
+      .selectFrom('todo_social_post_entity')
+      .selectAll()
+      .where('postUri', '=', uri.toString())
+      .execute()
+    const [post, entities] = await Promise.all([postQuery, entitiesQuery])
+    if (!post) return null
+    const record = translateDbObj(post)
+    record.entities = entities.map((row) => ({
+      index: [row.startIndex, row.endIndex],
+      type: row.type,
+      value: row.value,
+    }))
+    return record
+  }
+
+const insertFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri, obj: unknown): Promise<void> => {
+    if (!isValidSchema(obj)) {
+      throw new Error(`Record does not match schema: ${type}`)
+    }
+    const entities = (obj.entities || []).map((entity) => ({
+      postUri: uri.toString(),
+      startIndex: entity.index[0],
+      endIndex: entity.index[1],
+      type: entity.type,
+      value: entity.value,
+    }))
+    const post = {
+      uri: uri.toString(),
+      creator: uri.host,
+      text: obj.text,
+      createdAt: obj.createdAt,
+      replyRoot: obj.reply?.root,
+      replyParent: obj.reply?.parent,
+      indexedAt: new Date().toISOString(),
+    }
+    const promises = [db.insertInto('todo_social_post').values(post).execute()]
+    if (entities.length > 0) {
+      promises.push(
+        db.insertInto('todo_social_post_entity').values(entities).execute(),
+      )
+    }
+    await Promise.all(promises)
+  }
+
+const deleteFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<void> => {
+    await Promise.all([
+      db.deleteFrom('todo_social_post').where('uri', '=', uri.toString()),
+      db
+        .deleteFrom('todo_social_post_entity')
+        .where('postUri', '=', uri.toString()),
+    ])
+  }
 
 const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
   if (!isValidSchema(obj)) {
@@ -166,16 +168,16 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
 }
 
 export const makePlugin = (
-  db: DataSource,
-): DbRecordPlugin<Post.Record, PostIndex> => {
+  db: Kysely<PartialDB>,
+): DbRecordPlugin<Post.Record, TodoSocialPost> => {
   return {
     collection: type,
     tableName,
-    get: getFn(db),
     validateSchema,
-    set: setFn(db),
-    delete: deleteFn(db),
     translateDbObj,
+    get: getFn(db),
+    insert: insertFn(db),
+    delete: deleteFn(db),
     notifsForRecord,
   }
 }

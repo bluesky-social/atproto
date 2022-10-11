@@ -1,18 +1,15 @@
-import { Server } from '../../../lexicon'
+import { sql } from 'kysely'
 import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
+import { Server } from '../../../lexicon'
 import * as GetHomeFeed from '../../../lexicon/types/todo/social/getHomeFeed'
-import { FollowIndex } from '../../../db/records/follow'
-import { PostIndex } from '../../../db/records/post'
 import * as locals from '../../../locals'
-import { SelectQueryBuilder } from 'typeorm'
+import { FeedAlgorithm, isEnum, queryResultToFeedItem } from './util'
 import {
-  FeedAlgorithm,
-  isEnum,
-  queryPostsAndRepostsAsFeedItems,
-  queryPostsWithReposts,
-  queryResultToFeedItem,
-} from './util'
-import { postOrRepostIndexedAtClause } from '../../../db/util'
+  countClause,
+  isNotRepostClause,
+  paginate,
+  postOrRepostIndexedAtClause,
+} from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getHomeFeed(
@@ -34,61 +31,105 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      const builder = db.db.createQueryBuilder().from(PostIndex, 'post')
+      const { ref } = db.db.dynamic
 
-      // Determine result set of posts and reposts
-      if (feedAlgorithm === FeedAlgorithm.Firehose) {
-        // All posts, except requester's reposts
-        queryPostsWithReposts(builder).where(
-          // The null check handles ANSI nulls
-          '(repost.creator != :requester or repost.creator is null)',
-          { requester },
+      // @TODO break this query up, share parts with author feed and post thread
+      let builder = db.db
+        .selectFrom('todo_social_post as post')
+        // Determine result set of posts and reposts
+        .leftJoin('todo_social_repost as repost', 'repost.subject', 'post.uri')
+        .leftJoin('user as originator', (join) =>
+          join
+            .onRef('originator.did', '=', 'post.creator')
+            .orOnRef('originator.did', '=', 'repost.creator'),
         )
-      } else if (feedAlgorithm === FeedAlgorithm.ReverseChronological) {
-        // Followee's posts and reposts, and requester's posts
-        const followingIdsSubquery = (qb: SelectQueryBuilder<PostIndex>) => {
-          return qb
-            .subQuery()
-            .select('follow.subject')
-            .from(FollowIndex, 'follow')
-            .where('follow.creator = :did', { did: requester })
-            .getQuery()
-        }
-        queryPostsWithReposts(builder)
-          .where(`(repost.creator != :requester or repost.creator is null)`, {
-            requester,
-          })
-          .andWhere(
-            (qb) => {
-              return (
-                `(originator.did IN ${followingIdsSubquery(qb)} or ` +
-                `originator.did = :requester)`
-              )
-            },
-            { requester },
+        .if(feedAlgorithm === FeedAlgorithm.Firehose, (qb) => {
+          return qb.where(
+            // The null check handles ANSI nulls
+            sql`(repost.creator != ${requester} or repost.creator is null)`,
           )
-      } else {
-        const exhaustiveCheck: never = feedAlgorithm
-        throw new Error(`Unhandled case: ${exhaustiveCheck}`)
-      }
-
-      // Select data for presentation into FeedItem
-      queryPostsAndRepostsAsFeedItems(builder, { requester })
+        })
+        .if(feedAlgorithm === FeedAlgorithm.ReverseChronological, (qb) => {
+          const followingIdsSubquery = db.db
+            .selectFrom('todo_social_follow as follow')
+            .select('follow.subject')
+            .where('follow.creator', '=', requester)
+          return qb
+            .where(
+              sql`(repost.creator != ${requester} or repost.creator is null)`,
+            )
+            .where((qb) =>
+              qb
+                .where('originator.did', '=', requester)
+                .orWhere(`originator.did`, 'in', followingIdsSubquery),
+            )
+        })
+        // Select data for presentation into FeedItem
+        .leftJoin('user as author', 'author.did', 'post.creator')
+        .leftJoin(
+          'todo_social_profile as author_profile',
+          'author_profile.creator',
+          'author.did',
+        )
+        .leftJoin('user as reposted_by', 'reposted_by.did', 'repost.creator')
+        .leftJoin(
+          'todo_social_profile as reposted_by_profile',
+          'reposted_by_profile.creator',
+          'reposted_by.did',
+        )
+        .leftJoin('record', 'record.uri', 'post.uri')
+        .select([
+          'post.uri as uri',
+          'record.raw as rawRecord',
+          'record.indexedAt as indexedAt',
+          'author.did as authorDid',
+          'author.username as authorName',
+          'author_profile.displayName as authorDisplayName',
+          'reposted_by.did as repostedByDid',
+          'reposted_by.username as repostedByName',
+          'reposted_by_profile.displayName as repostedByDisplayName',
+          isNotRepostClause.as('isNotRepost'),
+          postOrRepostIndexedAtClause.as('cursor'),
+          db.db
+            .selectFrom('todo_social_like')
+            .whereRef('subject', '=', ref('post.uri'))
+            .select(countClause.as('count'))
+            .as('likeCount'),
+          db.db
+            .selectFrom('todo_social_repost')
+            .whereRef('subject', '=', ref('post.uri'))
+            .select(countClause.as('count'))
+            .as('repostCount'),
+          db.db
+            .selectFrom('todo_social_post')
+            .whereRef('replyParent', '=', ref('post.uri'))
+            .select(countClause.as('count'))
+            .as('replyCount'),
+          db.db
+            .selectFrom('todo_social_repost')
+            .where('creator', '=', requester)
+            .whereRef('subject', '=', ref('post.uri'))
+            .select('uri')
+            .as('requesterRepost'),
+          db.db
+            .selectFrom('todo_social_like')
+            .where('creator', '=', requester)
+            .whereRef('subject', '=', ref('post.uri'))
+            .select('uri')
+            .as('requesterLike'),
+        ])
         // Grouping by post then originator preserves one row for each
         // post or repost. Reposts of a given post only vary by originator.
-        .groupBy('post.uri')
-        .addGroupBy('originator.did')
+        .groupBy(['post.uri', 'originator.did'])
 
       // Apply pagination
-      builder.orderBy(postOrRepostIndexedAtClause, 'DESC')
-      if (before !== undefined) {
-        builder.andWhere(`${postOrRepostIndexedAtClause} < :before`, { before })
-      }
-      if (limit !== undefined) {
-        builder.limit(limit)
-      }
+      builder = paginate(builder, {
+        limit,
+        before,
+        by: postOrRepostIndexedAtClause,
+      })
 
-      const queryRes = await builder.getRawMany()
+      const queryRes = await builder.execute()
       const feed: GetHomeFeed.FeedItem[] = queryRes.map(queryResultToFeedItem)
 
       return { encoding: 'application/json', body: { feed } }

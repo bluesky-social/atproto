@@ -1,56 +1,48 @@
+import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import * as Profile from '../../lexicon/types/todo/social/profile'
-import { DataSource, Entity, Column, PrimaryColumn } from 'typeorm'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
-import { collectionToTableName } from '../util'
 
 const type = 'todo.social.profile'
-const tableName = collectionToTableName(type)
+const tableName = 'todo_social_profile'
 
-@Entity({ name: tableName })
-export class ProfileIndex {
-  @PrimaryColumn('varchar')
+export interface TodoSocialProfile {
   uri: string
-
-  @Column({ type: 'varchar', unique: true })
   creator: string
-
-  @Column('varchar')
   displayName: string
-
-  @Column({ type: 'text', nullable: true })
-  description?: string
-
-  @Column('varchar')
+  description: string | null
   indexedAt: string
 }
 
-@Entity({ name: `${tableName}_badges` })
-export class ProfileBadgeIndex {
-  @PrimaryColumn('varchar')
-  profile: string
-
-  @Column({ type: 'varchar', unique: true })
-  badge: string
+const supportingTableName = 'todo_social_profile_badge'
+export interface TodoSocialProfileBadge {
+  profileUri: string
+  badgeUri: string
 }
 
-const getFn =
-  (db: DataSource) =>
-  async (uri: AdxUri): Promise<Profile.Record | null> => {
-    const found = await db
-      .getRepository(ProfileIndex)
-      .findOneBy({ uri: uri.toString() })
-    if (found === null) return null
-    const obj = translateDbObj(found)
-    const badges = await db
-      .getRepository(ProfileBadgeIndex)
-      .findBy({ profile: uri.toString() })
-    obj.badges = badges.map((row) => ({
-      uri: row.badge,
-    }))
-    return obj
-  }
+export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
+  await db.schema
+    .createTable(tableName)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('displayName', 'varchar', (col) => col.notNull())
+    .addColumn('description', 'varchar')
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+
+  await db.schema
+    .createTable(supportingTableName)
+    .addColumn('profileUri', 'varchar', (col) => col.notNull())
+    .addColumn('badgeUri', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint('primary_key', ['profileUri', 'badgeUri'])
+    .execute()
+}
+
+export type PartialDB = {
+  [tableName]: TodoSocialProfile
+  [supportingTableName]: TodoSocialProfileBadge
+}
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Profile.Record => {
@@ -58,59 +50,86 @@ const isValidSchema = (obj: unknown): obj is Profile.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const setFn =
-  (db: DataSource) =>
+const translateDbObj = (dbObj: TodoSocialProfile): Profile.Record => {
+  return {
+    displayName: dbObj.displayName,
+    description: dbObj.description ?? undefined,
+  }
+}
+
+const getFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<Profile.Record | null> => {
+    const profileQuery = db
+      .selectFrom('todo_social_profile')
+      .selectAll()
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    const badgesQuery = db
+      .selectFrom('todo_social_profile_badge')
+      .select('badgeUri as uri')
+      .where('profileUri', '=', uri.toString())
+      .execute()
+    const [profile, badges] = await Promise.all([profileQuery, badgesQuery])
+    if (!profile) return null
+    const record = translateDbObj(profile)
+    record.badges = badges
+    return record
+  }
+
+const insertFn =
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
 
-    const badges = (obj.badges || []).map((badge) => {
-      const entry = new ProfileBadgeIndex()
-      entry.badge = badge.uri
-      entry.profile = uri.toString()
-      return entry
-    })
-    await db.getRepository(ProfileBadgeIndex).save(badges)
-
-    const profile = new ProfileIndex()
-    profile.uri = uri.toString()
-    profile.creator = uri.host
-    profile.displayName = obj.displayName
-    profile.description = obj.description
-    profile.indexedAt = new Date().toISOString()
-    await db.getRepository(ProfileIndex).save(profile)
+    const badges = (obj.badges || []).map((badge) => ({
+      badgeUri: badge.uri,
+      profileUri: uri.toString(),
+    }))
+    const profile = {
+      uri: uri.toString(),
+      creator: uri.host,
+      displayName: obj.displayName,
+      description: obj.description,
+      indexedAt: new Date().toISOString(),
+    }
+    const promises = [
+      db.insertInto('todo_social_profile').values(profile).execute(),
+    ]
+    if (badges.length > 0) {
+      promises.push(
+        db.insertInto('todo_social_profile_badge').values(badges).execute(),
+      )
+    }
+    await Promise.all(promises)
   }
 
 const deleteFn =
-  (db: DataSource) =>
+  (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
-    await db.getRepository(ProfileIndex).delete({ uri: uri.toString() })
-    await db
-      .getRepository(ProfileBadgeIndex)
-      .delete({ profile: uri.toString() })
+    await Promise.all([
+      db.deleteFrom('todo_social_profile').where('uri', '=', uri.toString()),
+      db
+        .deleteFrom('todo_social_profile_badge')
+        .where('profileUri', '=', uri.toString()),
+    ])
   }
-
-const translateDbObj = (dbObj: ProfileIndex): Profile.Record => {
-  return {
-    displayName: dbObj.displayName,
-    description: dbObj.description,
-  }
-}
 
 const notifsForRecord = (_uri: AdxUri, _obj: unknown): Notification[] => {
   return []
 }
 
 export const makePlugin = (
-  db: DataSource,
-): DbRecordPlugin<Profile.Record, ProfileIndex> => {
+  db: Kysely<PartialDB>,
+): DbRecordPlugin<Profile.Record, TodoSocialProfile> => {
   return {
     collection: type,
     tableName,
     get: getFn(db),
     validateSchema,
-    set: setFn(db),
+    insert: insertFn(db),
     delete: deleteFn(db),
     translateDbObj,
     notifsForRecord,

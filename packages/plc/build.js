@@ -15,8 +15,6 @@ require('esbuild')
     external: [
       './node_modules/better-sqlite3/*',
       '../../node_modules/better-sqlite3/*',
-      './node_modules/sqlite3/*',
-      '../../node_modules/sqlite3/*',
       '../../node_modules/level/*',
       '../../node_modules/classic-level/*',
     ],

@@ -1,9 +1,9 @@
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import { Repo } from '@adxp/repo'
 import { PlcClient } from '@adxp/plc'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
-import { InviteCode, InviteCodeUse } from '../../../db/invite-codes'
 
 export default function (server: Server) {
   server.todo.adx.getAccountsConfig((_params, _input, _req, res) => {
@@ -42,17 +42,16 @@ export default function (server: Server) {
         }
       }
       const found = await db.db
-        .createQueryBuilder()
-        .select([
-          'invite.disabled AS disabled',
-          'invite.availableUses as availableUses',
-          'COUNT(code_use.usedBy) as useCount',
-        ])
-        .from(InviteCode, 'invite')
-        .leftJoin(InviteCodeUse, 'code_use', 'invite.code = code_use.code')
-        .where('invite.code = :inviteCode', { inviteCode })
+        .selectFrom('invite_code as invite')
+        .leftJoin('invite_code_use as code_use', 'invite.code', 'code_use.code')
+        .where('invite.code', '=', inviteCode)
         .groupBy('invite.code')
-        .getRawOne()
+        .select([
+          'invite.disabled as disabled',
+          'invite.availableUses as availableUses',
+          sql<number>`count(code_use.usedBy)`.as('useCount'),
+        ])
+        .executeTakeFirst()
       if (!found || found.disabled || found.useCount >= found.availableUses) {
         logger.info({ username, email, inviteCode }, 'invalid invite code')
         return {
@@ -118,16 +117,26 @@ export default function (server: Server) {
 
     // @TODO this should be transactional to ensure no double use
     if (config.inviteRequired && inviteCode) {
-      const inviteCodeUse = new InviteCodeUse()
-      inviteCodeUse.code = inviteCode
-      inviteCodeUse.usedBy = did
-      inviteCodeUse.usedAt = new Date().toISOString()
-      await db.db.getRepository(InviteCodeUse).insert(inviteCodeUse)
+      const codeUse = {
+        code: inviteCode,
+        usedBy: did,
+        usedAt: new Date().toISOString(),
+      }
+      await db.db.insertInto('invite_code_use').values(codeUse).execute()
     }
 
     const authStore = locals.getAuthstore(res, did)
     const repo = await Repo.create(blockstore, did, authStore)
-    await db.setRepoRoot(did, repo.cid)
+
+    // @TODO transactionalize this
+    await db.db
+      .insertInto('repo_root')
+      .values({
+        did: did,
+        root: repo.cid.toString(),
+        indexedAt: new Date().toISOString(),
+      })
+      .execute()
 
     if (isTestUser && config.testNameRegistry) {
       config.testNameRegistry[username] = did

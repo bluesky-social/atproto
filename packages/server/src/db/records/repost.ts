@@ -1,48 +1,32 @@
+import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import * as Repost from '../../lexicon/types/todo/social/repost'
-import {
-  DataSource,
-  Entity,
-  Column,
-  PrimaryColumn,
-  Repository,
-  ManyToOne,
-} from 'typeorm'
 import { DbRecordPlugin, Notification } from '../types'
-import { User } from '../user'
 import schemas from '../schemas'
-import { collectionToTableName } from '../util'
-import { PostIndex } from './post'
 
 const type = 'todo.social.repost'
-const tableName = collectionToTableName(type)
+const tableName = 'todo_social_repost'
 
-@Entity({ name: tableName })
-export class RepostIndex {
-  @PrimaryColumn('varchar')
+export interface TodoSocialRepost {
   uri: string
-
-  @Column('varchar')
-  @ManyToOne(() => User, (user) => user.did)
   creator: string
-
-  @Column('varchar')
-  @ManyToOne(() => PostIndex, (post) => post.uri)
   subject: string
-
-  @Column('datetime')
   createdAt: string
-
-  @Column('varchar')
   indexedAt: string
 }
 
-const getFn =
-  (repo: Repository<RepostIndex>) =>
-  async (uri: AdxUri): Promise<Repost.Record | null> => {
-    const found = await repo.findOneBy({ uri: uri.toString() })
-    return found === null ? null : translateDbObj(found)
-  }
+export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
+  await db.schema
+    .createTable(tableName)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+}
+
+export type PartialDB = { [tableName]: TodoSocialRepost }
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Repost.Record => {
@@ -50,34 +34,47 @@ const isValidSchema = (obj: unknown): obj is Repost.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const setFn =
-  (repo: Repository<RepostIndex>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${type}`)
-    }
-    const repost = new RepostIndex()
-    repost.uri = uri.toString()
-    repost.creator = uri.host
-    repost.subject = obj.subject
-    repost.createdAt = obj.createdAt
-    repost.indexedAt = new Date().toISOString()
-
-    await repo.save(repost)
-  }
-
-const deleteFn =
-  (repo: Repository<RepostIndex>) =>
-  async (uri: AdxUri): Promise<void> => {
-    await repo.delete({ uri: uri.toString() })
-  }
-
-const translateDbObj = (dbObj: RepostIndex): Repost.Record => {
+const translateDbObj = (dbObj: TodoSocialRepost): Repost.Record => {
   return {
     subject: dbObj.subject,
     createdAt: dbObj.createdAt,
   }
 }
+
+const getFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<Repost.Record | null> => {
+    const found = await db
+      .selectFrom('todo_social_repost')
+      .selectAll()
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    return !found ? null : translateDbObj(found)
+  }
+
+const insertFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri, obj: unknown): Promise<void> => {
+    if (!isValidSchema(obj)) {
+      throw new Error(`Record does not match schema: ${type}`)
+    }
+    await db
+      .insertInto('todo_social_repost')
+      .values({
+        uri: uri.toString(),
+        creator: uri.host,
+        subject: obj.subject,
+        createdAt: obj.createdAt,
+        indexedAt: new Date().toISOString(),
+      })
+      .execute()
+  }
+
+const deleteFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<void> => {
+    await db.deleteFrom('todo_social_repost').where('uri', '=', uri.toString())
+  }
 
 const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
   if (!isValidSchema(obj)) {
@@ -95,17 +92,16 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
 }
 
 export const makePlugin = (
-  db: DataSource,
-): DbRecordPlugin<Repost.Record, RepostIndex> => {
-  const repository = db.getRepository(RepostIndex)
+  db: Kysely<PartialDB>,
+): DbRecordPlugin<Repost.Record, TodoSocialRepost> => {
   return {
     collection: type,
     tableName,
-    get: getFn(repository),
     validateSchema,
-    set: setFn(repository),
-    delete: deleteFn(repository),
     translateDbObj,
+    get: getFn(db),
+    insert: insertFn(db),
+    delete: deleteFn(db),
     notifsForRecord,
   }
 }

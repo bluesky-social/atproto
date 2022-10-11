@@ -1,46 +1,31 @@
+import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import * as Follow from '../../lexicon/types/todo/social/follow'
-import {
-  DataSource,
-  Entity,
-  Column,
-  PrimaryColumn,
-  Repository,
-  ManyToOne,
-} from 'typeorm'
 import { DbRecordPlugin, Notification } from '../types'
-import { User } from '../user'
 import schemas from '../schemas'
-import { collectionToTableName } from '../util'
 
 const type = 'todo.social.follow'
-const tableName = collectionToTableName(type)
-
-@Entity({ name: tableName })
-export class FollowIndex {
-  @PrimaryColumn('varchar')
+const tableName = 'todo_social_follow'
+export interface TodoSocialFollow {
   uri: string
-
-  @Column('varchar')
-  @ManyToOne(() => User, (user) => user.did)
   creator: string
-
-  @Column('varchar')
   subject: string
-
-  @Column('datetime')
   createdAt: string
-
-  @Column('varchar')
   indexedAt: string
 }
 
-const getFn =
-  (repo: Repository<FollowIndex>) =>
-  async (uri: AdxUri): Promise<Follow.Record | null> => {
-    const found = await repo.findOneBy({ uri: uri.toString() })
-    return found === null ? null : translateDbObj(found)
-  }
+export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
+  await db.schema
+    .createTable(tableName)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+}
+
+export type PartialDB = { [tableName]: TodoSocialFollow }
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Follow.Record => {
@@ -48,33 +33,45 @@ const isValidSchema = (obj: unknown): obj is Follow.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const setFn =
-  (repo: Repository<FollowIndex>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${type}`)
-    }
-    const follow = new FollowIndex()
-    follow.uri = uri.toString()
-    follow.creator = uri.host
-    follow.subject = obj.subject
-    follow.createdAt = obj.createdAt
-    follow.indexedAt = new Date().toISOString()
-    await repo.save(follow)
-  }
-
-const deleteFn =
-  (repo: Repository<FollowIndex>) =>
-  async (uri: AdxUri): Promise<void> => {
-    await repo.delete({ uri: uri.toString() })
-  }
-
-const translateDbObj = (dbObj: FollowIndex): Follow.Record => {
+const translateDbObj = (dbObj: TodoSocialFollow): Follow.Record => {
   return {
     subject: dbObj.subject,
     createdAt: dbObj.createdAt,
   }
 }
+
+const getFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<Follow.Record | null> => {
+    const found = await db
+      .selectFrom('todo_social_follow')
+      .selectAll()
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    return !found ? null : translateDbObj(found)
+  }
+
+const insertFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri, obj: unknown): Promise<void> => {
+    if (!isValidSchema(obj)) {
+      throw new Error(`Record does not match schema: ${type}`)
+    }
+    const val = {
+      uri: uri.toString(),
+      creator: uri.host,
+      subject: obj.subject,
+      createdAt: obj.createdAt,
+      indexedAt: new Date().toISOString(),
+    }
+    await db.insertInto('todo_social_follow').values(val).execute()
+  }
+
+const deleteFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<void> => {
+    await db.deleteFrom('todo_social_follow').where('uri', '=', uri.toString())
+  }
 
 const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
   if (!isValidSchema(obj)) {
@@ -90,17 +87,16 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
 }
 
 export const makePlugin = (
-  db: DataSource,
-): DbRecordPlugin<Follow.Record, FollowIndex> => {
-  const repository = db.getRepository(FollowIndex)
+  db: Kysely<PartialDB>,
+): DbRecordPlugin<Follow.Record, TodoSocialFollow> => {
   return {
     collection: type,
     tableName,
-    get: getFn(repository),
     validateSchema,
-    set: setFn(repository),
-    delete: deleteFn(repository),
     translateDbObj,
+    get: getFn(db),
+    insert: insertFn(db),
+    delete: deleteFn(db),
     notifsForRecord,
   }
 }

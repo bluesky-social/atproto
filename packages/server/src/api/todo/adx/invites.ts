@@ -1,7 +1,6 @@
 import { ForbiddenError } from '@adxp/xrpc-server'
 import * as crypto from '@adxp/crypto'
 import * as uint8arrays from 'uint8arrays'
-import { InviteCode } from '../../../db/invite-codes'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 
@@ -20,13 +19,17 @@ export default function (server: Server) {
       '-' +
       uint8arrays.toString(await crypto.randomBytes(5), 'base32').slice(0, 5)
 
-    const invite = new InviteCode()
-    invite.code = code
-    invite.availableUses = useCount
-    invite.createdBy = 'admin'
-    invite.forUser = 'admin'
-
-    await db.db.getRepository(InviteCode).insert(invite)
+    await db.db
+      .insertInto('invite_code')
+      .values({
+        code: code,
+        availableUses: useCount,
+        disabled: 0,
+        forUser: 'admin',
+        createdBy: 'admin',
+        createdAt: new Date().toISOString(),
+      })
+      .execute()
 
     logger.info({ useCount, code }, 'created invite code')
 

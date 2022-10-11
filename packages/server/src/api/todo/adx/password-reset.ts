@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { ServerConfig } from '../../../config'
-import { User } from '../../../db/user'
+import { User } from '../../../db/tables/user'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 
@@ -12,8 +12,7 @@ export default function (server: Server) {
       const { db, mailer, config } = locals.get(res)
       const { email } = input.body
 
-      const table = db.db.getRepository(User)
-      const user = await table.findOneBy({ email })
+      const user = await db.getUserByEmail(email)
 
       if (user) {
         // By signing with the password hash, this jwt becomes invalid once the user changes their password.
@@ -51,8 +50,7 @@ export default function (server: Server) {
       return createInvalidTokenError('Malformed token')
     }
 
-    const table = db.db.getRepository(User)
-    const user = await table.findOneBy({ did })
+    const user = await db.getUser(did)
     if (!user) {
       return createInvalidTokenError('Token could not be verified')
     }

@@ -1,11 +1,9 @@
+import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetNotifications from '../../../lexicon/types/todo/social/getNotifications'
-import { ProfileIndex } from '../../../db/records/profile'
-import { User } from '../../../db/user'
-import { AdxRecord } from '../../../db/record'
 import * as locals from '../../../locals'
-import { UserNotification } from '../../../db/user-notifications'
+import { paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getNotifications(
@@ -18,45 +16,46 @@ export default function (server: Server) {
         throw new AuthRequiredError()
       }
 
-      const notifBuilder = db.db
-        .createQueryBuilder()
-        .select([
-          'notif.recordUri AS uri',
-          'author.did AS authorDid',
-          'author.username AS authorName',
-          'author_profile.displayName AS authorDisplayName',
-          'notif.reason AS reason',
-          'notif.reasonSubject AS reasonSubject',
-          'notif.createdAt AS createdAt',
-          'record.raw AS record',
-          'record.indexedAt AS indexedAt',
-          'notif.recordUri AS uri',
-        ])
-        .from(UserNotification, 'notif')
-        .leftJoin(AdxRecord, 'record', 'record.uri = notif.recordUri')
-        .leftJoin(User, 'author', 'author.did = notif.author')
+      let notifBuilder = db.db
+        .selectFrom('user_notification as notif')
+        .where('notif.userDid', '=', requester)
+        .innerJoin('record', 'record.uri', 'notif.recordUri')
+        .innerJoin('user as author', 'author.did', 'notif.author')
         .leftJoin(
-          ProfileIndex,
-          'author_profile',
-          'author_profile.creator = author.did',
+          'todo_social_profile as author_profile',
+          'author_profile.creator',
+          'author.did',
         )
-        .orderBy('notif.createdAt', 'DESC')
-        .where('notif.userDid = :requester', { requester })
+        .select([
+          'notif.recordUri as uri',
+          'author.did as authorDid',
+          'author.username as authorName',
+          'author_profile.displayName as authorDisplayName',
+          'notif.reason as reason',
+          'notif.reasonSubject as reasonSubject',
+          'notif.indexedAt as createdAt',
+          'record.raw as record',
+          'record.indexedAt as indexedAt',
+          'notif.recordUri as uri',
+        ])
 
-      if (before) {
-        notifBuilder.andWhere('notif.createdAt < :before', { before })
-      }
-      if (limit) {
-        notifBuilder.limit(limit)
-      }
+      notifBuilder = paginate(notifBuilder, {
+        before,
+        limit,
+        by: sql`notif.indexedAt`,
+      })
 
       const [user, notifs] = await Promise.all([
-        db.db.getRepository(User).findOneBy({ did: requester }),
-        notifBuilder.getRawMany(),
+        db.db
+          .selectFrom('user')
+          .selectAll()
+          .where('did', '=', requester)
+          .executeTakeFirst(),
+        notifBuilder.execute(),
       ])
 
       if (!user) {
-        throw new InvalidRequestError(`Could not find user: ${user}`)
+        throw new InvalidRequestError(`Could not find user: ${requester}`)
       }
 
       const notifications = notifs.map((notif) => ({

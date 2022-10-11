@@ -12,7 +12,6 @@ import Mail from 'nodemailer/lib/mailer'
 import { App } from '../src'
 import * as locals from '../src/locals'
 import * as util from './_util'
-import { User } from '../src/db/user'
 
 const email = 'alice@test.com'
 const username = 'alice.test'
@@ -273,8 +272,11 @@ describe('account', () => {
     if (app === undefined) throw new Error()
     const { config, db } = locals.get(app)
 
-    const table = db.db.getRepository(User)
-    const user = await table.findOneBy({ did })
+    const user = await db.db
+      .selectFrom('user')
+      .selectAll()
+      .where('did', '=', did)
+      .executeTakeFirst()
     if (!user) {
       return expect(user).toBeTruthy()
     }

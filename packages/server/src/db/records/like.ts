@@ -1,46 +1,32 @@
+import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import * as Like from '../../lexicon/types/todo/social/like'
-import {
-  DataSource,
-  Entity,
-  Column,
-  PrimaryColumn,
-  Repository,
-  ManyToOne,
-} from 'typeorm'
 import { DbRecordPlugin, Notification } from '../types'
-import { User } from '../user'
 import schemas from '../schemas'
-import { collectionToTableName } from '../util'
 
 const type = 'todo.social.like'
-const tableName = collectionToTableName(type)
+const tableName = 'todo_social_like'
 
-@Entity({ name: tableName })
-export class LikeIndex {
-  @PrimaryColumn('varchar')
+export interface TodoSocialLike {
   uri: string
-
-  @Column('varchar')
-  @ManyToOne(() => User, (user) => user.did)
   creator: string
-
-  @Column('varchar')
   subject: string
-
-  @Column('datetime')
   createdAt: string
-
-  @Column('varchar')
   indexedAt: string
 }
 
-const getFn =
-  (repo: Repository<LikeIndex>) =>
-  async (uri: AdxUri): Promise<Like.Record | null> => {
-    const found = await repo.findOneBy({ uri: uri.toString() })
-    return found === null ? null : translateDbObj(found)
-  }
+export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
+  await db.schema
+    .createTable(tableName)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+}
+
+export type PartialDB = { [tableName]: TodoSocialLike }
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Like.Record => {
@@ -48,33 +34,47 @@ const isValidSchema = (obj: unknown): obj is Like.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const setFn =
-  (repo: Repository<LikeIndex>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${type}`)
-    }
-    const like = new LikeIndex()
-    like.uri = uri.toString()
-    like.creator = uri.host
-    like.subject = obj.subject
-    like.createdAt = obj.createdAt
-    like.indexedAt = new Date().toISOString()
-    await repo.save(like)
-  }
-
-const deleteFn =
-  (repo: Repository<LikeIndex>) =>
-  async (uri: AdxUri): Promise<void> => {
-    await repo.delete({ uri: uri.toString() })
-  }
-
-const translateDbObj = (dbObj: LikeIndex): Like.Record => {
+const translateDbObj = (dbObj: TodoSocialLike): Like.Record => {
   return {
     subject: dbObj.subject,
     createdAt: dbObj.createdAt,
   }
 }
+
+const getFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<Like.Record | null> => {
+    const found = await db
+      .selectFrom('todo_social_like')
+      .selectAll()
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    return !found ? null : translateDbObj(found)
+  }
+
+const insertFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri, obj: unknown): Promise<void> => {
+    if (!isValidSchema(obj)) {
+      throw new Error(`Record does not match schema: ${type}`)
+    }
+    await db
+      .insertInto('todo_social_like')
+      .values({
+        uri: uri.toString(),
+        creator: uri.host,
+        subject: obj.subject,
+        createdAt: obj.createdAt,
+        indexedAt: new Date().toISOString(),
+      })
+      .execute()
+  }
+
+const deleteFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<void> => {
+    await db.deleteFrom('todo_social_like').where('uri', '=', uri.toString())
+  }
 
 const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
   if (!isValidSchema(obj)) {
@@ -92,17 +92,16 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
 }
 
 export const makePlugin = (
-  db: DataSource,
-): DbRecordPlugin<Like.Record, LikeIndex> => {
-  const repository = db.getRepository(LikeIndex)
+  db: Kysely<PartialDB>,
+): DbRecordPlugin<Like.Record, TodoSocialLike> => {
   return {
     collection: type,
     tableName,
-    get: getFn(repository),
     validateSchema,
-    set: setFn(repository),
-    delete: deleteFn(repository),
     translateDbObj,
+    get: getFn(db),
+    insert: insertFn(db),
+    delete: deleteFn(db),
     notifsForRecord,
   }
 }

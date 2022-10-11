@@ -1,15 +1,10 @@
-import { Server } from '../../../lexicon'
+import { Kysely } from 'kysely'
 import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
-import { DataSource } from 'typeorm'
+import { Server } from '../../../lexicon'
 import * as GetPostThread from '../../../lexicon/types/todo/social/getPostThread'
-import { PostIndex } from '../../../db/records/post'
-import { ProfileIndex } from '../../../db/records/profile'
-import { User } from '../../../db/user'
-import * as util from '../../../db/util'
-import { LikeIndex } from '../../../db/records/like'
-import { RepostIndex } from '../../../db/records/repost'
-import { AdxRecord } from '../../../db/record'
 import * as locals from '../../../locals'
+import { DatabaseSchema } from '../../../db/database-schema'
+import { countClause } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getPostThread(
@@ -23,10 +18,9 @@ export default function (server: Server) {
       }
 
       const queryRes = await postInfoBuilder(db.db, requester)
-        .where('post.uri = :uri', {
-          uri,
-        })
-        .getRawOne()
+        .where('post.uri', '=', uri)
+        .executeTakeFirst()
+
       if (!queryRes) {
         throw new InvalidRequestError(`Post not found: ${uri}`)
       }
@@ -37,8 +31,8 @@ export default function (server: Server) {
       }
       if (queryRes.parent !== null) {
         const parentRes = await postInfoBuilder(db.db, requester)
-          .where('post.uri = :uri', { uri: queryRes.parent })
-          .getRawOne()
+          .where('post.uri', '=', queryRes.parent)
+          .executeTakeFirstOrThrow()
         thread.parent = rowToPost(parentRes)
       }
 
@@ -51,15 +45,15 @@ export default function (server: Server) {
 }
 
 const getReplies = async (
-  db: DataSource,
+  db: Kysely<DatabaseSchema>,
   parent: GetPostThread.Post,
   depth: number,
   requester: string,
 ): Promise<GetPostThread.Post[]> => {
   const res = await postInfoBuilder(db, requester)
-    .where('post.replyParent = :uri', { uri: parent.uri })
-    .orderBy('post.createdAt', 'DESC')
-    .getRawMany()
+    .where('post.replyParent', '=', parent.uri)
+    .orderBy('post.createdAt', 'desc')
+    .execute()
   const got = await Promise.all(
     res.map(async (row) => {
       const post = rowToPost(row, parent)
@@ -73,62 +67,58 @@ const getReplies = async (
 }
 
 // selects all the needed info about a post, just need to supply the `where` clause
-const postInfoBuilder = (db: DataSource, requester: string) => {
+// @TODO break this query up, share parts with home/author feeds
+const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
+  const { ref } = db.dynamic
   return db
-    .createQueryBuilder()
+    .selectFrom('todo_social_post as post')
+    .innerJoin('record', 'record.uri', 'post.uri')
+    .innerJoin('user as author', 'author.did', 'post.creator')
+    .leftJoin(
+      'todo_social_profile as author_profile',
+      'author.did',
+      'author_profile.creator',
+    )
     .select([
-      'post.uri AS uri',
-      'post.replyParent AS parent',
-      'author.did AS authorDid',
-      'author.username AS authorName',
-      'author_profile.displayName AS authorDisplayName',
-      'record.raw AS rawRecord',
-      'reply_count.count AS replyCount',
-      'like_count.count AS likeCount',
-      'repost_count.count AS repostCount',
-      'record.indexedAt AS indexedAt',
-      'requester_repost.uri AS requesterRepost',
-      'requester_like.uri AS requesterLike',
+      'post.uri as uri',
+      'post.replyParent as parent',
+      'author.did as authorDid',
+      'author.username as authorName',
+      'author_profile.displayName as authorDisplayName',
+      'record.raw as rawRecord',
+      'record.indexedAt as indexedAt',
+      db
+        .selectFrom('todo_social_like')
+        .select(countClause.as('count'))
+        .whereRef('subject', '=', ref('post.uri'))
+        .as('likeCount'),
+      db
+        .selectFrom('todo_social_repost')
+        .select(countClause.as('count'))
+        .whereRef('subject', '=', ref('post.uri'))
+        .as('repostCount'),
+      db
+        .selectFrom('todo_social_post')
+        .select(countClause.as('count'))
+        .whereRef('replyParent', '=', ref('post.uri'))
+        .as('replyCount'),
+      db
+        .selectFrom('todo_social_repost')
+        .select('uri')
+        .where('creator', '=', requester)
+        .whereRef('subject', '=', ref('post.uri'))
+        .as('requesterRepost'),
+      db
+        .selectFrom('todo_social_like')
+        .select('uri')
+        .where('creator', '=', requester)
+        .whereRef('subject', '=', ref('post.uri'))
+        .as('requesterLike'),
     ])
-    .from(PostIndex, 'post')
-    .innerJoin(AdxRecord, 'record', 'record.uri = post.uri')
-    .innerJoin(User, 'author', 'author.did = post.creator')
-    .leftJoin(
-      ProfileIndex,
-      'author_profile',
-      'author.did = author_profile.creator',
-    )
-    .leftJoin(
-      util.countSubquery(LikeIndex, 'subject'),
-      'like_count',
-      'like_count.subject = post.uri',
-    )
-    .leftJoin(
-      util.countSubquery(RepostIndex, 'subject'),
-      'repost_count',
-      'repost_count.subject = post.uri',
-    )
-    .leftJoin(
-      util.countSubquery(PostIndex, 'replyParent'),
-      'reply_count',
-      'reply_count.subject = post.uri',
-    )
-    .leftJoin(
-      RepostIndex,
-      'requester_repost',
-      `requester_repost.creator = :requester AND requester_repost.subject = post.uri`,
-      { requester },
-    )
-    .leftJoin(
-      LikeIndex,
-      'requester_like',
-      `requester_like.creator = :requester AND requester_like.subject = post.uri`,
-      { requester },
-    )
 }
 
 // converts the raw SQL output to a Post object
-// unfortunately not type-checked since we're dealing with raw SQL, so change with caution!
+// unfortunately not type-checked yet, so change with caution!
 const rowToPost = (
   row: any,
   parent?: GetPostThread.Post,

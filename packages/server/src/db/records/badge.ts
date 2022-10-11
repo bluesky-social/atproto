@@ -1,52 +1,36 @@
+import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import * as Badge from '../../lexicon/types/todo/social/badge'
-import {
-  DataSource,
-  Entity,
-  Column,
-  PrimaryColumn,
-  Repository,
-  ManyToOne,
-} from 'typeorm'
 import { DbRecordPlugin, Notification } from '../types'
-import { User } from '../user'
 import schemas from '../schemas'
-import { collectionToTableName } from '../util'
 
 const type = 'todo.social.badge'
-const tableName = collectionToTableName(type)
+const tableName = 'todo_social_badge'
 
-@Entity({ name: tableName })
-export class BadgeIndex {
-  @PrimaryColumn('varchar')
+export interface TodoSocialBadge {
   uri: string
-
-  @Column('varchar')
-  @ManyToOne(() => User, (user) => user.did)
   creator: string
-
-  @Column('varchar')
   subject: string
-
-  @Column('varchar')
   assertionType: string
-
-  @Column({ type: 'varchar', nullable: true })
   assertionTag?: string
-
-  @Column('datetime')
   createdAt: string
-
-  @Column('varchar')
   indexedAt: string
 }
 
-const getFn =
-  (repo: Repository<BadgeIndex>) =>
-  async (uri: AdxUri): Promise<Badge.Record | null> => {
-    const found = await repo.findOneBy({ uri: uri.toString() })
-    return found === null ? null : translateDbObj(found)
-  }
+export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
+  await db.schema
+    .createTable(tableName)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('assertionType', 'varchar', (col) => col.notNull())
+    .addColumn('assertionTag', 'varchar')
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+}
+
+export type PartialDB = { [tableName]: TodoSocialBadge }
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Badge.Record => {
@@ -54,30 +38,7 @@ const isValidSchema = (obj: unknown): obj is Badge.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const setFn =
-  (repo: Repository<BadgeIndex>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
-    if (!isValidSchema(obj)) {
-      throw new Error(`Record does not match schema: ${type}`)
-    }
-    const badge = new BadgeIndex()
-    badge.uri = uri.toString()
-    badge.creator = uri.host
-    badge.subject = obj.subject
-    badge.assertionType = obj.assertion.type
-    badge.assertionTag = (obj.assertion as Badge.TagAssertion).tag
-    badge.createdAt = obj.createdAt
-    badge.indexedAt = new Date().toISOString()
-    await repo.save(badge)
-  }
-
-const deleteFn =
-  (repo: Repository<BadgeIndex>) =>
-  async (uri: AdxUri): Promise<void> => {
-    await repo.delete({ uri: uri.toString() })
-  }
-
-const translateDbObj = (dbObj: BadgeIndex): Badge.Record => {
+const translateDbObj = (dbObj: TodoSocialBadge): Badge.Record => {
   const badge = {
     assertion: {
       type: dbObj.assertionType,
@@ -91,6 +52,41 @@ const translateDbObj = (dbObj: BadgeIndex): Badge.Record => {
   }
   return badge
 }
+
+const getFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<Badge.Record | null> => {
+    const found = await db
+      .selectFrom('todo_social_badge')
+      .selectAll()
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    return !found ? null : translateDbObj(found)
+  }
+
+const insertFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri, obj: unknown): Promise<void> => {
+    if (!isValidSchema(obj)) {
+      throw new Error(`Record does not match schema: ${type}`)
+    }
+    const val = {
+      uri: uri.toString(),
+      creator: uri.host,
+      subject: obj.subject,
+      assertionType: obj.assertion.type,
+      assertionTag: (obj.assertion as Badge.TagAssertion).tag,
+      createdAt: obj.createdAt,
+      indexedAt: new Date().toISOString(),
+    }
+    await db.insertInto('todo_social_badge').values(val).execute()
+  }
+
+const deleteFn =
+  (db: Kysely<PartialDB>) =>
+  async (uri: AdxUri): Promise<void> => {
+    await db.deleteFrom('todo_social_badge').where('uri', '=', uri.toString())
+  }
 
 const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
   if (!isValidSchema(obj)) {
@@ -106,17 +102,16 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
 }
 
 export const makePlugin = (
-  db: DataSource,
-): DbRecordPlugin<Badge.Record, BadgeIndex> => {
-  const repository = db.getRepository(BadgeIndex)
+  db: Kysely<PartialDB>,
+): DbRecordPlugin<Badge.Record, TodoSocialBadge> => {
   return {
     collection: type,
     tableName,
-    get: getFn(repository),
     validateSchema,
-    set: setFn(repository),
-    delete: deleteFn(repository),
     translateDbObj,
+    get: getFn(db),
+    insert: insertFn(db),
+    delete: deleteFn(db),
     notifsForRecord,
   }
 }
