@@ -178,10 +178,11 @@ export class Database {
     return table.validateSchema(obj).valid
   }
 
-  async indexRecord(uri: AdxUri, obj: unknown) {
+  async indexRecord(uri: AdxUri, cid: CID, obj: unknown) {
     log.debug({ uri }, 'indexing record')
     const record = {
       uri: uri.toString(),
+      cid: cid.toString(),
       did: uri.host,
       collection: uri.collection,
       recordKey: uri.recordKey,
@@ -236,7 +237,7 @@ export class Database {
     reverse: boolean,
     before?: string,
     after?: string,
-  ): Promise<{ uri: string; value: unknown }[]> {
+  ): Promise<{ uri: string; cid: string; value: object }[]> {
     let builder = this.db
       .selectFrom('record')
       .selectAll()
@@ -255,18 +256,30 @@ export class Database {
     return res.map((row) => {
       return {
         uri: row.uri,
+        cid: row.cid,
         value: JSON.parse(row.raw),
       }
     })
   }
 
-  async getRecord(uri: AdxUri): Promise<unknown | null> {
-    const record = await this.db
+  async getRecord(
+    uri: AdxUri,
+    cid: string | null,
+  ): Promise<{ uri: string; cid: string; value: object } | null> {
+    let builder = this.db
       .selectFrom('record')
-      .select('raw')
+      .selectAll()
       .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    return record ? JSON.parse(record.raw) : null
+    if (cid) {
+      builder = builder.where('cid', '=', cid)
+    }
+    const record = await builder.executeTakeFirst()
+    if (!record) return null
+    return {
+      uri: record.uri,
+      cid: record.cid,
+      value: JSON.parse(record.raw),
+    }
   }
 
   findTableForCollection(collection: string) {

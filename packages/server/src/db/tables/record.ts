@@ -2,6 +2,7 @@ import { Kysely } from 'kysely'
 
 export interface Record {
   uri: string
+  cid: string
   did: string
   collection: string
   recordKey: string
@@ -18,6 +19,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('recordKey', 'varchar', (col) => col.notNull())

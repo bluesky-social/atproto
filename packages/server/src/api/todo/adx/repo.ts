@@ -41,7 +41,7 @@ export default function (server: Server) {
   })
 
   server.todo.adx.repoListRecords(async (params, _in, _req, res) => {
-    const { nameOrDid, type, limit, before, after, reverse } = params
+    const { nameOrDid, collection, limit, before, after, reverse } = params
 
     const db = locals.db(res)
     const did = await db.getUserDid(nameOrDid)
@@ -51,7 +51,7 @@ export default function (server: Server) {
 
     const records = await db.listRecordsForCollection(
       did,
-      type,
+      collection,
       limit || 50,
       reverse || false,
       before,
@@ -61,13 +61,13 @@ export default function (server: Server) {
     return {
       encoding: 'application/json',
       body: {
-        records: records as { uri: string; value: Record<string, unknown> }[],
+        records,
       },
     }
   })
 
   server.todo.adx.repoGetRecord(async (params, _in, _req, res) => {
-    const { nameOrDid, type, tid } = params
+    const { nameOrDid, collection, recordKey, cid = null } = params
     const db = locals.db(res)
 
     const did = await db.getUserDid(nameOrDid)
@@ -75,15 +75,15 @@ export default function (server: Server) {
       throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
     }
 
-    const uri = new AdxUri(`${did}/${type}/${tid}`)
+    const uri = new AdxUri(`${did}/${collection}/${recordKey}`)
 
-    const record = await db.getRecord(uri)
+    const record = await db.getRecord(uri, cid)
     if (!record) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
     return {
       encoding: 'application/json',
-      body: { uri: uri.toString(), value: record },
+      body: record,
     }
   })
 
@@ -138,16 +138,16 @@ export default function (server: Server) {
   })
 
   server.todo.adx.repoCreateRecord(async (params, input, req, res) => {
-    const { did, type, validate } = params
+    const { did, collection, validate } = params
     const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
     if (validate) {
-      const validation = db.validateRecord(type, input.body)
+      const validation = db.validateRecord(collection, input.body)
       if (!validation.valid) {
         throw new InvalidRequestError(
-          `Invalid ${type} record: ${validation.error}`,
+          `Invalid ${collection} record: ${validation.error}`,
         )
       }
     }
@@ -157,10 +157,12 @@ export default function (server: Server) {
         `${did} is not a registered repo on this server`,
       )
     }
-    const tid = await repo.getCollection(type).createRecord(input.body)
-    const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
+    const { key, cid } = await repo
+      .getCollection(collection)
+      .createRecord(input.body)
+    const uri = new AdxUri(`${did}/${collection}/${key}`)
     try {
-      await db.indexRecord(uri, input.body)
+      await db.indexRecord(uri, cid, input.body)
     } catch (err) {
       logger.warn(
         { uri: uri.toString(), err, validate },
@@ -175,7 +177,7 @@ export default function (server: Server) {
 
     return {
       encoding: 'application/json',
-      body: { uri: uri.toString() },
+      body: { uri: uri.toString(), cid: cid.toString() },
     }
   })
 

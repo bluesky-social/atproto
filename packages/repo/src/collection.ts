@@ -1,5 +1,6 @@
 import { TID } from '@adxp/common'
 import { NSID } from '@adxp/nsid'
+import { CID } from 'multiformats/cid'
 import Repo from './repo'
 import log from './logger'
 
@@ -47,7 +48,7 @@ export class Collection {
     )
   }
 
-  async createRecord(record: unknown): Promise<TID> {
+  async createRecord(record: unknown): Promise<{ key: string; cid: CID }> {
     const tid = TID.next()
     const cid = await this.repo.blockstore.put(record as any)
     await this.repo.safeCommit(async (data) => {
@@ -61,7 +62,10 @@ export class Collection {
       },
       'created record',
     )
-    return tid
+    return {
+      key: tid.toString(),
+      cid,
+    }
   }
 
   async updateRecord(tid: TID, record: unknown): Promise<void> {
