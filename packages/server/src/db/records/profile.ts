@@ -11,7 +11,7 @@ export interface TodoSocialProfile {
   uri: string
   creator: string
   displayName: string
-  description?: string
+  description: string | null
   indexedAt: string
 }
 
@@ -53,7 +53,7 @@ const validateSchema = (obj: unknown) => validator.validate(obj)
 const translateDbObj = (dbObj: TodoSocialProfile): Profile.Record => {
   return {
     displayName: dbObj.displayName,
-    description: dbObj.description,
+    description: dbObj.description ?? undefined,
   }
 }
 

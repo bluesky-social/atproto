@@ -11,8 +11,8 @@ export interface TodoSocialPost {
   uri: string
   creator: string
   text: string
-  replyRoot?: string
-  replyParent?: string
+  replyRoot: string | null
+  replyParent: string | null
   createdAt: string
   indexedAt: string
 }
@@ -63,7 +63,7 @@ const translateDbObj = (dbObj: TodoSocialPost): Post.Record => {
   const reply = dbObj.replyRoot
     ? {
         root: dbObj.replyRoot,
-        parent: dbObj.replyParent,
+        parent: dbObj.replyParent ?? undefined,
       }
     : undefined
   return {

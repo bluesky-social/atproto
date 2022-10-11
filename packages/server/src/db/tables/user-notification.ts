@@ -8,7 +8,7 @@ export interface UserNotification {
   recordUri: string
   author: string
   reason: string
-  reasonSubject?: string
+  reasonSubject: string | null
   indexedAt: string
 }
 

@@ -29,7 +29,7 @@ export default function (server: Server) {
       if (depth > 0) {
         thread.replies = await getReplies(db.db, thread, depth - 1, requester)
       }
-      if (queryRes.parent !== undefined) {
+      if (queryRes.parent !== null) {
         const parentRes = await postInfoBuilder(db.db, requester)
           .where('post.uri', '=', queryRes.parent)
           .executeTakeFirstOrThrow()
