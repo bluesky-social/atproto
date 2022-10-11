@@ -14,11 +14,11 @@ export default function (server: Server) {
       }
 
       const result = await db.db
-        .selectFrom('user')
+        .selectFrom('user_notification as notif')
         .select(countClause.as('count'))
-        .leftJoin('user_notification as notif', 'notif.userDid', 'user.did')
+        .innerJoin('user', 'notif.userDid', 'user.did')
         .where('user.did', '=', requester)
-        .where('notif.indexedAt', '>', 'user.lastSeenNotifs')
+        .whereRef('notif.indexedAt', '>', 'user.lastSeenNotifs')
         .executeTakeFirst()
 
       const count = result?.count ?? 0
