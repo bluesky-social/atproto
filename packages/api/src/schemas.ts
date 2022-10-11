@@ -324,9 +324,9 @@ export const methodSchemas: MethodSchema[] = [
         description: 'The DID of the repo.',
         required: true,
       },
-      type: {
+      collection: {
         type: 'string',
-        description: 'The NSID of the record type.',
+        description: 'The NSID of the record collection.',
         required: true,
       },
       validate: {
@@ -343,9 +343,12 @@ export const methodSchemas: MethodSchema[] = [
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['uri'],
+        required: ['uri', 'cid'],
         properties: {
           uri: {
+            type: 'string',
+          },
+          cid: {
             type: 'string',
           },
         },
@@ -509,7 +512,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'array',
             items: {
               type: 'object',
-              required: ['uri', 'value'],
+              required: ['uri', 'cid', 'value'],
               properties: {
                 uri: {
                   type: 'string',

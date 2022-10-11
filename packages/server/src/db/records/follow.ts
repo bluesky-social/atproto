@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
+import { CID } from 'multiformats/cid'
 import * as Follow from '../../lexicon/types/todo/social/follow'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
@@ -8,8 +9,10 @@ const type = 'todo.social.follow'
 const tableName = 'todo_social_follow'
 export interface TodoSocialFollow {
   uri: string
+  cid: string
   creator: string
   subject: string
+  subjectCid: string
   createdAt: string
   indexedAt: string
 }
@@ -18,8 +21,10 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('subjectCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
@@ -36,6 +41,7 @@ const validateSchema = (obj: unknown) => validator.validate(obj)
 const translateDbObj = (dbObj: TodoSocialFollow): Follow.Record => {
   return {
     subject: dbObj.subject,
+    subjectCid: dbObj.subjectCid,
     createdAt: dbObj.createdAt,
   }
 }
@@ -53,14 +59,16 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
+  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
     const val = {
       uri: uri.toString(),
+      cid: cid.toString(),
       creator: uri.host,
       subject: obj.subject,
+      subjectCid: obj.subjectCid,
       createdAt: obj.createdAt,
       indexedAt: new Date().toISOString(),
     }

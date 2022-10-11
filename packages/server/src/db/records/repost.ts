@@ -11,6 +11,7 @@ export interface TodoSocialRepost {
   uri: string
   creator: string
   subject: string
+  subjectCid: string
   createdAt: string
   indexedAt: string
 }
@@ -21,6 +22,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('subjectCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
@@ -37,6 +39,7 @@ const validateSchema = (obj: unknown) => validator.validate(obj)
 const translateDbObj = (dbObj: TodoSocialRepost): Repost.Record => {
   return {
     subject: dbObj.subject,
+    subjectCid: dbObj.subjectCid,
     createdAt: dbObj.createdAt,
   }
 }
@@ -64,6 +67,7 @@ const insertFn =
         uri: uri.toString(),
         creator: uri.host,
         subject: obj.subject,
+        subjectCid: obj.subjectCid,
         createdAt: obj.createdAt,
         indexedAt: new Date().toISOString(),
       })

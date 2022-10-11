@@ -21,7 +21,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   records: {
     uri: string,
-    cid?: string,
+    cid: string,
     value: {},
   }[];
 }

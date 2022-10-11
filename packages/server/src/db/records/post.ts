@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
+import { CID } from 'multiformats/cid'
 import * as Post from '../../lexicon/types/todo/social/post'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
@@ -9,6 +10,7 @@ const tableName = 'todo_social_post'
 
 export interface TodoSocialPost {
   uri: string
+  cid: string
   creator: string
   text: string
   replyRoot: string | null
@@ -30,6 +32,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('text', 'varchar', (col) => col.notNull())
     .addColumn('replyRoot', 'varchar')
@@ -99,7 +102,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
+  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -112,6 +115,7 @@ const insertFn =
     }))
     const post = {
       uri: uri.toString(),
+      cid: cid.toString(),
       creator: uri.host,
       text: obj.text,
       createdAt: obj.createdAt,
