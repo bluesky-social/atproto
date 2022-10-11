@@ -4,7 +4,7 @@ import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetUserFollows from '../../../lexicon/types/todo/social/getUserFollows'
 import * as util from './util'
 import * as locals from '../../../locals'
-import { dateFromDb, dateToDb, paginate } from '../../../db/util'
+import { paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getUserFollows(
@@ -20,15 +20,15 @@ export default function (server: Server) {
         .selectFrom('todo_social_follow as follow')
         .where('follow.creator', '=', creator.did)
         .innerJoin('record', 'record.uri', 'follow.uri')
-        .innerJoin('user as creator', 'creator.did', 'record.did')
+        .innerJoin('user as subject', 'subject.did', 'follow.subject')
         .leftJoin(
           'todo_social_profile as profile',
           'profile.creator',
-          'record.did',
+          'follow.subject',
         )
         .select([
-          'creator.did as did',
-          'creator.username as name',
+          'subject.did as did',
+          'subject.username as name',
           'profile.displayName as displayName',
           'follow.createdAt as createdAt',
           'record.indexedAt as indexedAt',
@@ -36,7 +36,7 @@ export default function (server: Server) {
 
       followsReq = paginate(followsReq, {
         limit,
-        before: before && dateToDb(before),
+        before,
         by: sql`follow.createdAt`,
       })
 
@@ -44,8 +44,8 @@ export default function (server: Server) {
       const follows = followsRes.map((row) => ({
         did: row.did,
         name: row.name,
-        displayName: row.displayName || undefined,
-        createdAt: dateFromDb(row.createdAt),
+        displayName: row.displayName ?? undefined,
+        createdAt: row.createdAt,
         indexedAt: row.indexedAt,
       }))
 

@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import * as GetRepostedBy from '../../../lexicon/types/todo/social/getRepostedBy'
 import * as locals from '../../../locals'
-import { dateFromDb, dateToDb, paginate } from '../../../db/util'
+import { paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getRepostedBy(
@@ -30,7 +30,7 @@ export default function (server: Server) {
 
       builder = paginate(builder, {
         limit,
-        before: before && dateToDb(before),
+        before,
         by: sql`repost.createdAt`,
       })
 
@@ -40,7 +40,7 @@ export default function (server: Server) {
         did: row.did,
         name: row.name,
         displayName: row.displayName || undefined,
-        createdAt: dateFromDb(row.createdAt),
+        createdAt: row.createdAt,
         indexedAt: row.indexedAt,
       }))
 

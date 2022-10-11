@@ -4,7 +4,7 @@ import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetUserFollowers from '../../../lexicon/types/todo/social/getUserFollowers'
 import * as util from './util'
 import * as locals from '../../../locals'
-import { dateFromDb, dateToDb, paginate } from '../../../db/util'
+import { paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getUserFollowers(
@@ -36,7 +36,7 @@ export default function (server: Server) {
 
       followersReq = paginate(followersReq, {
         limit,
-        before: before && dateToDb(before),
+        before,
         by: sql`follow.createdAt`,
       })
 
@@ -45,7 +45,7 @@ export default function (server: Server) {
         did: row.did,
         name: row.name,
         displayName: row.displayName || undefined,
-        createdAt: dateFromDb(row.createdAt),
+        createdAt: row.createdAt,
         indexedAt: row.indexedAt,
       }))
 

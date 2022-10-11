@@ -4,8 +4,6 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import * as locals from '../../src/locals'
 import { App } from '../../src'
-import { UserNotification } from '../../src/db/user-notifications'
-import { dateFromDb } from '../../src/db/util'
 
 describe('pds notification views', () => {
   let client: AdxServiceClient
@@ -69,12 +67,14 @@ describe('pds notification views', () => {
 
     // Need to look-up createdAt time as a cursor since it's not in the method's output
     const beforeNotif = await db.db
-      .getRepository(UserNotification)
-      .findOneByOrFail({ recordUri: full.data.notifications[3].uri })
+      .selectFrom('user_notification')
+      .selectAll()
+      .where('recordUri', '=', full.data.notifications[3].uri)
+      .executeTakeFirstOrThrow()
 
     const paginated = await client.todo.social.getNotifications(
       {
-        before: dateFromDb(beforeNotif.createdAt),
+        before: beforeNotif.indexedAt,
         limit: 4,
       },
       undefined,
@@ -98,12 +98,14 @@ describe('pds notification views', () => {
 
     // Need to look-up createdAt time as a cursor since it's not in the method's output
     const beforeNotif = await db.db
-      .getRepository(UserNotification)
-      .findOneByOrFail({ recordUri: full.data.notifications[3].uri })
+      .selectFrom('user_notification')
+      .selectAll()
+      .where('recordUri', '=', full.data.notifications[3].uri)
+      .executeTakeFirstOrThrow()
 
     await client.todo.social.postNotificationsSeen(
       {},
-      { seenAt: beforeNotif.createdAt },
+      { seenAt: beforeNotif.indexedAt },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
   })

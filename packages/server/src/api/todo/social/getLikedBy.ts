@@ -1,7 +1,7 @@
 import { Server } from '../../../lexicon'
 import * as GetLikedBy from '../../../lexicon/types/todo/social/getLikedBy'
 import * as locals from '../../../locals'
-import { dateFromDb, dateToDb, paginate } from '../../../db/util'
+import { paginate } from '../../../db/util'
 import { sql } from 'kysely'
 
 export default function (server: Server) {
@@ -30,7 +30,7 @@ export default function (server: Server) {
 
       builder = paginate(builder, {
         limit,
-        before: before && dateToDb(before),
+        before,
         by: sql`like.createdAt`,
       })
 
@@ -40,7 +40,7 @@ export default function (server: Server) {
         did: row.did,
         name: row.name,
         displayName: row.displayName || undefined,
-        createdAt: dateFromDb(row.createdAt),
+        createdAt: row.createdAt,
         indexedAt: row.indexedAt,
       }))
 
