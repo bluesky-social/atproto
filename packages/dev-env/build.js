@@ -11,9 +11,9 @@ require('esbuild')
       './node_modules/sqlite3/*',
       '../server/node_modules/@mapbox/node-pre-gyp/*',
       '../plc/node_modules/@mapbox/node-pre-gyp/*',
+      '../plc/node_modules/better-sqlite3/*',
       '../server/node_modules/sqlite3/*',
       '../../node_modules/classic-level/*',
-      '../../node_modules/better-sqlite3/*',
     ],
     plugins: [
       copy({
