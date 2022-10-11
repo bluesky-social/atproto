@@ -18,4 +18,3 @@ echo # newline
 docker compose -f $compose_file rm -f --stop db_test
 
 exit $code
-q
