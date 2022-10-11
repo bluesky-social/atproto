@@ -7,7 +7,7 @@ export type DbRecordPlugin<T, S> = {
   validateSchema: (obj: unknown) => ValidationResult
   translateDbObj: (dbObj: S) => T
   get: (uri: AdxUri) => Promise<T | null>
-  set: (uri: AdxUri, obj: unknown) => Promise<void>
+  insert: (uri: AdxUri, obj: unknown) => Promise<void>
   delete: (uri: AdxUri) => Promise<void>
   notifsForRecord: (uri: AdxUri, obj: unknown) => Notification[]
 }

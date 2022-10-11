@@ -64,7 +64,7 @@ const getFn =
     return !found ? null : translateDbObj(found)
   }
 
-const setFn =
+const insertFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
@@ -110,7 +110,7 @@ export const makePlugin = (
     validateSchema,
     translateDbObj,
     get: getFn(db),
-    set: setFn(db),
+    insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,
   }

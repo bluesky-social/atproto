@@ -198,7 +198,7 @@ export class Database {
     }
     await this.db.insertInto('record').values(record).execute()
     const table = this.findTableForCollection(uri.collection)
-    await table.set(uri, obj)
+    await table.insert(uri, obj)
     const notifs = table.notifsForRecord(uri, obj)
     await this.notifications.process(notifs)
     log.info({ uri }, 'indexed record')
@@ -210,6 +210,7 @@ export class Database {
     const deleteQuery = this.db
       .deleteFrom('record')
       .where('uri', '=', uri.toString())
+      .execute()
     await Promise.all([
       table.delete(uri),
       deleteQuery,
@@ -236,7 +237,7 @@ export class Database {
     before?: string,
     after?: string,
   ): Promise<{ uri: string; value: unknown }[]> {
-    const builder = this.db
+    let builder = this.db
       .selectFrom('record')
       .selectAll()
       .where('did', '=', did)
@@ -245,10 +246,10 @@ export class Database {
       .limit(limit)
 
     if (before !== undefined) {
-      builder.where('recordKey', '<', before)
+      builder = builder.where('recordKey', '<', before)
     }
     if (after !== undefined) {
-      builder.where('recordKey', '>', after)
+      builder = builder.where('recordKey', '>', after)
     }
     const res = await builder.execute()
     return res.map((row) => {

@@ -77,7 +77,7 @@ const getFn =
     return record
   }
 
-const setFn =
+const insertFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
@@ -95,10 +95,15 @@ const setFn =
       description: obj.description,
       indexedAt: new Date().toISOString(),
     }
-    await Promise.all([
+    const promises = [
       db.insertInto('todo_social_profile').values(profile).execute(),
-      db.insertInto('todo_social_profile_badge').values(badges).execute(),
-    ])
+    ]
+    if (badges.length > 0) {
+      promises.push(
+        db.insertInto('todo_social_profile_badge').values(badges).execute(),
+      )
+    }
+    await Promise.all(promises)
   }
 
 const deleteFn =
@@ -124,7 +129,7 @@ export const makePlugin = (
     tableName,
     get: getFn(db),
     validateSchema,
-    set: setFn(db),
+    insert: insertFn(db),
     delete: deleteFn(db),
     translateDbObj,
     notifsForRecord,

@@ -28,6 +28,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
 
 export const process =
   (db: Kysely<PartialDB>) => async (notifs: Notification[]) => {
+    if (notifs.length === 0) return
     const vals = notifs.map((notif) => ({
       ...notif,
       indexedAt: new Date().toISOString(),

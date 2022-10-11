@@ -119,42 +119,42 @@ describe('crud operations', () => {
     expect(res2.value.text).toBe('Hello, world!')
   })
 
-  it('puts records', async () => {
-    const res1 = await aliceClient.todo.adx.repoPutRecord(
-      { did: alice.did, type: 'todo.social.post', tid: uri.recordKey },
-      {
-        $type: 'todo.social.post',
-        text: 'Hello, universe!',
-        createdAt: new Date().toISOString(),
-      },
-    )
-    expect(res1.data.uri).toBe(uri.toString())
+  // it('puts records', async () => {
+  //   const res1 = await aliceClient.todo.adx.repoPutRecord(
+  //     { did: alice.did, type: 'todo.social.post', tid: uri.recordKey },
+  //     {
+  //       $type: 'todo.social.post',
+  //       text: 'Hello, universe!',
+  //       createdAt: new Date().toISOString(),
+  //     },
+  //   )
+  //   expect(res1.data.uri).toBe(uri.toString())
 
-    const res2 = await client.todo.adx.repoGetRecord({
-      nameOrDid: alice.did,
-      type: 'todo.social.post',
-      tid: uri.recordKey,
-    })
-    expect(res2.data.uri).toBe(uri.toString())
-    expect((res2.data.value as Post.Record).text).toBe('Hello, universe!')
+  //   const res2 = await client.todo.adx.repoGetRecord({
+  //     nameOrDid: alice.did,
+  //     type: 'todo.social.post',
+  //     tid: uri.recordKey,
+  //   })
+  //   expect(res2.data.uri).toBe(uri.toString())
+  //   expect((res2.data.value as Post.Record).text).toBe('Hello, universe!')
 
-    const res3 = await aliceClient.todo.social.post.put(
-      { did: alice.did, tid: uri.recordKey },
-      {
-        $type: 'todo.social.post',
-        text: 'Hello, universe!!!',
-        createdAt: new Date().toISOString(),
-      },
-    )
-    expect(res3.uri).toBe(uri.toString())
+  //   const res3 = await aliceClient.todo.social.post.put(
+  //     { did: alice.did, tid: uri.recordKey },
+  //     {
+  //       $type: 'todo.social.post',
+  //       text: 'Hello, universe!!!',
+  //       createdAt: new Date().toISOString(),
+  //     },
+  //   )
+  //   expect(res3.uri).toBe(uri.toString())
 
-    const res4 = await client.todo.social.post.get({
-      nameOrDid: alice.did,
-      tid: uri.recordKey,
-    })
-    expect(res4.uri).toBe(uri.toString())
-    expect(res4.value.text).toBe('Hello, universe!!!')
-  })
+  //   const res4 = await client.todo.social.post.get({
+  //     nameOrDid: alice.did,
+  //     tid: uri.recordKey,
+  //   })
+  //   expect(res4.uri).toBe(uri.toString())
+  //   expect(res4.value.text).toBe('Hello, universe!!!')
+  // })
 
   it('deletes records', async () => {
     await aliceClient.todo.adx.repoDeleteRecord({
@@ -283,13 +283,13 @@ describe('crud operations', () => {
     await expect(prom1).rejects.toThrow(
       'The passed value does not declare a $type',
     )
-    const prom2 = aliceClient.todo.adx.repoPutRecord(
-      { did: alice.did, type: 'todo.social.post', tid: 'foo' },
-      {},
-    )
-    await expect(prom2).rejects.toThrow(
-      'The passed value does not declare a $type',
-    )
+    // const prom2 = aliceClient.todo.adx.repoPutRecord(
+    //   { did: alice.did, type: 'todo.social.post', tid: 'foo' },
+    //   {},
+    // )
+    // await expect(prom2).rejects.toThrow(
+    //   'The passed value does not declare a $type',
+    // )
   })
 
   it('requires the schema to be known if validating', async () => {
@@ -303,11 +303,11 @@ describe('crud operations', () => {
       { $type: 'com.example.foobar' },
     )
     await expect(prom2).rejects.toThrow('Schema not found')
-    const prom3 = aliceClient.todo.adx.repoPutRecord(
-      { did: alice.did, type: 'com.example.foobar', tid: 'foo' },
-      { $type: 'com.example.foobar' },
-    )
-    await expect(prom3).rejects.toThrow('Schema not found')
+    // const prom3 = aliceClient.todo.adx.repoPutRecord(
+    //   { did: alice.did, type: 'com.example.foobar', tid: 'foo' },
+    //   { $type: 'com.example.foobar' },
+    // )
+    // await expect(prom3).rejects.toThrow('Schema not found')
   })
 
   it('requires the $type to match the schema', async () => {
@@ -317,12 +317,12 @@ describe('crud operations', () => {
         { $type: 'todo.social.like' },
       ),
     ).rejects.toThrow('Record type todo.social.like is not supported')
-    await expect(
-      aliceClient.todo.adx.repoPutRecord(
-        { did: alice.did, type: 'todo.social.post', tid: 'foo' },
-        { $type: 'todo.social.like' },
-      ),
-    ).rejects.toThrow('Record type todo.social.like is not supported')
+    // await expect(
+    //   aliceClient.todo.adx.repoPutRecord(
+    //     { did: alice.did, type: 'todo.social.post', tid: 'foo' },
+    //     { $type: 'todo.social.like' },
+    //   ),
+    // ).rejects.toThrow('Record type todo.social.like is not supported')
   })
 
   it('validates the record on write', async () => {
@@ -334,14 +334,14 @@ describe('crud operations', () => {
     ).rejects.toThrow(
       "Failed todo.social.post validation for #/required: must have required property 'text'",
     )
-    await expect(
-      aliceClient.todo.adx.repoPutRecord(
-        { did: alice.did, type: 'todo.social.post', tid: 'foo' },
-        { $type: 'todo.social.post' },
-      ),
-    ).rejects.toThrow(
-      "Failed todo.social.post validation for #/required: must have required property 'text'",
-    )
+    // await expect(
+    //   aliceClient.todo.adx.repoPutRecord(
+    //     { did: alice.did, type: 'todo.social.post', tid: 'foo' },
+    //     { $type: 'todo.social.post' },
+    //   ),
+    // ).rejects.toThrow(
+    //   "Failed todo.social.post validation for #/required: must have required property 'text'",
+    // )
   })
 
   // TODO: does it?

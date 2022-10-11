@@ -21,7 +21,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('recordKey', 'varchar', (col) => col.notNull())
-    .addColumn('rew', 'text', (col) => col.notNull())
+    .addColumn('raw', 'text', (col) => col.notNull())
     .addColumn('receivedAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
