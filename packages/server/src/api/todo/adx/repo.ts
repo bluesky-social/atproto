@@ -95,6 +95,10 @@ export default function (server: Server) {
       throw new AuthRequiredError()
     }
     const tx = input.body
+    const update = tx.writes.findIndex((write) => write.action === 'update')
+    if (update > -1) {
+      throw new InvalidRequestError(`Updates are not yet supported.`)
+    }
     if (validate) {
       for (const write of tx.writes) {
         if (write.action === 'create' || write.action === 'update') {
@@ -175,45 +179,8 @@ export default function (server: Server) {
     }
   })
 
-  server.todo.adx.repoPutRecord(async (params, input, req, res) => {
-    const { did, type, tid, validate } = params
-    const { auth, db, logger } = locals.get(res)
-    if (!auth.verifyUser(req, did)) {
-      throw new AuthRequiredError()
-    }
-    if (validate) {
-      const validation = db.validateRecord(type, input.body)
-      if (!validation.valid) {
-        throw new InvalidRequestError(
-          `Invalid ${type} record: ${validation.error}`,
-        )
-      }
-    }
-    const repo = await locals.loadRepo(res, did)
-    if (!repo) {
-      throw new InvalidRequestError(
-        `${did} is not a registered repo on this server`,
-      )
-    }
-    await repo.getCollection(type).updateRecord(TID.fromStr(tid), input.body)
-    const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
-    try {
-      await db.indexRecord(uri, input.body)
-    } catch (err) {
-      logger.warn(
-        { uri: uri.toString(), err, validate },
-        'failed to index updated record',
-      )
-      if (validate) {
-        throw new InvalidRequestError(`Could not index record: ${err}`)
-      }
-    }
-    await db.updateRepoRoot(did, repo.cid)
-    // @TODO update subscribers
-    return {
-      encoding: 'application/json',
-      body: { uri: uri.toString() },
-    }
+  server.todo.adx.repoPutRecord(async (_params, _input, _req, _res) => {
+    throw new InvalidRequestError(`Updates are not yet supported.`)
   })
 
   server.todo.adx.repoDeleteRecord(async (params, _input, req, res) => {
