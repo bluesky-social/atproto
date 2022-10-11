@@ -16,7 +16,7 @@ export const userWhereClause = (user: string) => {
   }
 }
 
-export const isNotRepostClause = sql<boolean>`originator.did == post.creator`
+export const isNotRepostClause = sql<0 | 1>`originator.did == post.creator`
 
 export const postOrRepostIndexedAtClause = sql<string>`iif(${isNotRepostClause}, post.indexedAt, repost.indexedAt)`
 

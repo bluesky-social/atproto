@@ -43,7 +43,7 @@ export default function (server: Server) {
           'author_profile.creator',
           'author.did',
         )
-        .leftJoin('user as reposted_by', 'reposted_by.did', 'repost.subject')
+        .leftJoin('user as reposted_by', 'reposted_by.did', 'repost.creator')
         .leftJoin(
           'todo_social_profile as reposted_by_profile',
           'reposted_by_profile.creator',
