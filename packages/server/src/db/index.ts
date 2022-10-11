@@ -21,6 +21,7 @@ import { dbLogger as log } from '../logger'
 import { DatabaseSchema, createTables } from './database-schema'
 import * as scrypt from './scrypt'
 import { User } from './tables/user'
+import { dummyDialect } from './util'
 
 export class Database {
   db: Kysely<DatabaseSchema>
@@ -279,3 +280,6 @@ export class Database {
 }
 
 export default Database
+
+// Can use with typeof to get types for partial queries
+export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })

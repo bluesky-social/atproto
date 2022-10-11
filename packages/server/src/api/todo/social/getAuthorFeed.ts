@@ -1,11 +1,12 @@
-import { sql } from 'kysely'
 import { AuthRequiredError } from '@adxp/xrpc-server'
 import { Server } from '../../../lexicon'
 import * as GetAuthorFeed from '../../../lexicon/types/todo/social/getAuthorFeed'
 import * as locals from '../../../locals'
 import { queryResultToFeedItem } from './util'
 import {
+  countClause,
   isNotRepostClause,
+  paginate,
   postOrRepostIndexedAtClause,
 } from '../../../db/util'
 
@@ -20,10 +21,11 @@ export default function (server: Server) {
         throw new AuthRequiredError()
       }
 
+      const { ref } = db.db.dynamic
       const authorIsDid = author.startsWith('did:')
 
       // @TODO break this query up, share parts with home feed and post thread
-      const builder = db.db
+      let builder = db.db
         .selectFrom('todo_social_post as post')
         // Determine result set of posts and reposts
         .leftJoin('todo_social_repost as repost', 'repost.subject', 'post.uri')
@@ -48,79 +50,56 @@ export default function (server: Server) {
           'reposted_by.did',
         )
         .leftJoin('record', 'record.uri', 'post.uri')
-        .leftJoin(
-          db.db
-            .selectFrom('todo_social_like')
-            .select([
-              'todo_social_like.subject as subject',
-              db.db.fn.count('todo_social_like.uri').as('count'),
-            ])
-            .groupBy('subject')
-            .as('like_count'),
-          'like_count.subject',
-          'post.uri',
-        )
-        .leftJoin(
-          db.db
-            .selectFrom('todo_social_repost')
-            .select([
-              'todo_social_repost.subject as subject',
-              db.db.fn.count('todo_social_repost.uri').as('count'),
-            ])
-            .groupBy('subject')
-            .as('repost_count'),
-          'repost_count.subject',
-          'post.uri',
-        )
-        .leftJoin(
-          db.db
-            .selectFrom('todo_social_post')
-            .select([
-              'todo_social_post.replyParent as subject',
-              db.db.fn.count('todo_social_post.uri').as('count'),
-            ])
-            .groupBy('subject')
-            .as('reply_count'),
-          'reply_count.subject',
-          'post.uri',
-        )
-        .leftJoin('todo_social_repost as requester_repost', (join) =>
-          join
-            .on('requester_repost.creator', '=', requester)
-            .onRef('requester_repost.subject', '=', 'post.uri'),
-        )
-        .leftJoin('todo_social_like as requester_like', (join) =>
-          join
-            .on('requester_like.creator', '=', requester)
-            .onRef('requester_like.subject', '=', 'post.uri'),
-        )
         .select([
           'post.uri as uri',
+          'record.raw as rawRecord',
+          'record.indexedAt as indexedAt',
           'author.did as authorDid',
           'author.username as authorName',
           'author_profile.displayName as authorDisplayName',
           'reposted_by.did as repostedByDid',
           'reposted_by.username as repostedByName',
           'reposted_by_profile.displayName as repostedByDisplayName',
-          sql`${isNotRepostClause}`.as('isNotRepost'),
-          'record.raw as rawRecord',
-          'like_count.count as likeCount',
-          'repost_count.count as repostCount',
-          'reply_count.count as replyCount',
-          'requester_repost.uri as requesterRepost',
-          'requester_like.uri as requesterLike',
-          'record.indexedAt as indexedAt',
-          sql`${postOrRepostIndexedAtClause}`.as('cursor'),
+          isNotRepostClause.as('isNotRepost'),
+          postOrRepostIndexedAtClause.as('cursor'),
+          db.db
+            .selectFrom('todo_social_like')
+            .select(countClause.as('count'))
+            .whereRef('subject', '=', ref('post.uri'))
+            .as('likeCount'),
+          db.db
+            .selectFrom('todo_social_repost')
+            .select(countClause.as('count'))
+            .whereRef('subject', '=', ref('post.uri'))
+            .as('repostCount'),
+          db.db
+            .selectFrom('todo_social_post')
+            .select(countClause.as('count'))
+            .whereRef('replyParent', '=', ref('post.uri'))
+            .as('replyCount'),
+          db.db
+            .selectFrom('todo_social_repost')
+            .select('uri')
+            .where('creator', '=', requester)
+            .whereRef('subject', '=', ref('post.uri'))
+            .as('requesterRepost'),
+          db.db
+            .selectFrom('todo_social_like')
+            .select('uri')
+            .where('creator', '=', requester)
+            .whereRef('subject', '=', ref('post.uri'))
+            .as('requesterRepost'),
         ])
         // Grouping by post then originator preserves one row for each
         // post or repost. Reposts of a given post only vary by originator.
         .groupBy(['post.uri', 'originator.did'])
-        // Apply pagination
-        .orderBy(postOrRepostIndexedAtClause, 'desc')
-        .if(before !== undefined, (qb) =>
-          qb.where(postOrRepostIndexedAtClause, '<', before as string),
-        )
-        .if(limit !== undefined, (qb) => qb.limit(limit as number))
+
+      // Apply pagination
+      builder = paginate(builder, {
+        limit,
+        before,
+        by: postOrRepostIndexedAtClause,
+      })
 
       const queryRes = await builder.execute()
       const feed: GetAuthorFeed.FeedItem[] = queryRes.map(queryResultToFeedItem)
