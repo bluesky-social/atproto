@@ -4,6 +4,7 @@ import { Server } from '../../../lexicon'
 import * as GetPostThread from '../../../lexicon/types/todo/social/getPostThread'
 import * as locals from '../../../locals'
 import { DatabaseSchema } from '../../../db/database-schema'
+import { countClause } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getPostThread(
@@ -68,6 +69,7 @@ const getReplies = async (
 // selects all the needed info about a post, just need to supply the `where` clause
 // @TODO break this query up, share parts with home/author feeds
 const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
+  const { ref } = db.dynamic
   return db
     .selectFrom('todo_social_post as post')
     .innerJoin('record', 'record.uri', 'post.uri')
@@ -77,52 +79,6 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
       'author.did',
       'author_profile.creator',
     )
-    .leftJoin(
-      db
-        .selectFrom('todo_social_like')
-        .select([
-          'todo_social_like.subject as subject',
-          db.fn.count('todo_social_like.uri').as('count'),
-        ])
-        .groupBy('subject')
-        .as('like_count'),
-      'like_count.subject',
-      'post.uri',
-    )
-    .leftJoin(
-      db
-        .selectFrom('todo_social_repost')
-        .select([
-          'todo_social_repost.subject as subject',
-          db.fn.count('todo_social_repost.uri').as('count'),
-        ])
-        .groupBy('subject')
-        .as('repost_count'),
-      'repost_count.subject',
-      'post.uri',
-    )
-    .leftJoin(
-      db
-        .selectFrom('todo_social_post')
-        .select([
-          'todo_social_post.replyParent as subject',
-          db.fn.count('todo_social_post.uri').as('count'),
-        ])
-        .groupBy('subject')
-        .as('reply_count'),
-      'reply_count.subject',
-      'post.uri',
-    )
-    .leftJoin('todo_social_repost as requester_repost', (join) =>
-      join
-        .on('requester_repost.creator', '=', requester)
-        .onRef('requester_repost.subject', '=', 'post.uri'),
-    )
-    .leftJoin('todo_social_like as requester_like', (join) =>
-      join
-        .on('requester_like.creator', '=', requester)
-        .onRef('requester_like.subject', '=', 'post.uri'),
-    )
     .select([
       'post.uri as uri',
       'post.replyParent as parent',
@@ -130,12 +86,34 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
       'author.username as authorName',
       'author_profile.displayName as authorDisplayName',
       'record.raw as rawRecord',
-      'reply_count.count as replyCount',
-      'like_count.count as likeCount',
-      'repost_count.count as repostCount',
       'record.indexedAt as indexedAt',
-      'requester_repost.uri as requesterRepost',
-      'requester_like.uri as requesterLike',
+      db
+        .selectFrom('todo_social_like')
+        .select(countClause.as('count'))
+        .whereRef('subject', '=', ref('post.uri'))
+        .as('likeCount'),
+      db
+        .selectFrom('todo_social_repost')
+        .select(countClause.as('count'))
+        .whereRef('subject', '=', ref('post.uri'))
+        .as('repostCount'),
+      db
+        .selectFrom('todo_social_post')
+        .select(countClause.as('count'))
+        .whereRef('replyParent', '=', ref('post.uri'))
+        .as('replyCount'),
+      db
+        .selectFrom('todo_social_repost')
+        .select('uri')
+        .where('creator', '=', requester)
+        .whereRef('subject', '=', ref('post.uri'))
+        .as('requesterRepost'),
+      db
+        .selectFrom('todo_social_like')
+        .select('uri')
+        .where('creator', '=', requester)
+        .whereRef('subject', '=', ref('post.uri'))
+        .as('requesterLike'),
     ])
 }
 

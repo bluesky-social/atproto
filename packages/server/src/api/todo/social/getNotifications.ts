@@ -1,7 +1,9 @@
+import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetNotifications from '../../../lexicon/types/todo/social/getNotifications'
 import * as locals from '../../../locals'
+import { paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getNotifications(
@@ -14,7 +16,7 @@ export default function (server: Server) {
         throw new AuthRequiredError()
       }
 
-      const notifBuilder = db.db
+      let notifBuilder = db.db
         .selectFrom('user_notification as notif')
         .where('notif.userDid', '=', requester)
         .innerJoin('record', 'record.uri', 'notif.recordUri')
@@ -36,14 +38,12 @@ export default function (server: Server) {
           'record.indexedAt as indexedAt',
           'notif.recordUri as uri',
         ])
-        .orderBy('notif.indexedAt', 'desc')
 
-      if (before) {
-        notifBuilder.where('notif.indexedAt', '<', before)
-      }
-      if (limit) {
-        notifBuilder.limit(limit)
-      }
+      notifBuilder = paginate(notifBuilder, {
+        before,
+        limit,
+        by: sql`notif.indexedAt`,
+      })
 
       const [user, notifs] = await Promise.all([
         db.db

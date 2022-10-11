@@ -1,8 +1,8 @@
-import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import { AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetNotificationCount from '../../../lexicon/types/todo/social/getNotificationCount'
 import * as locals from '../../../locals'
+import { countClause } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getNotificationCount(
@@ -15,7 +15,7 @@ export default function (server: Server) {
 
       const result = await db.db
         .selectFrom('user')
-        .select(sql<number>`count(*)`.as('count'))
+        .select(countClause.as('count'))
         .leftJoin('user_notification as notif', 'notif.userDid', 'user.did')
         .where('user.did', '=', requester)
         .where('notif.indexedAt', '>', 'user.lastSeenNotifs')

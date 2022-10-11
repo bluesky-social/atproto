@@ -55,9 +55,9 @@ export const queryResultToFeedItem = (
         }
       : undefined,
   record: JSON.parse(row.rawRecord),
-  replyCount: row.replyCount || 0,
-  repostCount: row.repostCount || 0,
-  likeCount: row.likeCount || 0,
+  replyCount: row.replyCount,
+  repostCount: row.repostCount,
+  likeCount: row.likeCount,
   indexedAt: row.indexedAt,
   myState: {
     repost: row.requesterRepost || undefined,

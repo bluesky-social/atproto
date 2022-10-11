@@ -64,31 +64,31 @@ export default function (server: Server) {
           postOrRepostIndexedAtClause.as('cursor'),
           db.db
             .selectFrom('todo_social_like')
-            .select(countClause.as('count'))
             .whereRef('subject', '=', ref('post.uri'))
+            .select(countClause.as('count'))
             .as('likeCount'),
           db.db
             .selectFrom('todo_social_repost')
-            .select(countClause.as('count'))
             .whereRef('subject', '=', ref('post.uri'))
+            .select(countClause.as('count'))
             .as('repostCount'),
           db.db
             .selectFrom('todo_social_post')
-            .select(countClause.as('count'))
             .whereRef('replyParent', '=', ref('post.uri'))
+            .select(countClause.as('count'))
             .as('replyCount'),
           db.db
             .selectFrom('todo_social_repost')
-            .select('uri')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('post.uri'))
+            .select('uri')
             .as('requesterRepost'),
           db.db
             .selectFrom('todo_social_like')
-            .select('uri')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('post.uri'))
-            .as('requesterRepost'),
+            .select('uri')
+            .as('requesterLike'),
         ])
         // Grouping by post then originator preserves one row for each
         // post or repost. Reposts of a given post only vary by originator.

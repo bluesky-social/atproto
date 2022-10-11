@@ -1,7 +1,8 @@
+import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import * as GetRepostedBy from '../../../lexicon/types/todo/social/getRepostedBy'
 import * as locals from '../../../locals'
-import { dateFromDb, dateToDb } from '../../../db/util'
+import { dateFromDb, dateToDb, paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getRepostedBy(
@@ -26,15 +27,12 @@ export default function (server: Server) {
           'repost.createdAt as createdAt',
           'record.indexedAt as indexedAt',
         ])
-        .orderBy('repost.createdAt', 'desc')
 
-      // Paginate
-      if (before !== undefined) {
-        builder = builder.where('repost.createdAt', '<', dateToDb(before))
-      }
-      if (limit !== undefined) {
-        builder = builder.limit(limit)
-      }
+      builder = paginate(builder, {
+        limit,
+        before: before && dateToDb(before),
+        by: sql`repost.createdAt`,
+      })
 
       const repostedByRes = await builder.execute()
 

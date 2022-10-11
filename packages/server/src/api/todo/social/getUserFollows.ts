@@ -1,9 +1,10 @@
+import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetUserFollows from '../../../lexicon/types/todo/social/getUserFollows'
 import * as util from './util'
 import * as locals from '../../../locals'
-import { dateFromDb, dateToDb } from '../../../db/util'
+import { dateFromDb, dateToDb, paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getUserFollows(
@@ -32,15 +33,12 @@ export default function (server: Server) {
           'follow.createdAt as createdAt',
           'record.indexedAt as indexedAt',
         ])
-        .orderBy('follow.createdAt', 'desc')
 
-      // Paginate
-      if (before !== undefined) {
-        followsReq = followsReq.where('follow.createdAt', '<', dateToDb(before))
-      }
-      if (limit !== undefined) {
-        followsReq = followsReq.limit(limit)
-      }
+      followsReq = paginate(followsReq, {
+        limit,
+        before: before && dateToDb(before),
+        by: sql`follow.createdAt`,
+      })
 
       const followsRes = await followsReq.execute()
       const follows = followsRes.map((row) => ({

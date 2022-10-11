@@ -1,7 +1,7 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetProfile from '../../../lexicon/types/todo/social/getProfile'
-import * as util from '../../../db/util'
+import { countClause, userWhereClause } from '../../../db/util'
 import * as locals from '../../../locals'
 
 export default function (server: Server) {
@@ -15,64 +15,42 @@ export default function (server: Server) {
         throw new AuthRequiredError()
       }
 
+      const { ref } = db.db.dynamic
+
       const queryRes = await db.db
         .selectFrom('user')
-        .where(util.userWhereClause(user))
+        .where(userWhereClause(user))
         .leftJoin(
           'todo_social_profile as profile',
           'profile.creator',
           'user.did',
-        )
-        .leftJoin(
-          db.db
-            .selectFrom('todo_social_follow')
-            .select([
-              'todo_social_follow.creator as subject',
-              db.db.fn.count<number>('todo_social_follow.uri').as('count'),
-            ])
-            .groupBy('subject')
-            .as('follows_count'),
-          'follows_count.subject',
-          'user.did',
-        )
-        .leftJoin(
-          db.db
-            .selectFrom('todo_social_follow')
-            .select([
-              'todo_social_follow.subject as subject',
-              db.db.fn.count<number>('todo_social_follow.uri').as('count'),
-            ])
-            .groupBy('subject')
-            .as('followers_count'),
-          'followers_count.subject',
-          'user.did',
-        )
-        .leftJoin(
-          db.db
-            .selectFrom('todo_social_post')
-            .select([
-              'todo_social_post.creator as subject',
-              db.db.fn.count<number>('todo_social_post.uri').as('count'),
-            ])
-            .groupBy('subject')
-            .as('posts_count'),
-          'posts_count.subject',
-          'user.did',
-        )
-        .leftJoin('todo_social_follow as requester_follow', (join) =>
-          join
-            .on('requester_follow.creator', '=', requester)
-            .onRef('requester_follow.subject', '=', 'user.did'),
         )
         .select([
           'user.did as did',
           'user.username as name',
           'profile.displayName as displayName',
           'profile.description as description',
-          'follows_count.count as followsCount',
-          'followers_count.count as followersCount',
-          'posts_count.count as postsCount',
-          'requester_follow.uri as requesterFollow',
+          db.db
+            .selectFrom('todo_social_follow')
+            .whereRef('creator', '=', ref('user.did'))
+            .select(countClause.as('count'))
+            .as('followsCount'),
+          db.db
+            .selectFrom('todo_social_follow')
+            .whereRef('subject', '=', ref('user.did'))
+            .select(countClause.as('count'))
+            .as('followersCount'),
+          db.db
+            .selectFrom('todo_social_post')
+            .whereRef('creator', '=', ref('user.did'))
+            .select(countClause.as('count'))
+            .as('postsCount'),
+          db.db
+            .selectFrom('todo_social_follow')
+            .where('creator', '=', requester)
+            .whereRef('subject', '=', ref('user.did'))
+            .select('uri')
+            .as('requesterFollow'),
         ])
         .executeTakeFirst()
 
@@ -87,9 +65,9 @@ export default function (server: Server) {
           name: queryRes.name,
           displayName: queryRes.displayName || undefined,
           description: queryRes.description || undefined,
-          followsCount: queryRes.followsCount || 0,
-          followersCount: queryRes.followersCount || 0,
-          postsCount: queryRes.postsCount || 0,
+          followsCount: queryRes.followsCount,
+          followersCount: queryRes.followersCount,
+          postsCount: queryRes.postsCount,
           badges: [], // @TODO map this when implementing badging
           myState: {
             follow: queryRes.requesterFollow || undefined,

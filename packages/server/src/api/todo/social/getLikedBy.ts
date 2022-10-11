@@ -1,7 +1,8 @@
 import { Server } from '../../../lexicon'
 import * as GetLikedBy from '../../../lexicon/types/todo/social/getLikedBy'
 import * as locals from '../../../locals'
-import { dateFromDb, dateToDb } from '../../../db/util'
+import { dateFromDb, dateToDb, paginate } from '../../../db/util'
+import { sql } from 'kysely'
 
 export default function (server: Server) {
   server.todo.social.getLikedBy(
@@ -9,7 +10,7 @@ export default function (server: Server) {
       const { uri, limit, before } = params
       const { db } = locals.get(res)
 
-      const builder = db.db
+      let builder = db.db
         .selectFrom('todo_social_like as like')
         .where('like.subject', '=', uri)
         .innerJoin('record', 'like.uri', 'record.uri')
@@ -27,14 +28,11 @@ export default function (server: Server) {
           'record.indexedAt as indexedAt',
         ])
 
-      // Pagination
-      builder.orderBy('like.createdAt', 'desc')
-      if (before !== undefined) {
-        builder.where('like.createdAt', '<', dateToDb(before))
-      }
-      if (limit !== undefined) {
-        builder.limit(limit)
-      }
+      builder = paginate(builder, {
+        limit,
+        before: before && dateToDb(before),
+        by: sql`like.createdAt`,
+      })
 
       const likedByRes = await builder.execute()
 
