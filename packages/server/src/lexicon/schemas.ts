@@ -366,14 +366,14 @@ export const methodSchemas: MethodSchema[] = [
         description: 'The DID of the repo.',
         required: true,
       },
-      type: {
+      collection: {
         type: 'string',
-        description: 'The NSID of the record type.',
+        description: 'The NSID of the record collection.',
         required: true,
       },
-      tid: {
+      recordKey: {
         type: 'string',
-        description: 'The TID of the record.',
+        description: 'The key of the record.',
         required: true,
       },
     },

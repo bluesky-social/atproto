@@ -1,6 +1,5 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
-import { TID } from '@adxp/common'
 import { AdxUri } from '@adxp/uri'
 import * as didResolver from '@adxp/did-resolver'
 import * as repoDiff from '../../../repo-diff'
@@ -186,7 +185,7 @@ export default function (server: Server) {
   })
 
   server.todo.adx.repoDeleteRecord(async (params, _input, req, res) => {
-    const { did, type, tid } = params
+    const { did, collection, recordKey } = params
     const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
@@ -197,8 +196,8 @@ export default function (server: Server) {
         `${did} is not a registered repo on this server`,
       )
     }
-    await repo.getCollection(type).deleteRecord(TID.fromStr(tid))
-    const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
+    await repo.getCollection(collection).deleteRecord(recordKey)
+    const uri = new AdxUri(`${did}/${collection}/${recordKey}`)
     try {
       await db.deleteRecord(uri)
     } catch (err) {

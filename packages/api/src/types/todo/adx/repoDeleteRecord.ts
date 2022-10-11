@@ -5,8 +5,8 @@ import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
   did: string;
-  type: string;
-  tid: string;
+  collection: string;
+  recordKey: string;
 }
 
 export interface CallOptions {
