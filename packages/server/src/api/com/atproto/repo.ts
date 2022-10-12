@@ -94,8 +94,8 @@ export default function (server: Server) {
       throw new AuthRequiredError()
     }
     const tx = input.body
-    const update = tx.writes.findIndex((write) => write.action === 'update')
-    if (update > -1) {
+    const hasUpdate = tx.writes.some((write) => write.action === 'update')
+    if (hasUpdate) {
       throw new InvalidRequestError(`Updates are not yet supported.`)
     }
     if (validate) {
