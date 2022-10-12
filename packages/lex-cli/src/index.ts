@@ -8,12 +8,12 @@ import { NSID } from '@adxp/nsid'
 import {
   schemaTemplate,
   readAllSchemas,
-  genMd,
   genTsObj,
   genFileDiff,
   printFileDiff,
   applyFileDiff,
 } from './util'
+import * as mdGen from './mdgen'
 import { genClientApi } from './codegen/client'
 import { genServerApi } from './codegen/server'
 
@@ -46,10 +46,24 @@ program
 program
   .command('gen-md')
   .description('Generate markdown documentation')
+  .argument('<outfile>', 'path of the file to write to', toPath)
   .argument('<schemas...>', 'paths of the schema files to include', toPaths)
-  .action((schemaPaths: string[]) => {
+  .action(async (outFilePath: string, schemaPaths: string[]) => {
+    if (!outFilePath.endsWith('.md')) {
+      console.error('Must supply the path to a .md file as the first parameter')
+      process.exit(1)
+    }
+    console.log('Writing', outFilePath)
+    const ok = await yesno({
+      question: 'Are you sure you want to continue? [y/N]',
+      defaultValue: false,
+    })
+    if (!ok) {
+      console.log('Aborted.')
+      process.exit(0)
+    }
     const schemas = readAllSchemas(schemaPaths)
-    console.log(genMd(schemas))
+    await mdGen.process(outFilePath, schemas)
   })
 
 program
