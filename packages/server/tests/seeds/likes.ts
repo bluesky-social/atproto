@@ -18,10 +18,5 @@ export default async (sc: SeedClient) => {
     sc.replies[sc.dids.bob][0].uriRaw,
     sc.replies[sc.dids.bob][0].cidRaw,
   )
-  // await sc.like(
-  //   sc.dids.eve,
-  //   sc.reposts[sc.dids.dan][0].toString(),
-  //   sc.reposts[sc.dids.dan][0].toString(),
-  // )
   return sc
 }

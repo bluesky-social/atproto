@@ -58,18 +58,6 @@ describe('pds like views', () => {
     )
   })
 
-  // @TODO like reposts??
-  // it('fetches liked by reposts', async () => {
-  //   const danReply = await client.todo.social.getLikedBy({
-  //     uri: sc.reposts[dan][0].toString(),
-  //   })
-
-  //   expect(forSnapshot(danReply.data)).toMatchSnapshot()
-  //   expect(getCursors(danReply.data.likedBy)).toEqual(
-  //     getSortedCursors(danReply.data.likedBy),
-  //   )
-  // })
-
   it('paginates', async () => {
     const full = await client.todo.social.getLikedBy({
       uri: sc.posts[alice][1].uriRaw,
