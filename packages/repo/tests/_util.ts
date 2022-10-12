@@ -53,8 +53,8 @@ export const randomStr = (len: number): string => {
 }
 
 export const shuffle = <T>(arr: T[]): T[] => {
-  let toShuffle = [...arr]
-  let shuffled: T[] = []
+  const toShuffle = [...arr]
+  const shuffled: T[] = []
   while (toShuffle.length > 0) {
     const index = Math.floor(Math.random() * toShuffle.length)
     shuffled.push(toShuffle[index])
@@ -87,8 +87,8 @@ export const fillRepo = async (
     const coll = await repo.getCollection(collName)
     for (let i = 0; i < itemsPerCollection; i++) {
       const object = generateObject()
-      const tid = await coll.createRecord(object)
-      collData[tid.toString()] = object
+      const { key } = await coll.createRecord(object)
+      collData[key] = object
     }
     repoData[collName] = collData
   }
@@ -113,23 +113,23 @@ export const editRepo = async (
 
     for (let i = 0; i < adds; i++) {
       const object = generateObject()
-      const tid = await coll.createRecord(object)
-      collData[tid.toString()] = object
+      const { key } = await coll.createRecord(object)
+      collData[key] = object
     }
 
     const toUpdate = shuffled.slice(0, updates)
     for (let i = 0; i < toUpdate.length; i++) {
       const object = generateObject()
-      const tid = TID.fromStr(toUpdate[i][0])
+      const tid = toUpdate[i][0]
       await coll.updateRecord(tid, object)
-      collData[tid.toString()] = object
+      collData[tid] = object
     }
 
     const toDelete = shuffled.slice(updates, deletes)
     for (let i = 0; i < toDelete.length; i++) {
-      const tid = TID.fromStr(toDelete[i][0])
+      const tid = toDelete[i][0]
       await coll.deleteRecord(tid)
-      delete collData[tid.toString()]
+      delete collData[tid]
     }
     repoData[collName] = collData
   }
@@ -141,7 +141,7 @@ export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
     const coll = await repo.getCollection(collName)
     const collData = data[collName]
     for (const tid of Object.keys(collData)) {
-      const record = await coll.getRecord(TID.fromStr(tid))
+      const record = await coll.getRecord(tid)
       expect(record).toEqual(collData[tid])
     }
   }

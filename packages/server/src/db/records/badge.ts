@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
+import { CID } from 'multiformats/cid'
 import * as Badge from '../../lexicon/types/app/bsky/badge'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
@@ -9,6 +10,7 @@ const tableName = 'app_bsky_badge'
 
 export interface AppBskyBadge {
   uri: string
+  cid: string
   creator: string
   subject: string
   assertionType: string
@@ -21,6 +23,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('assertionType', 'varchar', (col) => col.notNull())
@@ -66,12 +69,13 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
+  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
     const val = {
       uri: uri.toString(),
+      cid: cid.toString(),
       creator: uri.host,
       subject: obj.subject,
       assertionType: obj.assertion.type,
@@ -88,7 +92,11 @@ const deleteFn =
     await db.deleteFrom('app_bsky_badge').where('uri', '=', uri.toString())
   }
 
-const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+const notifsForRecord = (
+  uri: AdxUri,
+  cid: CID,
+  obj: unknown,
+): Notification[] => {
   if (!isValidSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
@@ -96,6 +104,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
     userDid: obj.subject,
     author: uri.host,
     recordUri: uri.toString(),
+    recordCid: cid.toString(),
     reason: 'badge',
   }
   return [notif]

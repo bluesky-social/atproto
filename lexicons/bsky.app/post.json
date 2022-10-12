@@ -10,15 +10,23 @@
       "entities": {"$ref": "#/$defs/entity"},
       "reply": {
         "type": "object",
-        "required": ["root"],
+        "required": ["root", "parent"],
         "properties": {
-          "root": {"type": "string"},
-          "parent": {"type": "string"}
+          "root": {"$ref": "#/$defs/postRef"},
+          "parent": {"$ref": "#/$defs/postRef"}
         }
       },
       "createdAt": {"type": "string", "format": "date-time"}
     },
     "$defs": {
+      "postRef": {
+        "type": "object",
+        "required": ["uri", "cid"],
+        "properties": {
+          "uri": {"type": "string"},
+          "cid": {"type": "string"}
+        }
+      },
       "entity": {
         "type": "array",
         "items": {

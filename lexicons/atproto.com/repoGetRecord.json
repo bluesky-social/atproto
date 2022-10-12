@@ -4,9 +4,10 @@
   "type": "query",
   "description": "Fetch a record.",
   "parameters": {
-    "nameOrDid": {"type": "string", "required": true, "description": "The name or DID of the repo."},
-    "type": {"type": "string", "required": true, "description": "The NSID of the record type."},
-    "tid": {"type": "string", "required": true, "description": "The TID of the record."}
+    "user": {"type": "string", "required": true, "description": "The username or DID of the repo."},
+    "collection": {"type": "string", "required": true, "description": "The NSID of the collection."},
+    "rkey": {"type": "string", "required": true, "description": "The key of the record."},
+    "cid": {"type": "string", "required": false, "description": "The CID of the version of the record. If not specified, then return the most recent version."}
   },
   "output": {
     "encoding": "application/json",
@@ -15,6 +16,7 @@
       "required": ["uri", "value"],
       "properties": {
         "uri": {"type": "string"},
+        "cid": {"type": "string"},
         "value": {"type": "object"}
       }
     }

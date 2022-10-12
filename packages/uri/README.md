@@ -10,7 +10,7 @@ uri.protocol   // => 'adx:'
 uri.origin     // => 'adx://bob.com'
 uri.hostname   // => 'bob.com'
 uri.collection // => 'com.example.post'
-uri.recordKey  // => '1234'
+uri.rkey       // => '1234'
 ```
 
 ## License

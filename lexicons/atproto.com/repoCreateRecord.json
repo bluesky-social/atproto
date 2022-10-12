@@ -5,7 +5,7 @@
   "description": "Create a new record.",
   "parameters": {
     "did": {"type": "string", "required": true, "description": "The DID of the repo."},
-    "type": {"type": "string", "required": true, "description": "The NSID of the record type."},
+    "collection": {"type": "string", "required": true, "description": "The NSID of the record collection."},
     "validate": {"type": "boolean", "default": true, "description": "Validate the record?"}
   },
   "input": {
@@ -17,9 +17,10 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["uri"],
+      "required": ["uri", "cid"],
       "properties": {
-        "uri": {"type": "string"}
+        "uri": {"type": "string"},
+        "cid": {"type": "string"}
       }
     }
   }

@@ -1,6 +1,5 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
-import { TID } from '@adxp/common'
 import { AdxUri } from '@adxp/uri'
 import * as didResolver from '@adxp/did-resolver'
 import * as repoDiff from '../../../repo-diff'
@@ -8,31 +7,31 @@ import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.com.atproto.repoDescribe(async (params, _in, _req, res) => {
-    const { nameOrDid } = params
+    const { user } = params
 
     const { db, auth } = locals.get(res)
-    const user = await db.getUser(nameOrDid)
-    if (user === null) {
-      throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
+    const userObj = await db.getUser(user)
+    if (userObj === null) {
+      throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
     let didDoc
     try {
-      didDoc = await auth.didResolver.ensureResolveDid(user.did)
+      didDoc = await auth.didResolver.ensureResolveDid(userObj.did)
     } catch (err) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }
 
     const username = didResolver.getUsername(didDoc)
-    const nameIsCorrect = username === user.username
+    const nameIsCorrect = username === userObj.username
 
-    const collections = await db.listCollectionsForDid(user.did)
+    const collections = await db.listCollectionsForDid(userObj.did)
 
     return {
       encoding: 'application/json',
       body: {
-        name: user.username,
-        did: user.did,
+        name: userObj.username,
+        did: userObj.did,
         didDoc,
         collections,
         nameIsCorrect,
@@ -41,17 +40,17 @@ export default function (server: Server) {
   })
 
   server.com.atproto.repoListRecords(async (params, _in, _req, res) => {
-    const { nameOrDid, type, limit, before, after, reverse } = params
+    const { user, collection, limit, before, after, reverse } = params
 
     const db = locals.db(res)
-    const did = await db.getUserDid(nameOrDid)
+    const did = await db.getUserDid(user)
     if (!did) {
-      throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
+      throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
     const records = await db.listRecordsForCollection(
       did,
-      type,
+      collection,
       limit || 50,
       reverse || false,
       before,
@@ -61,29 +60,29 @@ export default function (server: Server) {
     return {
       encoding: 'application/json',
       body: {
-        records: records as { uri: string; value: Record<string, unknown> }[],
+        records,
       },
     }
   })
 
   server.com.atproto.repoGetRecord(async (params, _in, _req, res) => {
-    const { nameOrDid, type, tid } = params
+    const { user, collection, rkey, cid } = params
     const db = locals.db(res)
 
-    const did = await db.getUserDid(nameOrDid)
+    const did = await db.getUserDid(user)
     if (!did) {
-      throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
+      throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
-    const uri = new AdxUri(`${did}/${type}/${tid}`)
+    const uri = new AdxUri(`${did}/${collection}/${rkey}`)
 
-    const record = await db.getRecord(uri)
+    const record = await db.getRecord(uri, cid || null)
     if (!record) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
     return {
       encoding: 'application/json',
-      body: { uri: uri.toString(), value: record },
+      body: record,
     }
   })
 
@@ -95,6 +94,10 @@ export default function (server: Server) {
       throw new AuthRequiredError()
     }
     const tx = input.body
+    const hasUpdate = tx.writes.some((write) => write.action === 'update')
+    if (hasUpdate) {
+      throw new InvalidRequestError(`Updates are not yet supported.`)
+    }
     if (validate) {
       for (const write of tx.writes) {
         if (write.action === 'create' || write.action === 'update') {
@@ -134,16 +137,16 @@ export default function (server: Server) {
   })
 
   server.com.atproto.repoCreateRecord(async (params, input, req, res) => {
-    const { did, type, validate } = params
+    const { did, collection, validate } = params
     const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
     if (validate) {
-      const validation = db.validateRecord(type, input.body)
+      const validation = db.validateRecord(collection, input.body)
       if (!validation.valid) {
         throw new InvalidRequestError(
-          `Invalid ${type} record: ${validation.error}`,
+          `Invalid ${collection} record: ${validation.error}`,
         )
       }
     }
@@ -153,10 +156,12 @@ export default function (server: Server) {
         `${did} is not a registered repo on this server`,
       )
     }
-    const tid = await repo.getCollection(type).createRecord(input.body)
-    const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
+    const { key, cid } = await repo
+      .getCollection(collection)
+      .createRecord(input.body)
+    const uri = new AdxUri(`${did}/${collection}/${key}`)
     try {
-      await db.indexRecord(uri, input.body)
+      await db.indexRecord(uri, cid, input.body)
     } catch (err) {
       logger.warn(
         { uri: uri.toString(), err, validate },
@@ -171,53 +176,16 @@ export default function (server: Server) {
 
     return {
       encoding: 'application/json',
-      body: { uri: uri.toString() },
+      body: { uri: uri.toString(), cid: cid.toString() },
     }
   })
 
-  server.com.atproto.repoPutRecord(async (params, input, req, res) => {
-    const { did, type, tid, validate } = params
-    const { auth, db, logger } = locals.get(res)
-    if (!auth.verifyUser(req, did)) {
-      throw new AuthRequiredError()
-    }
-    if (validate) {
-      const validation = db.validateRecord(type, input.body)
-      if (!validation.valid) {
-        throw new InvalidRequestError(
-          `Invalid ${type} record: ${validation.error}`,
-        )
-      }
-    }
-    const repo = await locals.loadRepo(res, did)
-    if (!repo) {
-      throw new InvalidRequestError(
-        `${did} is not a registered repo on this server`,
-      )
-    }
-    await repo.getCollection(type).updateRecord(TID.fromStr(tid), input.body)
-    const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
-    try {
-      await db.indexRecord(uri, input.body)
-    } catch (err) {
-      logger.warn(
-        { uri: uri.toString(), err, validate },
-        'failed to index updated record',
-      )
-      if (validate) {
-        throw new InvalidRequestError(`Could not index record: ${err}`)
-      }
-    }
-    await db.updateRepoRoot(did, repo.cid)
-    // @TODO update subscribers
-    return {
-      encoding: 'application/json',
-      body: { uri: uri.toString() },
-    }
+  server.com.atproto.repoPutRecord(async (_params, _input, _req, _res) => {
+    throw new InvalidRequestError(`Updates are not yet supported.`)
   })
 
   server.com.atproto.repoDeleteRecord(async (params, _input, req, res) => {
-    const { did, type, tid } = params
+    const { did, collection, rkey } = params
     const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
@@ -228,8 +196,8 @@ export default function (server: Server) {
         `${did} is not a registered repo on this server`,
       )
     }
-    await repo.getCollection(type).deleteRecord(TID.fromStr(tid))
-    const uri = new AdxUri(`${did}/${type}/${tid.toString()}`)
+    await repo.getCollection(collection).deleteRecord(rkey)
+    const uri = new AdxUri(`${did}/${collection}/${rkey}`)
     try {
       await db.deleteRecord(uri)
     } catch (err) {

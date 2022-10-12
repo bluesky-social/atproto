@@ -4,8 +4,8 @@
   "type": "query",
   "description": "List a range of records in a collection.",
   "parameters": {
-    "nameOrDid": {"type": "string", "required": true, "description": "The username or DID of the repo."},
-    "type": {"type": "string", "required": true, "description": "The NSID of the record type."},
+    "user": {"type": "string", "required": true, "description": "The username or DID of the repo."},
+    "collection": {"type": "string", "required": true, "description": "The NSID of the record type."},
     "limit": {"type": "number", "minimum": 1, "default": 50, "description": "The number of records to return. TODO-max number?"},
     "before": {"type": "string", "description": "A TID to filter the range of records returned."},
     "after": {"type": "string", "description": "A TID to filter the range of records returned."},
@@ -21,9 +21,10 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["uri", "value"],
+            "required": ["uri", "cid", "value"],
             "properties": {
               "uri": {"type": "string"},
+              "cid": {"type": "string"},
               "value": {"type": "object"}
             }
           }

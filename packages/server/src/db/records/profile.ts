@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
+import { CID } from 'multiformats/cid'
 import * as Profile from '../../lexicon/types/app/bsky/profile'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
@@ -9,6 +10,7 @@ const tableName = 'app_bsky_profile'
 
 export interface AppBskyProfile {
   uri: string
+  cid: string
   creator: string
   displayName: string
   description: string | null
@@ -19,12 +21,14 @@ const supportingTableName = 'app_bsky_profile_badge'
 export interface AppBskyProfileBadge {
   profileUri: string
   badgeUri: string
+  badgeCid: string
 }
 
 export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('displayName', 'varchar', (col) => col.notNull())
     .addColumn('description', 'varchar')
@@ -35,6 +39,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .createTable(supportingTableName)
     .addColumn('profileUri', 'varchar', (col) => col.notNull())
     .addColumn('badgeUri', 'varchar', (col) => col.notNull())
+    .addColumn('badgeCid', 'varchar', (col) => col.notNull())
     // Index names need to be unique per schema for postgres
     .addPrimaryKeyConstraint(`${supportingTableName}_pkey`, [
       'profileUri',
@@ -71,29 +76,34 @@ const getFn =
       .executeTakeFirst()
     const badgesQuery = db
       .selectFrom('app_bsky_profile_badge')
-      .select('badgeUri as uri')
+      .selectAll()
       .where('profileUri', '=', uri.toString())
       .execute()
     const [profile, badges] = await Promise.all([profileQuery, badgesQuery])
     if (!profile) return null
     const record = translateDbObj(profile)
-    record.badges = badges
+    record.badges = badges.map((row) => ({
+      uri: row.badgeUri,
+      cid: row.badgeCid,
+    }))
     return record
   }
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
+  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
 
     const badges = (obj.badges || []).map((badge) => ({
       badgeUri: badge.uri,
+      badgeCid: badge.cid,
       profileUri: uri.toString(),
     }))
     const profile = {
       uri: uri.toString(),
+      cid: cid.toString(),
       creator: uri.host,
       displayName: obj.displayName,
       description: obj.description,

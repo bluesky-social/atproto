@@ -5,8 +5,8 @@ import express from 'express'
 
 export interface QueryParams {
   did: string;
-  type: string;
-  tid: string;
+  collection: string;
+  rkey: string;
 }
 
 export type HandlerInput = undefined

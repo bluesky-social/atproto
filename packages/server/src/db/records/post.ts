@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
+import { CID } from 'multiformats/cid'
 import * as Post from '../../lexicon/types/app/bsky/post'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
@@ -9,10 +10,13 @@ const tableName = 'app_bsky_post'
 
 export interface AppBskyPost {
   uri: string
+  cid: string
   creator: string
   text: string
   replyRoot: string | null
+  replyRootCid: string | null
   replyParent: string | null
+  replyParentCid: string | null
   createdAt: string
   indexedAt: string
 }
@@ -30,10 +34,13 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('text', 'varchar', (col) => col.notNull())
     .addColumn('replyRoot', 'varchar')
+    .addColumn('replyRootCid', 'varchar')
     .addColumn('replyParent', 'varchar')
+    .addColumn('replyParentCid', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
@@ -60,17 +67,24 @@ const isValidSchema = (obj: unknown): obj is Post.Record => {
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const translateDbObj = (dbObj: AppBskyPost): Post.Record => {
-  const reply = dbObj.replyRoot
-    ? {
-        root: dbObj.replyRoot,
-        parent: dbObj.replyParent ?? undefined,
-      }
-    : undefined
-  return {
+  const record: Post.Record = {
     text: dbObj.text,
-    reply: reply,
     createdAt: dbObj.createdAt,
   }
+
+  if (dbObj.replyRoot && dbObj.replyParent && dbObj.replyParentCid) {
+    record.reply = {
+      root: {
+        uri: dbObj.replyRoot,
+        cid: dbObj.replyParentCid,
+      },
+      parent: {
+        uri: dbObj.replyParent,
+        cid: dbObj.replyParentCid,
+      },
+    }
+  }
+  return record
 }
 
 const getFn =
@@ -99,7 +113,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
+  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -112,11 +126,14 @@ const insertFn =
     }))
     const post = {
       uri: uri.toString(),
+      cid: cid.toString(),
       creator: uri.host,
       text: obj.text,
       createdAt: obj.createdAt,
-      replyRoot: obj.reply?.root,
-      replyParent: obj.reply?.parent,
+      replyRoot: obj.reply?.root?.uri || null,
+      replyRootCid: obj.reply?.root?.cid || null,
+      replyParent: obj.reply?.parent?.uri || null,
+      replyParentCid: obj.reply?.parent?.cid || null,
       indexedAt: new Date().toISOString(),
     }
     const promises = [db.insertInto('app_bsky_post').values(post).execute()]
@@ -139,7 +156,11 @@ const deleteFn =
     ])
   }
 
-const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+const notifsForRecord = (
+  uri: AdxUri,
+  cid: CID,
+  obj: unknown,
+): Notification[] => {
   if (!isValidSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
@@ -150,16 +171,18 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
         userDid: entity.value,
         author: uri.host,
         recordUri: uri.toString(),
+        recordCid: cid.toString(),
         reason: 'mention',
       })
     }
   }
   if (obj.reply?.parent) {
-    const parentUri = new AdxUri(obj.reply.parent)
+    const parentUri = new AdxUri(obj.reply.parent.uri)
     notifs.push({
       userDid: parentUri.host,
       author: uri.host,
       recordUri: uri.toString(),
+      recordCid: cid.toString(),
       reason: 'reply',
       reasonSubject: parentUri.toString(),
     })

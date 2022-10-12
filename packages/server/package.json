@@ -10,6 +10,7 @@
     "test": "jest",
     "test:pg": "../pg/with-test-db.sh jest",
     "test:log": "cat test.log | pino-pretty",
+    "test:updateSnapshot": "jest --updateSnapshot",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",

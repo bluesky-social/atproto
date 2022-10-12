@@ -6,8 +6,18 @@
     "type": "object",
     "required": ["subject", "createdAt"],
     "properties": {
-      "subject": {"type": "string"},
+      "subject": {"$ref": "#/$defs/subject"},
       "createdAt": {"type": "string", "format": "date-time"}
+    },
+    "$defs": {
+      "subject": {
+        "type": "object",
+        "required": ["uri", "cid"],
+        "properties": {
+          "uri": {"type": "string"},
+          "cid": {"type": "string"}
+        }
+      }
     }
   }
 }

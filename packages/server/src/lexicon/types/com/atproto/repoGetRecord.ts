@@ -4,9 +4,10 @@
 import express from 'express'
 
 export interface QueryParams {
-  nameOrDid: string;
-  type: string;
-  tid: string;
+  user: string;
+  collection: string;
+  rkey: string;
+  cid?: string;
 }
 
 export type HandlerInput = undefined
@@ -25,6 +26,7 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
   uri: string;
+  cid?: string;
   value: {};
 }
 

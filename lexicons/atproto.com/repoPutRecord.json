@@ -5,8 +5,8 @@
   "description": "Write a record.",
   "parameters": {
     "did": {"type": "string", "required": true, "description": "The DID of the repo."},
-    "type": {"type": "string", "required": true, "description": "The NSID of the record type."},
-    "tid": {"type": "string", "required": true, "description": "The TID of the record."},
+    "collection": {"type": "string", "required": true, "description": "The NSID of the record type."},
+    "rkey": {"type": "string", "required": true, "description": "The TID of the record."},
     "validate": {"type": "boolean", "default": true, "description": "Validate the record?"}
   },
   "input": {
@@ -17,9 +17,10 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["uri"],
+      "required": ["uri", "cid"],
       "properties": {
-        "uri": {"type": "string"}
+        "uri": {"type": "string"},
+        "cid": {"type": "string"}
       }
     }
   }

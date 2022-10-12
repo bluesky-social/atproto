@@ -36,31 +36,31 @@ export default async (sc: SeedClient) => {
   await sc.post(sc.dids.alice, posts.alice[1])
   await sc.post(sc.dids.bob, posts.bob[1])
   await sc.post(sc.dids.alice, posts.alice[2])
-  await sc.like(sc.dids.bob, sc.posts[sc.dids.alice][1].uriRaw)
-  await sc.like(sc.dids.bob, sc.posts[sc.dids.alice][2].uriRaw)
-  await sc.like(sc.dids.carol, sc.posts[sc.dids.alice][1].uriRaw)
-  await sc.like(sc.dids.carol, sc.posts[sc.dids.alice][2].uriRaw)
-  await sc.like(sc.dids.dan, sc.posts[sc.dids.alice][1].uriRaw)
+  await sc.like(sc.dids.bob, sc.posts[sc.dids.alice][1].ref)
+  await sc.like(sc.dids.bob, sc.posts[sc.dids.alice][2].ref)
+  await sc.like(sc.dids.carol, sc.posts[sc.dids.alice][1].ref)
+  await sc.like(sc.dids.carol, sc.posts[sc.dids.alice][2].ref)
+  await sc.like(sc.dids.dan, sc.posts[sc.dids.alice][1].ref)
   await sc.reply(
     sc.dids.bob,
-    sc.posts[sc.dids.alice][1].uri,
-    sc.posts[sc.dids.alice][1].uri,
+    sc.posts[sc.dids.alice][1].ref,
+    sc.posts[sc.dids.alice][1].ref,
     replies.bob[0],
   )
   await sc.reply(
     sc.dids.carol,
-    sc.posts[sc.dids.alice][1].uri,
-    sc.posts[sc.dids.alice][1].uri,
+    sc.posts[sc.dids.alice][1].ref,
+    sc.posts[sc.dids.alice][1].ref,
     replies.carol[0],
   )
   await sc.reply(
     sc.dids.alice,
-    sc.posts[sc.dids.alice][1].uri,
-    sc.replies[sc.dids.bob][0].uri,
+    sc.posts[sc.dids.alice][1].ref,
+    sc.replies[sc.dids.bob][0].ref,
     replies.alice[0],
   )
-  await sc.repost(sc.dids.carol, sc.posts[sc.dids.dan][1].uriRaw)
-  await sc.repost(sc.dids.dan, sc.posts[sc.dids.alice][1].uriRaw)
+  await sc.repost(sc.dids.carol, sc.posts[sc.dids.dan][1].ref)
+  await sc.repost(sc.dids.dan, sc.posts[sc.dids.alice][1].ref)
   return sc
 }
 

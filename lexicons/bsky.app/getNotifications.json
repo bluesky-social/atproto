@@ -20,9 +20,10 @@
       "$defs": {
         "notification": {
           "type": "object",
-          "required": ["uri", "author", "reason", "record", "isRead", "indexedAt"],
+          "required": ["uri", "cid", "author", "reason", "record", "isRead", "indexedAt"],
           "properties": {
             "uri": {"type": "string", "format": "uri"},
+            "cid": {"type": "string" },
             "author": {
               "type": "object",
               "required": ["did", "name"],

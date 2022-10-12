@@ -5,6 +5,7 @@ import express from 'express'
 
 export interface QueryParams {
   uri: string;
+  cid?: string;
   limit?: number;
   before?: string;
 }
@@ -25,6 +26,7 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
   uri: string;
+  cid?: string;
   likedBy: {
     did: string,
     name: string,

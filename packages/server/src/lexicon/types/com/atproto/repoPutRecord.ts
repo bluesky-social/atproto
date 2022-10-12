@@ -5,8 +5,8 @@ import express from 'express'
 
 export interface QueryParams {
   did: string;
-  type: string;
-  tid: string;
+  collection: string;
+  rkey: string;
   validate?: boolean;
 }
 
@@ -33,6 +33,7 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
   uri: string;
+  cid: string;
 }
 
 export type Handler = (

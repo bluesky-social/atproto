@@ -34,6 +34,7 @@ export default function (server: Server) {
         .select([
           sql<'post' | 'repost'>`${'post'}`.as('type'),
           'uri as postUri',
+          'cid as postCid',
           'creator as originatorDid',
           'indexedAt as cursor',
         ])
@@ -46,6 +47,7 @@ export default function (server: Server) {
         .select([
           sql<'post' | 'repost'>`${'repost'}`.as('type'),
           'subject as postUri',
+          'subjectCid as postCid',
           'creator as originatorDid',
           'indexedAt as cursor',
         ])
@@ -69,6 +71,7 @@ export default function (server: Server) {
         .select([
           'type',
           'postUri',
+          'postCid',
           'cursor',
           'record.raw as recordRaw',
           'record.indexedAt as indexedAt',

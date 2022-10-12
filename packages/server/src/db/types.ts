@@ -1,5 +1,6 @@
 import { AdxUri } from '@adxp/uri'
 import { ValidationResult } from '@adxp/lexicon'
+import { CID } from 'multiformats/cid'
 
 export type DbRecordPlugin<T, S> = {
   collection: string
@@ -7,9 +8,9 @@ export type DbRecordPlugin<T, S> = {
   validateSchema: (obj: unknown) => ValidationResult
   translateDbObj: (dbObj: S) => T
   get: (uri: AdxUri) => Promise<T | null>
-  insert: (uri: AdxUri, obj: unknown) => Promise<void>
+  insert: (uri: AdxUri, cid: CID, obj: unknown) => Promise<void>
   delete: (uri: AdxUri) => Promise<void>
-  notifsForRecord: (uri: AdxUri, obj: unknown) => Notification[]
+  notifsForRecord: (uri: AdxUri, cid: CID, obj: unknown) => Notification[]
 }
 
 export type NotificationsPlugin = {
@@ -21,6 +22,7 @@ export type Notification = {
   userDid: string
   author: string
   recordUri: string
+  recordCid: string
   reason: string
   reasonSubject?: string
 }

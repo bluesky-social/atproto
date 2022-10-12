@@ -19,6 +19,7 @@ export interface OutputSchema {
 }
 export interface Post {
   uri: string;
+  cid: string;
   author: User;
   record: {};
   embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;

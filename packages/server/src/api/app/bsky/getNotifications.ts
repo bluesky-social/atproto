@@ -28,6 +28,7 @@ export default function (server: Server) {
         )
         .select([
           'notif.recordUri as uri',
+          'notif.recordCid as cid',
           'author.did as authorDid',
           'author.username as authorName',
           'author_profile.displayName as authorDisplayName',
@@ -60,6 +61,7 @@ export default function (server: Server) {
 
       const notifications = notifs.map((notif) => ({
         uri: notif.uri,
+        cid: notif.cid,
         author: {
           did: notif.authorDid,
           name: notif.authorName,

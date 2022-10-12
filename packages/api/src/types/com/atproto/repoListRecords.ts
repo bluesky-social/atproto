@@ -4,8 +4,8 @@
 import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
-  nameOrDid: string;
-  type: string;
+  user: string;
+  collection: string;
   limit?: number;
   before?: string;
   after?: string;
@@ -21,6 +21,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   records: {
     uri: string,
+    cid: string,
     value: {},
   }[];
 }

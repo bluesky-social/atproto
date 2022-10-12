@@ -5,6 +5,7 @@ import { AppBskyGetAuthorFeed, AppBskyGetHomeFeed } from '@adxp/api'
 export const rowToFeedItem = (row: FeedRow): FeedItem => ({
   cursor: row.cursor,
   uri: row.postUri,
+  cid: row.postCid,
   author: {
     did: row.authorDid,
     name: row.authorName,
@@ -39,6 +40,7 @@ type FeedItem = AppBskyGetAuthorFeed.FeedItem & AppBskyGetHomeFeed.FeedItem
 type FeedRow = {
   type: 'post' | 'repost'
   postUri: string
+  postCid: string
   cursor: string
   recordRaw: string
   indexedAt: string

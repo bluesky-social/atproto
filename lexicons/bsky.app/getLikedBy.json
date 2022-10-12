@@ -4,6 +4,7 @@
   "type": "query",
   "parameters": {
     "uri": {"type": "string", "required": true},
+    "cid": {"type": "string", "required": false},
     "limit": {"type": "number", "maximum": 100},
     "before": {"type": "string"}
   },
@@ -14,6 +15,7 @@
       "required": ["uri", "likedBy"],
       "properties": {
         "uri": {"type": "string"},
+        "cid": {"type": "string"},
         "likedBy": {
           "type": "array",
           "items": {

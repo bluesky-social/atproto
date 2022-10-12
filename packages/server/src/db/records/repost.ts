@@ -3,14 +3,17 @@ import { AdxUri } from '@adxp/uri'
 import * as Repost from '../../lexicon/types/app/bsky/repost'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
+import { CID } from '@adxp/common'
 
 const type = 'app.bsky.repost'
 const tableName = 'app_bsky_repost'
 
 export interface AppBskyRepost {
   uri: string
+  cid: string
   creator: string
   subject: string
+  subjectCid: string
   createdAt: string
   indexedAt: string
 }
@@ -19,8 +22,10 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('subjectCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
@@ -36,7 +41,10 @@ const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const translateDbObj = (dbObj: AppBskyRepost): Repost.Record => {
   return {
-    subject: dbObj.subject,
+    subject: {
+      uri: dbObj.subject,
+      cid: dbObj.subjectCid,
+    },
     createdAt: dbObj.createdAt,
   }
 }
@@ -54,7 +62,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
+  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -62,8 +70,10 @@ const insertFn =
       .insertInto('app_bsky_repost')
       .values({
         uri: uri.toString(),
+        cid: cid.toString(),
         creator: uri.host,
-        subject: obj.subject,
+        subject: obj.subject.uri,
+        subjectCid: obj.subject.cid,
         createdAt: obj.createdAt,
         indexedAt: new Date().toISOString(),
       })
@@ -76,15 +86,20 @@ const deleteFn =
     await db.deleteFrom('app_bsky_repost').where('uri', '=', uri.toString())
   }
 
-const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+const notifsForRecord = (
+  uri: AdxUri,
+  cid: CID,
+  obj: unknown,
+): Notification[] => {
   if (!isValidSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
-  const subjectUri = new AdxUri(obj.subject)
+  const subjectUri = new AdxUri(obj.subject.uri)
   const notif = {
     userDid: subjectUri.host,
     author: uri.host,
     recordUri: uri.toString(),
+    recordCid: cid.toString(),
     reason: 'repost',
     reasonSubject: subjectUri.toString(),
   }

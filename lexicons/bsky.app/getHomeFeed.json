@@ -22,10 +22,11 @@
       "$defs": {
         "feedItem": {
           "type": "object",
-          "required": ["cursor", "uri", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt"],
+          "required": ["cursor", "uri", "cid", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt"],
           "properties": {
             "cursor": {"type": "string"},
             "uri": {"type": "string"},
+            "cid": {"type": "string"},
             "author": {"$ref": "#/$defs/user"},
             "repostedBy": {"$ref": "#/$defs/user"},
             "record": {"type": "object"},

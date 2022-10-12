@@ -26,7 +26,7 @@ describe('pds thread views', () => {
 
   beforeAll(async () => {
     // Add a repost of a reply so that we can confirm myState in the thread
-    await sc.repost(bob, sc.replies[alice][0].uriRaw)
+    await sc.repost(bob, sc.replies[alice][0].ref)
   })
 
   afterAll(async () => {
@@ -35,7 +35,7 @@ describe('pds thread views', () => {
 
   it('fetches deep post thread', async () => {
     const thread = await client.app.bsky.getPostThread(
-      { uri: sc.posts[alice][1].uriRaw },
+      { uri: sc.posts[alice][1].ref.uriStr },
       undefined,
       { headers: sc.getHeaders(bob) },
     )
@@ -45,7 +45,7 @@ describe('pds thread views', () => {
 
   it('fetches shallow post thread', async () => {
     const thread = await client.app.bsky.getPostThread(
-      { depth: 1, uri: sc.posts[alice][1].uriRaw },
+      { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
       undefined,
       { headers: sc.getHeaders(bob) },
     )

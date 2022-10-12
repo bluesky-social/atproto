@@ -4,9 +4,10 @@
 import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
-  nameOrDid: string;
-  type: string;
-  tid: string;
+  user: string;
+  collection: string;
+  rkey: string;
+  cid?: string;
 }
 
 export interface CallOptions {
@@ -17,6 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   uri: string;
+  cid?: string;
   value: {};
 }
 

@@ -113,7 +113,7 @@ export async function generateMockSetup(env: DevEnv) {
   await follow(carla, bob.did)
 
   // a set of posts and reposts
-  const posts: { uri: string }[] = []
+  const posts: { uri: string; cid: string }[] = []
   for (let i = 0; i < postTexts.length; i++) {
     const author = picka(users)
     posts.push(
@@ -130,7 +130,7 @@ export async function generateMockSetup(env: DevEnv) {
       await reposter.api.app.bsky.repost.create(
         { did: reposter.did },
         {
-          subject: picka(posts).uri,
+          subject: picka(posts),
           createdAt: date.next().value,
         },
       )
@@ -142,8 +142,8 @@ export async function generateMockSetup(env: DevEnv) {
     const targetUri = picka(posts).uri
     const urip = new AdxUri(targetUri)
     const target = await alice.api.app.bsky.post.get({
-      nameOrDid: urip.host,
-      tid: urip.recordKey,
+      user: urip.host,
+      rkey: urip.rkey,
     })
     const author = picka(users)
     posts.push(
@@ -152,8 +152,8 @@ export async function generateMockSetup(env: DevEnv) {
         {
           text: picka(replyTexts),
           reply: {
-            root: target.value.reply ? target.value.reply.root : target.uri,
-            parent: target.uri,
+            root: target.value.reply ? target.value.reply.root : target,
+            parent: target,
           },
           createdAt: date.next().value,
         },
@@ -168,7 +168,7 @@ export async function generateMockSetup(env: DevEnv) {
         await user.api.app.bsky.like.create(
           { did: user.did },
           {
-            subject: post.uri,
+            subject: post,
             createdAt: date.next().value,
           },
         )

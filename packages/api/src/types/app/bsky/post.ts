@@ -17,10 +17,15 @@ export interface Record {
   text: string;
   entities?: Entity;
   reply?: {
-    root: string,
-    parent?: string,
+    root: PostRef,
+    parent: PostRef,
     [k: string]: unknown,
   };
   createdAt: string;
+  [k: string]: unknown;
+}
+export interface PostRef {
+  uri: string;
+  cid: string;
   [k: string]: unknown;
 }

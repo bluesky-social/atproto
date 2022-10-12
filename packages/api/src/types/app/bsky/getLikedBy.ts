@@ -5,6 +5,7 @@ import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
   uri: string;
+  cid?: string;
   limit?: number;
   before?: string;
 }
@@ -17,6 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   uri: string;
+  cid?: string;
   likedBy: {
     did: string,
     name: string,

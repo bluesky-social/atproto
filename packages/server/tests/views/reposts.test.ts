@@ -38,9 +38,9 @@ describe('pds repost views', () => {
 
   it('fetches reposted-by for a post', async () => {
     const view = await client.app.bsky.getRepostedBy({
-      uri: sc.posts[alice][2].uriRaw,
+      uri: sc.posts[alice][2].ref.uriStr,
     })
-    expect(view.data.uri).toEqual(sc.posts[sc.dids.alice][2].uriRaw)
+    expect(view.data.uri).toEqual(sc.posts[sc.dids.alice][2].ref.uriStr)
     expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
     expect(getCursors(view.data.repostedBy)).toEqual(
       getSortedCursors(view.data.repostedBy),
@@ -49,9 +49,9 @@ describe('pds repost views', () => {
 
   it('fetches reposted-by for a reply', async () => {
     const view = await client.app.bsky.getRepostedBy({
-      uri: sc.replies[bob][0].uriRaw,
+      uri: sc.replies[bob][0].ref.uriStr,
     })
-    expect(view.data.uri).toEqual(sc.replies[sc.dids.bob][0].uriRaw)
+    expect(view.data.uri).toEqual(sc.replies[sc.dids.bob][0].ref.uriStr)
     expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
     expect(getCursors(view.data.repostedBy)).toEqual(
       getSortedCursors(view.data.repostedBy),
@@ -60,13 +60,13 @@ describe('pds repost views', () => {
 
   it('paginates', async () => {
     const full = await client.app.bsky.getRepostedBy({
-      uri: sc.posts[alice][2].uriRaw,
+      uri: sc.posts[alice][2].ref.uriStr,
     })
 
     expect(full.data.repostedBy.length).toEqual(4)
 
     const paginated = await client.app.bsky.getRepostedBy({
-      uri: sc.posts[alice][2].uriRaw,
+      uri: sc.posts[alice][2].ref.uriStr,
       before: full.data.repostedBy[0].createdAt,
       limit: 2,
     })

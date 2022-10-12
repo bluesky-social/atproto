@@ -5,6 +5,7 @@ import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
   uri: string;
+  cid?: string;
   limit?: number;
   before?: string;
 }

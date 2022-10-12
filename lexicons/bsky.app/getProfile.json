@@ -35,9 +35,10 @@
       "$defs": {
         "badge": {
           "type": "object",
-          "required": ["uri"],
+          "required": ["uri", "cid"],
           "properties": {
             "uri": {"type": "string"},
+            "cid": {"type": "string"},
             "error": {"type": "string"},
             "issuer": {
               "type": "object",

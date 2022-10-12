@@ -5,7 +5,7 @@ import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
   did: string;
-  type: string;
+  collection: string;
   validate?: boolean;
 }
 
@@ -20,6 +20,7 @@ export interface InputSchema {
 
 export interface OutputSchema {
   uri: string;
+  cid: string;
 }
 
 export interface Response {

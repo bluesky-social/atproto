@@ -258,17 +258,17 @@ describe('Adx Uris', () => {
     {
       const urip = new AdxUri('adx://foo.com')
       expect(urip.collection).toBe('')
-      expect(urip.recordKey).toBe('')
+      expect(urip.rkey).toBe('')
     }
     {
       const urip = new AdxUri('adx://foo.com/com.example.foo')
       expect(urip.collection).toBe('com.example.foo')
-      expect(urip.recordKey).toBe('')
+      expect(urip.rkey).toBe('')
     }
     {
       const urip = new AdxUri('adx://foo.com/com.example.foo/123')
       expect(urip.collection).toBe('com.example.foo')
-      expect(urip.recordKey).toBe('123')
+      expect(urip.rkey).toBe('123')
     }
   })
 
@@ -290,14 +290,14 @@ describe('Adx Uris', () => {
     expect(urip.toString()).toBe('adx://foo.com/foo')
 
     urip.collection = 'com.example.foo'
-    urip.recordKey = '123'
+    urip.rkey = '123'
     expect(urip.toString()).toBe('adx://foo.com/com.example.foo/123')
-    urip.recordKey = '124'
+    urip.rkey = '124'
     expect(urip.toString()).toBe('adx://foo.com/com.example.foo/124')
     urip.collection = 'com.other.foo'
     expect(urip.toString()).toBe('adx://foo.com/com.other.foo/124')
     urip.pathname = ''
-    urip.recordKey = '123'
+    urip.rkey = '123'
     expect(urip.toString()).toBe('adx://foo.com/undefined/123')
     urip.pathname = 'foo'
 

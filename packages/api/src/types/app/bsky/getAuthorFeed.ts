@@ -21,6 +21,7 @@ export interface OutputSchema {
 export interface FeedItem {
   cursor: string;
   uri: string;
+  cid: string;
   author: User;
   repostedBy?: User;
   record: {};

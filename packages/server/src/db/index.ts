@@ -216,13 +216,14 @@ export class Database {
     return table.validateSchema(obj).valid
   }
 
-  async indexRecord(uri: AdxUri, obj: unknown) {
+  async indexRecord(uri: AdxUri, cid: CID, obj: unknown) {
     log.debug({ uri }, 'indexing record')
     const record = {
       uri: uri.toString(),
+      cid: cid.toString(),
       did: uri.host,
       collection: uri.collection,
-      recordKey: uri.recordKey,
+      rkey: uri.rkey,
       raw: JSON.stringify(obj),
       indexedAt: new Date().toISOString(),
       receivedAt: new Date().toISOString(),
@@ -231,13 +232,13 @@ export class Database {
       throw new Error('Expected indexed URI to contain DID')
     } else if (record.collection.length < 1) {
       throw new Error('Expected indexed URI to contain a collection')
-    } else if (record.recordKey.length < 1) {
+    } else if (record.rkey.length < 1) {
       throw new Error('Expected indexed URI to contain a record key')
     }
     await this.db.insertInto('record').values(record).execute()
     const table = this.findTableForCollection(uri.collection)
-    await table.insert(uri, obj)
-    const notifs = table.notifsForRecord(uri, obj)
+    await table.insert(uri, cid, obj)
+    const notifs = table.notifsForRecord(uri, cid, obj)
     await this.notifications.process(notifs)
     log.info({ uri }, 'indexed record')
   }
@@ -274,37 +275,49 @@ export class Database {
     reverse: boolean,
     before?: string,
     after?: string,
-  ): Promise<{ uri: string; value: unknown }[]> {
+  ): Promise<{ uri: string; cid: string; value: object }[]> {
     let builder = this.db
       .selectFrom('record')
       .selectAll()
       .where('did', '=', did)
       .where('collection', '=', collection)
-      .orderBy('recordKey', reverse ? 'desc' : 'asc')
+      .orderBy('rkey', reverse ? 'desc' : 'asc')
       .limit(limit)
 
     if (before !== undefined) {
-      builder = builder.where('recordKey', '<', before)
+      builder = builder.where('rkey', '<', before)
     }
     if (after !== undefined) {
-      builder = builder.where('recordKey', '>', after)
+      builder = builder.where('rkey', '>', after)
     }
     const res = await builder.execute()
     return res.map((row) => {
       return {
         uri: row.uri,
+        cid: row.cid,
         value: JSON.parse(row.raw),
       }
     })
   }
 
-  async getRecord(uri: AdxUri): Promise<unknown | null> {
-    const record = await this.db
+  async getRecord(
+    uri: AdxUri,
+    cid: string | null,
+  ): Promise<{ uri: string; cid: string; value: object } | null> {
+    let builder = this.db
       .selectFrom('record')
-      .select('raw')
+      .selectAll()
       .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    return record ? JSON.parse(record.raw) : null
+    if (cid) {
+      builder = builder.where('cid', '=', cid)
+    }
+    const record = await builder.executeTakeFirst()
+    if (!record) return null
+    return {
+      uri: record.uri,
+      cid: record.cid,
+      value: JSON.parse(record.raw),
+    }
   }
 
   findTableForCollection(collection: string) {
