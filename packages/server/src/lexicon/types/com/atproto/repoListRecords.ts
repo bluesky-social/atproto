@@ -4,7 +4,7 @@
 import express from 'express'
 
 export interface QueryParams {
-  nameOrDid: string;
+  user: string;
   collection: string;
   limit?: number;
   before?: string;

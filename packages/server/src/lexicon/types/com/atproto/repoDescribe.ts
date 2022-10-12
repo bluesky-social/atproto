@@ -4,7 +4,7 @@
 import express from 'express'
 
 export interface QueryParams {
-  nameOrDid: string;
+  user: string;
 }
 
 export type HandlerInput = undefined

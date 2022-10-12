@@ -223,7 +223,7 @@ export class Database {
       cid: cid.toString(),
       did: uri.host,
       collection: uri.collection,
-      recordKey: uri.recordKey,
+      rkey: uri.rkey,
       raw: JSON.stringify(obj),
       indexedAt: new Date().toISOString(),
       receivedAt: new Date().toISOString(),
@@ -232,7 +232,7 @@ export class Database {
       throw new Error('Expected indexed URI to contain DID')
     } else if (record.collection.length < 1) {
       throw new Error('Expected indexed URI to contain a collection')
-    } else if (record.recordKey.length < 1) {
+    } else if (record.rkey.length < 1) {
       throw new Error('Expected indexed URI to contain a record key')
     }
     await this.db.insertInto('record').values(record).execute()
@@ -281,14 +281,14 @@ export class Database {
       .selectAll()
       .where('did', '=', did)
       .where('collection', '=', collection)
-      .orderBy('recordKey', reverse ? 'desc' : 'asc')
+      .orderBy('rkey', reverse ? 'desc' : 'asc')
       .limit(limit)
 
     if (before !== undefined) {
-      builder = builder.where('recordKey', '<', before)
+      builder = builder.where('rkey', '<', before)
     }
     if (after !== undefined) {
-      builder = builder.where('recordKey', '>', after)
+      builder = builder.where('rkey', '>', after)
     }
     const res = await builder.execute()
     return res.map((row) => {

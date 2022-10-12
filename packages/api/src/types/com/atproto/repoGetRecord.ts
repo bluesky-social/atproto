@@ -4,9 +4,9 @@
 import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
-  nameOrDid: string;
+  user: string;
   collection: string;
-  recordKey: string;
+  rkey: string;
   cid?: string;
 }
 

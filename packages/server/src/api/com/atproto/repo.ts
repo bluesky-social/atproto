@@ -7,31 +7,31 @@ import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.com.atproto.repoDescribe(async (params, _in, _req, res) => {
-    const { nameOrDid } = params
+    const { user } = params
 
     const { db, auth } = locals.get(res)
-    const user = await db.getUser(nameOrDid)
-    if (user === null) {
-      throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
+    const userObj = await db.getUser(user)
+    if (userObj === null) {
+      throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
     let didDoc
     try {
-      didDoc = await auth.didResolver.ensureResolveDid(user.did)
+      didDoc = await auth.didResolver.ensureResolveDid(userObj.did)
     } catch (err) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }
 
     const username = didResolver.getUsername(didDoc)
-    const nameIsCorrect = username === user.username
+    const nameIsCorrect = username === userObj.username
 
-    const collections = await db.listCollectionsForDid(user.did)
+    const collections = await db.listCollectionsForDid(userObj.did)
 
     return {
       encoding: 'application/json',
       body: {
-        name: user.username,
-        did: user.did,
+        name: userObj.username,
+        did: userObj.did,
         didDoc,
         collections,
         nameIsCorrect,
@@ -40,12 +40,12 @@ export default function (server: Server) {
   })
 
   server.com.atproto.repoListRecords(async (params, _in, _req, res) => {
-    const { nameOrDid, collection, limit, before, after, reverse } = params
+    const { user, collection, limit, before, after, reverse } = params
 
     const db = locals.db(res)
-    const did = await db.getUserDid(nameOrDid)
+    const did = await db.getUserDid(user)
     if (!did) {
-      throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
+      throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
     const records = await db.listRecordsForCollection(
@@ -66,15 +66,15 @@ export default function (server: Server) {
   })
 
   server.com.atproto.repoGetRecord(async (params, _in, _req, res) => {
-    const { nameOrDid, collection, recordKey, cid } = params
+    const { user, collection, rkey, cid } = params
     const db = locals.db(res)
 
-    const did = await db.getUserDid(nameOrDid)
+    const did = await db.getUserDid(user)
     if (!did) {
-      throw new InvalidRequestError(`Could not find user: ${nameOrDid}`)
+      throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
-    const uri = new AdxUri(`${did}/${collection}/${recordKey}`)
+    const uri = new AdxUri(`${did}/${collection}/${rkey}`)
 
     const record = await db.getRecord(uri, cid || null)
     if (!record) {
@@ -185,7 +185,7 @@ export default function (server: Server) {
   })
 
   server.com.atproto.repoDeleteRecord(async (params, _input, req, res) => {
-    const { did, collection, recordKey } = params
+    const { did, collection, rkey } = params
     const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
@@ -196,8 +196,8 @@ export default function (server: Server) {
         `${did} is not a registered repo on this server`,
       )
     }
-    await repo.getCollection(collection).deleteRecord(recordKey)
-    const uri = new AdxUri(`${did}/${collection}/${recordKey}`)
+    await repo.getCollection(collection).deleteRecord(rkey)
+    const uri = new AdxUri(`${did}/${collection}/${rkey}`)
     try {
       await db.deleteRecord(uri)
     } catch (err) {

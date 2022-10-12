@@ -371,7 +371,7 @@ export const methodSchemas: MethodSchema[] = [
         description: 'The NSID of the record collection.',
         required: true,
       },
-      recordKey: {
+      rkey: {
         type: 'string',
         description: 'The key of the record.',
         required: true,
@@ -385,7 +385,7 @@ export const methodSchemas: MethodSchema[] = [
     description:
       'Get information about the repo, including the list of collections.',
     parameters: {
-      nameOrDid: {
+      user: {
         type: 'string',
         description: 'The username or DID of the repo.',
         required: true,
@@ -425,9 +425,9 @@ export const methodSchemas: MethodSchema[] = [
     type: 'query',
     description: 'Fetch a record.',
     parameters: {
-      nameOrDid: {
+      user: {
         type: 'string',
-        description: 'The name or DID of the repo.',
+        description: 'The username or DID of the repo.',
         required: true,
       },
       collection: {
@@ -435,7 +435,7 @@ export const methodSchemas: MethodSchema[] = [
         description: 'The NSID of the collection.',
         required: true,
       },
-      recordKey: {
+      rkey: {
         type: 'string',
         description: 'The key of the record.',
         required: true,
@@ -472,7 +472,7 @@ export const methodSchemas: MethodSchema[] = [
     type: 'query',
     description: 'List a range of records in a collection.',
     parameters: {
-      nameOrDid: {
+      user: {
         type: 'string',
         description: 'The username or DID of the repo.',
         required: true,
@@ -546,7 +546,7 @@ export const methodSchemas: MethodSchema[] = [
         description: 'The NSID of the record type.',
         required: true,
       },
-      recordKey: {
+      rkey: {
         type: 'string',
         description: 'The TID of the record.',
         required: true,

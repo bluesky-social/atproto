@@ -4,7 +4,7 @@
   "type": "query",
   "description": "Get information about the repo, including the list of collections.",
   "parameters": {
-    "nameOrDid": {"type": "string", "required": true, "description": "The username or DID of the repo."}
+    "user": {"type": "string", "required": true, "description": "The username or DID of the repo."}
   },
   "output": {
     "encoding": "application/json",

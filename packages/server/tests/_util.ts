@@ -116,7 +116,7 @@ export const forSnapshot = (obj: unknown) => {
     const str = item.startsWith('did:plc:') ? `adx://${item}` : item
     if (str.startsWith('adx://')) {
       const uri = new AdxUri(str)
-      if (uri.recordKey) {
+      if (uri.rkey) {
         return take(records, str)
       }
       if (uri.collection) {

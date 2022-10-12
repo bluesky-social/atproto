@@ -69,11 +69,11 @@ export class AdxUri {
     this.pathname = parts.join('/')
   }
 
-  get recordKey() {
+  get rkey() {
     return this.pathname.split('/').filter(Boolean)[1] || ''
   }
 
-  set recordKey(v: string) {
+  set rkey(v: string) {
     const parts = this.pathname.split('/').filter(Boolean)
     if (!parts[0]) parts[0] = 'undefined'
     parts[1] = v

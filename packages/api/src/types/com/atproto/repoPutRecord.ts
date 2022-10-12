@@ -6,7 +6,7 @@ import { Headers, XRPCError } from '@adxp/xrpc'
 export interface QueryParams {
   did: string;
   collection: string;
-  recordKey: string;
+  rkey: string;
   validate?: boolean;
 }
 

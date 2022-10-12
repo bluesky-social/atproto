@@ -5,7 +5,7 @@ export interface Record {
   cid: string
   did: string
   collection: string
-  recordKey: string
+  rkey: string
   raw: string
   receivedAt: string
   indexedAt: string
@@ -22,7 +22,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('collection', 'varchar', (col) => col.notNull())
-    .addColumn('recordKey', 'varchar', (col) => col.notNull())
+    .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('raw', 'text', (col) => col.notNull())
     .addColumn('receivedAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())

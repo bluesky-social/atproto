@@ -58,12 +58,12 @@ describe('crud operations', () => {
 
   it('describes repo', async () => {
     const description = await client.com.atproto.repoDescribe({
-      nameOrDid: alice.did,
+      user: alice.did,
     })
     expect(description.data.name).toBe(alice.username)
     expect(description.data.did).toBe(alice.did)
     const description2 = await client.com.atproto.repoDescribe({
-      nameOrDid: bob.did,
+      user: bob.did,
     })
     expect(description2.data.name).toBe(bob.username)
     expect(description2.data.did).toBe(bob.did)
@@ -80,14 +80,12 @@ describe('crud operations', () => {
       },
     )
     uri = new AdxUri(res.data.uri)
-    expect(res.data.uri).toBe(
-      `adx://${alice.did}/app.bsky.post/${uri.recordKey}`,
-    )
+    expect(res.data.uri).toBe(`adx://${alice.did}/app.bsky.post/${uri.rkey}`)
   })
 
   it('lists records', async () => {
     const res1 = await client.com.atproto.repoListRecords({
-      nameOrDid: alice.did,
+      user: alice.did,
       collection: 'app.bsky.post',
     })
     expect(res1.data.records.length).toBe(1)
@@ -97,7 +95,7 @@ describe('crud operations', () => {
     )
 
     const res2 = await client.app.bsky.post.list({
-      nameOrDid: alice.did,
+      user: alice.did,
     })
     expect(res2.records.length).toBe(1)
     expect(res2.records[0].uri).toBe(uri.toString())
@@ -106,16 +104,16 @@ describe('crud operations', () => {
 
   it('gets records', async () => {
     const res1 = await client.com.atproto.repoGetRecord({
-      nameOrDid: alice.did,
+      user: alice.did,
       collection: 'app.bsky.post',
-      recordKey: uri.recordKey,
+      rkey: uri.rkey,
     })
     expect(res1.data.uri).toBe(uri.toString())
     expect((res1.data.value as Post.Record).text).toBe('Hello, world!')
 
     const res2 = await client.app.bsky.post.get({
-      nameOrDid: alice.did,
-      recordKey: uri.recordKey,
+      user: alice.did,
+      rkey: uri.rkey,
     })
     expect(res2.uri).toBe(uri.toString())
     expect(res2.value.text).toBe('Hello, world!')
@@ -125,10 +123,10 @@ describe('crud operations', () => {
     await aliceClient.com.atproto.repoDeleteRecord({
       did: alice.did,
       collection: 'app.bsky.post',
-      recordKey: uri.recordKey,
+      rkey: uri.rkey,
     })
     const res1 = await client.com.atproto.repoListRecords({
-      nameOrDid: alice.did,
+      user: alice.did,
       collection: 'app.bsky.post',
     })
     expect(res1.data.records.length).toBe(0)
@@ -146,17 +144,17 @@ describe('crud operations', () => {
     const uri = new AdxUri(res1.uri)
 
     const res2 = await client.app.bsky.post.list({
-      nameOrDid: alice.did,
+      user: alice.did,
     })
     expect(res2.records.length).toBe(1)
 
     await aliceClient.app.bsky.post.delete({
       did: alice.did,
-      recordKey: uri.recordKey,
+      rkey: uri.rkey,
     })
 
     const res3 = await client.app.bsky.post.list({
-      nameOrDid: alice.did,
+      user: alice.did,
     })
     expect(res3.records.length).toBe(0)
   })
@@ -175,7 +173,7 @@ describe('crud operations', () => {
     }
     const doList = async (params: any) => {
       const res = await client.app.bsky.post.list({
-        nameOrDid: alice.did,
+        user: alice.did,
         ...params,
       })
       return res
@@ -198,21 +196,21 @@ describe('crud operations', () => {
     }
 
     {
-      const list = await doList({ after: uri2.recordKey })
+      const list = await doList({ after: uri2.rkey })
       expect(list.records.length).toBe(2)
       expect(list.records[0].value.text).toBe('Post 3')
       expect(list.records[1].value.text).toBe('Post 4')
     }
     {
-      const list = await doList({ before: uri3.recordKey })
+      const list = await doList({ before: uri3.rkey })
       expect(list.records.length).toBe(2)
       expect(list.records[0].value.text).toBe('Post 1')
       expect(list.records[1].value.text).toBe('Post 2')
     }
     {
       const list = await doList({
-        before: uri4.recordKey,
-        after: uri1.recordKey,
+        before: uri4.rkey,
+        after: uri1.rkey,
       })
       expect(list.records.length).toBe(2)
       expect(list.records[0].value.text).toBe('Post 2')
@@ -221,19 +219,19 @@ describe('crud operations', () => {
 
     await aliceClient.app.bsky.post.delete({
       did: alice.did,
-      recordKey: uri1.recordKey,
+      rkey: uri1.rkey,
     })
     await aliceClient.app.bsky.post.delete({
       did: alice.did,
-      recordKey: uri2.recordKey,
+      rkey: uri2.rkey,
     })
     await aliceClient.app.bsky.post.delete({
       did: alice.did,
-      recordKey: uri3.recordKey,
+      rkey: uri3.rkey,
     })
     await aliceClient.app.bsky.post.delete({
       did: alice.did,
-      recordKey: uri4.recordKey,
+      rkey: uri4.rkey,
     })
   })
 
@@ -252,7 +250,7 @@ describe('crud operations', () => {
 
   it('requires the schema to be known if validating', async () => {
     // const prom1 = client.com.atproto.repoListRecords(url, {
-    //   nameOrDid: alice.did,
+    //   user: alice.did,
     //   type: 'com.example.foobar',
     // })
     // await expect(prom1).rejects.toThrow('Schema not found: com.example.foobar')
@@ -302,7 +300,7 @@ describe('crud operations', () => {
   //     },
   //   )
   //   const res3 = await client.com.atproto.repoListRecords(url, {
-  //     nameOrDid: alice.did,
+  //     user: alice.did,
   //     type: 'app.bsky.post',
   //   })
   //   /** @ts-ignore TODO!!! */
@@ -330,9 +328,9 @@ describe('crud operations', () => {
   //     `Record type com.example.unknown is not supported`,
   //   )
   //   const res4 = await client.com.atproto.repoGetRecord(url, {
-  //     nameOrDid: alice.did,
+  //     user: alice.did,
   //     type: 'app.bsky.post',
-  //     tid: new AdxUri(res1.data.uri).recordKey,
+  //     tid: new AdxUri(res1.data.uri).rkey,
   //   })
   //   /** @ts-ignore TODO!!! */
   //   expect(res4.data.value.record).toBe('is bad')
@@ -347,9 +345,9 @@ describe('crud operations', () => {
   //     `Failed app.bsky.post validation for #/required: must have required property 'text'`,
   //   )
   //   const res5 = await client.com.atproto.repoGetRecord(url, {
-  //     nameOrDid: alice.did,
+  //     user: alice.did,
   //     type: 'app.bsky.post',
-  //     tid: new AdxUri(res2.data.uri).recordKey,
+  //     tid: new AdxUri(res2.data.uri).rkey,
   //   })
   //   /** @ts-ignore TODO!!! */
   //   expect(res5.data.value.dunno).toBe('lol')
@@ -366,12 +364,12 @@ describe('crud operations', () => {
   //   await client.com.atproto.repoDeleteRecord(url, {
   //     did: alice.did,
   //     type: 'app.bsky.post',
-  //     tid: new AdxUri(res1.data.uri).recordKey,
+  //     tid: new AdxUri(res1.data.uri).rkey,
   //   })
   //   await client.com.atproto.repoDeleteRecord(url, {
   //     did: alice.did,
   //     type: 'app.bsky.post',
-  //     tid: new AdxUri(res2.data.uri).recordKey,
+  //     tid: new AdxUri(res2.data.uri).rkey,
   //   })
   // })
 })

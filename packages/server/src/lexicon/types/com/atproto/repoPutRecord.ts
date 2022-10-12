@@ -6,7 +6,7 @@ import express from 'express'
 export interface QueryParams {
   did: string;
   collection: string;
-  recordKey: string;
+  rkey: string;
   validate?: boolean;
 }
 

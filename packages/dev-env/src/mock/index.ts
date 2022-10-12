@@ -142,8 +142,8 @@ export async function generateMockSetup(env: DevEnv) {
     const targetUri = picka(posts).uri
     const urip = new AdxUri(targetUri)
     const target = await alice.api.app.bsky.post.get({
-      nameOrDid: urip.host,
-      tid: urip.recordKey,
+      user: urip.host,
+      rkey: urip.rkey,
     })
     const author = picka(users)
     posts.push(
