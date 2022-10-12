@@ -23,17 +23,17 @@ describe('Repo', () => {
     const collection = repo.getCollection('com.example.posts')
 
     const obj = util.generateObject()
-    const tid = await collection.createRecord(obj)
-    let got = await collection.getRecord(tid)
+    const { key } = await collection.createRecord(obj)
+    let got = await collection.getRecord(key)
     expect(got).toEqual(obj)
 
     const updatedObj = util.generateObject()
-    await collection.updateRecord(tid, updatedObj)
-    got = await collection.getRecord(tid)
+    await collection.updateRecord(key, updatedObj)
+    got = await collection.getRecord(key)
     expect(got).toEqual(updatedObj)
 
-    await collection.deleteRecord(tid)
-    got = await collection.getRecord(tid)
+    await collection.deleteRecord(key)
+    got = await collection.getRecord(key)
     expect(got).toBeNull()
   })
 
