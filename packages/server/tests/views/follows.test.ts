@@ -33,7 +33,7 @@ describe('pds follow views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches followers', async () => {
-    const aliceFollowers = await client.todo.social.getUserFollowers({
+    const aliceFollowers = await client.app.bsky.getUserFollowers({
       user: sc.dids.alice,
     })
 
@@ -42,7 +42,7 @@ describe('pds follow views', () => {
       getSortedCursors(aliceFollowers.data.followers),
     )
 
-    const bobFollowers = await client.todo.social.getUserFollowers({
+    const bobFollowers = await client.app.bsky.getUserFollowers({
       user: sc.dids.bob,
     })
 
@@ -51,7 +51,7 @@ describe('pds follow views', () => {
       getSortedCursors(bobFollowers.data.followers),
     )
 
-    const carolFollowers = await client.todo.social.getUserFollowers({
+    const carolFollowers = await client.app.bsky.getUserFollowers({
       user: sc.dids.carol,
     })
 
@@ -60,7 +60,7 @@ describe('pds follow views', () => {
       getSortedCursors(carolFollowers.data.followers),
     )
 
-    const danFollowers = await client.todo.social.getUserFollowers({
+    const danFollowers = await client.app.bsky.getUserFollowers({
       user: sc.dids.dan,
     })
 
@@ -69,7 +69,7 @@ describe('pds follow views', () => {
       getSortedCursors(danFollowers.data.followers),
     )
 
-    const eveFollowers = await client.todo.social.getUserFollowers({
+    const eveFollowers = await client.app.bsky.getUserFollowers({
       user: sc.dids.eve,
     })
 
@@ -80,23 +80,23 @@ describe('pds follow views', () => {
   })
 
   it('fetches followers by username', async () => {
-    const byDid = await client.todo.social.getUserFollowers({
+    const byDid = await client.app.bsky.getUserFollowers({
       user: sc.dids.alice,
     })
-    const byUsername = await client.todo.social.getUserFollowers({
+    const byUsername = await client.app.bsky.getUserFollowers({
       user: sc.accounts[alice].username,
     })
     expect(byUsername.data).toEqual(byDid.data)
   })
 
   it('paginates followers', async () => {
-    const full = await client.todo.social.getUserFollowers({
+    const full = await client.app.bsky.getUserFollowers({
       user: sc.dids.alice,
     })
 
     expect(full.data.followers.length).toEqual(4)
 
-    const paginated = await client.todo.social.getUserFollowers({
+    const paginated = await client.app.bsky.getUserFollowers({
       user: sc.dids.alice,
       before: full.data.followers[0].createdAt,
       limit: 2,
@@ -106,7 +106,7 @@ describe('pds follow views', () => {
   })
 
   it('fetches follows', async () => {
-    const aliceFollowers = await client.todo.social.getUserFollows({
+    const aliceFollowers = await client.app.bsky.getUserFollows({
       user: sc.dids.alice,
     })
 
@@ -115,7 +115,7 @@ describe('pds follow views', () => {
       getSortedCursors(aliceFollowers.data.follows),
     )
 
-    const bobFollowers = await client.todo.social.getUserFollows({
+    const bobFollowers = await client.app.bsky.getUserFollows({
       user: sc.dids.bob,
     })
 
@@ -124,7 +124,7 @@ describe('pds follow views', () => {
       getSortedCursors(bobFollowers.data.follows),
     )
 
-    const carolFollowers = await client.todo.social.getUserFollows({
+    const carolFollowers = await client.app.bsky.getUserFollows({
       user: sc.dids.carol,
     })
 
@@ -133,7 +133,7 @@ describe('pds follow views', () => {
       getSortedCursors(carolFollowers.data.follows),
     )
 
-    const danFollowers = await client.todo.social.getUserFollows({
+    const danFollowers = await client.app.bsky.getUserFollows({
       user: sc.dids.dan,
     })
 
@@ -142,7 +142,7 @@ describe('pds follow views', () => {
       getSortedCursors(danFollowers.data.follows),
     )
 
-    const eveFollowers = await client.todo.social.getUserFollows({
+    const eveFollowers = await client.app.bsky.getUserFollows({
       user: sc.dids.eve,
     })
 
@@ -153,23 +153,23 @@ describe('pds follow views', () => {
   })
 
   it('fetches follows by username', async () => {
-    const byDid = await client.todo.social.getUserFollows({
+    const byDid = await client.app.bsky.getUserFollows({
       user: sc.dids.alice,
     })
-    const byUsername = await client.todo.social.getUserFollows({
+    const byUsername = await client.app.bsky.getUserFollows({
       user: sc.accounts[alice].username,
     })
     expect(byUsername.data).toEqual(byDid.data)
   })
 
   it('paginates follows', async () => {
-    const full = await client.todo.social.getUserFollows({
+    const full = await client.app.bsky.getUserFollows({
       user: sc.dids.alice,
     })
 
     expect(full.data.follows.length).toEqual(4)
 
-    const paginated = await client.todo.social.getUserFollows({
+    const paginated = await client.app.bsky.getUserFollows({
       user: sc.dids.alice,
       before: full.data.follows[0].createdAt,
       limit: 2,

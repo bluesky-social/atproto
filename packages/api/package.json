@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
-    "codegen": "lex gen-api ./src ../../schemas/todo.adx/* ../../schemas/todo.social/*",
+    "codegen": "lex gen-api ./src ../../lexicons/atproto.com/* ../../lexicons/bsky.app/*",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",

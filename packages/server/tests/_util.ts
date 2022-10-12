@@ -5,7 +5,7 @@ import { AdxUri } from '@adxp/uri'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
-import { TodoSocialGetAuthorFeed, TodoSocialGetHomeFeed } from '@adxp/api'
+import { AppBskyGetAuthorFeed, AppBskyGetHomeFeed } from '@adxp/api'
 
 const USE_TEST_SERVER = true
 
@@ -127,8 +127,7 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-type FeedItem = TodoSocialGetAuthorFeed.FeedItem &
-  TodoSocialGetHomeFeed.FeedItem
+type FeedItem = AppBskyGetAuthorFeed.FeedItem & AppBskyGetHomeFeed.FeedItem
 
 export const getCursors = (feed: FeedItem[]) => feed.map((item) => item.cursor)
 

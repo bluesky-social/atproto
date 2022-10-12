@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.getLikedBy",
+  "type": "query",
+  "parameters": {
+    "uri": {"type": "string", "required": true},
+    "limit": {"type": "number", "maximum": 100},
+    "before": {"type": "string"}
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["uri", "likedBy"],
+      "properties": {
+        "uri": {"type": "string"},
+        "likedBy": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["did", "name", "indexedAt"],
+            "properties": {
+              "did": {"type": "string"},
+              "name": {"type": "string"},
+              "displayName": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "createdAt": {"type": "string", "format": "date-time"},
+              "indexedAt": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

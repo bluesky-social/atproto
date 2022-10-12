@@ -1,0 +1,13 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.syncGetRepo",
+  "type": "query",
+  "description": "Gets the repo state.",
+  "parameters": {
+    "did": {"type": "string", "required": true, "description": "The DID of the repo."},
+    "from": {"type": "string", "description": "A past commit CID"}
+  },
+  "output": {
+    "encoding": "application/cbor"
+  }
+}

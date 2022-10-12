@@ -37,7 +37,7 @@ describe('pds like views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches liked by posts', async () => {
-    const alicePost = await client.todo.social.getLikedBy({
+    const alicePost = await client.app.bsky.getLikedBy({
       uri: sc.posts[alice][1].uriRaw,
     })
 
@@ -48,7 +48,7 @@ describe('pds like views', () => {
   })
 
   it('fetches liked by replies', async () => {
-    const bobReply = await client.todo.social.getLikedBy({
+    const bobReply = await client.app.bsky.getLikedBy({
       uri: sc.replies[bob][0].uriRaw,
     })
 
@@ -59,7 +59,7 @@ describe('pds like views', () => {
   })
 
   it('fetches liked by reposts', async () => {
-    const danReply = await client.todo.social.getLikedBy({
+    const danReply = await client.app.bsky.getLikedBy({
       uri: sc.reposts[dan][0].toString(),
     })
 
@@ -70,13 +70,13 @@ describe('pds like views', () => {
   })
 
   it('paginates', async () => {
-    const full = await client.todo.social.getLikedBy({
+    const full = await client.app.bsky.getLikedBy({
       uri: sc.posts[alice][1].uriRaw,
     })
 
     expect(full.data.likedBy.length).toEqual(4)
 
-    const paginated = await client.todo.social.getLikedBy({
+    const paginated = await client.app.bsky.getLikedBy({
       uri: sc.posts[alice][1].uriRaw,
       before: full.data.likedBy[0].createdAt,
       limit: 2,

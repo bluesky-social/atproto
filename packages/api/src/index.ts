@@ -6,85 +6,85 @@ import {
   ServiceClient as XrpcServiceClient,
 } from '@adxp/xrpc'
 import { methodSchemas, recordSchemas } from './schemas'
-import * as TodoAdxCreateAccount from './types/todo/adx/createAccount'
-import * as TodoAdxCreateInviteCode from './types/todo/adx/createInviteCode'
-import * as TodoAdxCreateSession from './types/todo/adx/createSession'
-import * as TodoAdxDeleteAccount from './types/todo/adx/deleteAccount'
-import * as TodoAdxDeleteSession from './types/todo/adx/deleteSession'
-import * as TodoAdxGetAccount from './types/todo/adx/getAccount'
-import * as TodoAdxGetAccountsConfig from './types/todo/adx/getAccountsConfig'
-import * as TodoAdxGetSession from './types/todo/adx/getSession'
-import * as TodoAdxRepoBatchWrite from './types/todo/adx/repoBatchWrite'
-import * as TodoAdxRepoCreateRecord from './types/todo/adx/repoCreateRecord'
-import * as TodoAdxRepoDeleteRecord from './types/todo/adx/repoDeleteRecord'
-import * as TodoAdxRepoDescribe from './types/todo/adx/repoDescribe'
-import * as TodoAdxRepoGetRecord from './types/todo/adx/repoGetRecord'
-import * as TodoAdxRepoListRecords from './types/todo/adx/repoListRecords'
-import * as TodoAdxRepoPutRecord from './types/todo/adx/repoPutRecord'
-import * as TodoAdxRequestAccountPasswordReset from './types/todo/adx/requestAccountPasswordReset'
-import * as TodoAdxResetAccountPassword from './types/todo/adx/resetAccountPassword'
-import * as TodoAdxResolveName from './types/todo/adx/resolveName'
-import * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
-import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
-import * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
-import * as TodoSocialBadge from './types/todo/social/badge'
-import * as TodoSocialFollow from './types/todo/social/follow'
-import * as TodoSocialGetAuthorFeed from './types/todo/social/getAuthorFeed'
-import * as TodoSocialGetHomeFeed from './types/todo/social/getHomeFeed'
-import * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
-import * as TodoSocialGetNotificationCount from './types/todo/social/getNotificationCount'
-import * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
-import * as TodoSocialGetPostThread from './types/todo/social/getPostThread'
-import * as TodoSocialGetProfile from './types/todo/social/getProfile'
-import * as TodoSocialGetRepostedBy from './types/todo/social/getRepostedBy'
-import * as TodoSocialGetUserFollowers from './types/todo/social/getUserFollowers'
-import * as TodoSocialGetUserFollows from './types/todo/social/getUserFollows'
-import * as TodoSocialLike from './types/todo/social/like'
-import * as TodoSocialMediaEmbed from './types/todo/social/mediaEmbed'
-import * as TodoSocialPost from './types/todo/social/post'
-import * as TodoSocialPostNotificationsSeen from './types/todo/social/postNotificationsSeen'
-import * as TodoSocialProfile from './types/todo/social/profile'
-import * as TodoSocialRepost from './types/todo/social/repost'
+import * as ComAtprotoCreateAccount from './types/com/atproto/createAccount'
+import * as ComAtprotoCreateInviteCode from './types/com/atproto/createInviteCode'
+import * as ComAtprotoCreateSession from './types/com/atproto/createSession'
+import * as ComAtprotoDeleteAccount from './types/com/atproto/deleteAccount'
+import * as ComAtprotoDeleteSession from './types/com/atproto/deleteSession'
+import * as ComAtprotoGetAccount from './types/com/atproto/getAccount'
+import * as ComAtprotoGetAccountsConfig from './types/com/atproto/getAccountsConfig'
+import * as ComAtprotoGetSession from './types/com/atproto/getSession'
+import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repoBatchWrite'
+import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repoCreateRecord'
+import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repoDeleteRecord'
+import * as ComAtprotoRepoDescribe from './types/com/atproto/repoDescribe'
+import * as ComAtprotoRepoGetRecord from './types/com/atproto/repoGetRecord'
+import * as ComAtprotoRepoListRecords from './types/com/atproto/repoListRecords'
+import * as ComAtprotoRepoPutRecord from './types/com/atproto/repoPutRecord'
+import * as ComAtprotoRequestAccountPasswordReset from './types/com/atproto/requestAccountPasswordReset'
+import * as ComAtprotoResetAccountPassword from './types/com/atproto/resetAccountPassword'
+import * as ComAtprotoResolveName from './types/com/atproto/resolveName'
+import * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
+import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
+import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
+import * as AppBskyBadge from './types/app/bsky/badge'
+import * as AppBskyFollow from './types/app/bsky/follow'
+import * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
+import * as AppBskyGetHomeFeed from './types/app/bsky/getHomeFeed'
+import * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
+import * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
+import * as AppBskyGetNotifications from './types/app/bsky/getNotifications'
+import * as AppBskyGetPostThread from './types/app/bsky/getPostThread'
+import * as AppBskyGetProfile from './types/app/bsky/getProfile'
+import * as AppBskyGetRepostedBy from './types/app/bsky/getRepostedBy'
+import * as AppBskyGetUserFollowers from './types/app/bsky/getUserFollowers'
+import * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
+import * as AppBskyLike from './types/app/bsky/like'
+import * as AppBskyMediaEmbed from './types/app/bsky/mediaEmbed'
+import * as AppBskyPost from './types/app/bsky/post'
+import * as AppBskyPostNotificationsSeen from './types/app/bsky/postNotificationsSeen'
+import * as AppBskyProfile from './types/app/bsky/profile'
+import * as AppBskyRepost from './types/app/bsky/repost'
 
-export * as TodoAdxCreateAccount from './types/todo/adx/createAccount'
-export * as TodoAdxCreateInviteCode from './types/todo/adx/createInviteCode'
-export * as TodoAdxCreateSession from './types/todo/adx/createSession'
-export * as TodoAdxDeleteAccount from './types/todo/adx/deleteAccount'
-export * as TodoAdxDeleteSession from './types/todo/adx/deleteSession'
-export * as TodoAdxGetAccount from './types/todo/adx/getAccount'
-export * as TodoAdxGetAccountsConfig from './types/todo/adx/getAccountsConfig'
-export * as TodoAdxGetSession from './types/todo/adx/getSession'
-export * as TodoAdxRepoBatchWrite from './types/todo/adx/repoBatchWrite'
-export * as TodoAdxRepoCreateRecord from './types/todo/adx/repoCreateRecord'
-export * as TodoAdxRepoDeleteRecord from './types/todo/adx/repoDeleteRecord'
-export * as TodoAdxRepoDescribe from './types/todo/adx/repoDescribe'
-export * as TodoAdxRepoGetRecord from './types/todo/adx/repoGetRecord'
-export * as TodoAdxRepoListRecords from './types/todo/adx/repoListRecords'
-export * as TodoAdxRepoPutRecord from './types/todo/adx/repoPutRecord'
-export * as TodoAdxRequestAccountPasswordReset from './types/todo/adx/requestAccountPasswordReset'
-export * as TodoAdxResetAccountPassword from './types/todo/adx/resetAccountPassword'
-export * as TodoAdxResolveName from './types/todo/adx/resolveName'
-export * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
-export * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
-export * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
-export * as TodoSocialBadge from './types/todo/social/badge'
-export * as TodoSocialFollow from './types/todo/social/follow'
-export * as TodoSocialGetAuthorFeed from './types/todo/social/getAuthorFeed'
-export * as TodoSocialGetHomeFeed from './types/todo/social/getHomeFeed'
-export * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
-export * as TodoSocialGetNotificationCount from './types/todo/social/getNotificationCount'
-export * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
-export * as TodoSocialGetPostThread from './types/todo/social/getPostThread'
-export * as TodoSocialGetProfile from './types/todo/social/getProfile'
-export * as TodoSocialGetRepostedBy from './types/todo/social/getRepostedBy'
-export * as TodoSocialGetUserFollowers from './types/todo/social/getUserFollowers'
-export * as TodoSocialGetUserFollows from './types/todo/social/getUserFollows'
-export * as TodoSocialLike from './types/todo/social/like'
-export * as TodoSocialMediaEmbed from './types/todo/social/mediaEmbed'
-export * as TodoSocialPost from './types/todo/social/post'
-export * as TodoSocialPostNotificationsSeen from './types/todo/social/postNotificationsSeen'
-export * as TodoSocialProfile from './types/todo/social/profile'
-export * as TodoSocialRepost from './types/todo/social/repost'
+export * as ComAtprotoCreateAccount from './types/com/atproto/createAccount'
+export * as ComAtprotoCreateInviteCode from './types/com/atproto/createInviteCode'
+export * as ComAtprotoCreateSession from './types/com/atproto/createSession'
+export * as ComAtprotoDeleteAccount from './types/com/atproto/deleteAccount'
+export * as ComAtprotoDeleteSession from './types/com/atproto/deleteSession'
+export * as ComAtprotoGetAccount from './types/com/atproto/getAccount'
+export * as ComAtprotoGetAccountsConfig from './types/com/atproto/getAccountsConfig'
+export * as ComAtprotoGetSession from './types/com/atproto/getSession'
+export * as ComAtprotoRepoBatchWrite from './types/com/atproto/repoBatchWrite'
+export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repoCreateRecord'
+export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repoDeleteRecord'
+export * as ComAtprotoRepoDescribe from './types/com/atproto/repoDescribe'
+export * as ComAtprotoRepoGetRecord from './types/com/atproto/repoGetRecord'
+export * as ComAtprotoRepoListRecords from './types/com/atproto/repoListRecords'
+export * as ComAtprotoRepoPutRecord from './types/com/atproto/repoPutRecord'
+export * as ComAtprotoRequestAccountPasswordReset from './types/com/atproto/requestAccountPasswordReset'
+export * as ComAtprotoResetAccountPassword from './types/com/atproto/resetAccountPassword'
+export * as ComAtprotoResolveName from './types/com/atproto/resolveName'
+export * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
+export * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
+export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
+export * as AppBskyBadge from './types/app/bsky/badge'
+export * as AppBskyFollow from './types/app/bsky/follow'
+export * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
+export * as AppBskyGetHomeFeed from './types/app/bsky/getHomeFeed'
+export * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
+export * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
+export * as AppBskyGetNotifications from './types/app/bsky/getNotifications'
+export * as AppBskyGetPostThread from './types/app/bsky/getPostThread'
+export * as AppBskyGetProfile from './types/app/bsky/getProfile'
+export * as AppBskyGetRepostedBy from './types/app/bsky/getRepostedBy'
+export * as AppBskyGetUserFollowers from './types/app/bsky/getUserFollowers'
+export * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
+export * as AppBskyLike from './types/app/bsky/like'
+export * as AppBskyMediaEmbed from './types/app/bsky/mediaEmbed'
+export * as AppBskyPost from './types/app/bsky/post'
+export * as AppBskyPostNotificationsSeen from './types/app/bsky/postNotificationsSeen'
+export * as AppBskyProfile from './types/app/bsky/profile'
+export * as AppBskyRepost from './types/app/bsky/repost'
 
 export class Client {
   xrpc: XrpcClient = new XrpcClient()
@@ -104,12 +104,14 @@ export default defaultInst
 export class ServiceClient {
   _baseClient: Client
   xrpc: XrpcServiceClient
-  todo: TodoNS
+  com: ComNS
+  app: AppNS
 
   constructor(baseClient: Client, xrpcService: XrpcServiceClient) {
     this._baseClient = baseClient
     this.xrpc = xrpcService
-    this.todo = new TodoNS(this)
+    this.com = new ComNS(this)
+    this.app = new AppNS(this)
   }
 
   setHeader(key: string, value: string): void {
@@ -117,19 +119,17 @@ export class ServiceClient {
   }
 }
 
-export class TodoNS {
+export class ComNS {
   _service: ServiceClient
-  adx: AdxNS
-  social: SocialNS
+  atproto: AtprotoNS
 
   constructor(service: ServiceClient) {
     this._service = service
-    this.adx = new AdxNS(service)
-    this.social = new SocialNS(service)
+    this.atproto = new AtprotoNS(service)
   }
 }
 
-export class AdxNS {
+export class AtprotoNS {
   _service: ServiceClient
 
   constructor(service: ServiceClient) {
@@ -137,259 +137,269 @@ export class AdxNS {
   }
 
   createAccount(
-    params: TodoAdxCreateAccount.QueryParams,
-    data?: TodoAdxCreateAccount.InputSchema,
-    opts?: TodoAdxCreateAccount.CallOptions
-  ): Promise<TodoAdxCreateAccount.Response> {
+    params: ComAtprotoCreateAccount.QueryParams,
+    data?: ComAtprotoCreateAccount.InputSchema,
+    opts?: ComAtprotoCreateAccount.CallOptions
+  ): Promise<ComAtprotoCreateAccount.Response> {
     return this._service.xrpc
-      .call('todo.adx.createAccount', params, data, opts)
+      .call('com.atproto.createAccount', params, data, opts)
       .catch((e) => {
-        throw TodoAdxCreateAccount.toKnownErr(e)
+        throw ComAtprotoCreateAccount.toKnownErr(e)
       })
   }
 
   createInviteCode(
-    params: TodoAdxCreateInviteCode.QueryParams,
-    data?: TodoAdxCreateInviteCode.InputSchema,
-    opts?: TodoAdxCreateInviteCode.CallOptions
-  ): Promise<TodoAdxCreateInviteCode.Response> {
+    params: ComAtprotoCreateInviteCode.QueryParams,
+    data?: ComAtprotoCreateInviteCode.InputSchema,
+    opts?: ComAtprotoCreateInviteCode.CallOptions
+  ): Promise<ComAtprotoCreateInviteCode.Response> {
     return this._service.xrpc
-      .call('todo.adx.createInviteCode', params, data, opts)
+      .call('com.atproto.createInviteCode', params, data, opts)
       .catch((e) => {
-        throw TodoAdxCreateInviteCode.toKnownErr(e)
+        throw ComAtprotoCreateInviteCode.toKnownErr(e)
       })
   }
 
   createSession(
-    params: TodoAdxCreateSession.QueryParams,
-    data?: TodoAdxCreateSession.InputSchema,
-    opts?: TodoAdxCreateSession.CallOptions
-  ): Promise<TodoAdxCreateSession.Response> {
+    params: ComAtprotoCreateSession.QueryParams,
+    data?: ComAtprotoCreateSession.InputSchema,
+    opts?: ComAtprotoCreateSession.CallOptions
+  ): Promise<ComAtprotoCreateSession.Response> {
     return this._service.xrpc
-      .call('todo.adx.createSession', params, data, opts)
+      .call('com.atproto.createSession', params, data, opts)
       .catch((e) => {
-        throw TodoAdxCreateSession.toKnownErr(e)
+        throw ComAtprotoCreateSession.toKnownErr(e)
       })
   }
 
   deleteAccount(
-    params: TodoAdxDeleteAccount.QueryParams,
-    data?: TodoAdxDeleteAccount.InputSchema,
-    opts?: TodoAdxDeleteAccount.CallOptions
-  ): Promise<TodoAdxDeleteAccount.Response> {
+    params: ComAtprotoDeleteAccount.QueryParams,
+    data?: ComAtprotoDeleteAccount.InputSchema,
+    opts?: ComAtprotoDeleteAccount.CallOptions
+  ): Promise<ComAtprotoDeleteAccount.Response> {
     return this._service.xrpc
-      .call('todo.adx.deleteAccount', params, data, opts)
+      .call('com.atproto.deleteAccount', params, data, opts)
       .catch((e) => {
-        throw TodoAdxDeleteAccount.toKnownErr(e)
+        throw ComAtprotoDeleteAccount.toKnownErr(e)
       })
   }
 
   deleteSession(
-    params: TodoAdxDeleteSession.QueryParams,
-    data?: TodoAdxDeleteSession.InputSchema,
-    opts?: TodoAdxDeleteSession.CallOptions
-  ): Promise<TodoAdxDeleteSession.Response> {
+    params: ComAtprotoDeleteSession.QueryParams,
+    data?: ComAtprotoDeleteSession.InputSchema,
+    opts?: ComAtprotoDeleteSession.CallOptions
+  ): Promise<ComAtprotoDeleteSession.Response> {
     return this._service.xrpc
-      .call('todo.adx.deleteSession', params, data, opts)
+      .call('com.atproto.deleteSession', params, data, opts)
       .catch((e) => {
-        throw TodoAdxDeleteSession.toKnownErr(e)
+        throw ComAtprotoDeleteSession.toKnownErr(e)
       })
   }
 
   getAccount(
-    params: TodoAdxGetAccount.QueryParams,
-    data?: TodoAdxGetAccount.InputSchema,
-    opts?: TodoAdxGetAccount.CallOptions
-  ): Promise<TodoAdxGetAccount.Response> {
+    params: ComAtprotoGetAccount.QueryParams,
+    data?: ComAtprotoGetAccount.InputSchema,
+    opts?: ComAtprotoGetAccount.CallOptions
+  ): Promise<ComAtprotoGetAccount.Response> {
     return this._service.xrpc
-      .call('todo.adx.getAccount', params, data, opts)
+      .call('com.atproto.getAccount', params, data, opts)
       .catch((e) => {
-        throw TodoAdxGetAccount.toKnownErr(e)
+        throw ComAtprotoGetAccount.toKnownErr(e)
       })
   }
 
   getAccountsConfig(
-    params: TodoAdxGetAccountsConfig.QueryParams,
-    data?: TodoAdxGetAccountsConfig.InputSchema,
-    opts?: TodoAdxGetAccountsConfig.CallOptions
-  ): Promise<TodoAdxGetAccountsConfig.Response> {
+    params: ComAtprotoGetAccountsConfig.QueryParams,
+    data?: ComAtprotoGetAccountsConfig.InputSchema,
+    opts?: ComAtprotoGetAccountsConfig.CallOptions
+  ): Promise<ComAtprotoGetAccountsConfig.Response> {
     return this._service.xrpc
-      .call('todo.adx.getAccountsConfig', params, data, opts)
+      .call('com.atproto.getAccountsConfig', params, data, opts)
       .catch((e) => {
-        throw TodoAdxGetAccountsConfig.toKnownErr(e)
+        throw ComAtprotoGetAccountsConfig.toKnownErr(e)
       })
   }
 
   getSession(
-    params: TodoAdxGetSession.QueryParams,
-    data?: TodoAdxGetSession.InputSchema,
-    opts?: TodoAdxGetSession.CallOptions
-  ): Promise<TodoAdxGetSession.Response> {
+    params: ComAtprotoGetSession.QueryParams,
+    data?: ComAtprotoGetSession.InputSchema,
+    opts?: ComAtprotoGetSession.CallOptions
+  ): Promise<ComAtprotoGetSession.Response> {
     return this._service.xrpc
-      .call('todo.adx.getSession', params, data, opts)
+      .call('com.atproto.getSession', params, data, opts)
       .catch((e) => {
-        throw TodoAdxGetSession.toKnownErr(e)
+        throw ComAtprotoGetSession.toKnownErr(e)
       })
   }
 
   repoBatchWrite(
-    params: TodoAdxRepoBatchWrite.QueryParams,
-    data?: TodoAdxRepoBatchWrite.InputSchema,
-    opts?: TodoAdxRepoBatchWrite.CallOptions
-  ): Promise<TodoAdxRepoBatchWrite.Response> {
+    params: ComAtprotoRepoBatchWrite.QueryParams,
+    data?: ComAtprotoRepoBatchWrite.InputSchema,
+    opts?: ComAtprotoRepoBatchWrite.CallOptions
+  ): Promise<ComAtprotoRepoBatchWrite.Response> {
     return this._service.xrpc
-      .call('todo.adx.repoBatchWrite', params, data, opts)
+      .call('com.atproto.repoBatchWrite', params, data, opts)
       .catch((e) => {
-        throw TodoAdxRepoBatchWrite.toKnownErr(e)
+        throw ComAtprotoRepoBatchWrite.toKnownErr(e)
       })
   }
 
   repoCreateRecord(
-    params: TodoAdxRepoCreateRecord.QueryParams,
-    data?: TodoAdxRepoCreateRecord.InputSchema,
-    opts?: TodoAdxRepoCreateRecord.CallOptions
-  ): Promise<TodoAdxRepoCreateRecord.Response> {
+    params: ComAtprotoRepoCreateRecord.QueryParams,
+    data?: ComAtprotoRepoCreateRecord.InputSchema,
+    opts?: ComAtprotoRepoCreateRecord.CallOptions
+  ): Promise<ComAtprotoRepoCreateRecord.Response> {
     return this._service.xrpc
-      .call('todo.adx.repoCreateRecord', params, data, opts)
+      .call('com.atproto.repoCreateRecord', params, data, opts)
       .catch((e) => {
-        throw TodoAdxRepoCreateRecord.toKnownErr(e)
+        throw ComAtprotoRepoCreateRecord.toKnownErr(e)
       })
   }
 
   repoDeleteRecord(
-    params: TodoAdxRepoDeleteRecord.QueryParams,
-    data?: TodoAdxRepoDeleteRecord.InputSchema,
-    opts?: TodoAdxRepoDeleteRecord.CallOptions
-  ): Promise<TodoAdxRepoDeleteRecord.Response> {
+    params: ComAtprotoRepoDeleteRecord.QueryParams,
+    data?: ComAtprotoRepoDeleteRecord.InputSchema,
+    opts?: ComAtprotoRepoDeleteRecord.CallOptions
+  ): Promise<ComAtprotoRepoDeleteRecord.Response> {
     return this._service.xrpc
-      .call('todo.adx.repoDeleteRecord', params, data, opts)
+      .call('com.atproto.repoDeleteRecord', params, data, opts)
       .catch((e) => {
-        throw TodoAdxRepoDeleteRecord.toKnownErr(e)
+        throw ComAtprotoRepoDeleteRecord.toKnownErr(e)
       })
   }
 
   repoDescribe(
-    params: TodoAdxRepoDescribe.QueryParams,
-    data?: TodoAdxRepoDescribe.InputSchema,
-    opts?: TodoAdxRepoDescribe.CallOptions
-  ): Promise<TodoAdxRepoDescribe.Response> {
+    params: ComAtprotoRepoDescribe.QueryParams,
+    data?: ComAtprotoRepoDescribe.InputSchema,
+    opts?: ComAtprotoRepoDescribe.CallOptions
+  ): Promise<ComAtprotoRepoDescribe.Response> {
     return this._service.xrpc
-      .call('todo.adx.repoDescribe', params, data, opts)
+      .call('com.atproto.repoDescribe', params, data, opts)
       .catch((e) => {
-        throw TodoAdxRepoDescribe.toKnownErr(e)
+        throw ComAtprotoRepoDescribe.toKnownErr(e)
       })
   }
 
   repoGetRecord(
-    params: TodoAdxRepoGetRecord.QueryParams,
-    data?: TodoAdxRepoGetRecord.InputSchema,
-    opts?: TodoAdxRepoGetRecord.CallOptions
-  ): Promise<TodoAdxRepoGetRecord.Response> {
+    params: ComAtprotoRepoGetRecord.QueryParams,
+    data?: ComAtprotoRepoGetRecord.InputSchema,
+    opts?: ComAtprotoRepoGetRecord.CallOptions
+  ): Promise<ComAtprotoRepoGetRecord.Response> {
     return this._service.xrpc
-      .call('todo.adx.repoGetRecord', params, data, opts)
+      .call('com.atproto.repoGetRecord', params, data, opts)
       .catch((e) => {
-        throw TodoAdxRepoGetRecord.toKnownErr(e)
+        throw ComAtprotoRepoGetRecord.toKnownErr(e)
       })
   }
 
   repoListRecords(
-    params: TodoAdxRepoListRecords.QueryParams,
-    data?: TodoAdxRepoListRecords.InputSchema,
-    opts?: TodoAdxRepoListRecords.CallOptions
-  ): Promise<TodoAdxRepoListRecords.Response> {
+    params: ComAtprotoRepoListRecords.QueryParams,
+    data?: ComAtprotoRepoListRecords.InputSchema,
+    opts?: ComAtprotoRepoListRecords.CallOptions
+  ): Promise<ComAtprotoRepoListRecords.Response> {
     return this._service.xrpc
-      .call('todo.adx.repoListRecords', params, data, opts)
+      .call('com.atproto.repoListRecords', params, data, opts)
       .catch((e) => {
-        throw TodoAdxRepoListRecords.toKnownErr(e)
+        throw ComAtprotoRepoListRecords.toKnownErr(e)
       })
   }
 
   repoPutRecord(
-    params: TodoAdxRepoPutRecord.QueryParams,
-    data?: TodoAdxRepoPutRecord.InputSchema,
-    opts?: TodoAdxRepoPutRecord.CallOptions
-  ): Promise<TodoAdxRepoPutRecord.Response> {
+    params: ComAtprotoRepoPutRecord.QueryParams,
+    data?: ComAtprotoRepoPutRecord.InputSchema,
+    opts?: ComAtprotoRepoPutRecord.CallOptions
+  ): Promise<ComAtprotoRepoPutRecord.Response> {
     return this._service.xrpc
-      .call('todo.adx.repoPutRecord', params, data, opts)
+      .call('com.atproto.repoPutRecord', params, data, opts)
       .catch((e) => {
-        throw TodoAdxRepoPutRecord.toKnownErr(e)
+        throw ComAtprotoRepoPutRecord.toKnownErr(e)
       })
   }
 
   requestAccountPasswordReset(
-    params: TodoAdxRequestAccountPasswordReset.QueryParams,
-    data?: TodoAdxRequestAccountPasswordReset.InputSchema,
-    opts?: TodoAdxRequestAccountPasswordReset.CallOptions
-  ): Promise<TodoAdxRequestAccountPasswordReset.Response> {
+    params: ComAtprotoRequestAccountPasswordReset.QueryParams,
+    data?: ComAtprotoRequestAccountPasswordReset.InputSchema,
+    opts?: ComAtprotoRequestAccountPasswordReset.CallOptions
+  ): Promise<ComAtprotoRequestAccountPasswordReset.Response> {
     return this._service.xrpc
-      .call('todo.adx.requestAccountPasswordReset', params, data, opts)
+      .call('com.atproto.requestAccountPasswordReset', params, data, opts)
       .catch((e) => {
-        throw TodoAdxRequestAccountPasswordReset.toKnownErr(e)
+        throw ComAtprotoRequestAccountPasswordReset.toKnownErr(e)
       })
   }
 
   resetAccountPassword(
-    params: TodoAdxResetAccountPassword.QueryParams,
-    data?: TodoAdxResetAccountPassword.InputSchema,
-    opts?: TodoAdxResetAccountPassword.CallOptions
-  ): Promise<TodoAdxResetAccountPassword.Response> {
+    params: ComAtprotoResetAccountPassword.QueryParams,
+    data?: ComAtprotoResetAccountPassword.InputSchema,
+    opts?: ComAtprotoResetAccountPassword.CallOptions
+  ): Promise<ComAtprotoResetAccountPassword.Response> {
     return this._service.xrpc
-      .call('todo.adx.resetAccountPassword', params, data, opts)
+      .call('com.atproto.resetAccountPassword', params, data, opts)
       .catch((e) => {
-        throw TodoAdxResetAccountPassword.toKnownErr(e)
+        throw ComAtprotoResetAccountPassword.toKnownErr(e)
       })
   }
 
   resolveName(
-    params: TodoAdxResolveName.QueryParams,
-    data?: TodoAdxResolveName.InputSchema,
-    opts?: TodoAdxResolveName.CallOptions
-  ): Promise<TodoAdxResolveName.Response> {
+    params: ComAtprotoResolveName.QueryParams,
+    data?: ComAtprotoResolveName.InputSchema,
+    opts?: ComAtprotoResolveName.CallOptions
+  ): Promise<ComAtprotoResolveName.Response> {
     return this._service.xrpc
-      .call('todo.adx.resolveName', params, data, opts)
+      .call('com.atproto.resolveName', params, data, opts)
       .catch((e) => {
-        throw TodoAdxResolveName.toKnownErr(e)
+        throw ComAtprotoResolveName.toKnownErr(e)
       })
   }
 
   syncGetRepo(
-    params: TodoAdxSyncGetRepo.QueryParams,
-    data?: TodoAdxSyncGetRepo.InputSchema,
-    opts?: TodoAdxSyncGetRepo.CallOptions
-  ): Promise<TodoAdxSyncGetRepo.Response> {
+    params: ComAtprotoSyncGetRepo.QueryParams,
+    data?: ComAtprotoSyncGetRepo.InputSchema,
+    opts?: ComAtprotoSyncGetRepo.CallOptions
+  ): Promise<ComAtprotoSyncGetRepo.Response> {
     return this._service.xrpc
-      .call('todo.adx.syncGetRepo', params, data, opts)
+      .call('com.atproto.syncGetRepo', params, data, opts)
       .catch((e) => {
-        throw TodoAdxSyncGetRepo.toKnownErr(e)
+        throw ComAtprotoSyncGetRepo.toKnownErr(e)
       })
   }
 
   syncGetRoot(
-    params: TodoAdxSyncGetRoot.QueryParams,
-    data?: TodoAdxSyncGetRoot.InputSchema,
-    opts?: TodoAdxSyncGetRoot.CallOptions
-  ): Promise<TodoAdxSyncGetRoot.Response> {
+    params: ComAtprotoSyncGetRoot.QueryParams,
+    data?: ComAtprotoSyncGetRoot.InputSchema,
+    opts?: ComAtprotoSyncGetRoot.CallOptions
+  ): Promise<ComAtprotoSyncGetRoot.Response> {
     return this._service.xrpc
-      .call('todo.adx.syncGetRoot', params, data, opts)
+      .call('com.atproto.syncGetRoot', params, data, opts)
       .catch((e) => {
-        throw TodoAdxSyncGetRoot.toKnownErr(e)
+        throw ComAtprotoSyncGetRoot.toKnownErr(e)
       })
   }
 
   syncUpdateRepo(
-    params: TodoAdxSyncUpdateRepo.QueryParams,
-    data?: TodoAdxSyncUpdateRepo.InputSchema,
-    opts?: TodoAdxSyncUpdateRepo.CallOptions
-  ): Promise<TodoAdxSyncUpdateRepo.Response> {
+    params: ComAtprotoSyncUpdateRepo.QueryParams,
+    data?: ComAtprotoSyncUpdateRepo.InputSchema,
+    opts?: ComAtprotoSyncUpdateRepo.CallOptions
+  ): Promise<ComAtprotoSyncUpdateRepo.Response> {
     return this._service.xrpc
-      .call('todo.adx.syncUpdateRepo', params, data, opts)
+      .call('com.atproto.syncUpdateRepo', params, data, opts)
       .catch((e) => {
-        throw TodoAdxSyncUpdateRepo.toKnownErr(e)
+        throw ComAtprotoSyncUpdateRepo.toKnownErr(e)
       })
   }
 }
 
-export class SocialNS {
+export class AppNS {
+  _service: ServiceClient
+  bsky: BskyNS
+
+  constructor(service: ServiceClient) {
+    this._service = service
+    this.bsky = new BskyNS(service)
+  }
+}
+
+export class BskyNS {
   _service: ServiceClient
   badge: BadgeRecord
   follow: FollowRecord
@@ -411,134 +421,134 @@ export class SocialNS {
   }
 
   getAuthorFeed(
-    params: TodoSocialGetAuthorFeed.QueryParams,
-    data?: TodoSocialGetAuthorFeed.InputSchema,
-    opts?: TodoSocialGetAuthorFeed.CallOptions
-  ): Promise<TodoSocialGetAuthorFeed.Response> {
+    params: AppBskyGetAuthorFeed.QueryParams,
+    data?: AppBskyGetAuthorFeed.InputSchema,
+    opts?: AppBskyGetAuthorFeed.CallOptions
+  ): Promise<AppBskyGetAuthorFeed.Response> {
     return this._service.xrpc
-      .call('todo.social.getAuthorFeed', params, data, opts)
+      .call('app.bsky.getAuthorFeed', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetAuthorFeed.toKnownErr(e)
+        throw AppBskyGetAuthorFeed.toKnownErr(e)
       })
   }
 
   getHomeFeed(
-    params: TodoSocialGetHomeFeed.QueryParams,
-    data?: TodoSocialGetHomeFeed.InputSchema,
-    opts?: TodoSocialGetHomeFeed.CallOptions
-  ): Promise<TodoSocialGetHomeFeed.Response> {
+    params: AppBskyGetHomeFeed.QueryParams,
+    data?: AppBskyGetHomeFeed.InputSchema,
+    opts?: AppBskyGetHomeFeed.CallOptions
+  ): Promise<AppBskyGetHomeFeed.Response> {
     return this._service.xrpc
-      .call('todo.social.getHomeFeed', params, data, opts)
+      .call('app.bsky.getHomeFeed', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetHomeFeed.toKnownErr(e)
+        throw AppBskyGetHomeFeed.toKnownErr(e)
       })
   }
 
   getLikedBy(
-    params: TodoSocialGetLikedBy.QueryParams,
-    data?: TodoSocialGetLikedBy.InputSchema,
-    opts?: TodoSocialGetLikedBy.CallOptions
-  ): Promise<TodoSocialGetLikedBy.Response> {
+    params: AppBskyGetLikedBy.QueryParams,
+    data?: AppBskyGetLikedBy.InputSchema,
+    opts?: AppBskyGetLikedBy.CallOptions
+  ): Promise<AppBskyGetLikedBy.Response> {
     return this._service.xrpc
-      .call('todo.social.getLikedBy', params, data, opts)
+      .call('app.bsky.getLikedBy', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetLikedBy.toKnownErr(e)
+        throw AppBskyGetLikedBy.toKnownErr(e)
       })
   }
 
   getNotificationCount(
-    params: TodoSocialGetNotificationCount.QueryParams,
-    data?: TodoSocialGetNotificationCount.InputSchema,
-    opts?: TodoSocialGetNotificationCount.CallOptions
-  ): Promise<TodoSocialGetNotificationCount.Response> {
+    params: AppBskyGetNotificationCount.QueryParams,
+    data?: AppBskyGetNotificationCount.InputSchema,
+    opts?: AppBskyGetNotificationCount.CallOptions
+  ): Promise<AppBskyGetNotificationCount.Response> {
     return this._service.xrpc
-      .call('todo.social.getNotificationCount', params, data, opts)
+      .call('app.bsky.getNotificationCount', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetNotificationCount.toKnownErr(e)
+        throw AppBskyGetNotificationCount.toKnownErr(e)
       })
   }
 
   getNotifications(
-    params: TodoSocialGetNotifications.QueryParams,
-    data?: TodoSocialGetNotifications.InputSchema,
-    opts?: TodoSocialGetNotifications.CallOptions
-  ): Promise<TodoSocialGetNotifications.Response> {
+    params: AppBskyGetNotifications.QueryParams,
+    data?: AppBskyGetNotifications.InputSchema,
+    opts?: AppBskyGetNotifications.CallOptions
+  ): Promise<AppBskyGetNotifications.Response> {
     return this._service.xrpc
-      .call('todo.social.getNotifications', params, data, opts)
+      .call('app.bsky.getNotifications', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetNotifications.toKnownErr(e)
+        throw AppBskyGetNotifications.toKnownErr(e)
       })
   }
 
   getPostThread(
-    params: TodoSocialGetPostThread.QueryParams,
-    data?: TodoSocialGetPostThread.InputSchema,
-    opts?: TodoSocialGetPostThread.CallOptions
-  ): Promise<TodoSocialGetPostThread.Response> {
+    params: AppBskyGetPostThread.QueryParams,
+    data?: AppBskyGetPostThread.InputSchema,
+    opts?: AppBskyGetPostThread.CallOptions
+  ): Promise<AppBskyGetPostThread.Response> {
     return this._service.xrpc
-      .call('todo.social.getPostThread', params, data, opts)
+      .call('app.bsky.getPostThread', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetPostThread.toKnownErr(e)
+        throw AppBskyGetPostThread.toKnownErr(e)
       })
   }
 
   getProfile(
-    params: TodoSocialGetProfile.QueryParams,
-    data?: TodoSocialGetProfile.InputSchema,
-    opts?: TodoSocialGetProfile.CallOptions
-  ): Promise<TodoSocialGetProfile.Response> {
+    params: AppBskyGetProfile.QueryParams,
+    data?: AppBskyGetProfile.InputSchema,
+    opts?: AppBskyGetProfile.CallOptions
+  ): Promise<AppBskyGetProfile.Response> {
     return this._service.xrpc
-      .call('todo.social.getProfile', params, data, opts)
+      .call('app.bsky.getProfile', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetProfile.toKnownErr(e)
+        throw AppBskyGetProfile.toKnownErr(e)
       })
   }
 
   getRepostedBy(
-    params: TodoSocialGetRepostedBy.QueryParams,
-    data?: TodoSocialGetRepostedBy.InputSchema,
-    opts?: TodoSocialGetRepostedBy.CallOptions
-  ): Promise<TodoSocialGetRepostedBy.Response> {
+    params: AppBskyGetRepostedBy.QueryParams,
+    data?: AppBskyGetRepostedBy.InputSchema,
+    opts?: AppBskyGetRepostedBy.CallOptions
+  ): Promise<AppBskyGetRepostedBy.Response> {
     return this._service.xrpc
-      .call('todo.social.getRepostedBy', params, data, opts)
+      .call('app.bsky.getRepostedBy', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetRepostedBy.toKnownErr(e)
+        throw AppBskyGetRepostedBy.toKnownErr(e)
       })
   }
 
   getUserFollowers(
-    params: TodoSocialGetUserFollowers.QueryParams,
-    data?: TodoSocialGetUserFollowers.InputSchema,
-    opts?: TodoSocialGetUserFollowers.CallOptions
-  ): Promise<TodoSocialGetUserFollowers.Response> {
+    params: AppBskyGetUserFollowers.QueryParams,
+    data?: AppBskyGetUserFollowers.InputSchema,
+    opts?: AppBskyGetUserFollowers.CallOptions
+  ): Promise<AppBskyGetUserFollowers.Response> {
     return this._service.xrpc
-      .call('todo.social.getUserFollowers', params, data, opts)
+      .call('app.bsky.getUserFollowers', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetUserFollowers.toKnownErr(e)
+        throw AppBskyGetUserFollowers.toKnownErr(e)
       })
   }
 
   getUserFollows(
-    params: TodoSocialGetUserFollows.QueryParams,
-    data?: TodoSocialGetUserFollows.InputSchema,
-    opts?: TodoSocialGetUserFollows.CallOptions
-  ): Promise<TodoSocialGetUserFollows.Response> {
+    params: AppBskyGetUserFollows.QueryParams,
+    data?: AppBskyGetUserFollows.InputSchema,
+    opts?: AppBskyGetUserFollows.CallOptions
+  ): Promise<AppBskyGetUserFollows.Response> {
     return this._service.xrpc
-      .call('todo.social.getUserFollows', params, data, opts)
+      .call('app.bsky.getUserFollows', params, data, opts)
       .catch((e) => {
-        throw TodoSocialGetUserFollows.toKnownErr(e)
+        throw AppBskyGetUserFollows.toKnownErr(e)
       })
   }
 
   postNotificationsSeen(
-    params: TodoSocialPostNotificationsSeen.QueryParams,
-    data?: TodoSocialPostNotificationsSeen.InputSchema,
-    opts?: TodoSocialPostNotificationsSeen.CallOptions
-  ): Promise<TodoSocialPostNotificationsSeen.Response> {
+    params: AppBskyPostNotificationsSeen.QueryParams,
+    data?: AppBskyPostNotificationsSeen.InputSchema,
+    opts?: AppBskyPostNotificationsSeen.CallOptions
+  ): Promise<AppBskyPostNotificationsSeen.Response> {
     return this._service.xrpc
-      .call('todo.social.postNotificationsSeen', params, data, opts)
+      .call('app.bsky.postNotificationsSeen', params, data, opts)
       .catch((e) => {
-        throw TodoSocialPostNotificationsSeen.toKnownErr(e)
+        throw AppBskyPostNotificationsSeen.toKnownErr(e)
       })
   }
 }
@@ -551,34 +561,34 @@ export class BadgeRecord {
   }
 
   async list(
-    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
-  ): Promise<{ records: { uri: string, value: TodoSocialBadge.Record }[] }> {
-    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
-      type: 'todo.social.badge',
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: AppBskyBadge.Record }[] }> {
+    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
+      type: 'app.bsky.badge',
       ...params,
     })
     return res.data
   }
 
   async get(
-    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
-  ): Promise<{ uri: string, value: TodoSocialBadge.Record }> {
-    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
-      type: 'todo.social.badge',
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: AppBskyBadge.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
+      type: 'app.bsky.badge',
       ...params,
     })
     return res.data
   }
 
   async create(
-    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialBadge.Record,
+    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'type'>,
+    record: AppBskyBadge.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.badge'
+    record.$type = 'app.bsky.badge'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoCreateRecord',
-      { type: 'todo.social.badge', ...params },
+      'com.atproto.repoCreateRecord',
+      { type: 'app.bsky.badge', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -586,14 +596,14 @@ export class BadgeRecord {
   }
 
   async put(
-    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialBadge.Record,
+    params: Omit<ComAtprotoRepoPutRecord.QueryParams, 'type'>,
+    record: AppBskyBadge.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.badge'
+    record.$type = 'app.bsky.badge'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoPutRecord',
-      { type: 'todo.social.badge', ...params },
+      'com.atproto.repoPutRecord',
+      { type: 'app.bsky.badge', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -601,12 +611,12 @@ export class BadgeRecord {
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'type'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
-      'todo.adx.repoDeleteRecord',
-      { type: 'todo.social.badge', ...params },
+      'com.atproto.repoDeleteRecord',
+      { type: 'app.bsky.badge', ...params },
       undefined,
       { headers }
     )
@@ -621,34 +631,34 @@ export class FollowRecord {
   }
 
   async list(
-    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
-  ): Promise<{ records: { uri: string, value: TodoSocialFollow.Record }[] }> {
-    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
-      type: 'todo.social.follow',
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: AppBskyFollow.Record }[] }> {
+    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
+      type: 'app.bsky.follow',
       ...params,
     })
     return res.data
   }
 
   async get(
-    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
-  ): Promise<{ uri: string, value: TodoSocialFollow.Record }> {
-    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
-      type: 'todo.social.follow',
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: AppBskyFollow.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
+      type: 'app.bsky.follow',
       ...params,
     })
     return res.data
   }
 
   async create(
-    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialFollow.Record,
+    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'type'>,
+    record: AppBskyFollow.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.follow'
+    record.$type = 'app.bsky.follow'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoCreateRecord',
-      { type: 'todo.social.follow', ...params },
+      'com.atproto.repoCreateRecord',
+      { type: 'app.bsky.follow', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -656,14 +666,14 @@ export class FollowRecord {
   }
 
   async put(
-    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialFollow.Record,
+    params: Omit<ComAtprotoRepoPutRecord.QueryParams, 'type'>,
+    record: AppBskyFollow.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.follow'
+    record.$type = 'app.bsky.follow'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoPutRecord',
-      { type: 'todo.social.follow', ...params },
+      'com.atproto.repoPutRecord',
+      { type: 'app.bsky.follow', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -671,12 +681,12 @@ export class FollowRecord {
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'type'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
-      'todo.adx.repoDeleteRecord',
-      { type: 'todo.social.follow', ...params },
+      'com.atproto.repoDeleteRecord',
+      { type: 'app.bsky.follow', ...params },
       undefined,
       { headers }
     )
@@ -691,34 +701,34 @@ export class LikeRecord {
   }
 
   async list(
-    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
-  ): Promise<{ records: { uri: string, value: TodoSocialLike.Record }[] }> {
-    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
-      type: 'todo.social.like',
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: AppBskyLike.Record }[] }> {
+    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
+      type: 'app.bsky.like',
       ...params,
     })
     return res.data
   }
 
   async get(
-    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
-  ): Promise<{ uri: string, value: TodoSocialLike.Record }> {
-    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
-      type: 'todo.social.like',
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: AppBskyLike.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
+      type: 'app.bsky.like',
       ...params,
     })
     return res.data
   }
 
   async create(
-    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialLike.Record,
+    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'type'>,
+    record: AppBskyLike.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.like'
+    record.$type = 'app.bsky.like'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoCreateRecord',
-      { type: 'todo.social.like', ...params },
+      'com.atproto.repoCreateRecord',
+      { type: 'app.bsky.like', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -726,14 +736,14 @@ export class LikeRecord {
   }
 
   async put(
-    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialLike.Record,
+    params: Omit<ComAtprotoRepoPutRecord.QueryParams, 'type'>,
+    record: AppBskyLike.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.like'
+    record.$type = 'app.bsky.like'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoPutRecord',
-      { type: 'todo.social.like', ...params },
+      'com.atproto.repoPutRecord',
+      { type: 'app.bsky.like', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -741,12 +751,12 @@ export class LikeRecord {
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'type'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
-      'todo.adx.repoDeleteRecord',
-      { type: 'todo.social.like', ...params },
+      'com.atproto.repoDeleteRecord',
+      { type: 'app.bsky.like', ...params },
       undefined,
       { headers }
     )
@@ -761,36 +771,34 @@ export class MediaEmbedRecord {
   }
 
   async list(
-    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
-  ): Promise<{
-    records: { uri: string, value: TodoSocialMediaEmbed.Record }[],
-  }> {
-    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
-      type: 'todo.social.mediaEmbed',
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: AppBskyMediaEmbed.Record }[] }> {
+    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
+      type: 'app.bsky.mediaEmbed',
       ...params,
     })
     return res.data
   }
 
   async get(
-    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
-  ): Promise<{ uri: string, value: TodoSocialMediaEmbed.Record }> {
-    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
-      type: 'todo.social.mediaEmbed',
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: AppBskyMediaEmbed.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
+      type: 'app.bsky.mediaEmbed',
       ...params,
     })
     return res.data
   }
 
   async create(
-    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialMediaEmbed.Record,
+    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'type'>,
+    record: AppBskyMediaEmbed.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.mediaEmbed'
+    record.$type = 'app.bsky.mediaEmbed'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoCreateRecord',
-      { type: 'todo.social.mediaEmbed', ...params },
+      'com.atproto.repoCreateRecord',
+      { type: 'app.bsky.mediaEmbed', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -798,14 +806,14 @@ export class MediaEmbedRecord {
   }
 
   async put(
-    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialMediaEmbed.Record,
+    params: Omit<ComAtprotoRepoPutRecord.QueryParams, 'type'>,
+    record: AppBskyMediaEmbed.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.mediaEmbed'
+    record.$type = 'app.bsky.mediaEmbed'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoPutRecord',
-      { type: 'todo.social.mediaEmbed', ...params },
+      'com.atproto.repoPutRecord',
+      { type: 'app.bsky.mediaEmbed', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -813,12 +821,12 @@ export class MediaEmbedRecord {
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'type'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
-      'todo.adx.repoDeleteRecord',
-      { type: 'todo.social.mediaEmbed', ...params },
+      'com.atproto.repoDeleteRecord',
+      { type: 'app.bsky.mediaEmbed', ...params },
       undefined,
       { headers }
     )
@@ -833,34 +841,34 @@ export class PostRecord {
   }
 
   async list(
-    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
-  ): Promise<{ records: { uri: string, value: TodoSocialPost.Record }[] }> {
-    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
-      type: 'todo.social.post',
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: AppBskyPost.Record }[] }> {
+    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
+      type: 'app.bsky.post',
       ...params,
     })
     return res.data
   }
 
   async get(
-    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
-  ): Promise<{ uri: string, value: TodoSocialPost.Record }> {
-    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
-      type: 'todo.social.post',
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: AppBskyPost.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
+      type: 'app.bsky.post',
       ...params,
     })
     return res.data
   }
 
   async create(
-    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialPost.Record,
+    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'type'>,
+    record: AppBskyPost.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.post'
+    record.$type = 'app.bsky.post'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoCreateRecord',
-      { type: 'todo.social.post', ...params },
+      'com.atproto.repoCreateRecord',
+      { type: 'app.bsky.post', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -868,14 +876,14 @@ export class PostRecord {
   }
 
   async put(
-    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialPost.Record,
+    params: Omit<ComAtprotoRepoPutRecord.QueryParams, 'type'>,
+    record: AppBskyPost.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.post'
+    record.$type = 'app.bsky.post'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoPutRecord',
-      { type: 'todo.social.post', ...params },
+      'com.atproto.repoPutRecord',
+      { type: 'app.bsky.post', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -883,12 +891,12 @@ export class PostRecord {
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'type'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
-      'todo.adx.repoDeleteRecord',
-      { type: 'todo.social.post', ...params },
+      'com.atproto.repoDeleteRecord',
+      { type: 'app.bsky.post', ...params },
       undefined,
       { headers }
     )
@@ -903,34 +911,34 @@ export class ProfileRecord {
   }
 
   async list(
-    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
-  ): Promise<{ records: { uri: string, value: TodoSocialProfile.Record }[] }> {
-    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
-      type: 'todo.social.profile',
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: AppBskyProfile.Record }[] }> {
+    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
+      type: 'app.bsky.profile',
       ...params,
     })
     return res.data
   }
 
   async get(
-    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
-  ): Promise<{ uri: string, value: TodoSocialProfile.Record }> {
-    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
-      type: 'todo.social.profile',
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: AppBskyProfile.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
+      type: 'app.bsky.profile',
       ...params,
     })
     return res.data
   }
 
   async create(
-    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialProfile.Record,
+    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'type'>,
+    record: AppBskyProfile.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.profile'
+    record.$type = 'app.bsky.profile'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoCreateRecord',
-      { type: 'todo.social.profile', ...params },
+      'com.atproto.repoCreateRecord',
+      { type: 'app.bsky.profile', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -938,14 +946,14 @@ export class ProfileRecord {
   }
 
   async put(
-    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialProfile.Record,
+    params: Omit<ComAtprotoRepoPutRecord.QueryParams, 'type'>,
+    record: AppBskyProfile.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.profile'
+    record.$type = 'app.bsky.profile'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoPutRecord',
-      { type: 'todo.social.profile', ...params },
+      'com.atproto.repoPutRecord',
+      { type: 'app.bsky.profile', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -953,12 +961,12 @@ export class ProfileRecord {
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'type'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
-      'todo.adx.repoDeleteRecord',
-      { type: 'todo.social.profile', ...params },
+      'com.atproto.repoDeleteRecord',
+      { type: 'app.bsky.profile', ...params },
       undefined,
       { headers }
     )
@@ -973,34 +981,34 @@ export class RepostRecord {
   }
 
   async list(
-    params: Omit<TodoAdxRepoListRecords.QueryParams, 'type'>
-  ): Promise<{ records: { uri: string, value: TodoSocialRepost.Record }[] }> {
-    const res = await this._service.xrpc.call('todo.adx.repoListRecords', {
-      type: 'todo.social.repost',
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'type'>
+  ): Promise<{ records: { uri: string, value: AppBskyRepost.Record }[] }> {
+    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
+      type: 'app.bsky.repost',
       ...params,
     })
     return res.data
   }
 
   async get(
-    params: Omit<TodoAdxRepoGetRecord.QueryParams, 'type'>
-  ): Promise<{ uri: string, value: TodoSocialRepost.Record }> {
-    const res = await this._service.xrpc.call('todo.adx.repoGetRecord', {
-      type: 'todo.social.repost',
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'type'>
+  ): Promise<{ uri: string, value: AppBskyRepost.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
+      type: 'app.bsky.repost',
       ...params,
     })
     return res.data
   }
 
   async create(
-    params: Omit<TodoAdxRepoCreateRecord.QueryParams, 'type'>,
-    record: TodoSocialRepost.Record,
+    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'type'>,
+    record: AppBskyRepost.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.repost'
+    record.$type = 'app.bsky.repost'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoCreateRecord',
-      { type: 'todo.social.repost', ...params },
+      'com.atproto.repoCreateRecord',
+      { type: 'app.bsky.repost', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -1008,14 +1016,14 @@ export class RepostRecord {
   }
 
   async put(
-    params: Omit<TodoAdxRepoPutRecord.QueryParams, 'type'>,
-    record: TodoSocialRepost.Record,
+    params: Omit<ComAtprotoRepoPutRecord.QueryParams, 'type'>,
+    record: AppBskyRepost.Record,
     headers?: Record<string, string>
   ): Promise<{ uri: string }> {
-    record.$type = 'todo.social.repost'
+    record.$type = 'app.bsky.repost'
     const res = await this._service.xrpc.call(
-      'todo.adx.repoPutRecord',
-      { type: 'todo.social.repost', ...params },
+      'com.atproto.repoPutRecord',
+      { type: 'app.bsky.repost', ...params },
       record,
       { encoding: 'application/json', headers }
     )
@@ -1023,12 +1031,12 @@ export class RepostRecord {
   }
 
   async delete(
-    params: Omit<TodoAdxRepoDeleteRecord.QueryParams, 'type'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'type'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
-      'todo.adx.repoDeleteRecord',
-      { type: 'todo.social.repost', ...params },
+      'com.atproto.repoDeleteRecord',
+      { type: 'app.bsky.repost', ...params },
       undefined,
       { headers }
     )

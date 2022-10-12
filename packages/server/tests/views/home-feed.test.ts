@@ -9,8 +9,8 @@ import {
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { FeedAlgorithm } from '../../src/api/todo/social/util'
-import { FeedItem } from '@adxp/api/src/types/todo/social/getHomeFeed'
+import { FeedAlgorithm } from '../../src/api/app/bsky/util'
+import { FeedItem } from '@adxp/api/src/types/app/bsky/getHomeFeed'
 
 describe('pds home feed views', () => {
   let client: AdxServiceClient
@@ -50,7 +50,7 @@ describe('pds home feed views', () => {
       expect(sc.follows[did]).toHaveProperty(originator)
     }
 
-    const aliceFeed = await client.todo.social.getHomeFeed(
+    const aliceFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
       undefined,
       {
@@ -64,7 +64,7 @@ describe('pds home feed views', () => {
       getSortedCursors(aliceFeed.data.feed),
     )
 
-    const bobFeed = await client.todo.social.getHomeFeed(
+    const bobFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
       undefined,
       {
@@ -78,7 +78,7 @@ describe('pds home feed views', () => {
       getSortedCursors(bobFeed.data.feed),
     )
 
-    const carolFeed = await client.todo.social.getHomeFeed(
+    const carolFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
       undefined,
       {
@@ -92,7 +92,7 @@ describe('pds home feed views', () => {
       getSortedCursors(carolFeed.data.feed),
     )
 
-    const danFeed = await client.todo.social.getHomeFeed(
+    const danFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
       undefined,
       {
@@ -116,7 +116,7 @@ describe('pds home feed views', () => {
       }
     }
 
-    const aliceFeed = await client.todo.social.getHomeFeed(
+    const aliceFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.Firehose },
       undefined,
       {
@@ -130,7 +130,7 @@ describe('pds home feed views', () => {
       getSortedCursors(aliceFeed.data.feed),
     )
 
-    const carolFeed = await client.todo.social.getHomeFeed(
+    const carolFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.Firehose },
       undefined,
       {
@@ -146,10 +146,10 @@ describe('pds home feed views', () => {
   })
 
   it("fetches authenticated user's home feed w/ default algorithm", async () => {
-    const defaultFeed = await client.todo.social.getHomeFeed({}, undefined, {
+    const defaultFeed = await client.app.bsky.getHomeFeed({}, undefined, {
       headers: sc.getHeaders(alice),
     })
-    const reverseChronologicalFeed = await client.todo.social.getHomeFeed(
+    const reverseChronologicalFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
       undefined,
       {
@@ -160,7 +160,7 @@ describe('pds home feed views', () => {
   })
 
   it('paginates reverse-chronological feed', async () => {
-    const full = await client.todo.social.getHomeFeed(
+    const full = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
       undefined,
       {
@@ -170,7 +170,7 @@ describe('pds home feed views', () => {
 
     expect(full.data.feed.length).toEqual(6)
 
-    const paginated = await client.todo.social.getHomeFeed(
+    const paginated = await client.app.bsky.getHomeFeed(
       {
         algorithm: FeedAlgorithm.ReverseChronological,
         before: full.data.feed[1].cursor,
@@ -186,7 +186,7 @@ describe('pds home feed views', () => {
   })
 
   it('paginates firehose feed', async () => {
-    const full = await client.todo.social.getHomeFeed(
+    const full = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.Firehose },
       undefined,
       {
@@ -196,7 +196,7 @@ describe('pds home feed views', () => {
 
     expect(full.data.feed.length).toEqual(13)
 
-    const paginated = await client.todo.social.getHomeFeed(
+    const paginated = await client.app.bsky.getHomeFeed(
       {
         algorithm: FeedAlgorithm.Firehose,
         before: full.data.feed[1].cursor,

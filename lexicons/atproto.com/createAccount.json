@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.createAccount",
+  "type": "procedure",
+  "description": "Create an account.",
+  "parameters": {},
+  "input": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["username", "email", "password"],
+      "properties": {
+        "email": {"type": "string"},
+        "username": {"type": "string"},
+        "inviteCode": {"type": "string"},
+        "password": {"type": "string"}
+      }
+    }
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["jwt", "username", "did"],
+      "properties": {
+        "jwt": { "type": "string" },
+        "username": { "type": "string" },
+        "did": { "type": "string" }
+      }
+    }
+  },
+  "errors": [
+    {"name": "InvalidUsername"},
+    {"name": "InvalidPassword"},
+    {"name": "InvalidInviteCode"},
+    {"name": "UsernameNotAvailable"}
+  ]
+}

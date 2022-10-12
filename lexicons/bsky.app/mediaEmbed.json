@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.mediaEmbed",
+  "type": "record",
+  "description": "A list of media embedded in a post or document.",
+  "record": {
+    "type": "object",
+    "required": ["media"],
+    "properties": {
+      "media": {"type": "array", "items": {"$ref": "#/$defs/mediaEmbed"}}
+    },
+    "$defs": {
+      "mediaEmbed": {
+        "type": "object",
+        "required": ["original"],
+        "properties": {
+          "alt": {"type": "string"},
+          "thumb": {"$ref": "#/$defs/mediaEmbedBlob"},
+          "original": {"$ref": "#/$defs/mediaEmbedBlob"}
+        }
+      },
+      "mediaEmbedBlob": {
+        "type": "object",
+        "required": ["mimeType", "blobId"],
+        "properties": {
+          "mimeType": {"type": "string"},
+          "blobId": {"type": "string"}
+        }
+      }
+    }
+  }
+}

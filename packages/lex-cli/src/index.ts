@@ -5,7 +5,15 @@ import fs from 'fs'
 import { Command, InvalidArgumentError } from 'commander'
 import yesno from 'yesno'
 import { NSID } from '@adxp/nsid'
-import { schemaTemplate, readAllSchemas, genMd, genTsObj } from './util'
+import {
+  schemaTemplate,
+  readAllSchemas,
+  genTsObj,
+  genFileDiff,
+  printFileDiff,
+  applyFileDiff,
+} from './util'
+import * as mdGen from './mdgen'
 import { genClientApi } from './codegen/client'
 import { genServerApi } from './codegen/server'
 
@@ -38,10 +46,24 @@ program
 program
   .command('gen-md')
   .description('Generate markdown documentation')
+  .argument('<outfile>', 'path of the file to write to', toPath)
   .argument('<schemas...>', 'paths of the schema files to include', toPaths)
-  .action((schemaPaths: string[]) => {
+  .action(async (outFilePath: string, schemaPaths: string[]) => {
+    if (!outFilePath.endsWith('.md')) {
+      console.error('Must supply the path to a .md file as the first parameter')
+      process.exit(1)
+    }
+    console.log('Writing', outFilePath)
+    const ok = await yesno({
+      question: 'Are you sure you want to continue? [y/N]',
+      defaultValue: false,
+    })
+    if (!ok) {
+      console.log('Aborted.')
+      process.exit(0)
+    }
     const schemas = readAllSchemas(schemaPaths)
-    console.log(genMd(schemas))
+    await mdGen.process(outFilePath, schemas)
   })
 
 program
@@ -61,11 +83,9 @@ program
   .action(async (outDir: string, schemaPaths: string[]) => {
     const schemas = readAllSchemas(schemaPaths)
     const api = await genClientApi(schemas)
+    const diff = genFileDiff(outDir, api)
     console.log('This will write the following files:')
-    for (const file of api.files) {
-      file.path = path.join(outDir, file.path)
-      console.log('-', file.path)
-    }
+    printFileDiff(diff)
     const ok = await yesno({
       question: 'Are you sure you want to continue? [y/N]',
       defaultValue: false,
@@ -74,10 +94,7 @@ program
       console.log('Aborted.')
       process.exit(0)
     }
-    for (const file of api.files) {
-      fs.mkdirSync(path.join(file.path, '..'), { recursive: true })
-      fs.writeFileSync(file.path, file.content, 'utf8')
-    }
+    applyFileDiff(diff)
     console.log('API generated.')
   })
 
@@ -89,11 +106,9 @@ program
   .action(async (outDir: string, schemaPaths: string[]) => {
     const schemas = readAllSchemas(schemaPaths)
     const api = await genServerApi(schemas)
+    const diff = genFileDiff(outDir, api)
     console.log('This will write the following files:')
-    for (const file of api.files) {
-      file.path = path.join(outDir, file.path)
-      console.log('-', file.path)
-    }
+    printFileDiff(diff)
     const ok = await yesno({
       question: 'Are you sure you want to continue? [y/N]',
       defaultValue: false,
@@ -102,10 +117,7 @@ program
       console.log('Aborted.')
       process.exit(0)
     }
-    for (const file of api.files) {
-      fs.mkdirSync(path.join(file.path, '..'), { recursive: true })
-      fs.writeFileSync(file.path, file.content, 'utf8')
-    }
+    applyFileDiff(diff)
     console.log('API generated.')
   })
 
