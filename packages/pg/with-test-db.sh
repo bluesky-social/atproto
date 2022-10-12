@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# @TODO handle sigint for cleanup
 
 # Example usage:
 # ./with-test-db.sh psql postgresql://pg:password@localhost:5433/postgres -c 'select 1;'

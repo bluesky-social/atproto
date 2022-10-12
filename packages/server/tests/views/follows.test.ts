@@ -12,7 +12,9 @@ describe('pds follow views', () => {
   let alice: string
 
   beforeAll(async () => {
-    const server = await runTestServer()
+    const server = await runTestServer({
+      dbPostgresSchema: 'views_follows',
+    })
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
