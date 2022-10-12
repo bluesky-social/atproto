@@ -10,10 +10,11 @@
       "entities": {"$ref": "#/$defs/entity"},
       "reply": {
         "type": "object",
-        "required": ["root"],
+        "required": ["root", "parent", "parentCid"],
         "properties": {
           "root": {"type": "string"},
-          "parent": {"type": "string"}
+          "parent": {"type": "string"},
+          "parentCid": {"type": "string"}
         }
       },
       "createdAt": {"type": "string", "format": "date-time"}

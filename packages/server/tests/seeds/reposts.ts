@@ -8,11 +8,35 @@ export default async (sc: SeedClient) => {
     username: 'eve.test',
     password: 'eve-pass',
   })
-  await sc.repost(sc.dids.bob, sc.posts[sc.dids.alice][2].uriRaw)
-  await sc.repost(sc.dids.carol, sc.posts[sc.dids.alice][2].uriRaw)
-  await sc.repost(sc.dids.dan, sc.posts[sc.dids.alice][2].uriRaw)
-  await sc.repost(sc.dids.eve, sc.posts[sc.dids.alice][2].uriRaw)
-  await sc.repost(sc.dids.dan, sc.replies[sc.dids.bob][0].uriRaw)
-  await sc.repost(sc.dids.eve, sc.replies[sc.dids.bob][0].uriRaw)
+  await sc.repost(
+    sc.dids.bob,
+    sc.posts[sc.dids.alice][2].uriRaw,
+    sc.posts[sc.dids.alice][2].cidRaw,
+  )
+  await sc.repost(
+    sc.dids.carol,
+    sc.posts[sc.dids.alice][2].uriRaw,
+    sc.posts[sc.dids.alice][2].cidRaw,
+  )
+  await sc.repost(
+    sc.dids.dan,
+    sc.posts[sc.dids.alice][2].uriRaw,
+    sc.posts[sc.dids.alice][2].cidRaw,
+  )
+  await sc.repost(
+    sc.dids.eve,
+    sc.posts[sc.dids.alice][2].uriRaw,
+    sc.posts[sc.dids.alice][2].cidRaw,
+  )
+  await sc.repost(
+    sc.dids.dan,
+    sc.replies[sc.dids.bob][0].uriRaw,
+    sc.replies[sc.dids.bob][0].cidRaw,
+  )
+  await sc.repost(
+    sc.dids.eve,
+    sc.replies[sc.dids.bob][0].uriRaw,
+    sc.replies[sc.dids.bob][0].cidRaw,
+  )
   return sc
 }

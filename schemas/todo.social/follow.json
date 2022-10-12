@@ -5,10 +5,9 @@
   "description": "A social follow",
   "record": {
     "type": "object",
-    "required": ["subject", "subjectCid", "createdAt"],
+    "required": ["subject", "createdAt"],
     "properties": {
       "subject": { "type": "string" },
-      "subjectCid": { "type": "string" },
       "createdAt": {"type": "string", "format": "date-time"}
     }
   }

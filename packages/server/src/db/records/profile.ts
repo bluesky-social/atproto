@@ -28,6 +28,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('displayName', 'varchar', (col) => col.notNull())
     .addColumn('description', 'varchar')

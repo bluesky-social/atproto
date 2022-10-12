@@ -3,7 +3,6 @@
 */
 export interface Record {
   subject: string;
-  subjectCid: string;
   createdAt: string;
   [k: string]: unknown;
 }

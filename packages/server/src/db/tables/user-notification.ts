@@ -6,6 +6,7 @@ export const tableName = 'user_notification'
 export interface UserNotification {
   userDid: string
   recordUri: string
+  recordCid: string
   author: string
   reason: string
   reasonSubject: string | null
@@ -19,6 +20,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .createTable(tableName)
     .addColumn('userDid', 'varchar', (col) => col.notNull())
     .addColumn('recordUri', 'varchar', (col) => col.notNull())
+    .addColumn('recordCid', 'varchar', (col) => col.notNull())
     .addColumn('author', 'varchar', (col) => col.notNull())
     .addColumn('reason', 'varchar', (col) => col.notNull())
     .addColumn('reasonSubject', 'varchar')

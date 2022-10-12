@@ -24,7 +24,11 @@ describe('pds thread views', () => {
 
   beforeAll(async () => {
     // Add a repost of a reply so that we can confirm myState in the thread
-    await sc.repost(bob, sc.replies[alice][0].uriRaw)
+    await sc.repost(
+      bob,
+      sc.replies[alice][0].uriRaw,
+      sc.replies[alice][0].cidRaw,
+    )
   })
 
   afterAll(async () => {

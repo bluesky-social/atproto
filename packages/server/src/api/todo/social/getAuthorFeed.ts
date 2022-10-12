@@ -52,6 +52,7 @@ export default function (server: Server) {
         .leftJoin('record', 'record.uri', 'post.uri')
         .select([
           'post.uri as uri',
+          'post.cid as cid',
           'record.raw as rawRecord',
           'record.indexedAt as indexedAt',
           'author.did as authorDid',

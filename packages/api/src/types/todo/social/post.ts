@@ -18,7 +18,8 @@ export interface Record {
   entities?: Entity;
   reply?: {
     root: string,
-    parent?: string,
+    parent: string,
+    parentCid: string,
     [k: string]: unknown,
   };
   createdAt: string;

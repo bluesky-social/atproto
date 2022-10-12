@@ -1823,12 +1823,9 @@ export const recordSchemas: RecordSchema[] = [
     description: 'A social follow',
     record: {
       type: 'object',
-      required: ['subject', 'subjectCid', 'createdAt'],
+      required: ['subject', 'createdAt'],
       properties: {
         subject: {
-          type: 'string',
-        },
-        subjectCid: {
           type: 'string',
         },
         createdAt: {
@@ -1923,12 +1920,15 @@ export const recordSchemas: RecordSchema[] = [
         },
         reply: {
           type: 'object',
-          required: ['root'],
+          required: ['root', 'parent', 'parentCid'],
           properties: {
             root: {
               type: 'string',
             },
             parent: {
+              type: 'string',
+            },
+            parentCid: {
               type: 'string',
             },
           },

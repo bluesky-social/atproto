@@ -46,17 +46,3 @@ Object {
   "uri": "record(0)",
 }
 `;
-
-exports[`pds like views fetches liked by reposts 1`] = `
-Object {
-  "likedBy": Array [
-    Object {
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "did": "user(0)",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "name": "eve.test",
-    },
-  ],
-  "uri": "record(0)",
-}
-`;

@@ -3,12 +3,14 @@ import { AdxUri } from '@adxp/uri'
 import * as Repost from '../../lexicon/types/todo/social/repost'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
+import { CID } from '@adxp/common'
 
 const type = 'todo.social.repost'
 const tableName = 'todo_social_repost'
 
 export interface TodoSocialRepost {
   uri: string
+  cid: string
   creator: string
   subject: string
   subjectCid: string
@@ -20,6 +22,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('subjectCid', 'varchar', (col) => col.notNull())
@@ -57,7 +60,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, obj: unknown): Promise<void> => {
+  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
     if (!isValidSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -65,6 +68,7 @@ const insertFn =
       .insertInto('todo_social_repost')
       .values({
         uri: uri.toString(),
+        cid: cid.toString(),
         creator: uri.host,
         subject: obj.subject,
         subjectCid: obj.subjectCid,
@@ -80,7 +84,11 @@ const deleteFn =
     await db.deleteFrom('todo_social_repost').where('uri', '=', uri.toString())
   }
 
-const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+const notifsForRecord = (
+  uri: AdxUri,
+  cid: CID,
+  obj: unknown,
+): Notification[] => {
   if (!isValidSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
@@ -89,6 +97,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
     userDid: subjectUri.host,
     author: uri.host,
     recordUri: uri.toString(),
+    recordCid: cid.toString(),
     reason: 'repost',
     reasonSubject: subjectUri.toString(),
   }

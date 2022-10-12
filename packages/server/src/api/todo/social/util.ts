@@ -41,6 +41,7 @@ export const queryResultToFeedItem = (
 ): TodoSocialGetHomeFeed.FeedItem & TodoSocialGetAuthorFeed.FeedItem => ({
   cursor: row.cursor,
   uri: row.uri,
+  cid: row.cid,
   author: {
     did: row.authorDid,
     name: row.authorName,

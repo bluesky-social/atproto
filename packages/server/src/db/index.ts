@@ -200,7 +200,7 @@ export class Database {
     await this.db.insertInto('record').values(record).execute()
     const table = this.findTableForCollection(uri.collection)
     await table.insert(uri, cid, obj)
-    const notifs = table.notifsForRecord(uri, obj)
+    const notifs = table.notifsForRecord(uri, cid, obj)
     await this.notifications.process(notifs)
     log.info({ uri }, 'indexed record')
   }

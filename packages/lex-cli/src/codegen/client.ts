@@ -342,7 +342,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     const method = cls.addMethod({
       isAsync: true,
       name: 'create',
-      returnType: 'Promise<{uri: string}>',
+      returnType: 'Promise<{uri: string, cid: string}>',
     })
     method.addParameter({
       name: 'params',
@@ -366,33 +366,33 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
       ].join('\n'),
     )
   }
-  {
-    //= put()
-    const method = cls.addMethod({
-      isAsync: true,
-      name: 'put',
-      returnType: 'Promise<{uri: string}>',
-    })
-    method.addParameter({
-      name: 'params',
-      type: `Omit<${toTitleCase(ADX_METHODS.put)}.QueryParams, "collection">`,
-    })
-    method.addParameter({
-      name: 'record',
-      type: `${typeModule}.Record`,
-    })
-    method.addParameter({
-      name: 'headers?',
-      type: `Record<string, string>`,
-    })
-    method.setBodyText(
-      [
-        `record.$type = '${schema.id}'`,
-        `const res = await this._service.xrpc.call('${ADX_METHODS.put}', { collection: '${schema.id}', ...params }, record, {encoding: 'application/json', headers})`,
-        `return res.data`,
-      ].join('\n'),
-    )
-  }
+  // {
+  //   //= put()
+  //   const method = cls.addMethod({
+  //     isAsync: true,
+  //     name: 'put',
+  //     returnType: 'Promise<{uri: string, cid: string}>',
+  //   })
+  //   method.addParameter({
+  //     name: 'params',
+  //     type: `Omit<${toTitleCase(ADX_METHODS.put)}.QueryParams, "collection">`,
+  //   })
+  //   method.addParameter({
+  //     name: 'record',
+  //     type: `${typeModule}.Record`,
+  //   })
+  //   method.addParameter({
+  //     name: 'headers?',
+  //     type: `Record<string, string>`,
+  //   })
+  //   method.setBodyText(
+  //     [
+  //       `record.$type = '${schema.id}'`,
+  //       `const res = await this._service.xrpc.call('${ADX_METHODS.put}', { collection: '${schema.id}', ...params }, record, {encoding: 'application/json', headers})`,
+  //       `return res.data`,
+  //     ].join('\n'),
+  //   )
+  // }
   {
     //= delete()
     const method = cls.addMethod({

@@ -7,7 +7,7 @@ import { sql } from 'kysely'
 export default function (server: Server) {
   server.todo.social.getLikedBy(
     async (params: GetLikedBy.QueryParams, _input, _req, res) => {
-      const { uri, limit, before } = params
+      const { uri, limit, before, cid } = params
       const { db } = locals.get(res)
 
       let builder = db.db
@@ -27,6 +27,10 @@ export default function (server: Server) {
           'like.createdAt as createdAt',
           'record.indexedAt as indexedAt',
         ])
+
+      if (cid) {
+        builder = builder.where('like.subjectCid', '=', cid)
+      }
 
       builder = paginate(builder, {
         limit,

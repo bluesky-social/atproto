@@ -17,9 +17,10 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["uri"],
+      "required": ["uri", "cid"],
       "properties": {
-        "uri": {"type": "string"}
+        "uri": {"type": "string"},
+        "cid": {"type": "string"}
       }
     }
   }

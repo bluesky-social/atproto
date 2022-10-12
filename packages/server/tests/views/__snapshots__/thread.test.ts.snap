@@ -7,6 +7,7 @@ Object {
     "displayName": "ali",
     "name": "alice.test",
   },
+  "cid": "cids(0)",
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "likeCount": 3,
   "myState": Object {
@@ -23,6 +24,7 @@ Object {
         "did": "user(1)",
         "name": "carol.test",
       },
+      "cid": "cids(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 0,
       "myState": Object {},
@@ -32,6 +34,7 @@ Object {
           "displayName": "ali",
           "name": "alice.test",
         },
+        "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "likeCount": 3,
         "myState": Object {
@@ -51,6 +54,7 @@ Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": "record(0)",
+          "parentCid": "cids(0)",
           "root": "record(0)",
         },
         "text": "of course",
@@ -66,6 +70,7 @@ Object {
         "displayName": "bobby",
         "name": "bob.test",
       },
+      "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 0,
       "myState": Object {},
@@ -75,6 +80,7 @@ Object {
           "displayName": "ali",
           "name": "alice.test",
         },
+        "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "likeCount": 3,
         "myState": Object {
@@ -94,6 +100,7 @@ Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": "record(0)",
+          "parentCid": "cids(0)",
           "root": "record(0)",
         },
         "text": "hear that",
@@ -105,6 +112,7 @@ Object {
             "displayName": "ali",
             "name": "alice.test",
           },
+          "cid": "cids(3)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "likeCount": 0,
           "myState": Object {
@@ -116,6 +124,7 @@ Object {
               "displayName": "bobby",
               "name": "bob.test",
             },
+            "cid": "cids(2)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "likeCount": 0,
             "myState": Object {},
@@ -125,6 +134,7 @@ Object {
                 "displayName": "ali",
                 "name": "alice.test",
               },
+              "cid": "cids(0)",
               "indexedAt": "1970-01-01T00:00:00.000Z",
               "likeCount": 3,
               "myState": Object {
@@ -144,6 +154,7 @@ Object {
               "createdAt": "1970-01-01T00:00:00.000Z",
               "reply": Object {
                 "parent": "record(0)",
+                "parentCid": "cids(0)",
                 "root": "record(0)",
               },
               "text": "hear that",
@@ -157,6 +168,7 @@ Object {
             "createdAt": "1970-01-01T00:00:00.000Z",
             "reply": Object {
               "parent": "record(3)",
+              "parentCid": "cids(2)",
               "root": "record(0)",
             },
             "text": "thanks bob",
@@ -185,6 +197,7 @@ Object {
     "displayName": "ali",
     "name": "alice.test",
   },
+  "cid": "cids(0)",
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "likeCount": 3,
   "myState": Object {
@@ -201,6 +214,7 @@ Object {
         "did": "user(1)",
         "name": "carol.test",
       },
+      "cid": "cids(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 0,
       "myState": Object {},
@@ -210,6 +224,7 @@ Object {
           "displayName": "ali",
           "name": "alice.test",
         },
+        "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "likeCount": 3,
         "myState": Object {
@@ -229,6 +244,7 @@ Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": "record(0)",
+          "parentCid": "cids(0)",
           "root": "record(0)",
         },
         "text": "of course",
@@ -243,6 +259,7 @@ Object {
         "displayName": "bobby",
         "name": "bob.test",
       },
+      "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 0,
       "myState": Object {},
@@ -252,6 +269,7 @@ Object {
           "displayName": "ali",
           "name": "alice.test",
         },
+        "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "likeCount": 3,
         "myState": Object {
@@ -271,6 +289,7 @@ Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": "record(0)",
+          "parentCid": "cids(0)",
           "root": "record(0)",
         },
         "text": "hear that",

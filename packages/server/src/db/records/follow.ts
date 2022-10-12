@@ -12,7 +12,6 @@ export interface TodoSocialFollow {
   cid: string
   creator: string
   subject: string
-  subjectCid: string
   createdAt: string
   indexedAt: string
 }
@@ -24,7 +23,6 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
-    .addColumn('subjectCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
@@ -41,7 +39,6 @@ const validateSchema = (obj: unknown) => validator.validate(obj)
 const translateDbObj = (dbObj: TodoSocialFollow): Follow.Record => {
   return {
     subject: dbObj.subject,
-    subjectCid: dbObj.subjectCid,
     createdAt: dbObj.createdAt,
   }
 }
@@ -68,7 +65,6 @@ const insertFn =
       cid: cid.toString(),
       creator: uri.host,
       subject: obj.subject,
-      subjectCid: obj.subjectCid,
       createdAt: obj.createdAt,
       indexedAt: new Date().toISOString(),
     }
@@ -81,7 +77,11 @@ const deleteFn =
     await db.deleteFrom('todo_social_follow').where('uri', '=', uri.toString())
   }
 
-const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+const notifsForRecord = (
+  uri: AdxUri,
+  cid: CID,
+  obj: unknown,
+): Notification[] => {
   if (!isValidSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
@@ -89,6 +89,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
     userDid: obj.subject,
     author: uri.host,
     recordUri: uri.toString(),
+    recordCid: cid.toString(),
     reason: 'follow',
   }
   return [notif]

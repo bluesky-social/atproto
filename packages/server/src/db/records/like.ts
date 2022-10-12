@@ -84,7 +84,11 @@ const deleteFn =
     await db.deleteFrom('todo_social_like').where('uri', '=', uri.toString())
   }
 
-const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+const notifsForRecord = (
+  uri: AdxUri,
+  cid: CID,
+  obj: unknown,
+): Notification[] => {
   if (!isValidSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
@@ -93,6 +97,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
     userDid: subjectUri.host,
     author: uri.host,
     recordUri: uri.toString(),
+    recordCid: cid.toString(),
     reason: 'like',
     reasonSubject: subjectUri.toString(),
   }

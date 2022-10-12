@@ -15,6 +15,7 @@ export interface TodoSocialPost {
   text: string
   replyRoot: string | null
   replyParent: string | null
+  replyParentCid: string | null
   createdAt: string
   indexedAt: string
 }
@@ -37,6 +38,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('text', 'varchar', (col) => col.notNull())
     .addColumn('replyRoot', 'varchar')
     .addColumn('replyParent', 'varchar')
+    .addColumn('replyParentCid', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
@@ -63,17 +65,19 @@ const isValidSchema = (obj: unknown): obj is Post.Record => {
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const translateDbObj = (dbObj: TodoSocialPost): Post.Record => {
-  const reply = dbObj.replyRoot
-    ? {
-        root: dbObj.replyRoot,
-        parent: dbObj.replyParent ?? undefined,
-      }
-    : undefined
-  return {
+  const record: Post.Record = {
     text: dbObj.text,
-    reply: reply,
     createdAt: dbObj.createdAt,
   }
+
+  if (dbObj.replyRoot && dbObj.replyParent && dbObj.replyParentCid) {
+    record.reply = {
+      root: dbObj.replyRoot,
+      parent: dbObj.replyParent,
+      parentCid: dbObj.replyParentCid,
+    }
+  }
+  return record
 }
 
 const getFn =
@@ -119,8 +123,9 @@ const insertFn =
       creator: uri.host,
       text: obj.text,
       createdAt: obj.createdAt,
-      replyRoot: obj.reply?.root,
-      replyParent: obj.reply?.parent,
+      replyRoot: obj.reply?.root || null,
+      replyParent: obj.reply?.parent || null,
+      replyParentCid: obj.reply?.parentCid || null,
       indexedAt: new Date().toISOString(),
     }
     const promises = [db.insertInto('todo_social_post').values(post).execute()]
@@ -143,7 +148,11 @@ const deleteFn =
     ])
   }
 
-const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
+const notifsForRecord = (
+  uri: AdxUri,
+  cid: CID,
+  obj: unknown,
+): Notification[] => {
   if (!isValidSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
@@ -154,6 +163,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
         userDid: entity.value,
         author: uri.host,
         recordUri: uri.toString(),
+        recordCid: cid.toString(),
         reason: 'mention',
       })
     }
@@ -164,6 +174,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
       userDid: parentUri.host,
       author: uri.host,
       recordUri: uri.toString(),
+      recordCid: cid.toString(),
       reason: 'reply',
       reasonSubject: parentUri.toString(),
     })

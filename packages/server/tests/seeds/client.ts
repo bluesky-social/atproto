@@ -1,5 +1,6 @@
 import { ServiceClient } from '@adxp/api'
 import { AdxUri } from '@adxp/uri'
+import { CID } from 'multiformats/cid'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -20,9 +21,15 @@ export class SeedClient {
     { displayName: string; description: string; uriRaw: string; uri: AdxUri }
   >
   follows: Record<string, Record<string, AdxUri>>
-  posts: Record<string, { text: string; uriRaw: string; uri: AdxUri }[]>
+  posts: Record<
+    string,
+    { text: string; uriRaw: string; uri: AdxUri; cid: CID; cidRaw: string }[]
+  >
   likes: Record<string, Record<string, AdxUri>>
-  replies: Record<string, { text: string; uriRaw: string; uri: AdxUri }[]>
+  replies: Record<
+    string,
+    { text: string; uriRaw: string; uri: AdxUri; cid: CID; cidRaw: string }[]
+  >
   reposts: Record<string, AdxUri[]>
   dids: Record<string, string>
 
@@ -88,14 +95,20 @@ export class SeedClient {
       this.getHeaders(by),
     )
     this.posts[by] ??= []
-    this.posts[by].push({ text, uriRaw: res.uri, uri: new AdxUri(res.uri) })
+    this.posts[by].push({
+      text,
+      uriRaw: res.uri,
+      uri: new AdxUri(res.uri),
+      cidRaw: res.cid,
+      cid: CID.parse(res.cid),
+    })
     return this.posts[by].at(-1)
   }
 
-  async like(by: string, subject: string) {
+  async like(by: string, subject: string, subjectCid: string) {
     const res = await this.client.todo.social.like.create(
       { did: by },
-      { subject, createdAt: new Date().toISOString() },
+      { subject, subjectCid, createdAt: new Date().toISOString() },
       this.getHeaders(by),
     )
     this.likes[by] ??= {}
@@ -103,7 +116,13 @@ export class SeedClient {
     return this.likes[by][subject]
   }
 
-  async reply(by: string, root: AdxUri, parent: AdxUri, text: string) {
+  async reply(
+    by: string,
+    root: AdxUri,
+    parent: AdxUri,
+    parentCid: CID,
+    text: string,
+  ) {
     const res = await this.client.todo.social.post.create(
       { did: by },
       {
@@ -111,20 +130,27 @@ export class SeedClient {
         reply: {
           root: root.toString(),
           parent: parent.toString(),
+          parentCid: parentCid.toString(),
         },
         createdAt: new Date().toISOString(),
       },
       this.getHeaders(by),
     )
     this.replies[by] ??= []
-    this.replies[by].push({ text, uriRaw: res.uri, uri: new AdxUri(res.uri) })
+    this.replies[by].push({
+      text,
+      uriRaw: res.uri,
+      uri: new AdxUri(res.uri),
+      cidRaw: res.cid,
+      cid: CID.parse(res.cid),
+    })
     return this.replies[by].at(-1)
   }
 
-  async repost(by: string, subject: string) {
+  async repost(by: string, subject: string, subjectCid: string) {
     const res = await this.client.todo.social.repost.create(
       { did: by },
-      { subject, createdAt: new Date().toISOString() },
+      { subject, subjectCid, createdAt: new Date().toISOString() },
       this.getHeaders(by),
     )
     this.reposts[by] ??= []

@@ -10,7 +10,7 @@ export type DbRecordPlugin<T, S> = {
   get: (uri: AdxUri) => Promise<T | null>
   insert: (uri: AdxUri, cid: CID, obj: unknown) => Promise<void>
   delete: (uri: AdxUri) => Promise<void>
-  notifsForRecord: (uri: AdxUri, obj: unknown) => Notification[]
+  notifsForRecord: (uri: AdxUri, cid: CID, obj: unknown) => Notification[]
 }
 
 export type NotificationsPlugin = {
@@ -22,6 +22,7 @@ export type Notification = {
   userDid: string
   author: string
   recordUri: string
+  recordCid: string
   reason: string
   reasonSubject?: string
 }

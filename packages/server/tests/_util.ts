@@ -2,6 +2,7 @@ import { MemoryBlockstore } from '@adxp/repo'
 import * as crypto from '@adxp/crypto'
 import * as plc from '@adxp/plc'
 import { AdxUri } from '@adxp/uri'
+import { CID } from 'multiformats/cid'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
@@ -99,6 +100,7 @@ export const forSnapshot = (obj: unknown) => {
   const records = { [kTake]: 'record' }
   const collections = { [kTake]: 'collection' }
   const users = { [kTake]: 'user' }
+  const cids = { [kTake]: 'cids' }
   const unknown = { [kTake]: 'unknown' }
   return mapLeafValues(obj, (item) => {
     if (typeof item !== 'string') {
@@ -120,6 +122,16 @@ export const forSnapshot = (obj: unknown) => {
     }
     if (str.match(/^\d{4}-\d{2}-\d{2}T/)) {
       return constantDate
+    }
+    let isCid: boolean
+    try {
+      CID.parse(str)
+      isCid = true
+    } catch (_err) {
+      isCid = false
+    }
+    if (isCid) {
+      return take(cids, str)
     }
     return item
   })

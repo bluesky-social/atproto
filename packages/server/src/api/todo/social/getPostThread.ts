@@ -81,6 +81,7 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
     )
     .select([
       'post.uri as uri',
+      'post.cid as cid',
       'post.replyParent as parent',
       'author.did as authorDid',
       'author.username as authorName',
@@ -125,6 +126,7 @@ const rowToPost = (
 ): GetPostThread.Post => {
   return {
     uri: row.uri,
+    cid: row.cid,
     author: {
       did: row.authorDid,
       name: row.authorName,

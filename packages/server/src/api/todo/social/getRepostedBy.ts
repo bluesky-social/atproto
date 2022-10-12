@@ -7,7 +7,7 @@ import { paginate } from '../../../db/util'
 export default function (server: Server) {
   server.todo.social.getRepostedBy(
     async (params: GetRepostedBy.QueryParams, _input, _req, res) => {
-      const { uri, limit, before } = params
+      const { uri, limit, before, cid } = params
       const { db } = locals.get(res)
 
       let builder = db.db
@@ -27,6 +27,10 @@ export default function (server: Server) {
           'repost.createdAt as createdAt',
           'record.indexedAt as indexedAt',
         ])
+
+      if (cid) {
+        builder = builder.where('repost.subjectCid', '=', cid)
+      }
 
       builder = paginate(builder, {
         limit,
