@@ -1,5 +1,6 @@
-import { Kysely, SqliteDialect, sql } from 'kysely'
+import { Kysely, SqliteDialect, sql, PostgresDialect } from 'kysely'
 import SqliteDB from 'better-sqlite3'
+import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
 import * as Badge from '../lexicon/types/app/bsky/badge'
@@ -35,7 +36,11 @@ export class Database {
   }
   notifications: NotificationsPlugin
 
-  constructor(db: Kysely<DatabaseSchema>) {
+  constructor(
+    db: Kysely<DatabaseSchema>,
+    public dialect: Dialect,
+    public schema?: string,
+  ) {
     this.db = db
     this.records = {
       post: postPlugin(db),
@@ -54,7 +59,36 @@ export class Database {
         database: new SqliteDB(location),
       }),
     })
-    return new Database(db)
+    return new Database(db, 'sqlite')
+  }
+
+  static async postgres(opts: {
+    url: string
+    schema: string | undefined
+  }): Promise<Database> {
+    const { url, schema } = opts
+    const pool = new PgPool({ connectionString: url })
+
+    // Select count(*) and other pg bigints as js integer
+    pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
+
+    // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
+    if (schema !== undefined) {
+      if (!/^[a-z_]+$/i.test(schema)) {
+        throw new Error(
+          `Postgres schema must only contain [A-Za-z_]: ${schema}`,
+        )
+      }
+      pool.on('connect', (client) =>
+        client.query(`SET search_path TO "${schema}"`),
+      )
+    }
+
+    const db = new Kysely<DatabaseSchema>({
+      dialect: new PostgresDialect({ pool }),
+    })
+
+    return new Database(db, 'pg', schema)
   }
 
   static async memory(): Promise<Database> {
@@ -66,6 +100,9 @@ export class Database {
   }
 
   async createTables(): Promise<void> {
+    if (this.schema !== undefined) {
+      await this.db.schema.createSchema(this.schema).ifNotExists().execute()
+    }
     await createTables(this.db)
   }
 
@@ -104,10 +141,11 @@ export class Database {
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
+    const { ref } = this.db.dynamic
     const found = await this.db
       .selectFrom('user')
       .selectAll()
-      .where(sql`UPPER(email)`, '=', email.toUpperCase())
+      .where(sql`UPPER(${ref('email')})`, '=', email.toUpperCase())
       .executeTakeFirst()
     return found || null
   }
@@ -281,6 +319,8 @@ export class Database {
 }
 
 export default Database
+
+type Dialect = 'pg' | 'sqlite'
 
 // Can use with typeof to get types for partial queries
 export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })

@@ -21,7 +21,9 @@ describe('pds author feed views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer()
+    const server = await runTestServer({
+      dbPostgresSchema: 'views_author_feed',
+    })
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)

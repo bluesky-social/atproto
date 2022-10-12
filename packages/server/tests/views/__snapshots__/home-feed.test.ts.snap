@@ -451,6 +451,36 @@ Array [
     "cursor": "1970-01-01T00:00:00.000Z",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "likeCount": 0,
+    "myState": Object {
+      "repost": "record(9)",
+    },
+    "record": Object {
+      "$type": "app.bsky.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "entities": Array [
+        Object {
+          "index": Array [
+            0,
+            18,
+          ],
+          "type": "mention",
+          "value": "user(0)",
+        },
+      ],
+      "text": "@alice.bluesky.xyz is the best",
+    },
+    "replyCount": 0,
+    "repostCount": 1,
+    "uri": "record(8)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(1)",
+      "name": "dan.test",
+    },
+    "cursor": "1970-01-01T00:00:00.000Z",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "myState": Object {},
     "record": Object {
       "$type": "app.bsky.post",
@@ -459,7 +489,7 @@ Array [
     },
     "replyCount": 0,
     "repostCount": 0,
-    "uri": "record(8)",
+    "uri": "record(10)",
   },
   Object {
     "author": Object {
@@ -477,7 +507,7 @@ Array [
     },
     "replyCount": 0,
     "repostCount": 0,
-    "uri": "record(9)",
+    "uri": "record(11)",
   },
   Object {
     "author": Object {
@@ -496,7 +526,7 @@ Array [
     },
     "replyCount": 0,
     "repostCount": 0,
-    "uri": "record(10)",
+    "uri": "record(12)",
   },
   Object {
     "author": Object {
@@ -515,7 +545,7 @@ Array [
     },
     "replyCount": 0,
     "repostCount": 0,
-    "uri": "record(11)",
+    "uri": "record(13)",
   },
 ]
 `;

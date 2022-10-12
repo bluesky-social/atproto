@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import * as GetRepostedBy from '../../../lexicon/types/app/bsky/getRepostedBy'
 import * as locals from '../../../locals'
@@ -9,6 +8,7 @@ export default function (server: Server) {
     async (params: GetRepostedBy.QueryParams, _input, _req, res) => {
       const { uri, limit, before } = params
       const { db } = locals.get(res)
+      const { ref } = db.db.dynamic
 
       let builder = db.db
         .selectFrom('app_bsky_repost as repost')
@@ -27,7 +27,7 @@ export default function (server: Server) {
       builder = paginate(builder, {
         limit,
         before,
-        by: sql`repost.createdAt`,
+        by: ref('repost.createdAt'),
       })
 
       const repostedByRes = await builder.execute()

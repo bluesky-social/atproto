@@ -32,6 +32,7 @@ export default function (server: Server) {
   server.com.atproto.createAccount(async (_params, input, _req, res) => {
     const { email, username, password, inviteCode } = input.body
     const { db, blockstore, auth, config, keypair, logger } = locals.get(res)
+    const { ref } = db.db.dynamic
 
     if (config.inviteRequired) {
       if (!inviteCode) {
@@ -49,7 +50,7 @@ export default function (server: Server) {
         .select([
           'invite.disabled as disabled',
           'invite.availableUses as availableUses',
-          sql<number>`count(code_use.usedBy)`.as('useCount'),
+          sql<number>`count(${ref('code_use.usedBy')})`.as('useCount'),
         ])
         .executeTakeFirst()
       if (!found || found.disabled || found.useCount >= found.availableUses) {

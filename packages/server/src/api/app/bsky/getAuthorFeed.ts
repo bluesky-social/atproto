@@ -1,108 +1,120 @@
+import { sql } from 'kysely'
 import { AuthRequiredError } from '@adxp/xrpc-server'
 import { Server } from '../../../lexicon'
 import * as GetAuthorFeed from '../../../lexicon/types/app/bsky/getAuthorFeed'
 import * as locals from '../../../locals'
-import { queryResultToFeedItem } from './util'
-import {
-  countClause,
-  isNotRepostClause,
-  paginate,
-  postOrRepostIndexedAtClause,
-} from '../../../db/util'
+import { rowToFeedItem } from './util/feed'
+import { countAll, paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.app.bsky.getAuthorFeed(
     async (params: GetAuthorFeed.QueryParams, _input, req, res) => {
-      const { author, limit, before } = params
-
       const { auth, db } = locals.get(res)
+      const { author, limit, before } = params
+      const { ref } = db.db.dynamic
+
       const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()
       }
 
-      const { ref } = db.db.dynamic
-      const authorIsDid = author.startsWith('did:')
+      const userLookupCol = author.startsWith('did:')
+        ? 'user.did'
+        : 'user.username'
+      const userQb = db.db
+        .selectFrom('user')
+        .selectAll()
+        .where(userLookupCol, '=', author)
 
-      // @TODO break this query up, share parts with home feed and post thread
-      let builder = db.db
-        .selectFrom('app_bsky_post as post')
-        // Determine result set of posts and reposts
-        .leftJoin('app_bsky_repost as repost', 'repost.subject', 'post.uri')
-        .leftJoin('user as originator', (join) =>
-          join
-            .onRef('originator.did', '=', 'post.creator')
-            .orOnRef('originator.did', '=', 'repost.creator'),
+      const postsQb = db.db
+        .selectFrom('app_bsky_post')
+        .whereExists(
+          userQb.whereRef('user.did', '=', ref('app_bsky_post.creator')),
         )
-        .if(authorIsDid, (qb) => qb.where('originator.did', '=', author))
-        .if(!authorIsDid, (qb) => qb.where('originator.username', '=', author))
-        // Select data for presentation into FeedItem
-        .leftJoin('user as author', 'author.did', 'post.creator')
+        .select([
+          sql<'post' | 'repost'>`${'post'}`.as('type'),
+          'uri as postUri',
+          'creator as originatorDid',
+          'indexedAt as cursor',
+        ])
+
+      const repostsQb = db.db
+        .selectFrom('app_bsky_repost')
+        .whereExists(
+          userQb.whereRef('user.did', '=', ref('app_bsky_repost.creator')),
+        )
+        .select([
+          sql<'post' | 'repost'>`${'repost'}`.as('type'),
+          'subject as postUri',
+          'creator as originatorDid',
+          'indexedAt as cursor',
+        ])
+
+      let postsAndRepostsQb = db.db
+        .selectFrom(postsQb.union(repostsQb).as('posts_and_reposts'))
+        .innerJoin('app_bsky_post as post', 'post.uri', 'postUri')
+        .innerJoin('record', 'record.uri', 'postUri')
+        .innerJoin('user as author', 'author.did', 'post.creator')
         .leftJoin(
           'app_bsky_profile as author_profile',
           'author_profile.creator',
           'author.did',
         )
-        .leftJoin('user as reposted_by', 'reposted_by.did', 'repost.creator')
+        .innerJoin('user as originator', 'originator.did', 'originatorDid')
         .leftJoin(
-          'app_bsky_profile as reposted_by_profile',
-          'reposted_by_profile.creator',
-          'reposted_by.did',
+          'app_bsky_profile as originator_profile',
+          'originator_profile.creator',
+          'originatorDid',
         )
-        .leftJoin('record', 'record.uri', 'post.uri')
         .select([
-          'post.uri as uri',
-          'record.raw as rawRecord',
+          'type',
+          'postUri',
+          'cursor',
+          'record.raw as recordRaw',
           'record.indexedAt as indexedAt',
           'author.did as authorDid',
           'author.username as authorName',
           'author_profile.displayName as authorDisplayName',
-          'reposted_by.did as repostedByDid',
-          'reposted_by.username as repostedByName',
-          'reposted_by_profile.displayName as repostedByDisplayName',
-          isNotRepostClause.as('isNotRepost'),
-          postOrRepostIndexedAtClause.as('cursor'),
+          'originator.did as originatorDid',
+          'originator.username as originatorName',
+          'originator_profile.displayName as originatorDisplayName',
           db.db
             .selectFrom('app_bsky_like')
-            .whereRef('subject', '=', ref('post.uri'))
-            .select(countClause.as('count'))
+            .whereRef('subject', '=', ref('postUri'))
+            .select(countAll.as('count'))
             .as('likeCount'),
           db.db
             .selectFrom('app_bsky_repost')
-            .whereRef('subject', '=', ref('post.uri'))
-            .select(countClause.as('count'))
+            .whereRef('subject', '=', ref('postUri'))
+            .select(countAll.as('count'))
             .as('repostCount'),
           db.db
             .selectFrom('app_bsky_post')
-            .whereRef('replyParent', '=', ref('post.uri'))
-            .select(countClause.as('count'))
+            .whereRef('replyParent', '=', ref('postUri'))
+            .select(countAll.as('count'))
             .as('replyCount'),
           db.db
             .selectFrom('app_bsky_repost')
             .where('creator', '=', requester)
-            .whereRef('subject', '=', ref('post.uri'))
+            .whereRef('subject', '=', ref('postUri'))
             .select('uri')
             .as('requesterRepost'),
           db.db
             .selectFrom('app_bsky_like')
             .where('creator', '=', requester)
-            .whereRef('subject', '=', ref('post.uri'))
+            .whereRef('subject', '=', ref('postUri'))
             .select('uri')
             .as('requesterLike'),
         ])
-        // Grouping by post then originator preserves one row for each
-        // post or repost. Reposts of a given post only vary by originator.
-        .groupBy(['post.uri', 'originator.did'])
 
-      // Apply pagination
-      builder = paginate(builder, {
+      postsAndRepostsQb = paginate(postsAndRepostsQb, {
         limit,
         before,
-        by: postOrRepostIndexedAtClause,
+        by: ref('cursor'),
       })
 
-      const queryRes = await builder.execute()
-      const feed: GetAuthorFeed.FeedItem[] = queryRes.map(queryResultToFeedItem)
+      const queryRes = await postsAndRepostsQb.execute()
+      const feed = queryRes.map(rowToFeedItem)
 
       return { encoding: 'application/json', body: { feed } }
     },

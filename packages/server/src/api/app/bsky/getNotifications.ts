@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetNotifications from '../../../lexicon/types/app/bsky/getNotifications'
@@ -8,9 +7,10 @@ import { paginate } from '../../../db/util'
 export default function (server: Server) {
   server.app.bsky.getNotifications(
     async (params: GetNotifications.QueryParams, _input, req, res) => {
-      const { limit, before } = params
-
       const { auth, db } = locals.get(res)
+      const { limit, before } = params
+      const { ref } = db.db.dynamic
+
       const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()
@@ -42,7 +42,7 @@ export default function (server: Server) {
       notifBuilder = paginate(notifBuilder, {
         before,
         limit,
-        by: sql`notif.indexedAt`,
+        by: ref('notif.indexedAt'),
       })
 
       const [user, notifs] = await Promise.all([

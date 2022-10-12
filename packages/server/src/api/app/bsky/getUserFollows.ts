@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import * as GetUserFollows from '../../../lexicon/types/app/bsky/getUserFollows'
@@ -11,6 +10,7 @@ export default function (server: Server) {
     async (params: GetUserFollows.QueryParams, _input, _req, res) => {
       const { user, limit, before } = params
       const { db } = locals.get(res)
+      const { ref } = db.db.dynamic
 
       const creator = await util.getUserInfo(db.db, user).catch((e) => {
         throw new InvalidRequestError(`User not found: ${user}`)
@@ -37,7 +37,7 @@ export default function (server: Server) {
       followsReq = paginate(followsReq, {
         limit,
         before,
-        by: sql`follow.createdAt`,
+        by: ref('follow.createdAt'),
       })
 
       const followsRes = await followsReq.execute()

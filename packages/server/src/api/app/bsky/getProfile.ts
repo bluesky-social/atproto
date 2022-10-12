@@ -1,7 +1,7 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetProfile from '../../../lexicon/types/app/bsky/getProfile'
-import { countClause, userWhereClause } from '../../../db/util'
+import { countAll, userWhereClause } from '../../../db/util'
 import * as locals from '../../../locals'
 
 export default function (server: Server) {
@@ -29,17 +29,17 @@ export default function (server: Server) {
           db.db
             .selectFrom('app_bsky_follow')
             .whereRef('creator', '=', ref('user.did'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('followsCount'),
           db.db
             .selectFrom('app_bsky_follow')
             .whereRef('subject', '=', ref('user.did'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('followersCount'),
           db.db
             .selectFrom('app_bsky_post')
             .whereRef('creator', '=', ref('user.did'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('postsCount'),
           db.db
             .selectFrom('app_bsky_follow')

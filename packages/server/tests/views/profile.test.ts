@@ -14,7 +14,9 @@ describe('pds profile views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer()
+    const server = await runTestServer({
+      dbPostgresSchema: 'views_profile',
+    })
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)

@@ -9,7 +9,7 @@ import {
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { FeedAlgorithm } from '../../src/api/app/bsky/util'
+import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
 import { FeedItem } from '@adxp/api/src/types/app/bsky/getHomeFeed'
 
 describe('pds home feed views', () => {
@@ -24,7 +24,9 @@ describe('pds home feed views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer()
+    const server = await runTestServer({
+      dbPostgresSchema: 'views_home_feed',
+    })
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)

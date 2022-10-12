@@ -4,7 +4,7 @@ import { Server } from '../../../lexicon'
 import * as GetPostThread from '../../../lexicon/types/app/bsky/getPostThread'
 import * as locals from '../../../locals'
 import { DatabaseSchema } from '../../../db/database-schema'
-import { countClause } from '../../../db/util'
+import { countAll } from '../../../db/util'
 
 export default function (server: Server) {
   server.app.bsky.getPostThread(
@@ -89,17 +89,17 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
       'record.indexedAt as indexedAt',
       db
         .selectFrom('app_bsky_like')
-        .select(countClause.as('count'))
+        .select(countAll.as('count'))
         .whereRef('subject', '=', ref('post.uri'))
         .as('likeCount'),
       db
         .selectFrom('app_bsky_repost')
-        .select(countClause.as('count'))
+        .select(countAll.as('count'))
         .whereRef('subject', '=', ref('post.uri'))
         .as('repostCount'),
       db
         .selectFrom('app_bsky_post')
-        .select(countClause.as('count'))
+        .select(countAll.as('count'))
         .whereRef('replyParent', '=', ref('post.uri'))
         .as('replyCount'),
       db
