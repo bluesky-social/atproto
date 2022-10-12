@@ -572,7 +572,7 @@ export class BadgeRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, value: AppBskyBadge.Record }> {
+  ): Promise<{ uri: string, cid: string, value: AppBskyBadge.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
       collection: 'app.bsky.badge',
       ...params,
@@ -627,7 +627,7 @@ export class FollowRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, value: AppBskyFollow.Record }> {
+  ): Promise<{ uri: string, cid: string, value: AppBskyFollow.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
       collection: 'app.bsky.follow',
       ...params,
@@ -682,7 +682,7 @@ export class LikeRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, value: AppBskyLike.Record }> {
+  ): Promise<{ uri: string, cid: string, value: AppBskyLike.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
       collection: 'app.bsky.like',
       ...params,
@@ -737,7 +737,7 @@ export class MediaEmbedRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, value: AppBskyMediaEmbed.Record }> {
+  ): Promise<{ uri: string, cid: string, value: AppBskyMediaEmbed.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
       collection: 'app.bsky.mediaEmbed',
       ...params,
@@ -792,7 +792,7 @@ export class PostRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, value: AppBskyPost.Record }> {
+  ): Promise<{ uri: string, cid: string, value: AppBskyPost.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
       collection: 'app.bsky.post',
       ...params,
@@ -847,7 +847,7 @@ export class ProfileRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, value: AppBskyProfile.Record }> {
+  ): Promise<{ uri: string, cid: string, value: AppBskyProfile.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
       collection: 'app.bsky.profile',
       ...params,
@@ -902,7 +902,7 @@ export class RepostRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, value: AppBskyRepost.Record }> {
+  ): Promise<{ uri: string, cid: string, value: AppBskyRepost.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
       collection: 'app.bsky.repost',
       ...params,
