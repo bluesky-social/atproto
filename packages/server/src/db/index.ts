@@ -1,6 +1,6 @@
 import { Kysely, SqliteDialect, sql, PostgresDialect } from 'kysely'
 import SqliteDB from 'better-sqlite3'
-import { Pool as PgPool } from 'pg'
+import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
 import * as Badge from '../lexicon/types/todo/social/badge'
@@ -68,6 +68,11 @@ export class Database {
   }): Promise<Database> {
     const { url, schema } = opts
     const pool = new PgPool({ connectionString: url })
+
+    // Select count(*) and other pg bigints as js integer
+    pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
+
+    // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
     if (schema !== undefined) {
       if (!/^[a-z_]+$/i.test(schema)) {
         throw new Error(
@@ -78,9 +83,11 @@ export class Database {
         client.query(`SET search_path TO "${schema}"`),
       )
     }
+
     const db = new Kysely<DatabaseSchema>({
       dialect: new PostgresDialect({ pool }),
     })
+
     return new Database(db, 'pg', schema)
   }
 

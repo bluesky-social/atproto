@@ -5,14 +5,15 @@ import * as GetHomeFeed from '../../../lexicon/types/todo/social/getHomeFeed'
 import * as locals from '../../../locals'
 import { isEnum } from './util'
 import { FeedAlgorithm, rowToFeedItem } from './util/feed'
-import { countClausePg, countClauseSqlite, paginate } from '../../../db/util'
+import { countAll, paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getHomeFeed(
     async (params: GetHomeFeed.QueryParams, _input, req, res) => {
-      const { algorithm, limit, before } = params
-
       const { auth, db } = locals.get(res)
+      const { algorithm, limit, before } = params
+      const { ref } = db.db.dynamic
+
       const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()
@@ -25,31 +26,7 @@ export default function (server: Server) {
         feedAlgorithm = FeedAlgorithm.ReverseChronological
       } else {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
-      } /*
-      .if(feedAlgorithm === FeedAlgorithm.Firehose, (qb) => {
-        return qb.where(
-          // The null check handles ANSI nulls
-          sql`(repost.creator != ${requester} or repost.creator is null)`,
-        )
-      })
-      .if(feedAlgorithm === FeedAlgorithm.ReverseChronological, (qb) => {
-        const followingIdsSubquery = db.db
-          .selectFrom('todo_social_follow as follow')
-          .select('follow.subject')
-          .where('follow.creator', '=', requester)
-        return qb
-          .where(
-            sql`(repost.creator != ${requester} or repost.creator is null)`,
-          )
-          .where((qb) =>
-            qb
-              .where('originator.did', '=', requester)
-              .orWhere(`originator.did`, 'in', followingIdsSubquery),
-          )
-      })*/
-      const { ref } = db.db.dynamic
-      const countClause =
-        db.dialect === 'pg' ? countClausePg : countClauseSqlite
+      }
 
       let postsQb = db.db
         .selectFrom('todo_social_post')
@@ -120,17 +97,17 @@ export default function (server: Server) {
           db.db
             .selectFrom('todo_social_like')
             .whereRef('subject', '=', ref('postUri'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('likeCount'),
           db.db
             .selectFrom('todo_social_repost')
             .whereRef('subject', '=', ref('postUri'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('repostCount'),
           db.db
             .selectFrom('todo_social_post')
             .whereRef('replyParent', '=', ref('postUri'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('replyCount'),
           db.db
             .selectFrom('todo_social_repost')

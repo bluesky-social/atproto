@@ -4,22 +4,19 @@ import { Server } from '../../../lexicon'
 import * as GetAuthorFeed from '../../../lexicon/types/todo/social/getAuthorFeed'
 import * as locals from '../../../locals'
 import { rowToFeedItem } from './util/feed'
-import { countClausePg, countClauseSqlite, paginate } from '../../../db/util'
+import { countAll, paginate } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getAuthorFeed(
     async (params: GetAuthorFeed.QueryParams, _input, req, res) => {
-      const { author, limit, before } = params
-
       const { auth, db } = locals.get(res)
+      const { author, limit, before } = params
+      const { ref } = db.db.dynamic
+
       const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()
       }
-
-      const { ref } = db.db.dynamic
-      const countClause =
-        db.dialect === 'pg' ? countClausePg : countClauseSqlite
 
       const userLookupCol = author.startsWith('did:')
         ? 'user.did'
@@ -84,17 +81,17 @@ export default function (server: Server) {
           db.db
             .selectFrom('todo_social_like')
             .whereRef('subject', '=', ref('postUri'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('likeCount'),
           db.db
             .selectFrom('todo_social_repost')
             .whereRef('subject', '=', ref('postUri'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('repostCount'),
           db.db
             .selectFrom('todo_social_post')
             .whereRef('replyParent', '=', ref('postUri'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('replyCount'),
           db.db
             .selectFrom('todo_social_repost')

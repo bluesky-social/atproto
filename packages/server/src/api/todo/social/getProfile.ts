@@ -1,7 +1,7 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetProfile from '../../../lexicon/types/todo/social/getProfile'
-import { countClause, userWhereClause } from '../../../db/util'
+import { countAll, userWhereClause } from '../../../db/util'
 import * as locals from '../../../locals'
 
 export default function (server: Server) {
@@ -33,17 +33,17 @@ export default function (server: Server) {
           db.db
             .selectFrom('todo_social_follow')
             .whereRef('creator', '=', ref('user.did'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('followsCount'),
           db.db
             .selectFrom('todo_social_follow')
             .whereRef('subject', '=', ref('user.did'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('followersCount'),
           db.db
             .selectFrom('todo_social_post')
             .whereRef('creator', '=', ref('user.did'))
-            .select(countClause.as('count'))
+            .select(countAll.as('count'))
             .as('postsCount'),
           db.db
             .selectFrom('todo_social_follow')

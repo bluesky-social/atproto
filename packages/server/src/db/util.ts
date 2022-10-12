@@ -17,11 +17,7 @@ export const userWhereClause = (user: string) => {
   }
 }
 
-export const countClausePg = sql<number>`count(*)::int`
-
-export const countClauseSqlite = sql<number>`count(*)`
-
-export const countClause = countClauseSqlite
+export const countAll = sql<number>`count(*)`
 
 export const paginate = <QB extends SelectQueryBuilder<any, any, any>>(
   qb: QB,
