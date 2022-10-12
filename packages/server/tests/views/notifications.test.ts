@@ -31,7 +31,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notification count without a last-seen', async () => {
-    const notifCount = await client.todo.social.getNotificationCount(
+    const notifCount = await client.app.bsky.getNotificationCount(
       {},
       undefined,
       { headers: sc.getHeaders(alice) },
@@ -41,7 +41,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications without a last-seen', async () => {
-    const notifRes = await client.todo.social.getNotifications({}, undefined, {
+    const notifRes = await client.app.bsky.getNotifications({}, undefined, {
       headers: sc.getHeaders(alice),
     })
 
@@ -61,7 +61,7 @@ describe('pds notification views', () => {
     if (app === undefined) throw new Error()
     const { db } = locals.get(app)
 
-    const full = await client.todo.social.getNotifications({}, undefined, {
+    const full = await client.app.bsky.getNotifications({}, undefined, {
       headers: sc.getHeaders(alice),
     })
 
@@ -74,7 +74,7 @@ describe('pds notification views', () => {
       .where('recordUri', '=', full.data.notifications[3].uri)
       .executeTakeFirstOrThrow()
 
-    const paginated = await client.todo.social.getNotifications(
+    const paginated = await client.app.bsky.getNotifications(
       {
         before: beforeNotif.indexedAt,
         limit: 4,
@@ -94,7 +94,7 @@ describe('pds notification views', () => {
     if (app === undefined) throw new Error()
     const { db } = locals.get(app)
 
-    const full = await client.todo.social.getNotifications({}, undefined, {
+    const full = await client.app.bsky.getNotifications({}, undefined, {
       headers: sc.getHeaders(alice),
     })
 
@@ -105,7 +105,7 @@ describe('pds notification views', () => {
       .where('recordUri', '=', full.data.notifications[3].uri)
       .executeTakeFirstOrThrow()
 
-    await client.todo.social.postNotificationsSeen(
+    await client.app.bsky.postNotificationsSeen(
       {},
       { seenAt: beforeNotif.indexedAt },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
@@ -113,7 +113,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notification count with a last-seen', async () => {
-    const notifCount = await client.todo.social.getNotificationCount(
+    const notifCount = await client.app.bsky.getNotificationCount(
       {},
       undefined,
       { headers: sc.getHeaders(alice) },
@@ -123,7 +123,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications with a last-seen', async () => {
-    const notifRes = await client.todo.social.getNotifications({}, undefined, {
+    const notifRes = await client.app.bsky.getNotifications({}, undefined, {
       headers: sc.getHeaders(alice),
     })
 

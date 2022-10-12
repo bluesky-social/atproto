@@ -1,13 +1,13 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
-import * as Badge from '../../lexicon/types/todo/social/badge'
+import * as Badge from '../../lexicon/types/app/bsky/badge'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
 
-const type = 'todo.social.badge'
-const tableName = 'todo_social_badge'
+const type = 'app.bsky.badge'
+const tableName = 'app_bsky_badge'
 
-export interface TodoSocialBadge {
+export interface AppBskyBadge {
   uri: string
   creator: string
   subject: string
@@ -30,7 +30,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .execute()
 }
 
-export type PartialDB = { [tableName]: TodoSocialBadge }
+export type PartialDB = { [tableName]: AppBskyBadge }
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Badge.Record => {
@@ -38,7 +38,7 @@ const isValidSchema = (obj: unknown): obj is Badge.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: TodoSocialBadge): Badge.Record => {
+const translateDbObj = (dbObj: AppBskyBadge): Badge.Record => {
   const badge = {
     assertion: {
       type: dbObj.assertionType,
@@ -57,7 +57,7 @@ const getFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<Badge.Record | null> => {
     const found = await db
-      .selectFrom('todo_social_badge')
+      .selectFrom('app_bsky_badge')
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
@@ -79,13 +79,13 @@ const insertFn =
       createdAt: obj.createdAt,
       indexedAt: new Date().toISOString(),
     }
-    await db.insertInto('todo_social_badge').values(val).execute()
+    await db.insertInto('app_bsky_badge').values(val).execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
-    await db.deleteFrom('todo_social_badge').where('uri', '=', uri.toString())
+    await db.deleteFrom('app_bsky_badge').where('uri', '=', uri.toString())
   }
 
 const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
@@ -103,7 +103,7 @@ const notifsForRecord = (uri: AdxUri, obj: unknown): Notification[] => {
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<Badge.Record, TodoSocialBadge> => {
+): DbRecordPlugin<Badge.Record, AppBskyBadge> => {
   return {
     collection: type,
     tableName,

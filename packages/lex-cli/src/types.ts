@@ -6,3 +6,9 @@ export interface GeneratedFile {
 export interface GeneratedAPI {
   files: GeneratedFile[]
 }
+
+export interface FileDiff {
+  act: 'add' | 'mod' | 'del'
+  path: string
+  content?: string
+}

@@ -3,18 +3,18 @@ import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
-import * as Badge from '../lexicon/types/todo/social/badge'
-import * as Follow from '../lexicon/types/todo/social/follow'
-import * as Like from '../lexicon/types/todo/social/like'
-import * as Post from '../lexicon/types/todo/social/post'
-import * as Profile from '../lexicon/types/todo/social/profile'
-import * as Repost from '../lexicon/types/todo/social/repost'
-import postPlugin, { TodoSocialPost } from './records/post'
-import likePlugin, { TodoSocialLike } from './records/like'
-import repostPlugin, { TodoSocialRepost } from './records/repost'
-import followPlugin, { TodoSocialFollow } from './records/follow'
-import badgePlugin, { TodoSocialBadge } from './records/badge'
-import profilePlugin, { TodoSocialProfile } from './records/profile'
+import * as Badge from '../lexicon/types/app/bsky/badge'
+import * as Follow from '../lexicon/types/app/bsky/follow'
+import * as Like from '../lexicon/types/app/bsky/like'
+import * as Post from '../lexicon/types/app/bsky/post'
+import * as Profile from '../lexicon/types/app/bsky/profile'
+import * as Repost from '../lexicon/types/app/bsky/repost'
+import postPlugin, { AppBskyPost } from './records/post'
+import likePlugin, { AppBskyLike } from './records/like'
+import repostPlugin, { AppBskyRepost } from './records/repost'
+import followPlugin, { AppBskyFollow } from './records/follow'
+import badgePlugin, { AppBskyBadge } from './records/badge'
+import profilePlugin, { AppBskyProfile } from './records/profile'
 import notificationPlugin from './tables/user-notification'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
@@ -27,12 +27,12 @@ import { dummyDialect } from './util'
 export class Database {
   db: Kysely<DatabaseSchema>
   records: {
-    post: DbRecordPlugin<Post.Record, TodoSocialPost>
-    like: DbRecordPlugin<Like.Record, TodoSocialLike>
-    repost: DbRecordPlugin<Repost.Record, TodoSocialRepost>
-    follow: DbRecordPlugin<Follow.Record, TodoSocialFollow>
-    profile: DbRecordPlugin<Profile.Record, TodoSocialProfile>
-    badge: DbRecordPlugin<Badge.Record, TodoSocialBadge>
+    post: DbRecordPlugin<Post.Record, AppBskyPost>
+    like: DbRecordPlugin<Like.Record, AppBskyLike>
+    repost: DbRecordPlugin<Repost.Record, AppBskyRepost>
+    follow: DbRecordPlugin<Follow.Record, AppBskyFollow>
+    profile: DbRecordPlugin<Profile.Record, AppBskyProfile>
+    badge: DbRecordPlugin<Badge.Record, AppBskyBadge>
   }
   notifications: NotificationsPlugin
 

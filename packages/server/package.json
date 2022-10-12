@@ -4,7 +4,7 @@
   "main": "src/index.ts",
   "bin": "dist/bin.ts",
   "scripts": {
-    "codegen": "lex gen-server ./src/lexicon ../../schemas/todo.adx/* ../../schemas/todo.social/*",
+    "codegen": "lex gen-server ./src/lexicon ../../lexicons/atproto.com/* ../../lexicons/bsky.app/*",
     "build": "node ./build.js",
     "start": "node dist/bin.js",
     "test": "jest",

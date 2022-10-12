@@ -31,7 +31,7 @@ describe('pds profile views', () => {
   })
 
   it('fetches own profile', async () => {
-    const aliceForAlice = await client.todo.social.getProfile(
+    const aliceForAlice = await client.app.bsky.getProfile(
       { user: alice },
       undefined,
       { headers: sc.getHeaders(alice) },
@@ -41,7 +41,7 @@ describe('pds profile views', () => {
   })
 
   it("fetches other's profile, with a follow", async () => {
-    const aliceForBob = await client.todo.social.getProfile(
+    const aliceForBob = await client.app.bsky.getProfile(
       { user: alice },
       undefined,
       { headers: sc.getHeaders(bob) },
@@ -51,7 +51,7 @@ describe('pds profile views', () => {
   })
 
   it("fetches other's profile, without a follow", async () => {
-    const danForBob = await client.todo.social.getProfile(
+    const danForBob = await client.app.bsky.getProfile(
       { user: dan },
       undefined,
       { headers: sc.getHeaders(bob) },
@@ -61,13 +61,11 @@ describe('pds profile views', () => {
   })
 
   it('fetches profile by username', async () => {
-    const byDid = await client.todo.social.getProfile(
-      { user: alice },
-      undefined,
-      { headers: sc.getHeaders(bob) },
-    )
+    const byDid = await client.app.bsky.getProfile({ user: alice }, undefined, {
+      headers: sc.getHeaders(bob),
+    })
 
-    const byUsername = await client.todo.social.getProfile(
+    const byUsername = await client.app.bsky.getProfile(
       { user: sc.accounts[alice].username },
       undefined,
       { headers: sc.getHeaders(bob) },

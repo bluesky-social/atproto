@@ -6,7 +6,7 @@ import { MethodSchema, RecordSchema } from '@adxp/lexicon'
 export const methodSchemas: MethodSchema[] = [
   {
     lexicon: 1,
-    id: 'todo.adx.createAccount',
+    id: 'com.atproto.createAccount',
     type: 'procedure',
     description: 'Create an account.',
     parameters: {},
@@ -66,7 +66,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.createInviteCode',
+    id: 'com.atproto.createInviteCode',
     type: 'procedure',
     description: 'Create an invite code.',
     parameters: {},
@@ -97,7 +97,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.createSession',
+    id: 'com.atproto.createSession',
     type: 'procedure',
     description: 'Create an authentication session.',
     parameters: {},
@@ -137,7 +137,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.deleteAccount',
+    id: 'com.atproto.deleteAccount',
     type: 'procedure',
     description: 'Delete an account.',
     parameters: {},
@@ -152,7 +152,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.deleteSession',
+    id: 'com.atproto.deleteSession',
     type: 'procedure',
     description: 'Delete the current session.',
     parameters: {},
@@ -167,7 +167,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.getAccount',
+    id: 'com.atproto.getAccount',
     type: 'query',
     description: 'Get information about an account.',
     parameters: {},
@@ -182,7 +182,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.getAccountsConfig',
+    id: 'com.atproto.getAccountsConfig',
     type: 'query',
     description:
       "Get a document describing the service's accounts configuration.",
@@ -208,7 +208,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.getSession',
+    id: 'com.atproto.getSession',
     type: 'query',
     description: 'Get information about the current session.',
     parameters: {},
@@ -230,7 +230,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.repoBatchWrite',
+    id: 'com.atproto.repoBatchWrite',
     type: 'procedure',
     description: 'Apply a batch transaction of creates, puts, and deletes.',
     parameters: {
@@ -315,7 +315,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.repoCreateRecord',
+    id: 'com.atproto.repoCreateRecord',
     type: 'procedure',
     description: 'Create a new record.',
     parameters: {
@@ -354,7 +354,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.repoDeleteRecord',
+    id: 'com.atproto.repoDeleteRecord',
     type: 'procedure',
     description: 'Delete a record.',
     parameters: {
@@ -377,7 +377,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.repoDescribe',
+    id: 'com.atproto.repoDescribe',
     type: 'query',
     description:
       'Get information about the repo, including the list of collections.',
@@ -418,7 +418,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.repoGetRecord',
+    id: 'com.atproto.repoGetRecord',
     type: 'query',
     description: 'Fetch a record.',
     parameters: {
@@ -456,7 +456,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.repoListRecords',
+    id: 'com.atproto.repoListRecords',
     type: 'query',
     description: 'List a range of records in a collection.',
     parameters: {
@@ -517,7 +517,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.repoPutRecord',
+    id: 'com.atproto.repoPutRecord',
     type: 'procedure',
     description: 'Write a record.',
     parameters: {
@@ -561,7 +561,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.requestAccountPasswordReset',
+    id: 'com.atproto.requestAccountPasswordReset',
     type: 'procedure',
     description: 'Initiate a user account password reset via email',
     parameters: {},
@@ -587,7 +587,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.resetAccountPassword',
+    id: 'com.atproto.resetAccountPassword',
     type: 'procedure',
     description: 'Reset a user account password using a token',
     parameters: {},
@@ -624,7 +624,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.resolveName',
+    id: 'com.atproto.resolveName',
     type: 'query',
     description: 'Provides the DID of a repo.',
     parameters: {
@@ -649,7 +649,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.syncGetRepo',
+    id: 'com.atproto.syncGetRepo',
     type: 'query',
     description: 'Gets the repo state.',
     parameters: {
@@ -669,7 +669,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.syncGetRoot',
+    id: 'com.atproto.syncGetRoot',
     type: 'query',
     description: 'Gets the current root CID of a repo.',
     parameters: {
@@ -694,7 +694,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.adx.syncUpdateRepo',
+    id: 'com.atproto.syncUpdateRepo',
     type: 'procedure',
     description: 'Writes commits to a repo.',
     parameters: {
@@ -710,7 +710,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getAuthorFeed',
+    id: 'app.bsky.getAuthorFeed',
     type: 'query',
     description: "A view of a user's feed",
     parameters: {
@@ -877,7 +877,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getHomeFeed',
+    id: 'app.bsky.getHomeFeed',
     type: 'query',
     description: "A view of the user's home feed",
     parameters: {
@@ -1043,7 +1043,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getLikedBy',
+    id: 'app.bsky.getLikedBy',
     type: 'query',
     parameters: {
       uri: {
@@ -1100,7 +1100,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getNotificationCount',
+    id: 'app.bsky.getNotificationCount',
     type: 'query',
     parameters: {},
     output: {
@@ -1118,7 +1118,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getNotifications',
+    id: 'app.bsky.getNotifications',
     type: 'query',
     parameters: {
       limit: {
@@ -1200,7 +1200,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getPostThread',
+    id: 'app.bsky.getPostThread',
     type: 'query',
     parameters: {
       uri: {
@@ -1361,7 +1361,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getProfile',
+    id: 'app.bsky.getProfile',
     type: 'query',
     parameters: {
       user: {
@@ -1468,7 +1468,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getRepostedBy',
+    id: 'app.bsky.getRepostedBy',
     type: 'query',
     parameters: {
       uri: {
@@ -1525,7 +1525,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getUserFollowers',
+    id: 'app.bsky.getUserFollowers',
     type: 'query',
     description: 'Who is following a user?',
     parameters: {
@@ -1596,7 +1596,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.getUserFollows',
+    id: 'app.bsky.getUserFollows',
     type: 'query',
     description: 'Who is a user following?',
     parameters: {
@@ -1667,7 +1667,7 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.postNotificationsSeen',
+    id: 'app.bsky.postNotificationsSeen',
     type: 'procedure',
     description: 'Notify server that the user has seen notifications',
     parameters: {},
@@ -1693,7 +1693,7 @@ export const methodSchemas: MethodSchema[] = [
 export const recordSchemas: RecordSchema[] = [
   {
     lexicon: 1,
-    id: 'todo.social.badge',
+    id: 'app.bsky.badge',
     type: 'record',
     description: 'An assertion about the subject by this user.',
     record: {
@@ -1773,7 +1773,7 @@ export const recordSchemas: RecordSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.follow',
+    id: 'app.bsky.follow',
     type: 'record',
     description: 'A social follow',
     record: {
@@ -1792,7 +1792,7 @@ export const recordSchemas: RecordSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.like',
+    id: 'app.bsky.like',
     type: 'record',
     record: {
       type: 'object',
@@ -1810,7 +1810,7 @@ export const recordSchemas: RecordSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.mediaEmbed',
+    id: 'app.bsky.mediaEmbed',
     type: 'record',
     description: 'A list of media embedded in a post or document.',
     record: {
@@ -1857,7 +1857,7 @@ export const recordSchemas: RecordSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.post',
+    id: 'app.bsky.post',
     type: 'record',
     record: {
       type: 'object',
@@ -1926,7 +1926,7 @@ export const recordSchemas: RecordSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.profile',
+    id: 'app.bsky.profile',
     type: 'record',
     record: {
       type: 'object',
@@ -1962,7 +1962,7 @@ export const recordSchemas: RecordSchema[] = [
   },
   {
     lexicon: 1,
-    id: 'todo.social.repost',
+    id: 'app.bsky.repost',
     type: 'record',
     record: {
       type: 'object',

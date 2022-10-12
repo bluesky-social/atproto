@@ -80,13 +80,13 @@ export async function generateMockSetup(env: DevEnv) {
 
   let _i = 1
   for (const user of users) {
-    const res = await clients.loggedout.todo.adx.createAccount(
+    const res = await clients.loggedout.com.atproto.createAccount(
       {},
       { email: user.email, username: user.username, password: user.password },
     )
     user.did = res.data.did
     user.api.setHeader('Authorization', `Bearer ${res.data.jwt}`)
-    await user.api.todo.social.profile.create(
+    await user.api.app.bsky.profile.create(
       { did: user.did },
       {
         displayName: ucfirst(user.username).slice(0, -5),
@@ -97,7 +97,7 @@ export async function generateMockSetup(env: DevEnv) {
 
   // everybody follows everybody
   const follow = async (author: User, subject: string) => {
-    await author.api.todo.social.follow.create(
+    await author.api.app.bsky.follow.create(
       { did: author.did },
       {
         subject,
@@ -117,7 +117,7 @@ export async function generateMockSetup(env: DevEnv) {
   for (let i = 0; i < postTexts.length; i++) {
     const author = picka(users)
     posts.push(
-      await author.api.todo.social.post.create(
+      await author.api.app.bsky.post.create(
         { did: author.did },
         {
           text: postTexts[i],
@@ -127,7 +127,7 @@ export async function generateMockSetup(env: DevEnv) {
     )
     if (rand(10) === 0) {
       const reposter = picka(users)
-      await reposter.api.todo.social.repost.create(
+      await reposter.api.app.bsky.repost.create(
         { did: reposter.did },
         {
           subject: picka(posts).uri,
@@ -141,13 +141,13 @@ export async function generateMockSetup(env: DevEnv) {
   for (let i = 0; i < 100; i++) {
     const targetUri = picka(posts).uri
     const urip = new AdxUri(targetUri)
-    const target = await alice.api.todo.social.post.get({
+    const target = await alice.api.app.bsky.post.get({
       nameOrDid: urip.host,
       tid: urip.recordKey,
     })
     const author = picka(users)
     posts.push(
-      await author.api.todo.social.post.create(
+      await author.api.app.bsky.post.create(
         { did: author.did },
         {
           text: picka(replyTexts),
@@ -165,7 +165,7 @@ export async function generateMockSetup(env: DevEnv) {
   for (const post of posts) {
     for (const user of users) {
       if (rand(3) === 0) {
-        await user.api.todo.social.like.create(
+        await user.api.app.bsky.like.create(
           { did: user.did },
           {
             subject: post.uri,
