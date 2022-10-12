@@ -1844,17 +1844,28 @@ export const recordSchemas: RecordSchema[] = [
     type: 'record',
     record: {
       type: 'object',
-      required: ['subject', 'subjectCid', 'createdAt'],
+      required: ['subject', 'createdAt'],
       properties: {
         subject: {
-          type: 'string',
-        },
-        subjectCid: {
-          type: 'string',
+          $ref: '#/$defs/subject',
         },
         createdAt: {
           type: 'string',
           format: 'date-time',
+        },
+      },
+      $defs: {
+        subject: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
         },
       },
     },
@@ -1923,16 +1934,13 @@ export const recordSchemas: RecordSchema[] = [
         },
         reply: {
           type: 'object',
-          required: ['root', 'parent', 'parentCid'],
+          required: ['root', 'parent'],
           properties: {
             root: {
-              type: 'string',
+              $ref: '#/$defs/postRef',
             },
             parent: {
-              type: 'string',
-            },
-            parentCid: {
-              type: 'string',
+              $ref: '#/$defs/postRef',
             },
           },
         },
@@ -1942,6 +1950,18 @@ export const recordSchemas: RecordSchema[] = [
         },
       },
       $defs: {
+        postRef: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
         entity: {
           type: 'array',
           items: {
@@ -2023,17 +2043,28 @@ export const recordSchemas: RecordSchema[] = [
     type: 'record',
     record: {
       type: 'object',
-      required: ['subject', 'subjectCid', 'createdAt'],
+      required: ['subject', 'createdAt'],
       properties: {
         subject: {
-          type: 'string',
-        },
-        subjectCid: {
-          type: 'string',
+          $ref: '#/$defs/subject',
         },
         createdAt: {
           type: 'string',
           format: 'date-time',
+        },
+      },
+      $defs: {
+        subject: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
         },
       },
     },

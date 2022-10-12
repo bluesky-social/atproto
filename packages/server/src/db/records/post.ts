@@ -14,6 +14,7 @@ export interface AppBskyPost {
   creator: string
   text: string
   replyRoot: string | null
+  replyRootCid: string | null
   replyParent: string | null
   replyParentCid: string | null
   createdAt: string
@@ -37,6 +38,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('text', 'varchar', (col) => col.notNull())
     .addColumn('replyRoot', 'varchar')
+    .addColumn('replyRootCid', 'varchar')
     .addColumn('replyParent', 'varchar')
     .addColumn('replyParentCid', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
@@ -72,9 +74,14 @@ const translateDbObj = (dbObj: AppBskyPost): Post.Record => {
 
   if (dbObj.replyRoot && dbObj.replyParent && dbObj.replyParentCid) {
     record.reply = {
-      root: dbObj.replyRoot,
-      parent: dbObj.replyParent,
-      parentCid: dbObj.replyParentCid,
+      root: {
+        uri: dbObj.replyRoot,
+        cid: dbObj.replyParentCid,
+      },
+      parent: {
+        uri: dbObj.replyParent,
+        cid: dbObj.replyParentCid,
+      },
     }
   }
   return record
@@ -123,9 +130,10 @@ const insertFn =
       creator: uri.host,
       text: obj.text,
       createdAt: obj.createdAt,
-      replyRoot: obj.reply?.root || null,
-      replyParent: obj.reply?.parent || null,
-      replyParentCid: obj.reply?.parentCid || null,
+      replyRoot: obj.reply?.root?.uri || null,
+      replyRootCid: obj.reply?.root?.cid || null,
+      replyParent: obj.reply?.parent?.uri || null,
+      replyParentCid: obj.reply?.parent?.cid || null,
       indexedAt: new Date().toISOString(),
     }
     const promises = [db.insertInto('app_bsky_post').values(post).execute()]
@@ -169,7 +177,7 @@ const notifsForRecord = (
     }
   }
   if (obj.reply?.parent) {
-    const parentUri = new AdxUri(obj.reply.parent)
+    const parentUri = new AdxUri(obj.reply.parent.uri)
     notifs.push({
       userDid: parentUri.host,
       author: uri.host,

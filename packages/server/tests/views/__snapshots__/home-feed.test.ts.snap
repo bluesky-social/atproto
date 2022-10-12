@@ -74,9 +74,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(3)",
-        "parentCid": "cids(3)",
-        "root": "record(0)",
+        "parent": Object {
+          "cid": "cids(3)",
+          "uri": "record(3)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
       },
       "text": "thanks bob",
     },
@@ -98,9 +103,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(0)",
-        "parentCid": "cids(0)",
-        "root": "record(0)",
+        "parent": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
       },
       "text": "of course",
     },
@@ -123,9 +133,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(0)",
-        "parentCid": "cids(0)",
-        "root": "record(0)",
+        "parent": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
       },
       "text": "hear that",
     },
@@ -346,9 +361,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(3)",
-        "parentCid": "cids(2)",
-        "root": "record(0)",
+        "parent": Object {
+          "cid": "cids(2)",
+          "uri": "record(3)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
       },
       "text": "thanks bob",
     },
@@ -370,9 +390,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(0)",
-        "parentCid": "cids(0)",
-        "root": "record(0)",
+        "parent": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
       },
       "text": "of course",
     },
@@ -395,9 +420,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(0)",
-        "parentCid": "cids(0)",
-        "root": "record(0)",
+        "parent": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
       },
       "text": "hear that",
     },
@@ -655,9 +685,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(3)",
-        "parentCid": "cids(3)",
-        "root": "record(0)",
+        "parent": Object {
+          "cid": "cids(3)",
+          "uri": "record(3)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
       },
       "text": "thanks bob",
     },
@@ -679,9 +714,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(0)",
-        "parentCid": "cids(0)",
-        "root": "record(0)",
+        "parent": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
       },
       "text": "of course",
     },
@@ -704,9 +744,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(0)",
-        "parentCid": "cids(0)",
-        "root": "record(0)",
+        "parent": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
       },
       "text": "hear that",
     },
@@ -934,9 +979,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(3)",
-        "parentCid": "cids(2)",
-        "root": "record(2)",
+        "parent": Object {
+          "cid": "cids(3)",
+          "uri": "record(3)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
       },
       "text": "thanks bob",
     },
@@ -949,7 +999,7 @@ Array [
       "did": "user(1)",
       "name": "carol.test",
     },
-    "cid": "cids(3)",
+    "cid": "cids(4)",
     "cursor": "1970-01-01T00:00:00.000Z",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "likeCount": 0,
@@ -958,9 +1008,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(2)",
-        "parentCid": "cids(4)",
-        "root": "record(2)",
+        "parent": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
       },
       "text": "of course",
     },
@@ -974,7 +1029,7 @@ Array [
       "displayName": "bobby",
       "name": "bob.test",
     },
-    "cid": "cids(2)",
+    "cid": "cids(3)",
     "cursor": "1970-01-01T00:00:00.000Z",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "likeCount": 0,
@@ -983,9 +1038,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(2)",
-        "parentCid": "cids(4)",
-        "root": "record(2)",
+        "parent": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
       },
       "text": "hear that",
     },
@@ -1041,7 +1101,7 @@ Array [
       "displayName": "ali",
       "name": "alice.test",
     },
-    "cid": "cids(4)",
+    "cid": "cids(2)",
     "cursor": "1970-01-01T00:00:00.000Z",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "likeCount": 3,
@@ -1136,9 +1196,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(2)",
-        "parentCid": "cids(1)",
-        "root": "record(1)",
+        "parent": Object {
+          "cid": "cids(2)",
+          "uri": "record(2)",
+        },
+        "root": Object {
+          "cid": "cids(1)",
+          "uri": "record(1)",
+        },
       },
       "text": "thanks bob",
     },
@@ -1151,7 +1216,7 @@ Array [
       "did": "user(1)",
       "name": "carol.test",
     },
-    "cid": "cids(2)",
+    "cid": "cids(3)",
     "cursor": "1970-01-01T00:00:00.000Z",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "likeCount": 0,
@@ -1160,9 +1225,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(1)",
-        "parentCid": "cids(3)",
-        "root": "record(1)",
+        "parent": Object {
+          "cid": "cids(1)",
+          "uri": "record(1)",
+        },
+        "root": Object {
+          "cid": "cids(1)",
+          "uri": "record(1)",
+        },
       },
       "text": "of course",
     },
@@ -1198,7 +1268,7 @@ Array [
       "displayName": "ali",
       "name": "alice.test",
     },
-    "cid": "cids(3)",
+    "cid": "cids(1)",
     "cursor": "1970-01-01T00:00:00.000Z",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "likeCount": 3,
@@ -1273,9 +1343,14 @@ Array [
       "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
-        "parent": "record(1)",
-        "parentCid": "cids(1)",
-        "root": "record(1)",
+        "parent": Object {
+          "cid": "cids(1)",
+          "uri": "record(1)",
+        },
+        "root": Object {
+          "cid": "cids(1)",
+          "uri": "record(1)",
+        },
       },
       "text": "hear that",
     },

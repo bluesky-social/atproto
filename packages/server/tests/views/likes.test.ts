@@ -40,7 +40,7 @@ describe('pds like views', () => {
 
   it('fetches liked by posts', async () => {
     const alicePost = await client.app.bsky.getLikedBy({
-      uri: sc.posts[alice][1].uriRaw,
+      uri: sc.posts[alice][1].ref.uriStr,
     })
 
     expect(forSnapshot(alicePost.data)).toMatchSnapshot()
@@ -51,7 +51,7 @@ describe('pds like views', () => {
 
   it('fetches liked by replies', async () => {
     const bobReply = await client.app.bsky.getLikedBy({
-      uri: sc.replies[bob][0].uriRaw,
+      uri: sc.replies[bob][0].ref.uriStr,
     })
 
     expect(forSnapshot(bobReply.data)).toMatchSnapshot()
@@ -62,13 +62,13 @@ describe('pds like views', () => {
 
   it('paginates', async () => {
     const full = await client.app.bsky.getLikedBy({
-      uri: sc.posts[alice][1].uriRaw,
+      uri: sc.posts[alice][1].ref.uriStr,
     })
 
     expect(full.data.likedBy.length).toEqual(4)
 
     const paginated = await client.app.bsky.getLikedBy({
-      uri: sc.posts[alice][1].uriRaw,
+      uri: sc.posts[alice][1].ref.uriStr,
       before: full.data.likedBy[0].createdAt,
       limit: 2,
     })

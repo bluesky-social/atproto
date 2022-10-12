@@ -41,8 +41,10 @@ const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const translateDbObj = (dbObj: AppBskyLike): Like.Record => {
   return {
-    subject: dbObj.subject,
-    subjectCid: dbObj.subjectCid,
+    subject: {
+      uri: dbObj.subject,
+      cid: dbObj.subjectCid,
+    },
     createdAt: dbObj.createdAt,
   }
 }
@@ -70,8 +72,8 @@ const insertFn =
         uri: uri.toString(),
         cid: cid.toString(),
         creator: uri.host,
-        subject: obj.subject,
-        subjectCid: obj.subjectCid,
+        subject: obj.subject.uri,
+        subjectCid: obj.subject.cid,
         createdAt: obj.createdAt,
         indexedAt: new Date().toISOString(),
       })
@@ -92,7 +94,7 @@ const notifsForRecord = (
   if (!isValidSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
-  const subjectUri = new AdxUri(obj.subject)
+  const subjectUri = new AdxUri(obj.subject.uri)
   const notif = {
     userDid: subjectUri.host,
     author: uri.host,

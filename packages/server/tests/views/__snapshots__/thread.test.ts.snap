@@ -53,9 +53,14 @@ Object {
         "$type": "app.bsky.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
-          "parent": "record(0)",
-          "parentCid": "cids(0)",
-          "root": "record(0)",
+          "parent": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
+          "root": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
         },
         "text": "of course",
       },
@@ -99,9 +104,14 @@ Object {
         "$type": "app.bsky.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
-          "parent": "record(0)",
-          "parentCid": "cids(0)",
-          "root": "record(0)",
+          "parent": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
+          "root": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
         },
         "text": "hear that",
       },
@@ -153,9 +163,14 @@ Object {
               "$type": "app.bsky.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
               "reply": Object {
-                "parent": "record(0)",
-                "parentCid": "cids(0)",
-                "root": "record(0)",
+                "parent": Object {
+                  "cid": "cids(0)",
+                  "uri": "record(0)",
+                },
+                "root": Object {
+                  "cid": "cids(0)",
+                  "uri": "record(0)",
+                },
               },
               "text": "hear that",
             },
@@ -167,9 +182,14 @@ Object {
             "$type": "app.bsky.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "reply": Object {
-              "parent": "record(3)",
-              "parentCid": "cids(2)",
-              "root": "record(0)",
+              "parent": Object {
+                "cid": "cids(2)",
+                "uri": "record(3)",
+              },
+              "root": Object {
+                "cid": "cids(0)",
+                "uri": "record(0)",
+              },
             },
             "text": "thanks bob",
           },
@@ -243,9 +263,14 @@ Object {
         "$type": "app.bsky.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
-          "parent": "record(0)",
-          "parentCid": "cids(0)",
-          "root": "record(0)",
+          "parent": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
+          "root": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
         },
         "text": "of course",
       },
@@ -288,9 +313,14 @@ Object {
         "$type": "app.bsky.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
-          "parent": "record(0)",
-          "parentCid": "cids(0)",
-          "root": "record(0)",
+          "parent": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
+          "root": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
         },
         "text": "hear that",
       },
