@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
-import { TodoSocialGetAuthorFeed, TodoSocialGetHomeFeed } from '@adxp/api'
+import { AppBskyGetAuthorFeed, AppBskyGetHomeFeed } from '@adxp/api'
 
 const USE_TEST_SERVER = true
 
@@ -28,6 +28,7 @@ export const runTestServer = async (
       close: async () => {},
     }
   }
+
   const pdsPort = await getPort()
   const keypair = await crypto.EcdsaKeypair.create()
 
@@ -46,29 +47,35 @@ export const runTestServer = async (
     `http://localhost:${pdsPort}`,
   )
 
-  const db = await Database.memory()
+  const config = new ServerConfig({
+    debugMode: true,
+    scheme: 'http',
+    hostname: 'localhost',
+    port: pdsPort,
+    serverDid,
+    adminPassword: ADMIN_PASSWORD,
+    inviteRequired: false,
+    didPlcUrl: plcUrl,
+    jwtSecret: 'jwt-secret',
+    testNameRegistry: {},
+    appUrlPasswordReset: 'app://forgot-password',
+    emailNoReplyAddress: 'noreply@blueskyweb.xyz',
+    dbPostgresUrl: process.env.DB_POSTGRES_URL,
+    ...params,
+  })
+
+  const db =
+    config.dbPostgresUrl !== undefined
+      ? await Database.postgres({
+          url: config.dbPostgresUrl,
+          schema: config.dbPostgresSchema,
+        })
+      : await Database.memory()
+
   await db.createTables()
   const serverBlockstore = new MemoryBlockstore()
-  const { app, listener } = server(
-    serverBlockstore,
-    db,
-    keypair,
-    new ServerConfig({
-      debugMode: true,
-      scheme: 'http',
-      hostname: 'localhost',
-      port: pdsPort,
-      serverDid,
-      adminPassword: ADMIN_PASSWORD,
-      inviteRequired: false,
-      didPlcUrl: plcUrl,
-      jwtSecret: 'jwt-secret',
-      testNameRegistry: {},
-      appUrlPasswordReset: 'app://forgot-password',
-      emailNoReplyAddress: 'noreply@blueskyweb.xyz',
-      ...params,
-    }),
-  )
+
+  const { app, listener } = server(serverBlockstore, db, keypair, config)
 
   return {
     url: `http://localhost:${pdsPort}`,
@@ -139,8 +146,7 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-type FeedItem = TodoSocialGetAuthorFeed.FeedItem &
-  TodoSocialGetHomeFeed.FeedItem
+type FeedItem = AppBskyGetAuthorFeed.FeedItem & AppBskyGetHomeFeed.FeedItem
 
 export const getCursors = (feed: FeedItem[]) => feed.map((item) => item.cursor)
 

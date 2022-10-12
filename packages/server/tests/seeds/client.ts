@@ -52,7 +52,7 @@ export class SeedClient {
       password: string
     },
   ) {
-    const { data } = await this.client.todo.adx.createAccount({}, params)
+    const { data } = await this.client.com.atproto.createAccount({}, params)
     this.dids[shortName] = data.did
     this.accounts[data.did] = {
       ...data,
@@ -63,7 +63,7 @@ export class SeedClient {
   }
 
   async createProfile(by: string, displayName: string, description: string) {
-    const res = await this.client.todo.social.profile.create(
+    const res = await this.client.app.bsky.profile.create(
       { did: by },
       { displayName, description },
       this.getHeaders(by),
@@ -78,7 +78,7 @@ export class SeedClient {
   }
 
   async follow(from: string, to: string) {
-    const res = await this.client.todo.social.follow.create(
+    const res = await this.client.app.bsky.follow.create(
       { did: from },
       { subject: to, createdAt: new Date().toISOString() },
       this.getHeaders(from),
@@ -89,7 +89,7 @@ export class SeedClient {
   }
 
   async post(by: string, text: string, entities?: any) {
-    const res = await this.client.todo.social.post.create(
+    const res = await this.client.app.bsky.post.create(
       { did: by },
       { text: text, entities, createdAt: new Date().toISOString() },
       this.getHeaders(by),
@@ -106,7 +106,7 @@ export class SeedClient {
   }
 
   async like(by: string, subject: string, subjectCid: string) {
-    const res = await this.client.todo.social.like.create(
+    const res = await this.client.app.bsky.like.create(
       { did: by },
       { subject, subjectCid, createdAt: new Date().toISOString() },
       this.getHeaders(by),
@@ -123,7 +123,7 @@ export class SeedClient {
     parentCid: CID,
     text: string,
   ) {
-    const res = await this.client.todo.social.post.create(
+    const res = await this.client.app.bsky.post.create(
       { did: by },
       {
         text: text,
@@ -148,7 +148,7 @@ export class SeedClient {
   }
 
   async repost(by: string, subject: string, subjectCid: string) {
-    const res = await this.client.todo.social.repost.create(
+    const res = await this.client.app.bsky.repost.create(
       { did: by },
       { subject, subjectCid, createdAt: new Date().toISOString() },
       this.getHeaders(by),

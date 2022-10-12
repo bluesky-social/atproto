@@ -13,7 +13,7 @@ Array [
     "reason": "repost",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.repost",
+      "$type": "app.bsky.repost",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(1)",
       "subjectCid": "cids(1)",
@@ -31,7 +31,7 @@ Array [
     "reason": "reply",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(1)",
@@ -54,7 +54,7 @@ Array [
     "reason": "reply",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(1)",
@@ -76,7 +76,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(1)",
       "subjectCid": "cids(1)",
@@ -94,7 +94,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(6)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(6)",
       "subjectCid": "cids(6)",
@@ -112,7 +112,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(1)",
       "subjectCid": "cids(1)",
@@ -131,7 +131,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(6)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(6)",
       "subjectCid": "cids(6)",
@@ -150,7 +150,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(1)",
       "subjectCid": "cids(1)",
@@ -167,7 +167,7 @@ Array [
     "isRead": true,
     "reason": "mention",
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -194,7 +194,7 @@ Array [
     "isRead": true,
     "reason": "follow",
     "record": Object {
-      "$type": "todo.social.follow",
+      "$type": "app.bsky.follow",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "user(3)",
     },
@@ -210,7 +210,7 @@ Array [
     "isRead": true,
     "reason": "follow",
     "record": Object {
-      "$type": "todo.social.follow",
+      "$type": "app.bsky.follow",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "user(3)",
     },
@@ -232,7 +232,7 @@ Array [
     "reason": "repost",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.repost",
+      "$type": "app.bsky.repost",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(1)",
       "subjectCid": "cids(1)",
@@ -250,7 +250,7 @@ Array [
     "reason": "reply",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(1)",
@@ -273,7 +273,7 @@ Array [
     "reason": "reply",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(1)",
@@ -295,7 +295,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(1)",
       "subjectCid": "cids(1)",
@@ -313,7 +313,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(6)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(6)",
       "subjectCid": "cids(6)",
@@ -331,7 +331,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(1)",
       "subjectCid": "cids(1)",
@@ -350,7 +350,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(6)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(6)",
       "subjectCid": "cids(6)",
@@ -369,7 +369,7 @@ Array [
     "reason": "like",
     "reasonSubject": "record(1)",
     "record": Object {
-      "$type": "todo.social.like",
+      "$type": "app.bsky.like",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "record(1)",
       "subjectCid": "cids(1)",
@@ -386,7 +386,7 @@ Array [
     "isRead": false,
     "reason": "mention",
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -413,7 +413,7 @@ Array [
     "isRead": false,
     "reason": "follow",
     "record": Object {
-      "$type": "todo.social.follow",
+      "$type": "app.bsky.follow",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "user(3)",
     },
@@ -429,7 +429,7 @@ Array [
     "isRead": false,
     "reason": "follow",
     "record": Object {
-      "$type": "todo.social.follow",
+      "$type": "app.bsky.follow",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "user(3)",
     },

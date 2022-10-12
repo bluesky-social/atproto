@@ -1,14 +1,14 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
-import * as Post from '../../lexicon/types/todo/social/post'
+import * as Post from '../../lexicon/types/app/bsky/post'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
 
-const type = 'todo.social.post'
-const tableName = 'todo_social_post'
+const type = 'app.bsky.post'
+const tableName = 'app_bsky_post'
 
-export interface TodoSocialPost {
+export interface AppBskyPost {
   uri: string
   cid: string
   creator: string
@@ -20,8 +20,8 @@ export interface TodoSocialPost {
   indexedAt: string
 }
 
-const supportingTableName = 'todo_social_post_entity'
-export interface TodoSocialPostEntity {
+const supportingTableName = 'app_bsky_post_entity'
+export interface AppBskyPostEntity {
   postUri: string
   startIndex: number
   endIndex: number
@@ -54,8 +54,8 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
 }
 
 export type PartialDB = {
-  [tableName]: TodoSocialPost
-  [supportingTableName]: TodoSocialPostEntity
+  [tableName]: AppBskyPost
+  [supportingTableName]: AppBskyPostEntity
 }
 
 const validator = schemas.createRecordValidator(type)
@@ -64,7 +64,7 @@ const isValidSchema = (obj: unknown): obj is Post.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: TodoSocialPost): Post.Record => {
+const translateDbObj = (dbObj: AppBskyPost): Post.Record => {
   const record: Post.Record = {
     text: dbObj.text,
     createdAt: dbObj.createdAt,
@@ -84,12 +84,12 @@ const getFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<Post.Record | null> => {
     const postQuery = db
-      .selectFrom('todo_social_post')
+      .selectFrom('app_bsky_post')
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
     const entitiesQuery = db
-      .selectFrom('todo_social_post_entity')
+      .selectFrom('app_bsky_post_entity')
       .selectAll()
       .where('postUri', '=', uri.toString())
       .execute()
@@ -128,10 +128,10 @@ const insertFn =
       replyParentCid: obj.reply?.parentCid || null,
       indexedAt: new Date().toISOString(),
     }
-    const promises = [db.insertInto('todo_social_post').values(post).execute()]
+    const promises = [db.insertInto('app_bsky_post').values(post).execute()]
     if (entities.length > 0) {
       promises.push(
-        db.insertInto('todo_social_post_entity').values(entities).execute(),
+        db.insertInto('app_bsky_post_entity').values(entities).execute(),
       )
     }
     await Promise.all(promises)
@@ -141,9 +141,9 @@ const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
     await Promise.all([
-      db.deleteFrom('todo_social_post').where('uri', '=', uri.toString()),
+      db.deleteFrom('app_bsky_post').where('uri', '=', uri.toString()),
       db
-        .deleteFrom('todo_social_post_entity')
+        .deleteFrom('app_bsky_post_entity')
         .where('postUri', '=', uri.toString()),
     ])
   }
@@ -184,7 +184,7 @@ const notifsForRecord = (
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<Post.Record, TodoSocialPost> => {
+): DbRecordPlugin<Post.Record, AppBskyPost> => {
   return {
     collection: type,
     tableName,

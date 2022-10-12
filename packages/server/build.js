@@ -8,10 +8,10 @@ require('esbuild')
     outdir: 'dist',
     platform: 'node',
     external: [
-      // @TODO May be able to get rid of the mapbox externals
-      '../plc/node_modules/@mapbox/node-pre-gyp/*',
       '../../node_modules/level/*',
       '../../node_modules/classic-level/*',
+      // Referenced in pg driver, but optional and we don't use it
+      'pg-native',
     ],
     plugins: [
       copy({

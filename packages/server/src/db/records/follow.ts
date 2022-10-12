@@ -1,13 +1,13 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
-import * as Follow from '../../lexicon/types/todo/social/follow'
+import * as Follow from '../../lexicon/types/app/bsky/follow'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
 
-const type = 'todo.social.follow'
-const tableName = 'todo_social_follow'
-export interface TodoSocialFollow {
+const type = 'app.bsky.follow'
+const tableName = 'app_bsky_follow'
+export interface AppBskyFollow {
   uri: string
   cid: string
   creator: string
@@ -28,7 +28,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .execute()
 }
 
-export type PartialDB = { [tableName]: TodoSocialFollow }
+export type PartialDB = { [tableName]: AppBskyFollow }
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Follow.Record => {
@@ -36,7 +36,7 @@ const isValidSchema = (obj: unknown): obj is Follow.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: TodoSocialFollow): Follow.Record => {
+const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
   return {
     subject: dbObj.subject,
     createdAt: dbObj.createdAt,
@@ -47,7 +47,7 @@ const getFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<Follow.Record | null> => {
     const found = await db
-      .selectFrom('todo_social_follow')
+      .selectFrom('app_bsky_follow')
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
@@ -68,13 +68,13 @@ const insertFn =
       createdAt: obj.createdAt,
       indexedAt: new Date().toISOString(),
     }
-    await db.insertInto('todo_social_follow').values(val).execute()
+    await db.insertInto('app_bsky_follow').values(val).execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
-    await db.deleteFrom('todo_social_follow').where('uri', '=', uri.toString())
+    await db.deleteFrom('app_bsky_follow').where('uri', '=', uri.toString())
   }
 
 const notifsForRecord = (
@@ -97,7 +97,7 @@ const notifsForRecord = (
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<Follow.Record, TodoSocialFollow> => {
+): DbRecordPlugin<Follow.Record, AppBskyFollow> => {
   return {
     collection: type,
     tableName,

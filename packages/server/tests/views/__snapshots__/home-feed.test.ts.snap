@@ -14,7 +14,7 @@ Array [
     "likeCount": 3,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -37,7 +37,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -71,7 +71,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(3)",
@@ -95,7 +95,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(0)",
@@ -120,7 +120,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(0)",
@@ -145,7 +145,7 @@ Array [
     "likeCount": 2,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "yoohoo",
     },
@@ -165,7 +165,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bobby boy here",
     },
@@ -185,7 +185,7 @@ Array [
     "likeCount": 3,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -204,7 +204,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -233,7 +233,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "dan here!",
     },
@@ -252,7 +252,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hi im carol",
     },
@@ -272,7 +272,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bob back at it again!",
     },
@@ -292,7 +292,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hey there",
     },
@@ -319,7 +319,7 @@ Array [
       "like": "record(1)",
     },
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -343,7 +343,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(3)",
@@ -367,7 +367,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(0)",
@@ -392,7 +392,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(0)",
@@ -419,7 +419,7 @@ Array [
       "like": "record(6)",
     },
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "yoohoo",
     },
@@ -439,7 +439,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bobby boy here",
     },
@@ -461,7 +461,7 @@ Array [
       "like": "record(1)",
     },
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -478,20 +478,32 @@ Array [
     "cursor": "1970-01-01T00:00:00.000Z",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "likeCount": 0,
-    "myState": Object {},
+    "myState": Object {
+      "repost": "record(9)",
+    },
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "text": "dan here!",
+      "entities": Array [
+        Object {
+          "index": Array [
+            0,
+            18,
+          ],
+          "type": "mention",
+          "value": "user(0)",
+        },
+      ],
+      "text": "@alice.bluesky.xyz is the best",
     },
     "replyCount": 0,
-    "repostCount": 0,
+    "repostCount": 1,
     "uri": "record(8)",
   },
   Object {
     "author": Object {
-      "did": "user(2)",
-      "name": "carol.test",
+      "did": "user(1)",
+      "name": "dan.test",
     },
     "cid": "cids(7)",
     "cursor": "1970-01-01T00:00:00.000Z",
@@ -499,29 +511,9 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "text": "hi im carol",
-    },
-    "replyCount": 0,
-    "repostCount": 0,
-    "uri": "record(9)",
-  },
-  Object {
-    "author": Object {
-      "did": "user(3)",
-      "displayName": "bobby",
-      "name": "bob.test",
-    },
-    "cid": "cids(8)",
-    "cursor": "1970-01-01T00:00:00.000Z",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "likeCount": 0,
-    "myState": Object {},
-    "record": Object {
-      "$type": "todo.social.post",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "text": "bob back at it again!",
+      "text": "dan here!",
     },
     "replyCount": 0,
     "repostCount": 0,
@@ -529,9 +521,28 @@ Array [
   },
   Object {
     "author": Object {
-      "did": "user(0)",
-      "displayName": "ali",
-      "name": "alice.test",
+      "did": "user(2)",
+      "name": "carol.test",
+    },
+    "cid": "cids(8)",
+    "cursor": "1970-01-01T00:00:00.000Z",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
+    "myState": Object {},
+    "record": Object {
+      "$type": "app.bsky.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "text": "hi im carol",
+    },
+    "replyCount": 0,
+    "repostCount": 0,
+    "uri": "record(11)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(3)",
+      "displayName": "bobby",
+      "name": "bob.test",
     },
     "cid": "cids(9)",
     "cursor": "1970-01-01T00:00:00.000Z",
@@ -539,13 +550,33 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "text": "bob back at it again!",
+    },
+    "replyCount": 0,
+    "repostCount": 0,
+    "uri": "record(12)",
+  },
+  Object {
+    "author": Object {
+      "did": "user(0)",
+      "displayName": "ali",
+      "name": "alice.test",
+    },
+    "cid": "cids(10)",
+    "cursor": "1970-01-01T00:00:00.000Z",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
+    "myState": Object {},
+    "record": Object {
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hey there",
     },
     "replyCount": 0,
     "repostCount": 0,
-    "uri": "record(11)",
+    "uri": "record(13)",
   },
 ]
 `;
@@ -564,7 +595,7 @@ Array [
     "likeCount": 3,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -587,7 +618,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -621,7 +652,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(3)",
@@ -645,7 +676,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(0)",
@@ -670,7 +701,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(0)",
@@ -695,7 +726,7 @@ Array [
     "likeCount": 2,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "yoohoo",
     },
@@ -715,7 +746,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bobby boy here",
     },
@@ -735,7 +766,7 @@ Array [
     "likeCount": 3,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -754,7 +785,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -783,7 +814,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "dan here!",
     },
@@ -802,7 +833,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hi im carol",
     },
@@ -822,7 +853,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bob back at it again!",
     },
@@ -842,7 +873,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hey there",
     },
@@ -866,7 +897,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -900,7 +931,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(3)",
@@ -924,7 +955,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(2)",
@@ -949,7 +980,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(2)",
@@ -976,7 +1007,7 @@ Array [
       "like": "record(6)",
     },
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "yoohoo",
     },
@@ -996,7 +1027,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bobby boy here",
     },
@@ -1018,7 +1049,7 @@ Array [
       "like": "record(8)",
     },
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -1037,7 +1068,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hi im carol",
     },
@@ -1057,7 +1088,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bob back at it again!",
     },
@@ -1077,7 +1108,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hey there",
     },
@@ -1102,7 +1133,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(2)",
@@ -1126,7 +1157,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(1)",
@@ -1153,7 +1184,7 @@ Array [
       "like": "record(5)",
     },
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "yoohoo",
     },
@@ -1175,7 +1206,7 @@ Array [
       "like": "record(6)",
     },
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -1194,7 +1225,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hi im carol",
     },
@@ -1214,7 +1245,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hey there",
     },
@@ -1239,7 +1270,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": "record(1)",
@@ -1264,7 +1295,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bobby boy here",
     },
@@ -1283,7 +1314,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -1312,7 +1343,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "dan here!",
     },
@@ -1332,7 +1363,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "todo.social.post",
+      "$type": "app.bsky.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bob back at it again!",
     },

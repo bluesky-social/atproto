@@ -6,38 +6,38 @@ import {
   Server as XrpcServer,
 } from '@adxp/xrpc-server'
 import { methodSchemas } from './schemas'
-import * as TodoAdxCreateAccount from './types/todo/adx/createAccount'
-import * as TodoAdxCreateInviteCode from './types/todo/adx/createInviteCode'
-import * as TodoAdxCreateSession from './types/todo/adx/createSession'
-import * as TodoAdxDeleteAccount from './types/todo/adx/deleteAccount'
-import * as TodoAdxDeleteSession from './types/todo/adx/deleteSession'
-import * as TodoAdxGetAccount from './types/todo/adx/getAccount'
-import * as TodoAdxGetAccountsConfig from './types/todo/adx/getAccountsConfig'
-import * as TodoAdxGetSession from './types/todo/adx/getSession'
-import * as TodoAdxRepoBatchWrite from './types/todo/adx/repoBatchWrite'
-import * as TodoAdxRepoCreateRecord from './types/todo/adx/repoCreateRecord'
-import * as TodoAdxRepoDeleteRecord from './types/todo/adx/repoDeleteRecord'
-import * as TodoAdxRepoDescribe from './types/todo/adx/repoDescribe'
-import * as TodoAdxRepoGetRecord from './types/todo/adx/repoGetRecord'
-import * as TodoAdxRepoListRecords from './types/todo/adx/repoListRecords'
-import * as TodoAdxRepoPutRecord from './types/todo/adx/repoPutRecord'
-import * as TodoAdxRequestAccountPasswordReset from './types/todo/adx/requestAccountPasswordReset'
-import * as TodoAdxResetAccountPassword from './types/todo/adx/resetAccountPassword'
-import * as TodoAdxResolveName from './types/todo/adx/resolveName'
-import * as TodoAdxSyncGetRepo from './types/todo/adx/syncGetRepo'
-import * as TodoAdxSyncGetRoot from './types/todo/adx/syncGetRoot'
-import * as TodoAdxSyncUpdateRepo from './types/todo/adx/syncUpdateRepo'
-import * as TodoSocialGetAuthorFeed from './types/todo/social/getAuthorFeed'
-import * as TodoSocialGetHomeFeed from './types/todo/social/getHomeFeed'
-import * as TodoSocialGetLikedBy from './types/todo/social/getLikedBy'
-import * as TodoSocialGetNotificationCount from './types/todo/social/getNotificationCount'
-import * as TodoSocialGetNotifications from './types/todo/social/getNotifications'
-import * as TodoSocialGetPostThread from './types/todo/social/getPostThread'
-import * as TodoSocialGetProfile from './types/todo/social/getProfile'
-import * as TodoSocialGetRepostedBy from './types/todo/social/getRepostedBy'
-import * as TodoSocialGetUserFollowers from './types/todo/social/getUserFollowers'
-import * as TodoSocialGetUserFollows from './types/todo/social/getUserFollows'
-import * as TodoSocialPostNotificationsSeen from './types/todo/social/postNotificationsSeen'
+import * as ComAtprotoCreateAccount from './types/com/atproto/createAccount'
+import * as ComAtprotoCreateInviteCode from './types/com/atproto/createInviteCode'
+import * as ComAtprotoCreateSession from './types/com/atproto/createSession'
+import * as ComAtprotoDeleteAccount from './types/com/atproto/deleteAccount'
+import * as ComAtprotoDeleteSession from './types/com/atproto/deleteSession'
+import * as ComAtprotoGetAccount from './types/com/atproto/getAccount'
+import * as ComAtprotoGetAccountsConfig from './types/com/atproto/getAccountsConfig'
+import * as ComAtprotoGetSession from './types/com/atproto/getSession'
+import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repoBatchWrite'
+import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repoCreateRecord'
+import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repoDeleteRecord'
+import * as ComAtprotoRepoDescribe from './types/com/atproto/repoDescribe'
+import * as ComAtprotoRepoGetRecord from './types/com/atproto/repoGetRecord'
+import * as ComAtprotoRepoListRecords from './types/com/atproto/repoListRecords'
+import * as ComAtprotoRepoPutRecord from './types/com/atproto/repoPutRecord'
+import * as ComAtprotoRequestAccountPasswordReset from './types/com/atproto/requestAccountPasswordReset'
+import * as ComAtprotoResetAccountPassword from './types/com/atproto/resetAccountPassword'
+import * as ComAtprotoResolveName from './types/com/atproto/resolveName'
+import * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
+import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
+import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
+import * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
+import * as AppBskyGetHomeFeed from './types/app/bsky/getHomeFeed'
+import * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
+import * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
+import * as AppBskyGetNotifications from './types/app/bsky/getNotifications'
+import * as AppBskyGetPostThread from './types/app/bsky/getPostThread'
+import * as AppBskyGetProfile from './types/app/bsky/getProfile'
+import * as AppBskyGetRepostedBy from './types/app/bsky/getRepostedBy'
+import * as AppBskyGetUserFollowers from './types/app/bsky/getUserFollowers'
+import * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
+import * as AppBskyPostNotificationsSeen from './types/app/bsky/postNotificationsSeen'
 
 export function createServer(): Server {
   return new Server()
@@ -45,199 +45,209 @@ export function createServer(): Server {
 
 export class Server {
   xrpc: XrpcServer = createXrpcServer(methodSchemas)
-  todo: TodoNS
+  com: ComNS
+  app: AppNS
 
   constructor() {
-    this.todo = new TodoNS(this)
+    this.com = new ComNS(this)
+    this.app = new AppNS(this)
   }
 }
 
-export class TodoNS {
+export class ComNS {
   server: Server
-  adx: AdxNS
-  social: SocialNS
+  atproto: AtprotoNS
 
   constructor(server: Server) {
     this.server = server
-    this.adx = new AdxNS(server)
-    this.social = new SocialNS(server)
+    this.atproto = new AtprotoNS(server)
   }
 }
 
-export class AdxNS {
+export class AtprotoNS {
   server: Server
 
   constructor(server: Server) {
     this.server = server
   }
 
-  createAccount(handler: TodoAdxCreateAccount.Handler) {
-    const schema = 'todo.adx.createAccount' // @ts-ignore
+  createAccount(handler: ComAtprotoCreateAccount.Handler) {
+    const schema = 'com.atproto.createAccount' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  createInviteCode(handler: TodoAdxCreateInviteCode.Handler) {
-    const schema = 'todo.adx.createInviteCode' // @ts-ignore
+  createInviteCode(handler: ComAtprotoCreateInviteCode.Handler) {
+    const schema = 'com.atproto.createInviteCode' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  createSession(handler: TodoAdxCreateSession.Handler) {
-    const schema = 'todo.adx.createSession' // @ts-ignore
+  createSession(handler: ComAtprotoCreateSession.Handler) {
+    const schema = 'com.atproto.createSession' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  deleteAccount(handler: TodoAdxDeleteAccount.Handler) {
-    const schema = 'todo.adx.deleteAccount' // @ts-ignore
+  deleteAccount(handler: ComAtprotoDeleteAccount.Handler) {
+    const schema = 'com.atproto.deleteAccount' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  deleteSession(handler: TodoAdxDeleteSession.Handler) {
-    const schema = 'todo.adx.deleteSession' // @ts-ignore
+  deleteSession(handler: ComAtprotoDeleteSession.Handler) {
+    const schema = 'com.atproto.deleteSession' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getAccount(handler: TodoAdxGetAccount.Handler) {
-    const schema = 'todo.adx.getAccount' // @ts-ignore
+  getAccount(handler: ComAtprotoGetAccount.Handler) {
+    const schema = 'com.atproto.getAccount' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getAccountsConfig(handler: TodoAdxGetAccountsConfig.Handler) {
-    const schema = 'todo.adx.getAccountsConfig' // @ts-ignore
+  getAccountsConfig(handler: ComAtprotoGetAccountsConfig.Handler) {
+    const schema = 'com.atproto.getAccountsConfig' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getSession(handler: TodoAdxGetSession.Handler) {
-    const schema = 'todo.adx.getSession' // @ts-ignore
+  getSession(handler: ComAtprotoGetSession.Handler) {
+    const schema = 'com.atproto.getSession' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  repoBatchWrite(handler: TodoAdxRepoBatchWrite.Handler) {
-    const schema = 'todo.adx.repoBatchWrite' // @ts-ignore
+  repoBatchWrite(handler: ComAtprotoRepoBatchWrite.Handler) {
+    const schema = 'com.atproto.repoBatchWrite' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  repoCreateRecord(handler: TodoAdxRepoCreateRecord.Handler) {
-    const schema = 'todo.adx.repoCreateRecord' // @ts-ignore
+  repoCreateRecord(handler: ComAtprotoRepoCreateRecord.Handler) {
+    const schema = 'com.atproto.repoCreateRecord' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  repoDeleteRecord(handler: TodoAdxRepoDeleteRecord.Handler) {
-    const schema = 'todo.adx.repoDeleteRecord' // @ts-ignore
+  repoDeleteRecord(handler: ComAtprotoRepoDeleteRecord.Handler) {
+    const schema = 'com.atproto.repoDeleteRecord' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  repoDescribe(handler: TodoAdxRepoDescribe.Handler) {
-    const schema = 'todo.adx.repoDescribe' // @ts-ignore
+  repoDescribe(handler: ComAtprotoRepoDescribe.Handler) {
+    const schema = 'com.atproto.repoDescribe' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  repoGetRecord(handler: TodoAdxRepoGetRecord.Handler) {
-    const schema = 'todo.adx.repoGetRecord' // @ts-ignore
+  repoGetRecord(handler: ComAtprotoRepoGetRecord.Handler) {
+    const schema = 'com.atproto.repoGetRecord' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  repoListRecords(handler: TodoAdxRepoListRecords.Handler) {
-    const schema = 'todo.adx.repoListRecords' // @ts-ignore
+  repoListRecords(handler: ComAtprotoRepoListRecords.Handler) {
+    const schema = 'com.atproto.repoListRecords' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  repoPutRecord(handler: TodoAdxRepoPutRecord.Handler) {
-    const schema = 'todo.adx.repoPutRecord' // @ts-ignore
+  repoPutRecord(handler: ComAtprotoRepoPutRecord.Handler) {
+    const schema = 'com.atproto.repoPutRecord' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
   requestAccountPasswordReset(
-    handler: TodoAdxRequestAccountPasswordReset.Handler
+    handler: ComAtprotoRequestAccountPasswordReset.Handler
   ) {
-    const schema = 'todo.adx.requestAccountPasswordReset' // @ts-ignore
+    const schema = 'com.atproto.requestAccountPasswordReset' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  resetAccountPassword(handler: TodoAdxResetAccountPassword.Handler) {
-    const schema = 'todo.adx.resetAccountPassword' // @ts-ignore
+  resetAccountPassword(handler: ComAtprotoResetAccountPassword.Handler) {
+    const schema = 'com.atproto.resetAccountPassword' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  resolveName(handler: TodoAdxResolveName.Handler) {
-    const schema = 'todo.adx.resolveName' // @ts-ignore
+  resolveName(handler: ComAtprotoResolveName.Handler) {
+    const schema = 'com.atproto.resolveName' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  syncGetRepo(handler: TodoAdxSyncGetRepo.Handler) {
-    const schema = 'todo.adx.syncGetRepo' // @ts-ignore
+  syncGetRepo(handler: ComAtprotoSyncGetRepo.Handler) {
+    const schema = 'com.atproto.syncGetRepo' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  syncGetRoot(handler: TodoAdxSyncGetRoot.Handler) {
-    const schema = 'todo.adx.syncGetRoot' // @ts-ignore
+  syncGetRoot(handler: ComAtprotoSyncGetRoot.Handler) {
+    const schema = 'com.atproto.syncGetRoot' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  syncUpdateRepo(handler: TodoAdxSyncUpdateRepo.Handler) {
-    const schema = 'todo.adx.syncUpdateRepo' // @ts-ignore
+  syncUpdateRepo(handler: ComAtprotoSyncUpdateRepo.Handler) {
+    const schema = 'com.atproto.syncUpdateRepo' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 }
 
-export class SocialNS {
+export class AppNS {
+  server: Server
+  bsky: BskyNS
+
+  constructor(server: Server) {
+    this.server = server
+    this.bsky = new BskyNS(server)
+  }
+}
+
+export class BskyNS {
   server: Server
 
   constructor(server: Server) {
     this.server = server
   }
 
-  getAuthorFeed(handler: TodoSocialGetAuthorFeed.Handler) {
-    const schema = 'todo.social.getAuthorFeed' // @ts-ignore
+  getAuthorFeed(handler: AppBskyGetAuthorFeed.Handler) {
+    const schema = 'app.bsky.getAuthorFeed' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getHomeFeed(handler: TodoSocialGetHomeFeed.Handler) {
-    const schema = 'todo.social.getHomeFeed' // @ts-ignore
+  getHomeFeed(handler: AppBskyGetHomeFeed.Handler) {
+    const schema = 'app.bsky.getHomeFeed' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getLikedBy(handler: TodoSocialGetLikedBy.Handler) {
-    const schema = 'todo.social.getLikedBy' // @ts-ignore
+  getLikedBy(handler: AppBskyGetLikedBy.Handler) {
+    const schema = 'app.bsky.getLikedBy' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getNotificationCount(handler: TodoSocialGetNotificationCount.Handler) {
-    const schema = 'todo.social.getNotificationCount' // @ts-ignore
+  getNotificationCount(handler: AppBskyGetNotificationCount.Handler) {
+    const schema = 'app.bsky.getNotificationCount' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getNotifications(handler: TodoSocialGetNotifications.Handler) {
-    const schema = 'todo.social.getNotifications' // @ts-ignore
+  getNotifications(handler: AppBskyGetNotifications.Handler) {
+    const schema = 'app.bsky.getNotifications' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getPostThread(handler: TodoSocialGetPostThread.Handler) {
-    const schema = 'todo.social.getPostThread' // @ts-ignore
+  getPostThread(handler: AppBskyGetPostThread.Handler) {
+    const schema = 'app.bsky.getPostThread' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getProfile(handler: TodoSocialGetProfile.Handler) {
-    const schema = 'todo.social.getProfile' // @ts-ignore
+  getProfile(handler: AppBskyGetProfile.Handler) {
+    const schema = 'app.bsky.getProfile' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getRepostedBy(handler: TodoSocialGetRepostedBy.Handler) {
-    const schema = 'todo.social.getRepostedBy' // @ts-ignore
+  getRepostedBy(handler: AppBskyGetRepostedBy.Handler) {
+    const schema = 'app.bsky.getRepostedBy' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getUserFollowers(handler: TodoSocialGetUserFollowers.Handler) {
-    const schema = 'todo.social.getUserFollowers' // @ts-ignore
+  getUserFollowers(handler: AppBskyGetUserFollowers.Handler) {
+    const schema = 'app.bsky.getUserFollowers' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  getUserFollows(handler: TodoSocialGetUserFollows.Handler) {
-    const schema = 'todo.social.getUserFollows' // @ts-ignore
+  getUserFollows(handler: AppBskyGetUserFollows.Handler) {
+    const schema = 'app.bsky.getUserFollows' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
-  postNotificationsSeen(handler: TodoSocialPostNotificationsSeen.Handler) {
-    const schema = 'todo.social.postNotificationsSeen' // @ts-ignore
+  postNotificationsSeen(handler: AppBskyPostNotificationsSeen.Handler) {
+    const schema = 'app.bsky.postNotificationsSeen' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 }

@@ -1,14 +1,14 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
-import * as Like from '../../lexicon/types/todo/social/like'
+import * as Like from '../../lexicon/types/app/bsky/like'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
 
-const type = 'todo.social.like'
-const tableName = 'todo_social_like'
+const type = 'app.bsky.like'
+const tableName = 'app_bsky_like'
 
-export interface TodoSocialLike {
+export interface AppBskyLike {
   uri: string
   cid: string
   creator: string
@@ -31,7 +31,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .execute()
 }
 
-export type PartialDB = { [tableName]: TodoSocialLike }
+export type PartialDB = { [tableName]: AppBskyLike }
 
 const validator = schemas.createRecordValidator(type)
 const isValidSchema = (obj: unknown): obj is Like.Record => {
@@ -39,7 +39,7 @@ const isValidSchema = (obj: unknown): obj is Like.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: TodoSocialLike): Like.Record => {
+const translateDbObj = (dbObj: AppBskyLike): Like.Record => {
   return {
     subject: dbObj.subject,
     subjectCid: dbObj.subjectCid,
@@ -51,7 +51,7 @@ const getFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<Like.Record | null> => {
     const found = await db
-      .selectFrom('todo_social_like')
+      .selectFrom('app_bsky_like')
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
@@ -65,7 +65,7 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
     await db
-      .insertInto('todo_social_like')
+      .insertInto('app_bsky_like')
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
@@ -81,7 +81,7 @@ const insertFn =
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
-    await db.deleteFrom('todo_social_like').where('uri', '=', uri.toString())
+    await db.deleteFrom('app_bsky_like').where('uri', '=', uri.toString())
   }
 
 const notifsForRecord = (
@@ -106,7 +106,7 @@ const notifsForRecord = (
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<Like.Record, TodoSocialLike> => {
+): DbRecordPlugin<Like.Record, AppBskyLike> => {
   return {
     collection: type,
     tableName,

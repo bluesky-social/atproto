@@ -1,0 +1,14 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.repost",
+  "type": "record",
+  "record": {
+    "type": "object",
+    "required": ["subject", "subjectCid", "createdAt"],
+    "properties": {
+      "subject": {"type": "string"},
+      "subjectCid": {"type": "string"},
+      "createdAt": {"type": "string", "format": "date-time"}
+    }
+  }
+}

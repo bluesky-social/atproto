@@ -1,5 +1,6 @@
 import {
   DummyDriver,
+  DynamicModule,
   RawBuilder,
   SelectQueryBuilder,
   sql,
@@ -10,21 +11,21 @@ import {
 
 export const userWhereClause = (user: string) => {
   if (user.startsWith('did:')) {
-    return sql<boolean>`user.did = ${user}`
+    return sql<0 | 1>`"user"."did" = ${user}`
   } else {
-    return sql<boolean>`user.username = ${user}`
+    return sql<0 | 1>`"user"."username" = ${user}`
   }
 }
 
-export const isNotRepostClause = sql<0 | 1>`originator.did == post.creator`
-
-export const postOrRepostIndexedAtClause = sql<string>`iif(${isNotRepostClause}, post.indexedAt, repost.indexedAt)`
-
-export const countClause = sql<number>`count(*)`
+export const countAll = sql<number>`count(*)`
 
 export const paginate = <QB extends SelectQueryBuilder<any, any, any>>(
   qb: QB,
-  opts: { limit?: number; before?: string; by: RawBuilder },
+  opts: {
+    limit?: number
+    before?: string
+    by: RawBuilder | ReturnType<DynamicModule['ref']>
+  },
 ) => {
   return qb
     .orderBy(opts.by, 'desc')

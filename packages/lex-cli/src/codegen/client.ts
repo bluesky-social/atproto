@@ -11,12 +11,12 @@ import { gen, schemasTs } from './common'
 import { GeneratedAPI } from '../types'
 import { schemasToNsidTree, NsidNS, toCamelCase, toTitleCase } from './util'
 
-const ADX_METHODS = {
-  list: 'todo.adx.repoListRecords',
-  get: 'todo.adx.repoGetRecord',
-  create: 'todo.adx.repoCreateRecord',
-  put: 'todo.adx.repoPutRecord',
-  delete: 'todo.adx.repoDeleteRecord',
+const ATP_METHODS = {
+  list: 'com.atproto.repoListRecords',
+  get: 'com.atproto.repoGetRecord',
+  create: 'com.atproto.repoCreateRecord',
+  put: 'com.atproto.repoPutRecord',
+  delete: 'com.atproto.repoDeleteRecord',
 }
 
 export async function genClientApi(schemas: Schema[]): Promise<GeneratedAPI> {
@@ -310,11 +310,11 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(ADX_METHODS.list)}.QueryParams, "collection">`,
+      type: `Omit<${toTitleCase(ATP_METHODS.list)}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
-        `const res = await this._service.xrpc.call('${ADX_METHODS.list}', { collection: '${schema.id}', ...params })`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.list}', { collection: '${schema.id}', ...params })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -328,11 +328,11 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     })
     method.addParameter({
       name: 'params',
-      type: `Omit<${toTitleCase(ADX_METHODS.get)}.QueryParams, "collection">`,
+      type: `Omit<${toTitleCase(ATP_METHODS.get)}.QueryParams, "collection">`,
     })
     method.setBodyText(
       [
-        `const res = await this._service.xrpc.call('${ADX_METHODS.get}', { collection: '${schema.id}', ...params })`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.get}', { collection: '${schema.id}', ...params })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -347,7 +347,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     method.addParameter({
       name: 'params',
       type: `Omit<${toTitleCase(
-        ADX_METHODS.create,
+        ATP_METHODS.create,
       )}.QueryParams, "collection">`,
     })
     method.addParameter({
@@ -361,7 +361,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     method.setBodyText(
       [
         `record.$type = '${schema.id}'`,
-        `const res = await this._service.xrpc.call('${ADX_METHODS.create}', { collection: '${schema.id}', ...params }, record, {encoding: 'application/json', headers })`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.create}', { collection: '${schema.id}', ...params }, record, {encoding: 'application/json', headers })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -375,7 +375,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
   //   })
   //   method.addParameter({
   //     name: 'params',
-  //     type: `Omit<${toTitleCase(ADX_METHODS.put)}.QueryParams, "collection">`,
+  //     type: `Omit<${toTitleCase(ATP_METHODS.put)}.QueryParams, "collection">`,
   //   })
   //   method.addParameter({
   //     name: 'record',
@@ -388,7 +388,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
   //   method.setBodyText(
   //     [
   //       `record.$type = '${schema.id}'`,
-  //       `const res = await this._service.xrpc.call('${ADX_METHODS.put}', { collection: '${schema.id}', ...params }, record, {encoding: 'application/json', headers})`,
+  //       `const res = await this._service.xrpc.call('${ATP_METHODS.put}', { collection: '${schema.id}', ...params }, record, {encoding: 'application/json', headers})`,
   //       `return res.data`,
   //     ].join('\n'),
   //   )
@@ -403,7 +403,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     method.addParameter({
       name: 'params',
       type: `Omit<${toTitleCase(
-        ADX_METHODS.delete,
+        ATP_METHODS.delete,
       )}.QueryParams, "collection">`,
     })
     method.addParameter({
@@ -413,7 +413,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
 
     method.setBodyText(
       [
-        `await this._service.xrpc.call('${ADX_METHODS.delete}', { collection: '${schema.id}', ...params }, undefined, { headers })`,
+        `await this._service.xrpc.call('${ATP_METHODS.delete}', { collection: '${schema.id}', ...params }, undefined, { headers })`,
       ].join('\n'),
     )
   }

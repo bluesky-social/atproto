@@ -21,7 +21,9 @@ describe('pds author feed views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer()
+    const server = await runTestServer({
+      dbPostgresSchema: 'views_author_feed',
+    })
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
@@ -37,7 +39,7 @@ describe('pds author feed views', () => {
   })
 
   it('fetches full author feeds for self (sorted, minimal myState).', async () => {
-    const aliceForAlice = await client.todo.social.getAuthorFeed(
+    const aliceForAlice = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[alice].username },
       undefined,
       {
@@ -50,7 +52,7 @@ describe('pds author feed views', () => {
       getSortedCursors(aliceForAlice.data.feed),
     )
 
-    const bobForBob = await client.todo.social.getAuthorFeed(
+    const bobForBob = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[bob].username },
       undefined,
       {
@@ -63,7 +65,7 @@ describe('pds author feed views', () => {
       getSortedCursors(bobForBob.data.feed),
     )
 
-    const carolForCarol = await client.todo.social.getAuthorFeed(
+    const carolForCarol = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[carol].username },
       undefined,
       {
@@ -76,7 +78,7 @@ describe('pds author feed views', () => {
       getSortedCursors(carolForCarol.data.feed),
     )
 
-    const danForDan = await client.todo.social.getAuthorFeed(
+    const danForDan = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[dan].username },
       undefined,
       {
@@ -91,7 +93,7 @@ describe('pds author feed views', () => {
   })
 
   it("reflects fetching user's state in the feed.", async () => {
-    const aliceForCarol = await client.todo.social.getAuthorFeed(
+    const aliceForCarol = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[alice].username },
       undefined,
       {
@@ -108,7 +110,7 @@ describe('pds author feed views', () => {
   })
 
   it('paginates', async () => {
-    const full = await client.todo.social.getAuthorFeed(
+    const full = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[alice].username },
       undefined,
       {
@@ -118,7 +120,7 @@ describe('pds author feed views', () => {
 
     expect(full.data.feed.length).toEqual(4)
 
-    const paginated = await client.todo.social.getAuthorFeed(
+    const paginated = await client.app.bsky.getAuthorFeed(
       {
         author: sc.accounts[alice].username,
         before: full.data.feed[0].cursor,

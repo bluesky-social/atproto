@@ -14,7 +14,9 @@ describe('pds like views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer()
+    const server = await runTestServer({
+      dbPostgresSchema: 'views_likes',
+    })
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
@@ -37,7 +39,7 @@ describe('pds like views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches liked by posts', async () => {
-    const alicePost = await client.todo.social.getLikedBy({
+    const alicePost = await client.app.bsky.getLikedBy({
       uri: sc.posts[alice][1].uriRaw,
     })
 
@@ -48,7 +50,7 @@ describe('pds like views', () => {
   })
 
   it('fetches liked by replies', async () => {
-    const bobReply = await client.todo.social.getLikedBy({
+    const bobReply = await client.app.bsky.getLikedBy({
       uri: sc.replies[bob][0].uriRaw,
     })
 
@@ -59,13 +61,13 @@ describe('pds like views', () => {
   })
 
   it('paginates', async () => {
-    const full = await client.todo.social.getLikedBy({
+    const full = await client.app.bsky.getLikedBy({
       uri: sc.posts[alice][1].uriRaw,
     })
 
     expect(full.data.likedBy.length).toEqual(4)
 
-    const paginated = await client.todo.social.getLikedBy({
+    const paginated = await client.app.bsky.getLikedBy({
       uri: sc.posts[alice][1].uriRaw,
       before: full.data.likedBy[0].createdAt,
       limit: 2,
