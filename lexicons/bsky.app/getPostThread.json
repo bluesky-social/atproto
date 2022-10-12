@@ -1,0 +1,95 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.getPostThread",
+  "type": "query",
+  "parameters": {
+    "uri": {"type": "string", "required": true},
+    "depth": {"type": "number"}
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["thread"],
+      "properties": {
+        "thread": {"$ref": "#/$defs/post"}
+      },
+      "$defs": {
+        "post": {
+          "type": "object",
+          "required": ["uri", "author", "record", "replyCount", "likeCount", "repostCount", "indexedAt"],
+          "properties": {
+            "uri": {"type": "string"},
+            "author": {"$ref": "#/$defs/user"},
+            "record": {"type": "object"},
+            "embed": {
+              "oneOf": [
+                {"$ref": "#/$defs/recordEmbed"},
+                {"$ref": "#/$defs/externalEmbed"},
+                {"$ref": "#/$defs/unknownEmbed"}
+              ]
+            },
+            "parent": {"$ref": "#/$defs/post"},
+            "replyCount": {"type": "number"},
+            "replies": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/post"}
+            },
+            "likeCount": {"type": "number"},
+            "repostCount": {"type": "number"},
+            "indexedAt": {"type": "string", "format": "date-time"},
+            "myState": {
+              "type": "object",
+              "properties": {
+                "repost": {"type": "string"},
+                "like": {"type": "string"}
+              }
+            }
+          }
+        },
+        "user": {
+          "type": "object",
+          "required": ["did", "name"],
+          "properties": {
+            "did": {"type": "string"},
+            "name": {"type": "string"},
+            "displayName": {
+              "type": "string",
+              "maxLength": 64
+            }
+          }
+        },
+        "recordEmbed": {
+          "type": "object",
+          "required": ["type", "author", "record"],
+          "properties": {
+            "type": {"const": "record"},
+            "author": {"$ref": "#/$defs/user"},
+            "record": {"type": "object"}
+          }
+        },
+        "externalEmbed": {
+          "type": "object",
+          "required": ["type", "uri", "title", "description", "imageUri"],
+          "properties": {
+            "type": {"const": "external"},
+            "uri": {"type": "string"},
+            "title": {"type": "string"},
+            "description": {"type": "string"},
+            "imageUri": {"type": "string"}
+          }
+        },
+        "unknownEmbed": {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "not": {"enum": ["record", "external"]}
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.deleteAccount",
+  "type": "procedure",
+  "description": "Delete an account.",
+  "parameters": {},
+  "input": {
+    "encoding": "",
+    "schema": {}
+  },
+  "output": {
+    "encoding": "",
+    "schema": {}
+  }
+}

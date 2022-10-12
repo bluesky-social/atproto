@@ -13,7 +13,7 @@ Object {
     "like": "record(1)",
   },
   "record": Object {
-    "$type": "todo.social.post",
+    "$type": "app.bsky.post",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "text": "again",
   },
@@ -38,7 +38,7 @@ Object {
           "like": "record(1)",
         },
         "record": Object {
-          "$type": "todo.social.post",
+          "$type": "app.bsky.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "text": "again",
         },
@@ -47,7 +47,7 @@ Object {
         "uri": "record(0)",
       },
       "record": Object {
-        "$type": "todo.social.post",
+        "$type": "app.bsky.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": "record(0)",
@@ -81,7 +81,7 @@ Object {
           "like": "record(1)",
         },
         "record": Object {
-          "$type": "todo.social.post",
+          "$type": "app.bsky.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "text": "again",
         },
@@ -90,7 +90,7 @@ Object {
         "uri": "record(0)",
       },
       "record": Object {
-        "$type": "todo.social.post",
+        "$type": "app.bsky.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": "record(0)",
@@ -131,7 +131,7 @@ Object {
                 "like": "record(1)",
               },
               "record": Object {
-                "$type": "todo.social.post",
+                "$type": "app.bsky.post",
                 "createdAt": "1970-01-01T00:00:00.000Z",
                 "text": "again",
               },
@@ -140,7 +140,7 @@ Object {
               "uri": "record(0)",
             },
             "record": Object {
-              "$type": "todo.social.post",
+              "$type": "app.bsky.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
               "reply": Object {
                 "parent": "record(0)",
@@ -153,7 +153,7 @@ Object {
             "uri": "record(3)",
           },
           "record": Object {
-            "$type": "todo.social.post",
+            "$type": "app.bsky.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "reply": Object {
               "parent": "record(3)",
@@ -191,7 +191,7 @@ Object {
     "like": "record(1)",
   },
   "record": Object {
-    "$type": "todo.social.post",
+    "$type": "app.bsky.post",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "text": "again",
   },
@@ -216,7 +216,7 @@ Object {
           "like": "record(1)",
         },
         "record": Object {
-          "$type": "todo.social.post",
+          "$type": "app.bsky.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "text": "again",
         },
@@ -225,7 +225,7 @@ Object {
         "uri": "record(0)",
       },
       "record": Object {
-        "$type": "todo.social.post",
+        "$type": "app.bsky.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": "record(0)",
@@ -258,7 +258,7 @@ Object {
           "like": "record(1)",
         },
         "record": Object {
-          "$type": "todo.social.post",
+          "$type": "app.bsky.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "text": "again",
         },
@@ -267,7 +267,7 @@ Object {
         "uri": "record(0)",
       },
       "record": Object {
-        "$type": "todo.social.post",
+        "$type": "app.bsky.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": "record(0)",

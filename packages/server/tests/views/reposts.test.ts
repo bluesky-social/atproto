@@ -35,7 +35,7 @@ describe('pds repost views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches reposted-by for a post', async () => {
-    const view = await client.todo.social.getRepostedBy({
+    const view = await client.app.bsky.getRepostedBy({
       uri: sc.posts[alice][2].uriRaw,
     })
     expect(view.data.uri).toEqual(sc.posts[sc.dids.alice][2].uriRaw)
@@ -46,7 +46,7 @@ describe('pds repost views', () => {
   })
 
   it('fetches reposted-by for a reply', async () => {
-    const view = await client.todo.social.getRepostedBy({
+    const view = await client.app.bsky.getRepostedBy({
       uri: sc.replies[bob][0].uriRaw,
     })
     expect(view.data.uri).toEqual(sc.replies[sc.dids.bob][0].uriRaw)
@@ -57,13 +57,13 @@ describe('pds repost views', () => {
   })
 
   it('paginates', async () => {
-    const full = await client.todo.social.getRepostedBy({
+    const full = await client.app.bsky.getRepostedBy({
       uri: sc.posts[alice][2].uriRaw,
     })
 
     expect(full.data.repostedBy.length).toEqual(4)
 
-    const paginated = await client.todo.social.getRepostedBy({
+    const paginated = await client.app.bsky.getRepostedBy({
       uri: sc.posts[alice][2].uriRaw,
       before: full.data.repostedBy[0].createdAt,
       limit: 2,

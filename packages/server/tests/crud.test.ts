@@ -1,5 +1,5 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as Post from '@adxp/api/src/types/todo/social/post'
+import * as Post from '@adxp/api/src/types/app/bsky/post'
 import { AdxUri } from '@adxp/uri'
 import * as util from './_util'
 
@@ -33,7 +33,7 @@ describe('crud operations', () => {
   })
 
   it('registers users', async () => {
-    const res = await client.todo.adx.createAccount(
+    const res = await client.com.atproto.createAccount(
       {},
       {
         email: alice.email,
@@ -43,7 +43,7 @@ describe('crud operations', () => {
     )
     aliceClient.setHeader('authorization', `Bearer ${res.data.jwt}`)
     alice.did = res.data.did
-    const res2 = await client.todo.adx.createAccount(
+    const res2 = await client.com.atproto.createAccount(
       {},
       {
         email: bob.email,
@@ -55,12 +55,12 @@ describe('crud operations', () => {
   })
 
   it('describes repo', async () => {
-    const description = await client.todo.adx.repoDescribe({
+    const description = await client.com.atproto.repoDescribe({
       nameOrDid: alice.did,
     })
     expect(description.data.name).toBe(alice.username)
     expect(description.data.did).toBe(alice.did)
-    const description2 = await client.todo.adx.repoDescribe({
+    const description2 = await client.com.atproto.repoDescribe({
       nameOrDid: bob.did,
     })
     expect(description2.data.name).toBe(bob.username)
@@ -69,24 +69,24 @@ describe('crud operations', () => {
 
   let uri: AdxUri
   it('creates records', async () => {
-    const res = await aliceClient.todo.adx.repoCreateRecord(
-      { did: alice.did, type: 'todo.social.post' },
+    const res = await aliceClient.com.atproto.repoCreateRecord(
+      { did: alice.did, type: 'app.bsky.post' },
       {
-        $type: 'todo.social.post',
+        $type: 'app.bsky.post',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       },
     )
     uri = new AdxUri(res.data.uri)
     expect(res.data.uri).toBe(
-      `adx://${alice.did}/todo.social.post/${uri.recordKey}`,
+      `adx://${alice.did}/app.bsky.post/${uri.recordKey}`,
     )
   })
 
   it('lists records', async () => {
-    const res1 = await client.todo.adx.repoListRecords({
+    const res1 = await client.com.atproto.repoListRecords({
       nameOrDid: alice.did,
-      type: 'todo.social.post',
+      type: 'app.bsky.post',
     })
     expect(res1.data.records.length).toBe(1)
     expect(res1.data.records[0].uri).toBe(uri.toString())
@@ -94,7 +94,7 @@ describe('crud operations', () => {
       'Hello, world!',
     )
 
-    const res2 = await client.todo.social.post.list({
+    const res2 = await client.app.bsky.post.list({
       nameOrDid: alice.did,
     })
     expect(res2.records.length).toBe(1)
@@ -103,15 +103,15 @@ describe('crud operations', () => {
   })
 
   it('gets records', async () => {
-    const res1 = await client.todo.adx.repoGetRecord({
+    const res1 = await client.com.atproto.repoGetRecord({
       nameOrDid: alice.did,
-      type: 'todo.social.post',
+      type: 'app.bsky.post',
       tid: uri.recordKey,
     })
     expect(res1.data.uri).toBe(uri.toString())
     expect((res1.data.value as Post.Record).text).toBe('Hello, world!')
 
-    const res2 = await client.todo.social.post.get({
+    const res2 = await client.app.bsky.post.get({
       nameOrDid: alice.did,
       tid: uri.recordKey,
     })
@@ -120,35 +120,35 @@ describe('crud operations', () => {
   })
 
   // it('puts records', async () => {
-  //   const res1 = await aliceClient.todo.adx.repoPutRecord(
-  //     { did: alice.did, type: 'todo.social.post', tid: uri.recordKey },
+  //   const res1 = await aliceClient.com.atproto.repoPutRecord(
+  //     { did: alice.did, type: 'app.bsky.post', tid: uri.recordKey },
   //     {
-  //       $type: 'todo.social.post',
+  //       $type: 'app.bsky.post',
   //       text: 'Hello, universe!',
   //       createdAt: new Date().toISOString(),
   //     },
   //   )
   //   expect(res1.data.uri).toBe(uri.toString())
 
-  //   const res2 = await client.todo.adx.repoGetRecord({
+  //   const res2 = await client.com.atproto.repoGetRecord({
   //     nameOrDid: alice.did,
-  //     type: 'todo.social.post',
+  //     type: 'app.bsky.post',
   //     tid: uri.recordKey,
   //   })
   //   expect(res2.data.uri).toBe(uri.toString())
   //   expect((res2.data.value as Post.Record).text).toBe('Hello, universe!')
 
-  //   const res3 = await aliceClient.todo.social.post.put(
+  //   const res3 = await aliceClient.app.bsky.post.put(
   //     { did: alice.did, tid: uri.recordKey },
   //     {
-  //       $type: 'todo.social.post',
+  //       $type: 'app.bsky.post',
   //       text: 'Hello, universe!!!',
   //       createdAt: new Date().toISOString(),
   //     },
   //   )
   //   expect(res3.uri).toBe(uri.toString())
 
-  //   const res4 = await client.todo.social.post.get({
+  //   const res4 = await client.app.bsky.post.get({
   //     nameOrDid: alice.did,
   //     tid: uri.recordKey,
   //   })
@@ -157,40 +157,40 @@ describe('crud operations', () => {
   // })
 
   it('deletes records', async () => {
-    await aliceClient.todo.adx.repoDeleteRecord({
+    await aliceClient.com.atproto.repoDeleteRecord({
       did: alice.did,
-      type: 'todo.social.post',
+      type: 'app.bsky.post',
       tid: uri.recordKey,
     })
-    const res1 = await client.todo.adx.repoListRecords({
+    const res1 = await client.com.atproto.repoListRecords({
       nameOrDid: alice.did,
-      type: 'todo.social.post',
+      type: 'app.bsky.post',
     })
     expect(res1.data.records.length).toBe(0)
   })
 
   it('CRUDs records with the semantic sugars', async () => {
-    const res1 = await aliceClient.todo.social.post.create(
+    const res1 = await aliceClient.app.bsky.post.create(
       { did: alice.did },
       {
-        $type: 'todo.social.post',
+        $type: 'app.bsky.post',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       },
     )
     const uri = new AdxUri(res1.uri)
 
-    const res2 = await client.todo.social.post.list({
+    const res2 = await client.app.bsky.post.list({
       nameOrDid: alice.did,
     })
     expect(res2.records.length).toBe(1)
 
-    await aliceClient.todo.social.post.delete({
+    await aliceClient.app.bsky.post.delete({
       did: alice.did,
       tid: uri.recordKey,
     })
 
-    const res3 = await client.todo.social.post.list({
+    const res3 = await client.app.bsky.post.list({
       nameOrDid: alice.did,
     })
     expect(res3.records.length).toBe(0)
@@ -198,10 +198,10 @@ describe('crud operations', () => {
 
   it('lists records with pagination', async () => {
     const doCreate = async (text: string) => {
-      const res = await aliceClient.todo.social.post.create(
+      const res = await aliceClient.app.bsky.post.create(
         { did: alice.did },
         {
-          $type: 'todo.social.post',
+          $type: 'app.bsky.post',
           text,
           createdAt: new Date().toISOString(),
         },
@@ -209,7 +209,7 @@ describe('crud operations', () => {
       return new AdxUri(res.uri)
     }
     const doList = async (params: any) => {
-      const res = await client.todo.social.post.list({
+      const res = await client.app.bsky.post.list({
         nameOrDid: alice.did,
         ...params,
       })
@@ -254,19 +254,19 @@ describe('crud operations', () => {
       expect(list.records[1].value.text).toBe('Post 3')
     }
 
-    await aliceClient.todo.social.post.delete({
+    await aliceClient.app.bsky.post.delete({
       did: alice.did,
       tid: uri1.recordKey,
     })
-    await aliceClient.todo.social.post.delete({
+    await aliceClient.app.bsky.post.delete({
       did: alice.did,
       tid: uri2.recordKey,
     })
-    await aliceClient.todo.social.post.delete({
+    await aliceClient.app.bsky.post.delete({
       did: alice.did,
       tid: uri3.recordKey,
     })
-    await aliceClient.todo.social.post.delete({
+    await aliceClient.app.bsky.post.delete({
       did: alice.did,
       tid: uri4.recordKey,
     })
@@ -276,15 +276,15 @@ describe('crud operations', () => {
   // --------------
 
   it('requires a $type on records', async () => {
-    const prom1 = aliceClient.todo.adx.repoCreateRecord(
-      { did: alice.did, type: 'todo.social.post' },
+    const prom1 = aliceClient.com.atproto.repoCreateRecord(
+      { did: alice.did, type: 'app.bsky.post' },
       {},
     )
     await expect(prom1).rejects.toThrow(
       'The passed value does not declare a $type',
     )
-    // const prom2 = aliceClient.todo.adx.repoPutRecord(
-    //   { did: alice.did, type: 'todo.social.post', tid: 'foo' },
+    // const prom2 = aliceClient.com.atproto.repoPutRecord(
+    //   { did: alice.did, type: 'app.bsky.post', tid: 'foo' },
     //   {},
     // )
     // await expect(prom2).rejects.toThrow(
@@ -293,17 +293,17 @@ describe('crud operations', () => {
   })
 
   it('requires the schema to be known if validating', async () => {
-    // const prom1 = client.todo.adx.repoListRecords(url, {
+    // const prom1 = client.com.atproto.repoListRecords(url, {
     //   nameOrDid: alice.did,
     //   type: 'com.example.foobar',
     // })
     // await expect(prom1).rejects.toThrow('Schema not found: com.example.foobar')
-    const prom2 = aliceClient.todo.adx.repoCreateRecord(
+    const prom2 = aliceClient.com.atproto.repoCreateRecord(
       { did: alice.did, type: 'com.example.foobar' },
       { $type: 'com.example.foobar' },
     )
     await expect(prom2).rejects.toThrow('Schema not found')
-    // const prom3 = aliceClient.todo.adx.repoPutRecord(
+    // const prom3 = aliceClient.com.atproto.repoPutRecord(
     //   { did: alice.did, type: 'com.example.foobar', tid: 'foo' },
     //   { $type: 'com.example.foobar' },
     // )
@@ -312,59 +312,59 @@ describe('crud operations', () => {
 
   it('requires the $type to match the schema', async () => {
     await expect(
-      aliceClient.todo.adx.repoCreateRecord(
-        { did: alice.did, type: 'todo.social.post' },
-        { $type: 'todo.social.like' },
+      aliceClient.com.atproto.repoCreateRecord(
+        { did: alice.did, type: 'app.bsky.post' },
+        { $type: 'app.bsky.like' },
       ),
-    ).rejects.toThrow('Record type todo.social.like is not supported')
+    ).rejects.toThrow('Record type app.bsky.like is not supported')
     // await expect(
-    //   aliceClient.todo.adx.repoPutRecord(
-    //     { did: alice.did, type: 'todo.social.post', tid: 'foo' },
-    //     { $type: 'todo.social.like' },
+    //   aliceClient.com.atproto.repoPutRecord(
+    //     { did: alice.did, type: 'app.bsky.post', tid: 'foo' },
+    //     { $type: 'app.bsky.like' },
     //   ),
-    // ).rejects.toThrow('Record type todo.social.like is not supported')
+    // ).rejects.toThrow('Record type app.bsky.like is not supported')
   })
 
   it('validates the record on write', async () => {
     await expect(
-      aliceClient.todo.adx.repoCreateRecord(
-        { did: alice.did, type: 'todo.social.post' },
-        { $type: 'todo.social.post' },
+      aliceClient.com.atproto.repoCreateRecord(
+        { did: alice.did, type: 'app.bsky.post' },
+        { $type: 'app.bsky.post' },
       ),
     ).rejects.toThrow(
-      "Failed todo.social.post validation for #/required: must have required property 'text'",
+      "Failed app.bsky.post validation for #/required: must have required property 'text'",
     )
     // await expect(
-    //   aliceClient.todo.adx.repoPutRecord(
-    //     { did: alice.did, type: 'todo.social.post', tid: 'foo' },
-    //     { $type: 'todo.social.post' },
+    //   aliceClient.com.atproto.repoPutRecord(
+    //     { did: alice.did, type: 'app.bsky.post', tid: 'foo' },
+    //     { $type: 'app.bsky.post' },
     //   ),
     // ).rejects.toThrow(
-    //   "Failed todo.social.post validation for #/required: must have required property 'text'",
+    //   "Failed app.bsky.post validation for #/required: must have required property 'text'",
     // )
   })
 
   // TODO: does it?
   // it('validates the record on read', async () => {
-  //   const res1 = await client.todo.adx.repoCreateRecord(
+  //   const res1 = await client.com.atproto.repoCreateRecord(
   //     url,
-  //     { did: alice.did, type: 'todo.social.post', validate: false },
+  //     { did: alice.did, type: 'app.bsky.post', validate: false },
   //     {
   //       encoding: 'application/json',
-  //       data: { $type: 'todo.social.post', record: 'is bad' },
+  //       data: { $type: 'app.bsky.post', record: 'is bad' },
   //     },
   //   )
-  //   const res2 = await client.todo.adx.repoCreateRecord(
+  //   const res2 = await client.com.atproto.repoCreateRecord(
   //     url,
-  //     { did: alice.did, type: 'todo.social.post', validate: false },
+  //     { did: alice.did, type: 'app.bsky.post', validate: false },
   //     {
   //       encoding: 'application/json',
   //       data: { $type: 'com.example.unknown', dunno: 'lol' },
   //     },
   //   )
-  //   const res3 = await client.todo.adx.repoListRecords(url, {
+  //   const res3 = await client.com.atproto.repoListRecords(url, {
   //     nameOrDid: alice.did,
-  //     type: 'todo.social.post',
+  //     type: 'app.bsky.post',
   //   })
   //   /** @ts-ignore TODO!!! */
   //   expect(res3.data.records[0].value.record).toBe('is bad')
@@ -376,7 +376,7 @@ describe('crud operations', () => {
   //   expect(res3.data.records[0].compatible).toBeTruthy()
   //   /** @ts-ignore TODO!!! */
   //   expect(res3.data.records[0].error).toBe(
-  //     `Failed todo.social.post validation for #/required: must have required property 'text'`,
+  //     `Failed app.bsky.post validation for #/required: must have required property 'text'`,
   //   )
   //   /** @ts-ignore TODO!!! */
   //   expect(res3.data.records[1].value.dunno).toBe('lol')
@@ -390,9 +390,9 @@ describe('crud operations', () => {
   //   expect(res3.data.records[1].error).toBe(
   //     `Record type com.example.unknown is not supported`,
   //   )
-  //   const res4 = await client.todo.adx.repoGetRecord(url, {
+  //   const res4 = await client.com.atproto.repoGetRecord(url, {
   //     nameOrDid: alice.did,
-  //     type: 'todo.social.post',
+  //     type: 'app.bsky.post',
   //     tid: new AdxUri(res1.data.uri).recordKey,
   //   })
   //   /** @ts-ignore TODO!!! */
@@ -405,11 +405,11 @@ describe('crud operations', () => {
   //   expect(res4.data.compatible).toBeTruthy()
   //   /** @ts-ignore TODO!!! */
   //   expect(res4.data.error).toBe(
-  //     `Failed todo.social.post validation for #/required: must have required property 'text'`,
+  //     `Failed app.bsky.post validation for #/required: must have required property 'text'`,
   //   )
-  //   const res5 = await client.todo.adx.repoGetRecord(url, {
+  //   const res5 = await client.com.atproto.repoGetRecord(url, {
   //     nameOrDid: alice.did,
-  //     type: 'todo.social.post',
+  //     type: 'app.bsky.post',
   //     tid: new AdxUri(res2.data.uri).recordKey,
   //   })
   //   /** @ts-ignore TODO!!! */
@@ -424,14 +424,14 @@ describe('crud operations', () => {
   //   expect(res5.data.error).toBe(
   //     `Record type com.example.unknown is not supported`,
   //   )
-  //   await client.todo.adx.repoDeleteRecord(url, {
+  //   await client.com.atproto.repoDeleteRecord(url, {
   //     did: alice.did,
-  //     type: 'todo.social.post',
+  //     type: 'app.bsky.post',
   //     tid: new AdxUri(res1.data.uri).recordKey,
   //   })
-  //   await client.todo.adx.repoDeleteRecord(url, {
+  //   await client.com.atproto.repoDeleteRecord(url, {
   //     did: alice.did,
-  //     type: 'todo.social.post',
+  //     type: 'app.bsky.post',
   //     tid: new AdxUri(res2.data.uri).recordKey,
   //   })
   // })

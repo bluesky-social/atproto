@@ -1,12 +1,12 @@
 import { once, EventEmitter } from 'events'
 import AdxApi, {
   ServiceClient as AdxServiceClient,
-  TodoAdxCreateAccount,
+  ComAtprotoCreateAccount,
 } from '@adxp/api'
 import {
   ExpiredTokenError,
   InvalidTokenError,
-} from '@adxp/api/src/types/todo/adx/resetAccountPassword'
+} from '@adxp/api/src/types/com/atproto/resetAccountPassword'
 import { sign } from 'jsonwebtoken'
 import Mail from 'nodemailer/lib/mailer'
 import { App } from '../src'
@@ -58,7 +58,7 @@ describe('account', () => {
   let inviteCode: string
 
   it('creates an invite code', async () => {
-    const res = await client.todo.adx.createInviteCode(
+    const res = await client.com.atproto.createInviteCode(
       {},
       { useCount: 1 },
       {
@@ -73,14 +73,14 @@ describe('account', () => {
   })
 
   it('serves the accounts system config', async () => {
-    const res = await client.todo.adx.getAccountsConfig({})
+    const res = await client.com.atproto.getAccountsConfig({})
     expect(res.data.inviteCodeRequired).toBe(true)
     expect(res.data.availableUserDomains[0]).toBe('test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
   })
 
   it('fails on invalid usernames', async () => {
-    const promise = client.todo.adx.createAccount(
+    const promise = client.com.atproto.createAccount(
       {},
       {
         email: 'bad-username@test.com',
@@ -90,12 +90,12 @@ describe('account', () => {
       },
     )
     await expect(promise).rejects.toThrow(
-      TodoAdxCreateAccount.InvalidUsernameError,
+      ComAtprotoCreateAccount.InvalidUsernameError,
     )
   })
 
   it('fails on bad invite code', async () => {
-    const promise = client.todo.adx.createAccount(
+    const promise = client.com.atproto.createAccount(
       {},
       {
         email,
@@ -105,7 +105,7 @@ describe('account', () => {
       },
     )
     await expect(promise).rejects.toThrow(
-      TodoAdxCreateAccount.InvalidInviteCodeError,
+      ComAtprotoCreateAccount.InvalidInviteCodeError,
     )
   })
 
@@ -113,7 +113,7 @@ describe('account', () => {
   let jwt: string
 
   it('creates an account', async () => {
-    const res = await client.todo.adx.createAccount(
+    const res = await client.com.atproto.createAccount(
       {},
       { email, username, password, inviteCode },
     )
@@ -126,7 +126,7 @@ describe('account', () => {
   })
 
   it('disallows duplicate email addresses and usernames', async () => {
-    const res = await client.todo.adx.createInviteCode(
+    const res = await client.com.atproto.createInviteCode(
       {},
       { useCount: 2 },
       {
@@ -138,13 +138,13 @@ describe('account', () => {
     const email = 'bob@test.com'
     const username = 'bob.test'
     const password = 'test123'
-    await client.todo.adx.createAccount(
+    await client.com.atproto.createAccount(
       {},
       { email, username, password, inviteCode },
     )
 
     await expect(
-      client.todo.adx.createAccount(
+      client.com.atproto.createAccount(
         {},
         {
           email: email.toUpperCase(),
@@ -156,7 +156,7 @@ describe('account', () => {
     ).rejects.toThrow('Email already taken: BOB@TEST.COM')
 
     await expect(
-      client.todo.adx.createAccount(
+      client.com.atproto.createAccount(
         {},
         {
           email: 'carol@test.com',
@@ -169,7 +169,7 @@ describe('account', () => {
   })
 
   it('fails on used up invite code', async () => {
-    const promise = client.todo.adx.createAccount(
+    const promise = client.com.atproto.createAccount(
       {},
       {
         email: 'bob@test.com',
@@ -179,16 +179,19 @@ describe('account', () => {
       },
     )
     await expect(promise).rejects.toThrow(
-      TodoAdxCreateAccount.InvalidInviteCodeError,
+      ComAtprotoCreateAccount.InvalidInviteCodeError,
     )
   })
 
   it('fails on unauthenticated requests', async () => {
-    await expect(client.todo.adx.getSession({})).rejects.toThrow()
+    await expect(client.com.atproto.getSession({})).rejects.toThrow()
   })
 
   it('logs in', async () => {
-    const res = await client.todo.adx.createSession({}, { username, password })
+    const res = await client.com.atproto.createSession(
+      {},
+      { username, password },
+    )
     jwt = res.data.jwt
     expect(typeof jwt).toBe('string')
     expect(res.data.name).toBe('alice.test')
@@ -197,7 +200,7 @@ describe('account', () => {
 
   it('can perform authenticated requests', async () => {
     client.setHeader('authorization', `Bearer ${jwt}`)
-    const res = await client.todo.adx.getSession({})
+    const res = await client.com.atproto.getSession({})
     expect(res.data.did).toBe(did)
     expect(res.data.name).toBe(username)
   })
@@ -212,7 +215,7 @@ describe('account', () => {
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(
-      client.todo.adx.requestAccountPasswordReset({}, { email }),
+      client.com.atproto.requestAccountPasswordReset({}, { email }),
     )
 
     expect(mail.to).toEqual(email)
@@ -224,24 +227,24 @@ describe('account', () => {
       return expect(token).toBeDefined()
     }
 
-    await client.todo.adx.resetAccountPassword(
+    await client.com.atproto.resetAccountPassword(
       {},
       { token, password: passwordAlt },
     )
 
     // Logs in with new password and not previous password
     await expect(
-      client.todo.adx.createSession({}, { username, password }),
+      client.com.atproto.createSession({}, { username, password }),
     ).rejects.toThrow('Invalid username or password')
 
     await expect(
-      client.todo.adx.createSession({}, { username, password: passwordAlt }),
+      client.com.atproto.createSession({}, { username, password: passwordAlt }),
     ).resolves.toBeDefined()
   })
 
   it('allows only single-use of password reset token', async () => {
     const mail = await getMailFrom(
-      client.todo.adx.requestAccountPasswordReset({}, { email }),
+      client.com.atproto.requestAccountPasswordReset({}, { email }),
     )
 
     const token = getTokenFromMail(mail)
@@ -251,20 +254,20 @@ describe('account', () => {
     }
 
     // Reset back from passwordAlt to password
-    await client.todo.adx.resetAccountPassword({}, { token, password })
+    await client.com.atproto.resetAccountPassword({}, { token, password })
 
     // Reuse of token fails
     await expect(
-      client.todo.adx.resetAccountPassword({}, { token, password }),
+      client.com.atproto.resetAccountPassword({}, { token, password }),
     ).rejects.toThrow(InvalidTokenError)
 
     // Logs in with new password and not previous password
     await expect(
-      client.todo.adx.createSession({}, { username, password: passwordAlt }),
+      client.com.atproto.createSession({}, { username, password: passwordAlt }),
     ).rejects.toThrow('Invalid username or password')
 
     await expect(
-      client.todo.adx.createSession({}, { username, password }),
+      client.com.atproto.createSession({}, { username, password }),
     ).resolves.toBeDefined()
   })
 
@@ -283,14 +286,14 @@ describe('account', () => {
 
     const signingKey = `${config.jwtSecret}::${user.password}`
     const expiredToken = await sign(
-      { sub: did, scope: 'todo.adx.resetAccountPassword' },
+      { sub: did, scope: 'com.atproto.resetAccountPassword' },
       signingKey,
       { expiresIn: -1 },
     )
 
     // Use of expired token fails
     await expect(
-      client.todo.adx.resetAccountPassword(
+      client.com.atproto.resetAccountPassword(
         {},
         { token: expiredToken, password: passwordAlt },
       ),
@@ -298,11 +301,11 @@ describe('account', () => {
 
     // Still logs in with previous password
     await expect(
-      client.todo.adx.createSession({}, { username, password: passwordAlt }),
+      client.com.atproto.createSession({}, { username, password: passwordAlt }),
     ).rejects.toThrow('Invalid username or password')
 
     await expect(
-      client.todo.adx.createSession({}, { username, password }),
+      client.com.atproto.createSession({}, { username, password }),
     ).resolves.toBeDefined()
   })
 })

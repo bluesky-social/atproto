@@ -1,0 +1,11 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repoDeleteRecord",
+  "type": "procedure",
+  "description": "Delete a record.",
+  "parameters": {
+    "did": {"type": "string", "required": true, "description": "The DID of the repo."},
+    "type": {"type": "string", "required": true, "description": "The NSID of the record type."},
+    "tid": {"type": "string", "required": true, "description": "The TID of the record."}
+  }
+}

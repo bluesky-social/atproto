@@ -1,10 +1,10 @@
 import { createServer } from '../lexicon'
-import todoAdx from './todo/adx'
-import todoSocial from './todo/social'
+import comAtproto from './com/atproto'
+import appBsky from './app/bsky'
 
 export default function () {
   const server = createServer()
-  todoAdx(server)
-  todoSocial(server)
+  comAtproto(server)
+  appBsky(server)
   return server
 }
