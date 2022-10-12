@@ -5,6 +5,9 @@ export interface ServerConfigValues {
   port: number
   hostname: string
 
+  dbPostgresUrl?: string
+  dbPostgresSchema?: string
+
   jwtSecret: string
 
   didPlcUrl: string
@@ -61,11 +64,16 @@ export class ServerConfig {
     const emailNoReplyAddress =
       process.env.EMAIL_NO_REPLY_ADDRESS || 'noreply@blueskyweb.xyz'
 
+    const dbPostgresUrl = process.env.DB_POSTGRES_URL
+    const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
+
     return new ServerConfig({
       debugMode,
       scheme,
       hostname,
       port,
+      dbPostgresUrl,
+      dbPostgresSchema,
       jwtSecret,
       serverDid,
       didPlcUrl,
@@ -99,6 +107,15 @@ export class ServerConfig {
   get origin() {
     const u = new URL(`${this.scheme}://${this.hostname}:${this.port}`)
     return u.origin
+  }
+
+  // @TODO should protect this better
+  get dbPostgresUrl() {
+    return this.cfg.dbPostgresUrl
+  }
+
+  get dbPostgresSchema() {
+    return this.cfg.dbPostgresSchema
   }
 
   // @TODO should protect this better

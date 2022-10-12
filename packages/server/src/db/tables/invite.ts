@@ -39,6 +39,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('code', 'varchar', (col) => col.notNull())
     .addColumn('usedBy', 'integer', (col) => col.notNull())
     .addColumn('usedAt', 'integer', (col) => col.notNull())
-    .addPrimaryKeyConstraint('primary_key', ['code', 'usedBy'])
+    // Index names need to be unique per schema for postgres
+    .addPrimaryKeyConstraint(`${supportingTableName}_pkey`, ['code', 'usedBy'])
     .execute()
 }

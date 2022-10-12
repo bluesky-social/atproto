@@ -27,6 +27,7 @@ export const runTestServer = async (
       close: async () => {},
     }
   }
+
   const pdsPort = await getPort()
   const keypair = await crypto.EcdsaKeypair.create()
 
@@ -45,29 +46,35 @@ export const runTestServer = async (
     `http://localhost:${pdsPort}`,
   )
 
-  const db = await Database.memory()
+  const config = new ServerConfig({
+    debugMode: true,
+    scheme: 'http',
+    hostname: 'localhost',
+    port: pdsPort,
+    serverDid,
+    adminPassword: ADMIN_PASSWORD,
+    inviteRequired: false,
+    didPlcUrl: plcUrl,
+    jwtSecret: 'jwt-secret',
+    testNameRegistry: {},
+    appUrlPasswordReset: 'app://forgot-password',
+    emailNoReplyAddress: 'noreply@blueskyweb.xyz',
+    dbPostgresUrl: process.env.DB_POSTGRES_URL,
+    ...params,
+  })
+
+  const db =
+    config.dbPostgresUrl !== undefined
+      ? await Database.postgres({
+          url: config.dbPostgresUrl,
+          schema: config.dbPostgresSchema,
+        })
+      : await Database.memory()
+
   await db.createTables()
   const serverBlockstore = new MemoryBlockstore()
-  const { app, listener } = server(
-    serverBlockstore,
-    db,
-    keypair,
-    new ServerConfig({
-      debugMode: true,
-      scheme: 'http',
-      hostname: 'localhost',
-      port: pdsPort,
-      serverDid,
-      adminPassword: ADMIN_PASSWORD,
-      inviteRequired: false,
-      didPlcUrl: plcUrl,
-      jwtSecret: 'jwt-secret',
-      testNameRegistry: {},
-      appUrlPasswordReset: 'app://forgot-password',
-      emailNoReplyAddress: 'noreply@blueskyweb.xyz',
-      ...params,
-    }),
-  )
+
+  const { app, listener } = server(serverBlockstore, db, keypair, config)
 
   return {
     url: `http://localhost:${pdsPort}`,
