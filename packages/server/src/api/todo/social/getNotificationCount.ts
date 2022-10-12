@@ -2,7 +2,7 @@ import { Server } from '../../../lexicon'
 import { AuthRequiredError } from '@adxp/xrpc-server'
 import * as GetNotificationCount from '../../../lexicon/types/todo/social/getNotificationCount'
 import * as locals from '../../../locals'
-import { countClause } from '../../../db/util'
+import { countClausePg, countClauseSqlite } from '../../../db/util'
 
 export default function (server: Server) {
   server.todo.social.getNotificationCount(
@@ -12,6 +12,9 @@ export default function (server: Server) {
       if (!requester) {
         throw new AuthRequiredError()
       }
+
+      const countClause =
+        db.dialect === 'pg' ? countClausePg : countClauseSqlite
 
       const result = await db.db
         .selectFrom('user_notification as notif')

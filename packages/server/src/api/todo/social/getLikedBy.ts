@@ -2,13 +2,13 @@ import { Server } from '../../../lexicon'
 import * as GetLikedBy from '../../../lexicon/types/todo/social/getLikedBy'
 import * as locals from '../../../locals'
 import { paginate } from '../../../db/util'
-import { sql } from 'kysely'
 
 export default function (server: Server) {
   server.todo.social.getLikedBy(
     async (params: GetLikedBy.QueryParams, _input, _req, res) => {
       const { uri, limit, before } = params
       const { db } = locals.get(res)
+      const { ref } = db.db.dynamic
 
       let builder = db.db
         .selectFrom('todo_social_like as like')
@@ -31,7 +31,7 @@ export default function (server: Server) {
       builder = paginate(builder, {
         limit,
         before,
-        by: sql`like.createdAt`,
+        by: ref('like.createdAt'),
       })
 
       const likedByRes = await builder.execute()

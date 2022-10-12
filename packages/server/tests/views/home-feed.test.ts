@@ -25,7 +25,7 @@ describe('pds home feed views', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'view_home_feed',
+      dbPostgresSchema: 'views_home_feed',
     })
     close = server.close
     client = AdxApi.service(server.url)

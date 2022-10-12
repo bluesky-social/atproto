@@ -15,7 +15,9 @@ describe('pds notification views', () => {
   let alice: string
 
   beforeAll(async () => {
-    const server = await runTestServer()
+    const server = await runTestServer({
+      dbPostgresSchema: 'views_noitifications',
+    })
     close = server.close
     app = server.app
     client = AdxApi.service(server.url)

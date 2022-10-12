@@ -22,7 +22,7 @@ describe('pds author feed views', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'view_author_feed',
+      dbPostgresSchema: 'views_author_feed',
     })
     close = server.close
     client = AdxApi.service(server.url)
