@@ -141,10 +141,11 @@ export class Database {
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
+    const { ref } = this.db.dynamic
     const found = await this.db
       .selectFrom('user')
       .selectAll()
-      .where(sql`UPPER(email)`, '=', email.toUpperCase())
+      .where(sql`UPPER(${ref('email')})`, '=', email.toUpperCase())
       .executeTakeFirst()
     return found || null
   }

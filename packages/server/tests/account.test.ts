@@ -27,7 +27,10 @@ describe('account', () => {
   let _origSendMail
 
   beforeAll(async () => {
-    const server = await util.runTestServer({ inviteRequired: true })
+    const server = await util.runTestServer({
+      inviteRequired: true,
+      dbPostgresSchema: 'account',
+    })
     close = server.close
     app = server.app
     serverUrl = server.url

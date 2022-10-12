@@ -13,7 +13,9 @@ describe('pds thread views', () => {
   let bob: string
 
   beforeAll(async () => {
-    const server = await runTestServer()
+    const server = await runTestServer({
+      dbPostgresSchema: 'views_thread',
+    })
     close = server.close
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)

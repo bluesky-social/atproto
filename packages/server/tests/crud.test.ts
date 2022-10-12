@@ -22,7 +22,9 @@ describe('crud operations', () => {
   let close: util.CloseFn
 
   beforeAll(async () => {
-    const server = await util.runTestServer()
+    const server = await util.runTestServer({
+      dbPostgresSchema: 'crud',
+    })
     close = server.close
     client = AdxApi.service(server.url)
     aliceClient = AdxApi.service(server.url)
