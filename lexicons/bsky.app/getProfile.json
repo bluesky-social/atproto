@@ -44,7 +44,7 @@
         "error": {"type": "string"},
         "issuer": {
           "type": "object",
-          "required": ["did", "name", "displayName"],
+          "required": ["did", "name"],
           "properties": {
             "did": {"type": "string"},
             "name": {"type": "string"},
@@ -58,7 +58,8 @@
           "type": "object",
           "required": ["type"],
           "properties": {
-            "type": {"type": "string"}
+            "type": {"type": "string"},
+            "tag": {"type": "string", "maxLength": 64}
           }
         },
         "createdAt": {"type": "string", "format": "date-time"}

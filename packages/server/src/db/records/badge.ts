@@ -14,7 +14,7 @@ export interface AppBskyBadge {
   creator: string
   subject: string
   assertionType: string
-  assertionTag?: string
+  assertionTag: string | null
   createdAt: string
   indexedAt: string
 }
@@ -42,18 +42,14 @@ const matchesSchema = (obj: unknown): obj is Badge.Record => {
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const translateDbObj = (dbObj: AppBskyBadge): Badge.Record => {
-  const badge = {
+  return {
     assertion: {
       type: dbObj.assertionType,
-      tag: dbObj.assertionTag,
+      tag: dbObj.assertionTag || undefined,
     },
     subject: dbObj.subject,
     createdAt: dbObj.createdAt,
   }
-  if (badge.assertion.type === 'tag') {
-    badge.assertion.tag = dbObj.assertionTag
-  }
-  return badge
 }
 
 const getFn =
@@ -79,7 +75,8 @@ const insertFn =
       creator: uri.host,
       subject: obj.subject,
       assertionType: obj.assertion.type,
-      assertionTag: (obj.assertion as Badge.AppBskyBadgeTagAssertion).tag,
+      assertionTag:
+        (obj.assertion as Badge.AppBskyBadgeTagAssertion).tag || null,
       createdAt: obj.createdAt,
       indexedAt: new Date().toISOString(),
     }

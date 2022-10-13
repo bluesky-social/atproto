@@ -7,7 +7,6 @@ const profileNsid = 'app.bsky.profile'
 
 export default function (server: Server) {
   server.app.bsky.updateProfile(async (_params, input, req, res) => {
-    // const { displayName, description, badges } = input.body
     const { auth, db } = locals.get(res)
 
     const requester = auth.getUserDid(req)
