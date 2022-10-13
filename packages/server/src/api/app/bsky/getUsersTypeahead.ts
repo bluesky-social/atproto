@@ -1,5 +1,5 @@
-import { QueryParams } from '@adxp/api/src/types/app/bsky/getUsersTypeahead'
 import { sql } from 'kysely'
+import { QueryParams } from '@adxp/api/src/types/app/bsky/getUsersTypeahead'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
@@ -10,7 +10,7 @@ export default function (server: Server) {
     const { db, auth } = locals.get(res)
     auth.getUserDidOrThrow(req)
 
-    // Remove @ in case user types username that way
+    // Remove leading @ in case a username is input that way
     term = term.trim().replace(/^@/g, '')
     limit = Math.min(limit ?? 25, 100)
 
@@ -89,7 +89,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
     .innerJoin('user', 'user.did', 'results.did')
     .leftJoin('app_bsky_profile as profile', 'profile.creator', 'results.did')
     .orderBy('distance')
-    .orderBy('did') // Keep order stable: break ties in distance arbitrarily using did
+    .orderBy('username') // Keep order stable: break ties in distance arbitrarily using username
     .limit(limit)
     .select([
       'distance',
