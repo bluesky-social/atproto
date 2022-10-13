@@ -13,6 +13,7 @@ import {
   printFileDiff,
   applyFileDiff,
 } from './util'
+import { resolveAllRefs } from './refs'
 import * as mdGen from './mdgen'
 import { genClientApi } from './codegen/client'
 import { genServerApi } from './codegen/server'
@@ -63,6 +64,7 @@ program
       process.exit(0)
     }
     const schemas = readAllSchemas(schemaPaths)
+    resolveAllRefs(schemas)
     await mdGen.process(outFilePath, schemas)
   })
 
@@ -72,6 +74,7 @@ program
   .argument('<schemas...>', 'paths of the schema files to include', toPaths)
   .action((schemaPaths: string[]) => {
     const schemas = readAllSchemas(schemaPaths)
+    resolveAllRefs(schemas)
     console.log(genTsObj(schemas))
   })
 
@@ -82,6 +85,7 @@ program
   .argument('<schemas...>', 'paths of the schema files to include', toPaths)
   .action(async (outDir: string, schemaPaths: string[]) => {
     const schemas = readAllSchemas(schemaPaths)
+    resolveAllRefs(schemas)
     const api = await genClientApi(schemas)
     const diff = genFileDiff(outDir, api)
     console.log('This will write the following files:')
@@ -105,6 +109,7 @@ program
   .argument('<schemas...>', 'paths of the schema files to include', toPaths)
   .action(async (outDir: string, schemaPaths: string[]) => {
     const schemas = readAllSchemas(schemaPaths)
+    resolveAllRefs(schemas)
     const api = await genServerApi(schemas)
     const diff = genFileDiff(outDir, api)
     console.log('This will write the following files:')

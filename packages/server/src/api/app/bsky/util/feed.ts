@@ -1,4 +1,5 @@
-import { AppBskyGetAuthorFeed, AppBskyGetHomeFeed } from '@adxp/api'
+import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/getAuthorFeed'
+import * as GetHomeFeed from '../../../../lexicon/types/app/bsky/getHomeFeed'
 
 // Present post and repost results into FeedItems
 // @TODO add embeds
@@ -35,7 +36,8 @@ export enum FeedAlgorithm {
   ReverseChronological = 'reverse-chronological',
 }
 
-type FeedItem = AppBskyGetAuthorFeed.FeedItem & AppBskyGetHomeFeed.FeedItem
+type FeedItem = GetAuthorFeed.AppBskyGetAuthorFeedFeedItem &
+  GetHomeFeed.AppBskyGetHomeFeedFeedItem
 
 type FeedRow = {
   type: 'post' | 'repost'

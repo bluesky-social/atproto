@@ -14,16 +14,16 @@
         "type": "string",
         "maxLength": 256
       },
-      "badges": {"type": "array", "items": {"$ref": "#/$defs/badgeRef"}}
-    },
-    "$defs": {
-      "badgeRef": {
-        "type": "object",
-        "required": ["uri", "cid"],
-        "properties": {
-          "uri": {"type": "string"},
-          "cid": {"type": "string"}
-        }
+      "badges": {"type": "array", "items": {"$ref": "#/defs/badgeRef"}}
+    }
+  },
+  "defs": {
+    "badgeRef": {
+      "type": "object",
+      "required": ["uri", "cid"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"}
       }
     }
   }

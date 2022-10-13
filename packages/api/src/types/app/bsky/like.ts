@@ -2,11 +2,11 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 export interface Record {
-  subject: Subject;
+  subject: AppBskyLikeSubject;
   createdAt: string;
   [k: string]: unknown;
 }
-export interface Subject {
+export interface AppBskyLikeSubject {
   uri: string;
   cid: string;
   [k: string]: unknown;

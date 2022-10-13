@@ -15,17 +15,20 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  thread: Post;
+  thread: AppBskyGetPostThreadPost;
 }
-export interface Post {
+export interface AppBskyGetPostThreadPost {
   uri: string;
   cid: string;
-  author: User;
+  author: AppBskyGetPostThreadUser;
   record: {};
-  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
-  parent?: Post;
+  embed?:
+    | AppBskyGetPostThreadRecordEmbed
+    | AppBskyGetPostThreadExternalEmbed
+    | AppBskyGetPostThreadUnknownEmbed;
+  parent?: AppBskyGetPostThreadPost;
   replyCount: number;
-  replies?: Post[];
+  replies?: AppBskyGetPostThreadPost[];
   likeCount: number;
   repostCount: number;
   indexedAt: string;
@@ -34,24 +37,24 @@ export interface Post {
     like?: string,
   };
 }
-export interface User {
+export interface AppBskyGetPostThreadUser {
   did: string;
   name: string;
   displayName?: string;
 }
-export interface RecordEmbed {
+export interface AppBskyGetPostThreadRecordEmbed {
   type: 'record';
-  author: User;
+  author: AppBskyGetPostThreadUser;
   record: {};
 }
-export interface ExternalEmbed {
+export interface AppBskyGetPostThreadExternalEmbed {
   type: 'external';
   uri: string;
   title: string;
   description: string;
   imageUri: string;
 }
-export interface UnknownEmbed {
+export interface AppBskyGetPostThreadUnknownEmbed {
   type: string;
 }
 

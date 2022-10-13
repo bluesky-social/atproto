@@ -10,8 +10,13 @@ export const recordSchema = z.object({
   revision: z.number().optional(),
   description: z.string().optional(),
   record: z.any().optional(),
+  defs: z.any().optional(),
 })
 export type RecordSchema = z.infer<typeof recordSchema>
+
+export function isValidRecordSchema(v: unknown): v is RecordSchema {
+  return recordSchema.safeParse(v).success
+}
 
 export class RecordSchemaMalformedError extends Error {
   constructor(
@@ -27,6 +32,7 @@ export class RecordSchemaMalformedError extends Error {
 
 export const methodSchemaBody = z.object({
   encoding: z.union([z.string(), z.string().array()]),
+  description: z.string().optional(),
   schema: z.any().optional(),
 })
 export type MethodSchemaBody = z.infer<typeof methodSchemaBody>
@@ -58,6 +64,7 @@ export const methodSchema = z.object({
   input: methodSchemaBody.optional(),
   output: methodSchemaBody.optional(),
   errors: methodSchemaError.array().optional(),
+  defs: z.any().optional(),
 })
 export type MethodSchema = z.infer<typeof methodSchema>
 

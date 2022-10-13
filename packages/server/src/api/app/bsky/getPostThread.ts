@@ -46,10 +46,10 @@ export default function (server: Server) {
 
 const getReplies = async (
   db: Kysely<DatabaseSchema>,
-  parent: GetPostThread.Post,
+  parent: GetPostThread.AppBskyGetPostThreadPost,
   depth: number,
   requester: string,
-): Promise<GetPostThread.Post[]> => {
+): Promise<GetPostThread.AppBskyGetPostThreadPost[]> => {
   const res = await postInfoBuilder(db, requester)
     .where('post.replyParent', '=', parent.uri)
     .orderBy('post.createdAt', 'desc')
@@ -122,8 +122,8 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
 // unfortunately not type-checked yet, so change with caution!
 const rowToPost = (
   row: any,
-  parent?: GetPostThread.Post,
-): GetPostThread.Post => {
+  parent?: GetPostThread.AppBskyGetPostThreadPost,
+): GetPostThread.AppBskyGetPostThreadPost => {
   return {
     uri: row.uri,
     cid: row.cid,

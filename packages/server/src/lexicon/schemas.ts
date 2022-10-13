@@ -29,6 +29,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
     output: {
@@ -47,6 +48,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
     errors: [
@@ -80,6 +82,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'number',
           },
         },
+        $defs: {},
       },
     },
     output: {
@@ -92,6 +95,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -114,6 +118,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
     output: {
@@ -132,6 +137,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -143,11 +149,15 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {},
     input: {
       encoding: '',
-      schema: {},
+      schema: {
+        $defs: {},
+      },
     },
     output: {
       encoding: '',
-      schema: {},
+      schema: {
+        $defs: {},
+      },
     },
   },
   {
@@ -158,11 +168,15 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {},
     input: {
       encoding: '',
-      schema: {},
+      schema: {
+        $defs: {},
+      },
     },
     output: {
       encoding: '',
-      schema: {},
+      schema: {
+        $defs: {},
+      },
     },
   },
   {
@@ -173,11 +187,15 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {},
     input: {
       encoding: '',
-      schema: {},
+      schema: {
+        $defs: {},
+      },
     },
     output: {
       encoding: '',
-      schema: {},
+      schema: {
+        $defs: {},
+      },
     },
   },
   {
@@ -203,6 +221,7 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
   },
@@ -225,6 +244,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -236,13 +256,13 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       did: {
         type: 'string',
-        description: 'The DID of the repo.',
         required: true,
+        description: 'The DID of the repo.',
       },
       validate: {
         type: 'boolean',
-        description: 'Validate the records?',
         default: true,
+        description: 'Validate the records?',
       },
     },
     input: {
@@ -306,11 +326,14 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
     output: {
       encoding: 'application/json',
-      schema: {},
+      schema: {
+        $defs: {},
+      },
     },
   },
   {
@@ -321,23 +344,26 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       did: {
         type: 'string',
-        description: 'The DID of the repo.',
         required: true,
+        description: 'The DID of the repo.',
       },
       collection: {
         type: 'string',
-        description: 'The NSID of the record collection.',
         required: true,
+        description: 'The NSID of the record collection.',
       },
       validate: {
         type: 'boolean',
-        description: 'Validate the record?',
         default: true,
+        description: 'Validate the record?',
       },
     },
     input: {
       encoding: 'application/json',
-      schema: {},
+      description: 'The record to create',
+      schema: {
+        $defs: {},
+      },
     },
     output: {
       encoding: 'application/json',
@@ -352,6 +378,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -363,18 +390,18 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       did: {
         type: 'string',
-        description: 'The DID of the repo.',
         required: true,
+        description: 'The DID of the repo.',
       },
       collection: {
         type: 'string',
-        description: 'The NSID of the record collection.',
         required: true,
+        description: 'The NSID of the record collection.',
       },
       rkey: {
         type: 'string',
-        description: 'The key of the record.',
         required: true,
+        description: 'The key of the record.',
       },
     },
   },
@@ -387,8 +414,8 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       user: {
         type: 'string',
-        description: 'The username or DID of the repo.',
         required: true,
+        description: 'The username or DID of the repo.',
       },
     },
     output: {
@@ -416,6 +443,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'boolean',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -427,24 +455,24 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       user: {
         type: 'string',
-        description: 'The username or DID of the repo.',
         required: true,
+        description: 'The username or DID of the repo.',
       },
       collection: {
         type: 'string',
-        description: 'The NSID of the collection.',
         required: true,
+        description: 'The NSID of the collection.',
       },
       rkey: {
         type: 'string',
-        description: 'The key of the record.',
         required: true,
+        description: 'The key of the record.',
       },
       cid: {
         type: 'string',
+        required: false,
         description:
           'The CID of the version of the record. If not specified, then return the most recent version.',
-        required: false,
       },
     },
     output: {
@@ -463,6 +491,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'object',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -474,19 +503,19 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       user: {
         type: 'string',
-        description: 'The username or DID of the repo.',
         required: true,
+        description: 'The username or DID of the repo.',
       },
       collection: {
         type: 'string',
-        description: 'The NSID of the record type.',
         required: true,
+        description: 'The NSID of the record type.',
       },
       limit: {
         type: 'number',
-        description: 'The number of records to return. TODO-max number?',
-        default: 50,
         minimum: 1,
+        default: 50,
+        description: 'The number of records to return. TODO-max number?',
       },
       before: {
         type: 'string',
@@ -527,6 +556,7 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
   },
@@ -538,28 +568,30 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       did: {
         type: 'string',
-        description: 'The DID of the repo.',
         required: true,
+        description: 'The DID of the repo.',
       },
       collection: {
         type: 'string',
-        description: 'The NSID of the record type.',
         required: true,
+        description: 'The NSID of the record type.',
       },
       rkey: {
         type: 'string',
-        description: 'The TID of the record.',
         required: true,
+        description: 'The TID of the record.',
       },
       validate: {
         type: 'boolean',
-        description: 'Validate the record?',
         default: true,
+        description: 'Validate the record?',
       },
     },
     input: {
       encoding: 'application/json',
-      schema: {},
+      schema: {
+        $defs: {},
+      },
     },
     output: {
       encoding: 'application/json',
@@ -574,6 +606,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -593,6 +626,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
     output: {
@@ -600,6 +634,7 @@ export const methodSchemas: MethodSchema[] = [
       schema: {
         type: 'object',
         properties: {},
+        $defs: {},
       },
     },
   },
@@ -622,6 +657,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
     output: {
@@ -629,6 +665,7 @@ export const methodSchemas: MethodSchema[] = [
       schema: {
         type: 'object',
         properties: {},
+        $defs: {},
       },
     },
     errors: [
@@ -662,6 +699,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -673,8 +711,8 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       did: {
         type: 'string',
-        description: 'The DID of the repo.',
         required: true,
+        description: 'The DID of the repo.',
       },
       from: {
         type: 'string',
@@ -693,8 +731,8 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       did: {
         type: 'string',
-        description: 'The DID of the repo.',
         required: true,
+        description: 'The DID of the repo.',
       },
     },
     output: {
@@ -707,6 +745,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -718,8 +757,8 @@ export const methodSchemas: MethodSchema[] = [
     parameters: {
       did: {
         type: 'string',
-        description: 'The DID of the repo.',
         required: true,
+        description: 'The DID of the repo.',
       },
     },
     input: {
@@ -753,12 +792,12 @@ export const methodSchemas: MethodSchema[] = [
           feed: {
             type: 'array',
             items: {
-              $ref: '#/$defs/feedItem',
+              $ref: '#/$defs/appBskyGetAuthorFeedFeedItem',
             },
           },
         },
         $defs: {
-          feedItem: {
+          appBskyGetAuthorFeedFeedItem: {
             type: 'object',
             required: [
               'cursor',
@@ -782,10 +821,10 @@ export const methodSchemas: MethodSchema[] = [
                 type: 'string',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/appBskyGetAuthorFeedUser',
               },
               repostedBy: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/appBskyGetAuthorFeedUser',
               },
               record: {
                 type: 'object',
@@ -793,13 +832,13 @@ export const methodSchemas: MethodSchema[] = [
               embed: {
                 oneOf: [
                   {
-                    $ref: '#/$defs/recordEmbed',
+                    $ref: '#/$defs/appBskyGetAuthorFeedRecordEmbed',
                   },
                   {
-                    $ref: '#/$defs/externalEmbed',
+                    $ref: '#/$defs/appBskyGetAuthorFeedExternalEmbed',
                   },
                   {
-                    $ref: '#/$defs/unknownEmbed',
+                    $ref: '#/$defs/appBskyGetAuthorFeedUnknownEmbed',
                   },
                 ],
               },
@@ -829,7 +868,7 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
-          user: {
+          appBskyGetAuthorFeedUser: {
             type: 'object',
             required: ['did', 'name'],
             properties: {
@@ -845,7 +884,7 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
-          recordEmbed: {
+          appBskyGetAuthorFeedRecordEmbed: {
             type: 'object',
             required: ['type', 'author', 'record'],
             properties: {
@@ -853,14 +892,14 @@ export const methodSchemas: MethodSchema[] = [
                 const: 'record',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/appBskyGetAuthorFeedUser',
               },
               record: {
                 type: 'object',
               },
             },
           },
-          externalEmbed: {
+          appBskyGetAuthorFeedExternalEmbed: {
             type: 'object',
             required: ['type', 'uri', 'title', 'description', 'imageUri'],
             properties: {
@@ -881,7 +920,7 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
-          unknownEmbed: {
+          appBskyGetAuthorFeedUnknownEmbed: {
             type: 'object',
             required: ['type'],
             properties: {
@@ -891,6 +930,143 @@ export const methodSchemas: MethodSchema[] = [
                   enum: ['record', 'external'],
                 },
               },
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      feedItem: {
+        type: 'object',
+        required: [
+          'cursor',
+          'uri',
+          'cid',
+          'author',
+          'record',
+          'replyCount',
+          'repostCount',
+          'likeCount',
+          'indexedAt',
+        ],
+        properties: {
+          cursor: {
+            type: 'string',
+          },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            $ref: '#/$defs/appBskyGetAuthorFeedUser',
+          },
+          repostedBy: {
+            $ref: '#/$defs/appBskyGetAuthorFeedUser',
+          },
+          record: {
+            type: 'object',
+          },
+          embed: {
+            oneOf: [
+              {
+                $ref: '#/$defs/appBskyGetAuthorFeedRecordEmbed',
+              },
+              {
+                $ref: '#/$defs/appBskyGetAuthorFeedExternalEmbed',
+              },
+              {
+                $ref: '#/$defs/appBskyGetAuthorFeedUnknownEmbed',
+              },
+            ],
+          },
+          replyCount: {
+            type: 'number',
+          },
+          repostCount: {
+            type: 'number',
+          },
+          likeCount: {
+            type: 'number',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          myState: {
+            type: 'object',
+            properties: {
+              repost: {
+                type: 'string',
+              },
+              like: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      user: {
+        type: 'object',
+        required: ['did', 'name'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          name: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+        },
+      },
+      recordEmbed: {
+        type: 'object',
+        required: ['type', 'author', 'record'],
+        properties: {
+          type: {
+            const: 'record',
+          },
+          author: {
+            $ref: '#/$defs/appBskyGetAuthorFeedUser',
+          },
+          record: {
+            type: 'object',
+          },
+        },
+      },
+      externalEmbed: {
+        type: 'object',
+        required: ['type', 'uri', 'title', 'description', 'imageUri'],
+        properties: {
+          type: {
+            const: 'external',
+          },
+          uri: {
+            type: 'string',
+          },
+          title: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          imageUri: {
+            type: 'string',
+          },
+        },
+      },
+      unknownEmbed: {
+        type: 'object',
+        required: ['type'],
+        properties: {
+          type: {
+            type: 'string',
+            not: {
+              enum: ['record', 'external'],
             },
           },
         },
@@ -923,12 +1099,12 @@ export const methodSchemas: MethodSchema[] = [
           feed: {
             type: 'array',
             items: {
-              $ref: '#/$defs/feedItem',
+              $ref: '#/$defs/appBskyGetHomeFeedFeedItem',
             },
           },
         },
         $defs: {
-          feedItem: {
+          appBskyGetHomeFeedFeedItem: {
             type: 'object',
             required: [
               'cursor',
@@ -952,10 +1128,10 @@ export const methodSchemas: MethodSchema[] = [
                 type: 'string',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/appBskyGetHomeFeedUser',
               },
               repostedBy: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/appBskyGetHomeFeedUser',
               },
               record: {
                 type: 'object',
@@ -963,13 +1139,13 @@ export const methodSchemas: MethodSchema[] = [
               embed: {
                 oneOf: [
                   {
-                    $ref: '#/$defs/recordEmbed',
+                    $ref: '#/$defs/appBskyGetHomeFeedRecordEmbed',
                   },
                   {
-                    $ref: '#/$defs/externalEmbed',
+                    $ref: '#/$defs/appBskyGetHomeFeedExternalEmbed',
                   },
                   {
-                    $ref: '#/$defs/unknownEmbed',
+                    $ref: '#/$defs/appBskyGetHomeFeedUnknownEmbed',
                   },
                 ],
               },
@@ -999,7 +1175,7 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
-          user: {
+          appBskyGetHomeFeedUser: {
             type: 'object',
             required: ['did', 'name'],
             properties: {
@@ -1015,7 +1191,7 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
-          recordEmbed: {
+          appBskyGetHomeFeedRecordEmbed: {
             type: 'object',
             required: ['type', 'author', 'record'],
             properties: {
@@ -1023,14 +1199,14 @@ export const methodSchemas: MethodSchema[] = [
                 const: 'record',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/appBskyGetHomeFeedUser',
               },
               record: {
                 type: 'object',
               },
             },
           },
-          externalEmbed: {
+          appBskyGetHomeFeedExternalEmbed: {
             type: 'object',
             required: ['type', 'uri', 'title', 'description', 'imageUri'],
             properties: {
@@ -1051,7 +1227,7 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
-          unknownEmbed: {
+          appBskyGetHomeFeedUnknownEmbed: {
             type: 'object',
             required: ['type'],
             properties: {
@@ -1061,6 +1237,143 @@ export const methodSchemas: MethodSchema[] = [
                   enum: ['record', 'external'],
                 },
               },
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      feedItem: {
+        type: 'object',
+        required: [
+          'cursor',
+          'uri',
+          'cid',
+          'author',
+          'record',
+          'replyCount',
+          'repostCount',
+          'likeCount',
+          'indexedAt',
+        ],
+        properties: {
+          cursor: {
+            type: 'string',
+          },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            $ref: '#/$defs/appBskyGetHomeFeedUser',
+          },
+          repostedBy: {
+            $ref: '#/$defs/appBskyGetHomeFeedUser',
+          },
+          record: {
+            type: 'object',
+          },
+          embed: {
+            oneOf: [
+              {
+                $ref: '#/$defs/appBskyGetHomeFeedRecordEmbed',
+              },
+              {
+                $ref: '#/$defs/appBskyGetHomeFeedExternalEmbed',
+              },
+              {
+                $ref: '#/$defs/appBskyGetHomeFeedUnknownEmbed',
+              },
+            ],
+          },
+          replyCount: {
+            type: 'number',
+          },
+          repostCount: {
+            type: 'number',
+          },
+          likeCount: {
+            type: 'number',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          myState: {
+            type: 'object',
+            properties: {
+              repost: {
+                type: 'string',
+              },
+              like: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      user: {
+        type: 'object',
+        required: ['did', 'name'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          name: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+        },
+      },
+      recordEmbed: {
+        type: 'object',
+        required: ['type', 'author', 'record'],
+        properties: {
+          type: {
+            const: 'record',
+          },
+          author: {
+            $ref: '#/$defs/appBskyGetHomeFeedUser',
+          },
+          record: {
+            type: 'object',
+          },
+        },
+      },
+      externalEmbed: {
+        type: 'object',
+        required: ['type', 'uri', 'title', 'description', 'imageUri'],
+        properties: {
+          type: {
+            const: 'external',
+          },
+          uri: {
+            type: 'string',
+          },
+          title: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          imageUri: {
+            type: 'string',
+          },
+        },
+      },
+      unknownEmbed: {
+        type: 'object',
+        required: ['type'],
+        properties: {
+          type: {
+            type: 'string',
+            not: {
+              enum: ['record', 'external'],
             },
           },
         },
@@ -1128,6 +1441,7 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
   },
@@ -1146,6 +1460,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'number',
           },
         },
+        $defs: {},
       },
     },
   },
@@ -1171,12 +1486,12 @@ export const methodSchemas: MethodSchema[] = [
           notifications: {
             type: 'array',
             items: {
-              $ref: '#/$defs/notification',
+              $ref: '#/$defs/appBskyGetNotificationsNotification',
             },
           },
         },
         $defs: {
-          notification: {
+          appBskyGetNotificationsNotification: {
             type: 'object',
             required: [
               'uri',
@@ -1234,6 +1549,63 @@ export const methodSchemas: MethodSchema[] = [
         },
       },
     },
+    defs: {
+      notification: {
+        type: 'object',
+        required: [
+          'uri',
+          'cid',
+          'author',
+          'reason',
+          'record',
+          'isRead',
+          'indexedAt',
+        ],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'uri',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'object',
+            required: ['did', 'name'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              name: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+            },
+          },
+          reason: {
+            type: 'string',
+            $comment:
+              "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'.",
+          },
+          reasonSubject: {
+            type: 'string',
+          },
+          record: {
+            type: 'object',
+          },
+          isRead: {
+            type: 'boolean',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+        },
+      },
+    },
   },
   {
     lexicon: 1,
@@ -1255,11 +1627,11 @@ export const methodSchemas: MethodSchema[] = [
         required: ['thread'],
         properties: {
           thread: {
-            $ref: '#/$defs/post',
+            $ref: '#/$defs/appBskyGetPostThreadPost',
           },
         },
         $defs: {
-          post: {
+          appBskyGetPostThreadPost: {
             type: 'object',
             required: [
               'uri',
@@ -1279,7 +1651,7 @@ export const methodSchemas: MethodSchema[] = [
                 type: 'string',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/appBskyGetPostThreadUser',
               },
               record: {
                 type: 'object',
@@ -1287,18 +1659,18 @@ export const methodSchemas: MethodSchema[] = [
               embed: {
                 oneOf: [
                   {
-                    $ref: '#/$defs/recordEmbed',
+                    $ref: '#/$defs/appBskyGetPostThreadRecordEmbed',
                   },
                   {
-                    $ref: '#/$defs/externalEmbed',
+                    $ref: '#/$defs/appBskyGetPostThreadExternalEmbed',
                   },
                   {
-                    $ref: '#/$defs/unknownEmbed',
+                    $ref: '#/$defs/appBskyGetPostThreadUnknownEmbed',
                   },
                 ],
               },
               parent: {
-                $ref: '#/$defs/post',
+                $ref: '#/$defs/appBskyGetPostThreadPost',
               },
               replyCount: {
                 type: 'number',
@@ -1306,7 +1678,7 @@ export const methodSchemas: MethodSchema[] = [
               replies: {
                 type: 'array',
                 items: {
-                  $ref: '#/$defs/post',
+                  $ref: '#/$defs/appBskyGetPostThreadPost',
                 },
               },
               likeCount: {
@@ -1332,7 +1704,7 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
-          user: {
+          appBskyGetPostThreadUser: {
             type: 'object',
             required: ['did', 'name'],
             properties: {
@@ -1348,7 +1720,7 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
-          recordEmbed: {
+          appBskyGetPostThreadRecordEmbed: {
             type: 'object',
             required: ['type', 'author', 'record'],
             properties: {
@@ -1356,14 +1728,14 @@ export const methodSchemas: MethodSchema[] = [
                 const: 'record',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/appBskyGetPostThreadUser',
               },
               record: {
                 type: 'object',
               },
             },
           },
-          externalEmbed: {
+          appBskyGetPostThreadExternalEmbed: {
             type: 'object',
             required: ['type', 'uri', 'title', 'description', 'imageUri'],
             properties: {
@@ -1384,7 +1756,7 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
-          unknownEmbed: {
+          appBskyGetPostThreadUnknownEmbed: {
             type: 'object',
             required: ['type'],
             properties: {
@@ -1394,6 +1766,145 @@ export const methodSchemas: MethodSchema[] = [
                   enum: ['record', 'external'],
                 },
               },
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      post: {
+        type: 'object',
+        required: [
+          'uri',
+          'cid',
+          'author',
+          'record',
+          'replyCount',
+          'likeCount',
+          'repostCount',
+          'indexedAt',
+        ],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            $ref: '#/$defs/appBskyGetPostThreadUser',
+          },
+          record: {
+            type: 'object',
+          },
+          embed: {
+            oneOf: [
+              {
+                $ref: '#/$defs/appBskyGetPostThreadRecordEmbed',
+              },
+              {
+                $ref: '#/$defs/appBskyGetPostThreadExternalEmbed',
+              },
+              {
+                $ref: '#/$defs/appBskyGetPostThreadUnknownEmbed',
+              },
+            ],
+          },
+          parent: {
+            $ref: '#/$defs/appBskyGetPostThreadPost',
+          },
+          replyCount: {
+            type: 'number',
+          },
+          replies: {
+            type: 'array',
+            items: {
+              $ref: '#/$defs/appBskyGetPostThreadPost',
+            },
+          },
+          likeCount: {
+            type: 'number',
+          },
+          repostCount: {
+            type: 'number',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          myState: {
+            type: 'object',
+            properties: {
+              repost: {
+                type: 'string',
+              },
+              like: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      user: {
+        type: 'object',
+        required: ['did', 'name'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          name: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+        },
+      },
+      recordEmbed: {
+        type: 'object',
+        required: ['type', 'author', 'record'],
+        properties: {
+          type: {
+            const: 'record',
+          },
+          author: {
+            $ref: '#/$defs/appBskyGetPostThreadUser',
+          },
+          record: {
+            type: 'object',
+          },
+        },
+      },
+      externalEmbed: {
+        type: 'object',
+        required: ['type', 'uri', 'title', 'description', 'imageUri'],
+        properties: {
+          type: {
+            const: 'external',
+          },
+          uri: {
+            type: 'string',
+          },
+          title: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          imageUri: {
+            type: 'string',
+          },
+        },
+      },
+      unknownEmbed: {
+        type: 'object',
+        required: ['type'],
+        properties: {
+          type: {
+            type: 'string',
+            not: {
+              enum: ['record', 'external'],
             },
           },
         },
@@ -1449,7 +1960,7 @@ export const methodSchemas: MethodSchema[] = [
           badges: {
             type: 'array',
             items: {
-              $ref: '#/$defs/badge',
+              $ref: '#/$defs/appBskyGetProfileBadge',
             },
           },
           myState: {
@@ -1462,7 +1973,7 @@ export const methodSchemas: MethodSchema[] = [
           },
         },
         $defs: {
-          badge: {
+          appBskyGetProfileBadge: {
             type: 'object',
             required: ['uri', 'cid'],
             properties: {
@@ -1505,6 +2016,52 @@ export const methodSchemas: MethodSchema[] = [
                 format: 'date-time',
               },
             },
+          },
+        },
+      },
+    },
+    defs: {
+      badge: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          error: {
+            type: 'string',
+          },
+          issuer: {
+            type: 'object',
+            required: ['did', 'name', 'displayName'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              name: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+            },
+          },
+          assertion: {
+            type: 'object',
+            required: ['type'],
+            properties: {
+              type: {
+                type: 'string',
+              },
+            },
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
           },
         },
       },
@@ -1568,6 +2125,7 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
   },
@@ -1639,6 +2197,7 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
   },
@@ -1710,6 +2269,7 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
   },
@@ -1730,11 +2290,14 @@ export const methodSchemas: MethodSchema[] = [
             format: 'date-time',
           },
         },
+        $defs: {},
       },
     },
     output: {
       encoding: 'application/json',
-      schema: {},
+      schema: {
+        $defs: {},
+      },
     },
   },
 ]
@@ -1751,16 +2314,16 @@ export const recordSchemas: RecordSchema[] = [
         assertion: {
           oneOf: [
             {
-              $ref: '#/$defs/inviteAssertion',
+              $ref: '#/$defs/appBskyBadgeInviteAssertion',
             },
             {
-              $ref: '#/$defs/employeeAssertion',
+              $ref: '#/$defs/appBskyBadgeEmployeeAssertion',
             },
             {
-              $ref: '#/$defs/tagAssertion',
+              $ref: '#/$defs/appBskyBadgeTagAssertion',
             },
             {
-              $ref: '#/$defs/unknownAssertion',
+              $ref: '#/$defs/appBskyBadgeUnknownAssertion',
             },
           ],
         },
@@ -1773,7 +2336,7 @@ export const recordSchemas: RecordSchema[] = [
         },
       },
       $defs: {
-        inviteAssertion: {
+        appBskyBadgeInviteAssertion: {
           type: 'object',
           required: ['type'],
           properties: {
@@ -1782,7 +2345,7 @@ export const recordSchemas: RecordSchema[] = [
             },
           },
         },
-        employeeAssertion: {
+        appBskyBadgeEmployeeAssertion: {
           type: 'object',
           required: ['type'],
           properties: {
@@ -1791,7 +2354,7 @@ export const recordSchemas: RecordSchema[] = [
             },
           },
         },
-        tagAssertion: {
+        appBskyBadgeTagAssertion: {
           type: 'object',
           required: ['type', 'tag'],
           properties: {
@@ -1804,7 +2367,7 @@ export const recordSchemas: RecordSchema[] = [
             },
           },
         },
-        unknownAssertion: {
+        appBskyBadgeUnknownAssertion: {
           type: 'object',
           required: ['type'],
           properties: {
@@ -1813,6 +2376,51 @@ export const recordSchemas: RecordSchema[] = [
               not: {
                 enum: ['invite', 'employee', 'tag'],
               },
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      inviteAssertion: {
+        type: 'object',
+        required: ['type'],
+        properties: {
+          type: {
+            const: 'invite',
+          },
+        },
+      },
+      employeeAssertion: {
+        type: 'object',
+        required: ['type'],
+        properties: {
+          type: {
+            const: 'employee',
+          },
+        },
+      },
+      tagAssertion: {
+        type: 'object',
+        required: ['type', 'tag'],
+        properties: {
+          type: {
+            const: 'tag',
+          },
+          tag: {
+            type: 'string',
+            maxLength: 64,
+          },
+        },
+      },
+      unknownAssertion: {
+        type: 'object',
+        required: ['type'],
+        properties: {
+          type: {
+            type: 'string',
+            not: {
+              enum: ['invite', 'employee', 'tag'],
             },
           },
         },
@@ -1836,6 +2444,7 @@ export const recordSchemas: RecordSchema[] = [
           format: 'date-time',
         },
       },
+      $defs: {},
     },
   },
   {
@@ -1847,7 +2456,7 @@ export const recordSchemas: RecordSchema[] = [
       required: ['subject', 'createdAt'],
       properties: {
         subject: {
-          $ref: '#/$defs/subject',
+          $ref: '#/$defs/appBskyLikeSubject',
         },
         createdAt: {
           type: 'string',
@@ -1855,7 +2464,7 @@ export const recordSchemas: RecordSchema[] = [
         },
       },
       $defs: {
-        subject: {
+        appBskyLikeSubject: {
           type: 'object',
           required: ['uri', 'cid'],
           properties: {
@@ -1865,6 +2474,20 @@ export const recordSchemas: RecordSchema[] = [
             cid: {
               type: 'string',
             },
+          },
+        },
+      },
+    },
+    defs: {
+      subject: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
           },
         },
       },
@@ -1882,12 +2505,12 @@ export const recordSchemas: RecordSchema[] = [
         media: {
           type: 'array',
           items: {
-            $ref: '#/$defs/mediaEmbed',
+            $ref: '#/$defs/appBskyMediaEmbedMediaEmbed',
           },
         },
       },
       $defs: {
-        mediaEmbed: {
+        appBskyMediaEmbedMediaEmbed: {
           type: 'object',
           required: ['original'],
           properties: {
@@ -1895,14 +2518,14 @@ export const recordSchemas: RecordSchema[] = [
               type: 'string',
             },
             thumb: {
-              $ref: '#/$defs/mediaEmbedBlob',
+              $ref: '#/$defs/appBskyMediaEmbedMediaEmbedBlob',
             },
             original: {
-              $ref: '#/$defs/mediaEmbedBlob',
+              $ref: '#/$defs/appBskyMediaEmbedMediaEmbedBlob',
             },
           },
         },
-        mediaEmbedBlob: {
+        appBskyMediaEmbedMediaEmbedBlob: {
           type: 'object',
           required: ['mimeType', 'blobId'],
           properties: {
@@ -1912,6 +2535,35 @@ export const recordSchemas: RecordSchema[] = [
             blobId: {
               type: 'string',
             },
+          },
+        },
+      },
+    },
+    defs: {
+      mediaEmbed: {
+        type: 'object',
+        required: ['original'],
+        properties: {
+          alt: {
+            type: 'string',
+          },
+          thumb: {
+            $ref: '#/$defs/appBskyMediaEmbedMediaEmbedBlob',
+          },
+          original: {
+            $ref: '#/$defs/appBskyMediaEmbedMediaEmbedBlob',
+          },
+        },
+      },
+      mediaEmbedBlob: {
+        type: 'object',
+        required: ['mimeType', 'blobId'],
+        properties: {
+          mimeType: {
+            type: 'string',
+          },
+          blobId: {
+            type: 'string',
           },
         },
       },
@@ -1930,17 +2582,17 @@ export const recordSchemas: RecordSchema[] = [
           maxLength: 256,
         },
         entities: {
-          $ref: '#/$defs/entity',
+          $ref: '#/$defs/appBskyPostEntity',
         },
         reply: {
           type: 'object',
           required: ['root', 'parent'],
           properties: {
             root: {
-              $ref: '#/$defs/postRef',
+              $ref: '#/$defs/appBskyPostPostRef',
             },
             parent: {
-              $ref: '#/$defs/postRef',
+              $ref: '#/$defs/appBskyPostPostRef',
             },
           },
         },
@@ -1950,26 +2602,14 @@ export const recordSchemas: RecordSchema[] = [
         },
       },
       $defs: {
-        postRef: {
-          type: 'object',
-          required: ['uri', 'cid'],
-          properties: {
-            uri: {
-              type: 'string',
-            },
-            cid: {
-              type: 'string',
-            },
-          },
-        },
-        entity: {
+        appBskyPostEntity: {
           type: 'array',
           items: {
             type: 'object',
             required: ['index', 'type', 'value'],
             properties: {
               index: {
-                $ref: '#/$defs/textSlice',
+                $ref: '#/$defs/appBskyPostTextSlice',
               },
               type: {
                 type: 'string',
@@ -1982,7 +2622,7 @@ export const recordSchemas: RecordSchema[] = [
             },
           },
         },
-        textSlice: {
+        appBskyPostTextSlice: {
           type: 'array',
           items: [
             {
@@ -1995,6 +2635,64 @@ export const recordSchemas: RecordSchema[] = [
           minItems: 2,
           maxItems: 2,
         },
+        appBskyPostPostRef: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      postRef: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+      entity: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['index', 'type', 'value'],
+          properties: {
+            index: {
+              $ref: '#/$defs/appBskyPostTextSlice',
+            },
+            type: {
+              type: 'string',
+              $comment: "Expected values are 'mention', 'hashtag', and 'link'.",
+            },
+            value: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      textSlice: {
+        type: 'array',
+        items: [
+          {
+            type: 'number',
+          },
+          {
+            type: 'number',
+          },
+        ],
+        minItems: 2,
+        maxItems: 2,
       },
     },
   },
@@ -2017,12 +2715,12 @@ export const recordSchemas: RecordSchema[] = [
         badges: {
           type: 'array',
           items: {
-            $ref: '#/$defs/badgeRef',
+            $ref: '#/$defs/appBskyProfileBadgeRef',
           },
         },
       },
       $defs: {
-        badgeRef: {
+        appBskyProfileBadgeRef: {
           type: 'object',
           required: ['uri', 'cid'],
           properties: {
@@ -2032,6 +2730,20 @@ export const recordSchemas: RecordSchema[] = [
             cid: {
               type: 'string',
             },
+          },
+        },
+      },
+    },
+    defs: {
+      badgeRef: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
           },
         },
       },
@@ -2046,7 +2758,7 @@ export const recordSchemas: RecordSchema[] = [
       required: ['subject', 'createdAt'],
       properties: {
         subject: {
-          $ref: '#/$defs/subject',
+          $ref: '#/$defs/appBskyRepostSubject',
         },
         createdAt: {
           type: 'string',
@@ -2054,7 +2766,7 @@ export const recordSchemas: RecordSchema[] = [
         },
       },
       $defs: {
-        subject: {
+        appBskyRepostSubject: {
           type: 'object',
           required: ['uri', 'cid'],
           properties: {
@@ -2064,6 +2776,20 @@ export const recordSchemas: RecordSchema[] = [
             cid: {
               type: 'string',
             },
+          },
+        },
+      },
+    },
+    defs: {
+      subject: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
           },
         },
       },

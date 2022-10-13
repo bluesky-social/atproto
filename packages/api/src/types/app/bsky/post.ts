@@ -5,9 +5,9 @@
  * @minItems 2
  * @maxItems 2
  */
-export type TextSlice = [number, number]
-export type Entity = {
-  index: TextSlice,
+export type AppBskyPostTextSlice = [number, number]
+export type AppBskyPostEntity = {
+  index: AppBskyPostTextSlice,
   type: string,
   value: string,
   [k: string]: unknown,
@@ -15,16 +15,16 @@ export type Entity = {
 
 export interface Record {
   text: string;
-  entities?: Entity;
+  entities?: AppBskyPostEntity;
   reply?: {
-    root: PostRef,
-    parent: PostRef,
+    root: AppBskyPostPostRef,
+    parent: AppBskyPostPostRef,
     [k: string]: unknown,
   };
   createdAt: string;
   [k: string]: unknown;
 }
-export interface PostRef {
+export interface AppBskyPostPostRef {
   uri: string;
   cid: string;
   [k: string]: unknown;

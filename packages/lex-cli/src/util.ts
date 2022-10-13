@@ -54,14 +54,16 @@ export function readSchema(path: string): Schema {
   }
   if (obj.type === 'query' || obj.type === 'procedure') {
     try {
-      return methodSchema.parse(obj)
+      methodSchema.parse(obj)
+      return obj
     } catch (e) {
       console.error(`Invalid method schema in file`, path)
       throw e
     }
   } else if (obj.type === 'record') {
     try {
-      return recordSchema.parse(obj)
+      recordSchema.parse(obj)
+      return obj
     } catch (e) {
       console.error(`Invalid record schema in file`, path)
       throw e

@@ -14,38 +14,38 @@
       "properties": {
         "notifications": {
           "type": "array",
-          "items": {"$ref": "#/$defs/notification"}
+          "items": {"$ref": "#/defs/notification"}
         }
-      },
-      "$defs": {
-        "notification": {
+      }
+    }
+  },
+  "defs": {
+    "notification": {
+      "type": "object",
+      "required": ["uri", "cid", "author", "reason", "record", "isRead", "indexedAt"],
+      "properties": {
+        "uri": {"type": "string", "format": "uri"},
+        "cid": {"type": "string" },
+        "author": {
           "type": "object",
-          "required": ["uri", "cid", "author", "reason", "record", "isRead", "indexedAt"],
+          "required": ["did", "name"],
           "properties": {
-            "uri": {"type": "string", "format": "uri"},
-            "cid": {"type": "string" },
-            "author": {
-              "type": "object",
-              "required": ["did", "name"],
-              "properties": {
-                "did": {"type": "string"},
-                "name": {"type": "string"},
-                "displayName": {
-                  "type": "string",
-                  "maxLength": 64
-                }
-              }
-            },
-            "reason": {
+            "did": {"type": "string"},
+            "name": {"type": "string"},
+            "displayName": {
               "type": "string",
-              "$comment": "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'."
-            },
-            "reasonSubject": {"type": "string"},
-            "record": {"type": "object"},
-            "isRead": {"type": "boolean"},
-            "indexedAt": {"type": "string", "format": "date-time"}
+              "maxLength": 64
+            }
           }
-        }
+        },
+        "reason": {
+          "type": "string",
+          "$comment": "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'."
+        },
+        "reasonSubject": {"type": "string"},
+        "record": {"type": "object"},
+        "isRead": {"type": "boolean"},
+        "indexedAt": {"type": "string", "format": "date-time"}
       }
     }
   }

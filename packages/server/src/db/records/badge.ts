@@ -79,7 +79,7 @@ const insertFn =
       creator: uri.host,
       subject: obj.subject,
       assertionType: obj.assertion.type,
-      assertionTag: (obj.assertion as Badge.TagAssertion).tag,
+      assertionTag: (obj.assertion as Badge.AppBskyBadgeTagAssertion).tag,
       createdAt: obj.createdAt,
       indexedAt: new Date().toISOString(),
     }
