@@ -54,6 +54,7 @@ export class SeedClient {
   likes: Record<string, Record<string, AdxUri>>
   replies: Record<string, { text: string; ref: Reference }[]>
   reposts: Record<string, Reference[]>
+  badges: Record<string, Record<string, Reference[]>>
   dids: Record<string, string>
 
   constructor(public client: ServiceClient) {
@@ -64,6 +65,7 @@ export class SeedClient {
     this.likes = {}
     this.replies = {}
     this.reposts = {}
+    this.badges = {}
     this.dids = {}
   }
 
@@ -117,11 +119,12 @@ export class SeedClient {
       this.getHeaders(by),
     )
     this.posts[by] ??= []
-    this.posts[by].push({
+    const post = {
       text,
       ref: new Reference(res.uri, res.cid),
-    })
-    return this.posts[by].at(-1)
+    }
+    this.posts[by].push(post)
+    return post
   }
 
   async like(by: string, subject: Reference) {
@@ -149,11 +152,12 @@ export class SeedClient {
       this.getHeaders(by),
     )
     this.replies[by] ??= []
-    this.replies[by].push({
+    const reply = {
       text,
       ref: new Reference(res.uri, res.cid),
-    })
-    return this.replies[by].at(-1)
+    }
+    this.replies[by].push(reply)
+    return reply
   }
 
   async repost(by: string, subject: Reference) {
@@ -163,8 +167,40 @@ export class SeedClient {
       this.getHeaders(by),
     )
     this.reposts[by] ??= []
-    this.reposts[by].push(new Reference(res.uri, res.cid))
-    return this.reposts[by].at(-1)
+    const repost = new Reference(res.uri, res.cid)
+    this.reposts[by].push(repost)
+    return repost
+  }
+
+  async giveBadge(from: string, to: string, type: string, tag?: string) {
+    const res = await this.client.app.bsky.badge.create(
+      { did: from },
+      {
+        subject: to,
+        assertion: {
+          type,
+          tag,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(from),
+    )
+    this.badges[from] ??= {}
+    this.badges[from][to] ??= []
+    const badge = new Reference(res.uri, res.cid)
+    this.badges[from][to].push(badge)
+    return badge
+  }
+
+  async acceptBadge(by: string, ref: Reference) {
+    await this.client.app.bsky.acceptedBadge.create(
+      { did: by },
+      {
+        subject: ref.raw,
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
   }
 
   getHeaders(did: string) {

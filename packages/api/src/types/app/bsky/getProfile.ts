@@ -33,10 +33,11 @@ export interface AppBskyGetProfileBadge {
   issuer?: {
     did: string,
     name: string,
-    displayName: string,
+    displayName?: string,
   };
   assertion?: {
     type: string,
+    tag?: string,
   };
   createdAt?: string;
 }

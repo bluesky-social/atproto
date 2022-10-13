@@ -2053,7 +2053,7 @@ export const methodSchemas: MethodSchema[] = [
               },
               issuer: {
                 type: 'object',
-                required: ['did', 'name', 'displayName'],
+                required: ['did', 'name'],
                 properties: {
                   did: {
                     type: 'string',
@@ -2073,6 +2073,10 @@ export const methodSchemas: MethodSchema[] = [
                 properties: {
                   type: {
                     type: 'string',
+                  },
+                  tag: {
+                    type: 'string',
+                    maxLength: 64,
                   },
                 },
               },
@@ -2101,7 +2105,7 @@ export const methodSchemas: MethodSchema[] = [
           },
           issuer: {
             type: 'object',
-            required: ['did', 'name', 'displayName'],
+            required: ['did', 'name'],
             properties: {
               did: {
                 type: 'string',
@@ -2121,6 +2125,10 @@ export const methodSchemas: MethodSchema[] = [
             properties: {
               type: {
                 type: 'string',
+              },
+              tag: {
+                type: 'string',
+                maxLength: 64,
               },
             },
           },
