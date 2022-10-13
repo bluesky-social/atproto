@@ -4,6 +4,7 @@
   "main": "dist/cli.js",
   "scripts": {
     "build": "node ./build.js",
+    "postbuild" : "tsc --build tsconfig.build.json",
     "start": "node dist/cli.js",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
