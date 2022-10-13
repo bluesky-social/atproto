@@ -10,8 +10,18 @@ export default function (server: Server) {
     const { db, auth } = locals.get(res)
     auth.getUserDidOrThrow(req)
 
-    term = term.trim()
+    // Remove @ in case user types username that way
+    term = term.trim().replace(/^@/g, '')
     limit = Math.min(limit ?? 25, 100)
+
+    if (!term) {
+      return {
+        encoding: 'application/json',
+        body: {
+          users: [],
+        },
+      }
+    }
 
     const results =
       db.dialect === 'pg'
@@ -35,10 +45,6 @@ export default function (server: Server) {
 
 const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
   const { ref } = db.db.dynamic
-
-  if (!term) {
-    return []
-  }
 
   // Performing matching by word using "strict word similarity" operator.
   // The more characters the user gives us, the more we can ratchet down
@@ -74,7 +80,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
         .as('accounts_and_profiles'),
     )
     .selectAll()
-    .distinctOn('did') // Per did, take whichever of account and profile score is best
+    .distinctOn('did') // Per did, take whichever of account and profile distance is best
     .orderBy('did')
     .orderBy('distance')
 
@@ -94,8 +100,39 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
     .execute()
 }
 
-const getResultsSqlite: GetResultsFn = async (db, opts) => {
-  throw new Error('Search not yet implemented for sqlite') // @TODO
+const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
+  const { ref } = db.db.dynamic
+
+  // Take the first three words in the search term. We're going to build a dynamic query
+  // based on the number of words, so to keep things predictable just ignore words 4 and
+  // beyond. We also remove the special wildcard characters supported by the LIKE operator,
+  // since that's where these values are heading.
+  const safeWords = term.replace(/[%_]/g, '').split(/\s+/).slice(0, 3)
+
+  // We'll ensured there's a space before each word in both textForMatch and in safeWords,
+  // so that we can reliably match word prefixes using LIKE operator.
+  const textForMatch = sql`lower(' ' || ${ref(
+    'user.username',
+  )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
+
+  return await db.db
+    .selectFrom('user')
+    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user.did')
+    .where((q) => {
+      safeWords.forEach((word) => {
+        // Match word prefixes against contents of username and displayName
+        q = q.where(textForMatch, 'like', `% ${word.toLowerCase()}%`)
+      })
+      return q
+    })
+    .orderBy('user.username')
+    .limit(limit)
+    .select([
+      'user.did as did',
+      'user.username as name',
+      'profile.displayName as displayName',
+    ])
+    .execute()
 }
 
 type GetResultsFn = (
