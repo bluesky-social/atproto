@@ -8,27 +8,18 @@ import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
 import { AppBskyGetAuthorFeed, AppBskyGetHomeFeed } from '@adxp/api'
 
-const USE_TEST_SERVER = true
-
 const ADMIN_PASSWORD = 'admin-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
-  app?: App
+  app: App
   close: CloseFn
 }
 
 export const runTestServer = async (
   params: Partial<ServerConfig> = {},
 ): Promise<TestServerInfo> => {
-  if (!USE_TEST_SERVER) {
-    return {
-      url: 'http://localhost:2583',
-      close: async () => {},
-    }
-  }
-
   const pdsPort = await getPort()
   const keypair = await crypto.EcdsaKeypair.create()
 

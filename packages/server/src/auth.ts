@@ -1,4 +1,5 @@
 import * as auth from '@adxp/auth'
+import { AuthRequiredError } from '@adxp/xrpc-server'
 import * as uint8arrays from 'uint8arrays'
 import { DidResolver } from '@adxp/did-resolver'
 import express from 'express'
@@ -43,6 +44,14 @@ export class ServerAuth {
     if (typeof sub !== 'string') return null
     if (!sub.startsWith('did:')) return null
     return sub
+  }
+
+  getUserDidOrThrow(req: express.Request): string {
+    const did = this.getUserDid(req)
+    if (did === null) {
+      throw new AuthRequiredError()
+    }
+    return did
   }
 
   verifyUser(req: express.Request, did: string): boolean {
