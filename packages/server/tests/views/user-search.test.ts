@@ -1,5 +1,5 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import { runTestServer, CloseFn } from '../_util'
+import { runTestServer, forSnapshot, CloseFn } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 import { App } from '../../src'
@@ -28,7 +28,7 @@ describe('pds user search views', () => {
     await close()
   })
 
-  it('typeahad gives relevant results', async () => {
+  it('typeahead gives relevant results', async () => {
     const result = await client.app.bsky.getUsersTypeahead(
       { term: 'car' },
       undefined,
@@ -65,9 +65,15 @@ describe('pds user search views', () => {
     ]
 
     shouldNotContain.forEach((name) => expect(names).not.toContain(name))
+
+    if (locals.get(app).db.dialect === 'pg') {
+      expect(forSnapshot(result.data.users)).toMatchSnapshot('postgres')
+    } else {
+      expect(forSnapshot(result.data.users)).toMatchSnapshot('sqlite')
+    }
   })
 
-  it('typeahead gives empty result set when given empty term', async () => {
+  it('typeahead gives empty result set when provided empty term', async () => {
     const result = await client.app.bsky.getUsersTypeahead(
       { term: '' },
       undefined,
@@ -93,5 +99,78 @@ describe('pds user search views', () => {
     )
 
     expect(limited.data.users).toEqual(full.data.users.slice(0, 5))
+  })
+
+  it('search gives relevant results', async () => {
+    const result = await client.app.bsky.getUsersSearch(
+      { term: 'car' },
+      undefined,
+      { headers },
+    )
+
+    const names = result.data.users.map((u) => u.name)
+
+    const shouldContain = [
+      'Cara.Wiegand69',
+      'Eudora_Dietrich4', // Carol Littel
+      'Shane_Torphy52', // Sadie Carter
+      'Aliya.Hodkiewicz', // Carlton Abernathy IV
+      'Carlos6',
+      'Carolina_McDermott77',
+    ]
+
+    shouldContain.forEach((name) => expect(names).toContain(name))
+
+    if (locals.get(app).db.dialect === 'pg') {
+      expect(names).toContain('Cayla_Marquardt39') // Fuzzy match supported by postgres
+    } else {
+      expect(names).not.toContain('Cayla_Marquardt39')
+    }
+
+    const shouldNotContain = [
+      'Sven70',
+      'Hilario84',
+      'Santa_Hermann78',
+      'Dylan61',
+      'Preston_Harris',
+      'Loyce95',
+      'Melyna_Zboncak',
+    ]
+
+    shouldNotContain.forEach((name) => expect(names).not.toContain(name))
+
+    if (locals.get(app).db.dialect === 'pg') {
+      expect(forSnapshot(result.data.users)).toMatchSnapshot('postgres')
+    } else {
+      expect(forSnapshot(result.data.users)).toMatchSnapshot('sqlite')
+    }
+  })
+
+  it('search gives empty result set when provided empty term', async () => {
+    const result = await client.app.bsky.getUsersSearch(
+      { term: '' },
+      undefined,
+      { headers },
+    )
+
+    expect(result.data.users).toEqual([])
+  })
+
+  it('search paginates', async () => {
+    const full = await client.app.bsky.getUsersSearch(
+      { term: 'p' },
+      undefined,
+      { headers },
+    )
+
+    expect(full.data.users.length).toBeGreaterThan(5)
+
+    const limited = await client.app.bsky.getUsersSearch(
+      { term: 'p', limit: 3, before: full.data.users[0].cursor },
+      undefined,
+      { headers },
+    )
+
+    expect(limited.data.users).toEqual(full.data.users.slice(1, 4))
   })
 })

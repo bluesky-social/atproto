@@ -70,7 +70,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
   const emptyQb = db.db
     .selectFrom('user')
     .where(sql`1 = 0`)
-    .select([sql.literal('').as('did'), sql.literal(1).as('distance')])
+    .select([sql.literal('').as('did'), sql<number>`0`.as('distance')])
 
   const resultsQb = db.db
     .selectFrom(
