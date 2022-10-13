@@ -6,7 +6,8 @@ import { CID } from 'multiformats/cid'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
-import { AppBskyGetAuthorFeed, AppBskyGetHomeFeed } from '@adxp/api'
+import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/getAuthorFeed'
+import * as GetHomeFeed from '../src/lexicon/types/app/bsky/getHomeFeed'
 
 const USE_TEST_SERVER = true
 
@@ -146,7 +147,8 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-type FeedItem = AppBskyGetAuthorFeed.FeedItem & AppBskyGetHomeFeed.FeedItem
+type FeedItem = GetAuthorFeed.AppBskyGetAuthorFeedFeedItem &
+  GetHomeFeed.AppBskyGetHomeFeedFeedItem
 
 export const getCursors = (feed: FeedItem[]) => feed.map((item) => item.cursor)
 

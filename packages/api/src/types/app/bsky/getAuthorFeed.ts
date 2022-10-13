@@ -16,16 +16,19 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  feed: FeedItem[];
+  feed: AppBskyGetAuthorFeedFeedItem[];
 }
-export interface FeedItem {
+export interface AppBskyGetAuthorFeedFeedItem {
   cursor: string;
   uri: string;
   cid: string;
-  author: User;
-  repostedBy?: User;
+  author: AppBskyGetAuthorFeedUser;
+  repostedBy?: AppBskyGetAuthorFeedUser;
   record: {};
-  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
+  embed?:
+    | AppBskyGetAuthorFeedRecordEmbed
+    | AppBskyGetAuthorFeedExternalEmbed
+    | AppBskyGetAuthorFeedUnknownEmbed;
   replyCount: number;
   repostCount: number;
   likeCount: number;
@@ -35,24 +38,24 @@ export interface FeedItem {
     like?: string,
   };
 }
-export interface User {
+export interface AppBskyGetAuthorFeedUser {
   did: string;
   name: string;
   displayName?: string;
 }
-export interface RecordEmbed {
+export interface AppBskyGetAuthorFeedRecordEmbed {
   type: 'record';
-  author: User;
+  author: AppBskyGetAuthorFeedUser;
   record: {};
 }
-export interface ExternalEmbed {
+export interface AppBskyGetAuthorFeedExternalEmbed {
   type: 'external';
   uri: string;
   title: string;
   description: string;
   imageUri: string;
 }
-export interface UnknownEmbed {
+export interface AppBskyGetAuthorFeedUnknownEmbed {
   type: string;
 }
 

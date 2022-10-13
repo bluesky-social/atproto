@@ -15,9 +15,9 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  notifications: Notification[];
+  notifications: AppBskyGetNotificationsNotification[];
 }
-export interface Notification {
+export interface AppBskyGetNotificationsNotification {
   uri: string;
   cid: string;
   author: {

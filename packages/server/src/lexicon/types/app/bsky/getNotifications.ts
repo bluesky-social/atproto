@@ -23,9 +23,9 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  notifications: Notification[];
+  notifications: AppBskyGetNotificationsNotification[];
 }
-export interface Notification {
+export interface AppBskyGetNotificationsNotification {
   uri: string;
   cid: string;
   author: {

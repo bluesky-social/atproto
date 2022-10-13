@@ -10,7 +10,7 @@ import {
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
-import { FeedItem } from '@adxp/api/src/types/app/bsky/getHomeFeed'
+import { AppBskyGetHomeFeedFeedItem as FeedItem } from '@adxp/api/src/types/app/bsky/getHomeFeed'
 
 describe('pds home feed views', () => {
   let client: AdxServiceClient
