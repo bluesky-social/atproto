@@ -37,6 +37,8 @@ import * as AppBskyGetProfile from './types/app/bsky/getProfile'
 import * as AppBskyGetRepostedBy from './types/app/bsky/getRepostedBy'
 import * as AppBskyGetUserFollowers from './types/app/bsky/getUserFollowers'
 import * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
+import * as AppBskyGetUsersSearch from './types/app/bsky/getUsersSearch'
+import * as AppBskyGetUsersTypeahead from './types/app/bsky/getUsersTypeahead'
 import * as AppBskyPostNotificationsSeen from './types/app/bsky/postNotificationsSeen'
 
 export function createServer(): Server {
@@ -243,6 +245,16 @@ export class BskyNS {
 
   getUserFollows(handler: AppBskyGetUserFollows.Handler) {
     const schema = 'app.bsky.getUserFollows' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
+  }
+
+  getUsersSearch(handler: AppBskyGetUsersSearch.Handler) {
+    const schema = 'app.bsky.getUsersSearch' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
+  }
+
+  getUsersTypeahead(handler: AppBskyGetUsersTypeahead.Handler) {
+    const schema = 'app.bsky.getUsersTypeahead' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
