@@ -54,7 +54,7 @@ export type PartialDB = {
 }
 
 const validator = schemas.createRecordValidator(type)
-const isValidSchema = (obj: unknown): obj is Profile.Record => {
+const matchesSchema = (obj: unknown): obj is Profile.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
@@ -92,7 +92,7 @@ const getFn =
 const insertFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
-    if (!isValidSchema(obj)) {
+    if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
 
@@ -143,6 +143,7 @@ export const makePlugin = (
     tableName,
     get: getFn(db),
     validateSchema,
+    matchesSchema,
     insert: insertFn(db),
     delete: deleteFn(db),
     translateDbObj,

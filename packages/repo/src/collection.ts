@@ -68,7 +68,7 @@ export class Collection {
     }
   }
 
-  async updateRecord(key: string, record: unknown): Promise<void> {
+  async updateRecord(key: string, record: unknown): Promise<CID> {
     const cid = await this.repo.blockstore.put(record as any)
     await this.repo.safeCommit(async (data) => {
       return data.update(this.dataIdForRecord(key), cid)
@@ -81,6 +81,7 @@ export class Collection {
       },
       'updated record',
     )
+    return cid
   }
 
   async deleteRecord(key: string): Promise<void> {

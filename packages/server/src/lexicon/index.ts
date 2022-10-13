@@ -39,6 +39,7 @@ import * as AppBskyGetRepostedBy from './types/app/bsky/getRepostedBy'
 import * as AppBskyGetUserFollowers from './types/app/bsky/getUserFollowers'
 import * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
 import * as AppBskyPostNotificationsSeen from './types/app/bsky/postNotificationsSeen'
+import * as AppBskyUpdateProfile from './types/app/bsky/updateProfile'
 
 export function createServer(): Server {
   return new Server()
@@ -254,6 +255,11 @@ export class BskyNS {
 
   postNotificationsSeen(handler: AppBskyPostNotificationsSeen.Handler) {
     const schema = 'app.bsky.postNotificationsSeen' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
+  }
+
+  updateProfile(handler: AppBskyUpdateProfile.Handler) {
+    const schema = 'app.bsky.updateProfile' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 }

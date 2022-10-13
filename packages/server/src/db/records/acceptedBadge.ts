@@ -34,7 +34,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
 export type PartialDB = { [tableName]: AppBskyAcceptedBadge }
 
 const validator = schemas.createRecordValidator(type)
-const isValidSchema = (obj: unknown): obj is AcceptedBadge.Record => {
+const matchesSchema = (obj: unknown): obj is AcceptedBadge.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
@@ -63,7 +63,7 @@ const getFn =
 const insertFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
-    if (!isValidSchema(obj)) {
+    if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
     await db
@@ -93,7 +93,7 @@ const notifsForRecord = (
   cid: CID,
   obj: unknown,
 ): Notification[] => {
-  if (!isValidSchema(obj)) {
+  if (!matchesSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
   const subjectUri = new AdxUri(obj.subject.uri)
@@ -115,6 +115,7 @@ export const makePlugin = (
     collection: type,
     tableName,
     validateSchema,
+    matchesSchema,
     translateDbObj,
     get: getFn(db),
     insert: insertFn(db),
