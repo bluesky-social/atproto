@@ -1075,6 +1075,71 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
+    id: 'app.bsky.getBadgeMembers',
+    type: 'query',
+    parameters: {
+      uri: {
+        type: 'string',
+        required: true,
+      },
+      cid: {
+        type: 'string',
+        required: false,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      before: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['uri', 'members'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          members: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'name', 'acceptedAt'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                name: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'app.bsky.getHomeFeed',
     type: 'query',
     description: "A view of the user's home feed",
@@ -2300,6 +2365,69 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'app.bsky.updateProfile',
+    type: 'procedure',
+    description: 'Notify server that the user has seen notifications',
+    parameters: {},
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: [],
+        properties: {
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          description: {
+            type: 'string',
+            maxLength: 256,
+          },
+          badges: {
+            type: 'array',
+            items: {
+              $ref: '#/$defs/appBskyProfileBadgeRef',
+            },
+          },
+        },
+        $defs: {
+          appBskyProfileBadgeRef: {
+            type: 'object',
+            required: ['uri', 'cid'],
+            properties: {
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['uri', 'cid', 'record'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          record: {
+            type: 'object',
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
 ]
 export const recordSchemas: RecordSchema[] = [
   {
@@ -2311,7 +2439,7 @@ export const recordSchemas: RecordSchema[] = [
       required: ['subject', 'createdAt'],
       properties: {
         subject: {
-          $ref: '#/$defs/subject',
+          $ref: '#/$defs/appBskyAcceptedBadgeSubject',
         },
         createdAt: {
           type: 'string',
@@ -2319,7 +2447,7 @@ export const recordSchemas: RecordSchema[] = [
         },
       },
       $defs: {
-        subject: {
+        appBskyAcceptedBadgeSubject: {
           type: 'object',
           required: ['uri', 'cid'],
           properties: {
@@ -2329,6 +2457,20 @@ export const recordSchemas: RecordSchema[] = [
             cid: {
               type: 'string',
             },
+          },
+        },
+      },
+    },
+    defs: {
+      subject: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
           },
         },
       },

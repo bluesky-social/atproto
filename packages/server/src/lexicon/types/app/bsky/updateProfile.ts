@@ -33,7 +33,9 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  [k: string]: unknown;
+  uri: string;
+  cid: string;
+  record: {};
 }
 
 export type Handler = (

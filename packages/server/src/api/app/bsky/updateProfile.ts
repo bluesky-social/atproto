@@ -1,9 +1,7 @@
 import { Server } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
 import * as locals from '../../../locals'
-import * as Profile from '../../../lexicon/types/app/bsky/profile'
 import { AdxUri } from '@adxp/uri'
-import e from 'express'
 
 const profileNsid = 'app.bsky.profile'
 
@@ -102,6 +100,13 @@ export default function (server: Server) {
       db.updateRepoRoot(requester, repo.cid),
     ])
 
-    return { encoding: 'application/json', body: {} }
+    return {
+      encoding: 'application/json',
+      body: {
+        uri: uri.toString(),
+        cid: newCid.toString(),
+        record: updated,
+      },
+    }
   })
 }

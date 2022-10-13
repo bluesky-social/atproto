@@ -2411,6 +2411,19 @@ export const methodSchemas: MethodSchema[] = [
     output: {
       encoding: 'application/json',
       schema: {
+        type: 'object',
+        required: ['uri', 'cid', 'record'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          record: {
+            type: 'object',
+          },
+        },
         $defs: {},
       },
     },
