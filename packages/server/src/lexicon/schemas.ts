@@ -1075,6 +1075,70 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
+    id: 'app.bsky.getBadgeMembers',
+    type: 'query',
+    parameters: {
+      uri: {
+        type: 'string',
+        required: true,
+      },
+      cid: {
+        type: 'string',
+        required: false,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      before: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['uri', 'members'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          members: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'name', 'acceptedAt'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                name: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'app.bsky.getHomeFeed',
     type: 'query',
     description: "A view of the user's home feed",
