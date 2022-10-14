@@ -80,7 +80,8 @@ export class Database {
         )
       }
       pool.on('connect', (client) =>
-        client.query(`SET search_path TO "${schema}"`),
+        // Shared objects such as extensions will go in the public schema
+        client.query(`SET search_path TO "${schema}",public`),
       )
     }
 
@@ -103,7 +104,7 @@ export class Database {
     if (this.schema !== undefined) {
       await this.db.schema.createSchema(this.schema).ifNotExists().execute()
     }
-    await createTables(this.db)
+    await createTables(this.db, this.dialect)
   }
 
   async getRepoRoot(did: string): Promise<CID | null> {
@@ -333,7 +334,7 @@ export class Database {
 
 export default Database
 
-type Dialect = 'pg' | 'sqlite'
+export type Dialect = 'pg' | 'sqlite'
 
 // Can use with typeof to get types for partial queries
 export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })

@@ -2275,6 +2275,111 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
+    id: 'app.bsky.getUsersSearch',
+    type: 'query',
+    description: 'Find users matching search criteria',
+    parameters: {
+      term: {
+        type: 'string',
+        required: true,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      before: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['users'],
+        properties: {
+          users: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'name', 'createdAt', 'indexedAt', 'cursor'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                name: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                description: {
+                  type: 'string',
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                cursor: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'app.bsky.getUsersTypeahead',
+    type: 'query',
+    description: 'Find user suggestions for a search term',
+    parameters: {
+      term: {
+        type: 'string',
+        required: true,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['users'],
+        properties: {
+          users: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'name'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                name: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'app.bsky.postNotificationsSeen',
     type: 'procedure',
     description: 'Notify server that the user has seen notifications',

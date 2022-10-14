@@ -39,6 +39,8 @@ import * as AppBskyGetProfile from './types/app/bsky/getProfile'
 import * as AppBskyGetRepostedBy from './types/app/bsky/getRepostedBy'
 import * as AppBskyGetUserFollowers from './types/app/bsky/getUserFollowers'
 import * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
+import * as AppBskyGetUsersSearch from './types/app/bsky/getUsersSearch'
+import * as AppBskyGetUsersTypeahead from './types/app/bsky/getUsersTypeahead'
 import * as AppBskyLike from './types/app/bsky/like'
 import * as AppBskyMediaEmbed from './types/app/bsky/mediaEmbed'
 import * as AppBskyPost from './types/app/bsky/post'
@@ -79,6 +81,8 @@ export * as AppBskyGetProfile from './types/app/bsky/getProfile'
 export * as AppBskyGetRepostedBy from './types/app/bsky/getRepostedBy'
 export * as AppBskyGetUserFollowers from './types/app/bsky/getUserFollowers'
 export * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
+export * as AppBskyGetUsersSearch from './types/app/bsky/getUsersSearch'
+export * as AppBskyGetUsersTypeahead from './types/app/bsky/getUsersTypeahead'
 export * as AppBskyLike from './types/app/bsky/like'
 export * as AppBskyMediaEmbed from './types/app/bsky/mediaEmbed'
 export * as AppBskyPost from './types/app/bsky/post'
@@ -537,6 +541,30 @@ export class BskyNS {
       .call('app.bsky.getUserFollows', params, data, opts)
       .catch((e) => {
         throw AppBskyGetUserFollows.toKnownErr(e)
+      })
+  }
+
+  getUsersSearch(
+    params: AppBskyGetUsersSearch.QueryParams,
+    data?: AppBskyGetUsersSearch.InputSchema,
+    opts?: AppBskyGetUsersSearch.CallOptions
+  ): Promise<AppBskyGetUsersSearch.Response> {
+    return this._service.xrpc
+      .call('app.bsky.getUsersSearch', params, data, opts)
+      .catch((e) => {
+        throw AppBskyGetUsersSearch.toKnownErr(e)
+      })
+  }
+
+  getUsersTypeahead(
+    params: AppBskyGetUsersTypeahead.QueryParams,
+    data?: AppBskyGetUsersTypeahead.InputSchema,
+    opts?: AppBskyGetUsersTypeahead.CallOptions
+  ): Promise<AppBskyGetUsersTypeahead.Response> {
+    return this._service.xrpc
+      .call('app.bsky.getUsersTypeahead', params, data, opts)
+      .catch((e) => {
+        throw AppBskyGetUsersTypeahead.toKnownErr(e)
       })
   }
 

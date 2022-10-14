@@ -9,27 +9,18 @@ import server, { ServerConfig, Database, App } from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/getAuthorFeed'
 import * as GetHomeFeed from '../src/lexicon/types/app/bsky/getHomeFeed'
 
-const USE_TEST_SERVER = true
-
 const ADMIN_PASSWORD = 'admin-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
-  app?: App
+  app: App
   close: CloseFn
 }
 
 export const runTestServer = async (
   params: Partial<ServerConfig> = {},
 ): Promise<TestServerInfo> => {
-  if (!USE_TEST_SERVER) {
-    return {
-      url: 'http://localhost:2583',
-      close: async () => {},
-    }
-  }
-
   const pdsPort = await getPort()
   const keypair = await crypto.EcdsaKeypair.create()
 

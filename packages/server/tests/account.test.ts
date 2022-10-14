@@ -22,7 +22,7 @@ describe('account', () => {
   let serverUrl: string
   let client: AdxServiceClient
   let close: util.CloseFn
-  let app: App | undefined
+  let app: App
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
@@ -36,23 +36,19 @@ describe('account', () => {
     serverUrl = server.url
     client = AdxApi.service(serverUrl)
 
-    if (app !== undefined) {
-      // Catch emails for use in tests
-      const { mailer } = locals.get(app)
-      _origSendMail = mailer.transporter.sendMail
-      mailer.transporter.sendMail = async (opts) => {
-        const result = await _origSendMail.call(mailer.transporter, opts)
-        mailCatcher.emit('mail', opts)
-        return result
-      }
+    // Catch emails for use in tests
+    const { mailer } = locals.get(app)
+    _origSendMail = mailer.transporter.sendMail
+    mailer.transporter.sendMail = async (opts) => {
+      const result = await _origSendMail.call(mailer.transporter, opts)
+      mailCatcher.emit('mail', opts)
+      return result
     }
   })
 
   afterAll(async () => {
-    if (app !== undefined) {
-      const { mailer } = locals.get(app)
-      mailer.transporter.sendMail = _origSendMail
-    }
+    const { mailer } = locals.get(app)
+    mailer.transporter.sendMail = _origSendMail
     if (close) {
       await close()
     }
@@ -275,7 +271,6 @@ describe('account', () => {
   })
 
   it('allows only unexpired password reset tokens', async () => {
-    if (app === undefined) throw new Error()
     const { config, db } = locals.get(app)
 
     const user = await db.db
