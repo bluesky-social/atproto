@@ -67,9 +67,9 @@ describe('pds user search views', () => {
     shouldNotContain.forEach((name) => expect(names).not.toContain(name))
 
     if (locals.get(app).db.dialect === 'pg') {
-      expect(forSnapshot(result.data.users)).toEqual(snapPgTypeahead)
+      expect(forSnapshot(result.data.users)).toEqual(snapTypeaheadPg)
     } else {
-      expect(forSnapshot(result.data.users)).toEqual(snapSqliteTypeahead)
+      expect(forSnapshot(result.data.users)).toEqual(snapTypeaheadSqlite)
     }
   })
 
@@ -140,9 +140,9 @@ describe('pds user search views', () => {
     shouldNotContain.forEach((name) => expect(names).not.toContain(name))
 
     if (locals.get(app).db.dialect === 'pg') {
-      expect(forSnapshot(result.data.users)).toEqual(snapPgSearch)
+      expect(forSnapshot(result.data.users)).toEqual(snapSearchPg)
     } else {
-      expect(forSnapshot(result.data.users)).toEqual(snapSqliteSearch)
+      expect(forSnapshot(result.data.users)).toEqual(snapSearchSqlite)
     }
   })
 
@@ -179,7 +179,7 @@ describe('pds user search views', () => {
 // you can achieve it using named snapshots, but when you run the tests for pg the test suite fails
 // since the sqlite snapshots appear obsolete to jest (and vice-versa when you run the sqlite suite).
 
-const snapPgTypeahead = [
+const snapTypeaheadPg = [
   {
     did: 'user(0)',
     name: 'Cara.Wiegand69',
@@ -215,7 +215,7 @@ const snapPgTypeahead = [
   },
 ]
 
-const snapSqliteTypeahead = [
+const snapTypeaheadSqlite = [
   {
     did: 'user(0)',
     displayName: 'Carlton Abernathy IV',
@@ -246,7 +246,7 @@ const snapSqliteTypeahead = [
   },
 ]
 
-const snapPgSearch = [
+const snapSearchPg = [
   {
     createdAt: '1970-01-01T00:00:00.000Z',
     cursor: '[0.5,"Cara.Wiegand69"]',
@@ -308,7 +308,7 @@ const snapPgSearch = [
   },
 ]
 
-const snapSqliteSearch = [
+const snapSearchSqlite = [
   {
     createdAt: '1970-01-01T00:00:00.000Z',
     cursor: '[0,"Aliya.Hodkiewicz"]',

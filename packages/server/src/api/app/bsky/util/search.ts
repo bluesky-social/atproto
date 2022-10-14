@@ -4,7 +4,7 @@ import Database from '../../../../db'
 
 export const getUserSearchQueryPg = (
   db: Database,
-  opts: { term: string; limit: number; before: string | undefined },
+  opts: { term: string; limit: number; before?: string },
 ) => {
   const { ref } = db.db.dynamic
   const { term, limit, before } = opts
@@ -76,7 +76,7 @@ export const getUserSearchQueryPg = (
 
 export const getUserSearchQuerySqlite = (
   db: Database,
-  opts: { term: string; limit: number; before: string | undefined },
+  opts: { term: string; limit: number; before?: string },
 ) => {
   const { ref } = db.db.dynamic
   const { term, limit, before } = opts
@@ -130,3 +130,6 @@ export const unpackCursor = (
     distance,
   }
 }
+
+// Remove leading @ in case a username is input that way
+export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')

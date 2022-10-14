@@ -4,6 +4,7 @@ import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 import {
+  cleanTerm,
   getUserSearchQueryPg,
   getUserSearchQuerySqlite,
   packCursor,
@@ -16,8 +17,7 @@ export default function (server: Server) {
     const { db, auth } = locals.get(res)
     auth.getUserDidOrThrow(req)
 
-    // Remove leading @ in case a username is input that way
-    term = term.trim().replace(/^@/g, '')
+    term = cleanTerm(term)
     limit = Math.min(limit ?? 25, 100)
 
     if (!term) {
