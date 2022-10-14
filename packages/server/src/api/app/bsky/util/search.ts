@@ -100,7 +100,7 @@ export const getUserSearchQuerySqlite = (
     return db.db.selectFrom('user').where(sql`1 = 0`)
   }
 
-  // We'll ensured there's a space before each word in both textForMatch and in safeWords,
+  // We'll ensure there's a space before each word in both textForMatch and in safeWords,
   // so that we can reliably match word prefixes using LIKE operator.
   const textForMatch = sql`lower(' ' || ${ref(
     'user.username',
