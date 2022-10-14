@@ -55,7 +55,7 @@ export default function (server: Server) {
 
 const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
   return await getUserSearchQueryPg(db, { term, limit, before })
-    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'results.did')
+    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user.did')
     .select([
       'distance',
       'user.did as did',
