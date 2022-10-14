@@ -32,8 +32,6 @@ export default function (server: Server) {
           ? await getResultsPg(db, { term, limit, before })
           : await getResultsSqlite(db, { term, limit, before })
 
-      const packCursor = db.dialect === 'pg' ? packCursorPg : packCursorSqlite
-
       const users = results.map((result) => ({
         did: result.did,
         name: result.name,
@@ -61,7 +59,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
   // The more characters the user gives us, the more we can ratchet down
   // the distance threshold for matching.
   const threshold = term.length < 3 ? 0.9 : 0.8
-  const cursor = before !== undefined ? unpackCursorPg(before) : undefined
+  const cursor = before !== undefined ? unpackCursor(before) : undefined
 
   const distanceAccount = sql<number>`(${ref('username')} <->>> ${term})`
   const keysetAccount =
@@ -133,26 +131,6 @@ const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
     .execute()
 }
 
-// E.g. { distance: .94827, name: 'pfrazee' } -> '94827::pfrazee'
-const packCursorPg = (
-  row: Awaited<ReturnType<GetResultsFn>>[number],
-): string => {
-  const { distance, name } = row
-  return JSON.stringify([distance, name])
-}
-
-const unpackCursorPg = (before: string): { distance: number; name: string } => {
-  const result = JSON.parse(before) /// @TODO bourne
-  const [distance, name, ...others] = result
-  if (typeof distance !== 'number' || !name || others.length > 0) {
-    throw new InvalidRequestError('Malformed cursor')
-  }
-  return {
-    name,
-    distance,
-  }
-}
-
 const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
   const { ref } = db.db.dynamic
 
@@ -168,7 +146,7 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
     'user.username',
   )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
 
-  const cursor = before && unpackCursorSqlite(before)
+  const cursor = before !== undefined ? unpackCursor(before) : undefined
 
   return await db.db
     .selectFrom('user')
@@ -180,6 +158,9 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
       })
       return q
     })
+    .if(!!cursor, (qb) =>
+      cursor ? qb.where('username', '>', cursor.name) : qb,
+    )
     .orderBy('username')
     .limit(limit)
     .select([
@@ -194,15 +175,23 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
     .execute()
 }
 
-const packCursorSqlite = (
-  row: Awaited<ReturnType<GetResultsFn>>[number],
-): string => {
-  return row.did
+// E.g. { distance: .94827, name: 'pfrazee' } -> '[0.94827,"pfrazee"]'
+const packCursor = (row: Awaited<ReturnType<GetResultsFn>>[number]): string => {
+  const { distance, name } = row
+  return JSON.stringify([distance, name])
 }
 
-const unpackCursorSqlite = (before: string): { did: string } => ({
-  did: before,
-})
+const unpackCursor = (before: string): { distance: number; name: string } => {
+  const result = JSON.parse(before) /// @TODO bourne
+  const [distance, name, ...others] = result
+  if (typeof distance !== 'number' || !name || others.length > 0) {
+    throw new InvalidRequestError('Malformed cursor')
+  }
+  return {
+    name,
+    distance,
+  }
+}
 
 type GetResultsFn = (
   db: Database,

@@ -67,9 +67,9 @@ describe('pds user search views', () => {
     shouldNotContain.forEach((name) => expect(names).not.toContain(name))
 
     if (locals.get(app).db.dialect === 'pg') {
-      expect(forSnapshot(result.data.users)).toMatchSnapshot('postgres')
+      expect(forSnapshot(result.data.users)).toEqual(snapPgTypeahead)
     } else {
-      expect(forSnapshot(result.data.users)).toMatchSnapshot('sqlite')
+      expect(forSnapshot(result.data.users)).toEqual(snapSqliteTypeahead)
     }
   })
 
@@ -140,9 +140,9 @@ describe('pds user search views', () => {
     shouldNotContain.forEach((name) => expect(names).not.toContain(name))
 
     if (locals.get(app).db.dialect === 'pg') {
-      expect(forSnapshot(result.data.users)).toMatchSnapshot('postgres')
+      expect(forSnapshot(result.data.users)).toEqual(snapPgSearch)
     } else {
-      expect(forSnapshot(result.data.users)).toMatchSnapshot('sqlite')
+      expect(forSnapshot(result.data.users)).toEqual(snapSqliteSearch)
     }
   })
 
@@ -174,3 +174,189 @@ describe('pds user search views', () => {
     expect(limited.data.users).toEqual(full.data.users.slice(1, 4))
   })
 })
+
+// Not using jest snapshots because it doesn't handle the conditional pg/sqlite very well:
+// you can achieve it using named snapshots, but when you run the tests for pg the test suite fails
+// since the sqlite snapshots appear obsolete to jest (and vice-versa when you run the sqlite suite).
+
+const snapPgTypeahead = [
+  {
+    did: 'user(0)',
+    name: 'Cara.Wiegand69',
+  },
+  {
+    did: 'user(1)',
+    displayName: 'Carol Littel',
+    name: 'Eudora_Dietrich4',
+  },
+  {
+    did: 'user(2)',
+    displayName: 'Sadie Carter',
+    name: 'Shane_Torphy52',
+  },
+  {
+    did: 'user(3)',
+    displayName: 'Carlton Abernathy IV',
+    name: 'Aliya.Hodkiewicz',
+  },
+  {
+    did: 'user(4)',
+    name: 'Carlos6',
+  },
+  {
+    did: 'user(5)',
+    displayName: 'Latoya Windler',
+    name: 'Carolina_McDermott77',
+  },
+  {
+    did: 'user(6)',
+    displayName: 'Rachel Kshlerin',
+    name: 'Cayla_Marquardt39',
+  },
+]
+
+const snapSqliteTypeahead = [
+  {
+    did: 'user(0)',
+    displayName: 'Carlton Abernathy IV',
+    name: 'Aliya.Hodkiewicz',
+  },
+  {
+    did: 'user(1)',
+    name: 'Cara.Wiegand69',
+  },
+  {
+    did: 'user(2)',
+    name: 'Carlos6',
+  },
+  {
+    did: 'user(3)',
+    displayName: 'Latoya Windler',
+    name: 'Carolina_McDermott77',
+  },
+  {
+    did: 'user(4)',
+    displayName: 'Carol Littel',
+    name: 'Eudora_Dietrich4',
+  },
+  {
+    did: 'user(5)',
+    displayName: 'Sadie Carter',
+    name: 'Shane_Torphy52',
+  },
+]
+
+const snapPgSearch = [
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0.5,"Cara.Wiegand69"]',
+    did: 'user(0)',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Cara.Wiegand69',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0.57142854,"Eudora_Dietrich4"]',
+    description: '',
+    did: 'user(1)',
+    displayName: 'Carol Littel',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Eudora_Dietrich4',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0.625,"Shane_Torphy52"]',
+    description: '',
+    did: 'user(2)',
+    displayName: 'Sadie Carter',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Shane_Torphy52',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0.6666666,"Aliya.Hodkiewicz"]',
+    description: '',
+    did: 'user(3)',
+    displayName: 'Carlton Abernathy IV',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Aliya.Hodkiewicz',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0.6666666,"Carlos6"]',
+    did: 'user(4)',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Carlos6',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0.7,"Carolina_McDermott77"]',
+    description: '',
+    did: 'user(5)',
+    displayName: 'Latoya Windler',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Carolina_McDermott77',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0.75,"Cayla_Marquardt39"]',
+    description: '',
+    did: 'user(6)',
+    displayName: 'Rachel Kshlerin',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Cayla_Marquardt39',
+  },
+]
+
+const snapSqliteSearch = [
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0,"Aliya.Hodkiewicz"]',
+    description: '',
+    did: 'user(0)',
+    displayName: 'Carlton Abernathy IV',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Aliya.Hodkiewicz',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0,"Cara.Wiegand69"]',
+    did: 'user(1)',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Cara.Wiegand69',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0,"Carlos6"]',
+    did: 'user(2)',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Carlos6',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0,"Carolina_McDermott77"]',
+    description: '',
+    did: 'user(3)',
+    displayName: 'Latoya Windler',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Carolina_McDermott77',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0,"Eudora_Dietrich4"]',
+    description: '',
+    did: 'user(4)',
+    displayName: 'Carol Littel',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Eudora_Dietrich4',
+  },
+  {
+    createdAt: '1970-01-01T00:00:00.000Z',
+    cursor: '[0,"Shane_Torphy52"]',
+    description: '',
+    did: 'user(5)',
+    displayName: 'Sadie Carter',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    name: 'Shane_Torphy52',
+  },
+]
