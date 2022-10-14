@@ -125,7 +125,7 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
       })
       return q
     })
-    .orderBy('user.username')
+    .orderBy('username')
     .limit(limit)
     .select([
       'user.did as did',
