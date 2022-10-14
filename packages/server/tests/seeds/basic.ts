@@ -65,6 +65,7 @@ export default async (sc: SeedClient) => {
   await sc.createBadge(sc.dids.bob, 'employee')
   await sc.createBadge(sc.dids.bob, 'tag', 'cool')
   await sc.createBadge(sc.dids.carol, 'tag', 'neat')
+  await sc.createBadge(sc.dids.carol, 'tag', 'cringe')
 
   await sc.offerBadge(sc.dids.bob, sc.dids.alice, sc.badges[sc.dids.bob][0])
   await sc.offerBadge(sc.dids.bob, sc.dids.alice, sc.badges[sc.dids.bob][1])

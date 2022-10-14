@@ -63,7 +63,20 @@ export default function (server: Server) {
           'badge.uri',
           'profile_badge.badgeUri',
         )
+        .innerJoin(
+          'app_bsky_badge_offer as offer',
+          'offer.badgeUri',
+          'badge.uri',
+        )
+        .innerJoin(
+          'app_bsky_badge_accept as accept',
+          'accept.badgeUri',
+          'badge.uri',
+        )
         .innerJoin('user as issuer', 'issuer.did', 'badge.creator')
+        .where('offer.subject', '=', queryRes.did)
+        .whereRef('offer.creator', '=', 'badge.creator')
+        .whereRef('accept.offerUri', '=', 'offer.uri')
         .leftJoin(
           'app_bsky_profile as issuer_profile',
           'issuer_profile.creator',
@@ -81,7 +94,6 @@ export default function (server: Server) {
         ])
         .execute()
 
-      // @TODO make sure the badge was BOTH properly offered & accepted
       const badges = badgesRes.map((row) => ({
         uri: row.uri,
         cid: row.cid,

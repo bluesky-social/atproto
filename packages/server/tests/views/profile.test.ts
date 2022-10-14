@@ -94,6 +94,26 @@ describe('pds profile views', () => {
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
   })
 
+  it('does not return a badge that the user does not possess', async () => {
+    const toHighlight = [
+      sc.badges[sc.dids.carol][0].raw,
+      sc.badges[sc.dids.carol][1].raw, // alice was not offered this badge
+    ]
+    await client.app.bsky.updateProfile(
+      {},
+      { badges: toHighlight },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceForAlice = await client.app.bsky.getProfile(
+      { user: alice },
+      undefined,
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
   it('fetches profile by username', async () => {
     const byDid = await client.app.bsky.getProfile({ user: alice }, undefined, {
       headers: sc.getHeaders(bob),

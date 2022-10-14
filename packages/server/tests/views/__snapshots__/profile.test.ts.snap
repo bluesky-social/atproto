@@ -28,6 +28,34 @@ Object {
 }
 `;
 
+exports[`pds profile views does not return a badge that the user does not possess 1`] = `
+Object {
+  "badges": Array [
+    Object {
+      "assertion": Object {
+        "tag": "neat",
+        "type": "tag",
+      },
+      "cid": "cids(0)",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "issuer": Object {
+        "did": "user(1)",
+        "name": "carol.test",
+      },
+      "uri": "record(0)",
+    },
+  ],
+  "description": "new descript",
+  "did": "user(0)",
+  "displayName": "ali",
+  "followersCount": 2,
+  "followsCount": 3,
+  "myState": Object {},
+  "name": "alice.test",
+  "postsCount": 4,
+}
+`;
+
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
   "badges": Array [],
