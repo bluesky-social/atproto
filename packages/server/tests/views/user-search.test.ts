@@ -173,6 +173,18 @@ describe('pds user search views', () => {
 
     expect(limited.data.users).toEqual(full.data.users.slice(1, 4))
   })
+
+  it('search handles bad input', async () => {
+    // Mostly for sqlite's benefit, since it uses LIKE and these are special characters that will
+    // get stripped. This input triggers a special case where there are no "safe" words for sqlite to search on.
+    const result = await client.app.bsky.getUsersSearch(
+      { term: ' % _ ' },
+      undefined,
+      { headers },
+    )
+
+    expect(result.data.users).toEqual([])
+  })
 })
 
 // Not using jest snapshots because it doesn't handle the conditional pg/sqlite very well:
