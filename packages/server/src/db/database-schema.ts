@@ -31,8 +31,17 @@ export const createTables = async (
   dialect: Dialect,
 ): Promise<void> => {
   if (dialect === 'pg') {
-    // Add trigram support, supporting user search
-    await sql`create extension if not exists pg_trgm`.execute(db)
+    try {
+      // Add trigram support, supporting user search.
+      // Explicitly add to public schema, so the extension can be seen in all schemas.
+      await sql`create extension if not exists pg_trgm with schema public`.execute(
+        db,
+      )
+    } catch (err: any) {
+      // The "if not exists" isn't bulletproof against races, and we see test suites racing to
+      // create the extension. So we can just ignore errors indicating the extension already exists.
+      if (!err?.detail?.includes?.('(pg_trgm) already exists')) throw err
+    }
   }
   await Promise.all([
     user.createTable(db, dialect),

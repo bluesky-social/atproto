@@ -80,7 +80,8 @@ export class Database {
         )
       }
       pool.on('connect', (client) =>
-        client.query(`SET search_path TO "${schema}"`),
+        // Shared objects such as extensions will go in the public schema
+        client.query(`SET search_path TO "${schema}",public`),
       )
     }
 
