@@ -81,6 +81,7 @@ export default function (server: Server) {
         ])
         .execute()
 
+      // @TODO make sure the badge was BOTH properly offered & accepted
       const badges = badgesRes.map((row) => ({
         uri: row.uri,
         cid: row.cid,

@@ -1,19 +1,21 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
-import * as AcceptedBadge from '../../lexicon/types/app/bsky/acceptedBadge'
+import * as BadgeAccept from '../../lexicon/types/app/bsky/badgeAccept'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
 
-const type = 'app.bsky.acceptedBadge'
-const tableName = 'app_bsky_accepted_badge'
+const type = 'app.bsky.badgeAccept'
+const tableName = 'app_bsky_badge_accept'
 
-export interface AppBskyAcceptedBadge {
+export interface AppBskyBadgeAccept {
   uri: string
   cid: string
   creator: string
-  subject: string
-  subjectCid: string
+  badgeUri: string
+  badgeCid: string
+  offerUri: string
+  offerCid: string
   createdAt: string
   indexedAt: string
 }
@@ -24,26 +26,32 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('subject', 'varchar', (col) => col.notNull())
-    .addColumn('subjectCid', 'varchar', (col) => col.notNull())
+    .addColumn('badgeUri', 'varchar', (col) => col.notNull())
+    .addColumn('badgeCid', 'varchar', (col) => col.notNull())
+    .addColumn('offerUri', 'varchar', (col) => col.notNull())
+    .addColumn('offerCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
 }
 
-export type PartialDB = { [tableName]: AppBskyAcceptedBadge }
+export type PartialDB = { [tableName]: AppBskyBadgeAccept }
 
 const validator = schemas.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is AcceptedBadge.Record => {
+const matchesSchema = (obj: unknown): obj is BadgeAccept.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyAcceptedBadge): AcceptedBadge.Record => {
+const translateDbObj = (dbObj: AppBskyBadgeAccept): BadgeAccept.Record => {
   return {
-    subject: {
-      uri: dbObj.subject,
-      cid: dbObj.subjectCid,
+    badge: {
+      uri: dbObj.badgeUri,
+      cid: dbObj.badgeCid,
+    },
+    offer: {
+      uri: dbObj.offerUri,
+      cid: dbObj.offerCid,
     },
     createdAt: dbObj.createdAt,
   }
@@ -51,9 +59,9 @@ const translateDbObj = (dbObj: AppBskyAcceptedBadge): AcceptedBadge.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<AcceptedBadge.Record | null> => {
+  async (uri: AdxUri): Promise<BadgeAccept.Record | null> => {
     const found = await db
-      .selectFrom('app_bsky_accepted_badge')
+      .selectFrom(tableName)
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
@@ -67,13 +75,15 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
     await db
-      .insertInto('app_bsky_accepted_badge')
+      .insertInto(tableName)
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
         creator: uri.host,
-        subject: obj.subject.uri,
-        subjectCid: obj.subject.cid,
+        badgeUri: obj.badge.uri,
+        badgeCid: obj.badge.cid,
+        offerUri: obj.offer.uri,
+        offerCid: obj.offer.cid,
         createdAt: obj.createdAt,
         indexedAt: new Date().toISOString(),
       })
@@ -83,34 +93,20 @@ const insertFn =
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
-    await db
-      .deleteFrom('app_bsky_accepted_badge')
-      .where('uri', '=', uri.toString())
+    await db.deleteFrom(tableName).where('uri', '=', uri.toString())
   }
 
 const notifsForRecord = (
-  uri: AdxUri,
-  cid: CID,
-  obj: unknown,
+  _uri: AdxUri,
+  _cid: CID,
+  _obj: unknown,
 ): Notification[] => {
-  if (!matchesSchema(obj)) {
-    throw new Error(`Record does not match schema: ${type}`)
-  }
-  const subjectUri = new AdxUri(obj.subject.uri)
-  const notif = {
-    userDid: subjectUri.host,
-    author: uri.host,
-    recordUri: uri.toString(),
-    recordCid: cid.toString(),
-    reason: 'like',
-    reasonSubject: subjectUri.toString(),
-  }
-  return [notif]
+  return []
 }
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<AcceptedBadge.Record, AppBskyAcceptedBadge> => {
+): DbRecordPlugin<BadgeAccept.Record, AppBskyBadgeAccept> => {
   return {
     collection: type,
     tableName,

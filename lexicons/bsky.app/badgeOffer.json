@@ -1,17 +1,18 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.acceptedBadge",
+  "id": "app.bsky.badgeOffer",
   "type": "record",
   "record": {
     "type": "object",
-    "required": ["subject", "createdAt"],
+    "required": ["badge", "subject", "createdAt"],
     "properties": {
-      "subject": {"$ref": "#/defs/subject"},
+      "badge": {"$ref": "#/defs/badge"},
+      "subject": {"type": "string"},
       "createdAt": {"type": "string", "format": "date-time"}
     }
   },
   "defs": {
-    "subject": {
+    "badge": {
       "type": "object",
       "required": ["uri", "cid"],
       "properties": {

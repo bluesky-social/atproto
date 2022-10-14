@@ -5,7 +5,7 @@
   "description": "An assertion about the subject by this user.",
   "record": {
     "type": "object",
-    "required": ["assertion", "subject", "createdAt"],
+    "required": ["assertion", "createdAt"],
     "properties": {
       "assertion": {
         "oneOf": [
@@ -15,7 +15,6 @@
           {"$ref": "#/defs/unknownAssertion"}
         ]
       },
-      "subject": { "type": "string" },
       "createdAt": {"type": "string", "format": "date-time"}
     }
   },

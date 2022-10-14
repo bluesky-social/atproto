@@ -6,31 +6,39 @@ import { paginate } from '../../../db/util'
 export default function (server: Server) {
   server.app.bsky.getBadgeMembers(
     async (params: GetBadgeMembers.QueryParams, _input, _req, res) => {
-      const { uri, cid, limit, before } = params
+      const { uri, limit, before } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
       let builder = db.db
-        .selectFrom('app_bsky_accepted_badge as accepted')
-        .where('accepted.subject', '=', 'uri')
-        .innerJoin('user', 'accepted.creator', 'user.did')
+        .selectFrom('app_bsky_badge as badge')
+        .innerJoin(
+          'app_bsky_badge_offer as offer',
+          'offer.badgeUri',
+          'badge.uri',
+        )
+        .innerJoin(
+          'app_bsky_badge_accept as accept',
+          'accept.badgeUri',
+          'badge.uri',
+        )
+        .innerJoin('user', 'user.did', 'accept.creator')
         .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user.did')
+        .where('offer.creator', '=', 'badge.creator')
+        .where('offer.subject', '=', 'accept.creator')
+        .where('accept.offerUri', '=', 'offer.uri')
         .select([
           'user.did as did',
           'user.username as name',
           'profile.displayName as displayName',
-          'accepted.createdAt as createdAt',
-          'accepted.indexedAt as indexedAt',
+          'offer.indexedAt as offeredAt',
+          'accept.indexedAt as acceptedAt',
         ])
-
-      if (cid) {
-        builder = builder.where('accepted.subjectCid', '=', cid)
-      }
 
       builder = paginate(builder, {
         limit,
         before,
-        by: ref('accepted.createdAt'),
+        by: ref('accept.createdAt'),
       })
 
       const badgeMembersRes = await builder.execute()
@@ -39,15 +47,14 @@ export default function (server: Server) {
         did: row.did,
         name: row.name,
         displayName: row.displayName || undefined,
-        createdAt: row.createdAt,
-        indexedAt: row.indexedAt,
+        offeredAt: row.offeredAt,
+        acceptedAt: row.acceptedAt,
       }))
 
       return {
         encoding: 'application/json',
         body: {
           uri,
-          cid,
           members,
         },
       }

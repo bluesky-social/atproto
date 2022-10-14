@@ -23,8 +23,8 @@ export interface OutputSchema {
     did: string,
     name: string,
     displayName?: string,
-    createdAt?: string,
-    indexedAt?: string,
+    offeredAt?: string,
+    acceptedAt: string,
   }[];
 }
 

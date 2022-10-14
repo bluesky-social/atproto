@@ -27,8 +27,9 @@ import * as ComAtprotoResolveName from './types/com/atproto/resolveName'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
-import * as AppBskyAcceptedBadge from './types/app/bsky/acceptedBadge'
 import * as AppBskyBadge from './types/app/bsky/badge'
+import * as AppBskyBadgeAccept from './types/app/bsky/badgeAccept'
+import * as AppBskyBadgeOffer from './types/app/bsky/badgeOffer'
 import * as AppBskyFollow from './types/app/bsky/follow'
 import * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
 import * as AppBskyGetBadgeMembers from './types/app/bsky/getBadgeMembers'
@@ -70,8 +71,9 @@ export * as ComAtprotoResolveName from './types/com/atproto/resolveName'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 export * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
-export * as AppBskyAcceptedBadge from './types/app/bsky/acceptedBadge'
 export * as AppBskyBadge from './types/app/bsky/badge'
+export * as AppBskyBadgeAccept from './types/app/bsky/badgeAccept'
+export * as AppBskyBadgeOffer from './types/app/bsky/badgeOffer'
 export * as AppBskyFollow from './types/app/bsky/follow'
 export * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
 export * as AppBskyGetBadgeMembers from './types/app/bsky/getBadgeMembers'
@@ -407,8 +409,9 @@ export class AppNS {
 
 export class BskyNS {
   _service: ServiceClient
-  acceptedBadge: AcceptedBadgeRecord
   badge: BadgeRecord
+  badgeAccept: BadgeAcceptRecord
+  badgeOffer: BadgeOfferRecord
   follow: FollowRecord
   like: LikeRecord
   mediaEmbed: MediaEmbedRecord
@@ -418,8 +421,9 @@ export class BskyNS {
 
   constructor(service: ServiceClient) {
     this._service = service
-    this.acceptedBadge = new AcceptedBadgeRecord(service)
     this.badge = new BadgeRecord(service)
+    this.badgeAccept = new BadgeAcceptRecord(service)
+    this.badgeOffer = new BadgeOfferRecord(service)
     this.follow = new FollowRecord(service)
     this.like = new LikeRecord(service)
     this.mediaEmbed = new MediaEmbedRecord(service)
@@ -585,63 +589,6 @@ export class BskyNS {
   }
 }
 
-export class AcceptedBadgeRecord {
-  _service: ServiceClient
-
-  constructor(service: ServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{
-    records: { uri: string, value: AppBskyAcceptedBadge.Record }[],
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
-      collection: 'app.bsky.acceptedBadge',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, cid: string, value: AppBskyAcceptedBadge.Record }> {
-    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
-      collection: 'app.bsky.acceptedBadge',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'collection'>,
-    record: AppBskyAcceptedBadge.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
-    record.$type = 'app.bsky.acceptedBadge'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repoCreateRecord',
-      { collection: 'app.bsky.acceptedBadge', ...params },
-      record,
-      { encoding: 'application/json', headers }
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
-    headers?: Record<string, string>
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repoDeleteRecord',
-      { collection: 'app.bsky.acceptedBadge', ...params },
-      undefined,
-      { headers }
-    )
-  }
-}
-
 export class BadgeRecord {
   _service: ServiceClient
 
@@ -691,6 +638,116 @@ export class BadgeRecord {
     await this._service.xrpc.call(
       'com.atproto.repoDeleteRecord',
       { collection: 'app.bsky.badge', ...params },
+      undefined,
+      { headers }
+    )
+  }
+}
+
+export class BadgeAcceptRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+  ): Promise<{ records: { uri: string, value: AppBskyBadgeAccept.Record }[] }> {
+    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
+      collection: 'app.bsky.badgeAccept',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
+  ): Promise<{ uri: string, cid: string, value: AppBskyBadgeAccept.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
+      collection: 'app.bsky.badgeAccept',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'collection'>,
+    record: AppBskyBadgeAccept.Record,
+    headers?: Record<string, string>
+  ): Promise<{ uri: string, cid: string }> {
+    record.$type = 'app.bsky.badgeAccept'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repoCreateRecord',
+      { collection: 'app.bsky.badgeAccept', ...params },
+      record,
+      { encoding: 'application/json', headers }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    headers?: Record<string, string>
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repoDeleteRecord',
+      { collection: 'app.bsky.badgeAccept', ...params },
+      undefined,
+      { headers }
+    )
+  }
+}
+
+export class BadgeOfferRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+  ): Promise<{ records: { uri: string, value: AppBskyBadgeOffer.Record }[] }> {
+    const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
+      collection: 'app.bsky.badgeOffer',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
+  ): Promise<{ uri: string, cid: string, value: AppBskyBadgeOffer.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repoGetRecord', {
+      collection: 'app.bsky.badgeOffer',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<ComAtprotoRepoCreateRecord.QueryParams, 'collection'>,
+    record: AppBskyBadgeOffer.Record,
+    headers?: Record<string, string>
+  ): Promise<{ uri: string, cid: string }> {
+    record.$type = 'app.bsky.badgeOffer'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repoCreateRecord',
+      { collection: 'app.bsky.badgeOffer', ...params },
+      record,
+      { encoding: 'application/json', headers }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    headers?: Record<string, string>
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repoDeleteRecord',
+      { collection: 'app.bsky.badgeOffer', ...params },
       undefined,
       { headers }
     )

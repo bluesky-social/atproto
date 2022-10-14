@@ -28,8 +28,8 @@
                 "type": "string",
                 "maxLength": 64
               },
-              "createdAt": {"type": "string", "format": "date-time"},
-              "indexedAt": {"type": "string", "format": "date-time"}
+              "offeredAt": {"type": "string", "format": "date-time"},
+              "acceptedAt": {"type": "string", "format": "date-time"}
             }
           }
         }

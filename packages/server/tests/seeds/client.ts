@@ -54,7 +54,8 @@ export class SeedClient {
   likes: Record<string, Record<string, AdxUri>>
   replies: Record<string, { text: string; ref: Reference }[]>
   reposts: Record<string, Reference[]>
-  badges: Record<string, Record<string, Reference[]>>
+  badges: Record<string, Reference[]>
+  badgeOffers: Record<string, Record<string, Reference[]>>
   dids: Record<string, string>
 
   constructor(public client: ServiceClient) {
@@ -66,6 +67,7 @@ export class SeedClient {
     this.replies = {}
     this.reposts = {}
     this.badges = {}
+    this.badgeOffers = {}
     this.dids = {}
   }
 
@@ -172,31 +174,47 @@ export class SeedClient {
     return repost
   }
 
-  async giveBadge(from: string, to: string, type: string, tag?: string) {
+  async createBadge(by: string, type: string, tag?: string) {
     const res = await this.client.app.bsky.badge.create(
-      { did: from },
+      { did: by },
       {
-        subject: to,
         assertion: {
           type,
           tag,
         },
         createdAt: new Date().toISOString(),
       },
-      this.getHeaders(from),
+      this.getHeaders(by),
     )
-    this.badges[from] ??= {}
-    this.badges[from][to] ??= []
+    this.badges[by] ??= []
     const badge = new Reference(res.uri, res.cid)
-    this.badges[from][to].push(badge)
+    this.badges[by].push(badge)
     return badge
   }
 
-  async acceptBadge(by: string, ref: Reference) {
-    await this.client.app.bsky.acceptedBadge.create(
+  async offerBadge(from: string, to: string, badge: Reference) {
+    const res = await this.client.app.bsky.badgeOffer.create(
+      { did: from },
+      {
+        subject: to,
+        badge: badge.raw,
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(from),
+    )
+    this.badgeOffers[from] ??= {}
+    this.badgeOffers[from][to] ??= []
+    const offer = new Reference(res.uri, res.cid)
+    this.badgeOffers[from][to].push(offer)
+    return offer
+  }
+
+  async acceptBadge(by: string, badge: Reference, offer: Reference) {
+    await this.client.app.bsky.badgeAccept.create(
       { did: by },
       {
-        subject: ref.raw,
+        badge: badge.raw,
+        offer: offer.raw,
         createdAt: new Date().toISOString(),
       },
       this.getHeaders(by),

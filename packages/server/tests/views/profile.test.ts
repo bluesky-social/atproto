@@ -61,7 +61,7 @@ describe('pds profile views', () => {
   })
 
   it('updates profile', async () => {
-    const toHighlight = [sc.badges[sc.dids.bob][sc.dids.alice][1].raw]
+    const toHighlight = [sc.badges[sc.dids.bob][1].raw]
     await client.app.bsky.updateProfile(
       {},
       { displayName: 'ali', badges: toHighlight },
@@ -78,7 +78,7 @@ describe('pds profile views', () => {
   })
 
   it('adds & removes badges from profile', async () => {
-    const toHighlight = [sc.badges[sc.dids.carol][sc.dids.alice][0].raw]
+    const toHighlight = [sc.badges[sc.dids.carol][0].raw]
     await client.app.bsky.updateProfile(
       {},
       { description: 'new descript', badges: toHighlight },

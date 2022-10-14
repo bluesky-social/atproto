@@ -1122,11 +1122,11 @@ export const methodSchemas: MethodSchema[] = [
                   type: 'string',
                   maxLength: 64,
                 },
-                createdAt: {
+                offeredAt: {
                   type: 'string',
                   format: 'date-time',
                 },
-                indexedAt: {
+                acceptedAt: {
                   type: 'string',
                   format: 'date-time',
                 },
@@ -2440,58 +2440,12 @@ export const methodSchemas: MethodSchema[] = [
 export const recordSchemas: RecordSchema[] = [
   {
     lexicon: 1,
-    id: 'app.bsky.acceptedBadge',
-    type: 'record',
-    record: {
-      type: 'object',
-      required: ['subject', 'createdAt'],
-      properties: {
-        subject: {
-          $ref: '#/$defs/appBskyAcceptedBadgeSubject',
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time',
-        },
-      },
-      $defs: {
-        appBskyAcceptedBadgeSubject: {
-          type: 'object',
-          required: ['uri', 'cid'],
-          properties: {
-            uri: {
-              type: 'string',
-            },
-            cid: {
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-    defs: {
-      subject: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-        },
-      },
-    },
-  },
-  {
-    lexicon: 1,
     id: 'app.bsky.badge',
     type: 'record',
     description: 'An assertion about the subject by this user.',
     record: {
       type: 'object',
-      required: ['assertion', 'subject', 'createdAt'],
+      required: ['assertion', 'createdAt'],
       properties: {
         assertion: {
           oneOf: [
@@ -2508,9 +2462,6 @@ export const recordSchemas: RecordSchema[] = [
               $ref: '#/$defs/appBskyBadgeUnknownAssertion',
             },
           ],
-        },
-        subject: {
-          type: 'string',
         },
         createdAt: {
           type: 'string',
@@ -2604,6 +2555,104 @@ export const recordSchemas: RecordSchema[] = [
             not: {
               enum: ['invite', 'employee', 'tag'],
             },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'app.bsky.badgeAccept',
+    type: 'record',
+    record: {
+      type: 'object',
+      required: ['badge', 'offer', 'createdAt'],
+      properties: {
+        badge: {
+          $ref: '#/$defs/appBskyBadgeAcceptSubject',
+        },
+        offer: {
+          $ref: '#/$defs/appBskyBadgeAcceptSubject',
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {
+        appBskyBadgeAcceptSubject: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      subject: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'app.bsky.badgeOffer',
+    type: 'record',
+    record: {
+      type: 'object',
+      required: ['badge', 'subject', 'createdAt'],
+      properties: {
+        badge: {
+          $ref: '#/$defs/appBskyBadgeOfferBadge',
+        },
+        subject: {
+          type: 'string',
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {
+        appBskyBadgeOfferBadge: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      badge: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
           },
         },
       },
