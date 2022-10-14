@@ -1,5 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`pds profile views adds & removes badges from profile 1`] = `
+Object {
+  "badges": Array [
+    Object {
+      "assertion": Object {
+        "tag": "neat",
+        "type": "tag",
+      },
+      "cid": "cids(0)",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "issuer": Object {
+        "did": "user(1)",
+        "name": "carol.test",
+      },
+      "uri": "record(0)",
+    },
+  ],
+  "description": "new descript",
+  "did": "user(0)",
+  "displayName": "ali",
+  "followersCount": 2,
+  "followsCount": 3,
+  "myState": Object {},
+  "name": "alice.test",
+  "postsCount": 4,
+}
+`;
+
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
   "badges": Array [],
@@ -31,6 +59,35 @@ Object {
 exports[`pds profile views fetches own profile 1`] = `
 Object {
   "badges": Array [],
+  "description": "its me!",
+  "did": "user(0)",
+  "displayName": "ali",
+  "followersCount": 2,
+  "followsCount": 3,
+  "myState": Object {},
+  "name": "alice.test",
+  "postsCount": 4,
+}
+`;
+
+exports[`pds profile views updates profile 1`] = `
+Object {
+  "badges": Array [
+    Object {
+      "assertion": Object {
+        "tag": "cool",
+        "type": "tag",
+      },
+      "cid": "cids(0)",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "issuer": Object {
+        "did": "user(1)",
+        "displayName": "bobby",
+        "name": "bob.test",
+      },
+      "uri": "record(0)",
+    },
+  ],
   "description": "its me!",
   "did": "user(0)",
   "displayName": "ali",

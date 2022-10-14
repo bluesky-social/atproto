@@ -60,6 +60,40 @@ describe('pds profile views', () => {
     expect(forSnapshot(danForBob.data)).toMatchSnapshot()
   })
 
+  it('updates profile', async () => {
+    const toHighlight = [sc.badges[sc.dids.bob][sc.dids.alice][1].raw]
+    await client.app.bsky.updateProfile(
+      {},
+      { displayName: 'ali', badges: toHighlight },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceForAlice = await client.app.bsky.getProfile(
+      { user: alice },
+      undefined,
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
+  it('adds & removes badges from profile', async () => {
+    const toHighlight = [sc.badges[sc.dids.carol][sc.dids.alice][0].raw]
+    await client.app.bsky.updateProfile(
+      {},
+      { description: 'new descript', badges: toHighlight },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceForAlice = await client.app.bsky.getProfile(
+      { user: alice },
+      undefined,
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
   it('fetches profile by username', async () => {
     const byDid = await client.app.bsky.getProfile({ user: alice }, undefined, {
       headers: sc.getHeaders(bob),

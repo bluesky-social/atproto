@@ -5,6 +5,7 @@ import getBadgeMembers from './getBadgeMembers'
 import getLikedBy from './getLikedBy'
 import getPostThread from './getPostThread'
 import getProfile from './getProfile'
+import updateProfile from './updateProfile'
 import getRepostedBy from './getRepostedBy'
 import getUserFollowers from './getUserFollowers'
 import getUserFollows from './getUserFollows'
@@ -19,6 +20,7 @@ export default function (server: Server) {
   getLikedBy(server)
   getPostThread(server)
   getProfile(server)
+  updateProfile(server)
   getRepostedBy(server)
   getUserFollowers(server)
   getUserFollows(server)

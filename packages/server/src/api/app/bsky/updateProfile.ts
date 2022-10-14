@@ -23,7 +23,8 @@ export default function (server: Server) {
 
     const current = await repo.getCollection(profileNsid).getRecord('self')
     if (!db.records.profile.matchesSchema(current)) {
-      throw new Error('')
+      // @TODO better errors
+      throw new Error('current doesnt match')
     }
 
     const updated = {
@@ -33,7 +34,7 @@ export default function (server: Server) {
       badges: input.body.badges || current.badges,
     }
     if (!db.records.profile.matchesSchema(updated)) {
-      throw new Error('')
+      throw new Error('updated doesnt match')
     }
 
     const uri = new AdxUri(`${requester}/${profileNsid}/self`)
@@ -47,11 +48,11 @@ export default function (server: Server) {
     const updatedBadges = updated.badges || []
     const toDelete = currBadges
       .filter(
-        (row) => !updatedBadges.some((badge) => (badge.uri = row.badgeUri)),
+        (row) => !updatedBadges.some((badge) => badge.uri === row.badgeUri),
       )
       .map((row) => row.badgeUri)
     const toAdd = updatedBadges
-      .filter((badge) => !currBadges.some((row) => (badge.uri = row.badgeUri)))
+      .filter((badge) => !currBadges.some((row) => badge.uri === row.badgeUri))
       .map((badge) => ({
         profileUri: uri.toString(),
         badgeUri: badge.uri,
@@ -72,12 +73,16 @@ export default function (server: Server) {
       .where('uri', '=', uri.toString())
       .execute()
 
-    const profileQuery = db.db.updateTable('app_bsky_profile').set({
-      cid: newCid.toString(),
-      displayName: current.displayName,
-      description: current.description,
-      indexedAt: new Date().toISOString(),
-    })
+    const profileQuery = db.db
+      .updateTable('app_bsky_profile')
+      .set({
+        cid: newCid.toString(),
+        displayName: updated.displayName,
+        description: updated.description,
+        indexedAt: new Date().toISOString(),
+      })
+      .where('uri', '=', uri.toString())
+      .execute()
 
     const delBadgesQuery = db.db
       .deleteFrom('app_bsky_profile_badge')

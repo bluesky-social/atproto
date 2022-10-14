@@ -156,9 +156,11 @@ export default function (server: Server) {
         `${did} is not a registered repo on this server`,
       )
     }
+    // @TODO handle this better. schema layer?
+    const rkey = collection === 'app.bsky.profile' ? 'self' : undefined
     const { key, cid } = await repo
       .getCollection(collection)
-      .createRecord(input.body)
+      .createRecord(input.body, rkey)
     const uri = new AdxUri(`${did}/${collection}/${key}`)
     try {
       await db.indexRecord(uri, cid, input.body)
