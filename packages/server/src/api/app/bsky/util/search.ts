@@ -1,6 +1,7 @@
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import { sql } from 'kysely'
 import Database from '../../../../db'
+import { DbRef } from '../../../../db/util'
 
 export const getUserSearchQueryPg = (
   db: Database,
@@ -15,38 +16,42 @@ export const getUserSearchQueryPg = (
   const threshold = term.length < 3 ? 0.9 : 0.8
   const cursor = before !== undefined ? unpackCursor(before) : undefined
 
-  const distanceAccount = sql<number>`(${ref('username')} <->>> ${term})`
-  const keysetAccount =
-    cursor &&
-    sql`(${distanceAccount} > ${cursor.distance}) or (${distanceAccount} = ${cursor.distance} and username > ${cursor.name})`
+  // Matching user accounts based on username
+  const distanceAccount = distance(term, ref('username'))
+  const keysetAccount = keyset(cursor, {
+    username: ref('username'),
+    distance: distanceAccount,
+  })
   const accountsQb = db.db
     .selectFrom('user')
-    .where(sql`(${distanceAccount} < ${threshold})`)
+    .where(distanceAccount, '<', threshold)
     .if(!!keysetAccount, (qb) => (keysetAccount ? qb.where(keysetAccount) : qb))
     .select(['user.did as did', distanceAccount.as('distance')])
     .orderBy(distanceAccount)
     .orderBy('username')
     .limit(limit)
 
-  const distanceProfile = sql<number>`(${ref('displayName')} <->>> ${term})`
-  const keysetProfile =
-    cursor &&
-    sql`(${distanceProfile} > ${cursor.distance}) or (${distanceProfile} = ${cursor.distance} and username > ${cursor.name})`
+  // Matching profiles based on display name
+  const distanceProfile = distance(term, ref('displayName'))
+  const keysetProfile = keyset(cursor, {
+    username: ref('username'),
+    distance: distanceProfile,
+  })
   const profilesQb = db.db
     .selectFrom('app_bsky_profile')
     .innerJoin('user', 'user.did', 'app_bsky_profile.creator')
-    .where(sql`(${distanceProfile} < ${threshold})`)
+    .where(distanceProfile, '<', threshold)
     .if(!!keysetProfile, (qb) => (keysetProfile ? qb.where(keysetProfile) : qb))
     .select(['user.did as did', distanceProfile.as('distance')])
     .orderBy(distanceProfile)
     .orderBy('username')
     .limit(limit)
 
+  // Combine user account and profile results, taking best matches from each
   const emptyQb = db.db
     .selectFrom('user')
     .where(sql`1 = 0`)
     .select([sql.literal('').as('did'), sql<number>`0`.as('distance')])
-
   const resultsQb = db.db
     .selectFrom(
       emptyQb
@@ -59,12 +64,11 @@ export const getUserSearchQueryPg = (
     .orderBy('did')
     .orderBy('distance')
 
-  const keysetAll =
-    cursor &&
-    sql`(${ref('distance')} > ${cursor.distance}) or (${ref('distance')} = ${
-      cursor.distance
-    } and username > ${cursor.name})`
-
+  // Sort and paginate all user results
+  const keysetAll = keyset(cursor, {
+    username: ref('username'),
+    distance: ref('distance'),
+  })
   return db.db
     .selectFrom(resultsQb.as('results'))
     .innerJoin('user', 'user.did', 'results.did')
@@ -85,7 +89,16 @@ export const getUserSearchQuerySqlite = (
   // based on the number of words, so to keep things predictable just ignore words 4 and
   // beyond. We also remove the special wildcard characters supported by the LIKE operator,
   // since that's where these values are heading.
-  const safeWords = term.replace(/[%_]/g, '').split(/\s+/).slice(0, 3)
+  const safeWords = term
+    .replace(/[%_]/g, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+
+  if (!safeWords.length) {
+    // Return no results. This could happen with weird input like ' % _ '.
+    return db.db.selectFrom('user').where(sql`1 = 0`)
+  }
 
   // We'll ensured there's a space before each word in both textForMatch and in safeWords,
   // so that we can reliably match word prefixes using LIKE operator.
@@ -133,3 +146,13 @@ export const unpackCursor = (
 
 // Remove leading @ in case a username is input that way
 export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')
+
+// Uses pg_trgm strict word similarity to check similarity between a search term and a stored value
+const distance = (term: string, ref: DbRef) =>
+  sql<number>`(${term} <<<-> ${ref})`
+
+// Keyset condition for a cursor
+const keyset = (cursor, refs: { username: DbRef; distance: DbRef }) => {
+  if (cursor === undefined) return undefined
+  return sql`(${refs.distance} > ${cursor.distance}) or (${refs.distance} = ${cursor.distance} and ${refs.username} > ${cursor.name})`
+}

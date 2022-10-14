@@ -24,7 +24,7 @@ export const paginate = <QB extends SelectQueryBuilder<any, any, any>>(
   opts: {
     limit?: number
     before?: string
-    by: RawBuilder | ReturnType<DynamicModule['ref']>
+    by: DbRef
   },
 ) => {
   return qb
@@ -47,3 +47,5 @@ export const dummyDialect = {
     return new SqliteQueryCompiler()
   },
 }
+
+export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
