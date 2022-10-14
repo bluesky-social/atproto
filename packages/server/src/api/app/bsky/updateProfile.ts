@@ -23,8 +23,8 @@ export default function (server: Server) {
 
     const current = await repo.getCollection(profileNsid).getRecord('self')
     if (!db.records.profile.matchesSchema(current)) {
-      // @TODO better errors
-      throw new Error('current doesnt match')
+      // @TODO need a way to get a profile out of a broken state
+      throw new InvalidRequestError('could not parse current profile')
     }
 
     const updated = {
@@ -34,7 +34,9 @@ export default function (server: Server) {
       badges: input.body.badges || current.badges,
     }
     if (!db.records.profile.matchesSchema(updated)) {
-      throw new Error('updated doesnt match')
+      throw new InvalidRequestError(
+        'requested updates do not produce a valid profile doc',
+      )
     }
 
     const uri = new AdxUri(`${requester}/${profileNsid}/self`)
