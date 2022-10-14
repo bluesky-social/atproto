@@ -1,5 +1,6 @@
-import { InvalidRequestError } from '@adxp/xrpc-server'
 import { sql } from 'kysely'
+import { safeParse } from '@hapi/bourne'
+import { InvalidRequestError } from '@adxp/xrpc-server'
 import Database from '../../../../db'
 import { DbRef } from '../../../../db/util'
 
@@ -133,7 +134,10 @@ export const packCursor = (row: { distance: number; name: string }): string => {
 export const unpackCursor = (
   before: string,
 ): { distance: number; name: string } => {
-  const result = JSON.parse(before) /// @TODO bourne
+  const result = safeParse(before)
+  if (!Array.isArray(result)) {
+    throw new InvalidRequestError('Malformed cursor')
+  }
   const [distance, name, ...others] = result
   if (typeof distance !== 'number' || !name || others.length > 0) {
     throw new InvalidRequestError('Malformed cursor')
