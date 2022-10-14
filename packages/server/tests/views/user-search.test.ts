@@ -6,7 +6,7 @@ import { App } from '../../src'
 import * as locals from '../../src/locals'
 
 describe('pds user search views', () => {
-  let app: App // @TODO ensure other tests know App now always exists
+  let app: App
   let client: AdxServiceClient
   let close: CloseFn
   let sc: SeedClient
