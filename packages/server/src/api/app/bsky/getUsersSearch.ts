@@ -1,124 +1,61 @@
 import { sql } from 'kysely'
-import { InvalidRequestError } from '@adxp/xrpc-server'
 import { QueryParams } from '@adxp/api/src/types/app/bsky/getUsersSearch'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
-import { debugCatch } from '../../../util'
+import {
+  getUserSearchQueryPg,
+  getUserSearchQuerySqlite,
+  packCursor,
+} from './util/search'
 
 export default function (server: Server) {
-  server.app.bsky.getUsersSearch(
-    debugCatch(async (params, _input, req, res) => {
-      let { term, limit } = params
-      const { before } = params
-      const { db, auth } = locals.get(res)
-      auth.getUserDidOrThrow(req)
+  server.app.bsky.getUsersSearch(async (params, _input, req, res) => {
+    let { term, limit } = params
+    const { before } = params
+    const { db, auth } = locals.get(res)
+    auth.getUserDidOrThrow(req)
 
-      // Remove leading @ in case a username is input that way
-      term = term.trim().replace(/^@/g, '')
-      limit = Math.min(limit ?? 25, 100)
+    // Remove leading @ in case a username is input that way
+    term = term.trim().replace(/^@/g, '')
+    limit = Math.min(limit ?? 25, 100)
 
-      if (!term) {
-        return {
-          encoding: 'application/json',
-          body: {
-            users: [],
-          },
-        }
-      }
-
-      const results =
-        db.dialect === 'pg'
-          ? await getResultsPg(db, { term, limit, before })
-          : await getResultsSqlite(db, { term, limit, before })
-
-      const users = results.map((result) => ({
-        did: result.did,
-        name: result.name,
-        displayName: result.displayName ?? undefined,
-        description: result.description ?? undefined,
-        createdAt: result.createdAt,
-        indexedAt: result.indexedAt ?? result.createdAt,
-        cursor: packCursor(result),
-      }))
-
+    if (!term) {
       return {
         encoding: 'application/json',
         body: {
-          users,
+          users: [],
         },
       }
-    }),
-  )
+    }
+
+    const results =
+      db.dialect === 'pg'
+        ? await getResultsPg(db, { term, limit, before })
+        : await getResultsSqlite(db, { term, limit, before })
+
+    const users = results.map((result) => ({
+      did: result.did,
+      name: result.name,
+      displayName: result.displayName ?? undefined,
+      description: result.description ?? undefined,
+      createdAt: result.createdAt,
+      indexedAt: result.indexedAt ?? result.createdAt,
+      cursor: packCursor(result),
+    }))
+
+    return {
+      encoding: 'application/json',
+      body: {
+        users,
+      },
+    }
+  })
 }
 
 const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
-  const { ref } = db.db.dynamic
-
-  // Performing matching by word using "strict word similarity" operator.
-  // The more characters the user gives us, the more we can ratchet down
-  // the distance threshold for matching.
-  const threshold = term.length < 3 ? 0.9 : 0.8
-  const cursor = before !== undefined ? unpackCursor(before) : undefined
-
-  const distanceAccount = sql<number>`(${ref('username')} <->>> ${term})`
-  const keysetAccount =
-    cursor &&
-    sql`(${distanceAccount} > ${cursor.distance}) or (${distanceAccount} = ${cursor.distance} and username > ${cursor.name})`
-  const accountsQb = db.db
-    .selectFrom('user')
-    .where(sql`(${distanceAccount} < ${threshold})`)
-    .if(!!keysetAccount, (qb) => (keysetAccount ? qb.where(keysetAccount) : qb))
-    .select(['user.did as did', distanceAccount.as('distance')])
-    .orderBy(distanceAccount)
-    .orderBy('username')
-    .limit(limit)
-
-  const distanceProfile = sql<number>`(${ref('displayName')} <->>> ${term})`
-  const keysetProfile =
-    cursor &&
-    sql`(${distanceProfile} > ${cursor.distance}) or (${distanceProfile} = ${cursor.distance} and username > ${cursor.name})`
-  const profilesQb = db.db
-    .selectFrom('app_bsky_profile')
-    .innerJoin('user', 'user.did', 'app_bsky_profile.creator')
-    .where(sql`(${distanceProfile} < ${threshold})`)
-    .if(!!keysetProfile, (qb) => (keysetProfile ? qb.where(keysetProfile) : qb))
-    .select(['user.did as did', distanceProfile.as('distance')])
-    .orderBy(distanceProfile)
-    .orderBy('username')
-    .limit(limit)
-
-  const emptyQb = db.db
-    .selectFrom('user')
-    .where(sql`1 = 0`)
-    .select([sql.literal('').as('did'), sql<number>`0`.as('distance')])
-
-  const resultsQb = db.db
-    .selectFrom(
-      emptyQb
-        .union(sql`${accountsQb}`) // The sql`` is adding parens
-        .union(sql`${profilesQb}`)
-        .as('accounts_and_profiles'),
-    )
-    .selectAll()
-    .distinctOn('did') // Per did, take whichever of account and profile distance is best
-    .orderBy('did')
-    .orderBy('distance')
-
-  const keysetAll =
-    cursor &&
-    sql`(${ref('distance')} > ${cursor.distance}) or (${ref('distance')} = ${
-      cursor.distance
-    } and username > ${cursor.name})`
-
-  return await db.db
-    .selectFrom(resultsQb.as('results'))
-    .innerJoin('user', 'user.did', 'results.did')
+  return await getUserSearchQueryPg(db, { term, limit, before })
     .leftJoin('app_bsky_profile as profile', 'profile.creator', 'results.did')
-    .if(!!keysetAll, (qb) => (keysetAll ? qb.where(keysetAll) : qb))
-    .orderBy('distance')
-    .orderBy('username') // Keep order stable: break ties in distance arbitrarily using username
-    .limit(limit)
     .select([
       'distance',
       'user.did as did',
@@ -132,37 +69,8 @@ const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
 }
 
 const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
-  const { ref } = db.db.dynamic
-
-  // Take the first three words in the search term. We're going to build a dynamic query
-  // based on the number of words, so to keep things predictable just ignore words 4 and
-  // beyond. We also remove the special wildcard characters supported by the LIKE operator,
-  // since that's where these values are heading.
-  const safeWords = term.replace(/[%_]/g, '').split(/\s+/).slice(0, 3)
-
-  // We'll ensured there's a space before each word in both textForMatch and in safeWords,
-  // so that we can reliably match word prefixes using LIKE operator.
-  const textForMatch = sql`lower(' ' || ${ref(
-    'user.username',
-  )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
-
-  const cursor = before !== undefined ? unpackCursor(before) : undefined
-
-  return await db.db
-    .selectFrom('user')
+  return await getUserSearchQuerySqlite(db, { term, limit, before })
     .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user.did')
-    .where((q) => {
-      safeWords.forEach((word) => {
-        // Match word prefixes against contents of username and displayName
-        q = q.where(textForMatch, 'like', `% ${word.toLowerCase()}%`)
-      })
-      return q
-    })
-    .if(!!cursor, (qb) =>
-      cursor ? qb.where('username', '>', cursor.name) : qb,
-    )
-    .orderBy('username')
-    .limit(limit)
     .select([
       sql<number>`0`.as('distance'),
       'user.did as did',
@@ -173,24 +81,6 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
       'profile.indexedAt as indexedAt',
     ])
     .execute()
-}
-
-// E.g. { distance: .94827, name: 'pfrazee' } -> '[0.94827,"pfrazee"]'
-const packCursor = (row: Awaited<ReturnType<GetResultsFn>>[number]): string => {
-  const { distance, name } = row
-  return JSON.stringify([distance, name])
-}
-
-const unpackCursor = (before: string): { distance: number; name: string } => {
-  const result = JSON.parse(before) /// @TODO bourne
-  const [distance, name, ...others] = result
-  if (typeof distance !== 'number' || !name || others.length > 0) {
-    throw new InvalidRequestError('Malformed cursor')
-  }
-  return {
-    name,
-    distance,
-  }
 }
 
 type GetResultsFn = (
