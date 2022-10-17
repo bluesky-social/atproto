@@ -17,6 +17,7 @@
       "type": "object",
       "required": ["records"],
       "properties": {
+        "cursor": {"type": "string"},
         "records": {
           "type": "array",
           "items": {

@@ -1,5 +1,11 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import { runTestServer, forSnapshot, CloseFn, constantDate } from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  CloseFn,
+  constantDate,
+  paginateAll,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
 
@@ -92,19 +98,27 @@ describe('pds follow views', () => {
   })
 
   it('paginates followers', async () => {
+    const results = (results) => results.flatMap((res) => res.followers)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getUserFollowers({
+        user: sc.dids.alice,
+        before: cursor,
+        limit: 2,
+      })
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.followers.length).toBeLessThanOrEqual(2),
+    )
+
     const full = await client.app.bsky.getUserFollowers({
       user: sc.dids.alice,
     })
 
     expect(full.data.followers.length).toEqual(4)
-
-    const paginated = await client.app.bsky.getUserFollowers({
-      user: sc.dids.alice,
-      before: full.data.followers[0].createdAt,
-      limit: 2,
-    })
-
-    expect(paginated.data.followers).toEqual(full.data.followers.slice(1, 3))
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
   it('fetches follows', async () => {
@@ -165,18 +179,26 @@ describe('pds follow views', () => {
   })
 
   it('paginates follows', async () => {
+    const results = (results) => results.flatMap((res) => res.follows)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getUserFollows({
+        user: sc.dids.alice,
+        before: cursor,
+        limit: 2,
+      })
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.follows.length).toBeLessThanOrEqual(2),
+    )
+
     const full = await client.app.bsky.getUserFollows({
       user: sc.dids.alice,
     })
 
     expect(full.data.follows.length).toEqual(4)
-
-    const paginated = await client.app.bsky.getUserFollows({
-      user: sc.dids.alice,
-      before: full.data.follows[0].createdAt,
-      limit: 2,
-    })
-
-    expect(paginated.data.follows).toEqual(full.data.follows.slice(1, 3))
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

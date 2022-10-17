@@ -26,6 +26,7 @@
             }
           }
         },
+        "cursor": {"type": "string"},
         "followers": {
           "type": "array",
           "items": {

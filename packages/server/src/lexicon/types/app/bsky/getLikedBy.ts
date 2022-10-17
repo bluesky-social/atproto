@@ -27,6 +27,7 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 export interface OutputSchema {
   uri: string;
   cid?: string;
+  cursor?: string;
   likedBy: {
     did: string,
     name: string,

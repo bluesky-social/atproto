@@ -1,5 +1,5 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import { runTestServer, forSnapshot, CloseFn } from '../_util'
+import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import * as locals from '../../src/locals'
@@ -58,35 +58,30 @@ describe('pds notification views', () => {
   })
 
   it('paginates', async () => {
-    const { db } = locals.get(app)
+    const results = (results) => results.flatMap((res) => res.likedBy)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getNotifications(
+        {
+          before: cursor,
+          limit: 4,
+        },
+        undefined,
+        { headers: sc.getHeaders(alice) },
+      )
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.notifications.length).toBeLessThanOrEqual(4),
+    )
 
     const full = await client.app.bsky.getNotifications({}, undefined, {
       headers: sc.getHeaders(alice),
     })
 
-    expect(full.data.notifications.length).toBe(14)
-
-    // Need to look-up createdAt time as a cursor since it's not in the method's output
-    const beforeNotif = await db.db
-      .selectFrom('user_notification')
-      .selectAll()
-      .where('recordUri', '=', full.data.notifications[3].uri)
-      .executeTakeFirstOrThrow()
-
-    const paginated = await client.app.bsky.getNotifications(
-      {
-        before: beforeNotif.indexedAt,
-        limit: 4,
-      },
-      undefined,
-      {
-        headers: sc.getHeaders(alice),
-      },
-    )
-
-    expect(paginated.data.notifications).toEqual(
-      full.data.notifications.slice(4, 8),
-    )
+    expect(full.data.notifications.length).toEqual(14)
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
   it('updates notifications last seen', async () => {

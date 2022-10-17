@@ -16,6 +16,7 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string;
   users: {
     did: string,
     name: string,
@@ -23,7 +24,6 @@ export interface OutputSchema {
     description?: string,
     createdAt: string,
     indexedAt: string,
-    cursor: string,
   }[];
 }
 

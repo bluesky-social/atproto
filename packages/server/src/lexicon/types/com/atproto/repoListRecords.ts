@@ -27,6 +27,7 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
+  cursor?: string;
   records: {
     uri: string,
     cid: string,

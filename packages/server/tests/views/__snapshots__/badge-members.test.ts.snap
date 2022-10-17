@@ -2,6 +2,7 @@
 
 exports[`pds badge members view fetch members of a badge 1`] = `
 Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
   "members": Array [
     Object {
       "acceptedAt": "1970-01-01T00:00:00.000Z",

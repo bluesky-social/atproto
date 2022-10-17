@@ -1,7 +1,13 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import { SeedClient } from '../seeds/client'
 import likesSeed from '../seeds/likes'
-import { CloseFn, constantDate, forSnapshot, runTestServer } from '../_util'
+import {
+  CloseFn,
+  constantDate,
+  forSnapshot,
+  paginateAll,
+  runTestServer,
+} from '../_util'
 
 describe('pds like views', () => {
   let client: AdxServiceClient
@@ -11,7 +17,6 @@ describe('pds like views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
-  let dan: string
 
   beforeAll(async () => {
     const server = await runTestServer({
@@ -23,7 +28,6 @@ describe('pds like views', () => {
     await likesSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    dan = sc.dids.dan
   })
 
   afterAll(async () => {
@@ -61,18 +65,26 @@ describe('pds like views', () => {
   })
 
   it('paginates', async () => {
+    const results = (results) => results.flatMap((res) => res.likedBy)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getLikedBy({
+        uri: sc.posts[alice][1].ref.uriStr,
+        before: cursor,
+        limit: 2,
+      })
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.likedBy.length).toBeLessThanOrEqual(2),
+    )
+
     const full = await client.app.bsky.getLikedBy({
       uri: sc.posts[alice][1].ref.uriStr,
     })
 
     expect(full.data.likedBy.length).toEqual(4)
-
-    const paginated = await client.app.bsky.getLikedBy({
-      uri: sc.posts[alice][1].ref.uriStr,
-      before: full.data.likedBy[0].createdAt,
-      limit: 2,
-    })
-
-    expect(paginated.data.likedBy).toEqual(full.data.likedBy.slice(1, 3))
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

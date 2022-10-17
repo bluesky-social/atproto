@@ -57,10 +57,15 @@ export default function (server: Server) {
       after,
     )
 
+    const lastRecord = records.at(-1)
+    const lastUri = lastRecord && new AdxUri(lastRecord?.uri)
+
     return {
       encoding: 'application/json',
       body: {
         records,
+        // Paginate with `before` by default, paginate with `after` when using `reverse`.
+        cursor: lastUri?.rkey,
       },
     }
   })

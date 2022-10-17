@@ -1,7 +1,7 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import * as Post from '@adxp/api/src/types/app/bsky/post'
 import { AdxUri } from '@adxp/uri'
-import * as util from './_util'
+import { CloseFn, paginateAll, runTestServer } from './_util'
 
 const alice = {
   email: 'alice@test.com',
@@ -19,10 +19,10 @@ const bob = {
 describe('crud operations', () => {
   let client: AdxServiceClient
   let aliceClient: AdxServiceClient
-  let close: util.CloseFn
+  let close: CloseFn
 
   beforeAll(async () => {
-    const server = await util.runTestServer({
+    const server = await runTestServer({
       dbPostgresSchema: 'crud',
     })
     close = server.close
@@ -159,79 +159,118 @@ describe('crud operations', () => {
     expect(res3.records.length).toBe(0)
   })
 
-  it('lists records with pagination', async () => {
-    const doCreate = async (text: string) => {
-      const res = await aliceClient.app.bsky.post.create(
-        { did: alice.did },
-        {
-          $type: 'app.bsky.post',
-          text,
-          createdAt: new Date().toISOString(),
-        },
+  describe('paginates', () => {
+    let uri1: AdxUri
+    let uri2: AdxUri
+    let uri3: AdxUri
+    let uri4: AdxUri
+    let uri5: AdxUri
+
+    beforeAll(async () => {
+      const createPost = async (text: string) => {
+        const res = await aliceClient.app.bsky.post.create(
+          { did: alice.did },
+          {
+            $type: 'app.bsky.post',
+            text,
+            createdAt: new Date().toISOString(),
+          },
+        )
+        return new AdxUri(res.uri)
+      }
+      uri1 = await createPost('Post 1')
+      uri2 = await createPost('Post 2')
+      uri3 = await createPost('Post 3')
+      uri4 = await createPost('Post 4')
+      uri5 = await createPost('Post 5')
+    })
+
+    afterAll(async () => {
+      await Promise.all(
+        [uri1, uri2, uri3, uri4, uri5].map((uri) =>
+          aliceClient.app.bsky.post.delete({
+            did: alice.did,
+            rkey: uri.rkey,
+          }),
+        ),
       )
-      return new AdxUri(res.uri)
-    }
-    const doList = async (params: any) => {
-      const res = await client.app.bsky.post.list({
+    })
+
+    it('in forwards order', async () => {
+      const results = (results) => results.flatMap((res) => res.records)
+      const paginator = async (cursor?: string) => {
+        const res = await client.app.bsky.post.list({
+          user: alice.did,
+          before: cursor,
+          limit: 2,
+        })
+        return res
+      }
+
+      const paginatedAll = await paginateAll(paginator)
+      paginatedAll.forEach((res) =>
+        expect(res.records.length).toBeLessThanOrEqual(2),
+      )
+
+      const full = await client.app.bsky.post.list({
         user: alice.did,
-        ...params,
       })
-      return res
-    }
-    const uri1 = await doCreate('Post 1')
-    const uri2 = await doCreate('Post 2')
-    const uri3 = await doCreate('Post 3')
-    const uri4 = await doCreate('Post 4')
-    {
-      const list = await doList({ limit: 2 })
-      expect(list.records.length).toBe(2)
-      expect(list.records[0].value.text).toBe('Post 1')
-      expect(list.records[1].value.text).toBe('Post 2')
-    }
-    {
-      const list = await doList({ limit: 2, reverse: true })
-      expect(list.records.length).toBe(2)
-      expect(list.records[0].value.text).toBe('Post 4')
-      expect(list.records[1].value.text).toBe('Post 3')
-    }
 
-    {
-      const list = await doList({ after: uri2.rkey })
-      expect(list.records.length).toBe(2)
-      expect(list.records[0].value.text).toBe('Post 3')
-      expect(list.records[1].value.text).toBe('Post 4')
-    }
-    {
-      const list = await doList({ before: uri3.rkey })
-      expect(list.records.length).toBe(2)
-      expect(list.records[0].value.text).toBe('Post 1')
-      expect(list.records[1].value.text).toBe('Post 2')
-    }
-    {
-      const list = await doList({
-        before: uri4.rkey,
+      expect(full.records.length).toEqual(5)
+      expect(results(paginatedAll)).toEqual(results([full]))
+    })
+
+    it('in reverse order', async () => {
+      const results = (results) => results.flatMap((res) => res.records)
+      const paginator = async (cursor?: string) => {
+        const res = await client.app.bsky.post.list({
+          user: alice.did,
+          reverse: true,
+          after: cursor,
+          limit: 2,
+        })
+        return res
+      }
+
+      const paginatedAll = await paginateAll(paginator)
+      paginatedAll.forEach((res) =>
+        expect(res.records.length).toBeLessThanOrEqual(2),
+      )
+
+      const full = await client.app.bsky.post.list({
+        user: alice.did,
+        reverse: true,
+      })
+
+      expect(full.records.length).toEqual(5)
+      expect(results(paginatedAll)).toEqual(results([full]))
+    })
+
+    it('between two records', async () => {
+      const list = await client.app.bsky.post.list({
+        user: alice.did,
         after: uri1.rkey,
+        before: uri5.rkey,
       })
-      expect(list.records.length).toBe(2)
-      expect(list.records[0].value.text).toBe('Post 2')
-      expect(list.records[1].value.text).toBe('Post 3')
-    }
+      expect(list.records.length).toBe(3)
+      expect(list.records[0].uri).toBe(uri4.toString())
+      expect(list.records[1].uri).toBe(uri3.toString())
+      expect(list.records[2].uri).toBe(uri2.toString())
+    })
 
-    await aliceClient.app.bsky.post.delete({
-      did: alice.did,
-      rkey: uri1.rkey,
-    })
-    await aliceClient.app.bsky.post.delete({
-      did: alice.did,
-      rkey: uri2.rkey,
-    })
-    await aliceClient.app.bsky.post.delete({
-      did: alice.did,
-      rkey: uri3.rkey,
-    })
-    await aliceClient.app.bsky.post.delete({
-      did: alice.did,
-      rkey: uri4.rkey,
+    it('reverses', async () => {
+      const forwards = await client.app.bsky.post.list({
+        user: alice.did,
+      })
+      const reverse = await client.app.bsky.post.list({
+        user: alice.did,
+        reverse: true,
+      })
+      expect(forwards.cursor).toEqual(uri1.rkey)
+      expect(reverse.cursor).toEqual(uri5.rkey)
+      expect(forwards.records.length).toEqual(5)
+      expect(reverse.records.length).toEqual(5)
+      expect(forwards.records.reverse()).toEqual(reverse.records)
     })
   })
 

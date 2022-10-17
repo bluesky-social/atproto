@@ -1,11 +1,5 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import {
-  runTestServer,
-  forSnapshot,
-  getCursors,
-  getSortedCursors,
-  CloseFn,
-} from '../_util'
+import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -48,9 +42,6 @@ describe('pds author feed views', () => {
     )
 
     expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
-    expect(getCursors(aliceForAlice.data.feed)).toEqual(
-      getSortedCursors(aliceForAlice.data.feed),
-    )
 
     const bobForBob = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[bob].username },
@@ -61,9 +52,6 @@ describe('pds author feed views', () => {
     )
 
     expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
-    expect(getCursors(bobForBob.data.feed)).toEqual(
-      getSortedCursors(bobForBob.data.feed),
-    )
 
     const carolForCarol = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[carol].username },
@@ -74,9 +62,6 @@ describe('pds author feed views', () => {
     )
 
     expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
-    expect(getCursors(carolForCarol.data.feed)).toEqual(
-      getSortedCursors(carolForCarol.data.feed),
-    )
 
     const danForDan = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[dan].username },
@@ -87,9 +72,6 @@ describe('pds author feed views', () => {
     )
 
     expect(forSnapshot(danForDan.data.feed)).toMatchSnapshot()
-    expect(getCursors(danForDan.data.feed)).toEqual(
-      getSortedCursors(danForDan.data.feed),
-    )
   })
 
   it("reflects fetching user's state in the feed.", async () => {
@@ -110,28 +92,34 @@ describe('pds author feed views', () => {
   })
 
   it('paginates', async () => {
+    const results = (results) => results.flatMap((res) => res.feed)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getAuthorFeed(
+        {
+          author: sc.accounts[alice].username,
+          before: cursor,
+          limit: 2,
+        },
+        undefined,
+        { headers: sc.getHeaders(dan) },
+      )
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.feed.length).toBeLessThanOrEqual(2),
+    )
+
     const full = await client.app.bsky.getAuthorFeed(
-      { author: sc.accounts[alice].username },
-      undefined,
       {
-        headers: sc.getHeaders(dan),
+        author: sc.accounts[alice].username,
       },
+      undefined,
+      { headers: sc.getHeaders(dan) },
     )
 
     expect(full.data.feed.length).toEqual(4)
-
-    const paginated = await client.app.bsky.getAuthorFeed(
-      {
-        author: sc.accounts[alice].username,
-        before: full.data.feed[0].cursor,
-        limit: 2,
-      },
-      undefined,
-      {
-        headers: sc.getHeaders(dan),
-      },
-    )
-
-    expect(paginated.data.feed).toEqual(full.data.feed.slice(1, 3))
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

@@ -1,5 +1,11 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import { runTestServer, forSnapshot, constantDate, CloseFn } from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  constantDate,
+  CloseFn,
+  paginateAll,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import repostsSeed from '../seeds/reposts'
 
@@ -59,18 +65,26 @@ describe('pds repost views', () => {
   })
 
   it('paginates', async () => {
+    const results = (results) => results.flatMap((res) => res.repostedBy)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getRepostedBy({
+        uri: sc.posts[alice][2].ref.uriStr,
+        before: cursor,
+        limit: 2,
+      })
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.repostedBy.length).toBeLessThanOrEqual(2),
+    )
+
     const full = await client.app.bsky.getRepostedBy({
       uri: sc.posts[alice][2].ref.uriStr,
     })
 
     expect(full.data.repostedBy.length).toEqual(4)
-
-    const paginated = await client.app.bsky.getRepostedBy({
-      uri: sc.posts[alice][2].ref.uriStr,
-      before: full.data.repostedBy[0].createdAt,
-      limit: 2,
-    })
-
-    expect(paginated.data.repostedBy).toEqual(full.data.repostedBy.slice(1, 3))
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

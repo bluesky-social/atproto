@@ -23,6 +23,7 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
+  cursor?: string;
   notifications: AppBskyGetNotificationsNotification[];
 }
 export interface AppBskyGetNotificationsNotification {
