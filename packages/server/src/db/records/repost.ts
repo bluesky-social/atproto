@@ -2,10 +2,10 @@ import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import * as Repost from '../../lexicon/types/app/bsky/repost'
 import { DbRecordPlugin, Notification } from '../types'
-import schemas from '../schemas'
+import * as schemas from '../schemas'
 import { CID } from '@adxp/common'
 
-const type = 'app.bsky.repost'
+const type = schemas.ids.AppBskyRepost
 const tableName = 'app_bsky_repost'
 
 export interface AppBskyRepost {
@@ -33,7 +33,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
 
 export type PartialDB = { [tableName]: AppBskyRepost }
 
-const validator = schemas.createRecordValidator(type)
+const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Repost.Record => {
   return validator.isValid(obj)
 }

@@ -3,9 +3,9 @@ import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import * as Post from '../../lexicon/types/app/bsky/post'
 import { DbRecordPlugin, Notification } from '../types'
-import schemas from '../schemas'
+import * as schemas from '../schemas'
 
-const type = 'app.bsky.post'
+const type = schemas.ids.AppBskyPost
 const tableName = 'app_bsky_post'
 
 export interface AppBskyPost {
@@ -60,7 +60,7 @@ export type PartialDB = {
   [supportingTableName]: AppBskyPostEntity
 }
 
-const validator = schemas.createRecordValidator(type)
+const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Post.Record => {
   return validator.isValid(obj)
 }

@@ -1,10 +1,10 @@
 import { RecordSchemas } from '@adxp/lexicon'
 import { recordSchemas } from '../lexicon/schemas'
 
-export const schemas = new RecordSchemas()
+export const records = new RecordSchemas()
 
 for (const schema of recordSchemas) {
-  schemas.add(schema)
+  records.add(schema)
 }
 
-export default schemas
+export { ids } from '../lexicon/schemas'

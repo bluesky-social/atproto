@@ -3,10 +3,10 @@ import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../lexicon/types/app/bsky/profile'
 import { DbRecordPlugin, Notification } from '../types'
-import schemas from '../schemas'
+import * as schemas from '../schemas'
 import { Dialect } from '..'
 
-const type = 'app.bsky.profile'
+const type = schemas.ids.AppBskyProfile
 const tableName = 'app_bsky_profile'
 
 export interface AppBskyProfile {
@@ -66,7 +66,7 @@ export type PartialDB = {
   [supportingTableName]: AppBskyProfileBadge
 }
 
-const validator = schemas.createRecordValidator(type)
+const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Profile.Record => {
   return validator.isValid(obj)
 }

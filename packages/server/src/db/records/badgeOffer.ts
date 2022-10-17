@@ -3,9 +3,9 @@ import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import * as BadgeOffer from '../../lexicon/types/app/bsky/badgeOffer'
 import { DbRecordPlugin, Notification } from '../types'
-import schemas from '../schemas'
+import * as schemas from '../schemas'
 
-const type = 'app.bsky.badgeOffer'
+const type = schemas.ids.AppBskyBadgeOffer
 const tableName = 'app_bsky_badge_offer'
 
 export interface AppBskyBadgeOffer {
@@ -35,7 +35,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
 
 export type PartialDB = { [tableName]: AppBskyBadgeOffer }
 
-const validator = schemas.createRecordValidator(type)
+const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is BadgeOffer.Record => {
   return validator.isValid(obj)
 }
