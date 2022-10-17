@@ -41,13 +41,15 @@ export default function (server: Server) {
       description: result.description ?? undefined,
       createdAt: result.createdAt,
       indexedAt: result.indexedAt ?? result.createdAt,
-      cursor: packCursor(result),
     }))
+
+    const lastResult = results.at(-1)
 
     return {
       encoding: 'application/json',
       body: {
         users,
+        cursor: lastResult && packCursor(lastResult),
       },
     }
   })
