@@ -12,12 +12,25 @@ const PRETTIER_OPTS = {
 
 export const schemasTs = (project, schemas: Schema[]) =>
   gen(project, '/schemas.ts', async (file) => {
+    const methodSchemas = schemas.filter(
+      (s) => s.type === 'query' || s.type === 'procedure',
+    )
+    const recordSchemas = schemas.filter((s) => s.type === 'record')
+
+    const nsidToEnum = (nsid: string): string => {
+      return nsid
+        .split('.')
+        .map((word) => word[0].toUpperCase() + word.slice(1))
+        .join('')
+    }
+
     //= import {RecordSchema, MethodSchema} from '@adxp/lexicon'
     file
       .addImportDeclaration({
         moduleSpecifier: '@adxp/lexicon',
       })
       .addNamedImports([{ name: 'MethodSchema' }, { name: 'RecordSchema' }])
+
     //= export const methodSchemaDict: Record<string, MethodSchema> = {...}
     file.addVariableStatement({
       isExported: true,
@@ -27,14 +40,12 @@ export const schemasTs = (project, schemas: Schema[]) =>
           name: 'methodSchemaDict',
           type: 'Record<string, MethodSchema>',
           initializer: JSON.stringify(
-            schemas
-              .filter((s) => s.type === 'query' || s.type === 'procedure')
-              .reduce((acc, cur) => {
-                return {
-                  ...acc,
-                  [cur.id]: cur,
-                }
-              }, {}),
+            methodSchemas.reduce((acc, cur) => {
+              return {
+                ...acc,
+                [cur.id]: cur,
+              }
+            }, {}),
             null,
             2,
           ),
@@ -53,6 +64,25 @@ export const schemasTs = (project, schemas: Schema[]) =>
         },
       ],
     })
+
+    //= export const ids = {...}
+    file.addVariableStatement({
+      isExported: true,
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: 'ids',
+          initializer: JSON.stringify(
+            recordSchemas.reduce((acc, cur) => {
+              return {
+                ...acc,
+                [nsidToEnum(cur.id)]: cur.id,
+              }
+            }, {}),
+          ),
+        },
+      ],
+    })
     //= export const recordSchemaDict: Record<string, RecordSchema> = {...}
     file.addVariableStatement({
       isExported: true,
@@ -62,14 +92,12 @@ export const schemasTs = (project, schemas: Schema[]) =>
           name: 'recordSchemaDict',
           type: 'Record<string, RecordSchema>',
           initializer: JSON.stringify(
-            schemas
-              .filter((s) => s.type === 'record')
-              .reduce((acc, cur) => {
-                return {
-                  ...acc,
-                  [cur.id]: cur,
-                }
-              }, {}),
+            recordSchemas.reduce((acc, cur) => {
+              return {
+                ...acc,
+                [cur.id]: cur,
+              }
+            }, {}),
             null,
             2,
           ),

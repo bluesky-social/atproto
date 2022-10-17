@@ -2545,6 +2545,17 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
   },
 }
 export const methodSchemas: MethodSchema[] = Object.values(methodSchemaDict)
+export const ids = {
+  AppBskyBadge: 'app.bsky.badge',
+  AppBskyBadgeAccept: 'app.bsky.badgeAccept',
+  AppBskyBadgeOffer: 'app.bsky.badgeOffer',
+  AppBskyFollow: 'app.bsky.follow',
+  AppBskyLike: 'app.bsky.like',
+  AppBskyMediaEmbed: 'app.bsky.mediaEmbed',
+  AppBskyPost: 'app.bsky.post',
+  AppBskyProfile: 'app.bsky.profile',
+  AppBskyRepost: 'app.bsky.repost',
+}
 export const recordSchemaDict: Record<string, RecordSchema> = {
   'app.bsky.badge': {
     lexicon: 1,
