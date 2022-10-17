@@ -2,6 +2,7 @@
   "name": "@adxp/auth",
   "version": "0.0.3",
   "main": "src/index.ts",
+  "license": "MIT",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/",

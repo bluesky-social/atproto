@@ -2,6 +2,7 @@
   "name": "@adxp/common",
   "version": "0.0.1",
   "main": "src/index.ts",
+  "license": "MIT",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/",

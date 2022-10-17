@@ -2,6 +2,7 @@
   "name": "@adxp/repo",
   "version": "0.0.1",
   "main": "src/index.ts",
+  "license": "MIT",
   "scripts": {
     "test": "jest",
     "test:profile": "node --inspect ../../node_modules/.bin/jest",

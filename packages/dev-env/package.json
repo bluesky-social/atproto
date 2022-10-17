@@ -2,6 +2,7 @@
   "name": "@adxp/dev-env",
   "version": "0.0.1",
   "main": "dist/cli.js",
+  "license": "MIT",
   "scripts": {
     "build": "node ./build.js",
     "postbuild" : "tsc --build tsconfig.build.json",
