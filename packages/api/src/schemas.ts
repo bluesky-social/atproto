@@ -3,8 +3,8 @@
 */
 import { MethodSchema, RecordSchema } from '@adxp/lexicon'
 
-export const methodSchemas: MethodSchema[] = [
-  {
+export const methodSchemaDict: Record<string, MethodSchema> = {
+  'com.atproto.createAccount': {
     lexicon: 1,
     id: 'com.atproto.createAccount',
     type: 'procedure',
@@ -66,7 +66,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     ],
   },
-  {
+  'com.atproto.createInviteCode': {
     lexicon: 1,
     id: 'com.atproto.createInviteCode',
     type: 'procedure',
@@ -99,7 +99,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.createSession': {
     lexicon: 1,
     id: 'com.atproto.createSession',
     type: 'procedure',
@@ -141,7 +141,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.deleteAccount': {
     lexicon: 1,
     id: 'com.atproto.deleteAccount',
     type: 'procedure',
@@ -160,7 +160,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.deleteSession': {
     lexicon: 1,
     id: 'com.atproto.deleteSession',
     type: 'procedure',
@@ -179,7 +179,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.getAccount': {
     lexicon: 1,
     id: 'com.atproto.getAccount',
     type: 'query',
@@ -198,7 +198,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.getAccountsConfig': {
     lexicon: 1,
     id: 'com.atproto.getAccountsConfig',
     type: 'query',
@@ -225,7 +225,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.getSession': {
     lexicon: 1,
     id: 'com.atproto.getSession',
     type: 'query',
@@ -248,7 +248,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.repoBatchWrite': {
     lexicon: 1,
     id: 'com.atproto.repoBatchWrite',
     type: 'procedure',
@@ -336,7 +336,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.repoCreateRecord': {
     lexicon: 1,
     id: 'com.atproto.repoCreateRecord',
     type: 'procedure',
@@ -382,7 +382,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.repoDeleteRecord': {
     lexicon: 1,
     id: 'com.atproto.repoDeleteRecord',
     type: 'procedure',
@@ -405,7 +405,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.repoDescribe': {
     lexicon: 1,
     id: 'com.atproto.repoDescribe',
     type: 'query',
@@ -447,7 +447,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.repoGetRecord': {
     lexicon: 1,
     id: 'com.atproto.repoGetRecord',
     type: 'query',
@@ -495,7 +495,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.repoListRecords': {
     lexicon: 1,
     id: 'com.atproto.repoListRecords',
     type: 'query',
@@ -560,7 +560,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.repoPutRecord': {
     lexicon: 1,
     id: 'com.atproto.repoPutRecord',
     type: 'procedure',
@@ -610,7 +610,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.requestAccountPasswordReset': {
     lexicon: 1,
     id: 'com.atproto.requestAccountPasswordReset',
     type: 'procedure',
@@ -638,7 +638,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.resetAccountPassword': {
     lexicon: 1,
     id: 'com.atproto.resetAccountPassword',
     type: 'procedure',
@@ -677,7 +677,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     ],
   },
-  {
+  'com.atproto.resolveName': {
     lexicon: 1,
     id: 'com.atproto.resolveName',
     type: 'query',
@@ -703,7 +703,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.syncGetRepo': {
     lexicon: 1,
     id: 'com.atproto.syncGetRepo',
     type: 'query',
@@ -723,7 +723,7 @@ export const methodSchemas: MethodSchema[] = [
       encoding: 'application/cbor',
     },
   },
-  {
+  'com.atproto.syncGetRoot': {
     lexicon: 1,
     id: 'com.atproto.syncGetRoot',
     type: 'query',
@@ -749,7 +749,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'com.atproto.syncUpdateRepo': {
     lexicon: 1,
     id: 'com.atproto.syncUpdateRepo',
     type: 'procedure',
@@ -765,7 +765,7 @@ export const methodSchemas: MethodSchema[] = [
       encoding: 'application/cbor',
     },
   },
-  {
+  'app.bsky.getAuthorFeed': {
     lexicon: 1,
     id: 'app.bsky.getAuthorFeed',
     type: 'query',
@@ -1073,7 +1073,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getBadgeMembers': {
     lexicon: 1,
     id: 'app.bsky.getBadgeMembers',
     type: 'query',
@@ -1138,7 +1138,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getHomeFeed': {
     lexicon: 1,
     id: 'app.bsky.getHomeFeed',
     type: 'query',
@@ -1445,7 +1445,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getLikedBy': {
     lexicon: 1,
     id: 'app.bsky.getLikedBy',
     type: 'query',
@@ -1510,7 +1510,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getNotificationCount': {
     lexicon: 1,
     id: 'app.bsky.getNotificationCount',
     type: 'query',
@@ -1529,7 +1529,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getNotifications': {
     lexicon: 1,
     id: 'app.bsky.getNotifications',
     type: 'query',
@@ -1672,7 +1672,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getPostThread': {
     lexicon: 1,
     id: 'app.bsky.getPostThread',
     type: 'query',
@@ -1976,7 +1976,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getProfile': {
     lexicon: 1,
     id: 'app.bsky.getProfile',
     type: 'query',
@@ -2140,7 +2140,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getRepostedBy': {
     lexicon: 1,
     id: 'app.bsky.getRepostedBy',
     type: 'query',
@@ -2202,7 +2202,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getUserFollowers': {
     lexicon: 1,
     id: 'app.bsky.getUserFollowers',
     type: 'query',
@@ -2274,7 +2274,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getUserFollows': {
     lexicon: 1,
     id: 'app.bsky.getUserFollows',
     type: 'query',
@@ -2346,7 +2346,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.getUsersSearch': {
     lexicon: 1,
     id: 'app.bsky.getUsersSearch',
     type: 'query',
@@ -2404,10 +2404,11 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
   },
-  {
+  'app.bsky.getUsersTypeahead': {
     lexicon: 1,
     id: 'app.bsky.getUsersTypeahead',
     type: 'query',
@@ -2448,10 +2449,11 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
   },
-  {
+  'app.bsky.postNotificationsSeen': {
     lexicon: 1,
     id: 'app.bsky.postNotificationsSeen',
     type: 'procedure',
@@ -2478,7 +2480,7 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.updateProfile': {
     lexicon: 1,
     id: 'app.bsky.updateProfile',
     type: 'procedure',
@@ -2541,13 +2543,15 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
-]
-export const recordSchemas: RecordSchema[] = [
-  {
+}
+export const methodSchemas: MethodSchema[] = Object.values(methodSchemaDict)
+export const recordSchemaDict: Record<string, RecordSchema> = {
+  'app.bsky.badge': {
     lexicon: 1,
     id: 'app.bsky.badge',
     type: 'record',
     description: 'An assertion about the subject by this user.',
+    keyed: 'tid',
     record: {
       type: 'object',
       required: ['assertion', 'createdAt'],
@@ -2665,10 +2669,11 @@ export const recordSchemas: RecordSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.badgeAccept': {
     lexicon: 1,
     id: 'app.bsky.badgeAccept',
     type: 'record',
+    keyed: 'tid',
     record: {
       type: 'object',
       required: ['badge', 'offer', 'createdAt'],
@@ -2714,10 +2719,11 @@ export const recordSchemas: RecordSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.badgeOffer': {
     lexicon: 1,
     id: 'app.bsky.badgeOffer',
     type: 'record',
+    keyed: 'tid',
     record: {
       type: 'object',
       required: ['badge', 'subject', 'createdAt'],
@@ -2763,11 +2769,12 @@ export const recordSchemas: RecordSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.follow': {
     lexicon: 1,
     id: 'app.bsky.follow',
     type: 'record',
     description: 'A social follow',
+    keyed: 'tid',
     record: {
       type: 'object',
       required: ['subject', 'createdAt'],
@@ -2783,10 +2790,11 @@ export const recordSchemas: RecordSchema[] = [
       $defs: {},
     },
   },
-  {
+  'app.bsky.like': {
     lexicon: 1,
     id: 'app.bsky.like',
     type: 'record',
+    keyed: 'tid',
     record: {
       type: 'object',
       required: ['subject', 'createdAt'],
@@ -2829,11 +2837,12 @@ export const recordSchemas: RecordSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.mediaEmbed': {
     lexicon: 1,
     id: 'app.bsky.mediaEmbed',
     type: 'record',
     description: 'A list of media embedded in a post or document.',
+    keyed: 'tid',
     record: {
       type: 'object',
       required: ['media'],
@@ -2905,10 +2914,11 @@ export const recordSchemas: RecordSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.post': {
     lexicon: 1,
     id: 'app.bsky.post',
     type: 'record',
+    keyed: 'tid',
     record: {
       type: 'object',
       required: ['text', 'createdAt'],
@@ -3032,10 +3042,11 @@ export const recordSchemas: RecordSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.profile': {
     lexicon: 1,
     id: 'app.bsky.profile',
     type: 'record',
+    keyed: 'literal:self',
     record: {
       type: 'object',
       required: ['displayName'],
@@ -3085,10 +3096,11 @@ export const recordSchemas: RecordSchema[] = [
       },
     },
   },
-  {
+  'app.bsky.repost': {
     lexicon: 1,
     id: 'app.bsky.repost',
     type: 'record',
+    keyed: 'tid',
     record: {
       type: 'object',
       required: ['subject', 'createdAt'],
@@ -3131,4 +3143,5 @@ export const recordSchemas: RecordSchema[] = [
       },
     },
   },
-]
+}
+export const recordSchemas: RecordSchema[] = Object.values(recordSchemaDict)

@@ -18,6 +18,29 @@ export const schemasTs = (project, schemas: Schema[]) =>
         moduleSpecifier: '@adxp/lexicon',
       })
       .addNamedImports([{ name: 'MethodSchema' }, { name: 'RecordSchema' }])
+    //= export const methodSchemaDict: Record<string, MethodSchema> = {...}
+    file.addVariableStatement({
+      isExported: true,
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: 'methodSchemaDict',
+          type: 'Record<string, MethodSchema>',
+          initializer: JSON.stringify(
+            schemas
+              .filter((s) => s.type === 'query' || s.type === 'procedure')
+              .reduce((acc, cur) => {
+                return {
+                  ...acc,
+                  [cur.id]: cur,
+                }
+              }, {}),
+            null,
+            2,
+          ),
+        },
+      ],
+    })
     //= export const methodSchemas: MethodSchema[] = [...]
     file.addVariableStatement({
       isExported: true,
@@ -26,8 +49,27 @@ export const schemasTs = (project, schemas: Schema[]) =>
         {
           name: 'methodSchemas',
           type: 'MethodSchema[]',
+          initializer: 'Object.values(methodSchemaDict)',
+        },
+      ],
+    })
+    //= export const recordSchemaDict: Record<string, RecordSchema> = {...}
+    file.addVariableStatement({
+      isExported: true,
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: 'recordSchemaDict',
+          type: 'Record<string, RecordSchema>',
           initializer: JSON.stringify(
-            schemas.filter((s) => s.type === 'query' || s.type === 'procedure'),
+            schemas
+              .filter((s) => s.type === 'record')
+              .reduce((acc, cur) => {
+                return {
+                  ...acc,
+                  [cur.id]: cur,
+                }
+              }, {}),
             null,
             2,
           ),
@@ -42,11 +84,7 @@ export const schemasTs = (project, schemas: Schema[]) =>
         {
           name: 'recordSchemas',
           type: 'RecordSchema[]',
-          initializer: JSON.stringify(
-            schemas.filter((s) => s.type === 'record'),
-            null,
-            2,
-          ),
+          initializer: 'Object.values(recordSchemaDict)',
         },
       ],
     })

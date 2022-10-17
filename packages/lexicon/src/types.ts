@@ -9,6 +9,7 @@ export const recordSchema = z.object({
   type: z.enum(['record']),
   revision: z.number().optional(),
   description: z.string().optional(),
+  keyed: z.string().optional(),
   record: z.any().optional(),
   defs: z.any().optional(),
 })
