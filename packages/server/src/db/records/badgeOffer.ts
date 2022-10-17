@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely'
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as BadgeOffer from '../../lexicon/types/app/bsky/badgeOffer'
 import { DbRecordPlugin, Notification } from '../types'
@@ -54,7 +54,7 @@ const translateDbObj = (dbObj: AppBskyBadgeOffer): BadgeOffer.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<BadgeOffer.Record | null> => {
+  async (uri: AtUri): Promise<BadgeOffer.Record | null> => {
     const found = await db
       .selectFrom('app_bsky_badge_offer')
       .selectAll()
@@ -65,7 +65,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
+  async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -86,14 +86,14 @@ const insertFn =
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<void> => {
+  async (uri: AtUri): Promise<void> => {
     await db
       .deleteFrom('app_bsky_badge_offer')
       .where('uri', '=', uri.toString())
   }
 
 const notifsForRecord = (
-  uri: AdxUri,
+  uri: AtUri,
   cid: CID,
   obj: unknown,
 ): Notification[] => {

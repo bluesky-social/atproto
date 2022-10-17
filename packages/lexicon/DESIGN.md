@@ -1,14 +1,14 @@
-# ADX Schemas, draft 2
+# ATP Schemas, draft 2
 
 TODO: update or remove me
 
 ## Background
 
-In [draft 1](https://gist.github.com/pfrazee/0c51dc1afceac83d984ebfd555fe6340#), we discussed the broad goals and background thinking for ADX's schemas and introduced a basic set of mechanisms. This included a number of ideas which didn't hold up to scrutiny, including the use of CBOR's tagged value types and no defined approach to schema versioning.
+In [draft 1](https://gist.github.com/pfrazee/0c51dc1afceac83d984ebfd555fe6340#), we discussed the broad goals and background thinking for ATP's schemas and introduced a basic set of mechanisms. This included a number of ideas which didn't hold up to scrutiny, including the use of CBOR's tagged value types and no defined approach to schema versioning.
 
-For draft 2, we've begun to engage much more deeply with the mechanics needed by ADX. This includes:
+For draft 2, we've begun to engage much more deeply with the mechanics needed by ATP. This includes:
 
-- The developer experience (DX) for application developers using ADX and ADX Schemas
+- The developer experience (DX) for application developers using ATP and ATP Schemas
 - The need for efficient secondary indexes on user data
 - Localized data descriptions in permissions screens
 
@@ -22,17 +22,17 @@ Consequently this draft introduces multiple changes compare to draft 1.
 >
 > In draft 1, I made a strong effort to build an RDF-based approach to schemas. This got almost exactly the response I expected: some people loved it, some people didn't care, and some people would have preferred that I hadn't. One of the most frequent questions I got from the latter two camps was "Why bother with RDF?" and generally my response was "because it might be useful eventually." In truth, however, I spent a disproportionate amount of time making the spec work with RDF for very little practical gain.
 >
-> As I started draft 2, I decided not to continue maintaining the RDF-oriented design, if just to reduce the complexity of an already complex idea-space. I remain open to arguments in its favor and to the possibility that the final design can adopt RDF, but for now I need to eject that priority so that I can focus on the practical needs of ADX.
+> As I started draft 2, I decided not to continue maintaining the RDF-oriented design, if just to reduce the complexity of an already complex idea-space. I remain open to arguments in its favor and to the possibility that the final design can adopt RDF, but for now I need to eject that priority so that I can focus on the practical needs of ATP.
 
 ---
 
 ## Overview
 
-### ADX at a glance
+### ATP at a glance
 
-ADX is a federated network for public social broadcast. Think: Twitter, Medium, Podcasts, YouTube, and so on.
+ATP is a federated network for public social broadcast. Think: Twitter, Medium, Podcasts, YouTube, and so on.
 
-ADX syncs "repositories" of user data. These are similar to Git repos in a way; the records get committed and assembled into a hash-tree. The commits are then signed by the owning user and synced to anyone interested.
+ATP syncs "repositories" of user data. These are similar to Git repos in a way; the records get committed and assembled into a hash-tree. The commits are then signed by the owning user and synced to anyone interested.
 
 All repositories are identified by a [DID](https://w3c.github.io/did-core/). The DID resolves to a public key which signs the repo data. Users also have "usernames" which are domain names -- so I'll probably be `@pfrazee.com`!
 
@@ -64,14 +64,14 @@ Every user's data is siloed in their repository, so to drive UIs we merge togeth
  
 Repos are synced between the PDSes and also crawled by indexers to create aggregated views and custom algorithms -- much like how search engines crawl the Web. The "view schemas" give us a way to talk to the PDS and indexers.
 
-### What do ADX Schemas describe?
+### What do ATP Schemas describe?
 
-ADX Schemas describe the following types of things:
+ATP Schemas describe the following types of things:
 
 |Thing|Description|Effects|
 |-|-|-|
-|**Collections**|Ordered lists of data within an ADX repository.|Where records are stored & access control.|
-|**Records**|Individual objects within collections in an ADX repository.|The smallest unit of data which can be transmitted over the network.|
+|**Collections**|Ordered lists of data within an ATP repository.|Where records are stored & access control.|
+|**Records**|Individual objects within collections in an ATP repository.|The smallest unit of data which can be transmitted over the network.|
 |**Views**|HTTP-accessable endpoints which compute a response at call-time.|What computed/indexed information is available to a client.|
 
 #### Collections
@@ -90,7 +90,7 @@ Views are HTTP endpoints which give information that requires additional indexes
 
 ### Record encoding (CBOR)
 
-ADX records are encoded using [CBOR](https://www.rfc-editor.org/rfc/rfc8949.html). The following value types are supported:
+ATP records are encoded using [CBOR](https://www.rfc-editor.org/rfc/rfc8949.html). The following value types are supported:
 
 <table>
   <tr>
@@ -143,7 +143,7 @@ TODO: do we need binary?
 
 ### Field pathing
 
-All fields in ADX records are addressed using [JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901) in the fragment section of the URL.
+All fields in ATP records are addressed using [JSON Pointers](https://datatracker.ietf.org/doc/html/rfc6901) in the fragment section of the URL.
 
 ```javascript
 const obj = {
@@ -163,7 +163,7 @@ get(obj, '#/arr/1/key') // => "value2"
 
 ### Reserved field names
 
-There are a set of fields which are reserved in ADX and shouldn't be used by schemas.
+There are a set of fields which are reserved in ATP and shouldn't be used by schemas.
 
 |Field|Usage|
 |-|-|
@@ -181,7 +181,7 @@ The data layout establishes the units of network-transmissable data. It includes
 
 |Grouping|Description|
 |-|-|
-|**Repository**|Repositories are the dataset of a single "actor" (ie user) in the ADX network. Every user has a single repository which is identified by a [DID](https://w3c.github.io/did-core/).|
+|**Repository**|Repositories are the dataset of a single "actor" (ie user) in the ATP network. Every user has a single repository which is identified by a [DID](https://w3c.github.io/did-core/).|
 |**Collection**|A collection is an ordered list of records. Every collection has a type and is identified by the Schema ID of its type. Collections may contain records of any type and cannot enforce any constraints on them.|
 |**Record**|A record is a key/value document. It is the smallest unit of data which can be transmitted over the network. Every record has a type and is identified by a key which is chosen by the writing software.|
 
@@ -194,7 +194,7 @@ The builtin "Definitions collection," identified by `def`, is used to store sche
 
 ### "adx" URL scheme
 
-The `adx` URL scheme is used to address records in the ADX network.
+The `adx` URL scheme is used to address records in the ATP network.
 
 ```
 adx-url   = "adx://" authority path [ "?" query ] [ "#" fragment ]
@@ -263,7 +263,7 @@ For instance, `blueskyweb.xyz:Comment` maps to the `Comment` schema published by
 
 ### Schema publishing
 
-Schemas must be published in ADX repositories under the special `'def'` collection and made available for download. The schema ID is expanded to the following URL form in order to download the schema:
+Schemas must be published in ATP repositories under the special `'def'` collection and made available for download. The schema ID is expanded to the following URL form in order to download the schema:
 
 ```
 'adx://' {author-domain-name} '/def/' {schema-name}
@@ -274,17 +274,17 @@ Schemas must be published in ADX repositories under the special `'def'` collecti
 Schemas all follow the following base form:
 
 ```typescript
-interface ADXSchema {
+interface ATPSchema {
   $type: 'adxs-collection' | 'adxs-record' | 'adxs-view'
   author: string // a domain name
   name: string // the name of the schema
   revision?: number // a versioning counter
-  locale: Record<LocaleCode, ADXSchemaLocaleStrings>
+  locale: Record<LocaleCode, ATPSchemaLocaleStrings>
 }
 
 type LocaleCode = string
 
-interface ADXSchemaLocaleStrings {
+interface ATPSchemaLocaleStrings {
   nameSingular: string
   namePlural: string
 }
@@ -293,16 +293,16 @@ interface ADXSchemaLocaleStrings {
 The form then varies according to the `$type` value.
 
 ```typescript
-interface ADXCollectionSchema extends ADXSchema {
+interface ATPCollectionSchema extends ATPSchema {
   $type: 'adxs-collection'
 }
 
-interface ADXRecordSchema extends ADXSchema {
+interface ATPRecordSchema extends ATPSchema {
   $type: 'adxs-record'
   schema: JSONSchema // constraints on the record value
 }
 
-interface ADXViewSchema extends ADXSchema {
+interface ATPViewSchema extends ATPSchema {
   $type: 'adxs-view'
   reads?: string[] // schema IDs of collections read by the view (affects permissioning)
   parameters: JSONSchema // constraints on the query parameters sent to the view
@@ -517,7 +517,7 @@ These examples are using a hypothetical API for validation. In practice, you'll 
 
 ## Application of schemas
 
-**Schemas are not enforced by ADX or by the Personal Data Server's APIs.** Instead they are used by applications and indexers to help ensure they're speaking the same language. Therefore it's up to developers to enforce the schemas.
+**Schemas are not enforced by ATP or by the Personal Data Server's APIs.** Instead they are used by applications and indexers to help ensure they're speaking the same language. Therefore it's up to developers to enforce the schemas.
 
 > The one exception to this is the permission screens, which are explained below.
 
@@ -525,7 +525,7 @@ Generally speaking, developers are advised to follow the schemas in their applic
 
 ### Permission screens
 
-Write-authorization in ADX is established using [UCANs](https://fission.codes/blog/auth-without-backend/) which are issued by the user's key management software. A UCAN designates the resources for which it permits writes.
+Write-authorization in ATP is established using [UCANs](https://fission.codes/blog/auth-without-backend/) which are issued by the user's key management software. A UCAN designates the resources for which it permits writes.
 
 Resource descriptions are hierarchical: they designate a collection schema and optionally one or more record schemas. The descriptions embed the schema IDs of which the key manager must translate these IDs into user-friendly descriptions.
 
@@ -554,7 +554,7 @@ foo.com would like to:
 
 ### Application APIs
 
-The core of an ADX API should handle the following verbs:
+The core of an ATP API should handle the following verbs:
 
 - `get(url)` a general record fetch
 - `listCollections(repo)` list all collections in a repo
@@ -595,7 +595,7 @@ if (zeetSchema.isValid(zeet)) {
 
 Libraries and tooling should be created for each environment/language and can adopt more useful patterns such as static type signatures, builder-patterns, and code generation.
 
-As all schemas are published on ADX, it's possible to write tools which "install" schemas from their ID, check for updates, and help publish changes (including verifying that updates to a schema do not violate previously-published constraints).
+As all schemas are published on ATP, it's possible to write tools which "install" schemas from their ID, check for updates, and help publish changes (including verifying that updates to a schema do not violate previously-published constraints).
 
 #### Schema negotiation
 
@@ -642,15 +642,15 @@ interface ValidationResult {
 
 ### PDS indexing behaviors
 
-Indexing is a key requirement for applications. A traditional relational database would struggle if developers had to "scan and filter" the entire table for each query, and ADX is no exception.
+Indexing is a key requirement for applications. A traditional relational database would struggle if developers had to "scan and filter" the entire table for each query, and ATP is no exception.
 
-Choosing an indexing strategy for ADX has been challenging. Here's a quick summary of the approaches we've considered:
+Choosing an indexing strategy for ATP has been challenging. Here's a quick summary of the approaches we've considered:
 
 - **Have each application produce its own indexes.** We often refer to this as the "full client" approach, where the application downloads repositories directly and produce whatever secondary indexes they need. This is always an option, but it doesn't really work in the browser or mobile environment (it takes a lot of resources) and it means the application needs to sync and index the records before the user can start. Realistically speaking, this approach requires the application to run its own backend, and we'd really like it if the core social applications could use the PDS as their sole backend -- a model we call the "delegator client."
 - **Allow schemas to define how they should be indexed by the PDS**. This is a wonderful-sounding idea until you realize that the resource costs of producing those indexes could easily grow out of control. Each index has a processing and storage cost, and we're not yet comfortable with the idea that a PDS should accept arbitrary index definitions.
 - **Create generic indexes on every field of every record by the PDS**. If schema-defined indexes *might* be a resource problem, then this idea definitely will be. There's also a good chance this won't cover all the kinds of indexes needed; how would the user's merged home feed get produced, for example?
 
-Right now we've decided the best option is implement indexes & views for a core set of schemas in the PDS software that Bluesky releases. As Bluesky's core mission is to enable decentralized public social broadcast, these baked-in schemas will be the vocabulary needed for social networking. This way we can be sure to produce efficient indexes for the core use-cases of ADX.
+Right now we've decided the best option is implement indexes & views for a core set of schemas in the PDS software that Bluesky releases. As Bluesky's core mission is to enable decentralized public social broadcast, these baked-in schemas will be the vocabulary needed for social networking. This way we can be sure to produce efficient indexes for the core use-cases of ATP.
 
 It's important to note that this approach will not preclude the use of other schemas. The PDS will still correctly accept and host data that uses other schemas, and applications will still be able to access that data. The PDS simply won't produce any optimized indexes for that data; an application will either need to live without custom indexes, or it will need to produce them itself.
 
@@ -660,13 +660,13 @@ This certainly wasn't our first choice, so we're hopeful that somebody comes up 
 
 ### Private data
 
-ADX is designed for public social broadcast. It uses self-authenticating data repos which are intended to be synced widely. As a consequence, private or selectively-shared data is not trivial to introduce.
+ATP is designed for public social broadcast. It uses self-authenticating data repos which are intended to be synced widely. As a consequence, private or selectively-shared data is not trivial to introduce.
 
-After multiple discussions, the Bluesky team decided to punt on private data. Every attempt to add private data to the ADX model revealed unacceptable trade-offs. Rather than add complexity to achieve a sub-par outcome, we decided to leave the question for later.
+After multiple discussions, the Bluesky team decided to punt on private data. Every attempt to add private data to the ATP model revealed unacceptable trade-offs. Rather than add complexity to achieve a sub-par outcome, we decided to leave the question for later.
 
 In the short-term, this will require applications and the PDS to maintain some private state. The PDS will likely need some baked-in APIs for notifications "is read" state, for instance.
 
-For the long-term, the prevailing theory is that a separate protocol may be needed. (Paul is partial to the idea of a mail protocol in which records are sent to a list of recipients.) This may be an entirely separate protocol or simply an additional mode for ADX.
+For the long-term, the prevailing theory is that a separate protocol may be needed. (Paul is partial to the idea of a mail protocol in which records are sent to a list of recipients.) This may be an entirely separate protocol or simply an additional mode for ATP.
 
 ## Open tasks and questions
 
@@ -690,7 +690,7 @@ Query parameters can't encode all the things that JSON-Schema can describe. We e
 
 ### Do we need "read" permissions for applications?
 
-All data in ADX is currently public and could be accessed by network sync. Is there any real value in describing read perms given that an app could talk to the sync protocol and get the same data?
+All data in ATP is currently public and could be accessed by network sync. Is there any real value in describing read perms given that an app could talk to the sync protocol and get the same data?
 
 ### How do "views" get resolved to HTTP endpoints?
 

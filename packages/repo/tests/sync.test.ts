@@ -1,5 +1,5 @@
-import * as auth from '@adxp/auth'
-import { TID } from '@adxp/common'
+import * as auth from '@atproto/auth'
+import { TID } from '@atproto/common'
 import { Repo, RepoRoot } from '../src'
 import { MemoryBlockstore } from '../src/blockstore'
 

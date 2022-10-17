@@ -1,4 +1,4 @@
-import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
+import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import {
   runTestServer,
   forSnapshot,
@@ -9,10 +9,10 @@ import {
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
-import { AppBskyGetHomeFeedFeedItem as FeedItem } from '@adxp/api/src/types/app/bsky/getHomeFeed'
+import { AppBskyGetHomeFeedFeedItem as FeedItem } from '@atproto/api/src/types/app/bsky/getHomeFeed'
 
 describe('pds home feed views', () => {
-  let client: AdxServiceClient
+  let client: AtpServiceClient
   let close: CloseFn
   let sc: SeedClient
 
@@ -27,7 +27,7 @@ describe('pds home feed views', () => {
       dbPostgresSchema: 'views_home_feed',
     })
     close = server.close
-    client = AdxApi.service(server.url)
+    client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     await basicSeed(sc)
     alice = sc.dids.alice

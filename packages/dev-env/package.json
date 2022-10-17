@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/dev-env",
+  "name": "@atproto/dev-env",
   "version": "0.0.1",
   "main": "dist/cli.js",
   "license": "MIT",
@@ -15,11 +15,11 @@
     "verify:fix": "yarn prettier:fix && yarn lint:fix"
   },
   "dependencies": {
-    "@adxp/api": "*",
-    "@adxp/crypto": "*",
-    "@adxp/did-resolver": "*",
-    "@adxp/server": "*",
-    "@adxp/uri": "*",
+    "@atproto/api": "*",
+    "@atproto/crypto": "*",
+    "@atproto/did-resolver": "*",
+    "@atproto/server": "*",
+    "@atproto/uri": "*",
     "chalk": "^5.0.1",
     "dotenv": "^16.0.1",
     "get-port": "^6.1.2"

@@ -1,3 +1,3 @@
-# ADX Crypto Library
+# ATP Crypto Library
 
-ADX's common cryptographic operations.
+ATP's common cryptographic operations.

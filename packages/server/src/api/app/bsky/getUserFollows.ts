@@ -1,5 +1,5 @@
 import { Server } from '../../../lexicon'
-import { InvalidRequestError } from '@adxp/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetUserFollows from '../../../lexicon/types/app/bsky/getUserFollows'
 import * as util from './util'
 import * as locals from '../../../locals'

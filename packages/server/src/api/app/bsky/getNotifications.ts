@@ -1,5 +1,5 @@
 import { Server } from '../../../lexicon'
-import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetNotifications from '../../../lexicon/types/app/bsky/getNotifications'
 import * as locals from '../../../locals'
 import { paginate } from '../../../db/util'

@@ -1,4 +1,4 @@
-import { Schema } from '@adxp/lexicon'
+import { Schema } from '@atproto/lexicon'
 
 export interface NsidNS {
   name: string

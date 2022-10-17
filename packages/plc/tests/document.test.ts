@@ -1,5 +1,5 @@
-import { check, cidForData } from '@adxp/common'
-import { EcdsaKeypair, parseDidKey } from '@adxp/crypto'
+import { check, cidForData } from '@atproto/common'
+import { EcdsaKeypair, parseDidKey } from '@atproto/crypto'
 import * as uint8arrays from 'uint8arrays'
 import * as document from '../src/lib/document'
 import * as operations from '../src/lib/operations'

@@ -1,6 +1,6 @@
 import path from 'path'
 import { promises as fsp } from 'fs'
-import * as auth from '@adxp/auth'
+import * as auth from '@atproto/auth'
 import { CID } from 'multiformats/cid'
 
 export type AccountJson = {
@@ -40,7 +40,7 @@ export const writeCfg = async (
     server: serverCleaned,
     delegator,
   }
-  await fsp.writeFile(path.join(repoPath, 'adx.key'), exportedKey, 'utf-8')
+  await fsp.writeFile(path.join(repoPath, 'atp.key'), exportedKey, 'utf-8')
   await fsp.writeFile(
     path.join(repoPath, 'account.json'),
     JSON.stringify(account, null, 2),
@@ -64,7 +64,7 @@ export const cfgExists = async (repoPath: string): Promise<boolean> => {
 
 export const loadCfg = async (repoPath: string): Promise<Config> => {
   const account = await readAccountFile(repoPath, 'account.json')
-  const jwkStr = (await readFile(repoPath, 'adx.key', 'utf-8')) as string
+  const jwkStr = (await readFile(repoPath, 'atp.key', 'utf-8')) as string
   const jwk = JSON.parse(jwkStr)
   const keypair = await auth.EcdsaKeypair.import(jwk)
   const tokenStr = (await readFile(repoPath, 'full.ucan', 'utf-8')) as string

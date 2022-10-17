@@ -1,5 +1,5 @@
 import { CID } from 'multiformats'
-import { TID } from '@adxp/common'
+import { TID } from '@atproto/common'
 import IpldStore from '../src/blockstore/ipld-store'
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/blockstore'

@@ -1,4 +1,4 @@
-import { writeCap } from '../src/adx-capabilities'
+import { writeCap } from '../src/atp-capabilities'
 import { Verifier, AuthStore, Ucan, ucans } from '../src'
 
 describe('tokens for post', () => {
@@ -21,12 +21,12 @@ describe('tokens for post', () => {
 
     cap = writeCap(rootDid, collection, record)
 
-    await verifier.verifyAdxUcan(fullUcan, fullUcan.payload.aud, cap)
+    await verifier.verifyAtpUcan(fullUcan, fullUcan.payload.aud, cap)
   })
 
   it('creates a valid token for a post', async () => {
     token = await authStore.createUcan(serverDid, cap, 30)
-    await verifier.verifyAdxUcan(token, serverDid, cap)
+    await verifier.verifyAtpUcan(token, serverDid, cap)
   })
 
   it('throws an error for the wrong collection', async () => {
@@ -36,7 +36,7 @@ describe('tokens for post', () => {
       record,
     )
     try {
-      const res = await verifier.verifyAdxUcan(token, serverDid, collectionCap)
+      const res = await verifier.verifyAtpUcan(token, serverDid, collectionCap)
       expect(res).toBe(null)
     } catch (err) {
       expect(err).toBeTruthy()
@@ -46,7 +46,7 @@ describe('tokens for post', () => {
   it('throws an error for the wrong record name', async () => {
     const recordCap = writeCap(rootDid, collection, '3iwc-gvs-ehpk-2z')
     try {
-      const res = await verifier.verifyAdxUcan(token, serverDid, recordCap)
+      const res = await verifier.verifyAtpUcan(token, serverDid, recordCap)
       expect(res).toBe(null)
     } catch (err) {
       expect(err).toBeTruthy()

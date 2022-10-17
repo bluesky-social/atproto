@@ -1,9 +1,9 @@
-import { EcdsaKeypair } from '@adxp/crypto'
+import { EcdsaKeypair } from '@atproto/crypto'
 import PlcClient from '../src/client'
 import * as document from '../src/lib/document'
 import getPort from 'get-port'
 import * as util from './util'
-import { cidForData } from '@adxp/common'
+import { cidForData } from '@atproto/common'
 import { AxiosError } from 'axios'
 
 const USE_TEST_SERVER = true

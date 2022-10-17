@@ -1,4 +1,4 @@
-import { RecordSchemas } from '@adxp/lexicon'
+import { RecordSchemas } from '@atproto/lexicon'
 import { recordSchemas } from '../lexicon/schemas'
 
 export const records = new RecordSchemas()

@@ -1,7 +1,7 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-import { MethodSchema, RecordSchema } from '@adxp/lexicon'
+import { MethodSchema, RecordSchema } from '@atproto/lexicon'
 
 export const methodSchemaDict: Record<string, MethodSchema> = {
   'com.atproto.createAccount': {

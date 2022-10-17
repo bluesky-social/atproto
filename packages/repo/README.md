@@ -1,3 +1,3 @@
-# ADX Repo
+# ATP Repo
 
-The "ADX repository" core implementation (a Merkle Search Tree).
+The "ATP repository" core implementation (a Merkle Search Tree).

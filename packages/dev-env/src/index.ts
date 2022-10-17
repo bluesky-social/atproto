@@ -1,11 +1,11 @@
 import http from 'http'
 import chalk from 'chalk'
 import crytpo from 'crypto'
-import { MemoryBlockstore } from '@adxp/repo'
-import PDSServer, { Database as PDSDatabase } from '@adxp/server'
-import * as plc from '@adxp/plc'
-import * as crypto from '@adxp/crypto'
-import AdxApi, { ServiceClient } from '@adxp/api'
+import { MemoryBlockstore } from '@atproto/repo'
+import PDSServer, { Database as PDSDatabase } from '@atproto/server'
+import * as plc from '@atproto/plc'
+import * as crypto from '@atproto/crypto'
+import AtpApi, { ServiceClient } from '@atproto/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
 export class DevEnvServer {
@@ -112,7 +112,7 @@ export class DevEnvServer {
   }
 
   getClient(): ServiceClient {
-    return AdxApi.service(`http://localhost:${this.port}`)
+    return AtpApi.service(`http://localhost:${this.port}`)
   }
 }
 

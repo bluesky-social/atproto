@@ -1,6 +1,6 @@
 import pino from 'pino'
 import pinoHttp from 'pino-http'
-import { subsystemLogger } from '@adxp/common'
+import { subsystemLogger } from '@atproto/common'
 import * as jwt from 'jsonwebtoken'
 import { parseBasicAuth } from './auth'
 

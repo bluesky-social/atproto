@@ -1,8 +1,8 @@
 import { Server } from '../../../lexicon'
-import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as locals from '../../../locals'
 import * as schema from '../../../lexicon/schemas'
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 
 const profileNsid = schema.ids.AppBskyProfile
 
@@ -40,7 +40,7 @@ export default function (server: Server) {
       )
     }
 
-    const uri = new AdxUri(`${requester}/${profileNsid}/self`)
+    const uri = new AtUri(`${requester}/${profileNsid}/self`)
 
     const currBadges = await db.db
       .selectFrom('app_bsky_profile_badge')

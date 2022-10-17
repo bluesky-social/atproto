@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { safeParse } from '@hapi/bourne'
-import { InvalidRequestError } from '@adxp/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../../../db'
 import { DbRef } from '../../../../db/util'
 

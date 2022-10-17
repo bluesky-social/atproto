@@ -2,7 +2,7 @@ import z from 'zod'
 import { CID } from 'multiformats'
 
 import IpldStore from '../blockstore/ipld-store'
-import { def, cidForData } from '@adxp/common'
+import { def, cidForData } from '@atproto/common'
 import { DataDiff } from './diff'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'

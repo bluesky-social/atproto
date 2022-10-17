@@ -1,7 +1,7 @@
 import * as http from 'http'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
-import xrpc, { XRPCError } from '@adxp/xrpc'
+import xrpc, { XRPCError } from '@atproto/xrpc'
 
 const SCHEMAS = [
   {

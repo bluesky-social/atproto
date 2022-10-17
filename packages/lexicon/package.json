@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/lexicon",
+  "name": "@atproto/lexicon",
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
@@ -15,7 +15,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@adxp/nsid": "*",
+    "@atproto/nsid": "*",
     "ajv": "^8.11.0",
     "ajv-formats": "^2.1.1",
     "zod": "^3.14.2"

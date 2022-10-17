@@ -1,5 +1,5 @@
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import { Schema } from '@adxp/lexicon'
+import { Schema } from '@atproto/lexicon'
 import prettier from 'prettier'
 import { GeneratedFile } from '../types'
 
@@ -24,10 +24,10 @@ export const schemasTs = (project, schemas: Schema[]) =>
         .join('')
     }
 
-    //= import {RecordSchema, MethodSchema} from '@adxp/lexicon'
+    //= import {RecordSchema, MethodSchema} from '@atproto/lexicon'
     file
       .addImportDeclaration({
-        moduleSpecifier: '@adxp/lexicon',
+        moduleSpecifier: '@atproto/lexicon',
       })
       .addNamedImports([{ name: 'MethodSchema' }, { name: 'RecordSchema' }])
 

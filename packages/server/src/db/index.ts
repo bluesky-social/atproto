@@ -1,7 +1,7 @@
 import { Kysely, SqliteDialect, sql, PostgresDialect } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
-import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
+import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
 import * as Badge from '../lexicon/types/app/bsky/badge'
 import * as BadgeAccept from '../lexicon/types/app/bsky/badgeAccept'
@@ -20,7 +20,7 @@ import badgeAcceptPlugin, { AppBskyBadgeAccept } from './records/badgeAccept'
 import badgeOfferPlugin, { AppBskyBadgeOffer } from './records/badgeOffer'
 import profilePlugin, { AppBskyProfile } from './records/profile'
 import notificationPlugin from './tables/user-notification'
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { dbLogger as log } from '../logger'
 import { DatabaseSchema, createTables } from './database-schema'
@@ -225,7 +225,7 @@ export class Database {
     return table.validateSchema(obj).valid
   }
 
-  async indexRecord(uri: AdxUri, cid: CID, obj: unknown) {
+  async indexRecord(uri: AtUri, cid: CID, obj: unknown) {
     log.debug({ uri }, 'indexing record')
     const record = {
       uri: uri.toString(),
@@ -252,7 +252,7 @@ export class Database {
     log.info({ uri }, 'indexed record')
   }
 
-  async deleteRecord(uri: AdxUri) {
+  async deleteRecord(uri: AtUri) {
     log.debug({ uri }, 'deleting indexed record')
     const table = this.findTableForCollection(uri.collection)
     const deleteQuery = this.db
@@ -310,7 +310,7 @@ export class Database {
   }
 
   async getRecord(
-    uri: AdxUri,
+    uri: AtUri,
     cid: string | null,
   ): Promise<{ uri: string; cid: string; value: object } | null> {
     let builder = this.db

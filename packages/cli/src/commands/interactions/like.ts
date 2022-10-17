@@ -1,7 +1,7 @@
 import cmd from '../../lib/command'
 import { loadClient } from '../../lib/client'
 import { REPO_PATH } from '../../lib/env'
-import { TID } from '@adxp/common'
+import { TID } from '@atproto/common'
 
 export default cmd({
   name: 'like',

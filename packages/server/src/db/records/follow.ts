@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely'
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../lexicon/types/app/bsky/follow'
 import { DbRecordPlugin, Notification } from '../types'
@@ -45,7 +45,7 @@ const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<Follow.Record | null> => {
+  async (uri: AtUri): Promise<Follow.Record | null> => {
     const found = await db
       .selectFrom('app_bsky_follow')
       .selectAll()
@@ -56,7 +56,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
+  async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -73,12 +73,12 @@ const insertFn =
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<void> => {
+  async (uri: AtUri): Promise<void> => {
     await db.deleteFrom('app_bsky_follow').where('uri', '=', uri.toString())
   }
 
 const notifsForRecord = (
-  uri: AdxUri,
+  uri: AtUri,
   cid: CID,
   obj: unknown,
 ): Notification[] => {

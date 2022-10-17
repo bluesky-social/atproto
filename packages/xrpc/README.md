@@ -3,7 +3,7 @@
 ## Usage
 
 ```typescript
-import xrpc from '@adxp/xrpc'
+import xrpc from '@atproto/xrpc'
 
 xrpc.addSchema({
   xrpc: 1,

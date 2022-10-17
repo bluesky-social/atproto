@@ -1,8 +1,8 @@
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import * as cbor from '@ipld/dag-cbor'
-import { check, cidForData } from '@adxp/common'
-import * as crypto from '@adxp/crypto'
+import { check, cidForData } from '@atproto/common'
+import * as crypto from '@atproto/crypto'
 import * as t from './types'
 import { ServerError } from '../server/error'
 

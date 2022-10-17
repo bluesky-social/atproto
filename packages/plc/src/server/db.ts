@@ -1,7 +1,7 @@
 import { Kysely, SqliteDialect } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { CID } from 'multiformats/cid'
-import { cidForData } from '@adxp/common'
+import { cidForData } from '@atproto/common'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
 import { ServerError } from './error'

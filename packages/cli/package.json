@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/cli",
+  "name": "@atproto/cli",
   "version": "0.0.1",
   "main": "dist/bin.js",
   "license": "MIT",
@@ -14,8 +14,8 @@
     "verify:fix": "yarn prettier:fix && yarn lint:fix"
   },
   "dependencies": {
-    "@adxp/auth": "*",
-    "@adxp/common": "*",
+    "@atproto/auth": "*",
+    "@atproto/common": "*",
     "chalk": "^5.0.0",
     "prompt": "^1.2.1"
   },

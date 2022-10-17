@@ -1,4 +1,8 @@
-import { methodSchema, MethodSchema, isValidMethodSchema } from '@adxp/lexicon'
+import {
+  methodSchema,
+  MethodSchema,
+  isValidMethodSchema,
+} from '@atproto/lexicon'
 import {
   getMethodSchemaHTTPMethod,
   constructMethodCallUri,

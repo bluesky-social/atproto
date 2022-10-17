@@ -1,6 +1,6 @@
 import { IndentationText, Project, SourceFile } from 'ts-morph'
-import { Schema, MethodSchema, RecordSchema } from '@adxp/lexicon'
-import { NSID } from '@adxp/nsid'
+import { Schema, MethodSchema, RecordSchema } from '@atproto/lexicon'
+import { NSID } from '@atproto/nsid'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
 import { gen, schemasTs } from './common'
 import { GeneratedAPI } from '../types'
@@ -27,9 +27,9 @@ export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
 
 const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
   gen(project, '/index.ts', async (file) => {
-    //= import {createServer as createXrpcServer, Server as XrpcServer} from '@adxp/xrpc-server'
+    //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
     const xrpcImport = file.addImportDeclaration({
-      moduleSpecifier: '@adxp/xrpc-server',
+      moduleSpecifier: '@atproto/xrpc-server',
     })
     xrpcImport.addNamedImport({
       name: 'createServer',

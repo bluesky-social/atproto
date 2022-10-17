@@ -1,4 +1,4 @@
-import { Schema } from '@adxp/lexicon'
+import { Schema } from '@atproto/lexicon'
 import { resolveAllRefs } from '../src/refs'
 
 describe('Reference resolution', () => {

@@ -1,7 +1,7 @@
 import os from 'os'
 import path from 'path'
 
-export const REPO_PATH = expandPath(process.env.ADX_REPO_PATH || `~/.adx`)
+export const REPO_PATH = expandPath(process.env.ATP_REPO_PATH || `~/.atp`)
 
 function expandPath(str: string) {
   if (str.startsWith('~')) {

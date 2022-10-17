@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely'
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../lexicon/types/app/bsky/like'
 import { DbRecordPlugin, Notification } from '../types'
@@ -51,7 +51,7 @@ const translateDbObj = (dbObj: AppBskyLike): Like.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<Like.Record | null> => {
+  async (uri: AtUri): Promise<Like.Record | null> => {
     const found = await db
       .selectFrom('app_bsky_like')
       .selectAll()
@@ -62,7 +62,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
+  async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -82,19 +82,19 @@ const insertFn =
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<void> => {
+  async (uri: AtUri): Promise<void> => {
     await db.deleteFrom('app_bsky_like').where('uri', '=', uri.toString())
   }
 
 const notifsForRecord = (
-  uri: AdxUri,
+  uri: AtUri,
   cid: CID,
   obj: unknown,
 ): Notification[] => {
   if (!matchesSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
-  const subjectUri = new AdxUri(obj.subject.uri)
+  const subjectUri = new AtUri(obj.subject.uri)
   const notif = {
     userDid: subjectUri.host,
     author: uri.host,

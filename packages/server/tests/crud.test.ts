@@ -1,6 +1,6 @@
-import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import * as Post from '@adxp/api/src/types/app/bsky/post'
-import { AdxUri } from '@adxp/uri'
+import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import * as Post from '@atproto/api/src/types/app/bsky/post'
+import { AtUri } from '@atproto/uri'
 import { CloseFn, paginateAll, runTestServer } from './_util'
 
 const alice = {
@@ -17,8 +17,8 @@ const bob = {
 }
 
 describe('crud operations', () => {
-  let client: AdxServiceClient
-  let aliceClient: AdxServiceClient
+  let client: AtpServiceClient
+  let aliceClient: AtpServiceClient
   let close: CloseFn
 
   beforeAll(async () => {
@@ -26,8 +26,8 @@ describe('crud operations', () => {
       dbPostgresSchema: 'crud',
     })
     close = server.close
-    client = AdxApi.service(server.url)
-    aliceClient = AdxApi.service(server.url)
+    client = AtpApi.service(server.url)
+    aliceClient = AtpApi.service(server.url)
   })
 
   afterAll(async () => {
@@ -69,7 +69,7 @@ describe('crud operations', () => {
     expect(description2.data.did).toBe(bob.did)
   })
 
-  let uri: AdxUri
+  let uri: AtUri
   it('creates records', async () => {
     const res = await aliceClient.com.atproto.repoCreateRecord(
       { did: alice.did, collection: 'app.bsky.post' },
@@ -79,8 +79,8 @@ describe('crud operations', () => {
         createdAt: new Date().toISOString(),
       },
     )
-    uri = new AdxUri(res.data.uri)
-    expect(res.data.uri).toBe(`adx://${alice.did}/app.bsky.post/${uri.rkey}`)
+    uri = new AtUri(res.data.uri)
+    expect(res.data.uri).toBe(`at://${alice.did}/app.bsky.post/${uri.rkey}`)
   })
 
   it('lists records', async () => {
@@ -141,7 +141,7 @@ describe('crud operations', () => {
         createdAt: new Date().toISOString(),
       },
     )
-    const uri = new AdxUri(res1.uri)
+    const uri = new AtUri(res1.uri)
 
     const res2 = await client.app.bsky.post.list({
       user: alice.did,
@@ -167,16 +167,16 @@ describe('crud operations', () => {
         createdAt: new Date().toISOString(),
       },
     )
-    const uri = new AdxUri(res1.uri)
+    const uri = new AtUri(res1.uri)
     expect(uri.rkey).toBe('self')
   })
 
   describe('paginates', () => {
-    let uri1: AdxUri
-    let uri2: AdxUri
-    let uri3: AdxUri
-    let uri4: AdxUri
-    let uri5: AdxUri
+    let uri1: AtUri
+    let uri2: AtUri
+    let uri3: AtUri
+    let uri4: AtUri
+    let uri5: AtUri
 
     beforeAll(async () => {
       const createPost = async (text: string) => {
@@ -188,7 +188,7 @@ describe('crud operations', () => {
             createdAt: new Date().toISOString(),
           },
         )
-        return new AdxUri(res.uri)
+        return new AtUri(res.uri)
       }
       uri1 = await createPost('Post 1')
       uri2 = await createPost('Post 2')
@@ -381,7 +381,7 @@ describe('crud operations', () => {
   //   const res4 = await client.com.atproto.repoGetRecord(url, {
   //     user: alice.did,
   //     type: 'app.bsky.post',
-  //     tid: new AdxUri(res1.data.uri).rkey,
+  //     tid: new AtUri(res1.data.uri).rkey,
   //   })
   //   /** @ts-ignore TODO!!! */
   //   expect(res4.data.value.record).toBe('is bad')
@@ -398,7 +398,7 @@ describe('crud operations', () => {
   //   const res5 = await client.com.atproto.repoGetRecord(url, {
   //     user: alice.did,
   //     type: 'app.bsky.post',
-  //     tid: new AdxUri(res2.data.uri).rkey,
+  //     tid: new AtUri(res2.data.uri).rkey,
   //   })
   //   /** @ts-ignore TODO!!! */
   //   expect(res5.data.value.dunno).toBe('lol')
@@ -415,12 +415,12 @@ describe('crud operations', () => {
   //   await client.com.atproto.repoDeleteRecord(url, {
   //     did: alice.did,
   //     type: 'app.bsky.post',
-  //     tid: new AdxUri(res1.data.uri).rkey,
+  //     tid: new AtUri(res1.data.uri).rkey,
   //   })
   //   await client.com.atproto.repoDeleteRecord(url, {
   //     did: alice.did,
   //     type: 'app.bsky.post',
-  //     tid: new AdxUri(res2.data.uri).rkey,
+  //     tid: new AtUri(res2.data.uri).rkey,
   //   })
   // })
 })
