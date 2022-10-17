@@ -1,9 +1,10 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../lexicon/types/app/bsky/profile'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
+import { Dialect } from '..'
 
 const type = 'app.bsky.profile'
 const tableName = 'app_bsky_profile'
@@ -24,7 +25,10 @@ export interface AppBskyProfileBadge {
   badgeCid: string
 }
 
-export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
+export const createTable = async (
+  db: Kysely<PartialDB>,
+  dialect: Dialect,
+): Promise<void> => {
   await db.schema
     .createTable(tableName)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
@@ -34,6 +38,15 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('description', 'varchar')
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
+
+  if (dialect === 'pg') {
+    await db.schema // Supports user search
+      .createIndex(`${tableName}_display_name_tgrm_idx`)
+      .on(tableName)
+      .using('gist')
+      .expression(sql`"displayName" gist_trgm_ops`)
+      .execute()
+  }
 
   await db.schema
     .createTable(supportingTableName)

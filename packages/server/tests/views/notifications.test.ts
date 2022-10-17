@@ -8,7 +8,7 @@ import { App } from '../../src'
 describe('pds notification views', () => {
   let client: AdxServiceClient
   let close: CloseFn
-  let app: App | undefined
+  let app: App
   let sc: SeedClient
 
   // account dids, for convenience
@@ -58,7 +58,6 @@ describe('pds notification views', () => {
   })
 
   it('paginates', async () => {
-    if (app === undefined) throw new Error()
     const { db } = locals.get(app)
 
     const full = await client.app.bsky.getNotifications({}, undefined, {
@@ -91,7 +90,6 @@ describe('pds notification views', () => {
   })
 
   it('updates notifications last seen', async () => {
-    if (app === undefined) throw new Error()
     const { db } = locals.get(app)
 
     const full = await client.app.bsky.getNotifications({}, undefined, {
