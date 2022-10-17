@@ -4,7 +4,10 @@
 import { Headers, XRPCError } from '@adxp/xrpc'
 
 export interface QueryParams {
-  user: string;
+  uri: string;
+  cid?: string;
+  limit?: number;
+  before?: string;
 }
 
 export interface CallOptions {
@@ -14,32 +17,15 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  did: string;
-  name: string;
-  displayName?: string;
-  description?: string;
-  followersCount: number;
-  followsCount: number;
-  postsCount: number;
-  pinnedBadges: AppBskyGetProfileBadge[];
-  myState?: {
-    follow?: string,
-  };
-}
-export interface AppBskyGetProfileBadge {
   uri: string;
-  cid: string;
-  error?: string;
-  issuer?: {
+  cid?: string;
+  members: {
     did: string,
     name: string,
     displayName?: string,
-  };
-  assertion?: {
-    type: string,
-    tag?: string,
-  };
-  createdAt?: string;
+    offeredAt: string,
+    acceptedAt: string,
+  }[];
 }
 
 export interface Response {

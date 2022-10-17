@@ -61,6 +61,40 @@ export default async (sc: SeedClient) => {
   )
   await sc.repost(sc.dids.carol, sc.posts[sc.dids.dan][1].ref)
   await sc.repost(sc.dids.dan, sc.posts[sc.dids.alice][1].ref)
+
+  await sc.createBadge(sc.dids.bob, 'employee')
+  await sc.createBadge(sc.dids.bob, 'tag', 'cool')
+  await sc.createBadge(sc.dids.carol, 'tag', 'neat')
+  await sc.createBadge(sc.dids.carol, 'tag', 'cringe')
+
+  await sc.offerBadge(sc.dids.bob, sc.dids.alice, sc.badges[sc.dids.bob][0])
+  await sc.offerBadge(sc.dids.bob, sc.dids.alice, sc.badges[sc.dids.bob][1])
+  await sc.offerBadge(sc.dids.bob, sc.dids.bob, sc.badges[sc.dids.bob][1])
+  await sc.offerBadge(sc.dids.bob, sc.dids.carol, sc.badges[sc.dids.bob][1])
+  await sc.offerBadge(sc.dids.bob, sc.dids.dan, sc.badges[sc.dids.bob][1])
+  await sc.offerBadge(sc.dids.carol, sc.dids.alice, sc.badges[sc.dids.carol][0])
+
+  await sc.acceptBadge(
+    sc.dids.alice,
+    sc.badges[sc.dids.bob][1],
+    sc.badgeOffers[sc.dids.bob][sc.dids.alice][1],
+  )
+  await sc.acceptBadge(
+    sc.dids.bob,
+    sc.badges[sc.dids.bob][1],
+    sc.badgeOffers[sc.dids.bob][sc.dids.bob][0],
+  )
+  await sc.acceptBadge(
+    sc.dids.carol,
+    sc.badges[sc.dids.bob][1],
+    sc.badgeOffers[sc.dids.bob][sc.dids.carol][0],
+  )
+  await sc.acceptBadge(
+    sc.dids.alice,
+    sc.badges[sc.dids.carol][0],
+    sc.badgeOffers[sc.dids.carol][sc.dids.alice][0],
+  )
+
   return sc
 }
 

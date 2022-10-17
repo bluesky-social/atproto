@@ -37,7 +37,7 @@ describe('pds notification views', () => {
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(notifCount.data.count).toBe(11)
+    expect(notifCount.data.count).toBe(14)
   })
 
   it('fetches notifications without a last-seen', async () => {
@@ -46,7 +46,7 @@ describe('pds notification views', () => {
     })
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(11)
+    expect(notifs.length).toBe(14)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
@@ -64,7 +64,7 @@ describe('pds notification views', () => {
       headers: sc.getHeaders(alice),
     })
 
-    expect(full.data.notifications.length).toBe(11)
+    expect(full.data.notifications.length).toBe(14)
 
     // Need to look-up createdAt time as a cursor since it's not in the method's output
     const beforeNotif = await db.db
@@ -126,7 +126,7 @@ describe('pds notification views', () => {
     })
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(11)
+    expect(notifs.length).toBe(14)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((_, i) => i >= 3))

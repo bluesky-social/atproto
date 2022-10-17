@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.badgeAccept",
+  "type": "record",
+  "record": {
+    "type": "object",
+    "required": ["badge", "offer", "createdAt"],
+    "properties": {
+      "badge": {"$ref": "#/defs/subject"},
+      "offer": {"$ref": "#/defs/subject"},
+      "createdAt": {"type": "string", "format": "date-time"}
+    }
+  },
+  "defs": {
+    "subject": {
+      "type": "object",
+      "required": ["uri", "cid"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"}
+      }
+    }
+  }
+}

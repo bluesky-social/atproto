@@ -12,6 +12,8 @@ import * as repost from './records/repost'
 import * as follow from './records/follow'
 import * as profile from './records/profile'
 import * as badge from './records/badge'
+import * as badgeAccept from './records/badgeAccept'
+import * as badgeOffer from './records/badgeOffer'
 import { Dialect } from '.'
 
 export type DatabaseSchema = user.PartialDB &
@@ -24,7 +26,9 @@ export type DatabaseSchema = user.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
   profile.PartialDB &
-  badge.PartialDB
+  badge.PartialDB &
+  badgeAccept.PartialDB &
+  badgeOffer.PartialDB
 
 export const createTables = async (
   db: Kysely<DatabaseSchema>,
@@ -55,5 +59,7 @@ export const createTables = async (
     follow.createTable(db),
     profile.createTable(db, dialect),
     badge.createTable(db),
+    badgeAccept.createTable(db),
+    badgeOffer.createTable(db),
   ])
 }

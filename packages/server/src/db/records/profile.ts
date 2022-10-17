@@ -67,7 +67,7 @@ export type PartialDB = {
 }
 
 const validator = schemas.createRecordValidator(type)
-const isValidSchema = (obj: unknown): obj is Profile.Record => {
+const matchesSchema = (obj: unknown): obj is Profile.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
@@ -95,7 +95,7 @@ const getFn =
     const [profile, badges] = await Promise.all([profileQuery, badgesQuery])
     if (!profile) return null
     const record = translateDbObj(profile)
-    record.badges = badges.map((row) => ({
+    record.pinnedBadges = badges.map((row) => ({
       uri: row.badgeUri,
       cid: row.badgeCid,
     }))
@@ -105,11 +105,11 @@ const getFn =
 const insertFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
-    if (!isValidSchema(obj)) {
+    if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
 
-    const badges = (obj.badges || []).map((badge) => ({
+    const badges = (obj.pinnedBadges || []).map((badge) => ({
       badgeUri: badge.uri,
       badgeCid: badge.cid,
       profileUri: uri.toString(),
@@ -156,6 +156,7 @@ export const makePlugin = (
     tableName,
     get: getFn(db),
     validateSchema,
+    matchesSchema,
     insert: insertFn(db),
     delete: deleteFn(db),
     translateDbObj,

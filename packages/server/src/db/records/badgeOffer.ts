@@ -1,17 +1,20 @@
 import { Kysely } from 'kysely'
 import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
-import * as Follow from '../../lexicon/types/app/bsky/follow'
+import * as BadgeOffer from '../../lexicon/types/app/bsky/badgeOffer'
 import { DbRecordPlugin, Notification } from '../types'
 import schemas from '../schemas'
 
-const type = 'app.bsky.follow'
-const tableName = 'app_bsky_follow'
-export interface AppBskyFollow {
+const type = 'app.bsky.badgeOffer'
+const tableName = 'app_bsky_badge_offer'
+
+export interface AppBskyBadgeOffer {
   uri: string
   cid: string
   creator: string
   subject: string
+  badgeUri: string
+  badgeCid: string
   createdAt: string
   indexedAt: string
 }
@@ -23,31 +26,37 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('badgeUri', 'varchar', (col) => col.notNull())
+    .addColumn('badgeCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
 }
 
-export type PartialDB = { [tableName]: AppBskyFollow }
+export type PartialDB = { [tableName]: AppBskyBadgeOffer }
 
 const validator = schemas.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is Follow.Record => {
+const matchesSchema = (obj: unknown): obj is BadgeOffer.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
+const translateDbObj = (dbObj: AppBskyBadgeOffer): BadgeOffer.Record => {
   return {
     subject: dbObj.subject,
+    badge: {
+      uri: dbObj.badgeUri,
+      cid: dbObj.badgeCid,
+    },
     createdAt: dbObj.createdAt,
   }
 }
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<Follow.Record | null> => {
+  async (uri: AdxUri): Promise<BadgeOffer.Record | null> => {
     const found = await db
-      .selectFrom('app_bsky_follow')
+      .selectFrom('app_bsky_badge_offer')
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
@@ -60,21 +69,27 @@ const insertFn =
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
-    const val = {
-      uri: uri.toString(),
-      cid: cid.toString(),
-      creator: uri.host,
-      subject: obj.subject,
-      createdAt: obj.createdAt,
-      indexedAt: new Date().toISOString(),
-    }
-    await db.insertInto('app_bsky_follow').values(val).execute()
+    await db
+      .insertInto('app_bsky_badge_offer')
+      .values({
+        uri: uri.toString(),
+        cid: cid.toString(),
+        creator: uri.host,
+        subject: obj.subject,
+        badgeUri: obj.badge.uri,
+        badgeCid: obj.badge.cid,
+        createdAt: obj.createdAt,
+        indexedAt: new Date().toISOString(),
+      })
+      .execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri): Promise<void> => {
-    await db.deleteFrom('app_bsky_follow').where('uri', '=', uri.toString())
+    await db
+      .deleteFrom('app_bsky_badge_offer')
+      .where('uri', '=', uri.toString())
   }
 
 const notifsForRecord = (
@@ -90,14 +105,15 @@ const notifsForRecord = (
     author: uri.host,
     recordUri: uri.toString(),
     recordCid: cid.toString(),
-    reason: 'follow',
+    reason: 'badge',
+    reasonSubject: obj.badge.uri,
   }
   return [notif]
 }
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<Follow.Record, AppBskyFollow> => {
+): DbRecordPlugin<BadgeOffer.Record, AppBskyBadgeOffer> => {
   return {
     collection: type,
     tableName,

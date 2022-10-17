@@ -11,6 +11,7 @@ describe('pds profile views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
+  let carol: string
   let dan: string
 
   beforeAll(async () => {
@@ -23,6 +24,7 @@ describe('pds profile views', () => {
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
+    carol = sc.dids.carol
     dan = sc.dids.dan
   })
 
@@ -58,6 +60,60 @@ describe('pds profile views', () => {
     )
 
     expect(forSnapshot(danForBob.data)).toMatchSnapshot()
+  })
+
+  it('updates profile', async () => {
+    const toPin = [sc.badges[bob][1].raw]
+    await client.app.bsky.updateProfile(
+      {},
+      { displayName: 'ali', pinnedBadges: toPin },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceForAlice = await client.app.bsky.getProfile(
+      { user: alice },
+      undefined,
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
+  it('adds & removes badges from profile', async () => {
+    const toPin = [sc.badges[carol][0].raw]
+    await client.app.bsky.updateProfile(
+      {},
+      { description: 'new descript', pinnedBadges: toPin },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceForAlice = await client.app.bsky.getProfile(
+      { user: alice },
+      undefined,
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
+  it('does not return a badge that the user does not possess', async () => {
+    const toPin = [
+      sc.badges[carol][0].raw,
+      sc.badges[carol][1].raw, // alice was not offered this badge
+    ]
+    await client.app.bsky.updateProfile(
+      {},
+      { pinnedBadges: toPin },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceForAlice = await client.app.bsky.getProfile(
+      { user: alice },
+      undefined,
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
   })
 
   it('fetches profile by username', async () => {

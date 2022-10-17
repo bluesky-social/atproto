@@ -2,12 +2,12 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 export interface Record {
-  displayName: string;
-  description?: string;
-  pinnedBadges?: AppBskyProfileBadgeRef[];
+  badge: AppBskyBadgeAcceptSubject;
+  offer: AppBskyBadgeAcceptSubject;
+  createdAt: string;
   [k: string]: unknown;
 }
-export interface AppBskyProfileBadgeRef {
+export interface AppBskyBadgeAcceptSubject {
   uri: string;
   cid: string;
   [k: string]: unknown;

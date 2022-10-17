@@ -6,6 +6,7 @@ export type DbRecordPlugin<T, S> = {
   collection: string
   tableName: string
   validateSchema: (obj: unknown) => ValidationResult
+  matchesSchema: (obj: unknown) => obj is T
   translateDbObj: (dbObj: S) => T
   get: (uri: AdxUri) => Promise<T | null>
   insert: (uri: AdxUri, cid: CID, obj: unknown) => Promise<void>
