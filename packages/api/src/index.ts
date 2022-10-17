@@ -590,7 +590,10 @@ export class BadgeRecord {
 
   async list(
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{ records: { uri: string, value: AppBskyBadge.Record }[] }> {
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyBadge.Record }[],
+  }> {
     const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
       collection: 'app.bsky.badge',
       ...params,
@@ -645,7 +648,10 @@ export class FollowRecord {
 
   async list(
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{ records: { uri: string, value: AppBskyFollow.Record }[] }> {
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyFollow.Record }[],
+  }> {
     const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
       collection: 'app.bsky.follow',
       ...params,
@@ -700,7 +706,10 @@ export class LikeRecord {
 
   async list(
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{ records: { uri: string, value: AppBskyLike.Record }[] }> {
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyLike.Record }[],
+  }> {
     const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
       collection: 'app.bsky.like',
       ...params,
@@ -755,7 +764,10 @@ export class MediaEmbedRecord {
 
   async list(
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{ records: { uri: string, value: AppBskyMediaEmbed.Record }[] }> {
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyMediaEmbed.Record }[],
+  }> {
     const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
       collection: 'app.bsky.mediaEmbed',
       ...params,
@@ -810,7 +822,10 @@ export class PostRecord {
 
   async list(
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{ records: { uri: string, value: AppBskyPost.Record }[] }> {
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyPost.Record }[],
+  }> {
     const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
       collection: 'app.bsky.post',
       ...params,
@@ -865,7 +880,10 @@ export class ProfileRecord {
 
   async list(
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{ records: { uri: string, value: AppBskyProfile.Record }[] }> {
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyProfile.Record }[],
+  }> {
     const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
       collection: 'app.bsky.profile',
       ...params,
@@ -920,7 +938,10 @@ export class RepostRecord {
 
   async list(
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{ records: { uri: string, value: AppBskyRepost.Record }[] }> {
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyRepost.Record }[],
+  }> {
     const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
       collection: 'app.bsky.repost',
       ...params,

@@ -306,7 +306,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     const method = cls.addMethod({
       isAsync: true,
       name: 'list',
-      returnType: `Promise<{records: ({uri: string, value: ${typeModule}.Record})[]}>`,
+      returnType: `Promise<{cursor?: string, records: ({uri: string, value: ${typeModule}.Record})[]}>`,
     })
     method.addParameter({
       name: 'params',
