@@ -82,7 +82,6 @@ describe('pds like views', () => {
 
     const full = await client.app.bsky.getLikedBy({
       uri: sc.posts[alice][1].ref.uriStr,
-      limit: 50,
     })
 
     expect(full.data.likedBy.length).toEqual(4)

@@ -4,7 +4,7 @@ import {
   forSnapshot,
   CloseFn,
   getOriginator,
-  constantDate,
+  paginateAll,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -40,14 +40,6 @@ describe('pds home feed views', () => {
     await close()
   })
 
-  const getCursors = (items: { indexedAt?: string }[]) =>
-    items.map((item) => item.indexedAt ?? constantDate)
-
-  const getSortedCursors = (items: { indexedAt?: string }[]) =>
-    getCursors(items).sort((a, b) => tstamp(b) - tstamp(a))
-
-  const tstamp = (x: string) => new Date(x).getTime()
-
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
     const expectOriginatorFollowedBy = (did) => (item: FeedItem) => {
       const originator = getOriginator(item)
@@ -69,9 +61,6 @@ describe('pds home feed views', () => {
 
     expect(forSnapshot(aliceFeed.data.feed)).toMatchSnapshot()
     aliceFeed.data.feed.forEach(expectOriginatorFollowedBy(alice))
-    expect(getCursors(aliceFeed.data.feed)).toEqual(
-      getSortedCursors(aliceFeed.data.feed),
-    )
 
     const bobFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
@@ -83,9 +72,6 @@ describe('pds home feed views', () => {
 
     expect(forSnapshot(bobFeed.data.feed)).toMatchSnapshot()
     bobFeed.data.feed.forEach(expectOriginatorFollowedBy(bob))
-    expect(getCursors(bobFeed.data.feed)).toEqual(
-      getSortedCursors(bobFeed.data.feed),
-    )
 
     const carolFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
@@ -97,9 +83,6 @@ describe('pds home feed views', () => {
 
     expect(forSnapshot(carolFeed.data.feed)).toMatchSnapshot()
     carolFeed.data.feed.forEach(expectOriginatorFollowedBy(carol))
-    expect(getCursors(carolFeed.data.feed)).toEqual(
-      getSortedCursors(carolFeed.data.feed),
-    )
 
     const danFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
@@ -111,9 +94,6 @@ describe('pds home feed views', () => {
 
     expect(forSnapshot(danFeed.data.feed)).toMatchSnapshot()
     danFeed.data.feed.forEach(expectOriginatorFollowedBy(dan))
-    expect(getCursors(danFeed.data.feed)).toEqual(
-      getSortedCursors(danFeed.data.feed),
-    )
   })
 
   it("fetches authenticated user's home feed w/ firehose algorithm", async () => {
@@ -135,9 +115,6 @@ describe('pds home feed views', () => {
 
     expect(forSnapshot(aliceFeed.data.feed)).toMatchSnapshot()
     aliceFeed.data.feed.forEach(expectNotOwnRepostsBy(alice))
-    expect(getCursors(aliceFeed.data.feed)).toEqual(
-      getSortedCursors(aliceFeed.data.feed),
-    )
 
     const carolFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.Firehose },
@@ -149,9 +126,6 @@ describe('pds home feed views', () => {
 
     expect(forSnapshot(carolFeed.data.feed)).toMatchSnapshot()
     carolFeed.data.feed.forEach(expectNotOwnRepostsBy(carol))
-    expect(getCursors(carolFeed.data.feed)).toEqual(
-      getSortedCursors(carolFeed.data.feed),
-    )
   })
 
   it("fetches authenticated user's home feed w/ default algorithm", async () => {
@@ -168,57 +142,67 @@ describe('pds home feed views', () => {
     expect(defaultFeed.data.feed).toEqual(reverseChronologicalFeed.data.feed)
   })
 
-  it.skip('paginates reverse-chronological feed', async () => {
-    // TODO
+  it('paginates reverse-chronological feed', async () => {
+    const results = (results) => results.flatMap((res) => res.feed)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getHomeFeed(
+        {
+          algorithm: FeedAlgorithm.ReverseChronological,
+          before: cursor,
+          limit: 4,
+        },
+        undefined,
+        { headers: sc.getHeaders(carol) },
+      )
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.feed.length).toBeLessThanOrEqual(4),
+    )
+
     const full = await client.app.bsky.getHomeFeed(
-      { algorithm: FeedAlgorithm.ReverseChronological },
-      undefined,
       {
-        headers: sc.getHeaders(carol),
+        algorithm: FeedAlgorithm.ReverseChronological,
       },
+      undefined,
+      { headers: sc.getHeaders(carol) },
     )
 
     expect(full.data.feed.length).toEqual(6)
-
-    const paginated = await client.app.bsky.getHomeFeed(
-      {
-        algorithm: FeedAlgorithm.ReverseChronological,
-        before: full.data.feed[1].indexedAt,
-        limit: 2,
-      },
-      undefined,
-      {
-        headers: sc.getHeaders(carol),
-      },
-    )
-
-    expect(paginated.data.feed).toEqual(full.data.feed.slice(2, 4))
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
-  it.skip('paginates firehose feed', async () => {
-    // TODO
+  it('paginates firehose feed', async () => {
+    const results = (results) => results.flatMap((res) => res.feed)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getHomeFeed(
+        {
+          algorithm: FeedAlgorithm.Firehose,
+          before: cursor,
+          limit: 5,
+        },
+        undefined,
+        { headers: sc.getHeaders(alice) },
+      )
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.feed.length).toBeLessThanOrEqual(5),
+    )
+
     const full = await client.app.bsky.getHomeFeed(
-      { algorithm: FeedAlgorithm.Firehose },
-      undefined,
       {
-        headers: sc.getHeaders(alice),
+        algorithm: FeedAlgorithm.Firehose,
       },
+      undefined,
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(full.data.feed.length).toEqual(13)
-
-    const paginated = await client.app.bsky.getHomeFeed(
-      {
-        algorithm: FeedAlgorithm.Firehose,
-        before: full.data.feed[1].indexedAt,
-        limit: 2,
-      },
-      undefined,
-      {
-        headers: sc.getHeaders(alice),
-      },
-    )
-
-    expect(paginated.data.feed).toEqual(full.data.feed.slice(2, 4))
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })
