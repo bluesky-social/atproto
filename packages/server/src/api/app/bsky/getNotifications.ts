@@ -72,11 +72,14 @@ export default function (server: Server) {
         record: JSON.parse(notif.record),
         isRead: notif.createdAt <= user.lastSeenNotifs,
         indexedAt: notif.indexedAt,
-        // @TODO do we need createdAt so that it can be used as a cursor?
       }))
+
       return {
         encoding: 'application/json',
-        body: { notifications },
+        body: {
+          notifications,
+          cursor: notifications.at(-1)?.indexedAt,
+        },
       }
     },
   )
