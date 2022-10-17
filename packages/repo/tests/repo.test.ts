@@ -19,7 +19,7 @@ describe('Repo', () => {
     repo = await Repo.create(blockstore, await authStore.did(), authStore)
   })
 
-  it('has proper metadat', async () => {
+  it('has proper metadata', async () => {
     expect(repo.meta.did).toEqual(await authStore.did())
     expect(repo.meta.version).toBe(1)
     expect(repo.meta.datastore).toBe('mst')
