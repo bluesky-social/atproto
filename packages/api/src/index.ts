@@ -684,7 +684,10 @@ export class BadgeAcceptRecord {
 
   async list(
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{ records: { uri: string, value: AppBskyBadgeAccept.Record }[] }> {
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyBadgeAccept.Record }[],
+  }> {
     const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
       collection: 'app.bsky.badgeAccept',
       ...params,
@@ -739,7 +742,10 @@ export class BadgeOfferRecord {
 
   async list(
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{ records: { uri: string, value: AppBskyBadgeOffer.Record }[] }> {
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyBadgeOffer.Record }[],
+  }> {
     const res = await this._service.xrpc.call('com.atproto.repoListRecords', {
       collection: 'app.bsky.badgeOffer',
       ...params,

@@ -16,6 +16,7 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
+        "cursor": {"type": "string"},
         "members": {
           "type": "array",
           "items": {

@@ -63,7 +63,9 @@ export default function (server: Server) {
         encoding: 'application/json',
         body: {
           uri,
+          cid,
           members,
+          cursor: members.at(-1)?.acceptedAt,
         },
       }
     },

@@ -1104,6 +1104,9 @@ export const methodSchemas: MethodSchema[] = [
           cid: {
             type: 'string',
           },
+          cursor: {
+            type: 'string',
+          },
           members: {
             type: 'array',
             items: {
