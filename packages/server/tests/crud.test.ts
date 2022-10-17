@@ -201,7 +201,7 @@ describe('crud operations', () => {
       const paginator = async (cursor?: string) => {
         const res = await client.app.bsky.post.list({
           user: alice.did,
-          after: cursor,
+          before: cursor,
           limit: 2,
         })
         return res
@@ -226,7 +226,7 @@ describe('crud operations', () => {
         const res = await client.app.bsky.post.list({
           user: alice.did,
           reverse: true,
-          before: cursor,
+          after: cursor,
           limit: 2,
         })
         return res
@@ -253,9 +253,9 @@ describe('crud operations', () => {
         before: uri5.rkey,
       })
       expect(list.records.length).toBe(3)
-      expect(list.records[0].uri).toBe(uri2.toString())
+      expect(list.records[0].uri).toBe(uri4.toString())
       expect(list.records[1].uri).toBe(uri3.toString())
-      expect(list.records[2].uri).toBe(uri4.toString())
+      expect(list.records[2].uri).toBe(uri2.toString())
     })
 
     it('reverses', async () => {
@@ -266,8 +266,8 @@ describe('crud operations', () => {
         user: alice.did,
         reverse: true,
       })
-      expect(forwards.cursor).toEqual(uri5.rkey)
-      expect(reverse.cursor).toEqual(uri1.rkey)
+      expect(forwards.cursor).toEqual(uri1.rkey)
+      expect(reverse.cursor).toEqual(uri5.rkey)
       expect(forwards.records.length).toEqual(5)
       expect(reverse.records.length).toEqual(5)
       expect(forwards.records.reverse()).toEqual(reverse.records)

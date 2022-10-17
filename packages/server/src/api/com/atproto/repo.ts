@@ -64,7 +64,7 @@ export default function (server: Server) {
       encoding: 'application/json',
       body: {
         records,
-        // Paginate with `after` by default, paginate with `before` when using `reverse`.
+        // Paginate with `before` by default, paginate with `after` when using `reverse`.
         cursor: lastUri?.rkey,
       },
     }
