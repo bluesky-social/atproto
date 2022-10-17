@@ -11,8 +11,15 @@ const strToTid = z
   .refine(TID.is, { message: 'Not a valid TID' })
   .transform(TID.fromStr)
 
-const repoRoot = z.object({
+const repoMeta = z.object({
   did: z.string(),
+  version: z.number(),
+  datastore: z.string(),
+})
+export type RepoMeta = z.infer<typeof repoMeta>
+
+const repoRoot = z.object({
+  meta: common.cid,
   prev: common.cid.nullable(),
   auth_token: common.cid.nullable(),
   data: common.cid,
@@ -55,6 +62,7 @@ export const def = {
   ...common,
   tid,
   strToTid,
+  repoMeta,
   repoRoot,
   commit,
   batchWrite,
