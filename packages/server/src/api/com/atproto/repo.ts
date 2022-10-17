@@ -160,16 +160,16 @@ export default function (server: Server) {
 
     // determine key type. if undefined, repo assigns a TID
     const keyType = schemas.recordSchemaDict[collection]?.keyed
-    let rkey: string | undefined
+    let recordKey: string | undefined
     if (keyType && keyType.startsWith('literal')) {
       const split = keyType.split(':')
-      rkey = split[1]
+      recordKey = split[1]
     }
 
-    const { key, cid } = await repo
+    const { rkey, cid } = await repo
       .getCollection(collection)
-      .createRecord(input.body, rkey)
-    const uri = new AdxUri(`${did}/${collection}/${key}`)
+      .createRecord(input.body, recordKey)
+    const uri = new AdxUri(`${did}/${collection}/${rkey}`)
     try {
       await db.indexRecord(uri, cid, input.body)
     } catch (err) {
