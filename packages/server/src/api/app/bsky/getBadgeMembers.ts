@@ -24,15 +24,16 @@ export default function (server: Server) {
         )
         .innerJoin('user', 'user.did', 'accept.creator')
         .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user.did')
-        .where('offer.creator', '=', 'badge.creator')
-        .where('offer.subject', '=', 'accept.creator')
-        .where('accept.offerUri', '=', 'offer.uri')
+        .where('badge.uri', '=', uri)
+        .whereRef('offer.creator', '=', 'badge.creator')
+        .whereRef('offer.subject', '=', 'accept.creator')
+        .whereRef('accept.offerUri', '=', 'offer.uri')
         .select([
           'user.did as did',
           'user.username as name',
           'profile.displayName as displayName',
-          'offer.indexedAt as offeredAt',
-          'accept.indexedAt as acceptedAt',
+          'offer.createdAt as offeredAt',
+          'accept.createdAt as acceptedAt',
         ])
 
       builder = paginate(builder, {
