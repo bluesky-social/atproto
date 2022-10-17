@@ -2,6 +2,7 @@
 
 exports[`pds like views fetches liked by posts 1`] = `
 Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
   "likedBy": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -35,6 +36,7 @@ Object {
 
 exports[`pds like views fetches liked by replies 1`] = `
 Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
   "likedBy": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",

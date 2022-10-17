@@ -141,15 +141,8 @@ export const forSnapshot = (obj: unknown) => {
 type FeedItem = GetAuthorFeed.AppBskyGetAuthorFeedFeedItem &
   GetHomeFeed.AppBskyGetHomeFeedFeedItem
 
-export const getCursors = (feed: FeedItem[]) => feed.map((item) => item.cursor)
-
-export const getSortedCursors = (feed: FeedItem[]) =>
-  getCursors(feed).sort((a, b) => tstamp(b) - tstamp(a))
-
 export const getOriginator = (item: FeedItem) =>
   item.repostedBy ? item.repostedBy.did : item.author.did
-
-const tstamp = (x: string) => new Date(x).getTime()
 
 // Useful for remapping ids in snapshot testing, to make snapshots deterministic.
 // E.g. you may use this to map this:
@@ -189,4 +182,17 @@ const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
     )
   }
   return fn(obj)
+}
+
+export const paginateAll = async <T extends { cursor?: string }>(
+  fn: (cursor?: string) => Promise<T>,
+): Promise<T[]> => {
+  const results: T[] = []
+  let cursor
+  do {
+    const res = await fn(cursor)
+    results.push(res)
+    cursor = res.cursor
+  } while (cursor)
+  return results
 }

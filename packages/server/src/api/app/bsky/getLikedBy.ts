@@ -49,6 +49,7 @@ export default function (server: Server) {
         body: {
           uri,
           cid,
+          cursor: likedBy.at(-1)?.createdAt,
           likedBy,
         },
       }
