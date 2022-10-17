@@ -4,6 +4,7 @@ import { AdxUri } from '@adxp/uri'
 import * as didResolver from '@adxp/did-resolver'
 import * as repoDiff from '../../../repo-diff'
 import * as locals from '../../../locals'
+import * as schemas from '../../../lexicon/schemas'
 
 export default function (server: Server) {
   server.com.atproto.repoDescribe(async (params, _in, _req, res) => {
@@ -156,8 +157,15 @@ export default function (server: Server) {
         `${did} is not a registered repo on this server`,
       )
     }
-    // @TODO handle this better. schema layer?
-    const rkey = collection === 'app.bsky.profile' ? 'self' : undefined
+
+    // determine key type. if undefined, repo assigns a TID
+    const keyType = schemas.recordSchemaDict[collection]?.keyed
+    let rkey: string | undefined
+    if (keyType && keyType.startsWith('literal')) {
+      const split = keyType.split(':')
+      rkey = split[1]
+    }
+
     const { key, cid } = await repo
       .getCollection(collection)
       .createRecord(input.body, rkey)
