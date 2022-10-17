@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 
-import { RepoRoot, Commit, def, BatchWrite, DataStore } from './types'
+import { RepoRoot, Commit, def, BatchWrite, DataStore, RepoMeta } from './types'
 import { check, streamToArray, TID } from '@adxp/common'
 import IpldStore, { AllowedIpldVal } from './blockstore/ipld-store'
 import * as auth from '@adxp/auth'
@@ -15,6 +15,7 @@ export class Repo {
   data: DataStore
   commit: Commit
   root: RepoRoot
+  meta: RepoMeta
   cid: CID
   authStore: auth.AuthStore | null
   verifier: auth.Verifier
@@ -24,6 +25,7 @@ export class Repo {
     data: DataStore
     commit: Commit
     root: RepoRoot
+    meta: RepoMeta
     cid: CID
     authStore: auth.AuthStore | undefined
     verifier: auth.Verifier | undefined
@@ -32,6 +34,7 @@ export class Repo {
     this.data = params.data
     this.commit = params.commit
     this.root = params.root
+    this.meta = params.meta
     this.cid = params.cid
     this.authStore = params.authStore || null
     this.verifier = params.verifier ?? new auth.Verifier()
@@ -55,8 +58,15 @@ export class Repo {
     const data = await MST.create(blockstore)
     const dataCid = await data.save()
 
-    const root: RepoRoot = {
+    const meta: RepoMeta = {
       did,
+      version: 1,
+      datastore: 'mst',
+    }
+    const metaCid = await blockstore.put(meta)
+
+    const root: RepoRoot = {
+      meta: metaCid,
       prev: null,
       auth_token: tokenCid,
       data: dataCid,
@@ -76,6 +86,7 @@ export class Repo {
       data,
       commit,
       root,
+      meta,
       cid,
       authStore,
       verifier,
@@ -90,13 +101,15 @@ export class Repo {
   ) {
     const commit = await blockstore.get(cid, def.commit)
     const root = await blockstore.get(commit.root, def.repoRoot)
+    const meta = await blockstore.get(root.meta, def.repoMeta)
     const data = await MST.load(blockstore, root.data)
-    log.info({ did: root.did }, 'loaded repo for')
+    log.info({ did: meta.did }, 'loaded repo for')
     return new Repo({
       blockstore,
       data,
       commit,
       root,
+      meta,
       cid,
       authStore,
       verifier,
@@ -130,7 +143,7 @@ export class Repo {
   }
 
   did(): string {
-    return this.root.did
+    return this.meta.did
   }
 
   getCollection(name: string): Collection {
@@ -158,7 +171,7 @@ export class Repo {
       : await this.ucanForOperation(updatedData)
     const dataCid = await updatedData.save()
     const root: RepoRoot = {
-      did: this.did(),
+      meta: this.root.meta,
       prev: currentCommit,
       auth_token: tokenCid,
       data: dataCid,
@@ -308,6 +321,10 @@ export class Repo {
       const nextRepo = await Repo.load(this.blockstore, commit)
       const diff = await prevRepo.data.diff(nextRepo.data)
 
+      if (!nextRepo.root.meta.equals(prevRepo.root.meta)) {
+        throw new Error('Not supported: repo metadata updated')
+      }
+
       let didForSignature: string
       if (nextRepo.root.auth_token) {
         // verify auth token covers all necessary writes
@@ -416,6 +433,7 @@ export class Repo {
     const root = await this.blockstore.get(commit.root, def.repoRoot)
     await this.blockstore.addToCar(car, this.cid)
     await this.blockstore.addToCar(car, commit.root)
+    await this.blockstore.addToCar(car, root.meta)
     if (root.auth_token) {
       await this.blockstore.addToCar(car, root.auth_token)
     }
@@ -442,6 +460,7 @@ export class Repo {
       const nextHead = await Repo.load(this.blockstore, commit)
       await this.blockstore.addToCar(car, nextHead.cid)
       await this.blockstore.addToCar(car, nextHead.commit.root)
+      await this.blockstore.addToCar(car, nextHead.root.meta)
       if (nextHead.root.auth_token) {
         await this.blockstore.addToCar(car, nextHead.root.auth_token)
       }

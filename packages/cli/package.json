@@ -2,6 +2,7 @@
   "name": "@adxp/cli",
   "version": "0.0.1",
   "main": "dist/bin.js",
+  "license": "MIT",
   "scripts": {
     "cli": "node dist/bin.js",
     "build": "node ./build.js",

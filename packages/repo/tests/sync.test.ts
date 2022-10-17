@@ -36,13 +36,7 @@ describe('Sync', () => {
 
   it('syncs a repo that is starting from scratch', async () => {
     repoData = await util.fillRepo(aliceRepo, 100)
-    try {
-      const car = await aliceRepo.getFullHistory()
-    } catch (err) {
-      const contents = await aliceBlockstore.getContents()
-      console.log(contents)
-      throw err
-    }
+    await aliceRepo.getFullHistory()
 
     const car = await aliceRepo.getFullHistory()
     bobRepo = await Repo.fromCarFile(car, bobBlockstore)
@@ -78,7 +72,7 @@ describe('Sync', () => {
     const auth_token = await aliceBlockstore.put(auth.encodeUcan(badUcan))
     const dataCid = await updatedData.save()
     const root: RepoRoot = {
-      did: aliceRepo.did(),
+      meta: aliceRepo.root.meta,
       prev: aliceRepo.cid,
       auth_token,
       data: dataCid,
@@ -105,7 +99,7 @@ describe('Sync', () => {
     const auth_token = await aliceRepo.ucanForOperation(updatedData)
     const dataCid = await updatedData.save()
     const root: RepoRoot = {
-      did: aliceRepo.did(),
+      meta: aliceRepo.root.meta,
       prev: aliceRepo.cid,
       auth_token,
       data: dataCid,

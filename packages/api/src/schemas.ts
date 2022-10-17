@@ -1073,6 +1073,71 @@ export const methodSchemas: MethodSchema[] = [
   },
   {
     lexicon: 1,
+    id: 'app.bsky.getBadgeMembers',
+    type: 'query',
+    parameters: {
+      uri: {
+        type: 'string',
+        required: true,
+      },
+      cid: {
+        type: 'string',
+        required: false,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      before: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['uri', 'members'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          members: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'name', 'acceptedAt', 'offeredAt'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                name: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                offeredAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                acceptedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'app.bsky.getHomeFeed',
     type: 'query',
     description: "A view of the user's home feed",
@@ -1930,7 +1995,7 @@ export const methodSchemas: MethodSchema[] = [
           'followersCount',
           'followsCount',
           'postsCount',
-          'badges',
+          'pinnedBadges',
         ],
         properties: {
           did: {
@@ -1956,7 +2021,7 @@ export const methodSchemas: MethodSchema[] = [
           postsCount: {
             type: 'number',
           },
-          badges: {
+          pinnedBadges: {
             type: 'array',
             items: {
               $ref: '#/$defs/appBskyGetProfileBadge',
@@ -1987,7 +2052,7 @@ export const methodSchemas: MethodSchema[] = [
               },
               issuer: {
                 type: 'object',
-                required: ['did', 'name', 'displayName'],
+                required: ['did', 'name'],
                 properties: {
                   did: {
                     type: 'string',
@@ -2007,6 +2072,10 @@ export const methodSchemas: MethodSchema[] = [
                 properties: {
                   type: {
                     type: 'string',
+                  },
+                  tag: {
+                    type: 'string',
+                    maxLength: 64,
                   },
                 },
               },
@@ -2035,7 +2104,7 @@ export const methodSchemas: MethodSchema[] = [
           },
           issuer: {
             type: 'object',
-            required: ['did', 'name', 'displayName'],
+            required: ['did', 'name'],
             properties: {
               did: {
                 type: 'string',
@@ -2055,6 +2124,10 @@ export const methodSchemas: MethodSchema[] = [
             properties: {
               type: {
                 type: 'string',
+              },
+              tag: {
+                type: 'string',
+                maxLength: 64,
               },
             },
           },
@@ -2418,6 +2491,69 @@ export const methodSchemas: MethodSchema[] = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'app.bsky.updateProfile',
+    type: 'procedure',
+    description: 'Notify server that the user has seen notifications',
+    parameters: {},
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: [],
+        properties: {
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          description: {
+            type: 'string',
+            maxLength: 256,
+          },
+          pinnedBadges: {
+            type: 'array',
+            items: {
+              $ref: '#/$defs/appBskyProfileBadgeRef',
+            },
+          },
+        },
+        $defs: {
+          appBskyProfileBadgeRef: {
+            type: 'object',
+            required: ['uri', 'cid'],
+            properties: {
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['uri', 'cid', 'record'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          record: {
+            type: 'object',
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
 ]
 export const recordSchemas: RecordSchema[] = [
   {
@@ -2427,7 +2563,7 @@ export const recordSchemas: RecordSchema[] = [
     description: 'An assertion about the subject by this user.',
     record: {
       type: 'object',
-      required: ['assertion', 'subject', 'createdAt'],
+      required: ['assertion', 'createdAt'],
       properties: {
         assertion: {
           oneOf: [
@@ -2444,9 +2580,6 @@ export const recordSchemas: RecordSchema[] = [
               $ref: '#/$defs/appBskyBadgeUnknownAssertion',
             },
           ],
-        },
-        subject: {
-          type: 'string',
         },
         createdAt: {
           type: 'string',
@@ -2540,6 +2673,104 @@ export const recordSchemas: RecordSchema[] = [
             not: {
               enum: ['invite', 'employee', 'tag'],
             },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'app.bsky.badgeAccept',
+    type: 'record',
+    record: {
+      type: 'object',
+      required: ['badge', 'offer', 'createdAt'],
+      properties: {
+        badge: {
+          $ref: '#/$defs/appBskyBadgeAcceptSubject',
+        },
+        offer: {
+          $ref: '#/$defs/appBskyBadgeAcceptSubject',
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {
+        appBskyBadgeAcceptSubject: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      subject: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'app.bsky.badgeOffer',
+    type: 'record',
+    record: {
+      type: 'object',
+      required: ['badge', 'subject', 'createdAt'],
+      properties: {
+        badge: {
+          $ref: '#/$defs/appBskyBadgeOfferBadge',
+        },
+        subject: {
+          type: 'string',
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {
+        appBskyBadgeOfferBadge: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      badge: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
           },
         },
       },
@@ -2830,7 +3061,7 @@ export const recordSchemas: RecordSchema[] = [
           type: 'string',
           maxLength: 256,
         },
-        badges: {
+        pinnedBadges: {
           type: 'array',
           items: {
             $ref: '#/$defs/appBskyProfileBadgeRef',

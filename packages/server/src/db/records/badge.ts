@@ -12,9 +12,8 @@ export interface AppBskyBadge {
   uri: string
   cid: string
   creator: string
-  subject: string
   assertionType: string
-  assertionTag?: string
+  assertionTag: string | null
   createdAt: string
   indexedAt: string
 }
@@ -25,7 +24,6 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('assertionType', 'varchar', (col) => col.notNull())
     .addColumn('assertionTag', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
@@ -36,24 +34,19 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
 export type PartialDB = { [tableName]: AppBskyBadge }
 
 const validator = schemas.createRecordValidator(type)
-const isValidSchema = (obj: unknown): obj is Badge.Record => {
+const matchesSchema = (obj: unknown): obj is Badge.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const translateDbObj = (dbObj: AppBskyBadge): Badge.Record => {
-  const badge = {
+  return {
     assertion: {
       type: dbObj.assertionType,
-      tag: dbObj.assertionTag,
+      tag: dbObj.assertionTag || undefined,
     },
-    subject: dbObj.subject,
     createdAt: dbObj.createdAt,
   }
-  if (badge.assertion.type === 'tag') {
-    badge.assertion.tag = dbObj.assertionTag
-  }
-  return badge
 }
 
 const getFn =
@@ -70,16 +63,16 @@ const getFn =
 const insertFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
-    if (!isValidSchema(obj)) {
+    if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
     const val = {
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
-      subject: obj.subject,
       assertionType: obj.assertion.type,
-      assertionTag: (obj.assertion as Badge.AppBskyBadgeTagAssertion).tag,
+      assertionTag:
+        (obj.assertion as Badge.AppBskyBadgeTagAssertion).tag || null,
       createdAt: obj.createdAt,
       indexedAt: new Date().toISOString(),
     }
@@ -93,21 +86,11 @@ const deleteFn =
   }
 
 const notifsForRecord = (
-  uri: AdxUri,
-  cid: CID,
-  obj: unknown,
+  _uri: AdxUri,
+  _cid: CID,
+  _obj: unknown,
 ): Notification[] => {
-  if (!isValidSchema(obj)) {
-    throw new Error(`Record does not match schema: ${type}`)
-  }
-  const notif = {
-    userDid: obj.subject,
-    author: uri.host,
-    recordUri: uri.toString(),
-    recordCid: cid.toString(),
-    reason: 'badge',
-  }
-  return [notif]
+  return []
 }
 
 export const makePlugin = (
@@ -117,6 +100,7 @@ export const makePlugin = (
     collection: type,
     tableName,
     validateSchema,
+    matchesSchema,
     translateDbObj,
     get: getFn(db),
     insert: insertFn(db),

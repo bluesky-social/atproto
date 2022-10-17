@@ -24,6 +24,7 @@ export default function (server: Server) {
         .select([
           'user.did as did',
           'user.username as name',
+          'profile.uri as profileUri',
           'profile.displayName as displayName',
           'profile.description as description',
           db.db
@@ -54,6 +55,60 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Profile not found`)
       }
 
+      const badgesRes = await db.db
+        .selectFrom('app_bsky_profile_badge as profile_badge')
+        .where('profile_badge.profileUri', '=', queryRes.profileUri || '')
+        .innerJoin(
+          'app_bsky_badge as badge',
+          'badge.uri',
+          'profile_badge.badgeUri',
+        )
+        .innerJoin(
+          'app_bsky_badge_offer as offer',
+          'offer.badgeUri',
+          'badge.uri',
+        )
+        .innerJoin(
+          'app_bsky_badge_accept as accept',
+          'accept.badgeUri',
+          'badge.uri',
+        )
+        .innerJoin('user as issuer', 'issuer.did', 'badge.creator')
+        .where('offer.subject', '=', queryRes.did)
+        .whereRef('offer.creator', '=', 'badge.creator')
+        .whereRef('accept.offerUri', '=', 'offer.uri')
+        .leftJoin(
+          'app_bsky_profile as issuer_profile',
+          'issuer_profile.creator',
+          'issuer.did',
+        )
+        .select([
+          'badge.uri as uri',
+          'badge.cid as cid',
+          'issuer.did as issuerDid',
+          'issuer.username as issuerName',
+          'issuer_profile.displayName as issuerDisplayName',
+          'badge.assertionType as assertionType',
+          'badge.assertionTag as assertionTag',
+          'badge.createdAt as createdAt',
+        ])
+        .execute()
+
+      const badges = badgesRes.map((row) => ({
+        uri: row.uri,
+        cid: row.cid,
+        issuer: {
+          did: row.issuerDid,
+          name: row.issuerName,
+          displayName: row.issuerDisplayName || undefined,
+        },
+        assertion: {
+          type: row.assertionType,
+          tag: row.assertionTag || undefined,
+        },
+        createdAt: row.createdAt,
+      }))
+
       return {
         encoding: 'application/json',
         body: {
@@ -64,7 +119,7 @@ export default function (server: Server) {
           followsCount: queryRes.followsCount,
           followersCount: queryRes.followersCount,
           postsCount: queryRes.postsCount,
-          badges: [], // @TODO map this when implementing badging
+          pinnedBadges: badges,
           myState: {
             follow: queryRes.requesterFollow || undefined,
           },

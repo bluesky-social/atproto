@@ -14,7 +14,7 @@
         "type": "string",
         "maxLength": 256
       },
-      "badges": {"type": "array", "items": {"$ref": "#/defs/badgeRef"}}
+      "pinnedBadges": {"type": "array", "items": {"$ref": "#/defs/badgeRef"}}
     }
   },
   "defs": {

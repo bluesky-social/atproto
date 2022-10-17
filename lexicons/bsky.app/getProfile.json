@@ -9,7 +9,7 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["did", "name", "followersCount", "followsCount", "postsCount", "badges"],
+      "required": ["did", "name", "followersCount", "followsCount", "postsCount", "pinnedBadges"],
       "properties": {
         "did": {"type": "string"},
         "name": {"type": "string"},
@@ -24,7 +24,7 @@
         "followersCount": {"type": "number"},
         "followsCount": {"type": "number"},
         "postsCount": {"type": "number"},
-        "badges": {"type": "array", "items": {"$ref":"#/defs/badge"}},
+        "pinnedBadges": {"type": "array", "items": {"$ref":"#/defs/badge"}},
         "myState": {
           "type": "object",
           "properties": {
@@ -44,7 +44,7 @@
         "error": {"type": "string"},
         "issuer": {
           "type": "object",
-          "required": ["did", "name", "displayName"],
+          "required": ["did", "name"],
           "properties": {
             "did": {"type": "string"},
             "name": {"type": "string"},
@@ -58,7 +58,8 @@
           "type": "object",
           "required": ["type"],
           "properties": {
-            "type": {"type": "string"}
+            "type": {"type": "string"},
+            "tag": {"type": "string", "maxLength": 64}
           }
         },
         "createdAt": {"type": "string", "format": "date-time"}

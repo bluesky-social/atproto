@@ -33,7 +33,7 @@ describe('pds notification views', () => {
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(notifCount.data.count).toBe(11)
+    expect(notifCount.data.count).toBe(14)
   })
 
   it('fetches notifications without a last-seen', async () => {
@@ -42,7 +42,7 @@ describe('pds notification views', () => {
     })
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(11)
+    expect(notifs.length).toBe(14)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
@@ -76,7 +76,7 @@ describe('pds notification views', () => {
       headers: sc.getHeaders(alice),
     })
 
-    expect(full.data.notifications.length).toEqual(11)
+    expect(full.data.notifications.length).toEqual(14)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
@@ -108,7 +108,7 @@ describe('pds notification views', () => {
     })
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(11)
+    expect(notifs.length).toBe(14)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((_, i) => i >= 3))

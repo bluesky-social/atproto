@@ -28,6 +28,7 @@ import * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
 import * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
+import * as AppBskyGetBadgeMembers from './types/app/bsky/getBadgeMembers'
 import * as AppBskyGetHomeFeed from './types/app/bsky/getHomeFeed'
 import * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
 import * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
@@ -40,6 +41,7 @@ import * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
 import * as AppBskyGetUsersSearch from './types/app/bsky/getUsersSearch'
 import * as AppBskyGetUsersTypeahead from './types/app/bsky/getUsersTypeahead'
 import * as AppBskyPostNotificationsSeen from './types/app/bsky/postNotificationsSeen'
+import * as AppBskyUpdateProfile from './types/app/bsky/updateProfile'
 
 export function createServer(): Server {
   return new Server()
@@ -203,6 +205,11 @@ export class BskyNS {
     return this.server.xrpc.method(schema, handler)
   }
 
+  getBadgeMembers(handler: AppBskyGetBadgeMembers.Handler) {
+    const schema = 'app.bsky.getBadgeMembers' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
+  }
+
   getHomeFeed(handler: AppBskyGetHomeFeed.Handler) {
     const schema = 'app.bsky.getHomeFeed' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
@@ -260,6 +267,11 @@ export class BskyNS {
 
   postNotificationsSeen(handler: AppBskyPostNotificationsSeen.Handler) {
     const schema = 'app.bsky.postNotificationsSeen' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
+  }
+
+  updateProfile(handler: AppBskyUpdateProfile.Handler) {
+    const schema = 'app.bsky.updateProfile' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 }

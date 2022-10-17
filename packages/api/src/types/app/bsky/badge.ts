@@ -7,7 +7,6 @@ export interface Record {
     | AppBskyBadgeEmployeeAssertion
     | AppBskyBadgeTagAssertion
     | AppBskyBadgeUnknownAssertion;
-  subject: string;
   createdAt: string;
   [k: string]: unknown;
 }

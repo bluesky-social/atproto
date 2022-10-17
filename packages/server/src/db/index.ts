@@ -4,6 +4,8 @@ import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@adxp/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
 import * as Badge from '../lexicon/types/app/bsky/badge'
+import * as BadgeAccept from '../lexicon/types/app/bsky/badgeAccept'
+import * as BadgeOffer from '../lexicon/types/app/bsky/badgeOffer'
 import * as Follow from '../lexicon/types/app/bsky/follow'
 import * as Like from '../lexicon/types/app/bsky/like'
 import * as Post from '../lexicon/types/app/bsky/post'
@@ -14,6 +16,8 @@ import likePlugin, { AppBskyLike } from './records/like'
 import repostPlugin, { AppBskyRepost } from './records/repost'
 import followPlugin, { AppBskyFollow } from './records/follow'
 import badgePlugin, { AppBskyBadge } from './records/badge'
+import badgeAcceptPlugin, { AppBskyBadgeAccept } from './records/badgeAccept'
+import badgeOfferPlugin, { AppBskyBadgeOffer } from './records/badgeOffer'
 import profilePlugin, { AppBskyProfile } from './records/profile'
 import notificationPlugin from './tables/user-notification'
 import { AdxUri } from '@adxp/uri'
@@ -33,6 +37,8 @@ export class Database {
     follow: DbRecordPlugin<Follow.Record, AppBskyFollow>
     profile: DbRecordPlugin<Profile.Record, AppBskyProfile>
     badge: DbRecordPlugin<Badge.Record, AppBskyBadge>
+    badgeAccept: DbRecordPlugin<BadgeAccept.Record, AppBskyBadgeAccept>
+    badgeOffer: DbRecordPlugin<BadgeOffer.Record, AppBskyBadgeOffer>
   }
   notifications: NotificationsPlugin
 
@@ -48,6 +54,8 @@ export class Database {
       repost: repostPlugin(db),
       follow: followPlugin(db),
       badge: badgePlugin(db),
+      badgeAccept: badgeAcceptPlugin(db),
+      badgeOffer: badgeOfferPlugin(db),
       profile: profilePlugin(db),
     }
     this.notifications = notificationPlugin(db)

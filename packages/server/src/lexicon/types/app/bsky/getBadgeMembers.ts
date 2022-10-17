@@ -4,7 +4,10 @@
 import express from 'express'
 
 export interface QueryParams {
-  user: string;
+  uri: string;
+  cid?: string;
+  limit?: number;
+  before?: string;
 }
 
 export type HandlerInput = undefined
@@ -22,32 +25,15 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  did: string;
-  name: string;
-  displayName?: string;
-  description?: string;
-  followersCount: number;
-  followsCount: number;
-  postsCount: number;
-  pinnedBadges: AppBskyGetProfileBadge[];
-  myState?: {
-    follow?: string,
-  };
-}
-export interface AppBskyGetProfileBadge {
   uri: string;
-  cid: string;
-  error?: string;
-  issuer?: {
+  cid?: string;
+  members: {
     did: string,
     name: string,
     displayName?: string,
-  };
-  assertion?: {
-    type: string,
-    tag?: string,
-  };
-  createdAt?: string;
+    offeredAt: string,
+    acceptedAt: string,
+  }[];
 }
 
 export type Handler = (
