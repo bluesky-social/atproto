@@ -2,10 +2,13 @@ import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import * as locals from '../../src/locals'
+import { App } from '../../src'
 
 describe('pds notification views', () => {
   let client: AdxServiceClient
   let close: CloseFn
+  let app: App
   let sc: SeedClient
 
   // account dids, for convenience
@@ -16,6 +19,7 @@ describe('pds notification views', () => {
       dbPostgresSchema: 'views_noitifications',
     })
     close = server.close
+    app = server.app
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
     await basicSeed(sc)
@@ -81,13 +85,22 @@ describe('pds notification views', () => {
   })
 
   it('updates notifications last seen', async () => {
+    const { db } = locals.get(app)
+
     const full = await client.app.bsky.getNotifications({}, undefined, {
       headers: sc.getHeaders(alice),
     })
 
+    // Need to look-up createdAt time as a cursor since it's not in the method's output
+    const beforeNotif = await db.db
+      .selectFrom('user_notification')
+      .selectAll()
+      .where('recordUri', '=', full.data.notifications[3].uri)
+      .executeTakeFirstOrThrow()
+
     await client.app.bsky.postNotificationsSeen(
       {},
-      { seenAt: full.data.notifications[3].indexedAt },
+      { seenAt: beforeNotif.indexedAt },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
   })
