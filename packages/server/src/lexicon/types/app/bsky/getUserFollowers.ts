@@ -29,6 +29,7 @@ export interface OutputSchema {
     name: string,
     displayName?: string,
   };
+  cursor?: string;
   followers: {
     did: string,
     name: string,

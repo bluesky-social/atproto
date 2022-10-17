@@ -16,6 +16,7 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
+        "cursor": {"type": "string"},
         "likedBy": {
           "type": "array",
           "items": {

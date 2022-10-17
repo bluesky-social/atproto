@@ -14,11 +14,12 @@
       "type": "object",
       "required": ["users"],
       "properties": {
+        "cursor": {"type": "string"},
         "users": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["did", "name", "createdAt", "indexedAt", "cursor"],
+            "required": ["did", "name", "createdAt", "indexedAt"],
             "properties": {
               "did": {"type": "string"},
               "name": {"type": "string"},
@@ -28,8 +29,7 @@
               },
               "description": {"type": "string"},
               "createdAt": {"type": "string", "format": "date-time"},
-              "indexedAt": {"type": "string", "format": "date-time"},
-              "cursor": {"type": "string"}
+              "indexedAt": {"type": "string", "format": "date-time"}
             }
           }
         }

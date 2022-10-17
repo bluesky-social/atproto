@@ -48,6 +48,7 @@ export default function (server: Server) {
         encoding: 'application/json',
         body: {
           uri,
+          cid,
           repostedBy,
         },
       }

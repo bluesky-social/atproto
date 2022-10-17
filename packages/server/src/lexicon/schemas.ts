@@ -537,6 +537,9 @@ export const methodSchemas: MethodSchema[] = [
         type: 'object',
         required: ['records'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           records: {
             type: 'array',
             items: {
@@ -789,6 +792,9 @@ export const methodSchemas: MethodSchema[] = [
         type: 'object',
         required: ['feed'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           feed: {
             type: 'array',
             items: {
@@ -800,7 +806,6 @@ export const methodSchemas: MethodSchema[] = [
           appBskyGetAuthorFeedFeedItem: {
             type: 'object',
             required: [
-              'cursor',
               'uri',
               'cid',
               'author',
@@ -811,9 +816,6 @@ export const methodSchemas: MethodSchema[] = [
               'indexedAt',
             ],
             properties: {
-              cursor: {
-                type: 'string',
-              },
               uri: {
                 type: 'string',
               },
@@ -939,7 +941,6 @@ export const methodSchemas: MethodSchema[] = [
       feedItem: {
         type: 'object',
         required: [
-          'cursor',
           'uri',
           'cid',
           'author',
@@ -950,9 +951,6 @@ export const methodSchemas: MethodSchema[] = [
           'indexedAt',
         ],
         properties: {
-          cursor: {
-            type: 'string',
-          },
           uri: {
             type: 'string',
           },
@@ -1096,6 +1094,9 @@ export const methodSchemas: MethodSchema[] = [
         type: 'object',
         required: ['feed'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           feed: {
             type: 'array',
             items: {
@@ -1107,7 +1108,6 @@ export const methodSchemas: MethodSchema[] = [
           appBskyGetHomeFeedFeedItem: {
             type: 'object',
             required: [
-              'cursor',
               'uri',
               'cid',
               'author',
@@ -1118,9 +1118,6 @@ export const methodSchemas: MethodSchema[] = [
               'indexedAt',
             ],
             properties: {
-              cursor: {
-                type: 'string',
-              },
               uri: {
                 type: 'string',
               },
@@ -1246,7 +1243,6 @@ export const methodSchemas: MethodSchema[] = [
       feedItem: {
         type: 'object',
         required: [
-          'cursor',
           'uri',
           'cid',
           'author',
@@ -1257,9 +1253,6 @@ export const methodSchemas: MethodSchema[] = [
           'indexedAt',
         ],
         properties: {
-          cursor: {
-            type: 'string',
-          },
           uri: {
             type: 'string',
           },
@@ -1413,6 +1406,9 @@ export const methodSchemas: MethodSchema[] = [
           cid: {
             type: 'string',
           },
+          cursor: {
+            type: 'string',
+          },
           likedBy: {
             type: 'array',
             items: {
@@ -1483,6 +1479,9 @@ export const methodSchemas: MethodSchema[] = [
         type: 'object',
         required: ['notifications'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           notifications: {
             type: 'array',
             items: {
@@ -2097,6 +2096,12 @@ export const methodSchemas: MethodSchema[] = [
           uri: {
             type: 'string',
           },
+          cid: {
+            type: 'string',
+          },
+          cursor: {
+            type: 'string',
+          },
           repostedBy: {
             type: 'array',
             items: {
@@ -2168,6 +2173,9 @@ export const methodSchemas: MethodSchema[] = [
                 maxLength: 64,
               },
             },
+          },
+          cursor: {
+            type: 'string',
           },
           followers: {
             type: 'array',
@@ -2241,6 +2249,9 @@ export const methodSchemas: MethodSchema[] = [
               },
             },
           },
+          cursor: {
+            type: 'string',
+          },
           follows: {
             type: 'array',
             items: {
@@ -2297,11 +2308,14 @@ export const methodSchemas: MethodSchema[] = [
         type: 'object',
         required: ['users'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           users: {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name', 'createdAt', 'indexedAt', 'cursor'],
+              required: ['did', 'name', 'createdAt', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
@@ -2324,13 +2338,11 @@ export const methodSchemas: MethodSchema[] = [
                   type: 'string',
                   format: 'date-time',
                 },
-                cursor: {
-                  type: 'string',
-                },
               },
             },
           },
         },
+        $defs: {},
       },
     },
   },
@@ -2375,6 +2387,7 @@ export const methodSchemas: MethodSchema[] = [
             },
           },
         },
+        $defs: {},
       },
     },
   },

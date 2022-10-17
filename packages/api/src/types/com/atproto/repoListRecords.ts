@@ -19,6 +19,7 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string;
   records: {
     uri: string,
     cid: string,

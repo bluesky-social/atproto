@@ -16,10 +16,10 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string;
   feed: AppBskyGetAuthorFeedFeedItem[];
 }
 export interface AppBskyGetAuthorFeedFeedItem {
-  cursor: string;
   uri: string;
   cid: string;
   author: AppBskyGetAuthorFeedUser;
