@@ -52,7 +52,7 @@ export class Collection {
     record: unknown,
     rkey?: string,
   ): Promise<{ key: string; cid: CID }> {
-    const key = rkey || TID.next().toString()
+    const key = rkey || TID.nextStr()
     const cid = await this.repo.blockstore.put(record as any)
     await this.repo.safeCommit(async (data) => {
       return data.add(this.dataIdForRecord(key), cid)
