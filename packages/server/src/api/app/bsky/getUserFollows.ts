@@ -54,6 +54,7 @@ export default function (server: Server) {
         body: {
           subject: creator,
           follows,
+          cursor: follows.at(-1)?.createdAt,
         },
       }
     },
