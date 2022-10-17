@@ -29,17 +29,17 @@ describe('Repo', () => {
     const collection = repo.getCollection('com.example.posts')
 
     const obj = util.generateObject()
-    const { key } = await collection.createRecord(obj)
-    let got = await collection.getRecord(key)
+    const { rkey } = await collection.createRecord(obj)
+    let got = await collection.getRecord(rkey)
     expect(got).toEqual(obj)
 
     const updatedObj = util.generateObject()
-    await collection.updateRecord(key, updatedObj)
-    got = await collection.getRecord(key)
+    await collection.updateRecord(rkey, updatedObj)
+    got = await collection.getRecord(rkey)
     expect(got).toEqual(updatedObj)
 
-    await collection.deleteRecord(key)
-    got = await collection.getRecord(key)
+    await collection.deleteRecord(rkey)
+    got = await collection.getRecord(rkey)
     expect(got).toBeNull()
   })
 
@@ -65,6 +65,16 @@ describe('Repo', () => {
       commit.sig,
     )
     expect(verified).toBeTruthy()
+  })
+
+  it('allows custom keys', async () => {
+    const rkey = 'blahblah'
+    const obj = util.generateObject()
+    const collection = repo.getCollection('com.example.posts')
+    const res = await collection.createRecord(obj, rkey)
+    expect(res.rkey).toEqual(rkey)
+    const got = await collection.getRecord(rkey)
+    expect(got).toEqual(obj)
   })
 
   it('sets correct DID', async () => {

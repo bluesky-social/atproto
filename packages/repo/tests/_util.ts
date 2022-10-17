@@ -87,8 +87,8 @@ export const fillRepo = async (
     const coll = await repo.getCollection(collName)
     for (let i = 0; i < itemsPerCollection; i++) {
       const object = generateObject()
-      const { key } = await coll.createRecord(object)
-      collData[key] = object
+      const { rkey } = await coll.createRecord(object)
+      collData[rkey] = object
     }
     repoData[collName] = collData
   }
@@ -113,8 +113,8 @@ export const editRepo = async (
 
     for (let i = 0; i < adds; i++) {
       const object = generateObject()
-      const { key } = await coll.createRecord(object)
-      collData[key] = object
+      const { rkey } = await coll.createRecord(object)
+      collData[rkey] = object
     }
 
     const toUpdate = shuffled.slice(0, updates)
