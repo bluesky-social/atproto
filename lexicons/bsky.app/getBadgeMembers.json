@@ -20,7 +20,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["did", "name", "acceptedAt"],
+            "required": ["did", "name", "acceptedAt", "offeredAt"],
             "properties": {
               "did": {"type": "string"},
               "name": {"type": "string"},

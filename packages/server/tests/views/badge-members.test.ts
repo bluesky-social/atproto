@@ -9,9 +9,7 @@ describe('pds badge members view', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
   let bob: string
-  let dan: string
 
   beforeAll(async () => {
     const server = await runTestServer({
@@ -21,9 +19,7 @@ describe('pds badge members view', () => {
     client = AdxApi.service(server.url)
     sc = new SeedClient(client)
     await likesSeed(sc)
-    alice = sc.dids.alice
     bob = sc.dids.bob
-    dan = sc.dids.dan
   })
 
   afterAll(async () => {

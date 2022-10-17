@@ -4,7 +4,7 @@
 export interface Record {
   displayName: string;
   description?: string;
-  badges?: AppBskyProfileBadgeRef[];
+  pinnedBadges?: AppBskyProfileBadgeRef[];
   [k: string]: unknown;
 }
 export interface AppBskyProfileBadgeRef {

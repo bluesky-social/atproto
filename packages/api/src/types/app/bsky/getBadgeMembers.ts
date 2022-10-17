@@ -23,7 +23,7 @@ export interface OutputSchema {
     did: string,
     name: string,
     displayName?: string,
-    offeredAt?: string,
+    offeredAt: string,
     acceptedAt: string,
   }[];
 }

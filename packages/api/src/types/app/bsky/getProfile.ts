@@ -21,7 +21,7 @@ export interface OutputSchema {
   followersCount: number;
   followsCount: number;
   postsCount: number;
-  badges: AppBskyGetProfileBadge[];
+  pinnedBadges: AppBskyGetProfileBadge[];
   myState?: {
     follow?: string,
   };

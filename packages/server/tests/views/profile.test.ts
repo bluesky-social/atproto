@@ -11,6 +11,7 @@ describe('pds profile views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
+  let carol: string
   let dan: string
 
   beforeAll(async () => {
@@ -23,6 +24,7 @@ describe('pds profile views', () => {
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
+    carol = sc.dids.carol
     dan = sc.dids.dan
   })
 
@@ -61,10 +63,10 @@ describe('pds profile views', () => {
   })
 
   it('updates profile', async () => {
-    const toHighlight = [sc.badges[sc.dids.bob][1].raw]
+    const toPin = [sc.badges[bob][1].raw]
     await client.app.bsky.updateProfile(
       {},
-      { displayName: 'ali', badges: toHighlight },
+      { displayName: 'ali', pinnedBadges: toPin },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
@@ -78,10 +80,10 @@ describe('pds profile views', () => {
   })
 
   it('adds & removes badges from profile', async () => {
-    const toHighlight = [sc.badges[sc.dids.carol][0].raw]
+    const toPin = [sc.badges[carol][0].raw]
     await client.app.bsky.updateProfile(
       {},
-      { description: 'new descript', badges: toHighlight },
+      { description: 'new descript', pinnedBadges: toPin },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
@@ -95,13 +97,13 @@ describe('pds profile views', () => {
   })
 
   it('does not return a badge that the user does not possess', async () => {
-    const toHighlight = [
-      sc.badges[sc.dids.carol][0].raw,
-      sc.badges[sc.dids.carol][1].raw, // alice was not offered this badge
+    const toPin = [
+      sc.badges[carol][0].raw,
+      sc.badges[carol][1].raw, // alice was not offered this badge
     ]
     await client.app.bsky.updateProfile(
       {},
-      { badges: toHighlight },
+      { pinnedBadges: toPin },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 

@@ -31,7 +31,7 @@ export default function (server: Server) {
       ...current,
       displayName: input.body.displayName || current.displayName,
       description: input.body.description || current.description,
-      badges: input.body.badges || current.badges,
+      pinnedBadges: input.body.pinnedBadges || current.pinnedBadges,
     }
     if (!db.records.profile.matchesSchema(updated)) {
       throw new InvalidRequestError(
@@ -47,7 +47,7 @@ export default function (server: Server) {
       .where('profileUri', '=', uri.toString())
       .execute()
 
-    const updatedBadges = updated.badges || []
+    const updatedBadges = updated.pinnedBadges || []
     const toDelete = currBadges
       .filter(
         (row) => !updatedBadges.some((badge) => badge.uri === row.badgeUri),

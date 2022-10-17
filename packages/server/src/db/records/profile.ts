@@ -82,7 +82,7 @@ const getFn =
     const [profile, badges] = await Promise.all([profileQuery, badgesQuery])
     if (!profile) return null
     const record = translateDbObj(profile)
-    record.badges = badges.map((row) => ({
+    record.pinnedBadges = badges.map((row) => ({
       uri: row.badgeUri,
       cid: row.badgeCid,
     }))
@@ -96,7 +96,7 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
 
-    const badges = (obj.badges || []).map((badge) => ({
+    const badges = (obj.pinnedBadges || []).map((badge) => ({
       badgeUri: badge.uri,
       badgeCid: badge.cid,
       profileUri: uri.toString(),

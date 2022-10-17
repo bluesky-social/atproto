@@ -119,7 +119,7 @@ export default function (server: Server) {
           followsCount: queryRes.followsCount,
           followersCount: queryRes.followersCount,
           postsCount: queryRes.postsCount,
-          badges,
+          pinnedBadges: badges,
           myState: {
             follow: queryRes.requesterFollow || undefined,
           },

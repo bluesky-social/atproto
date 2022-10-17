@@ -1110,7 +1110,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name', 'acceptedAt'],
+              required: ['did', 'name', 'acceptedAt', 'offeredAt'],
               properties: {
                 did: {
                   type: 'string',
@@ -1996,7 +1996,7 @@ export const methodSchemas: MethodSchema[] = [
           'followersCount',
           'followsCount',
           'postsCount',
-          'badges',
+          'pinnedBadges',
         ],
         properties: {
           did: {
@@ -2022,7 +2022,7 @@ export const methodSchemas: MethodSchema[] = [
           postsCount: {
             type: 'number',
           },
-          badges: {
+          pinnedBadges: {
             type: 'array',
             items: {
               $ref: '#/$defs/appBskyGetProfileBadge',
@@ -2393,7 +2393,7 @@ export const methodSchemas: MethodSchema[] = [
             type: 'string',
             maxLength: 256,
           },
-          badges: {
+          pinnedBadges: {
             type: 'array',
             items: {
               $ref: '#/$defs/appBskyProfileBadgeRef',
@@ -2943,7 +2943,7 @@ export const recordSchemas: RecordSchema[] = [
           type: 'string',
           maxLength: 256,
         },
-        badges: {
+        pinnedBadges: {
           type: 'array',
           items: {
             $ref: '#/$defs/appBskyProfileBadgeRef',
