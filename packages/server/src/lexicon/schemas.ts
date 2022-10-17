@@ -286,12 +286,15 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                     collection: {
                       type: 'string',
                     },
+                    rkey: {
+                      type: 'string',
+                    },
                     value: {},
                   },
                 },
                 {
                   type: 'object',
-                  required: ['action', 'collection', 'tid', 'value'],
+                  required: ['action', 'collection', 'rkey', 'value'],
                   properties: {
                     action: {
                       type: 'string',
@@ -300,7 +303,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                     collection: {
                       type: 'string',
                     },
-                    tid: {
+                    rkey: {
                       type: 'string',
                     },
                     value: {},
@@ -308,7 +311,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 },
                 {
                   type: 'object',
-                  required: ['action', 'collection', 'tid'],
+                  required: ['action', 'collection', 'rkey'],
                   properties: {
                     action: {
                       type: 'string',
@@ -317,7 +320,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                     collection: {
                       type: 'string',
                     },
-                    tid: {
+                    rkey: {
                       type: 'string',
                     },
                   },

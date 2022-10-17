@@ -286,12 +286,15 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                     collection: {
                       type: 'string',
                     },
+                    rkey: {
+                      type: 'string',
+                    },
                     value: {},
                   },
                 },
                 {
                   type: 'object',
-                  required: ['action', 'collection', 'tid', 'value'],
+                  required: ['action', 'collection', 'rkey', 'value'],
                   properties: {
                     action: {
                       type: 'string',
@@ -300,7 +303,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                     collection: {
                       type: 'string',
                     },
-                    tid: {
+                    rkey: {
                       type: 'string',
                     },
                     value: {},
@@ -308,7 +311,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 },
                 {
                   type: 'object',
-                  required: ['action', 'collection', 'tid'],
+                  required: ['action', 'collection', 'rkey'],
                   properties: {
                     action: {
                       type: 'string',
@@ -317,7 +320,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                     collection: {
                       type: 'string',
                     },
-                    tid: {
+                    rkey: {
                       type: 'string',
                     },
                   },
@@ -2545,6 +2548,17 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
   },
 }
 export const methodSchemas: MethodSchema[] = Object.values(methodSchemaDict)
+export const ids = {
+  AppBskyBadge: 'app.bsky.badge',
+  AppBskyBadgeAccept: 'app.bsky.badgeAccept',
+  AppBskyBadgeOffer: 'app.bsky.badgeOffer',
+  AppBskyFollow: 'app.bsky.follow',
+  AppBskyLike: 'app.bsky.like',
+  AppBskyMediaEmbed: 'app.bsky.mediaEmbed',
+  AppBskyPost: 'app.bsky.post',
+  AppBskyProfile: 'app.bsky.profile',
+  AppBskyRepost: 'app.bsky.repost',
+}
 export const recordSchemaDict: Record<string, RecordSchema> = {
   'app.bsky.badge': {
     lexicon: 1,
