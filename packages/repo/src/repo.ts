@@ -433,6 +433,7 @@ export class Repo {
     const root = await this.blockstore.get(commit.root, def.repoRoot)
     await this.blockstore.addToCar(car, this.cid)
     await this.blockstore.addToCar(car, commit.root)
+    await this.blockstore.addToCar(car, root.meta)
     if (root.auth_token) {
       await this.blockstore.addToCar(car, root.auth_token)
     }
@@ -459,6 +460,7 @@ export class Repo {
       const nextHead = await Repo.load(this.blockstore, commit)
       await this.blockstore.addToCar(car, nextHead.cid)
       await this.blockstore.addToCar(car, nextHead.commit.root)
+      await this.blockstore.addToCar(car, nextHead.root.meta)
       if (nextHead.root.auth_token) {
         await this.blockstore.addToCar(car, nextHead.root.auth_token)
       }
