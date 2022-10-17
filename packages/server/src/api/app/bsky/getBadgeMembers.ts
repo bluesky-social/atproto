@@ -6,7 +6,7 @@ import { paginate } from '../../../db/util'
 export default function (server: Server) {
   server.app.bsky.getBadgeMembers(
     async (params: GetBadgeMembers.QueryParams, _input, _req, res) => {
-      const { uri, limit, before } = params
+      const { uri, cid, limit, before } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
@@ -35,6 +35,13 @@ export default function (server: Server) {
           'offer.createdAt as offeredAt',
           'accept.createdAt as acceptedAt',
         ])
+
+      if (cid) {
+        builder = builder
+          .where('badge.cid', '=', 'cid')
+          .where('offer.badgeCid', '=', cid)
+          .where('accept.badgeCid', '=', cid)
+      }
 
       builder = paginate(builder, {
         limit,
