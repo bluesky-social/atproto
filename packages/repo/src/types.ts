@@ -27,8 +27,8 @@ export type Commit = z.infer<typeof commit>
 
 export const batchWriteCreate = z.object({
   action: z.literal('create'),
-  rkey: z.string().optional(),
   collection: z.string(),
+  rkey: z.string(),
   value: z.any(),
 })
 
