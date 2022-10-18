@@ -186,7 +186,7 @@ export class MST implements DataStore {
     if (alreadyHas) return pointer
     const entries = await this.getEntries()
     const data = util.serializeNodeData(entries)
-    const put = await this.blockstore.put(data as any)
+    await this.blockstore.put(data as any)
     for (const entry of entries) {
       if (entry.isTree()) {
         await entry.save()
@@ -238,7 +238,7 @@ export class MST implements DataStore {
       }
     } else {
       // it belongs on a higher layer & we must push the rest of the tree down
-      let split = await this.splitAround(key)
+      const split = await this.splitAround(key)
       // if the newly added key has >=2 more leading zeros than the current highest layer
       // then we need to add in structural nodes in between as well
       let left: MST | null = split[0]
