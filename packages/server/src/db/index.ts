@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { Kysely, SqliteDialect, sql, PostgresDialect } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
@@ -113,6 +114,10 @@ export class Database {
 
   get isTransaction() {
     return this.db.isTransaction
+  }
+
+  assertTransaction() {
+    assert(this.isTransaction, 'Transaction required')
   }
 
   async close(): Promise<void> {
@@ -237,6 +242,7 @@ export class Database {
   }
 
   async indexRecord(uri: AdxUri, cid: CID, obj: unknown) {
+    this.assertTransaction()
     log.debug({ uri }, 'indexing record')
     const record = {
       uri: uri.toString(),
@@ -264,6 +270,7 @@ export class Database {
   }
 
   async deleteRecord(uri: AdxUri) {
+    this.assertTransaction()
     log.debug({ uri }, 'deleting indexed record')
     const table = this.findTableForCollection(uri.collection)
     const deleteQuery = this.db

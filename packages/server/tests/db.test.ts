@@ -81,17 +81,27 @@ describe('db', () => {
       expect(row).toBeUndefined()
     })
 
-    it('indicates isTransaction()', async () => {
+    it('indicates isTransaction', async () => {
       const { db } = locals.get(app)
 
-      expect(db.db.isTransaction).toEqual(false)
+      expect(db.isTransaction).toEqual(false)
 
       await db.transaction(async (dbTxn) => {
-        expect(db.db.isTransaction).toEqual(false)
-        expect(dbTxn.db.isTransaction).toEqual(true)
+        expect(db.isTransaction).toEqual(false)
+        expect(dbTxn.isTransaction).toEqual(true)
       })
 
-      expect(db.db.isTransaction).toEqual(false)
+      expect(db.isTransaction).toEqual(false)
+    })
+
+    it('asserts transaction', async () => {
+      const { db } = locals.get(app)
+
+      expect(() => db.assertTransaction()).toThrow('Transaction required')
+
+      await db.transaction(async (dbTxn) => {
+        expect(() => dbTxn.assertTransaction()).not.toThrow()
+      })
     })
   })
 })
