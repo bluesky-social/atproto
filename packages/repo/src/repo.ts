@@ -203,15 +203,16 @@ export class Repo {
     await this.safeCommit(async (data: DataStore) => {
       for (const write of writes) {
         if (write.action === 'create') {
-          const dataKey = write.collection + '/' + TID.next().toString()
+          const rkey = write.rkey || TID.nextStr()
+          const dataKey = write.collection + '/' + rkey
           const cid = await this.put(write.value)
           data = await data.add(dataKey, cid)
         } else if (write.action === 'update') {
           const cid = await this.put(write.value)
-          const dataKey = write.collection + '/' + write.tid
+          const dataKey = write.collection + '/' + write.rkey
           data = await data.update(dataKey, cid)
         } else if (write.action === 'delete') {
-          const dataKey = write.collection + '/' + write.tid
+          const dataKey = write.collection + '/' + write.rkey
           data = await data.delete(dataKey)
         }
       }

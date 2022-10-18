@@ -18,18 +18,19 @@ export interface InputSchema {
     | {
         action: 'create',
         collection: string,
+        rkey?: string,
         value: unknown,
       }
     | {
         action: 'update',
         collection: string,
-        tid: string,
+        rkey: string,
         value: unknown,
       }
     | {
         action: 'delete',
         collection: string,
-        tid: string,
+        rkey: string,
       }
   )[];
 }

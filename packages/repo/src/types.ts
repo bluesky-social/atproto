@@ -1,15 +1,8 @@
 import { z } from 'zod'
 import { BlockWriter } from '@ipld/car/writer'
-import { def as common, TID } from '@adxp/common'
+import { def as common } from '@adxp/common'
 import { CID } from 'multiformats'
 import { DataDiff } from './mst'
-
-const tid = z.instanceof(TID)
-
-const strToTid = z
-  .string()
-  .refine(TID.is, { message: 'Not a valid TID' })
-  .transform(TID.fromStr)
 
 const repoMeta = z.object({
   did: z.string(),
@@ -34,6 +27,7 @@ export type Commit = z.infer<typeof commit>
 
 export const batchWriteCreate = z.object({
   action: z.literal('create'),
+  rkey: z.string().optional(),
   collection: z.string(),
   value: z.any(),
 })
@@ -41,14 +35,14 @@ export const batchWriteCreate = z.object({
 export const batchWriteUpdate = z.object({
   action: z.literal('update'),
   collection: z.string(),
-  tid: z.string(),
+  rkey: z.string(),
   value: z.any(),
 })
 
 export const batchWriteDelete = z.object({
   action: z.literal('delete'),
   collection: z.string(),
-  tid: z.string(),
+  rkey: z.string(),
 })
 
 export const batchWrite = z.union([
@@ -60,8 +54,6 @@ export type BatchWrite = z.infer<typeof batchWrite>
 
 export const def = {
   ...common,
-  tid,
-  strToTid,
   repoMeta,
   repoRoot,
   commit,

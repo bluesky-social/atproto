@@ -32,6 +32,10 @@ export class TID {
     return TID.fromTime(timestamp, clockid)
   }
 
+  static nextStr(): string {
+    return TID.next().toString()
+  }
+
   static fromTime(timestamp: number, clockid: number): TID {
     // base32 encode with encoding variant sort (s32)
     const str = `${s32encode(timestamp)}${s32encode(clockid).padStart(2, '2')}`

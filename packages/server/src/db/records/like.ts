@@ -3,9 +3,9 @@ import { AdxUri } from '@adxp/uri'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../lexicon/types/app/bsky/like'
 import { DbRecordPlugin, Notification } from '../types'
-import schemas from '../schemas'
+import * as schemas from '../schemas'
 
-const type = 'app.bsky.like'
+const type = schemas.ids.AppBskyLike
 const tableName = 'app_bsky_like'
 
 export interface AppBskyLike {
@@ -33,7 +33,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
 
 export type PartialDB = { [tableName]: AppBskyLike }
 
-const validator = schemas.createRecordValidator(type)
+const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Like.Record => {
   return validator.isValid(obj)
 }

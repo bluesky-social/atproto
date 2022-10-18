@@ -159,6 +159,18 @@ describe('crud operations', () => {
     expect(res3.records.length).toBe(0)
   })
 
+  it('creates records with the correct key described by the schema', async () => {
+    const res1 = await aliceClient.app.bsky.profile.create(
+      { did: alice.did },
+      {
+        displayName: 'alice',
+        createdAt: new Date().toISOString(),
+      },
+    )
+    const uri = new AdxUri(res1.uri)
+    expect(uri.rkey).toBe('self')
+  })
+
   describe('paginates', () => {
     let uri1: AdxUri
     let uri2: AdxUri

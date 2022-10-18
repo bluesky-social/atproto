@@ -1,9 +1,10 @@
 import { Server } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
 import * as locals from '../../../locals'
+import * as schema from '../../../lexicon/schemas'
 import { AdxUri } from '@adxp/uri'
 
-const profileNsid = 'app.bsky.profile'
+const profileNsid = schema.ids.AppBskyProfile
 
 export default function (server: Server) {
   server.app.bsky.updateProfile(async (_params, input, req, res) => {
