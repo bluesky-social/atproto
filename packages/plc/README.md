@@ -35,7 +35,7 @@ type Operation = {
 }
 ```
 
-Each operation contains a reference the the immeidately preceding operation in the log and is signed by either the `signingKey` or the `recoveryKey`.
+Each operation contains a reference the the immediately preceding operation in the log and is signed by either the `signingKey` or the `recoveryKey`.
 
 The DID itself is derived from the sha256 hash of the first operation in the log.
 It is then base32 encoded and truncated to 24 chars.
