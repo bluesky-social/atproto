@@ -104,6 +104,17 @@ export class Database {
     return Database.sqlite(':memory:')
   }
 
+  async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
+    return await this.db.transaction().execute((txn) => {
+      const dbTxn = new Database(txn, this.dialect, this.schema)
+      return fn(dbTxn)
+    })
+  }
+
+  get isTransaction() {
+    return this.db.isTransaction
+  }
+
   async close(): Promise<void> {
     await this.db.destroy()
   }

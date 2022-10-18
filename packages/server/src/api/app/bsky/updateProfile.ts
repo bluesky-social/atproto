@@ -61,50 +61,53 @@ export default function (server: Server) {
         badgeCid: badge.cid,
       }))
 
-    const newCid = await repo
-      .getCollection(profileNsid)
-      .updateRecord('self', updated)
+    const newCid = await db.transaction(async (txnDb) => {
+      // Update repo
+      const newCid = await repo
+        .getCollection(profileNsid)
+        .updateRecord('self', updated)
 
-    const recordQuery = db.db
-      .updateTable('record')
-      .set({
-        raw: JSON.stringify(updated),
-        cid: newCid.toString(),
-        indexedAt: new Date().toISOString(),
-      })
-      .where('uri', '=', uri.toString())
-      .execute()
+      // Update profile record
+      await txnDb.db
+        .updateTable('record')
+        .set({
+          raw: JSON.stringify(updated),
+          cid: newCid.toString(),
+          indexedAt: new Date().toISOString(),
+        })
+        .where('uri', '=', uri.toString())
+        .execute()
 
-    const profileQuery = db.db
-      .updateTable('app_bsky_profile')
-      .set({
-        cid: newCid.toString(),
-        displayName: updated.displayName,
-        description: updated.description,
-        indexedAt: new Date().toISOString(),
-      })
-      .where('uri', '=', uri.toString())
-      .execute()
+      // Update profile app index
+      await txnDb.db
+        .updateTable('app_bsky_profile')
+        .set({
+          cid: newCid.toString(),
+          displayName: updated.displayName,
+          description: updated.description,
+          indexedAt: new Date().toISOString(),
+        })
+        .where('uri', '=', uri.toString())
+        .execute()
 
-    const delBadgesQuery = db.db
-      .deleteFrom('app_bsky_profile_badge')
-      .where('profileUri', '=', uri.toString())
-      .where('badgeUri', 'in', toDelete)
-      .execute()
+      // Remove old badges
+      await txnDb.db
+        .deleteFrom('app_bsky_profile_badge')
+        .where('profileUri', '=', uri.toString())
+        .where('badgeUri', 'in', toDelete)
+        .execute()
 
-    const addBadgesQuery = db.db
-      .insertInto('app_bsky_profile_badge')
-      .values(toAdd)
-      .execute()
+      // Add new badges
+      await txnDb.db
+        .insertInto('app_bsky_profile_badge')
+        .values(toAdd)
+        .execute()
 
-    // @TODO transactionalize
-    await Promise.all([
-      recordQuery,
-      profileQuery,
-      delBadgesQuery,
-      addBadgesQuery,
-      db.updateRepoRoot(requester, repo.cid),
-    ])
+      // Index repo root
+      await txnDb.updateRepoRoot(requester, repo.cid)
+
+      return newCid
+    })
 
     return {
       encoding: 'application/json',
