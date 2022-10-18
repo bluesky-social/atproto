@@ -8,7 +8,6 @@ describe('db', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      inviteRequired: true,
       dbPostgresSchema: 'db',
     })
     close = server.close
@@ -71,7 +70,7 @@ describe('db', () => {
         throw new Error('Oops!')
       })
 
-      expect(promise).rejects.toThrow('Oops!')
+      await expect(promise).rejects.toThrow('Oops!')
 
       const row = await db.db
         .selectFrom('repo_root')
