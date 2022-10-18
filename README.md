@@ -1,6 +1,6 @@
-# @ Protocol (Authenticated Transfer Protocol)
+# AT Protocol (Authenticated Transfer Protocol)
 
-This is a working repository for the "@ Protocol," aka the Authenticated Tramsfer Protocol, aka ATP.
+This is a working repository for the "AT Protocol," aka the Authenticated Tramsfer Protocol.
 
 ---
 
