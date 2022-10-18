@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/uri",
+  "name": "@atproto/uri",
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {

@@ -1,21 +1,21 @@
 import * as ucans from '@ucans/core'
 
 /*
-ADX Ucans:
+ATP Ucans:
 
-Resource name: 'adx'
+Resource name: 'at'
 
 - Full permission for account: 
-    adx://did:example:userDid/*
+    at://did:example:userDid/*
 - Permission to write to particular application collection: 
-    adx://did:example:userDid/com.foo.post/*
+    at://did:example:userDid/com.foo.post/*
 - Permission to create a single interaction on user's behalf: 
-    adx://did:example:userDid/com.foo.post/234567abcdefg
+    at://did:example:userDid/com.foo.post/234567abcdefg
 
 Example: 
 {
-  with: { scheme: "adx", hierPart: "did:example:userDid/com.foo.post/*" },
-  can: { namespace: "adx", segments: [ "WRITE" ] }
+  with: { scheme: "at", hierPart: "did:example:userDid/com.foo.post/*" },
+  can: { namespace: "atp", segments: [ "WRITE" ] }
 }
 
 At the moment, we support only two capability level: 
@@ -23,57 +23,57 @@ At the moment, we support only two capability level:
 - 'MAINTENANCE': this does not allow updates to repo objects, but allows maintenance of the repo, such as repo creation
 */
 
-export const ADX_ABILITY_LEVELS = {
+export const ATP_ABILITY_LEVELS = {
   SUPER_USER: 2,
   WRITE: 1,
   MAINTENANCE: 0,
 }
 
-export const ADX_ABILITIES: string[] = Object.keys(ADX_ABILITY_LEVELS)
+export const ATP_ABILITIES: string[] = Object.keys(ATP_ABILITY_LEVELS)
 
-export type AdxAbility = keyof typeof ADX_ABILITY_LEVELS
+export type AtpAbility = keyof typeof ATP_ABILITY_LEVELS
 
-export const isAdxCap = (cap: ucans.Capability): boolean => {
-  return cap.with.scheme === 'adx' && isAdxAbility(cap.can)
+export const isAtpCap = (cap: ucans.Capability): boolean => {
+  return cap.with.scheme === 'at' && isAtpAbility(cap.can)
 }
 
-export const isAdxAbility = (ability: unknown): ability is AdxAbility => {
+export const isAtpAbility = (ability: unknown): ability is AtpAbility => {
   if (!ucans.ability.isAbility(ability)) return false
   if (ability === ucans.ability.SUPERUSER) return true
   const abilitySegment = ability.segments[0]
-  const isAdxAbilitySegment =
-    !!abilitySegment && ADX_ABILITIES.includes(abilitySegment)
-  return isAdxAbilitySegment && ability.namespace.toLowerCase() === 'adx'
+  const isAtpAbilitySegment =
+    !!abilitySegment && ATP_ABILITIES.includes(abilitySegment)
+  return isAtpAbilitySegment && ability.namespace.toLowerCase() === 'atp'
 }
 
-export const parseAdxAbility = (
+export const parseAtpAbility = (
   ability: ucans.ability.Ability,
-): AdxAbility | null => {
+): AtpAbility | null => {
   if (ability === ucans.ability.SUPERUSER) return 'SUPER_USER'
-  if (isAdxAbility(ability)) return ability.segments[0] as AdxAbility
+  if (isAtpAbility(ability)) return ability.segments[0] as AtpAbility
   return null
 }
 
-export const adxCapability = (
+export const atpCapability = (
   resource: string,
-  ability: AdxAbility,
+  ability: AtpAbility,
 ): ucans.Capability => {
   return {
-    with: { scheme: 'adx', hierPart: resource },
-    can: { namespace: 'adx', segments: [ability] },
+    with: { scheme: 'at', hierPart: resource },
+    can: { namespace: 'atp', segments: [ability] },
   }
 }
-export interface AdxResourcePointer {
+export interface AtpResourcePointer {
   did: string
   collection: string
   record: string
 }
 
 // @TODO: ugly import on param
-export const parseAdxResource = (
+export const parseAtpResource = (
   pointer: ucans.capability.resourcePointer.ResourcePointer,
-): AdxResourcePointer | null => {
-  if (pointer.scheme !== 'adx') return null
+): AtpResourcePointer | null => {
+  if (pointer.scheme !== 'at') return null
 
   const parts = pointer.hierPart.split('/')
   let [did, collection, record] = parts
@@ -87,10 +87,10 @@ export const parseAdxResource = (
   }
 }
 
-export const adxSemantics: ucans.DelegationSemantics = {
+export const atpSemantics: ucans.DelegationSemantics = {
   canDelegateResource(parentResource, childResource) {
-    const parent = parseAdxResource(parentResource)
-    const child = parseAdxResource(childResource)
+    const parent = parseAtpResource(parentResource)
+    const child = parseAtpResource(childResource)
 
     if (parent == null || child == null) return false
     if (parent.did !== child.did) return false
@@ -104,12 +104,12 @@ export const adxSemantics: ucans.DelegationSemantics = {
   },
 
   canDelegateAbility(parentAbility, childAbility) {
-    const parent = parseAdxAbility(parentAbility)
-    const child = parseAdxAbility(childAbility)
+    const parent = parseAtpAbility(parentAbility)
+    const child = parseAtpAbility(childAbility)
 
     if (parent == null || child == null) return false
 
-    if (ADX_ABILITY_LEVELS[child] > ADX_ABILITY_LEVELS[parent]) {
+    if (ATP_ABILITY_LEVELS[child] > ATP_ABILITY_LEVELS[parent]) {
       return false
     }
 

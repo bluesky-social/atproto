@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely'
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 import { Notification, NotificationsPlugin } from '../types'
 
 export const tableName = 'user_notification'
@@ -39,7 +39,7 @@ export const process =
   }
 
 export const deleteForRecord =
-  (db: Kysely<PartialDB>) => async (uri: AdxUri) => {
+  (db: Kysely<PartialDB>) => async (uri: AtUri) => {
     await db
       .deleteFrom('user_notification')
       .where('recordUri', '=', uri.toString())

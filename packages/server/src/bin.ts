@@ -1,6 +1,10 @@
 import dotenv from 'dotenv'
-import { IpldStore, MemoryBlockstore, PersistentBlockstore } from '@adxp/repo'
-import * as crypto from '@adxp/crypto'
+import {
+  IpldStore,
+  MemoryBlockstore,
+  PersistentBlockstore,
+} from '@atproto/repo'
+import * as crypto from '@atproto/crypto'
 import Database from './db'
 import server from './index'
 import { ServerConfig } from './config'
@@ -34,7 +38,7 @@ const run = async () => {
 
   const { listener } = server(blockstore, db, keypair, cfg)
   listener.on('listening', () => {
-    console.log(`🌞 ADX Data server is running at ${cfg.origin}`)
+    console.log(`🌞 ATP Data server is running at ${cfg.origin}`)
   })
 }
 

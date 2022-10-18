@@ -1,4 +1,4 @@
-import { Repo } from '@adxp/repo'
+import { Repo } from '@atproto/repo'
 import Database from './db'
 
 // @TODO revamp all subscriber logic

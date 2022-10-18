@@ -1,5 +1,5 @@
 import pinoHttp from 'pino-http'
-import { subsystemLogger } from '@adxp/common'
+import { subsystemLogger } from '@atproto/common'
 
 export const logger = subsystemLogger('plc')
 

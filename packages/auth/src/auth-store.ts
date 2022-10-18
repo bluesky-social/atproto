@@ -1,10 +1,10 @@
 import * as ucan from '@ucans/core'
 import { DidableKey } from '@ucans/core'
 
-import { adxSemantics, parseAdxResource } from './adx-semantics'
+import { atpSemantics, parseAtpResource } from './atp-semantics'
 import { MONTH_IN_SEC, YEAR_IN_SEC } from './consts'
 import { CapWithProof, Signer } from './types'
-import { vaguerCap, writeCap } from './adx-capabilities'
+import { vaguerCap, writeCap } from './atp-capabilities'
 import { PluginInjectedApi } from './plugins'
 
 export class AuthStore implements Signer {
@@ -41,7 +41,7 @@ export class AuthStore implements Signer {
   async getUcanStore(): Promise<ucan.StoreI> {
     if (!this.ucanStore) {
       this.ucanStore = await this.ucanApi.Store.fromTokens(
-        adxSemantics,
+        atpSemantics,
         this.tokens,
       )
     }
@@ -83,8 +83,8 @@ export class AuthStore implements Signer {
 
   async findProof(cap: ucan.Capability): Promise<ucan.DelegationChain | null> {
     const ucanStore = await this.getUcanStore()
-    // we only handle adx caps right now
-    const resource = parseAdxResource(cap.with)
+    // we only handle atp caps right now
+    const resource = parseAtpResource(cap.with)
     if (resource === null) return null
     const res = await ucan.first(
       ucanStore.findWithCapability(await this.did(), cap, resource.did),
@@ -144,7 +144,7 @@ export class AuthStore implements Signer {
       .withLifetimeInSeconds(lifetime)
 
     for (const prf of proofs) {
-      builder = builder.delegateCapability(prf.cap, prf.prf, adxSemantics)
+      builder = builder.delegateCapability(prf.cap, prf.prf, atpSemantics)
     }
 
     return builder.build()

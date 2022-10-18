@@ -1,8 +1,8 @@
 import { DevEnv } from '../index'
 import { ServerType } from '../types'
 import { genServerCfg } from '../util'
-import { AdxUri } from '@adxp/uri'
-import { ServiceClient } from '@adxp/api'
+import { AtUri } from '@atproto/uri'
+import { ServiceClient } from '@atproto/api'
 import { postTexts, replyTexts } from './data'
 
 // NOTE
@@ -140,7 +140,7 @@ export async function generateMockSetup(env: DevEnv) {
   // a set of replies
   for (let i = 0; i < 100; i++) {
     const targetUri = picka(posts).uri
-    const urip = new AdxUri(targetUri)
+    const urip = new AtUri(targetUri)
     const target = await alice.api.app.bsky.post.get({
       user: urip.host,
       rkey: urip.rkey,

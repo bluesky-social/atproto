@@ -1,3 +1,3 @@
-# ADX DID Resolver
+# ATP DID Resolver
 
-A library for resolving ADX's Decentralized ID methods.
+A library for resolving ATP's Decentralized ID methods.

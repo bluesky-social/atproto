@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/xrpc",
+  "name": "@atproto/xrpc",
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@adxp/lexicon": "*",
+    "@atproto/lexicon": "*",
     "zod": "^3.14.2"
   }
 }

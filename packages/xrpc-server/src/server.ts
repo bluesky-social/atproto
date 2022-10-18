@@ -1,6 +1,10 @@
 import express from 'express'
 import { ValidateFunction } from 'ajv'
-import { MethodSchema, methodSchema, isValidMethodSchema } from '@adxp/lexicon'
+import {
+  MethodSchema,
+  methodSchema,
+  isValidMethodSchema,
+} from '@atproto/lexicon'
 import {
   XRPCHandler,
   XRPCError,

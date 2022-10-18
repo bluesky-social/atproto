@@ -1,5 +1,5 @@
 import express from 'express'
-import { check } from '@adxp/common'
+import { check } from '@atproto/common'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
 import * as locals from './locals'

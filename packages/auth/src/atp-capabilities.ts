@@ -1,4 +1,4 @@
-import { adxCapability, parseAdxResource } from './adx-semantics'
+import { atpCapability, parseAtpResource } from './atp-semantics'
 import * as ucan from '@ucans/core'
 
 export const writeCap = (
@@ -13,15 +13,15 @@ export const writeCap = (
   if (record) {
     resource += '/' + record
   }
-  return adxCapability(resource, 'WRITE')
+  return atpCapability(resource, 'WRITE')
 }
 
 export const maintenanceCap = (did: string): ucan.Capability => {
-  return adxCapability(did, 'MAINTENANCE')
+  return atpCapability(did, 'MAINTENANCE')
 }
 
 export const vaguerCap = (cap: ucan.Capability): ucan.Capability | null => {
-  const rsc = parseAdxResource(cap.with)
+  const rsc = parseAtpResource(cap.with)
   if (rsc === null) return null
   // can't go vaguer than every collection
   if (rsc.collection === '*') return null

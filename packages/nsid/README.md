@@ -3,7 +3,7 @@
 ## Usage
 
 ```typescript
-import { NSID } from '@adxp/nsid'
+import { NSID } from '@atproto/nsid'
 
 const id1 = NSID.parse('com.example.foo')
 id1.authority  // => 'example.com'

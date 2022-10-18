@@ -1,5 +1,5 @@
-import { TID } from '@adxp/common'
-import { NSID } from '@adxp/nsid'
+import { TID } from '@atproto/common'
+import { NSID } from '@atproto/nsid'
 import { CID } from 'multiformats/cid'
 import Repo from './repo'
 import log from './logger'

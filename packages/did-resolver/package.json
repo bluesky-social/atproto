@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/did-resolver",
+  "name": "@atproto/did-resolver",
   "version": "0.0.1",
   "main": "src/index.ts",
   "license": "MIT",
@@ -16,8 +16,8 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@adxp/common": "*",
-    "@adxp/crypto": "*",
+    "@atproto/common": "*",
+    "@atproto/crypto": "*",
     "axios": "^0.24.0",
     "core-js": "2.6.5",
     "cors": "^2.8.5",
@@ -27,7 +27,7 @@
     "one-webcrypto": "^1.0.3"
   },
   "devDependencies": {
-    "@adxp/plc": "*",
+    "@atproto/plc": "*",
     "get-port": "^6.1.2"
   }
 }

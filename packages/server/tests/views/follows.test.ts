@@ -1,4 +1,4 @@
-import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
+import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import {
   runTestServer,
   forSnapshot,
@@ -10,7 +10,7 @@ import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
 
 describe('pds follow views', () => {
-  let client: AdxServiceClient
+  let client: AtpServiceClient
   let close: CloseFn
   let sc: SeedClient
 
@@ -22,7 +22,7 @@ describe('pds follow views', () => {
       dbPostgresSchema: 'views_follows',
     })
     close = server.close
-    client = AdxApi.service(server.url)
+    client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     await followsSeed(sc)
     alice = sc.dids.alice

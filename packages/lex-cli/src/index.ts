@@ -4,7 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import { Command, InvalidArgumentError } from 'commander'
 import yesno from 'yesno'
-import { NSID } from '@adxp/nsid'
+import { NSID } from '@atproto/nsid'
 import {
   schemaTemplate,
   readAllSchemas,

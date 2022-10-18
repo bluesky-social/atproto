@@ -1,5 +1,5 @@
-import { AdxUri } from '@adxp/uri'
-import { ValidationResult } from '@adxp/lexicon'
+import { AtUri } from '@atproto/uri'
+import { ValidationResult } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 
 export type DbRecordPlugin<T, S> = {
@@ -8,15 +8,15 @@ export type DbRecordPlugin<T, S> = {
   validateSchema: (obj: unknown) => ValidationResult
   matchesSchema: (obj: unknown) => obj is T
   translateDbObj: (dbObj: S) => T
-  get: (uri: AdxUri) => Promise<T | null>
-  insert: (uri: AdxUri, cid: CID, obj: unknown) => Promise<void>
-  delete: (uri: AdxUri) => Promise<void>
-  notifsForRecord: (uri: AdxUri, cid: CID, obj: unknown) => Notification[]
+  get: (uri: AtUri) => Promise<T | null>
+  insert: (uri: AtUri, cid: CID, obj: unknown) => Promise<void>
+  delete: (uri: AtUri) => Promise<void>
+  notifsForRecord: (uri: AtUri, cid: CID, obj: unknown) => Notification[]
 }
 
 export type NotificationsPlugin = {
   process: (notifs: Notification[]) => Promise<void>
-  deleteForRecord: (uri: AdxUri) => Promise<void>
+  deleteForRecord: (uri: AtUri) => Promise<void>
 }
 
 export type Notification = {

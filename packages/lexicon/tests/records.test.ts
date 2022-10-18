@@ -44,20 +44,20 @@ describe('Create schema collections and validators', () => {
 describe('Validates schemas', () => {
   const s = new RecordSchemas()
   expect(() => s.add({})).toThrow(RecordSchemaMalformedError)
-  expect(() => s.add({ adx: 1 })).toThrow(RecordSchemaMalformedError)
-  expect(() => s.add({ adx: 1, id: 'bad-nsid' })).toThrow(
+  expect(() => s.add({ lexicon: 1 })).toThrow(RecordSchemaMalformedError)
+  expect(() => s.add({ lexicon: 1, id: 'bad-nsid' })).toThrow(
     RecordSchemaMalformedError,
   )
   expect(() =>
     s.add({
-      adx: 1,
+      lexicon: 1,
       id: 'com.example.test',
       record: 'wrong',
     }),
   ).toThrow(RecordSchemaMalformedError)
   expect(() =>
     s.add({
-      adx: 1,
+      lexicon: 1,
       id: 'com.example.test',
       record: {
         type: 'array',
@@ -66,7 +66,7 @@ describe('Validates schemas', () => {
   ).toThrow(RecordSchemaMalformedError)
   expect(() =>
     s.add({
-      adx: 1,
+      lexicon: 1,
       id: 'com.example.test',
       record: {
         type: 'object',
@@ -170,7 +170,7 @@ describe('Validates extension types', () => {
             $required: true,
             $fallback:
               'This zeet includes a poll which this application does not support.',
-            question: "Do you like ADX's schemas system?",
+            question: "Do you like ATP's schemas system?",
             answers: ['yes', 'no', 'eh'],
           },
         },
@@ -191,7 +191,7 @@ describe('Validates extension types', () => {
             $required: true,
             $fallback:
               'This zeet includes a poll which this application does not support.',
-            question: "Do you like ADX's schemas system?",
+            question: "Do you like ATP's schemas system?",
             answers: ['yes', 'no', 'eh'],
             extraField: 'foo',
           },
@@ -213,7 +213,7 @@ describe('Validates extension types', () => {
             $required: false,
             $fallback:
               'This zeet includes a poll which this application does not support.',
-            question: "Do you like ADX's schemas system?",
+            question: "Do you like ATP's schemas system?",
             answers: ['yes', 'no', 'eh'],
           },
         },
@@ -235,7 +235,7 @@ describe('Validates extension types', () => {
         $ext: {
           'org.other.poll': {
             $required: false,
-            question: "Do you like ADX's schemas system?",
+            question: "Do you like ATP's schemas system?",
             answers: ['yes', 'no', 'eh'],
           },
         },
@@ -257,7 +257,7 @@ describe('Validates extension types', () => {
             $required: true,
             $fallback:
               'This zeet includes a poll which this application does not support.',
-            question: "Do you like ADX's schemas system?",
+            question: "Do you like ATP's schemas system?",
           },
         },
       })
@@ -281,7 +281,7 @@ describe('Validates extension types', () => {
               'en-US':
                 'This zeet includes a poll which this application does not support.',
             },
-            question: "Do you like ADX's schemas system?",
+            question: "Do you like ATP's schemas system?",
             answers: ['yes', 'no', 'eh'],
           },
         },
@@ -319,7 +319,7 @@ describe('isValid()', () => {
           $required: false,
           $fallback:
             'This zeet includes a poll which this application does not support.',
-          question: "Do you like ADX's schemas system?",
+          question: "Do you like ATP's schemas system?",
           answers: ['yes', 'no', 'eh'],
         },
       })

@@ -19,7 +19,7 @@ Each DID document is made up of just four pieces of data (for now):
 - `signingKey`
 - `recoveryKey`
 - `username`
-- `atpPds` (Personal Data Server for the related @ Protocol repository)
+- `atpPds` (Personal Data Server for the related AT Protocol repository)
 
 DID documents are derived from a log of signed operations, ordered by the PLC server.
 

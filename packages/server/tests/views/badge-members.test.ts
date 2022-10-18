@@ -1,4 +1,4 @@
-import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
+import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { SeedClient } from '../seeds/client'
 import likesSeed from '../seeds/likes'
 import {
@@ -10,7 +10,7 @@ import {
 } from '../_util'
 
 describe('pds badge members view', () => {
-  let client: AdxServiceClient
+  let client: AtpServiceClient
   let close: CloseFn
   let sc: SeedClient
 
@@ -22,7 +22,7 @@ describe('pds badge members view', () => {
       dbPostgresSchema: 'views_badge_members',
     })
     close = server.close
-    client = AdxApi.service(server.url)
+    client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     await likesSeed(sc)
     bob = sc.dids.bob

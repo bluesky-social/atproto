@@ -1,10 +1,10 @@
-export const ADX_URI_REGEX =
-  // protocol-  --did--------------   --name-------------   --path----   --query--   --hash--
-  /^(adx:\/\/)?((?:did:[a-z0-9:%-]+)|(?:[a-z][a-z0-9.:-]*))(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
+export const ATP_URI_REGEX =
+  // proto-    --did--------------   --name-------------   --path----   --query--   --hash--
+  /^(at:\/\/)?((?:did:[a-z0-9:%-]+)|(?:[a-z][a-z0-9.:-]*))(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 //                       --path-----   --query--  --hash--
 const RELATIVE_REGEX = /^(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 
-export class AdxUri {
+export class AtUri {
   hash: string
   host: string
   pathname: string
@@ -15,7 +15,7 @@ export class AdxUri {
     if (base) {
       parsed = parse(base)
       if (!parsed) {
-        throw new Error(`Invalid adx uri: ${base}`)
+        throw new Error(`Invalid at uri: ${base}`)
       }
       const relativep = parseRelative(uri)
       if (!relativep) {
@@ -25,7 +25,7 @@ export class AdxUri {
     } else {
       parsed = parse(uri)
       if (!parsed) {
-        throw new Error(`Invalid adx uri: ${uri}`)
+        throw new Error(`Invalid at uri: ${uri}`)
       }
     }
 
@@ -36,11 +36,11 @@ export class AdxUri {
   }
 
   get protocol() {
-    return 'adx:'
+    return 'at:'
   }
 
   get origin() {
-    return `adx://${this.host}`
+    return `at://${this.host}`
   }
 
   get hostname() {
@@ -97,12 +97,12 @@ export class AdxUri {
     if (hash && !hash.startsWith('#')) {
       hash = `#${hash}`
     }
-    return `adx://${this.host}${path}${qs}${hash}`
+    return `at://${this.host}${path}${qs}${hash}`
   }
 }
 
 function parse(str: string) {
-  const match = ADX_URI_REGEX.exec(str)
+  const match = ATP_URI_REGEX.exec(str)
   if (match) {
     return {
       hash: match[5] || '',

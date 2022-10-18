@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { BlockWriter } from '@ipld/car/writer'
-import { def as common } from '@adxp/common'
+import { def as common } from '@atproto/common'
 import { CID } from 'multiformats'
 import { DataDiff } from './mst'
 

@@ -1,4 +1,4 @@
-import * as auth from '@adxp/auth'
+import * as auth from '@atproto/auth'
 import { CID } from 'multiformats'
 import CidSet from '../cid-set'
 

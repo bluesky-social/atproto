@@ -1,3 +1,3 @@
-# ADX Auth Library
+# ATP Auth Library
 
-ADX's core permissioning library (based on UCANs).
+ATP's core permissioning library (based on UCANs).

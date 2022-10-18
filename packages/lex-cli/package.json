@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/lex-cli",
+  "name": "@atproto/lex-cli",
   "version": "0.0.1",
   "bin": {
     "lex": "dist/index.js"
@@ -18,8 +18,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@adxp/lexicon": "*",
-    "@adxp/nsid": "*",
+    "@atproto/lexicon": "*",
+    "@atproto/nsid": "*",
     "ajv": "^8.11.0",
     "ajv-formats": "^2.1.1",
     "chalk": "^5.1.1",

@@ -2,16 +2,22 @@
 
 ## Applications
 
-- [Server](./server): The Personal Data Server (PDS). This is ADX's main server-side implementation.
-- [CLI](./cli): A command-line application for interacting with ADX.
+- [Server](./server): The Personal Data Server (PDS). This is ATP's main server-side implementation.
 - [Dev Env](./dev-env): A command-line application for developers to construct and manage development environments.
+- [Lexicon CLI](./lex-cli/): A command-line application for generating code and documentation from Lexicon schemas.
+- [CLI](./cli): A command-line application for interacting with ATP. (Currently not maintained, and in need of updates.)
 
 ## Libraries
 
-- [API](./api): A library for communicating with ADX servers.
-- [Auth](./auth): ADX's core permissioning library (based on UCANs).
-- [Common](./common): A library containing code which is shared between ADX packages.
-- [Crypto](./crypto): ADX's common cryptographic operations.
-- [DID Resolver](./did-resolver): A library for resolving ADX's Decentralized ID methods.
-- [Repo](./repo): The "ADX repository" core implementation (a Merkle Search Tree).
-- [Schemas](./schemas/): A library for validating data using ADX's schema system.
+- [API](./api): A library for communicating with ATP servers.
+- [Auth](./auth): ATP's core permissioning library (based on UCANs).
+- [Common](./common): A library containing code which is shared between ATP packages.
+- [Crypto](./crypto): ATP's common cryptographic operations.
+- [DID Resolver](./did-resolver): A library for resolving ATP's Decentralized ID methods.
+- [Lexicon](./lexicon): A library for validating data using ATP's schema system.
+- [NSID](./nsid): A parser and generator of NSIDs.
+- [PLC](./plc): The did:placeholder implementation.
+- [Repo](./repo): The "ATP repository" core implementation (a Merkle Search Tree).
+- [URI](./uri): A parser and generator of `at://` uris.
+- [XRPC](./xrpc): An XRPC client implementation.
+- [XRPC Server](./xrpc-server): An XRPC server implementation.

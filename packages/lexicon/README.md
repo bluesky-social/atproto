@@ -1,9 +1,9 @@
 # Lexicon
 
-Lexicon is the semantic schemas & contracts system for ADX. This library provides definitions and APIs for ADX software.
+Lexicon is the semantic schemas & contracts system for ATP. This library provides definitions and APIs for ATP software.
 
 ```
-npm install @adxp/lexicon
+npm install @atproto/lexicon
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ TODO
 ### Record schemas
 
 ```typescript
-import { RecordSchemas } from '@adxp/lexicon'
+import { RecordSchemas } from '@atproto/lexicon'
 
 // create your schemas collection
 const schemas = new RecordSchemas()
@@ -100,7 +100,7 @@ const res4 = postValidator.validate({
     'com.example.poll': {
       $required: true,
       $fallback: 'This post includes a poll which this application does not support.',
-      question: "Do you like ADX's schemas system?",
+      question: "Do you like ATP's schemas system?",
       answers: ['yes', 'no', 'eh'],
     },
   },
@@ -121,7 +121,7 @@ const res5 = postValidator.validate({
     'org.other.poll': { // <-- we don't understand this type
       $required: false, // <-- ...but it's not required
       $fallback: 'This post includes a poll which this application does not support.',
-      question: "Do you like ADX's schemas system?",
+      question: "Do you like ATP's schemas system?",
       answers: ['yes', 'no', 'eh'],
     },
   },

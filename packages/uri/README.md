@@ -1,13 +1,13 @@
-# ADX URI API
+# ATP URI API
 
 ## Usage
 
 ```typescript
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 
-const uri = new AdxUri('adx://bob.com/com.example.post/1234')
-uri.protocol   // => 'adx:'
-uri.origin     // => 'adx://bob.com'
+const uri = new AtUri('at://bob.com/com.example.post/1234')
+uri.protocol   // => 'at:'
+uri.origin     // => 'at://bob.com'
 uri.hostname   // => 'bob.com'
 uri.collection // => 'com.example.post'
 uri.rkey       // => '1234'

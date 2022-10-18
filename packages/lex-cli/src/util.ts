@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { join } from 'path'
-import { methodSchema, recordSchema, Schema } from '@adxp/lexicon'
+import { methodSchema, recordSchema, Schema } from '@atproto/lexicon'
 import chalk from 'chalk'
 import { GeneratedAPI, FileDiff } from './types'
 

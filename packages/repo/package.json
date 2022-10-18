@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/repo",
+  "name": "@atproto/repo",
   "version": "0.0.1",
   "main": "src/index.ts",
   "license": "MIT",
@@ -18,9 +18,9 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@adxp/auth": "*",
-    "@adxp/common": "*",
-    "@adxp/nsid": "*",
+    "@atproto/auth": "*",
+    "@atproto/common": "*",
+    "@atproto/nsid": "*",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
     "ipld-hashmap": "^2.1.10",

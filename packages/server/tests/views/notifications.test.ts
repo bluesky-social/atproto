@@ -1,4 +1,4 @@
-import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
+import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -6,7 +6,7 @@ import * as locals from '../../src/locals'
 import { App } from '../../src'
 
 describe('pds notification views', () => {
-  let client: AdxServiceClient
+  let client: AtpServiceClient
   let close: CloseFn
   let app: App
   let sc: SeedClient
@@ -20,7 +20,7 @@ describe('pds notification views', () => {
     })
     close = server.close
     app = server.app
-    client = AdxApi.service(server.url)
+    client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     await basicSeed(sc)
     alice = sc.dids.alice

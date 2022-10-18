@@ -1,4 +1,4 @@
-import * as auth from '@adxp/auth'
+import * as auth from '@atproto/auth'
 
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/blockstore'

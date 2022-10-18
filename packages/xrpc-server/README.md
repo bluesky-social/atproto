@@ -3,7 +3,7 @@
 ## Usage
 
 ```typescript
-import * as xrpc from '@adxp/xrpc-server'
+import * as xrpc from '@atproto/xrpc-server'
 
 // create xrpc server
 const server = xrpc.createServer([{

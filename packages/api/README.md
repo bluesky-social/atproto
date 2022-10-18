@@ -1,9 +1,9 @@
-# ADX API
+# ATP API
 
 ## Usage
 
 ```typescript
-import API from '@adxp/api'
+import API from '@atproto/api'
 
 const client = API.service('http://example.com')
 

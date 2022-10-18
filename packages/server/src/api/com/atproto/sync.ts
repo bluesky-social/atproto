@@ -1,8 +1,8 @@
 import { Server } from '../../../lexicon'
-import { InvalidRequestError } from '@adxp/xrpc-server'
-import { def as common } from '@adxp/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { def as common } from '@atproto/common'
 import * as locals from '../../../locals'
-import { DataDiff, Repo } from '@adxp/repo'
+import { DataDiff, Repo } from '@atproto/repo'
 import * as repoDiff from '../../../repo-diff'
 
 export default function (server: Server) {

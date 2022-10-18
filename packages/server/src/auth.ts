@@ -1,7 +1,7 @@
-import * as auth from '@adxp/auth'
-import { AuthRequiredError } from '@adxp/xrpc-server'
+import * as auth from '@atproto/auth'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import * as uint8arrays from 'uint8arrays'
-import { DidResolver } from '@adxp/did-resolver'
+import { DidResolver } from '@atproto/did-resolver'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
 

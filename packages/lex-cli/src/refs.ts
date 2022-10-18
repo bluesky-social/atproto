@@ -1,4 +1,8 @@
-import { Schema, isValidRecordSchema, isValidMethodSchema } from '@adxp/lexicon'
+import {
+  Schema,
+  isValidRecordSchema,
+  isValidMethodSchema,
+} from '@atproto/lexicon'
 import pointer from 'json-pointer'
 import { toCamelCase } from './codegen/util'
 

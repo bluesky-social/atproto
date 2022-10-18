@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/auth",
+  "name": "@atproto/auth",
   "version": "0.0.3",
   "main": "src/index.ts",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@adxp/crypto": "*",
+    "@atproto/crypto": "*",
     "@ucans/core": "0.11.0",
     "uint8arrays": "3.0.0"
   }

@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely'
-import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../lexicon'
 import * as GetPostThread from '../../../lexicon/types/app/bsky/getPostThread'
 import * as locals from '../../../locals'

@@ -1,4 +1,4 @@
-import { MethodSchema } from '@adxp/lexicon'
+import { MethodSchema } from '@atproto/lexicon'
 import {
   CallOptions,
   Headers,

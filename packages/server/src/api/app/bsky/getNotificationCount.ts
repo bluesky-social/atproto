@@ -1,5 +1,5 @@
 import { Server } from '../../../lexicon'
-import { AuthRequiredError } from '@adxp/xrpc-server'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import * as GetNotificationCount from '../../../lexicon/types/app/bsky/getNotificationCount'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'

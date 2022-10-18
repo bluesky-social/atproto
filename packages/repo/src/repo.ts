@@ -1,11 +1,10 @@
 import { CID } from 'multiformats/cid'
 import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
-
 import { RepoRoot, Commit, def, BatchWrite, DataStore, RepoMeta } from './types'
-import { check, streamToArray, TID } from '@adxp/common'
+import { check, streamToArray, TID } from '@atproto/common'
 import IpldStore, { AllowedIpldVal } from './blockstore/ipld-store'
-import * as auth from '@adxp/auth'
+import * as auth from '@atproto/auth'
 import { DataDiff, MST } from './mst'
 import Collection from './collection'
 import log from './logger'
@@ -336,7 +335,7 @@ export class Repo {
         const token = await this.verifier.validateUcan(encodedToken)
         const neededCaps = diff.neededCapabilities(this.did())
         for (const cap of neededCaps) {
-          await this.verifier.verifyAdxUcan(token, this.did(), cap)
+          await this.verifier.verifyAtpUcan(token, this.did(), cap)
         }
         didForSignature = token.payload.iss
       } else {

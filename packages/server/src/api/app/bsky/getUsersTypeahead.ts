@@ -1,4 +1,4 @@
-import { QueryParams } from '@adxp/api/src/types/app/bsky/getUsersTypeahead'
+import { QueryParams } from '@atproto/api/src/types/app/bsky/getUsersTypeahead'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'

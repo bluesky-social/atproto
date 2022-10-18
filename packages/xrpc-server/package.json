@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/xrpc-server",
+  "name": "@atproto/xrpc-server",
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
@@ -15,8 +15,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@adxp/common": "*",
-    "@adxp/lexicon": "*",
+    "@atproto/common": "*",
+    "@atproto/lexicon": "*",
     "ajv": "^8.11.0",
     "ajv-formats": "^2.1.1",
     "express": "^4.17.2",
@@ -24,7 +24,7 @@
     "zod": "^3.14.2"
   },
   "devDependencies": {
-    "@adxp/xrpc": "*",
+    "@atproto/xrpc": "*",
     "@types/express": "^4.17.13"
   }
 }

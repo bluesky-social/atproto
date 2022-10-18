@@ -1,12 +1,12 @@
 import { once, EventEmitter } from 'events'
-import AdxApi, {
-  ServiceClient as AdxServiceClient,
+import AtpApi, {
+  ServiceClient as AtpServiceClient,
   ComAtprotoCreateAccount,
-} from '@adxp/api'
+} from '@atproto/api'
 import {
   ExpiredTokenError,
   InvalidTokenError,
-} from '@adxp/api/src/types/com/atproto/resetAccountPassword'
+} from '@atproto/api/src/types/com/atproto/resetAccountPassword'
 import { sign } from 'jsonwebtoken'
 import Mail from 'nodemailer/lib/mailer'
 import { App } from '../src'
@@ -20,7 +20,7 @@ const passwordAlt = 'test456'
 
 describe('account', () => {
   let serverUrl: string
-  let client: AdxServiceClient
+  let client: AtpServiceClient
   let close: util.CloseFn
   let app: App
   const mailCatcher = new EventEmitter()
@@ -34,7 +34,7 @@ describe('account', () => {
     close = server.close
     app = server.app
     serverUrl = server.url
-    client = AdxApi.service(serverUrl)
+    client = AtpApi.service(serverUrl)
 
     // Catch emails for use in tests
     const { mailer } = locals.get(app)

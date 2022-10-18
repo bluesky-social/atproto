@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
-import { InvalidRequestError } from '@adxp/xrpc-server'
-import { Repo } from '@adxp/repo'
-import { PlcClient } from '@adxp/plc'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { Repo } from '@atproto/repo'
+import { PlcClient } from '@atproto/plc'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 

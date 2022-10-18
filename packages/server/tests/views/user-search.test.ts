@@ -1,4 +1,4 @@
-import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
+import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
@@ -7,7 +7,7 @@ import * as locals from '../../src/locals'
 
 describe('pds user search views', () => {
   let app: App
-  let client: AdxServiceClient
+  let client: AtpServiceClient
   let close: CloseFn
   let sc: SeedClient
   let headers: { [s: string]: string }
@@ -18,7 +18,7 @@ describe('pds user search views', () => {
     })
     close = server.close
     app = server.app
-    client = AdxApi.service(server.url)
+    client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     await usersBulkSeed(sc)
     headers = sc.getHeaders(Object.values(sc.dids)[0])
