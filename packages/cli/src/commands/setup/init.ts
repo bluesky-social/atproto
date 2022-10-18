@@ -10,7 +10,7 @@ prompt.message = ''
 export default cmd({
   name: 'init',
   category: 'setup',
-  help: 'Create a new adx repo.',
+  help: 'Create a new atp repo.',
   opts: [
     { name: 'server', type: 'string', default: '' },
     { name: 'username', type: 'string', default: '' },
@@ -21,12 +21,12 @@ export default cmd({
     let { username, server, register, delegatorClient } = args
 
     console.log(`
- █████╗ ██████╗ ██╗  ██╗
-██╔══██╗██╔══██╗╚██╗██╔╝
-███████║██║  ██║ ╚███╔╝
-██╔══██║██║  ██║ ██╔██╗
-██║  ██║██████╔╝██╔╝ ██╗
-╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝`)
+ ██████╗ 
+██╔═══██╗
+██║██╗██║
+██║██║██║
+╚█║████╔╝
+ ╚╝╚═══╝ `)
 
     console.log(`Repo path: ${REPO_PATH}`)
 
@@ -39,7 +39,7 @@ export default cmd({
     }
 
     if (!username || !server) {
-      console.log(`This utility will initialize your adx repo.`)
+      console.log(`This utility will initialize your atp repo.`)
       console.log(`Press ^C at any time to quit.`)
       prompt.start()
       username = (

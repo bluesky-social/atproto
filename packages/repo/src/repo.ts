@@ -1,11 +1,10 @@
 import { CID } from 'multiformats/cid'
 import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
-
 import { RepoRoot, Commit, def, BatchWrite, DataStore, RepoMeta } from './types'
-import { check, streamToArray, TID } from '@adxp/common'
+import { check, streamToArray, TID } from '@atproto/common'
 import IpldStore, { AllowedIpldVal } from './blockstore/ipld-store'
-import * as auth from '@adxp/auth'
+import * as auth from '@atproto/auth'
 import { DataDiff, MST } from './mst'
 import Collection from './collection'
 import log from './logger'
@@ -203,15 +202,16 @@ export class Repo {
     await this.safeCommit(async (data: DataStore) => {
       for (const write of writes) {
         if (write.action === 'create') {
-          const dataKey = write.collection + '/' + TID.next().toString()
+          const rkey = write.rkey || TID.nextStr()
+          const dataKey = write.collection + '/' + rkey
           const cid = await this.put(write.value)
           data = await data.add(dataKey, cid)
         } else if (write.action === 'update') {
           const cid = await this.put(write.value)
-          const dataKey = write.collection + '/' + write.tid
+          const dataKey = write.collection + '/' + write.rkey
           data = await data.update(dataKey, cid)
         } else if (write.action === 'delete') {
-          const dataKey = write.collection + '/' + write.tid
+          const dataKey = write.collection + '/' + write.rkey
           data = await data.delete(dataKey)
         }
       }
@@ -335,7 +335,7 @@ export class Repo {
         const token = await this.verifier.validateUcan(encodedToken)
         const neededCaps = diff.neededCapabilities(this.did())
         for (const cap of neededCaps) {
-          await this.verifier.verifyAdxUcan(token, this.did(), cap)
+          await this.verifier.verifyAtpUcan(token, this.did(), cap)
         }
         didForSignature = token.payload.iss
       } else {

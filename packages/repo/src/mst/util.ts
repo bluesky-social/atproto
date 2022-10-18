@@ -4,9 +4,9 @@ import * as blockCodec from '@ipld/dag-cbor'
 import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
 import IpldStore from '../blockstore/ipld-store'
-import { sha256 } from '@adxp/crypto'
+import { sha256 } from '@atproto/crypto'
 import { MST, Leaf, NodeEntry, NodeData, MstOpts, Fanout } from './mst'
-import { cidForData } from '@adxp/common'
+import { cidForData } from '@atproto/common'
 
 type SupportedBases = 'base2' | 'base8' | 'base16' | 'base32' | 'base64'
 

@@ -23,26 +23,27 @@
                 "properties": {
                   "action": {"type": "string", "const": "create"},
                   "collection": {"type": "string"},
+                  "rkey": {"type": "string"},
                   "value": {}
                 }
               },
               {
                 "type": "object",
-                "required": ["action", "collection", "tid", "value"],
+                "required": ["action", "collection", "rkey", "value"],
                 "properties": {
                   "action": {"type": "string", "const": "update"},
                   "collection": {"type": "string"},
-                  "tid": {"type": "string"},
+                  "rkey": {"type": "string"},
                   "value": {}
                 }
               },
               {
                 "type": "object",
-                "required": ["action", "collection", "tid"],
+                "required": ["action", "collection", "rkey"],
                 "properties": {
                   "action": {"type": "string", "const": "delete"},
                   "collection": {"type": "string"},
-                  "tid": {"type": "string"}
+                  "rkey": {"type": "string"}
                 }
               }
             ]

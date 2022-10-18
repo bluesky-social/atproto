@@ -1,16 +1,16 @@
-import { ServiceClient } from '@adxp/api'
-import { AdxUri } from '@adxp/uri'
+import { ServiceClient } from '@atproto/api'
+import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
 
 class Reference {
-  uri: AdxUri
+  uri: AtUri
   cid: CID
 
-  constructor(uri: AdxUri | string, cid: CID | string) {
-    this.uri = new AdxUri(uri.toString())
+  constructor(uri: AtUri | string, cid: CID | string) {
+    this.uri = new AtUri(uri.toString())
     this.cid = CID.parse(cid.toString())
   }
 
@@ -51,7 +51,7 @@ export class SeedClient {
   >
   follows: Record<string, Record<string, Reference>>
   posts: Record<string, { text: string; ref: Reference }[]>
-  likes: Record<string, Record<string, AdxUri>>
+  likes: Record<string, Record<string, AtUri>>
   replies: Record<string, { text: string; ref: Reference }[]>
   reposts: Record<string, Reference[]>
   badges: Record<string, Reference[]>
@@ -136,7 +136,7 @@ export class SeedClient {
       this.getHeaders(by),
     )
     this.likes[by] ??= {}
-    this.likes[by][subject.uriStr] = new AdxUri(res.uri)
+    this.likes[by][subject.uriStr] = new AtUri(res.uri)
     return this.likes[by][subject.uriStr]
   }
 

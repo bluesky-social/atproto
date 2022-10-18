@@ -4,8 +4,8 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import { MethodSchema, RecordSchema, Schema } from '@adxp/lexicon'
-import { NSID } from '@adxp/nsid'
+import { MethodSchema, RecordSchema, Schema } from '@atproto/lexicon'
+import { NSID } from '@atproto/nsid'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
 import { gen, schemasTs } from './common'
 import { GeneratedAPI } from '../types'
@@ -40,9 +40,9 @@ export async function genClientApi(schemas: Schema[]): Promise<GeneratedAPI> {
 
 const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
   gen(project, '/index.ts', async (file) => {
-    //= import {Client as XrpcClient, ServiceClient as XrpcServiceClient} from '@adxp/xrpc'
+    //= import {Client as XrpcClient, ServiceClient as XrpcServiceClient} from '@atproto/xrpc'
     const xrpcImport = file.addImportDeclaration({
-      moduleSpecifier: '@adxp/xrpc',
+      moduleSpecifier: '@atproto/xrpc',
     })
     xrpcImport.addNamedImports([
       { name: 'Client', alias: 'XrpcClient' },
@@ -421,9 +421,9 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
 
 const methodSchemaTs = (project, schema: MethodSchema) =>
   gen(project, `/types/${schema.id.split('.').join('/')}.ts`, async (file) => {
-    //= import {Headers, XRPCError} from '@adxp/xrpc'
+    //= import {Headers, XRPCError} from '@atproto/xrpc'
     const xrpcImport = file.addImportDeclaration({
-      moduleSpecifier: '@adxp/xrpc',
+      moduleSpecifier: '@atproto/xrpc',
     })
     xrpcImport.addNamedImports([{ name: 'Headers' }, { name: 'XRPCError' }])
 

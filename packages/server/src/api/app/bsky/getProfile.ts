@@ -1,5 +1,5 @@
 import { Server } from '../../../lexicon'
-import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
+import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import * as GetProfile from '../../../lexicon/types/app/bsky/getProfile'
 import { countAll, userWhereClause } from '../../../db/util'
 import * as locals from '../../../locals'

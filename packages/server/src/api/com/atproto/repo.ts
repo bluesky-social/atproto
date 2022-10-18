@@ -1,9 +1,10 @@
 import { Server } from '../../../lexicon'
-import { InvalidRequestError, AuthRequiredError } from '@adxp/xrpc-server'
-import { AdxUri } from '@adxp/uri'
-import * as didResolver from '@adxp/did-resolver'
+import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/uri'
+import * as didResolver from '@atproto/did-resolver'
 import * as repoDiff from '../../../repo-diff'
 import * as locals from '../../../locals'
+import * as schemas from '../../../lexicon/schemas'
 
 export default function (server: Server) {
   server.com.atproto.repoDescribe(async (params, _in, _req, res) => {
@@ -58,7 +59,7 @@ export default function (server: Server) {
     )
 
     const lastRecord = records.at(-1)
-    const lastUri = lastRecord && new AdxUri(lastRecord?.uri)
+    const lastUri = lastRecord && new AtUri(lastRecord?.uri)
 
     return {
       encoding: 'application/json',
@@ -79,7 +80,7 @@ export default function (server: Server) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
-    const uri = new AdxUri(`${did}/${collection}/${rkey}`)
+    const uri = new AtUri(`${did}/${collection}/${rkey}`)
 
     const record = await db.getRecord(uri, cid || null)
     if (!record) {
@@ -161,12 +162,19 @@ export default function (server: Server) {
         `${did} is not a registered repo on this server`,
       )
     }
-    // @TODO handle this better. schema layer?
-    const rkey = collection === 'app.bsky.profile' ? 'self' : undefined
-    const { key, cid } = await repo
+
+    // determine key type. if undefined, repo assigns a TID
+    const keyType = schemas.recordSchemaDict[collection]?.key
+    let recordKey: string | undefined
+    if (keyType && keyType.startsWith('literal')) {
+      const split = keyType.split(':')
+      recordKey = split[1]
+    }
+
+    const { rkey, cid } = await repo
       .getCollection(collection)
-      .createRecord(input.body, rkey)
-    const uri = new AdxUri(`${did}/${collection}/${key}`)
+      .createRecord(input.body, recordKey)
+    const uri = new AtUri(`${did}/${collection}/${rkey}`)
     try {
       await db.indexRecord(uri, cid, input.body)
     } catch (err) {
@@ -204,7 +212,7 @@ export default function (server: Server) {
       )
     }
     await repo.getCollection(collection).deleteRecord(rkey)
-    const uri = new AdxUri(`${did}/${collection}/${rkey}`)
+    const uri = new AtUri(`${did}/${collection}/${rkey}`)
     try {
       await db.deleteRecord(uri)
     } catch (err) {

@@ -1,6 +1,6 @@
 import * as cbor from '@ipld/dag-cbor'
 import * as uint8arrays from 'uint8arrays'
-import { DidableKey, sha256 } from '@adxp/crypto'
+import { DidableKey, sha256 } from '@atproto/crypto'
 import * as t from './types'
 
 export const didForCreateOp = async (op: t.CreateOp, truncate = 24) => {

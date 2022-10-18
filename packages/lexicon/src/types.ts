@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { NSID } from '@adxp/nsid'
+import { NSID } from '@atproto/nsid'
 
 export const recordSchema = z.object({
   lexicon: z.literal(1),
@@ -9,6 +9,7 @@ export const recordSchema = z.object({
   type: z.enum(['record']),
   revision: z.number().optional(),
   description: z.string().optional(),
+  key: z.string().optional(),
   record: z.any().optional(),
   defs: z.any().optional(),
 })

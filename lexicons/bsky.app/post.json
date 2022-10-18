@@ -2,6 +2,7 @@
   "lexicon": 1,
   "id": "app.bsky.post",
   "type": "record",
+  "key": "tid",
   "record": {
     "type": "object",
     "required": ["text", "createdAt"],

@@ -1,4 +1,4 @@
-import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 

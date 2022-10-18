@@ -1,5 +1,5 @@
-import { ForbiddenError } from '@adxp/xrpc-server'
-import * as crypto from '@adxp/crypto'
+import { ForbiddenError } from '@atproto/xrpc-server'
+import * as crypto from '@atproto/crypto'
 import * as uint8arrays from 'uint8arrays'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'

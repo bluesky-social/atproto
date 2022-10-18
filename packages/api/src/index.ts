@@ -4,7 +4,7 @@
 import {
   Client as XrpcClient,
   ServiceClient as XrpcServiceClient,
-} from '@adxp/xrpc'
+} from '@atproto/xrpc'
 import { methodSchemas, recordSchemas } from './schemas'
 import * as ComAtprotoCreateAccount from './types/com/atproto/createAccount'
 import * as ComAtprotoCreateInviteCode from './types/com/atproto/createInviteCode'

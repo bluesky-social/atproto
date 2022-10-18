@@ -110,13 +110,13 @@ const envApi = {
 // =
 
 console.log(`
-█████╗ ██████╗ ██╗  ██╗
-██╔══██╗██╔══██╗╚██╗██╔╝
-███████║██║  ██║ ╚███╔╝ 
-██╔══██║██║  ██║ ██╔██╗ 
-██║  ██║██████╔╝██╔╝ ██╗
-╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝
-
+██████╗ 
+██╔═══██╗
+██║██╗██║
+██║██║██║
+╚█║████╔╝
+ ╚╝╚═══╝  protocol
+         
 [  v${pkg.version}  | created by Bluesky ]
 
 Initializing...`)
@@ -127,9 +127,9 @@ async function start() {
   console.log('Type .help if you get lost')
 
   // create repl
-  const inst = repl.start() //'adx $ ')
+  const inst = repl.start() //'atp $ ')
   Object.assign(inst.context, envApi)
-  inst.setupHistory(join(os.homedir(), '.adx-dev-env-history'), () => {})
+  inst.setupHistory(join(os.homedir(), '.atp-dev-env-history'), () => {})
   inst.on('exit', async () => {
     console.log(`Shutting down...`)
     await devEnv?.shutdown()

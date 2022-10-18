@@ -3,6 +3,7 @@
   "id": "app.bsky.badge",
   "type": "record",
   "description": "An assertion about the subject by this user.",
+  "key": "tid",
   "record": {
     "type": "object",
     "required": ["assertion", "createdAt"],

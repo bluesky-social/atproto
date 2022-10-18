@@ -1,11 +1,11 @@
 import { Kysely } from 'kysely'
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Post from '../../lexicon/types/app/bsky/post'
 import { DbRecordPlugin, Notification } from '../types'
-import schemas from '../schemas'
+import * as schemas from '../schemas'
 
-const type = 'app.bsky.post'
+const type = schemas.ids.AppBskyPost
 const tableName = 'app_bsky_post'
 
 export interface AppBskyPost {
@@ -60,7 +60,7 @@ export type PartialDB = {
   [supportingTableName]: AppBskyPostEntity
 }
 
-const validator = schemas.createRecordValidator(type)
+const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Post.Record => {
   return validator.isValid(obj)
 }
@@ -89,7 +89,7 @@ const translateDbObj = (dbObj: AppBskyPost): Post.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<Post.Record | null> => {
+  async (uri: AtUri): Promise<Post.Record | null> => {
     const postQuery = db
       .selectFrom('app_bsky_post')
       .selectAll()
@@ -113,7 +113,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
+  async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -147,7 +147,7 @@ const insertFn =
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<void> => {
+  async (uri: AtUri): Promise<void> => {
     await Promise.all([
       db.deleteFrom('app_bsky_post').where('uri', '=', uri.toString()),
       db
@@ -157,7 +157,7 @@ const deleteFn =
   }
 
 const notifsForRecord = (
-  uri: AdxUri,
+  uri: AtUri,
   cid: CID,
   obj: unknown,
 ): Notification[] => {
@@ -177,7 +177,7 @@ const notifsForRecord = (
     }
   }
   if (obj.reply?.parent) {
-    const parentUri = new AdxUri(obj.reply.parent.uri)
+    const parentUri = new AtUri(obj.reply.parent.uri)
     notifs.push({
       userDid: parentUri.host,
       author: uri.host,

@@ -53,7 +53,7 @@ $ docker compose rm test_db   # remove container
 
 #### `db` service for persistent use
 
-The `db` service has persistent storage on the host machine managed by Docker under a volume named `pg_adx_db`. When the container is removed, data in the database will remain on the host machine. In order to start fresh, you would need to remove the volume.
+The `db` service has persistent storage on the host machine managed by Docker under a volume named `pg_atp_db`. When the container is removed, data in the database will remain on the host machine. In order to start fresh, you would need to remove the volume.
 
 This service runs on port `5432`.
 
@@ -61,5 +61,5 @@ This service runs on port `5432`.
 $ docker compose up db -d    # start container
 $ docker compose stop db     # stop container
 $ docker compose rm db       # remove container
-$ docker volume rm pg_adx_db # remove volume
+$ docker volume rm pg_atp_db # remove volume
 ```

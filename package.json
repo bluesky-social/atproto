@@ -1,8 +1,8 @@
 {
-  "name": "adx",
+  "name": "atp",
   "version": "0.0.1",
-  "repository": "git@github.com:bluesky-social/adx.git",
-  "author": "Daniel Holmgren <dtholmgren@gmail.com>",
+  "repository": "git@github.com:bluesky-social/atp.git",
+  "author": "Bluesky PBLLC <hello@blueskyweb.xyz>",
   "license": "MIT",
   "private": true,
   "engines": {

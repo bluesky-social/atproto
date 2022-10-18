@@ -2,6 +2,7 @@
   "lexicon": 1,
   "id": "app.bsky.badgeAccept",
   "type": "record",
+  "key": "tid",
   "record": {
     "type": "object",
     "required": ["badge", "offer", "createdAt"],

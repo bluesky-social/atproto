@@ -5,7 +5,7 @@ import {
   recordSchema,
   RecordSchema,
   Schema,
-} from '@adxp/lexicon'
+} from '@atproto/lexicon'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
 
 const INSERT_START = [

@@ -1,10 +1,10 @@
 import * as ucans from '@ucans/core'
-import { DidableKey, EcdsaKeypair, p256Plugin } from '@adxp/crypto'
+import { DidableKey, EcdsaKeypair, p256Plugin } from '@atproto/crypto'
 import { PluginInjectedApi } from './plugins'
 import { verifySignature, verifySignatureUtf8 } from './signatures'
-import { verifyUcan, verifyAdxUcan, verifyFullWritePermission } from './verify'
+import { verifyUcan, verifyAtpUcan, verifyFullWritePermission } from './verify'
 import AuthStore from './auth-store'
-import { DidResolver } from '@adxp/did-resolver'
+import { DidResolver } from '@atproto/did-resolver'
 
 export const DID_KEY_PLUGINS = [p256Plugin]
 
@@ -96,12 +96,12 @@ export class Verifier {
     return verifyUcan(this.ucanApi)(token, opts)
   }
 
-  async verifyAdxUcan(
+  async verifyAtpUcan(
     token: ucans.Ucan | string,
     audience: string,
     cap: ucans.Capability,
   ): Promise<ucans.Ucan> {
-    return verifyAdxUcan(this.ucanApi)(token, audience, cap)
+    return verifyAtpUcan(this.ucanApi)(token, audience, cap)
   }
 
   async verifyFullWritePermission(

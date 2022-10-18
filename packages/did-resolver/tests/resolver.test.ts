@@ -6,9 +6,9 @@ import {
   Database as DidPlcDb,
   server as runPlcServer,
   PlcClient,
-} from '@adxp/plc'
+} from '@atproto/plc'
 import { DIDDocument } from 'did-resolver'
-import { EcdsaKeypair } from '@adxp/crypto'
+import { EcdsaKeypair } from '@atproto/crypto'
 
 describe('resolver', () => {
   let close: () => Promise<void>

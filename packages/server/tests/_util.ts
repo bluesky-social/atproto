@@ -1,7 +1,7 @@
-import { MemoryBlockstore } from '@adxp/repo'
-import * as crypto from '@adxp/crypto'
-import * as plc from '@adxp/plc'
-import { AdxUri } from '@adxp/uri'
+import { MemoryBlockstore } from '@atproto/repo'
+import * as crypto from '@atproto/crypto'
+import * as plc from '@atproto/plc'
+import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
@@ -105,9 +105,9 @@ export const forSnapshot = (obj: unknown) => {
     if (typeof item !== 'string') {
       return item
     }
-    const str = item.startsWith('did:plc:') ? `adx://${item}` : item
-    if (str.startsWith('adx://')) {
-      const uri = new AdxUri(str)
+    const str = item.startsWith('did:plc:') ? `at://${item}` : item
+    if (str.startsWith('at://')) {
+      const uri = new AtUri(str)
       if (uri.rkey) {
         return take(records, str)
       }

@@ -1,7 +1,7 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-import { Headers, XRPCError } from '@adxp/xrpc'
+import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
   limit?: number;

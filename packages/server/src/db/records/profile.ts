@@ -1,12 +1,12 @@
 import { Kysely, sql } from 'kysely'
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../lexicon/types/app/bsky/profile'
 import { DbRecordPlugin, Notification } from '../types'
-import schemas from '../schemas'
+import * as schemas from '../schemas'
 import { Dialect } from '..'
 
-const type = 'app.bsky.profile'
+const type = schemas.ids.AppBskyProfile
 const tableName = 'app_bsky_profile'
 
 export interface AppBskyProfile {
@@ -66,7 +66,7 @@ export type PartialDB = {
   [supportingTableName]: AppBskyProfileBadge
 }
 
-const validator = schemas.createRecordValidator(type)
+const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Profile.Record => {
   return validator.isValid(obj)
 }
@@ -81,7 +81,7 @@ const translateDbObj = (dbObj: AppBskyProfile): Profile.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<Profile.Record | null> => {
+  async (uri: AtUri): Promise<Profile.Record | null> => {
     const profileQuery = db
       .selectFrom('app_bsky_profile')
       .selectAll()
@@ -104,7 +104,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
+  async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -135,7 +135,7 @@ const insertFn =
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<void> => {
+  async (uri: AtUri): Promise<void> => {
     await Promise.all([
       db.deleteFrom('app_bsky_profile').where('uri', '=', uri.toString()),
       db
@@ -144,7 +144,7 @@ const deleteFn =
     ])
   }
 
-const notifsForRecord = (_uri: AdxUri, _obj: unknown): Notification[] => {
+const notifsForRecord = (_uri: AtUri, _obj: unknown): Notification[] => {
   return []
 }
 

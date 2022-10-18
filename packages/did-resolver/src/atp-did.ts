@@ -1,5 +1,5 @@
 import { DIDDocument } from 'did-resolver'
-import * as crypto from '@adxp/crypto'
+import * as crypto from '@atproto/crypto'
 
 export type AtpData = {
   did: string

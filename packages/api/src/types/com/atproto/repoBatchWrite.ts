@@ -1,7 +1,7 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-import { Headers, XRPCError } from '@adxp/xrpc'
+import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
   did: string;
@@ -18,18 +18,19 @@ export interface InputSchema {
     | {
         action: 'create',
         collection: string,
+        rkey?: string,
         value: unknown,
       }
     | {
         action: 'update',
         collection: string,
-        tid: string,
+        rkey: string,
         value: unknown,
       }
     | {
         action: 'delete',
         collection: string,
-        tid: string,
+        rkey: string,
       }
   )[];
 }

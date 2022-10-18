@@ -1,9 +1,10 @@
 import { Server } from '../../../lexicon'
-import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as locals from '../../../locals'
-import { AdxUri } from '@adxp/uri'
+import * as schema from '../../../lexicon/schemas'
+import { AtUri } from '@atproto/uri'
 
-const profileNsid = 'app.bsky.profile'
+const profileNsid = schema.ids.AppBskyProfile
 
 export default function (server: Server) {
   server.app.bsky.updateProfile(async (_params, input, req, res) => {
@@ -39,7 +40,7 @@ export default function (server: Server) {
       )
     }
 
-    const uri = new AdxUri(`${requester}/${profileNsid}/self`)
+    const uri = new AtUri(`${requester}/${profileNsid}/self`)
 
     const currBadges = await db.db
       .selectFrom('app_bsky_profile_badge')

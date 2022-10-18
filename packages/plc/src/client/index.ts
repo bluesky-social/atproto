@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
-import { DidableKey } from '@adxp/crypto'
-import { check, cidForData } from '@adxp/common'
+import { DidableKey } from '@atproto/crypto'
+import { check, cidForData } from '@atproto/common'
 import * as operations from '../lib/operations'
 import * as t from '../lib/types'
 

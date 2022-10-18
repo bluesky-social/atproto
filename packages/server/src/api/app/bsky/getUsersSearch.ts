@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { QueryParams } from '@adxp/api/src/types/app/bsky/getUsersSearch'
+import { QueryParams } from '@atproto/api/src/types/app/bsky/getUsersSearch'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'

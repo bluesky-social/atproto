@@ -1,5 +1,5 @@
 import { CID } from 'multiformats'
-import { TID } from '@adxp/common'
+import { TID } from '@atproto/common'
 import IpldStore from '../src/blockstore/ipld-store'
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/blockstore'
@@ -87,8 +87,8 @@ export const fillRepo = async (
     const coll = await repo.getCollection(collName)
     for (let i = 0; i < itemsPerCollection; i++) {
       const object = generateObject()
-      const { key } = await coll.createRecord(object)
-      collData[key] = object
+      const { rkey } = await coll.createRecord(object)
+      collData[rkey] = object
     }
     repoData[collName] = collData
   }
@@ -113,8 +113,8 @@ export const editRepo = async (
 
     for (let i = 0; i < adds; i++) {
       const object = generateObject()
-      const { key } = await coll.createRecord(object)
-      collData[key] = object
+      const { rkey } = await coll.createRecord(object)
+      collData[rkey] = object
     }
 
     const toUpdate = shuffled.slice(0, updates)

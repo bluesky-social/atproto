@@ -1,6 +1,6 @@
 import express from 'express'
 import zod from 'zod'
-import { ResponseType, ResponseTypeStrings } from '@adxp/xrpc'
+import { ResponseType, ResponseTypeStrings } from '@atproto/xrpc'
 
 export type Params = Record<string, string | number | boolean>
 

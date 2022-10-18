@@ -1,5 +1,5 @@
 {
-  "name": "@adxp/plc",
+  "name": "@atproto/plc",
   "version": "0.0.1",
   "main": "src/index.ts",
   "license": "MIT",
@@ -18,8 +18,8 @@
     "low": "node dist/scripts/low_pid.js"
   },
   "dependencies": {
-    "@adxp/common": "*",
-    "@adxp/crypto": "*",
+    "@atproto/common": "*",
+    "@atproto/crypto": "*",
     "@ipld/dag-cbor": "^7.0.3",
     "async-mutex": "^0.4.0",
     "axios": "^0.27.2",

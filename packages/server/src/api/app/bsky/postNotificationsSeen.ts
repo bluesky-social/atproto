@@ -1,5 +1,5 @@
 import { Server } from '../../../lexicon'
-import { AuthRequiredError, InvalidRequestError } from '@adxp/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as locals from '../../../locals'
 
 export default function (server: Server) {

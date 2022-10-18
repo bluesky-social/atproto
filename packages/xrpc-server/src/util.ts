@@ -1,5 +1,5 @@
 import express from 'express'
-import { MethodSchema, MethodSchemaParam } from '@adxp/lexicon'
+import { MethodSchema, MethodSchemaParam } from '@atproto/lexicon'
 import mime from 'mime-types'
 import Ajv, { ValidateFunction } from 'ajv'
 import addFormats from 'ajv-formats'

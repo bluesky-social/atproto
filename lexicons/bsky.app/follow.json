@@ -3,6 +3,7 @@
   "id": "app.bsky.follow",
   "type": "record",
   "description": "A social follow",
+  "key": "tid",
   "record": {
     "type": "object",
     "required": ["subject", "createdAt"],

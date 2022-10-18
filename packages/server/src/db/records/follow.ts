@@ -1,11 +1,11 @@
 import { Kysely } from 'kysely'
-import { AdxUri } from '@adxp/uri'
+import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../lexicon/types/app/bsky/follow'
 import { DbRecordPlugin, Notification } from '../types'
-import schemas from '../schemas'
+import * as schemas from '../schemas'
 
-const type = 'app.bsky.follow'
+const type = schemas.ids.AppBskyFollow
 const tableName = 'app_bsky_follow'
 export interface AppBskyFollow {
   uri: string
@@ -30,7 +30,7 @@ export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
 
 export type PartialDB = { [tableName]: AppBskyFollow }
 
-const validator = schemas.createRecordValidator(type)
+const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Follow.Record => {
   return validator.isValid(obj)
 }
@@ -45,7 +45,7 @@ const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<Follow.Record | null> => {
+  async (uri: AtUri): Promise<Follow.Record | null> => {
     const found = await db
       .selectFrom('app_bsky_follow')
       .selectAll()
@@ -56,7 +56,7 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri, cid: CID, obj: unknown): Promise<void> => {
+  async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -73,12 +73,12 @@ const insertFn =
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AdxUri): Promise<void> => {
+  async (uri: AtUri): Promise<void> => {
     await db.deleteFrom('app_bsky_follow').where('uri', '=', uri.toString())
   }
 
 const notifsForRecord = (
-  uri: AdxUri,
+  uri: AtUri,
   cid: CID,
   obj: unknown,
 ): Notification[] => {

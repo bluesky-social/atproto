@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { AuthRequiredError } from '@adxp/xrpc-server'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../../lexicon'
 import * as GetAuthorFeed from '../../../lexicon/types/app/bsky/getAuthorFeed'
 import * as locals from '../../../locals'

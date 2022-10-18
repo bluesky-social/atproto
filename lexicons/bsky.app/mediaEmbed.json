@@ -3,6 +3,7 @@
   "id": "app.bsky.mediaEmbed",
   "type": "record",
   "description": "A list of media embedded in a post or document.",
+  "key": "tid",
   "record": {
     "type": "object",
     "required": ["media"],

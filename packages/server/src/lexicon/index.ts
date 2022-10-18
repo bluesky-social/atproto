@@ -4,7 +4,7 @@
 import {
   createServer as createXrpcServer,
   Server as XrpcServer,
-} from '@adxp/xrpc-server'
+} from '@atproto/xrpc-server'
 import { methodSchemas } from './schemas'
 import * as ComAtprotoCreateAccount from './types/com/atproto/createAccount'
 import * as ComAtprotoCreateInviteCode from './types/com/atproto/createInviteCode'
