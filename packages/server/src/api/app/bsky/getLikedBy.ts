@@ -48,6 +48,8 @@ export default function (server: Server) {
         encoding: 'application/json',
         body: {
           uri,
+          cid,
+          cursor: likedBy.at(-1)?.createdAt,
           likedBy,
         },
       }

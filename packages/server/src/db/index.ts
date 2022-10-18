@@ -290,7 +290,7 @@ export class Database {
       .selectAll()
       .where('did', '=', did)
       .where('collection', '=', collection)
-      .orderBy('rkey', reverse ? 'desc' : 'asc')
+      .orderBy('rkey', reverse ? 'asc' : 'desc')
       .limit(limit)
 
     if (before !== undefined) {

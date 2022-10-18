@@ -12,6 +12,7 @@
       "type": "object",
       "required": ["notifications"],
       "properties": {
+        "cursor": {"type": "string"},
         "notifications": {
           "type": "array",
           "items": {"$ref": "#/defs/notification"}

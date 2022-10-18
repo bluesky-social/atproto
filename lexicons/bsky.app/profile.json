@@ -2,7 +2,7 @@
   "lexicon": 1,
   "id": "app.bsky.profile",
   "type": "record",
-  "keyed": "literal:self",
+  "key": "literal:self",
   "record": {
     "type": "object",
     "required": ["displayName"],

@@ -14,7 +14,7 @@ interface LexiconDoc {
 }
 
 interface RecordLexiconDoc extends LexiconDoc {
-  keyed?: string
+  key?: string
   record: JSONSchema
 }
 
@@ -100,7 +100,7 @@ interface XrpcError {
   "lexicon": 1,
   "id": "todo.social.repost",
   "type": "record",
-  "keyed": "tid",
+  "key": "tid",
   "record": {
     "type": "object",
     "required": ["subject", "createdAt"],

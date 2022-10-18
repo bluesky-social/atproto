@@ -1,5 +1,5 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
-import { runTestServer, forSnapshot, CloseFn } from '../_util'
+import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 import { App } from '../../src'
@@ -156,7 +156,22 @@ describe('pds user search views', () => {
     expect(result.data.users).toEqual([])
   })
 
-  it('search paginates', async () => {
+  it('paginates', async () => {
+    const results = (results) => results.flatMap((res) => res.users)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getUsersSearch(
+        { term: 'p', before: cursor, limit: 3 },
+        undefined,
+        { headers },
+      )
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.users.length).toBeLessThanOrEqual(3),
+    )
+
     const full = await client.app.bsky.getUsersSearch(
       { term: 'p' },
       undefined,
@@ -164,14 +179,7 @@ describe('pds user search views', () => {
     )
 
     expect(full.data.users.length).toBeGreaterThan(5)
-
-    const limited = await client.app.bsky.getUsersSearch(
-      { term: 'p', limit: 3, before: full.data.users[0].cursor },
-      undefined,
-      { headers },
-    )
-
-    expect(limited.data.users).toEqual(full.data.users.slice(1, 4))
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
   it('search handles bad input', async () => {
@@ -261,14 +269,12 @@ const snapTypeaheadSqlite = [
 const snapSearchPg = [
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0.5,"Cara.Wiegand69"]',
     did: 'user(0)',
     indexedAt: '1970-01-01T00:00:00.000Z',
     name: 'Cara.Wiegand69',
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0.57142854,"Eudora_Dietrich4"]',
     description: '',
     did: 'user(1)',
     displayName: 'Carol Littel',
@@ -277,7 +283,6 @@ const snapSearchPg = [
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0.625,"Shane_Torphy52"]',
     description: '',
     did: 'user(2)',
     displayName: 'Sadie Carter',
@@ -286,7 +291,6 @@ const snapSearchPg = [
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0.6666666,"Aliya.Hodkiewicz"]',
     description: '',
     did: 'user(3)',
     displayName: 'Carlton Abernathy IV',
@@ -295,14 +299,12 @@ const snapSearchPg = [
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0.6666666,"Carlos6"]',
     did: 'user(4)',
     indexedAt: '1970-01-01T00:00:00.000Z',
     name: 'Carlos6',
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0.7,"Carolina_McDermott77"]',
     description: '',
     did: 'user(5)',
     displayName: 'Latoya Windler',
@@ -311,7 +313,6 @@ const snapSearchPg = [
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0.75,"Cayla_Marquardt39"]',
     description: '',
     did: 'user(6)',
     displayName: 'Rachel Kshlerin',
@@ -323,7 +324,6 @@ const snapSearchPg = [
 const snapSearchSqlite = [
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0,"Aliya.Hodkiewicz"]',
     description: '',
     did: 'user(0)',
     displayName: 'Carlton Abernathy IV',
@@ -332,21 +332,18 @@ const snapSearchSqlite = [
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0,"Cara.Wiegand69"]',
     did: 'user(1)',
     indexedAt: '1970-01-01T00:00:00.000Z',
     name: 'Cara.Wiegand69',
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0,"Carlos6"]',
     did: 'user(2)',
     indexedAt: '1970-01-01T00:00:00.000Z',
     name: 'Carlos6',
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0,"Carolina_McDermott77"]',
     description: '',
     did: 'user(3)',
     displayName: 'Latoya Windler',
@@ -355,7 +352,6 @@ const snapSearchSqlite = [
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0,"Eudora_Dietrich4"]',
     description: '',
     did: 'user(4)',
     displayName: 'Carol Littel',
@@ -364,7 +360,6 @@ const snapSearchSqlite = [
   },
   {
     createdAt: '1970-01-01T00:00:00.000Z',
-    cursor: '[0,"Shane_Torphy52"]',
     description: '',
     did: 'user(5)',
     displayName: 'Sadie Carter',

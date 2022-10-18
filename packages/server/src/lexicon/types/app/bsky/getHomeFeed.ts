@@ -24,10 +24,10 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
+  cursor?: string;
   feed: AppBskyGetHomeFeedFeedItem[];
 }
 export interface AppBskyGetHomeFeedFeedItem {
-  cursor: string;
   uri: string;
   cid: string;
   author: AppBskyGetHomeFeedUser;

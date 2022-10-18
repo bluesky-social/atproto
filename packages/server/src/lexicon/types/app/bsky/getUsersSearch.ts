@@ -24,6 +24,7 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
+  cursor?: string;
   users: {
     did: string,
     name: string,
@@ -31,7 +32,6 @@ export interface OutputSchema {
     description?: string,
     createdAt: string,
     indexedAt: string,
-    cursor: string,
   }[];
 }
 

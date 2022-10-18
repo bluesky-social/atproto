@@ -18,6 +18,8 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   uri: string;
+  cid?: string;
+  cursor?: string;
   repostedBy: {
     did: string,
     name: string,

@@ -26,6 +26,8 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
   uri: string;
+  cid?: string;
+  cursor?: string;
   repostedBy: {
     did: string,
     name: string,

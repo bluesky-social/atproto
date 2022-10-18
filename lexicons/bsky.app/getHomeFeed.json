@@ -14,6 +14,7 @@
       "type": "object",
       "required": ["feed"],
       "properties": {
+        "cursor": {"type": "string"},
         "feed": {
           "type": "array",
           "items": {"$ref": "#/defs/feedItem"}
@@ -24,9 +25,8 @@
   "defs": {
     "feedItem": {
       "type": "object",
-      "required": ["cursor", "uri", "cid", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt"],
+      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt"],
       "properties": {
-        "cursor": {"type": "string"},
         "uri": {"type": "string"},
         "cid": {"type": "string"},
         "author": {"$ref": "#/defs/user"},

@@ -1,7 +1,13 @@
 import AdxApi, { ServiceClient as AdxServiceClient } from '@adxp/api'
 import { SeedClient } from '../seeds/client'
 import likesSeed from '../seeds/likes'
-import { CloseFn, constantDate, forSnapshot, runTestServer } from '../_util'
+import {
+  CloseFn,
+  constantDate,
+  forSnapshot,
+  paginateAll,
+  runTestServer,
+} from '../_util'
 
 describe('pds badge members view', () => {
   let client: AdxServiceClient
@@ -46,18 +52,26 @@ describe('pds badge members view', () => {
   })
 
   it('paginates', async () => {
+    const results = (results) => results.flatMap((res) => res.members)
+    const paginator = async (cursor?: string) => {
+      const res = await client.app.bsky.getBadgeMembers({
+        uri: sc.badges[bob][1].uriStr,
+        before: cursor,
+        limit: 2,
+      })
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.members.length).toBeLessThanOrEqual(2),
+    )
+
     const full = await client.app.bsky.getBadgeMembers({
       uri: sc.badges[bob][1].uriStr,
     })
 
     expect(full.data.members.length).toEqual(3)
-
-    const paginated = await client.app.bsky.getBadgeMembers({
-      uri: sc.badges[bob][1].uriStr,
-      before: full.data.members[0].acceptedAt,
-      limit: 1,
-    })
-
-    expect(paginated.data.members).toEqual(full.data.members.slice(1, 2))
+    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

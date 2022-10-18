@@ -540,6 +540,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         type: 'object',
         required: ['records'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           records: {
             type: 'array',
             items: {
@@ -792,6 +795,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         type: 'object',
         required: ['feed'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           feed: {
             type: 'array',
             items: {
@@ -803,7 +809,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           appBskyGetAuthorFeedFeedItem: {
             type: 'object',
             required: [
-              'cursor',
               'uri',
               'cid',
               'author',
@@ -814,9 +819,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               'indexedAt',
             ],
             properties: {
-              cursor: {
-                type: 'string',
-              },
               uri: {
                 type: 'string',
               },
@@ -942,7 +944,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       feedItem: {
         type: 'object',
         required: [
-          'cursor',
           'uri',
           'cid',
           'author',
@@ -953,9 +954,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           'indexedAt',
         ],
         properties: {
-          cursor: {
-            type: 'string',
-          },
           uri: {
             type: 'string',
           },
@@ -1109,6 +1107,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           cid: {
             type: 'string',
           },
+          cursor: {
+            type: 'string',
+          },
           members: {
             type: 'array',
             items: {
@@ -1164,6 +1165,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         type: 'object',
         required: ['feed'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           feed: {
             type: 'array',
             items: {
@@ -1175,7 +1179,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           appBskyGetHomeFeedFeedItem: {
             type: 'object',
             required: [
-              'cursor',
               'uri',
               'cid',
               'author',
@@ -1186,9 +1189,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               'indexedAt',
             ],
             properties: {
-              cursor: {
-                type: 'string',
-              },
               uri: {
                 type: 'string',
               },
@@ -1314,7 +1314,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       feedItem: {
         type: 'object',
         required: [
-          'cursor',
           'uri',
           'cid',
           'author',
@@ -1325,9 +1324,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           'indexedAt',
         ],
         properties: {
-          cursor: {
-            type: 'string',
-          },
           uri: {
             type: 'string',
           },
@@ -1481,6 +1477,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           cid: {
             type: 'string',
           },
+          cursor: {
+            type: 'string',
+          },
           likedBy: {
             type: 'array',
             items: {
@@ -1551,6 +1550,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         type: 'object',
         required: ['notifications'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           notifications: {
             type: 'array',
             items: {
@@ -2173,6 +2175,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           uri: {
             type: 'string',
           },
+          cid: {
+            type: 'string',
+          },
+          cursor: {
+            type: 'string',
+          },
           repostedBy: {
             type: 'array',
             items: {
@@ -2244,6 +2252,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 maxLength: 64,
               },
             },
+          },
+          cursor: {
+            type: 'string',
           },
           followers: {
             type: 'array',
@@ -2317,6 +2328,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               },
             },
           },
+          cursor: {
+            type: 'string',
+          },
           follows: {
             type: 'array',
             items: {
@@ -2373,11 +2387,14 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         type: 'object',
         required: ['users'],
         properties: {
+          cursor: {
+            type: 'string',
+          },
           users: {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name', 'createdAt', 'indexedAt', 'cursor'],
+              required: ['did', 'name', 'createdAt', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
@@ -2399,9 +2416,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 indexedAt: {
                   type: 'string',
                   format: 'date-time',
-                },
-                cursor: {
-                  type: 'string',
                 },
               },
             },
@@ -2565,7 +2579,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     id: 'app.bsky.badge',
     type: 'record',
     description: 'An assertion about the subject by this user.',
-    keyed: 'tid',
+    key: 'tid',
     record: {
       type: 'object',
       required: ['assertion', 'createdAt'],
@@ -2687,7 +2701,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     lexicon: 1,
     id: 'app.bsky.badgeAccept',
     type: 'record',
-    keyed: 'tid',
+    key: 'tid',
     record: {
       type: 'object',
       required: ['badge', 'offer', 'createdAt'],
@@ -2737,7 +2751,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     lexicon: 1,
     id: 'app.bsky.badgeOffer',
     type: 'record',
-    keyed: 'tid',
+    key: 'tid',
     record: {
       type: 'object',
       required: ['badge', 'subject', 'createdAt'],
@@ -2788,7 +2802,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     id: 'app.bsky.follow',
     type: 'record',
     description: 'A social follow',
-    keyed: 'tid',
+    key: 'tid',
     record: {
       type: 'object',
       required: ['subject', 'createdAt'],
@@ -2808,7 +2822,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     lexicon: 1,
     id: 'app.bsky.like',
     type: 'record',
-    keyed: 'tid',
+    key: 'tid',
     record: {
       type: 'object',
       required: ['subject', 'createdAt'],
@@ -2856,7 +2870,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     id: 'app.bsky.mediaEmbed',
     type: 'record',
     description: 'A list of media embedded in a post or document.',
-    keyed: 'tid',
+    key: 'tid',
     record: {
       type: 'object',
       required: ['media'],
@@ -2932,7 +2946,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     lexicon: 1,
     id: 'app.bsky.post',
     type: 'record',
-    keyed: 'tid',
+    key: 'tid',
     record: {
       type: 'object',
       required: ['text', 'createdAt'],
@@ -3060,7 +3074,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     lexicon: 1,
     id: 'app.bsky.profile',
     type: 'record',
-    keyed: 'literal:self',
+    key: 'literal:self',
     record: {
       type: 'object',
       required: ['displayName'],
@@ -3114,7 +3128,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     lexicon: 1,
     id: 'app.bsky.repost',
     type: 'record',
-    keyed: 'tid',
+    key: 'tid',
     record: {
       type: 'object',
       required: ['subject', 'createdAt'],

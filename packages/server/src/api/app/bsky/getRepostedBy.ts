@@ -48,7 +48,9 @@ export default function (server: Server) {
         encoding: 'application/json',
         body: {
           uri,
+          cid,
           repostedBy,
+          cursor: repostedBy.at(-1)?.createdAt,
         },
       }
     },

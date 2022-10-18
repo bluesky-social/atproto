@@ -44,7 +44,9 @@ export function constructMethodCallUri(
       if (!paramSchema) {
         throw new Error(`Invalid query parameter: ${key}`)
       }
-      uri.searchParams.set(key, encodeQueryParam(paramSchema.type, value))
+      if (value !== undefined) {
+        uri.searchParams.set(key, encodeQueryParam(paramSchema.type, value))
+      }
     }
   }
 

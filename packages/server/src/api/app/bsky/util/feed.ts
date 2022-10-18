@@ -4,7 +4,6 @@ import * as GetHomeFeed from '../../../../lexicon/types/app/bsky/getHomeFeed'
 // Present post and repost results into FeedItems
 // @TODO add embeds
 export const rowToFeedItem = (row: FeedRow): FeedItem => ({
-  cursor: row.cursor,
   uri: row.postUri,
   cid: row.postCid,
   author: {

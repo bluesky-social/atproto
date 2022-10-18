@@ -58,10 +58,15 @@ export default function (server: Server) {
       after,
     )
 
+    const lastRecord = records.at(-1)
+    const lastUri = lastRecord && new AdxUri(lastRecord?.uri)
+
     return {
       encoding: 'application/json',
       body: {
         records,
+        // Paginate with `before` by default, paginate with `after` when using `reverse`.
+        cursor: lastUri?.rkey,
       },
     }
   })
@@ -159,7 +164,7 @@ export default function (server: Server) {
     }
 
     // determine key type. if undefined, repo assigns a TID
-    const keyType = schemas.recordSchemaDict[collection]?.keyed
+    const keyType = schemas.recordSchemaDict[collection]?.key
     let recordKey: string | undefined
     if (keyType && keyType.startsWith('literal')) {
       const split = keyType.split(':')

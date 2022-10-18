@@ -119,7 +119,13 @@ export default function (server: Server) {
       const queryRes = await postsAndRepostsQb.execute()
       const feed = queryRes.map(rowToFeedItem)
 
-      return { encoding: 'application/json', body: { feed } }
+      return {
+        encoding: 'application/json',
+        body: {
+          feed,
+          cursor: queryRes.at(-1)?.cursor,
+        },
+      }
     },
   )
 }
