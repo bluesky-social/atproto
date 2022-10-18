@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import assert from 'assert'
 import { randomBytes } from '@adxp/crypto'
 import { InvalidRequestError } from '@adxp/xrpc-server'
 import { Repo } from '@adxp/repo'
@@ -6,7 +6,8 @@ import { PlcClient } from '@adxp/plc'
 import * as uint8arrays from 'uint8arrays'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
-import { countAll } from '../../../db/util'
+import { countAll, keys, selectValues, vals } from '../../../db/util'
+import { UserAlreadyExistsError } from '../../../db'
 
 export default function (server: Server) {
   server.com.atproto.getAccountsConfig((_params, _input, _req, res) => {
@@ -39,7 +40,7 @@ export default function (server: Server) {
     // In order to perform the significant db updates ahead of
     // registering the did, we will use a temp invalid did. Once everything
     // goes well and a fresh did is registered, we'll replace the temp values.
-    const tempDid = uint8arrays.toString(randomBytes(16), 'base32') // TODO handle replacement
+    const tempDid = uint8arrays.toString(randomBytes(16), 'base32')
     const now = new Date().toISOString()
 
     const { did, isTestUser } = await db.transaction(async (dbTxn) => {
@@ -51,16 +52,19 @@ export default function (server: Server) {
           )
         }
 
+        const codeUse = {
+          code: inviteCode,
+          usedBy: tempDid,
+          usedAt: now,
+        }
+
         const insertedCodeUse = await dbTxn.db
           .insertInto('invite_code_use')
-          .columns(['code', 'usedBy', 'usedAt'])
-          .expression(
-            dbTxn.db
-              .selectFrom(
-                sql`(values (${inviteCode}, ${tempDid}, ${now}))`.as('v'),
-              )
-              .selectAll()
-              .whereExists(validInviteQuery(dbTxn, inviteCode)),
+          .columns(keys(codeUse))
+          .expression((eb) =>
+            selectValues(eb, vals(codeUse)).whereExists(
+              validInviteQuery(dbTxn, inviteCode),
+            ),
           )
           .returning('code')
           .executeTakeFirst()
@@ -73,6 +77,8 @@ export default function (server: Server) {
           )
         }
       }
+
+      // Validate username
 
       if (username.startsWith('did:')) {
         throw new InvalidRequestError(
@@ -91,21 +97,24 @@ export default function (server: Server) {
         isTestUser = true
       }
 
-      // verify username and email are available.
+      // Pre-register user before going out to PLC to get a real did
 
-      // @TODO consider pushing this to the db, and checking for a
-      // uniqueness error during registerUser(). Main blocker to doing
-      // that now is that we need to create a did prior to registration.
-
-      const foundUsername = await dbTxn.getUser(username)
-      if (foundUsername !== null) {
-        throw new InvalidRequestError(`Username already taken: ${username}`)
+      try {
+        await dbTxn.preRegisterUser(email, username, tempDid, password)
+      } catch (err) {
+        if (err instanceof UserAlreadyExistsError) {
+          if ((await dbTxn.getUser(username)) !== null) {
+            throw new InvalidRequestError(`Username already taken: ${username}`)
+          } else if ((await dbTxn.getUserByEmail(email)) !== null) {
+            throw new InvalidRequestError(`Email already taken: ${email}`)
+          } else {
+            throw new InvalidRequestError('Username or email already taken')
+          }
+        }
+        throw err
       }
 
-      const foundEmail = await dbTxn.getUserByEmail(email)
-      if (foundEmail !== null) {
-        throw new InvalidRequestError(`Email already taken: ${email}`)
-      }
+      // Generate a real did with PLC
 
       const plcClient = new PlcClient(config.didPlcUrl)
       let did: string
@@ -124,12 +133,27 @@ export default function (server: Server) {
         throw err
       }
 
-      await dbTxn.registerUser(email, username, did, password)
+      // Now that we have a real did, we now replace the tempDid in user and invite_code_use
+      // tables, and setup the repo root. These all _should_ succeed under typical conditions.
+      // It's about as good as we're gonna get transactionally, given that we rely on PLC here to assign the did.
 
+      await dbTxn.postRegisterUser(tempDid, did)
+      if (config.inviteRequired) {
+        const updated = await dbTxn.db
+          .updateTable('invite_code_use')
+          .where('usedBy', '=', tempDid)
+          .set({ usedBy: did })
+          .executeTakeFirst()
+        assert(
+          Number(updated.numUpdatedRows) === 1,
+          'Should act on exactly one invite code use',
+        )
+      }
+
+      // Setup repo root
       const authStore = locals.getAuthstore(res, did)
       const repo = await Repo.create(blockstore, did, authStore)
 
-      // @TODO transactionalize this
       await dbTxn.db
         .insertInto('repo_root')
         .values({

@@ -27,7 +27,7 @@ import { dbLogger as log } from '../logger'
 import { DatabaseSchema, createTables } from './database-schema'
 import * as scrypt from './scrypt'
 import { User } from './tables/user'
-import { dummyDialect } from './util'
+import { dummyDialect, keys, selectValues, vals } from './util'
 
 export class Database {
   db: Kysely<DatabaseSchema>
@@ -181,23 +181,55 @@ export class Database {
     return found ? found.did : null
   }
 
-  async registerUser(
+  // Registration occurs in two steps:
+  // - pre-registration, we setup the account with an invalid, temporary did which is only visible in a transaction.
+  // - post-registration, we replace the temporary did with the user's newly-generated valid did.
+
+  async preRegisterUser(
     email: string,
     username: string,
-    did: string,
+    tempDid: string,
     password: string,
   ) {
-    log.debug({ username, did, email }, 'registering user')
+    this.assertTransaction()
+    log.debug({ username, email, tempDid }, 'pre-registering user')
     const user = {
       email: email,
       username: username,
-      did: did,
+      did: tempDid,
       password: await scrypt.hash(password),
       createdAt: new Date().toISOString(),
       lastSeenNotifs: new Date().toISOString(),
     }
-    await this.db.insertInto('user').values(user).execute()
-    log.info({ username, did, email }, 'registered user')
+    const inserted = await this.db
+      .insertInto('user')
+      .columns(keys(user))
+      .expression((eb) =>
+        selectValues(eb, vals(user)).whereNotExists(
+          userByUsernameOrEmailQuery(this, { username, email }),
+        ),
+      )
+      .returning('did')
+      .executeTakeFirst()
+    if (!inserted) {
+      throw new UserAlreadyExistsError()
+    }
+    log.info({ username, email, tempDid }, 'pre-registered user')
+  }
+
+  async postRegisterUser(tempDid: string, did: string) {
+    this.assertTransaction()
+    log.debug({ tempDid, did }, 'post-registering user')
+    const updated = await this.db
+      .updateTable('user')
+      .where('did', '=', tempDid)
+      .set({ did })
+      .executeTakeFirst()
+    assert(
+      Number(updated.numUpdatedRows) === 1,
+      'Post-register should act on exactly one user',
+    )
+    log.info({ tempDid, did }, 'post-registered user')
   }
 
   async updateUserPassword(did: string, password: string) {
@@ -364,3 +396,18 @@ export type Dialect = 'pg' | 'sqlite'
 
 // Can use with typeof to get types for partial queries
 export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })
+
+export class UserAlreadyExistsError extends Error {}
+
+const userByUsernameOrEmailQuery = (
+  db: Database,
+  vals: { username: string; email: string },
+) => {
+  const { username, email } = vals
+  const { ref } = db.db.dynamic
+  return db.db
+    .selectFrom('user')
+    .selectAll()
+    .where(sql`UPPER(${ref('email')})`, '=', email.toUpperCase())
+    .orWhere(sql`UPPER(${ref('username')})`, '=', username.toUpperCase())
+}
