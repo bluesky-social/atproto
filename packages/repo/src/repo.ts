@@ -1,22 +1,19 @@
 import { CID } from 'multiformats/cid'
-import { CarReader, CarWriter } from '@ipld/car'
+import { CarReader } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import {
   RepoRoot,
   Commit,
-  def,
   CidWriteOp,
-  RecordWriteOp,
   DataStore,
   RepoMeta,
+  RecordWriteOp,
 } from './types'
-import { streamToArray } from '@atproto/common'
 import IpldStore from './blockstore/ipld-store'
 import * as auth from '@atproto/auth'
 import { DataDiff } from './mst'
 import Collection from './collection'
 import * as verify from './verify'
-import * as util from './util'
 import log from './logger'
 import RepoStructure from './structure'
 
@@ -143,6 +140,27 @@ export class Repo {
     })
   }
 
+  async batchWrite(writes: RecordWriteOp[]) {
+    if (!this.authStore) {
+      throw new Error('No provided AuthStore')
+    }
+    const cidOps = await Promise.all(
+      writes.map(async (write) => {
+        if (write.action === 'create' || write.action === 'update') {
+          return {
+            action: write.action,
+            collection: write.collection,
+            rkey: write.rkey,
+            cid: await this.blockstore.put(write.value),
+          }
+        } else {
+          return write
+        }
+      }),
+    )
+    await this.safeCommit(cidOps)
+  }
+
   async revert(count: number): Promise<void> {
     const revertFrom = this.structure.cid
     this.structure = await this.structure.revert(count)
@@ -168,7 +186,7 @@ export class Repo {
   // loads car files, verifies structure, signature & auth on each commit
   // emits semantic updates to the structure starting from oldest first
   async loadAndVerifyDiff(buf: Uint8Array): Promise<DataDiff> {
-    const root = await this.loadCar(buf)
+    const root = await this.blockstore.loadCar(buf)
     const diff = await verify.verifyUpdates(
       this.blockstore,
       this.cid,
@@ -182,59 +200,25 @@ export class Repo {
   // CAR FILES
   // -----------
 
-  async loadCar(buf: Uint8Array): Promise<CID> {
-    const car = await CarReader.fromBytes(buf)
-    const roots = await car.getRoots()
-    if (roots.length !== 1) {
-      throw new Error(`Expected one root, got ${roots.length}`)
-    }
-    const rootCid = roots[0]
-    for await (const block of car.blocks()) {
-      await this.blockstore.putBytes(block.cid, block.bytes)
-    }
-    return rootCid
-  }
-
   async loadCarRoot(buf: Uint8Array): Promise<void> {
-    const root = await this.loadCar(buf)
+    const root = await this.blockstore.loadCar(buf)
     await this.loadRoot(root)
   }
 
   async getCarNoHistory(): Promise<Uint8Array> {
-    return this.openCar((car: BlockWriter) => {
-      return this.writeCheckoutToCarStream(car)
-    })
+    return this.structure.getCarNoHistory()
   }
 
   async getDiffCar(to: CID | null): Promise<Uint8Array> {
-    return this.openCar((car: BlockWriter) => {
-      return this.writeCommitsToCarStream(car, to, this.cid)
-    })
+    return this.structure.getDiffCar(to)
   }
 
   async getFullHistory(): Promise<Uint8Array> {
-    return this.getDiffCar(null)
-  }
-
-  private async openCar(
-    fn: (car: BlockWriter) => Promise<void>,
-  ): Promise<Uint8Array> {
-    const { writer, out } = CarWriter.create([this.cid])
-    await fn(writer)
-    writer.close()
-    return streamToArray(out)
+    return this.structure.getFullHistory()
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    const commit = await this.blockstore.get(this.cid, def.commit)
-    const root = await this.blockstore.get(commit.root, def.repoRoot)
-    await this.blockstore.addToCar(car, this.cid)
-    await this.blockstore.addToCar(car, commit.root)
-    await this.blockstore.addToCar(car, root.meta)
-    if (root.auth_token) {
-      await this.blockstore.addToCar(car, root.auth_token)
-    }
-    await this.data.writeToCarStream(car)
+    return this.structure.writeCheckoutToCarStream(car)
   }
 
   async writeCommitsToCarStream(
@@ -242,39 +226,11 @@ export class Repo {
     oldestCommit: CID | null,
     recentCommit: CID,
   ): Promise<void> {
-    const commitPath = await util.getCommitPath(
-      this.blockstore,
+    return this.structure.writeCommitsToCarStream(
+      car,
       oldestCommit,
       recentCommit,
     )
-    if (commitPath === null) {
-      throw new Error('Could not find shared history')
-    }
-    if (commitPath.length === 0) return
-    const firstHeadInPath = await Repo.load(this.blockstore, commitPath[0])
-    // handle the first commit
-    let prevHead: Repo | null =
-      firstHeadInPath.root.prev !== null
-        ? await Repo.load(this.blockstore, firstHeadInPath.root.prev)
-        : null
-    for (const commit of commitPath) {
-      const nextHead = await Repo.load(this.blockstore, commit)
-      await this.blockstore.addToCar(car, nextHead.cid)
-      await this.blockstore.addToCar(car, nextHead.commit.root)
-      await this.blockstore.addToCar(car, nextHead.root.meta)
-      if (nextHead.root.auth_token) {
-        await this.blockstore.addToCar(car, nextHead.root.auth_token)
-      }
-      if (prevHead === null) {
-        await nextHead.data.writeToCarStream(car)
-      } else {
-        const diff = await prevHead.data.diff(nextHead.data)
-        await Promise.all(
-          diff.newCidList().map((cid) => this.blockstore.addToCar(car, cid)),
-        )
-      }
-      prevHead = nextHead
-    }
   }
 }
 
