@@ -1,7 +1,6 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
-import * as repoLib from '@atproto/repo'
 import * as didResolver from '@atproto/did-resolver'
 import * as repoDiff from '../../../repo-diff'
 import * as locals from '../../../locals'

@@ -122,6 +122,13 @@ export class RepoStructure {
     return this.meta.did
   }
 
+  async getRecord(collection: string, rkey: string): Promise<unknown | null> {
+    const dataKey = collection + '/' + rkey
+    const cid = await this.data.get(dataKey)
+    if (!cid) return null
+    return this.blockstore.getUnchecked(cid)
+  }
+
   stageUpdate(write: CidWriteOp | CidWriteOp[]): RepoStructure {
     const writeArr = Array.isArray(write) ? write : [write]
     return this.updateRepo({
