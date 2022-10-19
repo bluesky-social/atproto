@@ -131,7 +131,7 @@ export class RepoStructure {
 
   async createCommit(
     authStore: auth.AuthStore,
-    performUpdate?: (old: CID, curr: CID) => Promise<boolean>,
+    performUpdate?: (prev: CID, curr: CID) => Promise<CID | null>,
   ): Promise<RepoStructure> {
     let data = this.data
     for (const write of this.stagedWrites) {
@@ -166,9 +166,10 @@ export class RepoStructure {
     const commitCid = await this.blockstore.put(commit)
 
     if (performUpdate) {
-      const shouldRetry = await performUpdate(this.cid, commitCid)
-      if (shouldRetry) {
-        return this.createCommit(authStore, performUpdate)
+      const rebaseOn = await performUpdate(this.cid, commitCid)
+      if (rebaseOn) {
+        const rebaseRepo = await RepoStructure.load(this.blockstore, rebaseOn)
+        return rebaseRepo.createCommit(authStore, performUpdate)
       }
     }
 

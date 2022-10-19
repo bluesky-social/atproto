@@ -134,9 +134,9 @@ export class Repo {
       throw new Error('No provided AuthStore')
     }
     const staged = await this.structure.stageUpdate(write)
-    this.structure = await staged.createCommit(this.authStore, async (old) => {
-      if (!this.cid.equals(old)) return true
-      return false
+    this.structure = await staged.createCommit(this.authStore, async (prev) => {
+      if (!this.cid.equals(prev)) return this.cid
+      return null
     })
   }
 
