@@ -183,16 +183,20 @@ export class Repo {
   // VERIFYING UPDATES
   // -----------
 
+  async verifyUpdates(earliest: CID | null, latest: CID): Promise<DataDiff> {
+    return verify.verifyUpdates(
+      this.blockstore,
+      earliest,
+      latest,
+      this.verifier,
+    )
+  }
+
   // loads car files, verifies structure, signature & auth on each commit
   // emits semantic updates to the structure starting from oldest first
   async loadAndVerifyDiff(buf: Uint8Array): Promise<DataDiff> {
     const root = await this.blockstore.loadCar(buf)
-    const diff = await verify.verifyUpdates(
-      this.blockstore,
-      this.cid,
-      root,
-      this.verifier,
-    )
+    const diff = await this.verifyUpdates(this.cid, root)
     await this.loadRoot(root)
     return diff
   }
