@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
-import { CarReader, CarWriter } from '@ipld/car'
+import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
-import { RepoRoot, Commit, def, BatchWrite, DataStore, RepoMeta } from './types'
+import { RepoRoot, Commit, def, CidWriteOp, DataStore, RepoMeta } from './types'
 import { streamToArray } from '@atproto/common'
 import IpldStore from './blockstore/ipld-store'
 import * as auth from '@atproto/auth'
@@ -16,17 +16,17 @@ type Params = {
   root: RepoRoot
   meta: RepoMeta
   cid: CID
-  stagedWrites: BatchWrite[]
+  stagedWrites: CidWriteOp[]
 }
 
-export class ImmutableRepo {
+export class RepoStructure {
   blockstore: IpldStore
   data: DataStore
   commit: Commit
   root: RepoRoot
   meta: RepoMeta
   cid: CID
-  stagedWrites: BatchWrite[]
+  stagedWrites: CidWriteOp[]
 
   constructor(params: Params) {
     this.blockstore = params.blockstore
@@ -35,13 +35,14 @@ export class ImmutableRepo {
     this.root = params.root
     this.meta = params.meta
     this.cid = params.cid
+    this.stagedWrites = params.stagedWrites
   }
 
   static async create(
     blockstore: IpldStore,
     did: string,
     authStore: auth.AuthStore,
-  ): Promise<ImmutableRepo> {
+  ): Promise<RepoStructure> {
     let tokenCid: CID | null = null
     if (!(await authStore.canSignForDid(did))) {
       const foundUcan = await authStore.findUcan(auth.maintenanceCap(did))
@@ -77,7 +78,7 @@ export class ImmutableRepo {
     const cid = await blockstore.put(commit)
 
     log.info({ did }, `created repo`)
-    return new ImmutableRepo({
+    return new RepoStructure({
       blockstore,
       data,
       commit,
@@ -94,7 +95,7 @@ export class ImmutableRepo {
     const meta = await blockstore.get(root.meta, def.repoMeta)
     const data = await MST.load(blockstore, root.data)
     log.info({ did: meta.did }, 'loaded repo for')
-    return new ImmutableRepo({
+    return new RepoStructure({
       blockstore,
       data,
       commit,
@@ -105,8 +106,8 @@ export class ImmutableRepo {
     })
   }
 
-  private updateRepo(params: Partial<Params>): ImmutableRepo {
-    return new ImmutableRepo({
+  private updateRepo(params: Partial<Params>): RepoStructure {
+    return new RepoStructure({
       blockstore: params.blockstore || this.blockstore,
       data: params.data || this.data,
       commit: params.commit || this.commit,
@@ -121,7 +122,7 @@ export class ImmutableRepo {
     return this.meta.did
   }
 
-  stageUpdate(write: BatchWrite | BatchWrite[]): ImmutableRepo {
+  stageUpdate(write: CidWriteOp | CidWriteOp[]): RepoStructure {
     const writeArr = Array.isArray(write) ? write : [write]
     return this.updateRepo({
       stagedWrites: [...this.stagedWrites, ...writeArr],
@@ -130,18 +131,16 @@ export class ImmutableRepo {
 
   async createCommit(
     authStore: auth.AuthStore,
-    performUpdate: (old: CID, curr: CID) => Promise<boolean>,
-  ): Promise<ImmutableRepo> {
+    performUpdate?: (old: CID, curr: CID) => Promise<boolean>,
+  ): Promise<RepoStructure> {
     let data = this.data
     for (const write of this.stagedWrites) {
       if (write.action === 'create') {
         const dataKey = write.collection + '/' + write.rkey
-        const cid = await this.blockstore.put(write.value)
-        data = await data.add(dataKey, cid)
+        data = await data.add(dataKey, write.cid)
       } else if (write.action === 'update') {
-        const cid = await this.blockstore.put(write.value)
         const dataKey = write.collection + '/' + write.rkey
-        data = await data.update(dataKey, cid)
+        data = await data.update(dataKey, write.cid)
       } else if (write.action === 'delete') {
         const dataKey = write.collection + '/' + write.rkey
         data = await data.delete(dataKey)
@@ -166,20 +165,23 @@ export class ImmutableRepo {
     }
     const commitCid = await this.blockstore.put(commit)
 
-    const shouldRetry = await performUpdate(this.cid, commitCid)
-    if (shouldRetry) {
-      return this.createCommit(authStore, performUpdate)
+    if (performUpdate) {
+      const shouldRetry = await performUpdate(this.cid, commitCid)
+      if (shouldRetry) {
+        return this.createCommit(authStore, performUpdate)
+      }
     }
 
     return this.updateRepo({
       cid: commitCid,
       root,
       commit,
+      data,
       stagedWrites: [],
     })
   }
 
-  async revert(count: number): Promise<ImmutableRepo> {
+  async revert(count: number): Promise<RepoStructure> {
     let revertTo = this.cid
     for (let i = 0; i < count; i++) {
       const commit = await this.blockstore.get(revertTo, def.commit)
@@ -189,24 +191,11 @@ export class ImmutableRepo {
       }
       revertTo = root.prev
     }
-    return ImmutableRepo.load(this.blockstore, revertTo)
+    return RepoStructure.load(this.blockstore, revertTo)
   }
 
   // CAR FILES
   // -----------
-
-  async loadCar(buf: Uint8Array): Promise<CID> {
-    const car = await CarReader.fromBytes(buf)
-    const roots = await car.getRoots()
-    if (roots.length !== 1) {
-      throw new Error(`Expected one root, got ${roots.length}`)
-    }
-    const rootCid = roots[0]
-    for await (const block of car.blocks()) {
-      await this.blockstore.putBytes(block.cid, block.bytes)
-    }
-    return rootCid
-  }
 
   async getCarNoHistory(): Promise<Uint8Array> {
     return this.openCar((car: BlockWriter) => {
@@ -259,17 +248,17 @@ export class ImmutableRepo {
       throw new Error('Could not find shared history')
     }
     if (commitPath.length === 0) return
-    const firstHeadInPath = await ImmutableRepo.load(
+    const firstHeadInPath = await RepoStructure.load(
       this.blockstore,
       commitPath[0],
     )
     // handle the first commit
-    let prevHead: ImmutableRepo | null =
+    let prevHead: RepoStructure | null =
       firstHeadInPath.root.prev !== null
-        ? await ImmutableRepo.load(this.blockstore, firstHeadInPath.root.prev)
+        ? await RepoStructure.load(this.blockstore, firstHeadInPath.root.prev)
         : null
     for (const commit of commitPath) {
-      const nextHead = await ImmutableRepo.load(this.blockstore, commit)
+      const nextHead = await RepoStructure.load(this.blockstore, commit)
       await this.blockstore.addToCar(car, nextHead.cid)
       await this.blockstore.addToCar(car, nextHead.commit.root)
       await this.blockstore.addToCar(car, nextHead.root.meta)
@@ -289,4 +278,4 @@ export class ImmutableRepo {
   }
 }
 
-export default ImmutableRepo
+export default RepoStructure

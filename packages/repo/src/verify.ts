@@ -1,12 +1,12 @@
 import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
 import { IpldStore } from './blockstore'
-import { ImmutableRepo } from './immutable'
+import { RepoStructure } from './structure'
 import { DataDiff } from './mst'
 import * as util from './util'
 import { def } from './types'
 
-export const verifySetOfUpdates = async (
+export const verifyUpdates = async (
   blockstore: IpldStore,
   earliest: CID | null,
   latest: CID,
@@ -18,9 +18,9 @@ export const verifySetOfUpdates = async (
   }
   const fullDiff = new DataDiff()
   if (commitPath.length === 0) return fullDiff
-  let prevRepo = await ImmutableRepo.load(blockstore, commitPath[0])
+  let prevRepo = await RepoStructure.load(blockstore, commitPath[0])
   for (const commit of commitPath.slice(1)) {
-    const nextRepo = await ImmutableRepo.load(blockstore, commit)
+    const nextRepo = await RepoStructure.load(blockstore, commit)
     const diff = await prevRepo.data.diff(nextRepo.data)
 
     if (!nextRepo.root.meta.equals(prevRepo.root.meta)) {

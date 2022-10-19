@@ -54,12 +54,15 @@ export class Collection {
   ): Promise<{ rkey: string; cid: CID }> {
     const recordKey = rkey || TID.nextStr()
     const cid = await this.repo.blockstore.put(record as any)
-    await this.repo.safeCommit(async (data) => {
-      return data.add(this.dataIdForRecord(recordKey), cid)
+    await this.repo.safeCommit({
+      action: 'create',
+      collection: this.nsid.toString(),
+      rkey: recordKey,
+      cid,
     })
     log.info(
       {
-        did: this.repo.did(),
+        did: this.repo.did,
         collection: this.name(),
         rkey: recordKey,
       },
@@ -70,12 +73,15 @@ export class Collection {
 
   async updateRecord(rkey: string, record: unknown): Promise<CID> {
     const cid = await this.repo.blockstore.put(record as any)
-    await this.repo.safeCommit(async (data) => {
-      return data.update(this.dataIdForRecord(rkey), cid)
+    await this.repo.safeCommit({
+      action: 'update',
+      collection: this.nsid.toString(),
+      rkey,
+      cid,
     })
     log.info(
       {
-        did: this.repo.did(),
+        did: this.repo.did,
         collection: this.name(),
         rkey,
       },
@@ -85,12 +91,14 @@ export class Collection {
   }
 
   async deleteRecord(rkey: string): Promise<void> {
-    await this.repo.safeCommit(async (data) => {
-      return data.delete(this.dataIdForRecord(rkey))
+    await this.repo.safeCommit({
+      action: 'delete',
+      collection: this.nsid.toString(),
+      rkey,
     })
     log.info(
       {
-        did: this.repo.did(),
+        did: this.repo.did,
         collection: this.name(),
         rkey,
       },

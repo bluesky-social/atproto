@@ -1,7 +1,15 @@
 import { CID } from 'multiformats/cid'
 import { CarReader, CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
-import { RepoRoot, Commit, def, BatchWrite, DataStore, RepoMeta } from './types'
+import {
+  RepoRoot,
+  Commit,
+  def,
+  CidWriteOp,
+  RecordWriteOp,
+  DataStore,
+  RepoMeta,
+} from './types'
 import { streamToArray } from '@atproto/common'
 import IpldStore from './blockstore/ipld-store'
 import * as auth from '@atproto/auth'
@@ -10,22 +18,22 @@ import Collection from './collection'
 import * as verify from './verify'
 import * as util from './util'
 import log from './logger'
-import ImmutableRepo from './immutable'
+import RepoStructure from './structure'
 
 export class Repo {
   blockstore: IpldStore
-  _repo: ImmutableRepo
+  structure: RepoStructure
   authStore: auth.AuthStore | null
   verifier: auth.Verifier
 
   constructor(params: {
     blockstore: IpldStore
-    repo: ImmutableRepo
+    structure: RepoStructure
     authStore: auth.AuthStore | undefined
     verifier: auth.Verifier | undefined
   }) {
     this.blockstore = params.blockstore
-    this._repo = params.repo
+    this.structure = params.structure
     this.authStore = params.authStore || null
     this.verifier = params.verifier ?? new auth.Verifier()
   }
@@ -36,12 +44,12 @@ export class Repo {
     authStore: auth.AuthStore,
     verifier?: auth.Verifier,
   ): Promise<Repo> {
-    const repo = await ImmutableRepo.create(blockstore, did, authStore)
+    const structure = await RepoStructure.create(blockstore, did, authStore)
 
     log.info({ did }, `created repo`)
     return new Repo({
       blockstore,
-      repo,
+      structure,
       authStore,
       verifier,
     })
@@ -53,11 +61,11 @@ export class Repo {
     verifier?: auth.Verifier,
     authStore?: auth.AuthStore,
   ) {
-    const repo = await ImmutableRepo.load(blockstore, cid)
-    log.info({ did: repo.meta.did }, 'loaded repo for')
+    const structure = await RepoStructure.load(blockstore, cid)
+    log.info({ did: structure.meta.did }, 'loaded repo for')
     return new Repo({
       blockstore,
-      repo,
+      structure,
       authStore,
       verifier,
     })
@@ -84,7 +92,7 @@ export class Repo {
 
     const repo = await Repo.load(blockstore, root, verifier, authStore)
     if (verifyAuthority && verifier) {
-      await verify.verifySetOfUpdates(blockstore, null, repo.cid, verifier)
+      await verify.verifyUpdates(blockstore, null, repo.cid, verifier)
     }
     return repo
   }
@@ -94,23 +102,23 @@ export class Repo {
   }
 
   get data(): DataStore {
-    return this._repo.data
+    return this.structure.data
   }
 
   get commit(): Commit {
-    return this._repo.commit
+    return this.structure.commit
   }
 
   get root(): RepoRoot {
-    return this._repo.root
+    return this.structure.root
   }
 
   get meta(): RepoMeta {
-    return this._repo.meta
+    return this.structure.meta
   }
 
   get cid(): CID {
-    return this._repo.cid
+    return this.structure.cid
   }
 
   getCollection(name: string): Collection {
@@ -122,78 +130,27 @@ export class Repo {
     return new Collection(this, name)
   }
 
-  // // The repo is mutable & things can change while you perform an operation
-  // // Ensure that the root of the repo has not changed so that you don't get local branching
-  // async safeCommit(
-  //   mutation: (data: DataStore) => Promise<DataStore>,
-  // ): Promise<void> {
-  //   if (this.authStore === null) {
-  //     throw new Error('No keypair provided. Repo is read-only.')
-  //   }
-  //   const currentCommit = this.cid
-  //   const updatedData = await mutation(this.data)
-  //   // if we're signing with the root key, we don't need an auth token
-  //   const tokenCid = (await this.authStore.canSignForDid(this.did()))
-  //     ? null
-  //     : await this.ucanForOperation(updatedData)
-  //   const dataCid = await updatedData.save()
-  //   const root: RepoRoot = {
-  //     meta: this.root.meta,
-  //     prev: currentCommit,
-  //     auth_token: tokenCid,
-  //     data: dataCid,
-  //   }
-  //   const rootCid = await this.blockstore.put(root)
-  //   const commit: Commit = {
-  //     root: rootCid,
-  //     sig: await this.authStore.sign(rootCid.bytes),
-  //   }
-  //   const commitCid = await this.blockstore.put(commit)
-  //   // If the root of the repo has changed, retry
-  //   if (!this.cid.equals(currentCommit)) {
-  //     return this.safeCommit(mutation)
-  //   }
-  //   this.cid = commitCid
-  //   this.data = updatedData
-
-  //   log.info(
-  //     {
-  //       did: this.did(),
-  //       prev: currentCommit.toString(),
-  //       commit: commitCid.toString(),
-  //     },
-  //     'created commit',
-  //   )
-  // }
-
-  async batchWrite(writes: BatchWrite[]) {
+  // The repo is mutable & things can change while you perform an operation
+  // Ensure that the root of the repo has not changed so that you don't get local branching
+  async safeCommit(write: CidWriteOp | CidWriteOp[]) {
     if (!this.authStore) {
       throw new Error('No provided AuthStore')
     }
-    const staged = await this._repo.stageUpdate(writes)
-    this._repo = await staged.createCommit(this.authStore, async (old) => {
+    const staged = await this.structure.stageUpdate(write)
+    this.structure = await staged.createCommit(this.authStore, async (old) => {
       if (!this.cid.equals(old)) return true
       return false
     })
   }
 
   async revert(count: number): Promise<void> {
-    const revertFrom = this.cid
-    let revertTo = this.cid
-    for (let i = 0; i < count; i++) {
-      const commit = await this.blockstore.get(revertTo, def.commit)
-      const root = await this.blockstore.get(commit.root, def.repoRoot)
-      if (root.prev === null) {
-        throw new Error(`Could not revert ${count} commits`)
-      }
-      revertTo = root.prev
-    }
-    await this.loadRoot(revertTo)
+    const revertFrom = this.structure.cid
+    this.structure = await this.structure.revert(count)
     log.info(
       {
         did: this.did,
         from: revertFrom.toString(),
-        to: revertTo.toString(),
+        to: this.structure.cid.toString(),
       },
       'revert repo',
     )
@@ -202,7 +159,7 @@ export class Repo {
   // ROOT OPERATIONS
   // -----------
   async loadRoot(newRoot: CID): Promise<void> {
-    this._repo = await ImmutableRepo.load(this.blockstore, newRoot)
+    this.structure = await RepoStructure.load(this.blockstore, newRoot)
   }
 
   // VERIFYING UPDATES
@@ -212,7 +169,7 @@ export class Repo {
   // emits semantic updates to the structure starting from oldest first
   async loadAndVerifyDiff(buf: Uint8Array): Promise<DataDiff> {
     const root = await this.loadCar(buf)
-    const diff = await verify.verifySetOfUpdates(
+    const diff = await verify.verifyUpdates(
       this.blockstore,
       this.cid,
       root,
