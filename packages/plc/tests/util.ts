@@ -12,13 +12,13 @@ export const runTestServer = async (opts: {
 
   const db =
     dbPostgresUrl !== undefined
-      ? await Database.postgres({
+      ? Database.postgres({
           url: dbPostgresUrl,
           schema: dbPostgresSchema,
         })
-      : await Database.memory()
+      : Database.memory()
 
-  await db.createTables()
+  await db.migrateToLatestOrThrow()
   const s = server(db, port)
   return async () => {
     await db.close()

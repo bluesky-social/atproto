@@ -1,4 +1,10 @@
-import { Kysely, PostgresDialect, SqliteDialect } from 'kysely'
+import {
+  Kysely,
+  KyselyConfig,
+  Migrator,
+  PostgresDialect,
+  SqliteDialect,
+} from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { CID } from 'multiformats/cid'
@@ -6,33 +12,32 @@ import { cidForData } from '@atproto/common'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
 import { ServerError } from './error'
-
-interface OperationsTable {
-  did: string
-  operation: string
-  cid: string
-  nullified: 0 | 1
-  createdAt: string
-}
-
-interface DatabaseSchema {
-  operations: OperationsTable
-}
+import * as migrations from './migrations'
 
 export class Database {
+  migrator: Migrator
   constructor(
-    public db: Kysely<DatabaseSchema>,
-    public dialect: Dialect,
+    public db: KyselyWithDialect<DatabaseSchema>,
     public schema?: string,
-  ) {}
+  ) {
+    this.migrator = new Migrator({
+      db,
+      migrationTableSchema: schema,
+      provider: {
+        async getMigrations() {
+          return migrations
+        },
+      },
+    })
+  }
 
   static sqlite(location: string): Database {
-    const db = new Kysely<DatabaseSchema>({
+    const db = new KyselyWithDialect<DatabaseSchema>('sqlite', {
       dialect: new SqliteDialect({
         database: new SqliteDB(location),
       }),
     })
-    return new Database(db, 'sqlite')
+    return new Database(db)
   }
 
   static postgres(opts: { url: string; schema?: string }): Database {
@@ -55,11 +60,11 @@ export class Database {
       )
     }
 
-    const db = new Kysely<DatabaseSchema>({
+    const db = new KyselyWithDialect<DatabaseSchema>('pg', {
       dialect: new PostgresDialect({ pool }),
     })
 
-    return new Database(db, 'pg', schema)
+    return new Database(db, schema)
   }
 
   static memory(): Database {
@@ -70,24 +75,18 @@ export class Database {
     await this.db.destroy()
   }
 
-  async createTables(): Promise<this> {
+  async migrateToLatestOrThrow() {
     if (this.schema !== undefined) {
       await this.db.schema.createSchema(this.schema).ifNotExists().execute()
     }
-    await this.db.schema
-      .createTable('operations')
-      .addColumn('did', 'varchar', (col) => col.notNull())
-      .addColumn('operation', 'text', (col) => col.notNull())
-      .addColumn('cid', 'varchar', (col) => col.notNull())
-      .addColumn('nullified', 'int2', (col) => col.defaultTo(0))
-      .addColumn('createdAt', 'varchar', (col) => col.notNull())
-      .addPrimaryKeyConstraint('primary_key', ['did', 'cid'])
-      .execute()
-    return this
-  }
-
-  async dropTables(): Promise<void> {
-    await this.db.schema.dropTable('operations').execute()
+    const { error, results } = await this.migrator.migrateToLatest()
+    if (error) {
+      throw error
+    }
+    if (!results) {
+      throw new Error('An unknown failure occurred while migrating')
+    }
+    return results
   }
 
   async validateAndAddOp(did: string, proposed: t.Operation): Promise<void> {
@@ -188,3 +187,23 @@ export class Database {
 export default Database
 
 export type Dialect = 'pg' | 'sqlite'
+
+// By placing the dialect on the kysely instance itself,
+// you can utilize this information inside migrations.
+export class KyselyWithDialect<DB> extends Kysely<DB> {
+  constructor(public dialect: Dialect, config: KyselyConfig) {
+    super(config)
+  }
+}
+
+interface OperationsTable {
+  did: string
+  operation: string
+  cid: string
+  nullified: 0 | 1
+  createdAt: string
+}
+
+interface DatabaseSchema {
+  operations: OperationsTable
+}

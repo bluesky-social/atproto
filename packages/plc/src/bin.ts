@@ -22,6 +22,8 @@ const run = async () => {
     db = Database.memory()
   }
 
+  await db.migrateToLatestOrThrow()
+
   const envPort = parseInt(process.env.PORT || '')
   const port = isNaN(envPort) ? 2582 : envPort
 
