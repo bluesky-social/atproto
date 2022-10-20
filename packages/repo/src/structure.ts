@@ -225,8 +225,11 @@ export class RepoStructure {
     fn: (car: BlockWriter) => Promise<void>,
   ): Promise<Uint8Array> {
     const { writer, out } = CarWriter.create([this.cid])
-    await fn(writer)
-    writer.close()
+    try {
+      await fn(writer)
+    } finally {
+      writer.close()
+    }
     return streamToArray(out)
   }
 

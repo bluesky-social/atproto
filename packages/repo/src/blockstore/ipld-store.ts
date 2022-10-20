@@ -78,9 +78,7 @@ export abstract class IpldStore {
       throw new Error(`Expected one root, got ${roots.length}`)
     }
     const rootCid = roots[0]
-    for await (const block of car.blocks()) {
-      await this.putBytes(block.cid, block.bytes)
-    }
+    await this.loadCarBlocks(car)
     return rootCid
   }
 
