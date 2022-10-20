@@ -5,6 +5,7 @@ import * as didResolver from '@atproto/did-resolver'
 import * as repoDiff from '../../../repo-diff'
 import * as locals from '../../../locals'
 import * as schemas from '../../../lexicon/schemas'
+import { TID } from '@atproto/common'
 
 export default function (server: Server) {
   server.com.atproto.repoDescribe(async (params, _in, _req, res) => {
@@ -123,9 +124,14 @@ export default function (server: Server) {
       )
     }
     const prevCid = repo.cid
-    await repo.batchWrite(tx.writes)
+    // generate TIDs for create actions without an rkey
+    const test = tx.writes.map((write) => ({
+      ...write,
+      rkey: write.rkey || TID.nextStr(),
+    }))
+    await repo.batchWrite(test)
     // @TODO: do something better here instead of rescanning for diff
-    const diff = await repo.verifySetOfUpdates(prevCid, repo.cid)
+    const diff = await repo.verifyUpdates(prevCid, repo.cid)
     try {
       await repoDiff.processDiff(db, repo, diff)
     } catch (err) {

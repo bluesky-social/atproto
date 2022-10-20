@@ -7,6 +7,7 @@ import { BlockWriter } from '@ipld/car/writer'
 import { check, util } from '@atproto/common'
 import { BlockReader } from '@ipld/car/api'
 import CidSet from '../cid-set'
+import { CarReader } from '@ipld/car/reader'
 
 type AllowedIpldRecordVal = string | number | CID | CID[] | Uint8Array | null
 
@@ -70,7 +71,18 @@ export abstract class IpldStore {
     car.put({ cid, bytes: await this.getBytes(cid) })
   }
 
-  async loadCar(car: BlockReader): Promise<void> {
+  async loadCar(buf: Uint8Array): Promise<CID> {
+    const car = await CarReader.fromBytes(buf)
+    const roots = await car.getRoots()
+    if (roots.length !== 1) {
+      throw new Error(`Expected one root, got ${roots.length}`)
+    }
+    const rootCid = roots[0]
+    await this.loadCarBlocks(car)
+    return rootCid
+  }
+
+  async loadCarBlocks(car: BlockReader): Promise<void> {
     for await (const block of car.blocks()) {
       await this.putBytes(block.cid, block.bytes)
     }

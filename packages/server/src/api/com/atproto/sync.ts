@@ -64,7 +64,7 @@ export default function (server: Server) {
     } else {
       const blockstore = locals.blockstore(res)
       repo = await Repo.fromCarFile(bytes, blockstore)
-      diff = await repo.verifySetOfUpdates(null, repo.cid)
+      diff = await repo.verifyUpdates(null, repo.cid)
     }
 
     await repoDiff.processDiff(db, repo, diff)

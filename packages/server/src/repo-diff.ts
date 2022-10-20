@@ -8,7 +8,7 @@ export const processDiff = async (
   diff: DataDiff,
 ): Promise<void> => {
   db.assertTransaction()
-  const did = repo.did()
+  const did = repo.did
   const adds = diff.addList().map(async (add) => {
     const loaded = await repo.blockstore.getUnchecked(add.cid)
     const uri = new AtUri(`${did}/${add.key}`)
