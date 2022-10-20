@@ -136,7 +136,8 @@ export class Database {
       .selectFrom('repo_root')
       .selectAll()
       .where('did', '=', did)
-    if (forUpdate) {
+    if (forUpdate && this.dialect !== 'sqlite') {
+      // SELECT FOR UPDATE is not supported by sqlite, but sqlite txs are SERIALIZABLE so we don't actually need it
       builder = builder.forUpdate()
     }
     const found = await builder.executeTakeFirst()

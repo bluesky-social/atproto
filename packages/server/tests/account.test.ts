@@ -195,7 +195,7 @@ describe('account', () => {
 
     let successes = 0
     let failures = 0
-    const promises: Promise<any>[] = []
+    const promises: Promise<unknown>[] = []
     for (let i = 0; i < COUNT; i++) {
       const attempt = async () => {
         try {
@@ -233,7 +233,7 @@ describe('account', () => {
 
     let successes = 0
     let failures = 0
-    const promises: Promise<any>[] = []
+    const promises: Promise<unknown>[] = []
     for (let i = 0; i < COUNT; i++) {
       const attempt = async () => {
         try {

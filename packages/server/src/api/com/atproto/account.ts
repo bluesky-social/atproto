@@ -43,7 +43,26 @@ export default function (server: Server) {
     const tempDid = uint8arrays.toString(randomBytes(16), 'base32')
     const now = new Date().toISOString()
 
-    const { did, isTestUser } = await db.transaction(async (dbTxn) => {
+    // Validate username
+
+    if (username.startsWith('did:')) {
+      throw new InvalidRequestError(
+        'Cannot register a username that starts with `did:`',
+        'InvalidUsername',
+      )
+    }
+
+    let isTestUser = false
+    if (username.endsWith('.test')) {
+      if (!config.debugMode || !config.testNameRegistry) {
+        throw new InvalidRequestError(
+          'Cannot register a test user if debug mode is not enabled',
+        )
+      }
+      isTestUser = true
+    }
+
+    const { did } = await db.transaction(async (dbTxn) => {
       if (config.inviteRequired) {
         if (!inviteCode) {
           throw new InvalidRequestError(
@@ -76,25 +95,6 @@ export default function (server: Server) {
             'InvalidInviteCode',
           )
         }
-      }
-
-      // Validate username
-
-      if (username.startsWith('did:')) {
-        throw new InvalidRequestError(
-          'Cannot register a username that starts with `did:`',
-          'InvalidUsername',
-        )
-      }
-
-      let isTestUser = false
-      if (username.endsWith('.test')) {
-        if (!config.debugMode || !config.testNameRegistry) {
-          throw new InvalidRequestError(
-            'Cannot register a test user if debug mode is not enabled',
-          )
-        }
-        isTestUser = true
       }
 
       // Pre-register user before going out to PLC to get a real did
