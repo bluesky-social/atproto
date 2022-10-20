@@ -1,6 +1,6 @@
 import { Response } from 'express'
 import pino from 'pino'
-import { IpldStore, Repo } from '@atproto/repo'
+import { IpldStore, RepoStructure } from '@atproto/repo'
 import { AuthStore, DidableKey } from '@atproto/auth'
 import * as plc from '@atproto/plc'
 import { Database } from './db'
@@ -104,12 +104,11 @@ export const getAuthstore = (res: Response, did: string): AuthStore => {
 export const loadRepo = async (
   res: Response,
   did: string,
-): Promise<Repo | null> => {
-  const { db, blockstore, auth } = getLocals(res)
+): Promise<RepoStructure | null> => {
+  const { db, blockstore } = getLocals(res)
   const currRoot = await db.getRepoRoot(did)
   if (!currRoot) {
     return null
   }
-  const authStore = getAuthstore(res, did)
-  return Repo.load(blockstore, currRoot, auth.verifier, authStore)
+  return RepoStructure.load(blockstore, currRoot)
 }

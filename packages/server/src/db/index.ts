@@ -131,23 +131,38 @@ export class Database {
     await createTables(this.db, this.dialect)
   }
 
-  async getRepoRoot(did: string): Promise<CID | null> {
-    const found = await this.db
+  async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {
+    let builder = this.db
       .selectFrom('repo_root')
       .selectAll()
       .where('did', '=', did)
-      .executeTakeFirst()
+    if (forUpdate) {
+      builder = builder.forUpdate()
+    }
+    const found = await builder.executeTakeFirst()
     return found ? CID.parse(found.root) : null
   }
 
-  async updateRepoRoot(did: string, root: CID) {
+  async updateRepoRoot(did: string, root: CID, prev?: CID): Promise<boolean> {
     log.debug({ did, root: root.toString() }, 'updating repo root')
-    await this.db
+    let builder = this.db
       .updateTable('repo_root')
       .set({ root: root.toString() })
       .where('did', '=', did)
-      .execute()
-    log.info({ did, root: root.toString() }, 'updated repo root')
+    if (prev) {
+      builder = builder.where('root', '=', prev.toString())
+    }
+    const res = await builder.executeTakeFirst()
+    if (res.numUpdatedRows > 0) {
+      log.info({ did, root: root.toString() }, 'updated repo root')
+      return true
+    } else {
+      log.info(
+        { did, root: root.toString() },
+        'failed to update repo root: misordered',
+      )
+      return false
+    }
   }
 
   async getUser(usernameOrDid: string): Promise<User | null> {

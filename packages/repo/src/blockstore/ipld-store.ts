@@ -22,7 +22,9 @@ export abstract class IpldStore {
   abstract destroy(): Promise<void>
 
   async put(
-    value: Record<string, AllowedIpldVal> | AllowedIpldVal,
+    // @TODO fix
+    // value: Record<string, AllowedIpldVal> | AllowedIpldVal,
+    value: unknown,
   ): Promise<CID> {
     const block = await Block.encode({
       value,
