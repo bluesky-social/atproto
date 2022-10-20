@@ -25,39 +25,53 @@ const commit = z.object({
 })
 export type Commit = z.infer<typeof commit>
 
-export const batchWriteCreate = z.object({
+export const cidCreateOp = z.object({
   action: z.literal('create'),
-  rkey: z.string().optional(),
   collection: z.string(),
+  rkey: z.string(),
+  cid: common.cid,
+})
+
+export const cidUpdateOp = z.object({
+  action: z.literal('update'),
+  collection: z.string(),
+  rkey: z.string(),
+  cid: common.cid,
+})
+
+export const deleteOp = z.object({
+  action: z.literal('delete'),
+  collection: z.string(),
+  rkey: z.string(),
+})
+
+export const cidWriteOp = z.union([cidCreateOp, cidUpdateOp, deleteOp])
+export type CidWriteOp = z.infer<typeof cidWriteOp>
+
+export const recordCreateOp = z.object({
+  action: z.literal('create'),
+  collection: z.string(),
+  rkey: z.string(),
   value: z.any(),
 })
 
-export const batchWriteUpdate = z.object({
+export const recordUpdateOp = z.object({
   action: z.literal('update'),
   collection: z.string(),
   rkey: z.string(),
   value: z.any(),
 })
 
-export const batchWriteDelete = z.object({
-  action: z.literal('delete'),
-  collection: z.string(),
-  rkey: z.string(),
-})
-
-export const batchWrite = z.union([
-  batchWriteCreate,
-  batchWriteUpdate,
-  batchWriteDelete,
-])
-export type BatchWrite = z.infer<typeof batchWrite>
+export const recordWriteOp = z.union([recordCreateOp, recordUpdateOp, deleteOp])
+export type RecordWriteOp = z.infer<typeof recordWriteOp>
 
 export const def = {
   ...common,
   repoMeta,
   repoRoot,
   commit,
-  batchWrite,
+  cidWriteOp,
+  recordWriteOp,
 }
 
 export interface CarStreamable {
