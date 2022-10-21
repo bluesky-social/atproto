@@ -65,7 +65,7 @@ export const runTestServer = async (
         })
       : await Database.memory()
 
-  await db.createTables()
+  await db.migrateToLatestOrThrow()
   const serverBlockstore = new MemoryBlockstore()
 
   const { app, listener } = server(serverBlockstore, db, keypair, config)

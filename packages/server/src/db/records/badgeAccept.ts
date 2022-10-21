@@ -20,21 +20,6 @@ export interface AppBskyBadgeAccept {
   indexedAt: string
 }
 
-export const createTable = async (db: Kysely<PartialDB>): Promise<void> => {
-  await db.schema
-    .createTable(tableName)
-    .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('badgeUri', 'varchar', (col) => col.notNull())
-    .addColumn('badgeCid', 'varchar', (col) => col.notNull())
-    .addColumn('offerUri', 'varchar', (col) => col.notNull())
-    .addColumn('offerCid', 'varchar', (col) => col.notNull())
-    .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .execute()
-}
-
 export type PartialDB = { [tableName]: AppBskyBadgeAccept }
 
 const validator = schemas.records.createRecordValidator(type)
