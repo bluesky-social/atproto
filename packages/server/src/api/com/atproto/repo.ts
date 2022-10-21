@@ -96,7 +96,7 @@ export default function (server: Server) {
   // @TODO all write methods should be transactional to ensure no forked histories
   server.com.atproto.repoBatchWrite(async (params, input, req, res) => {
     const { did, validate } = params
-    const { auth, db, blockstore, logger } = locals.get(res)
+    const { auth, db, blockstore } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -156,7 +156,7 @@ export default function (server: Server) {
         .createCommit(authStore, async (prev, curr) => {
           const success = await db.updateRepoRoot(did, curr, prev)
           if (!success) {
-            throw new Error('could not udpate')
+            throw new Error('Could not update repo root')
           }
           return null
         })
@@ -227,7 +227,7 @@ export default function (server: Server) {
         .createCommit(authStore, async (prev, curr) => {
           const success = await txn.updateRepoRoot(did, curr, prev)
           if (!success) {
-            throw new Error('could not udpate')
+            throw new Error('Could not update repo root')
           }
           return null
         })
@@ -273,7 +273,7 @@ export default function (server: Server) {
         .createCommit(authStore, async (prev, curr) => {
           const success = await txn.updateRepoRoot(did, curr, prev)
           if (!success) {
-            throw new Error('could not udpate')
+            throw new Error('Could not update repo root')
           }
           return null
         })

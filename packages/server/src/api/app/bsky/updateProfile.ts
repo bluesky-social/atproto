@@ -21,7 +21,9 @@ export default function (server: Server) {
     const { profileCid, updated } = await db.transaction(async (txnDb) => {
       const currRoot = await txnDb.getRepoRoot(requester, true)
       if (!currRoot) {
-        throw new Error('blah')
+        throw new InvalidRequestError(
+          `${requester} is not a registered repo on this server`,
+        )
       }
       const repo = await RepoStructure.load(blockstore, currRoot)
       const current = await repo.getRecord(profileNsid, 'self')
@@ -116,7 +118,7 @@ export default function (server: Server) {
         .createCommit(authStore, async (prev, curr) => {
           const success = await txnDb.updateRepoRoot(requester, curr, prev)
           if (!success) {
-            throw new Error('could not udpate')
+            throw new Error('Could not update repo root')
           }
           return null
         })
@@ -134,43 +136,3 @@ export default function (server: Server) {
     }
   })
 }
-
-// const updateProfileRetry = async (
-//   db: Database,
-//   blockstore: IpldStore,
-//   authStore: auth.AuthStore,
-//   userDid: string,
-//   input: HandlerInput,
-//   attempts = 5,
-// ): Promise<OutputSchema> => {
-//   for (let i = 0; i < attempts; i++) {
-//     try {
-//       const res = await attemptProfileUpdate(
-//         db,
-//         blockstore,
-//         authStore,
-//         userDid,
-//         input,
-//       )
-//       return res
-//     } catch (err) {
-//       if (err instanceof TransactionError) {
-//         continue
-//       } else {
-//         throw err
-//       }
-//     }
-//   }
-
-//   throw new Error(`attempted ${attempts} times`)
-// }
-
-// const attemptProfileUpdate = async (
-//   db: Database,
-//   blockstore: IpldStore,
-//   authStore: auth.AuthStore,
-//   userDid: string,
-//   input: HandlerInput,
-// ): Promise<OutputSchema> => {}
-
-// class TransactionError extends Error {}
