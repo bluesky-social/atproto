@@ -8,7 +8,7 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "start": "node dist/bin.js",
-    "test": "jest tests/crud.test.ts",
+    "test": "jest",
     "test:pg": "../pg/with-test-db.sh yarn test",
     "test:log": "cat test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
