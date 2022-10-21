@@ -8,6 +8,7 @@ import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll, keys, selectValues, vals } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
+import { sql } from 'kysely'
 
 export default function (server: Server) {
   server.com.atproto.getAccountsConfig((_params, _input, _req, res) => {
@@ -70,6 +71,8 @@ export default function (server: Server) {
             'InvalidInviteCode',
           )
         }
+
+        await dbTxn.lockTable('invite_code_use')
 
         const codeUse = {
           code: inviteCode,
