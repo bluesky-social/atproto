@@ -330,6 +330,7 @@ export class Database {
       deleteQuery,
       this.notifications.deleteForRecord(uri),
     ])
+
     log.info({ uri }, 'deleted indexed record')
   }
 

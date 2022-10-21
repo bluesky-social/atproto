@@ -205,7 +205,7 @@ export default function (server: Server) {
         )
       }
       try {
-        await db.indexRecord(uri, cid, input.body)
+        await txn.indexRecord(uri, cid, input.body)
       } catch (err) {
         logger.warn(
           { uri: uri.toString(), err, validate },
@@ -225,7 +225,7 @@ export default function (server: Server) {
           cid,
         })
         .createCommit(authStore, async (prev, curr) => {
-          const success = await db.updateRepoRoot(did, curr, prev)
+          const success = await txn.updateRepoRoot(did, curr, prev)
           if (!success) {
             throw new Error('could not udpate')
           }
@@ -271,7 +271,7 @@ export default function (server: Server) {
           rkey,
         })
         .createCommit(authStore, async (prev, curr) => {
-          const success = await db.updateRepoRoot(did, curr, prev)
+          const success = await txn.updateRepoRoot(did, curr, prev)
           if (!success) {
             throw new Error('could not udpate')
           }

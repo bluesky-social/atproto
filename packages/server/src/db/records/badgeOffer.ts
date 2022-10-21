@@ -90,6 +90,7 @@ const deleteFn =
     await db
       .deleteFrom('app_bsky_badge_offer')
       .where('uri', '=', uri.toString())
+      .execute()
   }
 
 const notifsForRecord = (
