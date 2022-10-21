@@ -89,7 +89,8 @@ export class DevEnvServer {
         break
       }
       case ServerType.DidPlaceholder: {
-        const db = await plc.Database.memory().createTables()
+        const db = plc.Database.memory()
+        await db.migrateToLatestOrThrow()
         this.inst = await onServerReady(plc.server(db, this.port))
         break
       }

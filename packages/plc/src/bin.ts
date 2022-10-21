@@ -10,13 +10,19 @@ const run = async () => {
     dotenv.config()
   }
 
-  let db: Database
   const dbLoc = process.env.DATABASE_LOC
-  if (dbLoc) {
-    db = await Database.sqlite(dbLoc)
+  const dbPostgresUrl = process.env.DB_POSTGRES_URL
+
+  let db: Database
+  if (dbPostgresUrl) {
+    db = Database.postgres({ url: dbPostgresUrl })
+  } else if (dbLoc) {
+    db = Database.sqlite(dbLoc)
   } else {
-    db = await Database.memory()
+    db = Database.memory()
   }
+
+  await db.migrateToLatestOrThrow()
 
   const envPort = parseInt(process.env.PORT || '')
   const port = isNaN(envPort) ? 2582 : envPort

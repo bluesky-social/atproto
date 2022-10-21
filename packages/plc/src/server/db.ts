@@ -1,33 +1,70 @@
-import { Kysely, SqliteDialect } from 'kysely'
+import {
+  Kysely,
+  KyselyConfig,
+  Migrator,
+  PostgresDialect,
+  SqliteDialect,
+} from 'kysely'
 import SqliteDB from 'better-sqlite3'
+import { Pool as PgPool, types as pgTypes } from 'pg'
 import { CID } from 'multiformats/cid'
 import { cidForData } from '@atproto/common'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
 import { ServerError } from './error'
-
-interface OperationsTable {
-  did: string
-  operation: string
-  cid: string
-  nullified: 0 | 1
-  createdAt: string
-}
-
-interface DatabaseSchema {
-  operations: OperationsTable
-}
+import * as migrations from './migrations'
 
 export class Database {
-  constructor(public db: Kysely<DatabaseSchema>) {}
+  migrator: Migrator
+  constructor(
+    public db: KyselyWithDialect<DatabaseSchema>,
+    public schema?: string,
+  ) {
+    this.migrator = new Migrator({
+      db,
+      migrationTableSchema: schema,
+      provider: {
+        async getMigrations() {
+          return migrations
+        },
+      },
+    })
+  }
 
   static sqlite(location: string): Database {
-    const db = new Kysely<DatabaseSchema>({
+    const db = new KyselyWithDialect<DatabaseSchema>('sqlite', {
       dialect: new SqliteDialect({
         database: new SqliteDB(location),
       }),
     })
     return new Database(db)
+  }
+
+  static postgres(opts: { url: string; schema?: string }): Database {
+    const { url, schema } = opts
+    const pool = new PgPool({ connectionString: url })
+
+    // Select count(*) and other pg bigints as js integer
+    pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
+
+    // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
+    if (schema !== undefined) {
+      if (!/^[a-z_]+$/i.test(schema)) {
+        throw new Error(
+          `Postgres schema must only contain [A-Za-z_]: ${schema}`,
+        )
+      }
+      pool.on('connect', (client) =>
+        // Shared objects such as extensions will go in the public schema
+        client.query(`SET search_path TO "${schema}",public`),
+      )
+    }
+
+    const db = new KyselyWithDialect<DatabaseSchema>('pg', {
+      dialect: new PostgresDialect({ pool }),
+    })
+
+    return new Database(db, schema)
   }
 
   static memory(): Database {
@@ -38,21 +75,18 @@ export class Database {
     await this.db.destroy()
   }
 
-  async createTables(): Promise<this> {
-    await this.db.schema
-      .createTable('operations')
-      .addColumn('did', 'varchar', (col) => col.notNull())
-      .addColumn('operation', 'text', (col) => col.notNull())
-      .addColumn('cid', 'varchar', (col) => col.notNull())
-      .addColumn('nullified', 'int2', (col) => col.defaultTo(0))
-      .addColumn('createdAt', 'varchar', (col) => col.notNull())
-      .addPrimaryKeyConstraint('primary_key', ['did', 'cid'])
-      .execute()
-    return this
-  }
-
-  async dropTables(): Promise<void> {
-    await this.db.schema.dropTable('operations').execute()
+  async migrateToLatestOrThrow() {
+    if (this.schema !== undefined) {
+      await this.db.schema.createSchema(this.schema).ifNotExists().execute()
+    }
+    const { error, results } = await this.migrator.migrateToLatest()
+    if (error) {
+      throw error
+    }
+    if (!results) {
+      throw new Error('An unknown failure occurred while migrating')
+    }
+    return results
   }
 
   async validateAndAddOp(did: string, proposed: t.Operation): Promise<void> {
@@ -65,48 +99,51 @@ export class Database {
     )
     const cid = await cidForData(proposed)
 
-    await this.db.transaction().execute(async (tx) => {
-      await tx
-        .insertInto('operations')
-        .values({
-          did,
-          operation: JSON.stringify(proposed),
-          cid: cid.toString(),
-          nullified: 0,
-          createdAt: new Date().toISOString(),
-        })
-        .execute()
-
-      if (nullified.length > 0) {
-        const nullfiedStrs = nullified.map((cid) => cid.toString())
+    await this.db
+      .transaction()
+      .setIsolationLevel('serializable')
+      .execute(async (tx) => {
         await tx
-          .updateTable('operations')
-          .set({ nullified: 1 })
-          .where('did', '=', did)
-          .where('cid', 'in', nullfiedStrs)
+          .insertInto('operations')
+          .values({
+            did,
+            operation: JSON.stringify(proposed),
+            cid: cid.toString(),
+            nullified: 0,
+            createdAt: new Date().toISOString(),
+          })
           .execute()
-      }
 
-      // verify that the 2nd to last tx matches the proposed prev
-      // otherwise rollback to prevent forks in history
-      const mostRecent = await tx
-        .selectFrom('operations')
-        .select('cid')
-        .where('did', '=', did)
-        .where('nullified', '=', 0)
-        .orderBy('createdAt', 'desc')
-        .limit(2)
-        .execute()
-      const isMatch =
-        (prev === null && !mostRecent[1]) ||
-        (prev && prev.equals(CID.parse(mostRecent[1].cid)))
-      if (!isMatch) {
-        throw new ServerError(
-          409,
-          `Proposed prev does not match the most recent operation: ${mostRecent?.toString()}`,
-        )
-      }
-    })
+        if (nullified.length > 0) {
+          const nullfiedStrs = nullified.map((cid) => cid.toString())
+          await tx
+            .updateTable('operations')
+            .set({ nullified: 1 })
+            .where('did', '=', did)
+            .where('cid', 'in', nullfiedStrs)
+            .execute()
+        }
+
+        // verify that the 2nd to last tx matches the proposed prev
+        // otherwise rollback to prevent forks in history
+        const mostRecent = await tx
+          .selectFrom('operations')
+          .select('cid')
+          .where('did', '=', did)
+          .where('nullified', '=', 0)
+          .orderBy('createdAt', 'desc')
+          .limit(2)
+          .execute()
+        const isMatch =
+          (prev === null && !mostRecent[1]) ||
+          (prev && prev.equals(CID.parse(mostRecent[1].cid)))
+        if (!isMatch) {
+          throw new ServerError(
+            409,
+            `Proposed prev does not match the most recent operation: ${mostRecent?.toString()}`,
+          )
+        }
+      })
   }
 
   async mostRecentCid(did: string, notIncluded: CID[]): Promise<CID | null> {
@@ -148,3 +185,25 @@ export class Database {
 }
 
 export default Database
+
+export type Dialect = 'pg' | 'sqlite'
+
+// By placing the dialect on the kysely instance itself,
+// you can utilize this information inside migrations.
+export class KyselyWithDialect<DB> extends Kysely<DB> {
+  constructor(public dialect: Dialect, config: KyselyConfig) {
+    super(config)
+  }
+}
+
+interface OperationsTable {
+  did: string
+  operation: string
+  cid: string
+  nullified: 0 | 1
+  createdAt: string
+}
+
+interface DatabaseSchema {
+  operations: OperationsTable
+}

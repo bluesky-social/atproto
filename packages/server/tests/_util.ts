@@ -27,7 +27,8 @@ export const runTestServer = async (
   // run plc server
   const plcPort = await getPort()
   const plcUrl = `http://localhost:${plcPort}`
-  const plcDb = await plc.Database.memory().createTables()
+  const plcDb = plc.Database.memory()
+  await plcDb.migrateToLatestOrThrow()
   const plcServer = plc.server(plcDb, plcPort)
 
   // setup server did

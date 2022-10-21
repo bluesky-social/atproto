@@ -25,7 +25,7 @@ describe('resolver', () => {
     })
 
     const plcDB = DidPlcDb.memory()
-    await plcDB.createTables()
+    await plcDB.migrateToLatestOrThrow()
     const plcPort = await getPort()
     const plcServer = await runPlcServer(plcDB, plcPort)
 
