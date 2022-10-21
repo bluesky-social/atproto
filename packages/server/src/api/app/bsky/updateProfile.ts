@@ -87,11 +87,13 @@ export default function (server: Server) {
       .where('uri', '=', uri.toString())
       .execute()
 
-    const delBadgesQuery = db.db
-      .deleteFrom('app_bsky_profile_badge')
-      .where('profileUri', '=', uri.toString())
-      .where('badgeUri', 'in', toDelete)
-      .execute()
+    const delBadgesQuery = toDelete.length
+      ? db.db
+          .deleteFrom('app_bsky_profile_badge')
+          .where('profileUri', '=', uri.toString())
+          .where('badgeUri', 'in', toDelete)
+          .execute()
+      : null
 
     const addBadgesQuery = db.db
       .insertInto('app_bsky_profile_badge')
