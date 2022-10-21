@@ -6,7 +6,7 @@ import { PlcClient } from '@atproto/plc'
 import * as uint8arrays from 'uint8arrays'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
-import { countAll, keys, selectValues, vals } from '../../../db/util'
+import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 
 export default function (server: Server) {
@@ -71,32 +71,36 @@ export default function (server: Server) {
           )
         }
 
-        await dbTxn.lockTable('invite_code_use')
-
-        const codeUse = {
-          code: inviteCode,
-          usedBy: tempDid,
-          usedAt: now,
-        }
-
-        const insertedCodeUse = await dbTxn.db
-          .insertInto('invite_code_use')
-          .columns(keys(codeUse))
-          .expression((eb) =>
-            selectValues(eb, vals(codeUse)).whereExists(
-              validInviteQuery(dbTxn, inviteCode),
-            ),
-          )
-          .returning('code')
+        const invite = await dbTxn.db
+          .selectFrom('invite_code')
+          .selectAll()
+          .where('code', '=', inviteCode)
+          // Lock invite code to avoid duplicate use
+          .if(dbTxn.dialect === 'pg', (qb) => qb.forUpdate())
           .executeTakeFirst()
 
-        if (!insertedCodeUse) {
+        const { useCount } = await dbTxn.db
+          .selectFrom('invite_code_use')
+          .select(countAll.as('useCount'))
+          .where('code', '=', inviteCode)
+          .executeTakeFirstOrThrow()
+
+        if (!invite || invite.disabled || invite.availableUses <= useCount) {
           logger.info({ username, email, inviteCode }, 'invalid invite code')
           throw new InvalidRequestError(
             'Provided invite code not available',
             'InvalidInviteCode',
           )
         }
+
+        await dbTxn.db
+          .insertInto('invite_code_use')
+          .values({
+            code: inviteCode,
+            usedBy: tempDid,
+            usedAt: now,
+          })
+          .execute()
       }
 
       // Pre-register user before going out to PLC to get a real did
@@ -180,21 +184,4 @@ export default function (server: Server) {
     // TODO
     return { encoding: '', body: {} }
   })
-}
-
-const validInviteQuery = (db, inviteCode: string) => {
-  const { ref } = db.db.dynamic
-  return db.db
-    .selectFrom('invite_code as invite')
-    .selectAll()
-    .where('invite.code', '=', inviteCode)
-    .where('invite.disabled', '=', 0)
-    .where(
-      'invite.availableUses',
-      '>',
-      db.db
-        .selectFrom('invite_code_use as code_use')
-        .whereRef('code_use.code', '=', ref('invite.code'))
-        .select(countAll.as('count')),
-    )
 }

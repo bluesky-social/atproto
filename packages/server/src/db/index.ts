@@ -27,7 +27,7 @@ import { dbLogger as log } from '../logger'
 import { DatabaseSchema, createTables } from './database-schema'
 import * as scrypt from './scrypt'
 import { User } from './tables/user'
-import { dummyDialect, keys, selectValues, vals } from './util'
+import { dummyDialect } from './util'
 
 export class Database {
   db: Kysely<DatabaseSchema>
@@ -172,9 +172,9 @@ export class Database {
       query = query.where('did', '=', usernameOrDid)
     } else {
       query = query.where(
-        sql`UPPER(username)`,
+        sql`lower(username)`,
         '=',
-        usernameOrDid.toUpperCase(),
+        usernameOrDid.toLowerCase(),
       )
     }
     const found = await query.executeTakeFirst()
@@ -182,11 +182,10 @@ export class Database {
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    const { ref } = this.db.dynamic
     const found = await this.db
       .selectFrom('user')
       .selectAll()
-      .where(sql`UPPER(${ref('email')})`, '=', email.toUpperCase())
+      .where(sql`lower(email)`, '=', email.toLowerCase())
       .executeTakeFirst()
     return found || null
   }
@@ -209,22 +208,17 @@ export class Database {
   ) {
     this.assertTransaction()
     log.debug({ username, email, tempDid }, 'pre-registering user')
-    const user = {
-      email: email,
-      username: username,
-      did: tempDid,
-      password: await scrypt.hash(password),
-      createdAt: new Date().toISOString(),
-      lastSeenNotifs: new Date().toISOString(),
-    }
     const inserted = await this.db
       .insertInto('user')
-      .columns(keys(user))
-      .expression((eb) =>
-        selectValues(eb, vals(user)).whereNotExists(
-          userByUsernameOrEmailQuery(this, { username, email }),
-        ),
-      )
+      .values({
+        email: email,
+        username: username,
+        did: tempDid,
+        password: await scrypt.hash(password),
+        createdAt: new Date().toISOString(),
+        lastSeenNotifs: new Date().toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
       .returning('did')
       .executeTakeFirst()
     if (!inserted) {
@@ -421,16 +415,3 @@ export type Dialect = 'pg' | 'sqlite'
 export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })
 
 export class UserAlreadyExistsError extends Error {}
-
-const userByUsernameOrEmailQuery = (
-  db: Database,
-  vals: { username: string; email: string },
-) => {
-  const { username, email } = vals
-  const { ref } = db.db.dynamic
-  return db.db
-    .selectFrom('user')
-    .selectAll()
-    .where(sql`UPPER(${ref('email')})`, '=', email.toUpperCase())
-    .orWhere(sql`UPPER(${ref('username')})`, '=', username.toUpperCase())
-}

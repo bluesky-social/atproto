@@ -207,8 +207,8 @@ describe('account', () => {
               password: `password`,
               inviteCode: res.data.code,
             },
-          ),
-            successes++
+          )
+          successes++
         } catch (err) {
           failures++
         }
@@ -221,15 +221,24 @@ describe('account', () => {
   })
 
   it('handles racing signups for same username', async () => {
-    const res = await client.com.atproto.createInviteCode(
+    const COUNT = 10
+
+    const invite1 = await client.com.atproto.createInviteCode(
       {},
-      { useCount: 10 },
+      { useCount: COUNT },
       {
         headers: { authorization: util.adminAuth() },
         encoding: 'application/json',
       },
     )
-    const COUNT = 10
+    const invite2 = await client.com.atproto.createInviteCode(
+      {},
+      { useCount: COUNT },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
 
     let successes = 0
     let failures = 0
@@ -237,16 +246,19 @@ describe('account', () => {
     for (let i = 0; i < COUNT; i++) {
       const attempt = async () => {
         try {
+          // Use two invites to ensure per-invite locking doesn't
+          // give the appearance of fixing a race for username.
+          const invite = i % 2 ? invite1 : invite2
           await client.com.atproto.createAccount(
             {},
             {
               email: `matching@test.com`,
               username: `matching.test.com`,
               password: `password`,
-              inviteCode: res.data.code,
+              inviteCode: invite.data.code,
             },
-          ),
-            successes++
+          )
+          successes++
         } catch (err) {
           failures++
         }
