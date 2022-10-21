@@ -27,6 +27,18 @@ export const createTable = async (
     .addColumn('lastSeenNotifs', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .execute()
+  await db.schema
+    .createIndex(`${tableName}_username_lower_idx`)
+    .unique()
+    .on(tableName)
+    .expression(sql`lower("username")`)
+    .execute()
+  await db.schema
+    .createIndex(`${tableName}_email_lower_idx`)
+    .unique()
+    .on(tableName)
+    .expression(sql`lower("email")`)
+    .execute()
   if (dialect === 'pg') {
     await db.schema // Supports user search
       .createIndex(`${tableName}_username_tgrm_idx`)
