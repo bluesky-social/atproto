@@ -13,9 +13,8 @@ This is a working repository for the "AT Protocol," aka the Authenticated Transf
 To learn more about ATP, see:
 
 - [The Protocol Overview](https://atproto.com/guides/overview)
-- [The Protocol Guides](https://atproto.com/guides)
-- [The Protocol Specs](https://atproto.com/specs)
-- [The Current Schemas (Lexicons)](https://atproto.com/lexicons)
+- [The Protocol Specs](https://atproto.com/specs/atp)
+- [The Current Schemas (Lexicons)](https://atproto.com/guides/lexicon)
 - The [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol). 
 
 ## License
