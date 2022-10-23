@@ -134,6 +134,20 @@ export class Database {
     log.info({ did, root: root.toString() }, 'updated repo root')
   }
 
+  async insertRepoRoot(did: string, root: CID) {
+    log.debug({ did, root: root.toString() }, 'inserting repo root')
+    // TODO: this is copied from createAccount; can we dedupe?
+    await this.db
+      .insertInto('repo_root')
+      .values({
+        did: did,
+        root: root.toString(),
+        indexedAt: new Date().toISOString(),
+      })
+      .execute()
+    log.debug({ did, root: root.toString() }, 'inserted repo root')
+  }
+
   async getUser(usernameOrDid: string): Promise<User | null> {
     let query = this.db.selectFrom('user').selectAll()
     if (usernameOrDid.startsWith('did:')) {

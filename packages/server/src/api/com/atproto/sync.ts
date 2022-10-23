@@ -71,6 +71,10 @@ export default function (server: Server) {
 
     // await subscriptions.notifySubscribers(db, repo)
 
-    await db.updateRepoRoot(did, repo.cid)
+    if (isNewRepo) {
+      await db.insertRepoRoot(did, repo.cid)
+    } else {
+      await db.updateRepoRoot(did, repo.cid)
+    }
   })
 }
