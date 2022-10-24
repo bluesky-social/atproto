@@ -12,6 +12,7 @@ export interface ServerConfigValues {
 
   didPlcUrl: string
   serverDid: string
+  serverRecoveryKey: string
 
   adminPassword: string
 
@@ -47,6 +48,8 @@ export class ServerConfig {
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
     const serverDid = process.env.SERVER_DID || ''
+    const serverRecoveryKey = process.env.SERVER_RECOVERY_KEY || ''
+
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
 
     const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
@@ -76,6 +79,7 @@ export class ServerConfig {
       dbPostgresSchema,
       jwtSecret,
       serverDid,
+      serverRecoveryKey,
       didPlcUrl,
       adminPassword,
       inviteRequired,
@@ -129,6 +133,10 @@ export class ServerConfig {
 
   get serverDid() {
     return this.cfg.serverDid
+  }
+
+  get serverRecoveryKey() {
+    return this.cfg.serverRecoveryKey
   }
 
   get adminPassword() {
