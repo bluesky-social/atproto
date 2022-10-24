@@ -59,11 +59,11 @@ export const runTestServer = async (
 
   const db =
     config.dbPostgresUrl !== undefined
-      ? await Database.postgres({
+      ? Database.postgres({
           url: config.dbPostgresUrl,
           schema: config.dbPostgresSchema,
         })
-      : await Database.memory()
+      : Database.memory()
 
   await db.migrateToLatestOrThrow()
   const serverBlockstore = new MemoryBlockstore()

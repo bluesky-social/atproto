@@ -76,7 +76,7 @@ export class Database {
     return new Database(db, 'sqlite')
   }
 
-  static postgres(opts: { url: string; schema: string | undefined }): Database {
+  static postgres(opts: { url: string; schema?: string }): Database {
     const { url, schema } = opts
     const pool = new PgPool({ connectionString: url })
 

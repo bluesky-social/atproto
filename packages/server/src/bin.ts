@@ -28,11 +28,18 @@ const run = async () => {
     blockstore = new MemoryBlockstore()
   }
 
-  if (cfg.databaseLocation) {
-    db = await Database.sqlite(cfg.databaseLocation)
+  if (cfg.dbPostgresUrl) {
+    db = Database.postgres({
+      url: cfg.dbPostgresUrl,
+      schema: cfg.dbPostgresSchema,
+    })
+  } else if (cfg.databaseLocation) {
+    db = Database.sqlite(cfg.databaseLocation)
   } else {
-    db = await Database.memory()
+    db = Database.memory()
   }
+
+  await db.migrateToLatestOrThrow()
 
   const keypair = await crypto.EcdsaKeypair.create()
 
