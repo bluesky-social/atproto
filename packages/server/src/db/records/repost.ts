@@ -70,7 +70,10 @@ const insertFn =
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db.deleteFrom('app_bsky_repost').where('uri', '=', uri.toString())
+    await db
+      .deleteFrom('app_bsky_repost')
+      .where('uri', '=', uri.toString())
+      .execute()
   }
 
 const notifsForRecord = (

@@ -182,6 +182,94 @@ describe('account', () => {
     )
   })
 
+  it('handles racing invite code uses', async () => {
+    const res = await client.com.atproto.createInviteCode(
+      {},
+      { useCount: 1 },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+    const COUNT = 10
+
+    let successes = 0
+    let failures = 0
+    const promises: Promise<unknown>[] = []
+    for (let i = 0; i < COUNT; i++) {
+      const attempt = async () => {
+        try {
+          await client.com.atproto.createAccount(
+            {},
+            {
+              email: `user${i}@test.com`,
+              username: `user${i}.test.com`,
+              password: `password`,
+              inviteCode: res.data.code,
+            },
+          )
+          successes++
+        } catch (err) {
+          failures++
+        }
+      }
+      promises.push(attempt())
+    }
+    await Promise.all(promises)
+    expect(successes).toBe(1)
+    expect(failures).toBe(9)
+  })
+
+  it('handles racing signups for same username', async () => {
+    const COUNT = 10
+
+    const invite1 = await client.com.atproto.createInviteCode(
+      {},
+      { useCount: COUNT },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+    const invite2 = await client.com.atproto.createInviteCode(
+      {},
+      { useCount: COUNT },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+
+    let successes = 0
+    let failures = 0
+    const promises: Promise<unknown>[] = []
+    for (let i = 0; i < COUNT; i++) {
+      const attempt = async () => {
+        try {
+          // Use two invites to ensure per-invite locking doesn't
+          // give the appearance of fixing a race for username.
+          const invite = i % 2 ? invite1 : invite2
+          await client.com.atproto.createAccount(
+            {},
+            {
+              email: `matching@test.com`,
+              username: `matching.test.com`,
+              password: `password`,
+              inviteCode: invite.data.code,
+            },
+          )
+          successes++
+        } catch (err) {
+          failures++
+        }
+      }
+      promises.push(attempt())
+    }
+    await Promise.all(promises)
+    expect(successes).toBe(1)
+    expect(failures).toBe(9)
+  })
+
   it('fails on unauthenticated requests', async () => {
     await expect(client.com.atproto.getSession({})).rejects.toThrow()
   })

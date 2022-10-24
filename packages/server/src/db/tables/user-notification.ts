@@ -30,6 +30,7 @@ export const deleteForRecord =
     await db
       .deleteFrom('user_notification')
       .where('recordUri', '=', uri.toString())
+      .execute()
   }
 
 export default (db: Kysely<PartialDB>): NotificationsPlugin => ({

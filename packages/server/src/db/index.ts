@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { Kysely, SqliteDialect, PostgresDialect, sql, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
@@ -107,6 +108,21 @@ export class Database {
     return Database.sqlite(':memory:')
   }
 
+  async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
+    return await this.db.transaction().execute((txn) => {
+      const dbTxn = new Database(txn, this.dialect, this.schema)
+      return fn(dbTxn)
+    })
+  }
+
+  get isTransaction() {
+    return this.db.isTransaction
+  }
+
+  assertTransaction() {
+    assert(this.isTransaction, 'Transaction required')
+  }
+
   async close(): Promise<void> {
     await this.db.destroy()
   }
@@ -125,23 +141,42 @@ export class Database {
     return results
   }
 
-  async getRepoRoot(did: string): Promise<CID | null> {
-    const found = await this.db
+  async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {
+    let builder = this.db
       .selectFrom('repo_root')
       .selectAll()
       .where('did', '=', did)
-      .executeTakeFirst()
+    if (forUpdate) {
+      this.assertTransaction()
+      if (this.dialect !== 'sqlite') {
+        // SELECT FOR UPDATE is not supported by sqlite, but sqlite txs are SERIALIZABLE so we don't actually need it
+        builder = builder.forUpdate()
+      }
+    }
+    const found = await builder.executeTakeFirst()
     return found ? CID.parse(found.root) : null
   }
 
-  async updateRepoRoot(did: string, root: CID) {
+  async updateRepoRoot(did: string, root: CID, prev?: CID): Promise<boolean> {
     log.debug({ did, root: root.toString() }, 'updating repo root')
-    await this.db
+    let builder = this.db
       .updateTable('repo_root')
       .set({ root: root.toString() })
       .where('did', '=', did)
-      .execute()
-    log.info({ did, root: root.toString() }, 'updated repo root')
+    if (prev) {
+      builder = builder.where('root', '=', prev.toString())
+    }
+    const res = await builder.executeTakeFirst()
+    if (res.numUpdatedRows > 0) {
+      log.info({ did, root: root.toString() }, 'updated repo root')
+      return true
+    } else {
+      log.info(
+        { did, root: root.toString() },
+        'failed to update repo root: misordered',
+      )
+      return false
+    }
   }
 
   async getUser(usernameOrDid: string): Promise<User | null> {
@@ -150,9 +185,9 @@ export class Database {
       query = query.where('did', '=', usernameOrDid)
     } else {
       query = query.where(
-        sql`UPPER(username)`,
+        sql`lower(username)`,
         '=',
-        usernameOrDid.toUpperCase(),
+        usernameOrDid.toLowerCase(),
       )
     }
     const found = await query.executeTakeFirst()
@@ -160,11 +195,10 @@ export class Database {
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    const { ref } = this.db.dynamic
     const found = await this.db
       .selectFrom('user')
       .selectAll()
-      .where(sql`UPPER(${ref('email')})`, '=', email.toUpperCase())
+      .where(sql`lower(email)`, '=', email.toLowerCase())
       .executeTakeFirst()
     return found || null
   }
@@ -175,23 +209,50 @@ export class Database {
     return found ? found.did : null
   }
 
-  async registerUser(
+  // Registration occurs in two steps:
+  // - pre-registration, we setup the account with an invalid, temporary did which is only visible in a transaction.
+  // - post-registration, we replace the temporary did with the user's newly-generated valid did.
+
+  async preRegisterUser(
     email: string,
     username: string,
-    did: string,
+    tempDid: string,
     password: string,
   ) {
-    log.debug({ username, did, email }, 'registering user')
-    const user = {
-      email: email,
-      username: username,
-      did: did,
-      password: await scrypt.hash(password),
-      createdAt: new Date().toISOString(),
-      lastSeenNotifs: new Date().toISOString(),
+    this.assertTransaction()
+    log.debug({ username, email, tempDid }, 'pre-registering user')
+    const inserted = await this.db
+      .insertInto('user')
+      .values({
+        email: email,
+        username: username,
+        did: tempDid,
+        password: await scrypt.hash(password),
+        createdAt: new Date().toISOString(),
+        lastSeenNotifs: new Date().toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .returning('did')
+      .executeTakeFirst()
+    if (!inserted) {
+      throw new UserAlreadyExistsError()
     }
-    await this.db.insertInto('user').values(user).execute()
-    log.info({ username, did, email }, 'registered user')
+    log.info({ username, email, tempDid }, 'pre-registered user')
+  }
+
+  async postRegisterUser(tempDid: string, did: string) {
+    this.assertTransaction()
+    log.debug({ tempDid, did }, 'post-registering user')
+    const updated = await this.db
+      .updateTable('user')
+      .where('did', '=', tempDid)
+      .set({ did })
+      .executeTakeFirst()
+    assert(
+      Number(updated.numUpdatedRows) === 1,
+      'Post-register should act on exactly one user',
+    )
+    log.info({ tempDid, did }, 'post-registered user')
   }
 
   async updateUserPassword(did: string, password: string) {
@@ -236,6 +297,7 @@ export class Database {
   }
 
   async indexRecord(uri: AtUri, cid: CID, obj: unknown) {
+    this.assertTransaction()
     log.debug({ uri }, 'indexing record')
     const record = {
       uri: uri.toString(),
@@ -263,6 +325,7 @@ export class Database {
   }
 
   async deleteRecord(uri: AtUri) {
+    this.assertTransaction()
     log.debug({ uri }, 'deleting indexed record')
     const table = this.findTableForCollection(uri.collection)
     const deleteQuery = this.db
@@ -274,6 +337,7 @@ export class Database {
       deleteQuery,
       this.notifications.deleteForRecord(uri),
     ])
+
     log.info({ uri }, 'deleted indexed record')
   }
 
@@ -356,3 +420,5 @@ export type Dialect = 'pg' | 'sqlite'
 
 // Can use with typeof to get types for partial queries
 export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })
+
+export class UserAlreadyExistsError extends Error {}

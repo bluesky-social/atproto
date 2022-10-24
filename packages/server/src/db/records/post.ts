@@ -124,10 +124,14 @@ const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
     await Promise.all([
-      db.deleteFrom('app_bsky_post').where('uri', '=', uri.toString()),
+      db
+        .deleteFrom('app_bsky_post')
+        .where('uri', '=', uri.toString())
+        .execute(),
       db
         .deleteFrom('app_bsky_post_entity')
-        .where('postUri', '=', uri.toString()),
+        .where('postUri', '=', uri.toString())
+        .execute(),
     ])
   }
 

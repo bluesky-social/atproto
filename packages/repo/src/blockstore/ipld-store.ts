@@ -9,21 +9,13 @@ import { BlockReader } from '@ipld/car/api'
 import CidSet from '../cid-set'
 import { CarReader } from '@ipld/car/reader'
 
-type AllowedIpldRecordVal = string | number | CID | CID[] | Uint8Array | null
-
-export type AllowedIpldVal =
-  | AllowedIpldRecordVal
-  | Record<string, AllowedIpldRecordVal>
-
 export abstract class IpldStore {
   abstract has(cid: CID): Promise<boolean>
   abstract getBytes(cid: CID): Promise<Uint8Array>
   abstract putBytes(cid: CID, bytes: Uint8Array): Promise<void>
   abstract destroy(): Promise<void>
 
-  async put(
-    value: Record<string, AllowedIpldVal> | AllowedIpldVal,
-  ): Promise<CID> {
+  async put(value: unknown): Promise<CID> {
     const block = await Block.encode({
       value,
       codec: blockCodec,

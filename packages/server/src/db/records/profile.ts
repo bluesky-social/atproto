@@ -100,10 +100,14 @@ const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
     await Promise.all([
-      db.deleteFrom('app_bsky_profile').where('uri', '=', uri.toString()),
+      db
+        .deleteFrom('app_bsky_profile')
+        .where('uri', '=', uri.toString())
+        .execute(),
       db
         .deleteFrom('app_bsky_profile_badge')
-        .where('profileUri', '=', uri.toString()),
+        .where('profileUri', '=', uri.toString())
+        .execute(),
     ])
   }
 

@@ -1,6 +1,7 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import * as Post from '@atproto/api/src/types/app/bsky/post'
 import { AtUri } from '@atproto/uri'
+import { response } from 'express'
 import { CloseFn, paginateAll, runTestServer } from './_util'
 
 const alice = {
@@ -169,6 +170,58 @@ describe('crud operations', () => {
     )
     const uri = new AtUri(res1.uri)
     expect(uri.rkey).toBe('self')
+  })
+
+  describe('crud races', () => {
+    let uris: AtUri[]
+    it('handles races on add', async () => {
+      const COUNT = 100
+      const postTexts: string[] = []
+      for (let i = 0; i < COUNT; i++) {
+        postTexts.push(`post-${i}`)
+      }
+      const responses = await Promise.all(
+        postTexts.map((text) =>
+          aliceClient.app.bsky.post.create(
+            { did: alice.did },
+            {
+              text,
+              createdAt: new Date().toISOString(),
+            },
+          ),
+        ),
+      )
+
+      uris = responses.map((resp) => new AtUri(resp.uri))
+
+      for (let i = 0; i < uris.length; i++) {
+        const uri = uris[i]
+        const got = await aliceClient.com.atproto.repoGetRecord({
+          user: alice.did,
+          collection: uri.collection,
+          rkey: uri.rkey,
+        })
+        // @ts-ignore
+        expect(got.data.value.text).toEqual(`post-${i}`)
+      }
+    })
+
+    it('handles races on del', async () => {
+      await Promise.all(
+        uris.map((uri) =>
+          aliceClient.app.bsky.post.delete({ did: alice.did, rkey: uri.rkey }),
+        ),
+      )
+      for (const uri of uris) {
+        await expect(
+          aliceClient.com.atproto.repoGetRecord({
+            user: alice.did,
+            collection: uri.collection,
+            rkey: uri.rkey,
+          }),
+        ).rejects.toThrow(Error)
+      }
+    })
   })
 
   describe('paginates', () => {

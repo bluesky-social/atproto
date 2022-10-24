@@ -116,6 +116,35 @@ describe('pds profile views', () => {
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
   })
 
+  it('handles racing updates', async () => {
+    const descriptions: string[] = []
+    const COUNT = 10
+    for (let i = 0; i < COUNT; i++) {
+      descriptions.push(`description-${i}`)
+    }
+    await Promise.all(
+      descriptions.map(async (description) => {
+        await client.app.bsky.updateProfile(
+          {},
+          { description },
+          { headers: sc.getHeaders(alice), encoding: 'application/json' },
+        )
+      }),
+    )
+
+    const profile = await client.app.bsky.getProfile(
+      { user: alice },
+      undefined,
+      { headers: sc.getHeaders(alice) },
+    )
+
+    // doesn't matter which request wins race, but one of them should win
+    const descripExists = descriptions.some(
+      (descrip) => profile.data.description === descrip,
+    )
+    expect(descripExists).toBeTruthy()
+  })
+
   it('fetches profile by username', async () => {
     const byDid = await client.app.bsky.getProfile({ user: alice }, undefined, {
       headers: sc.getHeaders(bob),

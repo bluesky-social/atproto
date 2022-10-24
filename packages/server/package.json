@@ -9,7 +9,7 @@
     "postbuild": "tsc --build tsconfig.build.json",
     "start": "node dist/bin.js",
     "test": "jest",
-    "test:pg": "../pg/with-test-db.sh jest",
+    "test:pg": "../pg/with-test-db.sh yarn test",
     "test:log": "cat test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
     "prettier": "prettier --check src/",

@@ -2,8 +2,6 @@ import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { def as common } from '@atproto/common'
 import * as locals from '../../../locals'
-import { DataDiff, Repo } from '@atproto/repo'
-import * as repoDiff from '../../../repo-diff'
 
 export default function (server: Server) {
   server.com.atproto.syncGetRoot(async (params, _in, _req, res) => {
@@ -33,44 +31,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.syncUpdateRepo(async (params, input, _req, res) => {
-    // we don't need auth here because the auth is on the data structure 😎
-    const { did } = params
-    const bytes = input.body
-    const db = locals.db(res)
-
-    // @TODO add something back here. new route for repos not on server?
-
-    // check to see if we have their username in DB, for indexed queries
-    // const haveUsername = await db.isDidRegistered(did)
-    // if (!haveUsername) {
-    //   const username = await service.getUsernameFromDidNetwork(did)
-    //   if (username) {
-    //     const [name, host] = username.split('@')
-    //     await db.registerDid(name, did, host)
-    //   }
-    // }
-
-    const maybeRepo = await locals.loadRepo(res, did)
-    const isNewRepo = maybeRepo === null
-    let repo: Repo
-    let diff: DataDiff
-
-    // @TODO: we should do these on a temp in-memory blockstore before merging down to our on-disk one
-    if (!isNewRepo) {
-      repo = maybeRepo
-      await repo.loadAndVerifyDiff
-      diff = await repo.loadAndVerifyDiff(bytes)
-    } else {
-      const blockstore = locals.blockstore(res)
-      repo = await Repo.fromCarFile(bytes, blockstore)
-      diff = await repo.verifyUpdates(null, repo.cid)
-    }
-
-    await repoDiff.processDiff(db, repo, diff)
-
-    // await subscriptions.notifySubscribers(db, repo)
-
-    await db.updateRepoRoot(did, repo.cid)
+  server.com.atproto.syncUpdateRepo(async (_params, _input, _req, _res) => {
+    throw new InvalidRequestError('Not implemented')
   })
 }
