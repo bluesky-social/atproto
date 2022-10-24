@@ -146,9 +146,12 @@ export class Database {
       .selectFrom('repo_root')
       .selectAll()
       .where('did', '=', did)
-    if (forUpdate && this.dialect !== 'sqlite' && this.isTransaction) {
-      // SELECT FOR UPDATE is not supported by sqlite, but sqlite txs are SERIALIZABLE so we don't actually need it
-      builder = builder.forUpdate()
+    if (forUpdate) {
+      this.assertTransaction()
+      if (this.dialect !== 'sqlite') {
+        // SELECT FOR UPDATE is not supported by sqlite, but sqlite txs are SERIALIZABLE so we don't actually need it
+        builder = builder.forUpdate()
+      }
     }
     const found = await builder.executeTakeFirst()
     return found ? CID.parse(found.root) : null
