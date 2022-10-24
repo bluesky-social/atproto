@@ -19,7 +19,7 @@
     "jest.config.base.js",
     "jest.config.js",
     "babel.config.js",
-    "build.js",
+    "build.js"
   ],
   "rules": {
     "no-var": "error",

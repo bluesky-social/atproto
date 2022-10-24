@@ -132,12 +132,8 @@ export function applyFileDiff(diff: FileDiff[]) {
   }
 }
 
-function readdirRecursiveSync(
-  root: string,
-  files: string[] = [],
-  prefix: string = '',
-) {
-  var dir = join(root, prefix)
+function readdirRecursiveSync(root: string, files: string[] = [], prefix = '') {
+  const dir = join(root, prefix)
   if (!fs.existsSync(dir)) return files
   if (fs.statSync(dir).isDirectory())
     fs.readdirSync(dir).forEach(function (name) {
