@@ -1,7 +1,6 @@
 import {
   DummyDriver,
   DynamicModule,
-  ExpressionBuilder,
   RawBuilder,
   SelectQueryBuilder,
   sql,
