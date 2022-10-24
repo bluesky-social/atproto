@@ -127,7 +127,7 @@ export default function (server: Server) {
       try {
         did = await plcClient.createDid(
           keypair,
-          recoveryKey || config.serverRecoveryKey,
+          recoveryKey || config.recoveryKey,
           username,
           config.origin,
         )

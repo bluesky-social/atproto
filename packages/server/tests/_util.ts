@@ -33,9 +33,10 @@ export const runTestServer = async (
 
   // setup server did
   const plcClient = new plc.PlcClient(plcUrl)
+  const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
   const serverDid = await plcClient.createDid(
     keypair,
-    keypair.did(),
+    recoveryKey,
     'pds.test',
     `http://localhost:${pdsPort}`,
   )
@@ -46,6 +47,7 @@ export const runTestServer = async (
     hostname: 'localhost',
     port: pdsPort,
     serverDid,
+    recoveryKey,
     adminPassword: ADMIN_PASSWORD,
     inviteRequired: false,
     didPlcUrl: plcUrl,
