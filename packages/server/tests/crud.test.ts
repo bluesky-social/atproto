@@ -221,7 +221,6 @@ describe('crud operations', () => {
           }),
         ).rejects.toThrow(Error)
       }
-      uris.map
     })
   })
 
