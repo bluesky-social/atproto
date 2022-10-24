@@ -8,7 +8,6 @@ import * as crypto from '@atproto/crypto'
 import Database from './db'
 import server from './index'
 import { ServerConfig } from './config'
-import fs from 'fs'
 
 const run = async () => {
   const env = process.env.ENV
