@@ -1,10 +1,9 @@
-import { Kysely, sql } from 'kysely'
+import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../lexicon/types/app/bsky/profile'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
-import { Dialect } from '..'
 
 const type = schemas.ids.AppBskyProfile
 const tableName = 'app_bsky_profile'
@@ -23,42 +22,6 @@ export interface AppBskyProfileBadge {
   profileUri: string
   badgeUri: string
   badgeCid: string
-}
-
-export const createTable = async (
-  db: Kysely<PartialDB>,
-  dialect: Dialect,
-): Promise<void> => {
-  await db.schema
-    .createTable(tableName)
-    .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('displayName', 'varchar', (col) => col.notNull())
-    .addColumn('description', 'varchar')
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .execute()
-
-  if (dialect === 'pg') {
-    await db.schema // Supports user search
-      .createIndex(`${tableName}_display_name_tgrm_idx`)
-      .on(tableName)
-      .using('gist')
-      .expression(sql`"displayName" gist_trgm_ops`)
-      .execute()
-  }
-
-  await db.schema
-    .createTable(supportingTableName)
-    .addColumn('profileUri', 'varchar', (col) => col.notNull())
-    .addColumn('badgeUri', 'varchar', (col) => col.notNull())
-    .addColumn('badgeCid', 'varchar', (col) => col.notNull())
-    // Index names need to be unique per schema for postgres
-    .addPrimaryKeyConstraint(`${supportingTableName}_pkey`, [
-      'profileUri',
-      'badgeUri',
-    ])
-    .execute()
 }
 
 export type PartialDB = {

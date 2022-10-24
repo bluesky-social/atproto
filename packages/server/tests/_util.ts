@@ -27,7 +27,8 @@ export const runTestServer = async (
   // run plc server
   const plcPort = await getPort()
   const plcUrl = `http://localhost:${plcPort}`
-  const plcDb = await plc.Database.memory().createTables()
+  const plcDb = plc.Database.memory()
+  await plcDb.migrateToLatestOrThrow()
   const plcServer = plc.server(plcDb, plcPort)
 
   // setup server did
@@ -58,13 +59,13 @@ export const runTestServer = async (
 
   const db =
     config.dbPostgresUrl !== undefined
-      ? await Database.postgres({
+      ? Database.postgres({
           url: config.dbPostgresUrl,
           schema: config.dbPostgresSchema,
         })
-      : await Database.memory()
+      : Database.memory()
 
-  await db.createTables()
+  await db.migrateToLatestOrThrow()
   const serverBlockstore = new MemoryBlockstore()
 
   const { app, listener } = server(serverBlockstore, db, keypair, config)

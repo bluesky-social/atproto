@@ -57,7 +57,7 @@ export class DevEnvServer {
         }
 
         const db = await PDSDatabase.memory()
-        await db.createTables()
+        await db.migrateToLatestOrThrow()
         const serverBlockstore = new MemoryBlockstore()
         const keypair = await crypto.EcdsaKeypair.create()
 
@@ -89,7 +89,8 @@ export class DevEnvServer {
         break
       }
       case ServerType.DidPlaceholder: {
-        const db = await plc.Database.memory().createTables()
+        const db = plc.Database.memory()
+        await db.migrateToLatestOrThrow()
         this.inst = await onServerReady(plc.server(db, this.port))
         break
       }

@@ -13,10 +13,11 @@ require('esbuild')
     platform: 'node',
     assetNames: 'src/static',
     external: [
-      './node_modules/better-sqlite3/*',
-      '../../node_modules/better-sqlite3/*',
+      'better-sqlite3',
       '../../node_modules/level/*',
       '../../node_modules/classic-level/*',
+      // Referenced in pg driver, but optional and we don't use it
+      'pg-native',
     ],
   })
   .catch(() => process.exit(1))

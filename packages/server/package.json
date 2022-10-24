@@ -17,7 +17,8 @@
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix"
+    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {
     "@atproto/api": "*",

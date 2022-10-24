@@ -8,6 +8,7 @@ require('esbuild')
     outdir: 'dist',
     platform: 'node',
     external: [
+      'better-sqlite3',
       '../../node_modules/level/*',
       '../../node_modules/classic-level/*',
       // Referenced in pg driver, but optional and we don't use it

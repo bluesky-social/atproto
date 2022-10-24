@@ -1,12 +1,12 @@
 {
   "name": "atp",
   "version": "0.0.1",
-  "repository": "git@github.com:bluesky-social/atp.git",
+  "repository": "git@github.com:bluesky-social/atproto.git",
   "author": "Bluesky PBLLC <hello@blueskyweb.xyz>",
   "license": "MIT",
   "private": true,
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   },
   "scripts": {
     "prepublish": "yarn build",

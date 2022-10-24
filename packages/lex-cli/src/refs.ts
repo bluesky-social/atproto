@@ -135,7 +135,7 @@ function lookup(obj: any, $ref: string): any {
   return res
 }
 
-const RE = /^lex:([a-z0-9-\.]+)/i
+const RE = /^lex:([a-z0-9-.]+)/i
 function extractId(v: string): string {
   return RE.exec(v)?.[1] || ''
 }
@@ -146,6 +146,6 @@ function refToKey(ref: string, id: string): string {
   return toCamelCase(`${id}.${name}`)
 }
 
-function isObj(v: any): v is Object {
+function isObj(v: any): v is object {
   return v && typeof v === 'object' && !Array.isArray(v)
 }

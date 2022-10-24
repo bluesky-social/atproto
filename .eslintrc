@@ -13,6 +13,14 @@
     "plugin:prettier/recommended",
     "prettier"
   ],
+  "ignorePatterns":[
+    "dist",
+    "node_modules",
+    "jest.config.base.js",
+    "jest.config.js",
+    "babel.config.js",
+    "build.js"
+  ],
   "rules": {
     "no-var": "error",
     "prefer-const": "warn",
