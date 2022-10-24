@@ -95,7 +95,7 @@ export default function (server: Server) {
 
   server.com.atproto.repoBatchWrite(async (params, input, req, res) => {
     const { did, validate } = params
-    const { auth, db, blockstore } = locals.get(res)
+    const { auth, db, blockstore, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -155,6 +155,7 @@ export default function (server: Server) {
         .createCommit(authStore, async (prev, curr) => {
           const success = await db.updateRepoRoot(did, curr, prev)
           if (!success) {
+            logger.error({ did, curr, prev }, 'repo update failed')
             throw new Error('Could not update repo root')
           }
           return null
@@ -226,6 +227,7 @@ export default function (server: Server) {
         .createCommit(authStore, async (prev, curr) => {
           const success = await txn.updateRepoRoot(did, curr, prev)
           if (!success) {
+            logger.error({ did, curr, prev }, 'repo update failed')
             throw new Error('Could not update repo root')
           }
           return null
@@ -244,7 +246,7 @@ export default function (server: Server) {
 
   server.com.atproto.repoDeleteRecord(async (params, _input, req, res) => {
     const { did, collection, rkey } = params
-    const { auth, db, blockstore } = locals.get(res)
+    const { auth, db, blockstore, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {
       throw new AuthRequiredError()
     }
@@ -270,6 +272,7 @@ export default function (server: Server) {
         .createCommit(authStore, async (prev, curr) => {
           const success = await txn.updateRepoRoot(did, curr, prev)
           if (!success) {
+            logger.error({ did, curr, prev }, 'repo update failed')
             throw new Error('Could not update repo root')
           }
           return null

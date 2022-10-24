@@ -11,7 +11,7 @@ const profileNsid = schema.ids.AppBskyProfile
 
 export default function (server: Server) {
   server.app.bsky.updateProfile(async (_params, input, req, res) => {
-    const { auth, db, blockstore } = locals.get(res)
+    const { auth, db, blockstore, logger } = locals.get(res)
 
     const requester = auth.getUserDid(req)
     if (!requester) {
@@ -121,6 +121,7 @@ export default function (server: Server) {
           .createCommit(authStore, async (prev, curr) => {
             const success = await txnDb.updateRepoRoot(requester, curr, prev)
             if (!success) {
+              logger.error({ did: requester, curr, prev }, 'repo update failed')
               throw new Error('Could not update repo root')
             }
             return null
