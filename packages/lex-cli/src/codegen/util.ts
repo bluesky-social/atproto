@@ -39,11 +39,11 @@ function getOrCreateNode(tree: NsidNS[], path: string[]): NsidNS {
 
 export function toTitleCase(v: string): string {
   v = v.replace(/^([a-z])/gi, (_, g) => g.toUpperCase()) // upper-case first letter
-  v = v.replace(/[\.-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash or dot segments
-  return v.replace(/[\.-]/g, '') // remove lefover dashes or dots
+  v = v.replace(/[.-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash or dot segments
+  return v.replace(/[.-]/g, '') // remove lefover dashes or dots
 }
 
 export function toCamelCase(v: string): string {
-  v = v.replace(/[\.-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash or dot segments
-  return v.replace(/[\.-]/g, '') // remove lefover dashes or dots
+  v = v.replace(/[.-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash or dot segments
+  return v.replace(/[.-]/g, '') // remove lefover dashes or dots
 }
