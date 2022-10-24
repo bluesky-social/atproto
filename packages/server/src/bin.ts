@@ -8,6 +8,7 @@ import * as crypto from '@atproto/crypto'
 import Database from './db'
 import server from './index'
 import { ServerConfig } from './config'
+import fs from 'fs'
 
 const run = async () => {
   const env = process.env.ENV
@@ -28,10 +29,18 @@ const run = async () => {
     blockstore = new MemoryBlockstore()
   }
 
+  let createDbTables = false;
+
   if (cfg.databaseLocation) {
+    createDbTables = !fs.statSync(cfg.databaseLocation, { throwIfNoEntry: false });
     db = await Database.sqlite(cfg.databaseLocation)
   } else {
+    createDbTables = true;
     db = await Database.memory()
+  }
+
+  if (createDbTables) {
+    await db.createTables();
   }
 
   const keypair = await crypto.EcdsaKeypair.create()
