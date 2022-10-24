@@ -399,12 +399,6 @@ export class Database {
     }
     return found
   }
-
-  async lockTable(tableName: string): Promise<void> {
-    if (this.dialect === 'pg') {
-      await sql`LOCK TABLE ${sql.ref(tableName)} IN SHARE MODE`.execute(this.db)
-    }
-  }
 }
 
 export default Database
