@@ -1,4 +1,4 @@
-import { Kysely, SqliteDialect, sql, PostgresDialect } from 'kysely'
+import { Kysely, SqliteDialect, PostgresDialect, sql, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
@@ -23,13 +23,15 @@ import notificationPlugin from './tables/user-notification'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { dbLogger as log } from '../logger'
-import { DatabaseSchema, createTables } from './database-schema'
+import { DatabaseSchema } from './database-schema'
 import * as scrypt from './scrypt'
 import { User } from './tables/user'
 import { dummyDialect } from './util'
+import * as migrations from './migrations'
+import { CtxMigrationProvider } from './migrations/provider'
 
 export class Database {
-  db: Kysely<DatabaseSchema>
+  migrator: Migrator
   records: {
     post: DbRecordPlugin<Post.Record, AppBskyPost>
     like: DbRecordPlugin<Like.Record, AppBskyLike>
@@ -43,11 +45,10 @@ export class Database {
   notifications: NotificationsPlugin
 
   constructor(
-    db: Kysely<DatabaseSchema>,
+    public db: Kysely<DatabaseSchema>,
     public dialect: Dialect,
     public schema?: string,
   ) {
-    this.db = db
     this.records = {
       post: postPlugin(db),
       like: likePlugin(db),
@@ -59,9 +60,14 @@ export class Database {
       profile: profilePlugin(db),
     }
     this.notifications = notificationPlugin(db)
+    this.migrator = new Migrator({
+      db,
+      migrationTableSchema: schema,
+      provider: new CtxMigrationProvider(migrations, dialect),
+    })
   }
 
-  static async sqlite(location: string): Promise<Database> {
+  static sqlite(location: string): Database {
     const db = new Kysely<DatabaseSchema>({
       dialect: new SqliteDialect({
         database: new SqliteDB(location),
@@ -70,10 +76,7 @@ export class Database {
     return new Database(db, 'sqlite')
   }
 
-  static async postgres(opts: {
-    url: string
-    schema: string | undefined
-  }): Promise<Database> {
+  static postgres(opts: { url: string; schema?: string }): Database {
     const { url, schema } = opts
     const pool = new PgPool({ connectionString: url })
 
@@ -100,7 +103,7 @@ export class Database {
     return new Database(db, 'pg', schema)
   }
 
-  static async memory(): Promise<Database> {
+  static memory(): Database {
     return Database.sqlite(':memory:')
   }
 
@@ -108,11 +111,18 @@ export class Database {
     await this.db.destroy()
   }
 
-  async createTables(): Promise<void> {
+  async migrateToLatestOrThrow() {
     if (this.schema !== undefined) {
       await this.db.schema.createSchema(this.schema).ifNotExists().execute()
     }
-    await createTables(this.db, this.dialect)
+    const { error, results } = await this.migrator.migrateToLatest()
+    if (error) {
+      throw error
+    }
+    if (!results) {
+      throw new Error('An unknown failure occurred while migrating')
+    }
+    return results
   }
 
   async getRepoRoot(did: string): Promise<CID | null> {

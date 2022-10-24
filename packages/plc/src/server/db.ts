@@ -1,10 +1,4 @@
-import {
-  Kysely,
-  KyselyConfig,
-  Migrator,
-  PostgresDialect,
-  SqliteDialect,
-} from 'kysely'
+import { Kysely, Migrator, PostgresDialect, SqliteDialect } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { CID } from 'multiformats/cid'
@@ -17,7 +11,8 @@ import * as migrations from './migrations'
 export class Database {
   migrator: Migrator
   constructor(
-    public db: KyselyWithDialect<DatabaseSchema>,
+    public db: Kysely<DatabaseSchema>,
+    public dialect: Dialect,
     public schema?: string,
   ) {
     this.migrator = new Migrator({
@@ -32,12 +27,12 @@ export class Database {
   }
 
   static sqlite(location: string): Database {
-    const db = new KyselyWithDialect<DatabaseSchema>('sqlite', {
+    const db = new Kysely<DatabaseSchema>({
       dialect: new SqliteDialect({
         database: new SqliteDB(location),
       }),
     })
-    return new Database(db)
+    return new Database(db, 'sqlite')
   }
 
   static postgres(opts: { url: string; schema?: string }): Database {
@@ -60,11 +55,11 @@ export class Database {
       )
     }
 
-    const db = new KyselyWithDialect<DatabaseSchema>('pg', {
+    const db = new Kysely<DatabaseSchema>({
       dialect: new PostgresDialect({ pool }),
     })
 
-    return new Database(db, schema)
+    return new Database(db, 'pg', schema)
   }
 
   static memory(): Database {
@@ -187,14 +182,6 @@ export class Database {
 export default Database
 
 export type Dialect = 'pg' | 'sqlite'
-
-// By placing the dialect on the kysely instance itself,
-// you can utilize this information inside migrations.
-export class KyselyWithDialect<DB> extends Kysely<DB> {
-  constructor(public dialect: Dialect, config: KyselyConfig) {
-    super(config)
-  }
-}
 
 interface OperationsTable {
   did: string
