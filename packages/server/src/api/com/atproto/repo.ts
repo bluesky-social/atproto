@@ -93,7 +93,6 @@ export default function (server: Server) {
     }
   })
 
-  // @TODO all write methods should be transactional to ensure no forked histories
   server.com.atproto.repoBatchWrite(async (params, input, req, res) => {
     const { did, validate } = params
     const { auth, db, blockstore } = locals.get(res)
@@ -233,8 +232,6 @@ export default function (server: Server) {
         })
     })
 
-    // @TODO update subscribers
-
     return {
       encoding: 'application/json',
       body: { uri: uri.toString(), cid: cid.toString() },
@@ -278,7 +275,5 @@ export default function (server: Server) {
           return null
         })
     })
-
-    // @TODO update subscribers
   })
 }
