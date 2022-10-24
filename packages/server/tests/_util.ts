@@ -14,6 +14,8 @@ const ADMIN_PASSWORD = 'admin-pass'
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
+  cfg: ServerConfig
+  serverKey: string
   app: App
   close: CloseFn
 }
@@ -74,6 +76,8 @@ export const runTestServer = async (
 
   return {
     url: `http://localhost:${pdsPort}`,
+    cfg: config,
+    serverKey: keypair.did(),
     app,
     close: async () => {
       await Promise.all([
