@@ -32,7 +32,7 @@ const run = async () => {
   let createDbTables = false;
 
   if (cfg.databaseLocation) {
-    createDbTables = !fs.statSync(cfg.databaseLocation, {throwIfNoEntry: false});
+    createDbTables = !fs.statSync(cfg.databaseLocation, { throwIfNoEntry: false });
     db = await Database.sqlite(cfg.databaseLocation)
   } else {
     createDbTables = true;
