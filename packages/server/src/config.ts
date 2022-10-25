@@ -48,7 +48,11 @@ export class ServerConfig {
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
     const serverDid = process.env.SERVER_DID || ''
-    const recoveryKey = process.env.RECOVERY_KEY || ''
+
+    if (typeof process.env.RECOVERY_KEY !== 'string') {
+      throw new Error('No value provided for process.env.RECOVERY_KEY')
+    }
+    const recoveryKey = process.env.RECOVERY_KEY
 
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
 
