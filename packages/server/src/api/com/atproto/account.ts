@@ -34,7 +34,7 @@ export default function (server: Server) {
   })
 
   server.com.atproto.createAccount(async (_params, input, _req, res) => {
-    const { email, username, password, inviteCode } = input.body
+    const { email, username, password, inviteCode, recoveryKey } = input.body
     const { db, blockstore, auth, config, keypair, logger } = locals.get(res)
 
     // In order to perform the significant db updates ahead of
@@ -127,7 +127,7 @@ export default function (server: Server) {
       try {
         did = await plcClient.createDid(
           keypair,
-          keypair.did(),
+          recoveryKey || config.recoveryKey,
           username,
           config.origin,
         )

@@ -97,7 +97,6 @@ export const plcClient = (res: Response): plc.PlcClient => {
 
 export const getAuthstore = (res: Response, did: string): AuthStore => {
   const { auth, keypair } = get(res)
-  // @TODO check that we can sign on behalf of this DID
   return auth.verifier.loadAuthStore(keypair, [], did)
 }
 
