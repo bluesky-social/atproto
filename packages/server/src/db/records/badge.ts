@@ -58,8 +58,7 @@ const insertFn =
       cid: cid.toString(),
       creator: uri.host,
       assertionType: obj.assertion.type,
-      assertionTag:
-        (obj.assertion as Badge.AppBskyBadgeTagAssertion).tag || null,
+      assertionTag: (obj.assertion as Badge.TagAssertion).tag || null,
       createdAt: obj.createdAt,
       indexedAt: new Date().toISOString(),
     }

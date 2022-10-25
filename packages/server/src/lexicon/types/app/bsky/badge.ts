@@ -3,27 +3,27 @@
 */
 export interface Record {
   assertion:
-    | AppBskyBadgeInviteAssertion
-    | AppBskyBadgeEmployeeAssertion
-    | AppBskyBadgeTagAssertion
-    | AppBskyBadgeUnknownAssertion;
+    | InviteAssertion
+    | EmployeeAssertion
+    | TagAssertion
+    | UnknownAssertion;
   createdAt: string;
   [k: string]: unknown;
 }
-export interface AppBskyBadgeInviteAssertion {
+export interface InviteAssertion {
   type: 'invite';
   [k: string]: unknown;
 }
-export interface AppBskyBadgeEmployeeAssertion {
+export interface EmployeeAssertion {
   type: 'employee';
   [k: string]: unknown;
 }
-export interface AppBskyBadgeTagAssertion {
+export interface TagAssertion {
   type: 'tag';
   tag: string;
   [k: string]: unknown;
 }
-export interface AppBskyBadgeUnknownAssertion {
+export interface UnknownAssertion {
   type: string;
   [k: string]: unknown;
 }

@@ -29,12 +29,12 @@ export interface OutputSchema {
   followersCount: number;
   followsCount: number;
   postsCount: number;
-  pinnedBadges: AppBskyGetProfileBadge[];
+  pinnedBadges: Badge[];
   myState?: {
     follow?: string,
   };
 }
-export interface AppBskyGetProfileBadge {
+export interface Badge {
   uri: string;
   cid: string;
   error?: string;
