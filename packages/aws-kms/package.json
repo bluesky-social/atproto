@@ -19,7 +19,6 @@
     "@atproto/crypto": "*",
     "@aws-sdk/client-kms": "^3.196.0",
     "@noble/secp256k1": "^1.7.0",
-    "@ucans/core": "0.11.0",
     "key-encoder": "^2.0.3"
   }
 }

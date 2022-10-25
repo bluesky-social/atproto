@@ -39,7 +39,6 @@ export class KmsKeypair implements crypto.DidableKey {
       'raw',
     )
     const publicKey = secp.utils.hexToBytes(rawPublicKeyHex)
-
     return new KmsKeypair(client, cfg.keyId, publicKey)
   }
 
@@ -56,7 +55,9 @@ export class KmsKeypair implements crypto.DidableKey {
     if (!res.Signature) {
       throw new Error('Could not get signature')
     }
-    return res.Signature
+    const sig = secp.Signature.fromDER(res.Signature)
+    const normalized = sig.normalizeS()
+    return normalized.toCompactRawBytes()
   }
 }
 
