@@ -13,7 +13,8 @@
         "email": {"type": "string"},
         "username": {"type": "string"},
         "inviteCode": {"type": "string"},
-        "password": {"type": "string"}
+        "password": {"type": "string"},
+        "recoveryKey": {"type": "string"}
       }
     }
   },

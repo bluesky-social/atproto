@@ -15,6 +15,7 @@ export interface InputSchema {
   username: string;
   inviteCode?: string;
   password: string;
+  recoveryKey?: string;
 }
 
 export interface HandlerSuccess {

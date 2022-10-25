@@ -7,9 +7,11 @@ import {
   ExpiredTokenError,
   InvalidTokenError,
 } from '@atproto/api/src/types/com/atproto/resetAccountPassword'
+import * as plc from '@atproto/plc'
+import * as crypto from '@atproto/crypto'
 import { sign } from 'jsonwebtoken'
 import Mail from 'nodemailer/lib/mailer'
-import { App } from '../src'
+import { App, ServerConfig } from '../src'
 import * as locals from '../src/locals'
 import * as util from './_util'
 
@@ -18,8 +20,25 @@ const username = 'alice.test'
 const password = 'test123'
 const passwordAlt = 'test456'
 
+const createInviteCode = async (
+  client: AtpServiceClient,
+  uses: number,
+): Promise<string> => {
+  const res = await client.com.atproto.createInviteCode(
+    {},
+    { useCount: uses },
+    {
+      headers: { authorization: util.adminAuth() },
+      encoding: 'application/json',
+    },
+  )
+  return res.data.code
+}
+
 describe('account', () => {
   let serverUrl: string
+  let cfg: ServerConfig
+  let serverKey: string
   let client: AtpServiceClient
   let close: util.CloseFn
   let app: App
@@ -34,6 +53,8 @@ describe('account', () => {
     close = server.close
     app = server.app
     serverUrl = server.url
+    cfg = server.cfg
+    serverKey = server.serverKey
     client = AtpApi.service(serverUrl)
 
     // Catch emails for use in tests
@@ -57,15 +78,7 @@ describe('account', () => {
   let inviteCode: string
 
   it('creates an invite code', async () => {
-    const res = await client.com.atproto.createInviteCode(
-      {},
-      { useCount: 1 },
-      {
-        headers: { authorization: util.adminAuth() },
-        encoding: 'application/json',
-      },
-    )
-    inviteCode = res.data.code
+    inviteCode = await createInviteCode(client, 1)
     const [host, code] = inviteCode.split('-')
     expect(host).toBe(new URL(serverUrl).hostname)
     expect(code.length).toBe(5)
@@ -124,16 +137,38 @@ describe('account', () => {
     expect(res.data.username).toEqual(username)
   })
 
-  it('disallows duplicate email addresses and usernames', async () => {
-    const res = await client.com.atproto.createInviteCode(
+  it('generates a properly formatted PLC DID', async () => {
+    const plcClient = new plc.PlcClient(cfg.didPlcUrl)
+    const didData = await plcClient.getDocumentData(did)
+
+    expect(didData.username).toBe(username)
+    expect(didData.signingKey).toBe(serverKey)
+    expect(didData.recoveryKey).toBe(cfg.recoveryKey)
+    expect(didData.atpPds).toBe(serverUrl)
+  })
+
+  it('allows a custom set recovery key', async () => {
+    const inviteCode = await createInviteCode(client, 1)
+    const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
+    const res = await client.com.atproto.createAccount(
       {},
-      { useCount: 2 },
       {
-        headers: { authorization: util.adminAuth() },
-        encoding: 'application/json',
+        email: 'custom-recovery@test.com',
+        username: 'custom-recovery.test.com',
+        password: 'custom-recovery',
+        inviteCode,
+        recoveryKey,
       },
     )
-    const inviteCode = res.data.code
+    const plcClient = new plc.PlcClient(cfg.didPlcUrl)
+    const didData = await plcClient.getDocumentData(res.data.did)
+
+    expect(didData.signingKey).toBe(serverKey)
+    expect(didData.recoveryKey).toBe(recoveryKey)
+  })
+
+  it('disallows duplicate email addresses and usernames', async () => {
+    const inviteCode = await createInviteCode(client, 2)
     const email = 'bob@test.com'
     const username = 'bob.test'
     const password = 'test123'
@@ -183,14 +218,7 @@ describe('account', () => {
   })
 
   it('handles racing invite code uses', async () => {
-    const res = await client.com.atproto.createInviteCode(
-      {},
-      { useCount: 1 },
-      {
-        headers: { authorization: util.adminAuth() },
-        encoding: 'application/json',
-      },
-    )
+    const inviteCode = await createInviteCode(client, 1)
     const COUNT = 10
 
     let successes = 0
@@ -205,7 +233,7 @@ describe('account', () => {
               email: `user${i}@test.com`,
               username: `user${i}.test.com`,
               password: `password`,
-              inviteCode: res.data.code,
+              inviteCode,
             },
           )
           successes++
@@ -223,22 +251,8 @@ describe('account', () => {
   it('handles racing signups for same username', async () => {
     const COUNT = 10
 
-    const invite1 = await client.com.atproto.createInviteCode(
-      {},
-      { useCount: COUNT },
-      {
-        headers: { authorization: util.adminAuth() },
-        encoding: 'application/json',
-      },
-    )
-    const invite2 = await client.com.atproto.createInviteCode(
-      {},
-      { useCount: COUNT },
-      {
-        headers: { authorization: util.adminAuth() },
-        encoding: 'application/json',
-      },
-    )
+    const invite1 = await createInviteCode(client, COUNT)
+    const invite2 = await createInviteCode(client, COUNT)
 
     let successes = 0
     let failures = 0
@@ -255,7 +269,7 @@ describe('account', () => {
               email: `matching@test.com`,
               username: `matching.test.com`,
               password: `password`,
-              inviteCode: invite.data.code,
+              inviteCode: invite,
             },
           )
           successes++
