@@ -1,58 +1,5 @@
 import bigInt from 'big-integer'
-import { webcrypto } from 'one-webcrypto'
 import * as uint8arrays from 'uint8arrays'
-
-import { BASE58_DID_PREFIX, P256_DID_PREFIX } from '../const'
-
-// DID <-> Public key conversions
-// ------------------------
-
-export const pubkeyBytesFromDid = (did: string): Uint8Array => {
-  if (!did.startsWith(BASE58_DID_PREFIX)) {
-    throw new Error('Expected a base58-encoded DID formatted `did:key:z...`')
-  }
-  const didWithoutPrefix = did.slice(BASE58_DID_PREFIX.length)
-  const didBytes = uint8arrays.fromString(didWithoutPrefix, 'base58btc')
-  if (!uint8arrays.equals(P256_DID_PREFIX, didBytes.slice(0, 2))) {
-    throw new Error('Unsupported key method: Expected NIST P-256')
-  }
-  const compressedKeyBytes = didBytes.slice(2)
-  return decompressPubkey(compressedKeyBytes)
-}
-
-export const ecdsaKeyFromDid = async (did: string): Promise<CryptoKey> => {
-  const keyBytes = pubkeyBytesFromDid(did)
-  return webcrypto.subtle.importKey(
-    'raw',
-    keyBytes,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    true,
-    ['verify'],
-  )
-}
-
-export const ecdhKeyFromDid = async (did: string): Promise<CryptoKey> => {
-  const keyBytes = pubkeyBytesFromDid(did)
-  return webcrypto.subtle.importKey(
-    'raw',
-    keyBytes,
-    { name: 'ECDH', namedCurve: 'P-256' },
-    true,
-    [],
-  )
-}
-
-export const didFromPubkey = async (pubkey: CryptoKey): Promise<string> => {
-  const buf = await webcrypto.subtle.exportKey('raw', pubkey)
-  const bytes = new Uint8Array(buf)
-  return didFromPubkeyBytes(bytes)
-}
-
-export const didFromPubkeyBytes = (pubkey: Uint8Array): string => {
-  const compressedKey = compressPubkey(pubkey)
-  const prefixedBytes = uint8arrays.concat([P256_DID_PREFIX, compressedKey])
-  return BASE58_DID_PREFIX + uint8arrays.toString(prefixedBytes, 'base58btc')
-}
 
 // PUBLIC KEY COMPRESSION
 // ------------------------

@@ -216,10 +216,16 @@ const formatKeyAndContext = (key: string): KeyAndContext => {
   }
   const { jwtAlg, keyBytes } = keyInfo
 
-  if (jwtAlg === 'ES256') {
+  if (jwtAlg === crypto.P256_JWT_ALG) {
     return {
       context: 'https://w3id.org/security/suites/ecdsa-2019/v1',
       type: 'EcdsaSecp256r1VerificationKey2019',
+      publicKeyMultibase: `z${uint8arrays.toString(keyBytes, 'base58btc')}`,
+    }
+  } else if (jwtAlg === crypto.SECP256K1_JWT_ALG) {
+    return {
+      context: 'https://w3id.org/security/suites/secp256k1-2019/v1',
+      type: 'EcdsaSecp256k1VerificationKey2019',
       publicKeyMultibase: `z${uint8arrays.toString(keyBytes, 'base58btc')}`,
     }
   }
