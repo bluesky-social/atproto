@@ -9,7 +9,7 @@ require('esbuild')
     platform: 'node',
     external: [
       '../plc/node_modules/better-sqlite3/*',
-      '../server/node_modules/better-sqlite3/*',
+      '../pds/node_modules/better-sqlite3/*',
       '../../node_modules/classic-level/*',
       // Referenced in pg driver, but optional and we don't use it
       'pg-native',
@@ -17,7 +17,7 @@ require('esbuild')
     plugins: [
       copy({
         assets: {
-          from: ['../server/src/mailer/templates/**/*'],
+          from: ['../pds/src/mailer/templates/**/*'],
           to: ['./templates'],
           keepStructure: true,
         },

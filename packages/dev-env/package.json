@@ -18,7 +18,7 @@
     "@atproto/api": "*",
     "@atproto/crypto": "*",
     "@atproto/did-resolver": "*",
-    "@atproto/server": "*",
+    "@atproto/pds": "*",
     "@atproto/uri": "*",
     "chalk": "^5.0.1",
     "dotenv": "^16.0.1",
