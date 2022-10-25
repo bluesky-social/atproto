@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "license": "MIT",
   "scripts": {
+    "start": "ts-node src/run.ts",
     "test": "jest ",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
@@ -15,6 +16,10 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@ucans/core": "0.11.0"
+    "@atproto/crypto": "*",
+    "@aws-sdk/client-kms": "^3.196.0",
+    "@noble/secp256k1": "^1.7.0",
+    "@ucans/core": "0.11.0",
+    "key-encoder": "^2.0.3"
   }
 }
