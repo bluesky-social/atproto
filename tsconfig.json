@@ -28,6 +28,7 @@
     { "path": "./packages/pds/tsconfig.build.json" },
     { "path": "./packages/api/tsconfig.build.json" },
     { "path": "./packages/auth/tsconfig.build.json" },
+    { "path": "./packages/aws-kms/tsconfig.build.json" },
     { "path": "./packages/common/tsconfig.build.json" },
     { "path": "./packages/crypto/tsconfig.build.json" },
     { "path": "./packages/dev-env" },
