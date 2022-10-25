@@ -11,7 +11,6 @@ export interface ServerConfigValues {
   jwtSecret: string
 
   didPlcUrl: string
-  serverDid: string
 
   adminPassword: string
 
@@ -46,7 +45,6 @@ export class ServerConfig {
     const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
-    const serverDid = process.env.SERVER_DID || ''
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
 
     const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
@@ -75,7 +73,6 @@ export class ServerConfig {
       dbPostgresUrl,
       dbPostgresSchema,
       jwtSecret,
-      serverDid,
       didPlcUrl,
       adminPassword,
       inviteRequired,
@@ -125,10 +122,6 @@ export class ServerConfig {
 
   get didPlcUrl() {
     return this.cfg.didPlcUrl
-  }
-
-  get serverDid() {
-    return this.cfg.serverDid
   }
 
   get adminPassword() {

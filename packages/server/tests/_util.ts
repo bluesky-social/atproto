@@ -31,21 +31,11 @@ export const runTestServer = async (
   await plcDb.migrateToLatestOrThrow()
   const plcServer = plc.server(plcDb, plcPort)
 
-  // setup server did
-  const plcClient = new plc.PlcClient(plcUrl)
-  const serverDid = await plcClient.createDid(
-    keypair,
-    keypair.did(),
-    'pds.test',
-    `http://localhost:${pdsPort}`,
-  )
-
   const config = new ServerConfig({
     debugMode: true,
     scheme: 'http',
     hostname: 'localhost',
     port: pdsPort,
-    serverDid,
     adminPassword: ADMIN_PASSWORD,
     inviteRequired: false,
     didPlcUrl: plcUrl,
