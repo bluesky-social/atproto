@@ -1,4 +1,5 @@
 import { webcrypto } from 'one-webcrypto'
+import { P256_JWT_ALG } from '../const'
 import { parseDidKey } from '../did'
 
 export const importKeypairJwk = async (
@@ -30,7 +31,7 @@ export const verifyDidSig = async (
   sig: Uint8Array,
 ): Promise<boolean> => {
   const { jwtAlg, keyBytes } = parseDidKey(did)
-  if (jwtAlg !== 'ES256') {
+  if (jwtAlg !== P256_JWT_ALG) {
     throw new Error(`Not a P-256 did:key: ${did}`)
   }
   return verify(keyBytes, data, sig)

@@ -30,10 +30,12 @@ export const getKey = (doc: DIDDocument, id: string): string | undefined => {
   // @TODO support jwk
   // should we be surfacing errors here or returning undefined?
   if (!found.publicKeyMultibase) return undefined
+  const keyBytes = crypto.multibaseToBytes(found.publicKeyMultibase)
   let didKey: string | undefined = undefined
   if (found.type === 'EcdsaSecp256r1VerificationKey2019') {
-    const keyBytes = crypto.multibaseToBytes(found.publicKeyMultibase)
-    didKey = crypto.formatDidKey('ES256', keyBytes)
+    didKey = crypto.formatDidKey(crypto.P256_JWT_ALG, keyBytes)
+  } else if (found.type === 'EcdsaSecp256k1VerificationKey2019') {
+    didKey = crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
   }
   return didKey
 }
