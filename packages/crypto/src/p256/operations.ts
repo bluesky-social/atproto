@@ -1,5 +1,5 @@
 import { webcrypto } from 'one-webcrypto'
-import * as encoding from './encoding'
+import { parseDidKey } from '../did'
 
 export const importKeypairJwk = async (
   jwk: JsonWebKey,
@@ -29,7 +29,10 @@ export const verifyDidSig = async (
   data: Uint8Array,
   sig: Uint8Array,
 ): Promise<boolean> => {
-  const keyBytes = encoding.pubkeyBytesFromDid(did)
+  const { jwtAlg, keyBytes } = parseDidKey(did)
+  if (jwtAlg !== 'ES256') {
+    throw new Error(`Not a P-256 did:key: ${did}`)
+  }
   return verify(keyBytes, data, sig)
 }
 
@@ -56,17 +59,5 @@ export const importEcdsaPublicKey = async (
     { name: 'ECDSA', namedCurve: 'P-256' },
     true,
     ['verify'],
-  )
-}
-
-export const importEcdhPublicKey = async (
-  keyBytes: Uint8Array,
-): Promise<CryptoKey> => {
-  return webcrypto.subtle.importKey(
-    'raw',
-    keyBytes,
-    { name: 'ECDH', namedCurve: 'P-256' },
-    true,
-    [],
   )
 }

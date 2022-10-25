@@ -3,15 +3,16 @@ import * as uint8arrays from 'uint8arrays'
 
 import * as ucan from '@ucans/core'
 
-import * as encoding from './encoding'
+import * as did from '../did'
 import * as operations from './operations'
+import { P256_JWT_ALG } from '../const'
 
 export type EcdsaKeypairOptions = {
   exportable: boolean
 }
 
 export class EcdsaKeypair implements ucan.DidableKey {
-  jwtAlg = 'ES256'
+  jwtAlg = P256_JWT_ALG
   private publicKey: Uint8Array
   private keypair: CryptoKeyPair
   private exportable: boolean
@@ -60,7 +61,7 @@ export class EcdsaKeypair implements ucan.DidableKey {
   }
 
   did(): string {
-    return encoding.didFromPubkeyBytes(this.publicKey)
+    return did.formatDidKey(this.jwtAlg, this.publicKey)
   }
 
   async sign(msg: Uint8Array): Promise<Uint8Array> {

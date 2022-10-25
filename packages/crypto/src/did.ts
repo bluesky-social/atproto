@@ -1,5 +1,6 @@
 import * as uint8arrays from 'uint8arrays'
 import * as p256 from './p256/encoding'
+import * as secp from './secp256k1/encoding'
 import plugins from './plugins'
 
 export const DID_KEY_BASE58_PREFIX = 'did:key:z'
@@ -24,6 +25,8 @@ export const parseDidKey = (did: string): ParsedDidKey => {
   let keyBytes = prefixedBytes.slice(plugin.prefix.length)
   if (plugin.jwtAlg === 'ES256') {
     keyBytes = p256.decompressPubkey(keyBytes)
+  } else if (plugin.jwtAlg === 'ES256K') {
+    keyBytes = secp.decompressPubkey(keyBytes)
   }
   return {
     jwtAlg: plugin.jwtAlg,
@@ -38,6 +41,8 @@ export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
   }
   if (jwtAlg === 'ES256') {
     keyBytes = p256.compressPubkey(keyBytes)
+  } else if (jwtAlg === 'ES256K') {
+    keyBytes = secp.compressPubkey(keyBytes)
   }
   const prefixedBytes = uint8arrays.concat([plugin.prefix, keyBytes])
   return (
