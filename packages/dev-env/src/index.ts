@@ -68,6 +68,7 @@ export class DevEnvServer {
             hostname: 'localhost',
             port: this.port,
             didPlcUrl: this.env.plcUrl,
+            recoveryKey: keypair.did(),
             testNameRegistry: this.env.testNameRegistry,
             jwtSecret: crytpo.randomBytes(8).toString('base64'),
             appUrlPasswordReset: 'app://password-reset',
