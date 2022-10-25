@@ -50,7 +50,8 @@ export class Secp256k1Keypair implements ucan.DidableKey {
 
   async sign(msg: Uint8Array): Promise<Uint8Array> {
     const msgHash = await secp.utils.sha256(msg)
-    return secp.sign(msgHash, this.privateKey)
+    // return raw 64 byte sig not DER-encoded
+    return secp.sign(msgHash, this.privateKey, { der: false })
   }
 
   async export(): Promise<Uint8Array> {
