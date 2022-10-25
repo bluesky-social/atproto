@@ -29,8 +29,7 @@ export default function (server: Server) {
   })
 
   server.com.atproto.getAccount(() => {
-    // TODO
-    return { encoding: '', body: {} }
+    throw new InvalidRequestError('Not implemented')
   })
 
   server.com.atproto.createAccount(async (_params, input, _req, res) => {
@@ -182,6 +181,6 @@ export default function (server: Server) {
 
   server.com.atproto.deleteAccount(() => {
     // TODO
-    return { encoding: '', body: {} }
+    throw new InvalidRequestError('Not implemented')
   })
 }

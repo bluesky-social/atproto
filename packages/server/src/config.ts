@@ -11,9 +11,8 @@ export interface ServerConfigValues {
   jwtSecret: string
 
   didPlcUrl: string
-  serverDid: string
-  recoveryKey: string
 
+  recoveryKey: string
   adminPassword: string
 
   inviteRequired: boolean
@@ -47,7 +46,6 @@ export class ServerConfig {
     const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
-    const serverDid = process.env.SERVER_DID || ''
 
     if (typeof process.env.RECOVERY_KEY !== 'string') {
       throw new Error('No value provided for process.env.RECOVERY_KEY')
@@ -82,7 +80,6 @@ export class ServerConfig {
       dbPostgresUrl,
       dbPostgresSchema,
       jwtSecret,
-      serverDid,
       recoveryKey,
       didPlcUrl,
       adminPassword,
@@ -133,10 +130,6 @@ export class ServerConfig {
 
   get didPlcUrl() {
     return this.cfg.didPlcUrl
-  }
-
-  get serverDid() {
-    return this.cfg.serverDid
   }
 
   get recoveryKey() {

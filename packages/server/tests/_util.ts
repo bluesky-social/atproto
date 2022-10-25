@@ -33,22 +33,12 @@ export const runTestServer = async (
   await plcDb.migrateToLatestOrThrow()
   const plcServer = plc.server(plcDb, plcPort)
 
-  // setup server did
-  const plcClient = new plc.PlcClient(plcUrl)
   const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
-  const serverDid = await plcClient.createDid(
-    keypair,
-    recoveryKey,
-    'pds.test',
-    `http://localhost:${pdsPort}`,
-  )
-
   const config = new ServerConfig({
     debugMode: true,
     scheme: 'http',
     hostname: 'localhost',
     port: pdsPort,
-    serverDid,
     recoveryKey,
     adminPassword: ADMIN_PASSWORD,
     inviteRequired: false,

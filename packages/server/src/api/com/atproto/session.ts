@@ -45,7 +45,6 @@ export default function (server: Server) {
   })
 
   server.com.atproto.deleteSession(() => {
-    // TODO
-    return { encoding: '', body: {} }
+    throw new InvalidRequestError('Not implemented')
   })
 }
