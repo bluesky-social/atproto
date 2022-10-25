@@ -12,7 +12,7 @@ export type KmsConfig = {
   region: string
 }
 
-export class KmsKeypair {
+export class KmsKeypair implements crypto.DidableKey {
   jwtAlg = crypto.SECP256K1_JWT_ALG
 
   constructor(
