@@ -3,6 +3,7 @@ export * from './did'
 export * from './multibase'
 export * from './random'
 export * from './sha'
+export * from './verify'
 
 export * from './p256/keypair'
 export * from './p256/plugin'

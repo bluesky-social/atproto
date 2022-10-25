@@ -222,6 +222,12 @@ const formatKeyAndContext = (key: string): KeyAndContext => {
       type: 'EcdsaSecp256r1VerificationKey2019',
       publicKeyMultibase: `z${uint8arrays.toString(keyBytes, 'base58btc')}`,
     }
+  } else if (jwtAlg === 'ES256K') {
+    return {
+      context: 'https://w3id.org/security/suites/secp256k1-2019/v1',
+      type: 'EcdsaSecp256k1VerificationKey2019',
+      publicKeyMultibase: `z${uint8arrays.toString(keyBytes, 'base58btc')}`,
+    }
   }
   throw new ServerError(400, `Unsupported key type: ${jwtAlg}`)
 }
