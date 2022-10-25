@@ -40,23 +40,36 @@ export const makeResolver = (opts: WebResolverOptions): DIDResolver => {
       url.protocol = 'http'
     }
 
-    let didDocument: DIDDocument
-    try {
-      const res = await axios.get(url.toString(), {
-        responseType: 'json',
-        timeout: opts.timeout,
-      })
-      didDocument = res.data
-    } catch (err) {
-      return errors.notFound()
-    }
+    let didDocument: DIDDocument | null = null
+    do {
+      try {
+        const res = await axios.get(url.toString(), {
+          responseType: 'json',
+          timeout: opts.timeout,
+        })
+        didDocument = res.data
+      } catch (err) {
+        return errors.notFound()
+        break
+      }
 
-    // TODO: this excludes the use of query params
-    const docIdMatchesDid = didDocument?.id === did
-    if (!docIdMatchesDid) {
-      return errors.invalidDid()
+      // TODO: this excludes the use of query params
+      const docIdMatchesDid = didDocument?.id === did
+      if (!docIdMatchesDid) {
+        return errors.invalidDid()
+        break
+      }
+    } while (false)
+  if (err) {
+    return {
+      didDocument,
+      didDocumentMetadata,
+      didResolutionMetadata: {
+        error: 'notFound',
+        message: err,
+      },
     }
-
+  } else {
     return {
       didResolutionMetadata: { contentType: 'application/did+ld+json' },
       didDocument,
