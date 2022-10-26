@@ -2,7 +2,7 @@ import http from 'http'
 import chalk from 'chalk'
 import crytpo from 'crypto'
 import { MemoryBlockstore } from '@atproto/repo'
-import PDSServer, { Database as PDSDatabase } from '@atproto/server'
+import PDSServer, { Database as PDSDatabase } from '@atproto/pds'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import AtpApi, { ServiceClient } from '@atproto/api'
@@ -61,14 +61,6 @@ export class DevEnvServer {
         const serverBlockstore = new MemoryBlockstore()
         const keypair = await crypto.EcdsaKeypair.create()
 
-        const plcClient = new plc.PlcClient(this.env.plcUrl)
-        const serverDid = await plcClient.createDid(
-          keypair,
-          keypair.did(),
-          'pds.test',
-          `http://localhost:${this.port}`,
-        )
-
         this.inst = await onServerReady(
           PDSServer(serverBlockstore, db, keypair, {
             debugMode: true,
@@ -76,7 +68,7 @@ export class DevEnvServer {
             hostname: 'localhost',
             port: this.port,
             didPlcUrl: this.env.plcUrl,
-            serverDid: serverDid,
+            recoveryKey: keypair.did(),
             testNameRegistry: this.env.testNameRegistry,
             jwtSecret: crytpo.randomBytes(8).toString('base64'),
             appUrlPasswordReset: 'app://password-reset',

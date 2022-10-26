@@ -14,6 +14,8 @@ const ADMIN_PASSWORD = 'admin-pass'
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
+  cfg: ServerConfig
+  serverKey: string
   app: App
   close: CloseFn
 }
@@ -31,21 +33,13 @@ export const runTestServer = async (
   await plcDb.migrateToLatestOrThrow()
   const plcServer = plc.server(plcDb, plcPort)
 
-  // setup server did
-  const plcClient = new plc.PlcClient(plcUrl)
-  const serverDid = await plcClient.createDid(
-    keypair,
-    keypair.did(),
-    'pds.test',
-    `http://localhost:${pdsPort}`,
-  )
-
+  const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
   const config = new ServerConfig({
     debugMode: true,
     scheme: 'http',
     hostname: 'localhost',
     port: pdsPort,
-    serverDid,
+    recoveryKey,
     adminPassword: ADMIN_PASSWORD,
     inviteRequired: false,
     didPlcUrl: plcUrl,
@@ -72,6 +66,8 @@ export const runTestServer = async (
 
   return {
     url: `http://localhost:${pdsPort}`,
+    cfg: config,
+    serverKey: keypair.did(),
     app,
     close: async () => {
       await Promise.all([

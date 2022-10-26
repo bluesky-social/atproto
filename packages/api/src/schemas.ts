@@ -28,6 +28,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           password: {
             type: 'string',
           },
+          recoveryKey: {
+            type: 'string',
+          },
         },
         $defs: {},
       },
