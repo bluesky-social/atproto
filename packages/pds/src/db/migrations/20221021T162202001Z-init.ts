@@ -33,6 +33,11 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
       if (!err?.detail?.includes?.('(pg_trgm) already exists')) throw err
     }
   }
+
+  // Postgres uses the type `bytea` for variable length bytes
+  // Kysely doesn't have this as a "supported data type", but it is 😛
+  const binaryDatatype = dialect === 'sqlite' ? 'blob' : ('bytea' as any)
+
   // Users
   await db.schema
     .createTable(userTable)
@@ -88,7 +93,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('cid', 'varchar', (col) => col.primaryKey())
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('size', 'integer', (col) => col.notNull())
-    .addColumn('content', 'blob', (col) => col.notNull())
+    .addColumn('content', 'bytea' as any, (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
   // Invites
