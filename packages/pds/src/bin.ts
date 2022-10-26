@@ -20,6 +20,9 @@ const run = async () => {
   let blockstore: IpldStore
   let db: Database
 
+  const keypair = await crypto.EcdsaKeypair.create()
+  process.env.RECOVERY_KEY = keypair.did()
+
   const cfg = ServerConfig.readEnv()
 
   if (cfg.blockstoreLocation) {
@@ -40,8 +43,6 @@ const run = async () => {
   }
 
   await db.migrateToLatestOrThrow()
-
-  const keypair = await crypto.EcdsaKeypair.create()
 
   const { listener } = server(blockstore, db, keypair, cfg)
   listener.on('listening', () => {
