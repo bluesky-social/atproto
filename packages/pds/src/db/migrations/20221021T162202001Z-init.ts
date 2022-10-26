@@ -93,7 +93,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('cid', 'varchar', (col) => col.primaryKey())
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('size', 'integer', (col) => col.notNull())
-    .addColumn('content', 'bytea' as any, (col) => col.notNull())
+    .addColumn('content', binaryDatatype, (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
   // Invites
