@@ -5,12 +5,10 @@ import KeyEncoder from 'key-encoder'
 
 const keyEncoder = new KeyEncoder('secp256k1')
 
-export type KmsConfig = {
-  accessKey: string
-  secretKey: string
-  keyId: string
-  region: string
-}
+export type KmsConfig = { keyId: string } & Omit<
+  aws.KMSClientConfig,
+  'apiVersion'
+>
 
 export class KmsKeypair implements crypto.DidableKey {
   jwtAlg = crypto.SECP256K1_JWT_ALG
@@ -22,14 +20,12 @@ export class KmsKeypair implements crypto.DidableKey {
   ) {}
 
   static async load(cfg: KmsConfig) {
+    const { keyId, ...rest } = cfg
     const client = new aws.KMS({
-      region: cfg.region,
-      credentials: {
-        accessKeyId: cfg.accessKey,
-        secretAccessKey: cfg.secretKey,
-      },
+      ...rest,
+      apiVersion: '2014-11-01',
     })
-    const res = await client.getPublicKey({ KeyId: cfg.keyId })
+    const res = await client.getPublicKey({ KeyId: keyId })
     if (!res.PublicKey) {
       throw new Error('Could not find public key')
     }
@@ -40,7 +36,7 @@ export class KmsKeypair implements crypto.DidableKey {
       'raw',
     )
     const publicKey = secp.utils.hexToBytes(rawPublicKeyHex)
-    return new KmsKeypair(client, cfg.keyId, publicKey)
+    return new KmsKeypair(client, keyId, publicKey)
   }
 
   did(): string {
