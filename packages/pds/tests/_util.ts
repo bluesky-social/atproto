@@ -1,4 +1,3 @@
-import { MemoryBlockstore } from '@atproto/repo'
 import * as crypto from '@atproto/crypto'
 import * as plc from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
@@ -60,9 +59,8 @@ export const runTestServer = async (
       : Database.memory()
 
   await db.migrateToLatestOrThrow()
-  const serverBlockstore = new MemoryBlockstore()
 
-  const { app, listener } = server(serverBlockstore, db, keypair, config)
+  const { app, listener } = server(db, keypair, config)
 
   return {
     url: `http://localhost:${pdsPort}`,

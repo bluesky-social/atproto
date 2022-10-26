@@ -4,6 +4,7 @@ import { Dialect } from '..'
 const userTable = 'user'
 const repoRootTable = 'repo_root'
 const recordTable = 'record'
+const ipldBlockTable = 'ipld_block'
 const inviteTable = 'invite_code'
 const inviteUseTable = 'invite_code_use'
 const notificationTable = 'user_notification'
@@ -79,6 +80,15 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('raw', 'text', (col) => col.notNull())
     .addColumn('receivedAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+  // Ipld Blocks
+  await db.schema
+    .createTable(ipldBlockTable)
+    .addColumn('cid', 'varchar', (col) => col.primaryKey())
+    .addColumn('did', 'varchar', (col) => col.notNull())
+    .addColumn('size', 'integer', (col) => col.notNull())
+    .addColumn('content', 'blob', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
   // Invites

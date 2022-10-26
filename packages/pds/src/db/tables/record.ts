@@ -4,7 +4,7 @@ export interface Record {
   did: string
   collection: string
   rkey: string
-  raw: string
+  raw: string // @TODO remove me
   receivedAt: string
   indexedAt: string
 }
