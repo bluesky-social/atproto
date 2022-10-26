@@ -251,6 +251,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(notificationTable).execute()
   await db.schema.dropTable(inviteUseTable).execute()
   await db.schema.dropTable(inviteTable).execute()
+  await db.schema.dropTable(ipldBlockTable).execute()
   await db.schema.dropTable(recordTable).execute()
   await db.schema.dropTable(repoRootTable).execute()
   await db.schema.dropTable(userTable).execute()
