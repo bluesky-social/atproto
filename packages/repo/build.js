@@ -1,7 +1,7 @@
 require('esbuild')
   .build({
     logLevel: 'info',
-    entryPoints: ['src/bin.ts'],
+    entryPoints: ['src/index.ts'],
     bundle: true,
     outdir: 'dist',
     platform: 'node',

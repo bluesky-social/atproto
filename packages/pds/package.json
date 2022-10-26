@@ -29,6 +29,7 @@
     "@atproto/plc": "*",
     "@atproto/repo": "*",
     "@atproto/uri": "*",
+    "@atproto/xrpc-server": "*",
     "@hapi/bourne": "^3.0.0",
     "better-sqlite3": "^7.6.2",
     "cors": "^2.8.5",

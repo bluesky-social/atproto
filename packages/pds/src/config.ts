@@ -30,7 +30,7 @@ export interface ServerConfigValues {
 export class ServerConfig {
   constructor(private cfg: ServerConfigValues) {}
 
-  static readEnv() {
+  static readEnv(overrides?: Partial<ServerConfig>) {
     const debugMode = process.env.DEBUG_MODE === '1'
 
     const hostname = process.env.HOSTNAME || 'localhost'
@@ -47,10 +47,10 @@ export class ServerConfig {
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
 
-    if (typeof process.env.RECOVERY_KEY !== 'string') {
+    const recoveryKey = overrides?.recoveryKey || process.env.RECOVERY_KEY
+    if (typeof recoveryKey !== 'string') {
       throw new Error('No value provided for process.env.RECOVERY_KEY')
     }
-    const recoveryKey = process.env.RECOVERY_KEY
 
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
 
@@ -90,6 +90,7 @@ export class ServerConfig {
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
+      ...overrides,
     })
   }
 
