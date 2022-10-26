@@ -21,9 +21,7 @@ const run = async () => {
   let db: Database
 
   const keypair = await crypto.EcdsaKeypair.create()
-  process.env.RECOVERY_KEY = keypair.did()
-
-  const cfg = ServerConfig.readEnv()
+  const cfg = ServerConfig.readEnv({ recoveryKey: keypair.did() })
 
   if (cfg.blockstoreLocation) {
     blockstore = new PersistentBlockstore(cfg.blockstoreLocation)
