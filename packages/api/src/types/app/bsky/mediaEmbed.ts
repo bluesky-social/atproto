@@ -2,16 +2,16 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 export interface Record {
-  media: AppBskyMediaEmbedMediaEmbed[];
+  media: MediaEmbed[];
   [k: string]: unknown;
 }
-export interface AppBskyMediaEmbedMediaEmbed {
+export interface MediaEmbed {
   alt?: string;
-  thumb?: AppBskyMediaEmbedMediaEmbedBlob;
-  original: AppBskyMediaEmbedMediaEmbedBlob;
+  thumb?: MediaEmbedBlob;
+  original: MediaEmbedBlob;
   [k: string]: unknown;
 }
-export interface AppBskyMediaEmbedMediaEmbedBlob {
+export interface MediaEmbedBlob {
   mimeType: string;
   blobId: string;
   [k: string]: unknown;

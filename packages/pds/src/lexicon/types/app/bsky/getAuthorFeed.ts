@@ -25,18 +25,15 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
   cursor?: string;
-  feed: AppBskyGetAuthorFeedFeedItem[];
+  feed: FeedItem[];
 }
-export interface AppBskyGetAuthorFeedFeedItem {
+export interface FeedItem {
   uri: string;
   cid: string;
-  author: AppBskyGetAuthorFeedUser;
-  repostedBy?: AppBskyGetAuthorFeedUser;
+  author: User;
+  repostedBy?: User;
   record: {};
-  embed?:
-    | AppBskyGetAuthorFeedRecordEmbed
-    | AppBskyGetAuthorFeedExternalEmbed
-    | AppBskyGetAuthorFeedUnknownEmbed;
+  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
   replyCount: number;
   repostCount: number;
   likeCount: number;
@@ -46,24 +43,24 @@ export interface AppBskyGetAuthorFeedFeedItem {
     like?: string,
   };
 }
-export interface AppBskyGetAuthorFeedUser {
+export interface User {
   did: string;
   name: string;
   displayName?: string;
 }
-export interface AppBskyGetAuthorFeedRecordEmbed {
+export interface RecordEmbed {
   type: 'record';
-  author: AppBskyGetAuthorFeedUser;
+  author: User;
   record: {};
 }
-export interface AppBskyGetAuthorFeedExternalEmbed {
+export interface ExternalEmbed {
   type: 'external';
   uri: string;
   title: string;
   description: string;
   imageUri: string;
 }
-export interface AppBskyGetAuthorFeedUnknownEmbed {
+export interface UnknownEmbed {
   type: string;
 }
 

@@ -135,8 +135,7 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-type FeedItem = GetAuthorFeed.AppBskyGetAuthorFeedFeedItem &
-  GetHomeFeed.AppBskyGetHomeFeedFeedItem
+type FeedItem = GetAuthorFeed.FeedItem & GetHomeFeed.FeedItem
 
 export const getOriginator = (item: FeedItem) =>
   item.repostedBy ? item.repostedBy.did : item.author.did

@@ -26,11 +26,11 @@ describe('Reference resolution', () => {
         type: 'object',
         properties: {
           subject: {
-            $ref: '#/$defs/appBskyLikeSubject',
+            $ref: '#/$defs/subject',
           },
         },
         $defs: {
-          appBskyLikeSubject: {
+          subject: {
             type: 'string',
           },
         },
@@ -72,15 +72,15 @@ describe('Reference resolution', () => {
         type: 'object',
         properties: {
           subject: {
-            $ref: '#/$defs/appBskyLikeSubjectArr',
+            $ref: '#/$defs/subjectArr',
           },
         },
         $defs: {
-          appBskyLikeSubjectArr: {
+          subjectArr: {
             type: 'array',
-            items: { type: { $ref: '#/$defs/appBskyLikeSubject' } },
+            items: { type: { $ref: '#/$defs/subject' } },
           },
-          appBskyLikeSubject: {
+          subject: {
             type: 'string',
           },
         },
@@ -88,7 +88,7 @@ describe('Reference resolution', () => {
       $defs: {
         subjectArr: {
           type: 'array',
-          items: { type: { $ref: '#/$defs/appBskyLikeSubject' } },
+          items: { type: { $ref: '#/$defs/subject' } },
         },
         subject: {
           type: 'string',
@@ -150,23 +150,23 @@ describe('Reference resolution', () => {
         type: 'object',
         properties: {
           subject: {
-            $ref: '#/$defs/appBskyLikeSubject',
+            $ref: '#/$defs/subject',
           },
           otherSubject: {
-            $ref: '#/$defs/appBskyRepostSubject',
+            $ref: '#/$defs/repostSubject',
           },
           displayName: {
-            $ref: '#/$defs/appBskyProfileDisplayName',
+            $ref: '#/$defs/displayName',
           },
         },
         $defs: {
-          appBskyLikeSubject: {
+          subject: {
             type: 'string',
           },
-          appBskyRepostSubject: {
+          repostSubject: {
             type: 'string',
           },
-          appBskyProfileDisplayName: {
+          displayName: {
             type: 'string',
           },
         },

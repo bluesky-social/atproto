@@ -35,8 +35,7 @@ export enum FeedAlgorithm {
   ReverseChronological = 'reverse-chronological',
 }
 
-type FeedItem = GetAuthorFeed.AppBskyGetAuthorFeedFeedItem &
-  GetHomeFeed.AppBskyGetHomeFeedFeedItem
+type FeedItem = GetAuthorFeed.FeedItem & GetHomeFeed.FeedItem
 
 type FeedRow = {
   type: 'post' | 'repost'

@@ -2,12 +2,12 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 export interface Record {
-  badge: AppBskyBadgeAcceptSubject;
-  offer: AppBskyBadgeAcceptSubject;
+  badge: Subject;
+  offer: Subject;
   createdAt: string;
   [k: string]: unknown;
 }
-export interface AppBskyBadgeAcceptSubject {
+export interface Subject {
   uri: string;
   cid: string;
   [k: string]: unknown;

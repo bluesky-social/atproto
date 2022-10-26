@@ -17,18 +17,15 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string;
-  feed: AppBskyGetHomeFeedFeedItem[];
+  feed: FeedItem[];
 }
-export interface AppBskyGetHomeFeedFeedItem {
+export interface FeedItem {
   uri: string;
   cid: string;
-  author: AppBskyGetHomeFeedUser;
-  repostedBy?: AppBskyGetHomeFeedUser;
+  author: User;
+  repostedBy?: User;
   record: {};
-  embed?:
-    | AppBskyGetHomeFeedRecordEmbed
-    | AppBskyGetHomeFeedExternalEmbed
-    | AppBskyGetHomeFeedUnknownEmbed;
+  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
   replyCount: number;
   repostCount: number;
   likeCount: number;
@@ -38,24 +35,24 @@ export interface AppBskyGetHomeFeedFeedItem {
     like?: string,
   };
 }
-export interface AppBskyGetHomeFeedUser {
+export interface User {
   did: string;
   name: string;
   displayName?: string;
 }
-export interface AppBskyGetHomeFeedRecordEmbed {
+export interface RecordEmbed {
   type: 'record';
-  author: AppBskyGetHomeFeedUser;
+  author: User;
   record: {};
 }
-export interface AppBskyGetHomeFeedExternalEmbed {
+export interface ExternalEmbed {
   type: 'external';
   uri: string;
   title: string;
   description: string;
   imageUri: string;
 }
-export interface AppBskyGetHomeFeedUnknownEmbed {
+export interface UnknownEmbed {
   type: string;
 }
 

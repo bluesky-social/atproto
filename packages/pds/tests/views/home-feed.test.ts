@@ -9,7 +9,7 @@ import {
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
-import { AppBskyGetHomeFeedFeedItem as FeedItem } from '@atproto/api/src/types/app/bsky/getHomeFeed'
+import { FeedItem } from '@atproto/api/src/types/app/bsky/getHomeFeed'
 
 describe('pds home feed views', () => {
   let client: AtpServiceClient
