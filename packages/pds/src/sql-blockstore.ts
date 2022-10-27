@@ -31,6 +31,7 @@ export class SqlBlockstore extends IpldStore {
   }
 
   async putBytes(cid: CID, bytes: Uint8Array): Promise<void> {
+    this.db.assertTransaction()
     const insertBlock = this.db.db
       .insertInto('ipld_block')
       .values({
