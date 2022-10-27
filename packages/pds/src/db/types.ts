@@ -9,7 +9,12 @@ export type DbRecordPlugin<T, S> = {
   matchesSchema: (obj: unknown) => obj is T
   translateDbObj: (dbObj: S) => T
   get: (uri: AtUri) => Promise<T | null>
-  insert: (uri: AtUri, cid: CID, obj: unknown) => Promise<void>
+  insert: (
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    timestamp?: string,
+  ) => Promise<void>
   delete: (uri: AtUri) => Promise<void>
   notifsForRecord: (uri: AtUri, cid: CID, obj: unknown) => Notification[]
 }

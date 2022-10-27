@@ -3,7 +3,11 @@ import { CID } from 'multiformats/cid'
 import Database from './db'
 
 export class SqlBlockstore extends IpldStore {
-  constructor(public db: Database, public did: string) {
+  constructor(
+    public db: Database,
+    public did: string,
+    public timestamp?: string,
+  ) {
     super()
   }
 
@@ -27,18 +31,21 @@ export class SqlBlockstore extends IpldStore {
   }
 
   async putBytes(cid: CID, bytes: Uint8Array): Promise<void> {
-    const row = {
-      cid: cid.toString(),
-      did: this.did,
-      size: bytes.length,
-      content: bytes,
-      indexedAt: new Date().toISOString(),
-    }
-    await this.db.db
+    const insertBlock = this.db.db
       .insertInto('ipld_block')
-      .values(row)
+      .values({
+        cid: cid.toString(),
+        size: bytes.length,
+        content: bytes,
+        indexedAt: this.timestamp || new Date().toISOString(),
+      })
       .onConflict((oc) => oc.doNothing())
       .execute()
+    const insertBlockOwner = this.db.db
+      .insertInto('ipld_block_creator')
+      .values({ cid: cid.toString(), did: this.did })
+      .execute()
+    await Promise.all([insertBlock, insertBlockOwner])
   }
 
   destroy(): Promise<void> {

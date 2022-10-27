@@ -4,8 +4,6 @@ export interface Record {
   did: string
   collection: string
   rkey: string
-  receivedAt: string
-  indexedAt: string
 }
 
 export const tableName = 'record'

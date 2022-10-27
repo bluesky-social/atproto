@@ -158,16 +158,22 @@ export class Database {
     return found ? CID.parse(found.root) : null
   }
 
-  async updateRepoRoot(did: string, root: CID, prev?: CID): Promise<boolean> {
+  async updateRepoRoot(
+    did: string,
+    root: CID,
+    prev: CID,
+    timestamp?: string,
+  ): Promise<boolean> {
     log.debug({ did, root: root.toString() }, 'updating repo root')
-    let builder = this.db
+    const res = await this.db
       .updateTable('repo_root')
-      .set({ root: root.toString() })
+      .set({
+        root: root.toString(),
+        indexedAt: timestamp || new Date().toISOString(),
+      })
       .where('did', '=', did)
-    if (prev) {
-      builder = builder.where('root', '=', prev.toString())
-    }
-    const res = await builder.executeTakeFirst()
+      .where('root', '=', prev.toString())
+      .executeTakeFirst()
     if (res.numUpdatedRows > 0) {
       log.info({ did, root: root.toString() }, 'updated repo root')
       return true
@@ -297,7 +303,7 @@ export class Database {
     return table.validateSchema(obj).valid
   }
 
-  async indexRecord(uri: AtUri, cid: CID, obj: unknown) {
+  async indexRecord(uri: AtUri, cid: CID, obj: unknown, timestamp?: string) {
     this.assertTransaction()
     log.debug({ uri }, 'indexing record')
     const record = {
@@ -306,8 +312,6 @@ export class Database {
       did: uri.host,
       collection: uri.collection,
       rkey: uri.rkey,
-      indexedAt: new Date().toISOString(),
-      receivedAt: new Date().toISOString(),
     }
     if (!record.did.startsWith('did:')) {
       throw new Error('Expected indexed URI to contain DID')
@@ -318,7 +322,7 @@ export class Database {
     }
     await this.db.insertInto('record').values(record).execute()
     const table = this.findTableForCollection(uri.collection)
-    await table.insert(uri, cid, obj)
+    await table.insert(uri, cid, obj, timestamp)
     const notifs = table.notifsForRecord(uri, cid, obj)
     await this.notifications.process(notifs)
     log.info({ uri }, 'indexed record')

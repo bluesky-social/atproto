@@ -5,6 +5,7 @@ const userTable = 'user'
 const repoRootTable = 'repo_root'
 const recordTable = 'record'
 const ipldBlockTable = 'ipld_block'
+const ipldBlockCreatorTable = 'ipld_block_creator'
 const inviteTable = 'invite_code'
 const inviteUseTable = 'invite_code_use'
 const notificationTable = 'user_notification'
@@ -35,8 +36,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   }
 
   // Postgres uses the type `bytea` for variable length bytes
-  // Kysely doesn't have this as a "supported data type", but it is 😛
-  const binaryDatatype = dialect === 'sqlite' ? 'blob' : ('bytea' as any)
+  const binaryDatatype = dialect === 'sqlite' ? 'blob' : sql`bytea`
 
   // Users
   await db.schema
@@ -83,17 +83,21 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('rkey', 'varchar', (col) => col.notNull())
-    .addColumn('receivedAt', 'varchar', (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
   // Ipld Blocks
   await db.schema
     .createTable(ipldBlockTable)
     .addColumn('cid', 'varchar', (col) => col.primaryKey())
-    .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('size', 'integer', (col) => col.notNull())
     .addColumn('content', binaryDatatype, (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+  // Ipld Block Creators
+  await db.schema
+    .createTable(ipldBlockCreatorTable)
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('did', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint(`${ipldBlockCreatorTable}_pkey`, ['cid', 'did'])
     .execute()
   // Invites
   await db.schema
@@ -255,6 +259,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(notificationTable).execute()
   await db.schema.dropTable(inviteUseTable).execute()
   await db.schema.dropTable(inviteTable).execute()
+  await db.schema.dropTable(ipldBlockCreatorTable).execute()
   await db.schema.dropTable(ipldBlockTable).execute()
   await db.schema.dropTable(recordTable).execute()
   await db.schema.dropTable(repoRootTable).execute()

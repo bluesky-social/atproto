@@ -158,7 +158,7 @@ export default function (server: Server) {
 
       // Setup repo root
       const authStore = locals.getAuthstore(res, did)
-      const blockstore = new SqlBlockstore(dbTxn, did)
+      const blockstore = new SqlBlockstore(dbTxn, did, now)
       const repo = await Repo.create(blockstore, did, authStore)
 
       await dbTxn.db

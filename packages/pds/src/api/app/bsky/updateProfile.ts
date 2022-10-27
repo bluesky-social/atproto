@@ -29,7 +29,8 @@ export default function (server: Server) {
             `${requester} is not a registered repo on this server`,
           )
         }
-        const blockstore = new SqlBlockstore(dbTxn, requester)
+        const now = new Date().toISOString()
+        const blockstore = new SqlBlockstore(dbTxn, requester, now)
         const repo = await RepoStructure.load(blockstore, currRoot)
         const current = await repo.getRecord(profileNsid, 'self')
         if (!db.records.profile.matchesSchema(current)) {
@@ -76,10 +77,7 @@ export default function (server: Server) {
         // Update profile record
         await dbTxn.db
           .updateTable('record')
-          .set({
-            cid: profileCid.toString(),
-            indexedAt: new Date().toISOString(),
-          })
+          .set({ cid: profileCid.toString() })
           .where('uri', '=', uri.toString())
           .execute()
 
@@ -90,7 +88,7 @@ export default function (server: Server) {
             cid: profileCid.toString(),
             displayName: updated.displayName,
             description: updated.description,
-            indexedAt: new Date().toISOString(),
+            indexedAt: now,
           })
           .where('uri', '=', uri.toString())
           .execute()

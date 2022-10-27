@@ -125,14 +125,15 @@ export default function (server: Server) {
           `${did} is not a registered repo on this server`,
         )
       }
-      const blockstore = new SqlBlockstore(dbTxn, did)
+      const now = new Date().toISOString()
+      const blockstore = new SqlBlockstore(dbTxn, did, now)
       const cidWriteOps: CidWriteOp[] = await Promise.all(
         tx.writes.map(async (write) => {
           if (write.action === 'create') {
             const cid = await blockstore.put(write.value)
             const rkey = write.rkey || TID.nextStr()
             const uri = new AtUri(`${did}/${write.collection}/${rkey}`)
-            await dbTxn.indexRecord(uri, cid, write.value)
+            await dbTxn.indexRecord(uri, cid, write.value, now)
             return {
               action: 'create',
               collection: write.collection,
@@ -155,7 +156,7 @@ export default function (server: Server) {
       await repo
         .stageUpdate(cidWriteOps)
         .createCommit(authStore, async (prev, curr) => {
-          const success = await db.updateRepoRoot(did, curr, prev)
+          const success = await db.updateRepoRoot(did, curr, prev, now)
           if (!success) {
             logger.error({ did, curr, prev }, 'repo update failed')
             throw new Error('Could not update repo root')
@@ -205,10 +206,11 @@ export default function (server: Server) {
           `${did} is not a registered repo on this server`,
         )
       }
-      const blockstore = new SqlBlockstore(dbTxn, did)
+      const now = new Date().toISOString()
+      const blockstore = new SqlBlockstore(dbTxn, did, now)
       const cid = await blockstore.put(input.body)
       try {
-        await dbTxn.indexRecord(uri, cid, input.body)
+        await dbTxn.indexRecord(uri, cid, input.body, now)
       } catch (err) {
         logger.warn(
           { uri: uri.toString(), err, validate },
@@ -228,7 +230,7 @@ export default function (server: Server) {
           cid,
         })
         .createCommit(authStore, async (prev, curr) => {
-          const success = await dbTxn.updateRepoRoot(did, curr, prev)
+          const success = await dbTxn.updateRepoRoot(did, curr, prev, now)
           if (!success) {
             logger.error({ did, curr, prev }, 'repo update failed')
             throw new Error('Could not update repo root')
@@ -264,9 +266,10 @@ export default function (server: Server) {
           `${did} is not a registered repo on this server`,
         )
       }
+      const now = new Date().toISOString()
       await dbTxn.deleteRecord(uri)
 
-      const blockstore = new SqlBlockstore(dbTxn, did)
+      const blockstore = new SqlBlockstore(dbTxn, did, now)
       const repo = await RepoStructure.load(blockstore, currRoot)
       await repo
         .stageUpdate({
@@ -275,7 +278,7 @@ export default function (server: Server) {
           rkey,
         })
         .createCommit(authStore, async (prev, curr) => {
-          const success = await dbTxn.updateRepoRoot(did, curr, prev)
+          const success = await dbTxn.updateRepoRoot(did, curr, prev, now)
           if (!success) {
             logger.error({ did, curr, prev }, 'repo update failed')
             throw new Error('Could not update repo root')

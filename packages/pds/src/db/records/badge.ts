@@ -49,7 +49,12 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
+  async (
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    timestamp?: string,
+  ): Promise<void> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -60,7 +65,7 @@ const insertFn =
       assertionType: obj.assertion.type,
       assertionTag: (obj.assertion as Badge.TagAssertion).tag || null,
       createdAt: obj.createdAt,
-      indexedAt: new Date().toISOString(),
+      indexedAt: timestamp || new Date().toISOString(),
     }
     await db.insertInto('app_bsky_badge').values(val).execute()
   }
