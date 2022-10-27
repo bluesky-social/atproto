@@ -58,11 +58,10 @@ export class DevEnvServer {
 
         const db = await PDSDatabase.memory()
         await db.migrateToLatestOrThrow()
-        const serverBlockstore = new MemoryBlockstore()
         const keypair = await crypto.EcdsaKeypair.create()
 
         this.inst = await onServerReady(
-          PDSServer(serverBlockstore, db, keypair, {
+          PDSServer(db, keypair, {
             debugMode: true,
             scheme: 'http',
             hostname: 'localhost',
