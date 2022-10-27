@@ -3,7 +3,7 @@ import { AtUri } from '@atproto/uri'
 import * as Repost from '../../lexicon/types/app/bsky/repost'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
-import { CID } from '@atproto/common'
+import { CID } from 'multiformats/cid'
 
 const type = schemas.ids.AppBskyRepost
 const tableName = 'app_bsky_repost'
