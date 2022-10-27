@@ -1,5 +1,6 @@
-import { Server } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import * as common from '@atproto/common'
+import { Server } from '../../../lexicon'
 import * as GetNotifications from '../../../lexicon/types/app/bsky/getNotifications'
 import * as locals from '../../../locals'
 import { paginate } from '../../../db/util'
@@ -19,7 +20,7 @@ export default function (server: Server) {
       let notifBuilder = db.db
         .selectFrom('user_notification as notif')
         .where('notif.userDid', '=', requester)
-        .innerJoin('record', 'record.uri', 'notif.recordUri')
+        .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
         .innerJoin('user as author', 'author.did', 'notif.author')
         .leftJoin(
           'app_bsky_profile as author_profile',
@@ -35,8 +36,8 @@ export default function (server: Server) {
           'notif.reason as reason',
           'notif.reasonSubject as reasonSubject',
           'notif.indexedAt as createdAt',
-          'record.raw as record',
-          'record.indexedAt as indexedAt',
+          'ipld_block.content as recordBytes',
+          'ipld_block.indexedAt as indexedAt',
           'notif.recordUri as uri',
         ])
 
@@ -69,7 +70,7 @@ export default function (server: Server) {
         },
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
-        record: JSON.parse(notif.record),
+        record: common.ipldBytesToRecord(notif.recordBytes),
         isRead: notif.createdAt <= user.lastSeenNotifs,
         indexedAt: notif.indexedAt,
       }))

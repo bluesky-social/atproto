@@ -22,6 +22,7 @@ import badgeOfferPlugin, { AppBskyBadgeOffer } from './records/badgeOffer'
 import profilePlugin, { AppBskyProfile } from './records/profile'
 import notificationPlugin from './tables/user-notification'
 import { AtUri } from '@atproto/uri'
+import * as common from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { dbLogger as log } from '../logger'
 import { DatabaseSchema } from './database-schema'
@@ -305,7 +306,6 @@ export class Database {
       did: uri.host,
       collection: uri.collection,
       rkey: uri.rkey,
-      raw: JSON.stringify(obj),
       indexedAt: new Date().toISOString(),
       receivedAt: new Date().toISOString(),
     }
@@ -361,24 +361,25 @@ export class Database {
   ): Promise<{ uri: string; cid: string; value: object }[]> {
     let builder = this.db
       .selectFrom('record')
-      .selectAll()
-      .where('did', '=', did)
-      .where('collection', '=', collection)
-      .orderBy('rkey', reverse ? 'asc' : 'desc')
+      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .where('record.did', '=', did)
+      .where('record.collection', '=', collection)
+      .orderBy('record.rkey', reverse ? 'asc' : 'desc')
       .limit(limit)
+      .selectAll()
 
     if (before !== undefined) {
-      builder = builder.where('rkey', '<', before)
+      builder = builder.where('record.rkey', '<', before)
     }
     if (after !== undefined) {
-      builder = builder.where('rkey', '>', after)
+      builder = builder.where('record.rkey', '>', after)
     }
     const res = await builder.execute()
     return res.map((row) => {
       return {
         uri: row.uri,
         cid: row.cid,
-        value: JSON.parse(row.raw),
+        value: common.ipldBytesToRecord(row.content),
       }
     })
   }
@@ -389,17 +390,18 @@ export class Database {
   ): Promise<{ uri: string; cid: string; value: object } | null> {
     let builder = this.db
       .selectFrom('record')
+      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .selectAll()
-      .where('uri', '=', uri.toString())
+      .where('record.uri', '=', uri.toString())
     if (cid) {
-      builder = builder.where('cid', '=', cid)
+      builder = builder.where('record.cid', '=', cid)
     }
     const record = await builder.executeTakeFirst()
     if (!record) return null
     return {
       uri: record.uri,
       cid: record.cid,
-      value: JSON.parse(record.raw),
+      value: common.ipldBytesToRecord(record.content),
     }
   }
 

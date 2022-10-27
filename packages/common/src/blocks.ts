@@ -18,20 +18,18 @@ export const cidForData = async (data: unknown): Promise<CID> => {
   return block.cid
 }
 
-export const valueToIpldBytes = async (value: unknown): Promise<Uint8Array> => {
-  const block = await valueToIpldBlock(value)
-  return block.bytes
+export const valueToIpldBytes = (value: unknown): Uint8Array => {
+  return blockCodec.encode(value)
 }
 
-export const ipldBytesToValue = async (
-  cid: CID,
-  bytes: Uint8Array,
-): Promise<unknown> => {
-  const block = await Block.create({
-    bytes,
-    cid,
-    codec: blockCodec,
-    hasher: blockHasher,
-  })
-  return block.value
+export const ipldBytesToValue = (bytes: Uint8Array) => {
+  return blockCodec.decode(bytes)
+}
+
+export const ipldBytesToRecord = (bytes: Uint8Array): object => {
+  const val = ipldBytesToValue(bytes)
+  if (typeof val !== 'object' || val === null) {
+    throw new Error(`Expected object, got: ${val}`)
+  }
+  return val
 }

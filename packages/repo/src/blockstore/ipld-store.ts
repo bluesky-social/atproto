@@ -32,7 +32,7 @@ export abstract class IpldStore {
 
   async getUnchecked(cid: CID): Promise<unknown> {
     const bytes = await this.getBytes(cid)
-    return common.ipldBytesToValue(cid, bytes)
+    return common.ipldBytesToValue(bytes)
   }
 
   async isMissing(cid: CID): Promise<boolean> {
