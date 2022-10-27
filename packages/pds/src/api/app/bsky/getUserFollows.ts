@@ -19,7 +19,6 @@ export default function (server: Server) {
       let followsReq = db.db
         .selectFrom('app_bsky_follow as follow')
         .where('follow.creator', '=', creator.did)
-        .innerJoin('record', 'record.uri', 'follow.uri')
         .innerJoin('user as subject', 'subject.did', 'follow.subject')
         .leftJoin(
           'app_bsky_profile as profile',
@@ -31,7 +30,7 @@ export default function (server: Server) {
           'subject.username as name',
           'profile.displayName as displayName',
           'follow.createdAt as createdAt',
-          'record.indexedAt as indexedAt',
+          'follow.indexedAt as indexedAt',
         ])
 
       followsReq = paginate(followsReq, {

@@ -88,7 +88,12 @@ const getFn =
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
+  async (
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    timestamp?: string,
+  ): Promise<void> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -109,7 +114,7 @@ const insertFn =
       replyRootCid: obj.reply?.root?.cid || null,
       replyParent: obj.reply?.parent?.uri || null,
       replyParentCid: obj.reply?.parent?.cid || null,
-      indexedAt: new Date().toISOString(),
+      indexedAt: timestamp || new Date().toISOString(),
     }
     const promises = [db.insertInto('app_bsky_post').values(post).execute()]
     if (entities.length > 0) {

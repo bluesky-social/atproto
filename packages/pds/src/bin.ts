@@ -1,9 +1,4 @@
 import dotenv from 'dotenv'
-import {
-  IpldStore,
-  MemoryBlockstore,
-  PersistentBlockstore,
-} from '@atproto/repo'
 import * as crypto from '@atproto/crypto'
 import Database from './db'
 import server from './index'
@@ -17,17 +12,10 @@ const run = async () => {
     dotenv.config()
   }
 
-  let blockstore: IpldStore
   let db: Database
 
   const keypair = await crypto.EcdsaKeypair.create()
   const cfg = ServerConfig.readEnv({ recoveryKey: keypair.did() })
-
-  if (cfg.blockstoreLocation) {
-    blockstore = new PersistentBlockstore(cfg.blockstoreLocation)
-  } else {
-    blockstore = new MemoryBlockstore()
-  }
 
   if (cfg.dbPostgresUrl) {
     db = Database.postgres({
@@ -42,7 +30,7 @@ const run = async () => {
 
   await db.migrateToLatestOrThrow()
 
-  const { listener } = server(blockstore, db, keypair, cfg)
+  const { listener } = server(db, keypair, cfg)
   listener.on('listening', () => {
     console.log(`🌞 ATP Data server is running at ${cfg.origin}`)
   })

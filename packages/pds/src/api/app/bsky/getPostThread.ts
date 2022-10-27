@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import * as common from '@atproto/common'
 import { Server } from '../../../lexicon'
 import * as GetPostThread from '../../../lexicon/types/app/bsky/getPostThread'
 import * as locals from '../../../locals'
@@ -72,7 +73,7 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
   const { ref } = db.dynamic
   return db
     .selectFrom('app_bsky_post as post')
-    .innerJoin('record', 'record.uri', 'post.uri')
+    .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
     .innerJoin('user as author', 'author.did', 'post.creator')
     .leftJoin(
       'app_bsky_profile as author_profile',
@@ -86,8 +87,8 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
       'author.did as authorDid',
       'author.username as authorName',
       'author_profile.displayName as authorDisplayName',
-      'record.raw as rawRecord',
-      'record.indexedAt as indexedAt',
+      'ipld_block.content as recordBytes',
+      'ipld_block.indexedAt as indexedAt',
       db
         .selectFrom('app_bsky_like')
         .select(countAll.as('count'))
@@ -132,7 +133,7 @@ const rowToPost = (
       name: row.authorName,
       displayName: row.authorDisplayName || undefined,
     },
-    record: JSON.parse(row.rawRecord),
+    record: common.ipldBytesToRecord(row.recordBytes),
     parent: parent ? { ...parent } : undefined,
     replyCount: row.replyCount || 0,
     likeCount: row.likeCount || 0,

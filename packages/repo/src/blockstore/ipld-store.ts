@@ -1,10 +1,8 @@
-import * as Block from 'multiformats/block'
 import { CID } from 'multiformats/cid'
-import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
-import * as blockCodec from '@ipld/dag-cbor'
 import { BlockWriter } from '@ipld/car/writer'
 
-import { check, util } from '@atproto/common'
+import * as common from '@atproto/common'
+import { check, util, valueToIpldBlock } from '@atproto/common'
 import { BlockReader } from '@ipld/car/api'
 import CidSet from '../cid-set'
 import { CarReader } from '@ipld/car/reader'
@@ -16,11 +14,7 @@ export abstract class IpldStore {
   abstract destroy(): Promise<void>
 
   async put(value: unknown): Promise<CID> {
-    const block = await Block.encode({
-      value,
-      codec: blockCodec,
-      hasher: blockHasher,
-    })
+    const block = await valueToIpldBlock(value)
     await this.putBytes(block.cid, block.bytes)
     return block.cid
   }
@@ -38,13 +32,7 @@ export abstract class IpldStore {
 
   async getUnchecked(cid: CID): Promise<unknown> {
     const bytes = await this.getBytes(cid)
-    const block = await Block.create({
-      bytes,
-      cid,
-      codec: blockCodec,
-      hasher: blockHasher,
-    })
-    return block.value
+    return common.ipldBytesToValue(bytes)
   }
 
   async isMissing(cid: CID): Promise<boolean> {

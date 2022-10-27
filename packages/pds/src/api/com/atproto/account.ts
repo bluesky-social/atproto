@@ -8,6 +8,7 @@ import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
+import SqlBlockstore from '../../../sql-blockstore'
 
 export default function (server: Server) {
   server.com.atproto.getAccountsConfig((_params, _input, _req, res) => {
@@ -34,7 +35,7 @@ export default function (server: Server) {
 
   server.com.atproto.createAccount(async (_params, input, _req, res) => {
     const { email, username, password, inviteCode, recoveryKey } = input.body
-    const { db, blockstore, auth, config, keypair, logger } = locals.get(res)
+    const { db, auth, config, keypair, logger } = locals.get(res)
 
     // In order to perform the significant db updates ahead of
     // registering the did, we will use a temp invalid did. Once everything
@@ -157,6 +158,7 @@ export default function (server: Server) {
 
       // Setup repo root
       const authStore = locals.getAuthstore(res, did)
+      const blockstore = new SqlBlockstore(dbTxn, did, now)
       const repo = await Repo.create(blockstore, did, authStore)
 
       await dbTxn.db

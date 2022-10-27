@@ -22,6 +22,7 @@ import badgeOfferPlugin, { AppBskyBadgeOffer } from './records/badgeOffer'
 import profilePlugin, { AppBskyProfile } from './records/profile'
 import notificationPlugin from './tables/user-notification'
 import { AtUri } from '@atproto/uri'
+import * as common from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { dbLogger as log } from '../logger'
 import { DatabaseSchema } from './database-schema'
@@ -157,16 +158,22 @@ export class Database {
     return found ? CID.parse(found.root) : null
   }
 
-  async updateRepoRoot(did: string, root: CID, prev?: CID): Promise<boolean> {
+  async updateRepoRoot(
+    did: string,
+    root: CID,
+    prev: CID,
+    timestamp?: string,
+  ): Promise<boolean> {
     log.debug({ did, root: root.toString() }, 'updating repo root')
-    let builder = this.db
+    const res = await this.db
       .updateTable('repo_root')
-      .set({ root: root.toString() })
+      .set({
+        root: root.toString(),
+        indexedAt: timestamp || new Date().toISOString(),
+      })
       .where('did', '=', did)
-    if (prev) {
-      builder = builder.where('root', '=', prev.toString())
-    }
-    const res = await builder.executeTakeFirst()
+      .where('root', '=', prev.toString())
+      .executeTakeFirst()
     if (res.numUpdatedRows > 0) {
       log.info({ did, root: root.toString() }, 'updated repo root')
       return true
@@ -296,7 +303,7 @@ export class Database {
     return table.validateSchema(obj).valid
   }
 
-  async indexRecord(uri: AtUri, cid: CID, obj: unknown) {
+  async indexRecord(uri: AtUri, cid: CID, obj: unknown, timestamp?: string) {
     this.assertTransaction()
     log.debug({ uri }, 'indexing record')
     const record = {
@@ -305,9 +312,6 @@ export class Database {
       did: uri.host,
       collection: uri.collection,
       rkey: uri.rkey,
-      raw: JSON.stringify(obj),
-      indexedAt: new Date().toISOString(),
-      receivedAt: new Date().toISOString(),
     }
     if (!record.did.startsWith('did:')) {
       throw new Error('Expected indexed URI to contain DID')
@@ -318,7 +322,7 @@ export class Database {
     }
     await this.db.insertInto('record').values(record).execute()
     const table = this.findTableForCollection(uri.collection)
-    await table.insert(uri, cid, obj)
+    await table.insert(uri, cid, obj, timestamp)
     const notifs = table.notifsForRecord(uri, cid, obj)
     await this.notifications.process(notifs)
     log.info({ uri }, 'indexed record')
@@ -361,24 +365,25 @@ export class Database {
   ): Promise<{ uri: string; cid: string; value: object }[]> {
     let builder = this.db
       .selectFrom('record')
-      .selectAll()
-      .where('did', '=', did)
-      .where('collection', '=', collection)
-      .orderBy('rkey', reverse ? 'asc' : 'desc')
+      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .where('record.did', '=', did)
+      .where('record.collection', '=', collection)
+      .orderBy('record.rkey', reverse ? 'asc' : 'desc')
       .limit(limit)
+      .selectAll()
 
     if (before !== undefined) {
-      builder = builder.where('rkey', '<', before)
+      builder = builder.where('record.rkey', '<', before)
     }
     if (after !== undefined) {
-      builder = builder.where('rkey', '>', after)
+      builder = builder.where('record.rkey', '>', after)
     }
     const res = await builder.execute()
     return res.map((row) => {
       return {
         uri: row.uri,
         cid: row.cid,
-        value: JSON.parse(row.raw),
+        value: common.ipldBytesToRecord(row.content),
       }
     })
   }
@@ -389,17 +394,18 @@ export class Database {
   ): Promise<{ uri: string; cid: string; value: object } | null> {
     let builder = this.db
       .selectFrom('record')
+      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .selectAll()
-      .where('uri', '=', uri.toString())
+      .where('record.uri', '=', uri.toString())
     if (cid) {
-      builder = builder.where('cid', '=', cid)
+      builder = builder.where('record.cid', '=', cid)
     }
     const record = await builder.executeTakeFirst()
     if (!record) return null
     return {
       uri: record.uri,
       cid: record.cid,
-      value: JSON.parse(record.raw),
+      value: common.ipldBytesToRecord(record.content),
     }
   }
 

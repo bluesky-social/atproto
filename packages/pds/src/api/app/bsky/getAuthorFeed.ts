@@ -55,7 +55,7 @@ export default function (server: Server) {
       let postsAndRepostsQb = db.db
         .selectFrom(postsQb.union(repostsQb).as('posts_and_reposts'))
         .innerJoin('app_bsky_post as post', 'post.uri', 'postUri')
-        .innerJoin('record', 'record.uri', 'postUri')
+        .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
         .innerJoin('user as author', 'author.did', 'post.creator')
         .leftJoin(
           'app_bsky_profile as author_profile',
@@ -73,8 +73,8 @@ export default function (server: Server) {
           'postUri',
           'postCid',
           'cursor',
-          'record.raw as recordRaw',
-          'record.indexedAt as indexedAt',
+          'ipld_block.content as recordBytes',
+          'ipld_block.indexedAt as indexedAt',
           'author.did as authorDid',
           'author.username as authorName',
           'author_profile.displayName as authorDisplayName',

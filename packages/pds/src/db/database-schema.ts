@@ -1,6 +1,8 @@
 import * as user from './tables/user'
 import * as repoRoot from './tables/repo-root'
 import * as record from './tables/record'
+import * as ipldBlock from './tables/ipld-block'
+import * as ipldBlockCreator from './tables/ipld-block-creator'
 import * as invite from './tables/invite'
 import * as notification from './tables/user-notification'
 import * as post from './records/post'
@@ -15,6 +17,8 @@ import * as badgeOffer from './records/badgeOffer'
 export type DatabaseSchema = user.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
+  ipldBlock.PartialDB &
+  ipldBlockCreator.PartialDB &
   invite.PartialDB &
   notification.PartialDB &
   post.PartialDB &

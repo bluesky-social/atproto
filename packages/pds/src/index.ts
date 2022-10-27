@@ -8,7 +8,6 @@ import express from 'express'
 import cors from 'cors'
 import * as auth from '@atproto/auth'
 import API from './api'
-import { IpldStore } from '@atproto/repo'
 import Database from './db'
 import ServerAuth from './auth'
 import * as error from './error'
@@ -26,7 +25,6 @@ export { Database } from './db'
 export type App = express.Application
 
 const runServer = (
-  blockstore: IpldStore,
   db: Database,
   keypair: auth.DidableKey,
   cfg: ServerConfigValues,
@@ -52,7 +50,6 @@ const runServer = (
 
   const locals: Locals = {
     logger: httpLogger,
-    blockstore,
     db,
     keypair,
     auth,

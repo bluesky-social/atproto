@@ -1,3 +1,4 @@
+import * as common from '@atproto/common'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/getAuthorFeed'
 import * as GetHomeFeed from '../../../../lexicon/types/app/bsky/getHomeFeed'
 
@@ -19,7 +20,7 @@ export const rowToFeedItem = (row: FeedRow): FeedItem => ({
           displayName: row.originatorDisplayName ?? undefined,
         }
       : undefined,
-  record: JSON.parse(row.recordRaw),
+  record: common.ipldBytesToRecord(row.recordBytes),
   replyCount: row.replyCount,
   repostCount: row.repostCount,
   likeCount: row.likeCount,
@@ -42,7 +43,7 @@ type FeedRow = {
   postUri: string
   postCid: string
   cursor: string
-  recordRaw: string
+  recordBytes: Uint8Array
   indexedAt: string
   authorDid: string
   authorName: string

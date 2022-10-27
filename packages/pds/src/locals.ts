@@ -1,6 +1,5 @@
 import { Response } from 'express'
 import pino from 'pino'
-import { IpldStore, RepoStructure } from '@atproto/repo'
 import { AuthStore, DidableKey } from '@atproto/auth'
 import * as plc from '@atproto/plc'
 import { Database } from './db'
@@ -11,7 +10,6 @@ import { App } from '.'
 
 export type Locals = {
   logger: pino.Logger
-  blockstore: IpldStore
   db: Database
   keypair: DidableKey
   auth: ServerAuth
@@ -27,14 +25,6 @@ export const logger = (res: HasLocals): pino.Logger => {
     throw new Error('No Logger object attached to server')
   }
   return logger as pino.Logger
-}
-
-export const blockstore = (res: HasLocals): IpldStore => {
-  const blockstore = res.locals.blockstore
-  if (!blockstore) {
-    throw new Error('No Blockstore object attached to server')
-  }
-  return blockstore as IpldStore
 }
 
 export const db = (res: HasLocals): Database => {
@@ -80,7 +70,6 @@ export const auth = (res: HasLocals): ServerAuth => {
 export const getLocals = (res: HasLocals): Locals => {
   return {
     logger: logger(res),
-    blockstore: blockstore(res),
     db: db(res),
     keypair: keypair(res),
     auth: auth(res),
@@ -98,16 +87,4 @@ export const plcClient = (res: Response): plc.PlcClient => {
 export const getAuthstore = (res: Response, did: string): AuthStore => {
   const { auth, keypair } = get(res)
   return auth.verifier.loadAuthStore(keypair, [], did)
-}
-
-export const loadRepo = async (
-  res: Response,
-  did: string,
-): Promise<RepoStructure | null> => {
-  const { db, blockstore } = getLocals(res)
-  const currRoot = await db.getRepoRoot(did)
-  if (!currRoot) {
-    return null
-  }
-  return RepoStructure.load(blockstore, currRoot)
 }
