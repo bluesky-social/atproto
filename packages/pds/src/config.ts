@@ -31,7 +31,7 @@ export interface ServerConfigValues {
 export class ServerConfig {
   constructor(private cfg: ServerConfigValues) {
     const invalidDomain = cfg.availableUserDomains.find(
-      (domain) => domain.length > 0 && domain.startsWith('.'),
+      (domain) => domain.length < 1 || !domain.startsWith('.'),
     )
     if (invalidDomain) {
       throw new Error(`Invalid domain: ${invalidDomain}`)
