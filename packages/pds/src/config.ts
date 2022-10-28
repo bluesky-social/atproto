@@ -1,6 +1,7 @@
 export interface ServerConfigValues {
   debugMode?: boolean
 
+  publicUrl?: string
   scheme: string
   port: number
   hostname: string
@@ -33,6 +34,7 @@ export class ServerConfig {
   static readEnv(overrides?: Partial<ServerConfig>) {
     const debugMode = process.env.DEBUG_MODE === '1'
 
+    const publicUrl = process.env.PUBLIC_URL || undefined
     const hostname = process.env.HOSTNAME || 'localhost'
     let scheme
     if ('TLS' in process.env) {
@@ -74,6 +76,7 @@ export class ServerConfig {
 
     return new ServerConfig({
       debugMode,
+      publicUrl,
       scheme,
       hostname,
       port,
@@ -115,7 +118,10 @@ export class ServerConfig {
     return u.origin
   }
 
-  // @TODO should protect this better
+  get publicUrl() {
+    return this.cfg.publicUrl || this.origin
+  }
+
   get dbPostgresUrl() {
     return this.cfg.dbPostgresUrl
   }
@@ -124,7 +130,6 @@ export class ServerConfig {
     return this.cfg.dbPostgresSchema
   }
 
-  // @TODO should protect this better
   get jwtSecret() {
     return this.cfg.jwtSecret
   }
