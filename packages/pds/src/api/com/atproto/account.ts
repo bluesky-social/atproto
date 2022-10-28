@@ -95,9 +95,7 @@ export default function (server: Server) {
       try {
         await dbTxn.registerUser(email, username, password)
       } catch (err) {
-        console.log('CAUGHT ERR')
         if (err instanceof UserAlreadyExistsError) {
-          console.log('here')
           if ((await dbTxn.getUser(username)) !== null) {
             throw new InvalidRequestError(`Username already taken: ${username}`)
           } else if ((await dbTxn.getUserByEmail(email)) !== null) {

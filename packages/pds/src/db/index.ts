@@ -196,7 +196,7 @@ export class Database {
       query = query.where('did', '=', usernameOrDid)
     } else {
       query = query.where(
-        sql`lower(user.username)`,
+        sql`lower(user_did.username)`,
         '=',
         usernameOrDid.toLowerCase(),
       )

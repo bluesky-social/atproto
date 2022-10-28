@@ -294,7 +294,6 @@ const snapSearchPg = [
   },
   {
     did: 'user(4)',
-    indexedAt: '1970-01-01T00:00:00.000Z',
     name: 'Carlos6',
   },
   {
