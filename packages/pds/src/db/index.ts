@@ -195,11 +195,7 @@ export class Database {
     if (usernameOrDid.startsWith('did:')) {
       query = query.where('did', '=', usernameOrDid)
     } else {
-      query = query.where(
-        sql`lower(user_did.username)`,
-        '=',
-        usernameOrDid.toLowerCase(),
-      )
+      query = query.where('user_did.username', '=', usernameOrDid.toLowerCase())
     }
     const found = await query.executeTakeFirst()
     return found || null
@@ -210,7 +206,7 @@ export class Database {
       .selectFrom('user')
       .innerJoin('user_did', 'user_did.username', 'user.username')
       .selectAll()
-      .where(sql`lower(email)`, '=', email.toLowerCase())
+      .where('email', '=', email.toLowerCase())
       .executeTakeFirst()
     return found || null
   }

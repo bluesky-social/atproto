@@ -10,7 +10,7 @@ export default function (server: Server) {
   server.com.atproto.requestAccountPasswordReset(
     async (_params, input, _req, res) => {
       const { db, mailer, config } = locals.get(res)
-      const { email } = input.body
+      const email = input.body.email.toLowerCase()
 
       const user = await db.getUserByEmail(email)
 

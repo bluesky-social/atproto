@@ -43,22 +43,10 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   await db.schema
     .createTable(userTable)
     .addColumn('username', 'varchar', (col) => col.primaryKey())
-    .addColumn('email', 'varchar', (col) => col.notNull())
+    .addColumn('email', 'varchar', (col) => col.notNull().unique())
     .addColumn('password', 'varchar', (col) => col.notNull())
     .addColumn('lastSeenNotifs', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .execute()
-  await db.schema
-    .createIndex(`${userTable}_username_lower_idx`)
-    .unique()
-    .on(userTable)
-    .expression(sql`lower("username")`)
-    .execute()
-  await db.schema
-    .createIndex(`${userTable}_email_lower_idx`)
-    .unique()
-    .on(userTable)
-    .expression(sql`lower("email")`)
     .execute()
   // User Dids
   await db.schema

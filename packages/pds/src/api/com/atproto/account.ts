@@ -25,32 +25,15 @@ export default function (server: Server) {
   })
 
   server.com.atproto.createAccount(async (_params, input, _req, res) => {
-    const { email, username, password, inviteCode, recoveryKey } = input.body
+    const { password, inviteCode, recoveryKey } = input.body
     const { db, auth, config, keypair, logger } = locals.get(res)
+    const username = input.body.username.toLowerCase()
+    const email = input.body.email.toLowerCase()
 
-    // In order to perform the significant db updates ahead of
-    // registering the did, we will use a temp invalid did. Once everything
-    // goes well and a fresh did is registered, we'll replace the temp values.
+    // throws if not
+    ensureUsernameValid(username, config.availableUserDomains)
+
     const now = new Date().toISOString()
-
-    // Validate username
-
-    if (username.startsWith('did:')) {
-      throw new InvalidRequestError(
-        'Cannot register a username that starts with `did:`',
-        'InvalidUsername',
-      )
-    }
-
-    const supportedUsername = config.availableUserDomains.some((host) =>
-      username.toLowerCase().endsWith(host),
-    )
-    if (!supportedUsername) {
-      throw new InvalidRequestError(
-        'Not a supported username domain',
-        'InvalidUsername',
-      )
-    }
 
     const did = await db.transaction(async (dbTxn) => {
       if (config.inviteRequired) {
@@ -161,4 +144,38 @@ export default function (server: Server) {
     // TODO
     throw new InvalidRequestError('Not implemented')
   })
+}
+
+const ensureUsernameValid = (
+  username: string,
+  availableUserDomains: string[],
+): void => {
+  if (username.startsWith('did:')) {
+    throw new InvalidRequestError(
+      'Cannot register a username that starts with `did:`',
+      'InvalidUsername',
+    )
+  }
+  const supportedDomain = availableUserDomains.find((domain) =>
+    username.endsWith(domain),
+  )
+  if (!supportedDomain) {
+    throw new InvalidRequestError(
+      'Not a supported username domain',
+      'InvalidUsername',
+    )
+  }
+  const front = username.slice(0, username.length - supportedDomain.length)
+  if (front.length < 2) {
+    throw new InvalidRequestError('Username too short', 'InvalidUsername')
+  } else if (front.length > 20) {
+    throw new InvalidRequestError('Username too long', 'InvalidUsername')
+  }
+  const validChars = /^[a-zA-Z0-9-]*$/.test(front)
+  if (!validChars) {
+    throw new InvalidRequestError(
+      'Invalid characters in username',
+      'InvalidUsername',
+    )
+  }
 }
