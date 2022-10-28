@@ -41,7 +41,14 @@ export class XRPCError extends Error {
     super(errorMessage)
   }
 
-  get typeStr() {
+  get payload() {
+    return {
+      error: this.customErrorName,
+      message: this.errorMessage || this.typeStr,
+    }
+  }
+
+  get typeStr(): string | undefined {
     return ResponseTypeStrings[this.type]
   }
 }

@@ -1,7 +1,6 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import * as Post from '@atproto/api/src/types/app/bsky/post'
 import { AtUri } from '@atproto/uri'
-import { response } from 'express'
 import { CloseFn, paginateAll, runTestServer } from './_util'
 
 const alice = {
