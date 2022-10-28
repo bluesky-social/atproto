@@ -59,6 +59,14 @@ export class DevEnvServer {
         await db.migrateToLatestOrThrow()
         const keypair = await crypto.EcdsaKeypair.create()
 
+        const plcClient = new plc.PlcClient(this.env.plcUrl)
+        const serverDid = await plcClient.createDid(
+          keypair,
+          keypair.did(),
+          'localhost',
+          `http://localhost:${this.port}`,
+        )
+
         this.inst = await onServerReady(
           PDSServer(db, keypair, {
             debugMode: true,
@@ -66,6 +74,7 @@ export class DevEnvServer {
             hostname: 'localhost',
             port: this.port,
             didPlcUrl: this.env.plcUrl,
+            serverDid,
             recoveryKey: keypair.did(),
             jwtSecret: crytpo.randomBytes(8).toString('base64'),
             availableUserDomains: ['.test'],

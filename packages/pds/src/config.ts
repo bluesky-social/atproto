@@ -12,6 +12,7 @@ export interface ServerConfigValues {
 
   didPlcUrl: string
 
+  serverDid: string
   recoveryKey: string
   adminPassword: string
 
@@ -30,7 +31,7 @@ export interface ServerConfigValues {
 export class ServerConfig {
   constructor(private cfg: ServerConfigValues) {}
 
-  static readEnv(overrides?: Partial<ServerConfig>) {
+  static readEnv(overrides?: Partial<ServerConfigValues>) {
     const debugMode = process.env.DEBUG_MODE === '1'
 
     const hostname = process.env.HOSTNAME || 'localhost'
@@ -46,6 +47,11 @@ export class ServerConfig {
     const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
+
+    const serverDid = overrides?.serverDid || process.env.SERVER_DID
+    if (typeof serverDid !== 'string') {
+      throw new Error('No value provided for process.env.SERVER_DID')
+    }
 
     const recoveryKey = overrides?.recoveryKey || process.env.RECOVERY_KEY
     if (typeof recoveryKey !== 'string') {
@@ -84,6 +90,7 @@ export class ServerConfig {
       jwtSecret,
       recoveryKey,
       didPlcUrl,
+      serverDid,
       adminPassword,
       inviteRequired,
       blockstoreLocation,
@@ -133,6 +140,10 @@ export class ServerConfig {
 
   get didPlcUrl() {
     return this.cfg.didPlcUrl
+  }
+
+  get serverDid() {
+    return this.cfg.recoveryKey
   }
 
   get recoveryKey() {

@@ -4,20 +4,20 @@ import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.com.atproto.resolveName(async (params, _in, _req, res) => {
-    const { db, config, keypair } = locals.get(res)
+    const { db, config } = locals.get(res)
 
     const name = params.name
 
     let did = ''
     if (!name || name === config.hostname) {
       // self
-      did = keypair.did()
+      did = config.serverDid
     } else {
       const supportedUsername = config.availableUserDomains.some((host) =>
         name.endsWith(host),
       )
       if (!supportedUsername) {
-        throw new InvalidRequestError('Not a support username domain')
+        throw new InvalidRequestError('Not a supported username domain')
       }
       const user = await db.getUser(name)
       if (!user) {

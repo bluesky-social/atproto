@@ -43,10 +43,13 @@ export default function (server: Server) {
     }
 
     const supportedUsername = config.availableUserDomains.some((host) =>
-      username.endsWith(host),
+      username.toLowerCase().endsWith(host),
     )
     if (!supportedUsername) {
-      throw new InvalidRequestError('Not a support username domain')
+      throw new InvalidRequestError(
+        'Not a supported username domain',
+        'InvalidUsername',
+      )
     }
 
     const did = await db.transaction(async (dbTxn) => {
