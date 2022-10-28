@@ -13,9 +13,9 @@ export interface CallOptions {
 export interface InputSchema {
   displayName?: string;
   description?: string;
-  pinnedBadges?: AppBskyProfileBadgeRef[];
+  pinnedBadges?: BadgeRef[];
 }
-export interface AppBskyProfileBadgeRef {
+export interface BadgeRef {
   uri: string;
   cid: string;
 }

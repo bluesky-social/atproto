@@ -1,6 +1,8 @@
 import * as uint8arrays from 'uint8arrays'
 import * as p256 from './p256/encoding'
+import * as secp from './secp256k1/encoding'
 import plugins from './plugins'
+import { P256_JWT_ALG, SECP256K1_JWT_ALG } from './const'
 
 export const DID_KEY_BASE58_PREFIX = 'did:key:z'
 
@@ -22,8 +24,10 @@ export const parseDidKey = (did: string): ParsedDidKey => {
     throw new Error('Unsupported key type')
   }
   let keyBytes = prefixedBytes.slice(plugin.prefix.length)
-  if (plugin.jwtAlg === 'ES256') {
+  if (plugin.jwtAlg === P256_JWT_ALG) {
     keyBytes = p256.decompressPubkey(keyBytes)
+  } else if (plugin.jwtAlg === SECP256K1_JWT_ALG) {
+    keyBytes = secp.decompressPubkey(keyBytes)
   }
   return {
     jwtAlg: plugin.jwtAlg,
@@ -36,8 +40,10 @@ export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
   if (!plugin) {
     throw new Error('Unsupported key type')
   }
-  if (jwtAlg === 'ES256') {
+  if (jwtAlg === P256_JWT_ALG) {
     keyBytes = p256.compressPubkey(keyBytes)
+  } else if (jwtAlg === SECP256K1_JWT_ALG) {
+    keyBytes = secp.compressPubkey(keyBytes)
   }
   const prefixedBytes = uint8arrays.concat([plugin.prefix, keyBytes])
   return (

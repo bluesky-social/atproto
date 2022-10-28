@@ -1,6 +1,6 @@
 import * as auth from '@atproto/auth'
 import { TID } from '@atproto/common'
-import { Repo, RepoRoot } from '../src'
+import { Repo, RepoRoot, verifyUpdates, ucanForOperation } from '../src'
 import { MemoryBlockstore } from '../src/blockstore'
 
 import * as util from './_util'
@@ -40,7 +40,7 @@ describe('Sync', () => {
 
     const car = await aliceRepo.getFullHistory()
     bobRepo = await Repo.fromCarFile(car, bobBlockstore)
-    const diff = await bobRepo.verifySetOfUpdates(null, bobRepo.cid)
+    const diff = await verifyUpdates(bobBlockstore, null, bobRepo.cid, verifier)
     await util.checkRepo(bobRepo, repoData)
     await util.checkRepoDiff(diff, {}, repoData)
   })
@@ -82,8 +82,8 @@ describe('Sync', () => {
       root: rootCid,
       sig: await aliceAuth.sign(rootCid.bytes),
     }
-    aliceRepo.cid = await aliceBlockstore.put(commit)
-    aliceRepo.data = updatedData
+    const commitCid = await aliceBlockstore.put(commit)
+    await aliceRepo.loadRoot(commitCid)
     const diffCar = await aliceRepo.getDiffCar(bobRepo.cid)
     await expect(bobRepo.loadAndVerifyDiff(diffCar)).rejects.toThrow()
     await aliceRepo.revert(1)
@@ -96,12 +96,18 @@ describe('Sync', () => {
       `com.example.test/${TID.next()}`,
       cid,
     )
-    const auth_token = await aliceRepo.ucanForOperation(updatedData)
+    const authToken = await ucanForOperation(
+      aliceRepo.data,
+      updatedData,
+      aliceRepo.did,
+      aliceAuth,
+    )
+    const authCid = await aliceBlockstore.put(authToken)
     const dataCid = await updatedData.save()
     const root: RepoRoot = {
       meta: aliceRepo.root.meta,
       prev: aliceRepo.cid,
-      auth_token,
+      auth_token: authCid,
       data: dataCid,
     }
     const rootCid = await aliceBlockstore.put(root)
@@ -110,8 +116,8 @@ describe('Sync', () => {
       root: rootCid,
       sig: await aliceAuth.sign(dataCid.bytes),
     }
-    aliceRepo.cid = await aliceBlockstore.put(commit)
-    aliceRepo.data = updatedData
+    const commitCid = await aliceBlockstore.put(commit)
+    await aliceRepo.loadRoot(commitCid)
     const diffCar = await aliceRepo.getDiffCar(bobRepo.cid)
     await expect(bobRepo.loadAndVerifyDiff(diffCar)).rejects.toThrow()
     await aliceRepo.revert(1)

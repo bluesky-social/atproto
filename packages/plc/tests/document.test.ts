@@ -1,5 +1,5 @@
 import { check, cidForData } from '@atproto/common'
-import { EcdsaKeypair, parseDidKey } from '@atproto/crypto'
+import { EcdsaKeypair, parseDidKey, Secp256k1Keypair } from '@atproto/crypto'
 import * as uint8arrays from 'uint8arrays'
 import * as document from '../src/lib/document'
 import * as operations from '../src/lib/operations'
@@ -9,17 +9,17 @@ describe('plc DID document', () => {
   const ops: t.Operation[] = []
 
   let signingKey: EcdsaKeypair
-  let recoveryKey: EcdsaKeypair
+  let recoveryKey: Secp256k1Keypair
   let did: string
   let username = 'alice.example.com'
   let atpPds = 'https://example.com'
 
   let oldSigningKey: EcdsaKeypair
-  let oldRecoveryKey: EcdsaKeypair
+  let oldRecoveryKey: Secp256k1Keypair
 
   beforeAll(async () => {
     signingKey = await EcdsaKeypair.create()
-    recoveryKey = await EcdsaKeypair.create()
+    recoveryKey = await Secp256k1Keypair.create()
   })
 
   it('creates a valid create op', async () => {
@@ -112,7 +112,7 @@ describe('plc DID document', () => {
   })
 
   it('allows for rotating recoveryKey', async () => {
-    const newRecoveryKey = await EcdsaKeypair.create()
+    const newRecoveryKey = await Secp256k1Keypair.create()
     const prev = await cidForData(ops[ops.length - 1])
     const op = await operations.rotateRecoveryKey(
       newRecoveryKey.did(),
@@ -156,7 +156,7 @@ describe('plc DID document', () => {
   })
 
   it('it allows recovery key to rotate recovery key', async () => {
-    const newKey = await EcdsaKeypair.create()
+    const newKey = await Secp256k1Keypair.create()
     const prev = await cidForData(ops[ops.length - 1])
     const op = await operations.rotateRecoveryKey(
       newKey.did(),
@@ -226,6 +226,7 @@ describe('plc DID document', () => {
     expect(doc['@context']).toEqual([
       'https://www.w3.org/ns/did/v1',
       'https://w3id.org/security/suites/ecdsa-2019/v1',
+      'https://w3id.org/security/suites/secp256k1-2019/v1',
     ])
     expect(doc.id).toEqual(did)
     expect(doc.alsoKnownAs).toEqual([`https://${username}`])
@@ -244,7 +245,7 @@ describe('plc DID document', () => {
     )
     expect(doc.verificationMethod[1].id).toEqual('#recoveryKey')
     expect(doc.verificationMethod[1].type).toEqual(
-      'EcdsaSecp256r1VerificationKey2019',
+      'EcdsaSecp256k1VerificationKey2019',
     )
     expect(doc.verificationMethod[1].controller).toEqual(did)
     const parsedRecoveryKey = parseDidKey(recoveryKey.did())

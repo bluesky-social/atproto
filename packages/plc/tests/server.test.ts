@@ -24,7 +24,10 @@ describe('PLC server', () => {
     let port: number
     if (USE_TEST_SERVER) {
       port = await getPort()
-      closeFn = await util.runTestServer(port)
+      closeFn = await util.runTestServer({
+        port,
+        dbPostgresSchema: 'server',
+      })
     } else {
       port = 2582
     }

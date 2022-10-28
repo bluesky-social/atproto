@@ -5,9 +5,6 @@ require('esbuild')
     bundle: true,
     outdir: 'dist',
     platform: 'node',
-    external: [
-      '../../node_modules/level/*',
-      '../../node_modules/classic-level/*',
-    ],
+    external: ['level', 'classic-level'],
   })
   .catch(() => process.exit(1))

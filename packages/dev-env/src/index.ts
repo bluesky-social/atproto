@@ -1,8 +1,7 @@
 import http from 'http'
 import chalk from 'chalk'
 import crytpo from 'crypto'
-import { MemoryBlockstore } from '@atproto/repo'
-import PDSServer, { Database as PDSDatabase } from '@atproto/server'
+import PDSServer, { Database as PDSDatabase } from '@atproto/pds'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import AtpApi, { ServiceClient } from '@atproto/api'
@@ -57,28 +56,28 @@ export class DevEnvServer {
         }
 
         const db = await PDSDatabase.memory()
-        await db.createTables()
-        const serverBlockstore = new MemoryBlockstore()
+        await db.migrateToLatestOrThrow()
         const keypair = await crypto.EcdsaKeypair.create()
 
         const plcClient = new plc.PlcClient(this.env.plcUrl)
         const serverDid = await plcClient.createDid(
           keypair,
           keypair.did(),
-          'pds.test',
+          'localhost',
           `http://localhost:${this.port}`,
         )
 
         this.inst = await onServerReady(
-          PDSServer(serverBlockstore, db, keypair, {
+          PDSServer(db, keypair, {
             debugMode: true,
             scheme: 'http',
             hostname: 'localhost',
             port: this.port,
             didPlcUrl: this.env.plcUrl,
-            serverDid: serverDid,
-            testNameRegistry: this.env.testNameRegistry,
+            serverDid,
+            recoveryKey: keypair.did(),
             jwtSecret: crytpo.randomBytes(8).toString('base64'),
+            availableUserDomains: ['.test'],
             appUrlPasswordReset: 'app://password-reset',
             // @TODO setup ethereal.email creds and set emailSmtpUrl here
             emailNoReplyAddress: 'noreply@blueskyweb.xyz',
@@ -89,7 +88,8 @@ export class DevEnvServer {
         break
       }
       case ServerType.DidPlaceholder: {
-        const db = await plc.Database.memory().createTables()
+        const db = plc.Database.memory()
+        await db.migrateToLatestOrThrow()
         this.inst = await onServerReady(plc.server(db, this.port))
         break
       }
@@ -119,7 +119,6 @@ export class DevEnvServer {
 export class DevEnv {
   plcUrl: string | undefined
   servers: Map<number, DevEnvServer> = new Map()
-  testNameRegistry: Record<string, string> = {}
 
   static async create(params: StartParams): Promise<DevEnv> {
     const devEnv = new DevEnv()

@@ -8,9 +8,6 @@ const cid = z
   })
   .transform((obj: unknown) => mf.CID.asCID(obj) as mf.CID)
 
-// const cid = z.instanceof(mf.CID)
-export type CID = z.infer<typeof cid>
-
 export const isCid = (str: string): boolean => {
   try {
     mf.CID.parse(str)
