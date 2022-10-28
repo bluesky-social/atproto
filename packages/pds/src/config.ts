@@ -29,7 +29,14 @@ export interface ServerConfigValues {
 }
 
 export class ServerConfig {
-  constructor(private cfg: ServerConfigValues) {}
+  constructor(private cfg: ServerConfigValues) {
+    const invalidDomain = cfg.availableUserDomains.find(
+      (domain) => domain.length > 0 && domain.startsWith('.'),
+    )
+    if (invalidDomain) {
+      throw new Error(`Invalid domain: ${invalidDomain}`)
+    }
+  }
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
     const debugMode = process.env.DEBUG_MODE === '1'
@@ -80,7 +87,7 @@ export class ServerConfig {
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
 
-    const cfg = new ServerConfig({
+    return new ServerConfig({
       debugMode,
       scheme,
       hostname,
@@ -101,15 +108,6 @@ export class ServerConfig {
       emailNoReplyAddress,
       ...overrides,
     })
-
-    const invalidDomain = cfg.availableUserDomains.find(
-      (domain) => domain.length > 0 && domain.startsWith('.'),
-    )
-    if (invalidDomain) {
-      throw new Error(`Invalid domain: ${invalidDomain}`)
-    }
-
-    return cfg
   }
 
   get debugMode() {
