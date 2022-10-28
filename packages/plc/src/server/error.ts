@@ -1,13 +1,20 @@
 import { ErrorRequestHandler } from 'express'
 import * as locals from './locals'
 
-export const handler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const handler: ErrorRequestHandler = (err, _req, res, next) => {
   const { logger } = locals.get(res)
+  logger.info(
+    err,
+    ServerError.is(err)
+      ? 'handled server error'
+      : 'unexpected internal server error',
+  )
+  if (res.headersSent) {
+    return next(err)
+  }
   if (ServerError.is(err)) {
-    logger.info(err, 'handled server error')
     return res.status(err.status).json({ message: err.message })
   } else {
-    logger.error(err, 'unexpected internal server error')
     return res.status(500).json({ message: 'Internal Server Error' })
   }
 }
