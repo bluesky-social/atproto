@@ -268,13 +268,10 @@ const snapTypeaheadSqlite = [
 
 const snapSearchPg = [
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     did: 'user(0)',
-    indexedAt: '1970-01-01T00:00:00.000Z',
     name: 'Cara.Wiegand69',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     description: '',
     did: 'user(1)',
     displayName: 'Carol Littel',
@@ -282,7 +279,6 @@ const snapSearchPg = [
     name: 'Eudora_Dietrich4',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     description: '',
     did: 'user(2)',
     displayName: 'Sadie Carter',
@@ -290,7 +286,6 @@ const snapSearchPg = [
     name: 'Shane_Torphy52',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     description: '',
     did: 'user(3)',
     displayName: 'Carlton Abernathy IV',
@@ -298,13 +293,11 @@ const snapSearchPg = [
     name: 'Aliya.Hodkiewicz',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     did: 'user(4)',
     indexedAt: '1970-01-01T00:00:00.000Z',
     name: 'Carlos6',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     description: '',
     did: 'user(5)',
     displayName: 'Latoya Windler',
@@ -312,7 +305,6 @@ const snapSearchPg = [
     name: 'Carolina_McDermott77',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     description: '',
     did: 'user(6)',
     displayName: 'Rachel Kshlerin',
@@ -323,7 +315,6 @@ const snapSearchPg = [
 
 const snapSearchSqlite = [
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     description: '',
     did: 'user(0)',
     displayName: 'Carlton Abernathy IV',
@@ -331,19 +322,14 @@ const snapSearchSqlite = [
     name: 'Aliya.Hodkiewicz',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     did: 'user(1)',
-    indexedAt: '1970-01-01T00:00:00.000Z',
     name: 'Cara.Wiegand69',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     did: 'user(2)',
-    indexedAt: '1970-01-01T00:00:00.000Z',
     name: 'Carlos6',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     description: '',
     did: 'user(3)',
     displayName: 'Latoya Windler',
@@ -351,7 +337,6 @@ const snapSearchSqlite = [
     name: 'Carolina_McDermott77',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     description: '',
     did: 'user(4)',
     displayName: 'Carol Littel',
@@ -359,7 +344,6 @@ const snapSearchSqlite = [
     name: 'Eudora_Dietrich4',
   },
   {
-    createdAt: '1970-01-01T00:00:00.000Z',
     description: '',
     did: 'user(5)',
     displayName: 'Sadie Carter',

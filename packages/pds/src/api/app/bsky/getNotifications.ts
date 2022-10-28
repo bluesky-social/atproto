@@ -21,7 +21,7 @@ export default function (server: Server) {
         .selectFrom('user_notification as notif')
         .where('notif.userDid', '=', requester)
         .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
-        .innerJoin('user as author', 'author.did', 'notif.author')
+        .innerJoin('user_did as author', 'author.did', 'notif.author')
         .leftJoin(
           'app_bsky_profile as author_profile',
           'author_profile.creator',
@@ -50,6 +50,7 @@ export default function (server: Server) {
       const [user, notifs] = await Promise.all([
         db.db
           .selectFrom('user')
+          .innerJoin('user_did', 'user_did.username', 'user.username')
           .selectAll()
           .where('did', '=', requester)
           .executeTakeFirst(),

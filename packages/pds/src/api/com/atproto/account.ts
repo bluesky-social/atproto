@@ -1,9 +1,6 @@
-import assert from 'assert'
-import { randomBytes } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Repo } from '@atproto/repo'
 import { PlcClient } from '@atproto/plc'
-import * as uint8arrays from 'uint8arrays'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
@@ -40,7 +37,6 @@ export default function (server: Server) {
     // In order to perform the significant db updates ahead of
     // registering the did, we will use a temp invalid did. Once everything
     // goes well and a fresh did is registered, we'll replace the temp values.
-    const tempDid = uint8arrays.toString(randomBytes(16), 'base32')
     const now = new Date().toISOString()
 
     // Validate username
@@ -92,23 +88,16 @@ export default function (server: Server) {
             'InvalidInviteCode',
           )
         }
-
-        await dbTxn.db
-          .insertInto('invite_code_use')
-          .values({
-            code: inviteCode,
-            usedBy: tempDid,
-            usedAt: now,
-          })
-          .execute()
       }
 
       // Pre-register user before going out to PLC to get a real did
 
       try {
-        await dbTxn.preRegisterUser(email, username, tempDid, password)
+        await dbTxn.registerUser(email, username, password)
       } catch (err) {
+        console.log('CAUGHT ERR')
         if (err instanceof UserAlreadyExistsError) {
+          console.log('here')
           if ((await dbTxn.getUser(username)) !== null) {
             throw new InvalidRequestError(`Username already taken: ${username}`)
           } else if ((await dbTxn.getUserByEmail(email)) !== null) {
@@ -143,17 +132,16 @@ export default function (server: Server) {
       // tables, and setup the repo root. These all _should_ succeed under typical conditions.
       // It's about as good as we're gonna get transactionally, given that we rely on PLC here to assign the did.
 
-      await dbTxn.postRegisterUser(tempDid, did)
-      if (config.inviteRequired) {
-        const updated = await dbTxn.db
-          .updateTable('invite_code_use')
-          .where('usedBy', '=', tempDid)
-          .set({ usedBy: did })
-          .executeTakeFirst()
-        assert(
-          Number(updated.numUpdatedRows) === 1,
-          'Should act on exactly one invite code use',
-        )
+      await dbTxn.registerUserDid(username, did)
+      if (config.inviteRequired && inviteCode) {
+        await dbTxn.db
+          .insertInto('invite_code_use')
+          .values({
+            code: inviteCode,
+            usedBy: did,
+            usedAt: now,
+          })
+          .execute()
       }
 
       // Setup repo root

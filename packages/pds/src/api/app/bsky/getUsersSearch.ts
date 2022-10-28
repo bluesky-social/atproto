@@ -39,8 +39,7 @@ export default function (server: Server) {
       name: result.name,
       displayName: result.displayName ?? undefined,
       description: result.description ?? undefined,
-      createdAt: result.createdAt,
-      indexedAt: result.indexedAt ?? result.createdAt,
+      indexedAt: result.indexedAt ?? undefined,
     }))
 
     const lastResult = results.at(-1)
@@ -57,14 +56,13 @@ export default function (server: Server) {
 
 const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
   return await getUserSearchQueryPg(db, { term, limit, before })
-    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user.did')
+    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
     .select([
       'distance',
-      'user.did as did',
-      'user.username as name',
+      'user_did.did as did',
+      'user_did.username as name',
       'profile.displayName as displayName',
       'profile.description as description',
-      'user.createdAt as createdAt',
       'profile.indexedAt as indexedAt',
     ])
     .execute()
@@ -72,14 +70,13 @@ const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
 
 const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
   return await getUserSearchQuerySqlite(db, { term, limit, before })
-    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user.did')
+    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
     .select([
       sql<number>`0`.as('distance'),
-      'user.did as did',
-      'user.username as name',
+      'user_did.did as did',
+      'user_did.username as name',
       'profile.displayName as displayName',
       'profile.description as description',
-      'user.createdAt as createdAt',
       'profile.indexedAt as indexedAt',
     ])
     .execute()
@@ -95,7 +92,6 @@ type GetResultsFn = (
     displayName: string | null
     description: string | null
     distance: number
-    createdAt: string
     indexedAt: string | null
   }[]
 >

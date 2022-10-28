@@ -17,8 +17,9 @@ export default function (server: Server) {
       const result = await db.db
         .selectFrom('user_notification as notif')
         .select(countAll.as('count'))
-        .innerJoin('user', 'notif.userDid', 'user.did')
-        .where('user.did', '=', requester)
+        .innerJoin('user_did', 'user_did.did', 'notif.userDid')
+        .innerJoin('user', 'user.username', 'user_did.username')
+        .where('user_did.did', '=', requester)
         .whereRef('notif.indexedAt', '>', 'user.lastSeenNotifs')
         .executeTakeFirst()
 

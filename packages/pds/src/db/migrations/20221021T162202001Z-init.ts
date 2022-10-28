@@ -2,6 +2,7 @@ import { Kysely, sql } from 'kysely'
 import { Dialect } from '..'
 
 const userTable = 'user'
+const userDidTable = 'user_did'
 const repoRootTable = 'repo_root'
 const recordTable = 'record'
 const ipldBlockTable = 'ipld_block'
@@ -41,8 +42,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   // Users
   await db.schema
     .createTable(userTable)
-    .addColumn('did', 'varchar', (col) => col.primaryKey())
-    .addColumn('username', 'varchar', (col) => col.notNull())
+    .addColumn('username', 'varchar', (col) => col.primaryKey())
     .addColumn('email', 'varchar', (col) => col.notNull())
     .addColumn('password', 'varchar', (col) => col.notNull())
     .addColumn('lastSeenNotifs', 'varchar', (col) => col.notNull())
@@ -60,10 +60,16 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .on(userTable)
     .expression(sql`lower("email")`)
     .execute()
+  // User Dids
+  await db.schema
+    .createTable(userDidTable)
+    .addColumn('did', 'varchar', (col) => col.primaryKey())
+    .addColumn('username', 'varchar', (col) => col.unique())
+    .execute()
   if (dialect === 'pg') {
     await db.schema // Supports user search
-      .createIndex(`${userTable}_username_tgrm_idx`)
-      .on(userTable)
+      .createIndex(`${userDidTable}_username_tgrm_idx`)
+      .on(userDidTable)
       .using('gist')
       .expression(sql`"username" gist_trgm_ops`)
       .execute()
@@ -263,5 +269,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(ipldBlockTable).execute()
   await db.schema.dropTable(recordTable).execute()
   await db.schema.dropTable(repoRootTable).execute()
+  await db.schema.dropTable(userDidTable).execute()
   await db.schema.dropTable(userTable).execute()
 }

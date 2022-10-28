@@ -19,17 +19,17 @@ export default function (server: Server) {
       }
 
       const userLookupCol = author.startsWith('did:')
-        ? 'user.did'
-        : 'user.username'
+        ? 'user_did.did'
+        : 'user_did.username'
       const userQb = db.db
-        .selectFrom('user')
+        .selectFrom('user_did')
         .selectAll()
         .where(userLookupCol, '=', author)
 
       const postsQb = db.db
         .selectFrom('app_bsky_post')
         .whereExists(
-          userQb.whereRef('user.did', '=', ref('app_bsky_post.creator')),
+          userQb.whereRef('user_did.did', '=', ref('app_bsky_post.creator')),
         )
         .select([
           sql<'post' | 'repost'>`${'post'}`.as('type'),
@@ -42,7 +42,7 @@ export default function (server: Server) {
       const repostsQb = db.db
         .selectFrom('app_bsky_repost')
         .whereExists(
-          userQb.whereRef('user.did', '=', ref('app_bsky_repost.creator')),
+          userQb.whereRef('user_did.did', '=', ref('app_bsky_repost.creator')),
         )
         .select([
           sql<'post' | 'repost'>`${'repost'}`.as('type'),
@@ -56,13 +56,13 @@ export default function (server: Server) {
         .selectFrom(postsQb.union(repostsQb).as('posts_and_reposts'))
         .innerJoin('app_bsky_post as post', 'post.uri', 'postUri')
         .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
-        .innerJoin('user as author', 'author.did', 'post.creator')
+        .innerJoin('user_did as author', 'author.did', 'post.creator')
         .leftJoin(
           'app_bsky_profile as author_profile',
           'author_profile.creator',
           'author.did',
         )
-        .innerJoin('user as originator', 'originator.did', 'originatorDid')
+        .innerJoin('user_did as originator', 'originator.did', 'originatorDid')
         .leftJoin(
           'app_bsky_profile as originator_profile',
           'originator_profile.creator',

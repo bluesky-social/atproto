@@ -1,5 +1,4 @@
 export interface User {
-  did: string
   username: string
   email: string
   password: string

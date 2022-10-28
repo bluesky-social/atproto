@@ -74,7 +74,7 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
   return db
     .selectFrom('app_bsky_post as post')
     .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
-    .innerJoin('user as author', 'author.did', 'post.creator')
+    .innerJoin('user_did as author', 'author.did', 'post.creator')
     .leftJoin(
       'app_bsky_profile as author_profile',
       'author.did',

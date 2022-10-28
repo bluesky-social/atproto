@@ -11,9 +11,9 @@ import {
 
 export const userWhereClause = (user: string) => {
   if (user.startsWith('did:')) {
-    return sql<0 | 1>`"user"."did" = ${user}`
+    return sql<0 | 1>`"user_did"."did" = ${user}`
   } else {
-    return sql<0 | 1>`"user"."username" = ${user}`
+    return sql<0 | 1>`"user_did"."username" = ${user}`
   }
 }
 

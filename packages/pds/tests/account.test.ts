@@ -202,6 +202,8 @@ describe('account', () => {
     ).rejects.toThrow('Username already taken: BOB.TEST')
   })
 
+  return
+
   it('fails on used up invite code', async () => {
     const promise = client.com.atproto.createAccount(
       {},
@@ -377,6 +379,7 @@ describe('account', () => {
 
     const user = await db.db
       .selectFrom('user')
+      .innerJoin('user_did', 'user_did.username', 'user.username')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()

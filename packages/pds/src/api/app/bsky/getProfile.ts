@@ -18,34 +18,38 @@ export default function (server: Server) {
       const { ref } = db.db.dynamic
 
       const queryRes = await db.db
-        .selectFrom('user')
+        .selectFrom('user_did')
         .where(userWhereClause(user))
-        .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user.did')
+        .leftJoin(
+          'app_bsky_profile as profile',
+          'profile.creator',
+          'user_did.did',
+        )
         .select([
-          'user.did as did',
-          'user.username as name',
+          'user_did.did as did',
+          'user_did.username as name',
           'profile.uri as profileUri',
           'profile.displayName as displayName',
           'profile.description as description',
           db.db
             .selectFrom('app_bsky_follow')
-            .whereRef('creator', '=', ref('user.did'))
+            .whereRef('creator', '=', ref('user_did.did'))
             .select(countAll.as('count'))
             .as('followsCount'),
           db.db
             .selectFrom('app_bsky_follow')
-            .whereRef('subject', '=', ref('user.did'))
+            .whereRef('subject', '=', ref('user_did.did'))
             .select(countAll.as('count'))
             .as('followersCount'),
           db.db
             .selectFrom('app_bsky_post')
-            .whereRef('creator', '=', ref('user.did'))
+            .whereRef('creator', '=', ref('user_did.did'))
             .select(countAll.as('count'))
             .as('postsCount'),
           db.db
             .selectFrom('app_bsky_follow')
             .where('creator', '=', requester)
-            .whereRef('subject', '=', ref('user.did'))
+            .whereRef('subject', '=', ref('user_did.did'))
             .select('uri')
             .as('requesterFollow'),
         ])
@@ -73,7 +77,7 @@ export default function (server: Server) {
           'accept.badgeUri',
           'badge.uri',
         )
-        .innerJoin('user as issuer', 'issuer.did', 'badge.creator')
+        .innerJoin('user_did as issuer', 'issuer.did', 'badge.creator')
         .where('offer.subject', '=', queryRes.did)
         .whereRef('offer.creator', '=', 'badge.creator')
         .whereRef('accept.offerUri', '=', 'offer.uri')
