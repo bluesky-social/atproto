@@ -54,6 +54,12 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('username', 'varchar', (col) => col.unique())
     .execute()
+  // User Dids
+  await db.schema
+    .createTable(userDidTable)
+    .addColumn('did', 'varchar', (col) => col.primaryKey())
+    .addColumn('username', 'varchar', (col) => col.unique())
+    .execute()
   if (dialect === 'pg') {
     await db.schema // Supports user search
       .createIndex(`${userDidTable}_username_tgrm_idx`)

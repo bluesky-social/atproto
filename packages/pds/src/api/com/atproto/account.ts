@@ -93,7 +93,7 @@ export default function (server: Server) {
           keypair,
           recoveryKey || config.recoveryKey,
           username,
-          config.origin,
+          config.publicUrl,
         )
       } catch (err) {
         logger.error(

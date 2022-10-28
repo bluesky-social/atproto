@@ -144,7 +144,7 @@ describe('account', () => {
     expect(didData.username).toBe(username)
     expect(didData.signingKey).toBe(serverKey)
     expect(didData.recoveryKey).toBe(cfg.recoveryKey)
-    expect(didData.atpPds).toBe(serverUrl)
+    expect(didData.atpPds).toBe('https://pds.public.url') // Mapped from publicUrl
   })
 
   it('allows a custom set recovery key', async () => {

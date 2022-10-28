@@ -56,6 +56,7 @@ export const runTestServer = async (
     availableUserDomains: ['.test'],
     appUrlPasswordReset: 'app://forgot-password',
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
+    publicUrl: 'https://pds.public.url',
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
     ...params,
   })

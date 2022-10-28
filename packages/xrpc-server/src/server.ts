@@ -159,13 +159,10 @@ export class Server {
           message: outputUnvalidated.message,
         })
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof XRPCError) {
         log.info(e, `error in xrpc method ${req.params.methodId}`)
-        res.status(e.type).json({
-          error: e.customErrorName,
-          message: e.errorMessage || e.typeStr,
-        })
+        res.status(e.type).json(e.payload)
       } else {
         log.error(
           e,
