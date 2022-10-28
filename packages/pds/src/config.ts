@@ -20,7 +20,7 @@ export interface ServerConfigValues {
   blockstoreLocation?: string
   databaseLocation?: string
 
-  testNameRegistry?: Record<string, string>
+  availableUserDomains: string[]
 
   appUrlPasswordReset: string
   emailSmtpUrl?: string
@@ -59,7 +59,9 @@ export class ServerConfig {
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
 
-    const testNameRegistry = debugMode ? {} : undefined
+    const availableUserDomains = process.env.AVAILABLE_USER_DOMAINS
+      ? process.env.AVAILABLE_USER_DOMAINS.split(',')
+      : []
 
     const appUrlPasswordReset =
       process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
@@ -86,7 +88,7 @@ export class ServerConfig {
       inviteRequired,
       blockstoreLocation,
       databaseLocation,
-      testNameRegistry,
+      availableUserDomains,
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
@@ -161,8 +163,8 @@ export class ServerConfig {
     return !this.databaseLocation
   }
 
-  get testNameRegistry() {
-    return this.cfg.testNameRegistry
+  get availableUserDomains() {
+    return this.cfg.availableUserDomains
   }
 
   get appUrlPasswordReset() {

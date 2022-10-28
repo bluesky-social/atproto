@@ -1,7 +1,6 @@
 import http from 'http'
 import chalk from 'chalk'
 import crytpo from 'crypto'
-import { MemoryBlockstore } from '@atproto/repo'
 import PDSServer, { Database as PDSDatabase } from '@atproto/pds'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
@@ -68,8 +67,8 @@ export class DevEnvServer {
             port: this.port,
             didPlcUrl: this.env.plcUrl,
             recoveryKey: keypair.did(),
-            testNameRegistry: this.env.testNameRegistry,
             jwtSecret: crytpo.randomBytes(8).toString('base64'),
+            availableUserDomains: ['.test'],
             appUrlPasswordReset: 'app://password-reset',
             // @TODO setup ethereal.email creds and set emailSmtpUrl here
             emailNoReplyAddress: 'noreply@blueskyweb.xyz',
@@ -111,7 +110,6 @@ export class DevEnvServer {
 export class DevEnv {
   plcUrl: string | undefined
   servers: Map<number, DevEnvServer> = new Map()
-  testNameRegistry: Record<string, string> = {}
 
   static async create(params: StartParams): Promise<DevEnv> {
     const devEnv = new DevEnv()

@@ -43,7 +43,7 @@ export const runTestServer = async (
     inviteRequired: false,
     didPlcUrl: plcUrl,
     jwtSecret: 'jwt-secret',
-    testNameRegistry: {},
+    availableUserDomains: ['.test'],
     appUrlPasswordReset: 'app://forgot-password',
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
     dbPostgresUrl: process.env.DB_POSTGRES_URL,

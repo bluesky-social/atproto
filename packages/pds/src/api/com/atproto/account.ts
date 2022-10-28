@@ -11,13 +11,7 @@ export default function (server: Server) {
   server.com.atproto.getAccountsConfig((_params, _input, _req, res) => {
     const cfg = locals.config(res)
 
-    let availableUserDomains: string[]
-    if (cfg.debugMode && !!cfg.testNameRegistry) {
-      availableUserDomains = ['test']
-    } else {
-      throw new Error('TODO')
-    }
-
+    const availableUserDomains = cfg.availableUserDomains
     const inviteCodeRequired = cfg.inviteRequired
 
     return {
@@ -48,17 +42,14 @@ export default function (server: Server) {
       )
     }
 
-    let isTestUser = false
-    if (username.endsWith('.test')) {
-      if (!config.debugMode || !config.testNameRegistry) {
-        throw new InvalidRequestError(
-          'Cannot register a test user if debug mode is not enabled',
-        )
-      }
-      isTestUser = true
+    const supportedUsername = config.availableUserDomains.some((host) =>
+      username.endsWith(host),
+    )
+    if (!supportedUsername) {
+      throw new InvalidRequestError('Not a support username domain')
     }
 
-    const { did } = await db.transaction(async (dbTxn) => {
+    const did = await db.transaction(async (dbTxn) => {
       if (config.inviteRequired) {
         if (!inviteCode) {
           throw new InvalidRequestError(
@@ -156,12 +147,8 @@ export default function (server: Server) {
         })
         .execute()
 
-      return { did, isTestUser }
+      return did
     })
-
-    if (isTestUser && config.testNameRegistry) {
-      config.testNameRegistry[username] = did
-    }
 
     const jwt = auth.createToken(did)
     return { encoding: 'application/json', body: { jwt, username, did } }
