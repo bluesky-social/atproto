@@ -1,5 +1,8 @@
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
+import { AddressInfo } from 'net'
+import express from 'express'
 import axios, { AxiosError } from 'axios'
+import { CloseFn, runTestServer, TestServerInfo } from './_util'
+import { handler as errorHandler } from '../src/error'
 
 describe('server', () => {
   let server: TestServerInfo
@@ -21,16 +24,17 @@ describe('server', () => {
     await expect(promise).rejects.toThrow('failed with status code 404')
   })
 
-  it('turns unknown errors into 500s.', async () => {
-    // Sneak a new, failing route in before the server's error handler
-    const errorHandler = server.app._router.stack.pop()
-    server.app.get('/oops', () => {
+  it('error handler turns unknown errors into 500s.', async () => {
+    const app = express()
+    app.get('/oops', () => {
       throw new Error('Oops!')
     })
-    server.app._router.stack.push(errorHandler)
-
-    const promise = axios.get(`${server.url}/oops`)
+    app.use(errorHandler)
+    const srv = app.listen()
+    const port = (srv.address() as AddressInfo).port
+    const promise = axios.get(`http://localhost:${port}/oops`)
     await expect(promise).rejects.toThrow('failed with status code 500')
+    srv.close()
     try {
       await promise
     } catch (err: unknown) {
