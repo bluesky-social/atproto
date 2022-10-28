@@ -1,4 +1,5 @@
 import * as user from './tables/user'
+import * as userDid from './tables/user-did'
 import * as repoRoot from './tables/repo-root'
 import * as record from './tables/record'
 import * as ipldBlock from './tables/ipld-block'
@@ -15,6 +16,7 @@ import * as badgeAccept from './records/badgeAccept'
 import * as badgeOffer from './records/badgeOffer'
 
 export type DatabaseSchema = user.PartialDB &
+  userDid.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
   ipldBlock.PartialDB &

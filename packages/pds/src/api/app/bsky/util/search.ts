@@ -24,10 +24,10 @@ export const getUserSearchQueryPg = (
     distance: distanceAccount,
   })
   const accountsQb = db.db
-    .selectFrom('user')
+    .selectFrom('user_did')
     .where(distanceAccount, '<', threshold)
     .if(!!keysetAccount, (qb) => (keysetAccount ? qb.where(keysetAccount) : qb))
-    .select(['user.did as did', distanceAccount.as('distance')])
+    .select(['user_did.did as did', distanceAccount.as('distance')])
     .orderBy(distanceAccount)
     .orderBy('username')
     .limit(limit)
@@ -40,10 +40,10 @@ export const getUserSearchQueryPg = (
   })
   const profilesQb = db.db
     .selectFrom('app_bsky_profile')
-    .innerJoin('user', 'user.did', 'app_bsky_profile.creator')
+    .innerJoin('user_did', 'user_did.did', 'app_bsky_profile.creator')
     .where(distanceProfile, '<', threshold)
     .if(!!keysetProfile, (qb) => (keysetProfile ? qb.where(keysetProfile) : qb))
-    .select(['user.did as did', distanceProfile.as('distance')])
+    .select(['user_did.did as did', distanceProfile.as('distance')])
     .orderBy(distanceProfile)
     .orderBy('username')
     .limit(limit)
@@ -72,7 +72,7 @@ export const getUserSearchQueryPg = (
   })
   return db.db
     .selectFrom(resultsQb.as('results'))
-    .innerJoin('user', 'user.did', 'results.did')
+    .innerJoin('user_did', 'user_did.did', 'results.did')
     .if(!!keysetAll, (qb) => (keysetAll ? qb.where(keysetAll) : qb))
     .orderBy('distance')
     .orderBy('username') // Keep order stable: break ties in distance arbitrarily using username
@@ -98,19 +98,19 @@ export const getUserSearchQuerySqlite = (
 
   if (!safeWords.length) {
     // Return no results. This could happen with weird input like ' % _ '.
-    return db.db.selectFrom('user').where(sql`1 = 0`)
+    return db.db.selectFrom('user_did').where(sql`1 = 0`)
   }
 
   // We'll ensure there's a space before each word in both textForMatch and in safeWords,
   // so that we can reliably match word prefixes using LIKE operator.
   const textForMatch = sql`lower(' ' || ${ref(
-    'user.username',
+    'user_did.username',
   )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
 
   const cursor = before !== undefined ? unpackCursor(before) : undefined
 
   return db.db
-    .selectFrom('user')
+    .selectFrom('user_did')
     .where((q) => {
       safeWords.forEach((word) => {
         // Match word prefixes against contents of username and displayName

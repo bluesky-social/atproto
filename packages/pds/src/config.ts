@@ -13,6 +13,7 @@ export interface ServerConfigValues {
 
   didPlcUrl: string
 
+  serverDid: string
   recoveryKey: string
   adminPassword: string
 
@@ -21,7 +22,7 @@ export interface ServerConfigValues {
   blockstoreLocation?: string
   databaseLocation?: string
 
-  testNameRegistry?: Record<string, string>
+  availableUserDomains: string[]
 
   appUrlPasswordReset: string
   emailSmtpUrl?: string
@@ -29,9 +30,16 @@ export interface ServerConfigValues {
 }
 
 export class ServerConfig {
-  constructor(private cfg: ServerConfigValues) {}
+  constructor(private cfg: ServerConfigValues) {
+    const invalidDomain = cfg.availableUserDomains.find(
+      (domain) => domain.length < 1 || !domain.startsWith('.'),
+    )
+    if (invalidDomain) {
+      throw new Error(`Invalid domain: ${invalidDomain}`)
+    }
+  }
 
-  static readEnv(overrides?: Partial<ServerConfig>) {
+  static readEnv(overrides?: Partial<ServerConfigValues>) {
     const debugMode = process.env.DEBUG_MODE === '1'
 
     const publicUrl = process.env.PUBLIC_URL || undefined
@@ -49,6 +57,11 @@ export class ServerConfig {
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
 
+    const serverDid = overrides?.serverDid || process.env.SERVER_DID
+    if (typeof serverDid !== 'string') {
+      throw new Error('No value provided for process.env.SERVER_DID')
+    }
+
     const recoveryKey = overrides?.recoveryKey || process.env.RECOVERY_KEY
     if (typeof recoveryKey !== 'string') {
       throw new Error('No value provided for process.env.RECOVERY_KEY')
@@ -61,7 +74,9 @@ export class ServerConfig {
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
 
-    const testNameRegistry = debugMode ? {} : undefined
+    const availableUserDomains = process.env.AVAILABLE_USER_DOMAINS
+      ? process.env.AVAILABLE_USER_DOMAINS.split(',')
+      : []
 
     const appUrlPasswordReset =
       process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
@@ -85,11 +100,12 @@ export class ServerConfig {
       jwtSecret,
       recoveryKey,
       didPlcUrl,
+      serverDid,
       adminPassword,
       inviteRequired,
       blockstoreLocation,
       databaseLocation,
-      testNameRegistry,
+      availableUserDomains,
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
@@ -138,6 +154,10 @@ export class ServerConfig {
     return this.cfg.didPlcUrl
   }
 
+  get serverDid() {
+    return this.cfg.recoveryKey
+  }
+
   get recoveryKey() {
     return this.cfg.recoveryKey
   }
@@ -166,8 +186,8 @@ export class ServerConfig {
     return !this.databaseLocation
   }
 
-  get testNameRegistry() {
-    return this.cfg.testNameRegistry
+  get availableUserDomains() {
+    return this.cfg.availableUserDomains
   }
 
   get appUrlPasswordReset() {

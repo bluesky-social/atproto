@@ -67,7 +67,7 @@ export default function (server: Server) {
     // Token had correct scope, was not expired, and referenced
     // a user whose password has not changed since token issuance.
 
-    await db.updateUserPassword(did, password)
+    await db.updateUserPassword(user.username, password)
 
     return {
       encoding: 'application/json',

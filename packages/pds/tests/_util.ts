@@ -33,17 +33,27 @@ export const runTestServer = async (
   const plcServer = plc.server(plcDb, plcPort)
 
   const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
+
+  const plcClient = new plc.PlcClient(plcUrl)
+  const serverDid = await plcClient.createDid(
+    keypair,
+    recoveryKey,
+    'localhost',
+    `http://localhost:${pdsPort}`,
+  )
+
   const config = new ServerConfig({
     debugMode: true,
     scheme: 'http',
     hostname: 'localhost',
     port: pdsPort,
+    serverDid,
     recoveryKey,
     adminPassword: ADMIN_PASSWORD,
     inviteRequired: false,
     didPlcUrl: plcUrl,
     jwtSecret: 'jwt-secret',
-    testNameRegistry: {},
+    availableUserDomains: ['.test'],
     appUrlPasswordReset: 'app://forgot-password',
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
     publicUrl: 'https://pds.public.url',

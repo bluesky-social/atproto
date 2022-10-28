@@ -19,15 +19,16 @@ export default function (server: Server) {
       throw new InvalidRequestError('Invalid date')
     }
 
-    const result = await db.db
-      .updateTable('user')
-      .set({ lastSeenNotifs: parsed })
-      .where('did', '=', requester)
-      .executeTakeFirst()
-
-    if (Number(result.numUpdatedRows) < 1) {
+    const user = await db.getUser(requester)
+    if (!user) {
       throw new InvalidRequestError(`Could not find user: ${requester}`)
     }
+
+    await db.db
+      .updateTable('user')
+      .set({ lastSeenNotifs: parsed })
+      .where('username', '=', user.username)
+      .executeTakeFirst()
 
     return { encoding: 'application/json', body: {} }
   })

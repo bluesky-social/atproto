@@ -2397,7 +2397,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name', 'createdAt', 'indexedAt'],
+              required: ['did', 'name'],
               properties: {
                 did: {
                   type: 'string',
@@ -2411,10 +2411,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 },
                 description: {
                   type: 'string',
-                },
-                createdAt: {
-                  type: 'string',
-                  format: 'date-time',
                 },
                 indexedAt: {
                   type: 'string',

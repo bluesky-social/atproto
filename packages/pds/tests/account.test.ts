@@ -87,7 +87,7 @@ describe('account', () => {
   it('serves the accounts system config', async () => {
     const res = await client.com.atproto.getAccountsConfig({})
     expect(res.data.inviteCodeRequired).toBe(true)
-    expect(res.data.availableUserDomains[0]).toBe('test')
+    expect(res.data.availableUserDomains[0]).toBe('.test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
   })
 
@@ -154,7 +154,7 @@ describe('account', () => {
       {},
       {
         email: 'custom-recovery@test.com',
-        username: 'custom-recovery.test.com',
+        username: 'custom-recovery.test',
         password: 'custom-recovery',
         inviteCode,
         recoveryKey,
@@ -231,7 +231,7 @@ describe('account', () => {
             {},
             {
               email: `user${i}@test.com`,
-              username: `user${i}.test.com`,
+              username: `user${i}.test`,
               password: `password`,
               inviteCode,
             },
@@ -267,7 +267,7 @@ describe('account', () => {
             {},
             {
               email: `matching@test.com`,
-              username: `matching.test.com`,
+              username: `matching.test`,
               password: `password`,
               inviteCode: invite,
             },
@@ -377,6 +377,7 @@ describe('account', () => {
 
     const user = await db.db
       .selectFrom('user')
+      .innerJoin('user_did', 'user_did.username', 'user.username')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()

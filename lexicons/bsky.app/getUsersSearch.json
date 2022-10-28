@@ -19,7 +19,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["did", "name", "createdAt", "indexedAt"],
+            "required": ["did", "name"],
             "properties": {
               "did": {"type": "string"},
               "name": {"type": "string"},
@@ -28,7 +28,6 @@
                 "maxLength": 64
               },
               "description": {"type": "string"},
-              "createdAt": {"type": "string", "format": "date-time"},
               "indexedAt": {"type": "string", "format": "date-time"}
             }
           }

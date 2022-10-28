@@ -31,6 +31,7 @@ import { User } from './tables/user'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
+import { UserDid } from './tables/user-did'
 
 export class Database {
   migrator: Migrator
@@ -186,13 +187,16 @@ export class Database {
     }
   }
 
-  async getUser(usernameOrDid: string): Promise<User | null> {
-    let query = this.db.selectFrom('user').selectAll()
+  async getUser(usernameOrDid: string): Promise<(User & UserDid) | null> {
+    let query = this.db
+      .selectFrom('user')
+      .innerJoin('user_did', 'user_did.username', 'user.username')
+      .selectAll()
     if (usernameOrDid.startsWith('did:')) {
       query = query.where('did', '=', usernameOrDid)
     } else {
       query = query.where(
-        sql`lower(username)`,
+        sql`lower(user_did.username)`,
         '=',
         usernameOrDid.toLowerCase(),
       )
@@ -201,9 +205,10 @@ export class Database {
     return found || null
   }
 
-  async getUserByEmail(email: string): Promise<User | null> {
+  async getUserByEmail(email: string): Promise<(User & UserDid) | null> {
     const found = await this.db
       .selectFrom('user')
+      .innerJoin('user_did', 'user_did.username', 'user.username')
       .selectAll()
       .where(sql`lower(email)`, '=', email.toLowerCase())
       .executeTakeFirst()
@@ -216,74 +221,57 @@ export class Database {
     return found ? found.did : null
   }
 
-  // Registration occurs in two steps:
-  // - pre-registration, we setup the account with an invalid, temporary did which is only visible in a transaction.
-  // - post-registration, we replace the temporary did with the user's newly-generated valid did.
-
-  async preRegisterUser(
-    email: string,
-    username: string,
-    tempDid: string,
-    password: string,
-  ) {
+  async registerUser(email: string, username: string, password: string) {
     this.assertTransaction()
-    log.debug({ username, email, tempDid }, 'pre-registering user')
+    log.debug({ username, email }, 'registering user')
     const inserted = await this.db
       .insertInto('user')
       .values({
         email: email,
         username: username,
-        did: tempDid,
         password: await scrypt.hash(password),
         createdAt: new Date().toISOString(),
         lastSeenNotifs: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
-      .returning('did')
+      .returning('username')
       .executeTakeFirst()
     if (!inserted) {
       throw new UserAlreadyExistsError()
     }
-    log.info({ username, email, tempDid }, 'pre-registered user')
+    log.info({ username, email }, 'registered user')
   }
 
-  async postRegisterUser(tempDid: string, did: string) {
+  async registerUserDid(username: string, did: string) {
     this.assertTransaction()
-    log.debug({ tempDid, did }, 'post-registering user')
-    const updated = await this.db
-      .updateTable('user')
-      .where('did', '=', tempDid)
-      .set({ did })
+    log.debug({ username, did }, 'registering user did')
+    await this.db
+      .insertInto('user_did')
+      .values({ username, did })
       .executeTakeFirst()
-    assert(
-      Number(updated.numUpdatedRows) === 1,
-      'Post-register should act on exactly one user',
-    )
-    log.info({ tempDid, did }, 'post-registered user')
+    log.info({ username, did }, 'post-registered user')
   }
 
-  async updateUserPassword(did: string, password: string) {
+  async updateUserPassword(username: string, password: string) {
     const hashedPassword = await scrypt.hash(password)
     await this.db
       .updateTable('user')
       .set({ password: hashedPassword })
-      .where('did', '=', did)
+      .where('username', '=', username)
       .execute()
   }
 
   async verifyUserPassword(
     username: string,
     password: string,
-  ): Promise<string | null> {
+  ): Promise<boolean> {
     const found = await this.db
       .selectFrom('user')
       .selectAll()
       .where('username', '=', username)
       .executeTakeFirst()
-    if (!found) return null
-    const validPass = await scrypt.verify(password, found.password)
-    if (!validPass) return null
-    return found.did
+    if (!found) return false
+    return scrypt.verify(password, found.password)
   }
 
   validateRecord(collection: string, obj: unknown): ValidationResult {
