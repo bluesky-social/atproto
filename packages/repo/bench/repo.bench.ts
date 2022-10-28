@@ -1,6 +1,6 @@
 import * as auth from '@atproto/auth'
 import { MemoryBlockstore, Repo } from '../src'
-import * as util from './_util'
+import * as util from '../tests/_util'
 
 describe('Repo Benchmarks', () => {
   const verifier = new auth.Verifier()
@@ -17,7 +17,7 @@ describe('Repo Benchmarks', () => {
     repo = await Repo.create(blockstore, await authStore.did(), authStore)
   })
 
-  it('works', async () => {
+  it('calculates size', async () => {
     const posts = repo.getCollection('app.bsky.post')
     for (let i = 0; i < size; i++) {
       if (i % 500 === 0) {
