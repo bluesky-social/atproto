@@ -85,7 +85,7 @@ export async function generateMockSetup(env: DevEnv) {
       { email: user.email, username: user.username, password: user.password },
     )
     user.did = res.data.did
-    user.api.setHeader('Authorization', `Bearer ${res.data.jwt}`)
+    user.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
     await user.api.app.bsky.profile.create(
       { did: user.did },
       {
