@@ -74,6 +74,13 @@ export default function (server: Server) {
     const access = auth.createAccessToken(user.did)
     const refresh = auth.createRefreshToken(user.did)
     await db.transaction(async (dbTxn) => {
+      const { numDeletedRows } = await dbTxn.db
+        .deleteFrom('refresh_token')
+        .where('id', '=', lastRefreshId)
+        .executeTakeFirst()
+      if (numDeletedRows < 1) {
+        throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
+      }
       await dbTxn.db
         .insertInto('refresh_token')
         .values({
@@ -81,10 +88,6 @@ export default function (server: Server) {
           did: refresh.payload.sub,
           expiresAt: new Date(refresh.payload.exp * 1000).toISOString(),
         })
-        .execute()
-      await dbTxn.db
-        .deleteFrom('refresh_token')
-        .where('id', '=', lastRefreshId)
         .execute()
     })
 
@@ -110,10 +113,14 @@ export default function (server: Server) {
       throw new Error('Unexpected missing refresh token id')
     }
 
-    await db.db
+    // If the token was already revoked, that's alright.
+    const { numDeletedRows } = await db.db
       .deleteFrom('refresh_token')
       .where('id', '=', lastRefreshId)
-      .execute()
+      .executeTakeFirst()
+    if (numDeletedRows < 1) {
+      throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
+    }
 
     return {
       encoding: 'application/json',

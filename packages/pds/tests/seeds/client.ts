@@ -223,6 +223,10 @@ export class SeedClient {
   }
 
   getHeaders(did: string) {
-    return { authorization: `Bearer ${this.accounts[did].accessJwt}` }
+    return SeedClient.getHeaders(this.accounts[did].accessJwt)
+  }
+
+  static getHeaders(jwt: string) {
+    return { authorization: `Bearer ${jwt}` }
   }
 }

@@ -40,7 +40,7 @@ export class ServerAuth {
     this.verifier = new auth.Verifier({ didResolver: opts.didResolver })
   }
 
-  createAccessToken(did: string) {
+  createAccessToken(did: string, expiresIn?: string | number) {
     const payload = {
       scope: AuthScopes.Access,
       sub: did,
@@ -48,13 +48,13 @@ export class ServerAuth {
     return {
       payload: payload as AuthToken, // exp set by sign()
       jwt: jwt.sign(payload, this._secret, {
-        expiresIn: '15mins',
+        expiresIn: expiresIn ?? '15mins',
         mutatePayload: true,
       }),
     }
   }
 
-  createRefreshToken(did: string) {
+  createRefreshToken(did: string, expiresIn?: string | number) {
     const payload = {
       scope: AuthScopes.Refresh,
       sub: did,
@@ -63,7 +63,7 @@ export class ServerAuth {
     return {
       payload: payload as AuthToken & { jti: string }, // exp set by sign()
       jwt: jwt.sign(payload, this._secret, {
-        expiresIn: '7days',
+        expiresIn: expiresIn ?? '7days',
         mutatePayload: true,
       }),
     }
