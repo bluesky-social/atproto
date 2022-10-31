@@ -93,15 +93,14 @@ export default function (server: Server) {
     if (!token) {
       throw new AuthRequiredError()
     }
-    const lastRefreshId = auth.verifyToken(token, AuthScopes.Refresh).jti
-    if (!lastRefreshId) {
+    const refreshToken = auth.verifyToken(token, AuthScopes.Refresh, {
+      ignoreExpiration: true,
+    })
+    if (!refreshToken.jti) {
       throw new Error('Unexpected missing refresh token id')
     }
 
-    const revoked = await revokeRefreshToken(db, lastRefreshId)
-    if (!revoked) {
-      throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
-    }
+    await revokeRefreshToken(db, refreshToken.jti)
 
     return {
       encoding: 'application/json',

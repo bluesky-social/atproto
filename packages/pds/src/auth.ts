@@ -110,10 +110,10 @@ export class ServerAuth {
     return header.slice(BEARER.length)
   }
 
-  verifyToken(token: string, scope?: AuthScopes) {
+  verifyToken(token: string, scope?: AuthScopes, options?: jwt.VerifyOptions) {
     try {
-      const payload = jwt.verify(token, this._secret)
-      if (typeof payload === 'string') {
+      const payload = jwt.verify(token, this._secret, options)
+      if (typeof payload === 'string' || 'signature' in payload) {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
       if (scope && payload.scope !== scope) {

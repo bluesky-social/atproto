@@ -135,8 +135,7 @@ describe('auth', () => {
     await deleteSession(account.refreshJwt)
     const refreshDeleted = refreshSession(account.refreshJwt)
     await expect(refreshDeleted).rejects.toThrow('Token has been revoked')
-    const deleteDeleted = deleteSession(account.refreshJwt)
-    await expect(deleteDeleted).rejects.toThrow('Token has been revoked')
+    await deleteSession(account.refreshJwt) // No problem double-revoking a token
   })
 
   it('access token cannot be used to refresh a session.', async () => {
@@ -161,5 +160,6 @@ describe('auth', () => {
     const refresh = auth.createRefreshToken(account.did, -1)
     const refreshExpired = refreshSession(refresh.jwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
+    await deleteSession(refresh.jwt) // No problem revoking an expired token
   })
 })
