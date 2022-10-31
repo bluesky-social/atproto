@@ -52,7 +52,7 @@ export default function (server: Server) {
       )
     }
 
-    const did = await db.transaction(async (dbTxn) => {
+    const result = await db.transaction(async (dbTxn) => {
       if (config.inviteRequired) {
         if (!inviteCode) {
           throw new InvalidRequestError(
@@ -150,11 +150,29 @@ export default function (server: Server) {
         })
         .execute()
 
-      return did
+      const access = auth.createAccessToken(did)
+      const refresh = auth.createRefreshToken(did)
+      await dbTxn.db
+        .insertInto('refresh_token')
+        .values({
+          id: refresh.payload.jti,
+          did: refresh.payload.sub,
+          expiresAt: new Date(refresh.payload.exp * 1000).toISOString(),
+        })
+        .execute()
+
+      return { did, accessJwt: access.jwt, refreshJwt: refresh.jwt }
     })
 
-    const jwt = auth.createToken(did)
-    return { encoding: 'application/json', body: { jwt, username, did } }
+    return {
+      encoding: 'application/json',
+      body: {
+        username,
+        did: result.did,
+        accessJwt: result.accessJwt,
+        refreshJwt: result.refreshJwt,
+      },
+    }
   })
 
   server.com.atproto.deleteAccount(() => {

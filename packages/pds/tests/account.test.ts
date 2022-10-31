@@ -130,7 +130,7 @@ describe('account', () => {
       { email, username, password, inviteCode },
     )
     did = res.data.did
-    jwt = res.data.jwt
+    jwt = res.data.accessJwt
 
     expect(typeof jwt).toBe('string')
     expect(did.startsWith('did:plc:')).toBeTruthy()
@@ -293,7 +293,7 @@ describe('account', () => {
       {},
       { username, password },
     )
-    jwt = res.data.jwt
+    jwt = res.data.accessJwt
     expect(typeof jwt).toBe('string')
     expect(res.data.name).toBe('alice.test')
     expect(res.data.did).toBe(did)
