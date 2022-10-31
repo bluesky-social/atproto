@@ -48,11 +48,23 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('lastSeenNotifs', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .execute()
+  await db.schema
+    .createIndex(`${userTable}_email_lower_idx`)
+    .unique()
+    .on(userTable)
+    .expression(sql`lower("email")`)
+    .execute()
   // User Dids
   await db.schema
     .createTable(userDidTable)
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('username', 'varchar', (col) => col.unique())
+    .execute()
+  await db.schema
+    .createIndex(`${userDidTable}_username_lower_idx`)
+    .unique()
+    .on(userDidTable)
+    .expression(sql`lower("username")`)
     .execute()
   if (dialect === 'pg') {
     await db.schema // Supports user search
