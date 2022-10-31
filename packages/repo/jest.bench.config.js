@@ -2,6 +2,6 @@ const base = require('./jest.config')
 
 module.exports = {
   ...base,
-  testRegex: '(/tests/.*.bench)',
-  testTimeout: 3000000
+  testRegex: '(/bench/.*.bench)',
+  testTimeout: 3000000,
 }

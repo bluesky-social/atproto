@@ -1,6 +1,6 @@
 import { CID } from 'multiformats'
 import { Fanout, MemoryBlockstore, MST, NodeEntry } from '../src'
-import * as util from './_util'
+import * as util from '../tests/_util'
 import fs from 'fs'
 
 type BenchmarkData = {
