@@ -2,6 +2,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScopes } from '../../../auth'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
+import { grantRefreshToken, revokeRefreshToken } from './util/auth'
 
 export default function (server: Server) {
   server.com.atproto.getSession(async (_params, _input, req, res) => {
@@ -36,14 +37,7 @@ export default function (server: Server) {
 
     const access = auth.createAccessToken(user.did)
     const refresh = auth.createRefreshToken(user.did)
-    await db.db
-      .insertInto('refresh_token')
-      .values({
-        id: refresh.payload.jti,
-        did: refresh.payload.sub,
-        expiresAt: new Date(refresh.payload.exp * 1000).toISOString(),
-      })
-      .execute()
+    await grantRefreshToken(db, refresh.payload)
 
     return {
       encoding: 'application/json',
@@ -73,22 +67,13 @@ export default function (server: Server) {
 
     const access = auth.createAccessToken(user.did)
     const refresh = auth.createRefreshToken(user.did)
+
     await db.transaction(async (dbTxn) => {
-      const { numDeletedRows } = await dbTxn.db
-        .deleteFrom('refresh_token')
-        .where('id', '=', lastRefreshId)
-        .executeTakeFirst()
-      if (numDeletedRows < 1) {
+      const revoked = await revokeRefreshToken(dbTxn, lastRefreshId)
+      if (!revoked) {
         throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
       }
-      await dbTxn.db
-        .insertInto('refresh_token')
-        .values({
-          id: refresh.payload.jti,
-          did: refresh.payload.sub,
-          expiresAt: new Date(refresh.payload.exp * 1000).toISOString(),
-        })
-        .execute()
+      await grantRefreshToken(dbTxn, refresh.payload)
     })
 
     return {
@@ -113,12 +98,8 @@ export default function (server: Server) {
       throw new Error('Unexpected missing refresh token id')
     }
 
-    // If the token was already revoked, that's alright.
-    const { numDeletedRows } = await db.db
-      .deleteFrom('refresh_token')
-      .where('id', '=', lastRefreshId)
-      .executeTakeFirst()
-    if (numDeletedRows < 1) {
+    const revoked = await revokeRefreshToken(db, lastRefreshId)
+    if (!revoked) {
       throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
     }
 

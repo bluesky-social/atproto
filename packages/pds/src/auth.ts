@@ -21,11 +21,13 @@ export enum AuthScopes {
   ResetPassword = 'com.atproto.resetAccountPassword',
 }
 
-type AuthToken = {
+export type AuthToken = {
   scope: AuthScopes
   sub: string
   exp: number
 }
+
+export type RefreshToken = AuthToken & { jti: string }
 
 export class ServerAuth {
   private _secret: string
@@ -61,7 +63,7 @@ export class ServerAuth {
       jti: uint8arrays.toString(crypto.randomBytes(32), 'base64'),
     }
     return {
-      payload: payload as AuthToken & { jti: string }, // exp set by sign()
+      payload: payload as RefreshToken, // exp set by sign()
       jwt: jwt.sign(payload, this._secret, {
         expiresIn: expiresIn ?? '7days',
         mutatePayload: true,

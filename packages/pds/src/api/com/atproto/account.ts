@@ -6,6 +6,7 @@ import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 import SqlBlockstore from '../../../sql-blockstore'
+import { grantRefreshToken } from './util/auth'
 
 export default function (server: Server) {
   server.com.atproto.getAccountsConfig((_params, _input, _req, res) => {
@@ -152,14 +153,7 @@ export default function (server: Server) {
 
       const access = auth.createAccessToken(did)
       const refresh = auth.createRefreshToken(did)
-      await dbTxn.db
-        .insertInto('refresh_token')
-        .values({
-          id: refresh.payload.jti,
-          did: refresh.payload.sub,
-          expiresAt: new Date(refresh.payload.exp * 1000).toISOString(),
-        })
-        .execute()
+      await grantRefreshToken(dbTxn, refresh.payload)
 
       return { did, accessJwt: access.jwt, refreshJwt: refresh.jwt }
     })
