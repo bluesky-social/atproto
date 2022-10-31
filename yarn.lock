@@ -1640,6 +1640,11 @@
   resolved "https://registry.yarnpkg.com/@hapi/bourne/-/bourne-3.0.0.tgz#f11fdf7dda62fe8e336fa7c6642d9041f30356d7"
   integrity sha512-Waj1cwPXJDucOib4a3bAISsKJVb15MKi9IvmTI/7ssVEm6sywXGjVJDhl6/umt1pK1ZS7PacXU3A1PmFKHEZ2w==
 
+"@hapi/hoek@^10.0.0":
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-10.0.1.tgz#ee9da297fabc557e1c040a0f44ee89c266ccc306"
+  integrity sha512-CvlW7jmOhWzuqOqiJQ3rQVLMcREh0eel4IBnxDx2FAcK8g7qoJRQK4L1CPBASoCY6y8e6zuCy3f2g+HWdkzcMw==
+
 "@hapi/hoek@^9.0.0":
   version "9.3.0"
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.3.0.tgz#8368869dcb735be2e7f5cb7647de78e167a251fb"
@@ -2834,6 +2839,13 @@
   integrity sha512-7vwq+rOHVWjyXxVlR76Agnvhy8I9rpzjosTESvmhNeXOXdZZB15Fl+TI9x1SiHZH5Jv2wTGduSxFDIaq0m3DUw==
   dependencies:
     "@hapi/hoek" "^9.0.0"
+
+"@sideway/address@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@sideway/address/-/address-5.0.0.tgz#015f191a4a29e2b2f9ad1aabe7465c3088241536"
+  integrity sha512-IEZ3Gi972M1yubSPhcpzpVTT/Vb46F9L0W+K/GhqvWv6aAvVbNNVsYFekXWEemHHFfTVrxFcURrzsPGPPKkxKQ==
+  dependencies:
+    "@hapi/hoek" "^10.0.0"
 
 "@sideway/formula@^3.0.0":
   version "3.0.0"

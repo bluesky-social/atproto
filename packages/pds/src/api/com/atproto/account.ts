@@ -6,6 +6,7 @@ import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 import SqlBlockstore from '../../../sql-blockstore'
+import { ensureUsernameValid } from './util/username'
 
 export default function (server: Server) {
   server.com.atproto.getAccountsConfig((_params, _input, _req, res) => {
@@ -144,38 +145,4 @@ export default function (server: Server) {
     // TODO
     throw new InvalidRequestError('Not implemented')
   })
-}
-
-const ensureUsernameValid = (
-  username: string,
-  availableUserDomains: string[],
-): void => {
-  if (username.startsWith('did:')) {
-    throw new InvalidRequestError(
-      'Cannot register a username that starts with `did:`',
-      'InvalidUsername',
-    )
-  }
-  const supportedDomain = availableUserDomains.find((domain) =>
-    username.endsWith(domain),
-  )
-  if (!supportedDomain) {
-    throw new InvalidRequestError(
-      'Not a supported username domain',
-      'InvalidUsername',
-    )
-  }
-  const front = username.slice(0, username.length - supportedDomain.length)
-  if (front.length < 2) {
-    throw new InvalidRequestError('Username too short', 'InvalidUsername')
-  } else if (front.length > 20) {
-    throw new InvalidRequestError('Username too long', 'InvalidUsername')
-  }
-  const validChars = /^[a-zA-Z0-9-]*$/.test(front)
-  if (!validChars) {
-    throw new InvalidRequestError(
-      'Invalid characters in username',
-      'InvalidUsername',
-    )
-  }
 }

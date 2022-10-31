@@ -244,6 +244,8 @@ describe('account', () => {
     await expect(tryUsername('jo/hn.test')).rejects.toThrow(
       'Invalid characters in username',
     )
+    await expect(tryUsername('about.test')).rejects.toThrow('Reserved username')
+    await expect(tryUsername('atp.test')).rejects.toThrow('Reserved username')
   })
 
   it('fails on used up invite code', async () => {
