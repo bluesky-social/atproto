@@ -22,9 +22,10 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["jwt", "username", "did"],
+      "required": ["accessJwt", "refreshJwt", "username", "did"],
       "properties": {
-        "jwt": { "type": "string" },
+        "accessJwt": { "type": "string" },
+        "refreshJwt": { "type": "string" },
         "username": { "type": "string" },
         "did": { "type": "string" }
       }

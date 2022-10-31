@@ -22,8 +22,7 @@ export interface OutputSchema {
     name: string,
     displayName?: string,
     description?: string,
-    createdAt: string,
-    indexedAt: string,
+    indexedAt?: string,
   }[];
 }
 

@@ -5,18 +5,7 @@ import express from 'express'
 
 export interface QueryParams {}
 
-export interface HandlerInput {
-  encoding: 'application/json';
-  body: InputSchema;
-}
-
-export interface InputSchema {
-  email: string;
-  username: string;
-  inviteCode?: string;
-  password: string;
-  recoveryKey?: string;
-}
+export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/json';
@@ -26,11 +15,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number;
   message?: string;
-  error?:
-    | 'InvalidUsername'
-    | 'InvalidPassword'
-    | 'InvalidInviteCode'
-    | 'UsernameNotAvailable';
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
@@ -38,7 +22,7 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 export interface OutputSchema {
   accessJwt: string;
   refreshJwt: string;
-  username: string;
+  name: string;
   did: string;
 }
 

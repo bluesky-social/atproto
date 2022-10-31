@@ -3,13 +3,8 @@
   "id": "com.atproto.deleteSession",
   "type": "procedure",
   "description": "Delete the current session.",
-  "parameters": {},
-  "input": {
-    "encoding": "",
-    "schema": {}
-  },
   "output": {
-    "encoding": "",
+    "encoding": "application/json",
     "schema": {}
   }
 }
