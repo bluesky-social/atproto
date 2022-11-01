@@ -6,9 +6,10 @@
   "key": "tid",
   "record": {
     "type": "object",
-    "required": ["subject", "createdAt"],
+    "required": ["subject", "declarationCid", "createdAt"],
     "properties": {
       "subject": { "type": "string" },
+      "declarationCid": { "type": "string" },
       "createdAt": {"type": "string", "format": "date-time"}
     }
   }

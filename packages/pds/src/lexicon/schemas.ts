@@ -2592,7 +2592,10 @@ export const ids = {
   AppBskyBadge: 'app.bsky.badge',
   AppBskyBadgeAccept: 'app.bsky.badgeAccept',
   AppBskyBadgeOffer: 'app.bsky.badgeOffer',
+  AppBskyDeclaration: 'app.bsky.declaration',
   AppBskyFollow: 'app.bsky.follow',
+  AppBskyInvite: 'app.bsky.invite',
+  AppBskyInviteAccept: 'app.bsky.inviteAccept',
   AppBskyLike: 'app.bsky.like',
   AppBskyMediaEmbed: 'app.bsky.mediaEmbed',
   AppBskyPost: 'app.bsky.post',
@@ -2823,6 +2826,22 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       },
     },
   },
+  'app.bsky.declaration': {
+    lexicon: 1,
+    id: 'app.bsky.declaration',
+    type: 'record',
+    key: 'literal:self',
+    record: {
+      type: 'object',
+      required: ['actorType'],
+      properties: {
+        actorType: {
+          type: 'string',
+        },
+      },
+      $defs: {},
+    },
+  },
   'app.bsky.follow': {
     lexicon: 1,
     id: 'app.bsky.follow',
@@ -2831,10 +2850,77 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     key: 'tid',
     record: {
       type: 'object',
-      required: ['subject', 'createdAt'],
+      required: ['subject', 'declarationCid', 'createdAt'],
       properties: {
         subject: {
           type: 'string',
+        },
+        declarationCid: {
+          type: 'string',
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
+  'app.bsky.invite': {
+    lexicon: 1,
+    id: 'app.bsky.invite',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['group', 'subject', 'createdAt'],
+      properties: {
+        group: {
+          type: 'string',
+        },
+        subject: {
+          type: 'string',
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
+  'app.bsky.inviteAccept': {
+    lexicon: 1,
+    id: 'app.bsky.inviteAccept',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['group', 'invite', 'createdAt'],
+      properties: {
+        group: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        invite: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
         },
         createdAt: {
           type: 'string',

@@ -2,8 +2,6 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 export interface Record {
-  subject: string;
-  declarationCid: string;
-  createdAt: string;
+  actorType: string;
   [k: string]: unknown;
 }
