@@ -12,9 +12,6 @@ import * as like from './records/like'
 import * as repost from './records/repost'
 import * as follow from './records/follow'
 import * as profile from './records/profile'
-import * as badge from './records/badge'
-import * as badgeAccept from './records/badgeAccept'
-import * as badgeOffer from './records/badgeOffer'
 
 export type DatabaseSchema = user.PartialDB &
   userDid.PartialDB &
@@ -29,7 +26,4 @@ export type DatabaseSchema = user.PartialDB &
   like.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
-  profile.PartialDB &
-  badge.PartialDB &
-  badgeAccept.PartialDB &
-  badgeOffer.PartialDB
+  profile.PartialDB

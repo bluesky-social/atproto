@@ -12,10 +12,6 @@ const inviteTable = 'invite_code'
 const inviteUseTable = 'invite_code_use'
 const notificationTable = 'user_notification'
 const profileTable = 'app_bsky_profile'
-const profileBadgeTable = 'app_bsky_profile_badge'
-const badgeTable = 'app_bsky_badge'
-const badgeOfferTable = 'app_bsky_badge_offer'
-const badgeAcceptTable = 'app_bsky_badge_accept'
 const followTable = 'app_bsky_follow'
 const postTable = 'app_bsky_post'
 const postEntityTable = 'app_bsky_post_entity'
@@ -160,51 +156,6 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
       .expression(sql`"displayName" gist_trgm_ops`)
       .execute()
   }
-  // Badges
-  await db.schema
-    .createTable(profileBadgeTable)
-    .addColumn('profileUri', 'varchar', (col) => col.notNull())
-    .addColumn('badgeUri', 'varchar', (col) => col.notNull())
-    .addColumn('badgeCid', 'varchar', (col) => col.notNull())
-    // Index names need to be unique per schema for postgres
-    .addPrimaryKeyConstraint(`${profileBadgeTable}_pkey`, [
-      'profileUri',
-      'badgeUri',
-    ])
-    .execute()
-  await db.schema
-    .createTable(badgeTable)
-    .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('assertionType', 'varchar', (col) => col.notNull())
-    .addColumn('assertionTag', 'varchar')
-    .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .execute()
-  await db.schema
-    .createTable(badgeOfferTable)
-    .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('subject', 'varchar', (col) => col.notNull())
-    .addColumn('badgeUri', 'varchar', (col) => col.notNull())
-    .addColumn('badgeCid', 'varchar', (col) => col.notNull())
-    .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .execute()
-  await db.schema
-    .createTable(badgeAcceptTable)
-    .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('badgeUri', 'varchar', (col) => col.notNull())
-    .addColumn('badgeCid', 'varchar', (col) => col.notNull())
-    .addColumn('offerUri', 'varchar', (col) => col.notNull())
-    .addColumn('offerCid', 'varchar', (col) => col.notNull())
-    .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .execute()
   // Follows
   await db.schema
     .createTable(followTable)
@@ -265,10 +216,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(postEntityTable).execute()
   await db.schema.dropTable(postTable).execute()
   await db.schema.dropTable(followTable).execute()
-  await db.schema.dropTable(badgeAcceptTable).execute()
-  await db.schema.dropTable(badgeOfferTable).execute()
-  await db.schema.dropTable(badgeTable).execute()
-  await db.schema.dropTable(profileBadgeTable).execute()
   await db.schema.dropTable(profileTable).execute()
   await db.schema.dropTable(notificationTable).execute()
   await db.schema.dropTable(inviteUseTable).execute()

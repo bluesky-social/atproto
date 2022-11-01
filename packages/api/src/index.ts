@@ -30,7 +30,6 @@ import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
 import * as AppBskyFollow from './types/app/bsky/follow'
 import * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
-import * as AppBskyGetBadgeMembers from './types/app/bsky/getBadgeMembers'
 import * as AppBskyGetHomeFeed from './types/app/bsky/getHomeFeed'
 import * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
 import * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
@@ -74,7 +73,6 @@ export * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
 export * as AppBskyFollow from './types/app/bsky/follow'
 export * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
-export * as AppBskyGetBadgeMembers from './types/app/bsky/getBadgeMembers'
 export * as AppBskyGetHomeFeed from './types/app/bsky/getHomeFeed'
 export * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
 export * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
@@ -447,18 +445,6 @@ export class BskyNS {
       .call('app.bsky.getAuthorFeed', params, data, opts)
       .catch((e) => {
         throw AppBskyGetAuthorFeed.toKnownErr(e)
-      })
-  }
-
-  getBadgeMembers(
-    params: AppBskyGetBadgeMembers.QueryParams,
-    data?: AppBskyGetBadgeMembers.InputSchema,
-    opts?: AppBskyGetBadgeMembers.CallOptions
-  ): Promise<AppBskyGetBadgeMembers.Response> {
-    return this._service.xrpc
-      .call('app.bsky.getBadgeMembers', params, data, opts)
-      .catch((e) => {
-        throw AppBskyGetBadgeMembers.toKnownErr(e)
       })
   }
 

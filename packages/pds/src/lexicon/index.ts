@@ -29,7 +29,6 @@ import * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
 import * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
-import * as AppBskyGetBadgeMembers from './types/app/bsky/getBadgeMembers'
 import * as AppBskyGetHomeFeed from './types/app/bsky/getHomeFeed'
 import * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
 import * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
@@ -208,11 +207,6 @@ export class BskyNS {
 
   getAuthorFeed(handler: AppBskyGetAuthorFeed.Handler) {
     const schema = 'app.bsky.getAuthorFeed' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
-  }
-
-  getBadgeMembers(handler: AppBskyGetBadgeMembers.Handler) {
-    const schema = 'app.bsky.getBadgeMembers' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 
