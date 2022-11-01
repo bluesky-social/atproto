@@ -44,16 +44,10 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   await db.schema
     .createTable(userTable)
     .addColumn('username', 'varchar', (col) => col.primaryKey())
-    .addColumn('email', 'varchar', (col) => col.notNull())
+    .addColumn('email', 'varchar', (col) => col.notNull().unique())
     .addColumn('password', 'varchar', (col) => col.notNull())
     .addColumn('lastSeenNotifs', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .execute()
-  await db.schema
-    .createIndex(`${userTable}_username_lower_idx`)
-    .unique()
-    .on(userTable)
-    .expression(sql`lower("username")`)
     .execute()
   await db.schema
     .createIndex(`${userTable}_email_lower_idx`)
@@ -66,6 +60,12 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .createTable(userDidTable)
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('username', 'varchar', (col) => col.unique())
+    .execute()
+  await db.schema
+    .createIndex(`${userDidTable}_username_lower_idx`)
+    .unique()
+    .on(userDidTable)
+    .expression(sql`lower("username")`)
     .execute()
   if (dialect === 'pg') {
     await db.schema // Supports user search

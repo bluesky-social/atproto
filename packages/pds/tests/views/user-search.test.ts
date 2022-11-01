@@ -39,29 +39,29 @@ describe('pds user search views', () => {
 
     const shouldContain = [
       'cara-wiegand69.test',
-      'eudora_dietrich4.test', // Carol Littel
-      'shane_torphy52.test', //Sadie Carter
+      'eudora-dietrich4.test', // Carol Littel
+      'shane-torphy52.test', //Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
-      'carolina_mcdermott77.test',
+      'carolina-mcdermott77.test',
     ]
 
     shouldContain.forEach((name) => expect(names).toContain(name))
 
     if (locals.get(app).db.dialect === 'pg') {
-      expect(names).toContain('cayla_marquardt39.test') // Fuzzy match supported by postgres
+      expect(names).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
     } else {
-      expect(names).not.toContain('cayla_marquardt39.test')
+      expect(names).not.toContain('cayla-marquardt39.test')
     }
 
     const shouldNotContain = [
       'sven70.test',
       'hilario84.test',
-      'santa_hermann78.test',
+      'santa-hermann78.test',
       'dylan61.test',
-      'preston_harris.test',
+      'preston-harris.test',
       'loyce95.test',
-      'melyna_zboncak.test',
+      'melyna-zboncak.test',
     ]
 
     shouldNotContain.forEach((name) => expect(names).not.toContain(name))
@@ -112,29 +112,29 @@ describe('pds user search views', () => {
 
     const shouldContain = [
       'cara-wiegand69.test',
-      'eudora_dietrich4.test', // Carol Littel
-      'shane_torphy52.test', //Sadie Carter
+      'eudora-dietrich4.test', // Carol Littel
+      'shane-torphy52.test', //Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
-      'carolina_mcdermott77.test',
+      'carolina-mcdermott77.test',
     ]
 
     shouldContain.forEach((name) => expect(names).toContain(name))
 
     if (locals.get(app).db.dialect === 'pg') {
-      expect(names).toContain('cayla_marquardt39.test') // Fuzzy match supported by postgres
+      expect(names).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
     } else {
-      expect(names).not.toContain('cayla_marquardt39.test')
+      expect(names).not.toContain('cayla-marquardt39.test')
     }
 
     const shouldNotContain = [
       'sven70.test',
       'hilario84.test',
-      'santa_hermann78.test',
+      'santa-hermann78.test',
       'dylan61.test',
-      'preston_harris.test',
+      'preston-harris.test',
       'loyce95.test',
-      'melyna_zboncak.test',
+      'melyna-zboncak.test',
     ]
 
     shouldNotContain.forEach((name) => expect(names).not.toContain(name))
@@ -207,12 +207,12 @@ const snapTypeaheadPg = [
   {
     did: 'user(1)',
     displayName: 'Carol Littel',
-    name: 'eudora_dietrich4.test',
+    name: 'eudora-dietrich4.test',
   },
   {
     did: 'user(2)',
     displayName: 'Sadie Carter',
-    name: 'shane_torphy52.test',
+    name: 'shane-torphy52.test',
   },
   {
     did: 'user(3)',
@@ -226,12 +226,12 @@ const snapTypeaheadPg = [
   {
     did: 'user(5)',
     displayName: 'Latoya Windler',
-    name: 'carolina_mcdermott77.test',
+    name: 'carolina-mcdermott77.test',
   },
   {
     did: 'user(6)',
     displayName: 'Rachel Kshlerin',
-    name: 'cayla_marquardt39.test',
+    name: 'cayla-marquardt39.test',
   },
 ]
 
@@ -252,17 +252,17 @@ const snapTypeaheadSqlite = [
   {
     did: 'user(3)',
     displayName: 'Latoya Windler',
-    name: 'carolina_mcdermott77.test',
+    name: 'carolina-mcdermott77.test',
   },
   {
     did: 'user(4)',
     displayName: 'Carol Littel',
-    name: 'eudora_dietrich4.test',
+    name: 'eudora-dietrich4.test',
   },
   {
     did: 'user(5)',
     displayName: 'Sadie Carter',
-    name: 'shane_torphy52.test',
+    name: 'shane-torphy52.test',
   },
 ]
 
@@ -276,14 +276,14 @@ const snapSearchPg = [
     did: 'user(1)',
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
-    name: 'eudora_dietrich4.test',
+    name: 'eudora-dietrich4.test',
   },
   {
     description: '',
     did: 'user(2)',
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
-    name: 'shane_torphy52.test',
+    name: 'shane-torphy52.test',
   },
   {
     description: '',
@@ -301,14 +301,14 @@ const snapSearchPg = [
     did: 'user(5)',
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
-    name: 'carolina_mcdermott77.test',
+    name: 'carolina-mcdermott77.test',
   },
   {
     description: '',
     did: 'user(6)',
     displayName: 'Rachel Kshlerin',
     indexedAt: '1970-01-01T00:00:00.000Z',
-    name: 'cayla_marquardt39.test',
+    name: 'cayla-marquardt39.test',
   },
 ]
 
@@ -333,20 +333,20 @@ const snapSearchSqlite = [
     did: 'user(3)',
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
-    name: 'carolina_mcdermott77.test',
+    name: 'carolina-mcdermott77.test',
   },
   {
     description: '',
     did: 'user(4)',
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
-    name: 'eudora_dietrich4.test',
+    name: 'eudora-dietrich4.test',
   },
   {
     description: '',
     did: 'user(5)',
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
-    name: 'shane_torphy52.test',
+    name: 'shane-torphy52.test',
   },
 ]

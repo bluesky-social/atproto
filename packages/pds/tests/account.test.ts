@@ -188,7 +188,7 @@ describe('account', () => {
           inviteCode,
         },
       ),
-    ).rejects.toThrow('Email already taken: BOB@TEST.COM')
+    ).rejects.toThrow('Email already taken: bob@test.com')
 
     await expect(
       client.com.atproto.createAccount(
@@ -200,7 +200,53 @@ describe('account', () => {
           inviteCode,
         },
       ),
-    ).rejects.toThrow('Username already taken: BOB.TEST')
+    ).rejects.toThrow('Username already taken: bob.test')
+  })
+
+  it('disallows improperly formatted usernames', async () => {
+    const inviteCode = await createInviteCode(client, 1)
+    const tryUsername = async (username: string) => {
+      await client.com.atproto.createAccount(
+        {},
+        { email: 'john@test.com', username, password: 'test123', inviteCode },
+      )
+    }
+    await expect(tryUsername('did:john')).rejects.toThrow(
+      'Cannot register a username that starts with `did:`',
+    )
+    await expect(tryUsername('john.bsky.io')).rejects.toThrow(
+      'Not a supported username domain',
+    )
+    await expect(tryUsername('j.test')).rejects.toThrow('Username too short')
+    await expect(tryUsername('jayromy-johnber123456.test')).rejects.toThrow(
+      'Username too long',
+    )
+    await expect(tryUsername('jo_hn.test')).rejects.toThrow(
+      'Invalid characters in username',
+    )
+    await expect(tryUsername('jo!hn.test')).rejects.toThrow(
+      'Invalid characters in username',
+    )
+    await expect(tryUsername('jo%hn.test')).rejects.toThrow(
+      'Invalid characters in username',
+    )
+    await expect(tryUsername('jo&hn.test')).rejects.toThrow(
+      'Invalid characters in username',
+    )
+    await expect(tryUsername('jo*hn.test')).rejects.toThrow(
+      'Invalid characters in username',
+    )
+    await expect(tryUsername('jo|hn.test')).rejects.toThrow(
+      'Invalid characters in username',
+    )
+    await expect(tryUsername('jo:hn.test')).rejects.toThrow(
+      'Invalid characters in username',
+    )
+    await expect(tryUsername('jo/hn.test')).rejects.toThrow(
+      'Invalid characters in username',
+    )
+    await expect(tryUsername('about.test')).rejects.toThrow('Reserved username')
+    await expect(tryUsername('atp.test')).rejects.toThrow('Reserved username')
   })
 
   it('fails on used up invite code', async () => {

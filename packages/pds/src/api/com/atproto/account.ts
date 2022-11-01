@@ -6,6 +6,7 @@ import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 import SqlBlockstore from '../../../sql-blockstore'
+import { ensureUsernameValid } from './util/username'
 import { grantRefreshToken } from './util/auth'
 
 export default function (server: Server) {
@@ -26,32 +27,15 @@ export default function (server: Server) {
   })
 
   server.com.atproto.createAccount(async (_params, input, _req, res) => {
-    const { email, username, password, inviteCode, recoveryKey } = input.body
+    const { password, inviteCode, recoveryKey } = input.body
     const { db, auth, config, keypair, logger } = locals.get(res)
+    const username = input.body.username.toLowerCase()
+    const email = input.body.email.toLowerCase()
 
-    // In order to perform the significant db updates ahead of
-    // registering the did, we will use a temp invalid did. Once everything
-    // goes well and a fresh did is registered, we'll replace the temp values.
+    // throws if not
+    ensureUsernameValid(username, config.availableUserDomains)
+
     const now = new Date().toISOString()
-
-    // Validate username
-
-    if (username.startsWith('did:')) {
-      throw new InvalidRequestError(
-        'Cannot register a username that starts with `did:`',
-        'InvalidUsername',
-      )
-    }
-
-    const supportedUsername = config.availableUserDomains.some((host) =>
-      username.toLowerCase().endsWith(host),
-    )
-    if (!supportedUsername) {
-      throw new InvalidRequestError(
-        'Not a supported username domain',
-        'InvalidUsername',
-      )
-    }
 
     const result = await db.transaction(async (dbTxn) => {
       if (config.inviteRequired) {
