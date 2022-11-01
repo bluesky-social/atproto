@@ -11,6 +11,7 @@ const ipldBlockCreatorTable = 'ipld_block_creator'
 const inviteCodeTable = 'invite_code'
 const inviteUseTable = 'invite_code_use'
 const notificationTable = 'user_notification'
+const declarationTable = 'app_bsky_declaration'
 const profileTable = 'app_bsky_profile'
 const profileBadgeTable = 'app_bsky_profile_badge'
 const badgeTable = 'app_bsky_badge'
@@ -142,6 +143,15 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('author', 'varchar', (col) => col.notNull())
     .addColumn('reason', 'varchar', (col) => col.notNull())
     .addColumn('reasonSubject', 'varchar')
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+  // Declarations
+  await db.schema
+    .createTable(declarationTable)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('actorType', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
   // Profiles
@@ -299,6 +309,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(badgeTable).execute()
   await db.schema.dropTable(profileBadgeTable).execute()
   await db.schema.dropTable(profileTable).execute()
+  await db.schema.dropTable(declarationTable).execute()
   await db.schema.dropTable(notificationTable).execute()
   await db.schema.dropTable(inviteUseTable).execute()
   await db.schema.dropTable(inviteCodeTable).execute()

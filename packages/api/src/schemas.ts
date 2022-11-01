@@ -39,7 +39,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['accessJwt', 'refreshJwt', 'username', 'did'],
+        required: ['accessJwt', 'refreshJwt', 'username', 'did', 'declaration'],
         properties: {
           accessJwt: {
             type: 'string',
@@ -51,6 +51,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
           },
           did: {
+            type: 'string',
+          },
+          declaration: {
             type: 'string',
           },
         },
@@ -2850,13 +2853,19 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     key: 'tid',
     record: {
       type: 'object',
-      required: ['subject', 'declarationCid', 'createdAt'],
+      required: ['subject', 'createdAt'],
       properties: {
         subject: {
-          type: 'string',
-        },
-        declarationCid: {
-          type: 'string',
+          type: 'object',
+          required: ['did', 'declaration'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declaration: {
+              type: 'string',
+            },
+          },
         },
         createdAt: {
           type: 'string',
@@ -2879,7 +2888,16 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
           type: 'string',
         },
         subject: {
-          type: 'string',
+          type: 'object',
+          required: ['did', 'declaration'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declaration: {
+              type: 'string',
+            },
+          },
         },
         createdAt: {
           type: 'string',
@@ -2900,12 +2918,12 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       properties: {
         group: {
           type: 'object',
-          required: ['did', 'declarationCid'],
+          required: ['did', 'declaration'],
           properties: {
             did: {
               type: 'string',
             },
-            declarationCid: {
+            declaration: {
               type: 'string',
             },
           },

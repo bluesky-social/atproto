@@ -4,7 +4,7 @@
 export interface Record {
   group: {
     did: string,
-    declarationCid: string,
+    declaration: string,
     [k: string]: unknown,
   };
   invite: {

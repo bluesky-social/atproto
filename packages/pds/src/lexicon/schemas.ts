@@ -39,7 +39,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['accessJwt', 'refreshJwt', 'username', 'did'],
+        required: ['accessJwt', 'refreshJwt', 'username', 'did', 'declaration'],
         properties: {
           accessJwt: {
             type: 'string',
@@ -51,6 +51,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
           },
           did: {
+            type: 'string',
+          },
+          declaration: {
             type: 'string',
           },
         },
