@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Repo } from '@atproto/repo'
+import { RepoStructure } from '@atproto/repo'
 import { PlcClient } from '@atproto/plc'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
@@ -8,6 +8,8 @@ import { UserAlreadyExistsError } from '../../../db'
 import SqlBlockstore from '../../../sql-blockstore'
 import { ensureUsernameValid } from './util/username'
 import { grantRefreshToken } from './util/auth'
+import { AtUri } from '@atproto/uri'
+import * as schema from '../../../lexicon/schemas'
 
 export default function (server: Server) {
   server.com.atproto.getAccountsConfig((_params, _input, _req, res) => {
@@ -124,22 +126,46 @@ export default function (server: Server) {
       // Setup repo root
       const authStore = locals.getAuthstore(res, did)
       const blockstore = new SqlBlockstore(dbTxn, did, now)
-      const repo = await Repo.create(blockstore, did, authStore)
+      const repo = await RepoStructure.create(blockstore, did, authStore)
 
-      await dbTxn.db
-        .insertInto('repo_root')
-        .values({
-          did: did,
-          root: repo.cid.toString(),
-          indexedAt: now,
+      const declaration = {
+        $type: 'app.bsky.declaration',
+        actorType: 'app.bsky.actorUser',
+      }
+      const declarationCid = await blockstore.put(declaration)
+      const uri = new AtUri(`${did}/${schema.ids.AppBskyDeclaration}/self`)
+
+      await repo
+        .stageUpdate({
+          action: 'create',
+          collection: uri.collection,
+          rkey: uri.rkey,
+          cid: declarationCid,
         })
-        .execute()
+        .createCommit(authStore, async (_prev, curr) => {
+          await dbTxn.db
+            .insertInto('repo_root')
+            .values({
+              did: did,
+              root: curr.toString(),
+              indexedAt: now,
+            })
+            .execute()
+          return null
+        })
+
+      await dbTxn.indexRecord(uri, declarationCid, declaration, now)
 
       const access = auth.createAccessToken(did)
       const refresh = auth.createRefreshToken(did)
       await grantRefreshToken(dbTxn, refresh.payload)
 
-      return { did, accessJwt: access.jwt, refreshJwt: refresh.jwt }
+      return {
+        did,
+        declarationCid,
+        accessJwt: access.jwt,
+        refreshJwt: refresh.jwt,
+      }
     })
 
     return {
@@ -149,6 +175,7 @@ export default function (server: Server) {
         did: result.did,
         accessJwt: result.accessJwt,
         refreshJwt: result.refreshJwt,
+        declarationCid: result.declarationCid.toString(),
       },
     }
   })

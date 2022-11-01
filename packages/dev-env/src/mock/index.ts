@@ -47,6 +47,7 @@ export async function generateMockSetup(env: DevEnv) {
   interface User {
     email: string
     did: string
+    declarationCid: string
     username: string
     password: string
     api: ServiceClient
@@ -55,6 +56,7 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'alice@test.com',
       did: '',
+      declarationCid: '',
       username: `alice.test`,
       password: 'hunter2',
       api: clients.alice,
@@ -62,6 +64,7 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'bob@test.com',
       did: '',
+      declarationCid: '',
       username: `bob.test`,
       password: 'hunter2',
       api: clients.bob,
@@ -69,6 +72,7 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'carla@test.com',
       did: '',
+      declarationCid: '',
       username: `carla.test`,
       password: 'hunter2',
       api: clients.carla,
@@ -85,6 +89,7 @@ export async function generateMockSetup(env: DevEnv) {
       { email: user.email, username: user.username, password: user.password },
     )
     user.did = res.data.did
+    user.declarationCid = res.data.declarationCid
     user.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
     await user.api.app.bsky.profile.create(
       { did: user.did },
@@ -96,21 +101,24 @@ export async function generateMockSetup(env: DevEnv) {
   }
 
   // everybody follows everybody
-  const follow = async (author: User, subject: string) => {
+  const follow = async (author: User, subject: User) => {
     await author.api.app.bsky.follow.create(
       { did: author.did },
       {
-        subject,
+        subject: {
+          did: subject.did,
+          declarationCid: subject.declarationCid,
+        },
         createdAt: date.next().value,
       },
     )
   }
-  await follow(alice, bob.did)
-  await follow(alice, carla.did)
-  await follow(bob, alice.did)
-  await follow(bob, carla.did)
-  await follow(carla, alice.did)
-  await follow(carla, bob.did)
+  await follow(alice, bob)
+  await follow(alice, carla)
+  await follow(bob, alice)
+  await follow(bob, carla)
+  await follow(carla, alice)
+  await follow(carla, bob)
 
   // a set of posts and reposts
   const posts: { uri: string; cid: string }[] = []

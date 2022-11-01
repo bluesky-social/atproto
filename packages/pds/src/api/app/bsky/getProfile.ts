@@ -38,7 +38,7 @@ export default function (server: Server) {
             .as('followsCount'),
           db.db
             .selectFrom('app_bsky_follow')
-            .whereRef('subject', '=', ref('user_did.did'))
+            .whereRef('subjectDid', '=', ref('user_did.did'))
             .select(countAll.as('count'))
             .as('followersCount'),
           db.db
@@ -49,7 +49,7 @@ export default function (server: Server) {
           db.db
             .selectFrom('app_bsky_follow')
             .where('creator', '=', requester)
-            .whereRef('subject', '=', ref('user_did.did'))
+            .whereRef('subjectDid', '=', ref('user_did.did'))
             .select('uri')
             .as('requesterFollow'),
         ])

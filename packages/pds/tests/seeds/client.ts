@@ -5,7 +5,7 @@ import { CID } from 'multiformats/cid'
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
 
-class Reference {
+class RecordRef {
   uri: AtUri
   cid: CID
 
@@ -30,6 +30,27 @@ class Reference {
   }
 }
 
+class UserRef {
+  did: string
+  declarationCid: CID
+
+  constructor(did: string, declarationCid: CID | string) {
+    this.did = did
+    this.declarationCid = CID.parse(declarationCid.toString())
+  }
+
+  get raw(): { did: string; declarationCid: string } {
+    return {
+      did: this.did.toString(),
+      declarationCid: this.declarationCid.toString(),
+    }
+  }
+
+  get declarationStr(): string {
+    return this.declarationCid.toString()
+  }
+}
+
 export class SeedClient {
   accounts: Record<
     string,
@@ -40,6 +61,7 @@ export class SeedClient {
       username: string
       email: string
       password: string
+      ref: UserRef
     }
   >
   profiles: Record<
@@ -47,14 +69,14 @@ export class SeedClient {
     {
       displayName: string
       description: string
-      ref: Reference
+      ref: RecordRef
     }
   >
-  follows: Record<string, Record<string, Reference>>
-  posts: Record<string, { text: string; ref: Reference }[]>
+  follows: Record<string, Record<string, RecordRef>>
+  posts: Record<string, { text: string; ref: RecordRef }[]>
   likes: Record<string, Record<string, AtUri>>
-  replies: Record<string, { text: string; ref: Reference }[]>
-  reposts: Record<string, Reference[]>
+  replies: Record<string, { text: string; ref: RecordRef }[]>
+  reposts: Record<string, RecordRef[]>
   dids: Record<string, string>
 
   constructor(public client: ServiceClient) {
@@ -82,6 +104,7 @@ export class SeedClient {
       ...data,
       email: params.email,
       password: params.password,
+      ref: new UserRef(data.did, data.declarationCid),
     }
     return this.accounts[shortName]
   }
@@ -95,20 +118,23 @@ export class SeedClient {
     this.profiles[by] = {
       displayName,
       description,
-      ref: new Reference(res.uri, res.cid),
+      ref: new RecordRef(res.uri, res.cid),
     }
     return this.profiles[by]
   }
 
-  async follow(from: string, to: string) {
+  async follow(from: string, to: UserRef) {
     const res = await this.client.app.bsky.follow.create(
       { did: from },
-      { subject: to, createdAt: new Date().toISOString() },
+      {
+        subject: to.raw,
+        createdAt: new Date().toISOString(),
+      },
       this.getHeaders(from),
     )
     this.follows[from] ??= {}
-    this.follows[from][to] = new Reference(res.uri, res.cid)
-    return this.follows[from][to]
+    this.follows[from][to.did] = new RecordRef(res.uri, res.cid)
+    return this.follows[from][to.did]
   }
 
   async post(by: string, text: string, entities?: any) {
@@ -120,13 +146,13 @@ export class SeedClient {
     this.posts[by] ??= []
     const post = {
       text,
-      ref: new Reference(res.uri, res.cid),
+      ref: new RecordRef(res.uri, res.cid),
     }
     this.posts[by].push(post)
     return post
   }
 
-  async like(by: string, subject: Reference) {
+  async like(by: string, subject: RecordRef) {
     const res = await this.client.app.bsky.like.create(
       { did: by },
       { subject: subject.raw, createdAt: new Date().toISOString() },
@@ -137,7 +163,7 @@ export class SeedClient {
     return this.likes[by][subject.uriStr]
   }
 
-  async reply(by: string, root: Reference, parent: Reference, text: string) {
+  async reply(by: string, root: RecordRef, parent: RecordRef, text: string) {
     const res = await this.client.app.bsky.post.create(
       { did: by },
       {
@@ -153,22 +179,26 @@ export class SeedClient {
     this.replies[by] ??= []
     const reply = {
       text,
-      ref: new Reference(res.uri, res.cid),
+      ref: new RecordRef(res.uri, res.cid),
     }
     this.replies[by].push(reply)
     return reply
   }
 
-  async repost(by: string, subject: Reference) {
+  async repost(by: string, subject: RecordRef) {
     const res = await this.client.app.bsky.repost.create(
       { did: by },
       { subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
     )
     this.reposts[by] ??= []
-    const repost = new Reference(res.uri, res.cid)
+    const repost = new RecordRef(res.uri, res.cid)
     this.reposts[by].push(repost)
     return repost
+  }
+
+  userRef(did: string): UserRef {
+    return this.accounts[did].ref
   }
 
   getHeaders(did: string) {
