@@ -1561,7 +1561,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               reason: {
                 type: 'string',
                 $comment:
-                  "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'.",
+                  "Expected values are 'like', 'repost', 'follow', 'mention' and 'reply'.",
               },
               reasonSubject: {
                 type: 'string',
@@ -1620,7 +1620,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           reason: {
             type: 'string',
             $comment:
-              "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'.",
+              "Expected values are 'like', 'repost', 'follow', 'mention' and 'reply'.",
           },
           reasonSubject: {
             type: 'string',
@@ -1963,7 +1963,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           'followersCount',
           'followsCount',
           'postsCount',
-          'pinnedBadges',
         ],
         properties: {
           did: {
@@ -1989,12 +1988,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           postsCount: {
             type: 'number',
           },
-          pinnedBadges: {
-            type: 'array',
-            items: {
-              $ref: '#/$defs/badge',
-            },
-          },
           myState: {
             type: 'object',
             properties: {
@@ -2004,106 +1997,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {
-          badge: {
-            type: 'object',
-            required: ['uri', 'cid'],
-            properties: {
-              uri: {
-                type: 'string',
-              },
-              cid: {
-                type: 'string',
-              },
-              error: {
-                type: 'string',
-              },
-              issuer: {
-                type: 'object',
-                required: ['did', 'name'],
-                properties: {
-                  did: {
-                    type: 'string',
-                  },
-                  name: {
-                    type: 'string',
-                  },
-                  displayName: {
-                    type: 'string',
-                    maxLength: 64,
-                  },
-                },
-              },
-              assertion: {
-                type: 'object',
-                required: ['type'],
-                properties: {
-                  type: {
-                    type: 'string',
-                  },
-                  tag: {
-                    type: 'string',
-                    maxLength: 64,
-                  },
-                },
-              },
-              createdAt: {
-                type: 'string',
-                format: 'date-time',
-              },
-            },
-          },
-        },
-      },
-    },
-    defs: {
-      badge: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          error: {
-            type: 'string',
-          },
-          issuer: {
-            type: 'object',
-            required: ['did', 'name'],
-            properties: {
-              did: {
-                type: 'string',
-              },
-              name: {
-                type: 'string',
-              },
-              displayName: {
-                type: 'string',
-                maxLength: 64,
-              },
-            },
-          },
-          assertion: {
-            type: 'object',
-            required: ['type'],
-            properties: {
-              type: {
-                type: 'string',
-              },
-              tag: {
-                type: 'string',
-                maxLength: 64,
-              },
-            },
-          },
-          createdAt: {
-            type: 'string',
-            format: 'date-time',
-          },
-        },
+        $defs: {},
       },
     },
   },
@@ -2475,27 +2369,8 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
             maxLength: 256,
           },
-          pinnedBadges: {
-            type: 'array',
-            items: {
-              $ref: '#/$defs/badgeRef',
-            },
-          },
         },
-        $defs: {
-          badgeRef: {
-            type: 'object',
-            required: ['uri', 'cid'],
-            properties: {
-              uri: {
-                type: 'string',
-              },
-              cid: {
-                type: 'string',
-              },
-            },
-          },
-        },
+        $defs: {},
       },
     },
     output: {
@@ -2819,41 +2694,8 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
           type: 'string',
           maxLength: 256,
         },
-        pinnedBadges: {
-          type: 'array',
-          items: {
-            $ref: '#/$defs/badgeRef',
-          },
-        },
       },
-      $defs: {
-        badgeRef: {
-          type: 'object',
-          required: ['uri', 'cid'],
-          properties: {
-            uri: {
-              type: 'string',
-            },
-            cid: {
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-    defs: {
-      badgeRef: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-        },
-      },
+      $defs: {},
     },
   },
   'app.bsky.repost': {

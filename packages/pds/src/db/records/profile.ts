@@ -16,18 +16,7 @@ export interface AppBskyProfile {
   description: string | null
   indexedAt: string
 }
-
-const supportingTableName = 'app_bsky_profile_badge'
-export interface AppBskyProfileBadge {
-  profileUri: string
-  badgeUri: string
-  badgeCid: string
-}
-
-export type PartialDB = {
-  [tableName]: AppBskyProfile
-  [supportingTableName]: AppBskyProfileBadge
-}
+export type PartialDB = { [tableName]: AppBskyProfile }
 
 const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Profile.Record => {
@@ -45,24 +34,13 @@ const translateDbObj = (dbObj: AppBskyProfile): Profile.Record => {
 const getFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<Profile.Record | null> => {
-    const profileQuery = db
+    const profile = await db
       .selectFrom('app_bsky_profile')
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
-    const badgesQuery = db
-      .selectFrom('app_bsky_profile_badge')
-      .selectAll()
-      .where('profileUri', '=', uri.toString())
-      .execute()
-    const [profile, badges] = await Promise.all([profileQuery, badgesQuery])
     if (!profile) return null
-    const record = translateDbObj(profile)
-    record.pinnedBadges = badges.map((row) => ({
-      uri: row.badgeUri,
-      cid: row.badgeCid,
-    }))
-    return record
+    return translateDbObj(profile)
   }
 
 const insertFn =
@@ -72,11 +50,6 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
 
-    const badges = (obj.pinnedBadges || []).map((badge) => ({
-      badgeUri: badge.uri,
-      badgeCid: badge.cid,
-      profileUri: uri.toString(),
-    }))
     const profile = {
       uri: uri.toString(),
       cid: cid.toString(),
@@ -85,30 +58,16 @@ const insertFn =
       description: obj.description,
       indexedAt: new Date().toISOString(),
     }
-    const promises = [
-      db.insertInto('app_bsky_profile').values(profile).execute(),
-    ]
-    if (badges.length > 0) {
-      promises.push(
-        db.insertInto('app_bsky_profile_badge').values(badges).execute(),
-      )
-    }
-    await Promise.all(promises)
+    await db.insertInto('app_bsky_profile').values(profile).execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await Promise.all([
-      db
-        .deleteFrom('app_bsky_profile')
-        .where('uri', '=', uri.toString())
-        .execute(),
-      db
-        .deleteFrom('app_bsky_profile_badge')
-        .where('profileUri', '=', uri.toString())
-        .execute(),
-    ])
+    await db
+      .deleteFrom('app_bsky_profile')
+      .where('uri', '=', uri.toString())
+      .execute()
   }
 
 const notifsForRecord = (_uri: AtUri, _obj: unknown): Notification[] => {

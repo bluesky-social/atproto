@@ -9,7 +9,7 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["did", "name", "followersCount", "followsCount", "postsCount", "pinnedBadges"],
+      "required": ["did", "name", "followersCount", "followsCount", "postsCount"],
       "properties": {
         "did": {"type": "string"},
         "name": {"type": "string"},
@@ -24,45 +24,12 @@
         "followersCount": {"type": "number"},
         "followsCount": {"type": "number"},
         "postsCount": {"type": "number"},
-        "pinnedBadges": {"type": "array", "items": {"$ref":"#/defs/badge"}},
         "myState": {
           "type": "object",
           "properties": {
             "follow": {"type": "string"}
           }
         }
-      }
-    }
-  },
-  "defs": {
-    "badge": {
-      "type": "object",
-      "required": ["uri", "cid"],
-      "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
-        "error": {"type": "string"},
-        "issuer": {
-          "type": "object",
-          "required": ["did", "name"],
-          "properties": {
-            "did": {"type": "string"},
-            "name": {"type": "string"},
-            "displayName": {
-              "type": "string",
-              "maxLength": 64
-            }
-          }
-        },
-        "assertion": {
-          "type": "object",
-          "required": ["type"],
-          "properties": {
-            "type": {"type": "string"},
-            "tag": {"type": "string", "maxLength": 64}
-          }
-        },
-        "createdAt": {"type": "string", "format": "date-time"}
       }
     }
   }

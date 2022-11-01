@@ -21,25 +21,9 @@ export interface OutputSchema {
   followersCount: number;
   followsCount: number;
   postsCount: number;
-  pinnedBadges: Badge[];
   myState?: {
     follow?: string,
   };
-}
-export interface Badge {
-  uri: string;
-  cid: string;
-  error?: string;
-  issuer?: {
-    did: string,
-    name: string,
-    displayName?: string,
-  };
-  assertion?: {
-    type: string,
-    tag?: string,
-  };
-  createdAt?: string;
 }
 
 export interface Response {
