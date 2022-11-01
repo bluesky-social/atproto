@@ -23,7 +23,7 @@ export interface OutputSchema {
   refreshJwt: string;
   username: string;
   did: string;
-  declaration: string;
+  declarationCid: string;
 }
 
 export interface Response {

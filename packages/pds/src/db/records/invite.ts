@@ -14,7 +14,7 @@ export interface AppBskyInvite {
   creator: string
   group: string
   subjectDid: string
-  subjectDeclaration: string
+  subjectDeclarationCid: string
   createdAt: string
   indexedAt: string
 }
@@ -32,7 +32,7 @@ const translateDbObj = (dbObj: AppBskyInvite): Invite.Record => {
     group: dbObj.group,
     subject: {
       did: dbObj.subjectDid,
-      declaration: dbObj.subjectDeclaration,
+      declarationCid: dbObj.subjectDeclarationCid,
     },
     createdAt: dbObj.createdAt,
   }
@@ -68,7 +68,7 @@ const insertFn =
         creator: uri.host,
         group: obj.group,
         subjectDid: obj.subject.did,
-        subjectDeclaration: obj.subject.declaration,
+        subjectDeclarationCid: obj.subject.declarationCid,
         createdAt: obj.createdAt,
         indexedAt: timestamp || new Date().toISOString(),
       })

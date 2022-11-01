@@ -10,10 +10,10 @@
     "properties": {
       "subject": {
         "type": "object",
-        "required": ["did", "declaration"],
+        "required": ["did", "declarationCid"],
         "properties": {
           "did": {"type": "string"},
-          "declaration": {"type": "string"}
+          "declarationCid": {"type": "string"}
         }
       },
       "createdAt": {"type": "string", "format": "date-time"}

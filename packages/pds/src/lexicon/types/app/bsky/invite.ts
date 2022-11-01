@@ -5,7 +5,7 @@ export interface Record {
   group: string;
   subject: {
     did: string,
-    declaration: string,
+    declarationCid: string,
     [k: string]: unknown,
   };
   createdAt: string;

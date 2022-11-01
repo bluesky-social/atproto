@@ -13,7 +13,7 @@ export interface AppBskyInviteAccept {
   cid: string
   creator: string
   groupDid: string
-  groupDeclaration: string
+  groupDeclarationCid: string
   inviteUri: string
   inviteCid: string
   createdAt: string
@@ -32,7 +32,7 @@ const translateDbObj = (dbObj: AppBskyInviteAccept): InviteAccept.Record => {
   return {
     group: {
       did: dbObj.groupDid,
-      declaration: dbObj.groupDeclaration,
+      declarationCid: dbObj.groupDeclarationCid,
     },
     invite: {
       uri: dbObj.inviteUri,
@@ -71,7 +71,7 @@ const insertFn =
         cid: cid.toString(),
         creator: uri.host,
         groupDid: obj.group.did,
-        groupDeclaration: obj.group.declaration,
+        groupDeclarationCid: obj.group.declarationCid,
         inviteUri: obj.invite.uri,
         inviteCid: obj.invite.cid,
         createdAt: obj.createdAt,

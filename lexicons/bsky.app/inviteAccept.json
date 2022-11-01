@@ -9,10 +9,10 @@
     "properties": {
       "group": {
         "type": "object",
-        "required": ["did", "declaration"],
+        "required": ["did", "declarationCid"],
         "properties": {
           "did": {"type": "string"},
-          "declaration": {"type": "string"}
+          "declarationCid": {"type": "string"}
         }
       },
       "invite": {

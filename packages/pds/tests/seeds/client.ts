@@ -32,22 +32,22 @@ class RecordRef {
 
 class UserRef {
   did: string
-  declaration: CID
+  declarationCid: CID
 
-  constructor(did: string, declaration: CID | string) {
+  constructor(did: string, declarationCid: CID | string) {
     this.did = did
-    this.declaration = CID.parse(declaration.toString())
+    this.declarationCid = CID.parse(declarationCid.toString())
   }
 
-  get raw(): { did: string; declaration: string } {
+  get raw(): { did: string; declarationCid: string } {
     return {
       did: this.did.toString(),
-      declaration: this.declaration.toString(),
+      declarationCid: this.declarationCid.toString(),
     }
   }
 
   get declarationStr(): string {
-    return this.declaration.toString()
+    return this.declarationCid.toString()
   }
 }
 
@@ -108,7 +108,7 @@ export class SeedClient {
       ...data,
       email: params.email,
       password: params.password,
-      ref: new UserRef(data.did, data.declaration),
+      ref: new UserRef(data.did, data.declarationCid),
     }
     return this.accounts[shortName]
   }

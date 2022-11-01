@@ -22,13 +22,13 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["accessJwt", "refreshJwt", "username", "did", "declaration"],
+      "required": ["accessJwt", "refreshJwt", "username", "did", "declarationCid"],
       "properties": {
         "accessJwt": { "type": "string" },
         "refreshJwt": { "type": "string" },
         "username": { "type": "string" },
         "did": { "type": "string" },
-        "declaration": { "type": "string" }
+        "declarationCid": { "type": "string" }
       }
     }
   },

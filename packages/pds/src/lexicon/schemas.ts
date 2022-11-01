@@ -39,7 +39,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['accessJwt', 'refreshJwt', 'username', 'did', 'declaration'],
+        required: [
+          'accessJwt',
+          'refreshJwt',
+          'username',
+          'did',
+          'declarationCid',
+        ],
         properties: {
           accessJwt: {
             type: 'string',
@@ -53,7 +59,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           did: {
             type: 'string',
           },
-          declaration: {
+          declarationCid: {
             type: 'string',
           },
         },
@@ -2832,6 +2838,8 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
   'app.bsky.declaration': {
     lexicon: 1,
     id: 'app.bsky.declaration',
+    description:
+      'Context for an account that is considered intrinsic to it and alters the fundamental understanding of an account of changed. A declaration should be treated as immutable.',
     type: 'record',
     key: 'literal:self',
     record: {
@@ -2887,12 +2895,12 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       properties: {
         subject: {
           type: 'object',
-          required: ['did', 'declaration'],
+          required: ['did', 'declarationCid'],
           properties: {
             did: {
               type: 'string',
             },
-            declaration: {
+            declarationCid: {
               type: 'string',
             },
           },
@@ -2919,12 +2927,12 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
         },
         subject: {
           type: 'object',
-          required: ['did', 'declaration'],
+          required: ['did', 'declarationCid'],
           properties: {
             did: {
               type: 'string',
             },
-            declaration: {
+            declarationCid: {
               type: 'string',
             },
           },
@@ -2948,12 +2956,12 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       properties: {
         group: {
           type: 'object',
-          required: ['did', 'declaration'],
+          required: ['did', 'declarationCid'],
           properties: {
             did: {
               type: 'string',
             },
-            declaration: {
+            declarationCid: {
               type: 'string',
             },
           },

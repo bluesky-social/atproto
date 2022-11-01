@@ -175,9 +175,9 @@ export default function (server: Server) {
 
       return {
         did,
+        declarationCid,
         accessJwt: access.jwt,
         refreshJwt: refresh.jwt,
-        declaration: declarationCid,
       }
     })
 
@@ -188,7 +188,7 @@ export default function (server: Server) {
         did: result.did,
         accessJwt: result.accessJwt,
         refreshJwt: result.refreshJwt,
-        declaration: result.declaration.toString(),
+        declarationCid: result.declarationCid.toString(),
       },
     }
   })

@@ -12,7 +12,7 @@ export interface AppBskyFollow {
   cid: string
   creator: string
   subjectDid: string
-  subjectDeclaration: string
+  subjectDeclarationCid: string
   createdAt: string
   indexedAt: string
 }
@@ -29,7 +29,7 @@ const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
   return {
     subject: {
       did: dbObj.subjectDid,
-      declaration: dbObj.subjectDeclaration,
+      declarationCid: dbObj.subjectDeclarationCid,
     },
     createdAt: dbObj.createdAt,
   }
@@ -62,7 +62,7 @@ const insertFn =
       cid: cid.toString(),
       creator: uri.host,
       subjectDid: obj.subject.did,
-      subjectDeclaration: obj.subject.declaration,
+      subjectDeclarationCid: obj.subject.declarationCid,
       createdAt: obj.createdAt,
       indexedAt: timestamp || new Date().toISOString(),
     }

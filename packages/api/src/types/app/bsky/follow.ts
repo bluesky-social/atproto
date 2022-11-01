@@ -4,7 +4,7 @@
 export interface Record {
   subject: {
     did: string,
-    declaration: string,
+    declarationCid: string,
     [k: string]: unknown,
   };
   createdAt: string;

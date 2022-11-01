@@ -47,7 +47,7 @@ export async function generateMockSetup(env: DevEnv) {
   interface User {
     email: string
     did: string
-    declaration: string
+    declarationCid: string
     username: string
     password: string
     api: ServiceClient
@@ -56,7 +56,7 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'alice@test.com',
       did: '',
-      declaration: '',
+      declarationCid: '',
       username: `alice.test`,
       password: 'hunter2',
       api: clients.alice,
@@ -64,7 +64,7 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'bob@test.com',
       did: '',
-      declaration: '',
+      declarationCid: '',
       username: `bob.test`,
       password: 'hunter2',
       api: clients.bob,
@@ -72,7 +72,7 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'carla@test.com',
       did: '',
-      declaration: '',
+      declarationCid: '',
       username: `carla.test`,
       password: 'hunter2',
       api: clients.carla,
@@ -89,7 +89,7 @@ export async function generateMockSetup(env: DevEnv) {
       { email: user.email, username: user.username, password: user.password },
     )
     user.did = res.data.did
-    user.declaration = res.data.declaration
+    user.declarationCid = res.data.declarationCid
     user.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
     await user.api.app.bsky.profile.create(
       { did: user.did },
@@ -107,7 +107,7 @@ export async function generateMockSetup(env: DevEnv) {
       {
         subject: {
           did: subject.did,
-          declaration: subject.declaration,
+          declarationCid: subject.declarationCid,
         },
         createdAt: date.next().value,
       },
