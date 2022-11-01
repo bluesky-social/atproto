@@ -43,7 +43,7 @@ describe('crud operations', () => {
         password: alice.password,
       },
     )
-    aliceClient.setHeader('authorization', `Bearer ${res.data.jwt}`)
+    aliceClient.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     alice.did = res.data.did
     const res2 = await client.com.atproto.createAccount(
       {},

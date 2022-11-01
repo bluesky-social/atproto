@@ -14,6 +14,7 @@ import Mail from 'nodemailer/lib/mailer'
 import { App, ServerConfig } from '../src'
 import * as locals from '../src/locals'
 import * as util from './_util'
+import { AuthScopes } from '../src/auth'
 
 const email = 'alice@test.com'
 const username = 'alice.test'
@@ -130,7 +131,7 @@ describe('account', () => {
       { email, username, password, inviteCode },
     )
     did = res.data.did
-    jwt = res.data.jwt
+    jwt = res.data.accessJwt
 
     expect(typeof jwt).toBe('string')
     expect(did.startsWith('did:plc:')).toBeTruthy()
@@ -293,7 +294,7 @@ describe('account', () => {
       {},
       { username, password },
     )
-    jwt = res.data.jwt
+    jwt = res.data.accessJwt
     expect(typeof jwt).toBe('string')
     expect(res.data.name).toBe('alice.test')
     expect(res.data.did).toBe(did)
@@ -387,7 +388,7 @@ describe('account', () => {
 
     const signingKey = `${config.jwtSecret}::${user.password}`
     const expiredToken = await sign(
-      { sub: did, scope: 'com.atproto.resetAccountPassword' },
+      { sub: did, scope: AuthScopes.ResetPassword },
       signingKey,
       { expiresIn: -1 },
     )

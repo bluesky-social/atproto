@@ -1,20 +1,8 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.createSession",
+  "id": "com.atproto.refreshSession",
   "type": "procedure",
-  "description": "Create an authentication session.",
-  "parameters": {},
-  "input": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["username", "password"],
-      "properties": {
-        "username": {"type": "string"},
-        "password": {"type": "string"}
-      }
-    }
-  },
+  "description": "Refresh an authentication session.",
   "output": {
     "encoding": "application/json",
     "schema": {

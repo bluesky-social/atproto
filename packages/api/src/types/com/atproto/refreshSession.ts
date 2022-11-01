@@ -7,13 +7,9 @@ export interface QueryParams {}
 
 export interface CallOptions {
   headers?: Headers;
-  encoding: 'application/json';
 }
 
-export interface InputSchema {
-  username: string;
-  password: string;
-}
+export type InputSchema = undefined
 
 export interface OutputSchema {
   accessJwt: string;

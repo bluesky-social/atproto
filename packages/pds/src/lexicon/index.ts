@@ -14,6 +14,7 @@ import * as ComAtprotoDeleteSession from './types/com/atproto/deleteSession'
 import * as ComAtprotoGetAccount from './types/com/atproto/getAccount'
 import * as ComAtprotoGetAccountsConfig from './types/com/atproto/getAccountsConfig'
 import * as ComAtprotoGetSession from './types/com/atproto/getSession'
+import * as ComAtprotoRefreshSession from './types/com/atproto/refreshSession'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repoBatchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repoCreateRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repoDeleteRecord'
@@ -112,6 +113,11 @@ export class AtprotoNS {
 
   getSession(handler: ComAtprotoGetSession.Handler) {
     const schema = 'com.atproto.getSession' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
+  }
+
+  refreshSession(handler: ComAtprotoRefreshSession.Handler) {
+    const schema = 'com.atproto.refreshSession' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 

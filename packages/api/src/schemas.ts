@@ -39,9 +39,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['jwt', 'username', 'did'],
+        required: ['accessJwt', 'refreshJwt', 'username', 'did'],
         properties: {
-          jwt: {
+          accessJwt: {
+            type: 'string',
+          },
+          refreshJwt: {
             type: 'string',
           },
           username: {
@@ -128,9 +131,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['jwt', 'name', 'did'],
+        required: ['accessJwt', 'refreshJwt', 'name', 'did'],
         properties: {
-          jwt: {
+          accessJwt: {
+            type: 'string',
+          },
+          refreshJwt: {
             type: 'string',
           },
           name: {
@@ -168,15 +174,8 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.deleteSession',
     type: 'procedure',
     description: 'Delete the current session.',
-    parameters: {},
-    input: {
-      encoding: '',
-      schema: {
-        $defs: {},
-      },
-    },
     output: {
-      encoding: '',
+      encoding: 'application/json',
       schema: {
         $defs: {},
       },
@@ -240,6 +239,34 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         type: 'object',
         required: ['name', 'did'],
         properties: {
+          name: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'com.atproto.refreshSession': {
+    lexicon: 1,
+    id: 'com.atproto.refreshSession',
+    type: 'procedure',
+    description: 'Refresh an authentication session.',
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['accessJwt', 'refreshJwt', 'name', 'did'],
+        properties: {
+          accessJwt: {
+            type: 'string',
+          },
+          refreshJwt: {
+            type: 'string',
+          },
           name: {
             type: 'string',
           },
@@ -2397,7 +2424,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name', 'createdAt', 'indexedAt'],
+              required: ['did', 'name'],
               properties: {
                 did: {
                   type: 'string',
@@ -2411,10 +2438,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 },
                 description: {
                   type: 'string',
-                },
-                createdAt: {
-                  type: 'string',
-                  format: 'date-time',
                 },
                 indexedAt: {
                   type: 'string',

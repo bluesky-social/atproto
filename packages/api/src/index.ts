@@ -14,6 +14,7 @@ import * as ComAtprotoDeleteSession from './types/com/atproto/deleteSession'
 import * as ComAtprotoGetAccount from './types/com/atproto/getAccount'
 import * as ComAtprotoGetAccountsConfig from './types/com/atproto/getAccountsConfig'
 import * as ComAtprotoGetSession from './types/com/atproto/getSession'
+import * as ComAtprotoRefreshSession from './types/com/atproto/refreshSession'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repoBatchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repoCreateRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repoDeleteRecord'
@@ -60,6 +61,7 @@ export * as ComAtprotoDeleteSession from './types/com/atproto/deleteSession'
 export * as ComAtprotoGetAccount from './types/com/atproto/getAccount'
 export * as ComAtprotoGetAccountsConfig from './types/com/atproto/getAccountsConfig'
 export * as ComAtprotoGetSession from './types/com/atproto/getSession'
+export * as ComAtprotoRefreshSession from './types/com/atproto/refreshSession'
 export * as ComAtprotoRepoBatchWrite from './types/com/atproto/repoBatchWrite'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repoCreateRecord'
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repoDeleteRecord'
@@ -241,6 +243,18 @@ export class AtprotoNS {
       .call('com.atproto.getSession', params, data, opts)
       .catch((e) => {
         throw ComAtprotoGetSession.toKnownErr(e)
+      })
+  }
+
+  refreshSession(
+    params: ComAtprotoRefreshSession.QueryParams,
+    data?: ComAtprotoRefreshSession.InputSchema,
+    opts?: ComAtprotoRefreshSession.CallOptions
+  ): Promise<ComAtprotoRefreshSession.Response> {
+    return this._service.xrpc
+      .call('com.atproto.refreshSession', params, data, opts)
+      .catch((e) => {
+        throw ComAtprotoRefreshSession.toKnownErr(e)
       })
   }
 

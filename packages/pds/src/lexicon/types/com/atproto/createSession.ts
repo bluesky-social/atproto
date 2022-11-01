@@ -28,7 +28,8 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  jwt: string;
+  accessJwt: string;
+  refreshJwt: string;
   name: string;
   did: string;
 }
