@@ -1,35 +1,42 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Follow from '../../lexicon/types/app/bsky/follow'
+import * as InviteAccept from '../../lexicon/types/app/bsky/inviteAccept'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
-const type = schemas.ids.AppBskyFollow
-const tableName = 'app_bsky_follow'
-export interface AppBskyFollow {
+const type = schemas.ids.AppBskyInviteAccept
+const tableName = 'app_bsky_invite_accept'
+
+export interface AppBskyInviteAccept {
   uri: string
   cid: string
   creator: string
-  subjectDid: string
-  subjectDeclaration: string
+  groupDid: string
+  groupDeclaration: string
+  inviteUri: string
+  inviteCid: string
   createdAt: string
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: AppBskyFollow }
+export type PartialDB = { [tableName]: AppBskyInviteAccept }
 
 const validator = schemas.records.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is Follow.Record => {
+const matchesSchema = (obj: unknown): obj is InviteAccept.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
+const translateDbObj = (dbObj: AppBskyInviteAccept): InviteAccept.Record => {
   return {
-    subject: {
-      did: dbObj.subjectDid,
-      declaration: dbObj.subjectDeclaration,
+    group: {
+      did: dbObj.groupDid,
+      declaration: dbObj.groupDeclaration,
+    },
+    invite: {
+      uri: dbObj.inviteUri,
+      cid: dbObj.inviteCid,
     },
     createdAt: dbObj.createdAt,
   }
@@ -37,9 +44,9 @@ const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Follow.Record | null> => {
+  async (uri: AtUri): Promise<InviteAccept.Record | null> => {
     const found = await db
-      .selectFrom('app_bsky_follow')
+      .selectFrom(tableName)
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
@@ -57,48 +64,39 @@ const insertFn =
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
-    const val = {
-      uri: uri.toString(),
-      cid: cid.toString(),
-      creator: uri.host,
-      subjectDid: obj.subject.did,
-      subjectDeclaration: obj.subject.declaration,
-      createdAt: obj.createdAt,
-      indexedAt: timestamp || new Date().toISOString(),
-    }
-    await db.insertInto('app_bsky_follow').values(val).execute()
+    await db
+      .insertInto(tableName)
+      .values({
+        uri: uri.toString(),
+        cid: cid.toString(),
+        creator: uri.host,
+        groupDid: obj.group.did,
+        groupDeclaration: obj.group.declaration,
+        inviteUri: obj.invite.uri,
+        inviteCid: obj.invite.cid,
+        createdAt: obj.createdAt,
+        indexedAt: timestamp || new Date().toISOString(),
+      })
+      .execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db
-      .deleteFrom('app_bsky_follow')
-      .where('uri', '=', uri.toString())
-      .execute()
+    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (
-  uri: AtUri,
-  cid: CID,
-  obj: unknown,
+  _uri: AtUri,
+  _cid: CID,
+  _obj: unknown,
 ): Notification[] => {
-  if (!matchesSchema(obj)) {
-    throw new Error(`Record does not match schema: ${type}`)
-  }
-  const notif = {
-    userDid: obj.subject.did,
-    author: uri.host,
-    recordUri: uri.toString(),
-    recordCid: cid.toString(),
-    reason: 'follow',
-  }
-  return [notif]
+  return []
 }
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<Follow.Record, AppBskyFollow> => {
+): DbRecordPlugin<InviteAccept.Record, AppBskyInviteAccept> => {
   return {
     collection: type,
     tableName,

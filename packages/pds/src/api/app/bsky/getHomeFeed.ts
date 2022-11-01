@@ -55,7 +55,7 @@ export default function (server: Server) {
         // Followee's posts and reposts, and requester's posts
         const followingIdsSubquery = db.db
           .selectFrom('app_bsky_follow as follow')
-          .select('follow.subject')
+          .select('follow.subjectDid')
           .where('follow.creator', '=', requester)
         repostsQb = repostsQb
           .where('creator', '!=', requester)

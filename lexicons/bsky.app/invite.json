@@ -8,7 +8,14 @@
     "required": ["group", "subject", "createdAt"],
     "properties": {
       "group": {"type": "string"},
-      "subject": {"type": "string"},
+      "subject": {
+        "type": "object",
+        "required": ["did", "declaration"],
+        "properties": {
+          "did": {"type": "string"},
+          "declaration": {"type": "string"}
+        }
+      },
       "createdAt": {"type": "string", "format": "date-time"}
     }
   }
