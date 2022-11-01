@@ -145,7 +145,8 @@ export default function (server: Server) {
       const repo = await RepoStructure.create(blockstore, did, authStore)
 
       const declaration = {
-        actorType: 'app.bksy.actorUser',
+        $type: 'app.bsky.declaration',
+        actorType: 'app.bsky.actorUser',
       }
       const declarationCid = await blockstore.put(declaration)
       const uri = new AtUri(`${did}/${schema.ids.AppBskyDeclaration}/self`)
@@ -168,6 +169,8 @@ export default function (server: Server) {
             .execute()
           return null
         })
+
+      await dbTxn.indexRecord(uri, declarationCid, declaration, now)
 
       const access = auth.createAccessToken(did)
       const refresh = auth.createRefreshToken(did)
