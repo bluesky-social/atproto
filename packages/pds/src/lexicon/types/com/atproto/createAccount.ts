@@ -40,6 +40,7 @@ export interface OutputSchema {
   refreshJwt: string;
   username: string;
   did: string;
+  declarationCid: string;
 }
 
 export type Handler = (

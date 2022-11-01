@@ -8,14 +8,17 @@ const repoRootTable = 'repo_root'
 const recordTable = 'record'
 const ipldBlockTable = 'ipld_block'
 const ipldBlockCreatorTable = 'ipld_block_creator'
-const inviteTable = 'invite_code'
+const inviteCodeTable = 'invite_code'
 const inviteUseTable = 'invite_code_use'
 const notificationTable = 'user_notification'
+const declarationTable = 'app_bsky_declaration'
 const profileTable = 'app_bsky_profile'
 const profileBadgeTable = 'app_bsky_profile_badge'
 const badgeTable = 'app_bsky_badge'
 const badgeOfferTable = 'app_bsky_badge_offer'
 const badgeAcceptTable = 'app_bsky_badge_accept'
+const inviteTable = 'app_bsky_invite'
+const inviteAcceptTable = 'app_bsky_invite_accept'
 const followTable = 'app_bsky_follow'
 const postTable = 'app_bsky_post'
 const postEntityTable = 'app_bsky_post_entity'
@@ -113,9 +116,9 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint(`${ipldBlockCreatorTable}_pkey`, ['cid', 'did'])
     .execute()
-  // Invites
+  // Invite Codes
   await db.schema
-    .createTable(inviteTable)
+    .createTable(inviteCodeTable)
     .addColumn('code', 'varchar', (col) => col.primaryKey())
     .addColumn('availableUses', 'integer', (col) => col.notNull())
     .addColumn('disabled', 'int2', (col) => col.defaultTo(0))
@@ -140,6 +143,15 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('author', 'varchar', (col) => col.notNull())
     .addColumn('reason', 'varchar', (col) => col.notNull())
     .addColumn('reasonSubject', 'varchar')
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+  // Declarations
+  await db.schema
+    .createTable(declarationTable)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('actorType', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
   // Profiles
@@ -205,13 +217,38 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
+  // Invites (Records)
+  await db.schema
+    .createTable(inviteTable)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('group', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDeclarationCid', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+  await db.schema
+    .createTable(inviteAcceptTable)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('groupDid', 'varchar', (col) => col.notNull())
+    .addColumn('groupDeclarationCid', 'varchar', (col) => col.notNull())
+    .addColumn('inviteUri', 'varchar', (col) => col.notNull())
+    .addColumn('inviteCid', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
   // Follows
   await db.schema
     .createTable(followTable)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDeclarationCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
@@ -265,14 +302,17 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(postEntityTable).execute()
   await db.schema.dropTable(postTable).execute()
   await db.schema.dropTable(followTable).execute()
+  await db.schema.dropTable(inviteAcceptTable).execute()
+  await db.schema.dropTable(inviteTable).execute()
   await db.schema.dropTable(badgeAcceptTable).execute()
   await db.schema.dropTable(badgeOfferTable).execute()
   await db.schema.dropTable(badgeTable).execute()
   await db.schema.dropTable(profileBadgeTable).execute()
   await db.schema.dropTable(profileTable).execute()
+  await db.schema.dropTable(declarationTable).execute()
   await db.schema.dropTable(notificationTable).execute()
   await db.schema.dropTable(inviteUseTable).execute()
-  await db.schema.dropTable(inviteTable).execute()
+  await db.schema.dropTable(inviteCodeTable).execute()
   await db.schema.dropTable(ipldBlockCreatorTable).execute()
   await db.schema.dropTable(ipldBlockTable).execute()
   await db.schema.dropTable(recordTable).execute()

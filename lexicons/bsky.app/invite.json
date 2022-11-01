@@ -1,13 +1,13 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.follow",
+  "id": "app.bsky.invite",
   "type": "record",
-  "description": "A social follow",
   "key": "tid",
   "record": {
     "type": "object",
-    "required": ["subject", "createdAt"],
+    "required": ["group", "subject", "createdAt"],
     "properties": {
+      "group": {"type": "string"},
       "subject": {
         "type": "object",
         "required": ["did", "declarationCid"],

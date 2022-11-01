@@ -2,6 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 export interface Record {
+  group: string;
   subject: {
     did: string,
     declarationCid: string,
