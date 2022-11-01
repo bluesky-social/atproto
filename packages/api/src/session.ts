@@ -9,16 +9,33 @@ import {
 } from '@atproto/xrpc'
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
-import { ServiceClient } from './client'
+import { Client, ServiceClient } from './client'
+import * as CreateSession from './client/types/com/atproto/createSession'
 import * as RefreshSession from './client/types/com/atproto/refreshSession'
 import * as CreateAccount from './client/types/com/atproto/createAccount'
 
+const CREATE_SESSION = 'com.atproto.createSession'
 const REFRESH_SESSION = 'com.atproto.refreshSession'
 const DELETE_SESSION = 'com.atproto.deleteSession'
 const CREATE_ACCOUNT = 'com.atproto.createAccount'
 
+export class SessionClient extends Client {
+  service(serviceUri: string | URL): SessionServiceClient {
+    const xrpcService = new SessionXrpcServiceClient(this.xrpc, serviceUri)
+    return new SessionServiceClient(this, xrpcService)
+  }
+}
+
+const defaultInst = new SessionClient()
+export default defaultInst
+
 export class SessionServiceClient extends ServiceClient {
   xrpc: SessionXrpcServiceClient
+  sessionManager: SessionManager
+  constructor(baseClient: Client, xrpcService: SessionXrpcServiceClient) {
+    super(baseClient, xrpcService)
+    this.sessionManager = this.xrpc.sessionManager
+  }
 }
 
 export class SessionXrpcServiceClient extends XrpcServiceClient {
@@ -60,6 +77,15 @@ export class SessionXrpcServiceClient extends XrpcServiceClient {
     // Complete any pending session refresh and then continue onto the original request with fresh credentials
     await this.refreshing
 
+    // Setup session on session or account creation
+    if (methodNsid === CREATE_SESSION || methodNsid === CREATE_ACCOUNT) {
+      const result = await original()
+      const { accessJwt, refreshJwt } =
+        result.data as CreateSession.OutputSchema & CreateAccount.OutputSchema
+      this.sessionManager.set({ accessJwt, refreshJwt })
+      return result
+    }
+
     // Clear session on session deletion
     if (methodNsid === DELETE_SESSION) {
       const result = await original({
@@ -70,15 +96,6 @@ export class SessionXrpcServiceClient extends XrpcServiceClient {
         },
       })
       this.sessionManager.unset()
-      return result
-    }
-
-    // Setup session on account creation
-    if (methodNsid === CREATE_ACCOUNT) {
-      const result = await original()
-      const { accessJwt, refreshJwt } =
-        result.data as CreateAccount.OutputSchema
-      this.sessionManager.set({ accessJwt, refreshJwt })
       return result
     }
 
@@ -100,9 +117,13 @@ export class SessionXrpcServiceClient extends XrpcServiceClient {
   }
 
   // Ensures a single refresh request at a time, deduping concurrent requests.
-  refresh(opts?: CallOptions) {
+  async refresh(opts?: CallOptions) {
     this.refreshing ??= this._refresh(opts)
-    return this.refreshing
+    try {
+      return await this.refreshing
+    } finally {
+      this.refreshing = undefined
+    }
   }
 
   private async _refresh(opts?: CallOptions) {
@@ -150,14 +171,14 @@ export class SessionManager extends (EventEmitter as new () => TypedEmitter<Sess
   accessHeaders() {
     return (
       this.session && {
-        authorization: `Bearer: ${this.session.accessJwt}`,
+        authorization: `Bearer ${this.session.accessJwt}`,
       }
     )
   }
   refreshHeaders() {
     return (
       this.session && {
-        authorization: `Bearer: ${this.session.refreshJwt}`,
+        authorization: `Bearer ${this.session.refreshJwt}`,
       }
     )
   }
