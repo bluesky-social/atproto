@@ -1,10 +1,9 @@
 import jwt from 'jsonwebtoken'
+import { AuthScopes } from '../../../auth'
 import { ServerConfig } from '../../../config'
 import { User } from '../../../db/tables/user'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
-
-const PASSWORD_RESET_SCOPE = 'com.atproto.resetAccountPassword'
 
 export default function (server: Server) {
   server.com.atproto.requestAccountPasswordReset(
@@ -20,7 +19,7 @@ export default function (server: Server) {
         const token = jwt.sign(
           {
             sub: user.did,
-            scope: PASSWORD_RESET_SCOPE,
+            scope: AuthScopes.ResetPassword,
           },
           getSigningKey(user, config),
           { expiresIn: '15mins' },
@@ -46,7 +45,7 @@ export default function (server: Server) {
     }
 
     const { sub: did, scope } = tokenBody
-    if (typeof did !== 'string' || scope !== PASSWORD_RESET_SCOPE) {
+    if (typeof did !== 'string' || scope !== AuthScopes.ResetPassword) {
       return createInvalidTokenError('Malformed token')
     }
 

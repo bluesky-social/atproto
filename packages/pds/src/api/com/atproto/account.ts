@@ -7,6 +7,7 @@ import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 import SqlBlockstore from '../../../sql-blockstore'
 import { ensureUsernameValid } from './util/username'
+import { grantRefreshToken } from './util/auth'
 
 export default function (server: Server) {
   server.com.atproto.getAccountsConfig((_params, _input, _req, res) => {
@@ -36,7 +37,7 @@ export default function (server: Server) {
 
     const now = new Date().toISOString()
 
-    const did = await db.transaction(async (dbTxn) => {
+    const result = await db.transaction(async (dbTxn) => {
       if (config.inviteRequired) {
         if (!inviteCode) {
           throw new InvalidRequestError(
@@ -134,11 +135,22 @@ export default function (server: Server) {
         })
         .execute()
 
-      return did
+      const access = auth.createAccessToken(did)
+      const refresh = auth.createRefreshToken(did)
+      await grantRefreshToken(dbTxn, refresh.payload)
+
+      return { did, accessJwt: access.jwt, refreshJwt: refresh.jwt }
     })
 
-    const jwt = auth.createToken(did)
-    return { encoding: 'application/json', body: { jwt, username, did } }
+    return {
+      encoding: 'application/json',
+      body: {
+        username,
+        did: result.did,
+        accessJwt: result.accessJwt,
+        refreshJwt: result.refreshJwt,
+      },
+    }
   })
 
   server.com.atproto.deleteAccount(() => {

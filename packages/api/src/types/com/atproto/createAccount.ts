@@ -19,7 +19,8 @@ export interface InputSchema {
 }
 
 export interface OutputSchema {
-  jwt: string;
+  accessJwt: string;
+  refreshJwt: string;
   username: string;
   did: string;
 }

@@ -11,8 +11,8 @@ export class CtxMigrationProvider<T> implements MigrationProvider {
     const ctxMigrations: Record<string, Migration> = {}
     Object.entries(this.migrations).forEach(([name, migration]) => {
       ctxMigrations[name] = {
-        up: (db) => migration.up(db, this.ctx),
-        down: (db) => Promise.resolve(migration.down?.(db, this.ctx)),
+        up: async (db) => await migration.up(db, this.ctx),
+        down: async (db) => await migration.down?.(db, this.ctx),
       }
     })
     return ctxMigrations
