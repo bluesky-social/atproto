@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
-    "codegen": "lex gen-api ./src ../../lexicons/atproto.com/* ../../lexicons/bsky.app/*",
+    "codegen": "lex gen-api ./src/client ../../lexicons/atproto.com/* ../../lexicons/bsky.app/*",
     "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
-    "postbuild" : "tsc --build tsconfig.build.json"
+    "postbuild": "tsc --build tsconfig.build.json"
   },
   "license": "MIT",
   "dependencies": {
