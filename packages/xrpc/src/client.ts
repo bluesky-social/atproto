@@ -35,7 +35,7 @@ export class Client {
     serviceUri: string | URL,
     methodNsid: string,
     params?: QueryParams,
-    data?: any,
+    data?: unknown,
     opts?: CallOptions,
   ) {
     return this.service(serviceUri).call(methodNsid, params, data, opts)
@@ -85,10 +85,14 @@ export class ServiceClient {
     this.headers[key] = value
   }
 
+  unsetHeader(key: string): void {
+    delete this.headers[key]
+  }
+
   async call(
     methodNsid: string,
     params?: QueryParams,
-    data?: any,
+    data?: unknown,
     opts?: CallOptions,
   ) {
     const schema = this.baseClient.schemas.get(methodNsid)
@@ -129,7 +133,7 @@ async function defaultFetchHandler(
   httpUri: string,
   httpMethod: string,
   httpHeaders: Headers,
-  httpReqBody: any,
+  httpReqBody: unknown,
 ): Promise<FetchHandlerResponse> {
   try {
     const res = await fetch(httpUri, {

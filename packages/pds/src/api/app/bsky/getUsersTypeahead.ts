@@ -1,4 +1,4 @@
-import { QueryParams } from '@atproto/api/src/types/app/bsky/getUsersTypeahead'
+import { AppBskyGetUsersTypeahead as Method } from '@atproto/api'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
@@ -70,5 +70,5 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
 
 type GetResultsFn = (
   db: Database,
-  opts: QueryParams & { limit: number },
+  opts: Method.QueryParams & { limit: number },
 ) => Promise<{ did: string; name: string; displayName: string | null }[]>

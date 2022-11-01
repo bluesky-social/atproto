@@ -9,7 +9,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@atproto/xrpc": "*"
+    "@atproto/xrpc": "*",
+    "typed-emitter": "^2.1.0"
   },
   "devDependencies": {
     "@atproto/lex-cli": "*"

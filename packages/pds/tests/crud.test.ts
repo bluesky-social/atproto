@@ -1,5 +1,7 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import * as Post from '@atproto/api/src/types/app/bsky/post'
+import AtpApi, {
+  ServiceClient as AtpServiceClient,
+  AppBskyPost as Post,
+} from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import { CloseFn, paginateAll, runTestServer } from './_util'
 

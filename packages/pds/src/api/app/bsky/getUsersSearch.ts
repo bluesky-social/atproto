@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { QueryParams } from '@atproto/api/src/types/app/bsky/getUsersSearch'
+import { AppBskyGetUsersSearch as Method } from '@atproto/api'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
@@ -84,7 +84,7 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
 
 type GetResultsFn = (
   db: Database,
-  opts: QueryParams & { limit: number },
+  opts: Method.QueryParams & { limit: number },
 ) => Promise<
   {
     did: string

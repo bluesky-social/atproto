@@ -1,4 +1,7 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpApi, {
+  ServiceClient as AtpServiceClient,
+  AppBskyGetHomeFeed as HomeFeed,
+} from '@atproto/api'
 import {
   runTestServer,
   forSnapshot,
@@ -9,7 +12,6 @@ import {
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
-import { FeedItem } from '@atproto/api/src/types/app/bsky/getHomeFeed'
 
 describe('pds home feed views', () => {
   let client: AtpServiceClient
@@ -41,7 +43,7 @@ describe('pds home feed views', () => {
   })
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
-    const expectOriginatorFollowedBy = (did) => (item: FeedItem) => {
+    const expectOriginatorFollowedBy = (did) => (item: HomeFeed.FeedItem) => {
       const originator = getOriginator(item)
       if (did === originator) {
         // The user sees their own posts, but the user does not expect to see their reposts
@@ -97,7 +99,7 @@ describe('pds home feed views', () => {
   })
 
   it("fetches authenticated user's home feed w/ firehose algorithm", async () => {
-    const expectNotOwnRepostsBy = (did) => (item: FeedItem) => {
+    const expectNotOwnRepostsBy = (did) => (item: HomeFeed.FeedItem) => {
       const originator = getOriginator(item)
       if (did === originator) {
         // The user sees their own posts, but the user does not expect to see their reposts
