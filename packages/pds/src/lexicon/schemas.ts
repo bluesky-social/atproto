@@ -1632,7 +1632,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               reason: {
                 type: 'string',
                 $comment:
-                  "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'.",
+                  "Expected values are 'like', 'repost', 'follow', 'badge', 'invite', 'mention' and 'reply'.",
               },
               reasonSubject: {
                 type: 'string',
@@ -1691,7 +1691,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           reason: {
             type: 'string',
             $comment:
-              "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'.",
+              "Expected values are 'like', 'repost', 'follow', 'badge', 'invite', 'mention' and 'reply'.",
           },
           reasonSubject: {
             type: 'string',
@@ -2839,10 +2839,40 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       required: ['actorType'],
       properties: {
         actorType: {
-          type: 'string',
+          oneOf: [
+            {
+              $ref: '#/$defs/actorKnown',
+            },
+            {
+              $ref: '#/$defs/actorUnknown',
+            },
+          ],
         },
       },
-      $defs: {},
+      $defs: {
+        actorKnown: {
+          type: 'string',
+          enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
+        },
+        actorUnknown: {
+          type: 'string',
+          not: {
+            enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
+          },
+        },
+      },
+    },
+    defs: {
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
+        },
+      },
     },
   },
   'app.bsky.follow': {

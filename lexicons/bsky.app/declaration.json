@@ -8,9 +8,21 @@
     "required": ["actorType"],
     "properties": {
       "actorType": {
-        "type": "string",
-        "$comment": "Expected values are 'user' or 'scene'"
+        "oneOf": [
+          {"$ref": "#/defs/actorKnown"},
+          {"$ref": "#/defs/actorUnknown"}
+        ]
       }
+    }
+  },
+  "defs": {
+    "actorKnown": { 
+      "type": "string",
+      "enum": ["app.bsky.actorUser", "app.bsky.actorScene"]
+    },
+    "actorUnknown": { 
+      "type": "string",
+      "not": {"enum": ["app.bsky.actorUser", "app.bsky.actorScene"]}
     }
   }
 }

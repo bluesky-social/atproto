@@ -145,7 +145,7 @@ export default function (server: Server) {
       const repo = await RepoStructure.create(blockstore, did, authStore)
 
       const declaration = {
-        actorType: 'user',
+        actorType: 'app.bksy.actorUser',
       }
       const declarationCid = await blockstore.put(declaration)
       const uri = new AtUri(`${did}/${schema.ids.AppBskyDeclaration}/self`)
