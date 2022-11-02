@@ -45,6 +45,7 @@ export class SqlBlockstore extends IpldStore {
     const insertBlockOwner = this.db.db
       .insertInto('ipld_block_creator')
       .values({ cid: cid.toString(), did: this.did })
+      .onConflict((oc) => oc.doNothing())
       .execute()
     await Promise.all([insertBlock, insertBlockOwner])
   }
