@@ -2,11 +2,8 @@ import { once, EventEmitter } from 'events'
 import AtpApi, {
   ServiceClient as AtpServiceClient,
   ComAtprotoCreateAccount,
+  ComAtprotoResetAccountPassword as ResetAccountPassword,
 } from '@atproto/api'
-import {
-  ExpiredTokenError,
-  InvalidTokenError,
-} from '@atproto/api/src/types/com/atproto/resetAccountPassword'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import { sign } from 'jsonwebtoken'
@@ -407,7 +404,7 @@ describe('account', () => {
     // Reuse of token fails
     await expect(
       client.com.atproto.resetAccountPassword({}, { token, password }),
-    ).rejects.toThrow(InvalidTokenError)
+    ).rejects.toThrow(ResetAccountPassword.InvalidTokenError)
 
     // Logs in with new password and not previous password
     await expect(
@@ -445,7 +442,7 @@ describe('account', () => {
         {},
         { token: expiredToken, password: passwordAlt },
       ),
-    ).rejects.toThrow(ExpiredTokenError)
+    ).rejects.toThrow(ResetAccountPassword.ExpiredTokenError)
 
     // Still logs in with previous password
     await expect(
