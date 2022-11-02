@@ -3,17 +3,28 @@
 */
 import { Headers, XRPCError } from '@atproto/xrpc'
 
-export interface QueryParams {
-  did: string;
-  collection: string;
-  rkey: string;
-}
+export interface QueryParams {}
 
 export interface CallOptions {
   headers?: Headers;
+  qp?: QueryParams;
+  encoding: 'application/json';
 }
 
-export type InputSchema = undefined
+export interface InputSchema {
+  /**
+   * The DID of the repo.
+   */
+  did: string;
+  /**
+   * The NSID of the record collection.
+   */
+  collection: string;
+  /**
+   * The key of the record.
+   */
+  rkey: string;
+}
 
 export interface Response {
   success: boolean;

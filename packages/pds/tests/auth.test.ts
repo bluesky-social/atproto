@@ -21,27 +21,30 @@ describe('auth', () => {
   })
 
   const createAccount = async (info) => {
-    const { data } = await client.com.atproto.createAccount({}, info)
+    const { data } = await client.com.atproto.createAccount(info)
     return data
   }
   const getSession = async (jwt) => {
-    const { data } = await client.com.atproto.getSession({}, undefined, {
-      headers: SeedClient.getHeaders(jwt),
-    })
+    const { data } = await client.com.atproto.getSession(
+      {},
+      {
+        headers: SeedClient.getHeaders(jwt),
+      },
+    )
     return data
   }
   const createSession = async (info) => {
-    const { data } = await client.com.atproto.createSession({}, info)
+    const { data } = await client.com.atproto.createSession(info)
     return data
   }
   const deleteSession = async (jwt) => {
-    const { data } = await client.com.atproto.deleteSession({}, undefined, {
+    const { data } = await client.com.atproto.deleteSession(undefined, {
       headers: SeedClient.getHeaders(jwt),
     })
     return data
   }
   const refreshSession = async (jwt) => {
-    const { data } = await client.com.atproto.refreshSession({}, undefined, {
+    const { data } = await client.com.atproto.refreshSession(undefined, {
       headers: SeedClient.getHeaders(jwt),
     })
     return data

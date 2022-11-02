@@ -7,10 +7,6 @@ export interface QueryParams {}
 
 export type HandlerInput = undefined
 
-export interface InputSchema {
-  [k: string]: unknown;
-}
-
 export interface HandlerSuccess {
   encoding: '';
   body: OutputSchema;

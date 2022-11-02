@@ -88,14 +88,11 @@ const envApi = {
 
     // create the PDS account
     const client = pds.getClient()
-    const pdsRes = await client.com.atproto.createAccount(
-      {},
-      {
-        email: usernameNoTld + '@test.com',
-        username,
-        password: usernameNoTld + '-pass',
-      },
-    )
+    const pdsRes = await client.com.atproto.createAccount({
+      email: usernameNoTld + '@test.com',
+      username,
+      password: usernameNoTld + '-pass',
+    })
     users.set(username, pds)
   },
 

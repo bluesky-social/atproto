@@ -9,6 +9,7 @@ export interface QueryParams {
 
 export interface CallOptions {
   headers?: Headers;
+  qp?: QueryParams;
   encoding: 'application/cbor';
 }
 

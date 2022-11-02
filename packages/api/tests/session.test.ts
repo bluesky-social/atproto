@@ -27,10 +27,11 @@ describe('session', () => {
     const sessions: (Session | undefined)[] = []
     client.sessionManager.on('session', (session) => sessions.push(session))
 
-    const { data: account } = await client.com.atproto.createAccount(
-      {},
-      { username: 'alice.test', email: 'alice@test.com', password: 'password' },
-    )
+    const { data: account } = await client.com.atproto.createAccount({
+      username: 'alice.test',
+      email: 'alice@test.com',
+      password: 'password',
+    })
 
     expect(client.sessionManager.active()).toEqual(true)
     expect(sessions).toEqual([
@@ -48,7 +49,7 @@ describe('session', () => {
     const sessions: (Session | undefined)[] = []
     client.sessionManager.on('session', (session) => sessions.push(session))
 
-    await client.com.atproto.deleteSession({})
+    await client.com.atproto.deleteSession()
 
     expect(sessions).toEqual([undefined])
     expect(client.sessionManager.active()).toEqual(false)
@@ -63,10 +64,10 @@ describe('session', () => {
     const sessions: (Session | undefined)[] = []
     client.sessionManager.on('session', (session) => sessions.push(session))
 
-    const { data: session } = await client.com.atproto.createSession(
-      {},
-      { username: 'alice.test', password: 'password' },
-    )
+    const { data: session } = await client.com.atproto.createSession({
+      username: 'alice.test',
+      password: 'password',
+    })
 
     expect(sessions).toEqual([
       { accessJwt: session.accessJwt, refreshJwt: session.refreshJwt },
@@ -84,12 +85,12 @@ describe('session', () => {
     const sessions: (Session | undefined)[] = []
     client.sessionManager.on('session', (session) => sessions.push(session))
 
-    const { data: session } = await client.com.atproto.createSession(
-      {},
-      { username: 'alice.test', password: 'password' },
-    )
+    const { data: session } = await client.com.atproto.createSession({
+      username: 'alice.test',
+      password: 'password',
+    })
 
-    const { data: sessionRefresh } = await client.com.atproto.refreshSession({})
+    const { data: sessionRefresh } = await client.com.atproto.refreshSession()
 
     expect(sessions).toEqual([
       { accessJwt: session.accessJwt, refreshJwt: session.refreshJwt },
@@ -107,13 +108,9 @@ describe('session', () => {
     })
 
     // Uses escape hatch: authorization set, so sessions are not managed by this call
-    const refreshStaleSession = client.com.atproto.refreshSession(
-      {},
-      undefined,
-      {
-        headers: { authorization: `Bearer ${session.refreshJwt}` },
-      },
-    )
+    const refreshStaleSession = client.com.atproto.refreshSession(undefined, {
+      headers: { authorization: `Bearer ${session.refreshJwt}` },
+    })
     await expect(refreshStaleSession).rejects.toThrow('Token has been revoked')
 
     expect(sessions.length).toEqual(2)
@@ -124,13 +121,13 @@ describe('session', () => {
     const sessions: (Session | undefined)[] = []
     client.sessionManager.on('session', (session) => sessions.push(session))
 
-    const { data: session } = await client.com.atproto.createSession(
-      {},
-      { username: 'alice.test', password: 'password' },
-    )
+    const { data: session } = await client.com.atproto.createSession({
+      username: 'alice.test',
+      password: 'password',
+    })
 
     const [{ data: sessionRefresh }] = await Promise.all(
-      [...Array(10)].map(() => client.com.atproto.refreshSession({})),
+      [...Array(10)].map(() => client.com.atproto.refreshSession()),
     )
 
     expect(sessions).toEqual([
@@ -153,10 +150,10 @@ describe('session', () => {
     const sessions: (Session | undefined)[] = []
     client.sessionManager.on('session', (session) => sessions.push(session))
 
-    const { data: session } = await client.com.atproto.createSession(
-      {},
-      { username: 'alice.test', password: 'password' },
-    )
+    const { data: session } = await client.com.atproto.createSession({
+      username: 'alice.test',
+      password: 'password',
+    })
     const sessionCreds = {
       accessJwt: session.accessJwt,
       refreshJwt: session.refreshJwt,

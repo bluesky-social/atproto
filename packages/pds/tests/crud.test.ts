@@ -35,24 +35,18 @@ describe('crud operations', () => {
   })
 
   it('registers users', async () => {
-    const res = await client.com.atproto.createAccount(
-      {},
-      {
-        email: alice.email,
-        username: alice.username,
-        password: alice.password,
-      },
-    )
+    const res = await client.com.atproto.createAccount({
+      email: alice.email,
+      username: alice.username,
+      password: alice.password,
+    })
     aliceClient.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     alice.did = res.data.did
-    const res2 = await client.com.atproto.createAccount(
-      {},
-      {
-        email: bob.email,
-        username: bob.username,
-        password: bob.password,
-      },
-    )
+    const res2 = await client.com.atproto.createAccount({
+      email: bob.email,
+      username: bob.username,
+      password: bob.password,
+    })
     bob.did = res2.data.did
   })
 
@@ -71,14 +65,15 @@ describe('crud operations', () => {
 
   let uri: AtUri
   it('creates records', async () => {
-    const res = await aliceClient.com.atproto.repoCreateRecord(
-      { did: alice.did, collection: 'app.bsky.post' },
-      {
+    const res = await aliceClient.com.atproto.repoCreateRecord({
+      did: alice.did,
+      collection: 'app.bsky.post',
+      record: {
         $type: 'app.bsky.post',
         text: 'Hello, world!',
         createdAt: new Date().toISOString(),
       },
-    )
+    })
     uri = new AtUri(res.data.uri)
     expect(res.data.uri).toBe(`at://${alice.did}/app.bsky.post/${uri.rkey}`)
   })
@@ -342,10 +337,11 @@ describe('crud operations', () => {
   // --------------
 
   it('requires a $type on records', async () => {
-    const prom1 = aliceClient.com.atproto.repoCreateRecord(
-      { did: alice.did, collection: 'app.bsky.post' },
-      {},
-    )
+    const prom1 = aliceClient.com.atproto.repoCreateRecord({
+      did: alice.did,
+      collection: 'app.bsky.post',
+      record: {},
+    })
     await expect(prom1).rejects.toThrow(
       'The passed value does not declare a $type',
     )
@@ -357,28 +353,31 @@ describe('crud operations', () => {
     //   type: 'com.example.foobar',
     // })
     // await expect(prom1).rejects.toThrow('Schema not found: com.example.foobar')
-    const prom2 = aliceClient.com.atproto.repoCreateRecord(
-      { did: alice.did, collection: 'com.example.foobar' },
-      { $type: 'com.example.foobar' },
-    )
+    const prom2 = aliceClient.com.atproto.repoCreateRecord({
+      did: alice.did,
+      collection: 'com.example.foobar',
+      record: { $type: 'com.example.foobar' },
+    })
     await expect(prom2).rejects.toThrow('Schema not found')
   })
 
   it('requires the $type to match the schema', async () => {
     await expect(
-      aliceClient.com.atproto.repoCreateRecord(
-        { did: alice.did, collection: 'app.bsky.post' },
-        { $type: 'app.bsky.like' },
-      ),
+      aliceClient.com.atproto.repoCreateRecord({
+        did: alice.did,
+        collection: 'app.bsky.post',
+        record: { $type: 'app.bsky.like' },
+      }),
     ).rejects.toThrow('Record type app.bsky.like is not supported')
   })
 
   it('validates the record on write', async () => {
     await expect(
-      aliceClient.com.atproto.repoCreateRecord(
-        { did: alice.did, collection: 'app.bsky.post' },
-        { $type: 'app.bsky.post' },
-      ),
+      aliceClient.com.atproto.repoCreateRecord({
+        did: alice.did,
+        collection: 'app.bsky.post',
+        record: { $type: 'app.bsky.post' },
+      }),
     ).rejects.toThrow(
       "Failed app.bsky.post validation for #/required: must have required property 'text'",
     )
@@ -388,7 +387,7 @@ describe('crud operations', () => {
   // it('validates the record on read', async () => {
   //   const res1 = await client.com.atproto.repoCreateRecord(
   //     url,
-  //     { did: alice.did, type: 'app.bsky.post', validate: false },
+  //     {did: alice.did, type: 'app.bsky.post', validate: false },
   //     {
   //       encoding: 'application/json',
   //       data: { $type: 'app.bsky.post', record: 'is bad' },

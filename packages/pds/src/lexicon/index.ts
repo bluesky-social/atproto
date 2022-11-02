@@ -43,6 +43,11 @@ import * as AppBskyGetUsersTypeahead from './types/app/bsky/getUsersTypeahead'
 import * as AppBskyPostNotificationsSeen from './types/app/bsky/postNotificationsSeen'
 import * as AppBskyUpdateProfile from './types/app/bsky/updateProfile'
 
+export const APP_BSKY = {
+  ActorScene: 'app.bsky.actorScene',
+  ActorUser: 'app.bsky.actorUser',
+}
+
 export function createServer(): Server {
   return new Server()
 }
