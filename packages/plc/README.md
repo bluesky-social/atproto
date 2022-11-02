@@ -67,9 +67,9 @@ The PLC server provides a 72hr window during which the `recoveryKey` can "rewrit
 
 This is to be used in adversarial situations in which a user's `signingKey` leaks or is being held by some custodian who turns out to be a bad actor.
 
-In a situation such as this, the `signingKey` may be used to rotate both the `signingKey` and `recoveryKey`.
+In a situation such as this, the `recoveryKey` may be used to rotate both the `signingKey` and `recoveryKey`.
 
-If a user wishes to recovery from this situation, they sign a new operation rotating the `signingKey` to a key that they hold and set the `prev` of that operation to point to the most recent pre-attack operation.
+If a user wishes to recover from this situation, they sign a new operation rotating the `signingKey` to a key that they hold and set the `prev` of that operation to point to the most recent pre-attack operation.
 
 ## Example
 
