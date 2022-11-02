@@ -6,7 +6,7 @@ import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/getAuthorFeed'
-import * as GetHomeFeed from '../src/lexicon/types/app/bsky/getHomeFeed'
+import * as GetTimeline from '../src/lexicon/types/app/bsky/getTimeline'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -144,7 +144,7 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-type FeedItem = GetAuthorFeed.FeedItem & GetHomeFeed.FeedItem
+type FeedItem = GetAuthorFeed.FeedItem & GetTimeline.FeedItem
 
 export const getOriginator = (item: FeedItem) =>
   item.repostedBy ? item.repostedBy.did : item.author.did

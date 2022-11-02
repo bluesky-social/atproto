@@ -1109,308 +1109,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.getHomeFeed': {
-    lexicon: 1,
-    id: 'app.bsky.getHomeFeed',
-    type: 'query',
-    description: "A view of the user's home feed",
-    parameters: {
-      algorithm: {
-        type: 'string',
-      },
-      limit: {
-        type: 'number',
-        maximum: 100,
-      },
-      before: {
-        type: 'string',
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['feed'],
-        properties: {
-          cursor: {
-            type: 'string',
-          },
-          feed: {
-            type: 'array',
-            items: {
-              $ref: '#/$defs/feedItem',
-            },
-          },
-        },
-        $defs: {
-          feedItem: {
-            type: 'object',
-            required: [
-              'uri',
-              'cid',
-              'author',
-              'record',
-              'replyCount',
-              'repostCount',
-              'likeCount',
-              'indexedAt',
-            ],
-            properties: {
-              uri: {
-                type: 'string',
-              },
-              cid: {
-                type: 'string',
-              },
-              author: {
-                $ref: '#/$defs/user',
-              },
-              repostedBy: {
-                $ref: '#/$defs/user',
-              },
-              record: {
-                type: 'object',
-              },
-              embed: {
-                oneOf: [
-                  {
-                    $ref: '#/$defs/recordEmbed',
-                  },
-                  {
-                    $ref: '#/$defs/externalEmbed',
-                  },
-                  {
-                    $ref: '#/$defs/unknownEmbed',
-                  },
-                ],
-              },
-              replyCount: {
-                type: 'number',
-              },
-              repostCount: {
-                type: 'number',
-              },
-              likeCount: {
-                type: 'number',
-              },
-              indexedAt: {
-                type: 'string',
-                format: 'date-time',
-              },
-              myState: {
-                type: 'object',
-                properties: {
-                  repost: {
-                    type: 'string',
-                  },
-                  like: {
-                    type: 'string',
-                  },
-                },
-              },
-            },
-          },
-          user: {
-            type: 'object',
-            required: ['did', 'name'],
-            properties: {
-              did: {
-                type: 'string',
-              },
-              name: {
-                type: 'string',
-              },
-              displayName: {
-                type: 'string',
-                maxLength: 64,
-              },
-            },
-          },
-          recordEmbed: {
-            type: 'object',
-            required: ['type', 'author', 'record'],
-            properties: {
-              type: {
-                const: 'record',
-              },
-              author: {
-                $ref: '#/$defs/user',
-              },
-              record: {
-                type: 'object',
-              },
-            },
-          },
-          externalEmbed: {
-            type: 'object',
-            required: ['type', 'uri', 'title', 'description', 'imageUri'],
-            properties: {
-              type: {
-                const: 'external',
-              },
-              uri: {
-                type: 'string',
-              },
-              title: {
-                type: 'string',
-              },
-              description: {
-                type: 'string',
-              },
-              imageUri: {
-                type: 'string',
-              },
-            },
-          },
-          unknownEmbed: {
-            type: 'object',
-            required: ['type'],
-            properties: {
-              type: {
-                type: 'string',
-                not: {
-                  enum: ['record', 'external'],
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    defs: {
-      feedItem: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'author',
-          'record',
-          'replyCount',
-          'repostCount',
-          'likeCount',
-          'indexedAt',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          author: {
-            $ref: '#/$defs/user',
-          },
-          repostedBy: {
-            $ref: '#/$defs/user',
-          },
-          record: {
-            type: 'object',
-          },
-          embed: {
-            oneOf: [
-              {
-                $ref: '#/$defs/recordEmbed',
-              },
-              {
-                $ref: '#/$defs/externalEmbed',
-              },
-              {
-                $ref: '#/$defs/unknownEmbed',
-              },
-            ],
-          },
-          replyCount: {
-            type: 'number',
-          },
-          repostCount: {
-            type: 'number',
-          },
-          likeCount: {
-            type: 'number',
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'date-time',
-          },
-          myState: {
-            type: 'object',
-            properties: {
-              repost: {
-                type: 'string',
-              },
-              like: {
-                type: 'string',
-              },
-            },
-          },
-        },
-      },
-      user: {
-        type: 'object',
-        required: ['did', 'name'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          name: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-        },
-      },
-      recordEmbed: {
-        type: 'object',
-        required: ['type', 'author', 'record'],
-        properties: {
-          type: {
-            const: 'record',
-          },
-          author: {
-            $ref: '#/$defs/user',
-          },
-          record: {
-            type: 'object',
-          },
-        },
-      },
-      externalEmbed: {
-        type: 'object',
-        required: ['type', 'uri', 'title', 'description', 'imageUri'],
-        properties: {
-          type: {
-            const: 'external',
-          },
-          uri: {
-            type: 'string',
-          },
-          title: {
-            type: 'string',
-          },
-          description: {
-            type: 'string',
-          },
-          imageUri: {
-            type: 'string',
-          },
-        },
-      },
-      unknownEmbed: {
-        type: 'object',
-        required: ['type'],
-        properties: {
-          type: {
-            type: 'string',
-            not: {
-              enum: ['record', 'external'],
-            },
-          },
-        },
-      },
-    },
-  },
   'app.bsky.getLikedBy': {
     lexicon: 1,
     id: 'app.bsky.getLikedBy',
@@ -2071,6 +1769,308 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
         },
         $defs: {},
+      },
+    },
+  },
+  'app.bsky.getTimeline': {
+    lexicon: 1,
+    id: 'app.bsky.getTimeline',
+    type: 'query',
+    description: "A view of the user's home timeline",
+    parameters: {
+      algorithm: {
+        type: 'string',
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      before: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['feed'],
+        properties: {
+          cursor: {
+            type: 'string',
+          },
+          feed: {
+            type: 'array',
+            items: {
+              $ref: '#/$defs/feedItem',
+            },
+          },
+        },
+        $defs: {
+          feedItem: {
+            type: 'object',
+            required: [
+              'uri',
+              'cid',
+              'author',
+              'record',
+              'replyCount',
+              'repostCount',
+              'likeCount',
+              'indexedAt',
+            ],
+            properties: {
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+              author: {
+                $ref: '#/$defs/user',
+              },
+              repostedBy: {
+                $ref: '#/$defs/user',
+              },
+              record: {
+                type: 'object',
+              },
+              embed: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/recordEmbed',
+                  },
+                  {
+                    $ref: '#/$defs/externalEmbed',
+                  },
+                  {
+                    $ref: '#/$defs/unknownEmbed',
+                  },
+                ],
+              },
+              replyCount: {
+                type: 'number',
+              },
+              repostCount: {
+                type: 'number',
+              },
+              likeCount: {
+                type: 'number',
+              },
+              indexedAt: {
+                type: 'string',
+                format: 'date-time',
+              },
+              myState: {
+                type: 'object',
+                properties: {
+                  repost: {
+                    type: 'string',
+                  },
+                  like: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+          user: {
+            type: 'object',
+            required: ['did', 'name'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              name: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+            },
+          },
+          recordEmbed: {
+            type: 'object',
+            required: ['type', 'author', 'record'],
+            properties: {
+              type: {
+                const: 'record',
+              },
+              author: {
+                $ref: '#/$defs/user',
+              },
+              record: {
+                type: 'object',
+              },
+            },
+          },
+          externalEmbed: {
+            type: 'object',
+            required: ['type', 'uri', 'title', 'description', 'imageUri'],
+            properties: {
+              type: {
+                const: 'external',
+              },
+              uri: {
+                type: 'string',
+              },
+              title: {
+                type: 'string',
+              },
+              description: {
+                type: 'string',
+              },
+              imageUri: {
+                type: 'string',
+              },
+            },
+          },
+          unknownEmbed: {
+            type: 'object',
+            required: ['type'],
+            properties: {
+              type: {
+                type: 'string',
+                not: {
+                  enum: ['record', 'external'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      feedItem: {
+        type: 'object',
+        required: [
+          'uri',
+          'cid',
+          'author',
+          'record',
+          'replyCount',
+          'repostCount',
+          'likeCount',
+          'indexedAt',
+        ],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            $ref: '#/$defs/user',
+          },
+          repostedBy: {
+            $ref: '#/$defs/user',
+          },
+          record: {
+            type: 'object',
+          },
+          embed: {
+            oneOf: [
+              {
+                $ref: '#/$defs/recordEmbed',
+              },
+              {
+                $ref: '#/$defs/externalEmbed',
+              },
+              {
+                $ref: '#/$defs/unknownEmbed',
+              },
+            ],
+          },
+          replyCount: {
+            type: 'number',
+          },
+          repostCount: {
+            type: 'number',
+          },
+          likeCount: {
+            type: 'number',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          myState: {
+            type: 'object',
+            properties: {
+              repost: {
+                type: 'string',
+              },
+              like: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      user: {
+        type: 'object',
+        required: ['did', 'name'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          name: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+        },
+      },
+      recordEmbed: {
+        type: 'object',
+        required: ['type', 'author', 'record'],
+        properties: {
+          type: {
+            const: 'record',
+          },
+          author: {
+            $ref: '#/$defs/user',
+          },
+          record: {
+            type: 'object',
+          },
+        },
+      },
+      externalEmbed: {
+        type: 'object',
+        required: ['type', 'uri', 'title', 'description', 'imageUri'],
+        properties: {
+          type: {
+            const: 'external',
+          },
+          uri: {
+            type: 'string',
+          },
+          title: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          imageUri: {
+            type: 'string',
+          },
+        },
+      },
+      unknownEmbed: {
+        type: 'object',
+        required: ['type'],
+        properties: {
+          type: {
+            type: 'string',
+            not: {
+              enum: ['record', 'external'],
+            },
+          },
+        },
       },
     },
   },
