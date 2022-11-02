@@ -3124,7 +3124,10 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
           maxLength: 256,
         },
         entities: {
-          $ref: '#/$defs/entity',
+          type: 'array',
+          items: {
+            $ref: '#/$defs/entity',
+          },
         },
         reply: {
           type: 'object',
@@ -3145,22 +3148,18 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       },
       $defs: {
         entity: {
-          type: 'array',
-          items: {
-            type: 'object',
-            required: ['index', 'type', 'value'],
-            properties: {
-              index: {
-                $ref: '#/$defs/textSlice',
-              },
-              type: {
-                type: 'string',
-                $comment:
-                  "Expected values are 'mention', 'hashtag', and 'link'.",
-              },
-              value: {
-                type: 'string',
-              },
+          type: 'object',
+          required: ['index', 'type', 'value'],
+          properties: {
+            index: {
+              $ref: '#/$defs/textSlice',
+            },
+            type: {
+              type: 'string',
+              $comment: "Expected values are 'mention', 'hashtag', and 'link'.",
+            },
+            value: {
+              type: 'string',
             },
           },
         },
@@ -3205,21 +3204,18 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
         },
       },
       entity: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['index', 'type', 'value'],
-          properties: {
-            index: {
-              $ref: '#/$defs/textSlice',
-            },
-            type: {
-              type: 'string',
-              $comment: "Expected values are 'mention', 'hashtag', and 'link'.",
-            },
-            value: {
-              type: 'string',
-            },
+        type: 'object',
+        required: ['index', 'type', 'value'],
+        properties: {
+          index: {
+            $ref: '#/$defs/textSlice',
+          },
+          type: {
+            type: 'string',
+            $comment: "Expected values are 'mention', 'hashtag', and 'link'.",
+          },
+          value: {
+            type: 'string',
           },
         },
       },

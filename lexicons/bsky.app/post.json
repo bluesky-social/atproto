@@ -8,7 +8,10 @@
     "required": ["text", "createdAt"],
     "properties": {
       "text": {"type": "string", "maxLength": 256},
-      "entities": {"$ref": "#/defs/entity"},
+      "entities": {
+        "type": "array",
+        "items": {"$ref": "#/defs/entity"}
+      },
       "reply": {
         "type": "object",
         "required": ["root", "parent"],
@@ -30,18 +33,15 @@
       }
     },
     "entity": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["index", "type", "value"],
-        "properties": {
-          "index": {"$ref": "#/defs/textSlice"},
-          "type": {
-            "type": "string",
-            "$comment": "Expected values are 'mention', 'hashtag', and 'link'."
-          },
-          "value": {"type": "string"}
-        }
+      "type": "object",
+      "required": ["index", "type", "value"],
+      "properties": {
+        "index": {"$ref": "#/defs/textSlice"},
+        "type": {
+          "type": "string",
+          "$comment": "Expected values are 'mention', 'hashtag', and 'link'."
+        },
+        "value": {"type": "string"}
       }
     },
     "textSlice": {
