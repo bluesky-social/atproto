@@ -1,6 +1,22 @@
 import { z } from 'zod'
 import { NSID } from '@atproto/nsid'
 
+export const tokenSchema = z.object({
+  lexicon: z.literal(1),
+  id: z.string().refine((v: string) => NSID.isValid(v), {
+    message: 'Must be a valid NSID',
+  }),
+  type: z.enum(['token']),
+  revision: z.number().optional(),
+  description: z.string().optional(),
+  defs: z.any().optional(),
+})
+export type TokenSchema = z.infer<typeof tokenSchema>
+
+export function isValidTokenSchema(v: unknown): v is TokenSchema {
+  return tokenSchema.safeParse(v).success
+}
+
 export const recordSchema = z.object({
   lexicon: z.literal(1),
   id: z.string().refine((v: string) => NSID.isValid(v), {
@@ -73,6 +89,6 @@ export function isValidMethodSchema(v: unknown): v is MethodSchema {
   return methodSchema.safeParse(v).success
 }
 
-export type Schema = RecordSchema | MethodSchema
+export type Schema = TokenSchema | RecordSchema | MethodSchema
 
 export class SchemaNotFoundError extends Error {}
