@@ -9,7 +9,14 @@ import { NSID } from '@atproto/nsid'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
 import { gen, schemasTs } from './common'
 import { GeneratedAPI } from '../types'
-import { schemasToNsidTree, NsidNS, toCamelCase, toTitleCase } from './util'
+import {
+  schemasToNsidTree,
+  NsidNS,
+  schemasToNsidTokens,
+  toCamelCase,
+  toTitleCase,
+  toScreamingSnakeCase,
+} from './util'
 
 const ATP_METHODS = {
   list: 'com.atproto.repoListRecords',
@@ -26,6 +33,7 @@ export async function genClientApi(schemas: Schema[]): Promise<GeneratedAPI> {
   })
   const api: GeneratedAPI = { files: [] }
   const nsidTree = schemasToNsidTree(schemas)
+  const nsidTokens = schemasToNsidTokens(schemas)
   for (const schema of schemas) {
     if (schema.type === 'query' || schema.type === 'procedure') {
       api.files.push(await methodSchemaTs(project, schema))
@@ -34,11 +42,16 @@ export async function genClientApi(schemas: Schema[]): Promise<GeneratedAPI> {
     }
   }
   api.files.push(await schemasTs(project, schemas))
-  api.files.push(await indexTs(project, schemas, nsidTree))
+  api.files.push(await indexTs(project, schemas, nsidTree, nsidTokens))
   return api
 }
 
-const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
+const indexTs = (
+  project: Project,
+  schemas: Schema[],
+  nsidTree: NsidNS[],
+  nsidTokens: Record<string, string[]>,
+) =>
   gen(project, '/index.ts', async (file) => {
     //= import {Client as XrpcClient, ServiceClient as XrpcServiceClient} from '@atproto/xrpc'
     const xrpcImport = file.addImportDeclaration({
@@ -55,6 +68,7 @@ const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
 
     // generate type imports and re-exports
     for (const schema of schemas) {
+      if (schema.type === 'token') continue
       const moduleSpecifier = `./types/${schema.id.split('.').join('/')}`
       file
         .addImportDeclaration({ moduleSpecifier })
@@ -62,6 +76,30 @@ const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
       file
         .addExportDeclaration({ moduleSpecifier })
         .setNamespaceExport(toTitleCase(schema.id))
+    }
+
+    // generate token enums
+    for (const nsidAuthority in nsidTokens) {
+      // export const {THE_AUTHORITY} = {
+      //  {Name}: "{authority.the.name}"
+      // }
+      file.addVariableStatement({
+        isExported: true,
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          {
+            name: toScreamingSnakeCase(nsidAuthority),
+            initializer: [
+              '{',
+              ...nsidTokens[nsidAuthority].map(
+                (nsidName) =>
+                  `${toTitleCase(nsidName)}: "${nsidAuthority}.${nsidName}",`,
+              ),
+              '}',
+            ].join('\n'),
+          },
+        ],
+      })
     }
 
     //= export class Client {...}

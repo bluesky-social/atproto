@@ -1,0 +1,6 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actorScene",
+  "type": "token",
+  "description": "Actor type: Scene. Defined for app.bsky.declaration's actorType."
+}
