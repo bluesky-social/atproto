@@ -806,6 +806,53 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/cbor',
     },
   },
+  'app.bsky.createScene': {
+    lexicon: 1,
+    id: 'app.bsky.createScene',
+    type: 'procedure',
+    description: 'Create a scene.',
+    parameters: {},
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['handle'],
+        properties: {
+          handle: {
+            type: 'string',
+          },
+          recoveryKey: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['handle', 'did', 'declarationCid'],
+        properties: {
+          handle: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+          },
+          declarationCid: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
+    errors: [
+      {
+        name: 'HandleNotAvailable',
+      },
+    ],
+  },
   'app.bsky.getAuthorFeed': {
     lexicon: 1,
     id: 'app.bsky.getAuthorFeed',

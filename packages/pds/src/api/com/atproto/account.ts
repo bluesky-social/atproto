@@ -1,6 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { RepoStructure } from '@atproto/repo'
 import { PlcClient } from '@atproto/plc'
+import { AtUri } from '@atproto/uri'
+import * as crypto from '@atproto/crypto'
+import * as uint8arrays from 'uint8arrays'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
@@ -8,7 +11,6 @@ import { UserAlreadyExistsError } from '../../../db'
 import SqlBlockstore from '../../../sql-blockstore'
 import { ensureValidHandle } from './util/handle'
 import { grantRefreshToken } from './util/auth'
-import { AtUri } from '@atproto/uri'
 import * as schema from '../../../lexicon/schemas'
 
 export default function (server: Server) {
@@ -37,6 +39,10 @@ export default function (server: Server) {
     // throws if not
     ensureValidHandle(handle, config.availableUserDomains)
 
+    // In order to perform the significant db updates ahead of
+    // registering the did, we will use a temp invalid did. Once everything
+    // goes well and a fresh did is registered, we'll replace the temp values.
+    const tempDid = uint8arrays.toString(crypto.randomBytes(16), 'base32')
     const now = new Date().toISOString()
 
     const result = await db.transaction(async (dbTxn) => {
@@ -72,24 +78,24 @@ export default function (server: Server) {
       }
 
       // Pre-register user before going out to PLC to get a real did
-
+      try {
+        await dbTxn.preregisterUserDid(handle, tempDid)
+      } catch (err) {
+        if (err instanceof UserAlreadyExistsError) {
+          throw new InvalidRequestError(`Handle already taken: ${handle}`)
+        }
+        throw err
+      }
       try {
         await dbTxn.registerUser(email, handle, password)
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
-          if ((await dbTxn.getUser(handle)) !== null) {
-            throw new InvalidRequestError(`Handle already taken: ${handle}`)
-          } else if ((await dbTxn.getUserByEmail(email)) !== null) {
-            throw new InvalidRequestError(`Email already taken: ${email}`)
-          } else {
-            throw new InvalidRequestError('Handle or email already taken')
-          }
+          throw new InvalidRequestError(`Email already taken: ${email}`)
         }
         throw err
       }
 
       // Generate a real did with PLC
-
       const plcClient = new PlcClient(config.didPlcUrl)
       let did: string
       try {
@@ -107,11 +113,9 @@ export default function (server: Server) {
         throw err
       }
 
-      // Now that we have a real did, we now replace the tempDid in user and invite_code_use
-      // tables, and setup the repo root. These all _should_ succeed under typical conditions.
-      // It's about as good as we're gonna get transactionally, given that we rely on PLC here to assign the did.
-
-      await dbTxn.registerUserDid(handle, did)
+      // Now that we have a real did, we now replace the tempDid
+      // and setup the repo root. This _should_ succeed under typical conditions.
+      await dbTxn.finalizeUserDid(handle, did, tempDid)
       if (config.inviteRequired && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')

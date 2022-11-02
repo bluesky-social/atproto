@@ -1,4 +1,5 @@
 import { Server } from '../../../lexicon'
+import createScene from './createScene'
 import getTimeline from './getTimeline'
 import getAuthorFeed from './getAuthorFeed'
 import getLikedBy from './getLikedBy'
@@ -15,6 +16,7 @@ import getNotificationCount from './getNotificationCount'
 import postNotificationsSeen from './postNotificationsSeen'
 
 export default function (server: Server) {
+  createScene(server)
   getTimeline(server)
   getAuthorFeed(server)
   getLikedBy(server)

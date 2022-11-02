@@ -238,13 +238,33 @@ export class Database {
     log.info({ handle, email }, 'registered user')
   }
 
-  async registerUserDid(handle: string, did: string) {
+  async preregisterUserDid(handle: string, tempDid: string) {
+    this.assertTransaction()
+    const inserted = await this.db
+      .insertInto('user_did')
+      .values({ handle: handle, did: tempDid })
+      .onConflict((oc) => oc.doNothing())
+      .returning('handle')
+      .executeTakeFirst()
+    if (!inserted) {
+      throw new UserAlreadyExistsError()
+    }
+    log.info({ handle, tempDid }, 'pre-registered user did')
+  }
+
+  async finalizeUserDid(handle: string, did: string, tempDid: string) {
     this.assertTransaction()
     log.debug({ handle, did }, 'registering user did')
-    await this.db
-      .insertInto('user_did')
-      .values({ handle, did })
+    const updated = await this.db
+      .updateTable('user_did')
+      .set({ did })
+      .where('handle', '=', handle)
+      .where('did', '=', tempDid)
+      .returningAll()
       .executeTakeFirst()
+    if (!updated) {
+      throw new Error('Something went wrong wtih user registration flow')
+    }
     log.info({ handle, did }, 'post-registered user')
   }
 

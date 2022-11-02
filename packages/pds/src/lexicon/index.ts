@@ -28,6 +28,7 @@ import * as ComAtprotoResolveHandle from './types/com/atproto/resolveHandle'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
+import * as AppBskyCreateScene from './types/app/bsky/createScene'
 import * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
 import * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
 import * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
@@ -208,6 +209,11 @@ export class BskyNS {
 
   constructor(server: Server) {
     this.server = server
+  }
+
+  createScene(handler: AppBskyCreateScene.Handler) {
+    const schema = 'app.bsky.createScene' // @ts-ignore
+    return this.server.xrpc.method(schema, handler)
   }
 
   getAuthorFeed(handler: AppBskyGetAuthorFeed.Handler) {
