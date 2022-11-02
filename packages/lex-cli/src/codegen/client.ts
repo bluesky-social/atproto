@@ -102,22 +102,6 @@ const indexTs = (
       })
     }
 
-    // // generate token enums
-    // for (const nsidAuthority in nsidTokens) {
-    //   // export enum T{TheAuthority} { ... }
-    //   const tokenEnum = file.addEnum({
-    //     name: `T${toTitleCase(nsidAuthority)}`,
-    //     isExported: true,
-    //   })
-    //   for (const nsidName of nsidTokens[nsidAuthority]) {
-    //     // Name = 'authority.the.name'
-    //     tokenEnum.addMember({
-    //       name: toTitleCase(nsidName),
-    //       value: `${nsidAuthority}.${nsidName}`,
-    //     })
-    //   }
-    // }
-
     //= export class Client {...}
     const clientCls = file.addClass({
       name: 'Client',
