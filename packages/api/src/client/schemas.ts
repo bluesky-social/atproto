@@ -39,7 +39,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['accessJwt', 'refreshJwt', 'username', 'did'],
+        required: [
+          'accessJwt',
+          'refreshJwt',
+          'username',
+          'did',
+          'declarationCid',
+        ],
         properties: {
           accessJwt: {
             type: 'string',
@@ -51,6 +57,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
           },
           did: {
+            type: 'string',
+          },
+          declarationCid: {
             type: 'string',
           },
         },
@@ -1629,7 +1638,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               reason: {
                 type: 'string',
                 $comment:
-                  "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'.",
+                  "Expected values are 'like', 'repost', 'follow', 'badge', 'invite', 'mention' and 'reply'.",
               },
               reasonSubject: {
                 type: 'string',
@@ -1688,7 +1697,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           reason: {
             type: 'string',
             $comment:
-              "Expected values are 'like', 'repost', 'follow', 'badge', 'mention' and 'reply'.",
+              "Expected values are 'like', 'repost', 'follow', 'badge', 'invite', 'mention' and 'reply'.",
           },
           reasonSubject: {
             type: 'string',
@@ -2592,7 +2601,10 @@ export const ids = {
   AppBskyBadge: 'app.bsky.badge',
   AppBskyBadgeAccept: 'app.bsky.badgeAccept',
   AppBskyBadgeOffer: 'app.bsky.badgeOffer',
+  AppBskyDeclaration: 'app.bsky.declaration',
   AppBskyFollow: 'app.bsky.follow',
+  AppBskyInvite: 'app.bsky.invite',
+  AppBskyInviteAccept: 'app.bsky.inviteAccept',
   AppBskyLike: 'app.bsky.like',
   AppBskyMediaEmbed: 'app.bsky.mediaEmbed',
   AppBskyPost: 'app.bsky.post',
@@ -2823,6 +2835,54 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       },
     },
   },
+  'app.bsky.declaration': {
+    lexicon: 1,
+    id: 'app.bsky.declaration',
+    description:
+      'Context for an account that is considered intrinsic to it and alters the fundamental understanding of an account of changed. A declaration should be treated as immutable.',
+    type: 'record',
+    key: 'literal:self',
+    record: {
+      type: 'object',
+      required: ['actorType'],
+      properties: {
+        actorType: {
+          oneOf: [
+            {
+              $ref: '#/$defs/actorKnown',
+            },
+            {
+              $ref: '#/$defs/actorUnknown',
+            },
+          ],
+        },
+      },
+      $defs: {
+        actorKnown: {
+          type: 'string',
+          enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
+        },
+        actorUnknown: {
+          type: 'string',
+          not: {
+            enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
+          },
+        },
+      },
+    },
+    defs: {
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
+        },
+      },
+    },
+  },
   'app.bsky.follow': {
     lexicon: 1,
     id: 'app.bsky.follow',
@@ -2834,7 +2894,89 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       required: ['subject', 'createdAt'],
       properties: {
         subject: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        createdAt: {
           type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
+  'app.bsky.invite': {
+    lexicon: 1,
+    id: 'app.bsky.invite',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['group', 'subject', 'createdAt'],
+      properties: {
+        group: {
+          type: 'string',
+        },
+        subject: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
+  'app.bsky.inviteAccept': {
+    lexicon: 1,
+    id: 'app.bsky.inviteAccept',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['group', 'invite', 'createdAt'],
+      properties: {
+        group: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        invite: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
         },
         createdAt: {
           type: 'string',

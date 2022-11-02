@@ -5,7 +5,6 @@
 - [PDS](./pds): The Personal Data Server (PDS). This is ATP's main server-side implementation.
 - [Dev Env](./dev-env): A command-line application for developers to construct and manage development environments.
 - [Lexicon CLI](./lex-cli/): A command-line application for generating code and documentation from Lexicon schemas.
-- [CLI](./cli): A command-line application for interacting with ATP. (Currently not maintained, and in need of updates.)
 
 ## Libraries
 

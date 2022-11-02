@@ -1,32 +1,35 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Follow from '../../lexicon/types/app/bsky/follow'
+import * as Invite from '../../lexicon/types/app/bsky/invite'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
-const type = schemas.ids.AppBskyFollow
-const tableName = 'app_bsky_follow'
-export interface AppBskyFollow {
+const type = schemas.ids.AppBskyInvite
+const tableName = 'app_bsky_invite'
+
+export interface AppBskyInvite {
   uri: string
   cid: string
   creator: string
+  group: string
   subjectDid: string
   subjectDeclarationCid: string
   createdAt: string
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: AppBskyFollow }
+export type PartialDB = { [tableName]: AppBskyInvite }
 
 const validator = schemas.records.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is Follow.Record => {
+const matchesSchema = (obj: unknown): obj is Invite.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
+const translateDbObj = (dbObj: AppBskyInvite): Invite.Record => {
   return {
+    group: dbObj.group,
     subject: {
       did: dbObj.subjectDid,
       declarationCid: dbObj.subjectDeclarationCid,
@@ -37,9 +40,9 @@ const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Follow.Record | null> => {
+  async (uri: AtUri): Promise<Invite.Record | null> => {
     const found = await db
-      .selectFrom('app_bsky_follow')
+      .selectFrom(tableName)
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
@@ -57,25 +60,25 @@ const insertFn =
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
-    const val = {
-      uri: uri.toString(),
-      cid: cid.toString(),
-      creator: uri.host,
-      subjectDid: obj.subject.did,
-      subjectDeclarationCid: obj.subject.declarationCid,
-      createdAt: obj.createdAt,
-      indexedAt: timestamp || new Date().toISOString(),
-    }
-    await db.insertInto('app_bsky_follow').values(val).execute()
+    await db
+      .insertInto(tableName)
+      .values({
+        uri: uri.toString(),
+        cid: cid.toString(),
+        creator: uri.host,
+        group: obj.group,
+        subjectDid: obj.subject.did,
+        subjectDeclarationCid: obj.subject.declarationCid,
+        createdAt: obj.createdAt,
+        indexedAt: timestamp || new Date().toISOString(),
+      })
+      .execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db
-      .deleteFrom('app_bsky_follow')
-      .where('uri', '=', uri.toString())
-      .execute()
+    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (
@@ -91,14 +94,15 @@ const notifsForRecord = (
     author: uri.host,
     recordUri: uri.toString(),
     recordCid: cid.toString(),
-    reason: 'follow',
+    reason: 'invite',
+    reasonSubject: obj.group,
   }
   return [notif]
 }
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<Follow.Record, AppBskyFollow> => {
+): DbRecordPlugin<Invite.Record, AppBskyInvite> => {
   return {
     collection: type,
     tableName,

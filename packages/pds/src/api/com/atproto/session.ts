@@ -21,7 +21,8 @@ export default function (server: Server) {
   })
 
   server.com.atproto.createSession(async (_params, input, _req, res) => {
-    const { username, password } = input.body
+    const { password } = input.body
+    const username = input.body.username.toLowerCase()
     const { db, auth } = locals.get(res)
     const validPass = await db.verifyUserPassword(username, password)
     if (!validPass) {

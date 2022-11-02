@@ -6,18 +6,23 @@ export default async (sc: SeedClient) => {
   await sc.createAccount('carol', users.carol)
   await sc.createAccount('dan', users.dan)
   await sc.createAccount('eve', users.eve)
-  await sc.follow(sc.dids.alice, sc.dids.bob)
-  await sc.follow(sc.dids.alice, sc.dids.carol)
-  await sc.follow(sc.dids.alice, sc.dids.dan)
-  await sc.follow(sc.dids.alice, sc.dids.eve)
-  await sc.follow(sc.dids.carol, sc.dids.alice)
-  await sc.follow(sc.dids.bob, sc.dids.alice)
-  await sc.follow(sc.dids.bob, sc.dids.carol)
-  await sc.follow(sc.dids.dan, sc.dids.alice)
-  await sc.follow(sc.dids.dan, sc.dids.bob)
-  await sc.follow(sc.dids.dan, sc.dids.eve)
-  await sc.follow(sc.dids.eve, sc.dids.alice)
-  await sc.follow(sc.dids.eve, sc.dids.carol)
+  const alice = sc.dids.alice
+  const bob = sc.dids.bob
+  const carol = sc.dids.carol
+  const dan = sc.dids.dan
+  const eve = sc.dids.eve
+  await sc.follow(alice, sc.userRef(bob))
+  await sc.follow(alice, sc.userRef(carol))
+  await sc.follow(alice, sc.userRef(dan))
+  await sc.follow(alice, sc.userRef(eve))
+  await sc.follow(carol, sc.userRef(alice))
+  await sc.follow(bob, sc.userRef(alice))
+  await sc.follow(bob, sc.userRef(carol))
+  await sc.follow(dan, sc.userRef(alice))
+  await sc.follow(dan, sc.userRef(bob))
+  await sc.follow(dan, sc.userRef(eve))
+  await sc.follow(eve, sc.userRef(alice))
+  await sc.follow(eve, sc.userRef(carol))
 }
 
 const users = {

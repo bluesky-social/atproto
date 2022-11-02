@@ -4,6 +4,9 @@ import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
+import * as Declaration from '../lexicon/types/app/bsky/declaration'
+import * as Invite from '../lexicon/types/app/bsky/invite'
+import * as InviteAccept from '../lexicon/types/app/bsky/inviteAccept'
 import * as Badge from '../lexicon/types/app/bsky/badge'
 import * as BadgeAccept from '../lexicon/types/app/bsky/badgeAccept'
 import * as BadgeOffer from '../lexicon/types/app/bsky/badgeOffer'
@@ -12,10 +15,13 @@ import * as Like from '../lexicon/types/app/bsky/like'
 import * as Post from '../lexicon/types/app/bsky/post'
 import * as Profile from '../lexicon/types/app/bsky/profile'
 import * as Repost from '../lexicon/types/app/bsky/repost'
+import declarationPlugin, { AppBskyDeclaration } from './records/declaration'
 import postPlugin, { AppBskyPost } from './records/post'
 import likePlugin, { AppBskyLike } from './records/like'
 import repostPlugin, { AppBskyRepost } from './records/repost'
 import followPlugin, { AppBskyFollow } from './records/follow'
+import invitePlugin, { AppBskyInvite } from './records/invite'
+import inviteAcceptPlugin, { AppBskyInviteAccept } from './records/inviteAccept'
 import badgePlugin, { AppBskyBadge } from './records/badge'
 import badgeAcceptPlugin, { AppBskyBadgeAccept } from './records/badgeAccept'
 import badgeOfferPlugin, { AppBskyBadgeOffer } from './records/badgeOffer'
@@ -36,11 +42,14 @@ import { UserDid } from './tables/user-did'
 export class Database {
   migrator: Migrator
   records: {
+    declaration: DbRecordPlugin<Declaration.Record, AppBskyDeclaration>
     post: DbRecordPlugin<Post.Record, AppBskyPost>
     like: DbRecordPlugin<Like.Record, AppBskyLike>
     repost: DbRecordPlugin<Repost.Record, AppBskyRepost>
     follow: DbRecordPlugin<Follow.Record, AppBskyFollow>
     profile: DbRecordPlugin<Profile.Record, AppBskyProfile>
+    invite: DbRecordPlugin<Invite.Record, AppBskyInvite>
+    inviteAccept: DbRecordPlugin<InviteAccept.Record, AppBskyInviteAccept>
     badge: DbRecordPlugin<Badge.Record, AppBskyBadge>
     badgeAccept: DbRecordPlugin<BadgeAccept.Record, AppBskyBadgeAccept>
     badgeOffer: DbRecordPlugin<BadgeOffer.Record, AppBskyBadgeOffer>
@@ -53,10 +62,13 @@ export class Database {
     public schema?: string,
   ) {
     this.records = {
+      declaration: declarationPlugin(db),
       post: postPlugin(db),
       like: likePlugin(db),
       repost: repostPlugin(db),
       follow: followPlugin(db),
+      invite: invitePlugin(db),
+      inviteAccept: inviteAcceptPlugin(db),
       badge: badgePlugin(db),
       badgeAccept: badgeAcceptPlugin(db),
       badgeOffer: badgeOfferPlugin(db),
@@ -195,11 +207,7 @@ export class Database {
     if (usernameOrDid.startsWith('did:')) {
       query = query.where('did', '=', usernameOrDid)
     } else {
-      query = query.where(
-        sql`lower(user_did.username)`,
-        '=',
-        usernameOrDid.toLowerCase(),
-      )
+      query = query.where('user_did.username', '=', usernameOrDid.toLowerCase())
     }
     const found = await query.executeTakeFirst()
     return found || null
@@ -210,7 +218,7 @@ export class Database {
       .selectFrom('user')
       .innerJoin('user_did', 'user_did.username', 'user.username')
       .selectAll()
-      .where(sql`lower(email)`, '=', email.toLowerCase())
+      .where('email', '=', email.toLowerCase())
       .executeTakeFirst()
     return found || null
   }

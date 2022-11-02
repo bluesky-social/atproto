@@ -283,7 +283,10 @@ Array [
     "record": Object {
       "$type": "app.bsky.follow",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": "user(1)",
+      "subject": Object {
+        "declarationCid": "cids(18)",
+        "did": "user(1)",
+      },
     },
     "uri": "record(17)",
   },
@@ -292,14 +295,17 @@ Array [
       "did": "user(0)",
       "name": "carol.test",
     },
-    "cid": "cids(18)",
+    "cid": "cids(19)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.follow",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": "user(1)",
+      "subject": Object {
+        "declarationCid": "cids(18)",
+        "did": "user(1)",
+      },
     },
     "uri": "record(18)",
   },
@@ -589,7 +595,10 @@ Array [
     "record": Object {
       "$type": "app.bsky.follow",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": "user(1)",
+      "subject": Object {
+        "declarationCid": "cids(18)",
+        "did": "user(1)",
+      },
     },
     "uri": "record(17)",
   },
@@ -598,14 +607,17 @@ Array [
       "did": "user(0)",
       "name": "carol.test",
     },
-    "cid": "cids(18)",
+    "cid": "cids(19)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.follow",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": "user(1)",
+      "subject": Object {
+        "declarationCid": "cids(18)",
+        "did": "user(1)",
+      },
     },
     "uri": "record(18)",
   },

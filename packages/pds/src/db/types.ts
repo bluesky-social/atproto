@@ -38,5 +38,6 @@ export type NotificationReason =
   | 'repost'
   | 'follow'
   | 'badge'
+  | 'invite'
   | 'mention'
   | 'reply'
