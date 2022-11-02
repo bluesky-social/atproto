@@ -69,7 +69,7 @@ This is to be used in adversarial situations in which a user's `signingKey` leak
 
 In a situation such as this, the `recoveryKey` may be used to rotate both the `signingKey` and `recoveryKey`.
 
-If a user wishes to recovery from this situation, they sign a new operation rotating the `signingKey` to a key that they hold and set the `prev` of that operation to point to the most recent pre-attack operation.
+If a user wishes to recover from this situation, they sign a new operation rotating the `signingKey` to a key that they hold and set the `prev` of that operation to point to the most recent pre-attack operation.
 
 ## Example
 
