@@ -63,10 +63,9 @@ describe('pds profile views', () => {
   })
 
   it('updates profile', async () => {
-    const toPin = [sc.badges[bob][1].raw]
     await client.app.bsky.updateProfile(
       {},
-      { displayName: 'ali', pinnedBadges: toPin },
+      { displayName: 'ali', description: 'new descript' },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
@@ -79,31 +78,10 @@ describe('pds profile views', () => {
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
   })
 
-  it('adds & removes badges from profile', async () => {
-    const toPin = [sc.badges[carol][0].raw]
+  it('handles partial updates', async () => {
     await client.app.bsky.updateProfile(
       {},
-      { description: 'new descript', pinnedBadges: toPin },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-
-    const aliceForAlice = await client.app.bsky.getProfile(
-      { user: alice },
-      undefined,
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
-  })
-
-  it('does not return a badge that the user does not possess', async () => {
-    const toPin = [
-      sc.badges[carol][0].raw,
-      sc.badges[carol][1].raw, // alice was not offered this badge
-    ]
-    await client.app.bsky.updateProfile(
-      {},
-      { pinnedBadges: toPin },
+      { description: 'blah blah' },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 

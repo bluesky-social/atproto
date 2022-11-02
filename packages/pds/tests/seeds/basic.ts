@@ -63,27 +63,6 @@ export default async (sc: SeedClient) => {
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
 
-  await sc.createBadge(bob, 'employee')
-  await sc.createBadge(bob, 'tag', 'cool')
-  await sc.createBadge(carol, 'tag', 'neat')
-  await sc.createBadge(carol, 'tag', 'cringe')
-
-  await sc.offerBadge(bob, alice, sc.badges[bob][0])
-  await sc.offerBadge(bob, alice, sc.badges[bob][1])
-  await sc.offerBadge(bob, bob, sc.badges[bob][1])
-  await sc.offerBadge(bob, carol, sc.badges[bob][1])
-  await sc.offerBadge(bob, dan, sc.badges[bob][1])
-  await sc.offerBadge(carol, alice, sc.badges[carol][0])
-
-  await sc.acceptBadge(alice, sc.badges[bob][1], sc.badgeOffers[bob][alice][1])
-  await sc.acceptBadge(bob, sc.badges[bob][1], sc.badgeOffers[bob][bob][0])
-  await sc.acceptBadge(carol, sc.badges[bob][1], sc.badgeOffers[bob][carol][0])
-  await sc.acceptBadge(
-    alice,
-    sc.badges[carol][0],
-    sc.badgeOffers[carol][alice][0],
-  )
-
   return sc
 }
 

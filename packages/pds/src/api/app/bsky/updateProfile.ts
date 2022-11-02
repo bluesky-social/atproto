@@ -42,35 +42,12 @@ export default function (server: Server) {
           ...current,
           displayName: input.body.displayName || current.displayName,
           description: input.body.description || current.description,
-          pinnedBadges: input.body.pinnedBadges || current.pinnedBadges,
         }
         if (!db.records.profile.matchesSchema(updated)) {
           throw new InvalidRequestError(
             'requested updates do not produce a valid profile doc',
           )
         }
-
-        const currBadges = await dbTxn.db
-          .selectFrom('app_bsky_profile_badge')
-          .selectAll()
-          .where('profileUri', '=', uri.toString())
-          .execute()
-
-        const updatedBadges = updated.pinnedBadges || []
-        const toDelete = currBadges
-          .filter(
-            (row) => !updatedBadges.some((badge) => badge.uri === row.badgeUri),
-          )
-          .map((row) => row.badgeUri)
-        const toAdd = updatedBadges
-          .filter(
-            (badge) => !currBadges.some((row) => badge.uri === row.badgeUri),
-          )
-          .map((badge) => ({
-            profileUri: uri.toString(),
-            badgeUri: badge.uri,
-            badgeCid: badge.cid,
-          }))
 
         const profileCid = await repo.blockstore.put(updated)
 
@@ -92,23 +69,6 @@ export default function (server: Server) {
           })
           .where('uri', '=', uri.toString())
           .execute()
-
-        // Remove old badges
-        if (toDelete.length > 0) {
-          await dbTxn.db
-            .deleteFrom('app_bsky_profile_badge')
-            .where('profileUri', '=', uri.toString())
-            .where('badgeUri', 'in', toDelete)
-            .execute()
-        }
-
-        // Add new badges
-        if (toAdd.length > 0) {
-          await dbTxn.db
-            .insertInto('app_bsky_profile_badge')
-            .values(toAdd)
-            .execute()
-        }
 
         await repo
           .stageUpdate({

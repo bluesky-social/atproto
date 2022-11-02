@@ -13,9 +13,6 @@ import * as post from './records/post'
 import * as like from './records/like'
 import * as repost from './records/repost'
 import * as follow from './records/follow'
-import * as badge from './records/badge'
-import * as badgeAccept from './records/badgeAccept'
-import * as badgeOffer from './records/badgeOffer'
 import * as invite from './records/invite'
 import * as inviteAccept from './records/inviteAccept'
 
@@ -34,8 +31,5 @@ export type DatabaseSchema = user.PartialDB &
   like.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
-  badge.PartialDB &
-  badgeAccept.PartialDB &
-  badgeOffer.PartialDB &
   invite.PartialDB &
   inviteAccept.PartialDB

@@ -13,11 +13,6 @@ export interface HandlerInput {
 export interface InputSchema {
   displayName?: string;
   description?: string;
-  pinnedBadges?: BadgeRef[];
-}
-export interface BadgeRef {
-  uri: string;
-  cid: string;
 }
 
 export interface HandlerSuccess {

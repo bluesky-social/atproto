@@ -7,9 +7,6 @@ import { DbRecordPlugin, NotificationsPlugin } from './types'
 import * as Declaration from '../lexicon/types/app/bsky/declaration'
 import * as Invite from '../lexicon/types/app/bsky/invite'
 import * as InviteAccept from '../lexicon/types/app/bsky/inviteAccept'
-import * as Badge from '../lexicon/types/app/bsky/badge'
-import * as BadgeAccept from '../lexicon/types/app/bsky/badgeAccept'
-import * as BadgeOffer from '../lexicon/types/app/bsky/badgeOffer'
 import * as Follow from '../lexicon/types/app/bsky/follow'
 import * as Like from '../lexicon/types/app/bsky/like'
 import * as Post from '../lexicon/types/app/bsky/post'
@@ -22,9 +19,6 @@ import repostPlugin, { AppBskyRepost } from './records/repost'
 import followPlugin, { AppBskyFollow } from './records/follow'
 import invitePlugin, { AppBskyInvite } from './records/invite'
 import inviteAcceptPlugin, { AppBskyInviteAccept } from './records/inviteAccept'
-import badgePlugin, { AppBskyBadge } from './records/badge'
-import badgeAcceptPlugin, { AppBskyBadgeAccept } from './records/badgeAccept'
-import badgeOfferPlugin, { AppBskyBadgeOffer } from './records/badgeOffer'
 import profilePlugin, { AppBskyProfile } from './records/profile'
 import notificationPlugin from './tables/user-notification'
 import { AtUri } from '@atproto/uri'
@@ -50,9 +44,6 @@ export class Database {
     profile: DbRecordPlugin<Profile.Record, AppBskyProfile>
     invite: DbRecordPlugin<Invite.Record, AppBskyInvite>
     inviteAccept: DbRecordPlugin<InviteAccept.Record, AppBskyInviteAccept>
-    badge: DbRecordPlugin<Badge.Record, AppBskyBadge>
-    badgeAccept: DbRecordPlugin<BadgeAccept.Record, AppBskyBadgeAccept>
-    badgeOffer: DbRecordPlugin<BadgeOffer.Record, AppBskyBadgeOffer>
   }
   notifications: NotificationsPlugin
 
@@ -69,9 +60,6 @@ export class Database {
       follow: followPlugin(db),
       invite: invitePlugin(db),
       inviteAccept: inviteAcceptPlugin(db),
-      badge: badgePlugin(db),
-      badgeAccept: badgeAcceptPlugin(db),
-      badgeOffer: badgeOfferPlugin(db),
       profile: profilePlugin(db),
     }
     this.notifications = notificationPlugin(db)

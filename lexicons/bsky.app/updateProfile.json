@@ -17,8 +17,7 @@
         "description": {
           "type": "string",
           "maxLength": 256
-        },
-        "pinnedBadges": {"type": "array", "items": {"$ref": "lex:app.bsky.profile#/defs/badgeRef"}}
+        }
       }
     }
   },
