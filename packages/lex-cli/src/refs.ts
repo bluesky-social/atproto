@@ -2,6 +2,7 @@ import {
   Schema,
   isValidRecordSchema,
   isValidMethodSchema,
+  isValidTokenSchema,
 } from '@atproto/lexicon'
 import pointer from 'json-pointer'
 import { toCamelCase } from './codegen/util'
@@ -104,6 +105,8 @@ function resolveRefs(
         keysToNameInfo,
       )
     }
+  } else if (isValidTokenSchema(doc)) {
+    // ignore
   } else {
     throw new Error('Unknown lexicon schema')
   }
@@ -169,6 +172,8 @@ function simplifyDefs(doc: Schema, keysToNameInfo: Map<string, NameInfo>) {
   } else if (isValidMethodSchema(doc)) {
     updateDefs(doc.input?.schema?.$defs)
     updateDefs(doc.output?.schema?.$defs)
+  } else if (isValidTokenSchema(doc)) {
+    // ignore
   } else {
     throw new Error('Unknown lexicon schema')
   }

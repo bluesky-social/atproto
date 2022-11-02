@@ -1,6 +1,11 @@
 import fs from 'fs'
 import { join } from 'path'
-import { methodSchema, recordSchema, Schema } from '@atproto/lexicon'
+import {
+  tokenSchema,
+  methodSchema,
+  recordSchema,
+  Schema,
+} from '@atproto/lexicon'
 import chalk from 'chalk'
 import { GeneratedAPI, FileDiff } from './types'
 
@@ -52,7 +57,15 @@ export function readSchema(path: string): Schema {
     console.error(`Failed to parse JSON in file`, path)
     throw e
   }
-  if (obj.type === 'query' || obj.type === 'procedure') {
+  if (obj.type === 'token') {
+    try {
+      tokenSchema.parse(obj)
+      return obj
+    } catch (e) {
+      console.error(`Invalid token schema in file`, path)
+      throw e
+    }
+  } else if (obj.type === 'query' || obj.type === 'procedure') {
     try {
       methodSchema.parse(obj)
       return obj

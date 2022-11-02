@@ -1,4 +1,5 @@
 import { Schema } from '@atproto/lexicon'
+import { NSID } from '@atproto/nsid'
 
 export interface NsidNS {
   name: string
@@ -11,6 +12,7 @@ export interface NsidNS {
 export function schemasToNsidTree(schemas: Schema[]): NsidNS[] {
   const tree: NsidNS[] = []
   for (const schema of schemas) {
+    if (schema.type === 'token') continue
     const node = getOrCreateNode(tree, schema.id.split('.').slice(0, -1))
     node.schemas.push(schema)
   }
@@ -37,6 +39,23 @@ function getOrCreateNode(tree: NsidNS[], path: string[]): NsidNS {
   return node
 }
 
+export function schemasToNsidTokens(
+  schemas: Schema[],
+): Record<string, string[]> {
+  const nsidTokens: Record<string, string[]> = {}
+  for (const schema of schemas) {
+    if (schema.type !== 'token') {
+      continue
+    }
+    const nsidp = NSID.parse(schema.id)
+    if (!nsidp.name) continue
+    const authority = nsidp.segments.slice(0, -1).join('.')
+    nsidTokens[authority] ??= []
+    nsidTokens[authority].push(nsidp.name)
+  }
+  return nsidTokens
+}
+
 export function toTitleCase(v: string): string {
   v = v.replace(/^([a-z])/gi, (_, g) => g.toUpperCase()) // upper-case first letter
   v = v.replace(/[.-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash or dot segments
@@ -46,4 +65,9 @@ export function toTitleCase(v: string): string {
 export function toCamelCase(v: string): string {
   v = v.replace(/[.-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash or dot segments
   return v.replace(/[.-]/g, '') // remove lefover dashes or dots
+}
+
+export function toScreamingSnakeCase(v: string): string {
+  v = v.replace(/[.-]+/gi, '_') // convert dashes and dots into underscores
+  return v.toUpperCase() // and scream!
 }

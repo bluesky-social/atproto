@@ -4,6 +4,8 @@ import {
   MethodSchema,
   recordSchema,
   RecordSchema,
+  tokenSchema,
+  TokenSchema,
   Schema,
 } from '@atproto/lexicon'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
@@ -48,7 +50,9 @@ export async function process(outFilePath: string, schemas: Schema[]) {
 async function genMdLines(schemas: Schema[]): Promise<StringTree> {
   let xprcMethods: StringTree = []
   let recordTypes: StringTree = []
+  let tokenTypes: StringTree = []
   for (const schema of schemas) {
+    console.log(schema.id)
     if (methodSchema.safeParse(schema).success) {
       xprcMethods = xprcMethods.concat(
         await genMethodSchemaMd(schema as MethodSchema),
@@ -57,11 +61,14 @@ async function genMdLines(schemas: Schema[]): Promise<StringTree> {
       recordTypes = recordTypes.concat(
         await genRecordSchemaMd(schema as RecordSchema),
       )
+    } else if (tokenSchema.safeParse(schema).success) {
+      tokenTypes = tokenTypes.concat(genTokenSchemaMd(schema as TokenSchema))
     }
   }
   let doc = [
     recordTypes?.length ? recordTypes : undefined,
     xprcMethods?.length ? xprcMethods : undefined,
+    tokenTypes?.length ? tokenTypes : undefined,
   ]
   return doc
 }
@@ -193,6 +200,13 @@ async function genRecordSchemaMd(schema: RecordSchema): Promise<StringTree> {
     record.push('')
   }
 
+  return doc
+}
+
+function genTokenSchemaMd(schema: TokenSchema): StringTree {
+  const desc: StringTree = []
+  const doc: StringTree = [`---`, ``, `## ${schema.id}`, '', desc]
+  desc.push(`<mark>Token</mark> ${schema.description || ''}`, ``)
   return doc
 }
 

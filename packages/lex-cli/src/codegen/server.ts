@@ -1,10 +1,22 @@
-import { IndentationText, Project, SourceFile } from 'ts-morph'
+import {
+  IndentationText,
+  Project,
+  SourceFile,
+  VariableDeclarationKind,
+} from 'ts-morph'
 import { Schema, MethodSchema, RecordSchema } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
 import { gen, schemasTs } from './common'
 import { GeneratedAPI } from '../types'
-import { schemasToNsidTree, NsidNS, toCamelCase, toTitleCase } from './util'
+import {
+  schemasToNsidTree,
+  NsidNS,
+  schemasToNsidTokens,
+  toCamelCase,
+  toTitleCase,
+  toScreamingSnakeCase,
+} from './util'
 
 export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
   const project = new Project({
@@ -13,6 +25,7 @@ export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
   })
   const api: GeneratedAPI = { files: [] }
   const nsidTree = schemasToNsidTree(schemas)
+  const nsidTokens = schemasToNsidTokens(schemas)
   for (const schema of schemas) {
     if (schema.type === 'query' || schema.type === 'procedure') {
       api.files.push(await methodSchemaTs(project, schema))
@@ -21,11 +34,16 @@ export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
     }
   }
   api.files.push(await schemasTs(project, schemas))
-  api.files.push(await indexTs(project, schemas, nsidTree))
+  api.files.push(await indexTs(project, schemas, nsidTree, nsidTokens))
   return api
 }
 
-const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
+const indexTs = (
+  project: Project,
+  schemas: Schema[],
+  nsidTree: NsidNS[],
+  nsidTokens: Record<string, string[]>,
+) =>
   gen(project, '/index.ts', async (file) => {
     //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
     const xrpcImport = file.addImportDeclaration({
@@ -58,6 +76,30 @@ const indexTs = (project: Project, schemas: Schema[], nsidTree: NsidNS[]) =>
           moduleSpecifier: `./types/${schema.id.split('.').join('/')}`,
         })
         .setNamespaceImport(toTitleCase(schema.id))
+    }
+
+    // generate token enums
+    for (const nsidAuthority in nsidTokens) {
+      // export const {THE_AUTHORITY} = {
+      //  {Name}: "{authority.the.name}"
+      // }
+      file.addVariableStatement({
+        isExported: true,
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          {
+            name: toScreamingSnakeCase(nsidAuthority),
+            initializer: [
+              '{',
+              ...nsidTokens[nsidAuthority].map(
+                (nsidName) =>
+                  `${toTitleCase(nsidName)}: "${nsidAuthority}.${nsidName}",`,
+              ),
+              '}',
+            ].join('\n'),
+          },
+        ],
+      })
     }
 
     //= export function createServer() { ... }
