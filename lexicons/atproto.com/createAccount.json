@@ -3,7 +3,6 @@
   "id": "com.atproto.createAccount",
   "type": "procedure",
   "description": "Create an account.",
-  "parameters": {},
   "input": {
     "encoding": "application/json",
     "schema": {
