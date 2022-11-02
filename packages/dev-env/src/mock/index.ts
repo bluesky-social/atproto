@@ -84,10 +84,11 @@ export async function generateMockSetup(env: DevEnv) {
 
   let _i = 1
   for (const user of users) {
-    const res = await clients.loggedout.com.atproto.createAccount(
-      {},
-      { email: user.email, username: user.username, password: user.password },
-    )
+    const res = await clients.loggedout.com.atproto.createAccount({
+      email: user.email,
+      username: user.username,
+      password: user.password,
+    })
     user.did = res.data.did
     user.declarationCid = res.data.declarationCid
     user.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)

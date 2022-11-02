@@ -4,10 +4,6 @@
   "type": "query",
   "description": "Get information about an account.",
   "parameters": {},
-  "input": {
-    "encoding": "",
-    "schema": {}
-  },
   "output": {
     "encoding": "",
     "schema": {}

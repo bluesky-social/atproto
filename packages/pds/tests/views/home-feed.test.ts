@@ -53,7 +53,6 @@ describe('pds home feed views', () => {
 
     const aliceFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
-      undefined,
       {
         headers: sc.getHeaders(alice),
       },
@@ -64,7 +63,6 @@ describe('pds home feed views', () => {
 
     const bobFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
-      undefined,
       {
         headers: sc.getHeaders(bob),
       },
@@ -75,7 +73,6 @@ describe('pds home feed views', () => {
 
     const carolFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
-      undefined,
       {
         headers: sc.getHeaders(carol),
       },
@@ -86,7 +83,6 @@ describe('pds home feed views', () => {
 
     const danFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
-      undefined,
       {
         headers: sc.getHeaders(dan),
       },
@@ -107,7 +103,6 @@ describe('pds home feed views', () => {
 
     const aliceFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.Firehose },
-      undefined,
       {
         headers: sc.getHeaders(alice),
       },
@@ -118,7 +113,6 @@ describe('pds home feed views', () => {
 
     const carolFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.Firehose },
-      undefined,
       {
         headers: sc.getHeaders(carol),
       },
@@ -129,12 +123,14 @@ describe('pds home feed views', () => {
   })
 
   it("fetches authenticated user's home feed w/ default algorithm", async () => {
-    const defaultFeed = await client.app.bsky.getHomeFeed({}, undefined, {
-      headers: sc.getHeaders(alice),
-    })
+    const defaultFeed = await client.app.bsky.getHomeFeed(
+      {},
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
     const reverseChronologicalFeed = await client.app.bsky.getHomeFeed(
       { algorithm: FeedAlgorithm.ReverseChronological },
-      undefined,
       {
         headers: sc.getHeaders(alice),
       },
@@ -151,7 +147,6 @@ describe('pds home feed views', () => {
           before: cursor,
           limit: 4,
         },
-        undefined,
         { headers: sc.getHeaders(carol) },
       )
       return res.data
@@ -166,7 +161,6 @@ describe('pds home feed views', () => {
       {
         algorithm: FeedAlgorithm.ReverseChronological,
       },
-      undefined,
       { headers: sc.getHeaders(carol) },
     )
 
@@ -183,7 +177,6 @@ describe('pds home feed views', () => {
           before: cursor,
           limit: 5,
         },
-        undefined,
         { headers: sc.getHeaders(alice) },
       )
       return res.data
@@ -198,7 +191,6 @@ describe('pds home feed views', () => {
       {
         algorithm: FeedAlgorithm.Firehose,
       },
-      undefined,
       { headers: sc.getHeaders(alice) },
     )
 

@@ -23,7 +23,6 @@ const createInviteCode = async (
   uses: number,
 ): Promise<string> => {
   const res = await client.com.atproto.createInviteCode(
-    {},
     { useCount: uses },
     {
       headers: { authorization: util.adminAuth() },
@@ -90,30 +89,24 @@ describe('account', () => {
   })
 
   it('fails on invalid usernames', async () => {
-    const promise = client.com.atproto.createAccount(
-      {},
-      {
-        email: 'bad-username@test.com',
-        username: 'did:bad-username.test',
-        password: 'asdf',
-        inviteCode,
-      },
-    )
+    const promise = client.com.atproto.createAccount({
+      email: 'bad-username@test.com',
+      username: 'did:bad-username.test',
+      password: 'asdf',
+      inviteCode,
+    })
     await expect(promise).rejects.toThrow(
       ComAtprotoCreateAccount.InvalidUsernameError,
     )
   })
 
   it('fails on bad invite code', async () => {
-    const promise = client.com.atproto.createAccount(
-      {},
-      {
-        email,
-        username,
-        password,
-        inviteCode: 'fake-invite',
-      },
-    )
+    const promise = client.com.atproto.createAccount({
+      email,
+      username,
+      password,
+      inviteCode: 'fake-invite',
+    })
     await expect(promise).rejects.toThrow(
       ComAtprotoCreateAccount.InvalidInviteCodeError,
     )
@@ -123,10 +116,12 @@ describe('account', () => {
   let jwt: string
 
   it('creates an account', async () => {
-    const res = await client.com.atproto.createAccount(
-      {},
-      { email, username, password, inviteCode },
-    )
+    const res = await client.com.atproto.createAccount({
+      email,
+      username,
+      password,
+      inviteCode,
+    })
     did = res.data.did
     jwt = res.data.accessJwt
 
@@ -148,16 +143,13 @@ describe('account', () => {
   it('allows a custom set recovery key', async () => {
     const inviteCode = await createInviteCode(client, 1)
     const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
-    const res = await client.com.atproto.createAccount(
-      {},
-      {
-        email: 'custom-recovery@test.com',
-        username: 'custom-recovery.test',
-        password: 'custom-recovery',
-        inviteCode,
-        recoveryKey,
-      },
-    )
+    const res = await client.com.atproto.createAccount({
+      email: 'custom-recovery@test.com',
+      username: 'custom-recovery.test',
+      password: 'custom-recovery',
+      inviteCode,
+      recoveryKey,
+    })
     const plcClient = new plc.PlcClient(cfg.didPlcUrl)
     const didData = await plcClient.getDocumentData(res.data.did)
 
@@ -170,43 +162,41 @@ describe('account', () => {
     const email = 'bob@test.com'
     const username = 'bob.test'
     const password = 'test123'
-    await client.com.atproto.createAccount(
-      {},
-      { email, username, password, inviteCode },
-    )
+    await client.com.atproto.createAccount({
+      email,
+      username,
+      password,
+      inviteCode,
+    })
 
     await expect(
-      client.com.atproto.createAccount(
-        {},
-        {
-          email: email.toUpperCase(),
-          username: 'carol.test',
-          password,
-          inviteCode,
-        },
-      ),
+      client.com.atproto.createAccount({
+        email: email.toUpperCase(),
+        username: 'carol.test',
+        password,
+        inviteCode,
+      }),
     ).rejects.toThrow('Email already taken: bob@test.com')
 
     await expect(
-      client.com.atproto.createAccount(
-        {},
-        {
-          email: 'carol@test.com',
-          username: username.toUpperCase(),
-          password,
-          inviteCode,
-        },
-      ),
+      client.com.atproto.createAccount({
+        email: 'carol@test.com',
+        username: username.toUpperCase(),
+        password,
+        inviteCode,
+      }),
     ).rejects.toThrow('Username already taken: bob.test')
   })
 
   it('disallows improperly formatted usernames', async () => {
     const inviteCode = await createInviteCode(client, 1)
     const tryUsername = async (username: string) => {
-      await client.com.atproto.createAccount(
-        {},
-        { email: 'john@test.com', username, password: 'test123', inviteCode },
-      )
+      await client.com.atproto.createAccount({
+        email: 'john@test.com',
+        username,
+        password: 'test123',
+        inviteCode,
+      })
     }
     await expect(tryUsername('did:john')).rejects.toThrow(
       'Cannot register a username that starts with `did:`',
@@ -247,15 +237,12 @@ describe('account', () => {
   })
 
   it('fails on used up invite code', async () => {
-    const promise = client.com.atproto.createAccount(
-      {},
-      {
-        email: 'bob@test.com',
-        username: 'bob.test',
-        password: 'asdf',
-        inviteCode,
-      },
-    )
+    const promise = client.com.atproto.createAccount({
+      email: 'bob@test.com',
+      username: 'bob.test',
+      password: 'asdf',
+      inviteCode,
+    })
     await expect(promise).rejects.toThrow(
       ComAtprotoCreateAccount.InvalidInviteCodeError,
     )
@@ -271,15 +258,12 @@ describe('account', () => {
     for (let i = 0; i < COUNT; i++) {
       const attempt = async () => {
         try {
-          await client.com.atproto.createAccount(
-            {},
-            {
-              email: `user${i}@test.com`,
-              username: `user${i}.test`,
-              password: `password`,
-              inviteCode,
-            },
-          )
+          await client.com.atproto.createAccount({
+            email: `user${i}@test.com`,
+            username: `user${i}.test`,
+            password: `password`,
+            inviteCode,
+          })
           successes++
         } catch (err) {
           failures++
@@ -307,15 +291,12 @@ describe('account', () => {
           // Use two invites to ensure per-invite locking doesn't
           // give the appearance of fixing a race for username.
           const invite = i % 2 ? invite1 : invite2
-          await client.com.atproto.createAccount(
-            {},
-            {
-              email: `matching@test.com`,
-              username: `matching.test`,
-              password: `password`,
-              inviteCode: invite,
-            },
-          )
+          await client.com.atproto.createAccount({
+            email: `matching@test.com`,
+            username: `matching.test`,
+            password: `password`,
+            inviteCode: invite,
+          })
           successes++
         } catch (err) {
           failures++
@@ -333,10 +314,7 @@ describe('account', () => {
   })
 
   it('logs in', async () => {
-    const res = await client.com.atproto.createSession(
-      {},
-      { username, password },
-    )
+    const res = await client.com.atproto.createSession({ username, password })
     jwt = res.data.accessJwt
     expect(typeof jwt).toBe('string')
     expect(res.data.name).toBe('alice.test')
@@ -360,7 +338,7 @@ describe('account', () => {
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(
-      client.com.atproto.requestAccountPasswordReset({}, { email }),
+      client.com.atproto.requestAccountPasswordReset({ email }),
     )
 
     expect(mail.to).toEqual(email)
@@ -372,24 +350,24 @@ describe('account', () => {
       return expect(token).toBeDefined()
     }
 
-    await client.com.atproto.resetAccountPassword(
-      {},
-      { token, password: passwordAlt },
-    )
+    await client.com.atproto.resetAccountPassword({
+      token,
+      password: passwordAlt,
+    })
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.createSession({}, { username, password }),
+      client.com.atproto.createSession({ username, password }),
     ).rejects.toThrow('Invalid username or password')
 
     await expect(
-      client.com.atproto.createSession({}, { username, password: passwordAlt }),
+      client.com.atproto.createSession({ username, password: passwordAlt }),
     ).resolves.toBeDefined()
   })
 
   it('allows only single-use of password reset token', async () => {
     const mail = await getMailFrom(
-      client.com.atproto.requestAccountPasswordReset({}, { email }),
+      client.com.atproto.requestAccountPasswordReset({ email }),
     )
 
     const token = getTokenFromMail(mail)
@@ -399,20 +377,20 @@ describe('account', () => {
     }
 
     // Reset back from passwordAlt to password
-    await client.com.atproto.resetAccountPassword({}, { token, password })
+    await client.com.atproto.resetAccountPassword({ token, password })
 
     // Reuse of token fails
     await expect(
-      client.com.atproto.resetAccountPassword({}, { token, password }),
+      client.com.atproto.resetAccountPassword({ token, password }),
     ).rejects.toThrow(ResetAccountPassword.InvalidTokenError)
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.createSession({}, { username, password: passwordAlt }),
+      client.com.atproto.createSession({ username, password: passwordAlt }),
     ).rejects.toThrow('Invalid username or password')
 
     await expect(
-      client.com.atproto.createSession({}, { username, password }),
+      client.com.atproto.createSession({ username, password }),
     ).resolves.toBeDefined()
   })
 
@@ -438,19 +416,19 @@ describe('account', () => {
 
     // Use of expired token fails
     await expect(
-      client.com.atproto.resetAccountPassword(
-        {},
-        { token: expiredToken, password: passwordAlt },
-      ),
+      client.com.atproto.resetAccountPassword({
+        token: expiredToken,
+        password: passwordAlt,
+      }),
     ).rejects.toThrow(ResetAccountPassword.ExpiredTokenError)
 
     // Still logs in with previous password
     await expect(
-      client.com.atproto.createSession({}, { username, password: passwordAlt }),
+      client.com.atproto.createSession({ username, password: passwordAlt }),
     ).rejects.toThrow('Invalid username or password')
 
     await expect(
-      client.com.atproto.createSession({}, { username, password }),
+      client.com.atproto.createSession({ username, password }),
     ).resolves.toBeDefined()
   })
 })

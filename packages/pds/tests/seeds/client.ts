@@ -98,7 +98,7 @@ export class SeedClient {
       password: string
     },
   ) {
-    const { data } = await this.client.com.atproto.createAccount({}, params)
+    const { data } = await this.client.com.atproto.createAccount(params)
     this.dids[shortName] = data.did
     this.accounts[data.did] = {
       ...data,

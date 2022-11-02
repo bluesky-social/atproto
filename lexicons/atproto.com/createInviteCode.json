@@ -3,7 +3,6 @@
   "id": "com.atproto.createInviteCode",
   "type": "procedure",
   "description": "Create an invite code.",
-  "parameters": {},
   "input": {
     "encoding": "application/json",
     "schema": {

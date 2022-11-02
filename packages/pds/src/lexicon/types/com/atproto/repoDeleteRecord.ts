@@ -3,13 +3,27 @@
 */
 import express from 'express'
 
-export interface QueryParams {
-  did: string;
-  collection: string;
-  rkey: string;
+export interface QueryParams {}
+
+export interface HandlerInput {
+  encoding: 'application/json';
+  body: InputSchema;
 }
 
-export type HandlerInput = undefined
+export interface InputSchema {
+  /**
+   * The DID of the repo.
+   */
+  did: string;
+  /**
+   * The NSID of the record collection.
+   */
+  collection: string;
+  /**
+   * The key of the record.
+   */
+  rkey: string;
+}
 
 export interface HandlerError {
   status: number;

@@ -35,7 +35,6 @@ describe('pds author feed views', () => {
   it('fetches full author feeds for self (sorted, minimal myState).', async () => {
     const aliceForAlice = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[alice].username },
-      undefined,
       {
         headers: sc.getHeaders(alice),
       },
@@ -45,7 +44,6 @@ describe('pds author feed views', () => {
 
     const bobForBob = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[bob].username },
-      undefined,
       {
         headers: sc.getHeaders(bob),
       },
@@ -55,7 +53,6 @@ describe('pds author feed views', () => {
 
     const carolForCarol = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[carol].username },
-      undefined,
       {
         headers: sc.getHeaders(carol),
       },
@@ -65,7 +62,6 @@ describe('pds author feed views', () => {
 
     const danForDan = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[dan].username },
-      undefined,
       {
         headers: sc.getHeaders(dan),
       },
@@ -77,7 +73,6 @@ describe('pds author feed views', () => {
   it("reflects fetching user's state in the feed.", async () => {
     const aliceForCarol = await client.app.bsky.getAuthorFeed(
       { author: sc.accounts[alice].username },
-      undefined,
       {
         headers: sc.getHeaders(carol),
       },
@@ -100,7 +95,6 @@ describe('pds author feed views', () => {
           before: cursor,
           limit: 2,
         },
-        undefined,
         { headers: sc.getHeaders(dan) },
       )
       return res.data
@@ -115,7 +109,6 @@ describe('pds author feed views', () => {
       {
         author: sc.accounts[alice].username,
       },
-      undefined,
       { headers: sc.getHeaders(dan) },
     )
 

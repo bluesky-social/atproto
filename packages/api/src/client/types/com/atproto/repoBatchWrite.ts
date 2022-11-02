@@ -3,17 +3,23 @@
 */
 import { Headers, XRPCError } from '@atproto/xrpc'
 
-export interface QueryParams {
-  did: string;
-  validate?: boolean;
-}
+export interface QueryParams {}
 
 export interface CallOptions {
   headers?: Headers;
+  qp?: QueryParams;
   encoding: 'application/json';
 }
 
 export interface InputSchema {
+  /**
+   * The DID of the repo.
+   */
+  did: string;
+  /**
+   * Validate the records?
+   */
+  validate?: boolean;
   writes: (
     | {
         action: 'create',

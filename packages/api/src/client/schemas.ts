@@ -9,7 +9,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.createAccount',
     type: 'procedure',
     description: 'Create an account.',
-    parameters: {},
     input: {
       encoding: 'application/json',
       schema: {
@@ -86,7 +85,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.createInviteCode',
     type: 'procedure',
     description: 'Create an invite code.',
-    parameters: {},
     input: {
       encoding: 'application/json',
       schema: {
@@ -119,7 +117,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.createSession',
     type: 'procedure',
     description: 'Create an authentication session.',
-    parameters: {},
     input: {
       encoding: 'application/json',
       schema: {
@@ -164,7 +161,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.deleteAccount',
     type: 'procedure',
     description: 'Delete an account.',
-    parameters: {},
     input: {
       encoding: '',
       schema: {
@@ -196,12 +192,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     type: 'query',
     description: 'Get information about an account.',
     parameters: {},
-    input: {
-      encoding: '',
-      schema: {
-        $defs: {},
-      },
-    },
     output: {
       encoding: '',
       schema: {
@@ -292,24 +282,21 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.repoBatchWrite',
     type: 'procedure',
     description: 'Apply a batch transaction of creates, puts, and deletes.',
-    parameters: {
-      did: {
-        type: 'string',
-        required: true,
-        description: 'The DID of the repo.',
-      },
-      validate: {
-        type: 'boolean',
-        default: true,
-        description: 'Validate the records?',
-      },
-    },
     input: {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['writes'],
+        required: ['did', 'writes'],
         properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+          validate: {
+            type: 'boolean',
+            default: true,
+            description: 'Validate the records?',
+          },
           writes: {
             type: 'array',
             items: {
@@ -383,27 +370,30 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.repoCreateRecord',
     type: 'procedure',
     description: 'Create a new record.',
-    parameters: {
-      did: {
-        type: 'string',
-        required: true,
-        description: 'The DID of the repo.',
-      },
-      collection: {
-        type: 'string',
-        required: true,
-        description: 'The NSID of the record collection.',
-      },
-      validate: {
-        type: 'boolean',
-        default: true,
-        description: 'Validate the record?',
-      },
-    },
     input: {
       encoding: 'application/json',
-      description: 'The record to create',
       schema: {
+        type: 'object',
+        required: ['did', 'collection', 'record'],
+        properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+          collection: {
+            type: 'string',
+            description: 'The NSID of the record collection.',
+          },
+          validate: {
+            type: 'boolean',
+            default: true,
+            description: 'Validate the record?',
+          },
+          record: {
+            type: 'object',
+            description: 'The record to create',
+          },
+        },
         $defs: {},
       },
     },
@@ -429,21 +419,26 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.repoDeleteRecord',
     type: 'procedure',
     description: 'Delete a record.',
-    parameters: {
-      did: {
-        type: 'string',
-        required: true,
-        description: 'The DID of the repo.',
-      },
-      collection: {
-        type: 'string',
-        required: true,
-        description: 'The NSID of the record collection.',
-      },
-      rkey: {
-        type: 'string',
-        required: true,
-        description: 'The key of the record.',
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['did', 'collection', 'rkey'],
+        properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+          collection: {
+            type: 'string',
+            description: 'The NSID of the record collection.',
+          },
+          rkey: {
+            type: 'string',
+            description: 'The key of the record.',
+          },
+        },
+        $defs: {},
       },
     },
   },
@@ -610,31 +605,34 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.repoPutRecord',
     type: 'procedure',
     description: 'Write a record.',
-    parameters: {
-      did: {
-        type: 'string',
-        required: true,
-        description: 'The DID of the repo.',
-      },
-      collection: {
-        type: 'string',
-        required: true,
-        description: 'The NSID of the record type.',
-      },
-      rkey: {
-        type: 'string',
-        required: true,
-        description: 'The TID of the record.',
-      },
-      validate: {
-        type: 'boolean',
-        default: true,
-        description: 'Validate the record?',
-      },
-    },
     input: {
       encoding: 'application/json',
       schema: {
+        type: 'object',
+        required: ['did', 'collection', 'rkey', 'record'],
+        properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+          collection: {
+            type: 'string',
+            description: 'The NSID of the record type.',
+          },
+          rkey: {
+            type: 'string',
+            description: 'The TID of the record.',
+          },
+          validate: {
+            type: 'boolean',
+            default: true,
+            description: 'Validate the record?',
+          },
+          record: {
+            type: 'object',
+            description: 'The record to create',
+          },
+        },
         $defs: {},
       },
     },
@@ -660,7 +658,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.requestAccountPasswordReset',
     type: 'procedure',
     description: 'Initiate a user account password reset via email',
-    parameters: {},
     input: {
       encoding: 'application/json',
       schema: {
@@ -688,7 +685,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'com.atproto.resetAccountPassword',
     type: 'procedure',
     description: 'Reset a user account password using a token',
-    parameters: {},
     input: {
       encoding: 'application/json',
       schema: {
@@ -2336,7 +2332,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'app.bsky.postNotificationsSeen',
     type: 'procedure',
     description: 'Notify server that the user has seen notifications',
-    parameters: {},
     input: {
       encoding: 'application/json',
       schema: {
@@ -2363,7 +2358,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'app.bsky.updateProfile',
     type: 'procedure',
     description: 'Notify server that the user has seen notifications',
-    parameters: {},
     input: {
       encoding: 'application/json',
       schema: {

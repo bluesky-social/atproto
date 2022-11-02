@@ -3,7 +3,6 @@
   "id": "com.atproto.createSession",
   "type": "procedure",
   "description": "Create an authentication session.",
-  "parameters": {},
   "input": {
     "encoding": "application/json",
     "schema": {

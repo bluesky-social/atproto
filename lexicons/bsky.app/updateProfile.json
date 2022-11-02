@@ -3,7 +3,6 @@
   "id": "app.bsky.updateProfile",
   "type": "procedure",
   "description": "Notify server that the user has seen notifications",
-  "parameters": { },
   "input": {
     "encoding": "application/json",
     "schema": {

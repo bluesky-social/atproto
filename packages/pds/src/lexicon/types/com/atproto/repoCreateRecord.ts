@@ -3,11 +3,7 @@
 */
 import express from 'express'
 
-export interface QueryParams {
-  did: string;
-  collection: string;
-  validate?: boolean;
-}
+export interface QueryParams {}
 
 export interface HandlerInput {
   encoding: 'application/json';
@@ -15,7 +11,22 @@ export interface HandlerInput {
 }
 
 export interface InputSchema {
-  [k: string]: unknown;
+  /**
+   * The DID of the repo.
+   */
+  did: string;
+  /**
+   * The NSID of the record collection.
+   */
+  collection: string;
+  /**
+   * Validate the record?
+   */
+  validate?: boolean;
+  /**
+   * The record to create
+   */
+  record: {};
 }
 
 export interface HandlerSuccess {

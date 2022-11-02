@@ -3,15 +3,31 @@
   "id": "com.atproto.repoCreateRecord",
   "type": "procedure",
   "description": "Create a new record.",
-  "parameters": {
-    "did": {"type": "string", "required": true, "description": "The DID of the repo."},
-    "collection": {"type": "string", "required": true, "description": "The NSID of the record collection."},
-    "validate": {"type": "boolean", "default": true, "description": "Validate the record?"}
-  },
   "input": {
     "encoding": "application/json",
-    "description": "The record to create",
-    "schema": {}
+    "schema": {
+      "type": "object",
+      "required": ["did", "collection", "record"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "description": "The DID of the repo."
+        },
+        "collection": {
+          "type": "string",
+          "description": "The NSID of the record collection."
+        },
+        "validate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Validate the record?"
+        },
+        "record": {
+          "type": "object",
+          "description": "The record to create"
+        }
+      }
+    }
   },
   "output": {
     "encoding": "application/json",

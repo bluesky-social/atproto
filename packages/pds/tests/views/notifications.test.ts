@@ -33,7 +33,6 @@ describe('pds notification views', () => {
   it('fetches notification count without a last-seen', async () => {
     const notifCount = await client.app.bsky.getNotificationCount(
       {},
-      undefined,
       { headers: sc.getHeaders(alice) },
     )
 
@@ -41,9 +40,12 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications without a last-seen', async () => {
-    const notifRes = await client.app.bsky.getNotifications({}, undefined, {
-      headers: sc.getHeaders(alice),
-    })
+    const notifRes = await client.app.bsky.getNotifications(
+      {},
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
 
     const notifs = notifRes.data.notifications
     expect(notifs.length).toBe(11)
@@ -65,7 +67,6 @@ describe('pds notification views', () => {
           before: cursor,
           limit: 4,
         },
-        undefined,
         { headers: sc.getHeaders(alice) },
       )
       return res.data
@@ -76,9 +77,12 @@ describe('pds notification views', () => {
       expect(res.notifications.length).toBeLessThanOrEqual(4),
     )
 
-    const full = await client.app.bsky.getNotifications({}, undefined, {
-      headers: sc.getHeaders(alice),
-    })
+    const full = await client.app.bsky.getNotifications(
+      {},
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
 
     expect(full.data.notifications.length).toEqual(11)
     expect(results(paginatedAll)).toEqual(results([full.data]))
@@ -87,9 +91,12 @@ describe('pds notification views', () => {
   it('updates notifications last seen', async () => {
     const { db } = locals.get(app)
 
-    const full = await client.app.bsky.getNotifications({}, undefined, {
-      headers: sc.getHeaders(alice),
-    })
+    const full = await client.app.bsky.getNotifications(
+      {},
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
 
     // Need to look-up createdAt time as a cursor since it's not in the method's output
     const beforeNotif = await db.db
@@ -99,7 +106,6 @@ describe('pds notification views', () => {
       .executeTakeFirstOrThrow()
 
     await client.app.bsky.postNotificationsSeen(
-      {},
       { seenAt: beforeNotif.indexedAt },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
@@ -108,7 +114,6 @@ describe('pds notification views', () => {
   it('fetches notification count with a last-seen', async () => {
     const notifCount = await client.app.bsky.getNotificationCount(
       {},
-      undefined,
       { headers: sc.getHeaders(alice) },
     )
 
@@ -116,9 +121,12 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications with a last-seen', async () => {
-    const notifRes = await client.app.bsky.getNotifications({}, undefined, {
-      headers: sc.getHeaders(alice),
-    })
+    const notifRes = await client.app.bsky.getNotifications(
+      {},
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
 
     const notifs = notifRes.data.notifications
     expect(notifs.length).toBe(11)

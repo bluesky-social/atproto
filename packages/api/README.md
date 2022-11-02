@@ -9,11 +9,14 @@ const client = API.service('http://example.com')
 
 // xrpc methods
 const res1 = await client.com.atproto.repoCreateRecord(
-  {did: alice.did, type: 'app.bsky.post'},
   {
-    $type: 'app.bsky.post',
-    text: 'Hello, world!',
-    createdAt: (new Date()).toISOString()
+    did: alice.did,
+    collection: 'app.bsky.post',
+    record: {
+      $type: 'app.bsky.post',
+      text: 'Hello, world!',
+      createdAt: (new Date()).toISOString()
+    }
   }
 )
 const res2 = await client.com.atproto.repoListRecords({did: alice.did, type: 'app.bsky.post'})

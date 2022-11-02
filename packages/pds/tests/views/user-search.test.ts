@@ -31,7 +31,6 @@ describe('pds user search views', () => {
   it('typeahead gives relevant results', async () => {
     const result = await client.app.bsky.getUsersTypeahead(
       { term: 'car' },
-      undefined,
       { headers },
     )
 
@@ -76,7 +75,6 @@ describe('pds user search views', () => {
   it('typeahead gives empty result set when provided empty term', async () => {
     const result = await client.app.bsky.getUsersTypeahead(
       { term: '' },
-      undefined,
       { headers },
     )
 
@@ -86,7 +84,6 @@ describe('pds user search views', () => {
   it('typeahead applies limit', async () => {
     const full = await client.app.bsky.getUsersTypeahead(
       { term: 'p' },
-      undefined,
       { headers },
     )
 
@@ -94,7 +91,6 @@ describe('pds user search views', () => {
 
     const limited = await client.app.bsky.getUsersTypeahead(
       { term: 'p', limit: 5 },
-      undefined,
       { headers },
     )
 
@@ -104,7 +100,6 @@ describe('pds user search views', () => {
   it('search gives relevant results', async () => {
     const result = await client.app.bsky.getUsersSearch(
       { term: 'car' },
-      undefined,
       { headers },
     )
 
@@ -149,7 +144,6 @@ describe('pds user search views', () => {
   it('search gives empty result set when provided empty term', async () => {
     const result = await client.app.bsky.getUsersSearch(
       { term: '' },
-      undefined,
       { headers },
     )
 
@@ -161,7 +155,6 @@ describe('pds user search views', () => {
     const paginator = async (cursor?: string) => {
       const res = await client.app.bsky.getUsersSearch(
         { term: 'p', before: cursor, limit: 3 },
-        undefined,
         { headers },
       )
       return res.data
@@ -174,7 +167,6 @@ describe('pds user search views', () => {
 
     const full = await client.app.bsky.getUsersSearch(
       { term: 'p' },
-      undefined,
       { headers },
     )
 
@@ -187,7 +179,6 @@ describe('pds user search views', () => {
     // get stripped. This input triggers a special case where there are no "safe" words for sqlite to search on.
     const result = await client.app.bsky.getUsersSearch(
       { term: ' % _ ' },
-      undefined,
       { headers },
     )
 

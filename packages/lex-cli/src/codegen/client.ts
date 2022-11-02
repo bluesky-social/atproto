@@ -282,14 +282,17 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
       name,
       returnType: `Promise<${moduleName}.Response>`,
     })
-    method.addParameter({
-      name: 'params',
-      type: `${moduleName}.QueryParams`,
-    })
-    method.addParameter({
-      name: 'data?',
-      type: `${moduleName}.InputSchema`,
-    })
+    if (schema.type === 'query') {
+      method.addParameter({
+        name: 'params?',
+        type: `${moduleName}.QueryParams`,
+      })
+    } else if (schema.type === 'procedure') {
+      method.addParameter({
+        name: 'data?',
+        type: `${moduleName}.InputSchema`,
+      })
+    }
     method.addParameter({
       name: 'opts?',
       type: `${moduleName}.CallOptions`,
@@ -297,7 +300,9 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
     method.setBodyText(
       [
         `return this._service.xrpc`,
-        `  .call('${schema.id}', params, data, opts)`,
+        schema.type === 'query'
+          ? `.call('${schema.id}', params, undefined, opts)`
+          : `.call('${schema.id}', opts?.qp, data, opts)`,
         `  .catch((e) => {`,
         `    throw ${moduleName}.toKnownErr(e)`,
         `  })`,
@@ -386,7 +391,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
       name: 'params',
       type: `Omit<${toTitleCase(
         ATP_METHODS.create,
-      )}.QueryParams, "collection">`,
+      )}.InputSchema, "collection" | "record">`,
     })
     method.addParameter({
       name: 'record',
@@ -399,7 +404,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     method.setBodyText(
       [
         `record.$type = '${schema.id}'`,
-        `const res = await this._service.xrpc.call('${ATP_METHODS.create}', { collection: '${schema.id}', ...params }, record, {encoding: 'application/json', headers })`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.create}', undefined, { collection: '${schema.id}', ...params, record }, {encoding: 'application/json', headers })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -413,7 +418,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
   //   })
   //   method.addParameter({
   //     name: 'params',
-  //     type: `Omit<${toTitleCase(ATP_METHODS.put)}.QueryParams, "collection">`,
+  //     type: `Omit<${toTitleCase(ATP_METHODS.put)}.InputSchema, "collection" | "record">`,
   //   })
   //   method.addParameter({
   //     name: 'record',
@@ -426,7 +431,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
   //   method.setBodyText(
   //     [
   //       `record.$type = '${schema.id}'`,
-  //       `const res = await this._service.xrpc.call('${ATP_METHODS.put}', { collection: '${schema.id}', ...params }, record, {encoding: 'application/json', headers})`,
+  //       `const res = await this._service.xrpc.call('${ATP_METHODS.put}', undefined, { collection: '${schema.id}', record, ...params }, {encoding: 'application/json', headers})`,
   //       `return res.data`,
   //     ].join('\n'),
   //   )
@@ -451,7 +456,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
 
     method.setBodyText(
       [
-        `await this._service.xrpc.call('${ATP_METHODS.delete}', { collection: '${schema.id}', ...params }, undefined, { headers })`,
+        `await this._service.xrpc.call('${ATP_METHODS.delete}', undefined, { collection: '${schema.id}', ...params }, { headers })`,
       ].join('\n'),
     )
   }
@@ -485,6 +490,9 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
       isExported: true,
     })
     opts.addProperty({ name: 'headers?', type: 'Headers' })
+    if (schema.type === 'procedure') {
+      opts.addProperty({ name: 'qp?', type: 'QueryParams' })
+    }
     if (schema.input) {
       if (Array.isArray(schema.input.encoding)) {
         opts.addProperty({
