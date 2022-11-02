@@ -1,5 +1,5 @@
 import { Server } from '../../../lexicon'
-import getHomeFeed from './getHomeFeed'
+import getTimeline from './getTimeline'
 import getAuthorFeed from './getAuthorFeed'
 import getLikedBy from './getLikedBy'
 import getPostThread from './getPostThread'
@@ -15,7 +15,7 @@ import getNotificationCount from './getNotificationCount'
 import postNotificationsSeen from './postNotificationsSeen'
 
 export default function (server: Server) {
-  getHomeFeed(server)
+  getTimeline(server)
   getAuthorFeed(server)
   getLikedBy(server)
   getPostThread(server)

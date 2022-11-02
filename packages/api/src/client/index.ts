@@ -31,13 +31,13 @@ import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
 import * as AppBskyDeclaration from './types/app/bsky/declaration'
 import * as AppBskyFollow from './types/app/bsky/follow'
 import * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
-import * as AppBskyGetHomeFeed from './types/app/bsky/getHomeFeed'
 import * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
 import * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
 import * as AppBskyGetNotifications from './types/app/bsky/getNotifications'
 import * as AppBskyGetPostThread from './types/app/bsky/getPostThread'
 import * as AppBskyGetProfile from './types/app/bsky/getProfile'
 import * as AppBskyGetRepostedBy from './types/app/bsky/getRepostedBy'
+import * as AppBskyGetTimeline from './types/app/bsky/getTimeline'
 import * as AppBskyGetUserFollowers from './types/app/bsky/getUserFollowers'
 import * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
 import * as AppBskyGetUsersSearch from './types/app/bsky/getUsersSearch'
@@ -77,13 +77,13 @@ export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
 export * as AppBskyDeclaration from './types/app/bsky/declaration'
 export * as AppBskyFollow from './types/app/bsky/follow'
 export * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
-export * as AppBskyGetHomeFeed from './types/app/bsky/getHomeFeed'
 export * as AppBskyGetLikedBy from './types/app/bsky/getLikedBy'
 export * as AppBskyGetNotificationCount from './types/app/bsky/getNotificationCount'
 export * as AppBskyGetNotifications from './types/app/bsky/getNotifications'
 export * as AppBskyGetPostThread from './types/app/bsky/getPostThread'
 export * as AppBskyGetProfile from './types/app/bsky/getProfile'
 export * as AppBskyGetRepostedBy from './types/app/bsky/getRepostedBy'
+export * as AppBskyGetTimeline from './types/app/bsky/getTimeline'
 export * as AppBskyGetUserFollowers from './types/app/bsky/getUserFollowers'
 export * as AppBskyGetUserFollows from './types/app/bsky/getUserFollows'
 export * as AppBskyGetUsersSearch from './types/app/bsky/getUsersSearch'
@@ -442,17 +442,6 @@ export class BskyNS {
       })
   }
 
-  getHomeFeed(
-    params?: AppBskyGetHomeFeed.QueryParams,
-    opts?: AppBskyGetHomeFeed.CallOptions
-  ): Promise<AppBskyGetHomeFeed.Response> {
-    return this._service.xrpc
-      .call('app.bsky.getHomeFeed', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyGetHomeFeed.toKnownErr(e)
-      })
-  }
-
   getLikedBy(
     params?: AppBskyGetLikedBy.QueryParams,
     opts?: AppBskyGetLikedBy.CallOptions
@@ -516,6 +505,17 @@ export class BskyNS {
       .call('app.bsky.getRepostedBy', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGetRepostedBy.toKnownErr(e)
+      })
+  }
+
+  getTimeline(
+    params?: AppBskyGetTimeline.QueryParams,
+    opts?: AppBskyGetTimeline.CallOptions
+  ): Promise<AppBskyGetTimeline.Response> {
+    return this._service.xrpc
+      .call('app.bsky.getTimeline', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGetTimeline.toKnownErr(e)
       })
   }
 

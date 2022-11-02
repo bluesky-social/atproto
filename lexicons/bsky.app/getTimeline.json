@@ -1,8 +1,8 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.getHomeFeed",
+  "id": "app.bsky.getTimeline",
   "type": "query",
-  "description": "A view of the user's home feed",
+  "description": "A view of the user's home timeline",
   "parameters": {
     "algorithm": {"type": "string"},
     "limit": {"type": "number", "maximum": 100},

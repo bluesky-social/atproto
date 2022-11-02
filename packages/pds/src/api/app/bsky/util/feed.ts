@@ -1,6 +1,6 @@
 import * as common from '@atproto/common'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/getAuthorFeed'
-import * as GetHomeFeed from '../../../../lexicon/types/app/bsky/getHomeFeed'
+import * as GetTimeline from '../../../../lexicon/types/app/bsky/getTimeline'
 
 // Present post and repost results into FeedItems
 // @TODO add embeds
@@ -36,7 +36,7 @@ export enum FeedAlgorithm {
   ReverseChronological = 'reverse-chronological',
 }
 
-type FeedItem = GetAuthorFeed.FeedItem & GetHomeFeed.FeedItem
+type FeedItem = GetAuthorFeed.FeedItem & GetTimeline.FeedItem
 
 type FeedRow = {
   type: 'post' | 'repost'

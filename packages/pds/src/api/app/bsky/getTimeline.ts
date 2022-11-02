@@ -1,15 +1,15 @@
 import { sql } from 'kysely'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../lexicon'
-import * as GetHomeFeed from '../../../lexicon/types/app/bsky/getHomeFeed'
+import * as GetTimeline from '../../../lexicon/types/app/bsky/getTimeline'
 import * as locals from '../../../locals'
 import { isEnum } from './util'
 import { FeedAlgorithm, rowToFeedItem } from './util/feed'
 import { countAll, paginate } from '../../../db/util'
 
 export default function (server: Server) {
-  server.app.bsky.getHomeFeed(
-    async (params: GetHomeFeed.QueryParams, _input, req, res) => {
+  server.app.bsky.getTimeline(
+    async (params: GetTimeline.QueryParams, _input, req, res) => {
       const { auth, db } = locals.get(res)
       const { algorithm, limit, before } = params
       const { ref } = db.db.dynamic
