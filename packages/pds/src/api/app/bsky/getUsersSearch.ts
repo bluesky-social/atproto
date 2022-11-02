@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
-import * as Method from '../../../lexicon/types/app/bsky/getUsersSearch'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
+import * as Method from '../../../lexicon/types/app/bsky/getUsersSearch'
 import * as locals from '../../../locals'
 import {
   cleanTerm,
