@@ -1,6 +1,6 @@
-import { AppBskyGetUsersTypeahead as Method } from '@atproto/api'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
+import * as Method from '../../../lexicon/types/app/bsky/getUsersTypeahead'
 import * as locals from '../../../locals'
 import {
   cleanTerm,

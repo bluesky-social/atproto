@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { AppBskyGetUsersSearch as Method } from '@atproto/api'
+import * as Method from '../../../lexicon/types/app/bsky/getUsersSearch'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'

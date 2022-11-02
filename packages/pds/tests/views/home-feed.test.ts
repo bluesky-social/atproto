@@ -1,7 +1,5 @@
-import AtpApi, {
-  ServiceClient as AtpServiceClient,
-  AppBskyGetHomeFeed as HomeFeed,
-} from '@atproto/api'
+import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import * as HomeFeed from '../../src/lexicon/types/app/bsky/getHomeFeed'
 import {
   runTestServer,
   forSnapshot,
