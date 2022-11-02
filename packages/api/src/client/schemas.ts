@@ -2332,7 +2332,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'app.bsky.postNotificationsSeen',
     type: 'procedure',
     description: 'Notify server that the user has seen notifications',
-    parameters: {},
     input: {
       encoding: 'application/json',
       schema: {
