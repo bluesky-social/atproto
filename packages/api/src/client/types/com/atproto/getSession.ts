@@ -12,7 +12,7 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  name: string;
+  handle: string;
   did: string;
 }
 

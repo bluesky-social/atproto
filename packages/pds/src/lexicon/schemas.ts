@@ -13,12 +13,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['username', 'email', 'password'],
+        required: ['handle', 'email', 'password'],
         properties: {
           email: {
             type: 'string',
           },
-          username: {
+          handle: {
             type: 'string',
           },
           inviteCode: {
@@ -41,7 +41,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         required: [
           'accessJwt',
           'refreshJwt',
-          'username',
+          'handle',
           'did',
           'declarationCid',
         ],
@@ -52,7 +52,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           refreshJwt: {
             type: 'string',
           },
-          username: {
+          handle: {
             type: 'string',
           },
           did: {
@@ -67,7 +67,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     },
     errors: [
       {
-        name: 'InvalidUsername',
+        name: 'InvalidHandle',
       },
       {
         name: 'InvalidPassword',
@@ -76,7 +76,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         name: 'InvalidInviteCode',
       },
       {
-        name: 'UsernameNotAvailable',
+        name: 'HandleNotAvailable',
       },
     ],
   },
@@ -121,9 +121,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['username', 'password'],
+        required: ['handle', 'password'],
         properties: {
-          username: {
+          handle: {
             type: 'string',
           },
           password: {
@@ -137,7 +137,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['accessJwt', 'refreshJwt', 'name', 'did'],
+        required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
         properties: {
           accessJwt: {
             type: 'string',
@@ -145,7 +145,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           refreshJwt: {
             type: 'string',
           },
-          name: {
+          handle: {
             type: 'string',
           },
           did: {
@@ -236,9 +236,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['name', 'did'],
+        required: ['handle', 'did'],
         properties: {
-          name: {
+          handle: {
             type: 'string',
           },
           did: {
@@ -258,7 +258,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['accessJwt', 'refreshJwt', 'name', 'did'],
+        required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
         properties: {
           accessJwt: {
             type: 'string',
@@ -266,7 +266,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           refreshJwt: {
             type: 'string',
           },
-          name: {
+          handle: {
             type: 'string',
           },
           did: {
@@ -452,16 +452,16 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       user: {
         type: 'string',
         required: true,
-        description: 'The username or DID of the repo.',
+        description: 'The handle or DID of the repo.',
       },
     },
     output: {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['name', 'did', 'didDoc', 'collections', 'nameIsCorrect'],
+        required: ['handle', 'did', 'didDoc', 'collections', 'handleIsCorrect'],
         properties: {
-          name: {
+          handle: {
             type: 'string',
           },
           did: {
@@ -476,7 +476,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               type: 'string',
             },
           },
-          nameIsCorrect: {
+          handleIsCorrect: {
             type: 'boolean',
           },
         },
@@ -493,7 +493,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       user: {
         type: 'string',
         required: true,
-        description: 'The username or DID of the repo.',
+        description: 'The handle or DID of the repo.',
       },
       collection: {
         type: 'string',
@@ -541,7 +541,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       user: {
         type: 'string',
         required: true,
-        description: 'The username or DID of the repo.',
+        description: 'The handle or DID of the repo.',
       },
       collection: {
         type: 'string',
@@ -718,16 +718,16 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     ],
   },
-  'com.atproto.resolveName': {
+  'com.atproto.resolveHandle': {
     lexicon: 1,
-    id: 'com.atproto.resolveName',
+    id: 'com.atproto.resolveHandle',
     type: 'query',
     description: 'Provides the DID of a repo.',
     parameters: {
-      name: {
+      handle: {
         type: 'string',
         description:
-          "The name to resolve. If not supplied, will resolve the host's own name.",
+          "The handle to resolve. If not supplied, will resolve the host's own handle.",
       },
     },
     output: {
@@ -910,12 +910,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           user: {
             type: 'object',
-            required: ['did', 'name'],
+            required: ['did', 'handle'],
             properties: {
               did: {
                 type: 'string',
               },
-              name: {
+              handle: {
                 type: 'string',
               },
               displayName: {
@@ -1045,12 +1045,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
       user: {
         type: 'object',
-        required: ['did', 'name'],
+        required: ['did', 'handle'],
         properties: {
           did: {
             type: 'string',
           },
-          name: {
+          handle: {
             type: 'string',
           },
           displayName: {
@@ -1149,12 +1149,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name', 'indexedAt'],
+              required: ['did', 'handle', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
                 },
-                name: {
+                handle: {
                   type: 'string',
                 },
                 displayName: {
@@ -1247,12 +1247,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               },
               author: {
                 type: 'object',
-                required: ['did', 'name'],
+                required: ['did', 'handle'],
                 properties: {
                   did: {
                     type: 'string',
                   },
-                  name: {
+                  handle: {
                     type: 'string',
                   },
                   displayName: {
@@ -1306,12 +1306,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           author: {
             type: 'object',
-            required: ['did', 'name'],
+            required: ['did', 'handle'],
             properties: {
               did: {
                 type: 'string',
               },
-              name: {
+              handle: {
                 type: 'string',
               },
               displayName: {
@@ -1441,12 +1441,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           user: {
             type: 'object',
-            required: ['did', 'name'],
+            required: ['did', 'handle'],
             properties: {
               did: {
                 type: 'string',
               },
-              name: {
+              handle: {
                 type: 'string',
               },
               displayName: {
@@ -1582,12 +1582,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
       user: {
         type: 'object',
-        required: ['did', 'name'],
+        required: ['did', 'handle'],
         properties: {
           did: {
             type: 'string',
           },
-          name: {
+          handle: {
             type: 'string',
           },
           displayName: {
@@ -1662,7 +1662,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         type: 'object',
         required: [
           'did',
-          'name',
+          'handle',
           'followersCount',
           'followsCount',
           'postsCount',
@@ -1671,7 +1671,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           did: {
             type: 'string',
           },
-          name: {
+          handle: {
             type: 'string',
           },
           displayName: {
@@ -1744,12 +1744,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name', 'indexedAt'],
+              required: ['did', 'handle', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
                 },
-                name: {
+                handle: {
                   type: 'string',
                 },
                 displayName: {
@@ -1875,12 +1875,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           user: {
             type: 'object',
-            required: ['did', 'name'],
+            required: ['did', 'handle'],
             properties: {
               did: {
                 type: 'string',
               },
-              name: {
+              handle: {
                 type: 'string',
               },
               displayName: {
@@ -2010,12 +2010,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
       user: {
         type: 'object',
-        required: ['did', 'name'],
+        required: ['did', 'handle'],
         properties: {
           did: {
             type: 'string',
           },
-          name: {
+          handle: {
             type: 'string',
           },
           displayName: {
@@ -2100,12 +2100,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         properties: {
           subject: {
             type: 'object',
-            required: ['did', 'name'],
+            required: ['did', 'handle'],
             properties: {
               did: {
                 type: 'string',
               },
-              name: {
+              handle: {
                 type: 'string',
               },
               displayName: {
@@ -2121,12 +2121,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name', 'indexedAt'],
+              required: ['did', 'handle', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
                 },
-                name: {
+                handle: {
                   type: 'string',
                 },
                 displayName: {
@@ -2175,12 +2175,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         properties: {
           subject: {
             type: 'object',
-            required: ['did', 'name'],
+            required: ['did', 'handle'],
             properties: {
               did: {
                 type: 'string',
               },
-              name: {
+              handle: {
                 type: 'string',
               },
               displayName: {
@@ -2196,12 +2196,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name', 'indexedAt'],
+              required: ['did', 'handle', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
                 },
-                name: {
+                handle: {
                   type: 'string',
                 },
                 displayName: {
@@ -2255,12 +2255,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name'],
+              required: ['did', 'handle'],
               properties: {
                 did: {
                   type: 'string',
                 },
-                name: {
+                handle: {
                   type: 'string',
                 },
                 displayName: {
@@ -2307,12 +2307,12 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'name'],
+              required: ['did', 'handle'],
               properties: {
                 did: {
                   type: 'string',
                 },
-                name: {
+                handle: {
                   type: 'string',
                 },
                 displayName: {

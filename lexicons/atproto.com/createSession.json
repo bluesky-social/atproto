@@ -7,9 +7,9 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["username", "password"],
+      "required": ["handle", "password"],
       "properties": {
-        "username": {"type": "string"},
+        "handle": {"type": "string"},
         "password": {"type": "string"}
       }
     }
@@ -18,11 +18,11 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["accessJwt", "refreshJwt", "name", "did"],
+      "required": ["accessJwt", "refreshJwt", "handle", "did"],
       "properties": {
         "accessJwt": {"type": "string"},
         "refreshJwt": {"type": "string"},
-        "name": {"type": "string"},
+        "handle": {"type": "string"},
         "did": {"type": "string"}
       }
     }

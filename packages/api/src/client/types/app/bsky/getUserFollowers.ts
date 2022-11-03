@@ -18,13 +18,13 @@ export type InputSchema = undefined
 export interface OutputSchema {
   subject: {
     did: string,
-    name: string,
+    handle: string,
     displayName?: string,
   };
   cursor?: string;
   followers: {
     did: string,
-    name: string,
+    handle: string,
     displayName?: string,
     createdAt?: string,
     indexedAt: string,

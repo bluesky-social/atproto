@@ -19,7 +19,7 @@ export interface OutputSchema {
   cursor?: string;
   users: {
     did: string,
-    name: string,
+    handle: string,
     displayName?: string,
     description?: string,
     indexedAt?: string,

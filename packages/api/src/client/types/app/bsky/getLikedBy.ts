@@ -22,7 +22,7 @@ export interface OutputSchema {
   cursor?: string;
   likedBy: {
     did: string,
-    name: string,
+    handle: string,
     displayName?: string,
     createdAt?: string,
     indexedAt: string,

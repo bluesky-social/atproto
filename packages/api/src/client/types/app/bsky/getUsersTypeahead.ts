@@ -17,7 +17,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   users: {
     did: string,
-    name: string,
+    handle: string,
     displayName?: string,
   }[];
 }

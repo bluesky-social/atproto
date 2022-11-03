@@ -14,11 +14,11 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  name: string;
+  handle: string;
   did: string;
   didDoc: {};
   collections: string[];
-  nameIsCorrect: boolean;
+  handleIsCorrect: boolean;
 }
 
 export interface Response {

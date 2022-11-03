@@ -7,7 +7,6 @@ export interface QueryParams {}
 
 export interface CallOptions {
   headers?: Headers;
-  qp?: QueryParams;
 }
 
 export type InputSchema = undefined
@@ -15,7 +14,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   accessJwt: string;
   refreshJwt: string;
-  name: string;
+  handle: string;
   did: string;
 }
 

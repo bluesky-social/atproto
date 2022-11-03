@@ -17,10 +17,10 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["did", "name"],
+            "required": ["did", "handle"],
             "properties": {
               "did": {"type": "string"},
-              "name": {"type": "string"},
+              "handle": {"type": "string"},
               "displayName": {
                 "type": "string",
                 "maxLength": 64

@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.resolveName",
+  "id": "com.atproto.resolveHandle",
   "type": "query",
   "description": "Provides the DID of a repo.",
   "parameters": {
-    "name": {"type": "string", "description": "The name to resolve. If not supplied, will resolve the host's own name."}
+    "handle": {"type": "string", "description": "The handle to resolve. If not supplied, will resolve the host's own handle."}
   },
   "output": {
     "encoding": "application/json",

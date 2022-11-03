@@ -4,7 +4,7 @@
   "type": "query",
   "description": "List a range of records in a collection.",
   "parameters": {
-    "user": {"type": "string", "required": true, "description": "The username or DID of the repo."},
+    "user": {"type": "string", "required": true, "description": "The handle or DID of the repo."},
     "collection": {"type": "string", "required": true, "description": "The NSID of the record type."},
     "limit": {"type": "number", "minimum": 1, "default": 50, "description": "The number of records to return. TODO-max number?"},
     "before": {"type": "string", "description": "A TID to filter the range of records returned."},

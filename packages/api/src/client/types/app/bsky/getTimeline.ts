@@ -37,7 +37,7 @@ export interface FeedItem {
 }
 export interface User {
   did: string;
-  name: string;
+  handle: string;
   displayName?: string;
 }
 export interface RecordEmbed {

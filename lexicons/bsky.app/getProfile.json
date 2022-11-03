@@ -9,10 +9,10 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["did", "name", "followersCount", "followsCount", "postsCount"],
+      "required": ["did", "handle", "followersCount", "followsCount", "postsCount"],
       "properties": {
         "did": {"type": "string"},
-        "name": {"type": "string"},
+        "handle": {"type": "string"},
         "displayName": {
           "type": "string",
           "maxLength": 64

@@ -25,7 +25,7 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 export interface OutputSchema {
   users: {
     did: string,
-    name: string,
+    handle: string,
     displayName?: string,
   }[];
 }

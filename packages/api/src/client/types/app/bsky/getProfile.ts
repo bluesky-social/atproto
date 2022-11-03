@@ -15,7 +15,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   did: string;
-  name: string;
+  handle: string;
   displayName?: string;
   description?: string;
   followersCount: number;
