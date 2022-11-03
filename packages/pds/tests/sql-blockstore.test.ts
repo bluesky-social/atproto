@@ -2,7 +2,7 @@ import SqlBlockstore from '../src/sql-blockstore'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import * as locals from '../src/locals'
 
-describe('server', () => {
+describe('sql blockstore', () => {
   let server: TestServerInfo
   let close: CloseFn
 
