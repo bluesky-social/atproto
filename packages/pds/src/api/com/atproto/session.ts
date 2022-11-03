@@ -16,23 +16,23 @@ export default function (server: Server) {
     }
     return {
       encoding: 'application/json',
-      body: { name: user.username, did: user.did },
+      body: { handle: user.handle, did: user.did },
     }
   })
 
   server.com.atproto.createSession(async (_params, input, _req, res) => {
     const { password } = input.body
-    const username = input.body.username.toLowerCase()
+    const handle = input.body.handle.toLowerCase()
     const { db, auth } = locals.get(res)
-    const validPass = await db.verifyUserPassword(username, password)
+    const validPass = await db.verifyUserPassword(handle, password)
     if (!validPass) {
-      throw new AuthRequiredError('Invalid username or password')
+      throw new AuthRequiredError('Invalid handle or password')
     }
 
-    const user = await db.getUser(username)
+    const user = await db.getUser(handle)
     if (!user) {
       throw new InvalidRequestError(
-        `Could not find user info for account: ${username}`,
+        `Could not find user info for account: ${handle}`,
       )
     }
 
@@ -44,7 +44,7 @@ export default function (server: Server) {
       encoding: 'application/json',
       body: {
         did: user.did,
-        name: user.username,
+        handle: user.handle,
         accessJwt: access.jwt,
         refreshJwt: refresh.jwt,
       },
@@ -81,7 +81,7 @@ export default function (server: Server) {
       encoding: 'application/json',
       body: {
         did: user.did,
-        name: user.username,
+        handle: user.handle,
         accessJwt: access.jwt,
         refreshJwt: refresh.jwt,
       },

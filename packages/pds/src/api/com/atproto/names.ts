@@ -3,25 +3,25 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as locals from '../../../locals'
 
 export default function (server: Server) {
-  server.com.atproto.resolveName(async (params, _in, _req, res) => {
+  server.com.atproto.resolveHandle(async (params, _in, _req, res) => {
     const { db, config } = locals.get(res)
 
-    const name = params.name
+    const handle = params.handle
 
     let did = ''
-    if (!name || name === config.hostname) {
+    if (!handle || handle === config.hostname) {
       // self
       did = config.serverDid
     } else {
-      const supportedUsername = config.availableUserDomains.some((host) =>
-        name.endsWith(host),
+      const supportedHandle = config.availableUserDomains.some((host) =>
+        handle.endsWith(host),
       )
-      if (!supportedUsername) {
-        throw new InvalidRequestError('Not a supported username domain')
+      if (!supportedHandle) {
+        throw new InvalidRequestError('Not a supported handle domain')
       }
-      const user = await db.getUser(name)
+      const user = await db.getUser(handle)
       if (!user) {
-        throw new InvalidRequestError('Unable to resolve namej')
+        throw new InvalidRequestError('Unable to resolve halnde')
       }
       did = user.did
     }
