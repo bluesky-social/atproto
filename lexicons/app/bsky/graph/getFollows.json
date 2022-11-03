@@ -1,0 +1,50 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.getFollows",
+  "type": "query",
+  "description": "Who is a user following?",
+  "parameters": {
+    "user": {"type": "string", "required": true},
+    "limit": {"type": "number", "maximum": 100},
+    "before": {"type": "string"}
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["subject", "follows"],
+      "properties": {
+        "subject": {
+          "type": "object",
+          "required": ["did", "handle"],
+          "properties": {
+            "did": {"type": "string"},
+            "handle": {"type": "string"},
+            "displayName": {
+              "type": "string",
+              "maxLength": 64
+            }
+          }
+        },
+        "cursor": {"type": "string"},
+        "follows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["did", "handle", "indexedAt"],
+            "properties": {
+              "did": {"type": "string"},
+              "handle": {"type": "string"},
+              "displayName": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "createdAt": {"type": "string", "format": "date-time"},
+              "indexedAt": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      }
+    }
+  }
+}
