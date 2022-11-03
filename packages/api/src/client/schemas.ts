@@ -4,9 +4,9 @@
 import { MethodSchema, RecordSchema } from '@atproto/lexicon'
 
 export const methodSchemaDict: Record<string, MethodSchema> = {
-  'com.atproto.createAccount': {
+  'com.atproto.account.create': {
     lexicon: 1,
-    id: 'com.atproto.createAccount',
+    id: 'com.atproto.account.create',
     type: 'procedure',
     description: 'Create an account.',
     input: {
@@ -80,9 +80,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     ],
   },
-  'com.atproto.createInviteCode': {
+  'com.atproto.account.createInviteCode': {
     lexicon: 1,
-    id: 'com.atproto.createInviteCode',
+    id: 'com.atproto.account.createInviteCode',
     type: 'procedure',
     description: 'Create an invite code.',
     input: {
@@ -112,53 +112,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.createSession': {
+  'com.atproto.account.delete': {
     lexicon: 1,
-    id: 'com.atproto.createSession',
-    type: 'procedure',
-    description: 'Create an authentication session.',
-    input: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['handle', 'password'],
-        properties: {
-          handle: {
-            type: 'string',
-          },
-          password: {
-            type: 'string',
-          },
-        },
-        $defs: {},
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
-        properties: {
-          accessJwt: {
-            type: 'string',
-          },
-          refreshJwt: {
-            type: 'string',
-          },
-          handle: {
-            type: 'string',
-          },
-          did: {
-            type: 'string',
-          },
-        },
-        $defs: {},
-      },
-    },
-  },
-  'com.atproto.deleteAccount': {
-    lexicon: 1,
-    id: 'com.atproto.deleteAccount',
+    id: 'com.atproto.account.delete',
     type: 'procedure',
     description: 'Delete an account.',
     input: {
@@ -174,21 +130,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.deleteSession': {
+  'com.atproto.account.get': {
     lexicon: 1,
-    id: 'com.atproto.deleteSession',
-    type: 'procedure',
-    description: 'Delete the current session.',
-    output: {
-      encoding: 'application/json',
-      schema: {
-        $defs: {},
-      },
-    },
-  },
-  'com.atproto.getAccount': {
-    lexicon: 1,
-    id: 'com.atproto.getAccount',
+    id: 'com.atproto.account.get',
     type: 'query',
     description: 'Get information about an account.',
     parameters: {},
@@ -199,76 +143,89 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.getAccountsConfig': {
+  'com.atproto.account.requestPasswordReset': {
     lexicon: 1,
-    id: 'com.atproto.getAccountsConfig',
-    type: 'query',
-    description:
-      "Get a document describing the service's accounts configuration.",
-    parameters: {},
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['availableUserDomains'],
-        properties: {
-          inviteCodeRequired: {
-            type: 'boolean',
-          },
-          availableUserDomains: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-        },
-        $defs: {},
-      },
-    },
-  },
-  'com.atproto.getSession': {
-    lexicon: 1,
-    id: 'com.atproto.getSession',
-    type: 'query',
-    description: 'Get information about the current session.',
-    parameters: {},
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['handle', 'did'],
-        properties: {
-          handle: {
-            type: 'string',
-          },
-          did: {
-            type: 'string',
-          },
-        },
-        $defs: {},
-      },
-    },
-  },
-  'com.atproto.refreshSession': {
-    lexicon: 1,
-    id: 'com.atproto.refreshSession',
+    id: 'com.atproto.account.requestPasswordReset',
     type: 'procedure',
-    description: 'Refresh an authentication session.',
+    description: 'Initiate a user account password reset via email',
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
     output: {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
+        properties: {},
+        $defs: {},
+      },
+    },
+  },
+  'com.atproto.account.resetPassword': {
+    lexicon: 1,
+    id: 'com.atproto.account.resetPassword',
+    type: 'procedure',
+    description: 'Reset a user account password using a token',
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['token', 'password'],
         properties: {
-          accessJwt: {
+          token: {
             type: 'string',
           },
-          refreshJwt: {
+          password: {
             type: 'string',
           },
-          handle: {
-            type: 'string',
-          },
+        },
+        $defs: {},
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        properties: {},
+        $defs: {},
+      },
+    },
+    errors: [
+      {
+        name: 'ExpiredToken',
+      },
+      {
+        name: 'InvalidToken',
+      },
+    ],
+  },
+  'com.atproto.handle.resolve': {
+    lexicon: 1,
+    id: 'com.atproto.handle.resolve',
+    type: 'query',
+    description: 'Provides the DID of a repo.',
+    parameters: {
+      handle: {
+        type: 'string',
+        description:
+          "The handle to resolve. If not supplied, will resolve the host's own handle.",
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['did'],
+        properties: {
           did: {
             type: 'string',
           },
@@ -277,9 +234,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.repoBatchWrite': {
+  'com.atproto.repo.batchWrite': {
     lexicon: 1,
-    id: 'com.atproto.repoBatchWrite',
+    id: 'com.atproto.repo.batchWrite',
     type: 'procedure',
     description: 'Apply a batch transaction of creates, puts, and deletes.',
     input: {
@@ -365,9 +322,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.repoCreateRecord': {
+  'com.atproto.repo.createRecord': {
     lexicon: 1,
-    id: 'com.atproto.repoCreateRecord',
+    id: 'com.atproto.repo.createRecord',
     type: 'procedure',
     description: 'Create a new record.',
     input: {
@@ -414,9 +371,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.repoDeleteRecord': {
+  'com.atproto.repo.deleteRecord': {
     lexicon: 1,
-    id: 'com.atproto.repoDeleteRecord',
+    id: 'com.atproto.repo.deleteRecord',
     type: 'procedure',
     description: 'Delete a record.',
     input: {
@@ -442,9 +399,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.repoDescribe': {
+  'com.atproto.repo.describe': {
     lexicon: 1,
-    id: 'com.atproto.repoDescribe',
+    id: 'com.atproto.repo.describe',
     type: 'query',
     description:
       'Get information about the repo, including the list of collections.',
@@ -484,9 +441,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.repoGetRecord': {
+  'com.atproto.repo.getRecord': {
     lexicon: 1,
-    id: 'com.atproto.repoGetRecord',
+    id: 'com.atproto.repo.getRecord',
     type: 'query',
     description: 'Fetch a record.',
     parameters: {
@@ -532,9 +489,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.repoListRecords': {
+  'com.atproto.repo.listRecords': {
     lexicon: 1,
-    id: 'com.atproto.repoListRecords',
+    id: 'com.atproto.repo.listRecords',
     type: 'query',
     description: 'List a range of records in a collection.',
     parameters: {
@@ -600,9 +557,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.repoPutRecord': {
+  'com.atproto.repo.putRecord': {
     lexicon: 1,
-    id: 'com.atproto.repoPutRecord',
+    id: 'com.atproto.repo.putRecord',
     type: 'procedure',
     description: 'Write a record.',
     input: {
@@ -653,45 +610,45 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.requestAccountPasswordReset': {
+  'com.atproto.server.getAccountsConfig': {
     lexicon: 1,
-    id: 'com.atproto.requestAccountPasswordReset',
-    type: 'procedure',
-    description: 'Initiate a user account password reset via email',
-    input: {
+    id: 'com.atproto.server.getAccountsConfig',
+    type: 'query',
+    description:
+      "Get a document describing the service's accounts configuration.",
+    parameters: {},
+    output: {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['email'],
+        required: ['availableUserDomains'],
         properties: {
-          email: {
-            type: 'string',
+          inviteCodeRequired: {
+            type: 'boolean',
+          },
+          availableUserDomains: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
           },
         },
         $defs: {},
       },
     },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        properties: {},
-        $defs: {},
-      },
-    },
   },
-  'com.atproto.resetAccountPassword': {
+  'com.atproto.session.create': {
     lexicon: 1,
-    id: 'com.atproto.resetAccountPassword',
+    id: 'com.atproto.session.create',
     type: 'procedure',
-    description: 'Reset a user account password using a token',
+    description: 'Create an authentication session.',
     input: {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['token', 'password'],
+        required: ['handle', 'password'],
         properties: {
-          token: {
+          handle: {
             type: 'string',
           },
           password: {
@@ -705,37 +662,17 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        properties: {},
-        $defs: {},
-      },
-    },
-    errors: [
-      {
-        name: 'ExpiredToken',
-      },
-      {
-        name: 'InvalidToken',
-      },
-    ],
-  },
-  'com.atproto.resolveHandle': {
-    lexicon: 1,
-    id: 'com.atproto.resolveHandle',
-    type: 'query',
-    description: 'Provides the DID of a repo.',
-    parameters: {
-      handle: {
-        type: 'string',
-        description:
-          "The handle to resolve. If not supplied, will resolve the host's own handle.",
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['did'],
+        required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
         properties: {
+          accessJwt: {
+            type: 'string',
+          },
+          refreshJwt: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+          },
           did: {
             type: 'string',
           },
@@ -744,9 +681,72 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.syncGetRepo': {
+  'com.atproto.session.delete': {
     lexicon: 1,
-    id: 'com.atproto.syncGetRepo',
+    id: 'com.atproto.session.delete',
+    type: 'procedure',
+    description: 'Delete the current session.',
+    output: {
+      encoding: 'application/json',
+      schema: {
+        $defs: {},
+      },
+    },
+  },
+  'com.atproto.session.get': {
+    lexicon: 1,
+    id: 'com.atproto.session.get',
+    type: 'query',
+    description: 'Get information about the current session.',
+    parameters: {},
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['handle', 'did'],
+        properties: {
+          handle: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'com.atproto.session.refresh': {
+    lexicon: 1,
+    id: 'com.atproto.session.refresh',
+    type: 'procedure',
+    description: 'Refresh an authentication session.',
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
+        properties: {
+          accessJwt: {
+            type: 'string',
+          },
+          refreshJwt: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'com.atproto.sync.getRepo': {
+    lexicon: 1,
+    id: 'com.atproto.sync.getRepo',
     type: 'query',
     description: 'Gets the repo state.',
     parameters: {
@@ -764,9 +764,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/cbor',
     },
   },
-  'com.atproto.syncGetRoot': {
+  'com.atproto.sync.getRoot': {
     lexicon: 1,
-    id: 'com.atproto.syncGetRoot',
+    id: 'com.atproto.sync.getRoot',
     type: 'query',
     description: 'Gets the current root CID of a repo.',
     parameters: {
@@ -790,9 +790,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'com.atproto.syncUpdateRepo': {
+  'com.atproto.sync.updateRepo': {
     lexicon: 1,
-    id: 'com.atproto.syncUpdateRepo',
+    id: 'com.atproto.sync.updateRepo',
     type: 'procedure',
     description: 'Writes commits to a repo.',
     parameters: {
@@ -806,9 +806,213 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/cbor',
     },
   },
-  'app.bsky.getAuthorFeed': {
+  'app.bsky.actor.getProfile': {
     lexicon: 1,
-    id: 'app.bsky.getAuthorFeed',
+    id: 'app.bsky.actor.getProfile',
+    type: 'query',
+    parameters: {
+      user: {
+        type: 'string',
+        required: true,
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: [
+          'did',
+          'handle',
+          'followersCount',
+          'followsCount',
+          'postsCount',
+        ],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          description: {
+            type: 'string',
+            maxLength: 256,
+          },
+          followersCount: {
+            type: 'number',
+          },
+          followsCount: {
+            type: 'number',
+          },
+          postsCount: {
+            type: 'number',
+          },
+          myState: {
+            type: 'object',
+            properties: {
+              follow: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'app.bsky.actor.search': {
+    lexicon: 1,
+    id: 'app.bsky.actor.search',
+    type: 'query',
+    description: 'Find users matching search criteria',
+    parameters: {
+      term: {
+        type: 'string',
+        required: true,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      before: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['users'],
+        properties: {
+          cursor: {
+            type: 'string',
+          },
+          users: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'handle'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                handle: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                description: {
+                  type: 'string',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'app.bsky.actor.searchTypeahead': {
+    lexicon: 1,
+    id: 'app.bsky.actor.searchTypeahead',
+    type: 'query',
+    description: 'Find user suggestions for a search term',
+    parameters: {
+      term: {
+        type: 'string',
+        required: true,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['users'],
+        properties: {
+          users: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'handle'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                handle: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'app.bsky.actor.updateProfile': {
+    lexicon: 1,
+    id: 'app.bsky.actor.updateProfile',
+    type: 'procedure',
+    description: 'Notify server that the user has seen notifications',
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: [],
+        properties: {
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          description: {
+            type: 'string',
+            maxLength: 256,
+          },
+        },
+        $defs: {},
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['uri', 'cid', 'record'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          record: {
+            type: 'object',
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'app.bsky.feed.getAuthorFeed': {
+    lexicon: 1,
+    id: 'app.bsky.feed.getAuthorFeed',
     type: 'query',
     description: "A view of a user's feed",
     parameters: {
@@ -1109,9 +1313,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.getLikedBy': {
+  'app.bsky.feed.getLikedBy': {
     lexicon: 1,
-    id: 'app.bsky.getLikedBy',
+    id: 'app.bsky.feed.getLikedBy',
     type: 'query',
     parameters: {
       uri: {
@@ -1177,174 +1381,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.getNotificationCount': {
+  'app.bsky.feed.getPostThread': {
     lexicon: 1,
-    id: 'app.bsky.getNotificationCount',
-    type: 'query',
-    parameters: {},
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['count'],
-        properties: {
-          count: {
-            type: 'number',
-          },
-        },
-        $defs: {},
-      },
-    },
-  },
-  'app.bsky.getNotifications': {
-    lexicon: 1,
-    id: 'app.bsky.getNotifications',
-    type: 'query',
-    parameters: {
-      limit: {
-        type: 'number',
-        maximum: 100,
-      },
-      before: {
-        type: 'string',
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['notifications'],
-        properties: {
-          cursor: {
-            type: 'string',
-          },
-          notifications: {
-            type: 'array',
-            items: {
-              $ref: '#/$defs/notification',
-            },
-          },
-        },
-        $defs: {
-          notification: {
-            type: 'object',
-            required: [
-              'uri',
-              'cid',
-              'author',
-              'reason',
-              'record',
-              'isRead',
-              'indexedAt',
-            ],
-            properties: {
-              uri: {
-                type: 'string',
-                format: 'uri',
-              },
-              cid: {
-                type: 'string',
-              },
-              author: {
-                type: 'object',
-                required: ['did', 'handle'],
-                properties: {
-                  did: {
-                    type: 'string',
-                  },
-                  handle: {
-                    type: 'string',
-                  },
-                  displayName: {
-                    type: 'string',
-                    maxLength: 64,
-                  },
-                },
-              },
-              reason: {
-                type: 'string',
-                $comment:
-                  "Expected values are 'like', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
-              },
-              reasonSubject: {
-                type: 'string',
-              },
-              record: {
-                type: 'object',
-              },
-              isRead: {
-                type: 'boolean',
-              },
-              indexedAt: {
-                type: 'string',
-                format: 'date-time',
-              },
-            },
-          },
-        },
-      },
-    },
-    defs: {
-      notification: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'author',
-          'reason',
-          'record',
-          'isRead',
-          'indexedAt',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'uri',
-          },
-          cid: {
-            type: 'string',
-          },
-          author: {
-            type: 'object',
-            required: ['did', 'handle'],
-            properties: {
-              did: {
-                type: 'string',
-              },
-              handle: {
-                type: 'string',
-              },
-              displayName: {
-                type: 'string',
-                maxLength: 64,
-              },
-            },
-          },
-          reason: {
-            type: 'string',
-            $comment:
-              "Expected values are 'like', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
-          },
-          reasonSubject: {
-            type: 'string',
-          },
-          record: {
-            type: 'object',
-          },
-          isRead: {
-            type: 'boolean',
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'date-time',
-          },
-        },
-      },
-    },
-  },
-  'app.bsky.getPostThread': {
-    lexicon: 1,
-    id: 'app.bsky.getPostThread',
+    id: 'app.bsky.feed.getPostThread',
     type: 'query',
     parameters: {
       uri: {
@@ -1646,67 +1685,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.getProfile': {
+  'app.bsky.feed.getRepostedBy': {
     lexicon: 1,
-    id: 'app.bsky.getProfile',
-    type: 'query',
-    parameters: {
-      user: {
-        type: 'string',
-        required: true,
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: [
-          'did',
-          'handle',
-          'followersCount',
-          'followsCount',
-          'postsCount',
-        ],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-          description: {
-            type: 'string',
-            maxLength: 256,
-          },
-          followersCount: {
-            type: 'number',
-          },
-          followsCount: {
-            type: 'number',
-          },
-          postsCount: {
-            type: 'number',
-          },
-          myState: {
-            type: 'object',
-            properties: {
-              follow: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        $defs: {},
-      },
-    },
-  },
-  'app.bsky.getRepostedBy': {
-    lexicon: 1,
-    id: 'app.bsky.getRepostedBy',
+    id: 'app.bsky.feed.getRepostedBy',
     type: 'query',
     parameters: {
       uri: {
@@ -1772,9 +1753,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.getTimeline': {
+  'app.bsky.feed.getTimeline': {
     lexicon: 1,
-    id: 'app.bsky.getTimeline',
+    id: 'app.bsky.feed.getTimeline',
     type: 'query',
     description: "A view of the user's home timeline",
     parameters: {
@@ -2074,9 +2055,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.getUserFollowers': {
+  'app.bsky.graph.getFollowers': {
     lexicon: 1,
-    id: 'app.bsky.getUserFollowers',
+    id: 'app.bsky.graph.getFollowers',
     type: 'query',
     description: 'Who is following a user?',
     parameters: {
@@ -2149,9 +2130,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.getUserFollows': {
+  'app.bsky.graph.getFollows': {
     lexicon: 1,
-    id: 'app.bsky.getUserFollows',
+    id: 'app.bsky.graph.getFollows',
     type: 'query',
     description: 'Who is a user following?',
     parameters: {
@@ -2224,16 +2205,30 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.getUsersSearch': {
+  'app.bsky.notification.getCount': {
     lexicon: 1,
-    id: 'app.bsky.getUsersSearch',
+    id: 'app.bsky.notification.getCount',
     type: 'query',
-    description: 'Find users matching search criteria',
-    parameters: {
-      term: {
-        type: 'string',
-        required: true,
+    parameters: {},
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['count'],
+        properties: {
+          count: {
+            type: 'number',
+          },
+        },
+        $defs: {},
       },
+    },
+  },
+  'app.bsky.notification.list': {
+    lexicon: 1,
+    id: 'app.bsky.notification.list',
+    type: 'query',
+    parameters: {
       limit: {
         type: 'number',
         maximum: 100,
@@ -2246,90 +2241,138 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['users'],
+        required: ['notifications'],
         properties: {
           cursor: {
             type: 'string',
           },
-          users: {
+          notifications: {
             type: 'array',
             items: {
-              type: 'object',
-              required: ['did', 'handle'],
-              properties: {
-                did: {
-                  type: 'string',
+              $ref: '#/$defs/notification',
+            },
+          },
+        },
+        $defs: {
+          notification: {
+            type: 'object',
+            required: [
+              'uri',
+              'cid',
+              'author',
+              'reason',
+              'record',
+              'isRead',
+              'indexedAt',
+            ],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'uri',
+              },
+              cid: {
+                type: 'string',
+              },
+              author: {
+                type: 'object',
+                required: ['did', 'handle'],
+                properties: {
+                  did: {
+                    type: 'string',
+                  },
+                  handle: {
+                    type: 'string',
+                  },
+                  displayName: {
+                    type: 'string',
+                    maxLength: 64,
+                  },
                 },
-                handle: {
-                  type: 'string',
-                },
-                displayName: {
-                  type: 'string',
-                  maxLength: 64,
-                },
-                description: {
-                  type: 'string',
-                },
-                indexedAt: {
-                  type: 'string',
-                  format: 'date-time',
-                },
+              },
+              reason: {
+                type: 'string',
+                $comment:
+                  "Expected values are 'like', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
+              },
+              reasonSubject: {
+                type: 'string',
+              },
+              record: {
+                type: 'object',
+              },
+              isRead: {
+                type: 'boolean',
+              },
+              indexedAt: {
+                type: 'string',
+                format: 'date-time',
               },
             },
           },
         },
-        $defs: {},
       },
     },
-  },
-  'app.bsky.getUsersTypeahead': {
-    lexicon: 1,
-    id: 'app.bsky.getUsersTypeahead',
-    type: 'query',
-    description: 'Find user suggestions for a search term',
-    parameters: {
-      term: {
-        type: 'string',
-        required: true,
-      },
-      limit: {
-        type: 'number',
-        maximum: 100,
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
+    defs: {
+      notification: {
         type: 'object',
-        required: ['users'],
+        required: [
+          'uri',
+          'cid',
+          'author',
+          'reason',
+          'record',
+          'isRead',
+          'indexedAt',
+        ],
         properties: {
-          users: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['did', 'handle'],
-              properties: {
-                did: {
-                  type: 'string',
-                },
-                handle: {
-                  type: 'string',
-                },
-                displayName: {
-                  type: 'string',
-                  maxLength: 64,
-                },
+          uri: {
+            type: 'string',
+            format: 'uri',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
               },
             },
           },
+          reason: {
+            type: 'string',
+            $comment:
+              "Expected values are 'like', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
+          },
+          reasonSubject: {
+            type: 'string',
+          },
+          record: {
+            type: 'object',
+          },
+          isRead: {
+            type: 'boolean',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
         },
-        $defs: {},
       },
     },
   },
-  'app.bsky.postNotificationsSeen': {
+  'app.bsky.notification.updateSeen': {
     lexicon: 1,
-    id: 'app.bsky.postNotificationsSeen',
+    id: 'app.bsky.notification.updateSeen',
     type: 'procedure',
     description: 'Notify server that the user has seen notifications',
     input: {
@@ -2353,217 +2396,44 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.updateProfile': {
-    lexicon: 1,
-    id: 'app.bsky.updateProfile',
-    type: 'procedure',
-    description: 'Notify server that the user has seen notifications',
-    input: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: [],
-        properties: {
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-          description: {
-            type: 'string',
-            maxLength: 256,
-          },
-        },
-        $defs: {},
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['uri', 'cid', 'record'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          record: {
-            type: 'object',
-          },
-        },
-        $defs: {},
-      },
-    },
-  },
 }
 export const methodSchemas: MethodSchema[] = Object.values(methodSchemaDict)
 export const ids = {
-  AppBskyDeclaration: 'app.bsky.declaration',
-  AppBskyFollow: 'app.bsky.follow',
-  AppBskyInvite: 'app.bsky.invite',
-  AppBskyInviteAccept: 'app.bsky.inviteAccept',
-  AppBskyLike: 'app.bsky.like',
-  AppBskyMediaEmbed: 'app.bsky.mediaEmbed',
-  AppBskyPost: 'app.bsky.post',
-  AppBskyProfile: 'app.bsky.profile',
-  AppBskyRepost: 'app.bsky.repost',
+  AppBskyActorProfile: 'app.bsky.actor.profile',
+  AppBskyFeedLike: 'app.bsky.feed.like',
+  AppBskyFeedMediaEmbed: 'app.bsky.feed.mediaEmbed',
+  AppBskyFeedPost: 'app.bsky.feed.post',
+  AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyGraphFollow: 'app.bsky.graph.follow',
+  AppBskyGraphInvite: 'app.bsky.graph.invite',
+  AppBskyGraphInviteAccept: 'app.bsky.graph.inviteAccept',
+  AppBskySystemDeclaration: 'app.bsky.system.declaration',
 }
 export const recordSchemaDict: Record<string, RecordSchema> = {
-  'app.bsky.declaration': {
+  'app.bsky.actor.profile': {
     lexicon: 1,
-    id: 'app.bsky.declaration',
-    description:
-      'Context for an account that is considered intrinsic to it and alters the fundamental understanding of an account of changed. A declaration should be treated as immutable.',
+    id: 'app.bsky.actor.profile',
     type: 'record',
     key: 'literal:self',
     record: {
       type: 'object',
-      required: ['actorType'],
+      required: ['displayName'],
       properties: {
-        actorType: {
-          oneOf: [
-            {
-              $ref: '#/$defs/actorKnown',
-            },
-            {
-              $ref: '#/$defs/actorUnknown',
-            },
-          ],
-        },
-      },
-      $defs: {
-        actorKnown: {
+        displayName: {
           type: 'string',
-          enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
+          maxLength: 64,
         },
-        actorUnknown: {
+        description: {
           type: 'string',
-          not: {
-            enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
-          },
-        },
-      },
-    },
-    defs: {
-      actorKnown: {
-        type: 'string',
-        enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
-      },
-      actorUnknown: {
-        type: 'string',
-        not: {
-          enum: ['app.bsky.actorUser', 'app.bsky.actorScene'],
-        },
-      },
-    },
-  },
-  'app.bsky.follow': {
-    lexicon: 1,
-    id: 'app.bsky.follow',
-    type: 'record',
-    description: 'A social follow',
-    key: 'tid',
-    record: {
-      type: 'object',
-      required: ['subject', 'createdAt'],
-      properties: {
-        subject: {
-          type: 'object',
-          required: ['did', 'declarationCid'],
-          properties: {
-            did: {
-              type: 'string',
-            },
-            declarationCid: {
-              type: 'string',
-            },
-          },
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time',
+          maxLength: 256,
         },
       },
       $defs: {},
     },
   },
-  'app.bsky.invite': {
+  'app.bsky.feed.like': {
     lexicon: 1,
-    id: 'app.bsky.invite',
-    type: 'record',
-    key: 'tid',
-    record: {
-      type: 'object',
-      required: ['group', 'subject', 'createdAt'],
-      properties: {
-        group: {
-          type: 'string',
-        },
-        subject: {
-          type: 'object',
-          required: ['did', 'declarationCid'],
-          properties: {
-            did: {
-              type: 'string',
-            },
-            declarationCid: {
-              type: 'string',
-            },
-          },
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time',
-        },
-      },
-      $defs: {},
-    },
-  },
-  'app.bsky.inviteAccept': {
-    lexicon: 1,
-    id: 'app.bsky.inviteAccept',
-    type: 'record',
-    key: 'tid',
-    record: {
-      type: 'object',
-      required: ['group', 'invite', 'createdAt'],
-      properties: {
-        group: {
-          type: 'object',
-          required: ['did', 'declarationCid'],
-          properties: {
-            did: {
-              type: 'string',
-            },
-            declarationCid: {
-              type: 'string',
-            },
-          },
-        },
-        invite: {
-          type: 'object',
-          required: ['uri', 'cid'],
-          properties: {
-            uri: {
-              type: 'string',
-            },
-            cid: {
-              type: 'string',
-            },
-          },
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time',
-        },
-      },
-      $defs: {},
-    },
-  },
-  'app.bsky.like': {
-    lexicon: 1,
-    id: 'app.bsky.like',
+    id: 'app.bsky.feed.like',
     type: 'record',
     key: 'tid',
     record: {
@@ -2608,9 +2478,9 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       },
     },
   },
-  'app.bsky.mediaEmbed': {
+  'app.bsky.feed.mediaEmbed': {
     lexicon: 1,
-    id: 'app.bsky.mediaEmbed',
+    id: 'app.bsky.feed.mediaEmbed',
     type: 'record',
     description: 'A list of media embedded in a post or document.',
     key: 'tid',
@@ -2685,9 +2555,9 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       },
     },
   },
-  'app.bsky.post': {
+  'app.bsky.feed.post': {
     lexicon: 1,
-    id: 'app.bsky.post',
+    id: 'app.bsky.feed.post',
     type: 'record',
     key: 'tid',
     record: {
@@ -2809,30 +2679,9 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       },
     },
   },
-  'app.bsky.profile': {
+  'app.bsky.feed.repost': {
     lexicon: 1,
-    id: 'app.bsky.profile',
-    type: 'record',
-    key: 'literal:self',
-    record: {
-      type: 'object',
-      required: ['displayName'],
-      properties: {
-        displayName: {
-          type: 'string',
-          maxLength: 64,
-        },
-        description: {
-          type: 'string',
-          maxLength: 256,
-        },
-      },
-      $defs: {},
-    },
-  },
-  'app.bsky.repost': {
-    lexicon: 1,
-    id: 'app.bsky.repost',
+    id: 'app.bsky.feed.repost',
     type: 'record',
     key: 'tid',
     record: {
@@ -2873,6 +2722,157 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
           cid: {
             type: 'string',
           },
+        },
+      },
+    },
+  },
+  'app.bsky.graph.follow': {
+    lexicon: 1,
+    id: 'app.bsky.graph.follow',
+    type: 'record',
+    description: 'A social follow',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['subject', 'createdAt'],
+      properties: {
+        subject: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
+  'app.bsky.graph.invite': {
+    lexicon: 1,
+    id: 'app.bsky.graph.invite',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['group', 'subject', 'createdAt'],
+      properties: {
+        group: {
+          type: 'string',
+        },
+        subject: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
+  'app.bsky.graph.inviteAccept': {
+    lexicon: 1,
+    id: 'app.bsky.graph.inviteAccept',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['group', 'invite', 'createdAt'],
+      properties: {
+        group: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        invite: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
+  'app.bsky.system.declaration': {
+    lexicon: 1,
+    id: 'app.bsky.system.declaration',
+    description:
+      'Context for an account that is considered intrinsic to it and alters the fundamental understanding of an account of changed. A declaration should be treated as immutable.',
+    type: 'record',
+    key: 'literal:self',
+    record: {
+      type: 'object',
+      required: ['actorType'],
+      properties: {
+        actorType: {
+          oneOf: [
+            {
+              $ref: '#/$defs/actorKnown',
+            },
+            {
+              $ref: '#/$defs/actorUnknown',
+            },
+          ],
+        },
+      },
+      $defs: {
+        actorKnown: {
+          type: 'string',
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
+        actorUnknown: {
+          type: 'string',
+          not: {
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+        },
+      },
+    },
+    defs: {
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
         },
       },
     },
