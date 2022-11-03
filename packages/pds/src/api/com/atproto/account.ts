@@ -35,7 +35,14 @@ export default function (server: Server) {
     const email = input.body.email.toLowerCase()
 
     // throws if not
-    handleLib.ensureValid(handle, config.availableUserDomains)
+    try {
+      handleLib.ensureValid(handle, config.availableUserDomains)
+    } catch (err) {
+      if (err instanceof handleLib.InvalidHandleError) {
+        throw new InvalidRequestError(err.message, 'InvalidHandle')
+      }
+      throw err
+    }
 
     const now = new Date().toISOString()
 
