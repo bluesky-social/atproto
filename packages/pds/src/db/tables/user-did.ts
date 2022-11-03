@@ -1,6 +1,6 @@
 export interface UserDid {
   did: string
-  username: string
+  handle: string
 }
 
 export const tableName = 'user_did'

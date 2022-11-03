@@ -42,7 +42,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   // Users
   await db.schema
     .createTable(userTable)
-    .addColumn('username', 'varchar', (col) => col.primaryKey())
+    .addColumn('handle', 'varchar', (col) => col.primaryKey())
     .addColumn('email', 'varchar', (col) => col.notNull().unique())
     .addColumn('password', 'varchar', (col) => col.notNull())
     .addColumn('lastSeenNotifs', 'varchar', (col) => col.notNull())
@@ -58,20 +58,20 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   await db.schema
     .createTable(userDidTable)
     .addColumn('did', 'varchar', (col) => col.primaryKey())
-    .addColumn('username', 'varchar', (col) => col.unique())
+    .addColumn('handle', 'varchar', (col) => col.unique())
     .execute()
   await db.schema
-    .createIndex(`${userDidTable}_username_lower_idx`)
+    .createIndex(`${userDidTable}_handle_lower_idx`)
     .unique()
     .on(userDidTable)
-    .expression(sql`lower("username")`)
+    .expression(sql`lower("handle")`)
     .execute()
   if (dialect === 'pg') {
     await db.schema // Supports user search
-      .createIndex(`${userDidTable}_username_tgrm_idx`)
+      .createIndex(`${userDidTable}_handle_tgrm_idx`)
       .on(userDidTable)
       .using('gist')
-      .expression(sql`"username" gist_trgm_ops`)
+      .expression(sql`"handle" gist_trgm_ops`)
       .execute()
   }
   // Refresh Tokens
