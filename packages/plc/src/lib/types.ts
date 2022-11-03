@@ -13,7 +13,7 @@ const documentData = z.object({
   did: z.string(),
   signingKey: z.string(),
   recoveryKey: z.string(),
-  username: z.string(),
+  handle: z.string(),
   atpPds: z.string(),
 })
 export type DocumentData = z.infer<typeof documentData>
@@ -22,7 +22,7 @@ const unsignedCreateOp = z.object({
   type: z.literal('create'),
   signingKey: z.string(),
   recoveryKey: z.string(),
-  username: z.string(),
+  handle: z.string(),
   service: z.string(),
   prev: z.null(),
 })
@@ -56,16 +56,16 @@ const rotateRecoveryKeyOp = unsignedRotateRecoveryKeyOp.extend({
 })
 export type RotateRecoveryKeyOp = z.infer<typeof rotateRecoveryKeyOp>
 
-const unsignedUpdateUsernameOp = z.object({
-  type: z.literal('update_username'),
-  username: z.string(),
+const unsignedUpdateHandleOp = z.object({
+  type: z.literal('update_handle'),
+  handle: z.string(),
   prev: z.string(),
 })
-export type UnsignedUpdateUsernameOp = z.infer<typeof unsignedUpdateUsernameOp>
-const updateUsernameOp = unsignedUpdateUsernameOp.extend({
+export type UnsignedUpdateHandleOp = z.infer<typeof unsignedUpdateHandleOp>
+const updateHandleOp = unsignedUpdateHandleOp.extend({
   sig: z.string(),
 })
-export type UpdateUsernameOp = z.infer<typeof updateUsernameOp>
+export type UpdateHandleOp = z.infer<typeof updateHandleOp>
 
 const unsignedUpdateAtpPdsOp = z.object({
   type: z.literal('update_atp_pds'),
@@ -81,7 +81,7 @@ export type UpdateAtpPdsOp = z.infer<typeof updateAtpPdsOp>
 const updateOperation = z.union([
   rotateSigningKeyOp,
   rotateRecoveryKeyOp,
-  updateUsernameOp,
+  updateHandleOp,
   updateAtpPdsOp,
 ])
 export type UpdateOperation = z.infer<typeof updateOperation>
@@ -92,7 +92,7 @@ export type Operation = z.infer<typeof operation>
 const unsignedUpdateOperation = z.union([
   unsignedRotateSigningKeyOp,
   unsignedRotateRecoveryKeyOp,
-  unsignedUpdateUsernameOp,
+  unsignedUpdateHandleOp,
   unsignedUpdateAtpPdsOp,
 ])
 export type UnsignedUpdateOperation = z.infer<typeof unsignedUpdateOperation>
@@ -141,8 +141,8 @@ export const def = {
   rotateSigningKeyOp,
   unsignedRotateRecoveryKeyOp,
   rotateRecoveryKeyOp,
-  unsignedUpdateUsernameOp,
-  updateUsernameOp,
+  unsignedUpdateHandleOp,
+  updateHandleOp,
   unsignedUpdateAtpPdsOp,
   updateAtpPdsOp,
   updateOperation,

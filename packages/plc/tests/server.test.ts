@@ -9,7 +9,7 @@ import { AxiosError } from 'axios'
 const USE_TEST_SERVER = true
 
 describe('PLC server', () => {
-  let username = 'alice.example.com'
+  let handle = 'alice.example.com'
   let atpPds = 'example.com'
 
   let closeFn: util.CloseFn | null = null
@@ -45,12 +45,7 @@ describe('PLC server', () => {
   })
 
   it('registers a did', async () => {
-    did = await client.createDid(
-      signingKey,
-      recoveryKey.did(),
-      username,
-      atpPds,
-    )
+    did = await client.createDid(signingKey, recoveryKey.did(), handle, atpPds)
   })
 
   it('retrieves did doc data', async () => {
@@ -58,7 +53,7 @@ describe('PLC server', () => {
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
-    expect(doc.username).toEqual(username)
+    expect(doc.handle).toEqual(handle)
     expect(doc.atpPds).toEqual(atpPds)
   })
 
@@ -72,8 +67,8 @@ describe('PLC server', () => {
     await client.rotateRecoveryKey(did, newRecoveryKey.did(), signingKey)
     recoveryKey = newRecoveryKey
 
-    username = 'ali.example2.com'
-    await client.updateUsername(did, username, signingKey)
+    handle = 'ali.example2.com'
+    await client.updateHandle(did, handle, signingKey)
 
     atpPds = 'example2.com'
     await client.updateAtpPds(did, atpPds, signingKey)
@@ -82,7 +77,7 @@ describe('PLC server', () => {
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
-    expect(doc.username).toEqual(username)
+    expect(doc.handle).toEqual(handle)
     expect(doc.atpPds).toEqual(atpPds)
   })
 
@@ -124,7 +119,7 @@ describe('PLC server', () => {
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
-    expect(doc.username).toEqual(username)
+    expect(doc.handle).toEqual(handle)
     expect(doc.atpPds).toEqual(atpPds)
   })
 

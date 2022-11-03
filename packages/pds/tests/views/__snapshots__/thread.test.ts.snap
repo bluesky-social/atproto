@@ -5,7 +5,7 @@ Object {
   "author": Object {
     "did": "user(0)",
     "displayName": "ali",
-    "name": "alice.test",
+    "handle": "alice.test",
   },
   "cid": "cids(0)",
   "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -22,7 +22,7 @@ Object {
     Object {
       "author": Object {
         "did": "user(1)",
-        "name": "carol.test",
+        "handle": "carol.test",
       },
       "cid": "cids(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -32,7 +32,7 @@ Object {
         "author": Object {
           "did": "user(0)",
           "displayName": "ali",
-          "name": "alice.test",
+          "handle": "alice.test",
         },
         "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -73,7 +73,7 @@ Object {
       "author": Object {
         "did": "user(2)",
         "displayName": "bobby",
-        "name": "bob.test",
+        "handle": "bob.test",
       },
       "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -83,7 +83,7 @@ Object {
         "author": Object {
           "did": "user(0)",
           "displayName": "ali",
-          "name": "alice.test",
+          "handle": "alice.test",
         },
         "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -120,7 +120,7 @@ Object {
           "author": Object {
             "did": "user(0)",
             "displayName": "ali",
-            "name": "alice.test",
+            "handle": "alice.test",
           },
           "cid": "cids(3)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -132,7 +132,7 @@ Object {
             "author": Object {
               "did": "user(2)",
               "displayName": "bobby",
-              "name": "bob.test",
+              "handle": "bob.test",
             },
             "cid": "cids(2)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -142,7 +142,7 @@ Object {
               "author": Object {
                 "did": "user(0)",
                 "displayName": "ali",
-                "name": "alice.test",
+                "handle": "alice.test",
               },
               "cid": "cids(0)",
               "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -215,7 +215,7 @@ Object {
   "author": Object {
     "did": "user(0)",
     "displayName": "ali",
-    "name": "alice.test",
+    "handle": "alice.test",
   },
   "cid": "cids(0)",
   "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -232,7 +232,7 @@ Object {
     Object {
       "author": Object {
         "did": "user(1)",
-        "name": "carol.test",
+        "handle": "carol.test",
       },
       "cid": "cids(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -242,7 +242,7 @@ Object {
         "author": Object {
           "did": "user(0)",
           "displayName": "ali",
-          "name": "alice.test",
+          "handle": "alice.test",
         },
         "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -282,7 +282,7 @@ Object {
       "author": Object {
         "did": "user(2)",
         "displayName": "bobby",
-        "name": "bob.test",
+        "handle": "bob.test",
       },
       "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -292,7 +292,7 @@ Object {
         "author": Object {
           "did": "user(0)",
           "displayName": "ali",
-          "name": "alice.test",
+          "handle": "alice.test",
         },
         "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",

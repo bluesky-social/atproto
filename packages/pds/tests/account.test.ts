@@ -14,7 +14,7 @@ import * as util from './_util'
 import { AuthScopes } from '../src/auth'
 
 const email = 'alice@test.com'
-const username = 'alice.test'
+const handle = 'alice.test'
 const password = 'test123'
 const passwordAlt = 'test456'
 
@@ -88,22 +88,22 @@ describe('account', () => {
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
   })
 
-  it('fails on invalid usernames', async () => {
+  it('fails on invalid handles', async () => {
     const promise = client.com.atproto.createAccount({
-      email: 'bad-username@test.com',
-      username: 'did:bad-username.test',
+      email: 'bad-handle@test.com',
+      handle: 'did:bad-handle.test',
       password: 'asdf',
       inviteCode,
     })
     await expect(promise).rejects.toThrow(
-      ComAtprotoCreateAccount.InvalidUsernameError,
+      ComAtprotoCreateAccount.InvalidHandleError,
     )
   })
 
   it('fails on bad invite code', async () => {
     const promise = client.com.atproto.createAccount({
       email,
-      username,
+      handle,
       password,
       inviteCode: 'fake-invite',
     })
@@ -118,7 +118,7 @@ describe('account', () => {
   it('creates an account', async () => {
     const res = await client.com.atproto.createAccount({
       email,
-      username,
+      handle,
       password,
       inviteCode,
     })
@@ -127,14 +127,14 @@ describe('account', () => {
 
     expect(typeof jwt).toBe('string')
     expect(did.startsWith('did:plc:')).toBeTruthy()
-    expect(res.data.username).toEqual(username)
+    expect(res.data.handle).toEqual(handle)
   })
 
   it('generates a properly formatted PLC DID', async () => {
     const plcClient = new plc.PlcClient(cfg.didPlcUrl)
     const didData = await plcClient.getDocumentData(did)
 
-    expect(didData.username).toBe(username)
+    expect(didData.handle).toBe(handle)
     expect(didData.signingKey).toBe(serverKey)
     expect(didData.recoveryKey).toBe(cfg.recoveryKey)
     expect(didData.atpPds).toBe('https://pds.public.url') // Mapped from publicUrl
@@ -145,7 +145,7 @@ describe('account', () => {
     const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
     const res = await client.com.atproto.createAccount({
       email: 'custom-recovery@test.com',
-      username: 'custom-recovery.test',
+      handle: 'custom-recovery.test',
       password: 'custom-recovery',
       inviteCode,
       recoveryKey,
@@ -157,14 +157,14 @@ describe('account', () => {
     expect(didData.recoveryKey).toBe(recoveryKey)
   })
 
-  it('disallows duplicate email addresses and usernames', async () => {
+  it('disallows duplicate email addresses and handles', async () => {
     const inviteCode = await createInviteCode(client, 2)
     const email = 'bob@test.com'
-    const username = 'bob.test'
+    const handle = 'bob.test'
     const password = 'test123'
     await client.com.atproto.createAccount({
       email,
-      username,
+      handle,
       password,
       inviteCode,
     })
@@ -172,7 +172,7 @@ describe('account', () => {
     await expect(
       client.com.atproto.createAccount({
         email: email.toUpperCase(),
-        username: 'carol.test',
+        handle: 'carol.test',
         password,
         inviteCode,
       }),
@@ -181,65 +181,65 @@ describe('account', () => {
     await expect(
       client.com.atproto.createAccount({
         email: 'carol@test.com',
-        username: username.toUpperCase(),
+        handle: handle.toUpperCase(),
         password,
         inviteCode,
       }),
-    ).rejects.toThrow('Username already taken: bob.test')
+    ).rejects.toThrow('Handle already taken: bob.test')
   })
 
-  it('disallows improperly formatted usernames', async () => {
+  it('disallows improperly formatted handles', async () => {
     const inviteCode = await createInviteCode(client, 1)
-    const tryUsername = async (username: string) => {
+    const tryHandle = async (handle: string) => {
       await client.com.atproto.createAccount({
         email: 'john@test.com',
-        username,
+        handle,
         password: 'test123',
         inviteCode,
       })
     }
-    await expect(tryUsername('did:john')).rejects.toThrow(
-      'Cannot register a username that starts with `did:`',
+    await expect(tryHandle('did:john')).rejects.toThrow(
+      'Cannot register a handle that starts with `did:`',
     )
-    await expect(tryUsername('john.bsky.io')).rejects.toThrow(
-      'Not a supported username domain',
+    await expect(tryHandle('john.bsky.io')).rejects.toThrow(
+      'Not a supported handle domain',
     )
-    await expect(tryUsername('j.test')).rejects.toThrow('Username too short')
-    await expect(tryUsername('jayromy-johnber123456.test')).rejects.toThrow(
-      'Username too long',
+    await expect(tryHandle('j.test')).rejects.toThrow('Handle too short')
+    await expect(tryHandle('jayromy-johnber123456.test')).rejects.toThrow(
+      'Handle too long',
     )
-    await expect(tryUsername('jo_hn.test')).rejects.toThrow(
-      'Invalid characters in username',
+    await expect(tryHandle('jo_hn.test')).rejects.toThrow(
+      'Invalid characters in handle',
     )
-    await expect(tryUsername('jo!hn.test')).rejects.toThrow(
-      'Invalid characters in username',
+    await expect(tryHandle('jo!hn.test')).rejects.toThrow(
+      'Invalid characters in handle',
     )
-    await expect(tryUsername('jo%hn.test')).rejects.toThrow(
-      'Invalid characters in username',
+    await expect(tryHandle('jo%hn.test')).rejects.toThrow(
+      'Invalid characters in handle',
     )
-    await expect(tryUsername('jo&hn.test')).rejects.toThrow(
-      'Invalid characters in username',
+    await expect(tryHandle('jo&hn.test')).rejects.toThrow(
+      'Invalid characters in handle',
     )
-    await expect(tryUsername('jo*hn.test')).rejects.toThrow(
-      'Invalid characters in username',
+    await expect(tryHandle('jo*hn.test')).rejects.toThrow(
+      'Invalid characters in handle',
     )
-    await expect(tryUsername('jo|hn.test')).rejects.toThrow(
-      'Invalid characters in username',
+    await expect(tryHandle('jo|hn.test')).rejects.toThrow(
+      'Invalid characters in handle',
     )
-    await expect(tryUsername('jo:hn.test')).rejects.toThrow(
-      'Invalid characters in username',
+    await expect(tryHandle('jo:hn.test')).rejects.toThrow(
+      'Invalid characters in handle',
     )
-    await expect(tryUsername('jo/hn.test')).rejects.toThrow(
-      'Invalid characters in username',
+    await expect(tryHandle('jo/hn.test')).rejects.toThrow(
+      'Invalid characters in handle',
     )
-    await expect(tryUsername('about.test')).rejects.toThrow('Reserved username')
-    await expect(tryUsername('atp.test')).rejects.toThrow('Reserved username')
+    await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
+    await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
   })
 
   it('fails on used up invite code', async () => {
     const promise = client.com.atproto.createAccount({
       email: 'bob@test.com',
-      username: 'bob.test',
+      handle: 'bob.test',
       password: 'asdf',
       inviteCode,
     })
@@ -260,7 +260,7 @@ describe('account', () => {
         try {
           await client.com.atproto.createAccount({
             email: `user${i}@test.com`,
-            username: `user${i}.test`,
+            handle: `user${i}.test`,
             password: `password`,
             inviteCode,
           })
@@ -276,7 +276,7 @@ describe('account', () => {
     expect(failures).toBe(9)
   })
 
-  it('handles racing signups for same username', async () => {
+  it('handles racing signups for same handle', async () => {
     const COUNT = 10
 
     const invite1 = await createInviteCode(client, COUNT)
@@ -289,11 +289,11 @@ describe('account', () => {
       const attempt = async () => {
         try {
           // Use two invites to ensure per-invite locking doesn't
-          // give the appearance of fixing a race for username.
+          // give the appearance of fixing a race for handle.
           const invite = i % 2 ? invite1 : invite2
           await client.com.atproto.createAccount({
             email: `matching@test.com`,
-            username: `matching.test`,
+            handle: `matching.test`,
             password: `password`,
             inviteCode: invite,
           })
@@ -314,10 +314,10 @@ describe('account', () => {
   })
 
   it('logs in', async () => {
-    const res = await client.com.atproto.createSession({ username, password })
+    const res = await client.com.atproto.createSession({ handle, password })
     jwt = res.data.accessJwt
     expect(typeof jwt).toBe('string')
-    expect(res.data.name).toBe('alice.test')
+    expect(res.data.handle).toBe('alice.test')
     expect(res.data.did).toBe(did)
   })
 
@@ -325,7 +325,7 @@ describe('account', () => {
     client.setHeader('authorization', `Bearer ${jwt}`)
     const res = await client.com.atproto.getSession({})
     expect(res.data.did).toBe(did)
-    expect(res.data.name).toBe(username)
+    expect(res.data.handle).toBe(handle)
   })
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {
@@ -357,11 +357,11 @@ describe('account', () => {
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.createSession({ username, password }),
-    ).rejects.toThrow('Invalid username or password')
+      client.com.atproto.createSession({ handle, password }),
+    ).rejects.toThrow('Invalid handle or password')
 
     await expect(
-      client.com.atproto.createSession({ username, password: passwordAlt }),
+      client.com.atproto.createSession({ handle, password: passwordAlt }),
     ).resolves.toBeDefined()
   })
 
@@ -386,11 +386,11 @@ describe('account', () => {
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.createSession({ username, password: passwordAlt }),
-    ).rejects.toThrow('Invalid username or password')
+      client.com.atproto.createSession({ handle, password: passwordAlt }),
+    ).rejects.toThrow('Invalid handle or password')
 
     await expect(
-      client.com.atproto.createSession({ username, password }),
+      client.com.atproto.createSession({ handle, password }),
     ).resolves.toBeDefined()
   })
 
@@ -399,7 +399,7 @@ describe('account', () => {
 
     const user = await db.db
       .selectFrom('user')
-      .innerJoin('user_did', 'user_did.username', 'user.username')
+      .innerJoin('user_did', 'user_did.handle', 'user.handle')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()
@@ -424,11 +424,11 @@ describe('account', () => {
 
     // Still logs in with previous password
     await expect(
-      client.com.atproto.createSession({ username, password: passwordAlt }),
-    ).rejects.toThrow('Invalid username or password')
+      client.com.atproto.createSession({ handle, password: passwordAlt }),
+    ).rejects.toThrow('Invalid handle or password')
 
     await expect(
-      client.com.atproto.createSession({ username, password }),
+      client.com.atproto.createSession({ handle, password }),
     ).resolves.toBeDefined()
   })
 })

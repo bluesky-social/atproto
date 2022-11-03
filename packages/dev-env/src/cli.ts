@@ -58,17 +58,17 @@ const envApi = {
     }
   },
 
-  async mkuser(username: string, serverPort?: number) {
+  async mkuser(handle: string, serverPort?: number) {
     assert(devEnv)
-    assert(username && typeof username === 'string', 'Username is required')
+    assert(handle && typeof handle === 'string', 'Handle is required')
 
-    if (!username.endsWith('.test')) {
-      username += '.test'
+    if (!handle.endsWith('.test')) {
+      handle += '.test'
     }
-    if (users.has(username)) {
-      throw new Error(`${username} already exists`)
+    if (users.has(handle)) {
+      throw new Error(`${handle} already exists`)
     }
-    const usernameNoTld = username.slice(0, username.length - '.test'.length)
+    const handleNoTld = handle.slice(0, handle.length - '.test'.length)
 
     const servers = devEnv.listOfType(ServerType.PersonalDataServer)
     let pds: DevEnvServer
@@ -84,20 +84,20 @@ const envApi = {
       pds = inst
     }
 
-    console.log(`Creating ${username} on ${pds.description}`)
+    console.log(`Creating ${handle} on ${pds.description}`)
 
     // create the PDS account
     const client = pds.getClient()
     const pdsRes = await client.com.atproto.createAccount({
-      email: usernameNoTld + '@test.com',
-      username,
-      password: usernameNoTld + '-pass',
+      email: handleNoTld + '@test.com',
+      handle,
+      password: handleNoTld + '-pass',
     })
-    users.set(username, pds)
+    users.set(handle, pds)
   },
 
-  user(name: string) {
-    const pds = users.get(name)
+  user(handle: string) {
+    const pds = users.get(handle)
     if (!pds) throw new Error('User not found')
     return pds.getClient()
   },

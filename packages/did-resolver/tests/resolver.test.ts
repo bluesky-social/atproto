@@ -53,15 +53,10 @@ describe('resolver', () => {
   it('creates the did on did:web & did:plc', async () => {
     const signingKey = await EcdsaKeypair.create()
     const recoveryKey = await EcdsaKeypair.create()
-    const username = 'alice.test'
+    const handle = 'alice.test'
     const pds = 'https://service.test'
     const client = new PlcClient(plcUrl)
-    plcDid = await client.createDid(
-      signingKey,
-      recoveryKey.did(),
-      username,
-      pds,
-    )
+    plcDid = await client.createDid(signingKey, recoveryKey.did(), handle, pds)
     didPlcDoc = await client.getDocument(plcDid)
     const domain = encodeURIComponent(`localhost:${webServer.port}`)
     webDid = `did:web:${domain}`

@@ -12,6 +12,7 @@ const atpSpecific = [
   'lexicon',
   'bsky',
   'bluesky',
+  'handle',
 ]
 
 // naively pulled from: https://radwebhosting.com/client_area/knowledgebase/196/List-of-Banned-Subdomain-Prefixes.html

@@ -34,7 +34,7 @@ describe('pds author feed views', () => {
 
   it('fetches full author feeds for self (sorted, minimal myState).', async () => {
     const aliceForAlice = await client.app.bsky.getAuthorFeed(
-      { author: sc.accounts[alice].username },
+      { author: sc.accounts[alice].handle },
       {
         headers: sc.getHeaders(alice),
       },
@@ -43,7 +43,7 @@ describe('pds author feed views', () => {
     expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
 
     const bobForBob = await client.app.bsky.getAuthorFeed(
-      { author: sc.accounts[bob].username },
+      { author: sc.accounts[bob].handle },
       {
         headers: sc.getHeaders(bob),
       },
@@ -52,7 +52,7 @@ describe('pds author feed views', () => {
     expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
 
     const carolForCarol = await client.app.bsky.getAuthorFeed(
-      { author: sc.accounts[carol].username },
+      { author: sc.accounts[carol].handle },
       {
         headers: sc.getHeaders(carol),
       },
@@ -61,7 +61,7 @@ describe('pds author feed views', () => {
     expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
 
     const danForDan = await client.app.bsky.getAuthorFeed(
-      { author: sc.accounts[dan].username },
+      { author: sc.accounts[dan].handle },
       {
         headers: sc.getHeaders(dan),
       },
@@ -72,7 +72,7 @@ describe('pds author feed views', () => {
 
   it("reflects fetching user's state in the feed.", async () => {
     const aliceForCarol = await client.app.bsky.getAuthorFeed(
-      { author: sc.accounts[alice].username },
+      { author: sc.accounts[alice].handle },
       {
         headers: sc.getHeaders(carol),
       },
@@ -91,7 +91,7 @@ describe('pds author feed views', () => {
     const paginator = async (cursor?: string) => {
       const res = await client.app.bsky.getAuthorFeed(
         {
-          author: sc.accounts[alice].username,
+          author: sc.accounts[alice].handle,
           before: cursor,
           limit: 2,
         },
@@ -107,7 +107,7 @@ describe('pds author feed views', () => {
 
     const full = await client.app.bsky.getAuthorFeed(
       {
-        author: sc.accounts[alice].username,
+        author: sc.accounts[alice].handle,
       },
       { headers: sc.getHeaders(dan) },
     )

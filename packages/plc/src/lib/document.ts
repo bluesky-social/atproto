@@ -95,7 +95,7 @@ export const validateOperationLog = async (
     did,
     signingKey: first.signingKey,
     recoveryKey: first.recoveryKey,
-    username: first.username,
+    handle: first.handle,
     atpPds: first.service,
   }
   let prev = await cidForData(first)
@@ -112,8 +112,8 @@ export const validateOperationLog = async (
       doc.signingKey = op.key
     } else if (check.is(op, t.def.rotateRecoveryKeyOp)) {
       doc.recoveryKey = op.key
-    } else if (check.is(op, t.def.updateUsernameOp)) {
-      doc.username = op.username
+    } else if (check.is(op, t.def.updateHandleOp)) {
+      doc.handle = op.handle
     } else if (check.is(op, t.def.updateAtpPdsOp)) {
       doc.atpPds = op.service
     } else {
@@ -173,7 +173,7 @@ export const formatDidDoc = (data: t.DocumentData): t.DidDocument => {
   return {
     '@context': context,
     id: data.did,
-    alsoKnownAs: [ensureHttpPrefix(data.username)],
+    alsoKnownAs: [ensureHttpPrefix(data.handle)],
     verificationMethod: [
       {
         id: `#signingKey`,

@@ -7,6 +7,7 @@ export interface QueryParams {}
 
 export interface CallOptions {
   headers?: Headers;
+  qp?: QueryParams;
 }
 
 export type InputSchema = undefined

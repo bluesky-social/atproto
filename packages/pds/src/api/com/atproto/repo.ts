@@ -25,7 +25,7 @@ export default function (server: Server) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }
 
-    const handle = didResolver.getUsername(didDoc)
+    const handle = didResolver.getHandle(didDoc)
     const handleIsCorrect = handle === userObj.handle
 
     const collections = await db.listCollectionsForDid(userObj.did)

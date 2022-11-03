@@ -24,7 +24,7 @@ export default {
         required: ['uri'],
         properties: {
           uri: { type: 'string', format: 'uri' },
-          username: { type: 'string' },
+          handle: { type: 'string' },
         },
       },
       embed: {

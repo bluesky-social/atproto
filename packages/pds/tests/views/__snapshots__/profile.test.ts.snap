@@ -7,10 +7,10 @@ Object {
   "displayName": "ali",
   "followersCount": 2,
   "followsCount": 3,
+  "handle": "alice.test",
   "myState": Object {
     "follow": "record(0)",
   },
-  "name": "alice.test",
   "postsCount": 4,
 }
 `;
@@ -20,8 +20,8 @@ Object {
   "did": "user(0)",
   "followersCount": 1,
   "followsCount": 1,
+  "handle": "dan.test",
   "myState": Object {},
-  "name": "dan.test",
   "postsCount": 2,
 }
 `;
@@ -33,8 +33,8 @@ Object {
   "displayName": "ali",
   "followersCount": 2,
   "followsCount": 3,
+  "handle": "alice.test",
   "myState": Object {},
-  "name": "alice.test",
   "postsCount": 4,
 }
 `;
@@ -46,8 +46,8 @@ Object {
   "displayName": "ali",
   "followersCount": 2,
   "followsCount": 3,
+  "handle": "alice.test",
   "myState": Object {},
-  "name": "alice.test",
   "postsCount": 4,
 }
 `;
@@ -59,8 +59,8 @@ Object {
   "displayName": "ali",
   "followersCount": 2,
   "followsCount": 3,
+  "handle": "alice.test",
   "myState": Object {},
-  "name": "alice.test",
   "postsCount": 4,
 }
 `;

@@ -48,7 +48,7 @@ export async function generateMockSetup(env: DevEnv) {
     email: string
     did: string
     declarationCid: string
-    username: string
+    handle: string
     password: string
     api: ServiceClient
   }
@@ -57,7 +57,7 @@ export async function generateMockSetup(env: DevEnv) {
       email: 'alice@test.com',
       did: '',
       declarationCid: '',
-      username: `alice.test`,
+      handle: `alice.test`,
       password: 'hunter2',
       api: clients.alice,
     },
@@ -65,7 +65,7 @@ export async function generateMockSetup(env: DevEnv) {
       email: 'bob@test.com',
       did: '',
       declarationCid: '',
-      username: `bob.test`,
+      handle: `bob.test`,
       password: 'hunter2',
       api: clients.bob,
     },
@@ -73,7 +73,7 @@ export async function generateMockSetup(env: DevEnv) {
       email: 'carla@test.com',
       did: '',
       declarationCid: '',
-      username: `carla.test`,
+      handle: `carla.test`,
       password: 'hunter2',
       api: clients.carla,
     },
@@ -86,7 +86,7 @@ export async function generateMockSetup(env: DevEnv) {
   for (const user of users) {
     const res = await clients.loggedout.com.atproto.createAccount({
       email: user.email,
-      username: user.username,
+      handle: user.handle,
       password: user.password,
     })
     user.did = res.data.did
@@ -95,7 +95,7 @@ export async function generateMockSetup(env: DevEnv) {
     await user.api.app.bsky.profile.create(
       { did: user.did },
       {
-        displayName: ucfirst(user.username).slice(0, -5),
+        displayName: ucfirst(user.handle).slice(0, -5),
         description: `Test user ${_i++}`,
       },
     )
