@@ -1,12 +1,12 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { RepoStructure } from '@atproto/repo'
 import { PlcClient } from '@atproto/plc'
+import * as handleLib from '@atproto/handle'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 import SqlBlockstore from '../../../sql-blockstore'
-import { ensureValidHandle } from './util/handle'
 import { grantRefreshToken } from './util/auth'
 import { AtUri } from '@atproto/uri'
 import * as schema from '../../../lexicon/schemas'
@@ -35,7 +35,7 @@ export default function (server: Server) {
     const email = input.body.email.toLowerCase()
 
     // throws if not
-    ensureValidHandle(handle, config.availableUserDomains)
+    handleLib.ensureValid(handle, config.availableUserDomains)
 
     const now = new Date().toISOString()
 
