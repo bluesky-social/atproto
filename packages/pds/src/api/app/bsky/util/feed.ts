@@ -9,14 +9,14 @@ export const rowToFeedItem = (row: FeedRow): FeedItem => ({
   cid: row.postCid,
   author: {
     did: row.authorDid,
-    name: row.authorName,
+    handle: row.authorHandle,
     displayName: row.authorDisplayName ?? undefined,
   },
   repostedBy:
     row.type === 'repost'
       ? {
           did: row.originatorDid,
-          name: row.originatorName,
+          handle: row.originatorHandle,
           displayName: row.originatorDisplayName ?? undefined,
         }
       : undefined,
@@ -46,10 +46,10 @@ type FeedRow = {
   recordBytes: Uint8Array
   indexedAt: string
   authorDid: string
-  authorName: string
+  authorHandle: string
   authorDisplayName: string | null
   originatorDid: string
-  originatorName: string
+  originatorHandle: string
   originatorDisplayName: string | null
   likeCount: number
   repostCount: number

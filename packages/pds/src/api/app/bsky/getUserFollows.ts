@@ -12,7 +12,7 @@ export default function (server: Server) {
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
-      const creator = await util.getUserInfo(db.db, user).catch((e) => {
+      const creator = await util.getUserInfo(db.db, user).catch((_e) => {
         throw new InvalidRequestError(`User not found: ${user}`)
       })
 
@@ -27,7 +27,7 @@ export default function (server: Server) {
         )
         .select([
           'subject.did as did',
-          'subject.username as name',
+          'subject.handle as handle',
           'profile.displayName as displayName',
           'follow.createdAt as createdAt',
           'follow.indexedAt as indexedAt',
@@ -42,7 +42,7 @@ export default function (server: Server) {
       const followsRes = await followsReq.execute()
       const follows = followsRes.map((row) => ({
         did: row.did,
-        name: row.name,
+        handle: row.handle,
         displayName: row.displayName ?? undefined,
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,

@@ -27,7 +27,7 @@ export default function (server: Server) {
     await db.db
       .updateTable('user')
       .set({ lastSeenNotifs: parsed })
-      .where('username', '=', user.username)
+      .where('handle', '=', user.handle)
       .executeTakeFirst()
 
     return { encoding: 'application/json', body: {} }

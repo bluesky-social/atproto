@@ -31,7 +31,7 @@ export default function (server: Server) {
           'notif.recordUri as uri',
           'notif.recordCid as cid',
           'author.did as authorDid',
-          'author.username as authorName',
+          'author.handle as authorHandle',
           'author_profile.displayName as authorDisplayName',
           'notif.reason as reason',
           'notif.reasonSubject as reasonSubject',
@@ -50,7 +50,7 @@ export default function (server: Server) {
       const [user, notifs] = await Promise.all([
         db.db
           .selectFrom('user')
-          .innerJoin('user_did', 'user_did.username', 'user.username')
+          .innerJoin('user_did', 'user_did.handle', 'user.handle')
           .selectAll()
           .where('did', '=', requester)
           .executeTakeFirst(),
@@ -66,7 +66,7 @@ export default function (server: Server) {
         cid: notif.cid,
         author: {
           did: notif.authorDid,
-          name: notif.authorName,
+          handle: notif.authorHandle,
           displayName: notif.authorDisplayName || undefined,
         },
         reason: notif.reason,

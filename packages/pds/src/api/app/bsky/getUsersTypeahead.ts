@@ -33,7 +33,7 @@ export default function (server: Server) {
 
     const users = results.map((result) => ({
       did: result.did,
-      name: result.name,
+      handle: result.handle,
       displayName: result.displayName ?? undefined,
     }))
 
@@ -51,7 +51,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
     .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
     .select([
       'user_did.did as did',
-      'user_did.username as name',
+      'user_did.handle as handle',
       'profile.displayName as displayName',
     ])
     .execute()
@@ -62,7 +62,7 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
     .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
     .select([
       'user_did.did as did',
-      'user_did.username as name',
+      'user_did.handle as handle',
       'profile.displayName as displayName',
     ])
     .execute()
@@ -71,4 +71,4 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
 type GetResultsFn = (
   db: Database,
   opts: Method.QueryParams & { limit: number },
-) => Promise<{ did: string; name: string; displayName: string | null }[]>
+) => Promise<{ did: string; handle: string; displayName: string | null }[]>
