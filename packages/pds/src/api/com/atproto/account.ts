@@ -3,13 +3,12 @@ import { RepoStructure } from '@atproto/repo'
 import { PlcClient } from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
 import * as crypto from '@atproto/crypto'
-import * as uint8arrays from 'uint8arrays'
 import { Server, APP_BSKY } from '../../../lexicon'
+import * as handleLib from '@atproto/handle'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 import SqlBlockstore from '../../../sql-blockstore'
-import { ensureValidHandle } from './util/handle'
 import { grantRefreshToken } from './util/auth'
 import * as schema from '../../../lexicon/schemas'
 
@@ -36,13 +35,19 @@ export default function (server: Server) {
     const handle = input.body.handle.toLowerCase()
     const email = input.body.email.toLowerCase()
 
-    // throws if not
-    ensureValidHandle(handle, config.availableUserDomains)
+    try {
+      handleLib.ensureValid(handle, config.availableUserDomains)
+    } catch (err) {
+      if (err instanceof handleLib.InvalidHandleError) {
+        throw new InvalidRequestError(err.message, 'InvalidHandle')
+      }
+      throw err
+    }
 
     // In order to perform the significant db updates ahead of
     // registering the did, we will use a temp invalid did. Once everything
     // goes well and a fresh did is registered, we'll replace the temp values.
-    const tempDid = uint8arrays.toString(crypto.randomBytes(16), 'base32')
+    const tempDid = crypto.randomStr(16, 'base32')
     const now = new Date().toISOString()
 
     const result = await db.transaction(async (dbTxn) => {
