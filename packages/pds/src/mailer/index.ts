@@ -33,7 +33,10 @@ export class ServerMailer {
   }
 
   async sendResetPassword(params: { token: string }, mailOpts: Mail.Options) {
-    return this.sendTemplate('resetPassword', params, mailOpts)
+    return this.sendTemplate('resetPassword', params, {
+      subject: 'Password Reset Requested',
+      ...mailOpts,
+    })
   }
 
   private async sendTemplate(templateName, params, mailOpts: Mail.Options) {
