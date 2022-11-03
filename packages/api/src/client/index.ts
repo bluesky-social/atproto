@@ -28,6 +28,7 @@ import * as ComAtprotoResolveHandle from './types/com/atproto/resolveHandle'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
+import * as AppBskyCreateScene from './types/app/bsky/createScene'
 import * as AppBskyDeclaration from './types/app/bsky/declaration'
 import * as AppBskyFollow from './types/app/bsky/follow'
 import * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
@@ -74,6 +75,7 @@ export * as ComAtprotoResolveHandle from './types/com/atproto/resolveHandle'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 export * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
+export * as AppBskyCreateScene from './types/app/bsky/createScene'
 export * as AppBskyDeclaration from './types/app/bsky/declaration'
 export * as AppBskyFollow from './types/app/bsky/follow'
 export * as AppBskyGetAuthorFeed from './types/app/bsky/getAuthorFeed'
@@ -429,6 +431,17 @@ export class BskyNS {
     this.post = new PostRecord(service)
     this.profile = new ProfileRecord(service)
     this.repost = new RepostRecord(service)
+  }
+
+  createScene(
+    data?: AppBskyCreateScene.InputSchema,
+    opts?: AppBskyCreateScene.CallOptions
+  ): Promise<AppBskyCreateScene.Response> {
+    return this._service.xrpc
+      .call('app.bsky.createScene', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyCreateScene.toKnownErr(e)
+      })
   }
 
   getAuthorFeed(

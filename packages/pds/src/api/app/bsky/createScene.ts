@@ -1,4 +1,4 @@
-import { Server } from '../../../lexicon'
+import { Server, APP_BSKY } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { PlcClient } from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
@@ -11,7 +11,7 @@ import SqlBlockstore from '../../../sql-blockstore'
 import { UserAlreadyExistsError } from '../../../db'
 
 // @TODO move to a higher dir
-import { ensureUsernameValid } from '../../com/atproto/util/username'
+import { ensureValidHandle } from '../../com/atproto/util/handle'
 
 export default function (server: Server) {
   server.app.bsky.createScene(async (_params, input, req, res) => {
@@ -26,7 +26,7 @@ export default function (server: Server) {
     const handle = input.body.handle.toLowerCase()
 
     // throws if not
-    ensureUsernameValid(handle, config.availableUserDomains)
+    ensureValidHandle(handle, config.availableUserDomains)
 
     const tempDid = uint8arrays.toString(crypto.randomBytes(16), 'base32')
     const now = new Date().toISOString()
@@ -77,7 +77,7 @@ export default function (server: Server) {
 
       const declaration = {
         $type: 'app.bsky.declaration',
-        actorType: 'app.bsky.actorScene', //@TODO replace with token
+        actorType: APP_BSKY.ActorScene,
       }
       const declarationCid = await blockstore.put(declaration)
       const uri = new AtUri(`${did}/${schema.ids.AppBskyDeclaration}/self`)

@@ -4,7 +4,7 @@ import { PlcClient } from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
 import * as crypto from '@atproto/crypto'
 import * as uint8arrays from 'uint8arrays'
-import { Server } from '../../../lexicon'
+import { Server, APP_BSKY } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
@@ -134,7 +134,7 @@ export default function (server: Server) {
 
       const declaration = {
         $type: 'app.bsky.declaration',
-        actorType: 'app.bsky.actorUser',
+        actorType: APP_BSKY.ActorUser,
       }
       const declarationCid = await blockstore.put(declaration)
       const uri = new AtUri(`${did}/${schema.ids.AppBskyDeclaration}/self`)
