@@ -87,14 +87,14 @@ describe('pds follow views', () => {
     )
   })
 
-  it('fetches followers by username', async () => {
+  it('fetches followers by handle', async () => {
     const byDid = await client.app.bsky.getUserFollowers({
       user: sc.dids.alice,
     })
-    const byUsername = await client.app.bsky.getUserFollowers({
-      user: sc.accounts[alice].username,
+    const byHandle = await client.app.bsky.getUserFollowers({
+      user: sc.accounts[alice].handle,
     })
-    expect(byUsername.data).toEqual(byDid.data)
+    expect(byHandle.data).toEqual(byDid.data)
   })
 
   it('paginates followers', async () => {
@@ -168,14 +168,14 @@ describe('pds follow views', () => {
     )
   })
 
-  it('fetches follows by username', async () => {
+  it('fetches follows by handle', async () => {
     const byDid = await client.app.bsky.getUserFollows({
       user: sc.dids.alice,
     })
-    const byUsername = await client.app.bsky.getUserFollows({
-      user: sc.accounts[alice].username,
+    const byHandle = await client.app.bsky.getUserFollows({
+      user: sc.accounts[alice].handle,
     })
-    expect(byUsername.data).toEqual(byDid.data)
+    expect(byHandle.data).toEqual(byDid.data)
   })
 
   it('paginates follows', async () => {

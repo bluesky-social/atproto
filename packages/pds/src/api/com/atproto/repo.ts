@@ -25,19 +25,19 @@ export default function (server: Server) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }
 
-    const username = didResolver.getUsername(didDoc)
-    const nameIsCorrect = username === userObj.username
+    const handle = didResolver.getHandle(didDoc)
+    const handleIsCorrect = handle === userObj.handle
 
     const collections = await db.listCollectionsForDid(userObj.did)
 
     return {
       encoding: 'application/json',
       body: {
-        name: userObj.username,
+        handle: userObj.handle,
         did: userObj.did,
         didDoc,
         collections,
-        nameIsCorrect,
+        handleIsCorrect,
       },
     }
   })

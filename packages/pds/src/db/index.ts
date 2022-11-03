@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { Kysely, SqliteDialect, PostgresDialect, sql, Migrator } from 'kysely'
+import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
@@ -187,15 +187,15 @@ export class Database {
     }
   }
 
-  async getUser(usernameOrDid: string): Promise<(User & UserDid) | null> {
+  async getUser(handleOrDid: string): Promise<(User & UserDid) | null> {
     let query = this.db
       .selectFrom('user')
-      .innerJoin('user_did', 'user_did.username', 'user.username')
+      .innerJoin('user_did', 'user_did.handle', 'user.handle')
       .selectAll()
-    if (usernameOrDid.startsWith('did:')) {
-      query = query.where('did', '=', usernameOrDid)
+    if (handleOrDid.startsWith('did:')) {
+      query = query.where('did', '=', handleOrDid)
     } else {
-      query = query.where('user_did.username', '=', usernameOrDid.toLowerCase())
+      query = query.where('user_did.handle', '=', handleOrDid.toLowerCase())
     }
     const found = await query.executeTakeFirst()
     return found || null
@@ -204,67 +204,64 @@ export class Database {
   async getUserByEmail(email: string): Promise<(User & UserDid) | null> {
     const found = await this.db
       .selectFrom('user')
-      .innerJoin('user_did', 'user_did.username', 'user.username')
+      .innerJoin('user_did', 'user_did.handle', 'user.handle')
       .selectAll()
       .where('email', '=', email.toLowerCase())
       .executeTakeFirst()
     return found || null
   }
 
-  async getUserDid(usernameOrDid: string): Promise<string | null> {
-    if (usernameOrDid.startsWith('did:')) return usernameOrDid
-    const found = await this.getUser(usernameOrDid)
+  async getUserDid(handleOrDid: string): Promise<string | null> {
+    if (handleOrDid.startsWith('did:')) return handleOrDid
+    const found = await this.getUser(handleOrDid)
     return found ? found.did : null
   }
 
-  async registerUser(email: string, username: string, password: string) {
+  async registerUser(email: string, handle: string, password: string) {
     this.assertTransaction()
-    log.debug({ username, email }, 'registering user')
+    log.debug({ handle, email }, 'registering user')
     const inserted = await this.db
       .insertInto('user')
       .values({
         email: email,
-        username: username,
+        handle: handle,
         password: await scrypt.hash(password),
         createdAt: new Date().toISOString(),
         lastSeenNotifs: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
-      .returning('username')
+      .returning('handle')
       .executeTakeFirst()
     if (!inserted) {
       throw new UserAlreadyExistsError()
     }
-    log.info({ username, email }, 'registered user')
+    log.info({ handle, email }, 'registered user')
   }
 
-  async registerUserDid(username: string, did: string) {
+  async registerUserDid(handle: string, did: string) {
     this.assertTransaction()
-    log.debug({ username, did }, 'registering user did')
+    log.debug({ handle, did }, 'registering user did')
     await this.db
       .insertInto('user_did')
-      .values({ username, did })
+      .values({ handle, did })
       .executeTakeFirst()
-    log.info({ username, did }, 'post-registered user')
+    log.info({ handle, did }, 'post-registered user')
   }
 
-  async updateUserPassword(username: string, password: string) {
+  async updateUserPassword(handle: string, password: string) {
     const hashedPassword = await scrypt.hash(password)
     await this.db
       .updateTable('user')
       .set({ password: hashedPassword })
-      .where('username', '=', username)
+      .where('handle', '=', handle)
       .execute()
   }
 
-  async verifyUserPassword(
-    username: string,
-    password: string,
-  ): Promise<boolean> {
+  async verifyUserPassword(handle: string, password: string): Promise<boolean> {
     const found = await this.db
       .selectFrom('user')
       .selectAll()
-      .where('username', '=', username)
+      .where('handle', '=', handle)
       .executeTakeFirst()
     if (!found) return false
     return scrypt.verify(password, found.password)

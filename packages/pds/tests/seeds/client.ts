@@ -58,7 +58,7 @@ export class SeedClient {
       did: string
       accessJwt: string
       refreshJwt: string
-      username: string
+      handle: string
       email: string
       password: string
       ref: UserRef
@@ -93,7 +93,7 @@ export class SeedClient {
   async createAccount(
     shortName: string,
     params: {
-      username: string
+      handle: string
       email: string
       password: string
     },

@@ -8,9 +8,9 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["name", "did"],
+      "required": ["handle", "did"],
       "properties": {
-        "name": {"type": "string"},
+        "handle": {"type": "string"},
         "did": {"type": "string"}
       }
     }

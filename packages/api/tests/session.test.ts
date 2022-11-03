@@ -28,7 +28,7 @@ describe('session', () => {
     client.sessionManager.on('session', (session) => sessions.push(session))
 
     const { data: account } = await client.com.atproto.createAccount({
-      username: 'alice.test',
+      handle: 'alice.test',
       email: 'alice@test.com',
       password: 'password',
     })
@@ -41,7 +41,7 @@ describe('session', () => {
     const { data: sessionInfo } = await client.com.atproto.getSession({})
     expect(sessionInfo).toEqual({
       did: account.did,
-      name: account.username,
+      handle: account.handle,
     })
   })
 
@@ -65,7 +65,7 @@ describe('session', () => {
     client.sessionManager.on('session', (session) => sessions.push(session))
 
     const { data: session } = await client.com.atproto.createSession({
-      username: 'alice.test',
+      handle: 'alice.test',
       password: 'password',
     })
 
@@ -77,7 +77,7 @@ describe('session', () => {
     const { data: sessionInfo } = await client.com.atproto.getSession({})
     expect(sessionInfo).toEqual({
       did: session.did,
-      name: session.name,
+      handle: session.handle,
     })
   })
 
@@ -86,7 +86,7 @@ describe('session', () => {
     client.sessionManager.on('session', (session) => sessions.push(session))
 
     const { data: session } = await client.com.atproto.createSession({
-      username: 'alice.test',
+      handle: 'alice.test',
       password: 'password',
     })
 
@@ -104,7 +104,7 @@ describe('session', () => {
     const { data: sessionInfo } = await client.com.atproto.getSession({})
     expect(sessionInfo).toEqual({
       did: sessionRefresh.did,
-      name: sessionRefresh.name,
+      handle: sessionRefresh.handle,
     })
 
     // Uses escape hatch: authorization set, so sessions are not managed by this call
@@ -122,7 +122,7 @@ describe('session', () => {
     client.sessionManager.on('session', (session) => sessions.push(session))
 
     const { data: session } = await client.com.atproto.createSession({
-      username: 'alice.test',
+      handle: 'alice.test',
       password: 'password',
     })
 
@@ -142,7 +142,7 @@ describe('session', () => {
     const { data: sessionInfo } = await client.com.atproto.getSession({})
     expect(sessionInfo).toEqual({
       did: sessionRefresh.did,
-      name: sessionRefresh.name,
+      handle: sessionRefresh.handle,
     })
   })
 
@@ -151,7 +151,7 @@ describe('session', () => {
     client.sessionManager.on('session', (session) => sessions.push(session))
 
     const { data: session } = await client.com.atproto.createSession({
-      username: 'alice.test',
+      handle: 'alice.test',
       password: 'password',
     })
     const sessionCreds = {
@@ -174,7 +174,7 @@ describe('session', () => {
     const { data: sessionInfo } = await client.com.atproto.getSession({})
     expect(sessionInfo).toEqual({
       did: session.did,
-      name: session.name,
+      handle: session.handle,
     })
 
     expect(sessions).toEqual([sessionCreds, undefined, sessionCreds])

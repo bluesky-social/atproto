@@ -27,7 +27,7 @@ export default function (server: Server) {
         )
         .select([
           'user_did.did as did',
-          'user_did.username as name',
+          'user_did.handle as handle',
           'profile.uri as profileUri',
           'profile.displayName as displayName',
           'profile.description as description',
@@ -63,7 +63,7 @@ export default function (server: Server) {
         encoding: 'application/json',
         body: {
           did: queryRes.did,
-          name: queryRes.name,
+          handle: queryRes.handle,
           displayName: queryRes.displayName || undefined,
           description: queryRes.description || undefined,
           followsCount: queryRes.followsCount,

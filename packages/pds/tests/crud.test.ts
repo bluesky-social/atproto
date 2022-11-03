@@ -5,13 +5,13 @@ import { CloseFn, paginateAll, runTestServer } from './_util'
 
 const alice = {
   email: 'alice@test.com',
-  username: 'alice.test',
+  handle: 'alice.test',
   did: '',
   password: 'alice-pass',
 }
 const bob = {
   email: 'bob@test.com',
-  username: 'bob.test',
+  handle: 'bob.test',
   did: '',
   password: 'bob-pass',
 }
@@ -37,14 +37,14 @@ describe('crud operations', () => {
   it('registers users', async () => {
     const res = await client.com.atproto.createAccount({
       email: alice.email,
-      username: alice.username,
+      handle: alice.handle,
       password: alice.password,
     })
     aliceClient.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     alice.did = res.data.did
     const res2 = await client.com.atproto.createAccount({
       email: bob.email,
-      username: bob.username,
+      handle: bob.handle,
       password: bob.password,
     })
     bob.did = res2.data.did
@@ -54,12 +54,12 @@ describe('crud operations', () => {
     const description = await client.com.atproto.repoDescribe({
       user: alice.did,
     })
-    expect(description.data.name).toBe(alice.username)
+    expect(description.data.handle).toBe(alice.handle)
     expect(description.data.did).toBe(alice.did)
     const description2 = await client.com.atproto.repoDescribe({
       user: bob.did,
     })
-    expect(description2.data.name).toBe(bob.username)
+    expect(description2.data.handle).toBe(bob.handle)
     expect(description2.data.did).toBe(bob.did)
   })
 

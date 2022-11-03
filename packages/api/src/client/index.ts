@@ -24,7 +24,7 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repoListRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repoPutRecord'
 import * as ComAtprotoRequestAccountPasswordReset from './types/com/atproto/requestAccountPasswordReset'
 import * as ComAtprotoResetAccountPassword from './types/com/atproto/resetAccountPassword'
-import * as ComAtprotoResolveName from './types/com/atproto/resolveName'
+import * as ComAtprotoResolveHandle from './types/com/atproto/resolveHandle'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
@@ -70,7 +70,7 @@ export * as ComAtprotoRepoListRecords from './types/com/atproto/repoListRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repoPutRecord'
 export * as ComAtprotoRequestAccountPasswordReset from './types/com/atproto/requestAccountPasswordReset'
 export * as ComAtprotoResetAccountPassword from './types/com/atproto/resetAccountPassword'
-export * as ComAtprotoResolveName from './types/com/atproto/resolveName'
+export * as ComAtprotoResolveHandle from './types/com/atproto/resolveHandle'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 export * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
@@ -351,14 +351,14 @@ export class AtprotoNS {
       })
   }
 
-  resolveName(
-    params?: ComAtprotoResolveName.QueryParams,
-    opts?: ComAtprotoResolveName.CallOptions
-  ): Promise<ComAtprotoResolveName.Response> {
+  resolveHandle(
+    params?: ComAtprotoResolveHandle.QueryParams,
+    opts?: ComAtprotoResolveHandle.CallOptions
+  ): Promise<ComAtprotoResolveHandle.Response> {
     return this._service.xrpc
-      .call('com.atproto.resolveName', params, undefined, opts)
+      .call('com.atproto.resolveHandle', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoResolveName.toKnownErr(e)
+        throw ComAtprotoResolveHandle.toKnownErr(e)
       })
   }
 

@@ -21,7 +21,7 @@ export default function (server: Server) {
         )
         .select([
           'user_did.did as did',
-          'user_did.username as name',
+          'user_did.handle as handle',
           'profile.displayName as displayName',
           'like.createdAt as createdAt',
           'like.indexedAt as indexedAt',
@@ -41,7 +41,7 @@ export default function (server: Server) {
 
       const likedBy = likedByRes.map((row) => ({
         did: row.did,
-        name: row.name,
+        handle: row.handle,
         displayName: row.displayName || undefined,
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,

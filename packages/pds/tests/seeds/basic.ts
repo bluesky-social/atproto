@@ -69,28 +69,28 @@ export default async (sc: SeedClient) => {
 const users = {
   alice: {
     email: 'alice@test.com',
-    username: 'alice.test',
+    handle: 'alice.test',
     password: 'alice-pass',
     displayName: 'ali',
     description: 'its me!',
   },
   bob: {
     email: 'bob@test.com',
-    username: 'bob.test',
+    handle: 'bob.test',
     password: 'bob-pass',
     displayName: 'bobby',
     description: 'hi im bob',
   },
   carol: {
     email: 'carol@test.com',
-    username: 'carol.test',
+    handle: 'carol.test',
     password: 'carol-pass',
     displayName: undefined,
     description: undefined,
   },
   dan: {
     email: 'dan@test.com',
-    username: 'dan.test',
+    handle: 'dan.test',
     password: 'dan-pass',
     displayName: undefined,
     description: undefined,

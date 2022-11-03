@@ -25,14 +25,14 @@ export const signOperation = async (
 export const create = async (
   signingKey: DidableKey,
   recoveryKey: string,
-  username: string,
+  handle: string,
   service: string,
 ): Promise<t.CreateOp> => {
   const op: t.UnsignedCreateOp = {
     type: 'create',
     signingKey: signingKey.did(),
     recoveryKey,
-    username,
+    handle,
     service,
     prev: null,
   }
@@ -66,14 +66,14 @@ export const rotateRecoveryKey = async (
   return signOperation(op, signingKey)
 }
 
-export const updateUsername = async (
-  username: string,
+export const updateHandle = async (
+  handle: string,
   prev: string,
   signingKey: DidableKey,
 ): Promise<t.Operation> => {
-  const op: t.UnsignedUpdateUsernameOp = {
-    type: 'update_username',
-    username,
+  const op: t.UnsignedUpdateHandleOp = {
+    type: 'update_handle',
+    handle,
     prev,
   }
   return signOperation(op, signingKey)

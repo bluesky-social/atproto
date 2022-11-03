@@ -18,12 +18,12 @@ There is the possibility that it could be extended to be more general in the fut
 Each DID document is made up of just four pieces of data (for now): 
 - `signingKey`
 - `recoveryKey`
-- `username`
+- `handle`
 - `atpPds` (Personal Data Server for the related AT Protocol repository)
 
 DID documents are derived from a log of signed operations, ordered by the PLC server.
 
-There are 5 operations that can be found in each log: `create`, `rotate_signing_key`, `rotate_recovery_key`, `update_username`, and `update_atp_pds`.
+There are 5 operations that can be found in each log: `create`, `rotate_signing_key`, `rotate_recovery_key`, `update_handle`, and `update_atp_pds`.
 
 Each operation is of the shape:
 ```ts
@@ -80,14 +80,14 @@ Consider the following operation log:
     type: 'create',
     signingKey: 'did:key:zDnaejYFhgFiVF89LhJ4UipACLKuqo6PteZf8eKDVKeExXUPk',
     recoveryKey: 'did:key:zDnaeSezF2TgCD71b5DiiFyhHQwKAfsBVqTTHRMvP597Z5Ztn',
-    username: 'alice.example.com',
+    handle: 'alice.example.com',
     service: 'https://example.com',
     prev: null,
     sig: 'vi6JAl5W4FfyViD5_BKL9p0rbI3MxTWuh0g_egTFAjtf7gwoSfSe1O3qMOEUPX6QH3H0Q9M4y7gOLGblWkEwfQ'
   },
   {
-    type: 'update_username',
-    username: 'ali.example2.com',
+    type: 'update_handle',
+    handle: 'ali.example2.com',
     prev: 'bafyreih2gihqzgq5qd6uqktyfpyxqxvpdnrpu2qunnkaxugbyquxumisuq',
     sig: 'KL98ORpGmAJTqDsC9mWAYbhoDIv_-eZ3Nv0YqiPkbgx0ra96gYa3fQhIpZVxXFyNbu_4Y3JhPCvyJb8yDMe9Sg'
   },
@@ -118,7 +118,7 @@ The log produces the following document data:
   did: 'did:plc:7iza6de2dwap2sbkpav7c6c6',
   signingKey: 'did:key:zDnaeh9v2RmcMo13Du2d6pjUf5bZwtauYxj3n9dYjw4EZUAR7',
   recoveryKey: 'did:key:zDnaedvvAsDE6H3BDdBejpx9ve2Tz95cymyCAKF66JbyMh1Lt',
-  username: 'ali.example2.com',
+  handle: 'ali.example2.com',
   atpPds: 'https://example2.com'
 }
 ```

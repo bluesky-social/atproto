@@ -5,27 +5,27 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(0)",
+    "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "name": "eve.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(1)",
+    "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "name": "dan.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(2)",
+    "handle": "carol.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "name": "carol.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(3)",
     "displayName": "bobby",
+    "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "name": "bob.test",
   },
 ]
 `;
@@ -35,14 +35,14 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(0)",
+    "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "name": "eve.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(1)",
+    "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "name": "dan.test",
   },
 ]
 `;

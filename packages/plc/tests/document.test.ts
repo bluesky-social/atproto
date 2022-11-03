@@ -11,7 +11,7 @@ describe('plc DID document', () => {
   let signingKey: EcdsaKeypair
   let recoveryKey: Secp256k1Keypair
   let did: string
-  let username = 'alice.example.com'
+  let handle = 'alice.example.com'
   let atpPds = 'https://example.com'
 
   let oldSigningKey: EcdsaKeypair
@@ -26,7 +26,7 @@ describe('plc DID document', () => {
     const createOp = await operations.create(
       signingKey,
       recoveryKey.did(),
-      username,
+      handle,
       atpPds,
     )
     const isValid = check.is(createOp, t.def.createOp)
@@ -41,15 +41,15 @@ describe('plc DID document', () => {
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
-    expect(doc.username).toEqual(username)
+    expect(doc.handle).toEqual(handle)
     expect(doc.atpPds).toEqual(atpPds)
   })
 
-  it('allows for updating username', async () => {
-    username = 'ali.example2.com'
+  it('allows for updating handle', async () => {
+    handle = 'ali.example2.com'
     const prev = await cidForData(ops[ops.length - 1])
-    const op = await operations.updateUsername(
-      username,
+    const op = await operations.updateHandle(
+      handle,
       prev.toString(),
       signingKey,
     )
@@ -59,7 +59,7 @@ describe('plc DID document', () => {
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
-    expect(doc.username).toEqual(username)
+    expect(doc.handle).toEqual(handle)
     expect(doc.atpPds).toEqual(atpPds)
   })
 
@@ -77,7 +77,7 @@ describe('plc DID document', () => {
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
-    expect(doc.username).toEqual(username)
+    expect(doc.handle).toEqual(handle)
     expect(doc.atpPds).toEqual(atpPds)
   })
 
@@ -97,13 +97,13 @@ describe('plc DID document', () => {
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
-    expect(doc.username).toEqual(username)
+    expect(doc.handle).toEqual(handle)
     expect(doc.atpPds).toEqual(atpPds)
   })
 
   it('no longer allows operations from old signing key', async () => {
     const prev = await cidForData(ops[ops.length - 1])
-    const op = await operations.updateUsername(
+    const op = await operations.updateHandle(
       'bob',
       prev.toString(),
       oldSigningKey,
@@ -127,13 +127,13 @@ describe('plc DID document', () => {
     expect(doc.did).toEqual(did)
     expect(doc.signingKey).toEqual(signingKey.did())
     expect(doc.recoveryKey).toEqual(recoveryKey.did())
-    expect(doc.username).toEqual(username)
+    expect(doc.handle).toEqual(handle)
     expect(doc.atpPds).toEqual(atpPds)
   })
 
   it('no longer allows operations from old recovery key', async () => {
     const prev = await cidForData(ops[ops.length - 1])
-    const op = await operations.updateUsername(
+    const op = await operations.updateHandle(
       'bob',
       prev.toString(),
       oldRecoveryKey,
@@ -169,17 +169,17 @@ describe('plc DID document', () => {
     expect(doc.recoveryKey).toEqual(newKey.did())
   })
 
-  it('it allows recovery key to update username', async () => {
-    username = 'ally.example3.com'
+  it('it allows recovery key to update handle', async () => {
+    handle = 'ally.example3.com'
     const prev = await cidForData(ops[ops.length - 1])
-    const op = await operations.updateUsername(
-      username,
+    const op = await operations.updateHandle(
+      handle,
       prev.toString(),
       recoveryKey,
     )
     ops.push(op)
     const doc = await document.validateOperationLog(did, ops)
-    expect(doc.username).toEqual(username)
+    expect(doc.handle).toEqual(handle)
   })
 
   it('it allows recovery key to update atpPds', async () => {
@@ -209,7 +209,7 @@ describe('plc DID document', () => {
     const op = await operations.create(
       signingKey,
       recoveryKey.did(),
-      username,
+      handle,
       atpPds,
     )
     expect(document.validateOperationLog(did, [...ops, op])).rejects.toThrow()
@@ -229,7 +229,7 @@ describe('plc DID document', () => {
       'https://w3id.org/security/suites/secp256k1-2019/v1',
     ])
     expect(doc.id).toEqual(did)
-    expect(doc.alsoKnownAs).toEqual([`https://${username}`])
+    expect(doc.alsoKnownAs).toEqual([`https://${handle}`])
 
     expect(doc.verificationMethod.length).toBe(2)
     expect(doc.verificationMethod[0].id).toEqual('#signingKey')
@@ -265,10 +265,10 @@ describe('plc DID document', () => {
   })
 
   it('formats a valid DID document regardless of leading https://', async () => {
-    username = 'https://alice.example.com'
+    handle = 'https://alice.example.com'
     const prev = await cidForData(ops[ops.length - 1])
-    const op1 = await operations.updateUsername(
-      username,
+    const op1 = await operations.updateHandle(
+      handle,
       prev.toString(),
       signingKey,
     )
@@ -283,7 +283,7 @@ describe('plc DID document', () => {
     ops.push(op2)
     const data = await document.validateOperationLog(did, ops)
     const doc = await document.formatDidDoc(data)
-    expect(doc.alsoKnownAs).toEqual([username])
+    expect(doc.alsoKnownAs).toEqual([handle])
     expect(doc.service[0].serviceEndpoint).toEqual(`https://${atpPds}`)
   })
 })

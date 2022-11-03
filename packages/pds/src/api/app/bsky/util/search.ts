@@ -17,10 +17,10 @@ export const getUserSearchQueryPg = (
   const threshold = term.length < 3 ? 0.9 : 0.8
   const cursor = before !== undefined ? unpackCursor(before) : undefined
 
-  // Matching user accounts based on username
-  const distanceAccount = distance(term, ref('username'))
+  // Matching user accounts based on handle
+  const distanceAccount = distance(term, ref('handle'))
   const keysetAccount = keyset(cursor, {
-    username: ref('username'),
+    handle: ref('handle'),
     distance: distanceAccount,
   })
   const accountsQb = db.db
@@ -29,13 +29,13 @@ export const getUserSearchQueryPg = (
     .if(!!keysetAccount, (qb) => (keysetAccount ? qb.where(keysetAccount) : qb))
     .select(['user_did.did as did', distanceAccount.as('distance')])
     .orderBy(distanceAccount)
-    .orderBy('username')
+    .orderBy('handle')
     .limit(limit)
 
   // Matching profiles based on display name
   const distanceProfile = distance(term, ref('displayName'))
   const keysetProfile = keyset(cursor, {
-    username: ref('username'),
+    handle: ref('handle'),
     distance: distanceProfile,
   })
   const profilesQb = db.db
@@ -45,7 +45,7 @@ export const getUserSearchQueryPg = (
     .if(!!keysetProfile, (qb) => (keysetProfile ? qb.where(keysetProfile) : qb))
     .select(['user_did.did as did', distanceProfile.as('distance')])
     .orderBy(distanceProfile)
-    .orderBy('username')
+    .orderBy('handle')
     .limit(limit)
 
   // Combine user account and profile results, taking best matches from each
@@ -67,7 +67,7 @@ export const getUserSearchQueryPg = (
 
   // Sort and paginate all user results
   const keysetAll = keyset(cursor, {
-    username: ref('username'),
+    handle: ref('handle'),
     distance: ref('distance'),
   })
   return db.db
@@ -75,7 +75,7 @@ export const getUserSearchQueryPg = (
     .innerJoin('user_did', 'user_did.did', 'results.did')
     .if(!!keysetAll, (qb) => (keysetAll ? qb.where(keysetAll) : qb))
     .orderBy('distance')
-    .orderBy('username') // Keep order stable: break ties in distance arbitrarily using username
+    .orderBy('handle') // Keep order stable: break ties in distance arbitrarily using handle
     .limit(limit)
 }
 
@@ -104,7 +104,7 @@ export const getUserSearchQuerySqlite = (
   // We'll ensure there's a space before each word in both textForMatch and in safeWords,
   // so that we can reliably match word prefixes using LIKE operator.
   const textForMatch = sql`lower(' ' || ${ref(
-    'user_did.username',
+    'user_did.handle',
   )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
 
   const cursor = before !== undefined ? unpackCursor(before) : undefined
@@ -113,42 +113,45 @@ export const getUserSearchQuerySqlite = (
     .selectFrom('user_did')
     .where((q) => {
       safeWords.forEach((word) => {
-        // Match word prefixes against contents of username and displayName
+        // Match word prefixes against contents of handle and displayName
         q = q.where(textForMatch, 'like', `% ${word.toLowerCase()}%`)
       })
       return q
     })
     .if(!!cursor, (qb) =>
-      cursor ? qb.where('username', '>', cursor.name) : qb,
+      cursor ? qb.where('handle', '>', cursor.handle) : qb,
     )
-    .orderBy('username')
+    .orderBy('handle')
     .limit(limit)
 }
 
-// E.g. { distance: .94827, name: 'pfrazee' } -> '[0.94827,"pfrazee"]'
-export const packCursor = (row: { distance: number; name: string }): string => {
-  const { distance, name } = row
-  return JSON.stringify([distance, name])
+// E.g. { distance: .94827, handle: 'pfrazee' } -> '[0.94827,"pfrazee"]'
+export const packCursor = (row: {
+  distance: number
+  handle: string
+}): string => {
+  const { distance, handle } = row
+  return JSON.stringify([distance, handle])
 }
 
 export const unpackCursor = (
   before: string,
-): { distance: number; name: string } => {
+): { distance: number; handle: string } => {
   const result = safeParse(before)
   if (!Array.isArray(result)) {
     throw new InvalidRequestError('Malformed cursor')
   }
-  const [distance, name, ...others] = result
-  if (typeof distance !== 'number' || !name || others.length > 0) {
+  const [distance, handle, ...others] = result
+  if (typeof distance !== 'number' || !handle || others.length > 0) {
     throw new InvalidRequestError('Malformed cursor')
   }
   return {
-    name,
+    handle,
     distance,
   }
 }
 
-// Remove leading @ in case a username is input that way
+// Remove leading @ in case a handle is input that way
 export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')
 
 // Uses pg_trgm strict word similarity to check similarity between a search term and a stored value
@@ -156,7 +159,7 @@ const distance = (term: string, ref: DbRef) =>
   sql<number>`(${term} <<<-> ${ref})`
 
 // Keyset condition for a cursor
-const keyset = (cursor, refs: { username: DbRef; distance: DbRef }) => {
+const keyset = (cursor, refs: { handle: DbRef; distance: DbRef }) => {
   if (cursor === undefined) return undefined
-  return sql`(${refs.distance} > ${cursor.distance}) or (${refs.distance} = ${cursor.distance} and ${refs.username} > ${cursor.name})`
+  return sql`(${refs.distance} > ${cursor.distance}) or (${refs.distance} = ${cursor.distance} and ${refs.handle} > ${cursor.handle})`
 }

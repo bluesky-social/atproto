@@ -18,10 +18,10 @@ Create a new PDS instance. Data is stored in memory.
 
 Stop the server at the given port.
 
-### `mkuser(username: string, pdsPort?: number)`
+### `mkuser(handle: string, pdsPort?: number)`
 
 Create a new user.
 
-### `user(username: string): ServiceClient`
+### `user(handle: string): ServiceClient`
 
 Get the `ServiceClient` for the given user.

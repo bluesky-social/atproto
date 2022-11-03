@@ -20,7 +20,7 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  name: string;
+  handle: string;
   did: string;
 }
 

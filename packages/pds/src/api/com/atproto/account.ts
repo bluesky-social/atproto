@@ -6,7 +6,7 @@ import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 import SqlBlockstore from '../../../sql-blockstore'
-import { ensureUsernameValid } from './util/username'
+import { ensureValidHandle } from './util/handle'
 import { grantRefreshToken } from './util/auth'
 import { AtUri } from '@atproto/uri'
 import * as schema from '../../../lexicon/schemas'
@@ -31,11 +31,11 @@ export default function (server: Server) {
   server.com.atproto.createAccount(async (_params, input, _req, res) => {
     const { password, inviteCode, recoveryKey } = input.body
     const { db, auth, config, keypair, logger } = locals.get(res)
-    const username = input.body.username.toLowerCase()
+    const handle = input.body.handle.toLowerCase()
     const email = input.body.email.toLowerCase()
 
     // throws if not
-    ensureUsernameValid(username, config.availableUserDomains)
+    ensureValidHandle(handle, config.availableUserDomains)
 
     const now = new Date().toISOString()
 
@@ -63,7 +63,7 @@ export default function (server: Server) {
           .executeTakeFirstOrThrow()
 
         if (!invite || invite.disabled || invite.availableUses <= useCount) {
-          logger.info({ username, email, inviteCode }, 'invalid invite code')
+          logger.info({ handle, email, inviteCode }, 'invalid invite code')
           throw new InvalidRequestError(
             'Provided invite code not available',
             'InvalidInviteCode',
@@ -74,15 +74,15 @@ export default function (server: Server) {
       // Pre-register user before going out to PLC to get a real did
 
       try {
-        await dbTxn.registerUser(email, username, password)
+        await dbTxn.registerUser(email, handle, password)
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
-          if ((await dbTxn.getUser(username)) !== null) {
-            throw new InvalidRequestError(`Username already taken: ${username}`)
+          if ((await dbTxn.getUser(handle)) !== null) {
+            throw new InvalidRequestError(`Handle already taken: ${handle}`)
           } else if ((await dbTxn.getUserByEmail(email)) !== null) {
             throw new InvalidRequestError(`Email already taken: ${email}`)
           } else {
-            throw new InvalidRequestError('Username or email already taken')
+            throw new InvalidRequestError('Handle or email already taken')
           }
         }
         throw err
@@ -96,12 +96,12 @@ export default function (server: Server) {
         did = await plcClient.createDid(
           keypair,
           recoveryKey || config.recoveryKey,
-          username,
+          handle,
           config.publicUrl,
         )
       } catch (err) {
         logger.error(
-          { didKey: keypair.did(), username },
+          { didKey: keypair.did(), handle },
           'failed to create did:plc',
         )
         throw err
@@ -111,7 +111,7 @@ export default function (server: Server) {
       // tables, and setup the repo root. These all _should_ succeed under typical conditions.
       // It's about as good as we're gonna get transactionally, given that we rely on PLC here to assign the did.
 
-      await dbTxn.registerUserDid(username, did)
+      await dbTxn.registerUserDid(handle, did)
       if (config.inviteRequired && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')
@@ -171,7 +171,7 @@ export default function (server: Server) {
     return {
       encoding: 'application/json',
       body: {
-        username,
+        handle,
         did: result.did,
         accessJwt: result.accessJwt,
         refreshJwt: result.refreshJwt,

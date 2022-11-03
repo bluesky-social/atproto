@@ -20,7 +20,7 @@ export default function (server: Server) {
 
       const userLookupCol = author.startsWith('did:')
         ? 'user_did.did'
-        : 'user_did.username'
+        : 'user_did.handle'
       const userQb = db.db
         .selectFrom('user_did')
         .selectAll()
@@ -76,10 +76,10 @@ export default function (server: Server) {
           'ipld_block.content as recordBytes',
           'ipld_block.indexedAt as indexedAt',
           'author.did as authorDid',
-          'author.username as authorName',
+          'author.handle as authorHandle',
           'author_profile.displayName as authorDisplayName',
           'originator.did as originatorDid',
-          'originator.username as originatorName',
+          'originator.handle as originatorHandle',
           'originator_profile.displayName as originatorDisplayName',
           db.db
             .selectFrom('app_bsky_like')

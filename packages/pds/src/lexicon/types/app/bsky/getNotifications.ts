@@ -31,7 +31,7 @@ export interface Notification {
   cid: string;
   author: {
     did: string,
-    name: string,
+    handle: string,
     displayName?: string,
   };
   reason: string;

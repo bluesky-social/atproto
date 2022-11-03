@@ -12,14 +12,14 @@ export interface CallOptions {
 }
 
 export interface InputSchema {
-  username: string;
+  handle: string;
   password: string;
 }
 
 export interface OutputSchema {
   accessJwt: string;
   refreshJwt: string;
-  name: string;
+  handle: string;
   did: string;
 }
 

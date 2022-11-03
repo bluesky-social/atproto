@@ -5,7 +5,7 @@ export default async (sc: SeedClient) => {
   await basicSeed(sc)
   await sc.createAccount('eve', {
     email: 'eve@test.com',
-    username: 'eve.test',
+    handle: 'eve.test',
     password: 'eve-pass',
   })
   await sc.repost(sc.dids.bob, sc.posts[sc.dids.alice][2].ref)

@@ -7,11 +7,11 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["accessJwt", "refreshJwt", "name", "did"],
+      "required": ["accessJwt", "refreshJwt", "handle", "did"],
       "properties": {
         "accessJwt": {"type": "string"},
         "refreshJwt": {"type": "string"},
-        "name": {"type": "string"},
+        "handle": {"type": "string"},
         "did": {"type": "string"}
       }
     }

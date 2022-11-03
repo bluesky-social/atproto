@@ -36,7 +36,7 @@ export interface Post {
 }
 export interface User {
   did: string;
-  name: string;
+  handle: string;
   displayName?: string;
 }
 export interface RecordEmbed {

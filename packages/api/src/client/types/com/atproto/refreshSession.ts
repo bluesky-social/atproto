@@ -15,7 +15,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   accessJwt: string;
   refreshJwt: string;
-  name: string;
+  handle: string;
   did: string;
 }
 

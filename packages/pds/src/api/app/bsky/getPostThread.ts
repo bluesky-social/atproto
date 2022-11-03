@@ -85,7 +85,7 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
       'post.cid as cid',
       'post.replyParent as parent',
       'author.did as authorDid',
-      'author.username as authorName',
+      'author.handle as authorHandle',
       'author_profile.displayName as authorDisplayName',
       'ipld_block.content as recordBytes',
       'ipld_block.indexedAt as indexedAt',
@@ -130,7 +130,7 @@ const rowToPost = (
     cid: row.cid,
     author: {
       did: row.authorDid,
-      name: row.authorName,
+      handle: row.authorHandle,
       displayName: row.authorDisplayName || undefined,
     },
     record: common.ipldBytesToRecord(row.recordBytes),

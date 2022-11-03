@@ -22,11 +22,11 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  name: string;
+  handle: string;
   did: string;
   didDoc: {};
   collections: string[];
-  nameIsCorrect: boolean;
+  handleIsCorrect: boolean;
 }
 
 export type Handler = (

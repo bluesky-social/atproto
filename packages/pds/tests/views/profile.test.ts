@@ -114,7 +114,7 @@ describe('pds profile views', () => {
     expect(descripExists).toBeTruthy()
   })
 
-  it('fetches profile by username', async () => {
+  it('fetches profile by handle', async () => {
     const byDid = await client.app.bsky.getProfile(
       { user: alice },
       {
@@ -122,11 +122,11 @@ describe('pds profile views', () => {
       },
     )
 
-    const byUsername = await client.app.bsky.getProfile(
-      { user: sc.accounts[alice].username },
+    const byHandle = await client.app.bsky.getProfile(
+      { user: sc.accounts[alice].handle },
       { headers: sc.getHeaders(bob) },
     )
 
-    expect(byUsername.data).toEqual(byDid.data)
+    expect(byHandle.data).toEqual(byDid.data)
   })
 })

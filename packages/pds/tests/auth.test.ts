@@ -52,52 +52,52 @@ describe('auth', () => {
 
   it('provides valid access and refresh token on account creation.', async () => {
     const account = await createAccount({
-      username: 'alice.test',
+      handle: 'alice.test',
       email: 'alice@test.com',
       password: 'password',
     })
     // Valid access token
     const sessionInfo = await getSession(account.accessJwt)
-    expect(sessionInfo).toEqual({ did: account.did, name: account.username }) // @TODO standardize on name or username?
+    expect(sessionInfo).toEqual({ did: account.did, handle: account.handle })
     // Valid refresh token
     const nextSession = await refreshSession(account.refreshJwt)
     expect(nextSession).toEqual(
       expect.objectContaining({
         did: account.did,
-        name: account.username,
+        handle: account.handle,
       }),
     )
   })
 
   it('provides valid access and refresh token on session creation.', async () => {
     await createAccount({
-      username: 'bob.test',
+      handle: 'bob.test',
       email: 'bob@test.com',
       password: 'password',
     })
     const session = await createSession({
-      username: 'bob.test',
+      handle: 'bob.test',
       password: 'password',
     })
     // Valid access token
     const sessionInfo = await getSession(session.accessJwt)
     expect(sessionInfo).toEqual({
       did: session.did,
-      name: session.name,
+      handle: session.handle,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
     expect(nextSession).toEqual(
       expect.objectContaining({
         did: session.did,
-        name: session.name,
+        handle: session.handle,
       }),
     )
   })
 
   it('provides valid access and refresh token on session refresh.', async () => {
     const account = await createAccount({
-      username: 'carol.test',
+      handle: 'carol.test',
       email: 'carol@test.com',
       password: 'password',
     })
@@ -106,21 +106,21 @@ describe('auth', () => {
     const sessionInfo = await getSession(session.accessJwt)
     expect(sessionInfo).toEqual({
       did: session.did,
-      name: session.name,
+      handle: session.handle,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
     expect(nextSession).toEqual(
       expect.objectContaining({
         did: session.did,
-        name: session.name,
+        handle: session.handle,
       }),
     )
   })
 
   it('refresh token is revoked after use.', async () => {
     const account = await createAccount({
-      username: 'eve.test',
+      handle: 'eve.test',
       email: 'eve@test.com',
       password: 'password',
     })
@@ -131,7 +131,7 @@ describe('auth', () => {
 
   it('refresh token is revoked when session is deleted.', async () => {
     const account = await createAccount({
-      username: 'finn.test',
+      handle: 'finn.test',
       email: 'finn@test.com',
       password: 'password',
     })
@@ -143,7 +143,7 @@ describe('auth', () => {
 
   it('access token cannot be used to refresh a session.', async () => {
     const account = await createAccount({
-      username: 'gordon.test',
+      handle: 'gordon.test',
       email: 'gordon@test.com',
       password: 'password',
     })
@@ -155,7 +155,7 @@ describe('auth', () => {
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
     const account = await createAccount({
-      username: 'holga.test',
+      handle: 'holga.test',
       email: 'holga@test.com',
       password: 'password',
     })

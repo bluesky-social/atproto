@@ -30,15 +30,10 @@ export class PlcClient {
   async createDid(
     signingKey: DidableKey,
     recoveryKey: string,
-    username: string,
+    handle: string,
     service: string,
   ): Promise<string> {
-    const op = await operations.create(
-      signingKey,
-      recoveryKey,
-      username,
-      service,
-    )
+    const op = await operations.create(signingKey, recoveryKey, handle, service)
     if (!check.is(op, t.def.createOp)) {
       throw new Error('Not a valid create operation')
     }
@@ -85,10 +80,10 @@ export class PlcClient {
     await axios.post(this.postOpUrl(did), op)
   }
 
-  async updateUsername(did: string, username: string, signingKey: DidableKey) {
+  async updateHandle(did: string, handle: string, signingKey: DidableKey) {
     const prev = await this.getPrev(did)
-    const op = await operations.updateUsername(
-      username,
+    const op = await operations.updateHandle(
+      handle,
       prev.toString(),
       signingKey,
     )

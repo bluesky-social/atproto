@@ -6,7 +6,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -21,14 +21,14 @@ Array [
     "repostCount": 1,
     "repostedBy": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "uri": "record(0)",
   },
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(1)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -53,7 +53,7 @@ Array [
     "repostCount": 1,
     "repostedBy": Object {
       "did": "user(2)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "uri": "record(1)",
   },
@@ -61,7 +61,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(2)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -89,7 +89,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(2)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -118,7 +118,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -147,7 +147,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -166,7 +166,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -185,7 +185,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -203,7 +203,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(1)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -231,7 +231,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -249,7 +249,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(2)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -268,7 +268,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -287,7 +287,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -311,7 +311,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -328,7 +328,7 @@ Array [
     "repostCount": 1,
     "repostedBy": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "uri": "record(0)",
   },
@@ -336,7 +336,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(1)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -364,7 +364,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(2)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -393,7 +393,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(2)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -422,7 +422,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -443,7 +443,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -462,7 +462,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -482,7 +482,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -512,7 +512,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -530,7 +530,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(2)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -549,7 +549,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -568,7 +568,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -592,7 +592,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -607,14 +607,14 @@ Array [
     "repostCount": 1,
     "repostedBy": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "uri": "record(0)",
   },
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(1)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -639,7 +639,7 @@ Array [
     "repostCount": 1,
     "repostedBy": Object {
       "did": "user(2)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "uri": "record(1)",
   },
@@ -647,7 +647,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(2)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -675,7 +675,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(2)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -704,7 +704,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -733,7 +733,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -752,7 +752,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -771,7 +771,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -789,7 +789,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(1)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -817,7 +817,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -835,7 +835,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(2)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -854,7 +854,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -873,7 +873,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -896,7 +896,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(0)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -921,7 +921,7 @@ Array [
     "repostCount": 1,
     "repostedBy": Object {
       "did": "user(1)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "uri": "record(0)",
   },
@@ -929,7 +929,7 @@ Array [
     "author": Object {
       "did": "user(2)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(1)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -957,7 +957,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -986,7 +986,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1015,7 +1015,7 @@ Array [
     "author": Object {
       "did": "user(2)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1036,7 +1036,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1055,7 +1055,7 @@ Array [
     "author": Object {
       "did": "user(2)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(2)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1075,7 +1075,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1094,7 +1094,7 @@ Array [
     "author": Object {
       "did": "user(3)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1113,7 +1113,7 @@ Array [
     "author": Object {
       "did": "user(2)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1137,7 +1137,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1165,7 +1165,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1194,7 +1194,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1215,7 +1215,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(1)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1235,7 +1235,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "carol.test",
+      "handle": "carol.test",
     },
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1254,7 +1254,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "ali",
-      "name": "alice.test",
+      "handle": "alice.test",
     },
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1278,7 +1278,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1307,7 +1307,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(2)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1325,7 +1325,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1353,7 +1353,7 @@ Array [
   Object {
     "author": Object {
       "did": "user(1)",
-      "name": "dan.test",
+      "handle": "dan.test",
     },
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1372,7 +1372,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "displayName": "bobby",
-      "name": "bob.test",
+      "handle": "bob.test",
     },
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",

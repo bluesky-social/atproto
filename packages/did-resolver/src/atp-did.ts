@@ -5,7 +5,7 @@ export type AtpData = {
   did: string
   signingKey: string
   recoveryKey: string
-  username: string
+  handle: string
   atpPds: string
 }
 
@@ -40,7 +40,7 @@ export const getKey = (doc: DIDDocument, id: string): string | undefined => {
   return didKey
 }
 
-export const getUsername = (doc: DIDDocument): string | undefined => {
+export const getHandle = (doc: DIDDocument): string | undefined => {
   const aka = doc.alsoKnownAs
   if (!aka) return undefined
   let found: string | undefined
@@ -81,13 +81,13 @@ export const parseToAtpDocument = (doc: DIDDocument): Partial<AtpData> => {
     did,
     signingKey: getKey(doc, '#signingKey'),
     recoveryKey: getKey(doc, '#recoveryKey'),
-    username: getUsername(doc),
+    handle: getHandle(doc),
     atpPds: getAtpPds(doc),
   }
 }
 
 export const ensureAtpDocument = (doc: DIDDocument): AtpData => {
-  const { did, signingKey, recoveryKey, username, atpPds } =
+  const { did, signingKey, recoveryKey, handle, atpPds } =
     parseToAtpDocument(doc)
   if (!did) {
     throw new Error(`Could not parse id from doc: ${doc}`)
@@ -98,11 +98,11 @@ export const ensureAtpDocument = (doc: DIDDocument): AtpData => {
   if (!recoveryKey) {
     throw new Error(`Could not parse recoveryKey from doc: ${doc}`)
   }
-  if (!username) {
-    throw new Error(`Could not parse username from doc: ${doc}`)
+  if (!handle) {
+    throw new Error(`Could not parse handle from doc: ${doc}`)
   }
   if (!atpPds) {
     throw new Error(`Could not parse atpPds from doc: ${doc}`)
   }
-  return { did, signingKey, recoveryKey, username, atpPds }
+  return { did, signingKey, recoveryKey, handle, atpPds }
 }

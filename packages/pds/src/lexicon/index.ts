@@ -24,7 +24,7 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repoListRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repoPutRecord'
 import * as ComAtprotoRequestAccountPasswordReset from './types/com/atproto/requestAccountPasswordReset'
 import * as ComAtprotoResetAccountPassword from './types/com/atproto/resetAccountPassword'
-import * as ComAtprotoResolveName from './types/com/atproto/resolveName'
+import * as ComAtprotoResolveHandle from './types/com/atproto/resolveHandle'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/syncGetRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/syncGetRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/syncUpdateRepo'
@@ -172,8 +172,8 @@ export class AtprotoNS {
     return this.server.xrpc.method(schema, handler)
   }
 
-  resolveName(handler: ComAtprotoResolveName.Handler) {
-    const schema = 'com.atproto.resolveName' // @ts-ignore
+  resolveHandle(handler: ComAtprotoResolveHandle.Handler) {
+    const schema = 'com.atproto.resolveHandle' // @ts-ignore
     return this.server.xrpc.method(schema, handler)
   }
 

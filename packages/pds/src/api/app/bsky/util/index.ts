@@ -4,7 +4,7 @@ import * as util from '../../../../db/util'
 
 type UserInfo = {
   did: string
-  name: string
+  handle: string
   displayName: string | undefined
 }
 
@@ -18,7 +18,7 @@ export const getUserInfo = async (
     .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
     .select([
       'user_did.did as did',
-      'user_did.username as name',
+      'user_did.handle as handle',
       'profile.displayName as displayName',
     ])
     .executeTakeFirst()
@@ -27,7 +27,7 @@ export const getUserInfo = async (
   }
   return {
     did: userInfo.did,
-    name: userInfo.name,
+    handle: userInfo.handle,
     displayName: userInfo.displayName || undefined,
   }
 }

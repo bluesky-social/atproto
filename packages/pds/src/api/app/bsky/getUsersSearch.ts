@@ -36,7 +36,7 @@ export default function (server: Server) {
 
     const users = results.map((result) => ({
       did: result.did,
-      name: result.name,
+      handle: result.handle,
       displayName: result.displayName ?? undefined,
       description: result.description ?? undefined,
       indexedAt: result.indexedAt ?? undefined,
@@ -60,7 +60,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
     .select([
       'distance',
       'user_did.did as did',
-      'user_did.username as name',
+      'user_did.handle as handle',
       'profile.displayName as displayName',
       'profile.description as description',
       'profile.indexedAt as indexedAt',
@@ -74,7 +74,7 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
     .select([
       sql<number>`0`.as('distance'),
       'user_did.did as did',
-      'user_did.username as name',
+      'user_did.handle as handle',
       'profile.displayName as displayName',
       'profile.description as description',
       'profile.indexedAt as indexedAt',
@@ -88,7 +88,7 @@ type GetResultsFn = (
 ) => Promise<
   {
     did: string
-    name: string
+    handle: string
     displayName: string | null
     description: string | null
     distance: number

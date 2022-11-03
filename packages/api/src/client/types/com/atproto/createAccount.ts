@@ -13,7 +13,7 @@ export interface CallOptions {
 
 export interface InputSchema {
   email: string;
-  username: string;
+  handle: string;
   inviteCode?: string;
   password: string;
   recoveryKey?: string;
@@ -22,7 +22,7 @@ export interface InputSchema {
 export interface OutputSchema {
   accessJwt: string;
   refreshJwt: string;
-  username: string;
+  handle: string;
   did: string;
   declarationCid: string;
 }
@@ -33,7 +33,7 @@ export interface Response {
   data: OutputSchema;
 }
 
-export class InvalidUsernameError extends XRPCError {
+export class InvalidHandleError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message)
   }
@@ -51,7 +51,7 @@ export class InvalidInviteCodeError extends XRPCError {
   }
 }
 
-export class UsernameNotAvailableError extends XRPCError {
+export class HandleNotAvailableError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message)
   }
@@ -59,11 +59,10 @@ export class UsernameNotAvailableError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'InvalidUsername') return new InvalidUsernameError(e)
+    if (e.error === 'InvalidHandle') return new InvalidHandleError(e)
     if (e.error === 'InvalidPassword') return new InvalidPasswordError(e)
     if (e.error === 'InvalidInviteCode') return new InvalidInviteCodeError(e)
-    if (e.error === 'UsernameNotAvailable')
-      return new UsernameNotAvailableError(e)
+    if (e.error === 'HandleNotAvailable') return new HandleNotAvailableError(e)
   }
   return e
 }

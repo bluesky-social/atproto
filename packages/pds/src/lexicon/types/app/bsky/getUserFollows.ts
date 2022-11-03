@@ -26,13 +26,13 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 export interface OutputSchema {
   subject: {
     did: string,
-    name: string,
+    handle: string,
     displayName?: string,
   };
   cursor?: string;
   follows: {
     did: string,
-    name: string,
+    handle: string,
     displayName?: string,
     createdAt?: string,
     indexedAt: string,

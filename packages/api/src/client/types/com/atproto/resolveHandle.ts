@@ -4,7 +4,7 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  name?: string;
+  handle?: string;
 }
 
 export interface CallOptions {
