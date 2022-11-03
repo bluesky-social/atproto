@@ -5,8 +5,8 @@ import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
 import * as Declaration from '../lexicon/types/app/bsky/declaration'
-import * as Invite from '../lexicon/types/app/bsky/invite'
-import * as InviteAccept from '../lexicon/types/app/bsky/inviteAccept'
+import * as Assertion from '../lexicon/types/app/bsky/assertion'
+import * as Confirmation from '../lexicon/types/app/bsky/confirmation'
 import * as Follow from '../lexicon/types/app/bsky/follow'
 import * as Like from '../lexicon/types/app/bsky/like'
 import * as Post from '../lexicon/types/app/bsky/post'
@@ -17,8 +17,8 @@ import postPlugin, { AppBskyPost } from './records/post'
 import likePlugin, { AppBskyLike } from './records/like'
 import repostPlugin, { AppBskyRepost } from './records/repost'
 import followPlugin, { AppBskyFollow } from './records/follow'
-import invitePlugin, { AppBskyInvite } from './records/invite'
-import inviteAcceptPlugin, { AppBskyInviteAccept } from './records/inviteAccept'
+import assertionPlugin, { AppBskyAssertion } from './records/assertion'
+import confirmationPlugin, { AppBskyConfirmation } from './records/confirmation'
 import profilePlugin, { AppBskyProfile } from './records/profile'
 import notificationPlugin from './tables/user-notification'
 import { AtUri } from '@atproto/uri'
@@ -42,8 +42,8 @@ export class Database {
     repost: DbRecordPlugin<Repost.Record, AppBskyRepost>
     follow: DbRecordPlugin<Follow.Record, AppBskyFollow>
     profile: DbRecordPlugin<Profile.Record, AppBskyProfile>
-    invite: DbRecordPlugin<Invite.Record, AppBskyInvite>
-    inviteAccept: DbRecordPlugin<InviteAccept.Record, AppBskyInviteAccept>
+    assertion: DbRecordPlugin<Assertion.Record, AppBskyAssertion>
+    confirmation: DbRecordPlugin<Confirmation.Record, AppBskyConfirmation>
   }
   notifications: NotificationsPlugin
 
@@ -58,8 +58,8 @@ export class Database {
       like: likePlugin(db),
       repost: repostPlugin(db),
       follow: followPlugin(db),
-      invite: invitePlugin(db),
-      inviteAccept: inviteAcceptPlugin(db),
+      assertion: assertionPlugin(db),
+      confirmation: confirmationPlugin(db),
       profile: profilePlugin(db),
     }
     this.notifications = notificationPlugin(db)

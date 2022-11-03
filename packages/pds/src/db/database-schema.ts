@@ -14,8 +14,8 @@ import * as post from './records/post'
 import * as like from './records/like'
 import * as repost from './records/repost'
 import * as follow from './records/follow'
-import * as invite from './records/invite'
-import * as inviteAccept from './records/inviteAccept'
+import * as assertion from './records/assertion'
+import * as confirmation from './records/confirmation'
 
 export type DatabaseSchema = user.PartialDB &
   didHandle.PartialDB &
@@ -33,5 +33,5 @@ export type DatabaseSchema = user.PartialDB &
   like.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
-  invite.PartialDB &
-  inviteAccept.PartialDB
+  assertion.PartialDB &
+  confirmation.PartialDB

@@ -2446,10 +2446,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
 }
 export const methodSchemas: MethodSchema[] = Object.values(methodSchemaDict)
 export const ids = {
+  AppBskyAssertion: 'app.bsky.assertion',
+  AppBskyConfirmation: 'app.bsky.confirmation',
   AppBskyDeclaration: 'app.bsky.declaration',
   AppBskyFollow: 'app.bsky.follow',
-  AppBskyInvite: 'app.bsky.invite',
-  AppBskyInviteAccept: 'app.bsky.inviteAccept',
   AppBskyLike: 'app.bsky.like',
   AppBskyMediaEmbed: 'app.bsky.mediaEmbed',
   AppBskyPost: 'app.bsky.post',
@@ -2457,6 +2457,79 @@ export const ids = {
   AppBskyRepost: 'app.bsky.repost',
 }
 export const recordSchemaDict: Record<string, RecordSchema> = {
+  'app.bsky.assertion': {
+    lexicon: 1,
+    id: 'app.bsky.assertion',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['assertion', 'subject', 'createdAt'],
+      properties: {
+        assertion: {
+          type: 'string',
+        },
+        subject: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
+  'app.bsky.confirmation': {
+    lexicon: 1,
+    id: 'app.bsky.confirmation',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['originator', 'assertion', 'createdAt'],
+      properties: {
+        originator: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        assertion: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
   'app.bsky.declaration': {
     lexicon: 1,
     id: 'app.bsky.declaration',
@@ -2523,79 +2596,6 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
               type: 'string',
             },
             declarationCid: {
-              type: 'string',
-            },
-          },
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time',
-        },
-      },
-      $defs: {},
-    },
-  },
-  'app.bsky.invite': {
-    lexicon: 1,
-    id: 'app.bsky.invite',
-    type: 'record',
-    key: 'tid',
-    record: {
-      type: 'object',
-      required: ['group', 'subject', 'createdAt'],
-      properties: {
-        group: {
-          type: 'string',
-        },
-        subject: {
-          type: 'object',
-          required: ['did', 'declarationCid'],
-          properties: {
-            did: {
-              type: 'string',
-            },
-            declarationCid: {
-              type: 'string',
-            },
-          },
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time',
-        },
-      },
-      $defs: {},
-    },
-  },
-  'app.bsky.inviteAccept': {
-    lexicon: 1,
-    id: 'app.bsky.inviteAccept',
-    type: 'record',
-    key: 'tid',
-    record: {
-      type: 'object',
-      required: ['group', 'invite', 'createdAt'],
-      properties: {
-        group: {
-          type: 'object',
-          required: ['did', 'declarationCid'],
-          properties: {
-            did: {
-              type: 'string',
-            },
-            declarationCid: {
-              type: 'string',
-            },
-          },
-        },
-        invite: {
-          type: 'object',
-          required: ['uri', 'cid'],
-          properties: {
-            uri: {
-              type: 'string',
-            },
-            cid: {
               type: 'string',
             },
           },
