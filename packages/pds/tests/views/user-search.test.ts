@@ -29,7 +29,7 @@ describe('pds user search views', () => {
   })
 
   it('typeahead gives relevant results', async () => {
-    const result = await client.app.bsky.getUsersTypeahead(
+    const result = await client.app.bsky.actor.searchTypeahead(
       { term: 'car' },
       { headers },
     )
@@ -73,7 +73,7 @@ describe('pds user search views', () => {
   })
 
   it('typeahead gives empty result set when provided empty term', async () => {
-    const result = await client.app.bsky.getUsersTypeahead(
+    const result = await client.app.bsky.actor.searchTypeahead(
       { term: '' },
       { headers },
     )
@@ -82,14 +82,14 @@ describe('pds user search views', () => {
   })
 
   it('typeahead applies limit', async () => {
-    const full = await client.app.bsky.getUsersTypeahead(
+    const full = await client.app.bsky.actor.searchTypeahead(
       { term: 'p' },
       { headers },
     )
 
     expect(full.data.users.length).toBeGreaterThan(5)
 
-    const limited = await client.app.bsky.getUsersTypeahead(
+    const limited = await client.app.bsky.actor.searchTypeahead(
       { term: 'p', limit: 5 },
       { headers },
     )
@@ -98,7 +98,7 @@ describe('pds user search views', () => {
   })
 
   it('search gives relevant results', async () => {
-    const result = await client.app.bsky.getUsersSearch(
+    const result = await client.app.bsky.actor.search(
       { term: 'car' },
       { headers },
     )
@@ -142,10 +142,7 @@ describe('pds user search views', () => {
   })
 
   it('search gives empty result set when provided empty term', async () => {
-    const result = await client.app.bsky.getUsersSearch(
-      { term: '' },
-      { headers },
-    )
+    const result = await client.app.bsky.actor.search({ term: '' }, { headers })
 
     expect(result.data.users).toEqual([])
   })
@@ -153,7 +150,7 @@ describe('pds user search views', () => {
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.getUsersSearch(
+      const res = await client.app.bsky.actor.search(
         { term: 'p', before: cursor, limit: 3 },
         { headers },
       )
@@ -165,10 +162,7 @@ describe('pds user search views', () => {
       expect(res.users.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await client.app.bsky.getUsersSearch(
-      { term: 'p' },
-      { headers },
-    )
+    const full = await client.app.bsky.actor.search({ term: 'p' }, { headers })
 
     expect(full.data.users.length).toBeGreaterThan(5)
     expect(results(paginatedAll)).toEqual(results([full.data]))
@@ -177,7 +171,7 @@ describe('pds user search views', () => {
   it('search handles bad input', async () => {
     // Mostly for sqlite's benefit, since it uses LIKE and these are special characters that will
     // get stripped. This input triggers a special case where there are no "safe" words for sqlite to search on.
-    const result = await client.app.bsky.getUsersSearch(
+    const result = await client.app.bsky.actor.search(
       { term: ' % _ ' },
       { headers },
     )

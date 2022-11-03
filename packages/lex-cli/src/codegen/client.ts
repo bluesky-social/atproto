@@ -19,11 +19,11 @@ import {
 } from './util'
 
 const ATP_METHODS = {
-  list: 'com.atproto.repoListRecords',
-  get: 'com.atproto.repoGetRecord',
-  create: 'com.atproto.repoCreateRecord',
-  put: 'com.atproto.repoPutRecord',
-  delete: 'com.atproto.repoDeleteRecord',
+  list: 'com.atproto.repo.listRecords',
+  get: 'com.atproto.repo.getRecord',
+  create: 'com.atproto.repo.createRecord',
+  put: 'com.atproto.repo.putRecord',
+  delete: 'com.atproto.repo.deleteRecord',
 }
 
 export async function genClientApi(schemas: Schema[]): Promise<GeneratedAPI> {

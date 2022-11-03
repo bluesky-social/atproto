@@ -1,13 +1,13 @@
-import { Server } from '../../../lexicon'
+import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as GetUserFollowers from '../../../lexicon/types/app/bsky/getUserFollowers'
-import * as util from './util'
-import * as locals from '../../../locals'
-import { paginate } from '../../../db/util'
+import * as GetFollowers from '../../../../lexicon/types/app/bsky/graph/getFollowers'
+import * as util from '../util'
+import * as locals from '../../../../locals'
+import { paginate } from '../../../../db/util'
 
 export default function (server: Server) {
-  server.app.bsky.getUserFollowers(
-    async (params: GetUserFollowers.QueryParams, _input, _req, res) => {
+  server.app.bsky.graph.getFollowers(
+    async (params: GetFollowers.QueryParams, _input, _req, res) => {
       const { user, limit, before } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic

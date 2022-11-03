@@ -1,19 +1,19 @@
-import { Server } from '../../../lexicon'
-import * as GetLikedBy from '../../../lexicon/types/app/bsky/getLikedBy'
-import * as locals from '../../../locals'
-import { paginate } from '../../../db/util'
+import { Server } from '../../../../lexicon'
+import * as GetRepostedBy from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
+import * as locals from '../../../../locals'
+import { paginate } from '../../../../db/util'
 
 export default function (server: Server) {
-  server.app.bsky.getLikedBy(
-    async (params: GetLikedBy.QueryParams, _input, _req, res) => {
+  server.app.bsky.feed.getRepostedBy(
+    async (params: GetRepostedBy.QueryParams, _input, _req, res) => {
       const { uri, limit, before, cid } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
       let builder = db.db
-        .selectFrom('app_bsky_like as like')
-        .where('like.subject', '=', uri)
-        .innerJoin('user_did', 'like.creator', 'user_did.did')
+        .selectFrom('app_bsky_repost as repost')
+        .where('repost.subject', '=', uri)
+        .innerJoin('user_did', 'user_did.did', 'repost.creator')
         .leftJoin(
           'app_bsky_profile as profile',
           'profile.creator',
@@ -23,23 +23,23 @@ export default function (server: Server) {
           'user_did.did as did',
           'user_did.handle as handle',
           'profile.displayName as displayName',
-          'like.createdAt as createdAt',
-          'like.indexedAt as indexedAt',
+          'repost.createdAt as createdAt',
+          'repost.indexedAt as indexedAt',
         ])
 
       if (cid) {
-        builder = builder.where('like.subjectCid', '=', cid)
+        builder = builder.where('repost.subjectCid', '=', cid)
       }
 
       builder = paginate(builder, {
         limit,
         before,
-        by: ref('like.createdAt'),
+        by: ref('repost.createdAt'),
       })
 
-      const likedByRes = await builder.execute()
+      const repostedByRes = await builder.execute()
 
-      const likedBy = likedByRes.map((row) => ({
+      const repostedBy = repostedByRes.map((row) => ({
         did: row.did,
         handle: row.handle,
         displayName: row.displayName || undefined,
@@ -52,8 +52,8 @@ export default function (server: Server) {
         body: {
           uri,
           cid,
-          cursor: likedBy.at(-1)?.createdAt,
-          likedBy,
+          repostedBy,
+          cursor: repostedBy.at(-1)?.createdAt,
         },
       }
     },

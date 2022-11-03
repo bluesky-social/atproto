@@ -1,14 +1,14 @@
 import { Kysely } from 'kysely'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
-import { Server } from '../../../lexicon'
-import * as GetPostThread from '../../../lexicon/types/app/bsky/getPostThread'
-import * as locals from '../../../locals'
-import { DatabaseSchema } from '../../../db/database-schema'
-import { countAll } from '../../../db/util'
+import { Server } from '../../../../lexicon'
+import * as GetPostThread from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import * as locals from '../../../../locals'
+import { DatabaseSchema } from '../../../../db/database-schema'
+import { countAll } from '../../../../db/util'
 
 export default function (server: Server) {
-  server.app.bsky.getPostThread(
+  server.app.bsky.feed.getPostThread(
     async (params: GetPostThread.QueryParams, _input, req, res) => {
       const { uri, depth = 6 } = params
       const { auth, db } = locals.get(res)

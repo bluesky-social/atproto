@@ -1,13 +1,13 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
-import { Server } from '../../../lexicon'
-import * as GetNotifications from '../../../lexicon/types/app/bsky/getNotifications'
-import * as locals from '../../../locals'
-import { paginate } from '../../../db/util'
+import { Server } from '../../../../lexicon'
+import * as List from '../../../../lexicon/types/app/bsky/notification/list'
+import * as locals from '../../../../locals'
+import { paginate } from '../../../../db/util'
 
 export default function (server: Server) {
-  server.app.bsky.getNotifications(
-    async (params: GetNotifications.QueryParams, _input, req, res) => {
+  server.app.bsky.notification.list(
+    async (params: List.QueryParams, _input, req, res) => {
       const { auth, db } = locals.get(res)
       const { limit, before } = params
       const { ref } = db.db.dynamic

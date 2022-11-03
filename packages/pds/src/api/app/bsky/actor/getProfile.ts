@@ -1,11 +1,11 @@
-import { Server } from '../../../lexicon'
+import { Server } from '../../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
-import * as GetProfile from '../../../lexicon/types/app/bsky/getProfile'
-import { countAll, userWhereClause } from '../../../db/util'
-import * as locals from '../../../locals'
+import * as GetProfile from '../../../../lexicon/types/app/bsky/actor/getProfile'
+import { countAll, userWhereClause } from '../../../../db/util'
+import * as locals from '../../../../locals'
 
 export default function (server: Server) {
-  server.app.bsky.getProfile(
+  server.app.bsky.actor.getProfile(
     async (params: GetProfile.QueryParams, _input, req, res) => {
       const { user } = params
       const { auth, db } = locals.get(res)

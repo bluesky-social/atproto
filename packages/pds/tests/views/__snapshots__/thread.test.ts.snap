@@ -14,7 +14,7 @@ Object {
     "like": "record(1)",
   },
   "record": Object {
-    "$type": "app.bsky.post",
+    "$type": "app.bsky.feed.post",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "text": "again",
   },
@@ -41,7 +41,7 @@ Object {
           "like": "record(1)",
         },
         "record": Object {
-          "$type": "app.bsky.post",
+          "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "text": "again",
         },
@@ -50,7 +50,7 @@ Object {
         "uri": "record(0)",
       },
       "record": Object {
-        "$type": "app.bsky.post",
+        "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": Object {
@@ -92,7 +92,7 @@ Object {
           "like": "record(1)",
         },
         "record": Object {
-          "$type": "app.bsky.post",
+          "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "text": "again",
         },
@@ -101,7 +101,7 @@ Object {
         "uri": "record(0)",
       },
       "record": Object {
-        "$type": "app.bsky.post",
+        "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": Object {
@@ -151,7 +151,7 @@ Object {
                 "like": "record(1)",
               },
               "record": Object {
-                "$type": "app.bsky.post",
+                "$type": "app.bsky.feed.post",
                 "createdAt": "1970-01-01T00:00:00.000Z",
                 "text": "again",
               },
@@ -160,7 +160,7 @@ Object {
               "uri": "record(0)",
             },
             "record": Object {
-              "$type": "app.bsky.post",
+              "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
               "reply": Object {
                 "parent": Object {
@@ -179,7 +179,7 @@ Object {
             "uri": "record(3)",
           },
           "record": Object {
-            "$type": "app.bsky.post",
+            "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "reply": Object {
               "parent": Object {
@@ -224,7 +224,7 @@ Object {
     "like": "record(1)",
   },
   "record": Object {
-    "$type": "app.bsky.post",
+    "$type": "app.bsky.feed.post",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "text": "again",
   },
@@ -251,7 +251,7 @@ Object {
           "like": "record(1)",
         },
         "record": Object {
-          "$type": "app.bsky.post",
+          "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "text": "again",
         },
@@ -260,7 +260,7 @@ Object {
         "uri": "record(0)",
       },
       "record": Object {
-        "$type": "app.bsky.post",
+        "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": Object {
@@ -301,7 +301,7 @@ Object {
           "like": "record(1)",
         },
         "record": Object {
-          "$type": "app.bsky.post",
+          "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "text": "again",
         },
@@ -310,7 +310,7 @@ Object {
         "uri": "record(0)",
       },
       "record": Object {
-        "$type": "app.bsky.post",
+        "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "reply": Object {
           "parent": Object {

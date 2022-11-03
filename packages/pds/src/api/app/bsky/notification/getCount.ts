@@ -1,12 +1,12 @@
-import { Server } from '../../../lexicon'
+import { Server } from '../../../../lexicon'
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import * as GetNotificationCount from '../../../lexicon/types/app/bsky/getNotificationCount'
-import * as locals from '../../../locals'
-import { countAll } from '../../../db/util'
+import * as GetCount from '../../../../lexicon/types/app/bsky/notification/getCount'
+import * as locals from '../../../../locals'
+import { countAll } from '../../../../db/util'
 
 export default function (server: Server) {
-  server.app.bsky.getNotificationCount(
-    async (params: GetNotificationCount.QueryParams, _input, req, res) => {
+  server.app.bsky.notification.getCount(
+    async (params: GetCount.QueryParams, _input, req, res) => {
       const { auth, db } = locals.get(res)
       const requester = auth.getUserDid(req)
 

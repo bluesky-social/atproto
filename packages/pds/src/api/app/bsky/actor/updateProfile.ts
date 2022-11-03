@@ -1,17 +1,17 @@
-import { Server } from '../../../lexicon'
+import { Server } from '../../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import * as locals from '../../../locals'
-import * as schema from '../../../lexicon/schemas'
+import * as locals from '../../../../locals'
+import * as schema from '../../../../lexicon/schemas'
 import { AtUri } from '@atproto/uri'
 import { RepoStructure } from '@atproto/repo'
-import SqlBlockstore from '../../../sql-blockstore'
+import SqlBlockstore from '../../../../sql-blockstore'
 import { CID } from 'multiformats/cid'
-import * as Profile from '../../../lexicon/types/app/bsky/profile'
+import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 
-const profileNsid = schema.ids.AppBskyProfile
+const profileNsid = schema.ids.AppBskyActorProfile
 
 export default function (server: Server) {
-  server.app.bsky.updateProfile(async (_params, input, req, res) => {
+  server.app.bsky.actor.updateProfile(async (_params, input, req, res) => {
     const { auth, db, logger } = locals.get(res)
 
     const requester = auth.getUserDid(req)

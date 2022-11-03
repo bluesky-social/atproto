@@ -33,7 +33,7 @@ describe('pds profile views', () => {
   })
 
   it('fetches own profile', async () => {
-    const aliceForAlice = await client.app.bsky.getProfile(
+    const aliceForAlice = await client.app.bsky.actor.getProfile(
       { user: alice },
       { headers: sc.getHeaders(alice) },
     )
@@ -42,7 +42,7 @@ describe('pds profile views', () => {
   })
 
   it("fetches other's profile, with a follow", async () => {
-    const aliceForBob = await client.app.bsky.getProfile(
+    const aliceForBob = await client.app.bsky.actor.getProfile(
       { user: alice },
       { headers: sc.getHeaders(bob) },
     )
@@ -51,7 +51,7 @@ describe('pds profile views', () => {
   })
 
   it("fetches other's profile, without a follow", async () => {
-    const danForBob = await client.app.bsky.getProfile(
+    const danForBob = await client.app.bsky.actor.getProfile(
       { user: dan },
       { headers: sc.getHeaders(bob) },
     )
@@ -60,12 +60,12 @@ describe('pds profile views', () => {
   })
 
   it('updates profile', async () => {
-    await client.app.bsky.updateProfile(
+    await client.app.bsky.actor.updateProfile(
       { displayName: 'ali', description: 'new descript' },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
-    const aliceForAlice = await client.app.bsky.getProfile(
+    const aliceForAlice = await client.app.bsky.actor.getProfile(
       { user: alice },
       { headers: sc.getHeaders(alice) },
     )
@@ -74,12 +74,12 @@ describe('pds profile views', () => {
   })
 
   it('handles partial updates', async () => {
-    await client.app.bsky.updateProfile(
+    await client.app.bsky.actor.updateProfile(
       { description: 'blah blah' },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
-    const aliceForAlice = await client.app.bsky.getProfile(
+    const aliceForAlice = await client.app.bsky.actor.getProfile(
       { user: alice },
       { headers: sc.getHeaders(alice) },
     )
@@ -95,14 +95,14 @@ describe('pds profile views', () => {
     }
     await Promise.all(
       descriptions.map(async (description) => {
-        await client.app.bsky.updateProfile(
+        await client.app.bsky.actor.updateProfile(
           { description },
           { headers: sc.getHeaders(alice), encoding: 'application/json' },
         )
       }),
     )
 
-    const profile = await client.app.bsky.getProfile(
+    const profile = await client.app.bsky.actor.getProfile(
       { user: alice },
       { headers: sc.getHeaders(alice) },
     )
@@ -115,14 +115,14 @@ describe('pds profile views', () => {
   })
 
   it('fetches profile by handle', async () => {
-    const byDid = await client.app.bsky.getProfile(
+    const byDid = await client.app.bsky.actor.getProfile(
       { user: alice },
       {
         headers: sc.getHeaders(bob),
       },
     )
 
-    const byHandle = await client.app.bsky.getProfile(
+    const byHandle = await client.app.bsky.actor.getProfile(
       { user: sc.accounts[alice].handle },
       { headers: sc.getHeaders(bob) },
     )

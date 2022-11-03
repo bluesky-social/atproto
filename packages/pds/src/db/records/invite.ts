@@ -1,11 +1,11 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Invite from '../../lexicon/types/app/bsky/invite'
+import * as Invite from '../../lexicon/types/app/bsky/graph/invite'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
-const type = schemas.ids.AppBskyInvite
+const type = schemas.ids.AppBskyGraphInvite
 const tableName = 'app_bsky_invite'
 
 export interface AppBskyInvite {

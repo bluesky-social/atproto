@@ -1,9 +1,9 @@
-import { Server } from '../../../lexicon'
+import { Server } from '../../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import * as locals from '../../../locals'
+import * as locals from '../../../../locals'
 
 export default function (server: Server) {
-  server.app.bsky.postNotificationsSeen(async (_params, input, req, res) => {
+  server.app.bsky.notification.updateSeen(async (_params, input, req, res) => {
     const { seenAt } = input.body
     const { auth, db } = locals.get(res)
 

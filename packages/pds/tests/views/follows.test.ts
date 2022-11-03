@@ -41,7 +41,7 @@ describe('pds follow views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches followers', async () => {
-    const aliceFollowers = await client.app.bsky.getUserFollowers({
+    const aliceFollowers = await client.app.bsky.graph.getFollowers({
       user: sc.dids.alice,
     })
 
@@ -50,7 +50,7 @@ describe('pds follow views', () => {
       getSortedCursors(aliceFollowers.data.followers),
     )
 
-    const bobFollowers = await client.app.bsky.getUserFollowers({
+    const bobFollowers = await client.app.bsky.graph.getFollowers({
       user: sc.dids.bob,
     })
 
@@ -59,7 +59,7 @@ describe('pds follow views', () => {
       getSortedCursors(bobFollowers.data.followers),
     )
 
-    const carolFollowers = await client.app.bsky.getUserFollowers({
+    const carolFollowers = await client.app.bsky.graph.getFollowers({
       user: sc.dids.carol,
     })
 
@@ -68,7 +68,7 @@ describe('pds follow views', () => {
       getSortedCursors(carolFollowers.data.followers),
     )
 
-    const danFollowers = await client.app.bsky.getUserFollowers({
+    const danFollowers = await client.app.bsky.graph.getFollowers({
       user: sc.dids.dan,
     })
 
@@ -77,7 +77,7 @@ describe('pds follow views', () => {
       getSortedCursors(danFollowers.data.followers),
     )
 
-    const eveFollowers = await client.app.bsky.getUserFollowers({
+    const eveFollowers = await client.app.bsky.graph.getFollowers({
       user: sc.dids.eve,
     })
 
@@ -88,10 +88,10 @@ describe('pds follow views', () => {
   })
 
   it('fetches followers by handle', async () => {
-    const byDid = await client.app.bsky.getUserFollowers({
+    const byDid = await client.app.bsky.graph.getFollowers({
       user: sc.dids.alice,
     })
-    const byHandle = await client.app.bsky.getUserFollowers({
+    const byHandle = await client.app.bsky.graph.getFollowers({
       user: sc.accounts[alice].handle,
     })
     expect(byHandle.data).toEqual(byDid.data)
@@ -100,7 +100,7 @@ describe('pds follow views', () => {
   it('paginates followers', async () => {
     const results = (results) => results.flatMap((res) => res.followers)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.getUserFollowers({
+      const res = await client.app.bsky.graph.getFollowers({
         user: sc.dids.alice,
         before: cursor,
         limit: 2,
@@ -113,7 +113,7 @@ describe('pds follow views', () => {
       expect(res.followers.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.getUserFollowers({
+    const full = await client.app.bsky.graph.getFollowers({
       user: sc.dids.alice,
     })
 
@@ -122,7 +122,7 @@ describe('pds follow views', () => {
   })
 
   it('fetches follows', async () => {
-    const aliceFollowers = await client.app.bsky.getUserFollows({
+    const aliceFollowers = await client.app.bsky.graph.getFollows({
       user: sc.dids.alice,
     })
 
@@ -131,7 +131,7 @@ describe('pds follow views', () => {
       getSortedCursors(aliceFollowers.data.follows),
     )
 
-    const bobFollowers = await client.app.bsky.getUserFollows({
+    const bobFollowers = await client.app.bsky.graph.getFollows({
       user: sc.dids.bob,
     })
 
@@ -140,7 +140,7 @@ describe('pds follow views', () => {
       getSortedCursors(bobFollowers.data.follows),
     )
 
-    const carolFollowers = await client.app.bsky.getUserFollows({
+    const carolFollowers = await client.app.bsky.graph.getFollows({
       user: sc.dids.carol,
     })
 
@@ -149,7 +149,7 @@ describe('pds follow views', () => {
       getSortedCursors(carolFollowers.data.follows),
     )
 
-    const danFollowers = await client.app.bsky.getUserFollows({
+    const danFollowers = await client.app.bsky.graph.getFollows({
       user: sc.dids.dan,
     })
 
@@ -158,7 +158,7 @@ describe('pds follow views', () => {
       getSortedCursors(danFollowers.data.follows),
     )
 
-    const eveFollowers = await client.app.bsky.getUserFollows({
+    const eveFollowers = await client.app.bsky.graph.getFollows({
       user: sc.dids.eve,
     })
 
@@ -169,10 +169,10 @@ describe('pds follow views', () => {
   })
 
   it('fetches follows by handle', async () => {
-    const byDid = await client.app.bsky.getUserFollows({
+    const byDid = await client.app.bsky.graph.getFollows({
       user: sc.dids.alice,
     })
-    const byHandle = await client.app.bsky.getUserFollows({
+    const byHandle = await client.app.bsky.graph.getFollows({
       user: sc.accounts[alice].handle,
     })
     expect(byHandle.data).toEqual(byDid.data)
@@ -181,7 +181,7 @@ describe('pds follow views', () => {
   it('paginates follows', async () => {
     const results = (results) => results.flatMap((res) => res.follows)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.getUserFollows({
+      const res = await client.app.bsky.graph.getFollows({
         user: sc.dids.alice,
         before: cursor,
         limit: 2,
@@ -194,7 +194,7 @@ describe('pds follow views', () => {
       expect(res.follows.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.getUserFollows({
+    const full = await client.app.bsky.graph.getFollows({
       user: sc.dids.alice,
     })
 

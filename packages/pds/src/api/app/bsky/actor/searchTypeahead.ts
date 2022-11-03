@@ -1,15 +1,15 @@
-import Database from '../../../db'
-import { Server } from '../../../lexicon'
-import * as Method from '../../../lexicon/types/app/bsky/getUsersTypeahead'
-import * as locals from '../../../locals'
+import Database from '../../../../db'
+import { Server } from '../../../../lexicon'
+import * as Method from '../../../../lexicon/types/app/bsky/actor/search'
+import * as locals from '../../../../locals'
 import {
   cleanTerm,
   getUserSearchQueryPg,
   getUserSearchQuerySqlite,
-} from './util/search'
+} from '../util/search'
 
 export default function (server: Server) {
-  server.app.bsky.getUsersTypeahead(async (params, _input, req, res) => {
+  server.app.bsky.actor.searchTypeahead(async (params, _input, req, res) => {
     let { term, limit } = params
     const { db, auth } = locals.get(res)
     auth.getUserDidOrThrow(req)

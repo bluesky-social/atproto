@@ -13,7 +13,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
@@ -42,7 +42,7 @@ Array [
     "likeCount": 2,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "yoohoo",
     },
@@ -61,7 +61,7 @@ Array [
     "likeCount": 3,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -80,7 +80,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hey there",
     },
@@ -104,7 +104,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
@@ -133,7 +133,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bobby boy here",
     },
@@ -152,7 +152,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "bob back at it again!",
     },
@@ -177,7 +177,7 @@ Array [
       "repost": "record(1)",
     },
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -209,7 +209,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
@@ -237,7 +237,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hi im carol",
     },
@@ -264,7 +264,7 @@ Array [
       "repost": "record(1)",
     },
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -286,7 +286,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
@@ -314,7 +314,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "dan here!",
     },
@@ -338,7 +338,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
@@ -369,7 +369,7 @@ Array [
       "like": "record(4)",
     },
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "yoohoo",
     },
@@ -390,7 +390,7 @@ Array [
       "like": "record(5)",
     },
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "again",
     },
@@ -409,7 +409,7 @@ Array [
     "likeCount": 0,
     "myState": Object {},
     "record": Object {
-      "$type": "app.bsky.post",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "text": "hey there",
     },

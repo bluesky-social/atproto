@@ -1,8 +1,8 @@
 import { once, EventEmitter } from 'events'
 import AtpApi, {
   ServiceClient as AtpServiceClient,
-  ComAtprotoCreateAccount,
-  ComAtprotoResetAccountPassword as ResetAccountPassword,
+  ComAtprotoAccountCreate,
+  ComAtprotoAccountResetPassword as ResetAccountPassword,
 } from '@atproto/api'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
@@ -22,7 +22,7 @@ const createInviteCode = async (
   client: AtpServiceClient,
   uses: number,
 ): Promise<string> => {
-  const res = await client.com.atproto.createInviteCode(
+  const res = await client.com.atproto.account.createInviteCode(
     { useCount: uses },
     {
       headers: { authorization: util.adminAuth() },
@@ -82,33 +82,33 @@ describe('account', () => {
   })
 
   it('serves the accounts system config', async () => {
-    const res = await client.com.atproto.getAccountsConfig({})
+    const res = await client.com.atproto.server.getAccountsConfig({})
     expect(res.data.inviteCodeRequired).toBe(true)
     expect(res.data.availableUserDomains[0]).toBe('.test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
   })
 
   it('fails on invalid handles', async () => {
-    const promise = client.com.atproto.createAccount({
+    const promise = client.com.atproto.account.create({
       email: 'bad-handle@test.com',
       handle: 'did:bad-handle.test',
       password: 'asdf',
       inviteCode,
     })
     await expect(promise).rejects.toThrow(
-      ComAtprotoCreateAccount.InvalidHandleError,
+      ComAtprotoAccountCreate.InvalidHandleError,
     )
   })
 
   it('fails on bad invite code', async () => {
-    const promise = client.com.atproto.createAccount({
+    const promise = client.com.atproto.account.create({
       email,
       handle,
       password,
       inviteCode: 'fake-invite',
     })
     await expect(promise).rejects.toThrow(
-      ComAtprotoCreateAccount.InvalidInviteCodeError,
+      ComAtprotoAccountCreate.InvalidInviteCodeError,
     )
   })
 
@@ -116,7 +116,7 @@ describe('account', () => {
   let jwt: string
 
   it('creates an account', async () => {
-    const res = await client.com.atproto.createAccount({
+    const res = await client.com.atproto.account.create({
       email,
       handle,
       password,
@@ -143,7 +143,7 @@ describe('account', () => {
   it('allows a custom set recovery key', async () => {
     const inviteCode = await createInviteCode(client, 1)
     const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
-    const res = await client.com.atproto.createAccount({
+    const res = await client.com.atproto.account.create({
       email: 'custom-recovery@test.com',
       handle: 'custom-recovery.test',
       password: 'custom-recovery',
@@ -162,7 +162,7 @@ describe('account', () => {
     const email = 'bob@test.com'
     const handle = 'bob.test'
     const password = 'test123'
-    await client.com.atproto.createAccount({
+    await client.com.atproto.account.create({
       email,
       handle,
       password,
@@ -170,7 +170,7 @@ describe('account', () => {
     })
 
     await expect(
-      client.com.atproto.createAccount({
+      client.com.atproto.account.create({
         email: email.toUpperCase(),
         handle: 'carol.test',
         password,
@@ -179,7 +179,7 @@ describe('account', () => {
     ).rejects.toThrow('Email already taken: bob@test.com')
 
     await expect(
-      client.com.atproto.createAccount({
+      client.com.atproto.account.create({
         email: 'carol@test.com',
         handle: handle.toUpperCase(),
         password,
@@ -191,7 +191,7 @@ describe('account', () => {
   it('disallows improperly formatted handles', async () => {
     const inviteCode = await createInviteCode(client, 1)
     const tryHandle = async (handle: string) => {
-      await client.com.atproto.createAccount({
+      await client.com.atproto.account.create({
         email: 'john@test.com',
         handle,
         password: 'test123',
@@ -237,14 +237,14 @@ describe('account', () => {
   })
 
   it('fails on used up invite code', async () => {
-    const promise = client.com.atproto.createAccount({
+    const promise = client.com.atproto.account.create({
       email: 'bob@test.com',
       handle: 'bob.test',
       password: 'asdf',
       inviteCode,
     })
     await expect(promise).rejects.toThrow(
-      ComAtprotoCreateAccount.InvalidInviteCodeError,
+      ComAtprotoAccountCreate.InvalidInviteCodeError,
     )
   })
 
@@ -258,7 +258,7 @@ describe('account', () => {
     for (let i = 0; i < COUNT; i++) {
       const attempt = async () => {
         try {
-          await client.com.atproto.createAccount({
+          await client.com.atproto.account.create({
             email: `user${i}@test.com`,
             handle: `user${i}.test`,
             password: `password`,
@@ -291,7 +291,7 @@ describe('account', () => {
           // Use two invites to ensure per-invite locking doesn't
           // give the appearance of fixing a race for handle.
           const invite = i % 2 ? invite1 : invite2
-          await client.com.atproto.createAccount({
+          await client.com.atproto.account.create({
             email: `matching@test.com`,
             handle: `matching.test`,
             password: `password`,
@@ -310,11 +310,11 @@ describe('account', () => {
   })
 
   it('fails on unauthenticated requests', async () => {
-    await expect(client.com.atproto.getSession({})).rejects.toThrow()
+    await expect(client.com.atproto.session.get({})).rejects.toThrow()
   })
 
   it('logs in', async () => {
-    const res = await client.com.atproto.createSession({ handle, password })
+    const res = await client.com.atproto.session.create({ handle, password })
     jwt = res.data.accessJwt
     expect(typeof jwt).toBe('string')
     expect(res.data.handle).toBe('alice.test')
@@ -323,7 +323,7 @@ describe('account', () => {
 
   it('can perform authenticated requests', async () => {
     client.setHeader('authorization', `Bearer ${jwt}`)
-    const res = await client.com.atproto.getSession({})
+    const res = await client.com.atproto.session.get({})
     expect(res.data.did).toBe(did)
     expect(res.data.handle).toBe(handle)
   })
@@ -338,7 +338,7 @@ describe('account', () => {
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(
-      client.com.atproto.requestAccountPasswordReset({ email }),
+      client.com.atproto.account.requestPasswordReset({ email }),
     )
 
     expect(mail.to).toEqual(email)
@@ -350,24 +350,24 @@ describe('account', () => {
       return expect(token).toBeDefined()
     }
 
-    await client.com.atproto.resetAccountPassword({
+    await client.com.atproto.account.resetPassword({
       token,
       password: passwordAlt,
     })
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.createSession({ handle, password }),
+      client.com.atproto.session.create({ handle, password }),
     ).rejects.toThrow('Invalid handle or password')
 
     await expect(
-      client.com.atproto.createSession({ handle, password: passwordAlt }),
+      client.com.atproto.session.create({ handle, password: passwordAlt }),
     ).resolves.toBeDefined()
   })
 
   it('allows only single-use of password reset token', async () => {
     const mail = await getMailFrom(
-      client.com.atproto.requestAccountPasswordReset({ email }),
+      client.com.atproto.account.requestPasswordReset({ email }),
     )
 
     const token = getTokenFromMail(mail)
@@ -377,20 +377,20 @@ describe('account', () => {
     }
 
     // Reset back from passwordAlt to password
-    await client.com.atproto.resetAccountPassword({ token, password })
+    await client.com.atproto.account.resetPassword({ token, password })
 
     // Reuse of token fails
     await expect(
-      client.com.atproto.resetAccountPassword({ token, password }),
+      client.com.atproto.account.resetPassword({ token, password }),
     ).rejects.toThrow(ResetAccountPassword.InvalidTokenError)
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.createSession({ handle, password: passwordAlt }),
+      client.com.atproto.session.create({ handle, password: passwordAlt }),
     ).rejects.toThrow('Invalid handle or password')
 
     await expect(
-      client.com.atproto.createSession({ handle, password }),
+      client.com.atproto.session.create({ handle, password }),
     ).resolves.toBeDefined()
   })
 
@@ -416,7 +416,7 @@ describe('account', () => {
 
     // Use of expired token fails
     await expect(
-      client.com.atproto.resetAccountPassword({
+      client.com.atproto.account.resetPassword({
         token: expiredToken,
         password: passwordAlt,
       }),
@@ -424,11 +424,11 @@ describe('account', () => {
 
     // Still logs in with previous password
     await expect(
-      client.com.atproto.createSession({ handle, password: passwordAlt }),
+      client.com.atproto.session.create({ handle, password: passwordAlt }),
     ).rejects.toThrow('Invalid handle or password')
 
     await expect(
-      client.com.atproto.createSession({ handle, password }),
+      client.com.atproto.session.create({ handle, password }),
     ).resolves.toBeDefined()
   })
 })

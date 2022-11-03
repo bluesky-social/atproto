@@ -1,6 +1,6 @@
 import * as common from '@atproto/common'
-import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/getAuthorFeed'
-import * as GetTimeline from '../../../../lexicon/types/app/bsky/getTimeline'
+import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 
 // Present post and repost results into FeedItems
 // @TODO add embeds

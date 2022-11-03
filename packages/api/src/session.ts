@@ -14,10 +14,10 @@ import * as CreateSession from './client/types/com/atproto/session/create'
 import * as RefreshSession from './client/types/com/atproto/session/refresh'
 import * as CreateAccount from './client/types/com/atproto/session/create'
 
-const CREATE_SESSION = 'com.atproto.createSession'
-const REFRESH_SESSION = 'com.atproto.refreshSession'
-const DELETE_SESSION = 'com.atproto.deleteSession'
-const CREATE_ACCOUNT = 'com.atproto.createAccount'
+const CREATE_SESSION = 'com.atproto.session.create'
+const REFRESH_SESSION = 'com.atproto.session.refresh'
+const DELETE_SESSION = 'com.atproto.session.delete'
+const CREATE_ACCOUNT = 'com.atproto.account.create'
 
 export class SessionClient extends Client {
   service(serviceUri: string | URL): SessionServiceClient {

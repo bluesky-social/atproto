@@ -1,17 +1,17 @@
 import { sql } from 'kysely'
-import Database from '../../../db'
-import { Server } from '../../../lexicon'
-import * as Method from '../../../lexicon/types/app/bsky/getUsersSearch'
-import * as locals from '../../../locals'
+import Database from '../../../../db'
+import { Server } from '../../../../lexicon'
+import * as Method from '../../../../lexicon/types/app/bsky/actor/search'
+import * as locals from '../../../../locals'
 import {
   cleanTerm,
   getUserSearchQueryPg,
   getUserSearchQuerySqlite,
   packCursor,
-} from './util/search'
+} from '../util/search'
 
 export default function (server: Server) {
-  server.app.bsky.getUsersSearch(async (params, _input, req, res) => {
+  server.app.bsky.actor.search(async (params, _input, req, res) => {
     let { term, limit } = params
     const { before } = params
     const { db, auth } = locals.get(res)
