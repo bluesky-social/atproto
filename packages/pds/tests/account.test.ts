@@ -399,7 +399,7 @@ describe('account', () => {
 
     const user = await db.db
       .selectFrom('user')
-      .innerJoin('user_did', 'user_did.handle', 'user.handle')
+      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()

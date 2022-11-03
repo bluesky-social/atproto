@@ -2,16 +2,13 @@ import { Server, APP_BSKY } from '../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { PlcClient } from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
-import * as uint8arrays from 'uint8arrays'
+import * as handleLib from '@atproto/handle'
 import * as locals from '../../../locals'
 import * as schema from '../../../lexicon/schemas'
 import { AtUri } from '@atproto/uri'
 import { RepoStructure } from '@atproto/repo'
 import SqlBlockstore from '../../../sql-blockstore'
 import { UserAlreadyExistsError } from '../../../db'
-
-// @TODO move to a higher dir
-import { ensureValidHandle } from '../../com/atproto/util/handle'
 
 export default function (server: Server) {
   server.app.bsky.createScene(async (_params, input, req, res) => {
@@ -25,16 +22,25 @@ export default function (server: Server) {
 
     const handle = input.body.handle.toLowerCase()
 
-    // throws if not
-    ensureValidHandle(handle, config.availableUserDomains)
+    try {
+      handleLib.ensureValid(handle, config.availableUserDomains)
+    } catch (err) {
+      if (err instanceof handleLib.InvalidHandleError) {
+        throw new InvalidRequestError(err.message, 'InvalidHandle')
+      }
+      throw err
+    }
 
-    const tempDid = uint8arrays.toString(crypto.randomBytes(16), 'base32')
+    // In order to perform the significant db updates ahead of
+    // registering the did, we will use a temp invalid did. Once everything
+    // goes well and a fresh did is registered, we'll replace the temp values.
+    const tempDid = crypto.randomStr(16, 'base32')
     const now = new Date().toISOString()
 
     const result = await db.transaction(async (dbTxn) => {
       // Pre-register before going out to PLC to get a real did
       try {
-        await dbTxn.preregisterUserDid(handle, tempDid)
+        await dbTxn.preregisterDid(handle, tempDid)
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
           throw new InvalidRequestError(
@@ -65,7 +71,7 @@ export default function (server: Server) {
 
       // Now that we have a real did, we now replace the tempDid
       // and setup the repo root. This _should_ succeed under typical conditions.
-      await dbTxn.finalizeUserDid(handle, did, tempDid)
+      await dbTxn.finalizeDid(handle, did, tempDid)
       await dbTxn.db
         .insertInto('scene')
         .values({ handle, creator: requester, createdAt: now })

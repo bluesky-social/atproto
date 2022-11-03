@@ -2,7 +2,7 @@ import { Kysely, sql } from 'kysely'
 import { Dialect } from '..'
 
 const userTable = 'user'
-const userDidTable = 'user_did'
+const didHandleTable = 'did_handle'
 const refreshTokenTable = 'refresh_token'
 const repoRootTable = 'repo_root'
 const recordTable = 'record'
@@ -56,20 +56,20 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .execute()
   // User Dids
   await db.schema
-    .createTable(userDidTable)
+    .createTable(didHandleTable)
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('handle', 'varchar', (col) => col.unique())
     .execute()
   await db.schema
-    .createIndex(`${userDidTable}_handle_lower_idx`)
+    .createIndex(`${didHandleTable}_handle_lower_idx`)
     .unique()
-    .on(userDidTable)
+    .on(didHandleTable)
     .expression(sql`lower("handle")`)
     .execute()
   if (dialect === 'pg') {
     await db.schema // Supports user search
-      .createIndex(`${userDidTable}_handle_tgrm_idx`)
-      .on(userDidTable)
+      .createIndex(`${didHandleTable}_handle_tgrm_idx`)
+      .on(didHandleTable)
       .using('gist')
       .expression(sql`"handle" gist_trgm_ops`)
       .execute()
@@ -264,6 +264,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(ipldBlockTable).execute()
   await db.schema.dropTable(recordTable).execute()
   await db.schema.dropTable(repoRootTable).execute()
-  await db.schema.dropTable(userDidTable).execute()
+  await db.schema.dropTable(didHandleTable).execute()
   await db.schema.dropTable(userTable).execute()
 }

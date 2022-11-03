@@ -18,38 +18,38 @@ export default function (server: Server) {
       const { ref } = db.db.dynamic
 
       const queryRes = await db.db
-        .selectFrom('user_did')
+        .selectFrom('did_handle')
         .where(userWhereClause(user))
         .leftJoin(
           'app_bsky_profile as profile',
           'profile.creator',
-          'user_did.did',
+          'did_handle.did',
         )
         .select([
-          'user_did.did as did',
-          'user_did.handle as handle',
+          'did_handle.did as did',
+          'did_handle.handle as handle',
           'profile.uri as profileUri',
           'profile.displayName as displayName',
           'profile.description as description',
           db.db
             .selectFrom('app_bsky_follow')
-            .whereRef('creator', '=', ref('user_did.did'))
+            .whereRef('creator', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
             .as('followsCount'),
           db.db
             .selectFrom('app_bsky_follow')
-            .whereRef('subjectDid', '=', ref('user_did.did'))
+            .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
             .as('followersCount'),
           db.db
             .selectFrom('app_bsky_post')
-            .whereRef('creator', '=', ref('user_did.did'))
+            .whereRef('creator', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
             .as('postsCount'),
           db.db
             .selectFrom('app_bsky_follow')
             .where('creator', '=', requester)
-            .whereRef('subjectDid', '=', ref('user_did.did'))
+            .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterFollow'),
         ])

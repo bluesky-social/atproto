@@ -56,11 +56,15 @@ export default function (server: Server) {
 
 const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
   return await getUserSearchQueryPg(db, { term, limit, before })
-    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
+    .leftJoin(
+      'app_bsky_profile as profile',
+      'profile.creator',
+      'did_handle.did',
+    )
     .select([
       'distance',
-      'user_did.did as did',
-      'user_did.handle as handle',
+      'did_handle.did as did',
+      'did_handle.handle as handle',
       'profile.displayName as displayName',
       'profile.description as description',
       'profile.indexedAt as indexedAt',
@@ -70,11 +74,15 @@ const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
 
 const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
   return await getUserSearchQuerySqlite(db, { term, limit, before })
-    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
+    .leftJoin(
+      'app_bsky_profile as profile',
+      'profile.creator',
+      'did_handle.did',
+    )
     .select([
       sql<number>`0`.as('distance'),
-      'user_did.did as did',
-      'user_did.handle as handle',
+      'did_handle.did as did',
+      'did_handle.handle as handle',
       'profile.displayName as displayName',
       'profile.description as description',
       'profile.indexedAt as indexedAt',

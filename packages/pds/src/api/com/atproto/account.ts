@@ -3,8 +3,8 @@ import { RepoStructure } from '@atproto/repo'
 import { PlcClient } from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
 import * as crypto from '@atproto/crypto'
-import { Server, APP_BSKY } from '../../../lexicon'
 import * as handleLib from '@atproto/handle'
+import { Server, APP_BSKY } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
@@ -84,7 +84,7 @@ export default function (server: Server) {
 
       // Pre-register user before going out to PLC to get a real did
       try {
-        await dbTxn.preregisterUserDid(handle, tempDid)
+        await dbTxn.preregisterDid(handle, tempDid)
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
           throw new InvalidRequestError(`Handle already taken: ${handle}`)
@@ -120,7 +120,7 @@ export default function (server: Server) {
 
       // Now that we have a real did, we now replace the tempDid
       // and setup the repo root. This _should_ succeed under typical conditions.
-      await dbTxn.finalizeUserDid(handle, did, tempDid)
+      await dbTxn.finalizeDid(handle, did, tempDid)
       if (config.inviteRequired && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')

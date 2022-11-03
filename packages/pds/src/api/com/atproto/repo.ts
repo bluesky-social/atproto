@@ -46,7 +46,7 @@ export default function (server: Server) {
     const { user, collection, limit, before, after, reverse } = params
 
     const db = locals.db(res)
-    const did = await db.getUserDid(user)
+    const did = await db.getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
@@ -77,7 +77,7 @@ export default function (server: Server) {
     const { user, collection, rkey, cid } = params
     const db = locals.db(res)
 
-    const did = await db.getUserDid(user)
+    const did = await db.getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }

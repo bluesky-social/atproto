@@ -17,7 +17,7 @@ describe('handle validation', () => {
     expect(check('john.bsky.io')).toThrow('Not a supported handle domain')
     expect(check('john.com')).toThrow('Not a supported handle domain')
     expect(check('j.test')).toThrow('Handle too short')
-    expect(check('jayromy-johnber123456.test')).toThrow('Handle too long')
+    expect(check('jaymome-johnber123456.test')).toThrow('Handle too long')
     expect(check('john.test.bsky.app')).toThrow('Invalid characters in handle')
     expect(check('john..test')).toThrow('Invalid characters in handle')
     expect(check('jo_hn.test')).toThrow('Invalid characters in handle')

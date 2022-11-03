@@ -31,7 +31,7 @@ import { User } from './tables/user'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
-import { UserDid } from './tables/user-did'
+import { DidHandle } from './tables/did-handle'
 
 export class Database {
   migrator: Migrator
@@ -187,31 +187,32 @@ export class Database {
     }
   }
 
-  async getUser(handleOrDid: string): Promise<(User & UserDid) | null> {
+  async getUser(handleOrDid: string): Promise<(User & DidHandle) | null> {
     let query = this.db
       .selectFrom('user')
-      .innerJoin('user_did', 'user_did.handle', 'user.handle')
+      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
       .selectAll()
     if (handleOrDid.startsWith('did:')) {
       query = query.where('did', '=', handleOrDid)
     } else {
-      query = query.where('user_did.handle', '=', handleOrDid.toLowerCase())
+      query = query.where('did_handle.handle', '=', handleOrDid.toLowerCase())
     }
     const found = await query.executeTakeFirst()
     return found || null
   }
 
-  async getUserByEmail(email: string): Promise<(User & UserDid) | null> {
+  async getUserByEmail(email: string): Promise<(User & DidHandle) | null> {
     const found = await this.db
       .selectFrom('user')
-      .innerJoin('user_did', 'user_did.handle', 'user.handle')
+      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
       .selectAll()
       .where('email', '=', email.toLowerCase())
       .executeTakeFirst()
     return found || null
   }
 
-  async getUserDid(handleOrDid: string): Promise<string | null> {
+  async getDidForActor(handleOrDid: string): Promise<string | null> {
+    // @TODO this doesn't handle scenes
     if (handleOrDid.startsWith('did:')) return handleOrDid
     const found = await this.getUser(handleOrDid)
     return found ? found.did : null
@@ -238,10 +239,10 @@ export class Database {
     log.info({ handle, email }, 'registered user')
   }
 
-  async preregisterUserDid(handle: string, tempDid: string) {
+  async preregisterDid(handle: string, tempDid: string) {
     this.assertTransaction()
     const inserted = await this.db
-      .insertInto('user_did')
+      .insertInto('did_handle')
       .values({ handle: handle, did: tempDid })
       .onConflict((oc) => oc.doNothing())
       .returning('handle')
@@ -249,14 +250,14 @@ export class Database {
     if (!inserted) {
       throw new UserAlreadyExistsError()
     }
-    log.info({ handle, tempDid }, 'pre-registered user did')
+    log.info({ handle, tempDid }, 'pre-registered did')
   }
 
-  async finalizeUserDid(handle: string, did: string, tempDid: string) {
+  async finalizeDid(handle: string, did: string, tempDid: string) {
     this.assertTransaction()
-    log.debug({ handle, did }, 'registering user did')
+    log.debug({ handle, did }, 'registering did-handle')
     const updated = await this.db
-      .updateTable('user_did')
+      .updateTable('did_handle')
       .set({ did })
       .where('handle', '=', handle)
       .where('did', '=', tempDid)
@@ -265,7 +266,7 @@ export class Database {
     if (!updated) {
       throw new Error('Something went wrong wtih user registration flow')
     }
-    log.info({ handle, did }, 'post-registered user')
+    log.info({ handle, did }, 'post-registered did-handle')
   }
 
   async updateUserPassword(handle: string, password: string) {
