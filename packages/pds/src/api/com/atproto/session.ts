@@ -5,7 +5,7 @@ import * as locals from '../../../locals'
 import { grantRefreshToken, revokeRefreshToken } from './util/auth'
 
 export default function (server: Server) {
-  server.com.atproto.getSession(async (_params, _input, req, res) => {
+  server.com.atproto.session.get(async (_params, _input, req, res) => {
     const { db, auth } = locals.get(res)
     const did = auth.getUserDidOrThrow(req)
     const user = await db.getUser(did)
@@ -20,7 +20,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.createSession(async (_params, input, _req, res) => {
+  server.com.atproto.session.create(async (_params, input, _req, res) => {
     const { password } = input.body
     const handle = input.body.handle.toLowerCase()
     const { db, auth } = locals.get(res)
@@ -51,7 +51,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.refreshSession(async (_params, _input, req, res) => {
+  server.com.atproto.session.refresh(async (_params, _input, req, res) => {
     const { db, auth } = locals.get(res)
     const did = auth.getUserDidOrThrow(req, AuthScopes.Refresh)
     const user = await db.getUser(did)
@@ -88,7 +88,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.deleteSession(async (_params, _input, req, res) => {
+  server.com.atproto.session.delete(async (_params, _input, req, res) => {
     const { db, auth } = locals.get(res)
     const token = auth.getToken(req)
     if (!token) {

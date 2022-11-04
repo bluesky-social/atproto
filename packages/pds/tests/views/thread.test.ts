@@ -34,7 +34,7 @@ describe('pds thread views', () => {
   })
 
   it('fetches deep post thread', async () => {
-    const thread = await client.app.bsky.getPostThread(
+    const thread = await client.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
       { headers: sc.getHeaders(bob) },
     )
@@ -43,7 +43,7 @@ describe('pds thread views', () => {
   })
 
   it('fetches shallow post thread', async () => {
-    const thread = await client.app.bsky.getPostThread(
+    const thread = await client.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
       { headers: sc.getHeaders(bob) },
     )
@@ -52,7 +52,7 @@ describe('pds thread views', () => {
   })
 
   it('fails for an unknown post', async () => {
-    const promise = client.app.bsky.getPostThread(
+    const promise = client.app.bsky.feed.getPostThread(
       { uri: 'does.not.exist' },
       { headers: sc.getHeaders(bob) },
     )

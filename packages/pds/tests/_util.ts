@@ -5,8 +5,8 @@ import { CID } from 'multiformats/cid'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
-import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/getAuthorFeed'
-import * as GetTimeline from '../src/lexicon/types/app/bsky/getTimeline'
+import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
+import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
 
 const ADMIN_PASSWORD = 'admin-pass'
 

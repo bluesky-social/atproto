@@ -9,7 +9,7 @@ import { CidWriteOp, RepoStructure } from '@atproto/repo'
 import SqlBlockstore from '../../../sql-blockstore'
 
 export default function (server: Server) {
-  server.com.atproto.repoDescribe(async (params, _in, _req, res) => {
+  server.com.atproto.repo.describe(async (params, _in, _req, res) => {
     const { user } = params
 
     const { db, auth } = locals.get(res)
@@ -42,7 +42,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repoListRecords(async (params, _in, _req, res) => {
+  server.com.atproto.repo.listRecords(async (params, _in, _req, res) => {
     const { user, collection, limit, before, after, reverse } = params
 
     const db = locals.db(res)
@@ -73,7 +73,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repoGetRecord(async (params, _in, _req, res) => {
+  server.com.atproto.repo.getRecord(async (params, _in, _req, res) => {
     const { user, collection, rkey, cid } = params
     const db = locals.db(res)
 
@@ -94,7 +94,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repoBatchWrite(async (params, input, req, res) => {
+  server.com.atproto.repo.batchWrite(async (params, input, req, res) => {
     const tx = input.body
     const { did, validate } = tx
     const { auth, db, logger } = locals.get(res)
@@ -171,7 +171,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repoCreateRecord(async (params, input, req, res) => {
+  server.com.atproto.repo.createRecord(async (params, input, req, res) => {
     const { did, collection, record } = input.body
     const validate =
       typeof input.body.validate === 'boolean' ? input.body.validate : true
@@ -248,11 +248,11 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repoPutRecord(async (_params, _input, _req, _res) => {
+  server.com.atproto.repo.putRecord(async (_params, _input, _req, _res) => {
     throw new InvalidRequestError(`Updates are not yet supported.`)
   })
 
-  server.com.atproto.repoDeleteRecord(async (_params, input, req, res) => {
+  server.com.atproto.repo.deleteRecord(async (_params, input, req, res) => {
     const { did, collection, rkey } = input.body
     const { auth, db, logger } = locals.get(res)
     if (!auth.verifyUser(req, did)) {

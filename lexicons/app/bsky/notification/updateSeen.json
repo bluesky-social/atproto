@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.notification.updateSeen",
+  "type": "procedure",
+  "description": "Notify server that the user has seen notifications",
+  "input": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["seenAt"],
+      "properties": {
+        "seenAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "output": { 
+    "encoding": "application/json",
+    "schema": {}
+  }
+}

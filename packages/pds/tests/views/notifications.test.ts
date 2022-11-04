@@ -31,7 +31,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notification count without a last-seen', async () => {
-    const notifCount = await client.app.bsky.getNotificationCount(
+    const notifCount = await client.app.bsky.notification.getCount(
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -40,7 +40,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications without a last-seen', async () => {
-    const notifRes = await client.app.bsky.getNotifications(
+    const notifRes = await client.app.bsky.notification.list(
       {},
       {
         headers: sc.getHeaders(alice),
@@ -62,7 +62,7 @@ describe('pds notification views', () => {
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.likedBy)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.getNotifications(
+      const res = await client.app.bsky.notification.list(
         {
           before: cursor,
           limit: 4,
@@ -77,7 +77,7 @@ describe('pds notification views', () => {
       expect(res.notifications.length).toBeLessThanOrEqual(4),
     )
 
-    const full = await client.app.bsky.getNotifications(
+    const full = await client.app.bsky.notification.list(
       {},
       {
         headers: sc.getHeaders(alice),
@@ -91,7 +91,7 @@ describe('pds notification views', () => {
   it('updates notifications last seen', async () => {
     const { db } = locals.get(app)
 
-    const full = await client.app.bsky.getNotifications(
+    const full = await client.app.bsky.notification.list(
       {},
       {
         headers: sc.getHeaders(alice),
@@ -105,14 +105,14 @@ describe('pds notification views', () => {
       .where('recordUri', '=', full.data.notifications[3].uri)
       .executeTakeFirstOrThrow()
 
-    await client.app.bsky.postNotificationsSeen(
+    await client.app.bsky.notification.updateSeen(
       { seenAt: beforeNotif.indexedAt },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
   })
 
   it('fetches notification count with a last-seen', async () => {
-    const notifCount = await client.app.bsky.getNotificationCount(
+    const notifCount = await client.app.bsky.notification.getCount(
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -121,7 +121,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications with a last-seen', async () => {
-    const notifRes = await client.app.bsky.getNotifications(
+    const notifRes = await client.app.bsky.notification.list(
       {},
       {
         headers: sc.getHeaders(alice),

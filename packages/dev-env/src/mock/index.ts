@@ -84,7 +84,7 @@ export async function generateMockSetup(env: DevEnv) {
 
   let _i = 1
   for (const user of users) {
-    const res = await clients.loggedout.com.atproto.createAccount({
+    const res = await clients.loggedout.com.atproto.account.create({
       email: user.email,
       handle: user.handle,
       password: user.password,
@@ -92,7 +92,7 @@ export async function generateMockSetup(env: DevEnv) {
     user.did = res.data.did
     user.declarationCid = res.data.declarationCid
     user.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
-    await user.api.app.bsky.profile.create(
+    await user.api.app.bsky.actor.profile.create(
       { did: user.did },
       {
         displayName: ucfirst(user.handle).slice(0, -5),
@@ -103,7 +103,7 @@ export async function generateMockSetup(env: DevEnv) {
 
   // everybody follows everybody
   const follow = async (author: User, subject: User) => {
-    await author.api.app.bsky.follow.create(
+    await author.api.app.bsky.graph.follow.create(
       { did: author.did },
       {
         subject: {
@@ -126,7 +126,7 @@ export async function generateMockSetup(env: DevEnv) {
   for (let i = 0; i < postTexts.length; i++) {
     const author = picka(users)
     posts.push(
-      await author.api.app.bsky.post.create(
+      await author.api.app.bsky.feed.post.create(
         { did: author.did },
         {
           text: postTexts[i],
@@ -136,7 +136,7 @@ export async function generateMockSetup(env: DevEnv) {
     )
     if (rand(10) === 0) {
       const reposter = picka(users)
-      await reposter.api.app.bsky.repost.create(
+      await reposter.api.app.bsky.feed.repost.create(
         { did: reposter.did },
         {
           subject: picka(posts),
@@ -150,13 +150,13 @@ export async function generateMockSetup(env: DevEnv) {
   for (let i = 0; i < 100; i++) {
     const targetUri = picka(posts).uri
     const urip = new AtUri(targetUri)
-    const target = await alice.api.app.bsky.post.get({
+    const target = await alice.api.app.bsky.feed.post.get({
       user: urip.host,
       rkey: urip.rkey,
     })
     const author = picka(users)
     posts.push(
-      await author.api.app.bsky.post.create(
+      await author.api.app.bsky.feed.post.create(
         { did: author.did },
         {
           text: picka(replyTexts),
@@ -174,7 +174,7 @@ export async function generateMockSetup(env: DevEnv) {
   for (const post of posts) {
     for (const user of users) {
       if (rand(3) === 0) {
-        await user.api.app.bsky.like.create(
+        await user.api.app.bsky.feed.like.create(
           { did: user.did },
           {
             subject: post,
