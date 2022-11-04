@@ -70,6 +70,7 @@ export class DevEnvServer {
         this.inst = await onServerReady(
           PDSServer(db, keypair, {
             debugMode: true,
+            version: '0.0.0',
             scheme: 'http',
             hostname: 'localhost',
             port: this.port,
