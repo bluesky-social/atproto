@@ -3,7 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as locals from '../../../locals'
 
 export default function (server: Server) {
-  server.com.atproto.resolveHandle(async (params, _in, _req, res) => {
+  server.com.atproto.handle.resolve(async (params, _in, _req, res) => {
     const { db, config } = locals.get(res)
 
     const handle = params.handle

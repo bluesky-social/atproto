@@ -98,7 +98,7 @@ export class SeedClient {
       password: string
     },
   ) {
-    const { data } = await this.client.com.atproto.createAccount(params)
+    const { data } = await this.client.com.atproto.account.create(params)
     this.dids[shortName] = data.did
     this.accounts[data.did] = {
       ...data,
@@ -110,7 +110,7 @@ export class SeedClient {
   }
 
   async createProfile(by: string, displayName: string, description: string) {
-    const res = await this.client.app.bsky.profile.create(
+    const res = await this.client.app.bsky.actor.profile.create(
       { did: by },
       { displayName, description },
       this.getHeaders(by),
@@ -124,7 +124,7 @@ export class SeedClient {
   }
 
   async follow(from: string, to: UserRef) {
-    const res = await this.client.app.bsky.follow.create(
+    const res = await this.client.app.bsky.graph.follow.create(
       { did: from },
       {
         subject: to.raw,
@@ -138,7 +138,7 @@ export class SeedClient {
   }
 
   async post(by: string, text: string, entities?: any) {
-    const res = await this.client.app.bsky.post.create(
+    const res = await this.client.app.bsky.feed.post.create(
       { did: by },
       { text: text, entities, createdAt: new Date().toISOString() },
       this.getHeaders(by),
@@ -153,7 +153,7 @@ export class SeedClient {
   }
 
   async like(by: string, subject: RecordRef) {
-    const res = await this.client.app.bsky.like.create(
+    const res = await this.client.app.bsky.feed.like.create(
       { did: by },
       { subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
@@ -164,7 +164,7 @@ export class SeedClient {
   }
 
   async reply(by: string, root: RecordRef, parent: RecordRef, text: string) {
-    const res = await this.client.app.bsky.post.create(
+    const res = await this.client.app.bsky.feed.post.create(
       { did: by },
       {
         text: text,
@@ -186,7 +186,7 @@ export class SeedClient {
   }
 
   async repost(by: string, subject: RecordRef) {
-    const res = await this.client.app.bsky.repost.create(
+    const res = await this.client.app.bsky.feed.repost.create(
       { did: by },
       { subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),

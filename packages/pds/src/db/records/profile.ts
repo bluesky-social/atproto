@@ -1,11 +1,11 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Profile from '../../lexicon/types/app/bsky/profile'
+import * as Profile from '../../lexicon/types/app/bsky/actor/profile'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
-const type = schemas.ids.AppBskyProfile
+const type = schemas.ids.AppBskyActorProfile
 const tableName = 'app_bsky_profile'
 
 export interface AppBskyProfile {
