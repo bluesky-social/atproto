@@ -79,7 +79,7 @@ const getFn =
     if (!post) return null
     const record = translateDbObj(post)
     record.entities = entities.map((row) => ({
-      index: [row.startIndex, row.endIndex],
+      index: { start: row.startIndex, end: row.endIndex },
       type: row.type,
       value: row.value,
     }))
@@ -99,8 +99,8 @@ const insertFn =
     }
     const entities = (obj.entities || []).map((entity) => ({
       postUri: uri.toString(),
-      startIndex: entity.index[0],
-      endIndex: entity.index[1],
+      startIndex: entity.index.start,
+      endIndex: entity.index.end,
       type: entity.type,
       value: entity.value,
     }))

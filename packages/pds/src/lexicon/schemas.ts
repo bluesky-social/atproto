@@ -2609,17 +2609,18 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
           },
         },
         textSlice: {
-          type: 'array',
-          items: [
-            {
+          type: 'object',
+          required: ['start', 'end'],
+          properties: {
+            start: {
               type: 'number',
+              minimum: 0,
             },
-            {
+            end: {
               type: 'number',
+              minimum: 0,
             },
-          ],
-          minItems: 2,
-          maxItems: 2,
+          },
         },
         postRef: {
           type: 'object',
@@ -2665,17 +2666,18 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
         },
       },
       textSlice: {
-        type: 'array',
-        items: [
-          {
+        type: 'object',
+        required: ['start', 'end'],
+        properties: {
+          start: {
             type: 'number',
+            minimum: 0,
           },
-          {
+          end: {
             type: 'number',
+            minimum: 0,
           },
-        ],
-        minItems: 2,
-        maxItems: 2,
+        },
       },
     },
   },
