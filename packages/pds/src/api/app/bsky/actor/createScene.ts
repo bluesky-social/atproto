@@ -74,7 +74,7 @@ export default function (server: Server) {
       await dbTxn.finalizeDid(handle, did, tempDid)
       await dbTxn.db
         .insertInto('scene')
-        .values({ handle, creator: requester, createdAt: now })
+        .values({ handle, owner: requester, createdAt: now })
         .execute()
 
       const sceneAuth = locals.getAuthstore(res, did)

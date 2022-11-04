@@ -1,6 +1,6 @@
 export interface Scene {
   handle: string
-  creator: string
+  owner: string
   createdAt: string
 }
 

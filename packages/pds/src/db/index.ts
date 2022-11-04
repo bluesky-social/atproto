@@ -288,6 +288,22 @@ export class Database {
     return scrypt.verify(password, found.password)
   }
 
+  async isUserControlledRepo(
+    repoDid: string,
+    userDid: string | null,
+  ): Promise<boolean> {
+    if (!userDid) return false
+    if (repoDid === userDid) return true
+    const found = await this.db
+      .selectFrom('did_handle')
+      .leftJoin('scene', 'scene.handle', 'did_handle.handle')
+      .where('did_handle.did', '=', repoDid)
+      .where('scene.owner', '=', userDid)
+      .select('scene.owner')
+      .executeTakeFirst()
+    return !!found
+  }
+
   validateRecord(collection: string, obj: unknown): ValidationResult {
     let table
     try {

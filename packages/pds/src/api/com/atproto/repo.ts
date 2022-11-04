@@ -98,9 +98,12 @@ export default function (server: Server) {
     const tx = input.body
     const { did, validate } = tx
     const { auth, db, logger } = locals.get(res)
-    if (!auth.verifyUser(req, did)) {
+    const requester = auth.getUserDid(req)
+    const authorized = await db.isUserControlledRepo(did, requester)
+    if (!authorized) {
       throw new AuthRequiredError()
     }
+
     const authStore = locals.getAuthstore(res, did)
     const hasUpdate = tx.writes.some((write) => write.action === 'update')
     if (hasUpdate) {
@@ -176,9 +179,12 @@ export default function (server: Server) {
     const validate =
       typeof input.body.validate === 'boolean' ? input.body.validate : true
     const { auth, db, logger } = locals.get(res)
-    if (!auth.verifyUser(req, did)) {
+    const requester = auth.getUserDid(req)
+    const authorized = await db.isUserControlledRepo(did, requester)
+    if (!authorized) {
       throw new AuthRequiredError()
     }
+
     if (validate) {
       const validation = db.validateRecord(collection, record)
       if (!validation.valid) {
@@ -255,9 +261,12 @@ export default function (server: Server) {
   server.com.atproto.repo.deleteRecord(async (_params, input, req, res) => {
     const { did, collection, rkey } = input.body
     const { auth, db, logger } = locals.get(res)
-    if (!auth.verifyUser(req, did)) {
+    const requester = auth.getUserDid(req)
+    const authorized = await db.isUserControlledRepo(did, requester)
+    if (!authorized) {
       throw new AuthRequiredError()
     }
+
     const authStore = locals.getAuthstore(res, did)
     const uri = new AtUri(`${did}/${collection}/${rkey}`)
 

@@ -8,17 +8,21 @@ const alice = {
   email: 'alice@test.com',
   handle: 'alice.test',
   did: '',
+  declarationCid: '',
   password: 'alice-pass',
 }
+
 const bob = {
   email: 'bob@test.com',
   handle: 'bob.test',
   did: '',
+  declarationCid: '',
   password: 'bob-pass',
 }
 
 describe('scenes', () => {
   let aliceClient: AtpSessionClient
+  let bobClient: AtpSessionClient
   let close: CloseFn
 
   beforeAll(async () => {
@@ -27,23 +31,49 @@ describe('scenes', () => {
     })
     close = server.close
 
-    // AtpSessionClient
-    // AtpApi.service.
     aliceClient = sessionClient.service(server.url)
-    await aliceClient.com.atproto.account.create({
+    const aliceRes = await aliceClient.com.atproto.account.create({
       email: alice.email,
       handle: alice.handle,
       password: alice.password,
     })
+    alice.did = aliceRes.data.did
+    alice.declarationCid = aliceRes.data.declarationCid
+
+    bobClient = sessionClient.service(server.url)
+    const bobRes = await bobClient.com.atproto.account.create({
+      email: bob.email,
+      handle: bob.handle,
+      password: bob.password,
+    })
+    bob.did = bobRes.data.did
+    bob.declarationCid = bobRes.data.declarationCid
   })
 
   afterAll(async () => {
     await close()
   })
 
+  let scene
+
   it('creates a scene', async () => {
-    await aliceClient.app.bsky.actor.createScene({
+    const res = await aliceClient.app.bsky.actor.createScene({
       handle: 'scene.test',
     })
+    scene = res.data
+  })
+
+  it('can invite members to scene', async () => {
+    await aliceClient.app.bsky.graph.assertion.create(
+      { did: scene.did },
+      {
+        assertion: 'asdf',
+        subject: {
+          did: bob.did,
+          declarationCid: bob.declarationCid,
+        },
+        createdAt: new Date().toISOString(),
+      },
+    )
   })
 })

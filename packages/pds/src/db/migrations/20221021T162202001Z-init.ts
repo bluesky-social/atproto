@@ -79,7 +79,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   await db.schema
     .createTable(sceneTable)
     .addColumn('handle', 'varchar', (col) => col.primaryKey())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('owner', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .execute()
   // Refresh Tokens
