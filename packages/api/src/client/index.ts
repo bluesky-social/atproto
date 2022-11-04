@@ -100,6 +100,10 @@ export * as AppBskyNotificationList from './types/app/bsky/notification/list'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
+export const APP_BSKY_GRAPH = {
+  AssertCreator: 'app.bsky.graph.assertCreator',
+  AssertMember: 'app.bsky.graph.assertMember',
+}
 export const APP_BSKY_SYSTEM = {
   ActorScene: 'app.bsky.system.actorScene',
   ActorUser: 'app.bsky.system.actorUser',

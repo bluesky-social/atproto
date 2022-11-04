@@ -44,6 +44,10 @@ import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getC
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 
+export const APP_BSKY_GRAPH = {
+  AssertCreator: 'app.bsky.graph.assertCreator',
+  AssertMember: 'app.bsky.graph.assertMember',
+}
 export const APP_BSKY_SYSTEM = {
   ActorScene: 'app.bsky.system.actorScene',
   ActorUser: 'app.bsky.system.actorUser',
