@@ -5,10 +5,8 @@ import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
 import * as locals from '../../../../locals'
 import * as schema from '../../../../lexicon/schemas'
-import { AtUri } from '@atproto/uri'
 import { RepoStructure } from '@atproto/repo'
 import { TID } from '@atproto/common'
-import SqlBlockstore from '../../../../sql-blockstore'
 import { UserAlreadyExistsError } from '../../../../db'
 import * as repoUtil from '../../../../util/repo'
 
@@ -79,12 +77,12 @@ export default function (server: Server) {
         .values({ handle, creator: requester, createdAt: now })
         .execute()
 
-      const authStore = locals.getAuthstore(res, did)
+      const sceneAuth = locals.getAuthstore(res, did)
       const sceneCtx = repoUtil.mutationContext(dbTxn, did, now)
       const sceneRepo = await RepoStructure.create(
         sceneCtx.blockstore,
         did,
-        authStore,
+        sceneAuth,
       )
       const userRoot = await dbTxn.getRepoRoot(requester, true)
       if (!userRoot) {
@@ -92,6 +90,7 @@ export default function (server: Server) {
           `${requester} is not a registered repo on this server`,
         )
       }
+      const userAuth = locals.getAuthstore(res, requester)
       const userCtx = repoUtil.mutationContext(dbTxn, did, now)
       const userRepo = await RepoStructure.load(userCtx.blockstore, userRoot)
 
@@ -122,8 +121,9 @@ export default function (server: Server) {
               assertion: APP_BSKY_GRAPH.AssertCreator,
               subject: {
                 did: requester,
-                declarationCid: userDeclaration.cid,
+                declarationCid: userDeclaration.cid.toString(),
               },
+              createdAt: new Date().toISOString(),
             },
           ),
           repoUtil.prepareCreate(
@@ -134,8 +134,9 @@ export default function (server: Server) {
               assertion: APP_BSKY_GRAPH.AssertMember,
               subject: {
                 did: requester,
-                declarationCid: userDeclaration.cid,
+                declarationCid: userDeclaration.cid.toString(),
               },
+              createdAt: new Date().toISOString(),
             },
           ),
         ],
@@ -149,27 +150,29 @@ export default function (server: Server) {
           {
             originator: {
               did: requester,
-              declarationCid: sceneDeclaration.cid,
+              declarationCid: sceneDeclaration.cid.toString(),
             },
             assertion: {
-              uri: creatorAssert.uri,
-              cid: creatorAssert.cid,
+              uri: creatorAssert.uri.toString(),
+              cid: creatorAssert.cid.toString(),
             },
+            createdAt: new Date().toISOString(),
           },
         ),
         repoUtil.prepareCreate(
           sceneCtx,
-          schema.ids.AppBskyGraphAssertion,
+          schema.ids.AppBskyGraphConfirmation,
           TID.nextStr(),
           {
             originator: {
               did: requester,
-              declarationCid: sceneDeclaration.cid,
+              declarationCid: sceneDeclaration.cid.toString(),
             },
             assertion: {
-              uri: memberAssert.uri,
-              cid: memberAssert.cid,
+              uri: memberAssert.uri.toString(),
+              cid: memberAssert.cid.toString(),
             },
+            createdAt: new Date().toISOString(),
           },
         ),
       ])
@@ -180,7 +183,7 @@ export default function (server: Server) {
           creatorAssert.toStage,
           memberAssert.toStage,
         ])
-        .createCommit(authStore, async (_prev, curr) => {
+        .createCommit(sceneAuth, async (_prev, curr) => {
           await dbTxn.db
             .insertInto('repo_root')
             .values({
@@ -192,17 +195,14 @@ export default function (server: Server) {
           return null
         })
 
-      const userCommit = sceneRepo
+      const userCommit = userRepo
         .stageUpdate([creatorConfirm.toStage, memberConfirm.toStage])
-        .createCommit(authStore, async (_prev, curr) => {
-          await dbTxn.db
-            .insertInto('repo_root')
-            .values({
-              did: requester,
-              root: curr.toString(),
-              indexedAt: now,
-            })
-            .execute()
+        .createCommit(userAuth, async (prev, curr) => {
+          const success = await dbTxn.updateRepoRoot(requester, curr, prev, now)
+          if (!success) {
+            logger.error({ did, curr, prev }, 'repo update failed')
+            throw new Error('Could not update repo root')
+          }
           return null
         })
 

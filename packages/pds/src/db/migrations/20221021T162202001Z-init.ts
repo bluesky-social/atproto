@@ -3,6 +3,7 @@ import { Dialect } from '..'
 
 const userTable = 'user'
 const didHandleTable = 'did_handle'
+const sceneTable = 'scene'
 const refreshTokenTable = 'refresh_token'
 const repoRootTable = 'repo_root'
 const recordTable = 'record'
@@ -74,6 +75,13 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
       .expression(sql`"handle" gist_trgm_ops`)
       .execute()
   }
+  // Scenes
+  await db.schema
+    .createTable(sceneTable)
+    .addColumn('handle', 'varchar', (col) => col.primaryKey())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .execute()
   // Refresh Tokens
   await db.schema
     .createTable(refreshTokenTable)

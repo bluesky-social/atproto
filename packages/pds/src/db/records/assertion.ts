@@ -6,7 +6,7 @@ import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyGraphAssertion
-const tableName = 'app_bsky_invite'
+const tableName = 'app_bsky_assertion'
 
 export interface AppBskyAssertion {
   uri: string
