@@ -129,7 +129,10 @@ export const hashAndFindDid = async (op: t.CreateOp, truncate = 24) => {
   const hashOfGenesis = await crypto.sha256(cbor.encode(op))
   const hashB32 = uint8arrays.toString(hashOfGenesis, 'base32')
   const truncated = hashB32.slice(0, truncate)
-  return `did:plc:${truncated}`
+  // https://github.com/multiformats/multibase/blob/master/multibase.csv
+  // | encoding | code | description                           |
+  // | base32   | b    | rfc4648 case-insensitive - no padding |
+  return `did:plc:b${truncated}`
 }
 
 export const assureValidCreationOp = async (did: string, op: t.CreateOp) => {
