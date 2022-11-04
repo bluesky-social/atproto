@@ -1,18 +1,18 @@
 import { EcdsaKeypair } from '@atproto/crypto'
 import PlcClient from '../src/client'
 import * as document from '../src/lib/document'
-import getPort from 'get-port'
-import * as util from './util'
+import { CloseFn, runTestServer } from './_util'
 import { cidForData } from '@atproto/common'
 import { AxiosError } from 'axios'
-
-const USE_TEST_SERVER = true
+import { App } from '../src'
+import * as locals from '../src/server/locals'
 
 describe('PLC server', () => {
   let handle = 'alice.example.com'
   let atpPds = 'example.com'
 
-  let closeFn: util.CloseFn | null = null
+  let app: App
+  let close: CloseFn
   let client: PlcClient
 
   let signingKey: EcdsaKeypair
@@ -21,26 +21,20 @@ describe('PLC server', () => {
   let did: string
 
   beforeAll(async () => {
-    let port: number
-    if (USE_TEST_SERVER) {
-      port = await getPort()
-      closeFn = await util.runTestServer({
-        port,
-        dbPostgresSchema: 'server',
-      })
-    } else {
-      port = 2582
-    }
+    const server = await runTestServer({
+      dbPostgresSchema: 'server',
+    })
 
-    client = new PlcClient(`http://localhost:${port}`)
-
+    app = server.app
+    close = server.close
+    client = new PlcClient(server.url)
     signingKey = await EcdsaKeypair.create()
     recoveryKey = await EcdsaKeypair.create()
   })
 
   afterAll(async () => {
-    if (closeFn) {
-      await closeFn()
+    if (close) {
+      await close()
     }
   })
 
@@ -167,5 +161,32 @@ describe('PLC server', () => {
 
     const ops = await client.getOperationLog(did)
     await document.validateOperationLog(did, ops)
+  })
+
+  it('healthcheck succeeds when database is available.', async () => {
+    const { data, status } = await client.health()
+    expect(status).toEqual(200)
+    expect(data).toEqual({ version: '0.0.0' })
+  })
+
+  it('healthcheck fails when database is unavailable.', async () => {
+    const { db } = locals.get(app)
+    await db.db.destroy()
+    let error: AxiosError
+    try {
+      await client.health()
+      throw new Error('Healthcheck should have failed')
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        error = err
+      } else {
+        throw err
+      }
+    }
+    expect(error.response?.status).toEqual(503)
+    expect(error.response?.data).toEqual({
+      version: '0.0.0',
+      error: 'Service Unavailable',
+    })
   })
 })

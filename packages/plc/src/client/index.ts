@@ -99,6 +99,10 @@ export class PlcClient {
     )
     await axios.post(this.postOpUrl(did), op)
   }
+
+  async health() {
+    return await axios.get(`${this.url}/_health`)
+  }
 }
 
 export default PlcClient

@@ -70,6 +70,7 @@ export class DevEnvServer {
         this.inst = await onServerReady(
           PDSServer(db, keypair, {
             debugMode: true,
+            version: '0.0.0',
             scheme: 'http',
             hostname: 'localhost',
             port: this.port,
@@ -90,7 +91,7 @@ export class DevEnvServer {
       case ServerType.DidPlaceholder: {
         const db = plc.Database.memory()
         await db.migrateToLatestOrThrow()
-        this.inst = await onServerReady(plc.server(db, this.port))
+        this.inst = await onServerReady(plc.server(db, this.port).listener)
         break
       }
       default:

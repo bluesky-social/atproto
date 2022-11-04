@@ -7,7 +7,7 @@ import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import * as auth from '@atproto/auth'
-import API from './api'
+import API, { health } from './api'
 import Database from './db'
 import ServerAuth from './auth'
 import * as error from './error'
@@ -62,7 +62,6 @@ const runServer = (
   app.use((req, res, next) => {
     const reqLocals: Locals = {
       ...locals,
-      // @ts-ignore
       logger: req.log, // This logger is request-specific
     }
     res.locals = reqLocals
@@ -70,6 +69,7 @@ const runServer = (
   })
 
   const apiServer = API()
+  app.use(health.router)
   app.use(apiServer.xrpc.router)
   app.use(error.handler)
 

@@ -1,8 +1,8 @@
+import { AddressInfo } from 'net'
 import * as crypto from '@atproto/crypto'
 import * as plc from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
@@ -22,15 +22,14 @@ export type TestServerInfo = {
 export const runTestServer = async (
   params: Partial<ServerConfig> = {},
 ): Promise<TestServerInfo> => {
-  const pdsPort = await getPort()
   const keypair = await crypto.EcdsaKeypair.create()
 
   // run plc server
-  const plcPort = await getPort()
-  const plcUrl = `http://localhost:${plcPort}`
   const plcDb = plc.Database.memory()
   await plcDb.migrateToLatestOrThrow()
-  const plcServer = plc.server(plcDb, plcPort)
+  const plcServer = plc.server(plcDb)
+  const plcPort = (plcServer.listener.address() as AddressInfo).port
+  const plcUrl = `http://localhost:${plcPort}`
 
   const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
 
@@ -39,14 +38,14 @@ export const runTestServer = async (
     keypair,
     recoveryKey,
     'localhost',
-    `http://localhost:${pdsPort}`,
+    'https://pds.public.url',
   )
 
   const config = new ServerConfig({
     debugMode: true,
+    version: '0.0.0',
     scheme: 'http',
     hostname: 'localhost',
-    port: pdsPort,
     serverDid,
     recoveryKey,
     adminPassword: ADMIN_PASSWORD,
@@ -72,6 +71,7 @@ export const runTestServer = async (
   await db.migrateToLatestOrThrow()
 
   const { app, listener } = server(db, keypair, config)
+  const pdsPort = (listener.address() as AddressInfo).port
 
   return {
     url: `http://localhost:${pdsPort}`,
@@ -82,8 +82,8 @@ export const runTestServer = async (
       await Promise.all([
         db.close(),
         listener.close(),
-        plcServer?.close(),
-        plcDb?.close(),
+        plcServer.listener.close(),
+        plcDb.close(),
       ])
     },
   }

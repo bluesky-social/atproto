@@ -39,7 +39,6 @@
   },
   "devDependencies": {
     "@types/pg": "^8.6.5",
-    "eslint-plugin-prettier": "^4.2.1",
-    "get-port": "^6.1.2"
+    "eslint-plugin-prettier": "^4.2.1"
   }
 }

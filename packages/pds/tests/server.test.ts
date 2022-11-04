@@ -3,6 +3,7 @@ import express from 'express'
 import axios, { AxiosError } from 'axios'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { handler as errorHandler } from '../src/error'
+import * as locals from '../src/locals'
 
 describe('server', () => {
   let server: TestServerInfo
@@ -44,5 +45,32 @@ describe('server', () => {
         message: 'Internal Server Error',
       })
     }
+  })
+
+  it('healthcheck succeeds when database is available.', async () => {
+    const { data, status } = await axios.get(`${server.url}/xrpc/_health`)
+    expect(status).toEqual(200)
+    expect(data).toEqual({ version: '0.0.0' })
+  })
+
+  it('healthcheck fails when database is unavailable.', async () => {
+    const { db } = locals.get(server.app)
+    await db.db.destroy()
+    let error: AxiosError
+    try {
+      await axios.get(`${server.url}/xrpc/_health`)
+      throw new Error('Healthcheck should have failed')
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        error = err
+      } else {
+        throw err
+      }
+    }
+    expect(error.response?.status).toEqual(503)
+    expect(error.response?.data).toEqual({
+      version: '0.0.0',
+      error: 'Service Unavailable',
+    })
   })
 })

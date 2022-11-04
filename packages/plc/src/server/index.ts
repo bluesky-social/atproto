@@ -6,36 +6,45 @@ import 'express-async-errors'
 
 import express from 'express'
 import cors from 'cors'
-import http from 'http'
 import { Database } from './db'
 import * as error from './error'
 import router from './routes'
 import { Locals } from './locals'
-import { loggerMiddleware } from './logger'
-
+import { loggerMiddleware, logger } from './logger'
 export * from './db'
 
-export const server = (db: Database, port: number): http.Server => {
+export type App = express.Application
+
+export const server = (db: Database, port?: number, _version?: string) => {
+  const version = _version || '0.0.0'
   const app = express()
   app.use(express.json())
   app.use(cors())
 
   app.use(loggerMiddleware)
 
+  const locals: Locals = {
+    logger,
+    version,
+    db,
+  }
+
+  app.locals = locals
+
   app.use((req, res, next) => {
-    const locals: Locals = {
-      // @ts-ignore
-      logger: req.log,
-      db,
+    const reqLocals: Locals = {
+      ...locals,
+      logger: req.log, // This logger is request-specific
     }
-    res.locals = locals
+    res.locals = reqLocals
     next()
   })
 
   app.use('/', router)
   app.use(error.handler)
 
-  return app.listen(port)
+  const listener = app.listen(port)
+  return { app, listener }
 }
 
 export default server
