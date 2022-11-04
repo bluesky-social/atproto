@@ -63,14 +63,32 @@ describe('scenes', () => {
     scene = res.data
   })
 
-  it('can invite members to scene', async () => {
-    await aliceClient.app.bsky.graph.assertion.create(
+  let invite
+  it('invites members to scene', async () => {
+    invite = await aliceClient.app.bsky.graph.assertion.create(
       { did: scene.did },
       {
         assertion: 'asdf',
         subject: {
           did: bob.did,
           declarationCid: bob.declarationCid,
+        },
+        createdAt: new Date().toISOString(),
+      },
+    )
+  })
+
+  it('members accept invites', async () => {
+    await bobClient.app.bsky.graph.confirmation.create(
+      { did: bob.did },
+      {
+        originator: {
+          did: scene.did,
+          declarationCid: scene.declarationCid,
+        },
+        assertion: {
+          uri: invite.uri,
+          cid: invite.cid,
         },
         createdAt: new Date().toISOString(),
       },
