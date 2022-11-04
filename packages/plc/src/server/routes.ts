@@ -1,10 +1,10 @@
 import express from 'express'
+import { sql } from 'kysely'
 import { check } from '@atproto/common'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
 import * as locals from './locals'
 import { ServerError } from './error'
-import { sql } from 'kysely'
 
 const router = express.Router()
 

@@ -1,9 +1,10 @@
 export interface ServerConfigValues {
   debugMode?: boolean
+  version: string
 
   publicUrl?: string
   scheme: string
-  port: number
+  port?: number
   hostname: string
 
   dbPostgresUrl?: string
@@ -41,6 +42,7 @@ export class ServerConfig {
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
     const debugMode = process.env.DEBUG_MODE === '1'
+    const version = process.env.PDS_VERSION || '0.0.0'
 
     const publicUrl = process.env.PUBLIC_URL || undefined
     const hostname = process.env.HOSTNAME || 'localhost'
@@ -91,6 +93,7 @@ export class ServerConfig {
 
     return new ServerConfig({
       debugMode,
+      version,
       publicUrl,
       scheme,
       hostname,
@@ -115,6 +118,10 @@ export class ServerConfig {
 
   get debugMode() {
     return this.cfg.debugMode
+  }
+
+  get version() {
+    return this.cfg.version
   }
 
   get scheme() {

@@ -7,7 +7,7 @@ import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import * as auth from '@atproto/auth'
-import API from './api'
+import API, { health } from './api'
 import Database from './db'
 import ServerAuth from './auth'
 import * as error from './error'
@@ -70,6 +70,7 @@ const runServer = (
 
   const apiServer = API()
   app.use(apiServer.xrpc.router)
+  app.use(health.router)
   app.use(error.handler)
 
   const listener = app.listen(config.port)
