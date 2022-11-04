@@ -39,10 +39,10 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
-          "index": Array [
-            0,
-            18,
-          ],
+          "index": Object {
+            "end": 18,
+            "start": 0,
+          },
           "type": "mention",
           "value": "user(0)",
         },
@@ -214,10 +214,10 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
-          "index": Array [
-            0,
-            18,
-          ],
+          "index": Object {
+            "end": 18,
+            "start": 0,
+          },
           "type": "mention",
           "value": "user(0)",
         },
@@ -495,10 +495,10 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
-          "index": Array [
-            0,
-            18,
-          ],
+          "index": Object {
+            "end": 18,
+            "start": 0,
+          },
           "type": "mention",
           "value": "user(0)",
         },
@@ -625,10 +625,10 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
-          "index": Array [
-            0,
-            18,
-          ],
+          "index": Object {
+            "end": 18,
+            "start": 0,
+          },
           "type": "mention",
           "value": "user(0)",
         },
@@ -800,10 +800,10 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
-          "index": Array [
-            0,
-            18,
-          ],
+          "index": Object {
+            "end": 18,
+            "start": 0,
+          },
           "type": "mention",
           "value": "user(0)",
         },
@@ -907,10 +907,10 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
-          "index": Array [
-            0,
-            18,
-          ],
+          "index": Object {
+            "end": 18,
+            "start": 0,
+          },
           "type": "mention",
           "value": "user(2)",
         },
@@ -1336,10 +1336,10 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "entities": Array [
         Object {
-          "index": Array [
-            0,
-            18,
-          ],
+          "index": Object {
+            "end": 18,
+            "start": 0,
+          },
           "type": "mention",
           "value": "user(2)",
         },

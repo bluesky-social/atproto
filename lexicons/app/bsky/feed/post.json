@@ -45,10 +45,12 @@
       }
     },
     "textSlice": {
-      "type": "array",
-      "items": [{"type": "number"}, {"type": "number"}],
-      "minItems": 2,
-      "maxItems": 2
+      "type": "object",
+      "required": ["start", "end"],
+      "properties": {
+        "start": {"type": "number", "minimum": 0},
+        "end": {"type": "number", "minimum": 0}
+      }
     }
   }
 }

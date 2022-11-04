@@ -1,12 +1,6 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-/**
- * @minItems 2
- * @maxItems 2
- */
-export type TextSlice = [number, number]
-
 export interface Record {
   text: string;
   entities?: Entity[];
@@ -22,6 +16,11 @@ export interface Entity {
   index: TextSlice;
   type: string;
   value: string;
+  [k: string]: unknown;
+}
+export interface TextSlice {
+  start: number;
+  end: number;
   [k: string]: unknown;
 }
 export interface PostRef {

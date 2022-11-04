@@ -29,7 +29,7 @@ export default async (sc: SeedClient) => {
   await sc.post(dan, posts.dan[0])
   await sc.post(dan, posts.dan[1], [
     {
-      index: [0, 18],
+      index: { start: 0, end: 18 },
       type: 'mention',
       value: alice,
     },
