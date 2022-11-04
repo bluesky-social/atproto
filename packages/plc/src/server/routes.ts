@@ -8,7 +8,7 @@ import { ServerError } from './error'
 
 const router = express.Router()
 
-router.get(`/health`, async function (req, res) {
+router.get('/health', async function (req, res) {
   const { db, version, logger } = locals.get(res)
   try {
     await sql`select 1`.execute(db.db)
@@ -20,7 +20,7 @@ router.get(`/health`, async function (req, res) {
 })
 
 // Get data for a DID document
-router.get(`/:did`, async function (req, res) {
+router.get('/:did', async function (req, res) {
   const { did } = req.params
   const { db } = locals.get(res)
   const log = await db.opsForDid(did)
@@ -34,7 +34,7 @@ router.get(`/:did`, async function (req, res) {
 })
 
 // Get data for a DID document
-router.get(`/data/:did`, async function (req, res) {
+router.get('/data/:did', async function (req, res) {
   const { did } = req.params
   const { db } = locals.get(res)
   const log = await db.opsForDid(did)
@@ -46,7 +46,7 @@ router.get(`/data/:did`, async function (req, res) {
 })
 
 // Get operation log for a DID
-router.get(`/log/:did`, async function (req, res) {
+router.get('/log/:did', async function (req, res) {
   const { did } = req.params
   const { db } = locals.get(res)
   const log = await db.opsForDid(did)
@@ -57,7 +57,7 @@ router.get(`/log/:did`, async function (req, res) {
 })
 
 // Update or create a DID doc
-router.post(`/:did`, async function (req, res) {
+router.post('/:did', async function (req, res) {
   const { did } = req.params
   const op = req.body
   if (!check.is(op, t.def.operation)) {

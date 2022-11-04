@@ -4,7 +4,7 @@ import * as locals from '../locals'
 
 export const router = express.Router()
 
-router.get(`/health`, async function (req, res) {
+router.get('/health', async function (req, res) {
   const { db, config, logger } = locals.get(res)
   const { version } = config
   try {

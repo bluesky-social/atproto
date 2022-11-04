@@ -1,3 +1,4 @@
+import { AddressInfo } from 'net'
 import * as crypto from '@atproto/crypto'
 import * as plc from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
@@ -6,7 +7,6 @@ import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
-import { AddressInfo } from 'net'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
