@@ -90,7 +90,7 @@ export class DevEnvServer {
       case ServerType.DidPlaceholder: {
         const db = plc.Database.memory()
         await db.migrateToLatestOrThrow()
-        this.inst = await onServerReady(plc.server(db, this.port))
+        this.inst = await onServerReady(plc.server(db, this.port).listener)
         break
       }
       default:

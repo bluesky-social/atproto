@@ -4,8 +4,20 @@ import * as document from '../lib/document'
 import * as t from '../lib/types'
 import * as locals from './locals'
 import { ServerError } from './error'
+import { sql } from 'kysely'
 
 const router = express.Router()
+
+router.get(`/health`, async function (req, res) {
+  const { db, version, logger } = locals.get(res)
+  try {
+    await sql`select 1`.execute(db.db)
+  } catch (err) {
+    logger.error(err, 'failed health check')
+    return res.status(503).send({ version, error: 'Service Unavailable' })
+  }
+  res.send({ version })
+})
 
 // Get data for a DID document
 router.get(`/:did`, async function (req, res) {

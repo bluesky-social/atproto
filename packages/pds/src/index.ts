@@ -62,7 +62,6 @@ const runServer = (
   app.use((req, res, next) => {
     const reqLocals: Locals = {
       ...locals,
-      // @ts-ignore
       logger: req.log, // This logger is request-specific
     }
     res.locals = reqLocals

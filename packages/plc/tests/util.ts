@@ -1,13 +1,18 @@
-import server from '../src/server'
+import { AddressInfo } from 'net'
+import server, { App } from '../src/server'
 import Database from '../src/server/db'
 
 export type CloseFn = () => Promise<void>
+export type TestServerInfo = {
+  app: App
+  url: string
+  close: CloseFn
+}
 
 export const runTestServer = async (opts: {
-  port: number
   dbPostgresSchema: string
-}): Promise<CloseFn> => {
-  const { port, dbPostgresSchema } = opts
+}): Promise<TestServerInfo> => {
+  const { dbPostgresSchema } = opts
   const dbPostgresUrl = process.env.DB_POSTGRES_URL || undefined
 
   const db =
@@ -19,9 +24,16 @@ export const runTestServer = async (opts: {
       : Database.memory()
 
   await db.migrateToLatestOrThrow()
-  const s = server(db, port)
-  return async () => {
-    await db.close()
-    s.close()
+
+  const { app, listener } = server(db)
+  const { port } = listener.address() as AddressInfo
+
+  return {
+    app,
+    url: `http://localhost:${port}`,
+    close: async () => {
+      await db.close()
+      listener.close()
+    },
   }
 }
