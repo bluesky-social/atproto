@@ -77,6 +77,26 @@ export default function (server: Server) {
         .values({ handle, owner: requester, createdAt: now })
         .execute()
 
+      const userRoot = await dbTxn.getRepoRoot(requester, true)
+      if (!userRoot) {
+        throw new InvalidRequestError(
+          `${requester} is not a registered repo on this server`,
+        )
+      }
+      const userDeclaration = await dbTxn.db
+        .selectFrom('app_bsky_declaration')
+        .where('creator', '=', requester)
+        .select('cid')
+        .executeTakeFirst()
+      if (!userDeclaration) {
+        throw new InvalidRequestError(
+          `Could not locate user declaration for ${requester}`,
+        )
+      }
+      const userAuth = locals.getAuthstore(res, requester)
+      const userCtx = repoUtil.mutationContext(dbTxn, did, now)
+      const userRepo = await RepoStructure.load(userCtx.blockstore, userRoot)
+
       const sceneAuth = locals.getAuthstore(res, did)
       const sceneCtx = repoUtil.mutationContext(dbTxn, did, now)
       const sceneRepo = await RepoStructure.create(
@@ -84,24 +104,6 @@ export default function (server: Server) {
         did,
         sceneAuth,
       )
-      const userRoot = await dbTxn.getRepoRoot(requester, true)
-      if (!userRoot) {
-        throw new InvalidRequestError(
-          `${requester} is not a registered repo on this server`,
-        )
-      }
-      const userAuth = locals.getAuthstore(res, requester)
-      const userCtx = repoUtil.mutationContext(dbTxn, did, now)
-      const userRepo = await RepoStructure.load(userCtx.blockstore, userRoot)
-
-      const userDeclaration = await dbTxn.db
-        .selectFrom('app_bsky_declaration')
-        .where('creator', '=', requester)
-        .select('cid')
-        .executeTakeFirst()
-      if (!userDeclaration) {
-        throw new Error('')
-      }
 
       const [sceneDeclaration, creatorAssert, memberAssert] = await Promise.all(
         [

@@ -14,7 +14,7 @@ export const getUserInfo = async (
 ): Promise<UserInfo> => {
   const userInfo = await db
     .selectFrom('did_handle')
-    .where(util.userWhereClause(user))
+    .where(util.actorWhereClause(user))
     .leftJoin(
       'app_bsky_profile as profile',
       'profile.creator',

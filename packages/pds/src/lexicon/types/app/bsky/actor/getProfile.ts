@@ -4,7 +4,7 @@
 import express from 'express'
 
 export interface QueryParams {
-  user: string;
+  actor: string;
 }
 
 export type HandlerInput = undefined
@@ -24,10 +24,12 @@ export type HandlerOutput = HandlerError | HandlerSuccess
 export interface OutputSchema {
   did: string;
   handle: string;
+  creator: string;
   displayName?: string;
   description?: string;
   followersCount: number;
   followsCount: number;
+  membersCount: number;
   postsCount: number;
   myState?: {
     follow?: string,

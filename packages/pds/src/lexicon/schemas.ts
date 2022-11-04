@@ -858,7 +858,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'app.bsky.actor.getProfile',
     type: 'query',
     parameters: {
-      user: {
+      actor: {
         type: 'string',
         required: true,
       },
@@ -870,8 +870,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         required: [
           'did',
           'handle',
+          'creator',
           'followersCount',
           'followsCount',
+          'membersCount',
           'postsCount',
         ],
         properties: {
@@ -879,6 +881,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
           },
           handle: {
+            type: 'string',
+          },
+          creator: {
             type: 'string',
           },
           displayName: {
@@ -893,6 +898,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'number',
           },
           followsCount: {
+            type: 'number',
+          },
+          membersCount: {
             type: 'number',
           },
           postsCount: {

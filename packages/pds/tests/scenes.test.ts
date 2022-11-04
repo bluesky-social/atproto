@@ -1,4 +1,5 @@
 import {
+  APP_BSKY_GRAPH,
   sessionClient,
   SessionServiceClient as AtpSessionClient,
 } from '@atproto/api'
@@ -68,7 +69,7 @@ describe('scenes', () => {
     invite = await aliceClient.app.bsky.graph.assertion.create(
       { did: scene.did },
       {
-        assertion: 'asdf',
+        assertion: APP_BSKY_GRAPH.AssertMember,
         subject: {
           did: bob.did,
           declarationCid: bob.declarationCid,
@@ -93,5 +94,13 @@ describe('scenes', () => {
         createdAt: new Date().toISOString(),
       },
     )
+  })
+
+  it('correctly returns scene info', async () => {
+    const profile = await aliceClient.app.bsky.actor.getProfile({
+      actor: scene.handle,
+    })
+    expect(profile.data.membersCount).toBe(2)
+    expect(profile.data.creator).toBe(alice.did)
   })
 })
