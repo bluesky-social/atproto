@@ -1,7 +1,7 @@
 import { EcdsaKeypair } from '@atproto/crypto'
 import PlcClient from '../src/client'
 import * as document from '../src/lib/document'
-import { CloseFn, runTestServer } from './util'
+import { CloseFn, runTestServer } from './_util'
 import { cidForData } from '@atproto/common'
 import { AxiosError } from 'axios'
 import { App } from '../src'
