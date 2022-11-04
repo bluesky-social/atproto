@@ -92,7 +92,11 @@ async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
   desc.push(`<mark>RPC ${schema.type}</mark> ${schema.description || ''}`, ``)
 
   if (schema.parameters && Object.keys(schema.parameters).length) {
-    params.push(`Parameters:`, ``)
+    if (schema.type === 'query') {
+      params.push(`Parameters:`, ``)
+    } else if (schema.type === 'procedure') {
+      params.push(`QP options:`, ``)
+    }
     for (const [k, desc] of Object.entries(schema.parameters)) {
       const param: string[] = []
       param.push(`- \`${k}\``)
@@ -125,7 +129,7 @@ async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
   params.push('')
 
   if (schema.input) {
-    input.push(`Input:`, ``)
+    input.push(`Parameters:`, ``)
     if (schema.input.encoding) {
       if (typeof schema.input.encoding === 'string') {
         input.push(`- Encoding: ${schema.input.encoding}`)
@@ -138,7 +142,7 @@ async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
       input.push('```typescript')
       input.push(
         (
-          await jsonSchemaToTs.compile(schema.input.schema, 'InputBody', {
+          await jsonSchemaToTs.compile(schema.input.schema, 'Parameters', {
             bannerComment: '',
             additionalProperties: false,
           })
@@ -150,7 +154,7 @@ async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
   }
 
   if (schema.output) {
-    output.push(`Output:`, ``)
+    output.push(`Response:`, ``)
     if (schema.output.encoding) {
       if (typeof schema.output.encoding === 'string') {
         output.push(`- Encoding: ${schema.output.encoding}`)
@@ -165,7 +169,7 @@ async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
       output.push('```typescript')
       output.push(
         (
-          await jsonSchemaToTs.compile(schema.output.schema, 'OutputBody', {
+          await jsonSchemaToTs.compile(schema.output.schema, 'Response', {
             bannerComment: '',
             additionalProperties: false,
           })
