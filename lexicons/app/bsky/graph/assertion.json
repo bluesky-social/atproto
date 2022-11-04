@@ -1,0 +1,22 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.assertion",
+  "type": "record",
+  "key": "tid",
+  "record": {
+    "type": "object",
+    "required": ["assertion", "subject", "createdAt"],
+    "properties": {
+      "assertion": {"type": "string"},
+      "subject": {
+        "type": "object",
+        "required": ["did", "declarationCid"],
+        "properties": {
+          "did": {"type": "string"},
+          "declarationCid": {"type": "string"}
+        }
+      },
+      "createdAt": {"type": "string", "format": "date-time"}
+    }
+  }
+}

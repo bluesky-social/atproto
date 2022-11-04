@@ -155,9 +155,9 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
     name: ns.className,
     isExported: true,
   })
-  //= server: Server
+  //= _server: Server
   cls.addProperty({
-    name: 'server',
+    name: '_server',
     type: 'Server',
   })
 
@@ -173,7 +173,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
   }
 
   //= constructor(server: Server) {
-  //=  this.server = server
+  //=  this._server = server
   //=  {child namespace declarations}
   //= }
   const cons = cls.addConstructor()
@@ -183,7 +183,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
   })
   cons.setBodyText(
     [
-      `this.server = server`,
+      `this._server = server`,
       ...ns.children.map(
         (ns) => `this.${ns.propName} = new ${ns.className}(server)`,
       ),
@@ -209,7 +209,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
         // Placing schema on separate line, since the following one was being formatted
         // into multiple lines and causing the ts-ignore to ignore the wrong line.
         `const schema = '${schema.id}' // @ts-ignore`,
-        `return this.server.xrpc.method(schema, handler)`,
+        `return this._server.xrpc.method(schema, handler)`,
       ].join('\n'),
     )
   }

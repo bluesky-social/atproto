@@ -1,12 +1,12 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Assertion from '../../lexicon/types/app/bsky/assertion'
+import * as Assertion from '../../lexicon/types/app/bsky/graph/assertion'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
-const type = schemas.ids.AppBskyAssertion
-const tableName = 'app_bsky_assertion'
+const type = schemas.ids.AppBskyGraphAssertion
+const tableName = 'app_bsky_invite'
 
 export interface AppBskyAssertion {
   uri: string

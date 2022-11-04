@@ -4,7 +4,7 @@ import { PlcClient } from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
 import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
-import { Server, APP_BSKY } from '../../../lexicon'
+import { Server, APP_BSKY_SYSTEM } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
@@ -13,7 +13,7 @@ import { grantRefreshToken } from './util/auth'
 import * as schema from '../../../lexicon/schemas'
 
 export default function (server: Server) {
-  server.com.atproto.getAccountsConfig((_params, _input, _req, res) => {
+  server.com.atproto.server.getAccountsConfig((_params, _input, _req, res) => {
     const cfg = locals.config(res)
 
     const availableUserDomains = cfg.availableUserDomains
@@ -25,11 +25,11 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.getAccount(() => {
+  server.com.atproto.account.get(() => {
     throw new InvalidRequestError('Not implemented')
   })
 
-  server.com.atproto.createAccount(async (_params, input, _req, res) => {
+  server.com.atproto.account.create(async (_params, input, _req, res) => {
     const { password, inviteCode, recoveryKey } = input.body
     const { db, auth, config, keypair, logger } = locals.get(res)
     const handle = input.body.handle.toLowerCase()
@@ -138,11 +138,13 @@ export default function (server: Server) {
       const repo = await RepoStructure.create(blockstore, did, authStore)
 
       const declaration = {
-        $type: 'app.bsky.declaration',
-        actorType: APP_BSKY.ActorUser,
+        $type: schema.ids.AppBskySystemDeclaration,
+        actorType: APP_BSKY_SYSTEM.ActorUser,
       }
       const declarationCid = await blockstore.put(declaration)
-      const uri = new AtUri(`${did}/${schema.ids.AppBskyDeclaration}/self`)
+      const uri = new AtUri(
+        `${did}/${schema.ids.AppBskySystemDeclaration}/self`,
+      )
 
       await repo
         .stageUpdate({
@@ -189,7 +191,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.deleteAccount(() => {
+  server.com.atproto.account.delete(() => {
     // TODO
     throw new InvalidRequestError('Not implemented')
   })

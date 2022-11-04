@@ -1,5 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import * as Timeline from '../../src/lexicon/types/app/bsky/getTimeline'
+import * as Timeline from '../../src/lexicon/types/app/bsky/feed/getTimeline'
 import {
   runTestServer,
   forSnapshot,
@@ -51,7 +51,7 @@ describe('pds home feed views', () => {
       expect(sc.follows[did]).toHaveProperty(originator)
     }
 
-    const aliceTL = await client.app.bsky.getTimeline(
+    const aliceTL = await client.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
         headers: sc.getHeaders(alice),
@@ -61,7 +61,7 @@ describe('pds home feed views', () => {
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
     aliceTL.data.feed.forEach(expectOriginatorFollowedBy(alice))
 
-    const bobTL = await client.app.bsky.getTimeline(
+    const bobTL = await client.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
         headers: sc.getHeaders(bob),
@@ -71,7 +71,7 @@ describe('pds home feed views', () => {
     expect(forSnapshot(bobTL.data.feed)).toMatchSnapshot()
     bobTL.data.feed.forEach(expectOriginatorFollowedBy(bob))
 
-    const carolTL = await client.app.bsky.getTimeline(
+    const carolTL = await client.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
         headers: sc.getHeaders(carol),
@@ -81,7 +81,7 @@ describe('pds home feed views', () => {
     expect(forSnapshot(carolTL.data.feed)).toMatchSnapshot()
     carolTL.data.feed.forEach(expectOriginatorFollowedBy(carol))
 
-    const danTL = await client.app.bsky.getTimeline(
+    const danTL = await client.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
         headers: sc.getHeaders(dan),
@@ -101,7 +101,7 @@ describe('pds home feed views', () => {
       }
     }
 
-    const aliceTL = await client.app.bsky.getTimeline(
+    const aliceTL = await client.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.Firehose },
       {
         headers: sc.getHeaders(alice),
@@ -111,7 +111,7 @@ describe('pds home feed views', () => {
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
     aliceTL.data.feed.forEach(expectNotOwnRepostsBy(alice))
 
-    const carolTL = await client.app.bsky.getTimeline(
+    const carolTL = await client.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.Firehose },
       {
         headers: sc.getHeaders(carol),
@@ -123,13 +123,13 @@ describe('pds home feed views', () => {
   })
 
   it("fetches authenticated user's home feed w/ default algorithm", async () => {
-    const defaultTL = await client.app.bsky.getTimeline(
+    const defaultTL = await client.app.bsky.feed.getTimeline(
       {},
       {
         headers: sc.getHeaders(alice),
       },
     )
-    const reverseChronologicalTL = await client.app.bsky.getTimeline(
+    const reverseChronologicalTL = await client.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
         headers: sc.getHeaders(alice),
@@ -141,7 +141,7 @@ describe('pds home feed views', () => {
   it('paginates reverse-chronological feed', async () => {
     const results = (results) => results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.getTimeline(
+      const res = await client.app.bsky.feed.getTimeline(
         {
           algorithm: FeedAlgorithm.ReverseChronological,
           before: cursor,
@@ -157,7 +157,7 @@ describe('pds home feed views', () => {
       expect(res.feed.length).toBeLessThanOrEqual(4),
     )
 
-    const full = await client.app.bsky.getTimeline(
+    const full = await client.app.bsky.feed.getTimeline(
       {
         algorithm: FeedAlgorithm.ReverseChronological,
       },
@@ -171,7 +171,7 @@ describe('pds home feed views', () => {
   it('paginates firehose feed', async () => {
     const results = (results) => results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.getTimeline(
+      const res = await client.app.bsky.feed.getTimeline(
         {
           algorithm: FeedAlgorithm.Firehose,
           before: cursor,
@@ -187,7 +187,7 @@ describe('pds home feed views', () => {
       expect(res.feed.length).toBeLessThanOrEqual(5),
     )
 
-    const full = await client.app.bsky.getTimeline(
+    const full = await client.app.bsky.feed.getTimeline(
       {
         algorithm: FeedAlgorithm.Firehose,
       },

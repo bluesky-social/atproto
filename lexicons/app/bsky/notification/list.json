@@ -1,0 +1,53 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.notification.list",
+  "type": "query",
+  "parameters": {
+    "limit": {"type": "number", "maximum": 100},
+    "before": {"type": "string"}
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["notifications"],
+      "properties": {
+        "cursor": {"type": "string"},
+        "notifications": {
+          "type": "array",
+          "items": {"$ref": "#/defs/notification"}
+        }
+      }
+    }
+  },
+  "defs": {
+    "notification": {
+      "type": "object",
+      "required": ["uri", "cid", "author", "reason", "record", "isRead", "indexedAt"],
+      "properties": {
+        "uri": {"type": "string", "format": "uri"},
+        "cid": {"type": "string" },
+        "author": {
+          "type": "object",
+          "required": ["did", "handle"],
+          "properties": {
+            "did": {"type": "string"},
+            "handle": {"type": "string"},
+            "displayName": {
+              "type": "string",
+              "maxLength": 64
+            }
+          }
+        },
+        "reason": {
+          "type": "string",
+          "$comment": "Expected values are 'like', 'repost', 'follow', 'invite', 'mention' and 'reply'."
+        },
+        "reasonSubject": {"type": "string"},
+        "record": {"type": "object"},
+        "isRead": {"type": "boolean"},
+        "indexedAt": {"type": "string", "format": "date-time"}
+      }
+    }
+  }
+}

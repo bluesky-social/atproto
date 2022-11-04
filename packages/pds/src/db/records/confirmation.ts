@@ -1,11 +1,11 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Confirmation from '../../lexicon/types/app/bsky/confirmation'
+import * as Confirmation from '../../lexicon/types/app/bsky/graph/confirmation'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
-const type = schemas.ids.AppBskyConfirmation
+const type = schemas.ids.AppBskyGraphConfirmation
 const tableName = 'app_bsky_confirmation'
 
 export interface AppBskyConfirmation {
