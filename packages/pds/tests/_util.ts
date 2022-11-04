@@ -82,8 +82,8 @@ export const runTestServer = async (
       await Promise.all([
         db.close(),
         listener.close(),
-        plcServer?.listener.close(),
-        plcDb?.close(),
+        plcServer.listener.close(),
+        plcDb.close(),
       ])
     },
   }

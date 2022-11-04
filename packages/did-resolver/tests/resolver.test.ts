@@ -35,7 +35,7 @@ describe('resolver', () => {
     close = async () => {
       await webServer.close()
       await plcDB.close()
-      await plcServer.close()
+      await plcServer.listener.close()
     }
   })
 
