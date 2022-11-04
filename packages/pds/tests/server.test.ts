@@ -48,7 +48,7 @@ describe('server', () => {
   })
 
   it('healthcheck succeeds when database is available.', async () => {
-    const { data, status } = await axios.get(`${server.url}/health`)
+    const { data, status } = await axios.get(`${server.url}/xrpc/_health`)
     expect(status).toEqual(200)
     expect(data).toEqual({ version: '0.0.0' })
   })
@@ -58,7 +58,7 @@ describe('server', () => {
     await db.db.destroy()
     let error: AxiosError
     try {
-      await axios.get(`${server.url}/health`)
+      await axios.get(`${server.url}/xrpc/_health`)
       throw new Error('Healthcheck should have failed')
     } catch (err) {
       if (err instanceof AxiosError) {

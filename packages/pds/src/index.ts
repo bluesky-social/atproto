@@ -69,8 +69,8 @@ const runServer = (
   })
 
   const apiServer = API()
-  app.use(apiServer.xrpc.router)
   app.use(health.router)
+  app.use(apiServer.xrpc.router)
   app.use(error.handler)
 
   const listener = app.listen(config.port)

@@ -101,7 +101,7 @@ export class PlcClient {
   }
 
   async health() {
-    return await axios.get(`${this.url}/health`)
+    return await axios.get(`${this.url}/_health`)
   }
 }
 

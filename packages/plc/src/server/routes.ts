@@ -8,7 +8,7 @@ import { ServerError } from './error'
 
 const router = express.Router()
 
-router.get('/health', async function (req, res) {
+router.get('/_health', async function (_req, res) {
   const { db, version, logger } = locals.get(res)
   try {
     await sql`select 1`.execute(db.db)
