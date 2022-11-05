@@ -2,7 +2,7 @@
   "lexicon": 1,
   "id": "app.bsky.actor.searchTypeahead",
   "type": "query",
-  "description": "Find user suggestions for a search term",
+  "description": "Find user suggestions for a search term.",
   "parameters": {
     "term": {"type": "string", "required": true},
     "limit": {"type": "number", "maximum": 100}

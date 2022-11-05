@@ -2,7 +2,7 @@
   "lexicon": 1,
   "id": "app.bsky.feed.getTimeline",
   "type": "query",
-  "description": "A view of the user's home timeline",
+  "description": "A view of the user's home timeline.",
   "parameters": {
     "algorithm": {"type": "string"},
     "limit": {"type": "number", "maximum": 100},

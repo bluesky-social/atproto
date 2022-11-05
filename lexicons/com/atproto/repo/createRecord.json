@@ -24,7 +24,7 @@
         },
         "record": {
           "type": "object",
-          "description": "The record to create"
+          "description": "The record to create."
         }
       }
     }
