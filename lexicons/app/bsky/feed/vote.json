@@ -5,7 +5,7 @@
   "key": "tid",
   "record": {
     "type": "object",
-    "required": ["subject", "createdAt"],
+    "required": ["subject", "direction", "createdAt"],
     "properties": {
       "subject": {"$ref": "#/defs/subject"},
       "direction": {"type": "string", "enum": ["up", "down"]},

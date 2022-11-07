@@ -2767,7 +2767,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     key: 'tid',
     record: {
       type: 'object',
-      required: ['subject', 'createdAt'],
+      required: ['subject', 'direction', 'createdAt'],
       properties: {
         subject: {
           $ref: '#/$defs/subject',

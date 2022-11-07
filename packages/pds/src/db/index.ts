@@ -8,13 +8,13 @@ import * as Declaration from '../lexicon/types/app/bsky/system/declaration'
 import * as Invite from '../lexicon/types/app/bsky/graph/invite'
 import * as InviteAccept from '../lexicon/types/app/bsky/graph/inviteAccept'
 import * as Follow from '../lexicon/types/app/bsky/graph/follow'
-import * as Like from '../lexicon/types/app/bsky/feed/like'
+import * as Vote from '../lexicon/types/app/bsky/feed/vote'
 import * as Post from '../lexicon/types/app/bsky/feed/post'
 import * as Profile from '../lexicon/types/app/bsky/actor/profile'
 import * as Repost from '../lexicon/types/app/bsky/feed/repost'
 import declarationPlugin, { AppBskyDeclaration } from './records/declaration'
 import postPlugin, { AppBskyPost } from './records/post'
-import likePlugin, { AppBskyLike } from './records/like'
+import votePlugin, { AppBskyVote } from './records/vote'
 import repostPlugin, { AppBskyRepost } from './records/repost'
 import followPlugin, { AppBskyFollow } from './records/follow'
 import invitePlugin, { AppBskyInvite } from './records/invite'
@@ -38,7 +38,7 @@ export class Database {
   records: {
     declaration: DbRecordPlugin<Declaration.Record, AppBskyDeclaration>
     post: DbRecordPlugin<Post.Record, AppBskyPost>
-    like: DbRecordPlugin<Like.Record, AppBskyLike>
+    vote: DbRecordPlugin<Vote.Record, AppBskyVote>
     repost: DbRecordPlugin<Repost.Record, AppBskyRepost>
     follow: DbRecordPlugin<Follow.Record, AppBskyFollow>
     profile: DbRecordPlugin<Profile.Record, AppBskyProfile>
@@ -55,7 +55,7 @@ export class Database {
     this.records = {
       declaration: declarationPlugin(db),
       post: postPlugin(db),
-      like: likePlugin(db),
+      vote: votePlugin(db),
       repost: repostPlugin(db),
       follow: followPlugin(db),
       invite: invitePlugin(db),

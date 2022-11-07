@@ -10,7 +10,7 @@ import * as notification from './tables/user-notification'
 import * as declaration from './records/declaration'
 import * as profile from './records/profile'
 import * as post from './records/post'
-import * as like from './records/like'
+import * as vote from './records/vote'
 import * as repost from './records/repost'
 import * as follow from './records/follow'
 import * as invite from './records/invite'
@@ -28,7 +28,7 @@ export type DatabaseSchema = user.PartialDB &
   declaration.PartialDB &
   profile.PartialDB &
   post.PartialDB &
-  like.PartialDB &
+  vote.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
   invite.PartialDB &
