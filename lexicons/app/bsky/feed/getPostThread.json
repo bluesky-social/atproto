@@ -19,7 +19,7 @@
   "defs": {
     "post": {
       "type": "object",
-      "required": ["uri", "cid", "author", "record", "replyCount", "likeCount", "repostCount", "indexedAt"],
+      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt"],
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
@@ -38,14 +38,16 @@
           "type": "array",
           "items": {"$ref": "#/defs/post"}
         },
-        "likeCount": {"type": "number"},
         "repostCount": {"type": "number"},
+        "upvoteCount": {"type": "number"},
+        "downvoteCount": {"type": "number"},
         "indexedAt": {"type": "string", "format": "date-time"},
         "myState": {
           "type": "object",
           "properties": {
             "repost": {"type": "string"},
-            "like": {"type": "string"}
+            "upvote": {"type": "string"},
+            "downvote": {"type": "string"}
           }
         }
       }
