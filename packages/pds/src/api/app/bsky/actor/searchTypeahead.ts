@@ -48,10 +48,14 @@ export default function (server: Server) {
 
 const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
   return await getUserSearchQueryPg(db, { term, limit })
-    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
+    .leftJoin(
+      'app_bsky_profile as profile',
+      'profile.creator',
+      'did_handle.did',
+    )
     .select([
-      'user_did.did as did',
-      'user_did.handle as handle',
+      'did_handle.did as did',
+      'did_handle.handle as handle',
       'profile.displayName as displayName',
     ])
     .execute()
@@ -59,10 +63,14 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
 
 const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
   return await getUserSearchQuerySqlite(db, { term, limit })
-    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
+    .leftJoin(
+      'app_bsky_profile as profile',
+      'profile.creator',
+      'did_handle.did',
+    )
     .select([
-      'user_did.did as did',
-      'user_did.handle as handle',
+      'did_handle.did as did',
+      'did_handle.handle as handle',
       'profile.displayName as displayName',
     ])
     .execute()

@@ -2,14 +2,10 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 export interface Record {
-  group: {
+  assertion: string;
+  subject: {
     did: string,
     declarationCid: string,
-    [k: string]: unknown,
-  };
-  invite: {
-    uri: string,
-    cid: string,
     [k: string]: unknown,
   };
   createdAt: string;

@@ -5,8 +5,8 @@ import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
 import { DbRecordPlugin, NotificationsPlugin } from './types'
 import * as Declaration from '../lexicon/types/app/bsky/system/declaration'
-import * as Invite from '../lexicon/types/app/bsky/graph/invite'
-import * as InviteAccept from '../lexicon/types/app/bsky/graph/inviteAccept'
+import * as Assertion from '../lexicon/types/app/bsky/graph/assertion'
+import * as Confirmation from '../lexicon/types/app/bsky/graph/confirmation'
 import * as Follow from '../lexicon/types/app/bsky/graph/follow'
 import * as Like from '../lexicon/types/app/bsky/feed/like'
 import * as Post from '../lexicon/types/app/bsky/feed/post'
@@ -17,8 +17,8 @@ import postPlugin, { AppBskyPost } from './records/post'
 import likePlugin, { AppBskyLike } from './records/like'
 import repostPlugin, { AppBskyRepost } from './records/repost'
 import followPlugin, { AppBskyFollow } from './records/follow'
-import invitePlugin, { AppBskyInvite } from './records/invite'
-import inviteAcceptPlugin, { AppBskyInviteAccept } from './records/inviteAccept'
+import assertionPlugin, { AppBskyAssertion } from './records/assertion'
+import confirmationPlugin, { AppBskyConfirmation } from './records/confirmation'
 import profilePlugin, { AppBskyProfile } from './records/profile'
 import notificationPlugin from './tables/user-notification'
 import { AtUri } from '@atproto/uri'
@@ -31,7 +31,7 @@ import { User } from './tables/user'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
-import { UserDid } from './tables/user-did'
+import { DidHandle } from './tables/did-handle'
 
 export class Database {
   migrator: Migrator
@@ -42,8 +42,8 @@ export class Database {
     repost: DbRecordPlugin<Repost.Record, AppBskyRepost>
     follow: DbRecordPlugin<Follow.Record, AppBskyFollow>
     profile: DbRecordPlugin<Profile.Record, AppBskyProfile>
-    invite: DbRecordPlugin<Invite.Record, AppBskyInvite>
-    inviteAccept: DbRecordPlugin<InviteAccept.Record, AppBskyInviteAccept>
+    assertion: DbRecordPlugin<Assertion.Record, AppBskyAssertion>
+    confirmation: DbRecordPlugin<Confirmation.Record, AppBskyConfirmation>
   }
   notifications: NotificationsPlugin
 
@@ -58,8 +58,8 @@ export class Database {
       like: likePlugin(db),
       repost: repostPlugin(db),
       follow: followPlugin(db),
-      invite: invitePlugin(db),
-      inviteAccept: inviteAcceptPlugin(db),
+      assertion: assertionPlugin(db),
+      confirmation: confirmationPlugin(db),
       profile: profilePlugin(db),
     }
     this.notifications = notificationPlugin(db)
@@ -187,33 +187,37 @@ export class Database {
     }
   }
 
-  async getUser(handleOrDid: string): Promise<(User & UserDid) | null> {
+  async getUser(handleOrDid: string): Promise<(User & DidHandle) | null> {
     let query = this.db
       .selectFrom('user')
-      .innerJoin('user_did', 'user_did.handle', 'user.handle')
+      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
       .selectAll()
     if (handleOrDid.startsWith('did:')) {
       query = query.where('did', '=', handleOrDid)
     } else {
-      query = query.where('user_did.handle', '=', handleOrDid.toLowerCase())
+      query = query.where('did_handle.handle', '=', handleOrDid.toLowerCase())
     }
     const found = await query.executeTakeFirst()
     return found || null
   }
 
-  async getUserByEmail(email: string): Promise<(User & UserDid) | null> {
+  async getUserByEmail(email: string): Promise<(User & DidHandle) | null> {
     const found = await this.db
       .selectFrom('user')
-      .innerJoin('user_did', 'user_did.handle', 'user.handle')
+      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
       .selectAll()
       .where('email', '=', email.toLowerCase())
       .executeTakeFirst()
     return found || null
   }
 
-  async getUserDid(handleOrDid: string): Promise<string | null> {
+  async getDidForActor(handleOrDid: string): Promise<string | null> {
     if (handleOrDid.startsWith('did:')) return handleOrDid
-    const found = await this.getUser(handleOrDid)
+    const found = await this.db
+      .selectFrom('did_handle')
+      .where('handle', '=', handleOrDid)
+      .select('did')
+      .executeTakeFirst()
     return found ? found.did : null
   }
 
@@ -223,7 +227,7 @@ export class Database {
     const inserted = await this.db
       .insertInto('user')
       .values({
-        email: email,
+        email: email.toLowerCase(),
         handle: handle,
         password: await scrypt.hash(password),
         createdAt: new Date().toISOString(),
@@ -238,14 +242,34 @@ export class Database {
     log.info({ handle, email }, 'registered user')
   }
 
-  async registerUserDid(handle: string, did: string) {
+  async preregisterDid(handle: string, tempDid: string) {
     this.assertTransaction()
-    log.debug({ handle, did }, 'registering user did')
-    await this.db
-      .insertInto('user_did')
-      .values({ handle, did })
+    const inserted = await this.db
+      .insertInto('did_handle')
+      .values({ handle: handle, did: tempDid })
+      .onConflict((oc) => oc.doNothing())
+      .returning('handle')
       .executeTakeFirst()
-    log.info({ handle, did }, 'post-registered user')
+    if (!inserted) {
+      throw new UserAlreadyExistsError()
+    }
+    log.info({ handle, tempDid }, 'pre-registered did')
+  }
+
+  async finalizeDid(handle: string, did: string, tempDid: string) {
+    this.assertTransaction()
+    log.debug({ handle, did }, 'registering did-handle')
+    const updated = await this.db
+      .updateTable('did_handle')
+      .set({ did })
+      .where('handle', '=', handle)
+      .where('did', '=', tempDid)
+      .returningAll()
+      .executeTakeFirst()
+    if (!updated) {
+      throw new Error('DID could not be finalized')
+    }
+    log.info({ handle, did }, 'post-registered did-handle')
   }
 
   async updateUserPassword(handle: string, password: string) {
@@ -265,6 +289,22 @@ export class Database {
       .executeTakeFirst()
     if (!found) return false
     return scrypt.verify(password, found.password)
+  }
+
+  async isUserControlledRepo(
+    repoDid: string,
+    userDid: string | null,
+  ): Promise<boolean> {
+    if (!userDid) return false
+    if (repoDid === userDid) return true
+    const found = await this.db
+      .selectFrom('did_handle')
+      .leftJoin('scene', 'scene.handle', 'did_handle.handle')
+      .where('did_handle.did', '=', repoDid)
+      .where('scene.owner', '=', userDid)
+      .select('scene.owner')
+      .executeTakeFirst()
+    return !!found
   }
 
   validateRecord(collection: string, obj: unknown): ValidationResult {

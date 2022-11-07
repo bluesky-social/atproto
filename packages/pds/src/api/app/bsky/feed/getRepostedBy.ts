@@ -13,15 +13,15 @@ export default function (server: Server) {
       let builder = db.db
         .selectFrom('app_bsky_repost as repost')
         .where('repost.subject', '=', uri)
-        .innerJoin('user_did', 'user_did.did', 'repost.creator')
+        .innerJoin('did_handle', 'did_handle.did', 'repost.creator')
         .leftJoin(
           'app_bsky_profile as profile',
           'profile.creator',
-          'user_did.did',
+          'did_handle.did',
         )
         .select([
-          'user_did.did as did',
-          'user_did.handle as handle',
+          'did_handle.did as did',
+          'did_handle.handle as handle',
           'profile.displayName as displayName',
           'repost.createdAt as createdAt',
           'repost.indexedAt as indexedAt',

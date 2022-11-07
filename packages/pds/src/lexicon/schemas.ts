@@ -806,12 +806,62 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/cbor',
     },
   },
+  'app.bsky.actor.createScene': {
+    lexicon: 1,
+    id: 'app.bsky.actor.createScene',
+    type: 'procedure',
+    description: 'Create a scene.',
+    parameters: {},
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['handle'],
+        properties: {
+          handle: {
+            type: 'string',
+          },
+          recoveryKey: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['handle', 'did', 'declarationCid'],
+        properties: {
+          handle: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+          },
+          declarationCid: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
+    errors: [
+      {
+        name: 'InvalidHandle',
+      },
+      {
+        name: 'HandleNotAvailable',
+      },
+    ],
+  },
   'app.bsky.actor.getProfile': {
     lexicon: 1,
     id: 'app.bsky.actor.getProfile',
     type: 'query',
     parameters: {
-      user: {
+      actor: {
         type: 'string',
         required: true,
       },
@@ -823,8 +873,11 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         required: [
           'did',
           'handle',
+          'actorType',
+          'creator',
           'followersCount',
           'followsCount',
+          'membersCount',
           'postsCount',
         ],
         properties: {
@@ -832,6 +885,19 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
           },
           handle: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+          creator: {
             type: 'string',
           },
           displayName: {
@@ -848,6 +914,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           followsCount: {
             type: 'number',
           },
+          membersCount: {
+            type: 'number',
+          },
           postsCount: {
             type: 'number',
           },
@@ -860,7 +929,30 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
@@ -2404,9 +2496,9 @@ export const ids = {
   AppBskyFeedMediaEmbed: 'app.bsky.feed.mediaEmbed',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyGraphAssertion: 'app.bsky.graph.assertion',
+  AppBskyGraphConfirmation: 'app.bsky.graph.confirmation',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
-  AppBskyGraphInvite: 'app.bsky.graph.invite',
-  AppBskyGraphInviteAccept: 'app.bsky.graph.inviteAccept',
   AppBskySystemDeclaration: 'app.bsky.system.declaration',
 }
 export const recordSchemaDict: Record<string, RecordSchema> = {
@@ -2728,6 +2820,79 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       },
     },
   },
+  'app.bsky.graph.assertion': {
+    lexicon: 1,
+    id: 'app.bsky.graph.assertion',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['assertion', 'subject', 'createdAt'],
+      properties: {
+        assertion: {
+          type: 'string',
+        },
+        subject: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
+  'app.bsky.graph.confirmation': {
+    lexicon: 1,
+    id: 'app.bsky.graph.confirmation',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['originator', 'assertion', 'createdAt'],
+      properties: {
+        originator: {
+          type: 'object',
+          required: ['did', 'declarationCid'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+            declarationCid: {
+              type: 'string',
+            },
+          },
+        },
+        assertion: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {},
+    },
+  },
   'app.bsky.graph.follow': {
     lexicon: 1,
     id: 'app.bsky.graph.follow',
@@ -2746,79 +2911,6 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
               type: 'string',
             },
             declarationCid: {
-              type: 'string',
-            },
-          },
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time',
-        },
-      },
-      $defs: {},
-    },
-  },
-  'app.bsky.graph.invite': {
-    lexicon: 1,
-    id: 'app.bsky.graph.invite',
-    type: 'record',
-    key: 'tid',
-    record: {
-      type: 'object',
-      required: ['group', 'subject', 'createdAt'],
-      properties: {
-        group: {
-          type: 'string',
-        },
-        subject: {
-          type: 'object',
-          required: ['did', 'declarationCid'],
-          properties: {
-            did: {
-              type: 'string',
-            },
-            declarationCid: {
-              type: 'string',
-            },
-          },
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time',
-        },
-      },
-      $defs: {},
-    },
-  },
-  'app.bsky.graph.inviteAccept': {
-    lexicon: 1,
-    id: 'app.bsky.graph.inviteAccept',
-    type: 'record',
-    key: 'tid',
-    record: {
-      type: 'object',
-      required: ['group', 'invite', 'createdAt'],
-      properties: {
-        group: {
-          type: 'object',
-          required: ['did', 'declarationCid'],
-          properties: {
-            did: {
-              type: 'string',
-            },
-            declarationCid: {
-              type: 'string',
-            },
-          },
-        },
-        invite: {
-          type: 'object',
-          required: ['uri', 'cid'],
-          properties: {
-            uri: {
-              type: 'string',
-            },
-            cid: {
               type: 'string',
             },
           },

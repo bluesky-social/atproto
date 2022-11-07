@@ -13,12 +13,16 @@ export const getUserInfo = async (
   user: string,
 ): Promise<UserInfo> => {
   const userInfo = await db
-    .selectFrom('user_did')
-    .where(util.userWhereClause(user))
-    .leftJoin('app_bsky_profile as profile', 'profile.creator', 'user_did.did')
+    .selectFrom('did_handle')
+    .where(util.actorWhereClause(user))
+    .leftJoin(
+      'app_bsky_profile as profile',
+      'profile.creator',
+      'did_handle.did',
+    )
     .select([
-      'user_did.did as did',
-      'user_did.handle as handle',
+      'did_handle.did as did',
+      'did_handle.handle as handle',
       'profile.displayName as displayName',
     ])
     .executeTakeFirst()

@@ -13,15 +13,15 @@ export default function (server: Server) {
       let builder = db.db
         .selectFrom('app_bsky_like as like')
         .where('like.subject', '=', uri)
-        .innerJoin('user_did', 'like.creator', 'user_did.did')
+        .innerJoin('did_handle', 'like.creator', 'did_handle.did')
         .leftJoin(
           'app_bsky_profile as profile',
           'profile.creator',
-          'user_did.did',
+          'did_handle.did',
         )
         .select([
-          'user_did.did as did',
-          'user_did.handle as handle',
+          'did_handle.did as did',
+          'did_handle.handle as handle',
           'profile.displayName as displayName',
           'like.createdAt as createdAt',
           'like.indexedAt as indexedAt',

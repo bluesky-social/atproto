@@ -1,5 +1,6 @@
 import * as user from './tables/user'
-import * as userDid from './tables/user-did'
+import * as didHandle from './tables/did-handle'
+import * as scene from './tables/scene'
 import * as repoRoot from './tables/repo-root'
 import * as refreshToken from './tables/refresh-token'
 import * as record from './tables/record'
@@ -13,11 +14,12 @@ import * as post from './records/post'
 import * as like from './records/like'
 import * as repost from './records/repost'
 import * as follow from './records/follow'
-import * as invite from './records/invite'
-import * as inviteAccept from './records/inviteAccept'
+import * as assertion from './records/assertion'
+import * as confirmation from './records/confirmation'
 
 export type DatabaseSchema = user.PartialDB &
-  userDid.PartialDB &
+  didHandle.PartialDB &
+  scene.PartialDB &
   refreshToken.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
@@ -31,5 +33,5 @@ export type DatabaseSchema = user.PartialDB &
   like.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
-  invite.PartialDB &
-  inviteAccept.PartialDB
+  assertion.PartialDB &
+  confirmation.PartialDB

@@ -28,6 +28,7 @@ import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
+import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
@@ -43,6 +44,10 @@ import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getC
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 
+export const APP_BSKY_GRAPH = {
+  AssertCreator: 'app.bsky.graph.assertCreator',
+  AssertMember: 'app.bsky.graph.assertMember',
+}
 export const APP_BSKY_SYSTEM = {
   ActorScene: 'app.bsky.system.actorScene',
   ActorUser: 'app.bsky.system.actorUser',
@@ -284,6 +289,11 @@ export class ActorNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  createScene(handler: AppBskyActorCreateScene.Handler) {
+    const schema = 'app.bsky.actor.createScene' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
   }
 
   getProfile(handler: AppBskyActorGetProfile.Handler) {
