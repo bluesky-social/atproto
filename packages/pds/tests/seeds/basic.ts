@@ -63,10 +63,10 @@ export default async (sc: SeedClient) => {
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
 
-  await sc.createScene(alice, 'scene.test')
-  const bobInv = await sc.inviteToScene('scene.test', sc.actorRef(bob))
+  await sc.createScene(bob, 'scene.test')
+  const aliceInv = await sc.inviteToScene('scene.test', sc.actorRef(alice))
   await sc.inviteToScene('scene.test', sc.actorRef(carol))
-  await sc.acceptSceneInvite(bob, 'scene.test', bobInv)
+  await sc.acceptSceneInvite(alice, 'scene.test', aliceInv)
 
   return sc
 }
