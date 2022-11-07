@@ -30,13 +30,15 @@ export default function (server: Server) {
   })
 
   server.com.atproto.account.create(async (_params, input, _req, res) => {
-    const { password, inviteCode, recoveryKey } = input.body
+    const { email, password, inviteCode, recoveryKey } = input.body
     const { db, auth, config, keypair, logger } = locals.get(res)
-    const handle = input.body.handle.toLowerCase()
-    const email = input.body.email.toLowerCase()
 
+    let handle: string
     try {
-      handleLib.ensureValid(handle, config.availableUserDomains)
+      handle = handleLib.normalizeAndEnsureValid(
+        input.body.handle,
+        config.availableUserDomains,
+      )
     } catch (err) {
       if (err instanceof handleLib.InvalidHandleError) {
         throw new InvalidRequestError(err.message, 'InvalidHandle')

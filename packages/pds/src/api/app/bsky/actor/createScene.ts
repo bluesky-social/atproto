@@ -20,10 +20,12 @@ export default function (server: Server) {
       throw new AuthRequiredError()
     }
 
-    const handle = input.body.handle.toLowerCase()
-
+    let handle: string
     try {
-      handleLib.ensureValid(handle, config.availableUserDomains)
+      handle = handleLib.normalizeAndEnsureValid(
+        input.body.handle,
+        config.availableUserDomains,
+      )
     } catch (err) {
       if (err instanceof handleLib.InvalidHandleError) {
         throw new InvalidRequestError(err.message, 'InvalidHandle')

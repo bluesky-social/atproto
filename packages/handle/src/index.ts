@@ -36,6 +36,20 @@ export const ensureValid = (
     throw new InvalidHandleError('Invalid characters in handle')
   }
 }
+
+export const normalize = (handle: string): string => {
+  return handle.toLowerCase()
+}
+
+export const normalizeAndEnsureValid = (
+  handle: string,
+  availableUserDomains: string[],
+): string => {
+  const normalized = normalize(handle)
+  ensureValid(normalized, availableUserDomains)
+  return normalized
+}
+
 export const isValid = (
   handle: string,
   availableUserDomains: string[],

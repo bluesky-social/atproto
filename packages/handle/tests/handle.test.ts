@@ -1,4 +1,4 @@
-import { ensureValid } from '../src'
+import { ensureValid, normalizeAndEnsureValid } from '../src'
 
 describe('handle validation', () => {
   const domains = ['.bsky.app', '.test']
@@ -10,7 +10,8 @@ describe('handle validation', () => {
     check('john.test')
     check('john.bsky.app')
   })
-  it('errors on invalid handles', () => {
+
+  it('throws on invalid handles', () => {
     expect(check('did:john.test')).toThrow(
       'Cannot register a handle that starts with `did:`',
     )
@@ -30,5 +31,16 @@ describe('handle validation', () => {
     expect(check('jo/hn.test')).toThrow('Invalid characters in handle')
     expect(check('about.test')).toThrow('Reserved handle')
     expect(check('atp.test')).toThrow('Reserved handle')
+  })
+
+  it('normalizes handles', () => {
+    const normalized = normalizeAndEnsureValid('JoHn.TeST', domains)
+    expect(normalized).toBe('john.test')
+  })
+
+  it('throws on invalid normalized handles', () => {
+    expect(() => normalizeAndEnsureValid('JoH!n.TeST', domains)).toThrow(
+      'Invalid characters in handle',
+    )
   })
 })

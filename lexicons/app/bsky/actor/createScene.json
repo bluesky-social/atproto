@@ -28,6 +28,7 @@
     }
   },
   "errors": [
+    {"name": "InvalidHandle"},
     {"name": "HandleNotAvailable"}
   ]
 }

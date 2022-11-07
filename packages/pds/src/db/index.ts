@@ -227,7 +227,7 @@ export class Database {
     const inserted = await this.db
       .insertInto('user')
       .values({
-        email: email,
+        email: email.toLowerCase(),
         handle: handle,
         password: await scrypt.hash(password),
         createdAt: new Date().toISOString(),
