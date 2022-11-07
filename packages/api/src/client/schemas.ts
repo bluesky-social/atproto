@@ -849,6 +849,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     },
     errors: [
       {
+        name: 'InvalidHandle',
+      },
+      {
         name: 'HandleNotAvailable',
       },
     ],

@@ -23,7 +23,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number;
   message?: string;
-  error?: 'HandleNotAvailable';
+  error?: 'InvalidHandle' | 'HandleNotAvailable';
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

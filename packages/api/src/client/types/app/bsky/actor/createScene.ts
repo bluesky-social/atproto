@@ -28,6 +28,12 @@ export interface Response {
   data: OutputSchema;
 }
 
+export class InvalidHandleError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export class HandleNotAvailableError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message)
@@ -36,6 +42,7 @@ export class HandleNotAvailableError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'InvalidHandle') return new InvalidHandleError(e)
     if (e.error === 'HandleNotAvailable') return new HandleNotAvailableError(e)
   }
   return e
