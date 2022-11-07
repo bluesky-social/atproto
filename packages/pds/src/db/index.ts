@@ -212,9 +212,12 @@ export class Database {
   }
 
   async getDidForActor(handleOrDid: string): Promise<string | null> {
-    // @TODO this doesn't handle scenes
     if (handleOrDid.startsWith('did:')) return handleOrDid
-    const found = await this.getUser(handleOrDid)
+    const found = await this.db
+      .selectFrom('did_handle')
+      .where('handle', '=', handleOrDid)
+      .select('did')
+      .executeTakeFirst()
     return found ? found.did : null
   }
 
@@ -264,7 +267,7 @@ export class Database {
       .returningAll()
       .executeTakeFirst()
     if (!updated) {
-      throw new Error('Something went wrong wtih user registration flow')
+      throw new Error('DID could not be finalized')
     }
     log.info({ handle, did }, 'post-registered did-handle')
   }
