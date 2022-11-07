@@ -48,6 +48,20 @@ Object {
 }
 `;
 
+exports[`pds profile views fetches scene's profile 1`] = `
+Object {
+  "actorType": "app.bsky.system.actorScene",
+  "creator": "user(1)",
+  "did": "user(0)",
+  "followersCount": 0,
+  "followsCount": 0,
+  "handle": "scene.test",
+  "membersCount": 2,
+  "myState": Object {},
+  "postsCount": 0,
+}
+`;
+
 exports[`pds profile views handles partial updates 1`] = `
 Object {
   "actorType": "app.bsky.system.actorUser",

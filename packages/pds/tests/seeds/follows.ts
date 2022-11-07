@@ -11,18 +11,18 @@ export default async (sc: SeedClient) => {
   const carol = sc.dids.carol
   const dan = sc.dids.dan
   const eve = sc.dids.eve
-  await sc.follow(alice, sc.userRef(bob))
-  await sc.follow(alice, sc.userRef(carol))
-  await sc.follow(alice, sc.userRef(dan))
-  await sc.follow(alice, sc.userRef(eve))
-  await sc.follow(carol, sc.userRef(alice))
-  await sc.follow(bob, sc.userRef(alice))
-  await sc.follow(bob, sc.userRef(carol))
-  await sc.follow(dan, sc.userRef(alice))
-  await sc.follow(dan, sc.userRef(bob))
-  await sc.follow(dan, sc.userRef(eve))
-  await sc.follow(eve, sc.userRef(alice))
-  await sc.follow(eve, sc.userRef(carol))
+  await sc.follow(alice, sc.actorRef(bob))
+  await sc.follow(alice, sc.actorRef(carol))
+  await sc.follow(alice, sc.actorRef(dan))
+  await sc.follow(alice, sc.actorRef(eve))
+  await sc.follow(carol, sc.actorRef(alice))
+  await sc.follow(bob, sc.actorRef(alice))
+  await sc.follow(bob, sc.actorRef(carol))
+  await sc.follow(dan, sc.actorRef(alice))
+  await sc.follow(dan, sc.actorRef(bob))
+  await sc.follow(dan, sc.actorRef(eve))
+  await sc.follow(eve, sc.actorRef(alice))
+  await sc.follow(eve, sc.actorRef(carol))
 }
 
 const users = {
