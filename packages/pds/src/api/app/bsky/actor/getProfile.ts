@@ -20,6 +20,11 @@ export default function (server: Server) {
       const queryRes = await db.db
         .selectFrom('did_handle')
         .where(actorWhereClause(actor))
+        .innerJoin(
+          'app_bsky_declaration as declaration',
+          'declaration.creator',
+          'did_handle.did',
+        )
         .leftJoin(
           'app_bsky_profile as profile',
           'profile.creator',
@@ -29,6 +34,7 @@ export default function (server: Server) {
         .select([
           'did_handle.did as did',
           'did_handle.handle as handle',
+          'declaration.actorType as actorType',
           'scene.owner as owner',
           'profile.uri as profileUri',
           'profile.displayName as displayName',
@@ -79,6 +85,7 @@ export default function (server: Server) {
           did: queryRes.did,
           handle: queryRes.handle,
           creator: queryRes.owner || queryRes.did,
+          actorType: queryRes.actorType,
           displayName: queryRes.displayName || undefined,
           description: queryRes.description || undefined,
           followsCount: queryRes.followsCount,

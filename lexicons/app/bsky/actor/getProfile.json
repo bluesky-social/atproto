@@ -3,16 +3,23 @@
   "id": "app.bsky.actor.getProfile",
   "type": "query",
   "parameters": {
-    "user": {"type": "string", "required": true}
+    "actor": {"type": "string", "required": true}
   },
   "output": {
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["did", "handle", "followersCount", "followsCount", "postsCount"],
+      "required": ["did", "handle", "actorType", "creator", "followersCount", "followsCount", "membersCount", "postsCount"],
       "properties": {
         "did": {"type": "string"},
         "handle": {"type": "string"},
+        "actorType": {
+          "oneOf": [
+            {"$ref": "#/defs/actorKnown"},
+            {"$ref": "#/defs/actorUnknown"}
+          ]
+        },
+        "creator": {"type": "string"},
         "displayName": {
           "type": "string",
           "maxLength": 64
@@ -23,6 +30,7 @@
         },
         "followersCount": {"type": "number"},
         "followsCount": {"type": "number"},
+        "membersCount": {"type": "number"},
         "postsCount": {"type": "number"},
         "myState": {
           "type": "object",
@@ -31,6 +39,16 @@
           }
         }
       }
+    }
+  },
+  "defs": {
+    "actorKnown": { 
+      "type": "string",
+      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
+    },
+    "actorUnknown": { 
+      "type": "string",
+      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
   }
 }

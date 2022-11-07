@@ -858,7 +858,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     id: 'app.bsky.actor.getProfile',
     type: 'query',
     parameters: {
-      user: {
+      actor: {
         type: 'string',
         required: true,
       },
@@ -870,8 +870,11 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         required: [
           'did',
           'handle',
+          'actorType',
+          'creator',
           'followersCount',
           'followsCount',
+          'membersCount',
           'postsCount',
         ],
         properties: {
@@ -879,6 +882,19 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
           },
           handle: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+          creator: {
             type: 'string',
           },
           displayName: {
@@ -895,6 +911,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           followsCount: {
             type: 'number',
           },
+          membersCount: {
+            type: 'number',
+          },
           postsCount: {
             type: 'number',
           },
@@ -907,7 +926,30 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },

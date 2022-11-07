@@ -870,6 +870,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         required: [
           'did',
           'handle',
+          'actorType',
           'creator',
           'followersCount',
           'followsCount',
@@ -882,6 +883,16 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           handle: {
             type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
           },
           creator: {
             type: 'string',
@@ -915,7 +926,30 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
