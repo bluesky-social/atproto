@@ -80,9 +80,9 @@ const notifsForRecord = (
   return [notif]
 }
 
-export const makePlugin = (
-  db: Kysely<PartialDB>,
-): DbRecordPlugin<Repost.Record, AppBskyRepost> => {
+export type PluginType = DbRecordPlugin<Repost.Record>
+
+export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
   return {
     collection: type,
     validateSchema,

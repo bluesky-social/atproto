@@ -20,27 +20,31 @@ const insertFn =
     uri: AtUri,
     cid: CID,
     obj: unknown,
-    timestamp?: string,
+    _timestamp?: string,
   ): Promise<void> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
+    if (uri.rkey !== 'self') {
+      throw new Error('Expected declarationrecord to be at rkey `self`')
+    }
     await db
-      .insertInto(tableName)
-      .values({
-        uri: uri.toString(),
-        cid: cid.toString(),
-        creator: uri.host,
-        actorType: obj.actorType,
-        indexedAt: timestamp || new Date().toISOString(),
-      })
+      .updateTable('did_handle')
+      .where('did', '=', uri.host)
+      .set({ declarationCid: cid.toString(), actorType: obj.actorType })
       .execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
+    // noop
+    if (uri.rkey !== 'self') return
+    await db
+      .updateTable('did_handle')
+      .where('did', '=', uri.host)
+      .set({ declarationCid: null, actorType: null })
+      .execute()
   }
 
 const notifsForRecord = (
@@ -51,9 +55,9 @@ const notifsForRecord = (
   return []
 }
 
-export const makePlugin = (
-  db: Kysely<PartialDB>,
-): DbRecordPlugin<Declaration.Record, AppBskyDeclaration> => {
+export type PluginType = DbRecordPlugin<Declaration.Record>
+
+export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
   return {
     collection: type,
     validateSchema,

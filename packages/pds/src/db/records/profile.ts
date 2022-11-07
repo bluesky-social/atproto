@@ -55,9 +55,9 @@ const notifsForRecord = (_uri: AtUri, _obj: unknown): Notification[] => {
   return []
 }
 
-export const makePlugin = (
-  db: Kysely<PartialDB>,
-): DbRecordPlugin<Profile.Record, AppBskyProfile> => {
+export type PluginType = DbRecordPlugin<Profile.Record>
+
+export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
   return {
     collection: type,
     validateSchema,

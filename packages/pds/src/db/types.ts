@@ -2,7 +2,7 @@ import { AtUri } from '@atproto/uri'
 import { ValidationResult } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 
-export type DbRecordPlugin<T, S> = {
+export type DbRecordPlugin<T> = {
   collection: string
   validateSchema: (obj: unknown) => ValidationResult
   matchesSchema: (obj: unknown) => obj is T
