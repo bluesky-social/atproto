@@ -28,31 +28,6 @@ const matchesSchema = (obj: unknown): obj is Confirmation.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyConfirmation): Confirmation.Record => {
-  return {
-    originator: {
-      did: dbObj.originatorDid,
-      declarationCid: dbObj.originatorDeclarationCid,
-    },
-    assertion: {
-      uri: dbObj.assertionUri,
-      cid: dbObj.assertionCid,
-    },
-    createdAt: dbObj.createdAt,
-  }
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Confirmation.Record | null> => {
-    const found = await db
-      .selectFrom(tableName)
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    return !found ? null : translateDbObj(found)
-  }
-
 const insertFn =
   (db: Kysely<PartialDB>) =>
   async (
@@ -99,11 +74,8 @@ export const makePlugin = (
 ): DbRecordPlugin<Confirmation.Record, AppBskyConfirmation> => {
   return {
     collection: type,
-    tableName,
     validateSchema,
     matchesSchema,
-    translateDbObj,
-    get: getFn(db),
     insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,

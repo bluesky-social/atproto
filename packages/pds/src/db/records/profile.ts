@@ -24,25 +24,6 @@ const matchesSchema = (obj: unknown): obj is Profile.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyProfile): Profile.Record => {
-  return {
-    displayName: dbObj.displayName,
-    description: dbObj.description ?? undefined,
-  }
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Profile.Record | null> => {
-    const profile = await db
-      .selectFrom('app_bsky_profile')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    if (!profile) return null
-    return translateDbObj(profile)
-  }
-
 const insertFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
@@ -79,13 +60,10 @@ export const makePlugin = (
 ): DbRecordPlugin<Profile.Record, AppBskyProfile> => {
   return {
     collection: type,
-    tableName,
-    get: getFn(db),
     validateSchema,
     matchesSchema,
     insert: insertFn(db),
     delete: deleteFn(db),
-    translateDbObj,
     notifsForRecord,
   }
 }

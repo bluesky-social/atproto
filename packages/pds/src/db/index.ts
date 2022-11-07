@@ -3,7 +3,7 @@ import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
-import { DbRecordPlugin, NotificationsPlugin } from './types'
+import { DbRecordPlugin, Notification, NotificationsPlugin } from './types'
 import * as Declaration from '../lexicon/types/app/bsky/system/declaration'
 import * as Assertion from '../lexicon/types/app/bsky/graph/assertion'
 import * as Confirmation from '../lexicon/types/app/bsky/graph/confirmation'
@@ -32,6 +32,7 @@ import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { DidHandle } from './tables/did-handle'
+import * as schema from '../lexicon/schemas'
 
 export class Database {
   migrator: Migrator

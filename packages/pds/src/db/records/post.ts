@@ -41,51 +41,6 @@ const matchesSchema = (obj: unknown): obj is Post.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyPost): Post.Record => {
-  const record: Post.Record = {
-    text: dbObj.text,
-    createdAt: dbObj.createdAt,
-  }
-
-  if (dbObj.replyRoot && dbObj.replyParent && dbObj.replyParentCid) {
-    record.reply = {
-      root: {
-        uri: dbObj.replyRoot,
-        cid: dbObj.replyParentCid,
-      },
-      parent: {
-        uri: dbObj.replyParent,
-        cid: dbObj.replyParentCid,
-      },
-    }
-  }
-  return record
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Post.Record | null> => {
-    const postQuery = db
-      .selectFrom('app_bsky_post')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    const entitiesQuery = db
-      .selectFrom('app_bsky_post_entity')
-      .selectAll()
-      .where('postUri', '=', uri.toString())
-      .execute()
-    const [post, entities] = await Promise.all([postQuery, entitiesQuery])
-    if (!post) return null
-    const record = translateDbObj(post)
-    record.entities = entities.map((row) => ({
-      index: { start: row.startIndex, end: row.endIndex },
-      type: row.type,
-      value: row.value,
-    }))
-    return record
-  }
-
 const insertFn =
   (db: Kysely<PartialDB>) =>
   async (
@@ -179,11 +134,8 @@ export const makePlugin = (
 ): DbRecordPlugin<Post.Record, AppBskyPost> => {
   return {
     collection: type,
-    tableName,
     validateSchema,
     matchesSchema,
-    translateDbObj,
-    get: getFn(db),
     insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,

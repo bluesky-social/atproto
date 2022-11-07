@@ -26,27 +26,6 @@ const matchesSchema = (obj: unknown): obj is Like.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyLike): Like.Record => {
-  return {
-    subject: {
-      uri: dbObj.subject,
-      cid: dbObj.subjectCid,
-    },
-    createdAt: dbObj.createdAt,
-  }
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Like.Record | null> => {
-    const found = await db
-      .selectFrom('app_bsky_like')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    return !found ? null : translateDbObj(found)
-  }
-
 const insertFn =
   (db: Kysely<PartialDB>) =>
   async (
@@ -106,11 +85,8 @@ export const makePlugin = (
 ): DbRecordPlugin<Like.Record, AppBskyLike> => {
   return {
     collection: type,
-    tableName,
     validateSchema,
     matchesSchema,
-    translateDbObj,
-    get: getFn(db),
     insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,

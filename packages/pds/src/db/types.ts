@@ -4,11 +4,8 @@ import { CID } from 'multiformats/cid'
 
 export type DbRecordPlugin<T, S> = {
   collection: string
-  tableName: string
   validateSchema: (obj: unknown) => ValidationResult
   matchesSchema: (obj: unknown) => obj is T
-  translateDbObj: (dbObj: S) => T
-  get: (uri: AtUri) => Promise<T | null>
   insert: (
     uri: AtUri,
     cid: CID,

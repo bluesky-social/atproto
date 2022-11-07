@@ -25,27 +25,6 @@ const matchesSchema = (obj: unknown): obj is Follow.Record => {
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
-  return {
-    subject: {
-      did: dbObj.subjectDid,
-      declarationCid: dbObj.subjectDeclarationCid,
-    },
-    createdAt: dbObj.createdAt,
-  }
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Follow.Record | null> => {
-    const found = await db
-      .selectFrom('app_bsky_follow')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    return !found ? null : translateDbObj(found)
-  }
-
 const insertFn =
   (db: Kysely<PartialDB>) =>
   async (
@@ -101,11 +80,8 @@ export const makePlugin = (
 ): DbRecordPlugin<Follow.Record, AppBskyFollow> => {
   return {
     collection: type,
-    tableName,
     validateSchema,
     matchesSchema,
-    translateDbObj,
-    get: getFn(db),
     insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,
