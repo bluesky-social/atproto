@@ -1,19 +1,26 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.graph.invite",
+  "id": "app.bsky.graph.confirmation",
   "type": "record",
   "key": "tid",
   "record": {
     "type": "object",
-    "required": ["group", "subject", "createdAt"],
+    "required": ["originator", "assertion", "createdAt"],
     "properties": {
-      "group": {"type": "string"},
-      "subject": {
+      "originator": {
         "type": "object",
         "required": ["did", "declarationCid"],
         "properties": {
           "did": {"type": "string"},
           "declarationCid": {"type": "string"}
+        }
+      },
+      "assertion": {
+        "type": "object",
+        "required": ["uri", "cid"],
+        "properties": {
+          "uri": {"type": "string"},
+          "cid": {"type": "string"}
         }
       },
       "createdAt": {"type": "string", "format": "date-time"}

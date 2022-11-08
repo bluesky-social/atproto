@@ -1,38 +1,42 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Invite from '../../lexicon/types/app/bsky/graph/invite'
+import * as Confirmation from '../../lexicon/types/app/bsky/graph/confirmation'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
-const type = schemas.ids.AppBskyGraphInvite
-const tableName = 'app_bsky_invite'
+const type = schemas.ids.AppBskyGraphConfirmation
+const tableName = 'app_bsky_confirmation'
 
-export interface AppBskyInvite {
+export interface AppBskyConfirmation {
   uri: string
   cid: string
   creator: string
-  group: string
-  subjectDid: string
-  subjectDeclarationCid: string
+  originatorDid: string
+  originatorDeclarationCid: string // @TODO do we need originator info?
+  assertionUri: string
+  assertionCid: string
   createdAt: string
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: AppBskyInvite }
+export type PartialDB = { [tableName]: AppBskyConfirmation }
 
 const validator = schemas.records.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is Invite.Record => {
+const matchesSchema = (obj: unknown): obj is Confirmation.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyInvite): Invite.Record => {
+const translateDbObj = (dbObj: AppBskyConfirmation): Confirmation.Record => {
   return {
-    group: dbObj.group,
-    subject: {
-      did: dbObj.subjectDid,
-      declarationCid: dbObj.subjectDeclarationCid,
+    originator: {
+      did: dbObj.originatorDid,
+      declarationCid: dbObj.originatorDeclarationCid,
+    },
+    assertion: {
+      uri: dbObj.assertionUri,
+      cid: dbObj.assertionCid,
     },
     createdAt: dbObj.createdAt,
   }
@@ -40,7 +44,7 @@ const translateDbObj = (dbObj: AppBskyInvite): Invite.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Invite.Record | null> => {
+  async (uri: AtUri): Promise<Confirmation.Record | null> => {
     const found = await db
       .selectFrom(tableName)
       .selectAll()
@@ -66,9 +70,10 @@ const insertFn =
         uri: uri.toString(),
         cid: cid.toString(),
         creator: uri.host,
-        group: obj.group,
-        subjectDid: obj.subject.did,
-        subjectDeclarationCid: obj.subject.declarationCid,
+        originatorDid: obj.originator.did,
+        originatorDeclarationCid: obj.originator.declarationCid,
+        assertionUri: obj.assertion.uri,
+        assertionCid: obj.assertion.cid,
         createdAt: obj.createdAt,
         indexedAt: timestamp || new Date().toISOString(),
       })
@@ -82,27 +87,16 @@ const deleteFn =
   }
 
 const notifsForRecord = (
-  uri: AtUri,
-  cid: CID,
-  obj: unknown,
+  _uri: AtUri,
+  _cid: CID,
+  _obj: unknown,
 ): Notification[] => {
-  if (!matchesSchema(obj)) {
-    throw new Error(`Record does not match schema: ${type}`)
-  }
-  const notif = {
-    userDid: obj.subject.did,
-    author: uri.host,
-    recordUri: uri.toString(),
-    recordCid: cid.toString(),
-    reason: 'invite',
-    reasonSubject: obj.group,
-  }
-  return [notif]
+  return []
 }
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<Invite.Record, AppBskyInvite> => {
+): DbRecordPlugin<Confirmation.Record, AppBskyConfirmation> => {
   return {
     collection: type,
     tableName,

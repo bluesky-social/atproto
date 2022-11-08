@@ -4,7 +4,7 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  user: string;
+  actor: string;
 }
 
 export interface CallOptions {
@@ -13,13 +13,21 @@ export interface CallOptions {
 
 export type InputSchema = undefined
 
+export type ActorKnown =
+  | 'app.bsky.system.actorUser'
+  | 'app.bsky.system.actorScene'
+export type ActorUnknown = string
+
 export interface OutputSchema {
   did: string;
   handle: string;
+  actorType: ActorKnown | ActorUnknown;
+  creator: string;
   displayName?: string;
   description?: string;
   followersCount: number;
   followsCount: number;
+  membersCount: number;
   postsCount: number;
   myState?: {
     follow?: string,

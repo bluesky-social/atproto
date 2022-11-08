@@ -24,18 +24,18 @@ export default function (server: Server) {
       let builder = db.db
         .selectFrom('app_bsky_vote as vote')
         .where('vote.subject', '=', uri)
-        .innerJoin('user_did', 'vote.creator', 'user_did.did')
+        .innerJoin('did_handle', 'vote.creator', 'did_handle.did')
         .leftJoin(
           'app_bsky_profile as profile',
           'profile.creator',
-          'user_did.did',
+          'did_handle.did',
         )
         .select([
           'vote.direction as direction',
           'vote.createdAt as createdAt',
           'vote.indexedAt as indexedAt',
-          'user_did.did as did',
-          'user_did.handle as handle',
+          'did_handle.did as did',
+          'did_handle.handle as handle',
           'profile.displayName as displayName',
         ])
 

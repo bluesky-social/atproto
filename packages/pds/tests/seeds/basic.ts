@@ -16,13 +16,13 @@ export default async (sc: SeedClient) => {
     users.alice.description,
   )
   await sc.createProfile(bob, users.bob.displayName, users.bob.description)
-  await sc.follow(alice, sc.userRef(bob))
-  await sc.follow(alice, sc.userRef(carol))
-  await sc.follow(alice, sc.userRef(dan))
-  await sc.follow(carol, sc.userRef(alice))
-  await sc.follow(bob, sc.userRef(alice))
-  await sc.follow(bob, sc.userRef(carol))
-  await sc.follow(dan, sc.userRef(bob))
+  await sc.follow(alice, sc.actorRef(bob))
+  await sc.follow(alice, sc.actorRef(carol))
+  await sc.follow(alice, sc.actorRef(dan))
+  await sc.follow(carol, sc.actorRef(alice))
+  await sc.follow(bob, sc.actorRef(alice))
+  await sc.follow(bob, sc.actorRef(carol))
+  await sc.follow(dan, sc.actorRef(bob))
   await sc.post(alice, posts.alice[0])
   await sc.post(bob, posts.bob[0])
   await sc.post(carol, posts.carol[0])
@@ -62,6 +62,11 @@ export default async (sc: SeedClient) => {
   )
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
+
+  await sc.createScene(bob, 'scene.test')
+  const aliceInv = await sc.inviteToScene('scene.test', sc.actorRef(alice))
+  await sc.inviteToScene('scene.test', sc.actorRef(carol))
+  await sc.acceptSceneInvite(alice, 'scene.test', aliceInv)
 
   return sc
 }

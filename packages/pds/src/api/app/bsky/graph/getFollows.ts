@@ -19,7 +19,7 @@ export default function (server: Server) {
       let followsReq = db.db
         .selectFrom('app_bsky_follow as follow')
         .where('follow.creator', '=', creator.did)
-        .innerJoin('user_did as subject', 'subject.did', 'follow.subjectDid')
+        .innerJoin('did_handle as subject', 'subject.did', 'follow.subjectDid')
         .leftJoin(
           'app_bsky_profile as profile',
           'profile.creator',

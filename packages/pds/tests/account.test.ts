@@ -157,6 +157,7 @@ describe('account', () => {
     expect(didData.recoveryKey).toBe(recoveryKey)
   })
 
+  return
   it('disallows duplicate email addresses and handles', async () => {
     const inviteCode = await createInviteCode(client, 2)
     const email = 'bob@test.com'
@@ -399,7 +400,7 @@ describe('account', () => {
 
     const user = await db.db
       .selectFrom('user')
-      .innerJoin('user_did', 'user_did.handle', 'user.handle')
+      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()

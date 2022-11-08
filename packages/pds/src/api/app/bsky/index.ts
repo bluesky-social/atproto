@@ -3,6 +3,7 @@ import getTimeline from './feed/getTimeline'
 import getAuthorFeed from './feed/getAuthorFeed'
 import getVotes from './feed/getVotes'
 import getPostThread from './feed/getPostThread'
+import createScene from './actor/createScene'
 import getProfile from './actor/getProfile'
 import updateProfile from './actor/updateProfile'
 import getRepostedBy from './feed/getRepostedBy'
@@ -15,6 +16,7 @@ import getNotificationCount from './notification/getCount'
 import postNotificationsSeen from './notification/updateSeen'
 
 export default function (server: Server) {
+  createScene(server)
   getTimeline(server)
   getAuthorFeed(server)
   getVotes(server)

@@ -1,26 +1,19 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.graph.inviteAccept",
+  "id": "app.bsky.graph.assertion",
   "type": "record",
   "key": "tid",
   "record": {
     "type": "object",
-    "required": ["group", "invite", "createdAt"],
+    "required": ["assertion", "subject", "createdAt"],
     "properties": {
-      "group": {
+      "assertion": {"type": "string"},
+      "subject": {
         "type": "object",
         "required": ["did", "declarationCid"],
         "properties": {
           "did": {"type": "string"},
           "declarationCid": {"type": "string"}
-        }
-      },
-      "invite": {
-        "type": "object",
-        "required": ["uri", "cid"],
-        "properties": {
-          "uri": {"type": "string"},
-          "cid": {"type": "string"}
         }
       },
       "createdAt": {"type": "string", "format": "date-time"}

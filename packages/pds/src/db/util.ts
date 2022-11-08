@@ -9,11 +9,11 @@ import {
   SqliteQueryCompiler,
 } from 'kysely'
 
-export const userWhereClause = (user: string) => {
-  if (user.startsWith('did:')) {
-    return sql<0 | 1>`"user_did"."did" = ${user}`
+export const actorWhereClause = (actor: string) => {
+  if (actor.startsWith('did:')) {
+    return sql<0 | 1>`"did_handle"."did" = ${actor}`
   } else {
-    return sql<0 | 1>`"user_did"."handle" = ${user}`
+    return sql<0 | 1>`"did_handle"."handle" = ${actor}`
   }
 }
 
