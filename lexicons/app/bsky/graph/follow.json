@@ -2,7 +2,7 @@
   "lexicon": 1,
   "id": "app.bsky.graph.follow",
   "type": "record",
-  "description": "A social follow",
+  "description": "A social follow.",
   "key": "tid",
   "record": {
     "type": "object",
