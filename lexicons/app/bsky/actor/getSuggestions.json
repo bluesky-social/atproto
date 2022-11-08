@@ -1,34 +1,40 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.actor.search",
+  "id": "app.bsky.actor.getSuggestions",
   "type": "query",
-  "description": "Find users matching search criteria",
+  "description": "Get a list of actors suggested for following. Used in discovery UIs.",
   "parameters": {
-    "term": {"type": "string", "required": true},
     "limit": {"type": "number", "maximum": 100},
-    "before": {"type": "string"}
+    "cursor": {"type": "string"}
   },
   "output": {
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["users"],
+      "required": ["actors"],
       "properties": {
         "cursor": {"type": "string"},
-        "users": {
+        "actors": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["did", "handle"],
+            "required": ["did", "handle", "actorType"],
             "properties": {
               "did": {"type": "string"},
               "handle": {"type": "string"},
+              "actorType": {"type": "string"},
               "displayName": {
                 "type": "string",
                 "maxLength": 64
               },
               "description": {"type": "string"},
-              "indexedAt": {"type": "string", "format": "date-time"}
+              "indexedAt": {"type": "string", "format": "date-time"},
+              "myState": {
+                "type": "object",
+                "properties": {
+                  "follow": {"type": "string"}
+                }
+              }
             }
           }
         }

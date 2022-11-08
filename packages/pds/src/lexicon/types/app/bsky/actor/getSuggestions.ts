@@ -4,10 +4,8 @@
 import express from 'express'
 
 export interface QueryParams {
-  uri: string;
-  cid?: string;
   limit?: number;
-  before?: string;
+  cursor?: string;
 }
 
 export type HandlerInput = undefined
@@ -25,15 +23,17 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  uri: string;
-  cid?: string;
   cursor?: string;
-  likedBy: {
+  actors: {
     did: string,
     handle: string,
+    actorType: string,
     displayName?: string,
-    createdAt?: string,
-    indexedAt: string,
+    description?: string,
+    indexedAt?: string,
+    myState?: {
+      follow?: string,
+    },
   }[];
 }
 

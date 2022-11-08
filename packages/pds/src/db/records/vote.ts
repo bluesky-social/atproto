@@ -1,27 +1,28 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Like from '../../lexicon/types/app/bsky/feed/like'
+import * as Vote from '../../lexicon/types/app/bsky/feed/vote'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
-const type = schemas.ids.AppBskyFeedLike
-const tableName = 'like'
+const type = schemas.ids.AppBskyFeedVote
+const tableName = 'vote'
 
-export interface BskyLike {
+export interface BskyVote {
   uri: string
   cid: string
   creator: string
+  direction: 'up' | 'down'
   subject: string
   subjectCid: string
   createdAt: string
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: BskyLike }
+export type PartialDB = { [tableName]: BskyVote }
 
 const validator = schemas.records.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is Like.Record => {
+const matchesSchema = (obj: unknown): obj is Vote.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
@@ -42,6 +43,7 @@ const insertFn =
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
+        direction: obj.direction,
         creator: uri.host,
         subject: obj.subject.uri,
         subjectCid: obj.subject.cid,
@@ -65,19 +67,23 @@ const notifsForRecord = (
   if (!matchesSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
+  if (obj.direction === 'down') {
+    // No notifications for downvotes
+    return []
+  }
   const subjectUri = new AtUri(obj.subject.uri)
   const notif = {
     userDid: subjectUri.host,
     author: uri.host,
     recordUri: uri.toString(),
     recordCid: cid.toString(),
-    reason: 'like',
+    reason: 'vote',
     reasonSubject: subjectUri.toString(),
   }
   return [notif]
 }
 
-export type PluginType = DbRecordPlugin<Like.Record>
+export type PluginType = DbRecordPlugin<Vote.Record>
 
 export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
   return {

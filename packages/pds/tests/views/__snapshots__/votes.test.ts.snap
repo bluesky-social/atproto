@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds vote views fetches post votes 1`] = `
+Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
+  "uri": "record(0)",
+  "votes": Array [
+    Object {
+      "actor": Object {
+        "did": "user(0)",
+        "handle": "eve.test",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "down",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "actor": Object {
+        "did": "user(1)",
+        "handle": "dan.test",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "actor": Object {
+        "did": "user(2)",
+        "handle": "carol.test",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "down",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "actor": Object {
+        "did": "user(3)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+}
+`;
+
+exports[`pds vote views fetches reply votes 1`] = `
+Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
+  "uri": "record(0)",
+  "votes": Array [
+    Object {
+      "actor": Object {
+        "did": "user(0)",
+        "handle": "carol.test",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+}
+`;

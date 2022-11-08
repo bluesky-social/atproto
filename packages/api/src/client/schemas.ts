@@ -956,6 +956,72 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
+  'app.bsky.actor.getSuggestions': {
+    lexicon: 1,
+    id: 'app.bsky.actor.getSuggestions',
+    type: 'query',
+    description:
+      'Get a list of actors suggested for following. Used in discovery UIs.',
+    parameters: {
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      cursor: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['actors'],
+        properties: {
+          cursor: {
+            type: 'string',
+          },
+          actors: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'handle', 'actorType'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                handle: {
+                  type: 'string',
+                },
+                actorType: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                description: {
+                  type: 'string',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                myState: {
+                  type: 'object',
+                  properties: {
+                    follow: {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
   'app.bsky.actor.search': {
     lexicon: 1,
     id: 'app.bsky.actor.search',
@@ -1146,7 +1212,8 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               'record',
               'replyCount',
               'repostCount',
-              'likeCount',
+              'upvoteCount',
+              'downvoteCount',
               'indexedAt',
             ],
             properties: {
@@ -1184,7 +1251,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               repostCount: {
                 type: 'number',
               },
-              likeCount: {
+              upvoteCount: {
+                type: 'number',
+              },
+              downvoteCount: {
                 type: 'number',
               },
               indexedAt: {
@@ -1197,7 +1267,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                   repost: {
                     type: 'string',
                   },
-                  like: {
+                  upvote: {
+                    type: 'string',
+                  },
+                  downvote: {
                     type: 'string',
                   },
                 },
@@ -1281,7 +1354,8 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           'record',
           'replyCount',
           'repostCount',
-          'likeCount',
+          'upvoteCount',
+          'downvoteCount',
           'indexedAt',
         ],
         properties: {
@@ -1319,7 +1393,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           repostCount: {
             type: 'number',
           },
-          likeCount: {
+          upvoteCount: {
+            type: 'number',
+          },
+          downvoteCount: {
             type: 'number',
           },
           indexedAt: {
@@ -1332,7 +1409,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               repost: {
                 type: 'string',
               },
-              like: {
+              upvote: {
+                type: 'string',
+              },
+              downvote: {
                 type: 'string',
               },
             },
@@ -1405,74 +1485,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
-  'app.bsky.feed.getLikedBy': {
-    lexicon: 1,
-    id: 'app.bsky.feed.getLikedBy',
-    type: 'query',
-    parameters: {
-      uri: {
-        type: 'string',
-        required: true,
-      },
-      cid: {
-        type: 'string',
-        required: false,
-      },
-      limit: {
-        type: 'number',
-        maximum: 100,
-      },
-      before: {
-        type: 'string',
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['uri', 'likedBy'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          cursor: {
-            type: 'string',
-          },
-          likedBy: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['did', 'handle', 'indexedAt'],
-              properties: {
-                did: {
-                  type: 'string',
-                },
-                handle: {
-                  type: 'string',
-                },
-                displayName: {
-                  type: 'string',
-                  maxLength: 64,
-                },
-                createdAt: {
-                  type: 'string',
-                  format: 'date-time',
-                },
-                indexedAt: {
-                  type: 'string',
-                  format: 'date-time',
-                },
-              },
-            },
-          },
-        },
-        $defs: {},
-      },
-    },
-  },
   'app.bsky.feed.getPostThread': {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -1505,8 +1517,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               'author',
               'record',
               'replyCount',
-              'likeCount',
               'repostCount',
+              'upvoteCount',
+              'downvoteCount',
               'indexedAt',
             ],
             properties: {
@@ -1547,10 +1560,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                   $ref: '#/$defs/post',
                 },
               },
-              likeCount: {
+              repostCount: {
                 type: 'number',
               },
-              repostCount: {
+              upvoteCount: {
+                type: 'number',
+              },
+              downvoteCount: {
                 type: 'number',
               },
               indexedAt: {
@@ -1563,7 +1579,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                   repost: {
                     type: 'string',
                   },
-                  like: {
+                  upvote: {
+                    type: 'string',
+                  },
+                  downvote: {
                     type: 'string',
                   },
                 },
@@ -1646,8 +1665,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           'author',
           'record',
           'replyCount',
-          'likeCount',
           'repostCount',
+          'upvoteCount',
+          'downvoteCount',
           'indexedAt',
         ],
         properties: {
@@ -1688,10 +1708,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               $ref: '#/$defs/post',
             },
           },
-          likeCount: {
+          repostCount: {
             type: 'number',
           },
-          repostCount: {
+          upvoteCount: {
+            type: 'number',
+          },
+          downvoteCount: {
             type: 'number',
           },
           indexedAt: {
@@ -1704,7 +1727,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               repost: {
                 type: 'string',
               },
-              like: {
+              upvote: {
+                type: 'string',
+              },
+              downvote: {
                 type: 'string',
               },
             },
@@ -1888,7 +1914,8 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               'record',
               'replyCount',
               'repostCount',
-              'likeCount',
+              'upvoteCount',
+              'downvoteCount',
               'indexedAt',
             ],
             properties: {
@@ -1926,7 +1953,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               repostCount: {
                 type: 'number',
               },
-              likeCount: {
+              upvoteCount: {
+                type: 'number',
+              },
+              downvoteCount: {
                 type: 'number',
               },
               indexedAt: {
@@ -1939,7 +1969,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                   repost: {
                     type: 'string',
                   },
-                  like: {
+                  upvote: {
+                    type: 'string',
+                  },
+                  downvote: {
                     type: 'string',
                   },
                 },
@@ -2023,7 +2056,8 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           'record',
           'replyCount',
           'repostCount',
-          'likeCount',
+          'upvoteCount',
+          'downvoteCount',
           'indexedAt',
         ],
         properties: {
@@ -2061,7 +2095,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           repostCount: {
             type: 'number',
           },
-          likeCount: {
+          upvoteCount: {
+            type: 'number',
+          },
+          downvoteCount: {
             type: 'number',
           },
           indexedAt: {
@@ -2074,7 +2111,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               repost: {
                 type: 'string',
               },
-              like: {
+              upvote: {
+                type: 'string',
+              },
+              downvote: {
                 type: 'string',
               },
             },
@@ -2142,6 +2182,110 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             not: {
               enum: ['record', 'external'],
             },
+          },
+        },
+      },
+    },
+  },
+  'app.bsky.feed.getVotes': {
+    lexicon: 1,
+    id: 'app.bsky.feed.getVotes',
+    type: 'query',
+    parameters: {
+      uri: {
+        type: 'string',
+        required: true,
+      },
+      cid: {
+        type: 'string',
+        required: false,
+      },
+      direction: {
+        type: 'string',
+        required: false,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      before: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['uri', 'votes'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          cursor: {
+            type: 'string',
+          },
+          votes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['direction', 'indexedAt', 'createdAt', 'actor'],
+              properties: {
+                direction: {
+                  type: 'string',
+                  enum: ['up', 'down'],
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                actor: {
+                  $ref: '#/$defs/actor',
+                },
+              },
+            },
+          },
+        },
+        $defs: {
+          actor: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      actor: {
+        type: 'object',
+        required: ['did', 'handle'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
           },
         },
       },
@@ -2384,7 +2528,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               reason: {
                 type: 'string',
                 $comment:
-                  "Expected values are 'like', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
+                  "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
               },
               reasonSubject: {
                 type: 'string',
@@ -2443,7 +2587,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           reason: {
             type: 'string',
             $comment:
-              "Expected values are 'like', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
+              "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
           },
           reasonSubject: {
             type: 'string',
@@ -2492,10 +2636,10 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
 export const methodSchemas: MethodSchema[] = Object.values(methodSchemaDict)
 export const ids = {
   AppBskyActorProfile: 'app.bsky.actor.profile',
-  AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedMediaEmbed: 'app.bsky.feed.mediaEmbed',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyFeedVote: 'app.bsky.feed.vote',
   AppBskyGraphAssertion: 'app.bsky.graph.assertion',
   AppBskyGraphConfirmation: 'app.bsky.graph.confirmation',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
@@ -2521,53 +2665,6 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
         },
       },
       $defs: {},
-    },
-  },
-  'app.bsky.feed.like': {
-    lexicon: 1,
-    id: 'app.bsky.feed.like',
-    type: 'record',
-    key: 'tid',
-    record: {
-      type: 'object',
-      required: ['subject', 'createdAt'],
-      properties: {
-        subject: {
-          $ref: '#/$defs/subject',
-        },
-        createdAt: {
-          type: 'string',
-          format: 'date-time',
-        },
-      },
-      $defs: {
-        subject: {
-          type: 'object',
-          required: ['uri', 'cid'],
-          properties: {
-            uri: {
-              type: 'string',
-            },
-            cid: {
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-    defs: {
-      subject: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-        },
-      },
     },
   },
   'app.bsky.feed.mediaEmbed': {
@@ -2784,6 +2881,57 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       properties: {
         subject: {
           $ref: '#/$defs/subject',
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {
+        subject: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      subject: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  'app.bsky.feed.vote': {
+    lexicon: 1,
+    id: 'app.bsky.feed.vote',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['subject', 'direction', 'createdAt'],
+      properties: {
+        subject: {
+          $ref: '#/$defs/subject',
+        },
+        direction: {
+          type: 'string',
+          enum: ['up', 'down'],
         },
         createdAt: {
           type: 'string',

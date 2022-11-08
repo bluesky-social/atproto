@@ -106,11 +106,12 @@ Array [
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
-    "reason": "like",
+    "reason": "vote",
     "reasonSubject": "record(2)",
     "record": Object {
-      "$type": "app.bsky.feed.like",
+      "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
       "subject": Object {
         "cid": "cids(3)",
         "uri": "record(2)",
@@ -126,11 +127,12 @@ Array [
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
-    "reason": "like",
+    "reason": "vote",
     "reasonSubject": "record(7)",
     "record": Object {
-      "$type": "app.bsky.feed.like",
+      "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
       "subject": Object {
         "cid": "cids(8)",
         "uri": "record(7)",
@@ -140,17 +142,19 @@ Array [
   },
   Object {
     "author": Object {
-      "did": "user(3)",
-      "handle": "carol.test",
+      "did": "user(4)",
+      "displayName": "bobby",
+      "handle": "bob.test",
     },
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
-    "reason": "like",
+    "reason": "vote",
     "reasonSubject": "record(2)",
     "record": Object {
-      "$type": "app.bsky.feed.like",
+      "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
       "subject": Object {
         "cid": "cids(3)",
         "uri": "record(2)",
@@ -160,52 +164,10 @@ Array [
   },
   Object {
     "author": Object {
-      "did": "user(4)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-    },
-    "cid": "cids(10)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": true,
-    "reason": "like",
-    "reasonSubject": "record(7)",
-    "record": Object {
-      "$type": "app.bsky.feed.like",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(8)",
-        "uri": "record(7)",
-      },
-    },
-    "uri": "record(9)",
-  },
-  Object {
-    "author": Object {
-      "did": "user(4)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-    },
-    "cid": "cids(11)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": true,
-    "reason": "like",
-    "reasonSubject": "record(2)",
-    "record": Object {
-      "$type": "app.bsky.feed.like",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(3)",
-        "uri": "record(2)",
-      },
-    },
-    "uri": "record(10)",
-  },
-  Object {
-    "author": Object {
       "did": "user(2)",
       "handle": "dan.test",
     },
-    "cid": "cids(12)",
+    "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
     "reason": "mention",
@@ -224,7 +186,7 @@ Array [
       ],
       "text": "@alice.bluesky.xyz is the best",
     },
-    "uri": "record(11)",
+    "uri": "record(9)",
   },
   Object {
     "author": Object {
@@ -232,7 +194,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
     },
-    "cid": "cids(13)",
+    "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
     "reason": "follow",
@@ -244,14 +206,14 @@ Array [
         "did": "user(1)",
       },
     },
-    "uri": "record(12)",
+    "uri": "record(10)",
   },
   Object {
     "author": Object {
       "did": "user(3)",
       "handle": "carol.test",
     },
-    "cid": "cids(14)",
+    "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
     "reason": "follow",
@@ -263,7 +225,7 @@ Array [
         "did": "user(1)",
       },
     },
-    "uri": "record(13)",
+    "uri": "record(11)",
   },
 ]
 `;
@@ -374,11 +336,12 @@ Array [
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
-    "reason": "like",
+    "reason": "vote",
     "reasonSubject": "record(2)",
     "record": Object {
-      "$type": "app.bsky.feed.like",
+      "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
       "subject": Object {
         "cid": "cids(3)",
         "uri": "record(2)",
@@ -394,11 +357,12 @@ Array [
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
-    "reason": "like",
+    "reason": "vote",
     "reasonSubject": "record(7)",
     "record": Object {
-      "$type": "app.bsky.feed.like",
+      "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
       "subject": Object {
         "cid": "cids(8)",
         "uri": "record(7)",
@@ -408,17 +372,19 @@ Array [
   },
   Object {
     "author": Object {
-      "did": "user(3)",
-      "handle": "carol.test",
+      "did": "user(4)",
+      "displayName": "bobby",
+      "handle": "bob.test",
     },
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
-    "reason": "like",
+    "reason": "vote",
     "reasonSubject": "record(2)",
     "record": Object {
-      "$type": "app.bsky.feed.like",
+      "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
       "subject": Object {
         "cid": "cids(3)",
         "uri": "record(2)",
@@ -428,52 +394,10 @@ Array [
   },
   Object {
     "author": Object {
-      "did": "user(4)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-    },
-    "cid": "cids(10)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "like",
-    "reasonSubject": "record(7)",
-    "record": Object {
-      "$type": "app.bsky.feed.like",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(8)",
-        "uri": "record(7)",
-      },
-    },
-    "uri": "record(9)",
-  },
-  Object {
-    "author": Object {
-      "did": "user(4)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-    },
-    "cid": "cids(11)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "like",
-    "reasonSubject": "record(2)",
-    "record": Object {
-      "$type": "app.bsky.feed.like",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(3)",
-        "uri": "record(2)",
-      },
-    },
-    "uri": "record(10)",
-  },
-  Object {
-    "author": Object {
       "did": "user(2)",
       "handle": "dan.test",
     },
-    "cid": "cids(12)",
+    "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "mention",
@@ -492,7 +416,7 @@ Array [
       ],
       "text": "@alice.bluesky.xyz is the best",
     },
-    "uri": "record(11)",
+    "uri": "record(9)",
   },
   Object {
     "author": Object {
@@ -500,7 +424,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
     },
-    "cid": "cids(13)",
+    "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "follow",
@@ -512,14 +436,14 @@ Array [
         "did": "user(1)",
       },
     },
-    "uri": "record(12)",
+    "uri": "record(10)",
   },
   Object {
     "author": Object {
       "did": "user(3)",
       "handle": "carol.test",
     },
-    "cid": "cids(14)",
+    "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "follow",
@@ -531,7 +455,7 @@ Array [
         "did": "user(1)",
       },
     },
-    "uri": "record(13)",
+    "uri": "record(11)",
   },
 ]
 `;

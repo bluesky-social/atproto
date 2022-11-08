@@ -11,7 +11,7 @@ import * as notification from './tables/user-notification'
 import * as assertion from './tables/assertion'
 import * as profile from './records/profile'
 import * as post from './records/post'
-import * as like from './records/like'
+import * as vote from './records/vote'
 import * as repost from './records/repost'
 import * as follow from './records/follow'
 
@@ -27,7 +27,7 @@ export type DatabaseSchema = user.PartialDB &
   notification.PartialDB &
   profile.PartialDB &
   post.PartialDB &
-  like.PartialDB &
+  vote.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
   assertion.PartialDB

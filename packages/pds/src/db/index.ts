@@ -6,7 +6,7 @@ import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
 import { NotificationsPlugin } from './types'
 import * as Declaration from './records/declaration'
 import * as Post from './records/post'
-import * as Like from './records/like'
+import * as Vote from './records/vote'
 import * as Repost from './records/repost'
 import * as Follow from './records/follow'
 import * as Assertion from './records/assertion'
@@ -31,7 +31,7 @@ export class Database {
   records: {
     declaration: Declaration.PluginType
     post: Post.PluginType
-    like: Like.PluginType
+    vote: Vote.PluginType
     repost: Repost.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
@@ -48,7 +48,7 @@ export class Database {
     this.records = {
       declaration: Declaration.makePlugin(db),
       post: Post.makePlugin(db),
-      like: Like.makePlugin(db),
+      vote: Vote.makePlugin(db),
       repost: Repost.makePlugin(db),
       follow: Follow.makePlugin(db),
       assertion: Assertion.makePlugin(db),

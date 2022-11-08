@@ -4,10 +4,8 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  uri: string;
-  cid?: string;
   limit?: number;
-  before?: string;
+  cursor?: string;
 }
 
 export interface CallOptions {
@@ -17,15 +15,17 @@ export interface CallOptions {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  uri: string;
-  cid?: string;
   cursor?: string;
-  likedBy: {
+  actors: {
     did: string,
     handle: string,
+    actorType: string,
     displayName?: string,
-    createdAt?: string,
-    indexedAt: string,
+    description?: string,
+    indexedAt?: string,
+    myState?: {
+      follow?: string,
+    },
   }[];
 }
 

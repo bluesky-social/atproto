@@ -102,10 +102,17 @@ export default function (server: Server) {
           'originator.handle as originatorHandle',
           'originator_profile.displayName as originatorDisplayName',
           db.db
-            .selectFrom('like')
+            .selectFrom('vote')
             .whereRef('subject', '=', ref('postUri'))
+            .where('direction', '=', 'up')
             .select(countAll.as('count'))
-            .as('likeCount'),
+            .as('upvoteCount'),
+          db.db
+            .selectFrom('vote')
+            .whereRef('subject', '=', ref('postUri'))
+            .where('direction', '=', 'down')
+            .select(countAll.as('count'))
+            .as('downvoteCount'),
           db.db
             .selectFrom('repost')
             .whereRef('subject', '=', ref('postUri'))
@@ -123,11 +130,19 @@ export default function (server: Server) {
             .select('uri')
             .as('requesterRepost'),
           db.db
-            .selectFrom('like')
+            .selectFrom('vote')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
+            .where('direction', '=', 'up')
             .select('uri')
-            .as('requesterLike'),
+            .as('requesterUpvote'),
+          db.db
+            .selectFrom('vote')
+            .where('creator', '=', requester)
+            .whereRef('subject', '=', ref('postUri'))
+            .where('direction', '=', 'down')
+            .select('uri')
+            .as('requesterDownvote'),
         ])
 
       postsAndRepostsQb = paginate(postsAndRepostsQb, {

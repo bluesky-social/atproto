@@ -23,11 +23,13 @@ export const rowToFeedItem = (row: FeedRow): FeedItem => ({
   record: common.ipldBytesToRecord(row.recordBytes),
   replyCount: row.replyCount,
   repostCount: row.repostCount,
-  likeCount: row.likeCount,
+  upvoteCount: row.upvoteCount,
+  downvoteCount: row.downvoteCount,
   indexedAt: row.indexedAt,
   myState: {
     repost: row.requesterRepost ?? undefined,
-    like: row.requesterLike ?? undefined,
+    upvote: row.requesterUpvote ?? undefined,
+    downvote: row.requesterDownvote ?? undefined,
   },
 })
 
@@ -51,9 +53,11 @@ type FeedRow = {
   originatorDid: string
   originatorHandle: string
   originatorDisplayName: string | null
-  likeCount: number
+  upvoteCount: number
+  downvoteCount: number
   repostCount: number
   replyCount: number
   requesterRepost: string | null
-  requesterLike: string | null
+  requesterUpvote: string | null
+  requesterDownvote: string | null
 }

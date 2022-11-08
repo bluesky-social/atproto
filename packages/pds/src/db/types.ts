@@ -31,7 +31,7 @@ export type Notification = {
 }
 
 export type NotificationReason =
-  | 'like'
+  | 'vote'
   | 'repost'
   | 'follow'
   | 'invite'

@@ -36,7 +36,7 @@ describe('pds notification views', () => {
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(notifCount.data.count).toBe(12)
+    expect(notifCount.data.count).toBe(10)
   })
 
   it('fetches notifications without a last-seen', async () => {
@@ -48,7 +48,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(12)
+    expect(notifs.length).toBe(10)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
@@ -60,7 +60,7 @@ describe('pds notification views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.likedBy)
+    const results = (results) => results.flatMap((res) => res.notifications)
     const paginator = async (cursor?: string) => {
       const res = await client.app.bsky.notification.list(
         {
@@ -84,7 +84,7 @@ describe('pds notification views', () => {
       },
     )
 
-    expect(full.data.notifications.length).toEqual(12)
+    expect(full.data.notifications.length).toEqual(10)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
@@ -129,7 +129,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(12)
+    expect(notifs.length).toBe(10)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((_, i) => i >= 3))

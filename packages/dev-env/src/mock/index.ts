@@ -170,13 +170,14 @@ export async function generateMockSetup(env: DevEnv) {
     )
   }
 
-  // a set of likes
+  // a set of up/downvotes
   for (const post of posts) {
     for (const user of users) {
       if (rand(3) === 0) {
-        await user.api.app.bsky.feed.like.create(
+        await user.api.app.bsky.feed.vote.create(
           { did: user.did },
           {
+            direction: rand(3) !== 0 ? 'up' : 'down',
             subject: post,
             createdAt: date.next().value,
           },
