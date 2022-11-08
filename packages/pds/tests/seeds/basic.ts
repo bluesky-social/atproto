@@ -64,9 +64,45 @@ export default async (sc: SeedClient) => {
   await sc.repost(dan, sc.posts[alice][1].ref)
 
   await sc.createScene(bob, 'scene.test')
-  const aliceInv = await sc.inviteToScene('scene.test', sc.actorRef(alice))
+  await sc.inviteToScene('scene.test', sc.actorRef(alice))
   await sc.inviteToScene('scene.test', sc.actorRef(carol))
-  await sc.acceptSceneInvite(alice, 'scene.test', aliceInv)
+  await sc.inviteToScene('scene.test', sc.actorRef(dan))
+  await sc.acceptSceneInvite(
+    alice,
+    'scene.test',
+    sc.sceneInvites['scene.test'][alice],
+  )
+  await sc.acceptSceneInvite(
+    carol,
+    'scene.test',
+    sc.sceneInvites['scene.test'][carol],
+  )
+  await sc.acceptSceneInvite(
+    dan,
+    'scene.test',
+    sc.sceneInvites['scene.test'][dan],
+  )
+
+  await sc.createScene(alice, 'alice-scene.test')
+
+  await sc.createScene(bob, 'other-scene.test')
+  await sc.inviteToScene('other-scene.test', sc.actorRef(alice))
+  await sc.inviteToScene('other-scene.test', sc.actorRef(carol))
+
+  await sc.createScene(carol, 'carol-scene.test')
+  await sc.inviteToScene('carol-scene.test', sc.actorRef(alice))
+  await sc.inviteToScene('carol-scene.test', sc.actorRef(bob))
+  await sc.inviteToScene('carol-scene.test', sc.actorRef(dan))
+  await sc.acceptSceneInvite(
+    alice,
+    'carol-scene.test',
+    sc.sceneInvites['carol-scene.test'][alice],
+  )
+  await sc.acceptSceneInvite(
+    dan,
+    'carol-scene.test',
+    sc.sceneInvites['carol-scene.test'][dan],
+  )
 
   return sc
 }
