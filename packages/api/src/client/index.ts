@@ -30,9 +30,10 @@ import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
+import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
-import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetLikedBy from './types/app/bsky/feed/getLikedBy'
@@ -77,9 +78,10 @@ export * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 export * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
+export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorSearch from './types/app/bsky/actor/search'
 export * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
-export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 export * as AppBskyFeedGetLikedBy from './types/app/bsky/feed/getLikedBy'
@@ -518,6 +520,17 @@ export class ActorNS {
       .call('app.bsky.actor.getProfile', params, undefined, opts)
       .catch((e) => {
         throw AppBskyActorGetProfile.toKnownErr(e)
+      })
+  }
+
+  getSuggestions(
+    params?: AppBskyActorGetSuggestions.QueryParams,
+    opts?: AppBskyActorGetSuggestions.CallOptions
+  ): Promise<AppBskyActorGetSuggestions.Response> {
+    return this._service.xrpc
+      .call('app.bsky.actor.getSuggestions', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyActorGetSuggestions.toKnownErr(e)
       })
   }
 

@@ -956,6 +956,72 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
+  'app.bsky.actor.getSuggestions': {
+    lexicon: 1,
+    id: 'app.bsky.actor.getSuggestions',
+    type: 'query',
+    description:
+      'Get a list of actors suggested for following. Used in discovery UIs.',
+    parameters: {
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      cursor: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['actors'],
+        properties: {
+          cursor: {
+            type: 'string',
+          },
+          actors: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'handle', 'actorType'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                handle: {
+                  type: 'string',
+                },
+                actorType: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                description: {
+                  type: 'string',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                myState: {
+                  type: 'object',
+                  properties: {
+                    follow: {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
   'app.bsky.actor.search': {
     lexicon: 1,
     id: 'app.bsky.actor.search',

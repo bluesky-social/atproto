@@ -30,6 +30,7 @@ import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
+import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
@@ -298,6 +299,11 @@ export class ActorNS {
 
   getProfile(handler: AppBskyActorGetProfile.Handler) {
     const schema = 'app.bsky.actor.getProfile' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getSuggestions(handler: AppBskyActorGetSuggestions.Handler) {
+    const schema = 'app.bsky.actor.getSuggestions' // @ts-ignore
     return this._server.xrpc.method(schema, handler)
   }
 

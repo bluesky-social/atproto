@@ -13,6 +13,7 @@ import getUsersSearch from './actor/search'
 import getUsersTypeahead from './actor/searchTypeahead'
 import getNotifications from './notification/list'
 import getNotificationCount from './notification/getCount'
+import getSuggestions from './actor/getSuggestions'
 import postNotificationsSeen from './notification/updateSeen'
 
 export default function (server: Server) {
@@ -30,5 +31,6 @@ export default function (server: Server) {
   getUsersTypeahead(server)
   getNotifications(server)
   getNotificationCount(server)
+  getSuggestions(server)
   postNotificationsSeen(server)
 }
