@@ -11,14 +11,10 @@ export default function (server: Server) {
       const { ref } = db.db.dynamic
 
       let builder = db.db
-        .selectFrom('app_bsky_like as like')
+        .selectFrom('like')
         .where('like.subject', '=', uri)
         .innerJoin('did_handle', 'like.creator', 'did_handle.did')
-        .leftJoin(
-          'app_bsky_profile as profile',
-          'profile.creator',
-          'did_handle.did',
-        )
+        .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .select([
           'did_handle.did as did',
           'did_handle.handle as handle',

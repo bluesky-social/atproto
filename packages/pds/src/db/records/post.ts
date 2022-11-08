@@ -6,9 +6,9 @@ import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyFeedPost
-const tableName = 'app_bsky_post'
+const tableName = 'post'
 
-export interface AppBskyPost {
+export interface BskyPost {
   uri: string
   cid: string
   creator: string
@@ -21,8 +21,8 @@ export interface AppBskyPost {
   indexedAt: string
 }
 
-const supportingTableName = 'app_bsky_post_entity'
-export interface AppBskyPostEntity {
+const supportingTableName = 'post_entity'
+export interface BskyPostEntity {
   postUri: string
   startIndex: number
   endIndex: number
@@ -31,8 +31,8 @@ export interface AppBskyPostEntity {
 }
 
 export type PartialDB = {
-  [tableName]: AppBskyPost
-  [supportingTableName]: AppBskyPostEntity
+  [tableName]: BskyPost
+  [supportingTableName]: BskyPostEntity
 }
 
 const validator = schemas.records.createRecordValidator(type)
@@ -71,10 +71,10 @@ const insertFn =
       replyParentCid: obj.reply?.parent?.cid || null,
       indexedAt: timestamp || new Date().toISOString(),
     }
-    const promises = [db.insertInto('app_bsky_post').values(post).execute()]
+    const promises = [db.insertInto(tableName).values(post).execute()]
     if (entities.length > 0) {
       promises.push(
-        db.insertInto('app_bsky_post_entity').values(entities).execute(),
+        db.insertInto(supportingTableName).values(entities).execute(),
       )
     }
     await Promise.all(promises)
@@ -84,12 +84,9 @@ const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
     await Promise.all([
+      db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute(),
       db
-        .deleteFrom('app_bsky_post')
-        .where('uri', '=', uri.toString())
-        .execute(),
-      db
-        .deleteFrom('app_bsky_post_entity')
+        .deleteFrom(supportingTableName)
         .where('postUri', '=', uri.toString())
         .execute(),
     ])

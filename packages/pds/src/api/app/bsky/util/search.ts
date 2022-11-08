@@ -39,8 +39,8 @@ export const getUserSearchQueryPg = (
     distance: distanceProfile,
   })
   const profilesQb = db.db
-    .selectFrom('app_bsky_profile')
-    .innerJoin('did_handle', 'did_handle.did', 'app_bsky_profile.creator')
+    .selectFrom('profile')
+    .innerJoin('did_handle', 'did_handle.did', 'profile.creator')
     .where(distanceProfile, '<', threshold)
     .if(!!keysetProfile, (qb) => (keysetProfile ? qb.where(keysetProfile) : qb))
     .select(['did_handle.did as did', distanceProfile.as('distance')])

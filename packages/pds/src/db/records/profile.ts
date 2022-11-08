@@ -6,9 +6,9 @@ import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyActorProfile
-const tableName = 'app_bsky_profile'
+const tableName = 'profile'
 
-export interface AppBskyProfile {
+export interface BskyProfile {
   uri: string
   cid: string
   creator: string
@@ -16,7 +16,7 @@ export interface AppBskyProfile {
   description: string | null
   indexedAt: string
 }
-export type PartialDB = { [tableName]: AppBskyProfile }
+export type PartialDB = { [tableName]: BskyProfile }
 
 const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Profile.Record => {
@@ -39,16 +39,13 @@ const insertFn =
       description: obj.description,
       indexedAt: new Date().toISOString(),
     }
-    await db.insertInto('app_bsky_profile').values(profile).execute()
+    await db.insertInto(tableName).values(profile).execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db
-      .deleteFrom('app_bsky_profile')
-      .where('uri', '=', uri.toString())
-      .execute()
+    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (_uri: AtUri, _obj: unknown): Notification[] => {

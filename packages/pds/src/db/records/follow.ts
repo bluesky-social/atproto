@@ -6,8 +6,8 @@ import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyGraphFollow
-const tableName = 'app_bsky_follow'
-export interface AppBskyFollow {
+const tableName = 'follow'
+export interface BskyFollow {
   uri: string
   cid: string
   creator: string
@@ -17,7 +17,7 @@ export interface AppBskyFollow {
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: AppBskyFollow }
+export type PartialDB = { [tableName]: BskyFollow }
 
 const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Follow.Record => {
@@ -45,16 +45,13 @@ const insertFn =
       createdAt: obj.createdAt,
       indexedAt: timestamp || new Date().toISOString(),
     }
-    await db.insertInto('app_bsky_follow').values(val).execute()
+    await db.insertInto(tableName).values(val).execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db
-      .deleteFrom('app_bsky_follow')
-      .where('uri', '=', uri.toString())
-      .execute()
+    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (

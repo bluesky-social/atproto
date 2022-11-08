@@ -60,7 +60,7 @@ export default function (server: Server) {
 
         // Update profile app index
         await dbTxn.db
-          .updateTable('app_bsky_profile')
+          .updateTable('profile')
           .set({
             cid: profileCid.toString(),
             displayName: updated.displayName,

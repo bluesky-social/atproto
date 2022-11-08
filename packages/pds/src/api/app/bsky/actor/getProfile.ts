@@ -20,11 +20,7 @@ export default function (server: Server) {
       const queryRes = await db.db
         .selectFrom('did_handle')
         .where(actorWhereClause(actor))
-        .leftJoin(
-          'app_bsky_profile as profile',
-          'profile.creator',
-          'did_handle.did',
-        )
+        .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .leftJoin('scene', 'scene.handle', 'did_handle.handle')
         .select([
           'did_handle.did as did',
@@ -35,12 +31,12 @@ export default function (server: Server) {
           'profile.displayName as displayName',
           'profile.description as description',
           db.db
-            .selectFrom('app_bsky_follow')
+            .selectFrom('follow')
             .whereRef('creator', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
             .as('followsCount'),
           db.db
-            .selectFrom('app_bsky_follow')
+            .selectFrom('follow')
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
             .as('followersCount'),
@@ -52,12 +48,12 @@ export default function (server: Server) {
             .select(countAll.as('count'))
             .as('membersCount'),
           db.db
-            .selectFrom('app_bsky_post')
+            .selectFrom('post')
             .whereRef('creator', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
             .as('postsCount'),
           db.db
-            .selectFrom('app_bsky_follow')
+            .selectFrom('follow')
             .where('creator', '=', requester)
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')

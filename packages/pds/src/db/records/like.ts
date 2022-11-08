@@ -6,9 +6,9 @@ import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyFeedLike
-const tableName = 'app_bsky_like'
+const tableName = 'like'
 
-export interface AppBskyLike {
+export interface BskyLike {
   uri: string
   cid: string
   creator: string
@@ -18,7 +18,7 @@ export interface AppBskyLike {
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: AppBskyLike }
+export type PartialDB = { [tableName]: BskyLike }
 
 const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Like.Record => {
@@ -38,7 +38,7 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
     await db
-      .insertInto('app_bsky_like')
+      .insertInto(tableName)
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
@@ -54,10 +54,7 @@ const insertFn =
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db
-      .deleteFrom('app_bsky_like')
-      .where('uri', '=', uri.toString())
-      .execute()
+    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (

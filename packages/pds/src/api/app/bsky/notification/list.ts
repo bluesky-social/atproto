@@ -23,7 +23,7 @@ export default function (server: Server) {
         .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
         .leftJoin(
-          'app_bsky_profile as author_profile',
+          'profile as author_profile',
           'author_profile.creator',
           'author.did',
         )
