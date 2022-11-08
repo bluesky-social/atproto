@@ -34,7 +34,7 @@ export default function (server: Server) {
       membershipsReq = paginate(membershipsReq, {
         limit,
         before,
-        by: ref('follow.createdAt'),
+        by: ref('assertion.createdAt'),
       })
 
       const membershipsRes = await membershipsReq.execute()
