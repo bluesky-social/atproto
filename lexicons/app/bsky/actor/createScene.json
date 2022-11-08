@@ -3,7 +3,6 @@
   "id": "app.bsky.actor.createScene",
   "type": "procedure",
   "description": "Create a scene.",
-  "parameters": {},
   "input": {
     "encoding": "application/json",
     "schema": {

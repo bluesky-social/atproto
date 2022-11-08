@@ -3,7 +3,6 @@
   "id": "com.atproto.server.getAccountsConfig",
   "type": "query",
   "description": "Get a document describing the service's accounts configuration.",
-  "parameters": {},
   "output": {
     "encoding": "application/json",
     "schema": {

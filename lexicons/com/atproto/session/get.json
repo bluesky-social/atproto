@@ -3,7 +3,6 @@
   "id": "com.atproto.session.get",
   "type": "query",
   "description": "Get information about the current session.",
-  "parameters": {},
   "output": {
     "encoding": "application/json",
     "schema": {

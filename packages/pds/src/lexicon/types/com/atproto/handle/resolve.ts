@@ -4,6 +4,9 @@
 import express from 'express'
 
 export interface QueryParams {
+  /**
+   * The handle to resolve. If not supplied, will resolve the host's own handle.
+   */
   handle?: string;
 }
 

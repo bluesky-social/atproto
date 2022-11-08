@@ -4,7 +4,11 @@
   "type": "procedure",
   "description": "Writes commits to a repo.",
   "parameters": {
-    "did": {"type": "string", "required": true, "description": "The DID of the repo."}
+    "type": "object",
+    "required": ["did"],
+    "properties": {
+      "did": {"type": "string", "description": "The DID of the repo."}
+    }
   },
   "input": {
     "encoding": "application/cbor"

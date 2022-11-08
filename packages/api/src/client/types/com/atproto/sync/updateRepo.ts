@@ -4,6 +4,9 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
+  /**
+   * The DID of the repo.
+   */
   did: string;
 }
 

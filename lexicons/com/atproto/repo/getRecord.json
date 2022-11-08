@@ -4,10 +4,14 @@
   "type": "query",
   "description": "Fetch a record.",
   "parameters": {
-    "user": {"type": "string", "required": true, "description": "The handle or DID of the repo."},
-    "collection": {"type": "string", "required": true, "description": "The NSID of the collection."},
-    "rkey": {"type": "string", "required": true, "description": "The key of the record."},
-    "cid": {"type": "string", "required": false, "description": "The CID of the version of the record. If not specified, then return the most recent version."}
+    "type": "object",
+    "required": ["user", "collection", "rkey"],
+    "properties": {
+      "user": {"type": "string", "description": "The handle or DID of the repo."},
+      "collection": {"type": "string", "description": "The NSID of the collection."},
+      "rkey": {"type": "string", "description": "The key of the record."},
+      "cid": {"type": "string", "description": "The CID of the version of the record. If not specified, then return the most recent version."}
+    }
   },
   "output": {
     "encoding": "application/json",

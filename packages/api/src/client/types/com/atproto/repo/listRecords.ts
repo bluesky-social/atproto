@@ -4,11 +4,29 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
+  /**
+   * The handle or DID of the repo.
+   */
   user: string;
+  /**
+   * The NSID of the record type.
+   */
   collection: string;
+  /**
+   * The number of records to return. TODO-max number?
+   */
   limit?: number;
+  /**
+   * A TID to filter the range of records returned.
+   */
   before?: string;
+  /**
+   * A TID to filter the range of records returned.
+   */
   after?: string;
+  /**
+   * Reverse the order of the returned records?
+   */
   reverse?: boolean;
 }
 
