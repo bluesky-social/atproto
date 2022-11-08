@@ -8,7 +8,7 @@ export default async (sc: SeedClient) => {
     handle: 'eve.test',
     password: 'eve-pass',
   })
-  await sc.like(sc.dids.eve, sc.posts[sc.dids.alice][1].ref)
-  await sc.like(sc.dids.carol, sc.replies[sc.dids.bob][0].ref)
+  await sc.vote('down', sc.dids.eve, sc.posts[sc.dids.alice][1].ref)
+  await sc.vote('up', sc.dids.carol, sc.replies[sc.dids.bob][0].ref)
   return sc
 }

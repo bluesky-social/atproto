@@ -8,10 +8,10 @@ Object {
     "handle": "alice.test",
   },
   "cid": "cids(0)",
+  "downvoteCount": 1,
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "likeCount": 3,
   "myState": Object {
-    "like": "record(1)",
+    "upvote": "record(1)",
   },
   "record": Object {
     "$type": "app.bsky.feed.post",
@@ -25,8 +25,8 @@ Object {
         "handle": "carol.test",
       },
       "cid": "cids(1)",
+      "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "likeCount": 0,
       "myState": Object {},
       "parent": Object {
         "author": Object {
@@ -35,10 +35,10 @@ Object {
           "handle": "alice.test",
         },
         "cid": "cids(0)",
+        "downvoteCount": 1,
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "likeCount": 3,
         "myState": Object {
-          "like": "record(1)",
+          "upvote": "record(1)",
         },
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -47,6 +47,7 @@ Object {
         },
         "replyCount": 2,
         "repostCount": 1,
+        "upvoteCount": 2,
         "uri": "record(0)",
       },
       "record": Object {
@@ -67,6 +68,7 @@ Object {
       "replies": Array [],
       "replyCount": 0,
       "repostCount": 0,
+      "upvoteCount": 0,
       "uri": "record(2)",
     },
     Object {
@@ -76,8 +78,8 @@ Object {
         "handle": "bob.test",
       },
       "cid": "cids(2)",
+      "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "likeCount": 0,
       "myState": Object {},
       "parent": Object {
         "author": Object {
@@ -86,10 +88,10 @@ Object {
           "handle": "alice.test",
         },
         "cid": "cids(0)",
+        "downvoteCount": 1,
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "likeCount": 3,
         "myState": Object {
-          "like": "record(1)",
+          "upvote": "record(1)",
         },
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -98,6 +100,7 @@ Object {
         },
         "replyCount": 2,
         "repostCount": 1,
+        "upvoteCount": 2,
         "uri": "record(0)",
       },
       "record": Object {
@@ -123,8 +126,8 @@ Object {
             "handle": "alice.test",
           },
           "cid": "cids(3)",
+          "downvoteCount": 0,
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "likeCount": 0,
           "myState": Object {
             "repost": "record(5)",
           },
@@ -135,8 +138,8 @@ Object {
               "handle": "bob.test",
             },
             "cid": "cids(2)",
+            "downvoteCount": 0,
             "indexedAt": "1970-01-01T00:00:00.000Z",
-            "likeCount": 0,
             "myState": Object {},
             "parent": Object {
               "author": Object {
@@ -145,10 +148,10 @@ Object {
                 "handle": "alice.test",
               },
               "cid": "cids(0)",
+              "downvoteCount": 1,
               "indexedAt": "1970-01-01T00:00:00.000Z",
-              "likeCount": 3,
               "myState": Object {
-                "like": "record(1)",
+                "upvote": "record(1)",
               },
               "record": Object {
                 "$type": "app.bsky.feed.post",
@@ -157,6 +160,7 @@ Object {
               },
               "replyCount": 2,
               "repostCount": 1,
+              "upvoteCount": 2,
               "uri": "record(0)",
             },
             "record": Object {
@@ -176,6 +180,7 @@ Object {
             },
             "replyCount": 1,
             "repostCount": 0,
+            "upvoteCount": 0,
             "uri": "record(3)",
           },
           "record": Object {
@@ -196,16 +201,19 @@ Object {
           "replies": Array [],
           "replyCount": 0,
           "repostCount": 1,
+          "upvoteCount": 0,
           "uri": "record(4)",
         },
       ],
       "replyCount": 1,
       "repostCount": 0,
+      "upvoteCount": 0,
       "uri": "record(3)",
     },
   ],
   "replyCount": 2,
   "repostCount": 1,
+  "upvoteCount": 2,
   "uri": "record(0)",
 }
 `;
@@ -218,10 +226,10 @@ Object {
     "handle": "alice.test",
   },
   "cid": "cids(0)",
+  "downvoteCount": 1,
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "likeCount": 3,
   "myState": Object {
-    "like": "record(1)",
+    "upvote": "record(1)",
   },
   "record": Object {
     "$type": "app.bsky.feed.post",
@@ -235,8 +243,8 @@ Object {
         "handle": "carol.test",
       },
       "cid": "cids(1)",
+      "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "likeCount": 0,
       "myState": Object {},
       "parent": Object {
         "author": Object {
@@ -245,10 +253,10 @@ Object {
           "handle": "alice.test",
         },
         "cid": "cids(0)",
+        "downvoteCount": 1,
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "likeCount": 3,
         "myState": Object {
-          "like": "record(1)",
+          "upvote": "record(1)",
         },
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -257,6 +265,7 @@ Object {
         },
         "replyCount": 2,
         "repostCount": 1,
+        "upvoteCount": 2,
         "uri": "record(0)",
       },
       "record": Object {
@@ -276,6 +285,7 @@ Object {
       },
       "replyCount": 0,
       "repostCount": 0,
+      "upvoteCount": 0,
       "uri": "record(2)",
     },
     Object {
@@ -285,8 +295,8 @@ Object {
         "handle": "bob.test",
       },
       "cid": "cids(2)",
+      "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "likeCount": 0,
       "myState": Object {},
       "parent": Object {
         "author": Object {
@@ -295,10 +305,10 @@ Object {
           "handle": "alice.test",
         },
         "cid": "cids(0)",
+        "downvoteCount": 1,
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "likeCount": 3,
         "myState": Object {
-          "like": "record(1)",
+          "upvote": "record(1)",
         },
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -307,6 +317,7 @@ Object {
         },
         "replyCount": 2,
         "repostCount": 1,
+        "upvoteCount": 2,
         "uri": "record(0)",
       },
       "record": Object {
@@ -326,11 +337,13 @@ Object {
       },
       "replyCount": 1,
       "repostCount": 0,
+      "upvoteCount": 0,
       "uri": "record(3)",
     },
   ],
   "replyCount": 2,
   "repostCount": 1,
+  "upvoteCount": 2,
   "uri": "record(0)",
 }
 `;

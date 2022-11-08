@@ -1,6 +1,6 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { SeedClient } from '../seeds/client'
-import likesSeed from '../seeds/likes'
+import votesSeed from '../seeds/votes'
 import {
   CloseFn,
   constantDate,
@@ -9,7 +9,7 @@ import {
   runTestServer,
 } from '../_util'
 
-describe('pds like views', () => {
+describe('pds vote views', () => {
   let client: AtpServiceClient
   let close: CloseFn
   let sc: SeedClient
@@ -20,12 +20,12 @@ describe('pds like views', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'views_likes',
+      dbPostgresSchema: 'views_votes',
     })
     close = server.close
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
-    await likesSeed(sc)
+    await votesSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
   })
@@ -42,32 +42,32 @@ describe('pds like views', () => {
 
   const tstamp = (x: string) => new Date(x).getTime()
 
-  it('fetches liked by posts', async () => {
-    const alicePost = await client.app.bsky.feed.getLikedBy({
+  it('fetches post votes', async () => {
+    const alicePost = await client.app.bsky.feed.getVotes({
       uri: sc.posts[alice][1].ref.uriStr,
     })
 
     expect(forSnapshot(alicePost.data)).toMatchSnapshot()
-    expect(getCursors(alicePost.data.likedBy)).toEqual(
-      getSortedCursors(alicePost.data.likedBy),
+    expect(getCursors(alicePost.data.votes)).toEqual(
+      getSortedCursors(alicePost.data.votes),
     )
   })
 
-  it('fetches liked by replies', async () => {
-    const bobReply = await client.app.bsky.feed.getLikedBy({
+  it('fetches reply votes', async () => {
+    const bobReply = await client.app.bsky.feed.getVotes({
       uri: sc.replies[bob][0].ref.uriStr,
     })
 
     expect(forSnapshot(bobReply.data)).toMatchSnapshot()
-    expect(getCursors(bobReply.data.likedBy)).toEqual(
-      getSortedCursors(bobReply.data.likedBy),
+    expect(getCursors(bobReply.data.votes)).toEqual(
+      getSortedCursors(bobReply.data.votes),
     )
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.likedBy)
+    const results = (results) => results.flatMap((res) => res.votes)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.feed.getLikedBy({
+      const res = await client.app.bsky.feed.getVotes({
         uri: sc.posts[alice][1].ref.uriStr,
         before: cursor,
         limit: 2,
@@ -77,14 +77,14 @@ describe('pds like views', () => {
 
     const paginatedAll = await paginateAll(paginator)
     paginatedAll.forEach((res) =>
-      expect(res.likedBy.length).toBeLessThanOrEqual(2),
+      expect(res.votes.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.feed.getLikedBy({
+    const full = await client.app.bsky.feed.getVotes({
       uri: sc.posts[alice][1].ref.uriStr,
     })
 
-    expect(full.data.likedBy.length).toEqual(4)
+    expect(full.data.votes.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

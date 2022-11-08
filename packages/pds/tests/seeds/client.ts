@@ -74,7 +74,10 @@ export class SeedClient {
   >
   follows: Record<string, Record<string, RecordRef>>
   posts: Record<string, { text: string; ref: RecordRef }[]>
-  likes: Record<string, Record<string, AtUri>>
+  votes: {
+    up: Record<string, Record<string, AtUri>>
+    down: Record<string, Record<string, AtUri>>
+  }
   replies: Record<string, { text: string; ref: RecordRef }[]>
   reposts: Record<string, RecordRef[]>
   scenes: Record<
@@ -90,7 +93,7 @@ export class SeedClient {
     this.profiles = {}
     this.follows = {}
     this.posts = {}
-    this.likes = {}
+    this.votes = { up: {}, down: {} }
     this.replies = {}
     this.reposts = {}
     this.scenes = {}
@@ -161,15 +164,15 @@ export class SeedClient {
     return post
   }
 
-  async like(by: string, subject: RecordRef) {
-    const res = await this.client.app.bsky.feed.like.create(
+  async vote(direction: 'up' | 'down', by: string, subject: RecordRef) {
+    const res = await this.client.app.bsky.feed.vote.create(
       { did: by },
-      { subject: subject.raw, createdAt: new Date().toISOString() },
+      { direction, subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
     )
-    this.likes[by] ??= {}
-    this.likes[by][subject.uriStr] = new AtUri(res.uri)
-    return this.likes[by][subject.uriStr]
+    this.votes[direction][by] ??= {}
+    this.votes[direction][by][subject.uriStr] = new AtUri(res.uri)
+    return this.votes[direction][by][subject.uriStr]
   }
 
   async reply(by: string, root: RecordRef, parent: RecordRef, text: string) {
