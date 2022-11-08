@@ -54,6 +54,7 @@ export const recordCreateOp = z.object({
   rkey: z.string(),
   value: z.any(),
 })
+export type RecordCreateOp = z.infer<typeof recordCreateOp>
 
 export const recordUpdateOp = z.object({
   action: z.literal('update'),
@@ -61,6 +62,7 @@ export const recordUpdateOp = z.object({
   rkey: z.string(),
   value: z.any(),
 })
+export type RecordUpdateOp = z.infer<typeof recordUpdateOp>
 
 export const recordWriteOp = z.union([recordCreateOp, recordUpdateOp, deleteOp])
 export type RecordWriteOp = z.infer<typeof recordWriteOp>
