@@ -4,6 +4,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import * as locals from '../../src/locals'
 import { App } from '../../src'
+import { Notification } from '../../src/lexicon/types/app/bsky/notification/list'
 
 describe('pds notification views', () => {
   let client: AtpServiceClient
@@ -30,6 +31,15 @@ describe('pds notification views', () => {
     await close()
   })
 
+  const sort = (notifs: Notification[]) => {
+    return notifs.sort((a, b) => {
+      if (a.indexedAt === b.indexedAt) {
+        return a.uri > b.uri ? -1 : 1
+      }
+      return a.indexedAt > b.indexedAt ? -a : 1
+    })
+  }
+
   it('fetches notification count without a last-seen', async () => {
     const notifCount = await client.app.bsky.notification.getCount(
       {},
@@ -47,7 +57,7 @@ describe('pds notification views', () => {
       },
     )
 
-    const notifs = notifRes.data.notifications
+    const notifs = sort(notifRes.data.notifications)
     expect(notifs.length).toBe(14)
 
     const readStates = notifs.map((notif) => notif.isRead)
@@ -60,7 +70,8 @@ describe('pds notification views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.notifications)
+    const results = (results) =>
+      sort(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
       const res = await client.app.bsky.notification.list(
         {
@@ -128,7 +139,7 @@ describe('pds notification views', () => {
       },
     )
 
-    const notifs = notifRes.data.notifications
+    const notifs = sort(notifRes.data.notifications)
     expect(notifs.length).toBe(14)
 
     const readStates = notifs.map((notif) => notif.isRead)
