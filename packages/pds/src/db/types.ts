@@ -1,6 +1,7 @@
 import { AtUri } from '@atproto/uri'
 import { ValidationResult } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { DynamicReferenceBuilder } from 'kysely/dist/cjs/dynamic/dynamic-reference-builder'
 
 export type DbRecordPlugin<T> = {
   collection: string
@@ -15,6 +16,8 @@ export type DbRecordPlugin<T> = {
   delete: (uri: AtUri) => Promise<void>
   notifsForRecord: (uri: AtUri, cid: CID, obj: unknown) => Notification[]
 }
+
+export type Ref = DynamicReferenceBuilder<any>
 
 export type NotificationsPlugin = {
   process: (notifs: Notification[]) => Promise<void>
