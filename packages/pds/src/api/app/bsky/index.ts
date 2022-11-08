@@ -7,8 +7,10 @@ import createScene from './actor/createScene'
 import getProfile from './actor/getProfile'
 import updateProfile from './actor/updateProfile'
 import getRepostedBy from './feed/getRepostedBy'
-import getUserFollowers from './graph/getFollowers'
-import getUserFollows from './graph/getFollows'
+import getFollowers from './graph/getFollowers'
+import getFollows from './graph/getFollows'
+import getMembers from './graph/getMembers'
+import getMemberships from './graph/getMemberships'
 import getUsersSearch from './actor/search'
 import getUsersTypeahead from './actor/searchTypeahead'
 import getNotifications from './notification/list'
@@ -25,8 +27,10 @@ export default function (server: Server) {
   getProfile(server)
   updateProfile(server)
   getRepostedBy(server)
-  getUserFollowers(server)
-  getUserFollows(server)
+  getFollowers(server)
+  getFollows(server)
+  getMembers(server)
+  getMemberships(server)
   getUsersSearch(server)
   getUsersTypeahead(server)
   getNotifications(server)
