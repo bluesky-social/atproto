@@ -87,4 +87,39 @@ describe('pds vote views', () => {
     expect(full.data.votes.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
+
+  it('filters by direction', async () => {
+    const full = await client.app.bsky.feed.getVotes({
+      uri: sc.posts[alice][1].ref.uriStr,
+    })
+
+    const upvotes = await client.app.bsky.feed.getVotes({
+      uri: sc.posts[alice][1].ref.uriStr,
+      direction: 'up',
+    })
+
+    const downvotes = await client.app.bsky.feed.getVotes({
+      uri: sc.posts[alice][1].ref.uriStr,
+      direction: 'down',
+    })
+
+    expect(upvotes.data.votes.length).toEqual(2)
+    upvotes.data.votes.forEach((vote) => {
+      expect(vote.direction).toEqual('up')
+    })
+
+    expect(downvotes.data.votes.length).toEqual(2)
+    downvotes.data.votes.forEach((vote) => {
+      expect(vote.direction).toEqual('down')
+    })
+
+    // Upvote filter and downvote filter comprise all votes
+    const upAndDownvotes = upvotes.data.votes.concat(downvotes.data.votes)
+    expect(full.data.votes.length).toEqual(4)
+    full.data.votes.forEach((vote) => {
+      upAndDownvotes.some(
+        (v) => v.direction === vote.direction && v.actor.did === vote.actor.did,
+      )
+    })
+  })
 })
