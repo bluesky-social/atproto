@@ -12,27 +12,17 @@ export interface CallOptions {
 }
 
 export interface InputSchema {
-  /**
-   * The DID of the repo.
-   */
-  did: string;
-  /**
-   * The NSID of the record collection.
-   */
-  collection: string;
-  /**
-   * Validate the record?
-   */
-  validate?: boolean;
-  /**
-   * The record to create.
-   */
-  record: {};
+  subject: Subject;
+  direction: 'up' | 'down' | 'none';
+}
+export interface Subject {
+  uri: string;
+  cid: string;
 }
 
 export interface OutputSchema {
-  uri: string;
-  cid: string;
+  upvote?: string;
+  downvote?: string;
 }
 
 export interface Response {

@@ -39,6 +39,7 @@ import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
+import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
@@ -352,6 +353,11 @@ export class FeedNS {
 
   getVotes(handler: AppBskyFeedGetVotes.Handler) {
     const schema = 'app.bsky.feed.getVotes' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  setVote(handler: AppBskyFeedSetVote.Handler) {
+    const schema = 'app.bsky.feed.setVote' // @ts-ignore
     return this._server.xrpc.method(schema, handler)
   }
 }
