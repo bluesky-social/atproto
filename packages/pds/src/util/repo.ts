@@ -28,7 +28,13 @@ export const mutationContext = (
 export type PreparedUpdate = {
   uri: AtUri
   cid: CID
-  toStage: CidWriteOp
+  toStage: CidWriteOp & { action: 'create' }
+  dbUpdate: Promise<void>
+}
+
+export type PreparedDeletion = {
+  uri: AtUri
+  toStage: CidWriteOp & { action: 'delete' }
   dbUpdate: Promise<void>
 }
 
@@ -51,5 +57,20 @@ export const prepareCreate = async (
       cid,
     },
     dbUpdate: ctx.db.indexRecord(uri, cid, record, ctx.time),
+  }
+}
+
+export const prepareDelete = (
+  ctx: MutationContext,
+  uri: AtUri,
+): PreparedDeletion => {
+  return {
+    uri,
+    toStage: {
+      action: 'delete',
+      collection: uri.collection,
+      rkey: uri.rkey,
+    },
+    dbUpdate: ctx.db.deleteRecord(uri),
   }
 }
