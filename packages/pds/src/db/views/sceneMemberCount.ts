@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import Database from '..'
 import { APP_BSKY_GRAPH } from '../../lexicon'
 import { Ref } from '../types'
@@ -13,3 +14,13 @@ export const sceneMemberCount = (db: Database, sceneDid: Ref) => {
 }
 
 export default sceneMemberCount
+=======
+export interface SceneMemberCount {
+  did: string
+  count: number
+}
+
+export const viewName = 'scene_member_count'
+
+export type PartialDB = { [viewName]: SceneMemberCount }
+>>>>>>> Stashed changes

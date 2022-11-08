@@ -4,6 +4,17 @@ import { APP_BSKY_SYSTEM } from '../lexicon'
 import * as views from '../db/views'
 import * as schemas from '../lexicon/schemas'
 
+<<<<<<< Updated upstream
+=======
+type MemberAddUpdate = {
+  type: 'member_add'
+}
+
+class SceneProcessor {
+  process()
+}
+
+>>>>>>> Stashed changes
 export const process = async (
   db: Database,
   did: string,

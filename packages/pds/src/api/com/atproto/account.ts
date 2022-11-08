@@ -120,7 +120,7 @@ export default function (server: Server) {
         throw err
       }
 
-      // Now that we have a real did, we create the declartion & replace the tempDid
+      // Now that we have a real did, we create the declaration & replace the tempDid
       // and setup the repo root. This _should_ succeed under typical conditions.
       const declaration = {
         $type: schema.ids.AppBskySystemDeclaration,

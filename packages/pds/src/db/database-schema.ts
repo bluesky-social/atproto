@@ -26,10 +26,10 @@ export type DatabaseSchema = user.PartialDB &
   ipldBlockCreator.PartialDB &
   inviteCode.PartialDB &
   notification.PartialDB &
+  assertion.PartialDB &
   profile.PartialDB &
   post.PartialDB &
   vote.PartialDB &
   repost.PartialDB &
   trend.PartialDB &
-  follow.PartialDB &
-  assertion.PartialDB
+  follow.PartialDB

@@ -12,49 +12,29 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
-import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
-import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
-import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
-import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
-import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
-import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
-import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
-import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
-import * as AppBskyActorSearch from './types/app/bsky/actor/search'
-import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
-import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
-import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
-import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
-import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyFeedMediaEmbed from './types/app/bsky/feed/mediaEmbed'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 import * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
+import * as AppBskyFeedTrending from './types/app/bsky/feed/trending'
 import * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 import * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
 import * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
-import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
-import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
-import * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
-import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
@@ -64,49 +44,29 @@ export * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 export * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 export * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 export * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
-export * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 export * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
-export * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
-export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
-export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 export * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 export * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 export * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
-export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-export * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
-export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 export * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
-export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
-export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
-export * as AppBskyActorSearch from './types/app/bsky/actor/search'
-export * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
-export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
-export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
-export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
-export * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 export * as AppBskyFeedMediaEmbed from './types/app/bsky/feed/mediaEmbed'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 export * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
+export * as AppBskyFeedTrending from './types/app/bsky/feed/trending'
 export * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 export * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
 export * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
-export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
-export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-export * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
-export * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
 export * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
-export * as AppBskyNotificationList from './types/app/bsky/notification/list'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
@@ -165,20 +125,16 @@ export class ComNS {
 export class AtprotoNS {
   _service: ServiceClient
   account: AccountNS
-  handle: HandleNS
   repo: RepoNS
   server: ServerNS
   session: SessionNS
-  sync: SyncNS
 
   constructor(service: ServiceClient) {
     this._service = service
     this.account = new AccountNS(service)
-    this.handle = new HandleNS(service)
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
     this.session = new SessionNS(service)
-    this.sync = new SyncNS(service)
   }
 }
 
@@ -256,25 +212,6 @@ export class AccountNS {
   }
 }
 
-export class HandleNS {
-  _service: ServiceClient
-
-  constructor(service: ServiceClient) {
-    this._service = service
-  }
-
-  resolve(
-    params?: ComAtprotoHandleResolve.QueryParams,
-    opts?: ComAtprotoHandleResolve.CallOptions
-  ): Promise<ComAtprotoHandleResolve.Response> {
-    return this._service.xrpc
-      .call('com.atproto.handle.resolve', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoHandleResolve.toKnownErr(e)
-      })
-  }
-}
-
 export class RepoNS {
   _service: ServiceClient
 
@@ -312,39 +249,6 @@ export class RepoNS {
       .call('com.atproto.repo.deleteRecord', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoRepoDeleteRecord.toKnownErr(e)
-      })
-  }
-
-  describe(
-    params?: ComAtprotoRepoDescribe.QueryParams,
-    opts?: ComAtprotoRepoDescribe.CallOptions
-  ): Promise<ComAtprotoRepoDescribe.Response> {
-    return this._service.xrpc
-      .call('com.atproto.repo.describe', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoRepoDescribe.toKnownErr(e)
-      })
-  }
-
-  getRecord(
-    params?: ComAtprotoRepoGetRecord.QueryParams,
-    opts?: ComAtprotoRepoGetRecord.CallOptions
-  ): Promise<ComAtprotoRepoGetRecord.Response> {
-    return this._service.xrpc
-      .call('com.atproto.repo.getRecord', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoRepoGetRecord.toKnownErr(e)
-      })
-  }
-
-  listRecords(
-    params?: ComAtprotoRepoListRecords.QueryParams,
-    opts?: ComAtprotoRepoListRecords.CallOptions
-  ): Promise<ComAtprotoRepoListRecords.Response> {
-    return this._service.xrpc
-      .call('com.atproto.repo.listRecords', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoRepoListRecords.toKnownErr(e)
       })
   }
 
@@ -431,47 +335,6 @@ export class SessionNS {
   }
 }
 
-export class SyncNS {
-  _service: ServiceClient
-
-  constructor(service: ServiceClient) {
-    this._service = service
-  }
-
-  getRepo(
-    params?: ComAtprotoSyncGetRepo.QueryParams,
-    opts?: ComAtprotoSyncGetRepo.CallOptions
-  ): Promise<ComAtprotoSyncGetRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.getRepo', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetRepo.toKnownErr(e)
-      })
-  }
-
-  getRoot(
-    params?: ComAtprotoSyncGetRoot.QueryParams,
-    opts?: ComAtprotoSyncGetRoot.CallOptions
-  ): Promise<ComAtprotoSyncGetRoot.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.getRoot', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetRoot.toKnownErr(e)
-      })
-  }
-
-  updateRepo(
-    data?: ComAtprotoSyncUpdateRepo.InputSchema,
-    opts?: ComAtprotoSyncUpdateRepo.CallOptions
-  ): Promise<ComAtprotoSyncUpdateRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.updateRepo', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncUpdateRepo.toKnownErr(e)
-      })
-  }
-}
-
 export class AppNS {
   _service: ServiceClient
   bsky: BskyNS
@@ -517,50 +380,6 @@ export class ActorNS {
       .call('app.bsky.actor.createScene', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyActorCreateScene.toKnownErr(e)
-      })
-  }
-
-  getProfile(
-    params?: AppBskyActorGetProfile.QueryParams,
-    opts?: AppBskyActorGetProfile.CallOptions
-  ): Promise<AppBskyActorGetProfile.Response> {
-    return this._service.xrpc
-      .call('app.bsky.actor.getProfile', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyActorGetProfile.toKnownErr(e)
-      })
-  }
-
-  getSuggestions(
-    params?: AppBskyActorGetSuggestions.QueryParams,
-    opts?: AppBskyActorGetSuggestions.CallOptions
-  ): Promise<AppBskyActorGetSuggestions.Response> {
-    return this._service.xrpc
-      .call('app.bsky.actor.getSuggestions', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyActorGetSuggestions.toKnownErr(e)
-      })
-  }
-
-  search(
-    params?: AppBskyActorSearch.QueryParams,
-    opts?: AppBskyActorSearch.CallOptions
-  ): Promise<AppBskyActorSearch.Response> {
-    return this._service.xrpc
-      .call('app.bsky.actor.search', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyActorSearch.toKnownErr(e)
-      })
-  }
-
-  searchTypeahead(
-    params?: AppBskyActorSearchTypeahead.QueryParams,
-    opts?: AppBskyActorSearchTypeahead.CallOptions
-  ): Promise<AppBskyActorSearchTypeahead.Response> {
-    return this._service.xrpc
-      .call('app.bsky.actor.searchTypeahead', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyActorSearchTypeahead.toKnownErr(e)
       })
   }
 
@@ -643,6 +462,7 @@ export class FeedNS {
   post: PostRecord
   repost: RepostRecord
   trend: TrendRecord
+  trending: TrendingRecord
   vote: VoteRecord
 
   constructor(service: ServiceClient) {
@@ -651,62 +471,8 @@ export class FeedNS {
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
     this.trend = new TrendRecord(service)
+    this.trending = new TrendingRecord(service)
     this.vote = new VoteRecord(service)
-  }
-
-  getAuthorFeed(
-    params?: AppBskyFeedGetAuthorFeed.QueryParams,
-    opts?: AppBskyFeedGetAuthorFeed.CallOptions
-  ): Promise<AppBskyFeedGetAuthorFeed.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getAuthorFeed', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetAuthorFeed.toKnownErr(e)
-      })
-  }
-
-  getPostThread(
-    params?: AppBskyFeedGetPostThread.QueryParams,
-    opts?: AppBskyFeedGetPostThread.CallOptions
-  ): Promise<AppBskyFeedGetPostThread.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getPostThread', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetPostThread.toKnownErr(e)
-      })
-  }
-
-  getRepostedBy(
-    params?: AppBskyFeedGetRepostedBy.QueryParams,
-    opts?: AppBskyFeedGetRepostedBy.CallOptions
-  ): Promise<AppBskyFeedGetRepostedBy.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getRepostedBy', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetRepostedBy.toKnownErr(e)
-      })
-  }
-
-  getTimeline(
-    params?: AppBskyFeedGetTimeline.QueryParams,
-    opts?: AppBskyFeedGetTimeline.CallOptions
-  ): Promise<AppBskyFeedGetTimeline.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getTimeline', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetTimeline.toKnownErr(e)
-      })
-  }
-
-  getVotes(
-    params?: AppBskyFeedGetVotes.QueryParams,
-    opts?: AppBskyFeedGetVotes.CallOptions
-  ): Promise<AppBskyFeedGetVotes.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getVotes', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetVotes.toKnownErr(e)
-      })
   }
 
   setVote(
@@ -969,6 +735,67 @@ export class TrendRecord {
   }
 }
 
+export class TrendingRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyFeedTrending.Record }[],
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.trending',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
+  ): Promise<{ uri: string, cid: string, value: AppBskyFeedTrending.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.trending',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedTrending.Record,
+    headers?: Record<string, string>
+  ): Promise<{ uri: string, cid: string }> {
+    record.$type = 'app.bsky.feed.trending'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.trending', ...params, record },
+      { encoding: 'application/json', headers }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    headers?: Record<string, string>
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.trending', ...params },
+      { headers }
+    )
+  }
+}
+
 export class VoteRecord {
   _service: ServiceClient
 
@@ -1041,50 +868,6 @@ export class GraphNS {
     this.assertion = new AssertionRecord(service)
     this.confirmation = new ConfirmationRecord(service)
     this.follow = new FollowRecord(service)
-  }
-
-  getFollowers(
-    params?: AppBskyGraphGetFollowers.QueryParams,
-    opts?: AppBskyGraphGetFollowers.CallOptions
-  ): Promise<AppBskyGraphGetFollowers.Response> {
-    return this._service.xrpc
-      .call('app.bsky.graph.getFollowers', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyGraphGetFollowers.toKnownErr(e)
-      })
-  }
-
-  getFollows(
-    params?: AppBskyGraphGetFollows.QueryParams,
-    opts?: AppBskyGraphGetFollows.CallOptions
-  ): Promise<AppBskyGraphGetFollows.Response> {
-    return this._service.xrpc
-      .call('app.bsky.graph.getFollows', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyGraphGetFollows.toKnownErr(e)
-      })
-  }
-
-  getMembers(
-    params?: AppBskyGraphGetMembers.QueryParams,
-    opts?: AppBskyGraphGetMembers.CallOptions
-  ): Promise<AppBskyGraphGetMembers.Response> {
-    return this._service.xrpc
-      .call('app.bsky.graph.getMembers', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyGraphGetMembers.toKnownErr(e)
-      })
-  }
-
-  getMemberships(
-    params?: AppBskyGraphGetMemberships.QueryParams,
-    opts?: AppBskyGraphGetMemberships.CallOptions
-  ): Promise<AppBskyGraphGetMemberships.Response> {
-    return this._service.xrpc
-      .call('app.bsky.graph.getMemberships', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyGraphGetMemberships.toKnownErr(e)
-      })
   }
 }
 
@@ -1294,17 +1077,6 @@ export class NotificationNS {
       .call('app.bsky.notification.getCount', params, undefined, opts)
       .catch((e) => {
         throw AppBskyNotificationGetCount.toKnownErr(e)
-      })
-  }
-
-  list(
-    params?: AppBskyNotificationList.QueryParams,
-    opts?: AppBskyNotificationList.CallOptions
-  ): Promise<AppBskyNotificationList.Response> {
-    return this._service.xrpc
-      .call('app.bsky.notification.list', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyNotificationList.toKnownErr(e)
       })
   }
 
