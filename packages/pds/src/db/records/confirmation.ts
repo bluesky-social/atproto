@@ -33,7 +33,6 @@ const insertFn =
       .where('uri', '=', obj.assertion.uri)
       .where('cid', '=', obj.assertion.cid)
       .set({
-        confirmed: 1,
         confirmUri: uri.toString(),
         confirmCid: cid.toString(),
         confirmCreated: obj.createdAt,
@@ -49,7 +48,6 @@ const deleteFn =
       .updateTable('assertion')
       .where('confirmUri', '=', uri.toString())
       .set({
-        confirmed: 0,
         confirmUri: null,
         confirmCid: null,
         confirmCreated: null,

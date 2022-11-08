@@ -36,7 +36,6 @@ const insertFn =
         subjectDeclarationCid: obj.subject.declarationCid,
         createdAt: obj.createdAt,
         indexedAt: timestamp || new Date().toISOString(),
-        confirmed: 0,
         confirmUri: null,
         confirmCid: null,
         confirmCreated: null,

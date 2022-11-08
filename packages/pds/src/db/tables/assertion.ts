@@ -7,7 +7,6 @@ export interface Assertion {
   subjectDeclarationCid: string
   createdAt: string
   indexedAt: string
-  confirmed: 0 | 1
   confirmUri: string | null
   confirmCid: string | null
   confirmCreated: string | null

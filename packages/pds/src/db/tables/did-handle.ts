@@ -1,8 +1,8 @@
 export interface DidHandle {
   did: string
   handle: string
-  actorType: string | null
-  declarationCid: string | null
+  actorType: string
+  declarationCid: string
 }
 
 export const tableName = 'did_handle'

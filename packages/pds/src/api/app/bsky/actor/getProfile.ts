@@ -20,11 +20,6 @@ export default function (server: Server) {
       const queryRes = await db.db
         .selectFrom('did_handle')
         .where(actorWhereClause(actor))
-        .innerJoin(
-          'app_bsky_declaration as declaration',
-          'declaration.creator',
-          'did_handle.did',
-        )
         .leftJoin(
           'app_bsky_profile as profile',
           'profile.creator',
@@ -34,7 +29,7 @@ export default function (server: Server) {
         .select([
           'did_handle.did as did',
           'did_handle.handle as handle',
-          'declaration.actorType as actorType',
+          'did_handle.actorType as actorType',
           'scene.owner as owner',
           'profile.uri as profileUri',
           'profile.displayName as displayName',
@@ -50,15 +45,10 @@ export default function (server: Server) {
             .select(countAll.as('count'))
             .as('followersCount'),
           db.db
-            .selectFrom('app_bsky_assertion as assertion')
-            .innerJoin(
-              'app_bsky_confirmation as confirmation',
-              'confirmation.assertionUri',
-              'assertion.uri',
-            )
+            .selectFrom('assertion')
             .whereRef('assertion.creator', '=', ref('did_handle.did'))
             .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
-            .whereRef('confirmation.assertionCid', '=', ref('assertion.cid'))
+            .where('assertion.confirmUri', 'is not', null)
             .select(countAll.as('count'))
             .as('membersCount'),
           db.db

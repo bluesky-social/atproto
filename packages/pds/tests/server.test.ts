@@ -61,7 +61,7 @@ describe('server', () => {
       await axios.get(`${server.url}/xrpc/_health`)
       throw new Error('Healthcheck should have failed')
     } catch (err) {
-      if (err instanceof AxiosError) {
+      if (axios.isAxiosError(err)) {
         error = err
       } else {
         throw err

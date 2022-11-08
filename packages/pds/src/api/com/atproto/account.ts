@@ -120,9 +120,13 @@ export default function (server: Server) {
         throw err
       }
 
-      // Now that we have a real did, we now replace the tempDid
+      // Now that we have a real did, we create the declartion & replace the tempDid
       // and setup the repo root. This _should_ succeed under typical conditions.
-      await dbTxn.finalizeDid(handle, did, tempDid)
+      const declaration = {
+        $type: schema.ids.AppBskySystemDeclaration,
+        actorType: APP_BSKY_SYSTEM.ActorUser,
+      }
+      await dbTxn.finalizeDid(handle, did, tempDid, declaration)
       if (config.inviteRequired && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')
@@ -135,24 +139,20 @@ export default function (server: Server) {
       }
 
       // Setup repo root
-      const authStore = locals.getAuthstore(res, did)
       const blockstore = new SqlBlockstore(dbTxn, did, now)
+      const authStore = locals.getAuthstore(res, did)
       const repo = await RepoStructure.create(blockstore, did, authStore)
 
-      const declaration = {
-        $type: schema.ids.AppBskySystemDeclaration,
-        actorType: APP_BSKY_SYSTEM.ActorUser,
-      }
       const declarationCid = await blockstore.put(declaration)
-      const uri = new AtUri(
+      const declarationUri = new AtUri(
         `${did}/${schema.ids.AppBskySystemDeclaration}/self`,
       )
 
       await repo
         .stageUpdate({
           action: 'create',
-          collection: uri.collection,
-          rkey: uri.rkey,
+          collection: declarationUri.collection,
+          rkey: declarationUri.rkey,
           cid: declarationCid,
         })
         .createCommit(authStore, async (_prev, curr) => {
@@ -167,7 +167,7 @@ export default function (server: Server) {
           return null
         })
 
-      await dbTxn.indexRecord(uri, declarationCid, declaration, now)
+      await dbTxn.indexRecord(declarationUri, declarationCid, declaration, now)
 
       const access = auth.createAccessToken(did)
       const refresh = auth.createRefreshToken(did)

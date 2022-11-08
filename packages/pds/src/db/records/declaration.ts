@@ -36,15 +36,9 @@ const insertFn =
   }
 
 const deleteFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<void> => {
-    // noop
-    if (uri.rkey !== 'self') return
-    await db
-      .updateTable('did_handle')
-      .where('did', '=', uri.host)
-      .set({ declarationCid: null, actorType: null })
-      .execute()
+  (_db: Kysely<PartialDB>) =>
+  async (_uri: AtUri): Promise<void> => {
+    throw new Error('Declaration alone can not be deleted')
   }
 
 const notifsForRecord = (

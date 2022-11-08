@@ -24,6 +24,7 @@ import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { DidHandle } from './tables/did-handle'
+import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
 
 export class Database {
   migrator: Migrator
@@ -238,7 +239,12 @@ export class Database {
     this.assertTransaction()
     const inserted = await this.db
       .insertInto('did_handle')
-      .values({ handle: handle, did: tempDid })
+      .values({
+        handle,
+        did: tempDid,
+        actorType: 'temp',
+        declarationCid: 'temp',
+      })
       .onConflict((oc) => oc.doNothing())
       .returning('handle')
       .executeTakeFirst()
@@ -248,12 +254,22 @@ export class Database {
     log.info({ handle, tempDid }, 'pre-registered did')
   }
 
-  async finalizeDid(handle: string, did: string, tempDid: string) {
+  async finalizeDid(
+    handle: string,
+    did: string,
+    tempDid: string,
+    declaration: DeclarationRecord,
+  ) {
     this.assertTransaction()
     log.debug({ handle, did }, 'registering did-handle')
+    const declarationCid = await common.cidForData(declaration)
     const updated = await this.db
       .updateTable('did_handle')
-      .set({ did })
+      .set({
+        did,
+        actorType: declaration.actorType,
+        declarationCid: declarationCid.toString(),
+      })
       .where('handle', '=', handle)
       .where('did', '=', tempDid)
       .returningAll()
