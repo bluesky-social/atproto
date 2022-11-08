@@ -6,6 +6,7 @@ import express from 'express'
 export interface QueryParams {
   uri: string;
   cid?: string;
+  direction?: string;
   limit?: number;
   before?: string;
 }
@@ -28,13 +29,17 @@ export interface OutputSchema {
   uri: string;
   cid?: string;
   cursor?: string;
-  likedBy: {
-    did: string,
-    handle: string,
-    displayName?: string,
-    createdAt?: string,
+  votes: {
+    direction: 'up' | 'down',
     indexedAt: string,
+    createdAt: string,
+    actor: Actor,
   }[];
+}
+export interface Actor {
+  did: string;
+  handle: string;
+  displayName?: string;
 }
 
 export type Handler = (

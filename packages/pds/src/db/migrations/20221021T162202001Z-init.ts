@@ -20,7 +20,7 @@ const followTable = 'app_bsky_follow'
 const postTable = 'app_bsky_post'
 const postEntityTable = 'app_bsky_post_entity'
 const repostTable = 'app_bsky_repost'
-const likeTable = 'app_bsky_like'
+const voteTable = 'app_bsky_vote'
 
 export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   if (dialect === 'pg') {
@@ -244,10 +244,11 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
   await db.schema
-    .createTable(likeTable)
+    .createTable(voteTable)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('direction', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('subjectCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
@@ -256,7 +257,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable(likeTable).execute()
+  await db.schema.dropTable(voteTable).execute()
   await db.schema.dropTable(repostTable).execute()
   await db.schema.dropTable(postEntityTable).execute()
   await db.schema.dropTable(postTable).execute()

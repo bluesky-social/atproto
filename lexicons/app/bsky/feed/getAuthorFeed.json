@@ -25,7 +25,7 @@
   "defs": {
     "feedItem": {
       "type": "object",
-      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt"],
+      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt"],
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
@@ -41,13 +41,15 @@
         },
         "replyCount": {"type": "number"},
         "repostCount": {"type": "number"},
-        "likeCount": {"type": "number"},
+        "upvoteCount": {"type": "number"},
+        "downvoteCount": {"type": "number"},
         "indexedAt": {"type": "string", "format": "date-time"},
         "myState": {
           "type": "object",
           "properties": {
             "repost": {"type": "string"},
-            "like": {"type": "string"}
+            "upvote": {"type": "string"},
+            "downvote": {"type": "string"}
           }
         }
       }

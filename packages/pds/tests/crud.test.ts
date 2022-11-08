@@ -371,9 +371,9 @@ describe('crud operations', () => {
       aliceClient.com.atproto.repo.createRecord({
         did: alice.did,
         collection: 'app.bsky.feed.post',
-        record: { $type: 'app.bsky.feed.like' },
+        record: { $type: 'app.bsky.feed.vote' },
       }),
-    ).rejects.toThrow('Record type app.bsky.feed.like is not supported')
+    ).rejects.toThrow('Record type app.bsky.feed.vote is not supported')
   })
 
   it('validates the record on write', async () => {

@@ -35,10 +35,10 @@ import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
-import * as AppBskyFeedGetLikedBy from './types/app/bsky/feed/getLikedBy'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
+import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
@@ -335,11 +335,6 @@ export class FeedNS {
     return this._server.xrpc.method(schema, handler)
   }
 
-  getLikedBy(handler: AppBskyFeedGetLikedBy.Handler) {
-    const schema = 'app.bsky.feed.getLikedBy' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
-  }
-
   getPostThread(handler: AppBskyFeedGetPostThread.Handler) {
     const schema = 'app.bsky.feed.getPostThread' // @ts-ignore
     return this._server.xrpc.method(schema, handler)
@@ -352,6 +347,11 @@ export class FeedNS {
 
   getTimeline(handler: AppBskyFeedGetTimeline.Handler) {
     const schema = 'app.bsky.feed.getTimeline' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getVotes(handler: AppBskyFeedGetVotes.Handler) {
+    const schema = 'app.bsky.feed.getVotes' // @ts-ignore
     return this._server.xrpc.method(schema, handler)
   }
 }

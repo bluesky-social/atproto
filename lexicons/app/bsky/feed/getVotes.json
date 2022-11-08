@@ -1,0 +1,51 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.getVotes",
+  "type": "query",
+  "parameters": {
+    "uri": {"type": "string", "required": true},
+    "cid": {"type": "string", "required": false},
+    "direction": {"type": "string", "required": false},
+    "limit": {"type": "number", "maximum": 100},
+    "before": {"type": "string"}
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["uri", "votes"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"},
+        "cursor": {"type": "string"},
+        "votes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["direction", "indexedAt", "createdAt", "actor"],
+            "properties": {
+              "direction": {"type": "string", "enum": ["up", "down"]},
+              "indexedAt": {"type": "string", "format": "date-time"},
+              "createdAt": {"type": "string", "format": "date-time"},
+              "actor": {"$ref": "#/defs/actor"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "defs": {
+    "actor": {
+      "type": "object",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": {"type": "string"},
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        }
+      }
+    }
+  }
+}

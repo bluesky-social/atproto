@@ -90,10 +90,17 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
       'ipld_block.content as recordBytes',
       'ipld_block.indexedAt as indexedAt',
       db
-        .selectFrom('app_bsky_like')
-        .select(countAll.as('count'))
+        .selectFrom('app_bsky_vote')
         .whereRef('subject', '=', ref('post.uri'))
-        .as('likeCount'),
+        .where('direction', '=', 'up')
+        .select(countAll.as('count'))
+        .as('upvoteCount'),
+      db
+        .selectFrom('app_bsky_vote')
+        .whereRef('subject', '=', ref('post.uri'))
+        .where('direction', '=', 'down')
+        .select(countAll.as('count'))
+        .as('downvoteCount'),
       db
         .selectFrom('app_bsky_repost')
         .select(countAll.as('count'))
@@ -111,11 +118,19 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
         .whereRef('subject', '=', ref('post.uri'))
         .as('requesterRepost'),
       db
-        .selectFrom('app_bsky_like')
-        .select('uri')
+        .selectFrom('app_bsky_vote')
         .where('creator', '=', requester)
         .whereRef('subject', '=', ref('post.uri'))
-        .as('requesterLike'),
+        .where('direction', '=', 'up')
+        .select('uri')
+        .as('requesterUpvote'),
+      db
+        .selectFrom('app_bsky_vote')
+        .where('creator', '=', requester)
+        .whereRef('subject', '=', ref('post.uri'))
+        .where('direction', '=', 'down')
+        .select('uri')
+        .as('requesterDownvote'),
     ])
 }
 
@@ -136,12 +151,14 @@ const rowToPost = (
     record: common.ipldBytesToRecord(row.recordBytes),
     parent: parent ? { ...parent } : undefined,
     replyCount: row.replyCount || 0,
-    likeCount: row.likeCount || 0,
+    upvoteCount: row.upvoteCount || 0,
+    downvoteCount: row.downvoteCount || 0,
     repostCount: row.repostCount || 0,
     indexedAt: row.indexedAt,
     myState: {
       repost: row.requesterRepost || undefined,
-      like: row.requesterLike || undefined,
+      upvote: row.requesterUpvote || undefined,
+      downvote: row.requesterDownvote || undefined,
     },
   }
 }

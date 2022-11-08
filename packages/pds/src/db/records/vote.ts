@@ -1,33 +1,35 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Like from '../../lexicon/types/app/bsky/feed/like'
+import * as Vote from '../../lexicon/types/app/bsky/feed/vote'
 import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
-const type = schemas.ids.AppBskyFeedLike
-const tableName = 'app_bsky_like'
+const type = schemas.ids.AppBskyFeedVote
+const tableName = 'app_bsky_vote'
 
-export interface AppBskyLike {
+export interface AppBskyVote {
   uri: string
   cid: string
   creator: string
+  direction: 'up' | 'down'
   subject: string
   subjectCid: string
   createdAt: string
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: AppBskyLike }
+export type PartialDB = { [tableName]: AppBskyVote }
 
 const validator = schemas.records.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is Like.Record => {
+const matchesSchema = (obj: unknown): obj is Vote.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const translateDbObj = (dbObj: AppBskyLike): Like.Record => {
+const translateDbObj = (dbObj: AppBskyVote): Vote.Record => {
   return {
+    direction: dbObj.direction,
     subject: {
       uri: dbObj.subject,
       cid: dbObj.subjectCid,
@@ -38,9 +40,9 @@ const translateDbObj = (dbObj: AppBskyLike): Like.Record => {
 
 const getFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Like.Record | null> => {
+  async (uri: AtUri): Promise<Vote.Record | null> => {
     const found = await db
-      .selectFrom('app_bsky_like')
+      .selectFrom('app_bsky_vote')
       .selectAll()
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
@@ -59,10 +61,11 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
     await db
-      .insertInto('app_bsky_like')
+      .insertInto('app_bsky_vote')
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
+        direction: obj.direction,
         creator: uri.host,
         subject: obj.subject.uri,
         subjectCid: obj.subject.cid,
@@ -76,7 +79,7 @@ const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
     await db
-      .deleteFrom('app_bsky_like')
+      .deleteFrom('app_bsky_vote')
       .where('uri', '=', uri.toString())
       .execute()
   }
@@ -89,13 +92,17 @@ const notifsForRecord = (
   if (!matchesSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
+  if (obj.direction === 'down') {
+    // No notifications for downvotes
+    return []
+  }
   const subjectUri = new AtUri(obj.subject.uri)
   const notif = {
     userDid: subjectUri.host,
     author: uri.host,
     recordUri: uri.toString(),
     recordCid: cid.toString(),
-    reason: 'like',
+    reason: 'vote',
     reasonSubject: subjectUri.toString(),
   }
   return [notif]
@@ -103,7 +110,7 @@ const notifsForRecord = (
 
 export const makePlugin = (
   db: Kysely<PartialDB>,
-): DbRecordPlugin<Like.Record, AppBskyLike> => {
+): DbRecordPlugin<Vote.Record, AppBskyVote> => {
   return {
     collection: type,
     tableName,

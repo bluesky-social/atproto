@@ -37,11 +37,11 @@ export default async (sc: SeedClient) => {
   await sc.post(alice, posts.alice[1])
   await sc.post(bob, posts.bob[1])
   await sc.post(alice, posts.alice[2])
-  await sc.like(bob, sc.posts[alice][1].ref)
-  await sc.like(bob, sc.posts[alice][2].ref)
-  await sc.like(carol, sc.posts[alice][1].ref)
-  await sc.like(carol, sc.posts[alice][2].ref)
-  await sc.like(dan, sc.posts[alice][1].ref)
+  await sc.vote('up', bob, sc.posts[alice][1].ref)
+  await sc.vote('down', bob, sc.posts[alice][2].ref)
+  await sc.vote('down', carol, sc.posts[alice][1].ref)
+  await sc.vote('up', carol, sc.posts[alice][2].ref)
+  await sc.vote('up', dan, sc.posts[alice][1].ref)
   await sc.reply(
     bob,
     sc.posts[alice][1].ref,

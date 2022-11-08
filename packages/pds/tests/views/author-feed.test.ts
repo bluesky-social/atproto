@@ -79,7 +79,8 @@ describe('pds author feed views', () => {
     )
 
     aliceForCarol.data.feed.forEach(({ uri, myState }) => {
-      expect(myState?.like).toEqual(sc.likes[carol][uri]?.toString())
+      expect(myState?.upvote).toEqual(sc.votes.up[carol]?.[uri]?.toString())
+      expect(myState?.downvote).toEqual(sc.votes.down[carol]?.[uri]?.toString())
       expect(myState?.repost).toEqual(sc.reposts[carol][uri]?.toString())
     })
 
