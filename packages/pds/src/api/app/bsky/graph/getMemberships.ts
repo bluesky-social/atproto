@@ -26,6 +26,8 @@ export default function (server: Server) {
         .select([
           'creator.did as did',
           'creator.handle as handle',
+          'creator.declarationCid as declarationCid',
+          'creator.actorType as actorType',
           'profile.displayName as displayName',
           'assertion.createdAt as createdAt',
           'assertion.indexedAt as indexedAt',
@@ -41,6 +43,10 @@ export default function (server: Server) {
       const memberships = membershipsRes.map((row) => ({
         did: row.did,
         handle: row.handle,
+        declaration: {
+          cid: row.declarationCid,
+          actorType: row.actorType,
+        },
         displayName: row.displayName || undefined,
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,

@@ -26,6 +26,10 @@ export interface OutputSchema {
     did: string,
     handle: string,
     displayName?: string,
+    declaration: {
+      cid: string,
+      actorType: string,
+    },
     createdAt?: string,
     indexedAt: string,
   }[];

@@ -2488,7 +2488,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle', 'indexedAt'],
+              required: ['did', 'handle', 'declaration', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
@@ -2499,6 +2499,18 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 displayName: {
                   type: 'string',
                   maxLength: 64,
+                },
+                declaration: {
+                  type: 'object',
+                  required: ['cid', 'actorType'],
+                  properties: {
+                    cid: {
+                      type: 'string',
+                    },
+                    actorType: {
+                      type: 'string',
+                    },
+                  },
                 },
                 createdAt: {
                   type: 'string',
@@ -2563,7 +2575,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle', 'indexedAt'],
+              required: ['did', 'handle', 'declaration', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
@@ -2574,6 +2586,18 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 displayName: {
                   type: 'string',
                   maxLength: 64,
+                },
+                declaration: {
+                  type: 'object',
+                  required: ['cid', 'actorType'],
+                  properties: {
+                    cid: {
+                      type: 'string',
+                    },
+                    actorType: {
+                      type: 'string',
+                    },
+                  },
                 },
                 createdAt: {
                   type: 'string',
