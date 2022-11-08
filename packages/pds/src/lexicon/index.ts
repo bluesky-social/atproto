@@ -69,17 +69,17 @@ export class Server {
 }
 
 export class ComNS {
-  server: Server
+  _server: Server
   atproto: AtprotoNS
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
     this.atproto = new AtprotoNS(server)
   }
 }
 
 export class AtprotoNS {
-  server: Server
+  _server: Server
   account: AccountNS
   handle: HandleNS
   repo: RepoNS
@@ -88,7 +88,7 @@ export class AtprotoNS {
   sync: SyncNS
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
     this.account = new AccountNS(server)
     this.handle = new HandleNS(server)
     this.repo = new RepoNS(server)
@@ -99,175 +99,175 @@ export class AtprotoNS {
 }
 
 export class AccountNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   create(handler: ComAtprotoAccountCreate.Handler) {
     const schema = 'com.atproto.account.create' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   createInviteCode(handler: ComAtprotoAccountCreateInviteCode.Handler) {
     const schema = 'com.atproto.account.createInviteCode' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   delete(handler: ComAtprotoAccountDelete.Handler) {
     const schema = 'com.atproto.account.delete' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   get(handler: ComAtprotoAccountGet.Handler) {
     const schema = 'com.atproto.account.get' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   requestPasswordReset(handler: ComAtprotoAccountRequestPasswordReset.Handler) {
     const schema = 'com.atproto.account.requestPasswordReset' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   resetPassword(handler: ComAtprotoAccountResetPassword.Handler) {
     const schema = 'com.atproto.account.resetPassword' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class HandleNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   resolve(handler: ComAtprotoHandleResolve.Handler) {
     const schema = 'com.atproto.handle.resolve' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class RepoNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   batchWrite(handler: ComAtprotoRepoBatchWrite.Handler) {
     const schema = 'com.atproto.repo.batchWrite' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   createRecord(handler: ComAtprotoRepoCreateRecord.Handler) {
     const schema = 'com.atproto.repo.createRecord' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   deleteRecord(handler: ComAtprotoRepoDeleteRecord.Handler) {
     const schema = 'com.atproto.repo.deleteRecord' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   describe(handler: ComAtprotoRepoDescribe.Handler) {
     const schema = 'com.atproto.repo.describe' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   getRecord(handler: ComAtprotoRepoGetRecord.Handler) {
     const schema = 'com.atproto.repo.getRecord' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   listRecords(handler: ComAtprotoRepoListRecords.Handler) {
     const schema = 'com.atproto.repo.listRecords' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   putRecord(handler: ComAtprotoRepoPutRecord.Handler) {
     const schema = 'com.atproto.repo.putRecord' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class ServerNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   getAccountsConfig(handler: ComAtprotoServerGetAccountsConfig.Handler) {
     const schema = 'com.atproto.server.getAccountsConfig' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class SessionNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   create(handler: ComAtprotoSessionCreate.Handler) {
     const schema = 'com.atproto.session.create' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   delete(handler: ComAtprotoSessionDelete.Handler) {
     const schema = 'com.atproto.session.delete' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   get(handler: ComAtprotoSessionGet.Handler) {
     const schema = 'com.atproto.session.get' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   refresh(handler: ComAtprotoSessionRefresh.Handler) {
     const schema = 'com.atproto.session.refresh' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class SyncNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   getRepo(handler: ComAtprotoSyncGetRepo.Handler) {
     const schema = 'com.atproto.sync.getRepo' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   getRoot(handler: ComAtprotoSyncGetRoot.Handler) {
     const schema = 'com.atproto.sync.getRoot' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   updateRepo(handler: ComAtprotoSyncUpdateRepo.Handler) {
     const schema = 'com.atproto.sync.updateRepo' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class AppNS {
-  server: Server
+  _server: Server
   bsky: BskyNS
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
     this.bsky = new BskyNS(server)
   }
 }
 
 export class BskyNS {
-  server: Server
+  _server: Server
   actor: ActorNS
   feed: FeedNS
   graph: GraphNS
@@ -275,7 +275,7 @@ export class BskyNS {
   system: SystemNS
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
     this.actor = new ActorNS(server)
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
@@ -285,116 +285,116 @@ export class BskyNS {
 }
 
 export class ActorNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   createScene(handler: AppBskyActorCreateScene.Handler) {
     const schema = 'app.bsky.actor.createScene' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   getProfile(handler: AppBskyActorGetProfile.Handler) {
     const schema = 'app.bsky.actor.getProfile' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   search(handler: AppBskyActorSearch.Handler) {
     const schema = 'app.bsky.actor.search' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   searchTypeahead(handler: AppBskyActorSearchTypeahead.Handler) {
     const schema = 'app.bsky.actor.searchTypeahead' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   updateProfile(handler: AppBskyActorUpdateProfile.Handler) {
     const schema = 'app.bsky.actor.updateProfile' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class FeedNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   getAuthorFeed(handler: AppBskyFeedGetAuthorFeed.Handler) {
     const schema = 'app.bsky.feed.getAuthorFeed' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   getPostThread(handler: AppBskyFeedGetPostThread.Handler) {
     const schema = 'app.bsky.feed.getPostThread' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   getRepostedBy(handler: AppBskyFeedGetRepostedBy.Handler) {
     const schema = 'app.bsky.feed.getRepostedBy' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   getTimeline(handler: AppBskyFeedGetTimeline.Handler) {
     const schema = 'app.bsky.feed.getTimeline' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   getVotes(handler: AppBskyFeedGetVotes.Handler) {
     const schema = 'app.bsky.feed.getVotes' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class GraphNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   getFollowers(handler: AppBskyGraphGetFollowers.Handler) {
     const schema = 'app.bsky.graph.getFollowers' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   getFollows(handler: AppBskyGraphGetFollows.Handler) {
     const schema = 'app.bsky.graph.getFollows' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class NotificationNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 
   getCount(handler: AppBskyNotificationGetCount.Handler) {
     const schema = 'app.bsky.notification.getCount' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   list(handler: AppBskyNotificationList.Handler) {
     const schema = 'app.bsky.notification.list' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 
   updateSeen(handler: AppBskyNotificationUpdateSeen.Handler) {
     const schema = 'app.bsky.notification.updateSeen' // @ts-ignore
-    return this.server.xrpc.method(schema, handler)
+    return this._server.xrpc.method(schema, handler)
   }
 }
 
 export class SystemNS {
-  server: Server
+  _server: Server
 
   constructor(server: Server) {
-    this.server = server
+    this._server = server
   }
 }
