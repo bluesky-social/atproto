@@ -147,7 +147,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     lexicon: 1,
     id: 'com.atproto.account.requestPasswordReset',
     type: 'procedure',
-    description: 'Initiate a user account password reset via email',
+    description: 'Initiate a user account password reset via email.',
     input: {
       encoding: 'application/json',
       schema: {
@@ -174,7 +174,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     lexicon: 1,
     id: 'com.atproto.account.resetPassword',
     type: 'procedure',
-    description: 'Reset a user account password using a token',
+    description: 'Reset a user account password using a token.',
     input: {
       encoding: 'application/json',
       schema: {
@@ -348,7 +348,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           record: {
             type: 'object',
-            description: 'The record to create',
+            description: 'The record to create.',
           },
         },
         $defs: {},
@@ -587,7 +587,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           record: {
             type: 'object',
-            description: 'The record to create',
+            description: 'The record to create.',
           },
         },
         $defs: {},
@@ -757,7 +757,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
       from: {
         type: 'string',
-        description: 'A past commit CID',
+        description: 'A past commit CID.',
       },
     },
     output: {
@@ -1026,7 +1026,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     lexicon: 1,
     id: 'app.bsky.actor.search',
     type: 'query',
-    description: 'Find users matching search criteria',
+    description: 'Find users matching search criteria.',
     parameters: {
       term: {
         type: 'string',
@@ -1084,7 +1084,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     lexicon: 1,
     id: 'app.bsky.actor.searchTypeahead',
     type: 'query',
-    description: 'Find user suggestions for a search term',
+    description: 'Find user suggestions for a search term.',
     parameters: {
       term: {
         type: 'string',
@@ -1129,7 +1129,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     lexicon: 1,
     id: 'app.bsky.actor.updateProfile',
     type: 'procedure',
-    description: 'Notify server that the user has seen notifications',
+    description: 'Notify server that the user has seen notifications.',
     input: {
       encoding: 'application/json',
       schema: {
@@ -1172,7 +1172,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     lexicon: 1,
     id: 'app.bsky.feed.getAuthorFeed',
     type: 'query',
-    description: "A view of a user's feed",
+    description: "A view of a user's feed.",
     parameters: {
       author: {
         type: 'string',
@@ -1875,7 +1875,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     lexicon: 1,
     id: 'app.bsky.feed.getTimeline',
     type: 'query',
-    description: "A view of the user's home timeline",
+    description: "A view of the user's home timeline.",
     parameters: {
       algorithm: {
         type: 'string',
@@ -2441,6 +2441,180 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
+  'app.bsky.graph.getMembers': {
+    lexicon: 1,
+    id: 'app.bsky.graph.getMembers',
+    type: 'query',
+    description: 'Who is a member of the group?',
+    parameters: {
+      actor: {
+        type: 'string',
+        required: true,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      before: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['subject', 'members'],
+        properties: {
+          subject: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+            },
+          },
+          cursor: {
+            type: 'string',
+          },
+          members: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'handle', 'declaration', 'indexedAt'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                handle: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                declaration: {
+                  type: 'object',
+                  required: ['cid', 'actorType'],
+                  properties: {
+                    cid: {
+                      type: 'string',
+                    },
+                    actorType: {
+                      type: 'string',
+                    },
+                  },
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'app.bsky.graph.getMemberships': {
+    lexicon: 1,
+    id: 'app.bsky.graph.getMemberships',
+    type: 'query',
+    description: 'Which groups is the actor a member of?',
+    parameters: {
+      actor: {
+        type: 'string',
+        required: true,
+      },
+      limit: {
+        type: 'number',
+        maximum: 100,
+      },
+      before: {
+        type: 'string',
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['subject', 'memberships'],
+        properties: {
+          subject: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+            },
+          },
+          cursor: {
+            type: 'string',
+          },
+          memberships: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'handle', 'declaration', 'indexedAt'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                handle: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                declaration: {
+                  type: 'object',
+                  required: ['cid', 'actorType'],
+                  properties: {
+                    cid: {
+                      type: 'string',
+                    },
+                    actorType: {
+                      type: 'string',
+                    },
+                  },
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
   'app.bsky.notification.getCount': {
     lexicon: 1,
     id: 'app.bsky.notification.getCount',
@@ -2610,7 +2784,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     lexicon: 1,
     id: 'app.bsky.notification.updateSeen',
     type: 'procedure',
-    description: 'Notify server that the user has seen notifications',
+    description: 'Notify server that the user has seen notifications.',
     input: {
       encoding: 'application/json',
       schema: {
@@ -3045,7 +3219,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
     lexicon: 1,
     id: 'app.bsky.graph.follow',
     type: 'record',
-    description: 'A social follow',
+    description: 'A social follow.',
     key: 'tid',
     record: {
       type: 'object',

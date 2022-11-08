@@ -3,31 +3,13 @@
 */
 import express from 'express'
 
-export interface QueryParams {}
-
-export interface HandlerInput {
-  encoding: 'application/json';
-  body: InputSchema;
+export interface QueryParams {
+  actor: string;
+  limit?: number;
+  before?: string;
 }
 
-export interface InputSchema {
-  /**
-   * The DID of the repo.
-   */
-  did: string;
-  /**
-   * The NSID of the record collection.
-   */
-  collection: string;
-  /**
-   * Validate the record?
-   */
-  validate?: boolean;
-  /**
-   * The record to create.
-   */
-  record: {};
-}
+export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/json';
@@ -42,8 +24,23 @@ export interface HandlerError {
 export type HandlerOutput = HandlerError | HandlerSuccess
 
 export interface OutputSchema {
-  uri: string;
-  cid: string;
+  subject: {
+    did: string,
+    handle: string,
+    displayName?: string,
+  };
+  cursor?: string;
+  members: {
+    did: string,
+    handle: string,
+    displayName?: string,
+    declaration: {
+      cid: string,
+      actorType: string,
+    },
+    createdAt?: string,
+    indexedAt: string,
+  }[];
 }
 
 export type Handler = (

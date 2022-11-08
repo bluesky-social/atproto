@@ -2,19 +2,19 @@ import { Kysely } from 'kysely'
 import { DatabaseSchema } from '../../../../db/database-schema'
 import * as util from '../../../../db/util'
 
-type UserInfo = {
+type ActorInfo = {
   did: string
   handle: string
   displayName: string | undefined
 }
 
-export const getUserInfo = async (
+export const getActorInfo = async (
   db: Kysely<DatabaseSchema>,
-  user: string,
-): Promise<UserInfo> => {
-  const userInfo = await db
+  actor: string,
+): Promise<ActorInfo> => {
+  const actorInfo = await db
     .selectFrom('did_handle')
-    .where(util.actorWhereClause(user))
+    .where(util.actorWhereClause(actor))
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select([
       'did_handle.did as did',
@@ -22,13 +22,13 @@ export const getUserInfo = async (
       'profile.displayName as displayName',
     ])
     .executeTakeFirst()
-  if (!userInfo) {
-    throw new Error(`Could not find entry for user: ${user}`)
+  if (!actorInfo) {
+    throw new Error(`Could not find entry for actor: ${actor}`)
   }
   return {
-    did: userInfo.did,
-    handle: userInfo.handle,
-    displayName: userInfo.displayName || undefined,
+    did: actorInfo.did,
+    handle: actorInfo.handle,
+    displayName: actorInfo.displayName || undefined,
   }
 }
 
