@@ -8,7 +8,7 @@
     "properties": {
       "uri": {"type": "string"},
       "cid": {"type": "string"},
-      "direction": {"type": "string"},
+      "direction": {"type": "string", "enum": ["up", "down"]},
       "limit": {"type": "number", "maximum": 100},
       "before": {"type": "string"}
     }

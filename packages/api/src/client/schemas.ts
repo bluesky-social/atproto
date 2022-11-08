@@ -2241,6 +2241,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         direction: {
           type: 'string',
+          enum: ['up', 'down'],
         },
         limit: {
           type: 'number',

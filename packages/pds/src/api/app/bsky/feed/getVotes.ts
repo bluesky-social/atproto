@@ -2,7 +2,6 @@ import { Server } from '../../../../lexicon'
 import * as GetVotes from '../../../../lexicon/types/app/bsky/feed/getVotes'
 import * as locals from '../../../../locals'
 import { paginate } from '../../../../db/util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server) {
   server.app.bsky.feed.getVotes(
@@ -10,16 +9,6 @@ export default function (server: Server) {
       const { uri, limit, before, cid, direction } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
-
-      if (
-        typeof direction === 'string' &&
-        direction !== 'up' &&
-        direction !== 'down'
-      ) {
-        throw new InvalidRequestError(
-          `Parameter 'direction' takes values ('up', 'down')`,
-        )
-      }
 
       let builder = db.db
         .selectFrom('vote')

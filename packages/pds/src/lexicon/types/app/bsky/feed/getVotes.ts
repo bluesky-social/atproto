@@ -6,7 +6,7 @@ import express from 'express'
 export interface QueryParams {
   uri: string;
   cid?: string;
-  direction?: string;
+  direction?: 'up' | 'down';
   limit?: number;
   before?: string;
 }
