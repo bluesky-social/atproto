@@ -36,7 +36,7 @@ describe('pds notification views', () => {
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(notifCount.data.count).toBe(12)
+    expect(notifCount.data.count).toBe(14)
   })
 
   it('fetches notifications without a last-seen', async () => {
@@ -48,7 +48,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(12)
+    expect(notifs.length).toBe(14)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
@@ -84,7 +84,7 @@ describe('pds notification views', () => {
       },
     )
 
-    expect(full.data.notifications.length).toEqual(12)
+    expect(full.data.notifications.length).toEqual(14)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
@@ -102,7 +102,7 @@ describe('pds notification views', () => {
     const beforeNotif = await db.db
       .selectFrom('user_notification')
       .selectAll()
-      .where('recordUri', '=', full.data.notifications[3].uri)
+      .where('recordUri', '=', full.data.notifications[4].uri)
       .executeTakeFirstOrThrow()
 
     await client.app.bsky.notification.updateSeen(
@@ -117,7 +117,7 @@ describe('pds notification views', () => {
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(notifCount.data.count).toBe(3)
+    expect(notifCount.data.count).toBe(4)
   })
 
   it('fetches notifications with a last-seen', async () => {
@@ -129,10 +129,10 @@ describe('pds notification views', () => {
     )
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(12)
+    expect(notifs.length).toBe(14)
 
     const readStates = notifs.map((notif) => notif.isRead)
-    expect(readStates).toEqual(notifs.map((_, i) => i >= 3))
+    expect(readStates).toEqual(notifs.map((_, i) => i >= 4))
 
     expect(forSnapshot(notifs)).toMatchSnapshot()
   })
