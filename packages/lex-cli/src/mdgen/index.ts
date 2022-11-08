@@ -25,7 +25,7 @@ export async function process(outFilePath: string, schemas: Schema[]) {
   } catch (e) {
     // ignore - no existing content
   }
-  let fileLines: StringTree = existingContent.split('\n')
+  const fileLines: StringTree = existingContent.split('\n')
 
   // find previously generated content
   let startIndex = fileLines.findIndex((line) => matchesStart(line))
@@ -65,7 +65,7 @@ async function genMdLines(schemas: Schema[]): Promise<StringTree> {
       tokenTypes = tokenTypes.concat(genTokenSchemaMd(schema as TokenSchema))
     }
   }
-  let doc = [
+  const doc = [
     recordTypes?.length ? recordTypes : undefined,
     xprcMethods?.length ? xprcMethods : undefined,
     tokenTypes?.length ? tokenTypes : undefined,
@@ -91,16 +91,19 @@ async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
 
   desc.push(`<mark>RPC ${schema.type}</mark> ${schema.description || ''}`, ``)
 
-  if (schema.parameters && Object.keys(schema.parameters).length) {
+  if (schema.parameters && Object.keys(schema.parameters.properties).length) {
     if (schema.type === 'query') {
       params.push(`Parameters:`, ``)
     } else if (schema.type === 'procedure') {
       params.push(`QP options:`, ``)
     }
-    for (const [k, desc] of Object.entries(schema.parameters)) {
+    const required = Array.isArray(schema.parameters.required)
+      ? schema.parameters.required
+      : []
+    for (const [k, desc] of Object.entries(schema.parameters.properties)) {
       const param: string[] = []
       param.push(`- \`${k}\``)
-      param.push(desc.required ? `Required` : `Optional`)
+      param.push(required.includes(k) ? `Required` : `Optional`)
       param.push(`${desc.type}.`)
       if (desc.description) {
         param.push(desc.description)

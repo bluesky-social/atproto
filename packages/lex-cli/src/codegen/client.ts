@@ -7,7 +7,7 @@ import {
 import { MethodSchema, RecordSchema, Schema } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
-import { gen, schemasTs } from './common'
+import { emptyObjectSchema, gen, schemasTs } from './common'
 import { GeneratedAPI } from '../types'
 import {
   schemasToNsidTree,
@@ -471,18 +471,18 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
     xrpcImport.addNamedImports([{ name: 'Headers' }, { name: 'XRPCError' }])
 
     //= export interface QueryParams {...}
-    const qp = file.addInterface({
-      name: 'QueryParams',
-      isExported: true,
-    })
-    if (schema.parameters && Object.keys(schema.parameters).length) {
-      for (const [key, desc] of Object.entries(schema.parameters)) {
-        qp.addProperty({
-          name: desc.required ? key : `${key}?`,
-          type: desc.type === 'integer' ? 'number' : desc.type,
-        })
-      }
-    }
+    file.insertText(
+      file.getFullText().length,
+      '\n' +
+        (await jsonSchemaToTs.compile(
+          schema.parameters ?? emptyObjectSchema,
+          'QueryParams',
+          {
+            bannerComment: '',
+            additionalProperties: false,
+          },
+        )),
+    )
 
     //= export interface CallOptions {...}
     const opts = file.addInterface({
