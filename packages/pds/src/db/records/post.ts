@@ -6,9 +6,9 @@ import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyFeedPost
-const tableName = 'app_bsky_post'
+const tableName = 'post'
 
-export interface AppBskyPost {
+export interface BskyPost {
   uri: string
   cid: string
   creator: string
@@ -21,8 +21,8 @@ export interface AppBskyPost {
   indexedAt: string
 }
 
-const supportingTableName = 'app_bsky_post_entity'
-export interface AppBskyPostEntity {
+const supportingTableName = 'post_entity'
+export interface BskyPostEntity {
   postUri: string
   startIndex: number
   endIndex: number
@@ -31,8 +31,8 @@ export interface AppBskyPostEntity {
 }
 
 export type PartialDB = {
-  [tableName]: AppBskyPost
-  [supportingTableName]: AppBskyPostEntity
+  [tableName]: BskyPost
+  [supportingTableName]: BskyPostEntity
 }
 
 const validator = schemas.records.createRecordValidator(type)
@@ -40,51 +40,6 @@ const matchesSchema = (obj: unknown): obj is Post.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
-
-const translateDbObj = (dbObj: AppBskyPost): Post.Record => {
-  const record: Post.Record = {
-    text: dbObj.text,
-    createdAt: dbObj.createdAt,
-  }
-
-  if (dbObj.replyRoot && dbObj.replyParent && dbObj.replyParentCid) {
-    record.reply = {
-      root: {
-        uri: dbObj.replyRoot,
-        cid: dbObj.replyParentCid,
-      },
-      parent: {
-        uri: dbObj.replyParent,
-        cid: dbObj.replyParentCid,
-      },
-    }
-  }
-  return record
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Post.Record | null> => {
-    const postQuery = db
-      .selectFrom('app_bsky_post')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    const entitiesQuery = db
-      .selectFrom('app_bsky_post_entity')
-      .selectAll()
-      .where('postUri', '=', uri.toString())
-      .execute()
-    const [post, entities] = await Promise.all([postQuery, entitiesQuery])
-    if (!post) return null
-    const record = translateDbObj(post)
-    record.entities = entities.map((row) => ({
-      index: { start: row.startIndex, end: row.endIndex },
-      type: row.type,
-      value: row.value,
-    }))
-    return record
-  }
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
@@ -116,10 +71,10 @@ const insertFn =
       replyParentCid: obj.reply?.parent?.cid || null,
       indexedAt: timestamp || new Date().toISOString(),
     }
-    const promises = [db.insertInto('app_bsky_post').values(post).execute()]
+    const promises = [db.insertInto(tableName).values(post).execute()]
     if (entities.length > 0) {
       promises.push(
-        db.insertInto('app_bsky_post_entity').values(entities).execute(),
+        db.insertInto(supportingTableName).values(entities).execute(),
       )
     }
     await Promise.all(promises)
@@ -129,12 +84,9 @@ const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
     await Promise.all([
+      db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute(),
       db
-        .deleteFrom('app_bsky_post')
-        .where('uri', '=', uri.toString())
-        .execute(),
-      db
-        .deleteFrom('app_bsky_post_entity')
+        .deleteFrom(supportingTableName)
         .where('postUri', '=', uri.toString())
         .execute(),
     ])
@@ -174,16 +126,13 @@ const notifsForRecord = (
   return notifs
 }
 
-export const makePlugin = (
-  db: Kysely<PartialDB>,
-): DbRecordPlugin<Post.Record, AppBskyPost> => {
+export type PluginType = DbRecordPlugin<Post.Record>
+
+export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
   return {
     collection: type,
-    tableName,
     validateSchema,
     matchesSchema,
-    translateDbObj,
-    get: getFn(db),
     insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,

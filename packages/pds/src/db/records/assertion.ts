@@ -3,51 +3,16 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Assertion from '../../lexicon/types/app/bsky/graph/assertion'
 import { DbRecordPlugin, Notification } from '../types'
+import { PartialDB } from '../tables/assertion'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyGraphAssertion
-const tableName = 'app_bsky_assertion'
-
-export interface AppBskyAssertion {
-  uri: string
-  cid: string
-  creator: string
-  assertion: string
-  subjectDid: string
-  subjectDeclarationCid: string
-  createdAt: string
-  indexedAt: string
-}
-
-export type PartialDB = { [tableName]: AppBskyAssertion }
 
 const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Assertion.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
-
-const translateDbObj = (dbObj: AppBskyAssertion): Assertion.Record => {
-  return {
-    assertion: dbObj.assertion,
-    subject: {
-      did: dbObj.subjectDid,
-      declarationCid: dbObj.subjectDeclarationCid,
-    },
-    createdAt: dbObj.createdAt,
-  }
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Assertion.Record | null> => {
-    const found = await db
-      .selectFrom(tableName)
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    return !found ? null : translateDbObj(found)
-  }
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
@@ -61,7 +26,7 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
     await db
-      .insertInto(tableName)
+      .insertInto('assertion')
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
@@ -71,6 +36,10 @@ const insertFn =
         subjectDeclarationCid: obj.subject.declarationCid,
         createdAt: obj.createdAt,
         indexedAt: timestamp || new Date().toISOString(),
+        confirmUri: null,
+        confirmCid: null,
+        confirmCreated: null,
+        confirmIndexed: null,
       })
       .execute()
   }
@@ -78,7 +47,7 @@ const insertFn =
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
+    await db.deleteFrom('assertion').where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (
@@ -100,16 +69,13 @@ const notifsForRecord = (
   return [notif]
 }
 
-export const makePlugin = (
-  db: Kysely<PartialDB>,
-): DbRecordPlugin<Assertion.Record, AppBskyAssertion> => {
+export type PluginType = DbRecordPlugin<Assertion.Record>
+
+export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
   return {
     collection: type,
-    tableName,
     validateSchema,
     matchesSchema,
-    translateDbObj,
-    get: getFn(db),
     insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,

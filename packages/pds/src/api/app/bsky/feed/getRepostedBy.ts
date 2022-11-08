@@ -11,14 +11,10 @@ export default function (server: Server) {
       const { ref } = db.db.dynamic
 
       let builder = db.db
-        .selectFrom('app_bsky_repost as repost')
+        .selectFrom('repost')
         .where('repost.subject', '=', uri)
         .innerJoin('did_handle', 'did_handle.did', 'repost.creator')
-        .leftJoin(
-          'app_bsky_profile as profile',
-          'profile.creator',
-          'did_handle.did',
-        )
+        .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .select([
           'did_handle.did as did',
           'did_handle.handle as handle',

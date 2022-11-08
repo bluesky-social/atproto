@@ -3,23 +3,15 @@ import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
-import { DbRecordPlugin, NotificationsPlugin } from './types'
-import * as Declaration from '../lexicon/types/app/bsky/system/declaration'
-import * as Assertion from '../lexicon/types/app/bsky/graph/assertion'
-import * as Confirmation from '../lexicon/types/app/bsky/graph/confirmation'
-import * as Follow from '../lexicon/types/app/bsky/graph/follow'
-import * as Vote from '../lexicon/types/app/bsky/feed/vote'
-import * as Post from '../lexicon/types/app/bsky/feed/post'
-import * as Profile from '../lexicon/types/app/bsky/actor/profile'
-import * as Repost from '../lexicon/types/app/bsky/feed/repost'
-import declarationPlugin, { AppBskyDeclaration } from './records/declaration'
-import postPlugin, { AppBskyPost } from './records/post'
-import votePlugin, { AppBskyVote } from './records/vote'
-import repostPlugin, { AppBskyRepost } from './records/repost'
-import followPlugin, { AppBskyFollow } from './records/follow'
-import assertionPlugin, { AppBskyAssertion } from './records/assertion'
-import confirmationPlugin, { AppBskyConfirmation } from './records/confirmation'
-import profilePlugin, { AppBskyProfile } from './records/profile'
+import { NotificationsPlugin } from './types'
+import * as Declaration from './records/declaration'
+import * as Post from './records/post'
+import * as Vote from './records/vote'
+import * as Repost from './records/repost'
+import * as Follow from './records/follow'
+import * as Assertion from './records/assertion'
+import * as Confirmation from './records/confirmation'
+import * as Profile from './records/profile'
 import notificationPlugin from './tables/user-notification'
 import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
@@ -32,18 +24,19 @@ import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { DidHandle } from './tables/did-handle'
+import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
 
 export class Database {
   migrator: Migrator
   records: {
-    declaration: DbRecordPlugin<Declaration.Record, AppBskyDeclaration>
-    post: DbRecordPlugin<Post.Record, AppBskyPost>
-    vote: DbRecordPlugin<Vote.Record, AppBskyVote>
-    repost: DbRecordPlugin<Repost.Record, AppBskyRepost>
-    follow: DbRecordPlugin<Follow.Record, AppBskyFollow>
-    profile: DbRecordPlugin<Profile.Record, AppBskyProfile>
-    assertion: DbRecordPlugin<Assertion.Record, AppBskyAssertion>
-    confirmation: DbRecordPlugin<Confirmation.Record, AppBskyConfirmation>
+    declaration: Declaration.PluginType
+    post: Post.PluginType
+    vote: Vote.PluginType
+    repost: Repost.PluginType
+    follow: Follow.PluginType
+    profile: Profile.PluginType
+    assertion: Assertion.PluginType
+    confirmation: Confirmation.PluginType
   }
   notifications: NotificationsPlugin
 
@@ -53,14 +46,14 @@ export class Database {
     public schema?: string,
   ) {
     this.records = {
-      declaration: declarationPlugin(db),
-      post: postPlugin(db),
-      vote: votePlugin(db),
-      repost: repostPlugin(db),
-      follow: followPlugin(db),
-      assertion: assertionPlugin(db),
-      confirmation: confirmationPlugin(db),
-      profile: profilePlugin(db),
+      declaration: Declaration.makePlugin(db),
+      post: Post.makePlugin(db),
+      vote: Vote.makePlugin(db),
+      repost: Repost.makePlugin(db),
+      follow: Follow.makePlugin(db),
+      assertion: Assertion.makePlugin(db),
+      confirmation: Confirmation.makePlugin(db),
+      profile: Profile.makePlugin(db),
     }
     this.notifications = notificationPlugin(db)
     this.migrator = new Migrator({
@@ -246,7 +239,12 @@ export class Database {
     this.assertTransaction()
     const inserted = await this.db
       .insertInto('did_handle')
-      .values({ handle: handle, did: tempDid })
+      .values({
+        handle,
+        did: tempDid,
+        actorType: 'temp',
+        declarationCid: 'temp',
+      })
       .onConflict((oc) => oc.doNothing())
       .returning('handle')
       .executeTakeFirst()
@@ -256,12 +254,22 @@ export class Database {
     log.info({ handle, tempDid }, 'pre-registered did')
   }
 
-  async finalizeDid(handle: string, did: string, tempDid: string) {
+  async finalizeDid(
+    handle: string,
+    did: string,
+    tempDid: string,
+    declaration: DeclarationRecord,
+  ) {
     this.assertTransaction()
     log.debug({ handle, did }, 'registering did-handle')
+    const declarationCid = await common.cidForData(declaration)
     const updated = await this.db
       .updateTable('did_handle')
-      .set({ did })
+      .set({
+        did,
+        actorType: declaration.actorType,
+        declarationCid: declarationCid.toString(),
+      })
       .where('handle', '=', handle)
       .where('did', '=', tempDid)
       .returningAll()

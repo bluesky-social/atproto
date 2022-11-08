@@ -29,7 +29,7 @@ export default function (server: Server) {
       }
 
       let postsQb = db.db
-        .selectFrom('app_bsky_post')
+        .selectFrom('post')
         .select([
           sql<'post' | 'repost'>`${'post'}`.as('type'),
           'uri as postUri',
@@ -39,7 +39,7 @@ export default function (server: Server) {
         ])
 
       let repostsQb = db.db
-        .selectFrom('app_bsky_repost')
+        .selectFrom('repost')
         .select([
           sql<'post' | 'repost'>`${'repost'}`.as('type'),
           'subject as postUri',
@@ -54,7 +54,7 @@ export default function (server: Server) {
       } else if (feedAlgorithm === FeedAlgorithm.ReverseChronological) {
         // Followee's posts and reposts, and requester's posts
         const followingIdsSubquery = db.db
-          .selectFrom('app_bsky_follow as follow')
+          .selectFrom('follow')
           .select('follow.subjectDid')
           .where('follow.creator', '=', requester)
         repostsQb = repostsQb
@@ -70,11 +70,11 @@ export default function (server: Server) {
 
       let postsAndRepostsQb = db.db
         .selectFrom(postsQb.union(repostsQb).as('posts_and_reposts'))
-        .innerJoin('app_bsky_post as post', 'post.uri', 'postUri')
+        .innerJoin('post', 'post.uri', 'postUri')
         .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
         .innerJoin('did_handle as author', 'author.did', 'post.creator')
         .leftJoin(
-          'app_bsky_profile as author_profile',
+          'profile as author_profile',
           'author_profile.creator',
           'author.did',
         )
@@ -84,7 +84,7 @@ export default function (server: Server) {
           'originatorDid',
         )
         .leftJoin(
-          'app_bsky_profile as originator_profile',
+          'profile as originator_profile',
           'originator_profile.creator',
           'originatorDid',
         )
@@ -102,42 +102,42 @@ export default function (server: Server) {
           'originator.handle as originatorHandle',
           'originator_profile.displayName as originatorDisplayName',
           db.db
-            .selectFrom('app_bsky_vote')
+            .selectFrom('vote')
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'up')
             .select(countAll.as('count'))
             .as('upvoteCount'),
           db.db
-            .selectFrom('app_bsky_vote')
+            .selectFrom('vote')
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'down')
             .select(countAll.as('count'))
             .as('downvoteCount'),
           db.db
-            .selectFrom('app_bsky_repost')
+            .selectFrom('repost')
             .whereRef('subject', '=', ref('postUri'))
             .select(countAll.as('count'))
             .as('repostCount'),
           db.db
-            .selectFrom('app_bsky_post')
+            .selectFrom('post')
             .whereRef('replyParent', '=', ref('postUri'))
             .select(countAll.as('count'))
             .as('replyCount'),
           db.db
-            .selectFrom('app_bsky_repost')
+            .selectFrom('repost')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
             .select('uri')
             .as('requesterRepost'),
           db.db
-            .selectFrom('app_bsky_vote')
+            .selectFrom('vote')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'up')
             .select('uri')
             .as('requesterUpvote'),
           db.db
-            .selectFrom('app_bsky_vote')
+            .selectFrom('vote')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'down')

@@ -1,6 +1,5 @@
 import { Server } from '../../../../lexicon'
 import * as locals from '../../../../locals'
-import { paginate } from '../../../../db/util'
 
 export default function (server: Server) {
   server.app.bsky.actor.getSuggestions(async (params, _input, req, res) => {
@@ -12,30 +11,21 @@ export default function (server: Server) {
 
     const { ref } = db.db.dynamic
 
-    let suggestionsReq = db.db
+    const suggestionsReq = db.db
       .selectFrom('user')
       .innerJoin('did_handle', 'user.handle', 'did_handle.handle')
-      .innerJoin(
-        'app_bsky_declaration as declaration',
-        'declaration.creator',
-        'did_handle.did',
-      )
-      .leftJoin(
-        'app_bsky_profile as profile',
-        'profile.creator',
-        'did_handle.did',
-      )
+      .leftJoin('profile', 'profile.creator', 'did_handle.did')
       .select([
         'did_handle.did as did',
         'did_handle.handle as handle',
-        'declaration.actorType as actorType',
+        'did_handle.actorType as actorType',
         'profile.uri as profileUri',
         'profile.displayName as displayName',
         'profile.description as description',
         'profile.indexedAt as indexedAt',
         'user.createdAt as createdAt',
         db.db
-          .selectFrom('app_bsky_follow')
+          .selectFrom('follow')
           .where('creator', '=', requester)
           .whereRef('subjectDid', '=', ref('did_handle.did'))
           .select('uri')

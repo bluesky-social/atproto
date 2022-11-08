@@ -6,8 +6,8 @@ import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyGraphFollow
-const tableName = 'app_bsky_follow'
-export interface AppBskyFollow {
+const tableName = 'follow'
+export interface BskyFollow {
   uri: string
   cid: string
   creator: string
@@ -17,34 +17,13 @@ export interface AppBskyFollow {
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: AppBskyFollow }
+export type PartialDB = { [tableName]: BskyFollow }
 
 const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Follow.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
-
-const translateDbObj = (dbObj: AppBskyFollow): Follow.Record => {
-  return {
-    subject: {
-      did: dbObj.subjectDid,
-      declarationCid: dbObj.subjectDeclarationCid,
-    },
-    createdAt: dbObj.createdAt,
-  }
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Follow.Record | null> => {
-    const found = await db
-      .selectFrom('app_bsky_follow')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    return !found ? null : translateDbObj(found)
-  }
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
@@ -66,16 +45,13 @@ const insertFn =
       createdAt: obj.createdAt,
       indexedAt: timestamp || new Date().toISOString(),
     }
-    await db.insertInto('app_bsky_follow').values(val).execute()
+    await db.insertInto(tableName).values(val).execute()
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db
-      .deleteFrom('app_bsky_follow')
-      .where('uri', '=', uri.toString())
-      .execute()
+    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (
@@ -96,16 +72,13 @@ const notifsForRecord = (
   return [notif]
 }
 
-export const makePlugin = (
-  db: Kysely<PartialDB>,
-): DbRecordPlugin<Follow.Record, AppBskyFollow> => {
+export type PluginType = DbRecordPlugin<Follow.Record>
+
+export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
   return {
     collection: type,
-    tableName,
     validateSchema,
     matchesSchema,
-    translateDbObj,
-    get: getFn(db),
     insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,

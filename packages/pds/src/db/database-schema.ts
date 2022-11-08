@@ -8,14 +8,12 @@ import * as ipldBlock from './tables/ipld-block'
 import * as ipldBlockCreator from './tables/ipld-block-creator'
 import * as inviteCode from './tables/invite-code'
 import * as notification from './tables/user-notification'
-import * as declaration from './records/declaration'
+import * as assertion from './tables/assertion'
 import * as profile from './records/profile'
 import * as post from './records/post'
 import * as vote from './records/vote'
 import * as repost from './records/repost'
 import * as follow from './records/follow'
-import * as assertion from './records/assertion'
-import * as confirmation from './records/confirmation'
 
 export type DatabaseSchema = user.PartialDB &
   didHandle.PartialDB &
@@ -27,11 +25,9 @@ export type DatabaseSchema = user.PartialDB &
   ipldBlockCreator.PartialDB &
   inviteCode.PartialDB &
   notification.PartialDB &
-  declaration.PartialDB &
   profile.PartialDB &
   post.PartialDB &
   vote.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
-  assertion.PartialDB &
-  confirmation.PartialDB
+  assertion.PartialDB

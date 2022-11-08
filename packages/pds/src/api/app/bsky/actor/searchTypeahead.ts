@@ -48,11 +48,7 @@ export default function (server: Server) {
 
 const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
   return await getUserSearchQueryPg(db, { term, limit })
-    .leftJoin(
-      'app_bsky_profile as profile',
-      'profile.creator',
-      'did_handle.did',
-    )
+    .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select([
       'did_handle.did as did',
       'did_handle.handle as handle',
@@ -63,11 +59,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
 
 const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
   return await getUserSearchQuerySqlite(db, { term, limit })
-    .leftJoin(
-      'app_bsky_profile as profile',
-      'profile.creator',
-      'did_handle.did',
-    )
+    .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select([
       'did_handle.did as did',
       'did_handle.handle as handle',

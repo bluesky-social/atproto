@@ -6,9 +6,9 @@ import { DbRecordPlugin, Notification } from '../types'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyFeedVote
-const tableName = 'app_bsky_vote'
+const tableName = 'vote'
 
-export interface AppBskyVote {
+export interface BskyVote {
   uri: string
   cid: string
   creator: string
@@ -19,35 +19,13 @@ export interface AppBskyVote {
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: AppBskyVote }
+export type PartialDB = { [tableName]: BskyVote }
 
 const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Vote.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
-
-const translateDbObj = (dbObj: AppBskyVote): Vote.Record => {
-  return {
-    direction: dbObj.direction,
-    subject: {
-      uri: dbObj.subject,
-      cid: dbObj.subjectCid,
-    },
-    createdAt: dbObj.createdAt,
-  }
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Vote.Record | null> => {
-    const found = await db
-      .selectFrom('app_bsky_vote')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    return !found ? null : translateDbObj(found)
-  }
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
@@ -61,7 +39,7 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
     await db
-      .insertInto('app_bsky_vote')
+      .insertInto(tableName)
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
@@ -78,10 +56,7 @@ const insertFn =
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db
-      .deleteFrom('app_bsky_vote')
-      .where('uri', '=', uri.toString())
-      .execute()
+    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (
@@ -108,16 +83,13 @@ const notifsForRecord = (
   return [notif]
 }
 
-export const makePlugin = (
-  db: Kysely<PartialDB>,
-): DbRecordPlugin<Vote.Record, AppBskyVote> => {
+export type PluginType = DbRecordPlugin<Vote.Record>
+
+export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
   return {
     collection: type,
-    tableName,
     validateSchema,
     matchesSchema,
-    translateDbObj,
-    get: getFn(db),
     insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,

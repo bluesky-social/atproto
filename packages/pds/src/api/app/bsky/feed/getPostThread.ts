@@ -72,11 +72,11 @@ const getReplies = async (
 const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
   const { ref } = db.dynamic
   return db
-    .selectFrom('app_bsky_post as post')
+    .selectFrom('post')
     .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
     .innerJoin('did_handle as author', 'author.did', 'post.creator')
     .leftJoin(
-      'app_bsky_profile as author_profile',
+      'profile as author_profile',
       'author.did',
       'author_profile.creator',
     )
@@ -90,42 +90,42 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
       'ipld_block.content as recordBytes',
       'ipld_block.indexedAt as indexedAt',
       db
-        .selectFrom('app_bsky_vote')
+        .selectFrom('vote')
         .whereRef('subject', '=', ref('post.uri'))
         .where('direction', '=', 'up')
         .select(countAll.as('count'))
         .as('upvoteCount'),
       db
-        .selectFrom('app_bsky_vote')
+        .selectFrom('vote')
         .whereRef('subject', '=', ref('post.uri'))
         .where('direction', '=', 'down')
         .select(countAll.as('count'))
         .as('downvoteCount'),
       db
-        .selectFrom('app_bsky_repost')
+        .selectFrom('repost')
         .select(countAll.as('count'))
         .whereRef('subject', '=', ref('post.uri'))
         .as('repostCount'),
       db
-        .selectFrom('app_bsky_post')
+        .selectFrom('post as reply')
         .select(countAll.as('count'))
         .whereRef('replyParent', '=', ref('post.uri'))
         .as('replyCount'),
       db
-        .selectFrom('app_bsky_repost')
+        .selectFrom('repost')
         .select('uri')
         .where('creator', '=', requester)
         .whereRef('subject', '=', ref('post.uri'))
         .as('requesterRepost'),
       db
-        .selectFrom('app_bsky_vote')
+        .selectFrom('vote')
         .where('creator', '=', requester)
         .whereRef('subject', '=', ref('post.uri'))
         .where('direction', '=', 'up')
         .select('uri')
         .as('requesterUpvote'),
       db
-        .selectFrom('app_bsky_vote')
+        .selectFrom('vote')
         .where('creator', '=', requester)
         .whereRef('subject', '=', ref('post.uri'))
         .where('direction', '=', 'down')

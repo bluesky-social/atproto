@@ -15,11 +15,7 @@ export const getUserInfo = async (
   const userInfo = await db
     .selectFrom('did_handle')
     .where(util.actorWhereClause(user))
-    .leftJoin(
-      'app_bsky_profile as profile',
-      'profile.creator',
-      'did_handle.did',
-    )
+    .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select([
       'did_handle.did as did',
       'did_handle.handle as handle',

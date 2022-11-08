@@ -6,9 +6,9 @@ import * as schemas from '../schemas'
 import { CID } from 'multiformats/cid'
 
 const type = schemas.ids.AppBskyFeedRepost
-const tableName = 'app_bsky_repost'
+const tableName = 'repost'
 
-export interface AppBskyRepost {
+export interface BskyRepost {
   uri: string
   cid: string
   creator: string
@@ -18,34 +18,13 @@ export interface AppBskyRepost {
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: AppBskyRepost }
+export type PartialDB = { [tableName]: BskyRepost }
 
 const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Repost.Record => {
   return validator.isValid(obj)
 }
 const validateSchema = (obj: unknown) => validator.validate(obj)
-
-const translateDbObj = (dbObj: AppBskyRepost): Repost.Record => {
-  return {
-    subject: {
-      uri: dbObj.subject,
-      cid: dbObj.subjectCid,
-    },
-    createdAt: dbObj.createdAt,
-  }
-}
-
-const getFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Repost.Record | null> => {
-    const found = await db
-      .selectFrom('app_bsky_repost')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-      .executeTakeFirst()
-    return !found ? null : translateDbObj(found)
-  }
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
@@ -59,7 +38,7 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
     await db
-      .insertInto('app_bsky_repost')
+      .insertInto(tableName)
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
@@ -75,10 +54,7 @@ const insertFn =
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db
-      .deleteFrom('app_bsky_repost')
-      .where('uri', '=', uri.toString())
-      .execute()
+    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (
@@ -101,16 +77,13 @@ const notifsForRecord = (
   return [notif]
 }
 
-export const makePlugin = (
-  db: Kysely<PartialDB>,
-): DbRecordPlugin<Repost.Record, AppBskyRepost> => {
+export type PluginType = DbRecordPlugin<Repost.Record>
+
+export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
   return {
     collection: type,
-    tableName,
     validateSchema,
     matchesSchema,
-    translateDbObj,
-    get: getFn(db),
     insert: insertFn(db),
     delete: deleteFn(db),
     notifsForRecord,

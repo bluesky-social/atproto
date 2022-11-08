@@ -71,9 +71,13 @@ export default function (server: Server) {
         throw err
       }
 
-      // Now that we have a real did, we now replace the tempDid
+      // Now that we have a real did, we create the declaration & replace the tempDid
       // and setup the repo root. This _should_ succeed under typical conditions.
-      await dbTxn.finalizeDid(handle, did, tempDid)
+      const declaration = {
+        $type: schema.ids.AppBskySystemDeclaration,
+        actorType: APP_BSKY_SYSTEM.ActorScene,
+      }
+      await dbTxn.finalizeDid(handle, did, tempDid, declaration)
       await dbTxn.db
         .insertInto('scene')
         .values({ handle, owner: requester, createdAt: now })
@@ -85,12 +89,13 @@ export default function (server: Server) {
           `${requester} is not a registered repo on this server`,
         )
       }
-      const userDeclaration = await dbTxn.db
-        .selectFrom('app_bsky_declaration')
-        .where('creator', '=', requester)
-        .select('cid')
+      const user = await dbTxn.db
+        .selectFrom('did_handle')
+        .where('did', '=', requester)
+        .select('declarationCid')
         .executeTakeFirst()
-      if (!userDeclaration) {
+      const userDeclarationCid = user?.declarationCid
+      if (!userDeclarationCid) {
         throw new InvalidRequestError(
           `Could not locate user declaration for ${requester}`,
         )
@@ -113,9 +118,7 @@ export default function (server: Server) {
             sceneCtx,
             schema.ids.AppBskySystemDeclaration,
             'self',
-            {
-              actorType: APP_BSKY_SYSTEM.ActorScene,
-            },
+            declaration,
           ),
           repoUtil.prepareCreate(
             sceneCtx,
@@ -125,7 +128,7 @@ export default function (server: Server) {
               assertion: APP_BSKY_GRAPH.AssertCreator,
               subject: {
                 did: requester,
-                declarationCid: userDeclaration.cid.toString(),
+                declarationCid: userDeclarationCid.toString(),
               },
               createdAt: new Date().toISOString(),
             },
@@ -138,7 +141,7 @@ export default function (server: Server) {
               assertion: APP_BSKY_GRAPH.AssertMember,
               subject: {
                 did: requester,
-                declarationCid: userDeclaration.cid.toString(),
+                declarationCid: userDeclarationCid.toString(),
               },
               createdAt: new Date().toISOString(),
             },
