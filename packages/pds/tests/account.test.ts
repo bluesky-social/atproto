@@ -157,7 +157,6 @@ describe('account', () => {
     expect(didData.recoveryKey).toBe(recoveryKey)
   })
 
-  return
   it('disallows duplicate email addresses and handles', async () => {
     const inviteCode = await createInviteCode(client, 2)
     const email = 'bob@test.com'
@@ -177,7 +176,7 @@ describe('account', () => {
         password,
         inviteCode,
       }),
-    ).rejects.toThrow('Email already taken: bob@test.com')
+    ).rejects.toThrow('Email already taken: BOB@TEST.COM')
 
     await expect(
       client.com.atproto.account.create({
