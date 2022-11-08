@@ -1,7 +1,7 @@
 import { Server } from '../../../lexicon'
 import getTimeline from './feed/getTimeline'
 import getAuthorFeed from './feed/getAuthorFeed'
-import getLikedBy from './feed/getLikedBy'
+import getVotes from './feed/getVotes'
 import getPostThread from './feed/getPostThread'
 import getProfile from './actor/getProfile'
 import updateProfile from './actor/updateProfile'
@@ -17,7 +17,7 @@ import postNotificationsSeen from './notification/updateSeen'
 export default function (server: Server) {
   getTimeline(server)
   getAuthorFeed(server)
-  getLikedBy(server)
+  getVotes(server)
   getPostThread(server)
   getProfile(server)
   updateProfile(server)
