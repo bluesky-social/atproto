@@ -24,7 +24,6 @@ import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { DidHandle } from './tables/did-handle'
-import * as schema from '../lexicon/schemas'
 
 export class Database {
   migrator: Migrator

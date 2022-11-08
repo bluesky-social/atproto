@@ -3,23 +3,10 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Assertion from '../../lexicon/types/app/bsky/graph/assertion'
 import { DbRecordPlugin, Notification } from '../types'
+import { PartialDB } from '../tables/assertion'
 import * as schemas from '../schemas'
 
 const type = schemas.ids.AppBskyGraphAssertion
-const tableName = 'app_bsky_assertion'
-
-export interface AppBskyAssertion {
-  uri: string
-  cid: string
-  creator: string
-  assertion: string
-  subjectDid: string
-  subjectDeclarationCid: string
-  createdAt: string
-  indexedAt: string
-}
-
-export type PartialDB = { [tableName]: AppBskyAssertion }
 
 const validator = schemas.records.createRecordValidator(type)
 const matchesSchema = (obj: unknown): obj is Assertion.Record => {
@@ -39,7 +26,7 @@ const insertFn =
       throw new Error(`Record does not match schema: ${type}`)
     }
     await db
-      .insertInto(tableName)
+      .insertInto('assertion')
       .values({
         uri: uri.toString(),
         cid: cid.toString(),
@@ -49,6 +36,11 @@ const insertFn =
         subjectDeclarationCid: obj.subject.declarationCid,
         createdAt: obj.createdAt,
         indexedAt: timestamp || new Date().toISOString(),
+        confirmed: 0,
+        confirmUri: null,
+        confirmCid: null,
+        confirmCreated: null,
+        confirmIndexed: null,
       })
       .execute()
   }
@@ -56,7 +48,7 @@ const insertFn =
 const deleteFn =
   (db: Kysely<PartialDB>) =>
   async (uri: AtUri): Promise<void> => {
-    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
+    await db.deleteFrom('assertion').where('uri', '=', uri.toString()).execute()
   }
 
 const notifsForRecord = (
