@@ -17,6 +17,7 @@ import {
 } from './types'
 import {
   ajv,
+  paramsAjv,
   validateReqParams,
   validateInput,
   validateOutput,
@@ -32,6 +33,7 @@ export class Server {
   router = express.Router()
   handlers: Map<string, XRPCHandler> = new Map()
   schemas: Map<string, MethodSchema> = new Map()
+  paramValidators: Map<string, ValidateFunction> = new Map()
   inputValidators: Map<string, ValidateFunction> = new Map()
   outputValidators: Map<string, ValidateFunction> = new Map()
 
@@ -66,6 +68,12 @@ export class Server {
   addSchema(schema: unknown) {
     if (isValidMethodSchema(schema)) {
       this.schemas.set(schema.id, schema)
+      if (schema.parameters) {
+        this.paramValidators.set(
+          schema.id,
+          paramsAjv.compile(schema.parameters),
+        )
+      }
       if (schema.input?.schema) {
         this.inputValidators.set(schema.id, ajv.compile(schema.input.schema))
       }
@@ -85,6 +93,7 @@ export class Server {
 
   removeSchema(nsid: string) {
     this.schemas.delete(nsid)
+    this.paramValidators.delete(nsid)
     this.inputValidators.delete(nsid)
     this.outputValidators.delete(nsid)
   }
@@ -116,7 +125,10 @@ export class Server {
       const inputBody = await readReqBody(req)
 
       // validate request
-      const params = validateReqParams(schema, req.query)
+      const params = validateReqParams(
+        req.query,
+        this.paramValidators.get(schema.id),
+      )
       const input = validateInput(
         schema,
         req,

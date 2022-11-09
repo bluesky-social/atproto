@@ -3,7 +3,11 @@
   "id": "app.bsky.actor.getProfile",
   "type": "query",
   "parameters": {
-    "actor": {"type": "string", "required": true}
+    "type": "object",
+    "required": ["actor"],
+    "properties": {
+      "actor": {"type": "string"}
+    }
   },
   "output": {
     "encoding": "application/json",
@@ -43,11 +47,11 @@
     }
   },
   "defs": {
-    "actorKnown": { 
+    "actorKnown": {
       "type": "string",
       "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
     },
-    "actorUnknown": { 
+    "actorUnknown": {
       "type": "string",
       "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }

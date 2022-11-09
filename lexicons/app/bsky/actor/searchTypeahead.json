@@ -4,8 +4,12 @@
   "type": "query",
   "description": "Find user suggestions for a search term.",
   "parameters": {
-    "term": {"type": "string", "required": true},
-    "limit": {"type": "number", "maximum": 100}
+    "type": "object",
+    "required": ["term"],
+    "properties": {
+      "term": {"type": "string"},
+      "limit": {"type": "number", "maximum": 100}
+    }
   },
   "output": {
     "encoding": "application/json",

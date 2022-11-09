@@ -38,7 +38,7 @@ export function isValidRecordSchema(v: unknown): v is RecordSchema {
 export class RecordSchemaMalformedError extends Error {
   constructor(
     message: string,
-    public schemaDef: any,
+    public schemaDef: unknown,
     public issues?: z.ZodIssue[],
   ) {
     super(message)
@@ -54,16 +54,18 @@ export const methodSchemaBody = z.object({
 })
 export type MethodSchemaBody = z.infer<typeof methodSchemaBody>
 
-export const methodSchemaParam = z.object({
-  type: z.enum(['string', 'number', 'integer', 'boolean']),
-  description: z.string().optional(),
-  default: z.union([z.string(), z.number(), z.boolean()]).optional(),
-  required: z.boolean().optional(),
-  minLength: z.number().optional(),
-  maxLength: z.number().optional(),
-  minimum: z.number().optional(),
-  maximum: z.number().optional(),
-})
+export const methodSchemaParam = z
+  .object({
+    type: z.literal('object'),
+    properties: z.record(
+      z
+        .object({
+          type: z.enum(['string', 'number', 'integer', 'boolean']),
+        })
+        .catchall(z.any()),
+    ),
+  })
+  .catchall(z.any())
 export type MethodSchemaParam = z.infer<typeof methodSchemaParam>
 
 export const methodSchemaError = z.object({
@@ -77,7 +79,7 @@ export const methodSchema = z.object({
   id: z.string(),
   type: z.enum(['query', 'procedure']),
   description: z.string().optional(),
-  parameters: z.record(methodSchemaParam).optional(),
+  parameters: methodSchemaParam.optional(),
   input: methodSchemaBody.optional(),
   output: methodSchemaBody.optional(),
   errors: methodSchemaError.array().optional(),

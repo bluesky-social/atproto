@@ -4,9 +4,13 @@
   "type": "query",
   "description": "Who is a member of the group?",
   "parameters": {
-    "actor": {"type": "string", "required": true},
-    "limit": {"type": "number", "maximum": 100},
-    "before": {"type": "string"}
+    "type": "object",
+    "required": ["actor"],
+    "properties": {
+      "actor": {"type": "string"},
+      "limit": {"type": "number", "maximum": 100},
+      "before": {"type": "string"}
+    }
   },
   "output": {
     "encoding": "application/json",

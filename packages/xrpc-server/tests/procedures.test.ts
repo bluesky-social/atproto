@@ -8,7 +8,12 @@ const SCHEMAS = [
     lexicon: 1,
     id: 'io.example.ping1',
     type: 'procedure',
-    parameters: { message: { type: 'string' } },
+    parameters: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
     output: {
       encoding: 'text/plain',
     },

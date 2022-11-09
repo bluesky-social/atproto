@@ -4,7 +4,11 @@
   "type": "query",
   "description": "Gets the current root CID of a repo.",
   "parameters": {
-    "did": {"type": "string", "required": true, "description": "The DID of the repo."}
+    "type": "object",
+    "required": ["did"],
+    "properties": {
+      "did": {"type": "string", "description": "The DID of the repo."}
+    }
   },
   "output": {
     "encoding": "application/json",

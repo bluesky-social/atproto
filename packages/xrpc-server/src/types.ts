@@ -2,7 +2,7 @@ import express from 'express'
 import zod from 'zod'
 import { ResponseType, ResponseTypeStrings } from '@atproto/xrpc'
 
-export type Params = Record<string, string | number | boolean>
+export type Params = typeof express.request['query']
 
 export const handlerInput = zod.object({
   encoding: zod.string(),

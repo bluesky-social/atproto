@@ -3,8 +3,12 @@
   "id": "app.bsky.feed.getPostThread",
   "type": "query",
   "parameters": {
-    "uri": {"type": "string", "required": true},
-    "depth": {"type": "number"}
+    "type": "object",
+    "required": ["uri"],
+    "properties": {
+      "uri": {"type": "string"},
+      "depth": {"type": "number"}
+    }
   },
   "output": {
     "encoding": "application/json",

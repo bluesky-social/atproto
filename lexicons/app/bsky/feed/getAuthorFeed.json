@@ -4,9 +4,13 @@
   "type": "query",
   "description": "A view of a user's feed.",
   "parameters": {
-    "author": {"type": "string", "required": true},
-    "limit": {"type": "number", "maximum": 100},
-    "before": {"type": "string"}
+    "type": "object",
+    "required": ["author"],
+    "properties": {
+      "author": {"type": "string"},
+      "limit": {"type": "number", "maximum": 100},
+      "before": {"type": "string"}
+    }
   },
   "output": {
     "encoding": "application/json",

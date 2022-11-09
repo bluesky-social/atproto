@@ -25,22 +25,10 @@ export function constructMethodCallUri(
   const uri = new URL(serviceUri)
   uri.pathname = `/xrpc/${schema.id}`
 
-  // default parameters
-  if (schema.parameters) {
-    for (const [key, paramSchema] of Object.entries(schema.parameters)) {
-      if (paramSchema.default) {
-        uri.searchParams.set(
-          key,
-          encodeQueryParam(paramSchema.type, paramSchema.default),
-        )
-      }
-    }
-  }
-
   // given parameters
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      const paramSchema = schema.parameters?.[key]
+      const paramSchema = schema.parameters?.properties[key]
       if (!paramSchema) {
         throw new Error(`Invalid query parameter: ${key}`)
       }

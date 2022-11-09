@@ -4,7 +4,10 @@
   "type": "query",
   "description": "Provides the DID of a repo.",
   "parameters": {
-    "handle": {"type": "string", "description": "The handle to resolve. If not supplied, will resolve the host's own handle."}
+    "type": "object",
+    "properties": {
+      "handle": {"type": "string", "description": "The handle to resolve. If not supplied, will resolve the host's own handle."}
+    }
   },
   "output": {
     "encoding": "application/json",

@@ -25,7 +25,7 @@ export async function process(outFilePath: string, schemas: Schema[]) {
   } catch (e) {
     // ignore - no existing content
   }
-  let fileLines: StringTree = existingContent.split('\n')
+  const fileLines: StringTree = existingContent.split('\n')
 
   // find previously generated content
   let startIndex = fileLines.findIndex((line) => matchesStart(line))
@@ -65,7 +65,7 @@ async function genMdLines(schemas: Schema[]): Promise<StringTree> {
       tokenTypes = tokenTypes.concat(genTokenSchemaMd(schema as TokenSchema))
     }
   }
-  let doc = [
+  const doc = [
     recordTypes?.length ? recordTypes : undefined,
     xprcMethods?.length ? xprcMethods : undefined,
     tokenTypes?.length ? tokenTypes : undefined,
@@ -91,42 +91,25 @@ async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
 
   desc.push(`<mark>RPC ${schema.type}</mark> ${schema.description || ''}`, ``)
 
-  if (schema.parameters && Object.keys(schema.parameters).length) {
+  if (schema.parameters) {
     if (schema.type === 'query') {
       params.push(`Parameters:`, ``)
     } else if (schema.type === 'procedure') {
       params.push(`QP options:`, ``)
     }
-    for (const [k, desc] of Object.entries(schema.parameters)) {
-      const param: string[] = []
-      param.push(`- \`${k}\``)
-      param.push(desc.required ? `Required` : `Optional`)
-      param.push(`${desc.type}.`)
-      if (desc.description) {
-        param.push(desc.description)
-      }
-      if (desc.type === 'string') {
-        if (typeof desc.maxLength !== 'undefined') {
-          param.push(`Max length ${desc.maxLength}.`)
-        }
-        if (typeof desc.minLength !== 'undefined') {
-          param.push(`Min length ${desc.minLength}.`)
-        }
-      } else if (desc.type === 'number' || desc.type === 'integer') {
-        if (typeof desc.maximum !== 'undefined') {
-          param.push(`Max value ${desc.maximum}.`)
-        }
-        if (typeof desc.minimum !== 'undefined') {
-          param.push(`Min value ${desc.minimum}.`)
-        }
-      }
-      if (typeof desc.default !== 'undefined') {
-        param.push(`Defaults to ${desc.default}.`)
-      }
-      params.push(param.join(' '))
-    }
+    params.push(`- Schema:`, ``)
+    params.push('```typescript')
+    params.push(
+      (
+        await jsonSchemaToTs.compile(schema.parameters, 'Parameters', {
+          bannerComment: '',
+          additionalProperties: false,
+        })
+      ).trim(),
+    )
+    params.push('```')
+    params.push('')
   }
-  params.push('')
 
   if (schema.input) {
     input.push(`Parameters:`, ``)

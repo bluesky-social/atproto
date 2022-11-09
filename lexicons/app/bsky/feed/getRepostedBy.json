@@ -3,10 +3,14 @@
   "id": "app.bsky.feed.getRepostedBy",
   "type": "query",
   "parameters": {
-    "uri": {"type": "string", "required": true},
-    "cid": {"type": "string", "required": false},
-    "limit": {"type": "number", "maximum": 100},
-    "before": {"type": "string"}
+    "type": "object",
+    "required": ["uri"],
+    "properties": {
+      "uri": {"type": "string"},
+      "cid": {"type": "string"},
+      "limit": {"type": "number", "maximum": 100},
+      "before": {"type": "string"}
+    }
   },
   "output": {
     "encoding": "application/json",

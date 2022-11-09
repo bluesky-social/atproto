@@ -22,7 +22,10 @@ describe('Schemas', () => {
       lexicon: 1,
       id: 'io.example.query2',
       type: 'query',
-      parameters: { message: { type: 'string' } },
+      parameters: {
+        type: 'object',
+        properties: { message: { type: 'string' } },
+      },
       output: {
         encoding: 'application/json',
         schema: {
@@ -37,10 +40,13 @@ describe('Schemas', () => {
       id: 'io.example.query3',
       type: 'query',
       parameters: {
-        strParam: { type: 'string', minLength: 10, maxLength: 100 },
-        numParam: { type: 'number', minimum: 10, maximum: 100 },
-        intParam: { type: 'integer', minimum: 10, maximum: 100 },
-        boolParam: { type: 'boolean' },
+        type: 'object',
+        properties: {
+          strParam: { type: 'string', minLength: 10, maxLength: 100 },
+          numParam: { type: 'number', minimum: 10, maximum: 100 },
+          intParam: { type: 'integer', minimum: 10, maximum: 100 },
+          boolParam: { type: 'boolean' },
+        },
       },
       output: {
         encoding: 'text/plain',
@@ -77,10 +83,13 @@ describe('Schemas', () => {
       id: 'io.example.query3',
       type: 'procedure',
       parameters: {
-        strParam: { type: 'string', minLength: 10, maxLength: 100 },
-        numParam: { type: 'number', minimum: 10, maximum: 100 },
-        intParam: { type: 'integer', minimum: 10, maximum: 100 },
-        boolParam: { type: 'boolean' },
+        type: 'object',
+        properties: {
+          strParam: { type: 'string', minLength: 10, maxLength: 100 },
+          numParam: { type: 'number', minimum: 10, maximum: 100 },
+          intParam: { type: 'integer', minimum: 10, maximum: 100 },
+          boolParam: { type: 'boolean' },
+        },
       },
       input: {
         encoding: 'text/plain',

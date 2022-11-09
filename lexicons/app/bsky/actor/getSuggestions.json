@@ -4,8 +4,11 @@
   "type": "query",
   "description": "Get a list of actors suggested for following. Used in discovery UIs.",
   "parameters": {
-    "limit": {"type": "number", "maximum": 100},
-    "cursor": {"type": "string"}
+    "type": "object",
+    "properties": {
+      "limit": {"type": "number", "maximum": 100},
+      "cursor": {"type": "string"}
+    }
   },
   "output": {
     "encoding": "application/json",

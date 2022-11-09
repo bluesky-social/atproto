@@ -4,9 +4,21 @@
 import express from 'express'
 
 export interface QueryParams {
+  /**
+   * The handle or DID of the repo.
+   */
   user: string;
+  /**
+   * The NSID of the collection.
+   */
   collection: string;
+  /**
+   * The key of the record.
+   */
   rkey: string;
+  /**
+   * The CID of the version of the record. If not specified, then return the most recent version.
+   */
   cid?: string;
 }
 

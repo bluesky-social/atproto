@@ -3,7 +3,6 @@
   "id": "com.atproto.account.get",
   "type": "query",
   "description": "Get information about an account.",
-  "parameters": {},
   "output": {
     "encoding": "",
     "schema": {}
