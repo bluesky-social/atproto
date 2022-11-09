@@ -39,6 +39,7 @@ export interface OutputSchema {
   postsCount: number;
   myState?: {
     follow?: string,
+    member?: string,
   };
 }
 

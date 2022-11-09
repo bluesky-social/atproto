@@ -2,6 +2,7 @@ import { Server } from '../../../lexicon'
 import getTimeline from './feed/getTimeline'
 import getAuthorFeed from './feed/getAuthorFeed'
 import getVotes from './feed/getVotes'
+import setVote from './feed/setVote'
 import getPostThread from './feed/getPostThread'
 import createScene from './actor/createScene'
 import getProfile from './actor/getProfile'
@@ -23,6 +24,7 @@ export default function (server: Server) {
   getTimeline(server)
   getAuthorFeed(server)
   getVotes(server)
+  setVote(server)
   getPostThread(server)
   getProfile(server)
   updateProfile(server)

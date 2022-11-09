@@ -43,6 +43,7 @@ import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyFeedMediaEmbed from './types/app/bsky/feed/mediaEmbed'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 import * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
 import * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 import * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
@@ -94,6 +95,7 @@ export * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 export * as AppBskyFeedMediaEmbed from './types/app/bsky/feed/mediaEmbed'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+export * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 export * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
 export * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 export * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
@@ -704,6 +706,17 @@ export class FeedNS {
       .call('app.bsky.feed.getVotes', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetVotes.toKnownErr(e)
+      })
+  }
+
+  setVote(
+    data?: AppBskyFeedSetVote.InputSchema,
+    opts?: AppBskyFeedSetVote.CallOptions
+  ): Promise<AppBskyFeedSetVote.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.setVote', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyFeedSetVote.toKnownErr(e)
       })
   }
 }

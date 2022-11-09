@@ -57,7 +57,9 @@ Object {
   "followsCount": 0,
   "handle": "scene.test",
   "membersCount": 4,
-  "myState": Object {},
+  "myState": Object {
+    "member": "record(0)",
+  },
   "postsCount": 0,
 }
 `;
