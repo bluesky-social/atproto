@@ -5,6 +5,7 @@ import * as Assertion from '../../lexicon/types/app/bsky/graph/assertion'
 import { DbRecordPlugin, Notification } from '../types'
 import { PartialDB } from '../tables/assertion'
 import * as schemas from '../schemas'
+import { Message } from '../message-queue/messages'
 
 const type = schemas.ids.AppBskyGraphAssertion
 
@@ -21,7 +22,7 @@ const insertFn =
     cid: CID,
     obj: unknown,
     timestamp?: string,
-  ): Promise<void> => {
+  ): Promise<Message[]> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }

@@ -1,21 +1,24 @@
 import { RepoStructure } from '@atproto/repo'
-import Database from '../db'
+import Database from '..'
 import {
   AddMember,
   AddUpvote,
+  CreateNotification,
+  DeleteNotifications,
   Message,
   RemoveMember,
   RemoveUpvote,
 } from './messages'
 import { sql } from 'kysely'
-import { dbLogger as log } from '../logger'
-import { SceneVotesOnPost } from '../db/views/sceneVotesOnPost'
+import { dbLogger as log } from '../../logger'
+import { SceneVotesOnPost } from '../views/sceneVotesOnPost'
 import { AuthStore } from '@atproto/auth'
-import * as repoUtil from '../util/repo'
-import * as schema from '../lexicon/schemas'
+import * as repoUtil from '../../util/repo'
+import * as schema from '../../lexicon/schemas'
 import { TID } from '@atproto/common'
+import { MessageQueue } from '../types'
 
-export class SceneProcessor {
+export class SqlMessageQueue implements MessageQueue {
   constructor(
     private db: Database,
     private getAuthStore: (did: string) => AuthStore,
@@ -41,12 +44,13 @@ export class SceneProcessor {
     const res = await this.db.db
       .selectFrom('scene_message_queue')
       .where('read', '=', 0)
+      .forUpdate()
       .selectAll()
       .execute()
     await Promise.all(res.map((row) => this.process(row.id)))
   }
 
-  async process(id: number): Promise<void> {
+  private async process(id: number): Promise<void> {
     await this.db.transaction(async (dbTxn) => {
       const res = await dbTxn.db
         .selectFrom('scene_message_queue')
@@ -61,15 +65,7 @@ export class SceneProcessor {
       } else if (res.read === 1) return
 
       const message: Message = JSON.parse(res.message)
-      if (message.type === 'add_member') {
-        await this.handleAddMember(dbTxn, message)
-      } else if (message.type === 'remove_member') {
-        await this.handleRemoveMember(dbTxn, message)
-      } else if (message.type === 'add_upvote') {
-        await this.handleAddUpvote(dbTxn, message)
-      } else if (message.type === 'remove_upvote') {
-        await this.handleRemoveUpvote(dbTxn, message)
-      }
+      await this.handleMessage(dbTxn, message)
 
       await dbTxn.db
         .updateTable('scene_message_queue')
@@ -79,8 +75,29 @@ export class SceneProcessor {
     })
   }
 
-  async handleAddMember(db: Database, message: AddMember): Promise<void> {
-    db.assertTransaction()
+  private async handleMessage(db: Database, message: Message) {
+    switch (message.type) {
+      case 'add_member':
+        return this.handleAddMember(db, message)
+      case 'remove_member':
+        return this.handleRemoveMember(db, message)
+      case 'add_upvote':
+        return this.handleAddUpvote(db, message)
+      case 'remove_upvote':
+        return this.handleRemoveUpvote(db, message)
+      case 'create_notification':
+        return this.handleCreateNotification(db, message)
+      case 'delete_notifications':
+        return this.handleDeleteNotifications(db, message)
+    }
+  }
+
+  // Reducers
+  // -------------
+  private async handleAddMember(
+    db: Database,
+    message: AddMember,
+  ): Promise<void> {
     const res = await db.db
       .updateTable('scene_member_count')
       .set({ count: sql`count + 1` })
@@ -95,8 +112,10 @@ export class SceneProcessor {
     }
   }
 
-  async handleRemoveMember(db: Database, message: RemoveMember): Promise<void> {
-    db.assertTransaction()
+  private async handleRemoveMember(
+    db: Database,
+    message: RemoveMember,
+  ): Promise<void> {
     await db.db
       .updateTable('scene_member_count')
       .set({ count: sql`count - 1` })
@@ -105,8 +124,10 @@ export class SceneProcessor {
       .execute()
   }
 
-  async handleAddUpvote(db: Database, message: AddUpvote): Promise<void> {
-    db.assertTransaction()
+  private async handleAddUpvote(
+    db: Database,
+    message: AddUpvote,
+  ): Promise<void> {
     const userScenes = await db.getScenesForUser(message.user)
 
     const res = await db.db
@@ -129,13 +150,14 @@ export class SceneProcessor {
     if (toInsert.length > 0) {
       await db.db.insertInto('scene_votes_on_post').values(toInsert).execute()
     }
-    await this.handleTrending(db, userScenes, message.subject)
+    await this.checkTrending(db, userScenes, message.subject)
   }
 
-  async handleRemoveUpvote(db: Database, message: RemoveUpvote): Promise<void> {
-    db.assertTransaction()
+  private async handleRemoveUpvote(
+    db: Database,
+    message: RemoveUpvote,
+  ): Promise<void> {
     const userScenes = await db.getScenesForUser(message.user)
-
     await db.db
       .updateTable('scene_votes_on_post')
       .set({ count: sql`count + 1` })
@@ -145,12 +167,38 @@ export class SceneProcessor {
       .execute()
   }
 
-  async handleTrending(
+  private async handleCreateNotification(
+    db: Database,
+    message: CreateNotification,
+  ): Promise<void> {
+    await db.db.insertInto('user_notification').values({
+      userDid: message.userDid,
+      recordUri: message.recordUri,
+      recordCid: message.recordCid,
+      author: message.author,
+      reason: message.reason,
+      reasonSubject: message.reasonSubject,
+      indexedAt: new Date().toISOString(),
+    })
+  }
+
+  private async handleDeleteNotifications(
+    db: Database,
+    message: DeleteNotifications,
+  ) {
+    await db.db
+      .deleteFrom('user_notification')
+      .where('recordUri', '=', message.recordUri)
+      .execute()
+  }
+
+  // Side effects
+  // -------------
+  private async checkTrending(
     db: Database,
     scenes: string[],
     subject: string,
   ): Promise<void> {
-    db.assertTransaction()
     const state = await db.db
       .selectFrom('scene_member_count as members')
       .innerJoin('scene_votes_on_post as votes', 'votes.did', 'members.did')
@@ -220,3 +268,5 @@ export class SceneProcessor {
     )
   }
 }
+
+export default SqlMessageQueue

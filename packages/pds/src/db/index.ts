@@ -3,7 +3,6 @@ import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
-import { NotificationsPlugin } from './types'
 import * as Declaration from './records/declaration'
 import * as Post from './records/post'
 import * as Vote from './records/vote'
@@ -27,6 +26,8 @@ import { CtxMigrationProvider } from './migrations/provider'
 import { DidHandle } from './tables/did-handle'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
 import { APP_BSKY_GRAPH } from '../lexicon'
+import { MessageQueue } from './types'
+import SqlMessageQueue from './message-queue'
 
 export class Database {
   migrator: Migrator
@@ -41,7 +42,7 @@ export class Database {
     assertion: Assertion.PluginType
     confirmation: Confirmation.PluginType
   }
-  notifications: NotificationsPlugin
+  messageQueue: MessageQueue
 
   constructor(
     public db: Kysely<DatabaseSchema>,
@@ -59,12 +60,13 @@ export class Database {
       confirmation: Confirmation.makePlugin(db),
       profile: Profile.makePlugin(db),
     }
-    this.notifications = notificationPlugin(db)
+    // this.notifications = notificationPlugin(db)
     this.migrator = new Migrator({
       db,
       migrationTableSchema: schema,
       provider: new CtxMigrationProvider(migrations, dialect),
     })
+    this.messageQueue = SqlMessageQueue
   }
 
   static sqlite(location: string): Database {
@@ -366,9 +368,9 @@ export class Database {
     }
     await this.db.insertInto('record').values(record).execute()
     const table = this.findTableForCollection(uri.collection)
-    await table.insert(uri, cid, obj, timestamp)
-    const notifs = table.notifsForRecord(uri, cid, obj)
-    await this.notifications.process(notifs)
+    const events = await table.insert(uri, cid, obj, timestamp)
+    // const notifs = table.notifsForRecord(uri, cid, obj)
+    // await this.notifications.process(notifs)
     log.info({ uri }, 'indexed record')
   }
 
