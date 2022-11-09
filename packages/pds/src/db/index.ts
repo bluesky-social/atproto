@@ -8,6 +8,7 @@ import * as Declaration from './records/declaration'
 import * as Post from './records/post'
 import * as Vote from './records/vote'
 import * as Repost from './records/repost'
+import * as Trend from './records/trend'
 import * as Follow from './records/follow'
 import * as Assertion from './records/assertion'
 import * as Confirmation from './records/confirmation'
@@ -33,6 +34,7 @@ export class Database {
     post: Post.PluginType
     vote: Vote.PluginType
     repost: Repost.PluginType
+    trend: Trend.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
     assertion: Assertion.PluginType
@@ -50,6 +52,7 @@ export class Database {
       post: Post.makePlugin(db),
       vote: Vote.makePlugin(db),
       repost: Repost.makePlugin(db),
+      trend: Trend.makePlugin(db),
       follow: Follow.makePlugin(db),
       assertion: Assertion.makePlugin(db),
       confirmation: Confirmation.makePlugin(db),

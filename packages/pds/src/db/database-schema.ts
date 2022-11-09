@@ -13,6 +13,7 @@ import * as profile from './records/profile'
 import * as post from './records/post'
 import * as vote from './records/vote'
 import * as repost from './records/repost'
+import * as trend from './records/trend'
 import * as follow from './records/follow'
 
 export type DatabaseSchema = user.PartialDB &
@@ -29,5 +30,6 @@ export type DatabaseSchema = user.PartialDB &
   post.PartialDB &
   vote.PartialDB &
   repost.PartialDB &
+  trend.PartialDB &
   follow.PartialDB &
   assertion.PartialDB

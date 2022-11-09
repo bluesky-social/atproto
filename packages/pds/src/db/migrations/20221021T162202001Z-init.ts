@@ -19,6 +19,7 @@ const followTable = 'follow'
 const postTable = 'post'
 const postEntityTable = 'post_entity'
 const repostTable = 'repost'
+const trendTable = 'trend'
 const voteTable = 'vote'
 
 export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
@@ -228,6 +229,16 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
   await db.schema
+    .createTable(trendTable)
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('subjectCid', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .execute()
+  await db.schema
     .createTable(voteTable)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
@@ -242,6 +253,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(voteTable).execute()
+  await db.schema.dropTable(trendTable).execute()
   await db.schema.dropTable(repostTable).execute()
   await db.schema.dropTable(postEntityTable).execute()
   await db.schema.dropTable(postTable).execute()
