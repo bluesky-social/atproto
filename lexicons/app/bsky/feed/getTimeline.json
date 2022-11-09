@@ -5,7 +5,6 @@
   "description": "A view of the user's home timeline.",
   "parameters": {
     "type": "object",
-    "required": [],
     "properties": {
       "algorithm": {"type": "string"},
       "limit": {"type": "number", "maximum": 100},

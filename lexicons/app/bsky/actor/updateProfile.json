@@ -7,7 +7,6 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": [],
       "properties": {
         "displayName": {
           "type": "string",

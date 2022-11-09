@@ -21,7 +21,6 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": [],
       "properties": {
         "upvote": {"type": "string"},
         "downvote": {"type": "string"}

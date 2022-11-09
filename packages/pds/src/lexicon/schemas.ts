@@ -979,7 +979,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       'Get a list of actors suggested for following. Used in discovery UIs.',
     parameters: {
       type: 'object',
-      required: [],
       properties: {
         limit: {
           type: 'number',
@@ -1159,7 +1158,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: [],
         properties: {
           displayName: {
             type: 'string',
@@ -1911,7 +1909,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     description: "A view of the user's home timeline.",
     parameters: {
       type: 'object',
-      required: [],
       properties: {
         algorithm: {
           type: 'string',
@@ -2369,7 +2366,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: [],
         properties: {
           upvote: {
             type: 'string',

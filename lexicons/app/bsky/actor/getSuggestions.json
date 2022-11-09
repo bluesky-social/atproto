@@ -5,7 +5,6 @@
   "description": "Get a list of actors suggested for following. Used in discovery UIs.",
   "parameters": {
     "type": "object",
-    "required": [],
     "properties": {
       "limit": {"type": "number", "maximum": 100},
       "cursor": {"type": "string"}
