@@ -137,7 +137,7 @@ export async function generateMockSetup(env: DevEnv) {
         createdAt: new Date().toISOString(),
       },
     )
-    bob.api.app.bsky.graph.confirmation.create(
+    await bob.api.app.bsky.graph.confirmation.create(
       { did: bob.did },
       {
         originator: {
@@ -164,7 +164,7 @@ export async function generateMockSetup(env: DevEnv) {
         createdAt: new Date().toISOString(),
       },
     )
-    carla.api.app.bsky.graph.confirmation.create(
+    await carla.api.app.bsky.graph.confirmation.create(
       { did: carla.did },
       {
         originator: {
