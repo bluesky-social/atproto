@@ -1844,7 +1844,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       properties: {
         uri: {
           type: 'string',
-          required: true,
         },
         cid: {
           type: 'string',

@@ -8,7 +8,12 @@ const SCHEMAS = [
     lexicon: 1,
     id: 'io.example.ping1',
     type: 'query',
-    parameters: { message: { type: 'string' } },
+    parameters: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
     output: {
       encoding: 'text/plain',
     },
@@ -17,7 +22,12 @@ const SCHEMAS = [
     lexicon: 1,
     id: 'io.example.ping2',
     type: 'query',
-    parameters: { message: { type: 'string' } },
+    parameters: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
     output: {
       encoding: 'application/octet-stream',
     },
@@ -26,7 +36,12 @@ const SCHEMAS = [
     lexicon: 1,
     id: 'io.example.ping3',
     type: 'query',
-    parameters: { message: { type: 'string' } },
+    parameters: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
     output: {
       encoding: 'application/json',
       schema: {

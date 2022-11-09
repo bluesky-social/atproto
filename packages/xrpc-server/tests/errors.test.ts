@@ -9,7 +9,10 @@ const SCHEMAS = [
     id: 'io.example.error',
     type: 'query',
     parameters: {
-      which: { type: 'string', default: 'foo' },
+      type: 'object',
+      properties: {
+        which: { type: 'string', default: 'foo' },
+      },
     },
     errors: [{ name: 'Foo' }, { name: 'Bar' }],
   },

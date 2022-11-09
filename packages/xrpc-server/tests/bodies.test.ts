@@ -90,13 +90,13 @@ describe('Parameters', () => {
     )
     await expect(
       client.call('io.example.validationTest', {}, {}),
-    ).rejects.toThrow(`data must have required property 'foo'`)
+    ).rejects.toThrow(`input must have required property 'foo'`)
     await expect(
       client.call('io.example.validationTest', {}, { foo: 123 }),
-    ).rejects.toThrow(`data/foo must be string`)
+    ).rejects.toThrow(`input/foo must be string`)
 
     await expect(client.call('io.example.validationTest2')).rejects.toThrow(
-      `data must have required property 'foo'`,
+      `output must have required property 'foo'`,
     )
   })
 })

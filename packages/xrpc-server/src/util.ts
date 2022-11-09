@@ -1,5 +1,5 @@
 import express from 'express'
-import { MethodSchema, MethodSchemaParam } from '@atproto/lexicon'
+import { MethodSchema } from '@atproto/lexicon'
 import mime from 'mime-types'
 import Ajv, { ValidateFunction } from 'ajv'
 import addFormats from 'ajv-formats'
@@ -12,86 +12,28 @@ import {
   InternalServerError,
 } from './types'
 
-export const ajv = new Ajv()
+export const ajv = new Ajv({ useDefaults: true })
 addFormats(ajv)
 
+export const paramsAjv = new Ajv({ useDefaults: 'empty', coerceTypes: true })
+addFormats(paramsAjv)
+
 type ReqQuery = typeof express.request['query']
-type SchemaParams = MethodSchema['parameters']
+
 export function validateReqParams(
-  schema: MethodSchema,
   reqParams: ReqQuery,
+  jsonValidator?: ValidateFunction,
 ): Params {
-  const params: Params = {}
-  const schemaParams: SchemaParams = schema.parameters || {}
-
-  for (const key of [
-    ...new Set(Object.keys(schemaParams).concat(Object.keys(reqParams))),
-  ]) {
-    const reqParam = reqParams[key]
-    const schemaParam = schemaParams[key]
-
-    // valid parameter
-    if (!schemaParam) {
-      throw new InvalidRequestError(`Unknown parameter: ${key}`)
+  if (jsonValidator) {
+    if (!jsonValidator(reqParams)) {
+      throw new InvalidRequestError(
+        paramsAjv.errorsText(jsonValidator.errors, {
+          dataVar: 'parameters',
+        }),
+      )
     }
-
-    // required and default
-    let value
-    if (typeof reqParam === 'undefined') {
-      if (schemaParam.required) {
-        throw new InvalidRequestError(`Required parameter not supplied: ${key}`)
-      } else if (schemaParam.default) {
-        value = schemaParam.default
-      } else {
-        continue
-      }
-    }
-
-    // type coersion
-    value = coerceParam(schemaParam.type, reqParam)
-
-    // value ranges
-    if (schemaParam.type === 'number' || schemaParam.type === 'integer') {
-      if (
-        typeof schemaParam.maximum === 'number' &&
-        value > schemaParam.maximum
-      ) {
-        throw new InvalidRequestError(
-          `Parameter '${key}' is greater than maximum allowed value (${schemaParam.maximum})`,
-        )
-      }
-      if (
-        typeof schemaParam.minimum === 'number' &&
-        value < schemaParam.minimum
-      ) {
-        throw new InvalidRequestError(
-          `Parameter '${key}' is less than minimum allowed value (${schemaParam.minimum})`,
-        )
-      }
-    } else if (schemaParam.type === 'string') {
-      if (
-        typeof schemaParam.maxLength === 'number' &&
-        value.length > schemaParam.maxLength
-      ) {
-        throw new InvalidRequestError(
-          `Parameter '${key}' is greater than maximum allowed length (${schemaParam.maxLength})`,
-        )
-      }
-      if (
-        typeof schemaParam.minLength === 'number' &&
-        value.length < schemaParam.minLength
-      ) {
-        throw new InvalidRequestError(
-          `Parameter '${key}' is less than minimum allowed length (${schemaParam.minLength})`,
-        )
-      }
-    }
-
-    // done
-    params[key] = value
   }
-
-  return params
+  return reqParams
 }
 
 export function validateInput(
@@ -132,7 +74,11 @@ export function validateInput(
   // json schema
   if (jsonValidator) {
     if (!jsonValidator(inputBody)) {
-      throw new InvalidRequestError(ajv.errorsText(jsonValidator.errors))
+      throw new InvalidRequestError(
+        ajv.errorsText(jsonValidator.errors, {
+          dataVar: 'input',
+        }),
+      )
     }
   }
 
@@ -178,7 +124,11 @@ export function validateOutput(
   // json schema
   if (jsonValidator) {
     if (!jsonValidator(output?.body)) {
-      throw new InternalServerError(ajv.errorsText(jsonValidator.errors))
+      throw new InternalServerError(
+        ajv.errorsText(jsonValidator.errors, {
+          dataVar: 'output',
+        }),
+      )
     }
   }
 
@@ -219,20 +169,4 @@ function parseInputBodyBuf(inputBodyBuf: Uint8Array, encoding: string) {
     return str
   }
   return inputBodyBuf
-}
-
-function coerceParam(
-  type: MethodSchemaParam['type'],
-  value: any,
-): string | boolean | number {
-  if (type === 'string') {
-    return String(value)
-  } else if (type === 'boolean') {
-    return String(value) === 'true'
-  } else if (type === 'integer') {
-    return parseInt(String(value))
-  } else if (type === 'number') {
-    return parseFloat(String(value))
-  }
-  throw new Error(`Unsupported parameter type: ${type}`)
 }

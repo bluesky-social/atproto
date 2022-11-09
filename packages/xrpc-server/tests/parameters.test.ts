@@ -9,10 +9,14 @@ const SCHEMAS = [
     id: 'io.example.paramTest',
     type: 'query',
     parameters: {
-      str: { type: 'string', minLength: 2, maxLength: 10, required: true },
-      int: { type: 'integer', minimum: 2, maximum: 10, required: true },
-      num: { type: 'number', minimum: 2, maximum: 10, required: true },
-      bool: { type: 'boolean', required: true },
+      type: 'object',
+      required: ['str', 'int', 'num', 'bool'],
+      properties: {
+        str: { type: 'string', minLength: 2, maxLength: 10 },
+        int: { type: 'integer', minimum: 2, maximum: 10 },
+        num: { type: 'number', minimum: 2, maximum: 10 },
+        bool: { type: 'boolean' },
+      },
     },
     output: {
       encoding: 'application/json',
@@ -68,7 +72,7 @@ describe('Parameters', () => {
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow(`Parameter 'str' is less than minimum allowed length (2)`)
+    ).rejects.toThrow('parameters/str must NOT have fewer than 2 characters')
     await expect(
       client.call('io.example.paramTest', {
         str: 'loooooooooooooong',
@@ -76,16 +80,14 @@ describe('Parameters', () => {
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow(
-      `Parameter 'str' is greater than maximum allowed length (10)`,
-    )
+    ).rejects.toThrow('parameters/str must NOT have more than 10 characters')
     await expect(
       client.call('io.example.paramTest', {
         int: 5,
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow(`Required parameter not supplied: str`)
+    ).rejects.toThrow(`parameters must have required property 'str'`)
 
     await expect(
       client.call('io.example.paramTest', {
@@ -94,7 +96,7 @@ describe('Parameters', () => {
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow(`Parameter 'int' is less than minimum allowed value (2)`)
+    ).rejects.toThrow('parameters/int must be >= 2')
     await expect(
       client.call('io.example.paramTest', {
         str: 'valid',
@@ -102,16 +104,14 @@ describe('Parameters', () => {
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow(
-      `Parameter 'int' is greater than maximum allowed value (10)`,
-    )
+    ).rejects.toThrow('parameters/int must be <= 10')
     await expect(
       client.call('io.example.paramTest', {
         str: 'valid',
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow(`Required parameter not supplied: int`)
+    ).rejects.toThrow(`parameters must have required property 'int'`)
 
     await expect(
       client.call('io.example.paramTest', {
@@ -120,7 +120,7 @@ describe('Parameters', () => {
         num: -5.5,
         bool: true,
       }),
-    ).rejects.toThrow(`Parameter 'num' is less than minimum allowed value (2)`)
+    ).rejects.toThrow('parameters/num must be >= 2')
     await expect(
       client.call('io.example.paramTest', {
         str: 'valid',
@@ -128,16 +128,14 @@ describe('Parameters', () => {
         num: 50.5,
         bool: true,
       }),
-    ).rejects.toThrow(
-      `Parameter 'num' is greater than maximum allowed value (10)`,
-    )
+    ).rejects.toThrow('parameters/num must be <= 10')
     await expect(
       client.call('io.example.paramTest', {
         str: 'valid',
         int: 5,
         bool: true,
       }),
-    ).rejects.toThrow(`Required parameter not supplied: num`)
+    ).rejects.toThrow(`parameters must have required property 'num'`)
 
     await expect(
       client.call('io.example.paramTest', {
@@ -145,6 +143,6 @@ describe('Parameters', () => {
         int: 5,
         num: 5.5,
       }),
-    ).rejects.toThrow(`Required parameter not supplied: bool`)
+    ).rejects.toThrow(`parameters must have required property 'bool'`)
   })
 })
