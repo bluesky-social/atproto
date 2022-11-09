@@ -177,4 +177,25 @@ describe('pds member views', () => {
     expect(full.data.memberships.length).toEqual(3)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
+
+  it('includes membership state in getProfile', async () => {
+    const profile1 = await client.app.bsky.actor.getProfile(
+      {
+        actor: scene,
+      },
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+    expect(profile1.data.myState?.member).toBeTruthy()
+    const profile2 = await client.app.bsky.actor.getProfile(
+      {
+        actor: otherScene,
+      },
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+    expect(profile2.data.myState?.member).toBeFalsy()
+  })
 })
