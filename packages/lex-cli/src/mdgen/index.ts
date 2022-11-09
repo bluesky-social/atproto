@@ -104,7 +104,11 @@ async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
       const param: string[] = []
       param.push(`- \`${k}\``)
       param.push(required.includes(k) ? `Required` : `Optional`)
-      param.push(`${desc.type}.`)
+      if (Array.isArray(desc.enum)) {
+        param.push(`${desc.type}: ${formatEnum(desc.enum)}.`)
+      } else {
+        param.push(`${desc.type}.`)
+      }
       if (desc.description) {
         param.push(desc.description)
       }
@@ -231,4 +235,25 @@ function matchesStart(line) {
 
 function matchesEnd(line) {
   return /<!-- END lex /.test(line)
+}
+
+/**
+ * E.g. ['a'] -> '"a"'
+ *      ['a', 'b'] -> '"a" or "b"'
+ *      ['a', 'b', 'c'] -> '"a", "b", or "c"'
+ */
+function formatEnum(values: unknown[]) {
+  if (!values.length) {
+    return ''
+  }
+  const qualified = values.map((val) => JSON.stringify(val))
+  const last = qualified.pop()
+  const head = qualified.join(', ')
+  if (qualified.length === 0) {
+    return last
+  }
+  if (qualified.length === 1) {
+    return `${head} or ${last}`
+  }
+  return `${head}, or ${last}`
 }
