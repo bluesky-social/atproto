@@ -2369,7 +2369,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: [],
         properties: {
           upvote: {
             type: 'string',
