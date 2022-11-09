@@ -87,6 +87,17 @@ describe('pds author feed views', () => {
     expect(forSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
   })
 
+  it('fetches scene feeds with trends.', async () => {
+    const aliceSceneForCarol = await client.app.bsky.feed.getAuthorFeed(
+      { author: sc.scenes['alice-scene.test'].handle },
+      {
+        headers: sc.getHeaders(carol),
+      },
+    )
+
+    expect(forSnapshot(aliceSceneForCarol.data.feed)).toMatchSnapshot()
+  })
+
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {

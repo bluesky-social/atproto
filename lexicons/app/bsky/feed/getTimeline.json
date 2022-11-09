@@ -33,6 +33,7 @@
         "uri": {"type": "string"},
         "cid": {"type": "string"},
         "author": {"$ref": "#/defs/user"},
+        "trendedBy": {"$ref": "#/defs/user"},
         "repostedBy": {"$ref": "#/defs/user"},
         "record": {"type": "object"},
         "embed": {
@@ -59,10 +60,11 @@
     },
     "user": {
       "type": "object",
-      "required": ["did", "handle"],
+      "required": ["did", "handle", "actorType"],
       "properties": {
         "did": {"type": "string"},
         "handle": {"type": "string"},
+        "actorType": {"type": "string"},
         "displayName": {
           "type": "string",
           "maxLength": 64

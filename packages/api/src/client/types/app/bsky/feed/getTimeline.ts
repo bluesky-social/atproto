@@ -23,6 +23,7 @@ export interface FeedItem {
   uri: string;
   cid: string;
   author: User;
+  trendedBy?: User;
   repostedBy?: User;
   record: {};
   embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
@@ -40,6 +41,7 @@ export interface FeedItem {
 export interface User {
   did: string;
   handle: string;
+  actorType: string;
   displayName?: string;
 }
 export interface RecordEmbed {

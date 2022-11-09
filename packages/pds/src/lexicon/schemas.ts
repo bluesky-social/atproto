@@ -1255,6 +1255,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               author: {
                 $ref: '#/$defs/user',
               },
+              trendedBy: {
+                $ref: '#/$defs/user',
+              },
               repostedBy: {
                 $ref: '#/$defs/user',
               },
@@ -1308,12 +1311,15 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           user: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'handle', 'actorType'],
             properties: {
               did: {
                 type: 'string',
               },
               handle: {
+                type: 'string',
+              },
+              actorType: {
                 type: 'string',
               },
               displayName: {
@@ -1397,6 +1403,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           author: {
             $ref: '#/$defs/user',
           },
+          trendedBy: {
+            $ref: '#/$defs/user',
+          },
           repostedBy: {
             $ref: '#/$defs/user',
           },
@@ -1450,12 +1459,15 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
       user: {
         type: 'object',
-        required: ['did', 'handle'],
+        required: ['did', 'handle', 'actorType'],
         properties: {
           did: {
             type: 'string',
           },
           handle: {
+            type: 'string',
+          },
+          actorType: {
             type: 'string',
           },
           displayName: {
@@ -1965,6 +1977,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               author: {
                 $ref: '#/$defs/user',
               },
+              trendedBy: {
+                $ref: '#/$defs/user',
+              },
               repostedBy: {
                 $ref: '#/$defs/user',
               },
@@ -2018,12 +2033,15 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           user: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'handle', 'actorType'],
             properties: {
               did: {
                 type: 'string',
               },
               handle: {
+                type: 'string',
+              },
+              actorType: {
                 type: 'string',
               },
               displayName: {
@@ -2107,6 +2125,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           author: {
             $ref: '#/$defs/user',
           },
+          trendedBy: {
+            $ref: '#/$defs/user',
+          },
           repostedBy: {
             $ref: '#/$defs/user',
           },
@@ -2160,12 +2181,15 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
       user: {
         type: 'object',
-        required: ['did', 'handle'],
+        required: ['did', 'handle', 'actorType'],
         properties: {
           did: {
             type: 'string',
           },
           handle: {
+            type: 'string',
+          },
+          actorType: {
             type: 'string',
           },
           displayName: {
@@ -2820,7 +2844,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               reason: {
                 type: 'string',
                 $comment:
-                  "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
+                  "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'.",
               },
               reasonSubject: {
                 type: 'string',
@@ -2879,7 +2903,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           reason: {
             type: 'string',
             $comment:
-              "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
+              "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'.",
           },
           reasonSubject: {
             type: 'string',
