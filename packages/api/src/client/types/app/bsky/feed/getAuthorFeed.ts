@@ -22,9 +22,9 @@ export interface OutputSchema {
 export interface FeedItem {
   uri: string;
   cid: string;
-  author: User;
-  trendedBy?: User;
-  repostedBy?: User;
+  author: Actor;
+  trendedBy?: Actor;
+  repostedBy?: Actor;
   record: {};
   embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
   replyCount: number;
@@ -38,7 +38,7 @@ export interface FeedItem {
     downvote?: string,
   };
 }
-export interface User {
+export interface Actor {
   did: string;
   handle: string;
   actorType: string;
@@ -46,7 +46,7 @@ export interface User {
 }
 export interface RecordEmbed {
   type: 'record';
-  author: User;
+  author: Actor;
   record: {};
 }
 export interface ExternalEmbed {
