@@ -26,6 +26,7 @@ import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { DidHandle } from './tables/did-handle'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
+import { APP_BSKY_GRAPH } from '../lexicon'
 
 export class Database {
   migrator: Migrator
@@ -316,6 +317,17 @@ export class Database {
       .select('scene.owner')
       .executeTakeFirst()
     return !!found
+  }
+
+  async getScenesForUser(userDid: string): Promise<string[]> {
+    const res = await this.db
+      .selectFrom('assertion')
+      .where('assertion.subjectDid', '=', userDid)
+      .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
+      .where('assertion.confirmUri', 'is not', null)
+      .select('assertion.creator as scene')
+      .execute()
+    return res.map((row) => row.scene)
   }
 
   validateRecord(collection: string, obj: unknown): ValidationResult {
