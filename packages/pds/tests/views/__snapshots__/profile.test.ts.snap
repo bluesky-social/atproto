@@ -56,8 +56,10 @@ Object {
   "followersCount": 0,
   "followsCount": 0,
   "handle": "scene.test",
-  "membersCount": 2,
-  "myState": Object {},
+  "membersCount": 4,
+  "myState": Object {
+    "member": "record(0)",
+  },
   "postsCount": 0,
 }
 `;

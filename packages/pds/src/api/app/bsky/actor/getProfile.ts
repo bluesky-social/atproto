@@ -58,6 +58,14 @@ export default function (server: Server) {
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterFollow'),
+          db.db
+            .selectFrom('assertion')
+            .whereRef('creator', '=', ref('did_handle.did'))
+            .where('assertion', '=', APP_BSKY_GRAPH.AssertMember)
+            .where('confirmUri', 'is not', null)
+            .where('subjectDid', '=', requester)
+            .select('confirmUri')
+            .as('requesterMember'),
         ])
         .executeTakeFirst()
 
@@ -80,6 +88,7 @@ export default function (server: Server) {
           postsCount: queryRes.postsCount,
           myState: {
             follow: queryRes.requesterFollow || undefined,
+            member: queryRes.requesterMember || undefined,
           },
         },
       }

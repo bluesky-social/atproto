@@ -42,6 +42,8 @@ import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
+import * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -376,6 +378,16 @@ export class GraphNS {
 
   getFollows(handler: AppBskyGraphGetFollows.Handler) {
     const schema = 'app.bsky.graph.getFollows' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getMembers(handler: AppBskyGraphGetMembers.Handler) {
+    const schema = 'app.bsky.graph.getMembers' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getMemberships(handler: AppBskyGraphGetMemberships.Handler) {
+    const schema = 'app.bsky.graph.getMemberships' // @ts-ignore
     return this._server.xrpc.method(schema, handler)
   }
 }

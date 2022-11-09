@@ -39,7 +39,8 @@
         "myState": {
           "type": "object",
           "properties": {
-            "follow": {"type": "string"}
+            "follow": {"type": "string"},
+            "member": {"type": "string"}
           }
         }
       }

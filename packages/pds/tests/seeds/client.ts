@@ -5,7 +5,7 @@ import { CID } from 'multiformats/cid'
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
 
-class RecordRef {
+export class RecordRef {
   uri: AtUri
   cid: CID
 
@@ -30,7 +30,7 @@ class RecordRef {
   }
 }
 
-class ActorRef {
+export class ActorRef {
   did: string
   declarationCid: CID
 

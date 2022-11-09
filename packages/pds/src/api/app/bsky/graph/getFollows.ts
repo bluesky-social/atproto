@@ -12,7 +12,7 @@ export default function (server: Server) {
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
-      const creator = await util.getUserInfo(db.db, user).catch((_e) => {
+      const creator = await util.getActorInfo(db.db, user).catch((_e) => {
         throw new InvalidRequestError(`User not found: ${user}`)
       })
 

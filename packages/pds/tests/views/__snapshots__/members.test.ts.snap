@@ -1,0 +1,261 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds member views fetches members 1`] = `
+Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
+  "members": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(4)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "handle": "scene.test",
+  },
+}
+`;
+
+exports[`pds member views fetches members 2`] = `
+Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
+  "members": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "handle": "other-scene.test",
+  },
+}
+`;
+
+exports[`pds member views fetches members 3`] = `
+Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
+  "members": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "handle": "carol-scene.test",
+  },
+}
+`;
+
+exports[`pds member views fetches memberships 1`] = `
+Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
+  "memberships": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "carol-scene.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "alice-scene.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "handle": "scene.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "displayName": "ali",
+    "handle": "alice.test",
+  },
+}
+`;
+
+exports[`pds member views fetches memberships 2`] = `
+Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
+  "memberships": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "other-scene.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "scene.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "displayName": "bobby",
+    "handle": "bob.test",
+  },
+}
+`;
+
+exports[`pds member views fetches memberships 3`] = `
+Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
+  "memberships": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "carol-scene.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "scene.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "handle": "carol.test",
+  },
+}
+`;
+
+exports[`pds member views fetches memberships 4`] = `
+Object {
+  "cursor": "1970-01-01T00:00:00.000Z",
+  "memberships": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "carol-scene.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "scene.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "subject": Object {
+    "did": "user(0)",
+    "handle": "dan.test",
+  },
+}
+`;

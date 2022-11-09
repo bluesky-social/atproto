@@ -941,6 +941,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               follow: {
                 type: 'string',
               },
+              member: {
+                type: 'string',
+              },
             },
           },
         },
@@ -2366,6 +2369,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
+        required: [],
         properties: {
           upvote: {
             type: 'string',
@@ -2531,6 +2535,186 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 displayName: {
                   type: 'string',
                   maxLength: 64,
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'app.bsky.graph.getMembers': {
+    lexicon: 1,
+    id: 'app.bsky.graph.getMembers',
+    type: 'query',
+    description: 'Who is a member of the group?',
+    parameters: {
+      type: 'object',
+      required: ['actor'],
+      properties: {
+        actor: {
+          type: 'string',
+        },
+        limit: {
+          type: 'number',
+          maximum: 100,
+        },
+        before: {
+          type: 'string',
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['subject', 'members'],
+        properties: {
+          subject: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+            },
+          },
+          cursor: {
+            type: 'string',
+          },
+          members: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'handle', 'declaration', 'indexedAt'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                handle: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                declaration: {
+                  type: 'object',
+                  required: ['cid', 'actorType'],
+                  properties: {
+                    cid: {
+                      type: 'string',
+                    },
+                    actorType: {
+                      type: 'string',
+                    },
+                  },
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
+  'app.bsky.graph.getMemberships': {
+    lexicon: 1,
+    id: 'app.bsky.graph.getMemberships',
+    type: 'query',
+    description: 'Which groups is the actor a member of?',
+    parameters: {
+      type: 'object',
+      required: ['actor'],
+      properties: {
+        actor: {
+          type: 'string',
+        },
+        limit: {
+          type: 'number',
+          maximum: 100,
+        },
+        before: {
+          type: 'string',
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['subject', 'memberships'],
+        properties: {
+          subject: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+            },
+          },
+          cursor: {
+            type: 'string',
+          },
+          memberships: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['did', 'handle', 'declaration', 'indexedAt'],
+              properties: {
+                did: {
+                  type: 'string',
+                },
+                handle: {
+                  type: 'string',
+                },
+                displayName: {
+                  type: 'string',
+                  maxLength: 64,
+                },
+                declaration: {
+                  type: 'object',
+                  required: ['cid', 'actorType'],
+                  properties: {
+                    cid: {
+                      type: 'string',
+                    },
+                    actorType: {
+                      type: 'string',
+                    },
+                  },
                 },
                 createdAt: {
                   type: 'string',
