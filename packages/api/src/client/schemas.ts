@@ -926,6 +926,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               follow: {
                 type: 'string',
               },
+              member: {
+                type: 'string',
+              },
             },
           },
         },
