@@ -2931,6 +2931,7 @@ export const ids = {
   AppBskyFeedMediaEmbed: 'app.bsky.feed.mediaEmbed',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyFeedTrend: 'app.bsky.feed.trend',
   AppBskyFeedVote: 'app.bsky.feed.vote',
   AppBskyGraphAssertion: 'app.bsky.graph.assertion',
   AppBskyGraphConfirmation: 'app.bsky.graph.confirmation',
@@ -3165,6 +3166,53 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
   'app.bsky.feed.repost': {
     lexicon: 1,
     id: 'app.bsky.feed.repost',
+    type: 'record',
+    key: 'tid',
+    record: {
+      type: 'object',
+      required: ['subject', 'createdAt'],
+      properties: {
+        subject: {
+          $ref: '#/$defs/subject',
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      $defs: {
+        subject: {
+          type: 'object',
+          required: ['uri', 'cid'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      subject: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  'app.bsky.feed.trend': {
+    lexicon: 1,
+    id: 'app.bsky.feed.trend',
     type: 'record',
     key: 'tid',
     record: {

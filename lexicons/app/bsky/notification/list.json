@@ -44,7 +44,7 @@
         },
         "reason": {
           "type": "string",
-          "$comment": "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'."
+          "$comment": "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'."
         },
         "reasonSubject": {"type": "string"},
         "record": {"type": "object"},

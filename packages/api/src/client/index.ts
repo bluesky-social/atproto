@@ -44,6 +44,7 @@ import * as AppBskyFeedMediaEmbed from './types/app/bsky/feed/mediaEmbed'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
+import * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
 import * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 import * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
 import * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
@@ -95,6 +96,7 @@ export * as AppBskyFeedMediaEmbed from './types/app/bsky/feed/mediaEmbed'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
+export * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
 export * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 export * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
 export * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
@@ -640,6 +642,7 @@ export class FeedNS {
   mediaEmbed: MediaEmbedRecord
   post: PostRecord
   repost: RepostRecord
+  trend: TrendRecord
   vote: VoteRecord
 
   constructor(service: ServiceClient) {
@@ -647,6 +650,7 @@ export class FeedNS {
     this.mediaEmbed = new MediaEmbedRecord(service)
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
+    this.trend = new TrendRecord(service)
     this.vote = new VoteRecord(service)
   }
 
@@ -899,6 +903,67 @@ export class RepostRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.repost', ...params },
+      { headers }
+    )
+  }
+}
+
+export class TrendRecord {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+  ): Promise<{
+    cursor?: string,
+    records: { uri: string, value: AppBskyFeedTrend.Record }[],
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.trend',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
+  ): Promise<{ uri: string, cid: string, value: AppBskyFeedTrend.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.trend',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedTrend.Record,
+    headers?: Record<string, string>
+  ): Promise<{ uri: string, cid: string }> {
+    record.$type = 'app.bsky.feed.trend'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.trend', ...params, record },
+      { encoding: 'application/json', headers }
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    headers?: Record<string, string>
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.trend', ...params },
       { headers }
     )
   }
