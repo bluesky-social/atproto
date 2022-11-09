@@ -1,4 +1,7 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpApi, {
+  AppBskyFeedGetPostThread,
+  ServiceClient as AtpServiceClient,
+} from '@atproto/api'
 import { SeedClient } from '../seeds/client'
 import votesSeed from '../seeds/votes'
 import {
@@ -120,6 +123,116 @@ describe('pds vote views', () => {
       upAndDownvotes.some(
         (v) => v.direction === vote.direction && v.actor.did === vote.actor.did,
       )
+    })
+  })
+
+  describe('setVote()', () => {
+    it('sets and clears votes', async () => {
+      const asAlice = {
+        encoding: 'application/json',
+        headers: sc.getHeaders(alice),
+      } as const
+
+      let post: AppBskyFeedGetPostThread.OutputSchema
+      const getPost = async () => {
+        const result = await client.app.bsky.feed.getPostThread(
+          {
+            uri: sc.posts[bob][0].ref.uriStr,
+            depth: 0,
+          },
+          asAlice,
+        )
+        return result.data
+      }
+
+      post = await getPost()
+      expect(post.thread.downvoteCount).toEqual(0)
+      expect(post.thread.myState).toEqual({})
+
+      // Upvote
+      const { data: upvoted } = await client.app.bsky.feed.setVote(
+        {
+          direction: 'up',
+          subject: {
+            uri: sc.posts[bob][0].ref.uriStr,
+            cid: sc.posts[bob][0].ref.cidStr,
+          },
+        },
+        asAlice,
+      )
+      post = await getPost()
+      expect(upvoted.upvote).not.toBeUndefined()
+      expect(upvoted.downvote).toBeUndefined()
+      expect(post.thread.upvoteCount).toEqual(1)
+      expect(post.thread.downvoteCount).toEqual(0)
+      expect(post.thread.myState).toEqual(upvoted)
+
+      // Downvote
+      const { data: downvoted } = await client.app.bsky.feed.setVote(
+        {
+          direction: 'down',
+          subject: {
+            uri: sc.posts[bob][0].ref.uriStr,
+            cid: sc.posts[bob][0].ref.cidStr,
+          },
+        },
+        asAlice,
+      )
+      post = await getPost()
+      expect(downvoted.upvote).toBeUndefined()
+      expect(downvoted.downvote).not.toBeUndefined()
+      expect(post.thread.upvoteCount).toEqual(0)
+      expect(post.thread.downvoteCount).toEqual(1)
+      expect(post.thread.myState).toEqual(downvoted)
+
+      // No vote
+      const { data: novoted } = await client.app.bsky.feed.setVote(
+        {
+          direction: 'none',
+          subject: {
+            uri: sc.posts[bob][0].ref.uriStr,
+            cid: sc.posts[bob][0].ref.cidStr,
+          },
+        },
+        asAlice,
+      )
+      post = await getPost()
+      expect(novoted.upvote).toBeUndefined()
+      expect(novoted.downvote).toBeUndefined()
+      expect(post.thread.upvoteCount).toEqual(0)
+      expect(post.thread.downvoteCount).toEqual(0)
+      expect(post.thread.myState).toEqual(novoted)
+    })
+
+    it('no-ops when already in correct state', async () => {
+      const asAlice = {
+        encoding: 'application/json',
+        headers: sc.getHeaders(alice),
+      } as const
+
+      const { data: upvotedA } = await client.app.bsky.feed.setVote(
+        {
+          direction: 'up',
+          subject: {
+            uri: sc.posts[bob][0].ref.uriStr,
+            cid: sc.posts[bob][0].ref.cidStr,
+          },
+        },
+        asAlice,
+      )
+
+      const { data: upvotedB } = await client.app.bsky.feed.setVote(
+        {
+          direction: 'up',
+          subject: {
+            uri: sc.posts[bob][0].ref.uriStr,
+            cid: sc.posts[bob][0].ref.cidStr,
+          },
+        },
+        asAlice,
+      )
+
+      expect(upvotedA).toEqual(upvotedB)
     })
   })
 })

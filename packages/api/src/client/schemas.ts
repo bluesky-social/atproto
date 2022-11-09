@@ -2294,6 +2294,72 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
   },
+  'app.bsky.feed.setVote': {
+    lexicon: 1,
+    id: 'app.bsky.feed.setVote',
+    type: 'procedure',
+    description: "Upvote, downvote, or clear the user's vote for a post.",
+    input: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['subject', 'direction'],
+        properties: {
+          subject: {
+            $ref: '#/$defs/subject',
+          },
+          direction: {
+            type: 'string',
+            enum: ['up', 'down', 'none'],
+          },
+        },
+        $defs: {
+          subject: {
+            type: 'object',
+            required: ['uri', 'cid'],
+            properties: {
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: [],
+        properties: {
+          upvote: {
+            type: 'string',
+          },
+          downvote: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
+    defs: {
+      subject: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   'app.bsky.graph.getFollowers': {
     lexicon: 1,
     id: 'app.bsky.graph.getFollowers',
