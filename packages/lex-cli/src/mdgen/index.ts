@@ -91,49 +91,25 @@ async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
 
   desc.push(`<mark>RPC ${schema.type}</mark> ${schema.description || ''}`, ``)
 
-  if (schema.parameters && Object.keys(schema.parameters.properties).length) {
+  if (schema.parameters) {
     if (schema.type === 'query') {
       params.push(`Parameters:`, ``)
     } else if (schema.type === 'procedure') {
       params.push(`QP options:`, ``)
     }
-    const required = Array.isArray(schema.parameters.required)
-      ? schema.parameters.required
-      : []
-    for (const [k, desc] of Object.entries(schema.parameters.properties)) {
-      const param: string[] = []
-      param.push(`- \`${k}\``)
-      param.push(required.includes(k) ? `Required` : `Optional`)
-      if (Array.isArray(desc.enum)) {
-        param.push(`${desc.type}: ${formatEnum(desc.enum)}.`)
-      } else {
-        param.push(`${desc.type}.`)
-      }
-      if (desc.description) {
-        param.push(desc.description)
-      }
-      if (desc.type === 'string') {
-        if (typeof desc.maxLength !== 'undefined') {
-          param.push(`Max length ${desc.maxLength}.`)
-        }
-        if (typeof desc.minLength !== 'undefined') {
-          param.push(`Min length ${desc.minLength}.`)
-        }
-      } else if (desc.type === 'number' || desc.type === 'integer') {
-        if (typeof desc.maximum !== 'undefined') {
-          param.push(`Max value ${desc.maximum}.`)
-        }
-        if (typeof desc.minimum !== 'undefined') {
-          param.push(`Min value ${desc.minimum}.`)
-        }
-      }
-      if (typeof desc.default !== 'undefined') {
-        param.push(`Defaults to ${desc.default}.`)
-      }
-      params.push(param.join(' '))
-    }
+    params.push(`- Schema:`, ``)
+    params.push('```typescript')
+    params.push(
+      (
+        await jsonSchemaToTs.compile(schema.parameters, 'Parameters', {
+          bannerComment: '',
+          additionalProperties: false,
+        })
+      ).trim(),
+    )
+    params.push('```')
+    params.push('')
   }
-  params.push('')
 
   if (schema.input) {
     input.push(`Parameters:`, ``)
@@ -235,25 +211,4 @@ function matchesStart(line) {
 
 function matchesEnd(line) {
   return /<!-- END lex /.test(line)
-}
-
-/**
- * E.g. ['a'] -> '"a"'
- *      ['a', 'b'] -> '"a" or "b"'
- *      ['a', 'b', 'c'] -> '"a", "b", or "c"'
- */
-function formatEnum(values: unknown[]) {
-  if (!values.length) {
-    return ''
-  }
-  const qualified = values.map((val) => JSON.stringify(val))
-  const last = qualified.pop()
-  const head = qualified.join(', ')
-  if (qualified.length === 0) {
-    return last
-  }
-  if (qualified.length === 1) {
-    return `${head} or ${last}`
-  }
-  return `${head}, or ${last}`
 }
