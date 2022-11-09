@@ -15,7 +15,7 @@ export default function (server: Server) {
     const requester = auth.getUserDidOrThrow(req)
     const authStore = await locals.getAuthstore(res, requester)
 
-    const created = await db.transaction(async (dbTxn) => {
+    const voteUri = await db.transaction(async (dbTxn) => {
       const currRoot = await dbTxn.getRepoRoot(requester, true)
       if (!currRoot) {
         throw new InvalidRequestError(
@@ -29,27 +29,41 @@ export default function (server: Server) {
 
       const existingVotes = await dbTxn.db
         .selectFrom('vote')
-        .select('uri')
+        .select(['uri', 'direction'])
         .where('creator', '=', requester)
         .where('subject', '=', subject.uri)
         .execute()
+
+      if (direction === 'none' && existingVotes.length === 0) {
+        // Already in desired state
+        return
+      }
+
+      if (
+        existingVotes.length === 1 &&
+        existingVotes[0].direction === direction
+      ) {
+        // Already in desired state
+        return existingVotes[0].uri
+      }
 
       const deleteExistingVotes = existingVotes.map(({ uri }) =>
         repoUtil.prepareDelete(ctx, new AtUri(uri)),
       )
 
       const createNewVote =
-        direction !== 'none' &&
-        (await repoUtil.prepareCreate(
-          ctx,
-          schema.ids.AppBskyFeedVote,
-          TID.nextStr(),
-          {
-            direction,
-            subject,
-            createdAt: now,
-          },
-        ))
+        direction === 'none'
+          ? null
+          : await repoUtil.prepareCreate(
+              ctx,
+              schema.ids.AppBskyFeedVote,
+              TID.nextStr(),
+              {
+                direction,
+                subject,
+                createdAt: now,
+              },
+            )
 
       const changes = createNewVote
         ? [...deleteExistingVotes, createNewVote]
@@ -66,15 +80,10 @@ export default function (server: Server) {
           return null
         })
 
-      await Promise.resolve([
-        commit,
-        ...changes.map((change) => change.dbUpdate),
-      ])
+      await Promise.all([commit, ...changes.map((change) => change.dbUpdate)])
 
-      return createNewVote || undefined
+      return createNewVote?.uri.toString()
     })
-
-    const voteUri = created?.uri.toString()
 
     return {
       encoding: 'application/json',

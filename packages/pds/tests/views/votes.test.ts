@@ -203,5 +203,36 @@ describe('pds vote views', () => {
       expect(post.thread.downvoteCount).toEqual(0)
       expect(post.thread.myState).toEqual(novoted)
     })
+
+    it('no-ops when already in correct state', async () => {
+      const asAlice = {
+        encoding: 'application/json',
+        headers: sc.getHeaders(alice),
+      } as const
+
+      const { data: upvotedA } = await client.app.bsky.feed.setVote(
+        {
+          direction: 'up',
+          subject: {
+            uri: sc.posts[bob][0].ref.uriStr,
+            cid: sc.posts[bob][0].ref.cidStr,
+          },
+        },
+        asAlice,
+      )
+
+      const { data: upvotedB } = await client.app.bsky.feed.setVote(
+        {
+          direction: 'up',
+          subject: {
+            uri: sc.posts[bob][0].ref.uriStr,
+            cid: sc.posts[bob][0].ref.cidStr,
+          },
+        },
+        asAlice,
+      )
+
+      expect(upvotedA).toEqual(upvotedB)
+    })
   })
 })
