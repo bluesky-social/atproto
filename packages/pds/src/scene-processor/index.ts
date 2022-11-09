@@ -1,7 +1,5 @@
-import { RecordWriteOp } from '@atproto/repo'
+import { RepoStructure } from '@atproto/repo'
 import Database from '../db'
-import { APP_BSKY_GRAPH, APP_BSKY_SYSTEM } from '../lexicon'
-import * as schemas from '../lexicon/schemas'
 import {
   AddMember,
   AddUpvote,
@@ -11,9 +9,17 @@ import {
 } from './messages'
 import { sql } from 'kysely'
 import { dbLogger as log } from '../logger'
+import { SceneVotesOnPost } from '../db/views/sceneVotesOnPost'
+import { AuthStore } from '@atproto/auth'
+import * as repoUtil from '../util/repo'
+import * as schema from '../lexicon/schemas'
+import { TID } from '@atproto/common'
 
-class SceneProcessor {
-  constructor(private db: Database) {}
+export class SceneProcessor {
+  constructor(
+    private db: Database,
+    private getAuthStore: (did: string) => AuthStore,
+  ) {}
 
   async send(message: Message): Promise<void> {
     const res = await this.db.db
@@ -21,7 +27,7 @@ class SceneProcessor {
       .values({
         message: JSON.stringify(message),
         read: 0,
-        createdAt: new Date().toISOString(0),
+        createdAt: new Date().toISOString(),
       })
       .returning('id')
       .executeTakeFirst()
@@ -59,6 +65,10 @@ class SceneProcessor {
         await this.handleAddMember(dbTxn, message)
       } else if (message.type === 'remove_member') {
         await this.handleRemoveMember(dbTxn, message)
+      } else if (message.type === 'add_upvote') {
+        await this.handleAddUpvote(dbTxn, message)
+      } else if (message.type === 'remove_upvote') {
+        await this.handleRemoveUpvote(dbTxn, message)
       }
 
       await dbTxn.db
@@ -104,20 +114,22 @@ class SceneProcessor {
       .set({ count: sql`count + 1` })
       .where('subject', '=', message.subject)
       .where('did', 'in', userScenes)
-      .returning(['did', 'count'])
+      .returning(['did', 'count', 'postedTrending'])
       .execute()
 
-    const toInsert = userScenes
+    const toInsert: SceneVotesOnPost[] = userScenes
       .filter((scene) => !res.some((row) => scene === row.did))
       .map((scene) => ({
         did: scene,
         subject: message.subject,
         count: 1,
+        postedTrending: 0,
       }))
 
     if (toInsert.length > 0) {
       await db.db.insertInto('scene_votes_on_post').values(toInsert).execute()
     }
+    await this.handleTrending(db, userScenes, message.subject)
   }
 
   async handleRemoveUpvote(db: Database, message: RemoveUpvote): Promise<void> {
@@ -132,32 +144,79 @@ class SceneProcessor {
       .returning(['did', 'count'])
       .execute()
   }
+
+  async handleTrending(
+    db: Database,
+    scenes: string[],
+    subject: string,
+  ): Promise<void> {
+    db.assertTransaction()
+    const state = await db.db
+      .selectFrom('scene_member_count as members')
+      .innerJoin('scene_votes_on_post as votes', 'votes.did', 'members.did')
+      .innerJoin('post', 'post.uri', 'votes.subject')
+      .where('members.did', 'in', scenes)
+      .where('votes.subject', '=', subject)
+      .select([
+        'members.did as did',
+        'members.count as memberCount',
+        'votes.subject as subject',
+        'post.cid as subjectCid',
+        'votes.count as voteCount',
+        'votes.postedTrending as postedTrending',
+      ])
+      .execute()
+
+    const now = new Date().toISOString()
+    await Promise.all(
+      state.map(async (scene) => {
+        if (scene.postedTrending) return
+        const ratio = scene.voteCount / scene.memberCount
+        const shouldTrend = scene.voteCount > 1 && ratio > 0.2
+        if (!shouldTrend) return
+
+        // this is a "threshold vote" that makes the post trend
+        const ctx = repoUtil.mutationContext(db, scene.did, now)
+        const sceneAuth = this.getAuthStore(scene.did)
+        const repoRoot = await db.getRepoRoot(scene.did, true)
+        if (!repoRoot) {
+          log.error({ scene: scene.did }, 'could not post trending record')
+          return
+        }
+        const repo = await RepoStructure.load(ctx.blockstore, repoRoot)
+        const trend = await repoUtil.prepareCreate(
+          ctx,
+          schema.ids.AppBskyFeedTrend,
+          TID.nextStr(),
+          {
+            subject: {
+              uri: scene.subject,
+              cid: scene.subjectCid,
+            },
+            createdAt: now,
+          },
+        )
+        const commit = repo
+          .stageUpdate(trend.toStage)
+          .createCommit(sceneAuth, async (_prev, curr) => {
+            await db.db
+              .insertInto('repo_root')
+              .values({
+                did: scene.did,
+                root: curr.toString(),
+                indexedAt: now,
+              })
+              .execute()
+            return null
+          })
+        const setTrendPosted = db.db
+          .updateTable('scene_votes_on_post')
+          .set({ postedTrending: 1 })
+          .where('did', '=', scene.did)
+          .where('subject', '=', scene.subject)
+          .execute()
+        await Promise.all([commit, setTrendPosted, trend.dbUpdate])
+      }),
+    )
+  }
 }
-
-// export const process = async (
-//   db: Database,
-//   did: string,
-//   write: RecordWriteOp,
-// ) => {
-//   // only process upvotes for now
-//   if (write.action !== 'create') return
-//   const record = write.value
-//   if (write.collection !== schemas.ids.AppBskyFeedVote) return
-//   if (!db.records.vote.matchesSchema(record)) return
-//   if (record.direction !== 'up') return
-
-//   const { ref } = db.db.dynamic
-//   const scenes = await db.db
-//     .selectFrom('did_handle')
-//     .where('did_handle.actorType', '=', APP_BSKY_SYSTEM.ActorScene)
-//     .innerJoin('assertion', 'assertion.creator', 'did_handle.did')
-//     .where('assertion.confirmUri', 'is not', null)
-//     .where('assertion.subjectDid', '=', did)
-//     .select([
-//       'did_handle.did as did',
-//       'did_handle.handle as handle',
-//       views.upvoteCountFromScene(db, ref('did_handle.did')).as('likeCount'),
-//       views.sceneMemberCount(db, ref('did_handle.did')).as('memberCount'),
-//     ])
-//     .execute()
-// }
