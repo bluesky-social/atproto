@@ -4,7 +4,10 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -18,11 +21,11 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
-          "cid": "cids(2)",
+          "cid": "cids(3)",
           "uri": "record(2)",
         },
         "root": Object {
-          "cid": "cids(1)",
+          "cid": "cids(2)",
           "uri": "record(1)",
         },
       },
@@ -35,12 +38,15 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(3)",
+    "cid": "cids(4)",
     "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -56,12 +62,15 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(1)",
+    "cid": "cids(2)",
     "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -77,12 +86,15 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(4)",
+    "cid": "cids(5)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -103,7 +115,10 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "bobby",
       "handle": "bob.test",
@@ -117,11 +132,11 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
-          "cid": "cids(1)",
+          "cid": "cids(2)",
           "uri": "record(1)",
         },
         "root": Object {
-          "cid": "cids(1)",
+          "cid": "cids(2)",
           "uri": "record(1)",
         },
       },
@@ -134,12 +149,15 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "bobby",
       "handle": "bob.test",
     },
-    "cid": "cids(2)",
+    "cid": "cids(3)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -155,12 +173,15 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "bobby",
       "handle": "bob.test",
     },
-    "cid": "cids(3)",
+    "cid": "cids(4)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -181,7 +202,10 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "handle": "dan.test",
     },
@@ -209,7 +233,10 @@ Array [
     "replyCount": 0,
     "repostCount": 1,
     "repostedBy": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(1)",
       "handle": "carol.test",
     },
@@ -218,11 +245,14 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(1)",
       "handle": "carol.test",
     },
-    "cid": "cids(1)",
+    "cid": "cids(2)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -231,11 +261,11 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
-          "cid": "cids(2)",
+          "cid": "cids(3)",
           "uri": "record(3)",
         },
         "root": Object {
-          "cid": "cids(2)",
+          "cid": "cids(3)",
           "uri": "record(3)",
         },
       },
@@ -248,11 +278,14 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(1)",
       "handle": "carol.test",
     },
-    "cid": "cids(3)",
+    "cid": "cids(4)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -273,7 +306,10 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -293,7 +329,10 @@ Array [
     "replyCount": 2,
     "repostCount": 1,
     "repostedBy": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(1)",
       "handle": "dan.test",
     },
@@ -302,11 +341,14 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(1)",
       "handle": "dan.test",
     },
-    "cid": "cids(1)",
+    "cid": "cids(2)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -332,11 +374,14 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(1)",
       "handle": "dan.test",
     },
-    "cid": "cids(2)",
+    "cid": "cids(3)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -357,7 +402,10 @@ exports[`pds author feed views fetches scene feeds with trends. 1`] = `
 Array [
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -376,7 +424,10 @@ Array [
     "replyCount": 2,
     "repostCount": 1,
     "trendedBy": Object {
-      "actorType": "app.bsky.system.actorScene",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(2)",
+      },
       "did": "user(1)",
       "handle": "alice-scene.test",
     },
@@ -385,12 +436,15 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
     },
-    "cid": "cids(1)",
+    "cid": "cids(3)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -412,7 +466,10 @@ Array [
     "replyCount": 1,
     "repostCount": 0,
     "trendedBy": Object {
-      "actorType": "app.bsky.system.actorScene",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorScene",
+        "cid": "cids(2)",
+      },
       "did": "user(1)",
       "handle": "alice-scene.test",
     },
@@ -426,7 +483,10 @@ exports[`pds author feed views reflects fetching user's state in the feed. 1`] =
 Array [
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -440,11 +500,11 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
-          "cid": "cids(2)",
+          "cid": "cids(3)",
           "uri": "record(2)",
         },
         "root": Object {
-          "cid": "cids(1)",
+          "cid": "cids(2)",
           "uri": "record(1)",
         },
       },
@@ -457,12 +517,15 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(3)",
+    "cid": "cids(4)",
     "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {
@@ -480,12 +543,15 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(1)",
+    "cid": "cids(2)",
     "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {
@@ -503,12 +569,15 @@ Array [
   },
   Object {
     "author": Object {
-      "actorType": "app.bsky.system.actorUser",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(4)",
+    "cid": "cids(5)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},

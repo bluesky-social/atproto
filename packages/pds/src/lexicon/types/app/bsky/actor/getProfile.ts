@@ -28,8 +28,8 @@ export type ActorUnknown = string
 
 export interface OutputSchema {
   did: string;
+  declaration: Declaration;
   handle: string;
-  actorType: ActorKnown | ActorUnknown;
   creator: string;
   displayName?: string;
   description?: string;
@@ -41,6 +41,10 @@ export interface OutputSchema {
     follow?: string,
     member?: string,
   };
+}
+export interface Declaration {
+  cid: string;
+  actorType: ActorKnown | ActorUnknown;
 }
 
 export type Handler = (

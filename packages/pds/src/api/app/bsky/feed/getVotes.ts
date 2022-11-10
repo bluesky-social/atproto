@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import * as GetVotes from '../../../../lexicon/types/app/bsky/feed/getVotes'
 import * as locals from '../../../../locals'
 import { paginate } from '../../../../db/util'
+import { getDeclarationSimple } from '../util'
 
 export default function (server: Server) {
   server.app.bsky.feed.getVotes(
@@ -20,6 +21,8 @@ export default function (server: Server) {
           'vote.createdAt as createdAt',
           'vote.indexedAt as indexedAt',
           'did_handle.did as did',
+          'did_handle.declarationCid as declarationCid',
+          'did_handle.actorType as actorType',
           'did_handle.handle as handle',
           'profile.displayName as displayName',
         ])
@@ -46,6 +49,7 @@ export default function (server: Server) {
         indexedAt: row.indexedAt,
         actor: {
           did: row.did,
+          declaration: getDeclarationSimple(row),
           handle: row.handle,
           displayName: row.displayName || undefined,
         },

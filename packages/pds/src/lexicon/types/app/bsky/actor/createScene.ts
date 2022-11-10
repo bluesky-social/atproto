@@ -28,10 +28,19 @@ export interface HandlerError {
 
 export type HandlerOutput = HandlerError | HandlerSuccess
 
+export type ActorKnown =
+  | 'app.bsky.system.actorUser'
+  | 'app.bsky.system.actorScene'
+export type ActorUnknown = string
+
 export interface OutputSchema {
   handle: string;
   did: string;
-  declarationCid: string;
+  declaration: Declaration;
+}
+export interface Declaration {
+  cid: string;
+  actorType: ActorKnown | ActorUnknown;
 }
 
 export type Handler = (

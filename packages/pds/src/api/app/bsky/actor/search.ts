@@ -3,6 +3,7 @@ import Database from '../../../../db'
 import { Server } from '../../../../lexicon'
 import * as Method from '../../../../lexicon/types/app/bsky/actor/search'
 import * as locals from '../../../../locals'
+import { getDeclarationSimple } from '../util'
 import {
   cleanTerm,
   getUserSearchQueryPg,
@@ -36,6 +37,7 @@ export default function (server: Server) {
 
     const users = results.map((result) => ({
       did: result.did,
+      declaration: getDeclarationSimple(result),
       handle: result.handle,
       displayName: result.displayName ?? undefined,
       description: result.description ?? undefined,
@@ -61,6 +63,8 @@ const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
       'distance',
       'did_handle.did as did',
       'did_handle.handle as handle',
+      'did_handle.actorType as actorType',
+      'did_handle.declarationCid as declarationCid',
       'profile.displayName as displayName',
       'profile.description as description',
       'profile.indexedAt as indexedAt',
@@ -75,6 +79,8 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
       sql<number>`0`.as('distance'),
       'did_handle.did as did',
       'did_handle.handle as handle',
+      'did_handle.actorType as actorType',
+      'did_handle.declarationCid as declarationCid',
       'profile.displayName as displayName',
       'profile.description as description',
       'profile.indexedAt as indexedAt',
@@ -88,6 +94,8 @@ type GetResultsFn = (
 ) => Promise<
   {
     did: string
+    actorType: string
+    declarationCid: string
     handle: string
     displayName: string | null
     description: string | null

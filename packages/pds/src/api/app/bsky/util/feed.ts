@@ -1,4 +1,5 @@
 import * as common from '@atproto/common'
+import { getDeclaration } from '.'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 
@@ -25,15 +26,15 @@ export const rowToFeedItem = (row: FeedRow): FeedItem => ({
 
 const rowToAuthor = (row: FeedRow) => ({
   did: row.authorDid,
+  declaration: getDeclaration('author', row),
   handle: row.authorHandle,
-  actorType: row.authorActorType,
   displayName: row.authorDisplayName ?? undefined,
 })
 
 const rowToOriginator = (row: FeedRow) => ({
   did: row.originatorDid,
+  declaration: getDeclaration('originator', row),
   handle: row.originatorHandle,
-  actorType: row.originatorActorType,
   displayName: row.originatorDisplayName ?? undefined,
 })
 
@@ -54,12 +55,14 @@ type FeedRow = {
   recordBytes: Uint8Array
   indexedAt: string
   authorDid: string
-  authorHandle: string
+  authorDeclarationCid: string
   authorActorType: string
+  authorHandle: string
   authorDisplayName: string | null
   originatorDid: string
-  originatorHandle: string
+  originatorDeclarationCid: string
   originatorActorType: string
+  originatorHandle: string
   originatorDisplayName: string | null
   upvoteCount: number
   downvoteCount: number

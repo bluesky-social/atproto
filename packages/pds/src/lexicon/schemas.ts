@@ -38,13 +38,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: [
-          'accessJwt',
-          'refreshJwt',
-          'handle',
-          'did',
-          'declarationCid',
-        ],
+        required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
         properties: {
           accessJwt: {
             type: 'string',
@@ -56,9 +50,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
           },
           did: {
-            type: 'string',
-          },
-          declarationCid: {
             type: 'string',
           },
         },
@@ -844,7 +835,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['handle', 'did', 'declarationCid'],
+        required: ['handle', 'did', 'declaration'],
         properties: {
           handle: {
             type: 'string',
@@ -852,11 +843,41 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           did: {
             type: 'string',
           },
-          declarationCid: {
-            type: 'string',
+          declaration: {
+            $ref: '#/$defs/declaration',
           },
         },
-        $defs: {},
+        $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
       },
     },
     errors: [
@@ -867,6 +888,37 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         name: 'HandleNotAvailable',
       },
     ],
+    defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
+      },
+    },
   },
   'app.bsky.actor.getProfile': {
     lexicon: 1,
@@ -887,8 +939,8 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         type: 'object',
         required: [
           'did',
+          'declaration',
           'handle',
-          'actorType',
           'creator',
           'followersCount',
           'followsCount',
@@ -899,18 +951,11 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           did: {
             type: 'string',
           },
+          declaration: {
+            $ref: '#/$defs/declaration',
+          },
           handle: {
             type: 'string',
-          },
-          actorType: {
-            oneOf: [
-              {
-                $ref: '#/$defs/actorKnown',
-              },
-              {
-                $ref: '#/$defs/actorUnknown',
-              },
-            ],
           },
           creator: {
             type: 'string',
@@ -948,6 +993,25 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
         },
         $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
           actorKnown: {
             type: 'string',
             enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
@@ -962,6 +1026,25 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     },
     defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
       actorKnown: {
         type: 'string',
         enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
@@ -1005,15 +1088,15 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle', 'actorType'],
+              required: ['did', 'declaration', 'handle'],
               properties: {
                 did: {
                   type: 'string',
                 },
-                handle: {
-                  type: 'string',
+                declaration: {
+                  $ref: '#/$defs/declaration',
                 },
-                actorType: {
+                handle: {
                   type: 'string',
                 },
                 displayName: {
@@ -1039,7 +1122,68 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
@@ -1077,10 +1221,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle'],
+              required: ['did', 'declaration', 'handle'],
               properties: {
                 did: {
                   type: 'string',
+                },
+                declaration: {
+                  $ref: '#/$defs/declaration',
                 },
                 handle: {
                   type: 'string',
@@ -1100,7 +1247,68 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
@@ -1132,10 +1340,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle'],
+              required: ['did', 'declaration', 'handle'],
               properties: {
                 did: {
                   type: 'string',
+                },
+                declaration: {
+                  $ref: '#/$defs/declaration',
                 },
                 handle: {
                   type: 'string',
@@ -1148,7 +1359,68 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
@@ -1311,21 +1583,50 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           actor: {
             type: 'object',
-            required: ['did', 'handle', 'actorType'],
+            required: ['did', 'declaration', 'handle'],
             properties: {
               did: {
                 type: 'string',
               },
-              handle: {
-                type: 'string',
+              declaration: {
+                $ref: '#/$defs/declaration',
               },
-              actorType: {
+              handle: {
                 type: 'string',
               },
               displayName: {
                 type: 'string',
                 maxLength: 64,
               },
+            },
+          },
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
             },
           },
           recordEmbed: {
@@ -1459,15 +1760,15 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
       actor: {
         type: 'object',
-        required: ['did', 'handle', 'actorType'],
+        required: ['did', 'declaration', 'handle'],
         properties: {
           did: {
             type: 'string',
           },
-          handle: {
-            type: 'string',
+          declaration: {
+            $ref: '#/$defs/declaration',
           },
-          actorType: {
+          handle: {
             type: 'string',
           },
           displayName: {
@@ -1522,6 +1823,35 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               enum: ['record', 'external'],
             },
           },
+        },
+      },
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
         },
       },
     },
@@ -1635,10 +1965,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           user: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'declaration', 'handle'],
             properties: {
               did: {
                 type: 'string',
+              },
+              declaration: {
+                $ref: '#/$defs/declaration',
               },
               handle: {
                 type: 'string',
@@ -1647,6 +1980,35 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 type: 'string',
                 maxLength: 64,
               },
+            },
+          },
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
             },
           },
           recordEmbed: {
@@ -1783,10 +2145,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
       user: {
         type: 'object',
-        required: ['did', 'handle'],
+        required: ['did', 'declaration', 'handle'],
         properties: {
           did: {
             type: 'string',
+          },
+          declaration: {
+            $ref: '#/$defs/declaration',
           },
           handle: {
             type: 'string',
@@ -1845,6 +2210,35 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
         },
       },
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
+      },
     },
   },
   'app.bsky.feed.getRepostedBy': {
@@ -1889,10 +2283,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle', 'indexedAt'],
+              required: ['did', 'declaration', 'handle', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
+                },
+                declaration: {
+                  $ref: '#/$defs/declaration',
                 },
                 handle: {
                   type: 'string',
@@ -1913,7 +2310,68 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
@@ -2033,10 +2491,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           actor: {
             type: 'object',
-            required: ['did', 'handle', 'actorType'],
+            required: ['did', 'declaration', 'handle'],
             properties: {
               did: {
                 type: 'string',
+              },
+              declaration: {
+                $ref: '#/$defs/declaration',
               },
               handle: {
                 type: 'string',
@@ -2048,6 +2509,35 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 type: 'string',
                 maxLength: 64,
               },
+            },
+          },
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
             },
           },
           recordEmbed: {
@@ -2181,10 +2671,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
       actor: {
         type: 'object',
-        required: ['did', 'handle', 'actorType'],
+        required: ['did', 'declaration', 'handle'],
         properties: {
           did: {
             type: 'string',
+          },
+          declaration: {
+            $ref: '#/$defs/declaration',
           },
           handle: {
             type: 'string',
@@ -2244,6 +2737,35 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               enum: ['record', 'external'],
             },
           },
+        },
+      },
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
         },
       },
     },
@@ -2318,10 +2840,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         $defs: {
           actor: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'declaration', 'handle'],
             properties: {
               did: {
                 type: 'string',
+              },
+              declaration: {
+                $ref: '#/$defs/declaration',
               },
               handle: {
                 type: 'string',
@@ -2332,16 +2857,48 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               },
             },
           },
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
         },
       },
     },
     defs: {
       actor: {
         type: 'object',
-        required: ['did', 'handle'],
+        required: ['did', 'declaration', 'handle'],
         properties: {
           did: {
             type: 'string',
+          },
+          declaration: {
+            $ref: '#/$defs/declaration',
           },
           handle: {
             type: 'string',
@@ -2350,6 +2907,35 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
             maxLength: 64,
           },
+        },
+      },
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
         },
       },
     },
@@ -2448,10 +3034,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         properties: {
           subject: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'declaration', 'handle'],
             properties: {
               did: {
                 type: 'string',
+              },
+              declaration: {
+                $ref: '#/$defs/declaration',
               },
               handle: {
                 type: 'string',
@@ -2469,10 +3058,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle', 'indexedAt'],
+              required: ['did', 'declaration', 'handle', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
+                },
+                declaration: {
+                  $ref: '#/$defs/declaration',
                 },
                 handle: {
                   type: 'string',
@@ -2493,7 +3085,68 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
@@ -2526,10 +3179,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         properties: {
           subject: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'declaration', 'handle'],
             properties: {
               did: {
                 type: 'string',
+              },
+              declaration: {
+                $ref: '#/$defs/declaration',
               },
               handle: {
                 type: 'string',
@@ -2547,10 +3203,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle', 'indexedAt'],
+              required: ['did', 'declaration', 'handle', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
+                },
+                declaration: {
+                  $ref: '#/$defs/declaration',
                 },
                 handle: {
                   type: 'string',
@@ -2571,7 +3230,68 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
@@ -2604,10 +3324,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         properties: {
           subject: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'declaration', 'handle'],
             properties: {
               did: {
                 type: 'string',
+              },
+              declaration: {
+                $ref: '#/$defs/declaration',
               },
               handle: {
                 type: 'string',
@@ -2625,10 +3348,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle', 'declaration', 'indexedAt'],
+              required: ['did', 'declaration', 'handle', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
+                },
+                declaration: {
+                  $ref: '#/$defs/declaration',
                 },
                 handle: {
                   type: 'string',
@@ -2636,18 +3362,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 displayName: {
                   type: 'string',
                   maxLength: 64,
-                },
-                declaration: {
-                  type: 'object',
-                  required: ['cid', 'actorType'],
-                  properties: {
-                    cid: {
-                      type: 'string',
-                    },
-                    actorType: {
-                      type: 'string',
-                    },
-                  },
                 },
                 createdAt: {
                   type: 'string',
@@ -2661,7 +3375,68 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
@@ -2694,10 +3469,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         properties: {
           subject: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'declaration', 'handle'],
             properties: {
               did: {
                 type: 'string',
+              },
+              declaration: {
+                $ref: '#/$defs/declaration',
               },
               handle: {
                 type: 'string',
@@ -2715,10 +3493,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'array',
             items: {
               type: 'object',
-              required: ['did', 'handle', 'declaration', 'indexedAt'],
+              required: ['did', 'declaration', 'handle', 'indexedAt'],
               properties: {
                 did: {
                   type: 'string',
+                },
+                declaration: {
+                  $ref: '#/$defs/declaration',
                 },
                 handle: {
                   type: 'string',
@@ -2726,18 +3507,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 displayName: {
                   type: 'string',
                   maxLength: 64,
-                },
-                declaration: {
-                  type: 'object',
-                  required: ['cid', 'actorType'],
-                  properties: {
-                    cid: {
-                      type: 'string',
-                    },
-                    actorType: {
-                      type: 'string',
-                    },
-                  },
                 },
                 createdAt: {
                   type: 'string',
@@ -2751,7 +3520,68 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
         },
-        $defs: {},
+        $defs: {
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
+        },
+      },
+    },
+    defs: {
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+        },
       },
     },
   },
@@ -2827,10 +3657,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               },
               author: {
                 type: 'object',
-                required: ['did', 'handle'],
+                required: ['did', 'declaration', 'handle'],
                 properties: {
                   did: {
                     type: 'string',
+                  },
+                  declaration: {
+                    $ref: '#/$defs/declaration',
                   },
                   handle: {
                     type: 'string',
@@ -2861,6 +3694,35 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               },
             },
           },
+          declaration: {
+            type: 'object',
+            required: ['cid', 'actorType'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+              actorType: {
+                oneOf: [
+                  {
+                    $ref: '#/$defs/actorKnown',
+                  },
+                  {
+                    $ref: '#/$defs/actorUnknown',
+                  },
+                ],
+              },
+            },
+          },
+          actorKnown: {
+            type: 'string',
+            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+          },
+          actorUnknown: {
+            type: 'string',
+            not: {
+              enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+            },
+          },
         },
       },
     },
@@ -2886,10 +3748,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
           author: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'declaration', 'handle'],
             properties: {
               did: {
                 type: 'string',
+              },
+              declaration: {
+                $ref: '#/$defs/declaration',
               },
               handle: {
                 type: 'string',
@@ -2918,6 +3783,35 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
             format: 'date-time',
           },
+        },
+      },
+      declaration: {
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            oneOf: [
+              {
+                $ref: '#/$defs/actorKnown',
+              },
+              {
+                $ref: '#/$defs/actorUnknown',
+              },
+            ],
+          },
+        },
+      },
+      actorKnown: {
+        type: 'string',
+        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
+      },
+      actorUnknown: {
+        type: 'string',
+        not: {
+          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
         },
       },
     },

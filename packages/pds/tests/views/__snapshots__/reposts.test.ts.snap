@@ -4,24 +4,40 @@ exports[`pds repost views fetches reposted-by for a post 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(1)",
     "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(2)",
     "handle": "carol.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(3)",
     "displayName": "bobby",
     "handle": "bob.test",
@@ -34,12 +50,20 @@ exports[`pds repost views fetches reposted-by for a reply 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(1)",
     "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",

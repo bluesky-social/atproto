@@ -16,10 +16,19 @@ export interface InputSchema {
   recoveryKey?: string;
 }
 
+export type ActorKnown =
+  | 'app.bsky.system.actorUser'
+  | 'app.bsky.system.actorScene'
+export type ActorUnknown = string
+
 export interface OutputSchema {
   handle: string;
   did: string;
-  declarationCid: string;
+  declaration: Declaration;
+}
+export interface Declaration {
+  cid: string;
+  actorType: ActorKnown | ActorUnknown;
 }
 
 export interface Response {

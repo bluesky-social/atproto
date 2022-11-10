@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetFollowers from '../../../../lexicon/types/app/bsky/graph/getFollowers'
-import * as util from '../util'
+import { getActorInfo, getDeclarationSimple } from '../util'
 import * as locals from '../../../../locals'
 import { paginate } from '../../../../db/util'
 
@@ -12,7 +12,7 @@ export default function (server: Server) {
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
-      const subject = await util.getActorInfo(db.db, user).catch((_e) => {
+      const subject = await getActorInfo(db.db, user).catch((_e) => {
         throw new InvalidRequestError(`User not found: ${user}`)
       })
 
@@ -23,6 +23,8 @@ export default function (server: Server) {
         .leftJoin('profile', 'profile.creator', 'follow.creator')
         .select([
           'creator.did as did',
+          'creator.declarationCid as declarationCid',
+          'creator.actorType as actorType',
           'creator.handle as handle',
           'profile.displayName as displayName',
           'follow.createdAt as createdAt',
@@ -38,6 +40,7 @@ export default function (server: Server) {
       const followersRes = await followersReq.execute()
       const followers = followersRes.map((row) => ({
         did: row.did,
+        declaration: getDeclarationSimple(row),
         handle: row.handle,
         displayName: row.displayName || undefined,
         createdAt: row.createdAt,

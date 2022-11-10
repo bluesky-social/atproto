@@ -24,17 +24,27 @@ export interface HandlerError {
 
 export type HandlerOutput = HandlerError | HandlerSuccess
 
+export type ActorKnown =
+  | 'app.bsky.system.actorUser'
+  | 'app.bsky.system.actorScene'
+export type ActorUnknown = string
+
 export interface OutputSchema {
   uri: string;
   cid?: string;
   cursor?: string;
   repostedBy: {
     did: string,
+    declaration: Declaration,
     handle: string,
     displayName?: string,
     createdAt?: string,
     indexedAt: string,
   }[];
+}
+export interface Declaration {
+  cid: string;
+  actorType: ActorKnown | ActorUnknown;
 }
 
 export type Handler = (

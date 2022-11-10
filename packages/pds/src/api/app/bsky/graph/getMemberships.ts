@@ -1,7 +1,7 @@
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetMemberships from '../../../../lexicon/types/app/bsky/graph/getMemberships'
-import * as util from '../util'
+import { getActorInfo, getDeclarationSimple } from '../util'
 import * as locals from '../../../../locals'
 import { paginate } from '../../../../db/util'
 
@@ -12,7 +12,7 @@ export default function (server: Server) {
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
-      const subject = await util.getActorInfo(db.db, actor).catch((_e) => {
+      const subject = await getActorInfo(db.db, actor).catch((_e) => {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       })
 
@@ -43,10 +43,7 @@ export default function (server: Server) {
       const memberships = membershipsRes.map((row) => ({
         did: row.did,
         handle: row.handle,
-        declaration: {
-          cid: row.declarationCid,
-          actorType: row.actorType,
-        },
+        declaration: getDeclarationSimple(row),
         displayName: row.displayName || undefined,
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,

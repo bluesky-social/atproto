@@ -23,6 +23,11 @@ export interface HandlerError {
 
 export type HandlerOutput = HandlerError | HandlerSuccess
 
+export type ActorKnown =
+  | 'app.bsky.system.actorUser'
+  | 'app.bsky.system.actorScene'
+export type ActorUnknown = string
+
 export interface OutputSchema {
   cursor?: string;
   feed: FeedItem[];
@@ -48,9 +53,14 @@ export interface FeedItem {
 }
 export interface Actor {
   did: string;
+  declaration: Declaration;
   handle: string;
-  actorType: string;
+  actorType?: string;
   displayName?: string;
+}
+export interface Declaration {
+  cid: string;
+  actorType: ActorKnown | ActorUnknown;
 }
 export interface RecordEmbed {
   type: 'record';

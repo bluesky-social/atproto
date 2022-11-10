@@ -3,6 +3,7 @@ import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import * as GetProfile from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import { countAll, actorWhereClause } from '../../../../db/util'
 import * as locals from '../../../../locals'
+import { getDeclarationSimple } from '../util'
 
 export default function (server: Server) {
   server.app.bsky.actor.getProfile(
@@ -26,6 +27,7 @@ export default function (server: Server) {
           'did_handle.did as did',
           'did_handle.handle as handle',
           'did_handle.actorType as actorType',
+          'did_handle.declarationCid as declarationCid',
           'scene.owner as owner',
           'profile.uri as profileUri',
           'profile.displayName as displayName',
@@ -77,9 +79,9 @@ export default function (server: Server) {
         encoding: 'application/json',
         body: {
           did: queryRes.did,
+          declaration: getDeclarationSimple(queryRes),
           handle: queryRes.handle,
           creator: queryRes.owner || queryRes.did,
-          actorType: queryRes.actorType,
           displayName: queryRes.displayName || undefined,
           description: queryRes.description || undefined,
           followsCount: queryRes.followsCount,
