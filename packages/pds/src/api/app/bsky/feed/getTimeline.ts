@@ -113,11 +113,13 @@ export default function (server: Server) {
           'author.declarationCid as authorDeclarationCid',
           'author.actorType as authorActorType',
           'author.handle as authorHandle',
+          'author.actorType as authorActorType',
           'author_profile.displayName as authorDisplayName',
           'originator.did as originatorDid',
           'originator.declarationCid as originatorDeclarationCid',
           'originator.actorType as originatorActorType',
           'originator.handle as originatorHandle',
+          'originator.actorType as originatorActorType',
           'originator_profile.displayName as originatorDisplayName',
           db.db
             .selectFrom('vote')
