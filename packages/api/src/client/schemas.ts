@@ -4234,13 +4234,13 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
         },
         subject: {
           type: 'object',
-          required: ['did', 'declaration'],
+          required: ['did', 'declarationCid'],
           properties: {
             did: {
               type: 'string',
             },
-            declaration: {
-              $ref: '#/$defs/declaration',
+            declarationCid: {
+              type: 'string',
             },
           },
         },
@@ -4249,68 +4249,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
           format: 'date-time',
         },
       },
-      $defs: {
-        declaration: {
-          type: 'object',
-          required: ['cid', 'actorType'],
-          properties: {
-            cid: {
-              type: 'string',
-            },
-            actorType: {
-              oneOf: [
-                {
-                  $ref: '#/$defs/actorKnown',
-                },
-                {
-                  $ref: '#/$defs/actorUnknown',
-                },
-              ],
-            },
-          },
-        },
-        actorKnown: {
-          type: 'string',
-          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-        },
-        actorUnknown: {
-          type: 'string',
-          not: {
-            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-          },
-        },
-      },
-    },
-    defs: {
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            oneOf: [
-              {
-                $ref: '#/$defs/actorKnown',
-              },
-              {
-                $ref: '#/$defs/actorUnknown',
-              },
-            ],
-          },
-        },
-      },
-      actorKnown: {
-        type: 'string',
-        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-      },
-      actorUnknown: {
-        type: 'string',
-        not: {
-          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-        },
-      },
+      $defs: {},
     },
   },
   'app.bsky.graph.confirmation': {
@@ -4324,13 +4263,13 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       properties: {
         originator: {
           type: 'object',
-          required: ['did', 'declaration'],
+          required: ['did', 'declarationCid'],
           properties: {
             did: {
               type: 'string',
             },
-            declaration: {
-              $ref: '#/$defs/declaration',
+            declarationCid: {
+              type: 'string',
             },
           },
         },
@@ -4351,68 +4290,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
           format: 'date-time',
         },
       },
-      $defs: {
-        declaration: {
-          type: 'object',
-          required: ['cid', 'actorType'],
-          properties: {
-            cid: {
-              type: 'string',
-            },
-            actorType: {
-              oneOf: [
-                {
-                  $ref: '#/$defs/actorKnown',
-                },
-                {
-                  $ref: '#/$defs/actorUnknown',
-                },
-              ],
-            },
-          },
-        },
-        actorKnown: {
-          type: 'string',
-          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-        },
-        actorUnknown: {
-          type: 'string',
-          not: {
-            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-          },
-        },
-      },
-    },
-    defs: {
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            oneOf: [
-              {
-                $ref: '#/$defs/actorKnown',
-              },
-              {
-                $ref: '#/$defs/actorUnknown',
-              },
-            ],
-          },
-        },
-      },
-      actorKnown: {
-        type: 'string',
-        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-      },
-      actorUnknown: {
-        type: 'string',
-        not: {
-          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-        },
-      },
+      $defs: {},
     },
   },
   'app.bsky.graph.follow': {
@@ -4427,13 +4305,13 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
       properties: {
         subject: {
           type: 'object',
-          required: ['did', 'declaration'],
+          required: ['did', 'declarationCid'],
           properties: {
             did: {
               type: 'string',
             },
-            declaration: {
-              $ref: '#/$defs/declaration',
+            declarationCid: {
+              type: 'string',
             },
           },
         },
@@ -4442,68 +4320,7 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
           format: 'date-time',
         },
       },
-      $defs: {
-        declaration: {
-          type: 'object',
-          required: ['cid', 'actorType'],
-          properties: {
-            cid: {
-              type: 'string',
-            },
-            actorType: {
-              oneOf: [
-                {
-                  $ref: '#/$defs/actorKnown',
-                },
-                {
-                  $ref: '#/$defs/actorUnknown',
-                },
-              ],
-            },
-          },
-        },
-        actorKnown: {
-          type: 'string',
-          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-        },
-        actorUnknown: {
-          type: 'string',
-          not: {
-            enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-          },
-        },
-      },
-    },
-    defs: {
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            oneOf: [
-              {
-                $ref: '#/$defs/actorKnown',
-              },
-              {
-                $ref: '#/$defs/actorUnknown',
-              },
-            ],
-          },
-        },
-      },
-      actorKnown: {
-        type: 'string',
-        enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-      },
-      actorUnknown: {
-        type: 'string',
-        not: {
-          enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
-        },
-      },
+      $defs: {},
     },
   },
   'app.bsky.system.declaration': {
