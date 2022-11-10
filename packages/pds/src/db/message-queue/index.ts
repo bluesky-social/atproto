@@ -255,7 +255,8 @@ export class SqlMessageQueue implements MessageQueue {
     await Promise.all(
       state.map(async (scene) => {
         if (scene.postedTrending) return
-        const ratio = scene.voteCount / scene.memberCount
+        const ratio =
+          scene.memberCount !== 0 ? scene.voteCount / scene.memberCount : 0
         const shouldTrend = scene.voteCount > 1 && ratio > 0.2
         if (!shouldTrend) return
 
