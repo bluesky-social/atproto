@@ -621,7 +621,7 @@ export class ProfileRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
@@ -757,7 +757,7 @@ export class MediaEmbedRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
@@ -818,7 +818,7 @@ export class PostRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
@@ -879,7 +879,7 @@ export class RepostRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
@@ -940,7 +940,7 @@ export class VoteRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
@@ -1063,7 +1063,7 @@ export class AssertionRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
@@ -1128,7 +1128,7 @@ export class ConfirmationRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
@@ -1189,7 +1189,7 @@ export class FollowRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
@@ -1305,7 +1305,7 @@ export class DeclarationRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(
