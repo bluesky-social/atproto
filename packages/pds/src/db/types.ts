@@ -20,6 +20,6 @@ export type DbRecordPlugin<T> = {
 export type Ref = DynamicReferenceBuilder<any>
 
 export interface MessageQueue {
-  send(message: Message): Promise<void>
+  send(message: Message | Message[]): Promise<void>
   catchup(): Promise<void>
 }

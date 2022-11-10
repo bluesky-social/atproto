@@ -15,9 +15,9 @@ import * as vote from './records/vote'
 import * as repost from './records/repost'
 import * as trend from './records/trend'
 import * as follow from './records/follow'
-import * as sceneMessageQueue from './views/sceneMessageQueue'
-import * as sceneMemberCount from './views/sceneMemberCount'
-import * as sceneVotesOnPost from './views/sceneVotesOnPost'
+import * as messageQueue from './message-queue/tables/messageQueue'
+import * as sceneMemberCount from './message-queue/tables/sceneMemberCount'
+import * as sceneVotesOnPost from './message-queue/tables/sceneVotesOnPost'
 
 export type DatabaseSchema = user.PartialDB &
   didHandle.PartialDB &
@@ -36,6 +36,6 @@ export type DatabaseSchema = user.PartialDB &
   repost.PartialDB &
   trend.PartialDB &
   follow.PartialDB &
-  sceneMessageQueue.PartialDB &
+  messageQueue.PartialDB &
   sceneMemberCount.PartialDB &
   sceneVotesOnPost.PartialDB

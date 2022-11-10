@@ -11,7 +11,7 @@ import {
 } from './messages'
 import { sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
-import { SceneVotesOnPost } from '../views/sceneVotesOnPost'
+import { SceneVotesOnPost } from './tables/sceneVotesOnPost'
 import { AuthStore } from '@atproto/auth'
 import * as repoUtil from '../../util/repo'
 import * as schema from '../../lexicon/schemas'
@@ -24,25 +24,22 @@ export class SqlMessageQueue implements MessageQueue {
     private getAuthStore: (did: string) => AuthStore,
   ) {}
 
-  async send(message: Message): Promise<void> {
+  async send(messages: Message | Message[]): Promise<void> {
     const res = await this.db.db
-      .insertInto('scene_message_queue')
+      .insertInto('message_queue')
       .values({
-        message: JSON.stringify(message),
+        message: JSON.stringify(messages),
         read: 0,
         createdAt: new Date().toISOString(),
       })
       .returning('id')
-      .executeTakeFirst()
-    if (!res) {
-      throw new Error(`Failed to send message: :${message}`)
-    }
-    this.process(res.id)
+      .execute()
+    res.forEach((row) => this.process(row.id))
   }
 
   async catchup(): Promise<void> {
     const res = await this.db.db
-      .selectFrom('scene_message_queue')
+      .selectFrom('message_queue')
       .where('read', '=', 0)
       .forUpdate()
       .selectAll()
@@ -53,7 +50,7 @@ export class SqlMessageQueue implements MessageQueue {
   private async process(id: number): Promise<void> {
     await this.db.transaction(async (dbTxn) => {
       const res = await dbTxn.db
-        .selectFrom('scene_message_queue')
+        .selectFrom('message_queue')
         .where('id', '=', id)
         .forUpdate()
         .selectAll()
@@ -68,7 +65,7 @@ export class SqlMessageQueue implements MessageQueue {
       await this.handleMessage(dbTxn, message)
 
       await dbTxn.db
-        .updateTable('scene_message_queue')
+        .updateTable('message_queue')
         .set({ read: 1 })
         .where('id', '=', id)
         .execute()

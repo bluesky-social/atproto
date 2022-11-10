@@ -12,7 +12,6 @@ import * as Follow from './records/follow'
 import * as Assertion from './records/assertion'
 import * as Confirmation from './records/confirmation'
 import * as Profile from './records/profile'
-import notificationPlugin from './tables/user-notification'
 import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
 import { CID } from 'multiformats/cid'
@@ -27,7 +26,6 @@ import { DidHandle } from './tables/did-handle'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
 import { APP_BSKY_GRAPH } from '../lexicon'
 import { MessageQueue } from './types'
-import SqlMessageQueue from './message-queue'
 
 export class Database {
   migrator: Migrator
@@ -42,7 +40,7 @@ export class Database {
     assertion: Assertion.PluginType
     confirmation: Confirmation.PluginType
   }
-  messageQueue: MessageQueue
+  messageQueue: MessageQueue | null = null
 
   constructor(
     public db: Kysely<DatabaseSchema>,
@@ -66,7 +64,6 @@ export class Database {
       migrationTableSchema: schema,
       provider: new CtxMigrationProvider(migrations, dialect),
     })
-    this.messageQueue = SqlMessageQueue
   }
 
   static sqlite(location: string): Database {
@@ -140,6 +137,10 @@ export class Database {
       throw new Error('An unknown failure occurred while migrating')
     }
     return results
+  }
+
+  setMessageQueue(mq: MessageQueue) {
+    this.messageQueue = mq
   }
 
   async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {
@@ -367,10 +368,11 @@ export class Database {
       throw new Error('Expected indexed URI to contain a record key')
     }
     await this.db.insertInto('record').values(record).execute()
+
     const table = this.findTableForCollection(uri.collection)
     const events = await table.insert(uri, cid, obj, timestamp)
-    // const notifs = table.notifsForRecord(uri, cid, obj)
-    // await this.notifications.process(notifs)
+    this.messageQueue && (await this.messageQueue.send(events))
+
     log.info({ uri }, 'indexed record')
   }
 
@@ -382,11 +384,9 @@ export class Database {
       .deleteFrom('record')
       .where('uri', '=', uri.toString())
       .execute()
-    await Promise.all([
-      table.delete(uri),
-      deleteQuery,
-      this.notifications.deleteForRecord(uri),
-    ])
+
+    const [events, _] = await Promise.all([table.delete(uri), deleteQuery])
+    this.messageQueue && (await this.messageQueue.send(events))
 
     log.info({ uri }, 'deleted indexed record')
   }
