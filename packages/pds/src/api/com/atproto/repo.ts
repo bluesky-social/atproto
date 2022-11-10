@@ -5,14 +5,8 @@ import * as didResolver from '@atproto/did-resolver'
 import * as locals from '../../../locals'
 import * as schemas from '../../../lexicon/schemas'
 import { TID } from '@atproto/common'
-import {
-  CidWriteOp,
-  RecordWriteOp,
-  recordWriteOp,
-  RepoStructure,
-} from '@atproto/repo'
+import { CidWriteOp, RepoStructure } from '@atproto/repo'
 import SqlBlockstore from '../../../sql-blockstore'
-import * as scenes from '../../../scenes'
 
 export default function (server: Server) {
   server.com.atproto.repo.describe(async (params, _in, _req, res) => {

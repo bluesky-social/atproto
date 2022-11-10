@@ -12,19 +12,40 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
+import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
+import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
+import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
+import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
+import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
+import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+import * as AppBskyActorSearch from './types/app/bsky/actor/search'
+import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
+import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
+import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
+import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
+import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
+import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
+import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
+import * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
+import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 
 export const APP_BSKY_GRAPH = {
@@ -64,16 +85,20 @@ export class ComNS {
 export class AtprotoNS {
   _server: Server
   account: AccountNS
+  handle: HandleNS
   repo: RepoNS
   server: ServerNS
   session: SessionNS
+  sync: SyncNS
 
   constructor(server: Server) {
     this._server = server
     this.account = new AccountNS(server)
+    this.handle = new HandleNS(server)
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
     this.session = new SessionNS(server)
+    this.sync = new SyncNS(server)
   }
 }
 
@@ -115,6 +140,19 @@ export class AccountNS {
   }
 }
 
+export class HandleNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  resolve(handler: ComAtprotoHandleResolve.Handler) {
+    const schema = 'com.atproto.handle.resolve' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+}
+
 export class RepoNS {
   _server: Server
 
@@ -134,6 +172,21 @@ export class RepoNS {
 
   deleteRecord(handler: ComAtprotoRepoDeleteRecord.Handler) {
     const schema = 'com.atproto.repo.deleteRecord' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  describe(handler: ComAtprotoRepoDescribe.Handler) {
+    const schema = 'com.atproto.repo.describe' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getRecord(handler: ComAtprotoRepoGetRecord.Handler) {
+    const schema = 'com.atproto.repo.getRecord' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  listRecords(handler: ComAtprotoRepoListRecords.Handler) {
+    const schema = 'com.atproto.repo.listRecords' // @ts-ignore
     return this._server.xrpc.method(schema, handler)
   }
 
@@ -184,6 +237,29 @@ export class SessionNS {
   }
 }
 
+export class SyncNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getRepo(handler: ComAtprotoSyncGetRepo.Handler) {
+    const schema = 'com.atproto.sync.getRepo' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getRoot(handler: ComAtprotoSyncGetRoot.Handler) {
+    const schema = 'com.atproto.sync.getRoot' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  updateRepo(handler: ComAtprotoSyncUpdateRepo.Handler) {
+    const schema = 'com.atproto.sync.updateRepo' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+}
+
 export class AppNS {
   _server: Server
   bsky: BskyNS
@@ -224,6 +300,26 @@ export class ActorNS {
     return this._server.xrpc.method(schema, handler)
   }
 
+  getProfile(handler: AppBskyActorGetProfile.Handler) {
+    const schema = 'app.bsky.actor.getProfile' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getSuggestions(handler: AppBskyActorGetSuggestions.Handler) {
+    const schema = 'app.bsky.actor.getSuggestions' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  search(handler: AppBskyActorSearch.Handler) {
+    const schema = 'app.bsky.actor.search' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  searchTypeahead(handler: AppBskyActorSearchTypeahead.Handler) {
+    const schema = 'app.bsky.actor.searchTypeahead' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
   updateProfile(handler: AppBskyActorUpdateProfile.Handler) {
     const schema = 'app.bsky.actor.updateProfile' // @ts-ignore
     return this._server.xrpc.method(schema, handler)
@@ -235,6 +331,31 @@ export class FeedNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getAuthorFeed(handler: AppBskyFeedGetAuthorFeed.Handler) {
+    const schema = 'app.bsky.feed.getAuthorFeed' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getPostThread(handler: AppBskyFeedGetPostThread.Handler) {
+    const schema = 'app.bsky.feed.getPostThread' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getRepostedBy(handler: AppBskyFeedGetRepostedBy.Handler) {
+    const schema = 'app.bsky.feed.getRepostedBy' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getTimeline(handler: AppBskyFeedGetTimeline.Handler) {
+    const schema = 'app.bsky.feed.getTimeline' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getVotes(handler: AppBskyFeedGetVotes.Handler) {
+    const schema = 'app.bsky.feed.getVotes' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
   }
 
   setVote(handler: AppBskyFeedSetVote.Handler) {
@@ -249,6 +370,26 @@ export class GraphNS {
   constructor(server: Server) {
     this._server = server
   }
+
+  getFollowers(handler: AppBskyGraphGetFollowers.Handler) {
+    const schema = 'app.bsky.graph.getFollowers' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getFollows(handler: AppBskyGraphGetFollows.Handler) {
+    const schema = 'app.bsky.graph.getFollows' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getMembers(handler: AppBskyGraphGetMembers.Handler) {
+    const schema = 'app.bsky.graph.getMembers' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  getMemberships(handler: AppBskyGraphGetMemberships.Handler) {
+    const schema = 'app.bsky.graph.getMemberships' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
 }
 
 export class NotificationNS {
@@ -260,6 +401,11 @@ export class NotificationNS {
 
   getCount(handler: AppBskyNotificationGetCount.Handler) {
     const schema = 'app.bsky.notification.getCount' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
+  }
+
+  list(handler: AppBskyNotificationList.Handler) {
+    const schema = 'app.bsky.notification.list' // @ts-ignore
     return this._server.xrpc.method(schema, handler)
   }
 
