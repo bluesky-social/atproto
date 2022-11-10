@@ -447,7 +447,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
       name: 'params',
       type: `Omit<${toTitleCase(
         ATP_METHODS.delete,
-      )}.QueryParams, "collection">`,
+      )}.InputSchema, "collection">`,
     })
     method.addParameter({
       name: 'headers?',
