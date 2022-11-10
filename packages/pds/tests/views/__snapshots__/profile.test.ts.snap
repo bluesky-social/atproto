@@ -2,8 +2,11 @@
 
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
-  "actorType": "app.bsky.system.actorUser",
   "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
   "description": "its me!",
   "did": "user(0)",
   "displayName": "ali",
@@ -20,8 +23,11 @@ Object {
 
 exports[`pds profile views fetches other's profile, without a follow 1`] = `
 Object {
-  "actorType": "app.bsky.system.actorUser",
   "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
   "did": "user(0)",
   "followersCount": 1,
   "followsCount": 1,
@@ -34,8 +40,11 @@ Object {
 
 exports[`pds profile views fetches own profile 1`] = `
 Object {
-  "actorType": "app.bsky.system.actorUser",
   "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
   "description": "its me!",
   "did": "user(0)",
   "displayName": "ali",
@@ -50,8 +59,11 @@ Object {
 
 exports[`pds profile views fetches scene's profile 1`] = `
 Object {
-  "actorType": "app.bsky.system.actorScene",
   "creator": "user(1)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorScene",
+    "cid": "cids(0)",
+  },
   "did": "user(0)",
   "followersCount": 0,
   "followsCount": 0,
@@ -66,8 +78,11 @@ Object {
 
 exports[`pds profile views handles partial updates 1`] = `
 Object {
-  "actorType": "app.bsky.system.actorUser",
   "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
   "description": "blah blah",
   "did": "user(0)",
   "displayName": "ali",
@@ -82,8 +97,11 @@ Object {
 
 exports[`pds profile views updates profile 1`] = `
 Object {
-  "actorType": "app.bsky.system.actorUser",
   "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
   "description": "new descript",
   "did": "user(0)",
   "displayName": "ali",

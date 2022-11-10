@@ -7,6 +7,10 @@ Object {
   "votes": Array [
     Object {
       "actor": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(0)",
+        },
         "did": "user(0)",
         "handle": "eve.test",
       },
@@ -16,6 +20,10 @@ Object {
     },
     Object {
       "actor": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(0)",
+        },
         "did": "user(1)",
         "handle": "dan.test",
       },
@@ -25,6 +33,10 @@ Object {
     },
     Object {
       "actor": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(0)",
+        },
         "did": "user(2)",
         "handle": "carol.test",
       },
@@ -34,6 +46,10 @@ Object {
     },
     Object {
       "actor": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(0)",
+        },
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
@@ -53,6 +69,10 @@ Object {
   "votes": Array [
     Object {
       "actor": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(0)",
+        },
         "did": "user(0)",
         "handle": "carol.test",
       },

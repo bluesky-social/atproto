@@ -4,6 +4,7 @@ import { Server } from '../../../../lexicon'
 import * as List from '../../../../lexicon/types/app/bsky/notification/list'
 import * as locals from '../../../../locals'
 import { paginate } from '../../../../db/util'
+import { getDeclaration } from '../util'
 
 export default function (server: Server) {
   server.app.bsky.notification.list(
@@ -31,6 +32,8 @@ export default function (server: Server) {
           'notif.recordUri as uri',
           'notif.recordCid as cid',
           'author.did as authorDid',
+          'author.declarationCid as authorDeclarationCid',
+          'author.actorType as authorActorType',
           'author.handle as authorHandle',
           'author_profile.displayName as authorDisplayName',
           'notif.reason as reason',
@@ -66,6 +69,7 @@ export default function (server: Server) {
         cid: notif.cid,
         author: {
           did: notif.authorDid,
+          declaration: getDeclaration('author', notif),
           handle: notif.authorHandle,
           displayName: notif.authorDisplayName || undefined,
         },

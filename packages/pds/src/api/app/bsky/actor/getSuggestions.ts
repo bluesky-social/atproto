@@ -1,5 +1,6 @@
 import { Server } from '../../../../lexicon'
 import * as locals from '../../../../locals'
+import { getDeclarationSimple } from '../util'
 
 export default function (server: Server) {
   server.app.bsky.actor.getSuggestions(async (params, _input, req, res) => {
@@ -19,6 +20,7 @@ export default function (server: Server) {
         'did_handle.did as did',
         'did_handle.handle as handle',
         'did_handle.actorType as actorType',
+        'did_handle.declarationCid as declarationCid',
         'profile.uri as profileUri',
         'profile.displayName as displayName',
         'profile.description as description',
@@ -42,7 +44,7 @@ export default function (server: Server) {
     const actors = suggestionsRes.map((result) => ({
       did: result.did,
       handle: result.handle,
-      actorType: result.actorType,
+      declaration: getDeclarationSimple(result),
       displayName: result.displayName ?? undefined,
       description: result.description ?? undefined,
       indexedAt: result.indexedAt ?? undefined,

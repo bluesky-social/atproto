@@ -110,12 +110,14 @@ export default function (server: Server) {
           'ipld_block.content as recordBytes',
           'ipld_block.indexedAt as indexedAt',
           'author.did as authorDid',
-          'author.handle as authorHandle',
+          'author.declarationCid as authorDeclarationCid',
           'author.actorType as authorActorType',
+          'author.handle as authorHandle',
           'author_profile.displayName as authorDisplayName',
           'originator.did as originatorDid',
-          'originator.handle as originatorHandle',
+          'originator.declarationCid as originatorDeclarationCid',
           'originator.actorType as originatorActorType',
+          'originator.handle as originatorHandle',
           'originator_profile.displayName as originatorDisplayName',
           db.db
             .selectFrom('vote')

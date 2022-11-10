@@ -2,6 +2,7 @@ import Database from '../../../../db'
 import { Server } from '../../../../lexicon'
 import * as Method from '../../../../lexicon/types/app/bsky/actor/search'
 import * as locals from '../../../../locals'
+import { getDeclarationSimple } from '../util'
 import {
   cleanTerm,
   getUserSearchQueryPg,
@@ -33,6 +34,7 @@ export default function (server: Server) {
 
     const users = results.map((result) => ({
       did: result.did,
+      declaration: getDeclarationSimple(result),
       handle: result.handle,
       displayName: result.displayName ?? undefined,
     }))
@@ -51,6 +53,8 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select([
       'did_handle.did as did',
+      'did_handle.declarationCid as declarationCid',
+      'did_handle.actorType as actorType',
       'did_handle.handle as handle',
       'profile.displayName as displayName',
     ])
@@ -62,6 +66,8 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select([
       'did_handle.did as did',
+      'did_handle.declarationCid as declarationCid',
+      'did_handle.actorType as actorType',
       'did_handle.handle as handle',
       'profile.displayName as displayName',
     ])
@@ -71,4 +77,12 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
 type GetResultsFn = (
   db: Database,
   opts: Method.QueryParams & { limit: number },
-) => Promise<{ did: string; handle: string; displayName: string | null }[]>
+) => Promise<
+  {
+    did: string
+    declarationCid: string
+    actorType: string
+    handle: string
+    displayName: string | null
+  }[]
+>

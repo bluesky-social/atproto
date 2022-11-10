@@ -112,13 +112,21 @@ export class SeedClient {
       password: string
     },
   ) {
-    const { data } = await this.client.com.atproto.account.create(params)
-    this.dids[shortName] = data.did
-    this.accounts[data.did] = {
-      ...data,
+    const { data: account } = await this.client.com.atproto.account.create(
+      params,
+    )
+    const { data: profile } = await this.client.app.bsky.actor.getProfile(
+      {
+        actor: params.handle,
+      },
+      { headers: SeedClient.getHeaders(account.accessJwt) },
+    )
+    this.dids[shortName] = account.did
+    this.accounts[account.did] = {
+      ...account,
       email: params.email,
       password: params.password,
-      ref: new ActorRef(data.did, data.declarationCid),
+      ref: new ActorRef(account.did, profile.declaration.cid),
     }
     return this.accounts[shortName]
   }
@@ -237,7 +245,7 @@ export class SeedClient {
       did: res.data.did,
       handle: res.data.handle,
       creator,
-      ref: new ActorRef(res.data.did, res.data.declarationCid),
+      ref: new ActorRef(res.data.did, res.data.declaration.cid),
     }
     this.dids[handle] = res.data.did
     this.scenes[res.data.handle] = scene

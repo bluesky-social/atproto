@@ -184,37 +184,49 @@ describe('pds user search views', () => {
 // you can achieve it using named snapshots, but when you run the tests for pg the test suite fails
 // since the sqlite snapshots appear obsolete to jest (and vice-versa when you run the sqlite suite).
 
+const declaration = {
+  actorType: 'app.bsky.system.actorUser',
+  cid: 'cids(0)',
+}
+
 const snapTypeaheadPg = [
   {
     did: 'user(0)',
+    declaration,
     handle: 'cara-wiegand69.test',
   },
   {
     did: 'user(1)',
+    declaration,
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
   },
   {
     did: 'user(2)',
+    declaration,
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
   },
   {
     did: 'user(3)',
+    declaration,
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
   },
   {
     did: 'user(4)',
+    declaration,
     handle: 'carlos6.test',
   },
   {
     did: 'user(5)',
+    declaration,
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
   },
   {
     did: 'user(6)',
+    declaration,
     displayName: 'Rachel Kshlerin',
     handle: 'cayla-marquardt39.test',
   },
@@ -223,29 +235,35 @@ const snapTypeaheadPg = [
 const snapTypeaheadSqlite = [
   {
     did: 'user(0)',
+    declaration,
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
   },
   {
     did: 'user(1)',
+    declaration,
     handle: 'cara-wiegand69.test',
   },
   {
     did: 'user(2)',
+    declaration,
     handle: 'carlos6.test',
   },
   {
     did: 'user(3)',
+    declaration,
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
   },
   {
     did: 'user(4)',
+    declaration,
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
   },
   {
     did: 'user(5)',
+    declaration,
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
   },
@@ -259,6 +277,7 @@ const snapSearchPg = [
   {
     description: '',
     did: 'user(1)',
+    declaration,
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
@@ -266,6 +285,7 @@ const snapSearchPg = [
   {
     description: '',
     did: 'user(2)',
+    declaration,
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',
@@ -273,17 +293,20 @@ const snapSearchPg = [
   {
     description: '',
     did: 'user(3)',
+    declaration,
     displayName: 'Carlton Abernathy IV',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
   },
   {
     did: 'user(4)',
+    declaration,
     handle: 'carlos6.test',
   },
   {
     description: '',
     did: 'user(5)',
+    declaration,
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
@@ -291,6 +314,7 @@ const snapSearchPg = [
   {
     description: '',
     did: 'user(6)',
+    declaration,
     displayName: 'Rachel Kshlerin',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'cayla-marquardt39.test',
@@ -301,21 +325,25 @@ const snapSearchSqlite = [
   {
     description: '',
     did: 'user(0)',
+    declaration,
     displayName: 'Carlton Abernathy IV',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
   },
   {
     did: 'user(1)',
+    declaration,
     handle: 'cara-wiegand69.test',
   },
   {
     did: 'user(2)',
+    declaration,
     handle: 'carlos6.test',
   },
   {
     description: '',
     did: 'user(3)',
+    declaration,
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
@@ -323,6 +351,7 @@ const snapSearchSqlite = [
   {
     description: '',
     did: 'user(4)',
+    declaration,
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
@@ -330,6 +359,7 @@ const snapSearchSqlite = [
   {
     description: '',
     did: 'user(5)',
+    declaration,
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',

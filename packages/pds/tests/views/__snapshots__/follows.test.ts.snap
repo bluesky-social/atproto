@@ -6,30 +6,50 @@ Object {
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(2)",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(3)",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(4)",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "alice.test",
   },
@@ -42,18 +62,30 @@ Object {
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(2)",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "bob.test",
   },
@@ -66,24 +98,40 @@ Object {
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(2)",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(3)",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "carol.test",
   },
@@ -96,12 +144,20 @@ Object {
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "dan.test",
   },
@@ -114,18 +170,30 @@ Object {
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(2)",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "eve.test",
   },
@@ -138,30 +206,50 @@ Object {
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(2)",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(3)",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(4)",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "alice.test",
   },
@@ -174,18 +262,30 @@ Object {
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(2)",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "bob.test",
   },
@@ -198,12 +298,20 @@ Object {
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "carol.test",
   },
@@ -216,24 +324,40 @@ Object {
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(2)",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(3)",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "dan.test",
   },
@@ -246,18 +370,30 @@ Object {
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(1)",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
       "did": "user(2)",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
   "subject": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
     "did": "user(0)",
     "handle": "eve.test",
   },
