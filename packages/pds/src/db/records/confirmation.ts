@@ -53,6 +53,7 @@ const deleteFn =
         confirmCreated: null,
         confirmIndexed: null,
       })
+      .execute()
   }
 
 const notifsForRecord = (
