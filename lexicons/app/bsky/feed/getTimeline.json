@@ -32,8 +32,9 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
-        "author": {"$ref": "#/defs/user"},
-        "repostedBy": {"$ref": "#/defs/user"},
+        "author": {"$ref": "#/defs/actor"},
+        "trendedBy": {"$ref": "#/defs/actor"},
+        "repostedBy": {"$ref": "#/defs/actor"},
         "record": {"type": "object"},
         "embed": {
           "oneOf": [
@@ -57,12 +58,13 @@
         }
       }
     },
-    "user": {
+    "actor": {
       "type": "object",
-      "required": ["did", "handle"],
+      "required": ["did", "handle", "actorType"],
       "properties": {
         "did": {"type": "string"},
         "handle": {"type": "string"},
+        "actorType": {"type": "string"},
         "displayName": {
           "type": "string",
           "maxLength": 64
@@ -74,7 +76,7 @@
       "required": ["type", "author", "record"],
       "properties": {
         "type": {"const": "record"},
-        "author": {"$ref": "#/defs/user"},
+        "author": {"$ref": "#/defs/actor"},
         "record": {"type": "object"}
       }
     },

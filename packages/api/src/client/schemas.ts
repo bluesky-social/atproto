@@ -1253,10 +1253,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 type: 'string',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/actor',
+              },
+              trendedBy: {
+                $ref: '#/$defs/actor',
               },
               repostedBy: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/actor',
               },
               record: {
                 type: 'object',
@@ -1306,14 +1309,17 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               },
             },
           },
-          user: {
+          actor: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'handle', 'actorType'],
             properties: {
               did: {
                 type: 'string',
               },
               handle: {
+                type: 'string',
+              },
+              actorType: {
                 type: 'string',
               },
               displayName: {
@@ -1330,7 +1336,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 const: 'record',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/actor',
               },
               record: {
                 type: 'object',
@@ -1395,10 +1401,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
           },
           author: {
-            $ref: '#/$defs/user',
+            $ref: '#/$defs/actor',
+          },
+          trendedBy: {
+            $ref: '#/$defs/actor',
           },
           repostedBy: {
-            $ref: '#/$defs/user',
+            $ref: '#/$defs/actor',
           },
           record: {
             type: 'object',
@@ -1448,14 +1457,17 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
         },
       },
-      user: {
+      actor: {
         type: 'object',
-        required: ['did', 'handle'],
+        required: ['did', 'handle', 'actorType'],
         properties: {
           did: {
             type: 'string',
           },
           handle: {
+            type: 'string',
+          },
+          actorType: {
             type: 'string',
           },
           displayName: {
@@ -1472,7 +1484,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             const: 'record',
           },
           author: {
-            $ref: '#/$defs/user',
+            $ref: '#/$defs/actor',
           },
           record: {
             type: 'object',
@@ -1963,10 +1975,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 type: 'string',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/actor',
+              },
+              trendedBy: {
+                $ref: '#/$defs/actor',
               },
               repostedBy: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/actor',
               },
               record: {
                 type: 'object',
@@ -2016,14 +2031,17 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               },
             },
           },
-          user: {
+          actor: {
             type: 'object',
-            required: ['did', 'handle'],
+            required: ['did', 'handle', 'actorType'],
             properties: {
               did: {
                 type: 'string',
               },
               handle: {
+                type: 'string',
+              },
+              actorType: {
                 type: 'string',
               },
               displayName: {
@@ -2040,7 +2058,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 const: 'record',
               },
               author: {
-                $ref: '#/$defs/user',
+                $ref: '#/$defs/actor',
               },
               record: {
                 type: 'object',
@@ -2105,10 +2123,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
           },
           author: {
-            $ref: '#/$defs/user',
+            $ref: '#/$defs/actor',
+          },
+          trendedBy: {
+            $ref: '#/$defs/actor',
           },
           repostedBy: {
-            $ref: '#/$defs/user',
+            $ref: '#/$defs/actor',
           },
           record: {
             type: 'object',
@@ -2158,14 +2179,17 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           },
         },
       },
-      user: {
+      actor: {
         type: 'object',
-        required: ['did', 'handle'],
+        required: ['did', 'handle', 'actorType'],
         properties: {
           did: {
             type: 'string',
           },
           handle: {
+            type: 'string',
+          },
+          actorType: {
             type: 'string',
           },
           displayName: {
@@ -2182,7 +2206,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             const: 'record',
           },
           author: {
-            $ref: '#/$defs/user',
+            $ref: '#/$defs/actor',
           },
           record: {
             type: 'object',

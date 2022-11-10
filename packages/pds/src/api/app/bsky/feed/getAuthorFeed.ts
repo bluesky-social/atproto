@@ -3,7 +3,7 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as locals from '../../../../locals'
-import { rowToFeedItem } from '../util/feed'
+import { FeedItemType, rowToFeedItem } from '../util/feed'
 import { countAll, paginate } from '../../../../db/util'
 
 export default function (server: Server) {
@@ -32,7 +32,7 @@ export default function (server: Server) {
           userQb.whereRef('did_handle.did', '=', ref('post.creator')),
         )
         .select([
-          sql<'post' | 'repost'>`${'post'}`.as('type'),
+          sql<FeedItemType>`${'post'}`.as('type'),
           'uri as postUri',
           'cid as postCid',
           'creator as originatorDid',
@@ -45,15 +45,28 @@ export default function (server: Server) {
           userQb.whereRef('did_handle.did', '=', ref('repost.creator')),
         )
         .select([
-          sql<'post' | 'repost'>`${'repost'}`.as('type'),
+          sql<FeedItemType>`${'repost'}`.as('type'),
           'subject as postUri',
           'subjectCid as postCid',
           'creator as originatorDid',
           'indexedAt as cursor',
         ])
 
-      let postsAndRepostsQb = db.db
-        .selectFrom(postsQb.union(repostsQb).as('posts_and_reposts'))
+      const trendsQb = db.db
+        .selectFrom('trend')
+        .whereExists(
+          userQb.whereRef('did_handle.did', '=', ref('trend.creator')),
+        )
+        .select([
+          sql<FeedItemType>`${'trend'}`.as('type'),
+          'subject as postUri',
+          'subjectCid as postCid',
+          'creator as originatorDid',
+          'indexedAt as cursor',
+        ])
+
+      let feedItemsQb = db.db
+        .selectFrom(postsQb.union(repostsQb).union(trendsQb).as('feed_items'))
         .innerJoin('post', 'post.uri', 'postUri')
         .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
         .innerJoin('did_handle as author', 'author.did', 'post.creator')
@@ -81,9 +94,11 @@ export default function (server: Server) {
           'ipld_block.indexedAt as indexedAt',
           'author.did as authorDid',
           'author.handle as authorHandle',
+          'author.actorType as authorActorType',
           'author_profile.displayName as authorDisplayName',
           'originator.did as originatorDid',
           'originator.handle as originatorHandle',
+          'originator.actorType as originatorActorType',
           'originator_profile.displayName as originatorDisplayName',
           db.db
             .selectFrom('vote')
@@ -129,13 +144,13 @@ export default function (server: Server) {
             .as('requesterDownvote'),
         ])
 
-      postsAndRepostsQb = paginate(postsAndRepostsQb, {
+      feedItemsQb = paginate(feedItemsQb, {
         limit,
         before,
         by: ref('cursor'),
       })
 
-      const queryRes = await postsAndRepostsQb.execute()
+      const queryRes = await feedItemsQb.execute()
       const feed = queryRes.map(rowToFeedItem)
 
       return {

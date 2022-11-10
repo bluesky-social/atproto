@@ -194,7 +194,7 @@ describe('pds home feed views', () => {
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(full.data.feed.length).toEqual(13)
+    expect(full.data.feed.length).toEqual(15)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })
