@@ -233,7 +233,6 @@ export class SeedClient {
         encoding: 'application/json',
       },
     )
-    this.dids[handle] = res.data.did
     const scene = {
       did: res.data.did,
       handle: res.data.handle,
