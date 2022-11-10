@@ -25,6 +25,8 @@ describe('pds notification views', () => {
     sc = new SeedClient(client)
     await basicSeed(sc)
     alice = sc.dids.alice
+    const { db } = locals.get(app)
+    await db.messageQueue?.catchup()
   })
 
   afterAll(async () => {

@@ -38,23 +38,29 @@ export class SqlMessageQueue implements MessageQueue {
   }
 
   async catchup(): Promise<void> {
-    const res = await this.db.db
+    let builder = this.db.db
       .selectFrom('message_queue')
       .where('read', '=', 0)
-      .forUpdate()
       .selectAll()
-      .execute()
+    if (this.db.dialect !== 'sqlite') {
+      builder = builder.forUpdate()
+    }
+    const res = await builder.execute()
     await Promise.all(res.map((row) => this.process(row.id)))
   }
 
   private async process(id: number): Promise<void> {
+    console.log('processing: ', id)
     await this.db.transaction(async (dbTxn) => {
-      const res = await dbTxn.db
+      let builder = dbTxn.db
         .selectFrom('message_queue')
         .where('id', '=', id)
-        .forUpdate()
         .selectAll()
-        .executeTakeFirst()
+      if (this.db.dialect !== 'sqlite') {
+        builder = builder.forUpdate()
+      }
+
+      const res = await builder.executeTakeFirst()
 
       if (!res) {
         log.error({ id }, 'message does not exist')
@@ -73,6 +79,7 @@ export class SqlMessageQueue implements MessageQueue {
   }
 
   private async handleMessage(db: Database, message: Message) {
+    console.log('hadnling: ', message)
     switch (message.type) {
       case 'add_member':
         return this.handleAddMember(db, message)

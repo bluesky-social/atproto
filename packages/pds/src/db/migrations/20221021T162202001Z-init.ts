@@ -1,6 +1,5 @@
 import { Kysely, sql } from 'kysely'
 import { Dialect } from '..'
-import { APP_BSKY_GRAPH, APP_BSKY_SYSTEM } from '../../lexicon'
 import { DatabaseSchema } from '../database-schema'
 
 const userTable = 'user'
@@ -23,6 +22,9 @@ const postEntityTable = 'post_entity'
 const repostTable = 'repost'
 const trendTable = 'trend'
 const voteTable = 'vote'
+const messageQueueTable = 'message_queue'
+const sceneMemberCountTable = 'scene_member_count'
+const sceneVotesOnPostTable = 'scnee_votes_on_post'
 
 export async function up(
   db: Kysely<DatabaseSchema>,
@@ -255,46 +257,36 @@ export async function up(
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
 
-  // await db.schema
-  //   .createView('scene_likes_on_post')
-  //   .orReplace()
-  //   .as(
-  //     db
-  //       .selectFrom('did_handle')
-  //       .where('did_handle.actorType', '=', APP_BSKY_SYSTEM.ActorScene)
-  //       .innerJoin('assertion', 'assertion.creator', 'did_handle.did')
-  //       .where('assertion.confirmUri', 'is not', null)
-  //       .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
-  //       .innerJoin('like', 'like.creator', 'assertion.subjectDid')
-  //       .groupBy(['did_handle.did', 'like.subject'])
-  //       .select([
-  //         'did_handle.did as did',
-  //         'like.subject as subject',
-  //         db.fn.count<number>('like.uri').as('count'),
-  //       ]),
-  //   )
-  //   .execute()
-
-  // await db.schema
-  //   .createView('scene_member_count')
-  //   .orReplace()
-  //   .as(
-  //     db
-  //       .selectFrom('did_handle')
-  //       .where('did_handle.actorType', '=', APP_BSKY_SYSTEM.ActorScene)
-  //       .innerJoin('assertion', 'assertion.creator', 'did_handle.did')
-  //       .where('assertion.confirmUri', 'is not', null)
-  //       .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
-  //       .groupBy('did_handle.did')
-  //       .select([
-  //         'did_handle.did as did',
-  //         db.fn.count<number>('assertion.uri').as('count'),
-  //       ]),
-  //   )
-  //   .execute()
+  let mqBuilder = db.schema.createTable(messageQueueTable)
+  mqBuilder =
+    dialect === 'pg'
+      ? mqBuilder.addColumn('id', 'serial', (col) => col.primaryKey())
+      : mqBuilder.addColumn('id', 'integer', (col) =>
+          col.autoIncrement().primaryKey(),
+        )
+  mqBuilder
+    .addColumn('message', 'varchar', (col) => col.notNull())
+    .addColumn('read', 'int2', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .execute()
+  await db.schema
+    .createTable(sceneMemberCountTable)
+    .addColumn('did', 'varchar', (col) => col.primaryKey())
+    .addColumn('count', 'integer', (col) => col.notNull())
+    .execute()
+  await db.schema
+    .createTable(sceneVotesOnPostTable)
+    .addColumn('did', 'varchar', (col) => col.primaryKey())
+    .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('count', 'integer', (col) => col.notNull())
+    .addColumn('postedTrending', 'int2', (col) => col.notNull())
+    .execute()
 }
 
 export async function down(db: Kysely<DatabaseSchema>): Promise<void> {
+  await db.schema.dropTable(sceneVotesOnPostTable).execute()
+  await db.schema.dropTable(sceneMemberCountTable).execute()
+  await db.schema.dropTable(messageQueueTable).execute()
   await db.schema.dropTable(voteTable).execute()
   await db.schema.dropTable(trendTable).execute()
   await db.schema.dropTable(repostTable).execute()
