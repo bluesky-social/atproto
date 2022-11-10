@@ -89,9 +89,12 @@ export async function generateMockSetup(env: DevEnv) {
       handle: user.handle,
       password: user.password,
     })
-    user.did = res.data.did
-    user.declarationCid = res.data.declarationCid
     user.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
+    const { data: profile } = await user.api.app.bsky.actor.getProfile({
+      actor: user.handle,
+    })
+    user.did = res.data.did
+    user.declarationCid = profile.declaration.cid
     await user.api.app.bsky.actor.profile.create(
       { did: user.did },
       {
@@ -142,7 +145,7 @@ export async function generateMockSetup(env: DevEnv) {
       {
         originator: {
           did: bestiesScene.data.did,
-          declarationCid: bestiesScene.data.declarationCid,
+          declarationCid: bestiesScene.data.declaration.cid,
         },
         assertion: {
           uri: invite.uri,
@@ -169,7 +172,7 @@ export async function generateMockSetup(env: DevEnv) {
       {
         originator: {
           did: bestiesScene.data.did,
-          declarationCid: bestiesScene.data.declarationCid,
+          declarationCid: bestiesScene.data.declaration.cid,
         },
         assertion: {
           uri: invite.uri,
