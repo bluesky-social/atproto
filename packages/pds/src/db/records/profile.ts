@@ -2,8 +2,9 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../lexicon/types/app/bsky/actor/profile'
-import { DbRecordPlugin, Notification } from '../types'
+import { DbRecordPlugin } from '../types'
 import * as schemas from '../schemas'
+import { Message } from '../message-queue/messages'
 
 const type = schemas.ids.AppBskyActorProfile
 const tableName = 'profile'
@@ -26,7 +27,7 @@ const validateSchema = (obj: unknown) => validator.validate(obj)
 
 const insertFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri, cid: CID, obj: unknown): Promise<void> => {
+  async (uri: AtUri, cid: CID, obj: unknown): Promise<Message[]> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -40,17 +41,15 @@ const insertFn =
       indexedAt: new Date().toISOString(),
     }
     await db.insertInto(tableName).values(profile).execute()
+    return []
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<void> => {
+  async (uri: AtUri): Promise<Message[]> => {
     await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
+    return []
   }
-
-const notifsForRecord = (_uri: AtUri, _obj: unknown): Notification[] => {
-  return []
-}
 
 export type PluginType = DbRecordPlugin<Profile.Record>
 
@@ -61,7 +60,6 @@ export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
     matchesSchema,
     insert: insertFn(db),
     delete: deleteFn(db),
-    notifsForRecord,
   }
 }
 

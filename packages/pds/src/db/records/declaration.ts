@@ -2,9 +2,10 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Declaration from '../../lexicon/types/app/bsky/system/declaration'
-import { DbRecordPlugin, Notification } from '../types'
+import { DbRecordPlugin } from '../types'
 import * as schemas from '../schemas'
 import { PartialDB } from '../tables/did-handle'
+import { Message } from '../message-queue/messages'
 
 const type = schemas.ids.AppBskySystemDeclaration
 
@@ -21,7 +22,7 @@ const insertFn =
     cid: CID,
     obj: unknown,
     _timestamp?: string,
-  ): Promise<void> => {
+  ): Promise<Message[]> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -33,21 +34,14 @@ const insertFn =
       .where('did', '=', uri.host)
       .set({ declarationCid: cid.toString(), actorType: obj.actorType })
       .execute()
+    return []
   }
 
 const deleteFn =
   (_db: Kysely<PartialDB>) =>
-  async (_uri: AtUri): Promise<void> => {
+  async (_uri: AtUri): Promise<Message[]> => {
     throw new Error('Declaration alone can not be deleted')
   }
-
-const notifsForRecord = (
-  _uri: AtUri,
-  _cid: CID,
-  _obj: unknown,
-): Notification[] => {
-  return []
-}
 
 export type PluginType = DbRecordPlugin<Declaration.Record>
 
@@ -58,7 +52,6 @@ export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
     matchesSchema,
     insert: insertFn(db),
     delete: deleteFn(db),
-    notifsForRecord,
   }
 }
 
