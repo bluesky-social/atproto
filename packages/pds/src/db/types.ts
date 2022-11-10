@@ -3,6 +3,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { DynamicReferenceBuilder } from 'kysely/dist/cjs/dynamic/dynamic-reference-builder'
 import { Message } from './message-queue/messages'
+import Database from '.'
 
 export type DbRecordPlugin<T> = {
   collection: string
@@ -20,6 +21,6 @@ export type DbRecordPlugin<T> = {
 export type Ref = DynamicReferenceBuilder<any>
 
 export interface MessageQueue {
-  send(message: Message | Message[]): Promise<void>
+  send(tx: Database, message: Message | Message[]): Promise<void>
   catchup(): Promise<void>
 }

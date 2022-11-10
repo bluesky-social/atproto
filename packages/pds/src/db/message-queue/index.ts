@@ -23,7 +23,7 @@ export class SqlMessageQueue implements MessageQueue {
     private getAuthStore: (did: string) => AuthStore,
   ) {}
 
-  async send(messages: Message | Message[]): Promise<void> {
+  async send(tx: Database, messages: Message | Message[]): Promise<void> {
     const msgArray = Array.isArray(messages) ? messages : [messages]
     if (msgArray.length === 0) return
     const now = new Date().toISOString()
@@ -33,7 +33,7 @@ export class SqlMessageQueue implements MessageQueue {
       createdAt: now,
     }))
 
-    const res = await this.db.db
+    const res = await tx.db
       .insertInto('message_queue')
       .values(values)
       .returning('id')
