@@ -22,6 +22,11 @@ export interface HandlerError {
 
 export type HandlerOutput = HandlerError | HandlerSuccess
 
+export type ActorKnown =
+  | 'app.bsky.system.actorUser'
+  | 'app.bsky.system.actorScene'
+export type ActorUnknown = string
+
 export interface OutputSchema {
   cursor?: string;
   notifications: Notification[];
@@ -31,6 +36,7 @@ export interface Notification {
   cid: string;
   author: {
     did: string,
+    declaration: Declaration,
     handle: string,
     displayName?: string,
   };
@@ -39,6 +45,10 @@ export interface Notification {
   record: {};
   isRead: boolean;
   indexedAt: string;
+}
+export interface Declaration {
+  cid: string;
+  actorType: ActorKnown | ActorUnknown;
 }
 
 export type Handler = (

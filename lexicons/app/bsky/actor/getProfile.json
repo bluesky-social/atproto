@@ -13,16 +13,11 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["did", "handle", "actorType", "creator", "followersCount", "followsCount", "membersCount", "postsCount"],
+      "required": ["did", "declaration", "handle", "creator", "followersCount", "followsCount", "membersCount", "postsCount"],
       "properties": {
         "did": {"type": "string"},
+        "declaration": {"$ref": "#/defs/declaration"},
         "handle": {"type": "string"},
-        "actorType": {
-          "oneOf": [
-            {"$ref": "#/defs/actorKnown"},
-            {"$ref": "#/defs/actorUnknown"}
-          ]
-        },
         "creator": {"type": "string"},
         "displayName": {
           "type": "string",
@@ -47,6 +42,19 @@
     }
   },
   "defs": {
+    "declaration": {
+      "type": "object",
+      "required": ["cid", "actorType"],
+      "properties": {
+        "cid": {"type": "string"},
+        "actorType": {
+          "oneOf": [
+            {"$ref": "#/defs/actorKnown"},
+            {"$ref": "#/defs/actorUnknown"}
+          ]
+        }
+      }
+    },
     "actorKnown": {
       "type": "string",
       "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]

@@ -9,10 +9,10 @@
     "properties": {
       "originator": {
         "type": "object",
-        "required": ["did", "declarationCid"],
+        "required": ["did", "declaration"],
         "properties": {
           "did": {"type": "string"},
-          "declarationCid": {"type": "string"}
+          "declaration": {"$ref": "#/defs/declaration"}
         }
       },
       "assertion": {
@@ -24,6 +24,29 @@
         }
       },
       "createdAt": {"type": "string", "format": "date-time"}
+    }
+  },
+  "defs": {
+    "declaration": {
+      "type": "object",
+      "required": ["cid", "actorType"],
+      "properties": {
+        "cid": {"type": "string"},
+        "actorType": {
+          "oneOf": [
+            {"$ref": "#/defs/actorKnown"},
+            {"$ref": "#/defs/actorUnknown"}
+          ]
+        }
+      }
+    },
+    "actorKnown": {
+      "type": "string",
+      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
+    },
+    "actorUnknown": {
+      "type": "string",
+      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
   }
 }
