@@ -1594,9 +1594,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               handle: {
                 type: 'string',
               },
-              actorType: {
-                type: 'string',
-              },
               displayName: {
                 type: 'string',
                 maxLength: 64,
@@ -1772,9 +1769,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             $ref: '#/$defs/declaration',
           },
           handle: {
-            type: 'string',
-          },
-          actorType: {
             type: 'string',
           },
           displayName: {

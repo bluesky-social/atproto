@@ -91,7 +91,8 @@ Array [
     "reason": "assertion",
     "reasonSubject": "user(0)",
     "record": Object {
-      "$type": "app.bsky.feed.trend",
+      "$type": "app.bsky.graph.assertion",
+      "assertion": "app.bsky.graph.assertMember",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": Object {
         "declarationCid": "cids(4)",
@@ -116,7 +117,7 @@ Array [
     "reasonSubject": "user(0)",
     "record": Object {
       "$type": "app.bsky.graph.assertion",
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": Object {
         "declarationCid": "cids(4)",
@@ -203,7 +204,7 @@ Array [
       },
       "text": "of course",
     },
-    "uri": "record(9)",
+    "uri": "record(8)",
   },
   Object {
     "author": Object {
@@ -271,7 +272,7 @@ Array [
       "did": "user(6)",
       "handle": "carol.test",
     },
-    "cid": "cids(12)",
+    "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
     "reason": "vote",
@@ -597,7 +598,7 @@ Array [
       },
       "text": "of course",
     },
-    "uri": "record(9)",
+    "uri": "record(8)",
   },
   Object {
     "author": Object {
@@ -665,7 +666,7 @@ Array [
       "did": "user(6)",
       "handle": "carol.test",
     },
-    "cid": "cids(12)",
+    "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "vote",

@@ -58,13 +58,11 @@ type FeedRow = {
   authorDeclarationCid: string
   authorActorType: string
   authorHandle: string
-  authorActorType: string
   authorDisplayName: string | null
   originatorDid: string
   originatorDeclarationCid: string
   originatorActorType: string
   originatorHandle: string
-  originatorActorType: string
   originatorDisplayName: string | null
   upvoteCount: number
   downvoteCount: number

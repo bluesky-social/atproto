@@ -957,7 +957,7 @@ export class TrendRecord {
   }
 
   async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.QueryParams, 'collection'>,
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
     headers?: Record<string, string>
   ): Promise<void> {
     await this._service.xrpc.call(

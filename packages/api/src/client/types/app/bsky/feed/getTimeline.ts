@@ -47,7 +47,7 @@ export interface Actor {
   did: string;
   declaration: Declaration;
   handle: string;
-  actorType: string;
+  actorType?: string;
   displayName?: string;
 }
 export interface Declaration {
