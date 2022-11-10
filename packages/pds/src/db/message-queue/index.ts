@@ -11,7 +11,6 @@ import {
 } from './messages'
 import { sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
-import { SceneVotesOnPost } from './tables/sceneVotesOnPost'
 import { AuthStore } from '@atproto/auth'
 import * as repoUtil from '../../util/repo'
 import * as schema from '../../lexicon/schemas'
@@ -25,16 +24,26 @@ export class SqlMessageQueue implements MessageQueue {
   ) {}
 
   async send(messages: Message | Message[]): Promise<void> {
+    const msgArray = Array.isArray(messages) ? messages : [messages]
+    if (msgArray.length === 0) return
+    const now = new Date().toISOString()
+    const values = msgArray.map((msg) => ({
+      message: JSON.stringify(msg),
+      read: 0 as 0 | 1,
+      createdAt: now,
+    }))
+
     const res = await this.db.db
       .insertInto('message_queue')
-      .values({
-        message: JSON.stringify(messages),
-        read: 0,
-        createdAt: new Date().toISOString(),
-      })
+      .values(values)
       .returning('id')
       .execute()
-    res.forEach((row) => this.process(row.id))
+
+    res.forEach((row) =>
+      this.process(row.id).catch((err) =>
+        log.error({ id: row.id, err }, 'failed to process message'),
+      ),
+    )
   }
 
   async catchup(): Promise<void> {
@@ -46,11 +55,16 @@ export class SqlMessageQueue implements MessageQueue {
       builder = builder.forUpdate()
     }
     const res = await builder.execute()
-    await Promise.all(res.map((row) => this.process(row.id)))
+    await Promise.all(
+      res.map((row) =>
+        this.process(row.id).catch((err) =>
+          log.error({ id: row.id, err }, 'failed to process message'),
+        ),
+      ),
+    )
   }
 
   private async process(id: number): Promise<void> {
-    console.log('processing: ', id)
     await this.db.transaction(async (dbTxn) => {
       let builder = dbTxn.db
         .selectFrom('message_queue')
@@ -79,20 +93,24 @@ export class SqlMessageQueue implements MessageQueue {
   }
 
   private async handleMessage(db: Database, message: Message) {
-    console.log('hadnling: ', message)
-    switch (message.type) {
-      case 'add_member':
-        return this.handleAddMember(db, message)
-      case 'remove_member':
-        return this.handleRemoveMember(db, message)
-      case 'add_upvote':
-        return this.handleAddUpvote(db, message)
-      case 'remove_upvote':
-        return this.handleRemoveUpvote(db, message)
-      case 'create_notification':
-        return this.handleCreateNotification(db, message)
-      case 'delete_notifications':
-        return this.handleDeleteNotifications(db, message)
+    try {
+      switch (message.type) {
+        case 'add_member':
+          return this.handleAddMember(db, message)
+        case 'remove_member':
+          return this.handleRemoveMember(db, message)
+        case 'add_upvote':
+          return this.handleAddUpvote(db, message)
+        case 'remove_upvote':
+          return this.handleRemoveUpvote(db, message)
+        case 'create_notification':
+          return this.handleCreateNotification(db, message)
+        case 'delete_notifications':
+          return this.handleDeleteNotifications(db, message)
+      }
+    } catch (err) {
+      console.log('FAILED ON: ', message.type)
+      throw err
     }
   }
 
@@ -103,15 +121,17 @@ export class SqlMessageQueue implements MessageQueue {
     message: AddMember,
   ): Promise<void> {
     const res = await db.db
-      .updateTable('scene_member_count')
-      .set({ count: sql`count + 1` })
-      .where('did', '=', message.scene)
-      .returning(['did', 'count'])
-      .execute()
-    if (res.length === 0) {
+      .insertInto('scene_member_count')
+      .values({ did: message.scene, count: 1 })
+      .onConflict((oc) => oc.doNothing())
+      .returningAll()
+      .executeTakeFirst()
+    if (!res) {
       await db.db
-        .insertInto('scene_member_count')
-        .values({ did: message.scene, count: 0 })
+        .updateTable('scene_member_count')
+        .set({ count: sql`count + 1` })
+        .where('did', '=', message.scene)
+        .returning(['did', 'count'])
         .execute()
     }
   }
@@ -133,26 +153,32 @@ export class SqlMessageQueue implements MessageQueue {
     message: AddUpvote,
   ): Promise<void> {
     const userScenes = await db.getScenesForUser(message.user)
-
-    const res = await db.db
-      .updateTable('scene_votes_on_post')
-      .set({ count: sql`count + 1` })
-      .where('subject', '=', message.subject)
-      .where('did', 'in', userScenes)
-      .returning(['did', 'count', 'postedTrending'])
+    if (userScenes.length < 1) return
+    const inserted = await db.db
+      .insertInto('scene_votes_on_post')
+      .values(
+        userScenes.map((scene) => ({
+          did: scene,
+          subject: message.subject,
+          count: 1,
+          postedTrending: 0 as 0 | 1,
+        })),
+      )
+      .onConflict((oc) => oc.doNothing())
+      .returningAll()
       .execute()
-
-    const toInsert: SceneVotesOnPost[] = userScenes
-      .filter((scene) => !res.some((row) => scene === row.did))
-      .map((scene) => ({
-        did: scene,
-        subject: message.subject,
-        count: 1,
-        postedTrending: 0,
-      }))
-
-    if (toInsert.length > 0) {
-      await db.db.insertInto('scene_votes_on_post').values(toInsert).execute()
+    const insertedIds = inserted.map((row) => row.did)
+    const toUpdate = userScenes.filter(
+      (scene) => insertedIds.indexOf(scene) < 0,
+    )
+    if (toUpdate.length > 0) {
+      await db.db
+        .updateTable('scene_votes_on_post')
+        .set({ count: sql`count + 1` })
+        .where('subject', '=', message.subject)
+        .where('did', 'in', toUpdate)
+        .returningAll()
+        .execute()
     }
     await this.checkTrending(db, userScenes, message.subject)
   }
@@ -162,9 +188,10 @@ export class SqlMessageQueue implements MessageQueue {
     message: RemoveUpvote,
   ): Promise<void> {
     const userScenes = await db.getScenesForUser(message.user)
+    if (userScenes.length === 0) return
     await db.db
       .updateTable('scene_votes_on_post')
-      .set({ count: sql`count + 1` })
+      .set({ count: sql`count - 1` })
       .where('subject', '=', message.subject)
       .where('did', 'in', userScenes)
       .returning(['did', 'count'])
@@ -175,15 +202,19 @@ export class SqlMessageQueue implements MessageQueue {
     db: Database,
     message: CreateNotification,
   ): Promise<void> {
-    await db.db.insertInto('user_notification').values({
-      userDid: message.userDid,
-      recordUri: message.recordUri,
-      recordCid: message.recordCid,
-      author: message.author,
-      reason: message.reason,
-      reasonSubject: message.reasonSubject,
-      indexedAt: new Date().toISOString(),
-    })
+    await db.db
+      .insertInto('user_notification')
+      .values({
+        userDid: message.userDid,
+        recordUri: message.recordUri,
+        recordCid: message.recordCid,
+        author: message.author,
+        reason: message.reason,
+        reasonSubject: message.reasonSubject,
+        indexedAt: new Date().toISOString(),
+      })
+      .returningAll()
+      .execute()
   }
 
   private async handleDeleteNotifications(
@@ -203,6 +234,7 @@ export class SqlMessageQueue implements MessageQueue {
     scenes: string[],
     subject: string,
   ): Promise<void> {
+    if (scenes.length === 0) return
     const state = await db.db
       .selectFrom('scene_member_count as members')
       .innerJoin('scene_votes_on_post as votes', 'votes.did', 'members.did')

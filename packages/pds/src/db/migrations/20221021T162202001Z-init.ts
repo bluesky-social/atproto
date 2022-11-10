@@ -24,7 +24,7 @@ const trendTable = 'trend'
 const voteTable = 'vote'
 const messageQueueTable = 'message_queue'
 const sceneMemberCountTable = 'scene_member_count'
-const sceneVotesOnPostTable = 'scnee_votes_on_post'
+const sceneVotesOnPostTable = 'scene_votes_on_post'
 
 export async function up(
   db: Kysely<DatabaseSchema>,

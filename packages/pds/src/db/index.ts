@@ -40,12 +40,12 @@ export class Database {
     assertion: Assertion.PluginType
     confirmation: Confirmation.PluginType
   }
-  messageQueue: MessageQueue | null = null
 
   constructor(
     public db: Kysely<DatabaseSchema>,
     public dialect: Dialect,
     public schema?: string,
+    public messageQueue?: MessageQueue,
   ) {
     this.records = {
       declaration: Declaration.makePlugin(db),
@@ -108,7 +108,12 @@ export class Database {
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     return await this.db.transaction().execute((txn) => {
-      const dbTxn = new Database(txn, this.dialect, this.schema)
+      const dbTxn = new Database(
+        txn,
+        this.dialect,
+        this.schema,
+        this.messageQueue,
+      )
       return fn(dbTxn)
     })
   }
