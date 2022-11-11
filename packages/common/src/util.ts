@@ -1,3 +1,14 @@
+export const noUndefinedVals = <T>(
+  obj: Record<string, T>,
+): Record<string, T> => {
+  Object.keys(obj).forEach((k) => {
+    if (obj[k] === undefined) {
+      delete obj[k]
+    }
+  })
+  return obj
+}
+
 export const wait = (ms: number) => {
   return new Promise((res) => setTimeout(res, ms))
 }
