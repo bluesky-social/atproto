@@ -7,6 +7,7 @@ import { RepoStructure } from '@atproto/repo'
 import SqlBlockstore from '../../../../sql-blockstore'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
+import * as common from '@atproto/common'
 
 const profileNsid = schema.ids.AppBskyActorProfile
 
@@ -58,6 +59,7 @@ export default function (server: Server) {
             description: input.body.description,
           }
         }
+        updated = common.noUndefinedKeys(updated)
         if (!db.records.profile.matchesSchema(updated)) {
           throw new InvalidRequestError(
             'requested updates do not produce a valid profile doc',
@@ -66,24 +68,28 @@ export default function (server: Server) {
 
         const profileCid = await repo.blockstore.put(updated)
 
-        // Update profile record
-        await dbTxn.db
-          .updateTable('record')
-          .set({ cid: profileCid.toString() })
-          .where('uri', '=', uri.toString())
-          .execute()
+        if (current) {
+          // Update profile record
+          await dbTxn.db
+            .updateTable('record')
+            .set({ cid: profileCid.toString() })
+            .where('uri', '=', uri.toString())
+            .execute()
 
-        // Update profile app index
-        await dbTxn.db
-          .updateTable('profile')
-          .set({
-            cid: profileCid.toString(),
-            displayName: updated.displayName,
-            description: updated.description,
-            indexedAt: now,
-          })
-          .where('uri', '=', uri.toString())
-          .execute()
+          // Update profile app index
+          await dbTxn.db
+            .updateTable('profile')
+            .set({
+              cid: profileCid.toString(),
+              displayName: updated.displayName,
+              description: updated.description,
+              indexedAt: now,
+            })
+            .where('uri', '=', uri.toString())
+            .execute()
+        } else {
+          await dbTxn.indexRecord(uri, profileCid, updated, now)
+        }
 
         await repo
           .stageUpdate({

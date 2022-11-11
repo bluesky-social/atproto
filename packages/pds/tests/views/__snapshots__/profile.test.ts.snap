@@ -1,5 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`pds profile views creates new profile 1`] = `
+Object {
+  "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
+  "did": "user(0)",
+  "displayName": "danny boy",
+  "followersCount": 1,
+  "followsCount": 1,
+  "handle": "dan.test",
+  "membersCount": 0,
+  "myState": Object {},
+  "postsCount": 2,
+}
+`;
+
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
   "creator": "user(0)",
