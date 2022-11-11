@@ -281,10 +281,11 @@ export async function up(
     .execute()
   await db.schema
     .createTable(sceneVotesOnPostTable)
-    .addColumn('did', 'varchar', (col) => col.primaryKey())
+    .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('count', 'integer', (col) => col.notNull())
     .addColumn('postedTrending', 'int2', (col) => col.notNull())
+    .addPrimaryKeyConstraint('primary_key', ['did', 'subject'])
     .execute()
 }
 
