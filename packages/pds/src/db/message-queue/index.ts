@@ -92,6 +92,7 @@ export class SqlMessageQueue implements MessageQueue {
         )
         .where('cursor.consumer', '=', this.name)
         .orderBy('id', 'asc')
+        .limit(1)
         .selectAll()
       if (this.db.dialect !== 'sqlite') {
         builder = builder.forUpdate()
@@ -270,7 +271,7 @@ export class SqlMessageQueue implements MessageQueue {
         if (scene.postedTrending) return
         const ratio =
           scene.memberCount !== 0 ? scene.voteCount / scene.memberCount : 0
-        const shouldTrend = scene.voteCount > 1 && ratio > 0.2
+        const shouldTrend = scene.voteCount > 1 && ratio >= 0.2
         if (!shouldTrend) return
 
         // this is a "threshold vote" that makes the post trend

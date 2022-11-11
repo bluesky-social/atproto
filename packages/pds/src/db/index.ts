@@ -58,7 +58,6 @@ export class Database {
       confirmation: Confirmation.makePlugin(db),
       profile: Profile.makePlugin(db),
     }
-    // this.notifications = notificationPlugin(db)
     this.migrator = new Migrator({
       db,
       migrationTableSchema: schema,

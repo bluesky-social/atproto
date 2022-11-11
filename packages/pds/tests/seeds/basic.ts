@@ -41,7 +41,9 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   await sc.vote('up', dan, sc.posts[alice][1].ref)
   await sc.vote('up', alice, sc.posts[carol][0].ref)
   await sc.vote('up', bob, sc.posts[carol][0].ref)
-  mq && (await mq.processAll())
+
+  await mq?.processAll()
+
   await sc.reply(
     bob,
     sc.posts[alice][1].ref,
@@ -62,7 +64,9 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   )
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
-  mq && (await mq.processAll())
+
+  await mq?.processAll()
+
   return sc
 }
 

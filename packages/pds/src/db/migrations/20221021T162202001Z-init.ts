@@ -285,7 +285,10 @@ export async function up(
     .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('count', 'integer', (col) => col.notNull())
     .addColumn('postedTrending', 'int2', (col) => col.notNull())
-    .addPrimaryKeyConstraint('primary_key', ['did', 'subject'])
+    .addPrimaryKeyConstraint(`${sceneVotesOnPostTable}_pkey`, [
+      'did',
+      'subject',
+    ])
     .execute()
 }
 
