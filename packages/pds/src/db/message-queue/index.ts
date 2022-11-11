@@ -133,17 +133,15 @@ export class SqlMessageQueue implements MessageQueue {
     message: AddMember,
   ): Promise<void> {
     const res = await db.db
-      .insertInto('scene_member_count')
-      .values({ did: message.scene, count: 1 })
-      .onConflict((oc) => oc.doNothing())
+      .updateTable('scene_member_count')
+      .set({ count: sql`count + 1` })
+      .where('did', '=', message.scene)
       .returningAll()
       .executeTakeFirst()
     if (!res) {
       await db.db
-        .updateTable('scene_member_count')
-        .set({ count: sql`count + 1` })
-        .where('did', '=', message.scene)
-        .returning(['did', 'count'])
+        .insertInto('scene_member_count')
+        .values({ did: message.scene, count: 1 })
         .execute()
     }
   }
@@ -166,30 +164,26 @@ export class SqlMessageQueue implements MessageQueue {
   ): Promise<void> {
     const userScenes = await db.getScenesForUser(message.user)
     if (userScenes.length < 1) return
-    const inserted = await db.db
-      .insertInto('scene_votes_on_post')
-      .values(
-        userScenes.map((scene) => ({
-          did: scene,
-          subject: message.subject,
-          count: 1,
-          postedTrending: 0 as 0 | 1,
-        })),
-      )
-      .onConflict((oc) => oc.doNothing())
+    const updated = await db.db
+      .updateTable('scene_votes_on_post')
+      .set({ count: sql`count + 1` })
+      .where('subject', '=', message.subject)
+      .where('did', 'in', userScenes)
       .returningAll()
       .execute()
-    const insertedIds = inserted.map((row) => row.did)
-    const toUpdate = userScenes.filter(
-      (scene) => insertedIds.indexOf(scene) < 0,
-    )
-    if (toUpdate.length > 0) {
+    const updatedIds = updated.map((row) => row.did)
+    const toInsert = userScenes.filter((scene) => updatedIds.indexOf(scene) < 0)
+    if (toInsert.length > 0) {
       await db.db
-        .updateTable('scene_votes_on_post')
-        .set({ count: sql`count + 1` })
-        .where('subject', '=', message.subject)
-        .where('did', 'in', toUpdate)
-        .returningAll()
+        .insertInto('scene_votes_on_post')
+        .values(
+          toInsert.map((scene) => ({
+            did: scene,
+            subject: message.subject,
+            count: 1,
+            postedTrending: 0 as 0 | 1,
+          })),
+        )
         .execute()
     }
     await this.checkTrending(db, userScenes, message.subject)

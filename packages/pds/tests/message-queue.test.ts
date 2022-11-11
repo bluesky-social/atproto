@@ -1,5 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { App, Database } from '../src'
+import { Database } from '../src'
 import { runTestServer, CloseFn } from './_util'
 import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
@@ -10,7 +10,6 @@ describe('db', () => {
   let close: CloseFn
   let client: AtpServiceClient
   let sc: SeedClient
-  let app: App
   let db: Database
 
   let uri1: AtUri, uri2: AtUri
@@ -20,7 +19,6 @@ describe('db', () => {
       dbPostgresSchema: 'message_queue',
     })
     close = server.close
-    app = server.app
     db = server.db
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
