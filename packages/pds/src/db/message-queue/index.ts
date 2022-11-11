@@ -110,19 +110,23 @@ export class SqlMessageQueue implements MessageQueue {
   }
 
   private async handleMessage(db: Database, message: Message) {
-    switch (message.type) {
-      case 'add_member':
-        return this.handleAddMember(db, message)
-      case 'remove_member':
-        return this.handleRemoveMember(db, message)
-      case 'add_upvote':
-        return this.handleAddUpvote(db, message)
-      case 'remove_upvote':
-        return this.handleRemoveUpvote(db, message)
-      case 'create_notification':
-        return this.handleCreateNotification(db, message)
-      case 'delete_notifications':
-        return this.handleDeleteNotifications(db, message)
+    try {
+      switch (message.type) {
+        case 'add_member':
+          return this.handleAddMember(db, message)
+        case 'remove_member':
+          return this.handleRemoveMember(db, message)
+        case 'add_upvote':
+          return this.handleAddUpvote(db, message)
+        case 'remove_upvote':
+          return this.handleRemoveUpvote(db, message)
+        case 'create_notification':
+          return this.handleCreateNotification(db, message)
+        case 'delete_notifications':
+          return this.handleDeleteNotifications(db, message)
+      }
+    } catch (err) {
+      log.error({ message, err }, 'unable to handle event')
     }
   }
 
