@@ -12,6 +12,7 @@ import getFollowers from './graph/getFollowers'
 import getFollows from './graph/getFollows'
 import getMembers from './graph/getMembers'
 import getMemberships from './graph/getMemberships'
+import getAssertions from './graph/getAssertions'
 import getUsersSearch from './actor/search'
 import getUsersTypeahead from './actor/searchTypeahead'
 import getNotifications from './notification/list'
@@ -33,6 +34,7 @@ export default function (server: Server) {
   getFollows(server)
   getMembers(server)
   getMemberships(server)
+  getAssertions(server)
   getUsersSearch(server)
   getUsersTypeahead(server)
   getNotifications(server)

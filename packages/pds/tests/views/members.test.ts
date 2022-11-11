@@ -44,7 +44,7 @@ describe('pds member views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches members', async () => {
-    const sceneMembers = await client.app.bsky.graph.getMembers({
+    const sceneMembers = await client.app.bsky.graph.getAssertions({
       actor: sc.scenes[scene].did,
     })
 
@@ -53,7 +53,7 @@ describe('pds member views', () => {
       getSortedCursors(sceneMembers.data.members),
     )
 
-    const otherSceneMembers = await client.app.bsky.graph.getMembers({
+    const otherSceneMembers = await client.app.bsky.graph.getAssertions({
       actor: sc.scenes[otherScene].did,
     })
 
@@ -62,7 +62,7 @@ describe('pds member views', () => {
       getSortedCursors(otherSceneMembers.data.members),
     )
 
-    const carolSceneMembers = await client.app.bsky.graph.getMembers({
+    const carolSceneMembers = await client.app.bsky.graph.getAssertions({
       actor: sc.scenes[carolScene].did,
     })
 
@@ -73,10 +73,10 @@ describe('pds member views', () => {
   })
 
   it('fetches members by handle', async () => {
-    const byDid = await client.app.bsky.graph.getMembers({
+    const byDid = await client.app.bsky.graph.getAssertions({
       actor: sc.scenes[scene].did,
     })
-    const byHandle = await client.app.bsky.graph.getMembers({
+    const byHandle = await client.app.bsky.graph.getAssertions({
       actor: sc.scenes[scene].handle,
     })
     expect(byHandle.data).toEqual(byDid.data)
@@ -85,7 +85,7 @@ describe('pds member views', () => {
   it('paginates members', async () => {
     const results = (results) => results.flatMap((res) => res.members)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.graph.getMembers({
+      const res = await client.app.bsky.graph.getAssertions({
         actor: sc.scenes[scene].did,
         before: cursor,
         limit: 2,
@@ -98,7 +98,7 @@ describe('pds member views', () => {
       expect(res.members.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.graph.getMembers({
+    const full = await client.app.bsky.graph.getAssertions({
       actor: sc.scenes[scene].did,
     })
 
