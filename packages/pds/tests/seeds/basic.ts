@@ -1,6 +1,7 @@
+import { MessageQueue } from '../../src/db/types'
 import { SeedClient } from './client'
 
-export default async (sc: SeedClient) => {
+export default async (sc: SeedClient, mq?: MessageQueue) => {
   await sc.createAccount('alice', users.alice)
   await sc.createAccount('bob', users.bob)
   await sc.createAccount('carol', users.carol)
@@ -85,6 +86,7 @@ export default async (sc: SeedClient) => {
   await sc.vote('up', dan, sc.posts[alice][1].ref)
   await sc.vote('up', alice, sc.posts[carol][0].ref)
   await sc.vote('up', bob, sc.posts[carol][0].ref)
+  mq && (await mq.process())
   await sc.reply(
     bob,
     sc.posts[alice][1].ref,
@@ -105,6 +107,7 @@ export default async (sc: SeedClient) => {
   )
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
+  mq && (await mq.process())
   return sc
 }
 

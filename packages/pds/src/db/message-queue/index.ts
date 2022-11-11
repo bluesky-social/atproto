@@ -84,24 +84,19 @@ export class SqlMessageQueue implements MessageQueue {
   }
 
   private async handleMessage(db: Database, message: Message) {
-    try {
-      switch (message.type) {
-        case 'add_member':
-          return this.handleAddMember(db, message)
-        case 'remove_member':
-          return this.handleRemoveMember(db, message)
-        case 'add_upvote':
-          return this.handleAddUpvote(db, message)
-        case 'remove_upvote':
-          return this.handleRemoveUpvote(db, message)
-        case 'create_notification':
-          return this.handleCreateNotification(db, message)
-        case 'delete_notifications':
-          return this.handleDeleteNotifications(db, message)
-      }
-    } catch (err) {
-      console.log('FAILED ON: ', message.type)
-      throw err
+    switch (message.type) {
+      case 'add_member':
+        return this.handleAddMember(db, message)
+      case 'remove_member':
+        return this.handleRemoveMember(db, message)
+      case 'add_upvote':
+        return this.handleAddUpvote(db, message)
+      case 'remove_upvote':
+        return this.handleRemoveUpvote(db, message)
+      case 'create_notification':
+        return this.handleCreateNotification(db, message)
+      case 'delete_notifications':
+        return this.handleDeleteNotifications(db, message)
     }
   }
 
@@ -256,7 +251,7 @@ export class SqlMessageQueue implements MessageQueue {
         const sceneAuth = this.getAuthStore(scene.did)
         const repoRoot = await db.getRepoRoot(scene.did, true)
         if (!repoRoot) {
-          log.error({ scene: scene.did }, 'could not post trending record')
+          log.error({ ...scene }, 'could not post trending record')
           return
         }
         const repo = await RepoStructure.load(ctx.blockstore, repoRoot)
