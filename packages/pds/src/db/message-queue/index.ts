@@ -104,9 +104,11 @@ export class SqlMessageQueue implements MessageQueue {
 
       const message: Message = JSON.parse(res.message)
       await this.handleMessage(dbTxn, message)
+
+      const nextCursor = res.id + 1
       await dbTxn.db
         .updateTable('message_queue_cursor')
-        .set({ cursor: sql`cursor + 1` })
+        .set({ cursor: nextCursor })
         .where('consumer', '=', this.name)
         .returningAll()
         .execute()
