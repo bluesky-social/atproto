@@ -98,6 +98,22 @@ describe('pds profile views', () => {
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
   })
 
+  it('handles scene profile updates', async () => {
+    await client.app.bsky.actor.updateProfile(
+      { did: scene, displayName: 'besties', description: 'feeling scene' },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+
+    const sceneForAlice = await client.app.bsky.actor.getProfile(
+      { actor: scene },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(sceneForAlice.data)).toMatchSnapshot()
+  })
+
+  return
+
   it('handles racing updates', async () => {
     const descriptions: string[] = []
     const COUNT = 10

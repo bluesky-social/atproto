@@ -7,7 +7,8 @@ export default async (sc: SeedClient) => {
   const carol = sc.dids.carol
   const dan = sc.dids.dan
 
-  await sc.createScene(bob, 'scene.test')
+  const scene = await sc.createScene(bob, 'scene.test')
+  await sc.createProfile(scene.did, 'besties', 'best friends eva', bob)
   await sc.inviteToScene('scene.test', sc.actorRef(alice))
   await sc.inviteToScene('scene.test', sc.actorRef(carol))
   await sc.inviteToScene('scene.test', sc.actorRef(dan))

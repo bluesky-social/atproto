@@ -12,6 +12,7 @@ export interface CallOptions {
 }
 
 export interface InputSchema {
+  did?: string;
   displayName?: string;
   description?: string;
 }

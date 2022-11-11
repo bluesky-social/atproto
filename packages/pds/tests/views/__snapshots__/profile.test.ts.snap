@@ -64,7 +64,9 @@ Object {
     "actorType": "app.bsky.system.actorScene",
     "cid": "cids(0)",
   },
+  "description": "best friends eva",
   "did": "user(0)",
+  "displayName": "besties",
   "followersCount": 0,
   "followsCount": 0,
   "handle": "scene.test",
@@ -92,6 +94,27 @@ Object {
   "membersCount": 0,
   "myState": Object {},
   "postsCount": 4,
+}
+`;
+
+exports[`pds profile views handles scene profile updates 1`] = `
+Object {
+  "creator": "user(1)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorScene",
+    "cid": "cids(0)",
+  },
+  "description": "feeling scene",
+  "did": "user(0)",
+  "displayName": "besties",
+  "followersCount": 0,
+  "followsCount": 0,
+  "handle": "scene.test",
+  "membersCount": 4,
+  "myState": Object {
+    "member": "record(0)",
+  },
+  "postsCount": 0,
 }
 `;
 

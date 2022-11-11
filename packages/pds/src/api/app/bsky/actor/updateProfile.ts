@@ -18,19 +18,24 @@ export default function (server: Server) {
     if (!requester) {
       throw new AuthRequiredError()
     }
-    const authStore = await locals.getAuthstore(res, requester)
-    const uri = new AtUri(`${requester}/${profileNsid}/self`)
+    const did = input.body.did || requester
+    const authorized = await db.isUserControlledRepo(did, requester)
+    if (!authorized) {
+      throw new AuthRequiredError()
+    }
+    const authStore = await locals.getAuthstore(res, did)
+    const uri = new AtUri(`${did}/${profileNsid}/self`)
 
     const { profileCid, updated } = await db.transaction(
       async (dbTxn): Promise<{ profileCid: CID; updated: Profile.Record }> => {
-        const currRoot = await dbTxn.getRepoRoot(requester, true)
+        const currRoot = await dbTxn.getRepoRoot(did, true)
         if (!currRoot) {
           throw new InvalidRequestError(
-            `${requester} is not a registered repo on this server`,
+            `${did} is not a registered repo on this server`,
           )
         }
         const now = new Date().toISOString()
-        const blockstore = new SqlBlockstore(dbTxn, requester, now)
+        const blockstore = new SqlBlockstore(dbTxn, did, now)
         const repo = await RepoStructure.load(blockstore, currRoot)
         const current = await repo.getRecord(profileNsid, 'self')
         if (!db.records.profile.matchesSchema(current)) {
@@ -78,9 +83,9 @@ export default function (server: Server) {
             cid: profileCid,
           })
           .createCommit(authStore, async (prev, curr) => {
-            const success = await dbTxn.updateRepoRoot(requester, curr, prev)
+            const success = await dbTxn.updateRepoRoot(did, curr, prev)
             if (!success) {
-              logger.error({ did: requester, curr, prev }, 'repo update failed')
+              logger.error({ did, curr, prev }, 'repo update failed')
               throw new Error('Could not update repo root')
             }
             return null
