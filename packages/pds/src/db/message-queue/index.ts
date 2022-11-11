@@ -274,15 +274,8 @@ export class SqlMessageQueue implements MessageQueue {
         )
         const commit = repo
           .stageUpdate(trend.toStage)
-          .createCommit(sceneAuth, async (_prev, curr) => {
-            await db.db
-              .insertInto('repo_root')
-              .values({
-                did: scene.did,
-                root: curr.toString(),
-                indexedAt: now,
-              })
-              .execute()
+          .createCommit(sceneAuth, async (prev, curr) => {
+            await db.updateRepoRoot(scene.did, curr, prev, now)
             return null
           })
         const setTrendPosted = db.db
