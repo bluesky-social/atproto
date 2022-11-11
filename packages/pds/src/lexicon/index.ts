@@ -40,6 +40,7 @@ import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
+import * as AppBskyGraphGetAssertions from './types/app/bsky/graph/getAssertions'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
@@ -369,6 +370,11 @@ export class GraphNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getAssertions(handler: AppBskyGraphGetAssertions.Handler) {
+    const schema = 'app.bsky.graph.getAssertions' // @ts-ignore
+    return this._server.xrpc.method(schema, handler)
   }
 
   getFollowers(handler: AppBskyGraphGetFollowers.Handler) {

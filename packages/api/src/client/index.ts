@@ -49,6 +49,7 @@ import * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 import * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
 import * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
+import * as AppBskyGraphGetAssertions from './types/app/bsky/graph/getAssertions'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
@@ -101,6 +102,7 @@ export * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 export * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
 export * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
+export * as AppBskyGraphGetAssertions from './types/app/bsky/graph/getAssertions'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 export * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
@@ -1041,6 +1043,17 @@ export class GraphNS {
     this.assertion = new AssertionRecord(service)
     this.confirmation = new ConfirmationRecord(service)
     this.follow = new FollowRecord(service)
+  }
+
+  getAssertions(
+    params?: AppBskyGraphGetAssertions.QueryParams,
+    opts?: AppBskyGraphGetAssertions.CallOptions
+  ): Promise<AppBskyGraphGetAssertions.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getAssertions', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetAssertions.toKnownErr(e)
+      })
   }
 
   getFollowers(

@@ -1,0 +1,90 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.getAssertions",
+  "type": "query",
+  "description": "General-purpose query for assertions.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "author": {"type": "string"},
+      "subject": {"type": "string"},
+      "assertion": {"type": "string"},
+      "confirmed": {"type": "boolean"},
+      "limit": {"type": "number", "maximum": 100},
+      "before": {"type": "string"}
+    }
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": ["assertions"],
+      "properties": {
+        "cursor": {"type": "string"},
+        "assertions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["uri", "cid", "assertion", "author", "subject", "indexedAt", "createdAt"],
+            "properties": {
+              "uri": {"type": "string"},
+              "cid": {"type": "string"},
+              "assertion": {"type": "string"},
+              "confirmation": {"$ref": "#/defs/confirmation"},
+              "author": {"$ref": "#/defs/actor"},
+              "subject": {"$ref": "#/defs/actor"},
+              "indexedAt": {"type": "string", "format": "date-time"},
+              "createdAt": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "defs": {
+    "confirmation": {
+      "type": "object",
+      "required": ["uri", "cid", "indexedAt", "createdAt"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"},
+        "indexedAt": {"type": "string", "format": "date-time"},
+        "createdAt": {"type": "string", "format": "date-time"}
+      }
+    },
+    "actor": {
+      "type": "object",
+      "required": ["did", "declaration", "handle"],
+      "properties": {
+        "did": {"type": "string"},
+        "declaration": {"$ref": "#/defs/declaration"},
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        }
+      }
+    },
+    "declaration": {
+      "type": "object",
+      "required": ["cid", "actorType"],
+      "properties": {
+        "cid": {"type": "string"},
+        "actorType": {
+          "oneOf": [
+            {"$ref": "#/defs/actorKnown"},
+            {"$ref": "#/defs/actorUnknown"}
+          ]
+        }
+      }
+    },
+    "actorKnown": {
+      "type": "string",
+      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
+    },
+    "actorUnknown": {
+      "type": "string",
+      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
+    }
+  }
+}
