@@ -37,16 +37,26 @@ export default function (server: Server) {
         const now = new Date().toISOString()
         const blockstore = new SqlBlockstore(dbTxn, did, now)
         const repo = await RepoStructure.load(blockstore, currRoot)
-        const current = await repo.getRecord(profileNsid, 'self')
-        if (!db.records.profile.matchesSchema(current)) {
-          // @TODO need a way to get a profile out of a broken state
-          throw new InvalidRequestError('could not parse current profile')
-        }
 
-        const updated = {
-          ...current,
-          displayName: input.body.displayName || current.displayName,
-          description: input.body.description || current.description,
+        let updated
+        const current = await repo.getRecord(profileNsid, 'self')
+        if (current) {
+          if (!db.records.profile.matchesSchema(current)) {
+            // @TODO need a way to get a profile out of a broken state
+            throw new InvalidRequestError('could not parse current profile')
+          }
+
+          updated = {
+            ...current,
+            displayName: input.body.displayName || current.displayName,
+            description: input.body.description || current.description,
+          }
+        } else {
+          updated = {
+            $type: profileNsid,
+            displayName: input.body.displayName,
+            description: input.body.description,
+          }
         }
         if (!db.records.profile.matchesSchema(updated)) {
           throw new InvalidRequestError(
@@ -77,7 +87,7 @@ export default function (server: Server) {
 
         await repo
           .stageUpdate({
-            action: 'update',
+            action: current ? 'update' : 'create',
             collection: profileNsid,
             rkey: 'self',
             cid: profileCid,
