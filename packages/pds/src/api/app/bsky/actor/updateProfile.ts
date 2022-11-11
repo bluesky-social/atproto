@@ -59,7 +59,7 @@ export default function (server: Server) {
             description: input.body.description,
           }
         }
-        updated = common.noUndefinedKeys(updated)
+        updated = common.noUndefinedVals(updated)
         if (!db.records.profile.matchesSchema(updated)) {
           throw new InvalidRequestError(
             'requested updates do not produce a valid profile doc',

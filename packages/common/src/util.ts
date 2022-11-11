@@ -1,6 +1,4 @@
-import { string } from 'zod'
-
-export const noUndefinedKeys = <T>(
+export const noUndefinedVals = <T>(
   obj: Record<string, T>,
 ): Record<string, T> => {
   Object.keys(obj).forEach((k) => {
