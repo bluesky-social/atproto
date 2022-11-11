@@ -33,8 +33,9 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
-        "author": {"$ref": "#/defs/user"},
-        "repostedBy": {"$ref": "#/defs/user"},
+        "author": {"$ref": "#/defs/actor"},
+        "trendedBy": {"$ref": "#/defs/actor"},
+        "repostedBy": {"$ref": "#/defs/actor"},
         "record": {"type": "object"},
         "embed": {
           "oneOf": [
@@ -58,11 +59,12 @@
         }
       }
     },
-    "user": {
+    "actor": {
       "type": "object",
-      "required": ["did", "handle"],
+      "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
+        "declaration": {"$ref": "#/defs/declaration"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",
@@ -75,7 +77,7 @@
       "required": ["type", "author", "record"],
       "properties": {
         "type": {"const": "record"},
-        "author": {"$ref": "#/defs/user"},
+        "author": {"$ref": "#/defs/actor"},
         "record": {"type": "object"}
       }
     },
@@ -99,6 +101,27 @@
           "not": {"enum": ["record", "external"]}
         }
       }
+    },
+    "declaration": {
+      "type": "object",
+      "required": ["cid", "actorType"],
+      "properties": {
+        "cid": {"type": "string"},
+        "actorType": {
+          "oneOf": [
+            {"$ref": "#/defs/actorKnown"},
+            {"$ref": "#/defs/actorUnknown"}
+          ]
+        }
+      }
+    },
+    "actorKnown": {
+      "type": "string",
+      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
+    },
+    "actorUnknown": {
+      "type": "string",
+      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
   }
 }

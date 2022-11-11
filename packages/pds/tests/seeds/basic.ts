@@ -84,6 +84,7 @@ export default async (sc: SeedClient) => {
   )
 
   await sc.createScene(alice, 'alice-scene.test')
+  const aliceScene = sc.dids['alice-scene.test']
 
   await sc.createScene(bob, 'other-scene.test')
   await sc.inviteToScene('other-scene.test', sc.actorRef(alice))
@@ -103,7 +104,8 @@ export default async (sc: SeedClient) => {
     'carol-scene.test',
     sc.sceneInvites['carol-scene.test'][dan],
   )
-
+  await sc.trend(alice, aliceScene, sc.replies[bob][0].ref)
+  await sc.trend(alice, aliceScene, sc.posts[alice][1].ref)
   return sc
 }
 

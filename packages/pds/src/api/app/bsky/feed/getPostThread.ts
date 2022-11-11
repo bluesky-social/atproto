@@ -6,6 +6,7 @@ import * as GetPostThread from '../../../../lexicon/types/app/bsky/feed/getPostT
 import * as locals from '../../../../locals'
 import { DatabaseSchema } from '../../../../db/database-schema'
 import { countAll } from '../../../../db/util'
+import { getDeclaration } from '../util'
 
 export default function (server: Server) {
   server.app.bsky.feed.getPostThread(
@@ -85,6 +86,8 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
       'post.cid as cid',
       'post.replyParent as parent',
       'author.did as authorDid',
+      'author.declarationCid as authorDeclarationCid',
+      'author.actorType as authorActorType',
       'author.handle as authorHandle',
       'author_profile.displayName as authorDisplayName',
       'ipld_block.content as recordBytes',
@@ -145,6 +148,7 @@ const rowToPost = (
     cid: row.cid,
     author: {
       did: row.authorDid,
+      declaration: getDeclaration('author', row),
       handle: row.authorHandle,
       displayName: row.authorDisplayName || undefined,
     },

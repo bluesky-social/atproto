@@ -21,13 +21,12 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["accessJwt", "refreshJwt", "handle", "did", "declarationCid"],
+      "required": ["accessJwt", "refreshJwt", "handle", "did"],
       "properties": {
         "accessJwt": { "type": "string" },
         "refreshJwt": { "type": "string" },
         "handle": { "type": "string" },
-        "did": { "type": "string" },
-        "declarationCid": { "type": "string" }
+        "did": { "type": "string" }
       }
     }
   },

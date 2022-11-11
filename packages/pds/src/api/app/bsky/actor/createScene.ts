@@ -223,7 +223,11 @@ export default function (server: Server) {
         memberConfirm.dbUpdate,
       ])
 
-      return { did, declarationCid: sceneDeclaration.cid }
+      return {
+        did,
+        declarationCid: sceneDeclaration.cid,
+        actorType: declaration.actorType,
+      }
     })
 
     return {
@@ -231,7 +235,10 @@ export default function (server: Server) {
       body: {
         handle,
         did: result.did,
-        declarationCid: result.declarationCid.toString(),
+        declaration: {
+          cid: result.declarationCid.toString(),
+          actorType: result.actorType,
+        },
       },
     }
   })

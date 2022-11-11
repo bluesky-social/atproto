@@ -18,16 +18,39 @@
     "encoding": "application/json",
     "schema": {
       "type": "object",
-      "required": ["handle", "did", "declarationCid"],
+      "required": ["handle", "did", "declaration"],
       "properties": {
         "handle": { "type": "string" },
         "did": { "type": "string" },
-        "declarationCid": { "type": "string" }
+        "declaration": {"$ref": "#/defs/declaration"}
       }
     }
   },
   "errors": [
     {"name": "InvalidHandle"},
     {"name": "HandleNotAvailable"}
-  ]
+  ],
+  "defs": {
+    "declaration": {
+      "type": "object",
+      "required": ["cid", "actorType"],
+      "properties": {
+        "cid": {"type": "string"},
+        "actorType": {
+          "oneOf": [
+            {"$ref": "#/defs/actorKnown"},
+            {"$ref": "#/defs/actorUnknown"}
+          ]
+        }
+      }
+    },
+    "actorKnown": {
+      "type": "string",
+      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
+    },
+    "actorUnknown": {
+      "type": "string",
+      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
+    }
+  }
 }

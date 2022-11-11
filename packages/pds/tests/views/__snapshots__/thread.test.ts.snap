@@ -3,6 +3,10 @@
 exports[`pds thread views fetches deep post thread 1`] = `
 Object {
   "author": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(1)",
+    },
     "did": "user(0)",
     "displayName": "ali",
     "handle": "alice.test",
@@ -21,15 +25,23 @@ Object {
   "replies": Array [
     Object {
       "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
         "did": "user(1)",
         "handle": "carol.test",
       },
-      "cid": "cids(1)",
+      "cid": "cids(2)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "myState": Object {},
       "parent": Object {
         "author": Object {
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -73,16 +85,24 @@ Object {
     },
     Object {
       "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
       },
-      "cid": "cids(2)",
+      "cid": "cids(3)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "myState": Object {},
       "parent": Object {
         "author": Object {
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -121,11 +141,15 @@ Object {
       "replies": Array [
         Object {
           "author": Object {
+            "declaration": Object {
+              "actorType": "app.bsky.system.actorUser",
+              "cid": "cids(1)",
+            },
             "did": "user(0)",
             "displayName": "ali",
             "handle": "alice.test",
           },
-          "cid": "cids(3)",
+          "cid": "cids(4)",
           "downvoteCount": 0,
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "myState": Object {
@@ -133,16 +157,24 @@ Object {
           },
           "parent": Object {
             "author": Object {
+              "declaration": Object {
+                "actorType": "app.bsky.system.actorUser",
+                "cid": "cids(1)",
+              },
               "did": "user(2)",
               "displayName": "bobby",
               "handle": "bob.test",
             },
-            "cid": "cids(2)",
+            "cid": "cids(3)",
             "downvoteCount": 0,
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "myState": Object {},
             "parent": Object {
               "author": Object {
+                "declaration": Object {
+                  "actorType": "app.bsky.system.actorUser",
+                  "cid": "cids(1)",
+                },
                 "did": "user(0)",
                 "displayName": "ali",
                 "handle": "alice.test",
@@ -188,7 +220,7 @@ Object {
             "createdAt": "1970-01-01T00:00:00.000Z",
             "reply": Object {
               "parent": Object {
-                "cid": "cids(2)",
+                "cid": "cids(3)",
                 "uri": "record(3)",
               },
               "root": Object {
@@ -221,6 +253,10 @@ Object {
 exports[`pds thread views fetches shallow post thread 1`] = `
 Object {
   "author": Object {
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(1)",
+    },
     "did": "user(0)",
     "displayName": "ali",
     "handle": "alice.test",
@@ -239,15 +275,23 @@ Object {
   "replies": Array [
     Object {
       "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
         "did": "user(1)",
         "handle": "carol.test",
       },
-      "cid": "cids(1)",
+      "cid": "cids(2)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "myState": Object {},
       "parent": Object {
         "author": Object {
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -290,16 +334,24 @@ Object {
     },
     Object {
       "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
       },
-      "cid": "cids(2)",
+      "cid": "cids(3)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "myState": Object {},
       "parent": Object {
         "author": Object {
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",

@@ -17,11 +17,11 @@
     }
   },
   "defs": {
-    "actorKnown": { 
+    "actorKnown": {
       "type": "string",
       "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
     },
-    "actorUnknown": { 
+    "actorUnknown": {
       "type": "string",
       "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
