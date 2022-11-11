@@ -1,6 +1,9 @@
 import { AtUri } from '@atproto/uri'
 import { ValidationResult } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
+import { DynamicReferenceBuilder } from 'kysely/dist/cjs/dynamic/dynamic-reference-builder'
+import { Message } from './message-queue/messages'
+import Database from '.'
 
 export type DbRecordPlugin<T> = {
   collection: string
@@ -11,29 +14,14 @@ export type DbRecordPlugin<T> = {
     cid: CID,
     obj: unknown,
     timestamp?: string,
-  ) => Promise<void>
-  delete: (uri: AtUri) => Promise<void>
-  notifsForRecord: (uri: AtUri, cid: CID, obj: unknown) => Notification[]
+  ) => Promise<Message[]>
+  delete: (uri: AtUri) => Promise<Message[]>
 }
 
-export type NotificationsPlugin = {
-  process: (notifs: Notification[]) => Promise<void>
-  deleteForRecord: (uri: AtUri) => Promise<void>
-}
+export type Ref = DynamicReferenceBuilder<any>
 
-export type Notification = {
-  userDid: string
-  author: string
-  recordUri: string
-  recordCid: string
-  reason: string
-  reasonSubject?: string
+export interface MessageQueue {
+  send(tx: Database, message: Message | Message[]): Promise<void>
+  processNext(): Promise<void>
+  processAll(): Promise<void>
 }
-
-export type NotificationReason =
-  | 'vote'
-  | 'repost'
-  | 'trend'
-  | 'follow'
-  | 'invite'
-  | 'reply'

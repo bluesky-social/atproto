@@ -2,8 +2,10 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Post from '../../lexicon/types/app/bsky/feed/post'
-import { DbRecordPlugin, Notification } from '../types'
+import { DbRecordPlugin } from '../types'
 import * as schemas from '../schemas'
+import * as messages from '../message-queue/messages'
+import { Message } from '../message-queue/messages'
 
 const type = schemas.ids.AppBskyFeedPost
 const tableName = 'post'
@@ -48,7 +50,7 @@ const insertFn =
     cid: CID,
     obj: unknown,
     timestamp?: string,
-  ): Promise<void> => {
+  ): Promise<Message[]> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -78,11 +80,12 @@ const insertFn =
       )
     }
     await Promise.all(promises)
+    return notifsForRecord(uri, cid, obj)
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<void> => {
+  async (uri: AtUri): Promise<Message[]> => {
     await Promise.all([
       db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute(),
       db
@@ -90,38 +93,39 @@ const deleteFn =
         .where('postUri', '=', uri.toString())
         .execute(),
     ])
+    return [messages.deleteNotifications(uri.toString())]
   }
 
-const notifsForRecord = (
-  uri: AtUri,
-  cid: CID,
-  obj: unknown,
-): Notification[] => {
+const notifsForRecord = (uri: AtUri, cid: CID, obj: Post.Record): Message[] => {
   if (!matchesSchema(obj)) {
     throw new Error(`Record does not match schema: ${type}`)
   }
-  const notifs: Notification[] = []
+  const notifs: Message[] = []
   for (const entity of obj.entities || []) {
     if (entity.type === 'mention') {
-      notifs.push({
-        userDid: entity.value,
-        author: uri.host,
-        recordUri: uri.toString(),
-        recordCid: cid.toString(),
-        reason: 'mention',
-      })
+      notifs.push(
+        messages.createNotification({
+          userDid: entity.value,
+          author: uri.host,
+          recordUri: uri.toString(),
+          recordCid: cid.toString(),
+          reason: 'mention',
+        }),
+      )
     }
   }
   if (obj.reply?.parent) {
     const parentUri = new AtUri(obj.reply.parent.uri)
-    notifs.push({
-      userDid: parentUri.host,
-      author: uri.host,
-      recordUri: uri.toString(),
-      recordCid: cid.toString(),
-      reason: 'reply',
-      reasonSubject: parentUri.toString(),
-    })
+    notifs.push(
+      messages.createNotification({
+        userDid: parentUri.host,
+        author: uri.host,
+        recordUri: uri.toString(),
+        recordCid: cid.toString(),
+        reason: 'reply',
+        reasonSubject: parentUri.toString(),
+      }),
+    )
   }
   return notifs
 }
@@ -135,7 +139,6 @@ export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
     matchesSchema,
     insert: insertFn(db),
     delete: deleteFn(db),
-    notifsForRecord,
   }
 }
 

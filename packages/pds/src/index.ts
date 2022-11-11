@@ -17,6 +17,7 @@ import { DidResolver } from '@atproto/did-resolver'
 import { Locals } from './locals'
 import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
+import SqlMessageQueue from './db/message-queue'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -36,6 +37,11 @@ const runServer = (
     adminPass: cfg.adminPassword,
     didResolver,
   })
+
+  const messageQueue = new SqlMessageQueue('pds', db, (did: string) => {
+    return auth.verifier.loadAuthStore(keypair, [], did)
+  })
+  db.setMessageQueue(messageQueue)
 
   const mailTransport =
     config.emailSmtpUrl !== undefined

@@ -1,9 +1,11 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import * as Repost from '../../lexicon/types/app/bsky/feed/repost'
-import { DbRecordPlugin, Notification } from '../types'
+import { DbRecordPlugin } from '../types'
 import * as schemas from '../schemas'
 import { CID } from 'multiformats/cid'
+import * as messages from '../message-queue/messages'
+import { Message } from '../message-queue/messages'
 
 const type = schemas.ids.AppBskyFeedRepost
 const tableName = 'repost'
@@ -33,7 +35,7 @@ const insertFn =
     cid: CID,
     obj: unknown,
     timestamp?: string,
-  ): Promise<void> => {
+  ): Promise<Message[]> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -49,33 +51,24 @@ const insertFn =
         indexedAt: timestamp || new Date().toISOString(),
       })
       .execute()
+    const subjectUri = new AtUri(obj.subject.uri)
+    const notif = messages.createNotification({
+      userDid: subjectUri.host,
+      author: uri.host,
+      recordUri: uri.toString(),
+      recordCid: cid.toString(),
+      reason: 'repost',
+      reasonSubject: subjectUri.toString(),
+    })
+    return [notif]
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<void> => {
+  async (uri: AtUri): Promise<Message[]> => {
     await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
+    return [messages.deleteNotifications(uri.toString())]
   }
-
-const notifsForRecord = (
-  uri: AtUri,
-  cid: CID,
-  obj: unknown,
-): Notification[] => {
-  if (!matchesSchema(obj)) {
-    throw new Error(`Record does not match schema: ${type}`)
-  }
-  const subjectUri = new AtUri(obj.subject.uri)
-  const notif = {
-    userDid: subjectUri.host,
-    author: uri.host,
-    recordUri: uri.toString(),
-    recordCid: cid.toString(),
-    reason: 'repost',
-    reasonSubject: subjectUri.toString(),
-  }
-  return [notif]
-}
 
 export type PluginType = DbRecordPlugin<Repost.Record>
 
@@ -86,7 +79,6 @@ export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
     matchesSchema,
     insert: insertFn(db),
     delete: deleteFn(db),
-    notifsForRecord,
   }
 }
 

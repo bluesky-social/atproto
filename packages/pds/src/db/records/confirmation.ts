@@ -4,8 +4,11 @@ import { CID } from 'multiformats/cid'
 import * as Confirmation from '../../lexicon/types/app/bsky/graph/confirmation'
 import * as assertionTable from '../tables/assertion'
 import * as didHandleTable from '../tables/did-handle'
-import { DbRecordPlugin, Notification } from '../types'
+import { DbRecordPlugin } from '../types'
 import * as schemas from '../schemas'
+import * as messages from '../message-queue/messages'
+import { Message } from '../message-queue/messages'
+import { APP_BSKY_GRAPH } from '../../lexicon'
 
 const type = schemas.ids.AppBskyGraphConfirmation
 
@@ -24,11 +27,11 @@ const insertFn =
     cid: CID,
     obj: unknown,
     timestamp?: string,
-  ): Promise<void> => {
+  ): Promise<Message[]> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
-    await db
+    const updated = await db
       .updateTable('assertion')
       .where('uri', '=', obj.assertion.uri)
       .where('cid', '=', obj.assertion.cid)
@@ -38,13 +41,19 @@ const insertFn =
         confirmCreated: obj.createdAt,
         confirmIndexed: timestamp || new Date().toISOString(),
       })
-      .execute()
+      .returningAll()
+      .executeTakeFirst()
+
+    if (updated?.assertion === APP_BSKY_GRAPH.AssertMember) {
+      return [messages.addMember(updated.creator, updated.subjectDid)]
+    }
+    return []
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<void> => {
-    await db
+  async (uri: AtUri): Promise<Message[]> => {
+    const updated = await db
       .updateTable('assertion')
       .where('confirmUri', '=', uri.toString())
       .set({
@@ -53,16 +62,13 @@ const deleteFn =
         confirmCreated: null,
         confirmIndexed: null,
       })
-      .execute()
-  }
+      .returningAll()
+      .executeTakeFirst()
 
-const notifsForRecord = (
-  _uri: AtUri,
-  _cid: CID,
-  _obj: unknown,
-): Notification[] => {
-  return []
-}
+    return updated
+      ? [messages.removeMember(updated.creator, updated.subjectDid)]
+      : []
+  }
 
 export type PluginType = DbRecordPlugin<Confirmation.Record>
 
@@ -73,7 +79,6 @@ export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
     matchesSchema,
     insert: insertFn(db),
     delete: deleteFn(db),
-    notifsForRecord,
   }
 }
 

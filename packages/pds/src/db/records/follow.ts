@@ -2,8 +2,10 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../lexicon/types/app/bsky/graph/follow'
-import { DbRecordPlugin, Notification } from '../types'
+import { DbRecordPlugin } from '../types'
 import * as schemas from '../schemas'
+import * as messages from '../message-queue/messages'
+import { Message } from '../message-queue/messages'
 
 const type = schemas.ids.AppBskyGraphFollow
 const tableName = 'follow'
@@ -32,7 +34,7 @@ const insertFn =
     cid: CID,
     obj: unknown,
     timestamp?: string,
-  ): Promise<void> => {
+  ): Promise<Message[]> => {
     if (!matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${type}`)
     }
@@ -46,31 +48,23 @@ const insertFn =
       indexedAt: timestamp || new Date().toISOString(),
     }
     await db.insertInto(tableName).values(val).execute()
+    return [
+      messages.createNotification({
+        userDid: obj.subject.did,
+        author: uri.host,
+        recordUri: uri.toString(),
+        recordCid: cid.toString(),
+        reason: 'follow',
+      }),
+    ]
   }
 
 const deleteFn =
   (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<void> => {
+  async (uri: AtUri): Promise<Message[]> => {
     await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
+    return [messages.deleteNotifications(uri.toString())]
   }
-
-const notifsForRecord = (
-  uri: AtUri,
-  cid: CID,
-  obj: unknown,
-): Notification[] => {
-  if (!matchesSchema(obj)) {
-    throw new Error(`Record does not match schema: ${type}`)
-  }
-  const notif = {
-    userDid: obj.subject.did,
-    author: uri.host,
-    recordUri: uri.toString(),
-    recordCid: cid.toString(),
-    reason: 'follow',
-  }
-  return [notif]
-}
 
 export type PluginType = DbRecordPlugin<Follow.Record>
 
@@ -81,7 +75,6 @@ export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
     matchesSchema,
     insert: insertFn(db),
     delete: deleteFn(db),
-    notifsForRecord,
   }
 }
 

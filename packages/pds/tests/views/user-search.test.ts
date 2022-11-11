@@ -271,6 +271,7 @@ const snapTypeaheadSqlite = [
 
 const snapSearchPg = [
   {
+    declaration,
     did: 'user(0)',
     handle: 'cara-wiegand69.test',
   },

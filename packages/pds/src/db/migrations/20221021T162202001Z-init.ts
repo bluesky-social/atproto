@@ -1,5 +1,6 @@
 import { Kysely, sql } from 'kysely'
 import { Dialect } from '..'
+import { DatabaseSchema } from '../database-schema'
 
 const userTable = 'user'
 const didHandleTable = 'did_handle'
@@ -21,8 +22,15 @@ const postEntityTable = 'post_entity'
 const repostTable = 'repost'
 const trendTable = 'trend'
 const voteTable = 'vote'
+const messageQueueTable = 'message_queue'
+const messageQueueCursorTable = 'message_queue_cursor'
+const sceneMemberCountTable = 'scene_member_count'
+const sceneVotesOnPostTable = 'scene_votes_on_post'
 
-export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
+export async function up(
+  db: Kysely<DatabaseSchema>,
+  dialect: Dialect,
+): Promise<void> {
   if (dialect === 'pg') {
     try {
       // Add trigram support, supporting user search.
@@ -249,9 +257,46 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
+
+  let mqBuilder = db.schema.createTable(messageQueueTable)
+  mqBuilder =
+    dialect === 'pg'
+      ? mqBuilder.addColumn('id', 'serial', (col) => col.primaryKey())
+      : mqBuilder.addColumn('id', 'integer', (col) =>
+          col.autoIncrement().primaryKey(),
+        )
+  mqBuilder
+    .addColumn('message', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .execute()
+  await db.schema
+    .createTable(messageQueueCursorTable)
+    .addColumn('consumer', 'varchar', (col) => col.primaryKey())
+    .addColumn('cursor', 'integer', (col) => col.notNull())
+    .execute()
+  await db.schema
+    .createTable(sceneMemberCountTable)
+    .addColumn('did', 'varchar', (col) => col.primaryKey())
+    .addColumn('count', 'integer', (col) => col.notNull())
+    .execute()
+  await db.schema
+    .createTable(sceneVotesOnPostTable)
+    .addColumn('did', 'varchar', (col) => col.notNull())
+    .addColumn('subject', 'varchar', (col) => col.notNull())
+    .addColumn('count', 'integer', (col) => col.notNull())
+    .addColumn('postedTrending', 'int2', (col) => col.notNull())
+    .addPrimaryKeyConstraint(`${sceneVotesOnPostTable}_pkey`, [
+      'did',
+      'subject',
+    ])
+    .execute()
 }
 
-export async function down(db: Kysely<unknown>): Promise<void> {
+export async function down(db: Kysely<DatabaseSchema>): Promise<void> {
+  await db.schema.dropTable(sceneVotesOnPostTable).execute()
+  await db.schema.dropTable(sceneMemberCountTable).execute()
+  await db.schema.dropTable(messageQueueCursorTable).execute()
+  await db.schema.dropTable(messageQueueTable).execute()
   await db.schema.dropTable(voteTable).execute()
   await db.schema.dropTable(trendTable).execute()
   await db.schema.dropTable(repostTable).execute()

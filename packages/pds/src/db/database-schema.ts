@@ -15,6 +15,10 @@ import * as vote from './records/vote'
 import * as repost from './records/repost'
 import * as trend from './records/trend'
 import * as follow from './records/follow'
+import * as messageQueue from './message-queue/tables/messageQueue'
+import * as messageQueueCursor from './message-queue/tables/messageQueueCursor'
+import * as sceneMemberCount from './message-queue/tables/sceneMemberCount'
+import * as sceneVotesOnPost from './message-queue/tables/sceneVotesOnPost'
 
 export type DatabaseSchema = user.PartialDB &
   didHandle.PartialDB &
@@ -26,10 +30,14 @@ export type DatabaseSchema = user.PartialDB &
   ipldBlockCreator.PartialDB &
   inviteCode.PartialDB &
   notification.PartialDB &
+  assertion.PartialDB &
   profile.PartialDB &
   post.PartialDB &
   vote.PartialDB &
   repost.PartialDB &
   trend.PartialDB &
   follow.PartialDB &
-  assertion.PartialDB
+  messageQueue.PartialDB &
+  messageQueueCursor.PartialDB &
+  sceneMemberCount.PartialDB &
+  sceneVotesOnPost.PartialDB

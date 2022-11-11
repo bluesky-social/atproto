@@ -3,7 +3,6 @@ import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
-import { NotificationsPlugin } from './types'
 import * as Declaration from './records/declaration'
 import * as Post from './records/post'
 import * as Vote from './records/vote'
@@ -13,7 +12,6 @@ import * as Follow from './records/follow'
 import * as Assertion from './records/assertion'
 import * as Confirmation from './records/confirmation'
 import * as Profile from './records/profile'
-import notificationPlugin from './tables/user-notification'
 import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
 import { CID } from 'multiformats/cid'
@@ -26,6 +24,8 @@ import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { DidHandle } from './tables/did-handle'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
+import { APP_BSKY_GRAPH } from '../lexicon'
+import { MessageQueue } from './types'
 
 export class Database {
   migrator: Migrator
@@ -40,12 +40,12 @@ export class Database {
     assertion: Assertion.PluginType
     confirmation: Confirmation.PluginType
   }
-  notifications: NotificationsPlugin
 
   constructor(
     public db: Kysely<DatabaseSchema>,
     public dialect: Dialect,
     public schema?: string,
+    public messageQueue?: MessageQueue,
   ) {
     this.records = {
       declaration: Declaration.makePlugin(db),
@@ -58,7 +58,6 @@ export class Database {
       confirmation: Confirmation.makePlugin(db),
       profile: Profile.makePlugin(db),
     }
-    this.notifications = notificationPlugin(db)
     this.migrator = new Migrator({
       db,
       migrationTableSchema: schema,
@@ -108,7 +107,12 @@ export class Database {
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     return await this.db.transaction().execute((txn) => {
-      const dbTxn = new Database(txn, this.dialect, this.schema)
+      const dbTxn = new Database(
+        txn,
+        this.dialect,
+        this.schema,
+        this.messageQueue,
+      )
       return fn(dbTxn)
     })
   }
@@ -137,6 +141,10 @@ export class Database {
       throw new Error('An unknown failure occurred while migrating')
     }
     return results
+  }
+
+  setMessageQueue(mq: MessageQueue) {
+    this.messageQueue = mq
   }
 
   async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {
@@ -318,6 +326,17 @@ export class Database {
     return !!found
   }
 
+  async getScenesForUser(userDid: string): Promise<string[]> {
+    const res = await this.db
+      .selectFrom('assertion')
+      .where('assertion.subjectDid', '=', userDid)
+      .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
+      .where('assertion.confirmUri', 'is not', null)
+      .select('assertion.creator as scene')
+      .execute()
+    return res.map((row) => row.scene)
+  }
+
   validateRecord(collection: string, obj: unknown): ValidationResult {
     let table
     try {
@@ -353,10 +372,11 @@ export class Database {
       throw new Error('Expected indexed URI to contain a record key')
     }
     await this.db.insertInto('record').values(record).execute()
+
     const table = this.findTableForCollection(uri.collection)
-    await table.insert(uri, cid, obj, timestamp)
-    const notifs = table.notifsForRecord(uri, cid, obj)
-    await this.notifications.process(notifs)
+    const events = await table.insert(uri, cid, obj, timestamp)
+    this.messageQueue && (await this.messageQueue.send(this, events))
+
     log.info({ uri }, 'indexed record')
   }
 
@@ -368,11 +388,9 @@ export class Database {
       .deleteFrom('record')
       .where('uri', '=', uri.toString())
       .execute()
-    await Promise.all([
-      table.delete(uri),
-      deleteQuery,
-      this.notifications.deleteForRecord(uri),
-    ])
+
+    const [events, _] = await Promise.all([table.delete(uri), deleteQuery])
+    this.messageQueue && (await this.messageQueue.send(this, events))
 
     log.info({ uri }, 'deleted indexed record')
   }

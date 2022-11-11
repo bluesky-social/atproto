@@ -16,6 +16,7 @@ export type TestServerInfo = {
   cfg: ServerConfig
   serverKey: string
   app: App
+  db: Database
   close: CloseFn
 }
 
@@ -78,6 +79,7 @@ export const runTestServer = async (
     cfg: config,
     serverKey: keypair.did(),
     app,
+    db,
     close: async () => {
       await Promise.all([
         db.close(),

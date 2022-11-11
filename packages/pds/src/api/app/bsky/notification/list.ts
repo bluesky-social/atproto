@@ -38,9 +38,8 @@ export default function (server: Server) {
           'author_profile.displayName as authorDisplayName',
           'notif.reason as reason',
           'notif.reasonSubject as reasonSubject',
-          'notif.indexedAt as createdAt',
+          'notif.indexedAt as indexedAt',
           'ipld_block.content as recordBytes',
-          'ipld_block.indexedAt as indexedAt',
           'notif.recordUri as uri',
         ])
 
@@ -76,7 +75,7 @@ export default function (server: Server) {
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
         record: common.ipldBytesToRecord(notif.recordBytes),
-        isRead: notif.createdAt <= user.lastSeenNotifs,
+        isRead: notif.indexedAt <= user.lastSeenNotifs,
         indexedAt: notif.indexedAt,
       }))
 
