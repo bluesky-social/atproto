@@ -1,13 +1,59 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds assertion views fetches assertions 1`] = `
+exports[`pds assertion views fetches assertions by author & subject 1`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertMember",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
+      "cid": "cids(0)",
       "confirmation": Object {
-        "cid": "cids(2)",
+        "cid": "cids(1)",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "uri": "record(1)",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(3)",
+        },
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+      },
+      "uri": "record(0)",
+    },
+  ],
+  "cursor": "1970-01-01T00:00:00.000Z",
+}
+`;
+
+exports[`pds assertion views fetches assertions by author 1`] = `
+Object {
+  "assertions": Array [
+    Object {
+      "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
+      "cid": "cids(0)",
+      "confirmation": Object {
+        "cid": "cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "uri": "record(1)",
@@ -26,6 +72,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(4)",
       "confirmation": Object {
         "cid": "cids(5)",
@@ -47,6 +101,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(6)",
       "confirmation": Object {
         "cid": "cids(7)",
@@ -68,7 +130,15 @@ Object {
       "uri": "record(4)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(8)",
       "confirmation": Object {
         "cid": "cids(9)",
@@ -90,7 +160,15 @@ Object {
       "uri": "record(6)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(10)",
       "confirmation": Object {
         "cid": "cids(11)",
@@ -113,23 +191,23 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions 2`] = `
+exports[`pds assertion views fetches assertions by author 2`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertMember",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "handle": "other-scene.test",
+      },
+      "cid": "cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "subject": Object {
@@ -144,6 +222,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "handle": "other-scene.test",
+      },
       "cid": "cids(3)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -160,6 +246,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertCreator",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "handle": "other-scene.test",
+      },
       "cid": "cids(4)",
       "confirmation": Object {
         "cid": "cids(5)",
@@ -182,6 +276,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "handle": "other-scene.test",
+      },
       "cid": "cids(6)",
       "confirmation": Object {
         "cid": "cids(7)",
@@ -204,25 +306,25 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "other-scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions 3`] = `
+exports[`pds assertion views fetches assertions by author 3`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertMember",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
+      "cid": "cids(0)",
       "confirmation": Object {
-        "cid": "cids(2)",
+        "cid": "cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "uri": "record(1)",
@@ -241,6 +343,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(4)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -257,6 +367,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(5)",
       "confirmation": Object {
         "cid": "cids(6)",
@@ -279,6 +397,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertCreator",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(7)",
       "confirmation": Object {
         "cid": "cids(8)",
@@ -300,6 +426,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(9)",
       "confirmation": Object {
         "cid": "cids(10)",
@@ -321,25 +455,25 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "carol-scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions filtered by confirmation status 1`] = `
+exports[`pds assertion views fetches assertions by author filtered by confirmation status 1`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertMember",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
+      "cid": "cids(0)",
       "confirmation": Object {
-        "cid": "cids(2)",
+        "cid": "cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "uri": "record(1)",
@@ -358,6 +492,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(4)",
       "confirmation": Object {
         "cid": "cids(5)",
@@ -379,6 +521,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(6)",
       "confirmation": Object {
         "cid": "cids(7)",
@@ -400,7 +550,15 @@ Object {
       "uri": "record(4)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(8)",
       "confirmation": Object {
         "cid": "cids(9)",
@@ -422,7 +580,15 @@ Object {
       "uri": "record(6)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(10)",
       "confirmation": Object {
         "cid": "cids(11)",
@@ -445,39 +611,31 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions filtered by confirmation status 2`] = `
+exports[`pds assertion views fetches assertions by author filtered by confirmation status 2`] = `
 Object {
   "assertions": Array [],
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions filtered by confirmation status 3`] = `
+exports[`pds assertion views fetches assertions by author filtered by confirmation status 3`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertCreator",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "other-scene.test",
+      },
+      "cid": "cids(0)",
       "confirmation": Object {
-        "cid": "cids(2)",
+        "cid": "cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "uri": "record(1)",
@@ -497,6 +655,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "other-scene.test",
+      },
       "cid": "cids(4)",
       "confirmation": Object {
         "cid": "cids(5)",
@@ -519,23 +685,23 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "other-scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions filtered by confirmation status 4`] = `
+exports[`pds assertion views fetches assertions by author filtered by confirmation status 4`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertMember",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "handle": "other-scene.test",
+      },
+      "cid": "cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "subject": Object {
@@ -550,6 +716,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "handle": "other-scene.test",
+      },
       "cid": "cids(3)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -566,25 +740,25 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "other-scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions filtered by confirmation status 5`] = `
+exports[`pds assertion views fetches assertions by author filtered by confirmation status 5`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertMember",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
+      "cid": "cids(0)",
       "confirmation": Object {
-        "cid": "cids(2)",
+        "cid": "cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "uri": "record(1)",
@@ -603,6 +777,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(4)",
       "confirmation": Object {
         "cid": "cids(5)",
@@ -625,6 +807,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertCreator",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(6)",
       "confirmation": Object {
         "cid": "cids(7)",
@@ -646,6 +836,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(8)",
       "confirmation": Object {
         "cid": "cids(9)",
@@ -667,25 +865,25 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "carol-scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions filtered by confirmation status 6`] = `
+exports[`pds assertion views fetches assertions by author filtered by confirmation status 6`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertMember",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
+      "cid": "cids(0)",
       "confirmation": Object {
-        "cid": "cids(2)",
+        "cid": "cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "uri": "record(1)",
@@ -704,6 +902,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(4)",
       "confirmation": Object {
         "cid": "cids(5)",
@@ -726,6 +932,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertCreator",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(6)",
       "confirmation": Object {
         "cid": "cids(7)",
@@ -747,6 +961,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(8)",
       "confirmation": Object {
         "cid": "cids(9)",
@@ -768,25 +990,25 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "carol-scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions filtered by type 1`] = `
+exports[`pds assertion views fetches assertions by author filtered by type 1`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertMember",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
+      "cid": "cids(0)",
       "confirmation": Object {
-        "cid": "cids(2)",
+        "cid": "cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "uri": "record(1)",
@@ -805,6 +1027,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(4)",
       "confirmation": Object {
         "cid": "cids(5)",
@@ -826,6 +1056,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(6)",
       "confirmation": Object {
         "cid": "cids(7)",
@@ -848,6 +1086,14 @@ Object {
     },
     Object {
       "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
       "cid": "cids(8)",
       "confirmation": Object {
         "cid": "cids(9)",
@@ -870,25 +1116,25 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
-      "cid": "cids(0)",
-    },
-    "did": "user(0)",
-    "handle": "scene.test",
-  },
 }
 `;
 
-exports[`pds assertion views fetches assertions filtered by type 2`] = `
+exports[`pds assertion views fetches assertions by author filtered by type 2`] = `
 Object {
   "assertions": Array [
     Object {
       "assertion": "app.bsky.graph.assertCreator",
-      "cid": "cids(1)",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "scene.test",
+      },
+      "cid": "cids(0)",
       "confirmation": Object {
-        "cid": "cids(2)",
+        "cid": "cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "uri": "record(1)",
@@ -908,13 +1154,157 @@ Object {
     },
   ],
   "cursor": "1970-01-01T00:00:00.000Z",
-  "subject": Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorScene",
+}
+`;
+
+exports[`pds assertion views fetches assertions by subject 1`] = `
+Object {
+  "assertions": Array [
+    Object {
+      "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(0)",
+        "handle": "carol-scene.test",
+      },
       "cid": "cids(0)",
+      "confirmation": Object {
+        "cid": "cids(1)",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "uri": "record(1)",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(3)",
+        },
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+      },
+      "uri": "record(0)",
     },
-    "did": "user(0)",
-    "handle": "scene.test",
-  },
+    Object {
+      "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(2)",
+        "handle": "other-scene.test",
+      },
+      "cid": "cids(4)",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(3)",
+        },
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+      },
+      "uri": "record(2)",
+    },
+    Object {
+      "assertion": "app.bsky.graph.assertCreator",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(3)",
+        "handle": "alice-scene.test",
+      },
+      "cid": "cids(5)",
+      "confirmation": Object {
+        "cid": "cids(6)",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "uri": "record(4)",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(3)",
+        },
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+      },
+      "uri": "record(3)",
+    },
+    Object {
+      "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(3)",
+        "handle": "alice-scene.test",
+      },
+      "cid": "cids(7)",
+      "confirmation": Object {
+        "cid": "cids(8)",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "uri": "record(6)",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(3)",
+        },
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+      },
+      "uri": "record(5)",
+    },
+    Object {
+      "assertion": "app.bsky.graph.assertMember",
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorScene",
+          "cid": "cids(2)",
+        },
+        "did": "user(4)",
+        "handle": "scene.test",
+      },
+      "cid": "cids(9)",
+      "confirmation": Object {
+        "cid": "cids(10)",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "uri": "record(8)",
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(3)",
+        },
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+      },
+      "uri": "record(7)",
+    },
+  ],
+  "cursor": "1970-01-01T00:00:00.000Z",
 }
 `;

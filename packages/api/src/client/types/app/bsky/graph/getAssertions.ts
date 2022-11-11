@@ -4,7 +4,8 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  actor: string;
+  author?: string;
+  subject?: string;
   assertion?: string;
   confirmed?: boolean;
   limit?: number;
@@ -23,35 +24,33 @@ export type ActorKnown =
 export type ActorUnknown = string
 
 export interface OutputSchema {
-  subject: {
-    did: string,
-    declaration: Declaration,
-    handle: string,
-    displayName?: string,
-  };
   cursor?: string;
   assertions: {
     uri: string,
     cid: string,
     assertion: string,
     confirmation?: Confirmation,
+    author: Actor,
     subject: Actor,
     indexedAt: string,
     createdAt: string,
   }[];
 }
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
-}
 export interface Confirmation {
   uri: string;
+  cid: string;
+  indexedAt: string;
+  createdAt: string;
 }
 export interface Actor {
   did: string;
   declaration: Declaration;
   handle: string;
   displayName?: string;
+}
+export interface Declaration {
+  cid: string;
+  actorType: ActorKnown | ActorUnknown;
 }
 
 export interface Response {

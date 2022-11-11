@@ -43,9 +43,14 @@ describe('pds assertion views', () => {
 
   const tstamp = (x: string) => new Date(x).getTime()
 
-  it('fetches assertions', async () => {
+  it('requires an author or subject', async () => {
+    const promise = client.app.bsky.graph.getAssertions()
+    await expect(promise).rejects.toThrow('Must provide an author or subject')
+  })
+
+  it('fetches assertions by author', async () => {
     const sceneAssertions = await client.app.bsky.graph.getAssertions({
-      actor: sc.scenes[scene].did,
+      author: sc.scenes[scene].did,
     })
 
     expect(forSnapshot(sceneAssertions.data)).toMatchSnapshot()
@@ -54,7 +59,7 @@ describe('pds assertion views', () => {
     )
 
     const otherSceneAssertions = await client.app.bsky.graph.getAssertions({
-      actor: sc.scenes[otherScene].did,
+      author: sc.scenes[otherScene].did,
     })
 
     expect(forSnapshot(otherSceneAssertions.data)).toMatchSnapshot()
@@ -63,7 +68,7 @@ describe('pds assertion views', () => {
     )
 
     const carolSceneAssertions = await client.app.bsky.graph.getAssertions({
-      actor: sc.scenes[carolScene].did,
+      author: sc.scenes[carolScene].did,
     })
 
     expect(forSnapshot(carolSceneAssertions.data)).toMatchSnapshot()
@@ -72,9 +77,32 @@ describe('pds assertion views', () => {
     )
   })
 
-  it('fetches assertions filtered by confirmation status', async () => {
+  it('fetches assertions by subject', async () => {
+    const aliceAssertions = await client.app.bsky.graph.getAssertions({
+      subject: sc.accounts[alice].did,
+    })
+
+    expect(forSnapshot(aliceAssertions.data)).toMatchSnapshot()
+    expect(getCursors(aliceAssertions.data.assertions)).toEqual(
+      getSortedCursors(aliceAssertions.data.assertions),
+    )
+  })
+
+  it('fetches assertions by author & subject', async () => {
+    const aliceSceneAssertions = await client.app.bsky.graph.getAssertions({
+      author: sc.scenes[scene].did,
+      subject: sc.accounts[alice].did,
+    })
+
+    expect(forSnapshot(aliceSceneAssertions.data)).toMatchSnapshot()
+    expect(getCursors(aliceSceneAssertions.data.assertions)).toEqual(
+      getSortedCursors(aliceSceneAssertions.data.assertions),
+    )
+  })
+
+  it('fetches assertions by author filtered by confirmation status', async () => {
     const sceneAssertionsConfirmed = await client.app.bsky.graph.getAssertions({
-      actor: sc.scenes[scene].did,
+      author: sc.scenes[scene].did,
       confirmed: true,
     })
 
@@ -85,7 +113,7 @@ describe('pds assertion views', () => {
 
     const sceneAssertionsUnconfirmed =
       await client.app.bsky.graph.getAssertions({
-        actor: sc.scenes[scene].did,
+        author: sc.scenes[scene].did,
         confirmed: false,
       })
 
@@ -96,7 +124,7 @@ describe('pds assertion views', () => {
 
     const otherSceneAssertionsConfirmed =
       await client.app.bsky.graph.getAssertions({
-        actor: sc.scenes[otherScene].did,
+        author: sc.scenes[otherScene].did,
         confirmed: true,
       })
 
@@ -107,7 +135,7 @@ describe('pds assertion views', () => {
 
     const otherSceneAssertionsUnconfirmed =
       await client.app.bsky.graph.getAssertions({
-        actor: sc.scenes[otherScene].did,
+        author: sc.scenes[otherScene].did,
         confirmed: false,
       })
 
@@ -118,7 +146,7 @@ describe('pds assertion views', () => {
 
     const carolSceneAssertionsConfirmed =
       await client.app.bsky.graph.getAssertions({
-        actor: sc.scenes[carolScene].did,
+        author: sc.scenes[carolScene].did,
         confirmed: true,
       })
 
@@ -129,7 +157,7 @@ describe('pds assertion views', () => {
 
     const carolSceneAssertionsUnconfirmed =
       await client.app.bsky.graph.getAssertions({
-        actor: sc.scenes[carolScene].did,
+        author: sc.scenes[carolScene].did,
         confirmed: true,
       })
 
@@ -139,9 +167,9 @@ describe('pds assertion views', () => {
     )
   })
 
-  it('fetches assertions filtered by type', async () => {
+  it('fetches assertions by author filtered by type', async () => {
     const sceneAssertionsMember = await client.app.bsky.graph.getAssertions({
-      actor: sc.scenes[scene].did,
+      author: sc.scenes[scene].did,
       assertion: 'app.bsky.graph.assertMember',
     })
 
@@ -151,7 +179,7 @@ describe('pds assertion views', () => {
     )
 
     const sceneAssertionsCreator = await client.app.bsky.graph.getAssertions({
-      actor: sc.scenes[scene].did,
+      author: sc.scenes[scene].did,
       assertion: 'app.bsky.graph.assertCreator',
     })
 
@@ -162,10 +190,9 @@ describe('pds assertion views', () => {
   })
 
   it('paginates assertions', async () => {
-    const results = (results) => results.flatMap((res) => res.assertions)
     const paginator = async (cursor?: string) => {
       const res = await client.app.bsky.graph.getAssertions({
-        actor: sc.scenes[scene].did,
+        author: sc.scenes[scene].did,
         before: cursor,
         limit: 2,
       })
@@ -176,12 +203,5 @@ describe('pds assertion views', () => {
     paginatedAll.forEach((res) =>
       expect(res.assertions.length).toBeLessThanOrEqual(2),
     )
-
-    const full = await client.app.bsky.graph.getAssertions({
-      actor: sc.scenes[scene].did,
-    })
-
-    expect(full.data.assertions.length).toEqual(4)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

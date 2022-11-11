@@ -3012,9 +3012,11 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
     description: 'General-purpose query for assertions.',
     parameters: {
       type: 'object',
-      required: ['actor'],
       properties: {
-        actor: {
+        author: {
+          type: 'string',
+        },
+        subject: {
           type: 'string',
         },
         assertion: {
@@ -3036,9 +3038,77 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       encoding: 'application/json',
       schema: {
         type: 'object',
-        required: ['subject', 'assertions'],
+        required: ['assertions'],
         properties: {
-          subject: {
+          cursor: {
+            type: 'string',
+          },
+          assertions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: [
+                'uri',
+                'cid',
+                'assertion',
+                'author',
+                'subject',
+                'indexedAt',
+                'createdAt',
+              ],
+              properties: {
+                uri: {
+                  type: 'string',
+                },
+                cid: {
+                  type: 'string',
+                },
+                assertion: {
+                  type: 'string',
+                },
+                confirmation: {
+                  $ref: '#/$defs/confirmation',
+                },
+                author: {
+                  $ref: '#/$defs/actor',
+                },
+                subject: {
+                  $ref: '#/$defs/actor',
+                },
+                indexedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+        $defs: {
+          confirmation: {
+            type: 'object',
+            required: ['uri', 'cid', 'indexedAt', 'createdAt'],
+            properties: {
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+              indexedAt: {
+                type: 'string',
+                format: 'date-time',
+              },
+              createdAt: {
+                type: 'string',
+                format: 'date-time',
+              },
+            },
+          },
+          actor: {
             type: 'object',
             required: ['did', 'declaration', 'handle'],
             properties: {
@@ -3057,50 +3127,6 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               },
             },
           },
-          cursor: {
-            type: 'string',
-          },
-          assertions: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: [
-                'uri',
-                'cid',
-                'assertion',
-                'subject',
-                'indexedAt',
-                'createdAt',
-              ],
-              properties: {
-                uri: {
-                  type: 'string',
-                },
-                cid: {
-                  type: 'string',
-                },
-                assertion: {
-                  type: 'string',
-                },
-                confirmation: {
-                  $ref: '#/$defs/confirmation',
-                },
-                subject: {
-                  $ref: '#/$defs/actor',
-                },
-                indexedAt: {
-                  type: 'string',
-                  format: 'date-time',
-                },
-                createdAt: {
-                  type: 'string',
-                  format: 'date-time',
-                },
-              },
-            },
-          },
-        },
-        $defs: {
           declaration: {
             type: 'object',
             required: ['cid', 'actorType'],
@@ -3130,44 +3156,27 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               enum: ['app.bsky.system.actorUser', 'app.bsky.system.actorScene'],
             },
           },
-          confirmation: {
-            type: 'object',
-            required: ['uri'],
-            properties: {
-              uri: {
-                type: 'string',
-              },
-            },
-          },
-          actor: {
-            type: 'object',
-            required: ['did', 'declaration', 'handle'],
-            properties: {
-              did: {
-                type: 'string',
-              },
-              declaration: {
-                $ref: '#/$defs/declaration',
-              },
-              handle: {
-                type: 'string',
-              },
-              displayName: {
-                type: 'string',
-                maxLength: 64,
-              },
-            },
-          },
         },
       },
     },
     defs: {
       confirmation: {
         type: 'object',
-        required: ['uri'],
+        required: ['uri', 'cid', 'indexedAt', 'createdAt'],
         properties: {
           uri: {
             type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
           },
         },
       },

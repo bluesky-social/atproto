@@ -8,17 +8,27 @@ import { paginate } from '../../../../db/util'
 export default function (server: Server) {
   server.app.bsky.graph.getAssertions(
     async (params: GetAssertions.QueryParams, _input, _req, res) => {
-      const { actor, assertion, confirmed, limit, before } = params
+      const { author, subject, assertion, confirmed, limit, before } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
-      const subject = await getActorInfo(db.db, actor).catch((_e) => {
-        throw new InvalidRequestError(`Actor not found: ${actor}`)
-      })
+      if (!author && !subject) {
+        throw new InvalidRequestError(`Must provide an author or subject`)
+      }
+
+      const authorInfo =
+        author &&
+        (await getActorInfo(db.db, author).catch((_e) => {
+          throw new InvalidRequestError(`Actor not found: ${author}`)
+        }))
+      const subjectInfo =
+        subject &&
+        (await getActorInfo(db.db, subject).catch((_e) => {
+          throw new InvalidRequestError(`Actor not found: ${subject}`)
+        }))
 
       let assertionsReq = db.db
         .selectFrom('assertion')
-        .where('assertion.creator', '=', subject.did)
         .if(typeof assertion === 'string', (q) =>
           q.where('assertion.assertion', '=', assertion as string),
         )
@@ -28,12 +38,22 @@ export default function (server: Server) {
         .if(confirmed === false, (q) =>
           q.where('assertion.confirmUri', 'is', null),
         )
+        .innerJoin('did_handle as author', 'author.did', 'assertion.creator')
+        .leftJoin(
+          'profile as authorProfile',
+          'authorProfile.creator',
+          'author.did',
+        )
         .innerJoin(
           'did_handle as subject',
           'subject.did',
           'assertion.subjectDid',
         )
-        .leftJoin('profile', 'profile.creator', 'subject.did')
+        .leftJoin(
+          'profile as subjectProfile',
+          'subjectProfile.creator',
+          'subject.did',
+        )
         .select([
           'assertion.uri as uri',
           'assertion.cid as cid',
@@ -42,14 +62,35 @@ export default function (server: Server) {
           'assertion.confirmCid',
           'assertion.confirmCreated',
           'assertion.confirmIndexed',
+          'author.did as authorDid',
+          'author.handle as authorHandle',
+          'author.declarationCid as authorDeclarationCid',
+          'author.actorType as authorActorType',
+          'authorProfile.displayName as authorDisplayName',
           'subject.did as subjectDid',
           'subject.handle as subjectHandle',
           'subject.declarationCid as subjectDeclarationCid',
           'subject.actorType as subjectActorType',
-          'profile.displayName as subjectDisplayName',
+          'subjectProfile.displayName as subjectDisplayName',
           'assertion.createdAt as createdAt',
           'assertion.indexedAt as indexedAt',
         ])
+
+      if (authorInfo) {
+        assertionsReq = assertionsReq.where(
+          'assertion.creator',
+          '=',
+          authorInfo.did,
+        )
+      }
+
+      if (subjectInfo) {
+        assertionsReq = assertionsReq.where(
+          'assertion.subjectDid',
+          '=',
+          subjectInfo.did,
+        )
+      }
 
       assertionsReq = paginate(assertionsReq, {
         limit,
@@ -62,14 +103,27 @@ export default function (server: Server) {
         uri: row.uri,
         cid: row.cid,
         assertion: row.assertionType,
-        confirmation: row.confirmUri
-          ? {
-              uri: row.confirmUri,
-              cid: row.confirmCid,
-              indexedAt: row.confirmIndexed,
-              createdAt: row.confirmCreated,
-            }
-          : undefined,
+        confirmation:
+          row.confirmUri &&
+          row.confirmCid &&
+          row.confirmIndexed &&
+          row.confirmCreated
+            ? {
+                uri: row.confirmUri,
+                cid: row.confirmCid,
+                indexedAt: row.confirmIndexed,
+                createdAt: row.confirmCreated,
+              }
+            : undefined,
+        author: {
+          did: row.authorDid,
+          handle: row.authorHandle,
+          declaration: {
+            cid: row.authorDeclarationCid,
+            actorType: row.authorActorType,
+          },
+          displayName: row.authorDisplayName || undefined,
+        },
         subject: {
           did: row.subjectDid,
           handle: row.subjectHandle,
@@ -86,7 +140,6 @@ export default function (server: Server) {
       return {
         encoding: 'application/json',
         body: {
-          subject,
           assertions,
           cursor: assertions.at(-1)?.createdAt,
         },
