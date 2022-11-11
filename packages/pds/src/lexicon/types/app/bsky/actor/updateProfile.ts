@@ -11,6 +11,7 @@ export interface HandlerInput {
 }
 
 export interface InputSchema {
+  did?: string;
   displayName?: string;
   description?: string;
 }

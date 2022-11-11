@@ -131,11 +131,16 @@ export class SeedClient {
     return this.accounts[shortName]
   }
 
-  async createProfile(by: string, displayName: string, description: string) {
+  async createProfile(
+    by: string,
+    displayName: string,
+    description: string,
+    fromUser?: string,
+  ) {
     const res = await this.client.app.bsky.actor.profile.create(
       { did: by },
       { displayName, description },
-      this.getHeaders(by),
+      this.getHeaders(fromUser || by),
     )
     this.profiles[by] = {
       displayName,
