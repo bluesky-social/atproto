@@ -108,20 +108,18 @@ describe('pds home feed views', () => {
       },
     )
 
-    console.log(aliceTL.data.feed)
-
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
     aliceTL.data.feed.forEach(expectNotOwnRepostsBy(alice))
 
-    // const carolTL = await client.app.bsky.feed.getTimeline(
-    //   { algorithm: FeedAlgorithm.Firehose },
-    //   {
-    //     headers: sc.getHeaders(carol),
-    //   },
-    // )
+    const carolTL = await client.app.bsky.feed.getTimeline(
+      { algorithm: FeedAlgorithm.Firehose },
+      {
+        headers: sc.getHeaders(carol),
+      },
+    )
 
-    // expect(forSnapshot(carolTL.data.feed)).toMatchSnapshot()
-    // carolTL.data.feed.forEach(expectNotOwnRepostsBy(carol))
+    expect(forSnapshot(carolTL.data.feed)).toMatchSnapshot()
+    carolTL.data.feed.forEach(expectNotOwnRepostsBy(carol))
   })
 
   it("fetches authenticated user's home feed w/ default algorithm", async () => {
