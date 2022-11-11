@@ -8,6 +8,7 @@ import { DbRecordPlugin } from '../types'
 import * as schemas from '../schemas'
 import * as messages from '../message-queue/messages'
 import { Message } from '../message-queue/messages'
+import { APP_BSKY_GRAPH } from '../../lexicon'
 
 const type = schemas.ids.AppBskyGraphConfirmation
 
@@ -42,9 +43,11 @@ const insertFn =
       })
       .returningAll()
       .executeTakeFirst()
-    return updated
-      ? [messages.addMember(updated.creator, updated.subjectDid)]
-      : []
+
+    if (updated?.assertion === APP_BSKY_GRAPH.AssertMember) {
+      return [messages.addMember(updated.creator, updated.subjectDid)]
+    }
+    return []
   }
 
 const deleteFn =

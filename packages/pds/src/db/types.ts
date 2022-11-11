@@ -22,5 +22,6 @@ export type Ref = DynamicReferenceBuilder<any>
 
 export interface MessageQueue {
   send(tx: Database, message: Message | Message[]): Promise<void>
-  process(): Promise<void>
+  processNext(): Promise<void>
+  processAll(): Promise<void>
 }

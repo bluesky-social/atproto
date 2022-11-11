@@ -39,7 +39,7 @@ export class SqlMessageQueue implements MessageQueue {
 
     await tx.db.insertInto('message_queue').values(values).execute()
 
-    this.process()
+    this.processNext()
   }
 
   private async ensureCursor(): Promise<void> {
@@ -52,35 +52,61 @@ export class SqlMessageQueue implements MessageQueue {
     this.cursorExists = true
   }
 
-  async process(): Promise<void> {
+  async processAll(): Promise<void> {
     await this.ensureCursor()
-    const keepGoing = await this.db.transaction(
-      async (dbTxn): Promise<boolean> => {
-        let builder = dbTxn.db
-          .selectFrom('message_queue_cursor as cursor')
-          .innerJoin('message_queue', 'message_queue.id', 'cursor.cursor')
-          .selectAll()
-        if (this.db.dialect !== 'sqlite') {
-          builder = builder.forUpdate()
-        }
+    await this.db.transaction(async (dbTxn) => {
+      let builder = dbTxn.db
+        .selectFrom('message_queue_cursor as cursor')
+        .innerJoin('message_queue', (join) =>
+          join.onRef('cursor.cursor', '<=', 'message_queue.id'),
+        )
+        .where('cursor.consumer', '=', this.name)
+        .selectAll()
+      if (this.db.dialect !== 'sqlite') {
+        builder = builder.forUpdate()
+      }
+      const res = await builder.execute()
+      // all caught up
+      if (res.length === 0) return
 
-        const res = await builder.executeTakeFirst()
-        // all caught up
-        if (!res) return false
-
-        const message: Message = JSON.parse(res.message)
+      for (const row of res) {
+        const message: Message = JSON.parse(row.message)
         await this.handleMessage(dbTxn, message)
-        await dbTxn.db
-          .updateTable('message_queue_cursor')
-          .set({ cursor: sql`cursor + 1` })
-          .where('consumer', '=', this.name)
-          .execute()
-        return true
-      },
-    )
-    if (keepGoing) {
-      await this.process()
-    }
+      }
+      const nextCursor = res[res.length - 1].id + 1
+      await dbTxn.db
+        .updateTable('message_queue_cursor')
+        .set({ cursor: nextCursor })
+        .where('consumer', '=', this.name)
+        .execute()
+    })
+  }
+
+  async processNext(): Promise<void> {
+    await this.ensureCursor()
+    await this.db.transaction(async (dbTxn) => {
+      let builder = dbTxn.db
+        .selectFrom('message_queue_cursor as cursor')
+        .innerJoin('message_queue', 'message_queue.id', 'cursor.cursor')
+        .where('cursor.consumer', '=', this.name)
+        .selectAll()
+      if (this.db.dialect !== 'sqlite') {
+        builder = builder.forUpdate()
+      }
+
+      const res = await builder.executeTakeFirst()
+      // all caught up
+      if (!res) return
+
+      const message: Message = JSON.parse(res.message)
+      await this.handleMessage(dbTxn, message)
+      await dbTxn.db
+        .updateTable('message_queue_cursor')
+        .set({ cursor: sql`cursor + 1` })
+        .where('consumer', '=', this.name)
+        .returningAll()
+        .execute()
+    })
   }
 
   private async handleMessage(db: Database, message: Message) {
