@@ -17,10 +17,15 @@ import * as schema from '../../lexicon/schemas'
 import { TID } from '@atproto/common'
 import { MessageQueue } from '../types'
 
+type GetAuthStoreFn = (did: string) => AuthStore
+
 export class SqlMessageQueue implements MessageQueue {
+  private cursorExists = false
+
   constructor(
+    private name: string,
     private db: Database,
-    private getAuthStore: (did: string) => AuthStore,
+    private getAuthStore: GetAuthStoreFn,
   ) {}
 
   async send(tx: Database, messages: Message | Message[]): Promise<void> {
@@ -29,67 +34,53 @@ export class SqlMessageQueue implements MessageQueue {
     const now = new Date().toISOString()
     const values = msgArray.map((msg) => ({
       message: JSON.stringify(msg),
-      read: 0 as 0 | 1,
       createdAt: now,
     }))
 
-    const res = await tx.db
-      .insertInto('message_queue')
-      .values(values)
-      .returning('id')
+    await tx.db.insertInto('message_queue').values(values).execute()
+
+    this.process()
+  }
+
+  private async ensureCursor(): Promise<void> {
+    if (this.cursorExists) return
+    await this.db.db
+      .insertInto('message_queue_cursor')
+      .values({ consumer: this.name, cursor: 1 })
+      .onConflict((oc) => oc.doNothing())
       .execute()
-
-    res.forEach((row) =>
-      this.process(row.id).catch((err) =>
-        log.error({ id: row.id, err }, 'failed to process message'),
-      ),
-    )
+    this.cursorExists = true
   }
 
-  async catchup(): Promise<void> {
-    let builder = this.db.db
-      .selectFrom('message_queue')
-      .where('read', '=', 0)
-      .selectAll()
-    if (this.db.dialect !== 'sqlite') {
-      builder = builder.forUpdate()
+  async process(): Promise<void> {
+    await this.ensureCursor()
+    const keepGoing = await this.db.transaction(
+      async (dbTxn): Promise<boolean> => {
+        let builder = dbTxn.db
+          .selectFrom('message_queue_cursor as cursor')
+          .innerJoin('message_queue', 'message_queue.id', 'cursor.cursor')
+          .selectAll()
+        if (this.db.dialect !== 'sqlite') {
+          builder = builder.forUpdate()
+        }
+
+        const res = await builder.executeTakeFirst()
+        // all caught up
+        if (!res) return false
+
+        const message: Message = JSON.parse(res.message)
+        await this.handleMessage(dbTxn, message)
+        await dbTxn.db
+          .updateTable('message_queue_cursor')
+          .set({ cursor: sql`cursor + 1` })
+          .where('consumer', '=', this.name)
+          .execute()
+        return true
+      },
+    )
+    if (keepGoing) {
+      await this.process()
     }
-    const res = await builder.execute()
-    await Promise.all(
-      res.map((row) =>
-        this.process(row.id).catch((err) =>
-          log.error({ id: row.id, err }, 'failed to process message'),
-        ),
-      ),
-    )
-  }
-
-  private async process(id: number): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      let builder = dbTxn.db
-        .selectFrom('message_queue')
-        .where('id', '=', id)
-        .selectAll()
-      if (this.db.dialect !== 'sqlite') {
-        builder = builder.forUpdate()
-      }
-
-      const res = await builder.executeTakeFirst()
-
-      if (!res) {
-        log.error({ id }, 'message does not exist')
-        return
-      } else if (res.read === 1) return
-
-      const message: Message = JSON.parse(res.message)
-      await this.handleMessage(dbTxn, message)
-
-      await dbTxn.db
-        .updateTable('message_queue')
-        .set({ read: 1 })
-        .where('id', '=', id)
-        .execute()
-    })
   }
 
   private async handleMessage(db: Database, message: Message) {

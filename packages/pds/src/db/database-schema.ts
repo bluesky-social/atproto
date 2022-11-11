@@ -16,6 +16,7 @@ import * as repost from './records/repost'
 import * as trend from './records/trend'
 import * as follow from './records/follow'
 import * as messageQueue from './message-queue/tables/messageQueue'
+import * as messageQueueCursor from './message-queue/tables/messageQueueCursor'
 import * as sceneMemberCount from './message-queue/tables/sceneMemberCount'
 import * as sceneVotesOnPost from './message-queue/tables/sceneVotesOnPost'
 
@@ -37,5 +38,6 @@ export type DatabaseSchema = user.PartialDB &
   trend.PartialDB &
   follow.PartialDB &
   messageQueue.PartialDB &
+  messageQueueCursor.PartialDB &
   sceneMemberCount.PartialDB &
   sceneVotesOnPost.PartialDB

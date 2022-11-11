@@ -23,6 +23,7 @@ const repostTable = 'repost'
 const trendTable = 'trend'
 const voteTable = 'vote'
 const messageQueueTable = 'message_queue'
+const messageQueueCursorTable = 'message_queue_cursor'
 const sceneMemberCountTable = 'scene_member_count'
 const sceneVotesOnPostTable = 'scene_votes_on_post'
 
@@ -266,8 +267,12 @@ export async function up(
         )
   mqBuilder
     .addColumn('message', 'varchar', (col) => col.notNull())
-    .addColumn('read', 'int2', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .execute()
+  await db.schema
+    .createTable(messageQueueCursorTable)
+    .addColumn('consumer', 'varchar', (col) => col.primaryKey())
+    .addColumn('cursor', 'integer', (col) => col.notNull())
     .execute()
   await db.schema
     .createTable(sceneMemberCountTable)
@@ -286,6 +291,7 @@ export async function up(
 export async function down(db: Kysely<DatabaseSchema>): Promise<void> {
   await db.schema.dropTable(sceneVotesOnPostTable).execute()
   await db.schema.dropTable(sceneMemberCountTable).execute()
+  await db.schema.dropTable(messageQueueCursorTable).execute()
   await db.schema.dropTable(messageQueueTable).execute()
   await db.schema.dropTable(voteTable).execute()
   await db.schema.dropTable(trendTable).execute()

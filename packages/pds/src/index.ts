@@ -38,7 +38,7 @@ const runServer = (
     didResolver,
   })
 
-  const messageQueue = new SqlMessageQueue(db, (did: string) => {
+  const messageQueue = new SqlMessageQueue('pds', db, (did: string) => {
     return auth.verifier.loadAuthStore(keypair, [], did)
   })
   db.setMessageQueue(messageQueue)
