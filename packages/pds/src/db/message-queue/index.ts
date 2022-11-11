@@ -87,8 +87,11 @@ export class SqlMessageQueue implements MessageQueue {
     await this.db.transaction(async (dbTxn) => {
       let builder = dbTxn.db
         .selectFrom('message_queue_cursor as cursor')
-        .innerJoin('message_queue', 'message_queue.id', 'cursor.cursor')
+        .innerJoin('message_queue', (join) =>
+          join.onRef('cursor.cursor', '<=', 'message_queue.id'),
+        )
         .where('cursor.consumer', '=', this.name)
+        .orderBy('id', 'asc')
         .selectAll()
       if (this.db.dialect !== 'sqlite') {
         builder = builder.forUpdate()
