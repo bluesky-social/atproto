@@ -11,7 +11,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
 
-describe('pds home feed views', () => {
+describe('timeline views', () => {
   let client: AtpServiceClient
   let close: CloseFn
   let sc: SeedClient
@@ -43,12 +43,10 @@ describe('pds home feed views', () => {
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
     const expectOriginatorFollowedBy = (did) => (item: Timeline.FeedItem) => {
       const originator = getOriginator(item)
-      if (did === originator) {
-        // The user sees their own posts, but the user does not expect to see their reposts
-        return expect(item.repostedBy?.did).not.toEqual(did)
+      // The user expects to see posts & reposts from themselves and follows
+      if (did !== originator) {
+        expect(sc.follows[did]).toHaveProperty(originator)
       }
-      // Otherwise, we expect that the user follows the originator of the post
-      expect(sc.follows[did]).toHaveProperty(originator)
     }
 
     const aliceTL = await client.app.bsky.feed.getTimeline(
@@ -93,14 +91,6 @@ describe('pds home feed views', () => {
   })
 
   it("fetches authenticated user's home feed w/ firehose algorithm", async () => {
-    const expectNotOwnRepostsBy = (did) => (item: Timeline.FeedItem) => {
-      const originator = getOriginator(item)
-      if (did === originator) {
-        // The user sees their own posts, but the user does not expect to see their reposts
-        return expect(item.repostedBy?.did).not.toEqual(did)
-      }
-    }
-
     const aliceTL = await client.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.Firehose },
       {
@@ -109,7 +99,6 @@ describe('pds home feed views', () => {
     )
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
-    aliceTL.data.feed.forEach(expectNotOwnRepostsBy(alice))
 
     const carolTL = await client.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.Firehose },
@@ -119,7 +108,6 @@ describe('pds home feed views', () => {
     )
 
     expect(forSnapshot(carolTL.data.feed)).toMatchSnapshot()
-    carolTL.data.feed.forEach(expectNotOwnRepostsBy(carol))
   })
 
   it("fetches authenticated user's home feed w/ default algorithm", async () => {
@@ -164,7 +152,7 @@ describe('pds home feed views', () => {
       { headers: sc.getHeaders(carol) },
     )
 
-    expect(full.data.feed.length).toEqual(6)
+    expect(full.data.feed.length).toEqual(7)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
