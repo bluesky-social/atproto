@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds home feed views fetches authenticated user's home feed w/ firehose algorithm 1`] = `
+exports[`timeline views fetches authenticated user's home feed w/ firehose algorithm 1`] = `
 Array [
   Object {
     "author": Object {
@@ -447,7 +447,7 @@ Array [
 ]
 `;
 
-exports[`pds home feed views fetches authenticated user's home feed w/ firehose algorithm 2`] = `
+exports[`timeline views fetches authenticated user's home feed w/ firehose algorithm 2`] = `
 Array [
   Object {
     "author": Object {
@@ -489,11 +489,54 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
+      "did": "user(1)",
+      "handle": "dan.test",
+    },
+    "cid": "cids(2)",
+    "downvoteCount": 0,
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "myState": Object {
+      "repost": "record(3)",
+    },
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "entities": Array [
+        Object {
+          "index": Object {
+            "end": 18,
+            "start": 0,
+          },
+          "type": "mention",
+          "value": "user(0)",
+        },
+      ],
+      "text": "@alice.bluesky.xyz is the best",
+    },
+    "replyCount": 0,
+    "repostCount": 1,
+    "repostedBy": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(2)",
+      "handle": "carol.test",
+    },
+    "upvoteCount": 0,
+    "uri": "record(2)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(2)",
+    "cid": "cids(3)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -502,8 +545,8 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
-          "cid": "cids(3)",
-          "uri": "record(3)",
+          "cid": "cids(4)",
+          "uri": "record(5)",
         },
         "root": Object {
           "cid": "cids(0)",
@@ -515,7 +558,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 0,
-    "uri": "record(2)",
+    "uri": "record(4)",
   },
   Object {
     "author": Object {
@@ -526,7 +569,7 @@ Array [
       "did": "user(2)",
       "handle": "carol.test",
     },
-    "cid": "cids(4)",
+    "cid": "cids(5)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -548,7 +591,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 0,
-    "uri": "record(4)",
+    "uri": "record(6)",
   },
   Object {
     "author": Object {
@@ -560,7 +603,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
     },
-    "cid": "cids(3)",
+    "cid": "cids(4)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -582,7 +625,7 @@ Array [
     "replyCount": 1,
     "repostCount": 0,
     "upvoteCount": 0,
-    "uri": "record(3)",
+    "uri": "record(5)",
   },
   Object {
     "author": Object {
@@ -593,7 +636,7 @@ Array [
       "did": "user(2)",
       "handle": "carol.test",
     },
-    "cid": "cids(5)",
+    "cid": "cids(6)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -607,14 +650,14 @@ Array [
     "trendedBy": Object {
       "declaration": Object {
         "actorType": "app.bsky.system.actorScene",
-        "cid": "cids(6)",
+        "cid": "cids(7)",
       },
       "did": "user(4)",
       "displayName": "besties",
       "handle": "scene.test",
     },
     "upvoteCount": 2,
-    "uri": "record(5)",
+    "uri": "record(7)",
   },
   Object {
     "author": Object {
@@ -642,7 +685,7 @@ Array [
     "trendedBy": Object {
       "declaration": Object {
         "actorType": "app.bsky.system.actorScene",
-        "cid": "cids(6)",
+        "cid": "cids(7)",
       },
       "did": "user(4)",
       "displayName": "besties",
@@ -661,11 +704,11 @@ Array [
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(7)",
+    "cid": "cids(8)",
     "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {
-      "upvote": "record(7)",
+      "upvote": "record(9)",
     },
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -675,7 +718,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 1,
-    "uri": "record(6)",
+    "uri": "record(8)",
   },
   Object {
     "author": Object {
@@ -687,7 +730,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
     },
-    "cid": "cids(8)",
+    "cid": "cids(9)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -699,7 +742,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 0,
-    "uri": "record(8)",
+    "uri": "record(10)",
   },
   Object {
     "author": Object {
@@ -736,11 +779,11 @@ Array [
       "did": "user(1)",
       "handle": "dan.test",
     },
-    "cid": "cids(9)",
+    "cid": "cids(2)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {
-      "repost": "record(10)",
+      "repost": "record(3)",
     },
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -760,7 +803,7 @@ Array [
     "replyCount": 0,
     "repostCount": 1,
     "upvoteCount": 0,
-    "uri": "record(9)",
+    "uri": "record(2)",
   },
   Object {
     "author": Object {
@@ -794,7 +837,7 @@ Array [
       "did": "user(2)",
       "handle": "carol.test",
     },
-    "cid": "cids(5)",
+    "cid": "cids(6)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -806,7 +849,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 2,
-    "uri": "record(5)",
+    "uri": "record(7)",
   },
   Object {
     "author": Object {
@@ -859,7 +902,7 @@ Array [
 ]
 `;
 
-exports[`pds home feed views fetches authenticated user's home feed w/ reverse-chronological algorithm 1`] = `
+exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 1`] = `
 Array [
   Object {
     "author": Object {
@@ -1239,7 +1282,7 @@ Array [
 ]
 `;
 
-exports[`pds home feed views fetches authenticated user's home feed w/ reverse-chronological algorithm 2`] = `
+exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 2`] = `
 Array [
   Object {
     "author": Object {
@@ -1535,7 +1578,7 @@ Array [
 ]
 `;
 
-exports[`pds home feed views fetches authenticated user's home feed w/ reverse-chronological algorithm 3`] = `
+exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 3`] = `
 Array [
   Object {
     "author": Object {
@@ -1544,30 +1587,39 @@ Array [
         "cid": "cids(1)",
       },
       "did": "user(0)",
-      "displayName": "ali",
-      "handle": "alice.test",
+      "handle": "dan.test",
     },
     "cid": "cids(0)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "myState": Object {},
+    "myState": Object {
+      "repost": "record(1)",
+    },
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "reply": Object {
-        "parent": Object {
-          "cid": "cids(3)",
-          "uri": "record(2)",
+      "entities": Array [
+        Object {
+          "index": Object {
+            "end": 18,
+            "start": 0,
+          },
+          "type": "mention",
+          "value": "user(2)",
         },
-        "root": Object {
-          "cid": "cids(2)",
-          "uri": "record(1)",
-        },
-      },
-      "text": "thanks bob",
+      ],
+      "text": "@alice.bluesky.xyz is the best",
     },
     "replyCount": 0,
-    "repostCount": 0,
+    "repostCount": 1,
+    "repostedBy": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(1)",
+      "handle": "carol.test",
+    },
     "upvoteCount": 0,
     "uri": "record(0)",
   },
@@ -1577,10 +1629,11 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(1)",
-      "handle": "carol.test",
+      "did": "user(2)",
+      "displayName": "ali",
+      "handle": "alice.test",
     },
-    "cid": "cids(4)",
+    "cid": "cids(2)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -1589,20 +1642,20 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
-          "cid": "cids(2)",
-          "uri": "record(1)",
+          "cid": "cids(4)",
+          "uri": "record(4)",
         },
         "root": Object {
-          "cid": "cids(2)",
-          "uri": "record(1)",
+          "cid": "cids(3)",
+          "uri": "record(3)",
         },
       },
-      "text": "of course",
+      "text": "thanks bob",
     },
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 0,
-    "uri": "record(3)",
+    "uri": "record(2)",
   },
   Object {
     "author": Object {
@@ -1610,15 +1663,48 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(0)",
+      "did": "user(1)",
+      "handle": "carol.test",
+    },
+    "cid": "cids(5)",
+    "downvoteCount": 0,
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "myState": Object {},
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(3)",
+          "uri": "record(3)",
+        },
+        "root": Object {
+          "cid": "cids(3)",
+          "uri": "record(3)",
+        },
+      },
+      "text": "of course",
+    },
+    "replyCount": 0,
+    "repostCount": 0,
+    "upvoteCount": 0,
+    "uri": "record(5)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(2)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(5)",
+    "cid": "cids(6)",
     "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {
-      "upvote": "record(5)",
+      "upvote": "record(7)",
     },
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -1628,7 +1714,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 1,
-    "uri": "record(4)",
+    "uri": "record(6)",
   },
   Object {
     "author": Object {
@@ -1636,15 +1722,15 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(0)",
+      "did": "user(2)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(2)",
+    "cid": "cids(3)",
     "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {
-      "downvote": "record(6)",
+      "downvote": "record(8)",
     },
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -1654,7 +1740,7 @@ Array [
     "replyCount": 2,
     "repostCount": 1,
     "upvoteCount": 2,
-    "uri": "record(1)",
+    "uri": "record(3)",
   },
   Object {
     "author": Object {
@@ -1665,7 +1751,7 @@ Array [
       "did": "user(1)",
       "handle": "carol.test",
     },
-    "cid": "cids(6)",
+    "cid": "cids(7)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -1677,7 +1763,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 2,
-    "uri": "record(7)",
+    "uri": "record(9)",
   },
   Object {
     "author": Object {
@@ -1685,11 +1771,11 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(0)",
+      "did": "user(2)",
       "displayName": "ali",
       "handle": "alice.test",
     },
-    "cid": "cids(7)",
+    "cid": "cids(8)",
     "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
@@ -1701,12 +1787,12 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 0,
-    "uri": "record(8)",
+    "uri": "record(10)",
   },
 ]
 `;
 
-exports[`pds home feed views fetches authenticated user's home feed w/ reverse-chronological algorithm 4`] = `
+exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 4`] = `
 Array [
   Object {
     "author": Object {
@@ -1715,31 +1801,32 @@ Array [
         "cid": "cids(1)",
       },
       "did": "user(0)",
-      "displayName": "bobby",
-      "handle": "bob.test",
+      "displayName": "ali",
+      "handle": "alice.test",
     },
     "cid": "cids(0)",
-    "downvoteCount": 0,
+    "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "myState": Object {},
+    "myState": Object {
+      "repost": "record(1)",
+      "upvote": "record(2)",
+    },
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "reply": Object {
-        "parent": Object {
-          "cid": "cids(2)",
-          "uri": "record(1)",
-        },
-        "root": Object {
-          "cid": "cids(2)",
-          "uri": "record(1)",
-        },
-      },
-      "text": "hear that",
+      "text": "again",
     },
-    "replyCount": 1,
-    "repostCount": 0,
-    "upvoteCount": 0,
+    "replyCount": 2,
+    "repostCount": 1,
+    "repostedBy": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(1)",
+      "handle": "dan.test",
+    },
+    "upvoteCount": 2,
     "uri": "record(0)",
   },
   Object {
@@ -1748,7 +1835,41 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(0)",
+      "did": "user(2)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+    },
+    "cid": "cids(2)",
+    "downvoteCount": 0,
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "myState": Object {},
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
+        "root": Object {
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
+      },
+      "text": "hear that",
+    },
+    "replyCount": 1,
+    "repostCount": 0,
+    "upvoteCount": 0,
+    "uri": "record(3)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
     },
@@ -1764,7 +1885,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 0,
-    "uri": "record(2)",
+    "uri": "record(4)",
   },
   Object {
     "author": Object {
@@ -1789,7 +1910,7 @@ Array [
             "start": 0,
           },
           "type": "mention",
-          "value": "user(2)",
+          "value": "user(0)",
         },
       ],
       "text": "@alice.bluesky.xyz is the best",
@@ -1797,7 +1918,7 @@ Array [
     "replyCount": 0,
     "repostCount": 1,
     "upvoteCount": 0,
-    "uri": "record(3)",
+    "uri": "record(5)",
   },
   Object {
     "author": Object {
@@ -1820,7 +1941,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 0,
-    "uri": "record(4)",
+    "uri": "record(6)",
   },
   Object {
     "author": Object {
@@ -1828,7 +1949,7 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(0)",
+      "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
     },
@@ -1844,7 +1965,7 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "upvoteCount": 0,
-    "uri": "record(5)",
+    "uri": "record(7)",
   },
 ]
 `;

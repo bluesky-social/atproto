@@ -59,9 +59,7 @@ export default function (server: Server) {
         ])
 
       if (feedAlgorithm === FeedAlgorithm.Firehose) {
-        // All posts, except requester's reposts/trends
-        repostsQb = repostsQb.where('creator', '!=', requester)
-        trendsQb = trendsQb.where('creator', '!=', requester)
+        // All posts
       } else if (feedAlgorithm === FeedAlgorithm.ReverseChronological) {
         // Followee's posts/reposts/trends, and requester's posts
         const followingIdsSubquery = db.db
@@ -69,8 +67,8 @@ export default function (server: Server) {
           .select('follow.subjectDid')
           .where('follow.creator', '=', requester)
         repostsQb = repostsQb
-          .where('creator', '!=', requester)
-          .where('creator', 'in', followingIdsSubquery)
+          .where('creator', '=', requester)
+          .orWhere('creator', 'in', followingIdsSubquery)
         trendsQb = trendsQb
           .where('creator', '=', requester)
           .orWhere('creator', 'in', followingIdsSubquery)
