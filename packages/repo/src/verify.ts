@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
 import { IpldStore } from './blockstore'
-import { RepoStructure } from './structure'
+import Repo from './repo'
 import { DataDiff } from './mst'
 import * as util from './util'
 import { def } from './types'
@@ -18,9 +18,9 @@ export const verifyUpdates = async (
   }
   const fullDiff = new DataDiff()
   if (commitPath.length === 0) return fullDiff
-  let prevRepo = await RepoStructure.load(blockstore, commitPath[0])
+  let prevRepo = await Repo.load(blockstore, commitPath[0])
   for (const commit of commitPath.slice(1)) {
-    const nextRepo = await RepoStructure.load(blockstore, commit)
+    const nextRepo = await Repo.load(blockstore, commit)
     const diff = await prevRepo.data.diff(nextRepo.data)
 
     if (!nextRepo.root.meta.equals(prevRepo.root.meta)) {
@@ -35,13 +35,13 @@ export const verifyUpdates = async (
         def.string,
       )
       const token = await verifier.validateUcan(encodedToken)
-      const neededCaps = diff.neededCapabilities(prevRepo.did())
+      const neededCaps = diff.neededCapabilities(prevRepo.did)
       for (const cap of neededCaps) {
-        await verifier.verifyAtpUcan(token, prevRepo.did(), cap)
+        await verifier.verifyAtpUcan(token, prevRepo.did, cap)
       }
       didForSignature = token.payload.iss
     } else {
-      didForSignature = prevRepo.did()
+      didForSignature = prevRepo.did
     }
 
     // verify signature matches repo root + auth token

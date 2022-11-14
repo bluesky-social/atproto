@@ -10,12 +10,14 @@ import { CarReader } from '@ipld/car/reader'
 export abstract class IpldStore {
   abstract has(cid: CID): Promise<boolean>
   abstract getBytes(cid: CID): Promise<Uint8Array>
-  abstract putBytes(cid: CID, bytes: Uint8Array): Promise<void>
+  abstract stageBytes(cid: CID, bytes: Uint8Array): Promise<void>
+  abstract saveStaged(): Promise<void>
+  abstract clearStaged(): Promise<void>
   abstract destroy(): Promise<void>
 
-  async put(value: unknown): Promise<CID> {
+  async stage(value: unknown): Promise<CID> {
     const block = await valueToIpldBlock(value)
-    await this.putBytes(block.cid, block.bytes)
+    await this.stageBytes(block.cid, block.bytes)
     return block.cid
   }
 
@@ -51,20 +53,20 @@ export abstract class IpldStore {
     car.put({ cid, bytes: await this.getBytes(cid) })
   }
 
-  async loadCar(buf: Uint8Array): Promise<CID> {
+  async stageCar(buf: Uint8Array): Promise<CID> {
     const car = await CarReader.fromBytes(buf)
     const roots = await car.getRoots()
     if (roots.length !== 1) {
       throw new Error(`Expected one root, got ${roots.length}`)
     }
     const rootCid = roots[0]
-    await this.loadCarBlocks(car)
+    await this.stageCarBlocks(car)
     return rootCid
   }
 
-  async loadCarBlocks(car: BlockReader): Promise<void> {
+  async stageCarBlocks(car: BlockReader): Promise<void> {
     for await (const block of car.blocks()) {
-      await this.putBytes(block.cid, block.bytes)
+      await this.stageBytes(block.cid, block.bytes)
     }
   }
 }
