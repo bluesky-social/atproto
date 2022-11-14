@@ -42,6 +42,8 @@ export default function (server: Server) {
     } catch (err) {
       if (err instanceof handleLib.InvalidHandleError) {
         throw new InvalidRequestError(err.message, 'InvalidHandle')
+      } else if (err instanceof handleLib.ReservedHandleError) {
+        throw new InvalidRequestError(err.message, 'HandleNotAvailable')
       }
       throw err
     }
