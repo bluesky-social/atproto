@@ -21,9 +21,11 @@ describe('sql blockstore', () => {
     const { db } = locals.get(server.app)
     const did = 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
 
-    const cid = await db.transaction((dbTxn) => {
+    const cid = await db.transaction(async (dbTxn) => {
       const blockstore = new SqlBlockstore(dbTxn, did)
-      return blockstore.put({ my: 'block' })
+      const cid = await blockstore.stage({ my: 'block' })
+      await blockstore.saveStaged()
+      return cid
     })
 
     const blockstore = new SqlBlockstore(db, did)
@@ -36,14 +38,18 @@ describe('sql blockstore', () => {
     const { db } = locals.get(server.app)
     const did = 'did:key:zQ3shtxV1FrJfhqE1dvxYRcCknWNjHc3c5X1y3ZSoPDi2aur2'
 
-    const cidA = await db.transaction((dbTxn) => {
+    const cidA = await db.transaction(async (dbTxn) => {
       const blockstore = new SqlBlockstore(dbTxn, did)
-      return blockstore.put({ my: 'block' })
+      const cid = await blockstore.stage({ my: 'block' })
+      await blockstore.saveStaged()
+      return cid
     })
 
-    const cidB = await db.transaction((dbTxn) => {
+    const cidB = await db.transaction(async (dbTxn) => {
       const blockstore = new SqlBlockstore(dbTxn, did)
-      return blockstore.put({ my: 'block' })
+      const cid = await blockstore.stage({ my: 'block' })
+      await blockstore.saveStaged()
+      return cid
     })
 
     expect(cidA.equals(cidB)).toBe(true)

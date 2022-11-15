@@ -1,5 +1,11 @@
 import { CID } from 'multiformats/cid'
-import { DeleteOp, RecordCreateOp, RecordWriteOp, Repo } from '@atproto/repo'
+import {
+  DeleteOp,
+  RecordCreateOp,
+  RecordUpdateOp,
+  RecordWriteOp,
+  Repo,
+} from '@atproto/repo'
 import * as auth from '@atproto/auth'
 import { AtUri } from '@atproto/uri'
 import Database from '../db'
@@ -43,13 +49,17 @@ export const writeToRepo = async (
       `${did} is not a registered repo on this server`,
     )
   }
-  const repo = await Repo.load(blockstore, currRoot)
   const writeOps = writes.map((write) => write.op)
-  const updated = await repo.stageUpdate(writeOps).createCommit(authStore)
-  const success = await dbTxn.updateRepoRoot(did, updated.cid, repo.cid, now)
-  if (!success) {
-    throw new Error('Repo root update failed, could not linearize')
-  }
+  const repo = await Repo.load(blockstore, currRoot)
+  await repo
+    .stageUpdate(writeOps)
+    .createCommit(authStore, async (prev, curr) => {
+      const success = await dbTxn.updateRepoRoot(did, curr, prev, now)
+      if (!success) {
+        throw new Error('Repo root update failed, could not linearize')
+      }
+      return null
+    })
 }
 
 export const indexWrites = async (
@@ -69,20 +79,31 @@ export const indexWrites = async (
   )
 }
 
-type PreparedCreate = {
+export type PreparedCreate = {
   action: 'create'
   uri: AtUri
   cid: CID
   op: RecordCreateOp
 }
 
-type PreparedDelete = {
+export type PreparedUpdate = {
+  action: 'update'
+  uri: AtUri
+  cid: CID
+  op: RecordUpdateOp
+}
+
+export type PreparedDelete = {
   action: 'delete'
   uri: AtUri
   op: DeleteOp
 }
 
-type PreparedWrites = (PreparedCreate | PreparedDelete)[]
+export type PreparedWrites = (
+  | PreparedCreate
+  | PreparedUpdate
+  | PreparedDelete
+)[]
 
 export const prepareCreate = async (
   did: string,
@@ -110,6 +131,25 @@ export const prepareCreates = async (
   return Promise.all(writes.map((write) => prepareCreate(did, write)))
 }
 
+export const prepareUpdate = async (
+  did: string,
+  write: RecordUpdateOp,
+): Promise<PreparedUpdate> => {
+  const record = {
+    ...write.value,
+    $type: write.collection,
+  }
+  return {
+    action: 'update',
+    uri: AtUri.make(did, write.collection, write.rkey),
+    cid: await cidForData(record),
+    op: {
+      ...write,
+      value: record,
+    },
+  }
+}
+
 export const prepareDelete = (did: string, write: DeleteOp): PreparedDelete => {
   return {
     action: 'delete',
@@ -129,8 +169,10 @@ export const prepareWrites = async (
         return prepareCreate(did, write)
       } else if (write.action === 'delete') {
         return prepareDelete(did, write)
+      } else if (write.action === 'update') {
+        return prepareUpdate(did, write)
       } else {
-        throw new InvalidRequestError(`Action not supported: ${write.action}`)
+        throw new Error(`Action not supported: ${write}`)
       }
     }),
   )

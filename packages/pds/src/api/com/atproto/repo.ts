@@ -4,7 +4,7 @@ import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
 import * as locals from '../../../locals'
 import * as schemas from '../../../lexicon/schemas'
-import { cidForData, TID } from '@atproto/common'
+import { TID } from '@atproto/common'
 import * as repoUtil from '../../../util/repo'
 
 export default function (server: Server) {
@@ -139,8 +139,10 @@ export default function (server: Server) {
 
     await db.transaction(async (dbTxn) => {
       const now = new Date().toISOString()
-      await repoUtil.writeToRepo(dbTxn, did, authStore, writes, now)
-      await repoUtil.indexWrites(dbTxn, writes, now)
+      await Promise.all([
+        repoUtil.writeToRepo(dbTxn, did, authStore, writes, now),
+        repoUtil.indexWrites(dbTxn, writes, now),
+      ])
     })
 
     return {
@@ -181,7 +183,7 @@ export default function (server: Server) {
     }
 
     const now = new Date().toISOString()
-    const write = await repoUtil.prepareWrites(did, {
+    const write = await repoUtil.prepareCreate(did, {
       action: 'create',
       collection,
       rkey,
@@ -189,16 +191,15 @@ export default function (server: Server) {
     })
 
     await db.transaction(async (dbTxn) => {
-      await repoUtil.writeToRepo(dbTxn, did, authStore, write, now)
-      await repoUtil.indexWrites(dbTxn, write, now)
+      await Promise.all([
+        repoUtil.writeToRepo(dbTxn, did, authStore, [write], now),
+        repoUtil.indexWrites(dbTxn, [write], now),
+      ])
     })
-
-    const uri = AtUri.make(did, collection, rkey)
-    const cid = await cidForData(record)
 
     return {
       encoding: 'application/json',
-      body: { uri: uri.toString(), cid: cid.toString() },
+      body: { uri: write.uri.toString(), cid: write.cid.toString() },
     }
   })
 
@@ -225,8 +226,10 @@ export default function (server: Server) {
     })
 
     await db.transaction(async (dbTxn) => {
-      await repoUtil.writeToRepo(dbTxn, did, authStore, write, now)
-      await repoUtil.indexWrites(dbTxn, write, now)
+      await Promise.all([
+        repoUtil.writeToRepo(dbTxn, did, authStore, write, now),
+        repoUtil.indexWrites(dbTxn, write, now),
+      ])
     })
   })
 }

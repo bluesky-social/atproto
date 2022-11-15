@@ -167,9 +167,11 @@ export default function (server: Server) {
         },
       ])
 
-      await repoUtil.createRepo(dbTxn, did, sceneAuth, sceneWrites, now)
-      await repoUtil.writeToRepo(dbTxn, requester, userAuth, userWrites, now)
-      await repoUtil.indexWrites(dbTxn, [...sceneWrites, ...userWrites], now)
+      await Promise.all([
+        repoUtil.createRepo(dbTxn, did, sceneAuth, sceneWrites, now),
+        repoUtil.writeToRepo(dbTxn, requester, userAuth, userWrites, now),
+        repoUtil.indexWrites(dbTxn, [...sceneWrites, ...userWrites], now),
+      ])
 
       return {
         did,
