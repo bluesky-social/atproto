@@ -32,7 +32,7 @@ export default function (server: Server) {
 
         let updated
         const uri = AtUri.make(did, profileNsid, 'self')
-        const current = await dbTxn.getRecord(uri, null)
+        const current = (await dbTxn.getRecord(uri, null))?.value
         if (current) {
           if (!db.records.profile.matchesSchema(current)) {
             // @TODO need a way to get a profile out of a broken state
