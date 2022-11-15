@@ -186,7 +186,7 @@ export class MST implements DataStore {
     if (alreadyHas) return pointer
     const entries = await this.getEntries()
     const data = util.serializeNodeData(entries)
-    await this.blockstore.stage(data as any)
+    await this.blockstore.stage(data)
     for (const entry of entries) {
       if (entry.isTree()) {
         await entry.stage()

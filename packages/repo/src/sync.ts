@@ -22,7 +22,7 @@ export const loadDiff = async (
   verifier: auth.Verifier,
 ): Promise<{ repo: Repo; diff: DataDiff }> => {
   const blockstore = repo.blockstore
-  let root = await blockstore.stageCar(diffCar)
+  const root = await blockstore.stageCar(diffCar)
   const diff = await verify.verifyUpdates(
     repo.blockstore,
     repo.cid,

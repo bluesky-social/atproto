@@ -9,6 +9,7 @@ import {
   RepoMeta,
   RecordCreateOp,
   RecordWriteOp,
+  CidWriteOp,
 } from './types'
 import { streamToArray } from '@atproto/common'
 import IpldStore from './blockstore/ipld-store'

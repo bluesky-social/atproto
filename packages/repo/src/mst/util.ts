@@ -1,6 +1,3 @@
-import * as Block from 'multiformats/block'
-import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
-import * as blockCodec from '@ipld/dag-cbor'
 import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
 import IpldStore from '../blockstore/ipld-store'
