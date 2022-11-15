@@ -13,7 +13,7 @@
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
     "verify:fix": "yarn prettier:fix && yarn lint:fix",
-    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "license": "MIT",
@@ -28,5 +28,9 @@
     "json-schema-to-typescript": "^11.0.2",
     "ts-morph": "^16.0.0",
     "yesno": "^0.4.0"
+  },
+  "devDependencies": {
+    "@npmcli/package-json": "^3.0.0",
+    "esbuild-node-externals": "^1.5.0"
   }
 }

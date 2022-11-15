@@ -6,6 +6,7 @@
     "codegen": "lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ./build.js --update-main-to-dist",
     "test": "jest"
   },
   "license": "MIT",
