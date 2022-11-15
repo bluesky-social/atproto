@@ -21,6 +21,7 @@ require('esbuild').build({
     'src/client/index.ts',
   ],
   bundle: true,
+  sourcemap: true,
   treeShaking: true,
   outdir: 'dist',
   platform: 'node',

@@ -16,6 +16,7 @@ require('esbuild').build({
   logLevel: 'info',
   entryPoints: ['src/index.ts', 'src/bin.ts', 'src/db/index.ts'],
   bundle: true,
+  sourcemap: true,
   outdir: 'dist',
   platform: 'node',
   external: [
