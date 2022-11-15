@@ -199,6 +199,8 @@ export class Repo {
       } else {
         await this.blockstore.saveStaged()
       }
+    } else {
+      await this.blockstore.saveStaged()
     }
 
     return this.updateRepo({
