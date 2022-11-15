@@ -96,6 +96,7 @@ export default function (server: Server) {
         limit,
         before,
         by: ref('assertion.createdAt'),
+        secondaryOrder: ref('assertion.uri'),
       })
 
       const assertionsRes = await assertionsReq.execute()

@@ -113,7 +113,7 @@ export default function (server: Server) {
               did: requester,
               declarationCid: userDeclarationCid.toString(),
             },
-            createdAt: new Date().toISOString(),
+            createdAt: now,
           },
         },
         {
@@ -126,7 +126,7 @@ export default function (server: Server) {
               did: requester,
               declarationCid: userDeclarationCid.toString(),
             },
-            createdAt: new Date().toISOString(),
+            createdAt: now,
           },
         },
       ])
@@ -146,7 +146,7 @@ export default function (server: Server) {
               uri: creatorAssert.uri.toString(),
               cid: creatorAssert.cid.toString(),
             },
-            createdAt: new Date().toISOString(),
+            createdAt: now,
           },
         },
         {
@@ -162,7 +162,7 @@ export default function (server: Server) {
               uri: memberAssert.uri.toString(),
               cid: memberAssert.cid.toString(),
             },
-            createdAt: new Date().toISOString(),
+            createdAt: now,
           },
         },
       ])
