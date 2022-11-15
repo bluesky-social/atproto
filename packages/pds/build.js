@@ -1,4 +1,5 @@
 const { copy } = require('esbuild-plugin-copy')
+const { nodeExternalsPlugin } = require('esbuild-node-externals')
 
 require('esbuild')
   .build({
@@ -14,14 +15,16 @@ require('esbuild')
       // Referenced in pg driver, but optional and we don't use it
       'pg-native',
     ],
-    plugins: [
-      copy({
-        assets: {
-          from: ['./src/mailer/templates/**/*'],
-          to: ['./templates'],
-          keepStructure: true,
-        },
-      }),
-    ],
+    plugins: []
+      .concat(process.env.ATP_BUILD_SHALLOW ? [nodeExternalsPlugin()] : [])
+      .concat([
+        copy({
+          assets: {
+            from: ['./src/mailer/templates/**/*'],
+            to: ['./templates'],
+            keepStructure: true,
+          },
+        }),
+      ]),
   })
   .catch(() => process.exit(1))

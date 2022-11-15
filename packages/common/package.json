@@ -11,7 +11,7 @@
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
     "verify:fix": "yarn prettier:fix && yarn lint:fix",
-    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
@@ -20,5 +20,8 @@
     "multiformats": "^9.6.4",
     "pino": "^8.6.1",
     "zod": "^3.14.2"
+  },
+  "devDependencies": {
+    "esbuild-node-externals": "^1.5.0"
   }
 }

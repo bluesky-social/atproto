@@ -8,6 +8,5 @@ require('esbuild')
     outdir: 'dist',
     platform: 'node',
     plugins: process.env.ATP_BUILD_SHALLOW ? [nodeExternalsPlugin()] : [],
-    external: ['level', 'classic-level'],
   })
   .catch(() => process.exit(1))

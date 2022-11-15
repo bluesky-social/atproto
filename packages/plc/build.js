@@ -1,3 +1,5 @@
+const { nodeExternalsPlugin } = require('esbuild-node-externals')
+
 require('esbuild')
   .build({
     logLevel: 'info',
@@ -12,6 +14,7 @@ require('esbuild')
     outdir: 'dist',
     platform: 'node',
     assetNames: 'src/static',
+    plugins: process.env.ATP_BUILD_SHALLOW ? [nodeExternalsPlugin()] : [],
     external: [
       'better-sqlite3',
       'level',
