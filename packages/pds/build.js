@@ -1,5 +1,8 @@
+const pkgJson = require('@npmcli/package-json')
 const { copy } = require('esbuild-plugin-copy')
 const { nodeExternalsPlugin } = require('esbuild-node-externals')
+
+const buildShallow = process.env.ATP_BUILD_SHALLOW === 'true'
 
 require('esbuild')
   .build({
@@ -15,16 +18,15 @@ require('esbuild')
       // Referenced in pg driver, but optional and we don't use it
       'pg-native',
     ],
-    plugins: []
-      .concat(process.env.ATP_BUILD_SHALLOW ? [nodeExternalsPlugin()] : [])
-      .concat([
-        copy({
-          assets: {
-            from: ['./src/mailer/templates/**/*'],
-            to: ['./templates'],
-            keepStructure: true,
-          },
-        }),
-      ]),
+    plugins: [].concat(buildShallow ? [nodeExternalsPlugin()] : []).concat([
+      copy({
+        assets: {
+          from: ['./src/mailer/templates/**/*'],
+          to: ['./templates'],
+          keepStructure: true,
+        },
+      }),
+    ]),
   })
-  .catch(() => process.exit(1))
+  .then(() => (buildShallow ? pkgJson.load(__dirname) : null))
+  .then((pkg) => (pkg?.update({ main: 'dist/index.js' }), pkg?.save()))

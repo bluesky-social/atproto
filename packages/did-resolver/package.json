@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@atproto/plc": "*",
+    "@npmcli/package-json": "^3.0.0",
     "esbuild-node-externals": "^1.5.0",
     "get-port": "^6.1.2"
   }
