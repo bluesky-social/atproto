@@ -19,9 +19,5 @@
     "@aws-sdk/client-kms": "^3.196.0",
     "@noble/secp256k1": "^1.7.0",
     "key-encoder": "^2.0.3"
-  },
-  "devDependencies": {
-    "@npmcli/package-json": "^3.0.0",
-    "esbuild-node-externals": "^1.5.0"
   }
 }
