@@ -55,18 +55,14 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (
-  uri: AtUri,
-  cid: CID,
-  obj: Assertion.Record,
-): Message[] => {
+const eventsForInsert = (obj: IndexedAssertion): Message[] => {
   const notif = messages.createNotification({
-    userDid: obj.subject.did,
-    author: uri.host,
-    recordUri: uri.toString(),
-    recordCid: cid.toString(),
+    userDid: obj.subjectDid,
+    author: obj.creator,
+    recordUri: obj.uri,
+    recordCid: obj.cid,
     reason: 'assertion',
-    reasonSubject: uri.host,
+    reasonSubject: obj.creator,
   })
   return [notif]
 }
@@ -93,16 +89,7 @@ const eventsForDelete = (
     events.push(messages.removeMember(deleted.creator, deleted.subjectDid))
   }
   if (replacedBy) {
-    events.push(
-      messages.createNotification({
-        userDid: replacedBy.subjectDid,
-        author: replacedBy.creator,
-        recordUri: replacedBy.uri,
-        recordCid: replacedBy.cid,
-        reason: 'assertion',
-        reasonSubject: replacedBy.creator,
-      }),
-    )
+    eventsForInsert(replacedBy).forEach((evt) => events.push(evt))
   }
   return events
 }

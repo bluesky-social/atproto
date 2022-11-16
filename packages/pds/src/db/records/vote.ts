@@ -50,21 +50,22 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (uri: AtUri, cid: CID, obj: Vote.Record): Message[] => {
+const createNotif = (obj: IndexedVote): Message => {
+  const subjectUri = new AtUri(obj.subject)
+  return messages.createNotification({
+    userDid: subjectUri.host,
+    author: obj.creator,
+    recordUri: obj.uri,
+    recordCid: obj.cid,
+    reason: 'vote',
+    reasonSubject: subjectUri.toString(),
+  })
+}
+
+const eventsForInsert = (obj: IndexedVote): Message[] => {
   // No events for downvotes
   if (obj.direction === 'down') return []
-  const subjectUri = new AtUri(obj.subject.uri)
-  return [
-    messages.createNotification({
-      userDid: subjectUri.host,
-      author: uri.host,
-      recordUri: uri.toString(),
-      recordCid: cid.toString(),
-      reason: 'vote',
-      reasonSubject: subjectUri.toString(),
-    }),
-    messages.addUpvote(uri.host, obj.subject.uri),
-  ]
+  return [createNotif(obj), messages.addUpvote(obj.creator, obj.subject)]
 }
 
 const deleteFn = async (
@@ -87,16 +88,7 @@ const eventsForDelete = (
   if (deleted.direction !== replacedBy?.direction) {
     events.push(messages.deleteNotifications(deleted.uri))
     if (replacedBy) {
-      const subjectUri = new AtUri(replacedBy.subject)
-      const newNotif = messages.createNotification({
-        userDid: subjectUri.host,
-        author: replacedBy.creator,
-        recordUri: replacedBy.uri,
-        recordCid: replacedBy.cid,
-        reason: 'vote',
-        reasonSubject: subjectUri.toString(),
-      })
-      events.push(newNotif)
+      events.push(createNotif(replacedBy))
     }
   }
   if (deleted.direction === 'up' && replacedBy?.direction !== 'up') {

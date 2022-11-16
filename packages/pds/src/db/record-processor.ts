@@ -22,7 +22,7 @@ type RecordProcessorParams<T, S> = {
     obj: T,
   ) => Promise<AtUri | null>
   deleteFn: (db: Kysely<DatabaseSchema>, uri: AtUri) => Promise<S | null>
-  eventsForInsert: (uri: AtUri, cid: CID, obj: T) => Message[]
+  eventsForInsert: (obj: S) => Message[]
   eventsForDelete: (prev: S, replacedBy: S | null) => Message[]
 }
 
@@ -61,7 +61,7 @@ export class RecordProcessor<T, S> {
     )
     // if this was a new record, return events
     if (inserted) {
-      return this.params.eventsForInsert(uri, cid, obj)
+      return this.params.eventsForInsert(inserted)
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)

@@ -49,17 +49,13 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (
-  uri: AtUri,
-  cid: CID,
-  obj: Trend.Record,
-): Message[] => {
-  const subjectUri = new AtUri(obj.subject.uri)
+const eventsForInsert = (obj: IndexedTrend): Message[] => {
+  const subjectUri = new AtUri(obj.subject)
   const notif = messages.createNotification({
     userDid: subjectUri.host,
-    author: uri.host,
-    recordUri: uri.toString(),
-    recordCid: cid.toString(),
+    author: obj.creator,
+    recordUri: obj.uri,
+    recordCid: obj.cid,
     reason: 'trend',
     reasonSubject: subjectUri.toString(),
   })

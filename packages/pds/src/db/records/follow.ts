@@ -49,17 +49,13 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (
-  uri: AtUri,
-  cid: CID,
-  obj: Follow.Record,
-): Message[] => {
+const eventsForInsert = (obj: IndexedFollow): Message[] => {
   return [
     messages.createNotification({
-      userDid: obj.subject.did,
-      author: uri.host,
-      recordUri: uri.toString(),
-      recordCid: cid.toString(),
+      userDid: obj.subjectDid,
+      author: obj.creator,
+      recordUri: obj.uri,
+      recordCid: obj.cid,
       reason: 'follow',
     }),
   ]

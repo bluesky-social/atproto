@@ -2,65 +2,72 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../lexicon/types/app/bsky/actor/profile'
-import { DbRecordPlugin } from '../types'
+import { Profile as IndexedProfile } from '../tables/profile'
 import * as schemas from '../schemas'
 import { Message } from '../message-queue/messages'
+import DatabaseSchema from '../database-schema'
+import RecordProcessor from '../record-processor'
 
-const type = schemas.ids.AppBskyActorProfile
-const tableName = 'profile'
+const schemaId = schemas.ids.AppBskyActorProfile
 
-export interface BskyProfile {
-  uri: string
-  cid: string
-  creator: string
-  displayName: string
-  description: string | null
-  indexedAt: string
-}
-export type PartialDB = { [tableName]: BskyProfile }
-
-const validator = schemas.records.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is Profile.Record => {
-  return validator.isValid(obj)
-}
-const validateSchema = (obj: unknown) => validator.validate(obj)
-
-const insertFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri, cid: CID, obj: unknown): Promise<Message[]> => {
-    if (!matchesSchema(obj)) {
-      throw new Error(`Record does not match schema: ${type}`)
-    }
-
-    const profile = {
+const insertFn = async (
+  db: Kysely<DatabaseSchema>,
+  uri: AtUri,
+  cid: CID,
+  obj: Profile.Record,
+): Promise<IndexedProfile | null> => {
+  if (uri.rkey !== 'self') return null
+  const inserted = await db
+    .insertInto('profile')
+    .values({
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
       displayName: obj.displayName,
       description: obj.description,
       indexedAt: new Date().toISOString(),
-    }
-    await db.insertInto(tableName).values(profile).execute()
-    return []
-  }
+    })
+    .onConflict((oc) => oc.doNothing())
+    .returningAll()
+    .executeTakeFirst()
+  return inserted || null
+}
 
-const deleteFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Message[]> => {
-    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
-    return []
-  }
+const findDuplicate = async (): Promise<AtUri | null> => {
+  return null
+}
 
-export type PluginType = DbRecordPlugin<Profile.Record>
+const eventsForInsert = (): Message[] => {
+  return []
+}
 
-export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
-  return {
-    collection: type,
-    validateSchema,
-    matchesSchema,
-    insert: insertFn(db),
-    delete: deleteFn(db),
-  }
+const deleteFn = async (
+  db: Kysely<DatabaseSchema>,
+  uri: AtUri,
+): Promise<IndexedProfile | null> => {
+  const deleted = await db
+    .deleteFrom('profile')
+    .where('uri', '=', uri.toString())
+    .returningAll()
+    .executeTakeFirst()
+  return deleted || null
+}
+
+const eventsForDelete = (): Message[] => {
+  return []
+}
+
+export type PluginType = RecordProcessor<Profile.Record, IndexedProfile>
+
+export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
+  return new RecordProcessor(db, {
+    schemaId,
+    insertFn,
+    findDuplicate,
+    deleteFn,
+    eventsForInsert,
+    eventsForDelete,
+  })
 }
 
 export default makePlugin
