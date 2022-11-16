@@ -136,13 +136,22 @@ export class ServerConfig {
     return this.cfg.hostname
   }
 
+  get internalUrl() {
+    return `${this.scheme}://${this.hostname}:${this.port}`
+  }
+
   get origin() {
-    const u = new URL(`${this.scheme}://${this.hostname}:${this.port}`)
+    const u = new URL(this.internalUrl)
     return u.origin
   }
 
   get publicUrl() {
-    return this.cfg.publicUrl || this.origin
+    return this.cfg.publicUrl || this.internalUrl
+  }
+
+  get publicHostname() {
+    const u = new URL(this.publicUrl)
+    return u.hostname
   }
 
   get dbPostgresUrl() {

@@ -16,7 +16,7 @@ export default function (server: Server) {
       // generate a 5 char b32 invite code - preceeded by the hostname
       // ex: bsky.app-abc12
       const code =
-        config.hostname +
+        config.publicHostname +
         '-' +
         uint8arrays.toString(await crypto.randomBytes(5), 'base32').slice(0, 5)
 

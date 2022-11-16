@@ -77,7 +77,7 @@ describe('account', () => {
   it('creates an invite code', async () => {
     inviteCode = await createInviteCode(client, 1)
     const [host, code] = inviteCode.split('-')
-    expect(host).toBe(new URL(serverUrl).hostname)
+    expect(host).toBe('pds.public.url') // Hostname of public url
     expect(code.length).toBe(5)
   })
 
