@@ -7,11 +7,12 @@ import * as record from './tables/record'
 import * as ipldBlock from './tables/ipld-block'
 import * as ipldBlockCreator from './tables/ipld-block-creator'
 import * as inviteCode from './tables/invite-code'
+import * as duplicateRecords from './tables/duplicate-record'
 import * as notification from './tables/user-notification'
 import * as assertion from './tables/assertion'
 import * as profile from './records/profile'
 import * as post from './records/post'
-import * as vote from './records/vote'
+import * as vote from './tables/vote'
 import * as repost from './records/repost'
 import * as trend from './records/trend'
 import * as follow from './records/follow'
@@ -29,6 +30,7 @@ export type DatabaseSchema = user.PartialDB &
   ipldBlock.PartialDB &
   ipldBlockCreator.PartialDB &
   inviteCode.PartialDB &
+  duplicateRecords.PartialDB &
   notification.PartialDB &
   assertion.PartialDB &
   profile.PartialDB &
