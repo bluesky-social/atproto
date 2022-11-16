@@ -27,11 +27,13 @@ type RecordProcessorParams<T, S> = {
 }
 
 export class RecordProcessor<T, S> {
+  collection: string
   validator: RecordValidator
   constructor(
     private db: Kysely<DatabaseSchema>,
     private params: RecordProcessorParams<T, S>,
   ) {
+    this.collection = this.params.schemaId
     this.validator = schemas.records.createRecordValidator(this.params.schemaId)
   }
 
