@@ -2,14 +2,13 @@ import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
 import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { DatabaseSchema } from '../database-schema'
-import { Message } from '../message-queue/messages'
-import * as schemas from '../schemas'
+import { DatabaseSchema } from './database-schema'
+import { Message } from './message-queue/messages'
+import * as schemas from './schemas'
 import { RecordValidator, ValidationResult } from '@atproto/lexicon'
 
 type RecordProcessorParams<T, S> = {
   schemaId: string
-  // matchesSchema: (obj: unknown) => obj is T
   insertFn: (
     db: Kysely<DatabaseSchema>,
     uri: AtUri,
@@ -22,7 +21,6 @@ type RecordProcessorParams<T, S> = {
     uri: AtUri,
     obj: T,
   ) => Promise<AtUri | null>
-  // deleteFn: (db: Kysely<DatabaseSchema>, uri: AtUri) => Promise<Message[]>
   deleteFn: (db: Kysely<DatabaseSchema>, uri: AtUri) => Promise<S | null>
   eventsForInsert: (uri: AtUri, cid: CID, obj: T) => Message[]
   eventsForDelete: (prev: S, replacedBy: S | null) => Message[]
@@ -114,3 +112,5 @@ export class RecordProcessor<T, S> {
     }
   }
 }
+
+export default RecordProcessor

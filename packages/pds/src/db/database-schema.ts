@@ -13,9 +13,9 @@ import * as assertion from './tables/assertion'
 import * as profile from './records/profile'
 import * as post from './records/post'
 import * as vote from './tables/vote'
-import * as repost from './records/repost'
-import * as trend from './records/trend'
-import * as follow from './records/follow'
+import * as repost from './tables/repost'
+import * as trend from './tables/trend'
+import * as follow from './tables/follow'
 import * as messageQueue from './message-queue/tables/messageQueue'
 import * as messageQueueCursor from './message-queue/tables/messageQueueCursor'
 import * as sceneMemberCount from './message-queue/tables/sceneMemberCount'
@@ -43,3 +43,5 @@ export type DatabaseSchema = user.PartialDB &
   messageQueueCursor.PartialDB &
   sceneMemberCount.PartialDB &
   sceneVotesOnPost.PartialDB
+
+export default DatabaseSchema

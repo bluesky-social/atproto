@@ -7,7 +7,7 @@ import * as schemas from '../schemas'
 import * as messages from '../message-queue/messages'
 import { Message } from '../message-queue/messages'
 import { DatabaseSchema } from '../database-schema'
-import { RecordProcessor } from './util'
+import RecordProcessor from '../record-processor'
 
 const schemaId = schemas.ids.AppBskyFeedVote
 
@@ -120,3 +120,5 @@ export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
     eventsForDelete,
   })
 }
+
+export default makePlugin
