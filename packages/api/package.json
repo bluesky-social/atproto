@@ -4,8 +4,9 @@
   "main": "src/index.ts",
   "scripts": {
     "codegen": "lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
-    "build": "esbuild src/index.ts --define:process.env.NODE_ENV=\\\"production\\\" --bundle --platform=node --sourcemap --outfile=dist/index.js",
+    "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ./build.js --update-main-to-dist",
     "test": "jest"
   },
   "license": "MIT",

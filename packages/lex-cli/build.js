@@ -19,5 +19,4 @@ require('esbuild').build({
   outdir: 'dist',
   platform: 'node',
   plugins: buildShallow ? [nodeExternalsPlugin()] : [],
-  external: ['level', 'classic-level'],
 })

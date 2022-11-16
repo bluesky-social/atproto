@@ -14,10 +14,10 @@ if (process.argv.includes('--update-main-to-dist')) {
 require('esbuild').build({
   logLevel: 'info',
   entryPoints: ['src/index.ts'],
+  sourcemap: true,
   bundle: true,
   sourcemap: true,
   outdir: 'dist',
   platform: 'node',
   plugins: buildShallow ? [nodeExternalsPlugin()] : [],
-  external: ['level', 'classic-level'],
 })
