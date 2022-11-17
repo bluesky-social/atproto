@@ -62,7 +62,7 @@ export class SqlMessageQueue implements MessageQueue {
     } catch (err) {
       log.error({ err }, 'error ensuring queue is up to date')
     }
-    setTimeout(this.ensureCaughtUp, 180000) // 3 min
+    setTimeout(this.ensureCaughtUp, 60000) // 1 min
   }
 
   async processAll(): Promise<void> {
