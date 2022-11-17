@@ -69,29 +69,33 @@ const eventsForInsert = (obj: IndexedPost): Message[] => {
   const notifs: Message[] = []
   for (const entity of obj.entities || []) {
     if (entity.type === 'mention') {
-      notifs.push(
-        messages.createNotification({
-          userDid: entity.value,
-          author: obj.post.creator,
-          recordUri: obj.post.uri,
-          recordCid: obj.post.cid,
-          reason: 'mention',
-        }),
-      )
+      if (entity.value !== obj.post.creator) {
+        notifs.push(
+          messages.createNotification({
+            userDid: entity.value,
+            author: obj.post.creator,
+            recordUri: obj.post.uri,
+            recordCid: obj.post.cid,
+            reason: 'mention',
+          }),
+        )
+      }
     }
   }
   if (obj.post.replyParent) {
     const parentUri = new AtUri(obj.post.replyParent)
-    notifs.push(
-      messages.createNotification({
-        userDid: parentUri.host,
-        author: obj.post.creator,
-        recordUri: obj.post.uri,
-        recordCid: obj.post.cid,
-        reason: 'reply',
-        reasonSubject: parentUri.toString(),
-      }),
-    )
+    if (parentUri.host !== obj.post.creator) {
+      notifs.push(
+        messages.createNotification({
+          userDid: parentUri.host,
+          author: obj.post.creator,
+          recordUri: obj.post.uri,
+          recordCid: obj.post.cid,
+          reason: 'reply',
+          reasonSubject: parentUri.toString(),
+        }),
+      )
+    }
   }
   return notifs
 }
