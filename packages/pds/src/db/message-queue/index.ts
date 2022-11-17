@@ -26,9 +26,7 @@ export class SqlMessageQueue implements MessageQueue {
     private db: Database,
     private getAuthStore: GetAuthStoreFn,
   ) {
-    this.ensureCaughtUp().catch((err) =>
-      log.error({ err }, 'error catching queue up on startup'),
-    )
+    this.ensureCaughtUp()
   }
 
   async send(tx: Database, messages: Message | Message[]): Promise<void> {
@@ -59,12 +57,12 @@ export class SqlMessageQueue implements MessageQueue {
   }
 
   async ensureCaughtUp(): Promise<void> {
-    await this.processAll()
-    setTimeout(async () => {
-      this.ensureCaughtUp().catch((err) =>
-        log.error({ err }, 'error ensuring queue is up to date'),
-      )
-    }, 180000) // 3 min
+    try {
+      await this.processAll()
+    } catch (err) {
+      log.error({ err }, 'error ensuring queue is up to date')
+    }
+    setTimeout(this.ensureCaughtUp, 180000) // 3 min
   }
 
   async processAll(): Promise<void> {
