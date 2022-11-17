@@ -24,4 +24,5 @@ export interface MessageQueue {
   send(tx: Database, message: Message | Message[]): Promise<void>
   processNext(): Promise<void>
   processAll(): Promise<void>
+  destroy(): void
 }

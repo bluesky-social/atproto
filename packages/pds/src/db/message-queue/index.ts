@@ -20,12 +20,15 @@ type GetAuthStoreFn = (did: string) => AuthStore
 
 export class SqlMessageQueue implements MessageQueue {
   private cursorExists = false
+  private ensureCaughtUpTimeout: ReturnType<typeof setTimeout> | undefined
 
   constructor(
     private name: string,
     private db: Database,
     private getAuthStore: GetAuthStoreFn,
-  ) {}
+  ) {
+    this.ensureCaughtUp()
+  }
 
   async send(tx: Database, messages: Message | Message[]): Promise<void> {
     const msgArray = Array.isArray(messages) ? messages : [messages]
@@ -37,8 +40,11 @@ export class SqlMessageQueue implements MessageQueue {
     }))
 
     await tx.db.insertInto('message_queue').values(values).execute()
-
-    this.processNext()
+    for (let i = 0; i < msgArray.length; i++) {
+      this.processNext().catch((err) => {
+        log.error({ err }, 'error processing message')
+      })
+    }
   }
 
   private async ensureCursor(): Promise<void> {
@@ -49,6 +55,21 @@ export class SqlMessageQueue implements MessageQueue {
       .onConflict((oc) => oc.doNothing())
       .execute()
     this.cursorExists = true
+  }
+
+  async ensureCaughtUp(): Promise<void> {
+    try {
+      await this.processAll()
+    } catch (err) {
+      log.error({ err }, 'error ensuring queue is up to date')
+    }
+    this.ensureCaughtUpTimeout = setTimeout(() => this.ensureCaughtUp(), 60000) // 1 min
+  }
+
+  destroy() {
+    if (this.ensureCaughtUpTimeout) {
+      clearTimeout(this.ensureCaughtUpTimeout)
+    }
   }
 
   async processAll(): Promise<void> {
