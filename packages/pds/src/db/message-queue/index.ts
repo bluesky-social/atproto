@@ -25,7 +25,11 @@ export class SqlMessageQueue implements MessageQueue {
     private name: string,
     private db: Database,
     private getAuthStore: GetAuthStoreFn,
-  ) {}
+  ) {
+    this.ensureCaughtUp().catch((err) =>
+      log.error({ err }, 'error catching queue up on startup'),
+    )
+  }
 
   async send(tx: Database, messages: Message | Message[]): Promise<void> {
     const msgArray = Array.isArray(messages) ? messages : [messages]
@@ -37,8 +41,11 @@ export class SqlMessageQueue implements MessageQueue {
     }))
 
     await tx.db.insertInto('message_queue').values(values).execute()
-
-    this.processNext()
+    for (let i = 0; i < msgArray.length; i++) {
+      this.processNext().catch((err) => {
+        log.error({ err }, 'error processing message')
+      })
+    }
   }
 
   private async ensureCursor(): Promise<void> {
@@ -49,6 +56,15 @@ export class SqlMessageQueue implements MessageQueue {
       .onConflict((oc) => oc.doNothing())
       .execute()
     this.cursorExists = true
+  }
+
+  async ensureCaughtUp(): Promise<void> {
+    await this.processAll()
+    setTimeout(async () => {
+      this.ensureCaughtUp().catch((err) =>
+        log.error({ err }, 'error ensuring queue is up to date'),
+      )
+    }, 180000) // 3 min
   }
 
   async processAll(): Promise<void> {
