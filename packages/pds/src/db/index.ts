@@ -126,6 +126,7 @@ export class Database {
   }
 
   async close(): Promise<void> {
+    this.messageQueue?.destroy()
     await this.db.destroy()
   }
 
