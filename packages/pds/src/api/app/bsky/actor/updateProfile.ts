@@ -94,7 +94,9 @@ export default function (server: Server) {
           await dbTxn.indexRecord(uri, profileCid, updated, now)
         } else {
           // should never hit this
-          throw new Error(`Unsupported action on update profile: ${write}`)
+          throw new Error(
+            `Unsupported action on update profile: ${write.action}`,
+          )
         }
 
         return { profileCid, updated }

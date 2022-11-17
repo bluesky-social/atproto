@@ -28,9 +28,6 @@ describe('Repo', () => {
   })
 
   it('does basic operations', async () => {
-    // const collection
-    // const collection = repo.getCollection('com.example.posts')
-
     const rkey = TID.nextStr()
     const record = util.generateObject()
     repo = await repo

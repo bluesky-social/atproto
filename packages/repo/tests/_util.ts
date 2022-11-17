@@ -124,12 +124,10 @@ export const editRepo = async (
   for (const collName of testCollections) {
     const collData = prevData[collName]
     const shuffled = shuffle(Object.entries(collData))
-    // const coll = await repo.getCollection(collName)
 
     for (let i = 0; i < adds; i++) {
       const object = generateObject()
       const rkey = TID.nextStr()
-      // const { rkey } = await coll.createRecord(object)
       collData[rkey] = object
       writes.push({
         action: 'create',

@@ -8,17 +8,33 @@ import CidSet from '../cid-set'
 import { CarReader } from '@ipld/car/reader'
 
 export abstract class IpldStore {
-  abstract has(cid: CID): Promise<boolean>
-  abstract getBytes(cid: CID): Promise<Uint8Array>
-  abstract stageBytes(cid: CID, bytes: Uint8Array): Promise<void>
+  staged: Map<string, Uint8Array>
+
+  constructor() {
+    this.staged = new Map()
+  }
+
+  abstract getSavedBytes(cid: CID): Promise<Uint8Array | null>
+  abstract hasSavedBlock(cid: CID): Promise<boolean>
   abstract saveStaged(): Promise<void>
-  abstract clearStaged(): Promise<void>
-  abstract destroy(): Promise<void>
+  abstract destroySaved(): Promise<void>
+
+  async stageBytes(k: CID, v: Uint8Array): Promise<void> {
+    this.staged.set(k.toString(), v)
+  }
 
   async stage(value: unknown): Promise<CID> {
     const block = await valueToIpldBlock(value)
     await this.stageBytes(block.cid, block.bytes)
     return block.cid
+  }
+
+  async getBytes(cid: CID): Promise<Uint8Array> {
+    const fromStaged = this.staged.get(cid.toString())
+    if (fromStaged) return fromStaged
+    const fromBlocks = await this.getSavedBytes(cid)
+    if (fromBlocks) return fromBlocks
+    throw new Error(`Not found: ${cid.toString()}`)
   }
 
   async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
@@ -37,6 +53,10 @@ export abstract class IpldStore {
     return common.ipldBytesToValue(bytes)
   }
 
+  async has(cid: CID): Promise<boolean> {
+    return this.staged.has(cid.toString()) || this.hasSavedBlock(cid)
+  }
+
   async isMissing(cid: CID): Promise<boolean> {
     const has = await this.has(cid)
     return !has
@@ -47,6 +67,15 @@ export abstract class IpldStore {
       return this.isMissing(c)
     })
     return new CidSet(missing)
+  }
+
+  async clearStaged(): Promise<void> {
+    this.staged.clear()
+  }
+
+  async destroy(): Promise<void> {
+    this.clearStaged()
+    await this.destroySaved()
   }
 
   async addToCar(car: BlockWriter, cid: CID) {

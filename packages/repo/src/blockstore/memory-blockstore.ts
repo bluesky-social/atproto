@@ -3,28 +3,18 @@ import IpldStore from './ipld-store'
 
 export class MemoryBlockstore extends IpldStore {
   blocks: Map<string, Uint8Array>
-  staged: Map<string, Uint8Array>
 
   constructor() {
     super()
     this.blocks = new Map()
-    this.staged = new Map()
   }
 
-  async getBytes(cid: CID): Promise<Uint8Array> {
-    const fromStaged = this.staged.get(cid.toString())
-    if (fromStaged) return fromStaged
-    const fromBlocks = this.blocks.get(cid.toString())
-    if (fromBlocks) return fromBlocks
-    throw new Error(`Not found: ${cid.toString()}`)
+  async getSavedBytes(cid: CID): Promise<Uint8Array | null> {
+    return this.blocks.get(cid.toString()) || null
   }
 
-  // async putBytes(k: CID, v: Uint8Array): Promise<void> {
-  //   this.map.set(k.toString(), v)
-  // }
-
-  async stageBytes(k: CID, v: Uint8Array): Promise<void> {
-    this.staged.set(k.toString(), v)
+  async hasSavedBlock(cid: CID): Promise<boolean> {
+    return this.blocks.has(cid.toString())
   }
 
   async saveStaged(): Promise<void> {
@@ -32,14 +22,6 @@ export class MemoryBlockstore extends IpldStore {
       this.blocks.set(key, val)
     })
     this.clearStaged()
-  }
-
-  async clearStaged(): Promise<void> {
-    this.staged.clear()
-  }
-
-  async has(cid: CID): Promise<boolean> {
-    return this.staged.has(cid.toString()) || this.blocks.has(cid.toString())
   }
 
   async sizeInBytes(): Promise<number> {
@@ -50,8 +32,7 @@ export class MemoryBlockstore extends IpldStore {
     return total
   }
 
-  async destroy(): Promise<void> {
-    this.staged.clear()
+  async destroySaved(): Promise<void> {
     this.blocks.clear()
   }
 
