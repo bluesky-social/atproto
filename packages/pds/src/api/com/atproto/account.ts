@@ -1,16 +1,15 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { RepoStructure } from '@atproto/repo'
 import { PlcClient } from '@atproto/plc'
-import { AtUri } from '@atproto/uri'
 import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
 import { Server, APP_BSKY_SYSTEM } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
-import SqlBlockstore from '../../../sql-blockstore'
 import { grantRefreshToken } from './util/auth'
 import * as schema from '../../../lexicon/schemas'
+import * as repoUtil from '../../../util/repo'
+import { cidForData } from '@atproto/common'
 
 export default function (server: Server) {
   server.com.atproto.server.getAccountsConfig((_params, _input, _req, res) => {
@@ -140,37 +139,19 @@ export default function (server: Server) {
           .execute()
       }
 
+      const write = await repoUtil.prepareCreate(did, {
+        action: 'create',
+        collection: schema.ids.AppBskySystemDeclaration,
+        rkey: 'self',
+        value: declaration,
+      })
+
       // Setup repo root
-      const blockstore = new SqlBlockstore(dbTxn, did, now)
       const authStore = locals.getAuthstore(res, did)
-      const repo = await RepoStructure.create(blockstore, did, authStore)
+      await repoUtil.createRepo(dbTxn, did, authStore, [write], now)
+      await repoUtil.indexWrites(dbTxn, [write], now)
 
-      const declarationCid = await blockstore.put(declaration)
-      const declarationUri = new AtUri(
-        `${did}/${schema.ids.AppBskySystemDeclaration}/self`,
-      )
-
-      await repo
-        .stageUpdate({
-          action: 'create',
-          collection: declarationUri.collection,
-          rkey: declarationUri.rkey,
-          cid: declarationCid,
-        })
-        .createCommit(authStore, async (_prev, curr) => {
-          await dbTxn.db
-            .insertInto('repo_root')
-            .values({
-              did: did,
-              root: curr.toString(),
-              indexedAt: now,
-            })
-            .execute()
-          return null
-        })
-
-      await dbTxn.indexRecord(declarationUri, declarationCid, declaration, now)
-
+      const declarationCid = await cidForData(declaration)
       const access = auth.createAccessToken(did)
       const refresh = auth.createRefreshToken(did)
       await grantRefreshToken(dbTxn, refresh.payload)

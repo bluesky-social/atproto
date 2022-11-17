@@ -2,7 +2,7 @@ import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { def as common } from '@atproto/common'
 import * as locals from '../../../locals'
-import { RepoStructure } from '@atproto/repo'
+import { Repo } from '@atproto/repo'
 import SqlBlockstore from '../../../sql-blockstore'
 
 export default function (server: Server) {
@@ -27,7 +27,7 @@ export default function (server: Server) {
       throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
     }
     const blockstore = new SqlBlockstore(db, did)
-    const repo = await RepoStructure.load(blockstore, repoRoot)
+    const repo = await Repo.load(blockstore, repoRoot)
     const fromCid = from ? common.strToCid.parse(from) : null
     const diff = await repo.getDiffCar(fromCid)
     return {

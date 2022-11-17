@@ -180,16 +180,16 @@ export class MST implements DataStore {
   // -------------------
 
   // Persist the MST to the blockstore
-  async save(): Promise<CID> {
+  async stage(): Promise<CID> {
     const pointer = await this.getPointer()
     const alreadyHas = await this.blockstore.has(pointer)
     if (alreadyHas) return pointer
     const entries = await this.getEntries()
     const data = util.serializeNodeData(entries)
-    await this.blockstore.put(data as any)
+    await this.blockstore.stage(data)
     for (const entry of entries) {
       if (entry.isTree()) {
-        await entry.save()
+        await entry.stage()
       }
     }
     return pointer

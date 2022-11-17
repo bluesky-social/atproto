@@ -5,11 +5,11 @@ require('esbuild')
     logLevel: 'info',
     entryPoints: ['src/index.ts', 'src/cli.ts'],
     bundle: true,
+    sourcemap: true,
     outdir: 'dist',
     platform: 'node',
     external: [
       'better-sqlite3',
-      'classic-level',
       // Referenced in pg driver, but optional and we don't use it
       'pg-native',
     ],

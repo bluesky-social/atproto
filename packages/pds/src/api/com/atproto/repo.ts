@@ -5,8 +5,7 @@ import * as didResolver from '@atproto/did-resolver'
 import * as locals from '../../../locals'
 import * as schemas from '../../../lexicon/schemas'
 import { TID } from '@atproto/common'
-import { CidWriteOp, RepoStructure } from '@atproto/repo'
-import SqlBlockstore from '../../../sql-blockstore'
+import * as repoUtil from '../../../util/repo'
 
 export default function (server: Server) {
   server.com.atproto.repo.describe(async (params, _in, _req, res) => {
@@ -97,7 +96,7 @@ export default function (server: Server) {
   server.com.atproto.repo.batchWrite(async (params, input, req, res) => {
     const tx = input.body
     const { did, validate } = tx
-    const { auth, db, logger } = locals.get(res)
+    const { auth, db } = locals.get(res)
     const requester = auth.getUserDid(req)
     const authorized = await db.isUserControlledRepo(did, requester)
     if (!authorized) {
@@ -121,51 +120,29 @@ export default function (server: Server) {
         }
       }
     }
-    await db.transaction(async (dbTxn) => {
-      const currRoot = await dbTxn.getRepoRoot(did, true)
-      if (!currRoot) {
-        throw new InvalidRequestError(
-          `${did} is not a registered repo on this server`,
-        )
-      }
-      const now = new Date().toISOString()
-      const blockstore = new SqlBlockstore(dbTxn, did, now)
-      const cidWriteOps: CidWriteOp[] = await Promise.all(
-        tx.writes.map(async (write) => {
-          if (write.action === 'create') {
-            const cid = await blockstore.put(write.value)
-            const rkey = write.rkey || TID.nextStr()
-            const uri = new AtUri(`${did}/${write.collection}/${rkey}`)
-            await dbTxn.indexRecord(uri, cid, write.value, now)
-            return {
-              action: 'create',
-              collection: write.collection,
-              rkey,
-              cid,
-            }
-          } else if (write.action === 'delete') {
-            const uri = new AtUri(`${did}/${write.collection}/${write.rkey}`)
-            await dbTxn.deleteRecord(uri)
-            return write
-          } else {
-            throw new InvalidRequestError(
-              `Action not supported: ${write.action}`,
-            )
-          }
-        }),
-      )
 
-      const repo = await RepoStructure.load(blockstore, currRoot)
-      await repo
-        .stageUpdate(cidWriteOps)
-        .createCommit(authStore, async (prev, curr) => {
-          const success = await db.updateRepoRoot(did, curr, prev, now)
-          if (!success) {
-            logger.error({ did, curr, prev }, 'repo update failed')
-            throw new Error('Could not update repo root')
+    const writes = await repoUtil.prepareWrites(
+      did,
+      tx.writes.map((write) => {
+        if (write.action === 'create') {
+          return {
+            ...write,
+            rkey: write.rkey || TID.nextStr(),
           }
-          return null
-        })
+        } else if (write.action === 'delete') {
+          return write
+        } else {
+          throw new InvalidRequestError(`Action not supported: ${write.action}`)
+        }
+      }),
+    )
+
+    await db.transaction(async (dbTxn) => {
+      const now = new Date().toISOString()
+      await Promise.all([
+        repoUtil.writeToRepo(dbTxn, did, authStore, writes, now),
+        repoUtil.indexWrites(dbTxn, writes, now),
+      ])
     })
 
     return {
@@ -178,7 +155,7 @@ export default function (server: Server) {
     const { did, collection, record } = input.body
     const validate =
       typeof input.body.validate === 'boolean' ? input.body.validate : true
-    const { auth, db, logger } = locals.get(res)
+    const { auth, db } = locals.get(res)
     const requester = auth.getUserDid(req)
     const authorized = await db.isUserControlledRepo(did, requester)
     if (!authorized) {
@@ -205,52 +182,24 @@ export default function (server: Server) {
       rkey = TID.nextStr()
     }
 
-    const uri = new AtUri(`${did}/${collection}/${rkey}`)
+    const now = new Date().toISOString()
+    const write = await repoUtil.prepareCreate(did, {
+      action: 'create',
+      collection,
+      rkey,
+      value: record,
+    })
 
-    const { cid } = await db.transaction(async (dbTxn) => {
-      const currRoot = await dbTxn.getRepoRoot(did, true)
-      if (!currRoot) {
-        throw new InvalidRequestError(
-          `${did} is not a registered repo on this server`,
-        )
-      }
-      const now = new Date().toISOString()
-      const blockstore = new SqlBlockstore(dbTxn, did, now)
-      const cid = await blockstore.put(record)
-      try {
-        await dbTxn.indexRecord(uri, cid, record, now)
-      } catch (err) {
-        logger.warn(
-          { uri: uri.toString(), err, validate },
-          'failed to index new record',
-        )
-        if (validate) {
-          throw new InvalidRequestError(`Could not index record: ${err}`)
-        }
-      }
-
-      const repo = await RepoStructure.load(blockstore, currRoot)
-      await repo
-        .stageUpdate({
-          action: 'create',
-          collection,
-          rkey,
-          cid,
-        })
-        .createCommit(authStore, async (prev, curr) => {
-          const success = await dbTxn.updateRepoRoot(did, curr, prev, now)
-          if (!success) {
-            logger.error({ did, curr, prev }, 'repo update failed')
-            throw new Error('Could not update repo root')
-          }
-          return null
-        })
-      return { cid }
+    await db.transaction(async (dbTxn) => {
+      await Promise.all([
+        repoUtil.writeToRepo(dbTxn, did, authStore, [write], now),
+        repoUtil.indexWrites(dbTxn, [write], now),
+      ])
     })
 
     return {
       encoding: 'application/json',
-      body: { uri: uri.toString(), cid: cid.toString() },
+      body: { uri: write.uri.toString(), cid: write.cid.toString() },
     }
   })
 
@@ -260,7 +209,7 @@ export default function (server: Server) {
 
   server.com.atproto.repo.deleteRecord(async (_params, input, req, res) => {
     const { did, collection, rkey } = input.body
-    const { auth, db, logger } = locals.get(res)
+    const { auth, db } = locals.get(res)
     const requester = auth.getUserDid(req)
     const authorized = await db.isUserControlledRepo(did, requester)
     if (!authorized) {
@@ -268,34 +217,19 @@ export default function (server: Server) {
     }
 
     const authStore = locals.getAuthstore(res, did)
-    const uri = new AtUri(`${did}/${collection}/${rkey}`)
+    const now = new Date().toISOString()
+
+    const write = await repoUtil.prepareWrites(did, {
+      action: 'delete',
+      collection,
+      rkey,
+    })
 
     await db.transaction(async (dbTxn) => {
-      const currRoot = await dbTxn.getRepoRoot(did, true)
-      if (!currRoot) {
-        throw new InvalidRequestError(
-          `${did} is not a registered repo on this server`,
-        )
-      }
-      const now = new Date().toISOString()
-      await dbTxn.deleteRecord(uri)
-
-      const blockstore = new SqlBlockstore(dbTxn, did, now)
-      const repo = await RepoStructure.load(blockstore, currRoot)
-      await repo
-        .stageUpdate({
-          action: 'delete',
-          collection,
-          rkey,
-        })
-        .createCommit(authStore, async (prev, curr) => {
-          const success = await dbTxn.updateRepoRoot(did, curr, prev, now)
-          if (!success) {
-            logger.error({ did, curr, prev }, 'repo update failed')
-            throw new Error('Could not update repo root')
-          }
-          return null
-        })
+      await Promise.all([
+        repoUtil.writeToRepo(dbTxn, did, authStore, write, now),
+        repoUtil.indexWrites(dbTxn, write, now),
+      ])
     })
   })
 }

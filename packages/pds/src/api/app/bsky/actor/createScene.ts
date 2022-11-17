@@ -5,7 +5,6 @@ import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
 import * as locals from '../../../../locals'
 import * as schema from '../../../../lexicon/schemas'
-import { RepoStructure } from '@atproto/repo'
 import { TID } from '@atproto/common'
 import { UserAlreadyExistsError } from '../../../../db'
 import * as repoUtil from '../../../../util/repo'
@@ -85,12 +84,6 @@ export default function (server: Server) {
         .values({ handle, owner: requester, createdAt: now })
         .execute()
 
-      const userRoot = await dbTxn.getRepoRoot(requester, true)
-      if (!userRoot) {
-        throw new InvalidRequestError(
-          `${requester} is not a registered repo on this server`,
-        )
-      }
       const user = await dbTxn.db
         .selectFrom('did_handle')
         .where('did', '=', requester)
@@ -103,60 +96,50 @@ export default function (server: Server) {
         )
       }
       const userAuth = locals.getAuthstore(res, requester)
-      const userCtx = repoUtil.mutationContext(dbTxn, did, now)
-      const userRepo = await RepoStructure.load(userCtx.blockstore, userRoot)
-
       const sceneAuth = locals.getAuthstore(res, did)
-      const sceneCtx = repoUtil.mutationContext(dbTxn, did, now)
-      const sceneRepo = await RepoStructure.create(
-        sceneCtx.blockstore,
-        did,
-        sceneAuth,
-      )
 
-      const [sceneDeclaration, creatorAssert, memberAssert] = await Promise.all(
-        [
-          repoUtil.prepareCreate(
-            sceneCtx,
-            schema.ids.AppBskySystemDeclaration,
-            'self',
-            declaration,
-          ),
-          repoUtil.prepareCreate(
-            sceneCtx,
-            schema.ids.AppBskyGraphAssertion,
-            TID.nextStr(),
-            {
-              assertion: APP_BSKY_GRAPH.AssertCreator,
-              subject: {
-                did: requester,
-                declarationCid: userDeclarationCid.toString(),
-              },
-              createdAt: new Date().toISOString(),
+      const sceneWrites = await repoUtil.prepareCreates(did, [
+        {
+          action: 'create',
+          collection: schema.ids.AppBskySystemDeclaration,
+          rkey: 'self',
+          value: declaration,
+        },
+        {
+          action: 'create',
+          collection: schema.ids.AppBskyGraphAssertion,
+          rkey: TID.nextStr(),
+          value: {
+            assertion: APP_BSKY_GRAPH.AssertCreator,
+            subject: {
+              did: requester,
+              declarationCid: userDeclarationCid.toString(),
             },
-          ),
-          repoUtil.prepareCreate(
-            sceneCtx,
-            schema.ids.AppBskyGraphAssertion,
-            TID.nextStr(),
-            {
-              assertion: APP_BSKY_GRAPH.AssertMember,
-              subject: {
-                did: requester,
-                declarationCid: userDeclarationCid.toString(),
-              },
-              createdAt: new Date().toISOString(),
+            createdAt: now,
+          },
+        },
+        {
+          action: 'create',
+          collection: schema.ids.AppBskyGraphAssertion,
+          rkey: TID.nextStr(),
+          value: {
+            assertion: APP_BSKY_GRAPH.AssertMember,
+            subject: {
+              did: requester,
+              declarationCid: userDeclarationCid.toString(),
             },
-          ),
-        ],
-      )
+            createdAt: now,
+          },
+        },
+      ])
+      const [sceneDeclaration, creatorAssert, memberAssert] = sceneWrites
 
-      const [creatorConfirm, memberConfirm] = await Promise.all([
-        repoUtil.prepareCreate(
-          sceneCtx,
-          schema.ids.AppBskyGraphConfirmation,
-          TID.nextStr(),
-          {
+      const userWrites = await repoUtil.prepareCreates(requester, [
+        {
+          action: 'create',
+          collection: schema.ids.AppBskyGraphConfirmation,
+          rkey: TID.nextStr(),
+          value: {
             originator: {
               did: requester,
               declarationCid: sceneDeclaration.cid.toString(),
@@ -165,14 +148,14 @@ export default function (server: Server) {
               uri: creatorAssert.uri.toString(),
               cid: creatorAssert.cid.toString(),
             },
-            createdAt: new Date().toISOString(),
+            createdAt: now,
           },
-        ),
-        repoUtil.prepareCreate(
-          sceneCtx,
-          schema.ids.AppBskyGraphConfirmation,
-          TID.nextStr(),
-          {
+        },
+        {
+          action: 'create',
+          collection: schema.ids.AppBskyGraphConfirmation,
+          rkey: TID.nextStr(),
+          value: {
             originator: {
               did: requester,
               declarationCid: sceneDeclaration.cid.toString(),
@@ -181,48 +164,15 @@ export default function (server: Server) {
               uri: memberAssert.uri.toString(),
               cid: memberAssert.cid.toString(),
             },
-            createdAt: new Date().toISOString(),
+            createdAt: now,
           },
-        ),
+        },
       ])
 
-      const sceneCommit = sceneRepo
-        .stageUpdate([
-          sceneDeclaration.toStage,
-          creatorAssert.toStage,
-          memberAssert.toStage,
-        ])
-        .createCommit(sceneAuth, async (_prev, curr) => {
-          await dbTxn.db
-            .insertInto('repo_root')
-            .values({
-              did: did,
-              root: curr.toString(),
-              indexedAt: now,
-            })
-            .execute()
-          return null
-        })
-
-      const userCommit = userRepo
-        .stageUpdate([creatorConfirm.toStage, memberConfirm.toStage])
-        .createCommit(userAuth, async (prev, curr) => {
-          const success = await dbTxn.updateRepoRoot(requester, curr, prev, now)
-          if (!success) {
-            logger.error({ did, curr, prev }, 'repo update failed')
-            throw new Error('Could not update repo root')
-          }
-          return null
-        })
-
       await Promise.all([
-        sceneCommit,
-        userCommit,
-        sceneDeclaration.dbUpdate,
-        creatorAssert.dbUpdate,
-        memberAssert.dbUpdate,
-        creatorConfirm.dbUpdate,
-        memberConfirm.dbUpdate,
+        repoUtil.createRepo(dbTxn, did, sceneAuth, sceneWrites, now),
+        repoUtil.writeToRepo(dbTxn, requester, userAuth, userWrites, now),
+        repoUtil.indexWrites(dbTxn, [...sceneWrites, ...userWrites], now),
       ])
 
       return {

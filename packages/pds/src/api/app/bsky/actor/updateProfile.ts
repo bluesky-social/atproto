@@ -3,17 +3,16 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as locals from '../../../../locals'
 import * as schema from '../../../../lexicon/schemas'
 import { AtUri } from '@atproto/uri'
-import { RepoStructure } from '@atproto/repo'
-import SqlBlockstore from '../../../../sql-blockstore'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import * as common from '@atproto/common'
+import * as repoUtil from '../../../../util/repo'
 
 const profileNsid = schema.ids.AppBskyActorProfile
 
 export default function (server: Server) {
   server.app.bsky.actor.updateProfile(async (_params, input, req, res) => {
-    const { auth, db, logger } = locals.get(res)
+    const { auth, db } = locals.get(res)
 
     const requester = auth.getUserDid(req)
     if (!requester) {
@@ -29,18 +28,11 @@ export default function (server: Server) {
 
     const { profileCid, updated } = await db.transaction(
       async (dbTxn): Promise<{ profileCid: CID; updated: Profile.Record }> => {
-        const currRoot = await dbTxn.getRepoRoot(did, true)
-        if (!currRoot) {
-          throw new InvalidRequestError(
-            `${did} is not a registered repo on this server`,
-          )
-        }
         const now = new Date().toISOString()
-        const blockstore = new SqlBlockstore(dbTxn, did, now)
-        const repo = await RepoStructure.load(blockstore, currRoot)
 
         let updated
-        const current = await repo.getRecord(profileNsid, 'self')
+        const uri = AtUri.make(did, profileNsid, 'self')
+        const current = (await dbTxn.getRecord(uri, null))?.value
         if (current) {
           if (!db.records.profile.matchesSchema(current)) {
             // @TODO need a way to get a profile out of a broken state
@@ -66,9 +58,19 @@ export default function (server: Server) {
           )
         }
 
-        const profileCid = await repo.blockstore.put(updated)
+        const writes = await repoUtil.prepareWrites(did, {
+          action: current ? 'update' : 'create',
+          collection: profileNsid,
+          rkey: 'self',
+          value: updated,
+        })
 
-        if (current) {
+        await repoUtil.writeToRepo(dbTxn, did, authStore, writes, now)
+
+        const write = writes[0]
+        let profileCid: CID
+        if (write.action === 'update') {
+          profileCid = write.cid
           // Update profile record
           await dbTxn.db
             .updateTable('record')
@@ -87,25 +89,15 @@ export default function (server: Server) {
             })
             .where('uri', '=', uri.toString())
             .execute()
-        } else {
+        } else if (write.action === 'create') {
+          profileCid = write.cid
           await dbTxn.indexRecord(uri, profileCid, updated, now)
+        } else {
+          // should never hit this
+          throw new Error(
+            `Unsupported action on update profile: ${write.action}`,
+          )
         }
-
-        await repo
-          .stageUpdate({
-            action: current ? 'update' : 'create',
-            collection: profileNsid,
-            rkey: 'self',
-            cid: profileCid,
-          })
-          .createCommit(authStore, async (prev, curr) => {
-            const success = await dbTxn.updateRepoRoot(did, curr, prev)
-            if (!success) {
-              logger.error({ did, curr, prev }, 'repo update failed')
-              throw new Error('Could not update repo root')
-            }
-            return null
-          })
 
         return { profileCid, updated }
       },

@@ -31,6 +31,7 @@ export const cidCreateOp = z.object({
   rkey: z.string(),
   cid: common.cid,
 })
+export type CidCreateOp = z.infer<typeof cidCreateOp>
 
 export const cidUpdateOp = z.object({
   action: z.literal('update'),
@@ -38,12 +39,14 @@ export const cidUpdateOp = z.object({
   rkey: z.string(),
   cid: common.cid,
 })
+export type CidUpdateOp = z.infer<typeof cidUpdateOp>
 
 export const deleteOp = z.object({
   action: z.literal('delete'),
   collection: z.string(),
   rkey: z.string(),
 })
+export type DeleteOp = z.infer<typeof deleteOp>
 
 export const cidWriteOp = z.union([cidCreateOp, cidUpdateOp, deleteOp])
 export type CidWriteOp = z.infer<typeof cidWriteOp>
@@ -93,6 +96,6 @@ export interface DataStore {
   list(count: number, after?: string, before?: string): Promise<DataValue[]>
   listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
   diff(other: DataStore): Promise<DataDiff>
-  save(): Promise<CID>
+  stage(): Promise<CID>
   writeToCarStream(car: BlockWriter): Promise<void>
 }

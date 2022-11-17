@@ -1,4 +1,3 @@
-import { RepoStructure } from '@atproto/repo'
 import Database from '..'
 import {
   AddMember,
@@ -277,39 +276,31 @@ export class SqlMessageQueue implements MessageQueue {
         if (!shouldTrend) return
 
         // this is a "threshold vote" that makes the post trend
-        const ctx = repoUtil.mutationContext(db, scene.did, now)
         const sceneAuth = this.getAuthStore(scene.did)
-        const repoRoot = await db.getRepoRoot(scene.did, true)
-        if (!repoRoot) {
-          log.error({ ...scene }, 'could not post trending record')
-          return
-        }
-        const repo = await RepoStructure.load(ctx.blockstore, repoRoot)
-        const trend = await repoUtil.prepareCreate(
-          ctx,
-          schema.ids.AppBskyFeedTrend,
-          TID.nextStr(),
-          {
+        const writes = await repoUtil.prepareWrites(scene.did, {
+          action: 'create',
+          collection: schema.ids.AppBskyFeedTrend,
+          rkey: TID.nextStr(),
+          value: {
             subject: {
               uri: scene.subject,
               cid: scene.subjectCid,
             },
             createdAt: now,
           },
-        )
-        const commit = repo
-          .stageUpdate(trend.toStage)
-          .createCommit(sceneAuth, async (prev, curr) => {
-            await db.updateRepoRoot(scene.did, curr, prev, now)
-            return null
-          })
+        })
         const setTrendPosted = db.db
           .updateTable('scene_votes_on_post')
           .set({ postedTrending: 1 })
           .where('did', '=', scene.did)
           .where('subject', '=', scene.subject)
           .execute()
-        await Promise.all([commit, setTrendPosted, trend.dbUpdate])
+
+        await Promise.all([
+          repoUtil.writeToRepo(db, scene.did, sceneAuth, writes, now),
+          repoUtil.indexWrites(db, writes, now),
+          setTrendPosted,
+        ])
       }),
     )
   }

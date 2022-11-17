@@ -1,32 +1,21 @@
-import { RepoStructure } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as schema from '../../../../lexicon/schemas'
 import { Server } from '../../../../lexicon'
 import * as locals from '../../../../locals'
 import * as repoUtil from '../../../../util/repo'
 import { TID } from '@atproto/common'
+import { DeleteOp } from '@atproto/repo'
 
 export default function (server: Server) {
   server.app.bsky.feed.setVote(async (_params, input, req, res) => {
     const { subject, direction } = input.body
-    const { auth, db, logger } = locals.get(res)
+    const { auth, db } = locals.get(res)
 
     const requester = auth.getUserDidOrThrow(req)
     const authStore = await locals.getAuthstore(res, requester)
+    const now = new Date().toISOString()
 
     const voteUri = await db.transaction(async (dbTxn) => {
-      const currRoot = await dbTxn.getRepoRoot(requester, true)
-      if (!currRoot) {
-        throw new InvalidRequestError(
-          `${requester} is not a registered repo on this server`,
-        )
-      }
-
-      const now = new Date().toISOString()
-      const ctx = repoUtil.mutationContext(dbTxn, requester, now)
-      const repo = await RepoStructure.load(ctx.blockstore, currRoot)
-
       const existingVotes = await dbTxn.db
         .selectFrom('vote')
         .select(['uri', 'direction'])
@@ -47,42 +36,37 @@ export default function (server: Server) {
         return existingVotes[0].uri
       }
 
-      const deleteExistingVotes = existingVotes.map(({ uri }) =>
-        repoUtil.prepareDelete(ctx, new AtUri(uri)),
-      )
-
-      const createNewVote =
-        direction === 'none'
-          ? null
-          : await repoUtil.prepareCreate(
-              ctx,
-              schema.ids.AppBskyFeedVote,
-              TID.nextStr(),
-              {
-                direction,
-                subject,
-                createdAt: now,
-              },
-            )
-
-      const changes = createNewVote
-        ? [...deleteExistingVotes, createNewVote]
-        : deleteExistingVotes
-
-      const commit = repo
-        .stageUpdate(changes.map((change) => change.toStage))
-        .createCommit(authStore, async (prev, curr) => {
-          const success = await dbTxn.updateRepoRoot(requester, curr, prev, now)
-          if (!success) {
-            logger.error({ did: ctx.did, curr, prev }, 'repo update failed')
-            throw new Error('Could not update repo root')
+      const writes = await repoUtil.prepareWrites(requester, [
+        ...existingVotes.map((vote): DeleteOp => {
+          const uri = new AtUri(vote.uri)
+          return {
+            action: 'delete',
+            collection: uri.collection,
+            rkey: uri.rkey,
           }
-          return null
+        }),
+      ])
+
+      let create: repoUtil.PreparedCreate | undefined
+
+      if (direction !== 'none') {
+        create = await repoUtil.prepareCreate(requester, {
+          action: 'create',
+          collection: schema.ids.AppBskyFeedVote,
+          rkey: TID.nextStr(),
+          value: {
+            direction,
+            subject,
+            createdAt: now,
+          },
         })
+        writes.push(create)
+      }
 
-      await Promise.all([commit, ...changes.map((change) => change.dbUpdate)])
+      await repoUtil.writeToRepo(dbTxn, requester, authStore, writes, now)
+      await repoUtil.indexWrites(dbTxn, writes, now)
 
-      return createNewVote?.uri.toString()
+      return create?.uri.toString()
     })
 
     return {

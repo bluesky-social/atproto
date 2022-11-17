@@ -3,9 +3,11 @@ import * as auth from '@atproto/auth'
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/blockstore'
 import * as util from './_util'
+import { TID } from '@atproto/common'
 
 describe('Repo', () => {
   const verifier = new auth.Verifier()
+  const collName = 'com.example.posts'
 
   let blockstore: MemoryBlockstore
   let authStore: auth.AuthStore
@@ -26,34 +28,57 @@ describe('Repo', () => {
   })
 
   it('does basic operations', async () => {
-    const collection = repo.getCollection('com.example.posts')
+    const rkey = TID.nextStr()
+    const record = util.generateObject()
+    repo = await repo
+      .stageUpdate({
+        action: 'create',
+        collection: collName,
+        rkey: rkey,
+        value: record,
+      })
+      .createCommit(authStore)
 
-    const obj = util.generateObject()
-    const { rkey } = await collection.createRecord(obj)
-    let got = await collection.getRecord(rkey)
-    expect(got).toEqual(obj)
+    let got = await repo.getRecord(collName, rkey)
+    expect(got).toEqual(record)
 
-    const updatedObj = util.generateObject()
-    await collection.updateRecord(rkey, updatedObj)
-    got = await collection.getRecord(rkey)
-    expect(got).toEqual(updatedObj)
+    const updatedRecord = util.generateObject()
+    repo = await repo
+      .stageUpdate({
+        action: 'update',
+        collection: collName,
+        rkey: rkey,
+        value: updatedRecord,
+      })
+      .createCommit(authStore)
+    got = await repo.getRecord(collName, rkey)
+    expect(got).toEqual(updatedRecord)
 
-    await collection.deleteRecord(rkey)
-    got = await collection.getRecord(rkey)
+    repo = await repo
+      .stageUpdate({
+        action: 'delete',
+        collection: collName,
+        rkey: rkey,
+      })
+      .createCommit(authStore)
+    got = await repo.getRecord(collName, rkey)
     expect(got).toBeNull()
   })
 
   it('adds content collections', async () => {
-    repoData = await util.fillRepo(repo, 100)
+    const filled = await util.fillRepo(repo, authStore, 100)
+    repo = filled.repo
+    repoData = filled.data
     await util.checkRepo(repo, repoData)
   })
 
   it('edits and deletes content', async () => {
-    repoData = await util.editRepo(repo, repoData, {
+    const edited = await util.editRepo(repo, repoData, authStore, {
       adds: 20,
       updates: 20,
       deletes: 20,
     })
+    repo = edited.repo
     await util.checkRepo(repo, repoData)
   })
 
@@ -67,27 +92,12 @@ describe('Repo', () => {
     expect(verified).toBeTruthy()
   })
 
-  it('allows custom keys', async () => {
-    const rkey = 'blahblah'
-    const obj = util.generateObject()
-    const collection = repo.getCollection('com.example.posts')
-    const res = await collection.createRecord(obj, rkey)
-    expect(res.rkey).toEqual(rkey)
-    const got = await collection.getRecord(rkey)
-    expect(got).toEqual(obj)
-  })
-
   it('sets correct DID', async () => {
     expect(repo.did).toEqual(await authStore.did())
   })
 
   it('loads from blockstore', async () => {
-    const reloadedRepo = await Repo.load(
-      blockstore,
-      repo.cid,
-      verifier,
-      authStore,
-    )
+    const reloadedRepo = await Repo.load(blockstore, repo.cid)
 
     await util.checkRepo(reloadedRepo, repoData)
     expect(repo.meta.did).toEqual(await authStore.did())

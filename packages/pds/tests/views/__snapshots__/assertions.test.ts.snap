@@ -134,7 +134,7 @@ Object {
       "uri": "record(4)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -165,7 +165,7 @@ Object {
       "uri": "record(6)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -251,7 +251,7 @@ Object {
       "uri": "record(1)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -281,7 +281,7 @@ Object {
       "uri": "record(2)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -402,7 +402,7 @@ Object {
       "uri": "record(3)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -431,7 +431,7 @@ Object {
       "uri": "record(5)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -559,7 +559,7 @@ Object {
       "uri": "record(4)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -590,7 +590,7 @@ Object {
       "uri": "record(6)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -635,7 +635,7 @@ exports[`pds assertion views fetches assertions by author filtered by confirmati
 Object {
   "assertions": Array [
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -665,7 +665,7 @@ Object {
       "uri": "record(0)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -817,7 +817,7 @@ Object {
       "uri": "record(2)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -846,7 +846,7 @@ Object {
       "uri": "record(4)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -942,7 +942,7 @@ Object {
       "uri": "record(2)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -971,7 +971,7 @@ Object {
       "uri": "record(4)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -1231,7 +1231,7 @@ Object {
       "uri": "record(2)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertCreator",
+      "assertion": "app.bsky.graph.assertMember",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
@@ -1261,7 +1261,7 @@ Object {
       "uri": "record(3)",
     },
     Object {
-      "assertion": "app.bsky.graph.assertMember",
+      "assertion": "app.bsky.graph.assertCreator",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorScene",
