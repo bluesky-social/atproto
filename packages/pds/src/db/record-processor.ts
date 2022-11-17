@@ -95,7 +95,7 @@ export class RecordProcessor<T, S> {
         .selectFrom('duplicate_record')
         .innerJoin('ipld_block', 'ipld_block.cid', 'duplicate_record.cid')
         .where('duplicateOf', '=', uri.toString())
-        .orderBy('indexedAt', 'asc')
+        .orderBy('duplicate_record.indexedAt', 'asc')
         .limit(1)
         .selectAll()
         .executeTakeFirst()
