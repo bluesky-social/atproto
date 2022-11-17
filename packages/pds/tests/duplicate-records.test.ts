@@ -1,4 +1,3 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import { CloseFn, runTestServer } from './_util'
 import { Database } from '../src'
@@ -9,7 +8,6 @@ import { APP_BSKY_GRAPH } from '../src/lexicon'
 
 describe('duplicate record', () => {
   let close: CloseFn
-  let client: AtpServiceClient
   let did: string
   let db: Database
 
@@ -19,14 +17,7 @@ describe('duplicate record', () => {
     })
     db = server.db
     close = server.close
-    client = AtpApi.service(server.url)
-    const res = await client.com.atproto.account.create({
-      handle: 'alice.test',
-      email: 'alice@test.com',
-      password: 'alice-pass',
-    })
-    client.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
-    did = res.data.did
+    did = 'did:example:alice'
   })
 
   afterAll(async () => {
