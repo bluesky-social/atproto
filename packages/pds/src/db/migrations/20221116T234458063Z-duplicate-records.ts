@@ -17,7 +17,6 @@ type DatabaseSchemaWithTemps = DatabaseSchema & {
 const duplicateRecordTable = 'duplicate_record'
 
 export async function up(db: Kysely<DatabaseSchemaWithTemps>): Promise<void> {
-  console.log('MIGRATING')
   await db.schema
     .createTable(duplicateRecordTable)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
@@ -48,7 +47,7 @@ export async function up(db: Kysely<DatabaseSchemaWithTemps>): Promise<void> {
       .addColumn('indexedAt', 'varchar', (col) => col.notNull())
       .addUniqueConstraint('repost_unique_subject', ['creator', 'subject'])
       .execute()
-    await db
+    await tx
       .insertInto('repost_temp')
       .expression((exp) =>
         exp.selectFrom('repost').selectAll().where('uri', 'not in', dupUris),
@@ -196,7 +195,6 @@ export async function up(db: Kysely<DatabaseSchemaWithTemps>): Promise<void> {
     await tx.schema.dropTable('assertion').execute()
     await tx.schema.alterTable('assertion_temp').renameTo('assertion').execute()
   })
-  console.log('MIGRATED')
 }
 
 export async function down(db: Kysely<DatabaseSchema>): Promise<void> {
