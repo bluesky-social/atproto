@@ -7,7 +7,7 @@ import {
   DIDDocument,
 } from 'did-resolver'
 import axios from 'axios'
-import * as errors from '../errors'
+import * as errors from './errors'
 
 export type PlcResolverOptions = {
   timeout: number

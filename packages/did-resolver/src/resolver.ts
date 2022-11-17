@@ -4,8 +4,8 @@ import {
   DIDResolutionOptions,
   DIDResolutionResult,
 } from 'did-resolver'
-import * as web from './web/resolver'
-import * as plc from './plc/resolver'
+import * as web from './web-resolver'
+import * as plc from './plc-resolver'
 import * as atpDid from './atp-did'
 import log from './logger'
 

@@ -1,7 +1,7 @@
 import getPort from 'get-port'
 import { AtpData, DidResolver } from '../src'
-import { DidWebServer } from '../src/web/server'
-import DidWebDb from '../src/web/db'
+import { DidWebServer } from './web/server'
+import DidWebDb from './web/db'
 import {
   Database as DidPlcDb,
   server as runPlcServer,
