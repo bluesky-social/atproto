@@ -1,5 +1,4 @@
 import { Kysely } from 'kysely'
-import Database from '..'
 import DatabaseSchema from '../database-schema'
 import { Assertion } from '../tables/assertion'
 import { Follow } from '../tables/follow'
@@ -21,7 +20,7 @@ export async function up(db: Kysely<DatabaseSchemaWithTemps>): Promise<void> {
   await db.schema
     .createTable(duplicateRecordTable)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('did', 'varchar', (col) => col.notNull())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('duplicateOf', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
