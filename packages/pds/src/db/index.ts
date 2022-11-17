@@ -380,7 +380,7 @@ export class Database {
     log.info({ uri }, 'indexed record')
   }
 
-  async deleteRecord(uri: AtUri) {
+  async deleteRecord(uri: AtUri, cascading = false) {
     this.assertTransaction()
     log.debug({ uri }, 'deleting indexed record')
     const table = this.findTableForCollection(uri.collection)
@@ -390,7 +390,7 @@ export class Database {
       .execute()
 
     const [events, _] = await Promise.all([
-      table.deleteRecord(uri),
+      table.deleteRecord(uri, cascading),
       deleteQuery,
     ])
     this.messageQueue && (await this.messageQueue.send(this, events))

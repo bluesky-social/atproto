@@ -68,12 +68,15 @@ export class RecordProcessor<T, S> {
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
     if (found) {
-      await this.db.insertInto('duplicate_record').values({
-        uri: uri.toString(),
-        cid: cid.toString(),
-        duplicateOf: found.toString(),
-        indexedAt: timestamp || new Date().toISOString(),
-      })
+      await this.db
+        .insertInto('duplicate_record')
+        .values({
+          uri: uri.toString(),
+          cid: cid.toString(),
+          duplicateOf: found.toString(),
+          indexedAt: timestamp || new Date().toISOString(),
+        })
+        .execute()
     }
     return []
   }
