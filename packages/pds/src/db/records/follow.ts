@@ -2,43 +2,25 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../lexicon/types/app/bsky/graph/follow'
-import { DbRecordPlugin } from '../types'
+import { Follow as IndexedFollow } from '../tables/follow'
 import * as schemas from '../schemas'
 import * as messages from '../message-queue/messages'
 import { Message } from '../message-queue/messages'
+import DatabaseSchema from '../database-schema'
+import RecordProcessor from '../record-processor'
 
-const type = schemas.ids.AppBskyGraphFollow
-const tableName = 'follow'
-export interface BskyFollow {
-  uri: string
-  cid: string
-  creator: string
-  subjectDid: string
-  subjectDeclarationCid: string
-  createdAt: string
-  indexedAt: string
-}
+const schemaId = schemas.ids.AppBskyGraphFollow
 
-export type PartialDB = { [tableName]: BskyFollow }
-
-const validator = schemas.records.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is Follow.Record => {
-  return validator.isValid(obj)
-}
-const validateSchema = (obj: unknown) => validator.validate(obj)
-
-const insertFn =
-  (db: Kysely<PartialDB>) =>
-  async (
-    uri: AtUri,
-    cid: CID,
-    obj: unknown,
-    timestamp?: string,
-  ): Promise<Message[]> => {
-    if (!matchesSchema(obj)) {
-      throw new Error(`Record does not match schema: ${type}`)
-    }
-    const val = {
+const insertFn = async (
+  db: Kysely<DatabaseSchema>,
+  uri: AtUri,
+  cid: CID,
+  obj: Follow.Record,
+  timestamp?: string,
+): Promise<IndexedFollow | null> => {
+  const inserted = await db
+    .insertInto('follow')
+    .values({
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
@@ -46,36 +28,70 @@ const insertFn =
       subjectDeclarationCid: obj.subject.declarationCid,
       createdAt: obj.createdAt,
       indexedAt: timestamp || new Date().toISOString(),
-    }
-    await db.insertInto(tableName).values(val).execute()
-    return [
-      messages.createNotification({
-        userDid: obj.subject.did,
-        author: uri.host,
-        recordUri: uri.toString(),
-        recordCid: cid.toString(),
-        reason: 'follow',
-      }),
-    ]
-  }
+    })
+    .onConflict((oc) => oc.doNothing())
+    .returningAll()
+    .executeTakeFirst()
+  return inserted || null
+}
 
-const deleteFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Message[]> => {
-    await db.deleteFrom(tableName).where('uri', '=', uri.toString()).execute()
-    return [messages.deleteNotifications(uri.toString())]
-  }
+const findDuplicate = async (
+  db: Kysely<DatabaseSchema>,
+  uri: AtUri,
+  obj: Follow.Record,
+): Promise<AtUri | null> => {
+  const found = await db
+    .selectFrom('follow')
+    .where('creator', '=', uri.host)
+    .where('subjectDid', '=', obj.subject.did)
+    .selectAll()
+    .executeTakeFirst()
+  return found ? new AtUri(found.uri) : null
+}
 
-export type PluginType = DbRecordPlugin<Follow.Record>
+const eventsForInsert = (obj: IndexedFollow): Message[] => {
+  return [
+    messages.createNotification({
+      userDid: obj.subjectDid,
+      author: obj.creator,
+      recordUri: obj.uri,
+      recordCid: obj.cid,
+      reason: 'follow',
+    }),
+  ]
+}
 
-export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
-  return {
-    collection: type,
-    validateSchema,
-    matchesSchema,
-    insert: insertFn(db),
-    delete: deleteFn(db),
-  }
+const deleteFn = async (
+  db: Kysely<DatabaseSchema>,
+  uri: AtUri,
+): Promise<IndexedFollow | null> => {
+  const deleted = await db
+    .deleteFrom('follow')
+    .where('uri', '=', uri.toString())
+    .returningAll()
+    .executeTakeFirst()
+  return deleted || null
+}
+
+const eventsForDelete = (
+  deleted: IndexedFollow,
+  replacedBy: IndexedFollow | null,
+): Message[] => {
+  if (replacedBy) return []
+  return [messages.deleteNotifications(deleted.uri)]
+}
+
+export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
+
+export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
+  return new RecordProcessor(db, {
+    schemaId,
+    insertFn,
+    findDuplicate,
+    deleteFn,
+    eventsForInsert,
+    eventsForDelete,
+  })
 }
 
 export default makePlugin

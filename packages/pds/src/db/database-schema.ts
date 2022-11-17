@@ -7,14 +7,15 @@ import * as record from './tables/record'
 import * as ipldBlock from './tables/ipld-block'
 import * as ipldBlockCreator from './tables/ipld-block-creator'
 import * as inviteCode from './tables/invite-code'
+import * as duplicateRecords from './tables/duplicate-record'
 import * as notification from './tables/user-notification'
 import * as assertion from './tables/assertion'
-import * as profile from './records/profile'
-import * as post from './records/post'
-import * as vote from './records/vote'
-import * as repost from './records/repost'
-import * as trend from './records/trend'
-import * as follow from './records/follow'
+import * as profile from './tables/profile'
+import * as post from './tables/post'
+import * as vote from './tables/vote'
+import * as repost from './tables/repost'
+import * as trend from './tables/trend'
+import * as follow from './tables/follow'
 import * as messageQueue from './message-queue/tables/messageQueue'
 import * as messageQueueCursor from './message-queue/tables/messageQueueCursor'
 import * as sceneMemberCount from './message-queue/tables/sceneMemberCount'
@@ -29,6 +30,7 @@ export type DatabaseSchema = user.PartialDB &
   ipldBlock.PartialDB &
   ipldBlockCreator.PartialDB &
   inviteCode.PartialDB &
+  duplicateRecords.PartialDB &
   notification.PartialDB &
   assertion.PartialDB &
   profile.PartialDB &
@@ -41,3 +43,5 @@ export type DatabaseSchema = user.PartialDB &
   messageQueueCursor.PartialDB &
   sceneMemberCount.PartialDB &
   sceneVotesOnPost.PartialDB
+
+export default DatabaseSchema

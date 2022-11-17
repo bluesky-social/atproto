@@ -2,99 +2,115 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Vote from '../../lexicon/types/app/bsky/feed/vote'
-import { DbRecordPlugin } from '../types'
+import { Vote as IndexedVote } from '../tables/vote'
 import * as schemas from '../schemas'
 import * as messages from '../message-queue/messages'
 import { Message } from '../message-queue/messages'
+import { DatabaseSchema } from '../database-schema'
+import RecordProcessor from '../record-processor'
 
-const type = schemas.ids.AppBskyFeedVote
-const tableName = 'vote'
+const schemaId = schemas.ids.AppBskyFeedVote
 
-export interface BskyVote {
-  uri: string
-  cid: string
-  creator: string
-  direction: 'up' | 'down'
-  subject: string
-  subjectCid: string
-  createdAt: string
-  indexedAt: string
+const insertFn = async (
+  db: Kysely<DatabaseSchema>,
+  uri: AtUri,
+  cid: CID,
+  obj: Vote.Record,
+  timestamp?: string,
+): Promise<IndexedVote | null> => {
+  const inserted = await db
+    .insertInto('vote')
+    .values({
+      uri: uri.toString(),
+      cid: cid.toString(),
+      direction: obj.direction,
+      creator: uri.host,
+      subject: obj.subject.uri,
+      subjectCid: obj.subject.cid,
+      createdAt: obj.createdAt,
+      indexedAt: timestamp || new Date().toISOString(),
+    })
+    .onConflict((oc) => oc.doNothing())
+    .returningAll()
+    .executeTakeFirst()
+  return inserted || null
 }
 
-export type PartialDB = { [tableName]: BskyVote }
-
-const validator = schemas.records.createRecordValidator(type)
-const matchesSchema = (obj: unknown): obj is Vote.Record => {
-  return validator.isValid(obj)
+const findDuplicate = async (
+  db: Kysely<DatabaseSchema>,
+  uri: AtUri,
+  obj: Vote.Record,
+): Promise<AtUri | null> => {
+  const found = await db
+    .selectFrom('vote')
+    .where('creator', '=', uri.host)
+    .where('subject', '=', obj.subject.uri)
+    .selectAll()
+    .executeTakeFirst()
+  return found ? new AtUri(found.uri) : null
 }
-const validateSchema = (obj: unknown) => validator.validate(obj)
 
-const insertFn =
-  (db: Kysely<PartialDB>) =>
-  async (
-    uri: AtUri,
-    cid: CID,
-    obj: unknown,
-    timestamp?: string,
-  ): Promise<Message[]> => {
-    if (!matchesSchema(obj)) {
-      throw new Error(`Record does not match schema: ${type}`)
+const createNotif = (obj: IndexedVote): Message => {
+  const subjectUri = new AtUri(obj.subject)
+  return messages.createNotification({
+    userDid: subjectUri.host,
+    author: obj.creator,
+    recordUri: obj.uri,
+    recordCid: obj.cid,
+    reason: 'vote',
+    reasonSubject: subjectUri.toString(),
+  })
+}
+
+const eventsForInsert = (obj: IndexedVote): Message[] => {
+  // No events for downvotes
+  if (obj.direction === 'down') return []
+  return [createNotif(obj), messages.addUpvote(obj.creator, obj.subject)]
+}
+
+const deleteFn = async (
+  db: Kysely<DatabaseSchema>,
+  uri: AtUri,
+): Promise<IndexedVote | null> => {
+  const deleted = await db
+    .deleteFrom('vote')
+    .where('uri', '=', uri.toString())
+    .returningAll()
+    .executeTakeFirst()
+  return deleted || null
+}
+
+const eventsForDelete = (
+  deleted: IndexedVote,
+  replacedBy: IndexedVote | null,
+): Message[] => {
+  const events: Message[] = []
+  if (deleted.direction !== replacedBy?.direction) {
+    events.push(messages.deleteNotifications(deleted.uri))
+    if (replacedBy) {
+      events.push(createNotif(replacedBy))
     }
-    await db
-      .insertInto(tableName)
-      .values({
-        uri: uri.toString(),
-        cid: cid.toString(),
-        direction: obj.direction,
-        creator: uri.host,
-        subject: obj.subject.uri,
-        subjectCid: obj.subject.cid,
-        createdAt: obj.createdAt,
-        indexedAt: timestamp || new Date().toISOString(),
-      })
-      .execute()
-    // No events for downvotes
-    if (obj.direction === 'down') return []
-    const subjectUri = new AtUri(obj.subject.uri)
-    return [
-      messages.createNotification({
-        userDid: subjectUri.host,
-        author: uri.host,
-        recordUri: uri.toString(),
-        recordCid: cid.toString(),
-        reason: 'vote',
-        reasonSubject: subjectUri.toString(),
-      }),
-      messages.addUpvote(uri.host, obj.subject.uri),
-    ]
   }
-
-const deleteFn =
-  (db: Kysely<PartialDB>) =>
-  async (uri: AtUri): Promise<Message[]> => {
-    const deleted = await db
-      .deleteFrom(tableName)
-      .where('uri', '=', uri.toString())
-      .returningAll()
-      .executeTakeFirst()
-
-    const events: Message[] = [messages.deleteNotifications(uri.toString())]
-    if (deleted?.direction === 'up') {
-      events.push(messages.removeUpvote(deleted.creator, deleted.subject))
-    }
-    return events
+  if (deleted.direction === 'up' && replacedBy?.direction !== 'up') {
+    events.push(messages.removeUpvote(deleted.creator, deleted.subject))
   }
-
-export type PluginType = DbRecordPlugin<Vote.Record>
-
-export const makePlugin = (db: Kysely<PartialDB>): PluginType => {
-  return {
-    collection: type,
-    validateSchema,
-    matchesSchema,
-    insert: insertFn(db),
-    delete: deleteFn(db),
+  if (replacedBy?.direction === 'up' && deleted.direction !== 'up') {
+    events.push(messages.addUpvote(replacedBy.creator, replacedBy.subject))
   }
+  return events
+}
+
+export type PluginType = RecordProcessor<Vote.Record, IndexedVote>
+
+export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
+  return new RecordProcessor(db, {
+    schemaId,
+    insertFn,
+    findDuplicate,
+    deleteFn,
+    eventsForInsert,
+    eventsForDelete,
+  })
 }
 
 export default makePlugin

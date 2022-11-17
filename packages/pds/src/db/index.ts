@@ -374,13 +374,13 @@ export class Database {
     await this.db.insertInto('record').values(record).execute()
 
     const table = this.findTableForCollection(uri.collection)
-    const events = await table.insert(uri, cid, obj, timestamp)
+    const events = await table.insertRecord(uri, cid, obj, timestamp)
     this.messageQueue && (await this.messageQueue.send(this, events))
 
     log.info({ uri }, 'indexed record')
   }
 
-  async deleteRecord(uri: AtUri) {
+  async deleteRecord(uri: AtUri, cascading = false) {
     this.assertTransaction()
     log.debug({ uri }, 'deleting indexed record')
     const table = this.findTableForCollection(uri.collection)
@@ -389,7 +389,10 @@ export class Database {
       .where('uri', '=', uri.toString())
       .execute()
 
-    const [events, _] = await Promise.all([table.delete(uri), deleteQuery])
+    const [events, _] = await Promise.all([
+      table.deleteRecord(uri, cascading),
+      deleteQuery,
+    ])
     this.messageQueue && (await this.messageQueue.send(this, events))
 
     log.info({ uri }, 'deleted indexed record')
