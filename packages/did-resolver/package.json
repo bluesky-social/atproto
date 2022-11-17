@@ -19,15 +19,12 @@
     "@atproto/common": "*",
     "@atproto/crypto": "*",
     "axios": "^0.24.0",
-    "core-js": "2.6.5",
-    "cors": "^2.8.5",
-    "did-resolver": "^4.0.0",
-    "express": "^4.18.1",
-    "level": "^8.0.0",
-    "one-webcrypto": "^1.0.3"
+    "did-resolver": "^4.0.0"
   },
   "devDependencies": {
     "@atproto/plc": "*",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
     "get-port": "^6.1.2"
   }
 }

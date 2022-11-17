@@ -1,5 +1,4 @@
 import { DIDDocument } from 'did-resolver'
-import level from 'level'
 
 interface DidStore {
   put(key: string, val: string): Promise<void>
@@ -33,11 +32,6 @@ class MemoryStore implements DidStore {
 
 export class DidWebDb {
   constructor(private store: DidStore) {}
-
-  static persistent(location = 'dids'): DidWebDb {
-    const store = new level.Level(location)
-    return new DidWebDb(store)
-  }
 
   static memory(): DidWebDb {
     const store = new MemoryStore()
