@@ -50,6 +50,8 @@ describe('crud operations', () => {
     bob.did = res2.data.did
   })
 
+  return
+
   it('describes repo', async () => {
     const description = await client.com.atproto.repo.describe({
       user: alice.did,
