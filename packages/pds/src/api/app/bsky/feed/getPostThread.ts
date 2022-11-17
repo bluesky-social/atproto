@@ -32,10 +32,7 @@ export default function (server: Server) {
         thread.replies = await getReplies(db.db, thread, depth - 1, requester)
       }
       if (queryRes.parent !== null) {
-        const parentRes = await postInfoBuilder(db.db, requester)
-          .where('post.uri', '=', queryRes.parent)
-          .executeTakeFirstOrThrow()
-        thread.parent = rowToPost(parentRes)
+        thread.parent = await getAncestors(db.db, queryRes.parent, requester)
       }
 
       return {
@@ -44,6 +41,21 @@ export default function (server: Server) {
       }
     },
   )
+}
+
+const getAncestors = async (
+  db: Kysely<DatabaseSchema>,
+  parentUri: string,
+  requester: string,
+): Promise<GetPostThread.Post> => {
+  const parentRes = await postInfoBuilder(db, requester)
+    .where('post.uri', '=', parentUri)
+    .executeTakeFirstOrThrow()
+  const parentObj = rowToPost(parentRes)
+  if (parentRes.parent !== null) {
+    parentObj.parent = await getAncestors(db, parentRes.parent, requester)
+  }
+  return parentObj
 }
 
 const getReplies = async (
