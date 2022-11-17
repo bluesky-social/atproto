@@ -20,6 +20,7 @@ type GetAuthStoreFn = (did: string) => AuthStore
 
 export class SqlMessageQueue implements MessageQueue {
   private cursorExists = false
+  private ensureCaughtUpTimeout: ReturnType<typeof setTimeout> | undefined
 
   constructor(
     private name: string,
@@ -62,7 +63,13 @@ export class SqlMessageQueue implements MessageQueue {
     } catch (err) {
       log.error({ err }, 'error ensuring queue is up to date')
     }
-    setTimeout(this.ensureCaughtUp, 60000) // 1 min
+    this.ensureCaughtUpTimeout = setTimeout(() => this.ensureCaughtUp(), 60000) // 1 min
+  }
+
+  destroy() {
+    if (this.ensureCaughtUpTimeout) {
+      clearTimeout(this.ensureCaughtUpTimeout)
+    }
   }
 
   async processAll(): Promise<void> {
