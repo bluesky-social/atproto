@@ -24,7 +24,7 @@ export const ensureValid = (
   }
 
   if (reservedSubdomains[front]) {
-    throw new InvalidHandleError('Reserved handle')
+    throw new ReservedHandleError('Reserved handle')
   }
 
   if (front.indexOf('.') > -1) {
@@ -57,7 +57,10 @@ export const isValid = (
   try {
     ensureValid(handle, availableUserDomains)
   } catch (err) {
-    if (err instanceof InvalidHandleError) {
+    if (
+      err instanceof InvalidHandleError ||
+      err instanceof ReservedHandleError
+    ) {
       return false
     }
     throw err
@@ -66,3 +69,4 @@ export const isValid = (
 }
 
 export class InvalidHandleError extends Error {}
+export class ReservedHandleError extends Error {}
