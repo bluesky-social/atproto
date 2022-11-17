@@ -1,22 +1,8 @@
 import { Kysely } from 'kysely'
-import DatabaseSchema from '../database-schema'
-import { Assertion } from '../tables/assertion'
-import { Follow } from '../tables/follow'
-import { Repost } from '../tables/repost'
-import { Trend } from '../tables/trend'
-import { Vote } from '../tables/vote'
-
-type DatabaseSchemaWithTemps = DatabaseSchema & {
-  repost_temp: Repost
-  trend_temp: Trend
-  vote_temp: Vote
-  follow_temp: Follow
-  assertion_temp: Assertion
-}
 
 const duplicateRecordTable = 'duplicate_record'
 
-export async function up(db: Kysely<DatabaseSchemaWithTemps>): Promise<void> {
+export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(duplicateRecordTable)
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
@@ -186,6 +172,6 @@ export async function up(db: Kysely<DatabaseSchemaWithTemps>): Promise<void> {
   })
 }
 
-export async function down(db: Kysely<DatabaseSchema>): Promise<void> {
+export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(duplicateRecordTable)
 }

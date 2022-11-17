@@ -1,6 +1,5 @@
 import { Kysely, sql } from 'kysely'
 import { Dialect } from '..'
-import { DatabaseSchema } from '../database-schema'
 
 const userTable = 'user'
 const didHandleTable = 'did_handle'
@@ -27,10 +26,7 @@ const messageQueueCursorTable = 'message_queue_cursor'
 const sceneMemberCountTable = 'scene_member_count'
 const sceneVotesOnPostTable = 'scene_votes_on_post'
 
-export async function up(
-  db: Kysely<DatabaseSchema>,
-  dialect: Dialect,
-): Promise<void> {
+export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   if (dialect === 'pg') {
     try {
       // Add trigram support, supporting user search.
@@ -292,7 +288,7 @@ export async function up(
     .execute()
 }
 
-export async function down(db: Kysely<DatabaseSchema>): Promise<void> {
+export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(sceneVotesOnPostTable).execute()
   await db.schema.dropTable(sceneMemberCountTable).execute()
   await db.schema.dropTable(messageQueueCursorTable).execute()
