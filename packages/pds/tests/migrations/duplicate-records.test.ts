@@ -8,8 +8,14 @@ describe('duplicate record', () => {
   let db: Database
 
   beforeAll(async () => {
-    db = Database.memory()
-    console.log(await db.migrator.getMigrations())
+    if (process.env.DB_POSTGRES_URL) {
+      db = Database.postgres({
+        url: process.env.DB_POSTGRES_URL,
+        schema: 'migration_duplicate_records',
+      })
+    } else {
+      db = Database.memory()
+    }
     await db.migrator.migrateTo('_20221021T162202001Z')
   })
 
