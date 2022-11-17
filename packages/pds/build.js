@@ -21,8 +21,6 @@ require('esbuild').build({
   platform: 'node',
   external: [
     'better-sqlite3',
-    'level',
-    'classic-level',
     // Referenced in pg driver, but optional and we don't use it
     'pg-native',
   ],

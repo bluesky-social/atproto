@@ -25,10 +25,14 @@ export const paginate = <QB extends SelectQueryBuilder<any, any, any>>(
     limit?: number
     before?: string
     by: DbRef
+    secondaryOrder?: DbRef
   },
 ) => {
   return qb
     .orderBy(opts.by, 'desc')
+    .if(opts.secondaryOrder !== undefined, (q) =>
+      q.orderBy(opts.secondaryOrder as DbRef, 'desc'),
+    )
     .if(opts.limit !== undefined, (q) => q.limit(opts.limit as number))
     .if(opts.before !== undefined, (q) => q.where(opts.by, '<', opts.before))
 }

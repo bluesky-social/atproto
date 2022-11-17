@@ -10,7 +10,6 @@ require('esbuild')
     platform: 'node',
     external: [
       'better-sqlite3',
-      'classic-level',
       // Referenced in pg driver, but optional and we don't use it
       'pg-native',
     ],

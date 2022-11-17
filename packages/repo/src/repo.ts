@@ -1,228 +1,271 @@
 import { CID } from 'multiformats/cid'
-import { CarReader } from '@ipld/car'
+import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/lib/writer-browser'
 import {
   RepoRoot,
   Commit,
-  CidWriteOp,
+  def,
   DataStore,
   RepoMeta,
+  RecordCreateOp,
   RecordWriteOp,
 } from './types'
+import { streamToArray } from '@atproto/common'
 import IpldStore from './blockstore/ipld-store'
 import * as auth from '@atproto/auth'
-import { DataDiff } from './mst'
-import Collection from './collection'
-import * as verify from './verify'
+import { MST } from './mst'
 import log from './logger'
-import RepoStructure from './structure'
+import * as util from './util'
+
+type Params = {
+  blockstore: IpldStore
+  data: DataStore
+  commit: Commit
+  root: RepoRoot
+  meta: RepoMeta
+  cid: CID
+  stagedWrites: RecordWriteOp[]
+}
 
 export class Repo {
   blockstore: IpldStore
-  structure: RepoStructure
-  authStore: auth.AuthStore | null
-  verifier: auth.Verifier
+  data: DataStore
+  commit: Commit
+  root: RepoRoot
+  meta: RepoMeta
+  cid: CID
+  stagedWrites: RecordWriteOp[]
 
-  constructor(params: {
-    blockstore: IpldStore
-    structure: RepoStructure
-    authStore: auth.AuthStore | undefined
-    verifier: auth.Verifier | undefined
-  }) {
+  constructor(params: Params) {
     this.blockstore = params.blockstore
-    this.structure = params.structure
-    this.authStore = params.authStore || null
-    this.verifier = params.verifier ?? new auth.Verifier()
+    this.data = params.data
+    this.commit = params.commit
+    this.root = params.root
+    this.meta = params.meta
+    this.cid = params.cid
+    this.stagedWrites = params.stagedWrites
   }
 
   static async create(
     blockstore: IpldStore,
     did: string,
     authStore: auth.AuthStore,
-    verifier?: auth.Verifier,
+    initialRecords: RecordCreateOp[] = [],
   ): Promise<Repo> {
-    const structure = await RepoStructure.create(blockstore, did, authStore)
+    let tokenCid: CID | null = null
+    if (!(await authStore.canSignForDid(did))) {
+      const foundUcan = await authStore.findUcan(auth.maintenanceCap(did))
+      if (foundUcan === null) {
+        throw new Error(`No valid Ucan for creating repo`)
+      }
+      tokenCid = await blockstore.stage(auth.encodeUcan(foundUcan))
+    }
+
+    let data = await MST.create(blockstore)
+    for (const write of initialRecords) {
+      const cid = await blockstore.stage(write.value)
+      const dataKey = write.collection + '/' + write.rkey
+      data = await data.add(dataKey, cid)
+    }
+    const dataCid = await data.stage()
+
+    const meta: RepoMeta = {
+      did,
+      version: 1,
+      datastore: 'mst',
+    }
+    const metaCid = await blockstore.stage(meta)
+
+    const root: RepoRoot = {
+      meta: metaCid,
+      prev: null,
+      auth_token: tokenCid,
+      data: dataCid,
+    }
+
+    const rootCid = await blockstore.stage(root)
+    const commit: Commit = {
+      root: rootCid,
+      sig: await authStore.sign(rootCid.bytes),
+    }
+
+    const cid = await blockstore.stage(commit)
+
+    await blockstore.saveStaged()
 
     log.info({ did }, `created repo`)
     return new Repo({
       blockstore,
-      structure,
-      authStore,
-      verifier,
+      data,
+      commit,
+      root,
+      meta,
+      cid,
+      stagedWrites: [],
     })
   }
 
-  static async load(
-    blockstore: IpldStore,
-    cid: CID,
-    verifier?: auth.Verifier,
-    authStore?: auth.AuthStore,
-  ) {
-    const structure = await RepoStructure.load(blockstore, cid)
-    log.info({ did: structure.meta.did }, 'loaded repo for')
+  static async load(blockstore: IpldStore, cid: CID) {
+    const commit = await blockstore.get(cid, def.commit)
+    const root = await blockstore.get(commit.root, def.repoRoot)
+    const meta = await blockstore.get(root.meta, def.repoMeta)
+    const data = await MST.load(blockstore, root.data)
+    log.info({ did: meta.did }, 'loaded repo for')
     return new Repo({
       blockstore,
-      structure,
-      authStore,
-      verifier,
+      data,
+      commit,
+      root,
+      meta,
+      cid,
+      stagedWrites: [],
     })
   }
 
-  static async fromCarFile(
-    buf: Uint8Array,
-    blockstore: IpldStore,
-    verifier?: auth.Verifier,
-    verifyAuthority = true,
-    authStore?: auth.AuthStore,
-  ) {
-    const car = await CarReader.fromBytes(buf)
-
-    const roots = await car.getRoots()
-    if (roots.length !== 1) {
-      throw new Error(`Expected one root, got ${roots.length}`)
-    }
-    const root = roots[0]
-
-    for await (const block of car.blocks()) {
-      await blockstore.putBytes(block.cid, block.bytes)
-    }
-
-    const repo = await Repo.load(blockstore, root, verifier, authStore)
-    if (verifyAuthority && verifier) {
-      await verify.verifyUpdates(blockstore, null, repo.cid, verifier)
-    }
-    return repo
+  private updateRepo(params: Partial<Params>): Repo {
+    return new Repo({
+      blockstore: params.blockstore || this.blockstore,
+      data: params.data || this.data,
+      commit: params.commit || this.commit,
+      root: params.root || this.root,
+      meta: params.meta || this.meta,
+      cid: params.cid || this.cid,
+      stagedWrites: params.stagedWrites || this.stagedWrites,
+    })
   }
 
   get did(): string {
     return this.meta.did
   }
 
-  get data(): DataStore {
-    return this.structure.data
+  async getRecord(collection: string, rkey: string): Promise<unknown | null> {
+    const dataKey = collection + '/' + rkey
+    const cid = await this.data.get(dataKey)
+    if (!cid) return null
+    return this.blockstore.getUnchecked(cid)
   }
 
-  get commit(): Commit {
-    return this.structure.commit
-  }
-
-  get root(): RepoRoot {
-    return this.structure.root
-  }
-
-  get meta(): RepoMeta {
-    return this.structure.meta
-  }
-
-  get cid(): CID {
-    return this.structure.cid
-  }
-
-  getCollection(name: string): Collection {
-    if (name.length > 256) {
-      throw new Error(
-        `Collection names may not be longer than 256 chars: ${name}`,
-      )
-    }
-    return new Collection(this, name)
-  }
-
-  // The repo is mutable & things can change while you perform an operation
-  // Ensure that the root of the repo has not changed so that you don't get local branching
-  async safeCommit(write: CidWriteOp | CidWriteOp[]) {
-    if (!this.authStore) {
-      throw new Error('No provided AuthStore')
-    }
-    const staged = await this.structure.stageUpdate(write)
-    this.structure = await staged.createCommit(this.authStore, async (prev) => {
-      if (!this.cid.equals(prev)) return this.cid
-      return null
+  stageUpdate(write: RecordWriteOp | RecordWriteOp[]): Repo {
+    const writeArr = Array.isArray(write) ? write : [write]
+    return this.updateRepo({
+      stagedWrites: [...this.stagedWrites, ...writeArr],
     })
   }
 
-  async batchWrite(writes: RecordWriteOp[]) {
-    if (!this.authStore) {
-      throw new Error('No provided AuthStore')
+  async createCommit(
+    authStore: auth.AuthStore,
+    performUpdate?: (prev: CID, curr: CID) => Promise<CID | null>,
+  ): Promise<Repo> {
+    let data = this.data
+    for (const write of this.stagedWrites) {
+      if (write.action === 'create') {
+        const cid = await this.blockstore.stage(write.value)
+        const dataKey = write.collection + '/' + write.rkey
+        data = await data.add(dataKey, cid)
+      } else if (write.action === 'update') {
+        const cid = await this.blockstore.stage(write.value)
+        const dataKey = write.collection + '/' + write.rkey
+        data = await data.update(dataKey, cid)
+      } else if (write.action === 'delete') {
+        const dataKey = write.collection + '/' + write.rkey
+        data = await data.delete(dataKey)
+      }
     }
-    const cidOps = await Promise.all(
-      writes.map(async (write) => {
-        if (write.action === 'create' || write.action === 'update') {
-          return {
-            action: write.action,
-            collection: write.collection,
-            rkey: write.rkey,
-            cid: await this.blockstore.put(write.value),
-          }
-        } else {
-          return write
-        }
-      }),
-    )
-    await this.safeCommit(cidOps)
+    const token = (await authStore.canSignForDid(this.did))
+      ? null
+      : await util.ucanForOperation(this.data, data, this.did, authStore)
+    const tokenCid = token ? await this.blockstore.stage(token) : null
+
+    const dataCid = await data.stage()
+    const root: RepoRoot = {
+      meta: this.root.meta,
+      prev: this.cid,
+      auth_token: tokenCid,
+      data: dataCid,
+    }
+    const rootCid = await this.blockstore.stage(root)
+    const commit: Commit = {
+      root: rootCid,
+      sig: await authStore.sign(rootCid.bytes),
+    }
+    const commitCid = await this.blockstore.stage(commit)
+
+    if (performUpdate) {
+      const rebaseOn = await performUpdate(this.cid, commitCid)
+      if (rebaseOn) {
+        await this.blockstore.clearStaged()
+        const rebaseRepo = await Repo.load(this.blockstore, rebaseOn)
+        return rebaseRepo.createCommit(authStore, performUpdate)
+      } else {
+        await this.blockstore.saveStaged()
+      }
+    } else {
+      await this.blockstore.saveStaged()
+    }
+
+    return this.updateRepo({
+      cid: commitCid,
+      root,
+      commit,
+      data,
+      stagedWrites: [],
+    })
   }
 
-  async revert(count: number): Promise<void> {
-    const revertFrom = this.structure.cid
-    this.structure = await this.structure.revert(count)
-    log.info(
-      {
-        did: this.did,
-        from: revertFrom.toString(),
-        to: this.structure.cid.toString(),
-      },
-      'revert repo',
-    )
-  }
-
-  // ROOT OPERATIONS
-  // -----------
-  async loadRoot(newRoot: CID): Promise<void> {
-    this.structure = await RepoStructure.load(this.blockstore, newRoot)
-  }
-
-  // VERIFYING UPDATES
-  // -----------
-
-  async verifyUpdates(earliest: CID | null, latest: CID): Promise<DataDiff> {
-    return verify.verifyUpdates(
-      this.blockstore,
-      earliest,
-      latest,
-      this.verifier,
-    )
-  }
-
-  // loads car files, verifies structure, signature & auth on each commit
-  // emits semantic updates to the structure starting from oldest first
-  async loadAndVerifyDiff(buf: Uint8Array): Promise<DataDiff> {
-    const root = await this.blockstore.loadCar(buf)
-    const diff = await this.verifyUpdates(this.cid, root)
-    await this.loadRoot(root)
-    return diff
+  async revert(count: number): Promise<Repo> {
+    let revertTo = this.cid
+    for (let i = 0; i < count; i++) {
+      const commit = await this.blockstore.get(revertTo, def.commit)
+      const root = await this.blockstore.get(commit.root, def.repoRoot)
+      if (root.prev === null) {
+        throw new Error(`Could not revert ${count} commits`)
+      }
+      revertTo = root.prev
+    }
+    return Repo.load(this.blockstore, revertTo)
   }
 
   // CAR FILES
   // -----------
 
-  async loadCarRoot(buf: Uint8Array): Promise<void> {
-    const root = await this.blockstore.loadCar(buf)
-    await this.loadRoot(root)
-  }
-
   async getCarNoHistory(): Promise<Uint8Array> {
-    return this.structure.getCarNoHistory()
+    return this.openCar((car: BlockWriter) => {
+      return this.writeCheckoutToCarStream(car)
+    })
   }
 
   async getDiffCar(to: CID | null): Promise<Uint8Array> {
-    return this.structure.getDiffCar(to)
+    return this.openCar((car: BlockWriter) => {
+      return this.writeCommitsToCarStream(car, to, this.cid)
+    })
   }
 
   async getFullHistory(): Promise<Uint8Array> {
-    return this.structure.getFullHistory()
+    return this.getDiffCar(null)
+  }
+
+  private async openCar(
+    fn: (car: BlockWriter) => Promise<void>,
+  ): Promise<Uint8Array> {
+    const { writer, out } = CarWriter.create([this.cid])
+    try {
+      await fn(writer)
+    } finally {
+      writer.close()
+    }
+    return streamToArray(out)
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    return this.structure.writeCheckoutToCarStream(car)
+    const commit = await this.blockstore.get(this.cid, def.commit)
+    const root = await this.blockstore.get(commit.root, def.repoRoot)
+    await this.blockstore.addToCar(car, this.cid)
+    await this.blockstore.addToCar(car, commit.root)
+    await this.blockstore.addToCar(car, root.meta)
+    if (root.auth_token) {
+      await this.blockstore.addToCar(car, root.auth_token)
+    }
+    await this.data.writeToCarStream(car)
   }
 
   async writeCommitsToCarStream(
@@ -230,11 +273,39 @@ export class Repo {
     oldestCommit: CID | null,
     recentCommit: CID,
   ): Promise<void> {
-    return this.structure.writeCommitsToCarStream(
-      car,
+    const commitPath = await util.getCommitPath(
+      this.blockstore,
       oldestCommit,
       recentCommit,
     )
+    if (commitPath === null) {
+      throw new Error('Could not find shared history')
+    }
+    if (commitPath.length === 0) return
+    const firstHeadInPath = await Repo.load(this.blockstore, commitPath[0])
+    // handle the first commit
+    let prevHead: Repo | null =
+      firstHeadInPath.root.prev !== null
+        ? await Repo.load(this.blockstore, firstHeadInPath.root.prev)
+        : null
+    for (const commit of commitPath) {
+      const nextHead = await Repo.load(this.blockstore, commit)
+      await this.blockstore.addToCar(car, nextHead.cid)
+      await this.blockstore.addToCar(car, nextHead.commit.root)
+      await this.blockstore.addToCar(car, nextHead.root.meta)
+      if (nextHead.root.auth_token) {
+        await this.blockstore.addToCar(car, nextHead.root.auth_token)
+      }
+      if (prevHead === null) {
+        await nextHead.data.writeToCarStream(car)
+      } else {
+        const diff = await prevHead.data.diff(nextHead.data)
+        await Promise.all(
+          diff.newCidList().map((cid) => this.blockstore.addToCar(car, cid)),
+        )
+      }
+      prevHead = nextHead
+    }
   }
 }
 

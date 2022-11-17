@@ -1,10 +1,12 @@
 import { CID } from 'multiformats'
 import { TID } from '@atproto/common'
+import * as auth from '@atproto/auth'
 import IpldStore from '../src/blockstore/ipld-store'
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/blockstore'
 import { DataDiff, MST } from '../src/mst'
 import fs from 'fs'
+import { RecordWriteOp } from '../src'
 
 type IdMapping = Record<string, CID>
 
@@ -12,7 +14,7 @@ const fakeStore = new MemoryBlockstore()
 
 export const randomCid = async (store: IpldStore = fakeStore): Promise<CID> => {
   const str = randomStr(50)
-  return store.put({ test: str })
+  return store.stage({ test: str })
 }
 
 export const generateBulkTids = (count: number): TID[] => {
@@ -79,70 +81,100 @@ export type RepoData = Record<string, CollectionData>
 
 export const fillRepo = async (
   repo: Repo,
+  authStore: auth.AuthStore,
   itemsPerCollection: number,
-): Promise<RepoData> => {
+): Promise<{ repo: Repo; data: RepoData }> => {
   const repoData: RepoData = {}
+  const writes: RecordWriteOp[] = []
   for (const collName of testCollections) {
     const collData: CollectionData = {}
-    const coll = await repo.getCollection(collName)
     for (let i = 0; i < itemsPerCollection; i++) {
       const object = generateObject()
-      const { rkey } = await coll.createRecord(object)
+      const rkey = TID.nextStr()
       collData[rkey] = object
+      writes.push({
+        action: 'create',
+        collection: collName,
+        rkey,
+        value: object,
+      })
     }
     repoData[collName] = collData
   }
-  return repoData
+  const updated = await repo.stageUpdate(writes).createCommit(authStore)
+  return {
+    repo: updated,
+    data: repoData,
+  }
 }
 
 export const editRepo = async (
   repo: Repo,
   prevData: RepoData,
+  authStore: auth.AuthStore,
   params: {
     adds?: number
     updates?: number
     deletes?: number
   },
-): Promise<RepoData> => {
+): Promise<{ repo: Repo; data: RepoData }> => {
   const { adds = 0, updates = 0, deletes = 0 } = params
   const repoData: RepoData = {}
+  const writes: RecordWriteOp[] = []
   for (const collName of testCollections) {
     const collData = prevData[collName]
     const shuffled = shuffle(Object.entries(collData))
-    const coll = await repo.getCollection(collName)
 
     for (let i = 0; i < adds; i++) {
       const object = generateObject()
-      const { rkey } = await coll.createRecord(object)
+      const rkey = TID.nextStr()
       collData[rkey] = object
+      writes.push({
+        action: 'create',
+        collection: collName,
+        rkey,
+        value: object,
+      })
     }
 
     const toUpdate = shuffled.slice(0, updates)
     for (let i = 0; i < toUpdate.length; i++) {
       const object = generateObject()
-      const tid = toUpdate[i][0]
-      await coll.updateRecord(tid, object)
-      collData[tid] = object
+      const rkey = toUpdate[i][0]
+      writes.push({
+        action: 'update',
+        collection: collName,
+        rkey,
+        value: object,
+      })
+      collData[rkey] = object
     }
 
     const toDelete = shuffled.slice(updates, deletes)
     for (let i = 0; i < toDelete.length; i++) {
-      const tid = toDelete[i][0]
-      await coll.deleteRecord(tid)
-      delete collData[tid]
+      const rkey = toDelete[i][0]
+      writes.push({
+        action: 'delete',
+        collection: collName,
+        rkey,
+      })
+      delete collData[rkey]
     }
     repoData[collName] = collData
   }
-  return repoData
+  const updated = await repo.stageUpdate(writes).createCommit(authStore)
+  return {
+    repo: updated,
+    data: repoData,
+  }
 }
 
 export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
   for (const collName of Object.keys(data)) {
-    const coll = await repo.getCollection(collName)
     const collData = data[collName]
-    for (const tid of Object.keys(collData)) {
-      const record = await coll.getRecord(tid)
-      expect(record).toEqual(collData[tid])
+    for (const rkey of Object.keys(collData)) {
+      const record = await repo.getRecord(collName, rkey)
+      expect(record).toEqual(collData[rkey])
     }
   }
 }
@@ -159,7 +191,7 @@ export const checkRepoDiff = async (
     const parts = key.split('/')
     const collection = parts[0]
     const obj = (data[collection] || {})[parts[1]]
-    return obj === undefined ? undefined : fakeStore.put(obj as any)
+    return obj === undefined ? undefined : fakeStore.stage(obj)
   }
 
   for (const add of diff.addList()) {

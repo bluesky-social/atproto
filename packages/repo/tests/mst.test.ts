@@ -90,7 +90,7 @@ describe('Merkle Search Tree', () => {
   })
 
   it('saves and loads from blockstore', async () => {
-    const cid = await mst.save()
+    const cid = await mst.stage()
     const loaded = await MST.load(blockstore, cid)
     const origNodes = await mst.allNodes()
     const loadedNodes = await loaded.allNodes()
