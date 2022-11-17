@@ -51,6 +51,15 @@ describe('pds thread views', () => {
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
   })
 
+  it('fetches ancestors', async () => {
+    const thread = await client.app.bsky.feed.getPostThread(
+      { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+  })
+
   it('fails for an unknown post', async () => {
     const promise = client.app.bsky.feed.getPostThread(
       { uri: 'does.not.exist' },
