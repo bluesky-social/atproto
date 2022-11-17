@@ -99,6 +99,7 @@ export class RecordProcessor<T, S> {
         .limit(1)
         .selectAll()
         .executeTakeFirst()
+
       if (!found) {
         return this.params.eventsForDelete(deleted, null)
       }
