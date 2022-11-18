@@ -1,4 +1,5 @@
 import { AddressInfo } from 'net'
+import http from 'http'
 import * as crypto from '@atproto/crypto'
 import * as plc from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
@@ -83,12 +84,21 @@ export const runTestServer = async (
     close: async () => {
       await Promise.all([
         db.close(),
-        listener.close(),
-        plcServer.listener.close(),
+        closeServer(listener),
+        closeServer(plcServer.listener),
         plcDb.close(),
       ])
     },
   }
+}
+
+const closeServer = (s: http.Server): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    s.close((err) => {
+      if (err) reject(err)
+      resolve()
+    })
+  })
 }
 
 export const adminAuth = () => {
