@@ -165,12 +165,12 @@ export class MST implements DataStore {
     return this.pointer
   }
 
-  // We should be able to find the layer of a node by either a hint on creation or by looking at the first leaf
-  // If we have neither a hint nor a leaf, we throw an error
-  // We could recurse to find the layer, but it isn't necessary for any of our current operations
+  // In most cases, we get the layer of a node from a hint on creation
+  // In the case of the topmost node in the tree, we look for a key in the node & determine the layer
+  // In the case where we don't find one, we recurse down until we do.
+  // If we still can't find one, then we have an empty tree and the node is layer 0
   async getLayer(): Promise<number> {
     this.layer = await this.attemptGetLayer()
-    // we walked the whole tree & couldn't find a single key, so must be an empty tree, ie layer 0
     if (this.layer === null) this.layer = 0
     return this.layer
   }
