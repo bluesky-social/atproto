@@ -157,6 +157,30 @@ describe('Merkle Search Tree', () => {
   // Special Cases (these are made for fanout 32)
   // ------------
 
+  it('trims the top of an MST on stage', async () => {
+    const layer0 = [
+      '3j6hnk65jis2t',
+      '3j6hnk65jit2t',
+      '3j6hnk65jiu2t',
+      '3j6hnk65jne2t',
+      '3j6hnk65jnm2t',
+    ]
+    const layer1 = '3j6hnk65jju2t'
+    mst = await MST.create(blockstore, [], { fanout: 32 })
+    const cid = await util.randomCid()
+    const tids = [...layer0, layer1]
+    for (const tid of tids) {
+      mst = await mst.add(tid, cid)
+    }
+    const layer = await mst.getLayer()
+    expect(layer).toBe(1)
+    mst = await mst.delete(layer1)
+    const root = await mst.stage()
+    const loaded = MST.load(blockstore, root)
+    const loadedLayer = await loaded.getLayer()
+    expect(loadedLayer).toBe(0)
+  })
+
   // These are some tricky things that can come up that may not be included in a randomized tree
 
   /**
