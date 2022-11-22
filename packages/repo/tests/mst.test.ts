@@ -224,6 +224,9 @@ describe('Merkle Search Tree', () => {
     const layer = await mst.getLayer()
     expect(layer).toBe(2)
 
+    const root = await mst.stage()
+    mst = MST.load(blockstore, root, { fanout: 32 })
+
     const allTids = [...layer0, ...layer1, layer2]
     for (const tid of allTids) {
       const got = await mst.get(tid)
@@ -245,7 +248,6 @@ describe('Merkle Search Tree', () => {
    */
   it('handles new layers that are two higher than existing', async () => {
     const layer0 = ['3j6hnk65jis2t', '3j6hnk65kvz2t']
-    const layer1 = ['3j6hnk65jju2t', '3j6hnk65l222t']
     const layer2 = '3j6hnk65jng2t'
     mst = await MST.create(blockstore, [], { fanout: 32 })
     const cid = await util.randomCid()
@@ -253,13 +255,13 @@ describe('Merkle Search Tree', () => {
       mst = await mst.add(tid, cid)
     }
     mst = await mst.add(layer2, cid)
-    for (const tid of layer1) {
-      mst = await mst.add(tid, cid)
-    }
+
+    const root = await mst.stage()
+    mst = MST.load(blockstore, root, { fanout: 32 })
 
     const layer = await mst.getLayer()
     expect(layer).toBe(2)
-    const allTids = [...layer0, ...layer1, layer2]
+    const allTids = [...layer0, layer2]
     for (const tid of allTids) {
       const got = await mst.get(tid)
       expect(cid.equals(got)).toBeTruthy()

@@ -612,10 +612,12 @@ export class MST implements DataStore {
 
   async createParent(): Promise<MST> {
     const layer = await this.getLayer()
-    return MST.create(this.blockstore, [this], {
+    const parent = await MST.create(this.blockstore, [this], {
       layer: layer + 1,
       fanout: this.fanout,
     })
+    parent.outdatedPointer = true
+    return parent
   }
 
   // Finding insertion points
