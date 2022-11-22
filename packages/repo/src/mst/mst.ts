@@ -165,31 +165,61 @@ export class MST implements DataStore {
     return this.pointer
   }
 
-  // We should be able to find the layer of a node by either a hint on creation or by looking at the first leaf
-  // If we have neither a hint nor a leaf, we throw an error
-  // We could recurse to find the layer, but it isn't necessary for any of our current operations
+  // In most cases, we get the layer of a node from a hint on creation
+  // In the case of the topmost node in the tree, we look for a key in the node & determine the layer
+  // In the case where we don't find one, we recurse down until we do.
+  // If we still can't find one, then we have an empty tree and the node is layer 0
   async getLayer(): Promise<number> {
+    this.layer = await this.attemptGetLayer()
+    if (this.layer === null) this.layer = 0
+    return this.layer
+  }
+
+  async attemptGetLayer(): Promise<number | null> {
     if (this.layer !== null) return this.layer
     const entries = await this.getEntries()
-    this.layer = await util.layerForEntries(entries, this.fanout)
-    if (!this.layer) this.layer = 0
-    return this.layer
+    let layer = await util.layerForEntries(entries, this.fanout)
+    if (layer === null) {
+      for (const entry of entries) {
+        if (entry.isTree()) {
+          const childLayer = await entry.attemptGetLayer()
+          if (childLayer !== null) {
+            layer = childLayer + 1
+            break
+          }
+        }
+      }
+    }
+    if (layer !== null) this.layer = layer
+    return layer
   }
 
   // Core functionality
   // -------------------
 
   // Persist the MST to the blockstore
+  // If the topmost tree only has one entry and it's a subtree, we can eliminate the topmost tree
+  // However, lower trees with only one entry must be preserved
   async stage(): Promise<CID> {
+    return this.stageRecurse(true)
+  }
+
+  async stageRecurse(trimTop = false): Promise<CID> {
     const pointer = await this.getPointer()
     const alreadyHas = await this.blockstore.has(pointer)
     if (alreadyHas) return pointer
     const entries = await this.getEntries()
+    if (entries.length === 1 && trimTop) {
+      const node = entries[0]
+      if (node.isTree()) {
+        return node.stageRecurse(true)
+      }
+    }
     const data = util.serializeNodeData(entries)
     await this.blockstore.stage(data)
     for (const entry of entries) {
       if (entry.isTree()) {
-        await entry.stage()
+        await entry.stageRecurse(false)
       }
     }
     return pointer
@@ -582,10 +612,12 @@ export class MST implements DataStore {
 
   async createParent(): Promise<MST> {
     const layer = await this.getLayer()
-    return MST.create(this.blockstore, [this], {
+    const parent = await MST.create(this.blockstore, [this], {
       layer: layer + 1,
       fanout: this.fanout,
     })
+    parent.outdatedPointer = true
+    return parent
   }
 
   // Finding insertion points

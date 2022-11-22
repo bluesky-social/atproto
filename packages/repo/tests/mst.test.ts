@@ -157,6 +157,30 @@ describe('Merkle Search Tree', () => {
   // Special Cases (these are made for fanout 32)
   // ------------
 
+  it('trims the top of an MST on stage', async () => {
+    const layer0 = [
+      '3j6hnk65jis2t',
+      '3j6hnk65jit2t',
+      '3j6hnk65jiu2t',
+      '3j6hnk65jne2t',
+      '3j6hnk65jnm2t',
+    ]
+    const layer1 = '3j6hnk65jju2t'
+    mst = await MST.create(blockstore, [], { fanout: 32 })
+    const cid = await util.randomCid()
+    const tids = [...layer0, layer1]
+    for (const tid of tids) {
+      mst = await mst.add(tid, cid)
+    }
+    const layer = await mst.getLayer()
+    expect(layer).toBe(1)
+    mst = await mst.delete(layer1)
+    const root = await mst.stage()
+    const loaded = MST.load(blockstore, root)
+    const loadedLayer = await loaded.getLayer()
+    expect(loadedLayer).toBe(0)
+  })
+
   // These are some tricky things that can come up that may not be included in a randomized tree
 
   /**
@@ -200,6 +224,9 @@ describe('Merkle Search Tree', () => {
     const layer = await mst.getLayer()
     expect(layer).toBe(2)
 
+    const root = await mst.stage()
+    mst = MST.load(blockstore, root, { fanout: 32 })
+
     const allTids = [...layer0, ...layer1, layer2]
     for (const tid of allTids) {
       const got = await mst.get(tid)
@@ -221,7 +248,6 @@ describe('Merkle Search Tree', () => {
    */
   it('handles new layers that are two higher than existing', async () => {
     const layer0 = ['3j6hnk65jis2t', '3j6hnk65kvz2t']
-    const layer1 = ['3j6hnk65jju2t', '3j6hnk65l222t']
     const layer2 = '3j6hnk65jng2t'
     mst = await MST.create(blockstore, [], { fanout: 32 })
     const cid = await util.randomCid()
@@ -229,13 +255,13 @@ describe('Merkle Search Tree', () => {
       mst = await mst.add(tid, cid)
     }
     mst = await mst.add(layer2, cid)
-    for (const tid of layer1) {
-      mst = await mst.add(tid, cid)
-    }
+
+    const root = await mst.stage()
+    mst = MST.load(blockstore, root, { fanout: 32 })
 
     const layer = await mst.getLayer()
     expect(layer).toBe(2)
-    const allTids = [...layer0, ...layer1, layer2]
+    const allTids = [...layer0, layer2]
     for (const tid of allTids) {
       const got = await mst.get(tid)
       expect(cid.equals(got)).toBeTruthy()
