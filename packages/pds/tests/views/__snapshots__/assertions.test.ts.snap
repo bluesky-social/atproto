@@ -35,7 +35,7 @@ Object {
       "uri": "record(0)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -196,7 +196,7 @@ Object {
       "uri": "record(8)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -311,7 +311,7 @@ Object {
       "uri": "record(4)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -460,7 +460,7 @@ Object {
       "uri": "record(7)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -621,7 +621,7 @@ Object {
       "uri": "record(8)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -695,7 +695,7 @@ Object {
       "uri": "record(2)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -750,7 +750,7 @@ Object {
       "uri": "record(1)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -875,7 +875,7 @@ Object {
       "uri": "record(6)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -1000,7 +1000,7 @@ Object {
       "uri": "record(6)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -1130,7 +1130,7 @@ Object {
       "uri": "record(6)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -1169,7 +1169,7 @@ Object {
       "uri": "record(0)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;
 
@@ -1322,6 +1322,6 @@ Object {
       "uri": "record(7)",
     },
   ],
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "[\\"1970-01-01T00:00:00.000Z\\",\\"at://did:plc:w/app.bsky.x.y/z\\"]",
 }
 `;

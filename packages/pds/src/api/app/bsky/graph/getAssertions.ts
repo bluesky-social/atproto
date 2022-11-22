@@ -1,16 +1,16 @@
+import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetAssertions from '../../../../lexicon/types/app/bsky/graph/getAssertions'
 import { getActorInfo } from '../util'
 import * as locals from '../../../../locals'
-import { paginate } from '../../../../db/util'
+import { Keyset, paginate } from '../../../../db/util'
 
 export default function (server: Server) {
   server.app.bsky.graph.getAssertions(
     async (params: GetAssertions.QueryParams, _input, _req, res) => {
       const { author, subject, assertion, confirmed, limit, before } = params
       const { db } = locals.get(res)
-      const { ref } = db.db.dynamic
 
       if (!author && !subject) {
         throw new InvalidRequestError(`Must provide an author or subject`)
@@ -92,11 +92,11 @@ export default function (server: Server) {
         )
       }
 
+      const keyset = new AssertionsKeyset()
       assertionsReq = paginate(assertionsReq, {
         limit,
         before,
-        by: ref('assertion.createdAt'),
-        secondaryOrder: ref('assertion.uri'),
+        keyset,
       })
 
       const assertionsRes = await assertionsReq.execute()
@@ -142,9 +142,18 @@ export default function (server: Server) {
         encoding: 'application/json',
         body: {
           assertions,
-          cursor: assertions.at(-1)?.createdAt,
+          cursor: keyset.packFromResult(assertionsRes),
         },
       }
     },
   )
+}
+
+type AssertionRow = { createdAt: string; uri: string }
+class AssertionsKeyset extends Keyset<AssertionRow> {
+  primary = sql`assertion.createdAt`
+  secondary = sql`assertion.uri`
+  cursorFromResult(result: AssertionRow) {
+    return { primary: result.createdAt, secondary: result.uri }
+  }
 }

@@ -8,6 +8,8 @@ import {
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely'
+import { safeParse } from '@hapi/bourne'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export const actorWhereClause = (actor: string) => {
   if (actor.startsWith('did:')) {
@@ -19,22 +21,80 @@ export const actorWhereClause = (actor: string) => {
 
 export const countAll = sql<number>`count(*)`
 
-export const paginate = <QB extends SelectQueryBuilder<any, any, any>>(
+export const paginate = <QB extends SelectQueryBuilder<any, any, any>, T>(
   qb: QB,
-  opts: {
-    limit?: number
-    before?: string
-    by: DbRef
-    secondaryOrder?: DbRef
-  },
+  opts:
+    | {
+        limit?: number
+        before?: string
+        by: DbRef
+      }
+    | {
+        limit?: number
+        before?: string
+        keyset: Keyset<T>
+      },
 ) => {
+  if ('by' in opts) {
+    return qb
+      .if(opts.limit !== undefined, (q) => q.limit(opts.limit as number))
+      .orderBy(opts.by, 'desc')
+      .if(opts.before !== undefined, (q) => q.where(opts.by, '<', opts.before))
+  }
+  const cursor = opts.keyset.unpack(opts.before)
+  const keysetCondition = getKeysetCondition(cursor, opts.keyset)
   return qb
-    .orderBy(opts.by, 'desc')
-    .if(opts.secondaryOrder !== undefined, (q) =>
-      q.orderBy(opts.secondaryOrder as DbRef, 'desc'),
-    )
     .if(opts.limit !== undefined, (q) => q.limit(opts.limit as number))
-    .if(opts.before !== undefined, (q) => q.where(opts.by, '<', opts.before))
+    .orderBy(opts.keyset.primary, 'desc')
+    .orderBy(opts.keyset.secondary, 'desc')
+    .if(keysetCondition !== undefined, (qb) =>
+      keysetCondition ? qb.where(keysetCondition) : qb,
+    )
+}
+
+export abstract class Keyset<T> {
+  abstract primary: DbRef
+  abstract secondary: DbRef
+  abstract cursorFromResult(result: T): Cursor
+  packFromResult(results: T | T[]): string | undefined {
+    const result = Array.isArray(results) ? results.at(-1) : results
+    if (result === undefined) return
+    return this.pack(this.cursorFromResult(result))
+  }
+  pack(cursor?: Cursor): string | undefined {
+    if (cursor === undefined) return
+    return JSON.stringify([cursor.primary, cursor.secondary])
+  }
+  unpack(cursorStr?: string): Cursor | undefined {
+    if (cursorStr === undefined) return
+    const result = safeParse(cursorStr)
+    if (!Array.isArray(result)) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    const [primary, secondary, ...others] = result
+    if (
+      typeof primary !== 'string' ||
+      typeof secondary !== 'string' ||
+      others.length > 0
+    ) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary,
+      secondary,
+    }
+  }
+}
+
+type Cursor = { primary: string; secondary: string }
+
+// Keyset condition for a cursor
+const getKeysetCondition = <T>(
+  cursor: Cursor | undefined,
+  keyset: Keyset<T>,
+) => {
+  if (cursor === undefined) return undefined
+  return sql`(${keyset.primary} < ${cursor.primary}) or (${keyset.primary} = ${cursor.primary} and ${keyset.secondary} < ${cursor.secondary})`
 }
 
 export const dummyDialect = {
