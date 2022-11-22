@@ -161,5 +161,5 @@ const distance = (term: string, ref: DbRef) =>
 // Keyset condition for a cursor
 const keyset = (cursor, refs: { handle: DbRef; distance: DbRef }) => {
   if (cursor === undefined) return undefined
-  return sql`(${refs.distance} > ${cursor.distance}) or (${refs.distance} = ${cursor.distance} and ${refs.handle} > ${cursor.handle})`
+  return sql`((${refs.distance} > ${cursor.distance}) or (${refs.distance} = ${cursor.distance} and ${refs.handle} > ${cursor.handle}))`
 }

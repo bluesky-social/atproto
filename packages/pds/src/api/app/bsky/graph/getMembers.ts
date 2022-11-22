@@ -1,16 +1,16 @@
+import { sql } from 'kysely'
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetMembers from '../../../../lexicon/types/app/bsky/graph/getMembers'
 import { getActorInfo, getDeclarationSimple } from '../util'
 import * as locals from '../../../../locals'
-import { paginate } from '../../../../db/util'
+import { Keyset, paginate } from '../../../../db/util'
 
 export default function (server: Server) {
   server.app.bsky.graph.getMembers(
     async (params: GetMembers.QueryParams, _input, _req, res) => {
       const { actor, limit, before } = params
       const { db } = locals.get(res)
-      const { ref } = db.db.dynamic
 
       const subject = await getActorInfo(db.db, actor).catch((_e) => {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
@@ -33,14 +33,16 @@ export default function (server: Server) {
           'subject.declarationCid as declarationCid',
           'subject.actorType as actorType',
           'profile.displayName as displayName',
+          'assertion.uri as uri',
           'assertion.createdAt as createdAt',
           'assertion.indexedAt as indexedAt',
         ])
 
+      const keyset = new MembersKeyset()
       membersReq = paginate(membersReq, {
         limit,
         before,
-        by: ref('assertion.createdAt'),
+        keyset,
       })
 
       const membersRes = await membersReq.execute()
@@ -58,9 +60,18 @@ export default function (server: Server) {
         body: {
           subject,
           members,
-          cursor: members.at(-1)?.createdAt,
+          cursor: keyset.packFromResult(membersRes),
         },
       }
     },
   )
+}
+
+type MemberRow = { createdAt: string; uri: string }
+class MembersKeyset extends Keyset<MemberRow> {
+  primary = sql`assertion.createdAt`
+  secondary = sql`assertion.uri`
+  cursorFromResult(result: MemberRow) {
+    return { primary: result.createdAt, secondary: result.uri }
+  }
 }

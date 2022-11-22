@@ -1,16 +1,16 @@
+import { sql } from 'kysely'
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetMemberships from '../../../../lexicon/types/app/bsky/graph/getMemberships'
 import { getActorInfo, getDeclarationSimple } from '../util'
 import * as locals from '../../../../locals'
-import { paginate } from '../../../../db/util'
+import { Keyset, paginate } from '../../../../db/util'
 
 export default function (server: Server) {
   server.app.bsky.graph.getMemberships(
     async (params: GetMemberships.QueryParams, _input, _req, res) => {
       const { actor, limit, before } = params
       const { db } = locals.get(res)
-      const { ref } = db.db.dynamic
 
       const subject = await getActorInfo(db.db, actor).catch((_e) => {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
@@ -29,14 +29,16 @@ export default function (server: Server) {
           'creator.declarationCid as declarationCid',
           'creator.actorType as actorType',
           'profile.displayName as displayName',
+          'assertion.uri as uri',
           'assertion.createdAt as createdAt',
           'assertion.indexedAt as indexedAt',
         ])
 
+      const keyset = new MembershipsKeyset()
       membershipsReq = paginate(membershipsReq, {
         limit,
         before,
-        by: ref('assertion.createdAt'),
+        keyset,
       })
 
       const membershipsRes = await membershipsReq.execute()
@@ -54,9 +56,18 @@ export default function (server: Server) {
         body: {
           subject,
           memberships,
-          cursor: memberships.at(-1)?.createdAt,
+          cursor: keyset.packFromResult(membershipsRes),
         },
       }
     },
   )
+}
+
+type MembershipRow = { createdAt: string; uri: string }
+class MembershipsKeyset extends Keyset<MembershipRow> {
+  primary = sql`assertion.createdAt`
+  secondary = sql`assertion.uri`
+  cursorFromResult(result: MembershipRow) {
+    return { primary: result.createdAt, secondary: result.uri }
+  }
 }

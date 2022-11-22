@@ -1,9 +1,10 @@
+import { sql } from 'kysely'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import * as List from '../../../../lexicon/types/app/bsky/notification/list'
 import * as locals from '../../../../locals'
-import { paginate } from '../../../../db/util'
+import { paginate, Keyset } from '../../../../db/util'
 import { getDeclaration } from '../util'
 
 export default function (server: Server) {
@@ -11,7 +12,6 @@ export default function (server: Server) {
     async (params: List.QueryParams, _input, req, res) => {
       const { auth, db } = locals.get(res)
       const { limit, before } = params
-      const { ref } = db.db.dynamic
 
       const requester = auth.getUserDid(req)
       if (!requester) {
@@ -40,13 +40,13 @@ export default function (server: Server) {
           'notif.reasonSubject as reasonSubject',
           'notif.indexedAt as indexedAt',
           'ipld_block.content as recordBytes',
-          'notif.recordUri as uri',
         ])
 
+      const keyset = new NotifsKeyset()
       notifBuilder = paginate(notifBuilder, {
         before,
         limit,
-        by: ref('notif.indexedAt'),
+        keyset,
       })
 
       const [user, notifs] = await Promise.all([
@@ -83,9 +83,18 @@ export default function (server: Server) {
         encoding: 'application/json',
         body: {
           notifications,
-          cursor: notifications.at(-1)?.indexedAt,
+          cursor: keyset.packFromResult(notifs),
         },
       }
     },
   )
+}
+
+type NotifRow = { indexedAt: string; uri: string }
+class NotifsKeyset extends Keyset<NotifRow> {
+  primary = sql`notif.indexedAt`
+  secondary = sql`notif.recordUri`
+  cursorFromResult(result: NotifRow) {
+    return { primary: result.indexedAt, secondary: result.uri }
+  }
 }

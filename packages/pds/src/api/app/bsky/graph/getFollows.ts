@@ -1,16 +1,16 @@
+import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetFollows from '../../../../lexicon/types/app/bsky/graph/getFollows'
 import { getActorInfo, getDeclarationSimple } from '../util'
 import * as locals from '../../../../locals'
-import { paginate } from '../../../../db/util'
+import { Keyset, paginate } from '../../../../db/util'
 
 export default function (server: Server) {
   server.app.bsky.graph.getFollows(
     async (params: GetFollows.QueryParams, _input, _req, res) => {
       const { user, limit, before } = params
       const { db } = locals.get(res)
-      const { ref } = db.db.dynamic
 
       const creator = await getActorInfo(db.db, user).catch((_e) => {
         throw new InvalidRequestError(`User not found: ${user}`)
@@ -27,14 +27,16 @@ export default function (server: Server) {
           'subject.actorType as actorType',
           'subject.handle as handle',
           'profile.displayName as displayName',
+          'follow.uri as uri',
           'follow.createdAt as createdAt',
           'follow.indexedAt as indexedAt',
         ])
 
+      const keyset = new FollowsKeyset()
       followsReq = paginate(followsReq, {
         limit,
         before,
-        by: ref('follow.createdAt'),
+        keyset,
       })
 
       const followsRes = await followsReq.execute()
@@ -52,9 +54,18 @@ export default function (server: Server) {
         body: {
           subject: creator,
           follows,
-          cursor: follows.at(-1)?.createdAt,
+          cursor: keyset.packFromResult(followsRes),
         },
       }
     },
   )
+}
+
+type FollowRow = { createdAt: string; uri: string }
+class FollowsKeyset extends Keyset<FollowRow> {
+  primary = sql`follow.createdAt`
+  secondary = sql`follow.uri`
+  cursorFromResult(result: FollowRow) {
+    return { primary: result.createdAt, secondary: result.uri }
+  }
 }

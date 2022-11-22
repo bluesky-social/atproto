@@ -94,7 +94,7 @@ const getKeysetCondition = <T>(
   keyset: Keyset<T>,
 ) => {
   if (cursor === undefined) return undefined
-  return sql`(${keyset.primary} < ${cursor.primary}) or (${keyset.primary} = ${cursor.primary} and ${keyset.secondary} < ${cursor.secondary})`
+  return sql`((${keyset.primary} < ${cursor.primary}) or (${keyset.primary} = ${cursor.primary} and ${keyset.secondary} < ${cursor.secondary}))`
 }
 
 export const dummyDialect = {
