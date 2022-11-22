@@ -63,11 +63,7 @@ export default function (server: Server) {
   )
 }
 
-type MembershipRow = { createdAt: string; uri: string }
-class MembershipsKeyset extends Keyset<MembershipRow> {
+class MembershipsKeyset extends Keyset {
   primary = sql`assertion."createdAt"`
   secondary = sql`assertion.uri`
-  cursorFromResult(result: MembershipRow) {
-    return { primary: result.createdAt, secondary: result.uri }
-  }
 }

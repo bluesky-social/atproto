@@ -61,11 +61,7 @@ export default function (server: Server) {
   )
 }
 
-type FollowerRow = { createdAt: string; uri: string }
-class FollowersKeyset extends Keyset<FollowerRow> {
+class FollowersKeyset extends Keyset {
   primary = sql`follow."createdAt"`
   secondary = sql`follow.uri`
-  cursorFromResult(result: FollowerRow) {
-    return { primary: result.createdAt, secondary: result.uri }
-  }
 }

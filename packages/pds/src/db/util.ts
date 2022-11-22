@@ -52,10 +52,17 @@ export const paginate = <QB extends SelectQueryBuilder<any, any, any>, T>(
     )
 }
 
-export abstract class Keyset<T> {
+type DefaultRow = { createdAt: string; uri: string }
+export abstract class Keyset<T = DefaultRow> {
   abstract primary: DbRef
   abstract secondary: DbRef
-  abstract cursorFromResult(result: T): Cursor
+  cursorFromResult(result: T): Cursor
+  cursorFromResult<T extends DefaultRow>(result: T): Cursor {
+    return {
+      primary: result.createdAt,
+      secondary: result.uri,
+    }
+  }
   packFromResult(results: T | T[]): string | undefined {
     const result = Array.isArray(results) ? results.at(-1) : results
     if (result === undefined) return
