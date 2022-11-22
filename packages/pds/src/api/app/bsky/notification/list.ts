@@ -92,8 +92,8 @@ export default function (server: Server) {
 
 type NotifRow = { indexedAt: string; uri: string }
 class NotifsKeyset extends Keyset<NotifRow> {
-  primary = sql`notif.indexedAt`
-  secondary = sql`notif.recordUri`
+  primary = sql`notif."indexedAt"`
+  secondary = sql`notif."recordUri"`
   cursorFromResult(result: NotifRow) {
     return { primary: result.indexedAt, secondary: result.uri }
   }

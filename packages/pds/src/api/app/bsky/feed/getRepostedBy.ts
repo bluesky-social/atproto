@@ -63,7 +63,7 @@ export default function (server: Server) {
 
 type RepostRow = { createdAt: string; uri: string }
 class RepostsKeyset extends Keyset<RepostRow> {
-  primary = sql`repost.createdAt`
+  primary = sql`repost."createdAt"`
   secondary = sql`repost.uri`
   cursorFromResult(result: RepostRow) {
     return { primary: result.createdAt, secondary: result.uri }

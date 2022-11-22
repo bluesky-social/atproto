@@ -71,7 +71,7 @@ export default function (server: Server) {
 
 type VoteRow = { createdAt: string; uri: string }
 class VotesKeyset extends Keyset<VoteRow> {
-  primary = sql`vote.createdAt`
+  primary = sql`vote."createdAt"`
   secondary = sql`vote.uri`
   cursorFromResult(result: VoteRow) {
     return { primary: result.createdAt, secondary: result.uri }

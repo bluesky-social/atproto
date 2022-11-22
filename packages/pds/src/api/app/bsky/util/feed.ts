@@ -1,7 +1,7 @@
 import * as common from '@atproto/common'
 import { sql } from 'kysely'
 import { getDeclaration } from '.'
-import { DbRef, Keyset } from '../../../../db/util'
+import { Keyset } from '../../../../db/util'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 
@@ -77,7 +77,7 @@ type FeedRow = {
 
 export class FeedKeyset extends Keyset<FeedRow> {
   primary = sql`cursor`
-  secondary = sql`postUri`
+  secondary = sql`"postUri"`
   cursorFromResult(result: FeedRow) {
     return { primary: result.cursor, secondary: result.postUri }
   }

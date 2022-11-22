@@ -151,7 +151,7 @@ export default function (server: Server) {
 
 type AssertionRow = { createdAt: string; uri: string }
 class AssertionsKeyset extends Keyset<AssertionRow> {
-  primary = sql`assertion.createdAt`
+  primary = sql`assertion."createdAt"`
   secondary = sql`assertion.uri`
   cursorFromResult(result: AssertionRow) {
     return { primary: result.createdAt, secondary: result.uri }
