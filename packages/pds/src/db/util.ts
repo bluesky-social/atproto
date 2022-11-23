@@ -23,24 +23,12 @@ export const countAll = sql<number>`count(*)`
 
 export const paginate = <QB extends SelectQueryBuilder<any, any, any>, T>(
   qb: QB,
-  opts:
-    | {
-        limit?: number
-        before?: string
-        by: DbRef
-      }
-    | {
-        limit?: number
-        before?: string
-        keyset: Keyset<T>
-      },
+  opts: {
+    limit?: number
+    before?: string
+    keyset: Keyset<T>
+  },
 ) => {
-  if ('by' in opts) {
-    return qb
-      .if(opts.limit !== undefined, (q) => q.limit(opts.limit as number))
-      .orderBy(opts.by, 'desc')
-      .if(opts.before !== undefined, (q) => q.where(opts.by, '<', opts.before))
-  }
   const cursor = opts.keyset.unpack(opts.before)
   const keysetCondition = getKeysetCondition(cursor, opts.keyset)
   return qb
