@@ -48,8 +48,8 @@
       "type": "object",
       "required": ["start", "end"],
       "properties": {
-        "start": {"type": "number", "minimum": 0},
-        "end": {"type": "number", "minimum": 0}
+        "start": {"type": "integer", "minimum": 0},
+        "end": {"type": "integer", "minimum": 0}
       }
     }
   }

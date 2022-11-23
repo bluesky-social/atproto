@@ -7,7 +7,7 @@
     "required": ["uri"],
     "properties": {
       "uri": {"type": "string"},
-      "depth": {"type": "number"}
+      "depth": {"type": "integer"}
     }
   },
   "output": {
@@ -37,14 +37,14 @@
           ]
         },
         "parent": {"$ref": "#/defs/post"},
-        "replyCount": {"type": "number"},
+        "replyCount": {"type": "integer"},
         "replies": {
           "type": "array",
           "items": {"$ref": "#/defs/post"}
         },
-        "repostCount": {"type": "number"},
-        "upvoteCount": {"type": "number"},
-        "downvoteCount": {"type": "number"},
+        "repostCount": {"type": "integer"},
+        "upvoteCount": {"type": "integer"},
+        "downvoteCount": {"type": "integer"},
         "indexedAt": {"type": "string", "format": "date-time"},
         "myState": {
           "type": "object",

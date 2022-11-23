@@ -83,7 +83,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         required: ['useCount'],
         properties: {
           useCount: {
-            type: 'number',
+            type: 'integer',
           },
         },
         $defs: {},
@@ -503,7 +503,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           description: 'The NSID of the record type.',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           minimum: 1,
           default: 50,
           description: 'The number of records to return. TODO-max number?',
@@ -969,16 +969,16 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             maxLength: 256,
           },
           followersCount: {
-            type: 'number',
+            type: 'integer',
           },
           followsCount: {
-            type: 'number',
+            type: 'integer',
           },
           membersCount: {
-            type: 'number',
+            type: 'integer',
           },
           postsCount: {
-            type: 'number',
+            type: 'integer',
           },
           myState: {
             type: 'object',
@@ -1067,7 +1067,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       type: 'object',
       properties: {
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         cursor: {
@@ -1200,7 +1200,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -1325,7 +1325,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
       },
@@ -1482,7 +1482,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -1553,16 +1553,16 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 ],
               },
               replyCount: {
-                type: 'number',
+                type: 'integer',
               },
               repostCount: {
-                type: 'number',
+                type: 'integer',
               },
               upvoteCount: {
-                type: 'number',
+                type: 'integer',
               },
               downvoteCount: {
-                type: 'number',
+                type: 'integer',
               },
               indexedAt: {
                 type: 'string',
@@ -1730,16 +1730,16 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             ],
           },
           replyCount: {
-            type: 'number',
+            type: 'integer',
           },
           repostCount: {
-            type: 'number',
+            type: 'integer',
           },
           upvoteCount: {
-            type: 'number',
+            type: 'integer',
           },
           downvoteCount: {
-            type: 'number',
+            type: 'integer',
           },
           indexedAt: {
             type: 'string',
@@ -1871,7 +1871,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         depth: {
-          type: 'number',
+          type: 'integer',
         },
       },
     },
@@ -1929,7 +1929,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 $ref: '#/$defs/post',
               },
               replyCount: {
-                type: 'number',
+                type: 'integer',
               },
               replies: {
                 type: 'array',
@@ -1938,13 +1938,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 },
               },
               repostCount: {
-                type: 'number',
+                type: 'integer',
               },
               upvoteCount: {
-                type: 'number',
+                type: 'integer',
               },
               downvoteCount: {
-                type: 'number',
+                type: 'integer',
               },
               indexedAt: {
                 type: 'string',
@@ -2109,7 +2109,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             $ref: '#/$defs/post',
           },
           replyCount: {
-            type: 'number',
+            type: 'integer',
           },
           replies: {
             type: 'array',
@@ -2118,13 +2118,13 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             },
           },
           repostCount: {
-            type: 'number',
+            type: 'integer',
           },
           upvoteCount: {
-            type: 'number',
+            type: 'integer',
           },
           downvoteCount: {
-            type: 'number',
+            type: 'integer',
           },
           indexedAt: {
             type: 'string',
@@ -2259,7 +2259,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -2390,7 +2390,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -2461,16 +2461,16 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 ],
               },
               replyCount: {
-                type: 'number',
+                type: 'integer',
               },
               repostCount: {
-                type: 'number',
+                type: 'integer',
               },
               upvoteCount: {
-                type: 'number',
+                type: 'integer',
               },
               downvoteCount: {
-                type: 'number',
+                type: 'integer',
               },
               indexedAt: {
                 type: 'string',
@@ -2641,16 +2641,16 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             ],
           },
           replyCount: {
-            type: 'number',
+            type: 'integer',
           },
           repostCount: {
-            type: 'number',
+            type: 'integer',
           },
           upvoteCount: {
-            type: 'number',
+            type: 'integer',
           },
           downvoteCount: {
-            type: 'number',
+            type: 'integer',
           },
           indexedAt: {
             type: 'string',
@@ -2792,7 +2792,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           enum: ['up', 'down'],
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -3029,7 +3029,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'boolean',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -3246,7 +3246,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -3391,7 +3391,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -3536,7 +3536,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -3681,7 +3681,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           type: 'string',
         },
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -3824,7 +3824,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         required: ['count'],
         properties: {
           count: {
-            type: 'number',
+            type: 'integer',
           },
         },
         $defs: {},
@@ -3839,7 +3839,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       type: 'object',
       properties: {
         limit: {
-          type: 'number',
+          type: 'integer',
           maximum: 100,
         },
         before: {
@@ -4241,11 +4241,11 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
           required: ['start', 'end'],
           properties: {
             start: {
-              type: 'number',
+              type: 'integer',
               minimum: 0,
             },
             end: {
-              type: 'number',
+              type: 'integer',
               minimum: 0,
             },
           },
@@ -4298,11 +4298,11 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
         required: ['start', 'end'],
         properties: {
           start: {
-            type: 'number',
+            type: 'integer',
             minimum: 0,
           },
           end: {
-            type: 'number',
+            type: 'integer',
             minimum: 0,
           },
         },
