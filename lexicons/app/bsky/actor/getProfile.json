@@ -27,10 +27,10 @@
           "type": "string",
           "maxLength": 256
         },
-        "followersCount": {"type": "number"},
-        "followsCount": {"type": "number"},
-        "membersCount": {"type": "number"},
-        "postsCount": {"type": "number"},
+        "followersCount": {"type": "integer"},
+        "followsCount": {"type": "integer"},
+        "membersCount": {"type": "integer"},
+        "postsCount": {"type": "integer"},
         "myState": {
           "type": "object",
           "properties": {

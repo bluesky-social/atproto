@@ -10,7 +10,7 @@
       "subject": {"type": "string"},
       "assertion": {"type": "string"},
       "confirmed": {"type": "boolean"},
-      "limit": {"type": "number", "maximum": 100},
+      "limit": {"type": "integer", "maximum": 100},
       "before": {"type": "string"}
     }
   },
