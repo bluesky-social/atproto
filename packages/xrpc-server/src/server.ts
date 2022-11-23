@@ -21,9 +21,9 @@ import {
   validateReqParams,
   validateInput,
   validateOutput,
-  readReqBody,
 } from './util'
 import log from './logger'
+import { ResponseType } from '@atproto/xrpc'
 
 export function createServer(schemas?: unknown[]) {
   return new Server(schemas)
@@ -103,6 +103,7 @@ export class Server {
 
   async handle(req: express.Request, res: express.Response) {
     try {
+      assertWellConfigured(req)
       // lookup handler and schema
       const handler = this.handlers.get(req.params.methodId)
       const schema = this.schemas.get(req.params.methodId)
@@ -121,9 +122,6 @@ export class Server {
         )
       }
 
-      // read request body
-      const inputBody = await readReqBody(req)
-
       // validate request
       const params = validateReqParams(
         req.query,
@@ -132,7 +130,6 @@ export class Server {
       const input = validateInput(
         schema,
         req,
-        inputBody,
         this.inputValidators.get(schema.id),
       )
 
@@ -194,4 +191,13 @@ function isHandlerSuccess(v: HandlerOutput): v is HandlerSuccess {
 
 function isHandlerError(v: HandlerOutput): v is HandlerError {
   return handlerError.safeParse(v).success
+}
+
+function assertWellConfigured(req: express.Request) {
+  if (!('body' in req)) {
+    throw new XRPCError(
+      ResponseType.InternalServerError,
+      `XRPC server didn't see req.body. Ensure that your server is using json() and raw() middleware for parsing request bodies.`,
+    )
+  }
 }

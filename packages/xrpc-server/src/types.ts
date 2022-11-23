@@ -44,7 +44,10 @@ export class XRPCError extends Error {
   get payload() {
     return {
       error: this.customErrorName,
-      message: this.errorMessage || this.typeStr,
+      message:
+        this.type === ResponseType.InternalServerError
+          ? this.typeStr // Do not respond with error details for 500s
+          : this.errorMessage || this.typeStr,
     }
   }
 
