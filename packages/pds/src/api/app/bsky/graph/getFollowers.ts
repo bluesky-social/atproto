@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetFollowers from '../../../../lexicon/types/app/bsky/graph/getFollowers'
@@ -11,6 +10,7 @@ export default function (server: Server) {
     async (params: GetFollowers.QueryParams, _input, _req, res) => {
       const { user, limit, before } = params
       const { db } = locals.get(res)
+      const { ref } = db.db.dynamic
 
       const subject = await getActorInfo(db.db, user).catch((_e) => {
         throw new InvalidRequestError(`User not found: ${user}`)
@@ -32,7 +32,7 @@ export default function (server: Server) {
           'follow.indexedAt as indexedAt',
         ])
 
-      const keyset = new FollowersKeyset()
+      const keyset = new Keyset(ref('follow.createdAt'), ref('follow.uri'))
       followersReq = paginate(followersReq, {
         limit,
         before,
@@ -59,9 +59,4 @@ export default function (server: Server) {
       }
     },
   )
-}
-
-class FollowersKeyset extends Keyset {
-  primary = sql`follow."createdAt"`
-  secondary = sql`follow.uri`
 }

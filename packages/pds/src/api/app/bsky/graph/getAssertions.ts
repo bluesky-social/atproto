@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetAssertions from '../../../../lexicon/types/app/bsky/graph/getAssertions'
@@ -11,6 +10,7 @@ export default function (server: Server) {
     async (params: GetAssertions.QueryParams, _input, _req, res) => {
       const { author, subject, assertion, confirmed, limit, before } = params
       const { db } = locals.get(res)
+      const { ref } = db.db.dynamic
 
       if (!author && !subject) {
         throw new InvalidRequestError(`Must provide an author or subject`)
@@ -92,7 +92,10 @@ export default function (server: Server) {
         )
       }
 
-      const keyset = new AssertionsKeyset()
+      const keyset = new Keyset(
+        ref('assertion.createdAt'),
+        ref('assertion.uri'),
+      )
       assertionsReq = paginate(assertionsReq, {
         limit,
         before,
@@ -147,9 +150,4 @@ export default function (server: Server) {
       }
     },
   )
-}
-
-class AssertionsKeyset extends Keyset {
-  primary = sql`assertion."createdAt"`
-  secondary = sql`assertion.uri`
 }

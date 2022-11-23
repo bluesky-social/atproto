@@ -53,9 +53,8 @@ export const paginate = <QB extends SelectQueryBuilder<any, any, any>, T>(
 }
 
 type DefaultRow = { createdAt: string; uri: string }
-export abstract class Keyset<T = DefaultRow> {
-  abstract primary: DbRef
-  abstract secondary: DbRef
+export class Keyset<T = DefaultRow> {
+  constructor(public primary: DbRef, public secondary: DbRef) {}
   cursorFromResult(result: T): Cursor
   cursorFromResult<T extends DefaultRow>(result: T): Cursor {
     return {

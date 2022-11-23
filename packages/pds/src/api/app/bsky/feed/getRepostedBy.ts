@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import * as GetRepostedBy from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
 import * as locals from '../../../../locals'
@@ -10,6 +9,7 @@ export default function (server: Server) {
     async (params: GetRepostedBy.QueryParams, _input, _req, res) => {
       const { uri, limit, before, cid } = params
       const { db } = locals.get(res)
+      const { ref } = db.db.dynamic
 
       let builder = db.db
         .selectFrom('repost')
@@ -31,7 +31,7 @@ export default function (server: Server) {
         builder = builder.where('repost.subjectCid', '=', cid)
       }
 
-      const keyset = new RepostsKeyset()
+      const keyset = new Keyset(ref('repost.createdAt'), ref('repost.uri'))
       builder = paginate(builder, {
         limit,
         before,
@@ -59,9 +59,4 @@ export default function (server: Server) {
       }
     },
   )
-}
-
-class RepostsKeyset extends Keyset {
-  primary = sql`repost."createdAt"`
-  secondary = sql`repost.uri`
 }

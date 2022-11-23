@@ -148,7 +148,7 @@ export default function (server: Server) {
             .as('requesterDownvote'),
         ])
 
-      const keyset = new FeedKeyset()
+      const keyset = new FeedKeyset(ref('cursor'), ref('postUri'))
       feedItemsQb = paginate(feedItemsQb, {
         limit,
         before,

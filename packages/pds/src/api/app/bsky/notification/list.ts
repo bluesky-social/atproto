@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
 import { Server } from '../../../../lexicon'
@@ -12,6 +11,7 @@ export default function (server: Server) {
     async (params: List.QueryParams, _input, req, res) => {
       const { auth, db } = locals.get(res)
       const { limit, before } = params
+      const { ref } = db.db.dynamic
 
       const requester = auth.getUserDid(req)
       if (!requester) {
@@ -42,7 +42,10 @@ export default function (server: Server) {
           'ipld_block.content as recordBytes',
         ])
 
-      const keyset = new NotifsKeyset()
+      const keyset = new NotifsKeyset(
+        ref('notif.indexedAt'),
+        ref('notif.recordUri'),
+      )
       notifBuilder = paginate(notifBuilder, {
         before,
         limit,
@@ -92,8 +95,6 @@ export default function (server: Server) {
 
 type NotifRow = { indexedAt: string; uri: string }
 class NotifsKeyset extends Keyset<NotifRow> {
-  primary = sql`notif."indexedAt"`
-  secondary = sql`notif."recordUri"`
   cursorFromResult(result: NotifRow) {
     return { primary: result.indexedAt, secondary: result.uri }
   }

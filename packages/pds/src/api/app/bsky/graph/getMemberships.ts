@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetMemberships from '../../../../lexicon/types/app/bsky/graph/getMemberships'
@@ -11,6 +10,7 @@ export default function (server: Server) {
     async (params: GetMemberships.QueryParams, _input, _req, res) => {
       const { actor, limit, before } = params
       const { db } = locals.get(res)
+      const { ref } = db.db.dynamic
 
       const subject = await getActorInfo(db.db, actor).catch((_e) => {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
@@ -34,7 +34,10 @@ export default function (server: Server) {
           'assertion.indexedAt as indexedAt',
         ])
 
-      const keyset = new MembershipsKeyset()
+      const keyset = new Keyset(
+        ref('assertion.createdAt'),
+        ref('assertion.uri'),
+      )
       membershipsReq = paginate(membershipsReq, {
         limit,
         before,
@@ -61,9 +64,4 @@ export default function (server: Server) {
       }
     },
   )
-}
-
-class MembershipsKeyset extends Keyset {
-  primary = sql`assertion."createdAt"`
-  secondary = sql`assertion.uri`
 }

@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import * as GetVotes from '../../../../lexicon/types/app/bsky/feed/getVotes'
 import * as locals from '../../../../locals'
@@ -10,6 +9,7 @@ export default function (server: Server) {
     async (params: GetVotes.QueryParams, _input, _req, res) => {
       const { uri, limit, before, cid, direction } = params
       const { db } = locals.get(res)
+      const { ref } = db.db.dynamic
 
       let builder = db.db
         .selectFrom('vote')
@@ -36,7 +36,7 @@ export default function (server: Server) {
         builder = builder.where('vote.subjectCid', '=', cid)
       }
 
-      const keyset = new VotesKeyset()
+      const keyset = new Keyset(ref('vote.createdAt'), ref('vote.uri'))
       builder = paginate(builder, {
         limit,
         before,
@@ -67,9 +67,4 @@ export default function (server: Server) {
       }
     },
   )
-}
-
-class VotesKeyset extends Keyset {
-  primary = sql`vote."createdAt"`
-  secondary = sql`vote.uri`
 }
