@@ -1,0 +1,30 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.data.uploadBlob",
+  "type": "procedure",
+  "description": "Upload a blob to later be referenced in user repo",
+  "input": {
+    "encoding": "multipart/form-data",
+    "schema": {
+      "type": "object",
+      "required": ["did",  "data"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "description": "The DID of the repo."
+        },
+        "data": {}
+      }
+    }
+  },
+  "output": {
+    "encoding": "application/json",
+    "schema": {
+      "type": "object",
+      "required": [ "cid"],
+      "properties": {
+        "cid": {"type": "string"}
+      }
+    }
+  }
+}
