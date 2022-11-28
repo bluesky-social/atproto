@@ -16,7 +16,9 @@
       "type": "object",
       "required": ["thread"],
       "properties": {
-        "thread": {"$ref": "#/defs/post"}
+        "thread": {
+          "oneOf": [{"$ref": "#/defs/post"}, {"$ref": "#/defs/notFoundPost"}]
+        }
       }
     }
   },
@@ -36,11 +38,11 @@
             {"$ref": "#/defs/unknownEmbed"}
           ]
         },
-        "parent": {"$ref": "#/defs/post"},
+        "parent": {"oneOf": [{"$ref": "#/defs/post"}, {"$ref": "#/defs/notFoundPost"}]},
         "replyCount": {"type": "integer"},
         "replies": {
           "type": "array",
-          "items": {"$ref": "#/defs/post"}
+          "items": {"oneOf": [{"$ref": "#/defs/post"}, {"$ref": "#/defs/notFoundPost"}]}
         },
         "repostCount": {"type": "integer"},
         "upvoteCount": {"type": "integer"},
@@ -54,6 +56,14 @@
             "downvote": {"type": "string"}
           }
         }
+      }
+    },
+    "notFoundPost": {
+      "type": "object",
+      "required": ["uri", "notFound"],
+      "properties": {
+        "uri": {"type": "string"},
+        "notFound": {"type": "boolean"}
       }
     },
     "user": {

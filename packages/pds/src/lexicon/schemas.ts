@@ -1882,7 +1882,14 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         required: ['thread'],
         properties: {
           thread: {
-            $ref: '#/$defs/post',
+            oneOf: [
+              {
+                $ref: '#/$defs/post',
+              },
+              {
+                $ref: '#/$defs/notFoundPost',
+              },
+            ],
           },
         },
         $defs: {
@@ -1926,7 +1933,14 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 ],
               },
               parent: {
-                $ref: '#/$defs/post',
+                oneOf: [
+                  {
+                    $ref: '#/$defs/post',
+                  },
+                  {
+                    $ref: '#/$defs/notFoundPost',
+                  },
+                ],
               },
               replyCount: {
                 type: 'integer',
@@ -1934,7 +1948,14 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               replies: {
                 type: 'array',
                 items: {
-                  $ref: '#/$defs/post',
+                  oneOf: [
+                    {
+                      $ref: '#/$defs/post',
+                    },
+                    {
+                      $ref: '#/$defs/notFoundPost',
+                    },
+                  ],
                 },
               },
               repostCount: {
@@ -2062,6 +2083,18 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
               },
             },
           },
+          notFoundPost: {
+            type: 'object',
+            required: ['uri', 'notFound'],
+            properties: {
+              uri: {
+                type: 'string',
+              },
+              notFound: {
+                type: 'boolean',
+              },
+            },
+          },
         },
       },
     },
@@ -2106,7 +2139,14 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             ],
           },
           parent: {
-            $ref: '#/$defs/post',
+            oneOf: [
+              {
+                $ref: '#/$defs/post',
+              },
+              {
+                $ref: '#/$defs/notFoundPost',
+              },
+            ],
           },
           replyCount: {
             type: 'integer',
@@ -2114,7 +2154,14 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           replies: {
             type: 'array',
             items: {
-              $ref: '#/$defs/post',
+              oneOf: [
+                {
+                  $ref: '#/$defs/post',
+                },
+                {
+                  $ref: '#/$defs/notFoundPost',
+                },
+              ],
             },
           },
           repostCount: {
@@ -2143,6 +2190,18 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
                 type: 'string',
               },
             },
+          },
+        },
+      },
+      notFoundPost: {
+        type: 'object',
+        required: ['uri', 'notFound'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          notFound: {
+            type: 'boolean',
           },
         },
       },

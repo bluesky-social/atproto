@@ -47,10 +47,16 @@ const getAncestors = async (
   db: Kysely<DatabaseSchema>,
   parentUri: string,
   requester: string,
-): Promise<GetPostThread.Post> => {
+): Promise<GetPostThread.Post | GetPostThread.NotFoundPost> => {
   const parentRes = await postInfoBuilder(db, requester)
     .where('post.uri', '=', parentUri)
-    .executeTakeFirstOrThrow()
+    .executeTakeFirst()
+  if (!parentRes) {
+    return {
+      uri: parentUri,
+      notFound: true,
+    }
+  }
   const parentObj = rowToPost(parentRes)
   if (parentRes.parent !== null) {
     parentObj.parent = await getAncestors(db, parentRes.parent, requester)
