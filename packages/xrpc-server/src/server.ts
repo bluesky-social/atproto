@@ -21,6 +21,7 @@ import {
   validateReqParams,
   validateInput,
   validateOutput,
+  hasBody,
 } from './util'
 import log from './logger'
 import { ResponseType } from '@atproto/xrpc'
@@ -170,12 +171,12 @@ export class Server {
       }
     } catch (e: unknown) {
       if (e instanceof XRPCError) {
-        log.info(e, `error in xrpc method ${req.params.methodId}`)
+        log.error(e, `error in xrpc method ${req.params.methodId}`)
         res.status(e.type).json(e.payload)
       } else {
         log.error(
           e,
-          `Unhandled exception in ${req.params.methodId} xrpc handler:`,
+          `unhandled exception in xrpc method ${req.params.methodId}`,
         )
         res.status(500).json({
           message: 'Unexpected internal server error',
@@ -194,10 +195,10 @@ function isHandlerError(v: HandlerOutput): v is HandlerError {
 }
 
 function assertWellConfigured(req: express.Request) {
-  if (!('body' in req)) {
+  if (hasBody(req) && !req.complete) {
     throw new XRPCError(
       ResponseType.InternalServerError,
-      `XRPC server didn't see req.body. Ensure that your server is using json() and raw() middleware for parsing request bodies.`,
+      `XRPC server didn't see req.body. Ensure that your server is using json(), raw(), and/or text() middleware for parsing request bodies.`,
     )
   }
 }
