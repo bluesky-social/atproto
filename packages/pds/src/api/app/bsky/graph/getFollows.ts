@@ -3,7 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetFollows from '../../../../lexicon/types/app/bsky/graph/getFollows'
 import { getActorInfo, getDeclarationSimple } from '../util'
 import * as locals from '../../../../locals'
-import { Keyset, paginate } from '../../../../db/util'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 
 export default function (server: Server) {
   server.app.bsky.graph.getFollows(
@@ -27,12 +27,15 @@ export default function (server: Server) {
           'subject.actorType as actorType',
           'subject.handle as handle',
           'profile.displayName as displayName',
-          'follow.uri as uri',
+          'follow.cid as cid',
           'follow.createdAt as createdAt',
           'follow.indexedAt as indexedAt',
         ])
 
-      const keyset = new Keyset(ref('follow.createdAt'), ref('follow.uri'))
+      const keyset = new TimeCidKeyset(
+        ref('follow.createdAt'),
+        ref('follow.cid'),
+      )
       followsReq = paginate(followsReq, {
         limit,
         before,

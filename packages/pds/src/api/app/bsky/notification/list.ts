@@ -3,7 +3,7 @@ import * as common from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import * as List from '../../../../lexicon/types/app/bsky/notification/list'
 import * as locals from '../../../../locals'
-import { paginate, Keyset } from '../../../../db/util'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclaration } from '../util'
 
 export default function (server: Server) {
@@ -44,7 +44,7 @@ export default function (server: Server) {
 
       const keyset = new NotifsKeyset(
         ref('notif.indexedAt'),
-        ref('notif.recordUri'),
+        ref('notif.recordCid'),
       )
       notifBuilder = paginate(notifBuilder, {
         before,
@@ -93,9 +93,9 @@ export default function (server: Server) {
   )
 }
 
-type NotifRow = { indexedAt: string; uri: string }
-class NotifsKeyset extends Keyset<NotifRow> {
-  cursorFromResult(result: NotifRow) {
-    return { primary: result.indexedAt, secondary: result.uri }
+type NotifRow = { indexedAt: string; cid: string }
+class NotifsKeyset extends TimeCidKeyset<NotifRow> {
+  labelResult(result: NotifRow) {
+    return { primary: result.indexedAt, secondary: result.cid }
   }
 }

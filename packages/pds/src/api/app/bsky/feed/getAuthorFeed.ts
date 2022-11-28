@@ -4,7 +4,8 @@ import { Server } from '../../../../lexicon'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as locals from '../../../../locals'
 import { FeedItemType, rowToFeedItem, FeedKeyset } from '../util/feed'
-import { countAll, paginate } from '../../../../db/util'
+import { countAll } from '../../../../db/util'
+import { paginate } from '../../../../db/pagination'
 
 export default function (server: Server) {
   server.app.bsky.feed.getAuthorFeed(
@@ -148,7 +149,7 @@ export default function (server: Server) {
             .as('requesterDownvote'),
         ])
 
-      const keyset = new FeedKeyset(ref('cursor'), ref('postUri'))
+      const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       feedItemsQb = paginate(feedItemsQb, {
         limit,
         before,

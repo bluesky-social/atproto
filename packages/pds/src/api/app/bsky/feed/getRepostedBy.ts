@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
 import * as GetRepostedBy from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
 import * as locals from '../../../../locals'
-import { Keyset, paginate } from '../../../../db/util'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclarationSimple } from '../util'
 
 export default function (server: Server) {
@@ -22,7 +22,7 @@ export default function (server: Server) {
           'did_handle.actorType as actorType',
           'did_handle.handle as handle',
           'profile.displayName as displayName',
-          'repost.uri as uri',
+          'repost.cid as cid',
           'repost.createdAt as createdAt',
           'repost.indexedAt as indexedAt',
         ])
@@ -31,7 +31,10 @@ export default function (server: Server) {
         builder = builder.where('repost.subjectCid', '=', cid)
       }
 
-      const keyset = new Keyset(ref('repost.createdAt'), ref('repost.uri'))
+      const keyset = new TimeCidKeyset(
+        ref('repost.createdAt'),
+        ref('repost.cid'),
+      )
       builder = paginate(builder, {
         limit,
         before,

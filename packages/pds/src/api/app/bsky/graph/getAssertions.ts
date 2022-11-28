@@ -3,7 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetAssertions from '../../../../lexicon/types/app/bsky/graph/getAssertions'
 import { getActorInfo } from '../util'
 import * as locals from '../../../../locals'
-import { Keyset, paginate } from '../../../../db/util'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 
 export default function (server: Server) {
   server.app.bsky.graph.getAssertions(
@@ -92,9 +92,9 @@ export default function (server: Server) {
         )
       }
 
-      const keyset = new Keyset(
+      const keyset = new TimeCidKeyset(
         ref('assertion.createdAt'),
-        ref('assertion.uri'),
+        ref('assertion.cid'),
       )
       assertionsReq = paginate(assertionsReq, {
         limit,

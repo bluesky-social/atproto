@@ -1,6 +1,6 @@
 import * as common from '@atproto/common'
 import { getDeclaration } from '.'
-import { Keyset } from '../../../../db/util'
+import { TimeCidKeyset } from '../../../../db/pagination'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 
@@ -74,8 +74,8 @@ type FeedRow = {
   requesterDownvote: string | null
 }
 
-export class FeedKeyset extends Keyset<FeedRow> {
-  cursorFromResult(result: FeedRow) {
-    return { primary: result.cursor, secondary: result.postUri }
+export class FeedKeyset extends TimeCidKeyset<FeedRow> {
+  labelResult(result: FeedRow) {
+    return { primary: result.cursor, secondary: result.postCid }
   }
 }
