@@ -120,5 +120,8 @@
       "type": "string",
       "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
-  }
+  },
+  "errors": [
+    {"name": "NotFound"}
+  ]
 }
