@@ -1,5 +1,6 @@
 import * as common from '@atproto/common'
 import { getDeclaration } from '.'
+import { TimeCidKeyset } from '../../../../db/pagination'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 
@@ -71,4 +72,10 @@ type FeedRow = {
   requesterRepost: string | null
   requesterUpvote: string | null
   requesterDownvote: string | null
+}
+
+export class FeedKeyset extends TimeCidKeyset<FeedRow> {
+  labelResult(result: FeedRow) {
+    return { primary: result.cursor, secondary: result.postCid }
+  }
 }

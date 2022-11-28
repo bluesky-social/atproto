@@ -3,7 +3,7 @@ import * as common from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import * as List from '../../../../lexicon/types/app/bsky/notification/list'
 import * as locals from '../../../../locals'
-import { paginate } from '../../../../db/util'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclaration } from '../util'
 
 export default function (server: Server) {
@@ -40,13 +40,16 @@ export default function (server: Server) {
           'notif.reasonSubject as reasonSubject',
           'notif.indexedAt as indexedAt',
           'ipld_block.content as recordBytes',
-          'notif.recordUri as uri',
         ])
 
+      const keyset = new NotifsKeyset(
+        ref('notif.indexedAt'),
+        ref('notif.recordCid'),
+      )
       notifBuilder = paginate(notifBuilder, {
         before,
         limit,
-        by: ref('notif.indexedAt'),
+        keyset,
       })
 
       const [user, notifs] = await Promise.all([
@@ -83,9 +86,16 @@ export default function (server: Server) {
         encoding: 'application/json',
         body: {
           notifications,
-          cursor: notifications.at(-1)?.indexedAt,
+          cursor: keyset.packFromResult(notifs),
         },
       }
     },
   )
+}
+
+type NotifRow = { indexedAt: string; cid: string }
+class NotifsKeyset extends TimeCidKeyset<NotifRow> {
+  labelResult(result: NotifRow) {
+    return { primary: result.indexedAt, secondary: result.cid }
+  }
 }

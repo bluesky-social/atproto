@@ -3,7 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetMemberships from '../../../../lexicon/types/app/bsky/graph/getMemberships'
 import { getActorInfo, getDeclarationSimple } from '../util'
 import * as locals from '../../../../locals'
-import { paginate } from '../../../../db/util'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 
 export default function (server: Server) {
   server.app.bsky.graph.getMemberships(
@@ -29,14 +29,19 @@ export default function (server: Server) {
           'creator.declarationCid as declarationCid',
           'creator.actorType as actorType',
           'profile.displayName as displayName',
+          'assertion.cid as cid',
           'assertion.createdAt as createdAt',
           'assertion.indexedAt as indexedAt',
         ])
 
+      const keyset = new TimeCidKeyset(
+        ref('assertion.createdAt'),
+        ref('assertion.cid'),
+      )
       membershipsReq = paginate(membershipsReq, {
         limit,
         before,
-        by: ref('assertion.createdAt'),
+        keyset,
       })
 
       const membershipsRes = await membershipsReq.execute()
@@ -54,7 +59,7 @@ export default function (server: Server) {
         body: {
           subject,
           memberships,
-          cursor: memberships.at(-1)?.createdAt,
+          cursor: keyset.packFromResult(membershipsRes),
         },
       }
     },

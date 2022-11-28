@@ -70,9 +70,6 @@ describe('pds notification views', () => {
   })
 
   it('paginates', async () => {
-    // @TODO there is a small bug where notifications generated with the same
-    // indexedAt time paginate together, even if the page lands between them.
-    // Can see this with assertMember and assertCreator notifications.
     const results = (results) =>
       sort(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {

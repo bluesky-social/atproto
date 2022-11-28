@@ -140,6 +140,9 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d{4}-\d{2}-\d{2}T/)) {
       return constantDate
     }
+    if (str.match(/^\d+::bafy/)) {
+      return constantKeysetCursor
+    }
     let isCid: boolean
     try {
       CID.parse(str)
@@ -186,6 +189,7 @@ export function take(
 }
 
 export const constantDate = new Date(0).toISOString()
+export const constantKeysetCursor = '0000000000000::bafycid'
 
 const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
   if (Array.isArray(obj)) {

@@ -2,7 +2,7 @@
 
 exports[`pds follow views fetches followers 1`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -58,7 +58,7 @@ Object {
 
 exports[`pds follow views fetches followers 2`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -94,7 +94,7 @@ Object {
 
 exports[`pds follow views fetches followers 3`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -140,7 +140,7 @@ Object {
 
 exports[`pds follow views fetches followers 4`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -166,7 +166,7 @@ Object {
 
 exports[`pds follow views fetches followers 5`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -202,7 +202,7 @@ Object {
 
 exports[`pds follow views fetches follows 1`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -258,7 +258,7 @@ Object {
 
 exports[`pds follow views fetches follows 2`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -294,7 +294,7 @@ Object {
 
 exports[`pds follow views fetches follows 3`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -320,7 +320,7 @@ Object {
 
 exports[`pds follow views fetches follows 4`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -366,7 +366,7 @@ Object {
 
 exports[`pds follow views fetches follows 5`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",

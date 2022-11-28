@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
 import * as GetVotes from '../../../../lexicon/types/app/bsky/feed/getVotes'
 import * as locals from '../../../../locals'
-import { paginate } from '../../../../db/util'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclarationSimple } from '../util'
 
 export default function (server: Server) {
@@ -17,6 +17,7 @@ export default function (server: Server) {
         .innerJoin('did_handle', 'vote.creator', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .select([
+          'vote.cid as cid',
           'vote.direction as direction',
           'vote.createdAt as createdAt',
           'vote.indexedAt as indexedAt',
@@ -35,14 +36,14 @@ export default function (server: Server) {
         builder = builder.where('vote.subjectCid', '=', cid)
       }
 
+      const keyset = new TimeCidKeyset(ref('vote.createdAt'), ref('vote.cid'))
       builder = paginate(builder, {
         limit,
         before,
-        by: ref('vote.createdAt'),
+        keyset,
       })
 
       const votesRes = await builder.execute()
-
       const votes = votesRes.map((row) => ({
         direction: row.direction,
         createdAt: row.createdAt,
@@ -60,7 +61,7 @@ export default function (server: Server) {
         body: {
           uri,
           cid,
-          cursor: votes.at(-1)?.createdAt,
+          cursor: keyset.packFromResult(votesRes),
           votes,
         },
       }

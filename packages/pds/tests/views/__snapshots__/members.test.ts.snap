@@ -2,7 +2,7 @@
 
 exports[`pds member views fetches members 1`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "members": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -61,7 +61,7 @@ Object {
 
 exports[`pds member views fetches members 2`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "members": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -88,7 +88,7 @@ Object {
 
 exports[`pds member views fetches members 3`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "members": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -135,7 +135,7 @@ Object {
 
 exports[`pds member views fetches memberships 1`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "memberships": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -183,7 +183,7 @@ Object {
 
 exports[`pds member views fetches memberships 2`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "memberships": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -221,7 +221,7 @@ Object {
 
 exports[`pds member views fetches memberships 3`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "memberships": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -258,7 +258,7 @@ Object {
 
 exports[`pds member views fetches memberships 4`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "memberships": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",

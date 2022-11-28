@@ -1,9 +1,8 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import {
   runTestServer,
-  forSnapshot,
+  forSnapshot as forSnapshotUtil,
   CloseFn,
-  constantDate,
   paginateAll,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
@@ -35,11 +34,28 @@ describe('pds assertion views', () => {
     await close()
   })
 
-  const getCursors = (items: { createdAt?: string }[]) =>
-    items.map((item) => item.createdAt ?? constantDate)
+  const getCursors = (items: { createdAt: string; cid: string }[]) =>
+    items.map((item) => [item.createdAt, item.cid])
 
-  const getSortedCursors = (items: { createdAt?: string }[]) =>
-    getCursors(items).sort((a, b) => tstamp(b) - tstamp(a))
+  const getSortedCursors = (items: { createdAt: string; cid: string }[]) =>
+    getCursors(items).sort(
+      (a, b) => tstamp(b[0]) - tstamp(a[0]) || b[1].localeCompare(a[1]),
+    )
+
+  // Since the pagination is only stable relative to cids, which may change order between test runs,
+  // we need a more deterministic ordering for snapshots. The sort order is tested with getSortedCursors().
+  const forSnapshot = (
+    assertions: { createdAt: string; assertion: string }[],
+  ) => {
+    return forSnapshotUtil(
+      [...assertions].sort((a, b) => {
+        return (
+          tstamp(b.createdAt) - tstamp(a.createdAt) ||
+          b.assertion.localeCompare(a.assertion)
+        )
+      }),
+    )
+  }
 
   const tstamp = (x: string) => new Date(x).getTime()
 
@@ -53,7 +69,7 @@ describe('pds assertion views', () => {
       author: sc.scenes[scene].did,
     })
 
-    expect(forSnapshot(sceneAssertions.data)).toMatchSnapshot()
+    expect(forSnapshot(sceneAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(sceneAssertions.data.assertions)).toEqual(
       getSortedCursors(sceneAssertions.data.assertions),
     )
@@ -62,7 +78,7 @@ describe('pds assertion views', () => {
       author: sc.scenes[otherScene].did,
     })
 
-    expect(forSnapshot(otherSceneAssertions.data)).toMatchSnapshot()
+    expect(forSnapshot(otherSceneAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(otherSceneAssertions.data.assertions)).toEqual(
       getSortedCursors(otherSceneAssertions.data.assertions),
     )
@@ -71,7 +87,7 @@ describe('pds assertion views', () => {
       author: sc.scenes[carolScene].did,
     })
 
-    expect(forSnapshot(carolSceneAssertions.data)).toMatchSnapshot()
+    expect(forSnapshot(carolSceneAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(carolSceneAssertions.data.assertions)).toEqual(
       getSortedCursors(carolSceneAssertions.data.assertions),
     )
@@ -82,7 +98,7 @@ describe('pds assertion views', () => {
       subject: sc.accounts[alice].did,
     })
 
-    expect(forSnapshot(aliceAssertions.data)).toMatchSnapshot()
+    expect(forSnapshot(aliceAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(aliceAssertions.data.assertions)).toEqual(
       getSortedCursors(aliceAssertions.data.assertions),
     )
@@ -94,7 +110,7 @@ describe('pds assertion views', () => {
       subject: sc.accounts[alice].did,
     })
 
-    expect(forSnapshot(aliceSceneAssertions.data)).toMatchSnapshot()
+    expect(forSnapshot(aliceSceneAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(aliceSceneAssertions.data.assertions)).toEqual(
       getSortedCursors(aliceSceneAssertions.data.assertions),
     )
@@ -106,7 +122,9 @@ describe('pds assertion views', () => {
       confirmed: true,
     })
 
-    expect(forSnapshot(sceneAssertionsConfirmed.data)).toMatchSnapshot()
+    expect(
+      forSnapshot(sceneAssertionsConfirmed.data.assertions),
+    ).toMatchSnapshot()
     expect(getCursors(sceneAssertionsConfirmed.data.assertions)).toEqual(
       getSortedCursors(sceneAssertionsConfirmed.data.assertions),
     )
@@ -117,7 +135,9 @@ describe('pds assertion views', () => {
         confirmed: false,
       })
 
-    expect(forSnapshot(sceneAssertionsUnconfirmed.data)).toMatchSnapshot()
+    expect(
+      forSnapshot(sceneAssertionsUnconfirmed.data.assertions),
+    ).toMatchSnapshot()
     expect(getCursors(sceneAssertionsUnconfirmed.data.assertions)).toEqual(
       getSortedCursors(sceneAssertionsUnconfirmed.data.assertions),
     )
@@ -128,7 +148,9 @@ describe('pds assertion views', () => {
         confirmed: true,
       })
 
-    expect(forSnapshot(otherSceneAssertionsConfirmed.data)).toMatchSnapshot()
+    expect(
+      forSnapshot(otherSceneAssertionsConfirmed.data.assertions),
+    ).toMatchSnapshot()
     expect(getCursors(otherSceneAssertionsConfirmed.data.assertions)).toEqual(
       getSortedCursors(otherSceneAssertionsConfirmed.data.assertions),
     )
@@ -139,7 +161,9 @@ describe('pds assertion views', () => {
         confirmed: false,
       })
 
-    expect(forSnapshot(otherSceneAssertionsUnconfirmed.data)).toMatchSnapshot()
+    expect(
+      forSnapshot(otherSceneAssertionsUnconfirmed.data.assertions),
+    ).toMatchSnapshot()
     expect(getCursors(otherSceneAssertionsUnconfirmed.data.assertions)).toEqual(
       getSortedCursors(otherSceneAssertionsUnconfirmed.data.assertions),
     )
@@ -150,7 +174,9 @@ describe('pds assertion views', () => {
         confirmed: true,
       })
 
-    expect(forSnapshot(carolSceneAssertionsConfirmed.data)).toMatchSnapshot()
+    expect(
+      forSnapshot(carolSceneAssertionsConfirmed.data.assertions),
+    ).toMatchSnapshot()
     expect(getCursors(carolSceneAssertionsConfirmed.data.assertions)).toEqual(
       getSortedCursors(carolSceneAssertionsConfirmed.data.assertions),
     )
@@ -161,7 +187,9 @@ describe('pds assertion views', () => {
         confirmed: true,
       })
 
-    expect(forSnapshot(carolSceneAssertionsUnconfirmed.data)).toMatchSnapshot()
+    expect(
+      forSnapshot(carolSceneAssertionsUnconfirmed.data.assertions),
+    ).toMatchSnapshot()
     expect(getCursors(carolSceneAssertionsUnconfirmed.data.assertions)).toEqual(
       getSortedCursors(carolSceneAssertionsUnconfirmed.data.assertions),
     )
@@ -173,7 +201,7 @@ describe('pds assertion views', () => {
       assertion: 'app.bsky.graph.assertMember',
     })
 
-    expect(forSnapshot(sceneAssertionsMember.data)).toMatchSnapshot()
+    expect(forSnapshot(sceneAssertionsMember.data.assertions)).toMatchSnapshot()
     expect(getCursors(sceneAssertionsMember.data.assertions)).toEqual(
       getSortedCursors(sceneAssertionsMember.data.assertions),
     )
@@ -183,7 +211,9 @@ describe('pds assertion views', () => {
       assertion: 'app.bsky.graph.assertCreator',
     })
 
-    expect(forSnapshot(sceneAssertionsCreator.data)).toMatchSnapshot()
+    expect(
+      forSnapshot(sceneAssertionsCreator.data.assertions),
+    ).toMatchSnapshot()
     expect(getCursors(sceneAssertionsCreator.data.assertions)).toEqual(
       getSortedCursors(sceneAssertionsCreator.data.assertions),
     )

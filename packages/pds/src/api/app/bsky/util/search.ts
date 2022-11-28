@@ -1,8 +1,8 @@
 import { sql } from 'kysely'
-import { safeParse } from '@hapi/bourne'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../../../db'
 import { DbRef } from '../../../../db/util'
+import { GenericKeyset, paginate } from '../../../../db/pagination'
 
 export const getUserSearchQueryPg = (
   db: Database,
@@ -15,38 +15,33 @@ export const getUserSearchQueryPg = (
   // The more characters the user gives us, the more we can ratchet down
   // the distance threshold for matching.
   const threshold = term.length < 3 ? 0.9 : 0.8
-  const cursor = before !== undefined ? unpackCursor(before) : undefined
 
   // Matching user accounts based on handle
   const distanceAccount = distance(term, ref('handle'))
-  const keysetAccount = keyset(cursor, {
-    handle: ref('handle'),
-    distance: distanceAccount,
-  })
-  const accountsQb = db.db
+  let accountsQb = db.db
     .selectFrom('did_handle')
     .where(distanceAccount, '<', threshold)
-    .if(!!keysetAccount, (qb) => (keysetAccount ? qb.where(keysetAccount) : qb))
     .select(['did_handle.did as did', distanceAccount.as('distance')])
-    .orderBy(distanceAccount)
-    .orderBy('handle')
-    .limit(limit)
+  accountsQb = paginate(accountsQb, {
+    limit,
+    before,
+    direction: 'asc',
+    keyset: new SearchKeyset(distanceAccount, ref('handle')),
+  })
 
   // Matching profiles based on display name
   const distanceProfile = distance(term, ref('displayName'))
-  const keysetProfile = keyset(cursor, {
-    handle: ref('handle'),
-    distance: distanceProfile,
-  })
-  const profilesQb = db.db
+  let profilesQb = db.db
     .selectFrom('profile')
     .innerJoin('did_handle', 'did_handle.did', 'profile.creator')
     .where(distanceProfile, '<', threshold)
-    .if(!!keysetProfile, (qb) => (keysetProfile ? qb.where(keysetProfile) : qb))
     .select(['did_handle.did as did', distanceProfile.as('distance')])
-    .orderBy(distanceProfile)
-    .orderBy('handle')
-    .limit(limit)
+  profilesQb = paginate(profilesQb, {
+    limit,
+    before,
+    direction: 'asc',
+    keyset: new SearchKeyset(distanceProfile, ref('handle')),
+  })
 
   // Combine user account and profile results, taking best matches from each
   const emptyQb = db.db
@@ -66,17 +61,15 @@ export const getUserSearchQueryPg = (
     .orderBy('distance')
 
   // Sort and paginate all user results
-  const keysetAll = keyset(cursor, {
-    handle: ref('handle'),
-    distance: ref('distance'),
-  })
-  return db.db
+  const allQb = db.db
     .selectFrom(resultsQb.as('results'))
     .innerJoin('did_handle', 'did_handle.did', 'results.did')
-    .if(!!keysetAll, (qb) => (keysetAll ? qb.where(keysetAll) : qb))
-    .orderBy('distance')
-    .orderBy('handle') // Keep order stable: break ties in distance arbitrarily using handle
-    .limit(limit)
+  return paginate(allQb, {
+    limit,
+    before,
+    direction: 'asc',
+    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+  })
 }
 
 export const getUserSearchQuerySqlite = (
@@ -107,7 +100,8 @@ export const getUserSearchQuerySqlite = (
     'did_handle.handle',
   )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
 
-  const cursor = before !== undefined ? unpackCursor(before) : undefined
+  const keyset = new SearchKeyset(sql``, sql``)
+  const cursor = keyset.unpackCursor(before)
 
   return db.db
     .selectFrom('did_handle')
@@ -119,36 +113,10 @@ export const getUserSearchQuerySqlite = (
       return q
     })
     .if(!!cursor, (qb) =>
-      cursor ? qb.where('handle', '>', cursor.handle) : qb,
+      cursor ? qb.where('handle', '>', cursor.secondary) : qb,
     )
     .orderBy('handle')
     .limit(limit)
-}
-
-// E.g. { distance: .94827, handle: 'pfrazee' } -> '[0.94827,"pfrazee"]'
-export const packCursor = (row: {
-  distance: number
-  handle: string
-}): string => {
-  const { distance, handle } = row
-  return JSON.stringify([distance, handle])
-}
-
-export const unpackCursor = (
-  before: string,
-): { distance: number; handle: string } => {
-  const result = safeParse(before)
-  if (!Array.isArray(result)) {
-    throw new InvalidRequestError('Malformed cursor')
-  }
-  const [distance, handle, ...others] = result
-  if (typeof distance !== 'number' || !handle || others.length > 0) {
-    throw new InvalidRequestError('Malformed cursor')
-  }
-  return {
-    handle,
-    distance,
-  }
 }
 
 // Remove leading @ in case a handle is input that way
@@ -158,8 +126,29 @@ export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')
 const distance = (term: string, ref: DbRef) =>
   sql<number>`(${term} <<<-> ${ref})`
 
-// Keyset condition for a cursor
-const keyset = (cursor, refs: { handle: DbRef; distance: DbRef }) => {
-  if (cursor === undefined) return undefined
-  return sql`(${refs.distance} > ${cursor.distance}) or (${refs.distance} = ${cursor.distance} and ${refs.handle} > ${cursor.handle})`
+type Result = { distance: number; handle: string }
+type LabeledResult = { primary: number; secondary: string }
+export class SearchKeyset extends GenericKeyset<Result, LabeledResult> {
+  labelResult(result: Result) {
+    return {
+      primary: result.distance,
+      secondary: result.handle,
+    }
+  }
+  labeledResultToCursor(labeled: LabeledResult) {
+    return {
+      primary: labeled.primary.toString().replace('0.', '.'),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: { primary: string; secondary: string }) {
+    const distance = parseFloat(cursor.primary)
+    if (isNaN(distance)) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: distance,
+      secondary: cursor.secondary,
+    }
+  }
 }

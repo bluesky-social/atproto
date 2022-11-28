@@ -2,7 +2,7 @@
 
 exports[`pds vote views fetches post votes 1`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "uri": "record(0)",
   "votes": Array [
     Object {
@@ -64,7 +64,7 @@ Object {
 
 exports[`pds vote views fetches reply votes 1`] = `
 Object {
-  "cursor": "1970-01-01T00:00:00.000Z",
+  "cursor": "0000000000000::bafycid",
   "uri": "record(0)",
   "votes": Array [
     Object {
