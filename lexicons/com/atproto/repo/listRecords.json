@@ -9,7 +9,7 @@
     "properties": {
       "user": {"type": "string", "description": "The handle or DID of the repo."},
       "collection": {"type": "string", "description": "The NSID of the record type."},
-      "limit": {"type": "integer", "minimum": 1, "default": 50, "description": "The number of records to return. TODO-max number?"},
+      "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50, "description": "The number of records to return."},
       "before": {"type": "string", "description": "A TID to filter the range of records returned."},
       "after": {"type": "string", "description": "A TID to filter the range of records returned."},
       "reverse": {"type": "boolean", "description": "Reverse the order of the returned records?"}

@@ -13,7 +13,7 @@ export interface QueryParams {
    */
   collection: string;
   /**
-   * The number of records to return. TODO-max number?
+   * The number of records to return.
    */
   limit?: number;
   /**
