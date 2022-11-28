@@ -55,8 +55,11 @@ export abstract class GenericKeyset<R, LR extends LabeledResult> {
       secondary,
     }
   }
-  getSql(labeled?: LR) {
+  getSql(labeled?: LR, direction?: 'asc' | 'desc') {
     if (labeled === undefined) return
+    if (direction === 'asc') {
+      return sql`((${this.primary} > ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
+    }
     return sql`((${this.primary} < ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
   }
 }
@@ -97,14 +100,15 @@ export const paginate = <
   opts: {
     limit?: number
     before?: string
+    direction?: 'asc' | 'desc'
     keyset: K
   },
 ) => {
-  const { limit, before, keyset } = opts
-  const keysetSql = keyset.getSql(keyset.unpack(before))
+  const { limit, before, keyset, direction = 'desc' } = opts
+  const keysetSql = keyset.getSql(keyset.unpack(before), direction)
   return qb
     .if(!!limit, (q) => q.limit(limit as number))
-    .orderBy(keyset.primary, 'desc')
-    .orderBy(keyset.secondary, 'desc')
+    .orderBy(keyset.primary, direction)
+    .orderBy(keyset.secondary, direction)
     .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb))
 }

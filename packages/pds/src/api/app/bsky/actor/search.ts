@@ -8,7 +8,7 @@ import {
   cleanTerm,
   getUserSearchQueryPg,
   getUserSearchQuerySqlite,
-  packCursor,
+  SearchKeyset,
 } from '../util/search'
 
 export default function (server: Server) {
@@ -44,13 +44,13 @@ export default function (server: Server) {
       indexedAt: result.indexedAt ?? undefined,
     }))
 
-    const lastResult = results.at(-1)
+    const keyset = new SearchKeyset(sql``, sql``)
 
     return {
       encoding: 'application/json',
       body: {
         users,
-        cursor: lastResult && packCursor(lastResult),
+        cursor: keyset.packFromResult(results),
       },
     }
   })
