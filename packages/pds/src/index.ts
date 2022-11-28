@@ -51,6 +51,7 @@ const runServer = (
   const mailer = new ServerMailer(mailTransport, config)
 
   const app = express()
+  app.use(express.json({ limit: '100kb' }))
   app.use(cors())
   app.use(loggerMiddleware)
 

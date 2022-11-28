@@ -18,7 +18,7 @@ export type App = express.Application
 export const server = (db: Database, port?: number, _version?: string) => {
   const version = _version || '0.0.0'
   const app = express()
-  app.use(express.json())
+  app.use(express.json({ limit: '100kb' }))
   app.use(cors())
 
   app.use(loggerMiddleware)
