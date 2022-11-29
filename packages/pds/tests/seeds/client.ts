@@ -179,6 +179,16 @@ export class SeedClient {
     return post
   }
 
+  async deletePost(by: string, uri: AtUri) {
+    await this.client.app.bsky.feed.post.delete(
+      {
+        did: by,
+        rkey: uri.rkey,
+      },
+      this.getHeaders(by),
+    )
+  }
+
   async vote(direction: 'up' | 'down', by: string, subject: RecordRef) {
     const res = await this.client.app.bsky.feed.vote.create(
       { did: by },

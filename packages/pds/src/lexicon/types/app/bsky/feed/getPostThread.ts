@@ -29,7 +29,7 @@ export type ActorKnown =
 export type ActorUnknown = string
 
 export interface OutputSchema {
-  thread: Post;
+  thread: Post | NotFoundPost;
 }
 export interface Post {
   uri: string;
@@ -37,9 +37,9 @@ export interface Post {
   author: User;
   record: {};
   embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
-  parent?: Post;
+  parent?: Post | NotFoundPost;
   replyCount: number;
-  replies?: Post[];
+  replies?: (Post | NotFoundPost)[];
   repostCount: number;
   upvoteCount: number;
   downvoteCount: number;
@@ -74,6 +74,10 @@ export interface ExternalEmbed {
 }
 export interface UnknownEmbed {
   type: string;
+}
+export interface NotFoundPost {
+  uri: string;
+  notFound: boolean;
 }
 
 export type Handler = (

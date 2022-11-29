@@ -73,4 +73,53 @@ describe('pds thread views', () => {
       AppBskyFeedGetPostThread.NotFoundError,
     )
   })
+
+  it('handles deleted posts correctly', async () => {
+    const alice = sc.dids.alice
+    const bob = sc.dids.bob
+
+    const indexes = {
+      aliceRoot: -1,
+      bobReply: -1,
+      aliceReplyReply: -1,
+    }
+
+    await sc.post(alice, 'Deletion thread')
+    indexes.aliceRoot = sc.posts[alice].length - 1
+
+    await sc.reply(
+      bob,
+      sc.posts[alice][indexes.aliceRoot].ref,
+      sc.posts[alice][indexes.aliceRoot].ref,
+      'Reply',
+    )
+    indexes.bobReply = sc.replies[bob].length - 1
+    await sc.reply(
+      alice,
+      sc.posts[alice][indexes.aliceRoot].ref,
+      sc.replies[bob][indexes.bobReply].ref,
+      'Reply reply',
+    )
+    indexes.aliceReplyReply = sc.replies[alice].length - 1
+
+    const thread1 = await client.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+    expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
+
+    await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
+
+    const thread2 = await client.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+    expect(forSnapshot(thread2.data.thread)).toMatchSnapshot()
+
+    const thread3 = await client.app.bsky.feed.getPostThread(
+      { uri: sc.replies[alice][indexes.aliceReplyReply].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+    expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
+  })
 })
