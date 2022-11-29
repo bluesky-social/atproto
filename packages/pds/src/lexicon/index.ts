@@ -4,6 +4,7 @@
 import {
   createServer as createXrpcServer,
   Server as XrpcServer,
+  Options as XrpcOptions,
 } from '@atproto/xrpc-server'
 import { methodSchemas } from './schemas'
 import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
@@ -58,16 +59,17 @@ export const APP_BSKY_SYSTEM = {
   ActorUser: 'app.bsky.system.actorUser',
 }
 
-export function createServer(): Server {
-  return new Server()
+export function createServer(options?: XrpcOptions): Server {
+  return new Server(options)
 }
 
 export class Server {
-  xrpc: XrpcServer = createXrpcServer(methodSchemas)
+  xrpc: XrpcServer
   com: ComNS
   app: AppNS
 
-  constructor() {
+  constructor(options?: XrpcOptions) {
+    this.xrpc = createXrpcServer(methodSchemas, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
   }

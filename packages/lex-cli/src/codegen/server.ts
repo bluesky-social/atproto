@@ -57,6 +57,10 @@ const indexTs = (
       name: 'Server',
       alias: 'XrpcServer',
     })
+    xrpcImport.addNamedImport({
+      name: 'Options',
+      alias: 'XrpcOptions',
+    })
     //= import {methodSchemas} from './schemas'
     file
       .addImportDeclaration({
@@ -102,13 +106,16 @@ const indexTs = (
       })
     }
 
-    //= export function createServer() { ... }
+    //= export function createServer(options?: XrpcOptions) { ... }
     const createServerFn = file.addFunction({
       name: 'createServer',
       returnType: 'Server',
+      parameters: [
+        { name: 'options', type: 'XrpcOptions', hasQuestionToken: true },
+      ],
       isExported: true,
     })
-    createServerFn.setBodyText(`return new Server()`)
+    createServerFn.setBodyText(`return new Server(options)`)
 
     //= export class Server {...}
     const serverCls = file.addClass({
@@ -119,7 +126,6 @@ const indexTs = (
     serverCls.addProperty({
       name: 'xrpc',
       type: 'XrpcServer',
-      initializer: 'createXrpcServer(methodSchemas)',
     })
 
     // generate classes for the schemas
@@ -134,14 +140,19 @@ const indexTs = (
       genNamespaceCls(file, ns)
     }
 
-    //= constructor () {
-    //=  this.xrpc.addSchemas(schemas)
+    //= constructor (options?: XrpcOptions) {
+    //=  this.xrpc = createXrpcServer(methodSchemas, options)
     //=  {namespace declarations}
     //= }
     serverCls
-      .addConstructor()
+      .addConstructor({
+        parameters: [
+          { name: 'options', type: 'XrpcOptions', hasQuestionToken: true },
+        ],
+      })
       .setBodyText(
         [
+          'this.xrpc = createXrpcServer(methodSchemas, options)',
           ...nsidTree.map(
             (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
           ),

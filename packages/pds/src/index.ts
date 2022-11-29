@@ -51,7 +51,6 @@ const runServer = (
   const mailer = new ServerMailer(mailTransport, config)
 
   const app = express()
-  app.use(express.json({ limit: '100kb' }))
   app.use(cors())
   app.use(loggerMiddleware)
 
@@ -75,7 +74,13 @@ const runServer = (
     next()
   })
 
-  const apiServer = API()
+  const apiServer = API({
+    payload: {
+      jsonLimit: '100kb',
+      textLimit: '100kb',
+      rawLimit: '5mb',
+    },
+  })
   app.use(health.router)
   app.use(apiServer.xrpc.router)
   app.use(error.handler)

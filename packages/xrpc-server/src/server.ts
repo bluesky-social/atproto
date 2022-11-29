@@ -21,13 +21,19 @@ import {
   validateReqParams,
   validateInput,
   validateOutput,
-  hasBody,
 } from './util'
 import log from './logger'
-import { ResponseType } from '@atproto/xrpc'
 
-export function createServer(schemas?: unknown[]) {
-  return new Server(schemas)
+export type Options = {
+  payload?: {
+    jsonLimit?: string | number
+    rawLimit?: string | number
+    textLimit?: string | number
+  }
+}
+
+export function createServer(schemas?: unknown[], options?: Options) {
+  return new Server(schemas, options)
 }
 
 export class Server {
@@ -38,10 +44,13 @@ export class Server {
   inputValidators: Map<string, ValidateFunction> = new Map()
   outputValidators: Map<string, ValidateFunction> = new Map()
 
-  constructor(schemas?: unknown[]) {
+  constructor(schemas?: unknown[], opts?: Options) {
     if (schemas) {
       this.addSchemas(schemas)
     }
+    this.router.use(express.json({ limit: opts?.payload?.jsonLimit }))
+    this.router.use(express.raw({ limit: opts?.payload?.rawLimit }))
+    this.router.use(express.text({ limit: opts?.payload?.textLimit }))
     this.router.use('/xrpc/:methodId', this.handle.bind(this))
   }
 
@@ -104,7 +113,6 @@ export class Server {
 
   async handle(req: express.Request, res: express.Response) {
     try {
-      assertWellConfigured(req)
       // lookup handler and schema
       const handler = this.handlers.get(req.params.methodId)
       const schema = this.schemas.get(req.params.methodId)
@@ -192,13 +200,4 @@ function isHandlerSuccess(v: HandlerOutput): v is HandlerSuccess {
 
 function isHandlerError(v: HandlerOutput): v is HandlerError {
   return handlerError.safeParse(v).success
-}
-
-function assertWellConfigured(req: express.Request) {
-  if (hasBody(req) && !req.complete) {
-    throw new XRPCError(
-      ResponseType.InternalServerError,
-      `XRPC server didn't see req.body. Ensure that your server is using json(), raw(), and/or text() middleware for parsing request bodies.`,
-    )
-  }
 }

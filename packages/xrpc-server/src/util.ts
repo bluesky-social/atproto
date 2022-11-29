@@ -149,7 +149,7 @@ function isValidEncoding(possible: string | string[], value: string) {
   return possible === normalized
 }
 
-export function hasBody(req: express.Request) {
+function hasBody(req: express.Request) {
   const contentLength = req.headers['content-length']
   const transferEncoding = req.headers['transfer-encoding']
   return (contentLength && parseInt(contentLength, 10) > 0) || transferEncoding
