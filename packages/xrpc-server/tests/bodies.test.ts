@@ -2,6 +2,7 @@ import * as http from 'http'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import xrpc from '@atproto/xrpc'
+import logger from '../src/logger'
 
 const SCHEMAS = [
   {
@@ -95,8 +96,18 @@ describe('Parameters', () => {
       client.call('io.example.validationTest', {}, { foo: 123 }),
     ).rejects.toThrow(`input/foo must be string`)
 
+    // 500 responses don't include details, so we nab details from the logger.
+    let error: string | undefined
+    const origError = logger.error
+    logger.error = (obj, ...args) => {
+      error = obj.message
+      logger.error = origError
+      return logger.error(obj, ...args)
+    }
+
     await expect(client.call('io.example.validationTest2')).rejects.toThrow(
-      `output must have required property 'foo'`,
+      'Internal Server Error',
     )
+    expect(error).toEqual(`output must have required property 'foo'`)
   })
 })

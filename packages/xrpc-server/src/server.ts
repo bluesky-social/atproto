@@ -21,12 +21,19 @@ import {
   validateReqParams,
   validateInput,
   validateOutput,
-  readReqBody,
 } from './util'
 import log from './logger'
 
-export function createServer(schemas?: unknown[]) {
-  return new Server(schemas)
+export type Options = {
+  payload?: {
+    jsonLimit?: string | number
+    rawLimit?: string | number
+    textLimit?: string | number
+  }
+}
+
+export function createServer(schemas?: unknown[], options?: Options) {
+  return new Server(schemas, options)
 }
 
 export class Server {
@@ -37,10 +44,13 @@ export class Server {
   inputValidators: Map<string, ValidateFunction> = new Map()
   outputValidators: Map<string, ValidateFunction> = new Map()
 
-  constructor(schemas?: unknown[]) {
+  constructor(schemas?: unknown[], opts?: Options) {
     if (schemas) {
       this.addSchemas(schemas)
     }
+    this.router.use(express.json({ limit: opts?.payload?.jsonLimit }))
+    this.router.use(express.raw({ limit: opts?.payload?.rawLimit }))
+    this.router.use(express.text({ limit: opts?.payload?.textLimit }))
     this.router.use('/xrpc/:methodId', this.handle.bind(this))
   }
 
@@ -121,9 +131,6 @@ export class Server {
         )
       }
 
-      // read request body
-      const inputBody = await readReqBody(req)
-
       // validate request
       const params = validateReqParams(
         req.query,
@@ -132,7 +139,6 @@ export class Server {
       const input = validateInput(
         schema,
         req,
-        inputBody,
         this.inputValidators.get(schema.id),
       )
 
@@ -173,12 +179,12 @@ export class Server {
       }
     } catch (e: unknown) {
       if (e instanceof XRPCError) {
-        log.info(e, `error in xrpc method ${req.params.methodId}`)
+        log.error(e, `error in xrpc method ${req.params.methodId}`)
         res.status(e.type).json(e.payload)
       } else {
         log.error(
           e,
-          `Unhandled exception in ${req.params.methodId} xrpc handler:`,
+          `unhandled exception in xrpc method ${req.params.methodId}`,
         )
         res.status(500).json({
           message: 'Unexpected internal server error',

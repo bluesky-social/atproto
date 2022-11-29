@@ -1,4 +1,5 @@
 import express from 'express'
+import { isHttpError } from 'http-errors'
 import zod from 'zod'
 import { ResponseType, ResponseTypeStrings } from '@atproto/xrpc'
 
@@ -44,12 +45,25 @@ export class XRPCError extends Error {
   get payload() {
     return {
       error: this.customErrorName,
-      message: this.errorMessage || this.typeStr,
+      message:
+        this.type === ResponseType.InternalServerError
+          ? this.typeStr // Do not respond with error details for 500s
+          : this.errorMessage || this.typeStr,
     }
   }
 
   get typeStr(): string | undefined {
     return ResponseTypeStrings[this.type]
+  }
+
+  static fromError(error: unknown) {
+    if (isHttpError(error)) {
+      return new XRPCError(error.status, error.message, error.name)
+    }
+    if (error instanceof Error) {
+      return new InternalServerError(error.message)
+    }
+    return new InternalServerError()
   }
 }
 

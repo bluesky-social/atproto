@@ -39,16 +39,16 @@ export function validateReqParams(
 export function validateInput(
   schema: MethodSchema,
   req: express.Request,
-  inputBodyBuf: Uint8Array,
   jsonValidator?: ValidateFunction,
 ): HandlerInput | undefined {
   // request expectation
-  if (inputBodyBuf?.byteLength && !schema.input) {
+  const reqHasBody = hasBody(req)
+  if (reqHasBody && !schema.input) {
     throw new InvalidRequestError(
       `A request body was provided when none was expected`,
     )
   }
-  if (!inputBodyBuf?.byteLength && schema.input) {
+  if (!reqHasBody && schema.input) {
     throw new InvalidRequestError(
       `A request body is expected but none was provided`,
     )
@@ -68,12 +68,9 @@ export function validateInput(
     return undefined
   }
 
-  // parse
-  const inputBody = parseInputBodyBuf(inputBodyBuf, inputEncoding)
-
   // json schema
   if (jsonValidator) {
-    if (!jsonValidator(inputBody)) {
+    if (!jsonValidator(req.body)) {
       throw new InvalidRequestError(
         ajv.errorsText(jsonValidator.errors, {
           dataVar: 'input',
@@ -84,7 +81,7 @@ export function validateInput(
 
   return {
     encoding: inputEncoding,
-    body: inputBody,
+    body: req.body,
   }
 }
 
@@ -143,14 +140,6 @@ export function normalizeMime(v: string) {
   return shortType
 }
 
-export async function readReqBody(req: express.Request): Promise<Uint8Array> {
-  return new Promise((resolve) => {
-    const chunks: Buffer[] = []
-    req.on('data', (chunk) => chunks.push(chunk))
-    req.on('end', () => resolve(new Uint8Array(Buffer.concat(chunks))))
-  })
-}
-
 function isValidEncoding(possible: string | string[], value: string) {
   const normalized = normalizeMime(value)
   if (!normalized) return false
@@ -160,13 +149,8 @@ function isValidEncoding(possible: string | string[], value: string) {
   return possible === normalized
 }
 
-function parseInputBodyBuf(inputBodyBuf: Uint8Array, encoding: string) {
-  if (encoding.startsWith('text/') || encoding === 'application/json') {
-    const str = new TextDecoder().decode(inputBodyBuf)
-    if (encoding === 'application/json') {
-      return JSON.parse(str)
-    }
-    return str
-  }
-  return inputBodyBuf
+function hasBody(req: express.Request) {
+  const contentLength = req.headers['content-length']
+  const transferEncoding = req.headers['transfer-encoding']
+  return (contentLength && parseInt(contentLength, 10) > 0) || transferEncoding
 }
