@@ -22,13 +22,15 @@ export class SharpImageProcessor implements ImageProcessor {
 
     // Scale up to hit any specified minimum size
     if (typeof min !== 'boolean') {
-      processor = processor.resize({
-        fit: 'cover',
+      const upsizeProcessor = sharp().resize({
+        fit: 'outside',
         width: min.width,
         height: min.height,
         withoutReduction: true,
         withoutEnlargement: false,
       })
+      forwardStreamErrors(stream, upsizeProcessor)
+      stream = stream.pipe(upsizeProcessor)
     }
 
     // Scale down (or possibly up if min is false) to desired size
@@ -36,16 +38,14 @@ export class SharpImageProcessor implements ImageProcessor {
       fit,
       width,
       height,
-      withoutEnlargement: min === false,
+      withoutEnlargement: min !== true,
     })
 
     // Output to specified format
     if (format === 'jpeg') {
       processor = processor.jpeg({ quality: quality ?? 80 })
     } else if (format === 'png') {
-      const compressionLevel =
-        typeof quality === 'number' ? Math.round((9 * quality) / 100) : 6
-      processor = processor.png({ compressionLevel })
+      processor = processor.png({ quality: quality ?? 100 })
     }
 
     forwardStreamErrors(stream, processor)
