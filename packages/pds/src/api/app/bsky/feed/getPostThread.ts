@@ -24,7 +24,7 @@ export default function (server: Server) {
         .executeTakeFirst()
 
       if (!queryRes) {
-        throw new InvalidRequestError(`Post not found: ${uri}`)
+        throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
 
       const thread = rowToPost(queryRes)

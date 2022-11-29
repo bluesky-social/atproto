@@ -73,8 +73,15 @@ export interface Response {
   data: OutputSchema;
 }
 
+export class NotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'NotFound') return new NotFoundError(e)
   }
   return e
 }

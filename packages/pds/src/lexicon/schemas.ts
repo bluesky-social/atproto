@@ -2252,6 +2252,11 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
       },
     },
+    errors: [
+      {
+        name: 'NotFound',
+      },
+    ],
   },
   'app.bsky.feed.getRepostedBy': {
     lexicon: 1,

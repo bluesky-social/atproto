@@ -1,4 +1,7 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpApi, {
+  ServiceClient as AtpServiceClient,
+  AppBskyFeedGetPostThread,
+} from '@atproto/api'
 import { runTestServer, forSnapshot, CloseFn } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -66,6 +69,8 @@ describe('pds thread views', () => {
       { headers: sc.getHeaders(bob) },
     )
 
-    await expect(promise).rejects.toThrow('Post not found: does.not.exist')
+    await expect(promise).rejects.toThrow(
+      AppBskyFeedGetPostThread.NotFoundError,
+    )
   })
 })
