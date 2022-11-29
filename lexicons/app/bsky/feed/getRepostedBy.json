@@ -8,7 +8,7 @@
     "properties": {
       "uri": {"type": "string"},
       "cid": {"type": "string"},
-      "limit": {"type": "integer", "maximum": 100},
+      "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
       "before": {"type": "string"}
     }
   },

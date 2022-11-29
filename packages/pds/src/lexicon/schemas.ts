@@ -505,8 +505,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         limit: {
           type: 'integer',
           minimum: 1,
+          maximum: 100,
           default: 50,
-          description: 'The number of records to return. TODO-max number?',
+          description: 'The number of records to return.',
         },
         before: {
           type: 'string',
@@ -1068,7 +1069,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       properties: {
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         cursor: {
           type: 'string',
@@ -1201,7 +1204,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -1326,7 +1331,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
       },
     },
@@ -1483,7 +1490,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -2260,7 +2269,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -2391,7 +2402,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -2793,7 +2806,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -3030,7 +3045,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -3247,7 +3264,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -3392,7 +3411,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -3537,7 +3558,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -3682,7 +3705,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
         },
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
@@ -3840,7 +3865,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       properties: {
         limit: {
           type: 'integer',
+          minimum: 1,
           maximum: 100,
+          default: 50,
         },
         before: {
           type: 'string',
