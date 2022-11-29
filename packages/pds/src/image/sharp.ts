@@ -33,7 +33,7 @@ export class SharpImageProcessor implements ImageProcessor {
       stream = stream.pipe(upsizeProcessor)
     }
 
-    // Scale down (or possibly up if min is false) to desired size
+    // Scale down (or possibly up if min is true) to desired size
     processor = processor.resize({
       fit,
       width,
