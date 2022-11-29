@@ -969,6 +969,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             type: 'string',
             maxLength: 256,
           },
+          avatar: {
+            type: 'string',
+          },
           followersCount: {
             type: 'integer',
           },
@@ -4192,6 +4195,13 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
         description: {
           type: 'string',
           maxLength: 256,
+        },
+        avatar: {
+          type: 'image',
+          accept: 'image/png,image/jpeg',
+          maxWidth: 500,
+          maxHeight: 500,
+          maxSize: '100kB',
         },
       },
       $defs: {},

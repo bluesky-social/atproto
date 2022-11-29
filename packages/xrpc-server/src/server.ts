@@ -21,6 +21,7 @@ import {
   validateReqParams,
   validateInput,
   validateOutput,
+  removeBlobsFromSchema,
 } from './util'
 import log from './logger'
 
@@ -85,7 +86,8 @@ export class Server {
         )
       }
       if (schema.input?.schema) {
-        this.inputValidators.set(schema.id, ajv.compile(schema.input.schema))
+        const noBlobs = removeBlobsFromSchema(schema.input.schema)
+        this.inputValidators.set(schema.id, ajv.compile(noBlobs))
       }
       if (schema.output?.schema) {
         this.outputValidators.set(schema.id, ajv.compile(schema.output.schema))
@@ -136,9 +138,10 @@ export class Server {
         req.query,
         this.paramValidators.get(schema.id),
       )
-      const input = validateInput(
+      const input = await validateInput(
         schema,
         req,
+        res,
         this.inputValidators.get(schema.id),
       )
 

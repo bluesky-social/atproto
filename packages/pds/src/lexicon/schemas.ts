@@ -198,6 +198,42 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
       },
     ],
   },
+  'com.atproto.data.uploadBlob': {
+    lexicon: 1,
+    id: 'com.atproto.data.uploadBlob',
+    type: 'procedure',
+    description: 'Upload a blob to later be referenced in user repo',
+    input: {
+      encoding: 'multipart/form-data',
+      schema: {
+        type: 'object',
+        required: ['did', 'data'],
+        properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+          data: {
+            'type:': 'blob',
+          },
+        },
+        $defs: {},
+      },
+    },
+    output: {
+      encoding: 'application/json',
+      schema: {
+        type: 'object',
+        required: ['cid'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+        },
+        $defs: {},
+      },
+    },
+  },
   'com.atproto.handle.resolve': {
     lexicon: 1,
     id: 'com.atproto.handle.resolve',
@@ -968,6 +1004,9 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
           description: {
             type: 'string',
             maxLength: 256,
+          },
+          avatar: {
+            type: 'string',
           },
           followersCount: {
             type: 'integer',
@@ -4192,6 +4231,13 @@ export const recordSchemaDict: Record<string, RecordSchema> = {
         description: {
           type: 'string',
           maxLength: 256,
+        },
+        avatar: {
+          type: 'image',
+          accept: 'image/png,image/jpeg',
+          maxWidth: 500,
+          maxHeight: 500,
+          maxSize: '100kB',
         },
       },
       $defs: {},

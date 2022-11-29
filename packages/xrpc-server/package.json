@@ -22,11 +22,13 @@
     "express": "^4.17.2",
     "http-errors": "^2.0.0",
     "mime-types": "^2.1.35",
+    "multer": "^1.4.5-lts.1",
     "zod": "^3.14.2"
   },
   "devDependencies": {
     "@atproto/xrpc": "*",
     "@types/express": "^4.17.13",
-    "@types/http-errors": "^2.0.1"
+    "@types/http-errors": "^2.0.1",
+    "@types/multer": "^1.4.7"
   }
 }

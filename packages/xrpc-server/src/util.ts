@@ -1,6 +1,7 @@
 import express from 'express'
 import { MethodSchema } from '@atproto/lexicon'
 import mime from 'mime-types'
+import multer from 'multer'
 import Ajv, { ValidateFunction } from 'ajv'
 import addFormats from 'ajv-formats'
 import {
@@ -36,11 +37,12 @@ export function validateReqParams(
   return reqParams
 }
 
-export function validateInput(
+export async function validateInput(
   schema: MethodSchema,
   req: express.Request,
+  res: express.Response,
   jsonValidator?: ValidateFunction,
-): HandlerInput | undefined {
+): Promise<HandlerInput | undefined> {
   // request expectation
   const reqHasBody = hasBody(req)
   if (reqHasBody && !schema.input) {
@@ -66,6 +68,11 @@ export function validateInput(
   if (!inputEncoding) {
     // no input body
     return undefined
+  }
+
+  // json/text/raw is handled by middleware, we explicitly handle multiparts
+  if (inputEncoding === 'multipart/form-data') {
+    await handleMultipart(schema, req, res)
   }
 
   // json schema
@@ -153,4 +160,45 @@ function hasBody(req: express.Request) {
   const contentLength = req.headers['content-length']
   const transferEncoding = req.headers['transfer-encoding']
   return (contentLength && parseInt(contentLength, 10) > 0) || transferEncoding
+}
+
+async function handleMultipart(
+  schema: MethodSchema,
+  req: express.Request,
+  res: express.Response,
+): Promise<void> {
+  const properties = schema.input?.schema?.properties
+  if (typeof properties !== 'object') return
+  const files: { name: string; maxCount: 1 }[] = []
+  for (const key of Object.keys(properties)) {
+    if (properties[key].type === 'blob') {
+      files.push({ name: key, maxCount: 1 })
+    }
+  }
+  return new Promise((resolve, reject) => {
+    multer().fields(files)(req, res, (err) => {
+      if (err) {
+        return reject(err)
+      }
+      resolve()
+    })
+  })
+}
+
+export function removeBlobsFromSchema(schema: Record<string, any>) {
+  const propertiesNoBlobs = {}
+  const requiredNoBlobs: string[] = []
+  for (const [key, val] of Object.entries(schema.properties)) {
+    if ((val as any).type !== 'blob') {
+      propertiesNoBlobs[key] = val
+      if (schema.required.indexOf(key) > -1) {
+        requiredNoBlobs.push(key)
+      }
+    }
+  }
+  return {
+    ...schema,
+    required: requiredNoBlobs,
+    properties: propertiesNoBlobs,
+  }
 }

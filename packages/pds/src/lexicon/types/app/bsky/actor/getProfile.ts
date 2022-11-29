@@ -33,6 +33,7 @@ export interface OutputSchema {
   creator: string;
   displayName?: string;
   description?: string;
+  avatar?: string;
   followersCount: number;
   followsCount: number;
   membersCount: number;
