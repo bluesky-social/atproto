@@ -59,41 +59,6 @@ describe('Blobs', () => {
         body: data,
       },
     )
-    console.log(res.status)
-    console.log(res.statusText)
-    // const res1 = await client.call('io.example.uploadBlob', {}, data, {
-    //   // encoding: 'multipart/form-data',
-    //   headers: {
-    //     'Content-Type': 'multipart/form-data',
-    //   },
-    // })
-    // expect(res1.success).toBeTruthy()
-    // expect(res1.data.foo).toBe('hello')
-    // expect(res1.data.bar).toBe(123)
+    expect(res.status).toBe(200)
   })
-
-  //   await expect(client.call('io.example.validationTest', {})).rejects.toThrow(
-  //     `A request body is expected but none was provided`,
-  //   )
-  //   await expect(
-  //     client.call('io.example.validationTest', {}, {}),
-  //   ).rejects.toThrow(`input must have required property 'foo'`)
-  //   await expect(
-  //     client.call('io.example.validationTest', {}, { foo: 123 }),
-  //   ).rejects.toThrow(`input/foo must be string`)
-
-  //   // 500 responses don't include details, so we nab details from the logger.
-  //   let error: string | undefined
-  //   const origError = logger.error
-  //   logger.error = (obj, ...args) => {
-  //     error = obj.message
-  //     logger.error = origError
-  //     return logger.error(obj, ...args)
-  //   }
-
-  //   await expect(client.call('io.example.validationTest2')).rejects.toThrow(
-  //     'Internal Server Error',
-  //   )
-  //   expect(error).toEqual(`output must have required property 'foo'`)
-  // })
 })

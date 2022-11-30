@@ -72,7 +72,15 @@ export async function validateInput(
 
   // json/text/raw is handled by middleware, we explicitly handle multiparts
   if (inputEncoding === 'multipart/form-data') {
-    await handleMultipart(schema, req, res)
+    const expectedFiles = expectedFilesFromSchema(schema.input?.schema)
+    await handleMultipart(expectedFiles, req, res)
+    const uploadedFiles = Object.keys(req.files || {})
+    const missing = expectedFiles.filter(
+      (name) => uploadedFiles.indexOf(name) < 0,
+    )
+    if (missing.length > 0) {
+      throw new InvalidRequestError(`Missing expected blob upload: ${missing}`)
+    }
   }
 
   // json schema
@@ -163,18 +171,11 @@ function hasBody(req: express.Request) {
 }
 
 async function handleMultipart(
-  schema: MethodSchema,
+  expectedFiles: string[],
   req: express.Request,
   res: express.Response,
 ): Promise<void> {
-  const properties = schema.input?.schema?.properties
-  if (typeof properties !== 'object') return
-  const files: { name: string; maxCount: 1 }[] = []
-  for (const key of Object.keys(properties)) {
-    if (properties[key].type === 'blob') {
-      files.push({ name: key, maxCount: 1 })
-    }
-  }
+  const files = expectedFiles.map((name) => ({ name, maxCount: 1 }))
   return new Promise((resolve, reject) => {
     multer().fields(files)(req, res, (err) => {
       if (err) {
@@ -183,6 +184,17 @@ async function handleMultipart(
       resolve()
     })
   })
+}
+
+function expectedFilesFromSchema(schema: Record<string, any>): string[] {
+  const properties = schema.properties
+  const filenames: string[] = []
+  for (const key of Object.keys(properties)) {
+    if (properties[key].type === 'blob') {
+      filenames.push(key)
+    }
+  }
+  return filenames
 }
 
 export function removeBlobsFromSchema(schema: Record<string, any>) {
