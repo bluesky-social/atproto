@@ -1,4 +1,8 @@
-import express, { NextFunction, RequestHandler } from 'express'
+import express, {
+  ErrorRequestHandler,
+  NextFunction,
+  RequestHandler,
+} from 'express'
 import { ValidateFunction } from 'ajv'
 import {
   MethodSchema,
@@ -46,16 +50,16 @@ export class Server {
   paramValidators: Map<string, ValidateFunction> = new Map()
   inputValidators: Map<string, ValidateFunction> = new Map()
   outputValidators: Map<string, ValidateFunction> = new Map()
-  middleware: Record<'json' | 'raw' | 'text' | 'locals', RequestHandler>
+  middleware: Record<'json' | 'raw' | 'text', RequestHandler>
 
   constructor(schemas?: unknown[], opts?: Options) {
     if (schemas) {
       this.addSchemas(schemas)
     }
-    this.router.use('/xrpc/:methodId', this.catchall.bind(this))
     this.router.use(this.routes)
+    this.router.use('/xrpc/:methodId', this.catchall.bind(this))
+    this.router.use(errorMiddleware)
     this.middleware = {
-      locals: localsMiddleware,
       json: express.json({ limit: opts?.payload?.jsonLimit }),
       raw: express.raw({ limit: opts?.payload?.rawLimit }),
       text: express.text({ limit: opts?.payload?.textLimit }),
@@ -112,11 +116,11 @@ export class Server {
   // =
 
   protected async addRoute(schema: MethodSchema, config: XRPCHandlerConfig) {
-    const verb: 'get' | 'post' = schema.type === 'procedure' ? 'post' : 'get'
+    const verb: 'post' | 'get' = schema.type === 'procedure' ? 'post' : 'get'
     const middleware: RequestHandler[] = []
-    middleware.push(this.middleware.locals)
+    middleware.push(createLocalsMiddleware(schema))
     if (config.auth) {
-      middleware.push(createAuthMiddleware(schema, config.auth))
+      middleware.push(createAuthMiddleware(config.auth))
     }
     if (verb === 'post') {
       middleware.push(this.middleware.json)
@@ -132,34 +136,35 @@ export class Server {
 
   async catchall(
     req: express.Request,
-    res: express.Response,
+    _res: express.Response,
     next: NextFunction,
   ) {
     const schema = this.schemas.get(req.params.methodId)
     if (!schema) {
-      const err = new MethodNotImplementedError()
-      return sendXRPCError(res, err)
+      return next(new MethodNotImplementedError())
     }
     // validate method
     if (schema.type === 'query' && req.method !== 'GET') {
-      const err = new InvalidRequestError(
-        `Incorrect HTTP method (${req.method}) expected GET`,
+      return next(
+        new InvalidRequestError(
+          `Incorrect HTTP method (${req.method}) expected GET`,
+        ),
       )
-      return sendXRPCError(res, err)
     } else if (schema.type === 'procedure' && req.method !== 'POST') {
-      const err = new InvalidRequestError(
-        `Incorrect HTTP method (${req.method}) expected POST`,
+      return next(
+        new InvalidRequestError(
+          `Incorrect HTTP method (${req.method}) expected POST`,
+        ),
       )
-      return sendXRPCError(res, err)
     }
-    return next('route')
+    return next()
   }
 
   createHandler(schema: MethodSchema, handler: XRPCHandler): RequestHandler {
     const paramValidator = this.paramValidators.get(schema.id)
     const inputValidator = this.inputValidators.get(schema.id)
     const outputValidator = this.outputValidators.get(schema.id)
-    return async function (req, res) {
+    return async function (req, res, next) {
       try {
         // validate request
         const params = validateReqParams(req.query, paramValidator)
@@ -205,13 +210,8 @@ export class Server {
             res.status(200).end()
           }
         }
-      } catch (e: unknown) {
-        if (e instanceof XRPCError) {
-          log.error(e, `error in xrpc method ${schema.id}`)
-        } else {
-          log.error(e, `unhandled exception in xrpc method ${schema.id}`)
-        }
-        sendXRPCError(res, XRPCError.fromError(e))
+      } catch (err: unknown) {
+        next(err)
       }
     }
   }
@@ -221,27 +221,23 @@ function isHandlerSuccess(v: HandlerOutput): v is HandlerSuccess {
   return handlerSuccess.safeParse(v).success
 }
 
-function sendXRPCError(res: express.Response, err: XRPCError) {
-  return res.status(err.type).json(err.payload)
-}
-
 const kRequestLocals = Symbol('requestLocals')
 
-const localsMiddleware: RequestHandler = function (req, _res, next) {
-  const locals: RequestLocals = { auth: undefined }
-  req[kRequestLocals] = locals
-  return next()
+function createLocalsMiddleware(schema: MethodSchema): RequestHandler {
+  return function (req, _res, next) {
+    const locals: RequestLocals = { auth: undefined, schemaId: schema.id }
+    req[kRequestLocals] = locals
+    return next()
+  }
 }
 
 type RequestLocals = {
   auth: HandlerAuth | undefined
+  schemaId: string
 }
 
-function createAuthMiddleware(
-  schema: MethodSchema,
-  verifier: AuthVerifier,
-): RequestHandler {
-  return async function (req, res, next) {
+function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
+  return async function (req, _res, next) {
     try {
       const result = await verifier(req)
       if (isHandlerError(result)) {
@@ -250,13 +246,23 @@ function createAuthMiddleware(
       const locals: RequestLocals = req[kRequestLocals]
       locals.auth = result
       next()
-    } catch (e: unknown) {
-      if (e instanceof XRPCError) {
-        log.error(e, `error in xrpc method auth ${schema.id}`)
-      } else {
-        log.error(e, `unhandled exception in xrpc method auth ${schema.id}`)
-      }
-      sendXRPCError(res, XRPCError.fromError(e))
+    } catch (err: unknown) {
+      next(err)
     }
   }
+}
+
+const errorMiddleware: ErrorRequestHandler = function (err, req, res, next) {
+  const locals: RequestLocals | undefined = req[kRequestLocals]
+  const methodSuffix = locals ? ` method ${locals.schemaId}` : ''
+  if (err instanceof XRPCError) {
+    log.error(err, `error in xrpc${methodSuffix}`)
+  } else {
+    log.error(err, `unhandled exception in xrpc${methodSuffix}`)
+  }
+  if (res.headersSent) {
+    return next(err)
+  }
+  const xrpcError = XRPCError.fromError(err)
+  return res.status(xrpcError.type).json(xrpcError.payload)
 }
