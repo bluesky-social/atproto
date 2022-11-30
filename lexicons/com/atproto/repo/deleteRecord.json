@@ -1,25 +1,29 @@
 {
   "lexicon": 1,
   "id": "com.atproto.repo.deleteRecord",
-  "type": "procedure",
-  "description": "Delete a record.",
-  "input": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["did", "collection", "rkey"],
-      "properties": {
-        "did": {
-          "type": "string",
-          "description": "The DID of the repo."
-        },
-        "collection": {
-          "type": "string",
-          "description": "The NSID of the record collection."
-        },
-        "rkey": {
-          "type": "string",
-          "description": "The key of the record."
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete a record.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "collection", "rkey"],
+          "properties": {
+            "did": {
+              "type": "string",
+              "description": "The DID of the repo."
+            },
+            "collection": {
+              "type": "string",
+              "description": "The NSID of the record collection."
+            },
+            "rkey": {
+              "type": "string",
+              "description": "The key of the record."
+            }
+          }
         }
       }
     }

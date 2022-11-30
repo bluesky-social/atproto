@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.post",
+  "id": "app.bsky.feed.debug",
   "defs": {
     "main": {
       "type": "record",
@@ -14,12 +14,34 @@
             "type": "array",
             "items": "#entity"
           },
-          "reply": "#replyRef",
-          "createdAt": {"type": "datetime"}
+          "reply": "#reply",
+          "createdAt": {"type": "string"}
         }
       }
     },
-    "replyRef":{
+    "someToken": {"type": "token"},
+    "unknown": {"type": "unknown"},
+    "boolean": {"type": "boolean"},
+    "number": {"type": "number"},
+    "integer": {"type": "integer"},
+    "string": {"type": "string"},
+    "blob": {"type": "blob"},
+    "image": {"type": "image"},
+    "video": {"type": "video"},
+    "audio": {"type": "audio"},
+    "stringArr": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "replyArr": {
+      "type": "array",
+      "items": "#reply"
+    },
+    "multiArr": {
+      "type": "array",
+      "items": ["#reply", "#postRef", "#entity"]
+    },
+    "reply":{
       "type": "object",
       "required": ["root", "parent"],
       "properties": {

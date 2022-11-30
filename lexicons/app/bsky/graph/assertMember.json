@@ -1,6 +1,10 @@
 {
   "lexicon": 1,
   "id": "app.bsky.graph.assertMember",
-  "type": "token",
-  "description": "Assertion type: Member. Defined for app.bsky.graph.assertions's assertion."
+  "defs": {
+    "main": {
+      "type": "token",
+      "description": "Assertion type: Member. Defined for app.bsky.graph.assertions's assertion."
+    }
+  }
 }

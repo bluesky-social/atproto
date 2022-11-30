@@ -1,22 +1,27 @@
 {
   "lexicon": 1,
   "id": "app.bsky.graph.assertion",
-  "type": "record",
-  "key": "tid",
-  "record": {
-    "type": "object",
-    "required": ["assertion", "subject", "createdAt"],
-    "properties": {
-      "assertion": {"type": "string"},
-      "subject": {
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
         "type": "object",
-        "required": ["did", "declarationCid"],
+        "required": ["assertion", "subject", "createdAt"],
         "properties": {
-          "did": {"type": "string"},
-          "declarationCid": {"type": "string"}
+          "assertion": {"type": "string"},
+          "subject": "#subject",
+          "createdAt": {"type": "datetime"}
         }
-      },
-      "createdAt": {"type": "string", "format": "date-time"}
+      }
+    },
+    "subject": {
+      "type": "object",
+      "required": ["did", "declarationCid"],
+      "properties": {
+        "did": {"type": "string"},
+        "declarationCid": {"type": "string"}
+      }
     }
   }
 }

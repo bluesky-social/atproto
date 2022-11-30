@@ -1,56 +1,48 @@
 {
   "lexicon": 1,
   "id": "app.bsky.actor.createScene",
-  "type": "procedure",
-  "description": "Create a scene.",
-  "input": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["handle"],
-      "properties": {
-        "handle": {"type": "string"},
-        "recoveryKey": {"type": "string"}
-      }
-    }
-  },
-  "output": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["handle", "did", "declaration"],
-      "properties": {
-        "handle": { "type": "string" },
-        "did": { "type": "string" },
-        "declaration": {"$ref": "#/defs/declaration"}
-      }
-    }
-  },
-  "errors": [
-    {"name": "InvalidHandle"},
-    {"name": "HandleNotAvailable"}
-  ],
   "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create a scene.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["handle"],
+          "properties": {
+            "handle": {"type": "string"},
+            "recoveryKey": {"type": "string"}
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["handle", "did", "declaration"],
+          "properties": {
+            "handle": { "type": "string" },
+            "did": { "type": "string" },
+            "declaration": "#declaration"
+          }
+        }
+      },
+      "errors": [
+        {"name": "InvalidHandle"},
+        {"name": "HandleNotAvailable"}
+      ]
+    },
     "declaration": {
       "type": "object",
       "required": ["cid", "actorType"],
       "properties": {
         "cid": {"type": "string"},
         "actorType": {
-          "oneOf": [
-            {"$ref": "#/defs/actorKnown"},
-            {"$ref": "#/defs/actorUnknown"}
-          ]
+          "type": "string", 
+          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
         }
       }
-    },
-    "actorKnown": {
-      "type": "string",
-      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-    },
-    "actorUnknown": {
-      "type": "string",
-      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
   }
 }
