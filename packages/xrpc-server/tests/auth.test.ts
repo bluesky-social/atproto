@@ -69,6 +69,7 @@ describe('Auth', () => {
           }),
         },
       )
+      throw new Error('Didnt throw')
     } catch (e: any) {
       expect(e instanceof XRPCError).toBeTruthy()
       expect(e.success).toBeFalsy()
@@ -91,6 +92,7 @@ describe('Auth', () => {
           }),
         },
       )
+      throw new Error('Didnt throw')
     } catch (e: any) {
       expect(e instanceof XRPCError).toBeTruthy()
       expect(e.success).toBeFalsy()
