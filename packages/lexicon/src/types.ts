@@ -194,32 +194,8 @@ export const lexUserType = z.union([
   lexNumber,
   lexInteger,
   lexString,
-
-  z.string().array(),
 ])
 export type LexUserType = z.infer<typeof lexUserType>
-
-export const lexUserTypeConcrete = z.union([
-  lexRecord,
-
-  lexXrpcQuery,
-  lexXrpcProcedure,
-
-  lexBlob,
-  lexImage,
-  lexVideo,
-  lexAudio,
-
-  lexArray,
-  lexToken,
-  lexObject,
-
-  lexBoolean,
-  lexNumber,
-  lexInteger,
-  lexString,
-])
-export type LexUserTypeConcrete = z.infer<typeof lexUserTypeConcrete>
 
 export const lexiconDoc = z.object({
   lexicon: z.literal(1),

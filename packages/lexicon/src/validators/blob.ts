@@ -1,15 +1,11 @@
 import { Lexicons } from '../lexicons'
-import {
-  LexUserTypeConcrete,
-  ValidationResult,
-  ValidationError,
-} from '../types'
+import { LexUserType, ValidationResult, ValidationError } from '../types'
 import { isObj, hasProp } from '../types'
 
 export function blob(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   if (!isObj(value)) {
@@ -36,7 +32,7 @@ export function blob(
 export function image(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   return blob(lexicons, path, def, value)
@@ -45,7 +41,7 @@ export function image(
 export function video(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   return blob(lexicons, path, def, value)
@@ -54,7 +50,7 @@ export function video(
 export function audio(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   return blob(lexicons, path, def, value)

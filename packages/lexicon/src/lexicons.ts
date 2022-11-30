@@ -5,7 +5,6 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexUserType,
-  LexUserTypeConcrete,
   LexiconDocMalformedError,
   LexiconDefNotFoundError,
   InvalidLexiconError,
@@ -86,21 +85,19 @@ export class Lexicons {
   }
 
   /**
-   * Resolve a def URI to a set of concrete types.
+   * Get a def, throw if not found. Throws on not found.
    */
-  resolveDef(uri: string): LexUserTypeConcrete[] {
+  getDefOrThrow(uri: string, types?: string[]): LexUserType {
     const def = this.getDef(uri)
     if (!def) {
       throw new LexiconDefNotFoundError(`Lexicon not found: ${uri}`)
     }
-    if (Array.isArray(def)) {
-      let defs: LexUserTypeConcrete[] = []
-      for (const itemUri of def) {
-        defs = defs.concat(this.resolveDef(itemUri))
-      }
-      return defs
+    if (types && !types.includes(def.type)) {
+      throw new InvalidLexiconError(
+        `Not a ${types.join(' or ')} lexicon: ${uri}`,
+      )
     }
-    return [def]
+    return def
   }
 
   /**
@@ -108,10 +105,7 @@ export class Lexicons {
    */
   assertValidRecord(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
-    const defs = this.resolveDef(lexUri)
-    if (!defs.every((def) => def.type === 'record')) {
-      throw new InvalidLexiconError(`Not a record lexicon: ${lexUri}`)
-    }
+    const def = this.getDefOrThrow(lexUri, ['record'])
     if (!isObj(value)) {
       throw new ValidationError(`Record must be an object`)
     }
@@ -124,7 +118,7 @@ export class Lexicons {
         `Invalid $type: must be ${lexUri}, got ${$type}`,
       )
     }
-    assertValidRecord(this, defs as LexRecord[], value)
+    assertValidRecord(this, def as LexRecord, value)
   }
 
   /**
@@ -132,19 +126,8 @@ export class Lexicons {
    */
   assertValidXrpcParams(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
-    const defs = this.resolveDef(lexUri)
-    if (
-      !defs.every((def) => def.type === 'query' || def.type === 'procedure')
-    ) {
-      throw new InvalidLexiconError(
-        `Not a query or procedure lexicon: ${lexUri}`,
-      )
-    }
-    assertValidXrpcParams(
-      this,
-      defs as (LexXrpcProcedure | LexXrpcQuery)[],
-      value,
-    )
+    const def = this.getDefOrThrow(lexUri, ['query', 'procedure'])
+    assertValidXrpcParams(this, def as LexXrpcProcedure | LexXrpcQuery, value)
   }
 
   /**
@@ -152,11 +135,8 @@ export class Lexicons {
    */
   assertValidXrpcInput(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
-    const defs = this.resolveDef(lexUri)
-    if (!defs.every((def) => def.type === 'procedure')) {
-      throw new InvalidLexiconError(`Not a procedure lexicon: ${lexUri}`)
-    }
-    assertValidXrpcInput(this, defs as LexXrpcProcedure[], value)
+    const def = this.getDefOrThrow(lexUri, ['procedure'])
+    assertValidXrpcInput(this, def as LexXrpcProcedure, value)
   }
 
   /**
@@ -164,19 +144,8 @@ export class Lexicons {
    */
   assertValidXrpcOutput(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
-    const defs = this.resolveDef(lexUri)
-    if (
-      !defs.every((def) => def.type === 'query' || def.type === 'procedure')
-    ) {
-      throw new InvalidLexiconError(
-        `Not a query or procedure lexicon: ${lexUri}`,
-      )
-    }
-    assertValidXrpcOutput(
-      this,
-      defs as (LexXrpcProcedure | LexXrpcQuery)[],
-      value,
-    )
+    const def = this.getDefOrThrow(lexUri, ['query', 'procedure'])
+    assertValidXrpcOutput(this, def as LexXrpcProcedure | LexXrpcQuery, value)
   }
 }
 
@@ -193,9 +162,6 @@ function* iterDefs(doc: LexiconDoc): Generator<[string, LexUserType]> {
 // this method mutates objects
 // -prf
 function resolveDefUris(def: LexUserType, baseUri: string): LexUserType {
-  if (Array.isArray(def)) {
-    return def.map((str) => toLexUri(str, baseUri))
-  }
   if (def.type === 'object') {
     if (def.properties) {
       for (const k in def.properties) {

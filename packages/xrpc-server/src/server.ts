@@ -82,7 +82,7 @@ export class Server {
     try {
       // lookup handler and schema
       const handler = this.handlers.get(req.params.methodId)
-      const def = this.lex.resolveDef(req.params.methodId)[0]
+      const def = this.lex.getDef(req.params.methodId)
       if (
         !handler ||
         !def ||

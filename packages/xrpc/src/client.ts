@@ -83,7 +83,7 @@ export class ServiceClient {
     data?: unknown,
     opts?: CallOptions,
   ) {
-    const def = this.baseClient.lex.resolveDef(methodNsid)[0]
+    const def = this.baseClient.lex.getDefOrThrow(methodNsid)
     if (!def || (def.type !== 'query' && def.type !== 'procedure')) {
       throw new Error(
         `Invalid lexicon: ${methodNsid}. Must be a query or procedure.`,

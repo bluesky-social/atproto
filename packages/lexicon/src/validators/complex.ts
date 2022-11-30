@@ -2,7 +2,7 @@ import { Lexicons } from '../lexicons'
 import {
   LexArray,
   LexObject,
-  LexUserTypeConcrete,
+  LexUserType,
   ValidationResult,
   ValidationError,
 } from '../types'
@@ -14,7 +14,7 @@ import * as Blob from './blob'
 export function validate(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   switch (def.type) {
@@ -49,7 +49,7 @@ export function validate(
 export function array(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   def = def as LexArray
@@ -105,7 +105,7 @@ export function array(
 export function object(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   def = def as LexObject

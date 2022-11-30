@@ -1,6 +1,6 @@
 import { Lexicons } from '../lexicons'
 import {
-  LexUserTypeConcrete,
+  LexUserType,
   LexBoolean,
   LexNumber,
   LexInteger,
@@ -12,7 +12,7 @@ import {
 export function validate(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   switch (def.type) {
@@ -35,7 +35,7 @@ export function validate(
 export function boolean(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   def = def as LexBoolean
@@ -73,7 +73,7 @@ export function boolean(
 export function number(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   def = def as LexNumber
@@ -147,7 +147,7 @@ export function number(
 export function integer(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   def = def as LexInteger
@@ -172,7 +172,7 @@ export function integer(
 export function string(
   lexicons: Lexicons,
   path: string,
-  def: LexUserTypeConcrete,
+  def: LexUserType,
   value: unknown,
 ): ValidationResult {
   def = def as LexString
