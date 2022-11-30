@@ -75,7 +75,10 @@ export async function validateInput(
     const expectedFiles = expectedFilesFromSchema(schema.input?.schema)
     await handleMultipart(expectedFiles, req, res)
     const uploadedFiles = Object.keys(req.files || {})
-    const missing = expectedFiles.filter(
+    const requiredFiles = expectedFiles.filter(
+      (name) => schema.input?.schema.required.indexOf(name) > -1,
+    )
+    const missing = requiredFiles.filter(
       (name) => uploadedFiles.indexOf(name) < 0,
     )
     if (missing.length > 0) {

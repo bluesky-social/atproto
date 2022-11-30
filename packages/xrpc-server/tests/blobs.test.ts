@@ -13,10 +13,11 @@ const SCHEMAS = [
       encoding: 'multipart/form-data',
       schema: {
         type: 'object',
-        required: ['field', 'file'],
+        required: ['field', 'file', 'otherFile'],
         properties: {
           field: { type: 'string' },
           file: { type: 'blob' },
+          otherFile: { type: 'blob' },
         },
       },
     },
@@ -47,11 +48,14 @@ describe('Blobs', () => {
   })
 
   it('uploads blobs', async () => {
-    const bytes = randomBytes(1000)
-    const blob = new Blob([bytes.buffer], { type: 'image/png' })
+    const file = new Blob([randomBytes(500).buffer], { type: 'image/png' })
+    const otherFile = new Blob([randomBytes(500).buffer], {
+      type: 'image/jpeg',
+    })
     const data = new FormData()
     data.append('field', 'blah')
-    data.append('file', blob)
+    data.append('file', file)
+    data.append('otherFile', otherFile)
     const res = await fetch(
       'http://localhost:8892/xrpc/io.example.uploadBlob',
       {
@@ -60,5 +64,38 @@ describe('Blobs', () => {
       },
     )
     expect(res.status).toBe(200)
+  })
+
+  it('fails if missing a field', async () => {
+    const file = new Blob([randomBytes(500).buffer], { type: 'image/png' })
+    const otherFile = new Blob([randomBytes(500).buffer], {
+      type: 'image/jpeg',
+    })
+    const data = new FormData()
+    data.append('file', file)
+    data.append('otherFile', otherFile)
+    const res = await fetch(
+      'http://localhost:8892/xrpc/io.example.uploadBlob',
+      {
+        method: 'POST',
+        body: data,
+      },
+    )
+    expect(res.status).toBe(400)
+  })
+
+  it('fails if missing a file', async () => {
+    const file = new Blob([randomBytes(500).buffer], { type: 'image/png' })
+    const data = new FormData()
+    data.append('field', 'blah')
+    data.append('file', file)
+    const res = await fetch(
+      'http://localhost:8892/xrpc/io.example.uploadBlob',
+      {
+        method: 'POST',
+        body: data,
+      },
+    )
+    expect(res.status).toBe(400)
   })
 })
