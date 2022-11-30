@@ -50,7 +50,7 @@ const SCHEMAS = [
   },
 ]
 
-describe('Parameters', () => {
+describe('Bodies', () => {
   let s: http.Server
   const server = xrpcServer.createServer(SCHEMAS)
   server.method(
