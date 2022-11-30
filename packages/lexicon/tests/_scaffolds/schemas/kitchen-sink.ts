@@ -11,7 +11,15 @@ export default {
       key: 'tid',
       record: {
         type: 'object',
-        required: ['object', 'array', 'boolean', 'number', 'integer', 'string'],
+        required: [
+          'object',
+          'array',
+          'boolean',
+          'number',
+          'integer',
+          'string',
+          'datetime',
+        ],
         properties: {
           object: '#object',
           array: { type: 'array', items: { type: 'string' } },
@@ -19,6 +27,7 @@ export default {
           number: { type: 'number' },
           integer: { type: 'integer' },
           string: { type: 'string' },
+          datetime: { type: 'datetime' },
         },
       },
     },

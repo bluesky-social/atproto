@@ -155,7 +155,7 @@ const indexTs = (
     }
 
     //= constructor (options?: XrpcOptions) {
-    //=  this.xrpc = createXrpcServer(methodSchemas, options)
+    //=  this.xrpc = createXrpcServer(lexicons, options)
     //=  {namespace declarations}
     //= }
     serverCls
@@ -166,7 +166,7 @@ const indexTs = (
       })
       .setBodyText(
         [
-          'this.xrpc = createXrpcServer(methodSchemas, options)',
+          'this.xrpc = createXrpcServer(lexicons, options)',
           ...nsidTree.map(
             (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
           ),

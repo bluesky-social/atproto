@@ -51,6 +51,7 @@ describe('Record validation', () => {
       number: 123.45,
       integer: 123,
       string: 'string',
+      datetime: new Date().toISOString(),
     })
   })
 
@@ -86,6 +87,7 @@ describe('Record validation', () => {
         number: 123.45,
         integer: 123,
         string: 'string',
+        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record must have the property "object"')
   })
@@ -107,6 +109,7 @@ describe('Record validation', () => {
         number: 123.45,
         integer: 123,
         string: 'string',
+        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/object/object/boolean must be a boolean')
     expect(() =>
@@ -118,6 +121,7 @@ describe('Record validation', () => {
         number: 123.45,
         integer: 123,
         string: 'string',
+        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/object must be an object')
     expect(() =>
@@ -136,6 +140,7 @@ describe('Record validation', () => {
         number: 123.45,
         integer: 123,
         string: 'string',
+        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/array must be an array')
     expect(() =>
@@ -154,6 +159,7 @@ describe('Record validation', () => {
         number: 'string',
         integer: 123,
         string: 'string',
+        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/number must be a number')
     expect(() =>
@@ -172,6 +178,7 @@ describe('Record validation', () => {
         number: 123.45,
         integer: true,
         string: 'string',
+        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/integer must be a number')
     expect(() =>
@@ -190,8 +197,28 @@ describe('Record validation', () => {
         number: 123.45,
         integer: 123,
         string: {},
+        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/string must be a string')
+    expect(() =>
+      lex.assertValidRecord('com.example.kitchenSink#record', {
+        $type: 'com.example.kitchenSink#record',
+        object: {
+          object: { boolean: true },
+          array: ['one', 'two'],
+          boolean: true,
+          number: 123.45,
+          integer: 123,
+          string: 'string',
+        },
+        array: ['one', 'two'],
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+        datetime: 1234,
+      }),
+    ).toThrow('Record/datetime must be a string')
   })
 
   it('Handles optional properties correctly', () => {
@@ -386,6 +413,28 @@ describe('Record validation', () => {
         string: 'b',
       }),
     ).toThrow('Record/string must be a')
+  })
+
+  it('Applies datetime formatting constraint', () => {
+    expect(() =>
+      lex.assertValidRecord('com.example.kitchenSink#record', {
+        $type: 'com.example.kitchenSink#record',
+        object: {
+          object: { boolean: true },
+          array: ['one', 'two'],
+          boolean: true,
+          number: 123.45,
+          integer: 123,
+          string: 'string',
+        },
+        array: ['one', 'two'],
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+        datetime: 'bad date',
+      }),
+    ).toThrow('Record/datetime must be an iso8601 formatted datetime')
   })
 })
 

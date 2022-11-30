@@ -5,6 +5,7 @@ import {
   LexNumber,
   LexInteger,
   LexString,
+  LexDatetime,
   ValidationResult,
   ValidationError,
 } from '../types'
@@ -24,6 +25,8 @@ export function validate(
       return integer(lexicons, path, def, value)
     case 'string':
       return string(lexicons, path, def, value)
+    case 'datetime':
+      return datetime(lexicons, path, def, value)
     case 'unknown':
       return unknown(lexicons, path, def, value)
     default:
@@ -239,6 +242,40 @@ export function string(
           `${path} must not be shorter than ${def.minLength} characters`,
         ),
       }
+    }
+  }
+
+  return { success: true }
+}
+
+export function datetime(
+  lexicons: Lexicons,
+  path: string,
+  def: LexUserType,
+  value: unknown,
+): ValidationResult {
+  def = def as LexDatetime
+
+  // type
+  const type = typeof value
+  if (type !== 'string') {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a string`),
+    }
+  }
+
+  // valid iso-8601
+  {
+    try {
+      const date = new Date(Date.parse(value as string))
+      if (value !== date.toISOString()) {
+        throw new ValidationError(
+          `${path} must be an iso8601 formatted datetime`,
+        )
+      }
+    } catch {
+      throw new ValidationError(`${path} must be an iso8601 formatted datetime`)
     }
   }
 

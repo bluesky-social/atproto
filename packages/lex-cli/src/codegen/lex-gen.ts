@@ -336,6 +336,8 @@ export function primitiveToType(type: string): string {
       return 'number'
     case 'boolean':
       return 'boolean'
+    case 'datetime':
+      return 'string'
     case 'unknown':
       return '{}'
     default:
