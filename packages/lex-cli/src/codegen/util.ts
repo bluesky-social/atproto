@@ -1,26 +1,33 @@
-import { Schema } from '@atproto/lexicon'
+import { LexiconDoc, LexUserType } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 
-export interface NsidNS {
+export interface DefTreeNodeUserType {
+  nsid: string
+  def: LexUserType
+}
+
+export interface DefTreeNode {
   name: string
   className: string
   propName: string
-  children: NsidNS[]
-  schemas: Schema[]
+  children: DefTreeNode[]
+  userTypes: DefTreeNodeUserType[]
 }
 
-export function schemasToNsidTree(schemas: Schema[]): NsidNS[] {
-  const tree: NsidNS[] = []
-  for (const schema of schemas) {
-    if (schema.type === 'token') continue
-    const node = getOrCreateNode(tree, schema.id.split('.').slice(0, -1))
-    node.schemas.push(schema)
+export function lexiconsToDefTree(lexicons: LexiconDoc[]): DefTreeNode[] {
+  const tree: DefTreeNode[] = []
+  for (const lexicon of lexicons) {
+    if (!lexicon.defs.main) {
+      continue
+    }
+    const node = getOrCreateNode(tree, lexicon.id.split('.').slice(0, -1))
+    node.userTypes.push({ nsid: lexicon.id, def: lexicon.defs.main })
   }
   return tree
 }
 
-function getOrCreateNode(tree: NsidNS[], path: string[]): NsidNS {
-  let node: NsidNS | undefined
+function getOrCreateNode(tree: DefTreeNode[], path: string[]): DefTreeNode {
+  let node: DefTreeNode | undefined
   for (const segment of path) {
     node = tree.find((v) => v.name === segment)
     if (!node) {
@@ -29,8 +36,8 @@ function getOrCreateNode(tree: NsidNS[], path: string[]): NsidNS {
         className: `${toTitleCase(segment)}NS`,
         propName: toCamelCase(segment),
         children: [],
-        schemas: [],
-      } as NsidNS
+        userTypes: [],
+      } as DefTreeNode
       tree.push(node)
     }
     tree = node.children
@@ -40,19 +47,17 @@ function getOrCreateNode(tree: NsidNS[], path: string[]): NsidNS {
 }
 
 export function schemasToNsidTokens(
-  schemas: Schema[],
+  lexicons: LexiconDoc[],
 ): Record<string, string[]> {
   const nsidTokens: Record<string, string[]> = {}
-  for (const schema of schemas) {
-    if (schema.type !== 'token') {
-      continue
-    }
-    const nsidp = NSID.parse(schema.id)
-    if (!nsidp.name) continue
-    const authority = nsidp.segments.slice(0, -1).join('.')
-    nsidTokens[authority] ??= []
-    nsidTokens[authority].push(nsidp.name)
-  }
+  // TODO
+  // for (const lexicon of lexicons) {
+  //   const nsidp = NSID.parse(lexicon.id)
+  //   if (!nsidp.name) continue
+  //   const authority = nsidp.segments.slice(0, -1).join('.')
+  //   nsidTokens[authority] ??= []
+  //   nsidTokens[authority].push(nsidp.name)
+  // }
   return nsidTokens
 }
 

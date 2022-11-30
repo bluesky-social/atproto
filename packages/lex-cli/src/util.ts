@@ -1,40 +1,18 @@
 import fs from 'fs'
 import { join } from 'path'
-import {
-  tokenSchema,
-  methodSchema,
-  recordSchema,
-  Schema,
-} from '@atproto/lexicon'
+import { lexiconDoc, LexiconDoc } from '@atproto/lexicon'
+import { ZodError, ZodFormattedError } from 'zod'
 import chalk from 'chalk'
 import { GeneratedAPI, FileDiff } from './types'
 
-export function schemaTemplate(nsid: string, options?: Record<string, string>) {
-  return {
-    xrpc: 1,
-    id: nsid,
-    type: options?.type || '',
-    description: options?.desc || '',
-    parameters: {},
-    input: {
-      encoding: '',
-      schema: {},
-    },
-    output: {
-      encoding: '',
-      schema: {},
-    },
-  }
-}
-
-export function readAllSchemas(paths: string[]): Schema[] {
+export function readAllLexicons(paths: string[]): LexiconDoc[] {
   const schemas: any[] = []
   for (const path of paths) {
     if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
       continue
     }
     try {
-      schemas.push(readSchema(path))
+      schemas.push(readLexicon(path))
     } catch (e: any) {
       // skip
     }
@@ -42,7 +20,7 @@ export function readAllSchemas(paths: string[]): Schema[] {
   return schemas
 }
 
-export function readSchema(path: string): Schema {
+export function readLexicon(path: string): LexiconDoc {
   let str: string
   let obj: any
   try {
@@ -57,28 +35,15 @@ export function readSchema(path: string): Schema {
     console.error(`Failed to parse JSON in file`, path)
     throw e
   }
-  if (obj.type === 'token') {
+  if (typeof obj.lexicon === 'number') {
     try {
-      tokenSchema.parse(obj)
+      lexiconDoc.parse(obj)
       return obj
     } catch (e) {
-      console.error(`Invalid token schema in file`, path)
-      throw e
-    }
-  } else if (obj.type === 'query' || obj.type === 'procedure') {
-    try {
-      methodSchema.parse(obj)
-      return obj
-    } catch (e) {
-      console.error(`Invalid method schema in file`, path)
-      throw e
-    }
-  } else if (obj.type === 'record') {
-    try {
-      recordSchema.parse(obj)
-      return obj
-    } catch (e) {
-      console.error(`Invalid record schema in file`, path)
+      console.error(`Invalid lexicon`, path)
+      if (e instanceof ZodError) {
+        printZodError(e.format())
+      }
       throw e
     }
   } else {
@@ -87,8 +52,8 @@ export function readSchema(path: string): Schema {
   }
 }
 
-export function genTsObj(schemas: Schema[]): string {
-  return `export const schemas = ${JSON.stringify(schemas, null, 2)}`
+export function genTsObj(lexicons: LexiconDoc[]): string {
+  return `export const lexicons = ${JSON.stringify(lexicons, null, 2)}`
 }
 
 export function genFileDiff(outDir: string, api: GeneratedAPI) {
@@ -145,6 +110,26 @@ export function applyFileDiff(diff: FileDiff[]) {
   }
 }
 
+function printZodError(node: ZodFormattedError<any>, path = ''): boolean {
+  if (node._errors?.length) {
+    console.log(chalk.red(`Issues at ${path}:`))
+    for (const err of dedup(node._errors)) {
+      console.log(chalk.red(` - ${err}`))
+    }
+    return true
+  } else {
+    for (const k in node) {
+      if (k === '_errors') {
+        continue
+      }
+      if (printZodError(node[k], `${path}/${k}`)) {
+        // return true
+      }
+    }
+  }
+  return false
+}
+
 function readdirRecursiveSync(root: string, files: string[] = [], prefix = '') {
   const dir = join(root, prefix)
   if (!fs.existsSync(dir)) return files
@@ -157,4 +142,8 @@ function readdirRecursiveSync(root: string, files: string[] = [], prefix = '') {
   }
 
   return files
+}
+
+function dedup(arr: string[]): string[] {
+  return Array.from(new Set(arr))
 }

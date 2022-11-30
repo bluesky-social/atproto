@@ -1,4 +1,5 @@
-import {
+export {}
+/*import {
   IndentationText,
   Project,
   SourceFile,
@@ -7,11 +8,11 @@ import {
 import { Schema, MethodSchema, RecordSchema } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import * as jsonSchemaToTs from 'json-schema-to-typescript'
-import { emptyObjectSchema, gen, schemasTs } from './common'
+import { emptyObjectSchema, gen, lexiconsTs } from './common'
 import { GeneratedAPI } from '../types'
 import {
-  schemasToNsidTree,
-  NsidNS,
+  lexiconsToDefTree,
+  DefTreeNode,
   schemasToNsidTokens,
   toCamelCase,
   toTitleCase,
@@ -24,7 +25,7 @@ export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
     manipulationSettings: { indentationText: IndentationText.TwoSpaces },
   })
   const api: GeneratedAPI = { files: [] }
-  const nsidTree = schemasToNsidTree(schemas)
+  const nsidTree = lexiconsToDefTree(schemas)
   const nsidTokens = schemasToNsidTokens(schemas)
   for (const schema of schemas) {
     if (schema.type === 'query' || schema.type === 'procedure') {
@@ -33,7 +34,7 @@ export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
       api.files.push(await recordSchemaTs(project, schema))
     }
   }
-  api.files.push(await schemasTs(project, schemas))
+  api.files.push(await lexiconsTs(project, schemas))
   api.files.push(await indexTs(project, schemas, nsidTree, nsidTokens))
   return api
 }
@@ -41,7 +42,7 @@ export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
 const indexTs = (
   project: Project,
   schemas: Schema[],
-  nsidTree: NsidNS[],
+  nsidTree: DefTreeNode[],
   nsidTokens: Record<string, string[]>,
 ) =>
   gen(project, '/index.ts', async (file) => {
@@ -160,7 +161,7 @@ const indexTs = (
       )
   })
 
-function genNamespaceCls(file: SourceFile, ns: NsidNS) {
+function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
   //= export class {ns}NS {...}
   const cls = file.addClass({
     name: ns.className,
@@ -202,7 +203,7 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
   )
 
   // methods
-  for (const schema of ns.schemas) {
+  for (const schema of ns.lexicons) {
     if (schema.type !== 'query' && schema.type !== 'procedure') {
       continue
     }
@@ -390,3 +391,4 @@ const recordSchemaTs = (project, schema: RecordSchema) =>
         })),
     )
   })
+*/

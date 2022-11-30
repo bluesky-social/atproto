@@ -1,3 +1,4 @@
+import { ZodError } from 'zod'
 import {
   LexiconDoc,
   lexiconDoc,
@@ -27,6 +28,14 @@ export class Lexicons {
   docs: Map<string, LexiconDoc> = new Map()
   defs: Map<string, LexUserType> = new Map()
 
+  constructor(docs?: unknown[]) {
+    if (docs?.length) {
+      for (const doc of docs) {
+        this.add(doc)
+      }
+    }
+  }
+
   /**
    * Add a lexicon doc.
    */
@@ -34,13 +43,17 @@ export class Lexicons {
     try {
       lexiconDoc.parse(doc)
     } catch (e: any) {
-      throw new LexiconDocMalformedError(
-        `Failed to parse schema definition ${
-          (doc as Record<string, string>).id
-        }`,
-        doc,
-        e.issues,
-      )
+      if (e instanceof ZodError) {
+        throw new LexiconDocMalformedError(
+          `Failed to parse schema definition ${
+            (doc as Record<string, string>).id
+          }`,
+          doc,
+          e.issues,
+        )
+      } else {
+        throw e
+      }
     }
     const validatedDoc = doc as LexiconDoc
     const uri = toLexUri(validatedDoc.id)
