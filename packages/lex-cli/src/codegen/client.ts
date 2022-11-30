@@ -17,10 +17,9 @@ import { GeneratedAPI } from '../types'
 import {
   genUserType,
   genObject,
-  stripScheme,
-  stripHash,
-  refToType,
-  primitiveToType,
+  genXrpcParams,
+  genXrpcInput,
+  genXrpcOutput,
 } from './lex-gen'
 import {
   lexiconsToDefTree,
@@ -61,7 +60,7 @@ export async function genClientApi(
 
 const indexTs = (
   project: Project,
-  lexicons: LexiconDoc[],
+  lexiconDocs: LexiconDoc[],
   nsidTree: DefTreeNode[],
   nsidTokens: Record<string, string[]>,
 ) =>
@@ -80,14 +79,14 @@ const indexTs = (
       .addNamedImports([{ name: 'lexicons' }])
 
     // generate type imports and re-exports
-    for (const schema of lexicons) {
-      const moduleSpecifier = `./types/${schema.id.split('.').join('/')}`
+    for (const lexicon of lexiconDocs) {
+      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}`
       file
         .addImportDeclaration({ moduleSpecifier })
-        .setNamespaceImport(toTitleCase(schema.id))
+        .setNamespaceImport(toTitleCase(lexicon.id))
       file
         .addExportDeclaration({ moduleSpecifier })
-        .setNamespaceExport(toTitleCase(schema.id))
+        .setNamespaceExport(toTitleCase(lexicon.id))
     }
 
     // generate token enums
@@ -491,9 +490,9 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         const lexUri = `${lexiconDoc.id}#${defId}`
         if (defId === 'main') {
           if (def.type === 'query' || def.type === 'procedure') {
-            genClientXrpcParams(file, lexicons, lexUri)
-            genClientXrpcInput(file, lexicons, lexUri)
-            genClientXrpcOutput(file, lexicons, lexUri)
+            genXrpcParams(file, lexicons, lexUri)
+            genXrpcInput(file, lexicons, lexUri)
+            genXrpcOutput(file, lexicons, lexUri)
             genClientXrpcCommon(file, lexicons, lexUri)
           } else if (def.type === 'record') {
             genClientRecord(file, lexicons, lexUri)
@@ -506,112 +505,6 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
       }
     },
   )
-
-function genClientXrpcParams(
-  file: SourceFile,
-  lexicons: Lexicons,
-  lexUri: string,
-) {
-  const def = lexicons.getDefOrThrow(lexUri, [
-    'query',
-    'procedure',
-  ]) as LexXrpcQuery
-
-  //= export interface QueryParams {...}
-  const iface = file.addInterface({
-    name: 'QueryParams',
-    isExported: true,
-  })
-  if (def.parameters) {
-    for (const paramKey in def.parameters) {
-      const paramDef = def.parameters[paramKey]
-      iface.addProperty({
-        name: `${paramKey}?`,
-        type: primitiveToType(paramDef.type),
-      })
-    }
-  }
-}
-
-function genClientXrpcInput(
-  file: SourceFile,
-  lexicons: Lexicons,
-  lexUri: string,
-) {
-  const def = lexicons.getDefOrThrow(lexUri, [
-    'query',
-    'procedure',
-  ]) as LexXrpcProcedure
-
-  if (def.input?.schema) {
-    if (
-      typeof def.input.schema === 'string' ||
-      Array.isArray(def.input.schema)
-    ) {
-      //= export type InputSchema = ...
-      const refs = Array.isArray(def.input.schema)
-        ? def.input.schema
-        : [def.input.schema]
-      file.addTypeAlias({
-        name: 'InputSchema',
-        type: refs
-          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri))))
-          .join('|'),
-        isExported: true,
-      })
-    } else if (typeof def.input.schema === 'object') {
-      //= export interface InputSchema {...}
-      genObject(file, lexicons, lexUri, def.input.schema, `InputSchema`)
-    }
-  } else if (def.input?.encoding) {
-    //= export type InputSchema = string | Uint8Array
-    file.addTypeAlias({
-      isExported: true,
-      name: 'InputSchema',
-      type: 'string | Uint8Array',
-    })
-  } else {
-    //= export type InputSchema = undefined
-    file.addTypeAlias({
-      isExported: true,
-      name: 'InputSchema',
-      type: 'undefined',
-    })
-  }
-}
-
-function genClientXrpcOutput(
-  file: SourceFile,
-  lexicons: Lexicons,
-  lexUri: string,
-) {
-  const def = lexicons.getDefOrThrow(lexUri, [
-    'query',
-    'procedure',
-  ]) as LexXrpcQuery
-
-  if (def.output?.schema) {
-    if (
-      typeof def.output.schema === 'string' ||
-      Array.isArray(def.output.schema)
-    ) {
-      //= export type OutputSchema = ...
-      const refs = Array.isArray(def.output.schema)
-        ? def.output.schema
-        : [def.output.schema]
-      file.addTypeAlias({
-        name: 'OutputSchema',
-        type: refs
-          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri))))
-          .join('|'),
-        isExported: true,
-      })
-    } else if (typeof def.output.schema === 'object') {
-      //= export interface OutputSchema {...}
-      genObject(file, lexicons, lexUri, def.output.schema, `OutputSchema`)
-    }
-  }
-}
 
 function genClientXrpcCommon(
   file: SourceFile,

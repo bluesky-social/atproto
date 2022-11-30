@@ -80,5 +80,3 @@ function banner() {
 */
 `
 }
-
-export const emptyObjectSchema = { type: 'object' } as const

@@ -5,6 +5,8 @@ import {
   LexObject,
   LexArray,
   LexToken,
+  LexXrpcProcedure,
+  LexXrpcQuery,
 } from '@atproto/lexicon'
 import { toTitleCase, toScreamingSnakeCase } from './util'
 
@@ -183,6 +185,112 @@ export function genPrimitiveOrBlob(
     type: primitiveOrBlobToType(def.type),
     isExported: true,
   })
+}
+
+export function genXrpcParams(
+  file: SourceFile,
+  lexicons: Lexicons,
+  lexUri: string,
+) {
+  const def = lexicons.getDefOrThrow(lexUri, [
+    'query',
+    'procedure',
+  ]) as LexXrpcQuery
+
+  //= export interface QueryParams {...}
+  const iface = file.addInterface({
+    name: 'QueryParams',
+    isExported: true,
+  })
+  if (def.parameters) {
+    for (const paramKey in def.parameters) {
+      const paramDef = def.parameters[paramKey]
+      iface.addProperty({
+        name: `${paramKey}?`,
+        type: primitiveToType(paramDef.type),
+      })
+    }
+  }
+}
+
+export function genXrpcInput(
+  file: SourceFile,
+  lexicons: Lexicons,
+  lexUri: string,
+) {
+  const def = lexicons.getDefOrThrow(lexUri, [
+    'query',
+    'procedure',
+  ]) as LexXrpcProcedure
+
+  if (def.input?.schema) {
+    if (
+      typeof def.input.schema === 'string' ||
+      Array.isArray(def.input.schema)
+    ) {
+      //= export type InputSchema = ...
+      const refs = Array.isArray(def.input.schema)
+        ? def.input.schema
+        : [def.input.schema]
+      file.addTypeAlias({
+        name: 'InputSchema',
+        type: refs
+          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri))))
+          .join('|'),
+        isExported: true,
+      })
+    } else if (typeof def.input.schema === 'object') {
+      //= export interface InputSchema {...}
+      genObject(file, lexicons, lexUri, def.input.schema, `InputSchema`)
+    }
+  } else if (def.input?.encoding) {
+    //= export type InputSchema = string | Uint8Array
+    file.addTypeAlias({
+      isExported: true,
+      name: 'InputSchema',
+      type: 'string | Uint8Array',
+    })
+  } else {
+    //= export type InputSchema = undefined
+    file.addTypeAlias({
+      isExported: true,
+      name: 'InputSchema',
+      type: 'undefined',
+    })
+  }
+}
+
+export function genXrpcOutput(
+  file: SourceFile,
+  lexicons: Lexicons,
+  lexUri: string,
+) {
+  const def = lexicons.getDefOrThrow(lexUri, [
+    'query',
+    'procedure',
+  ]) as LexXrpcQuery
+
+  if (def.output?.schema) {
+    if (
+      typeof def.output.schema === 'string' ||
+      Array.isArray(def.output.schema)
+    ) {
+      //= export type OutputSchema = ...
+      const refs = Array.isArray(def.output.schema)
+        ? def.output.schema
+        : [def.output.schema]
+      file.addTypeAlias({
+        name: 'OutputSchema',
+        type: refs
+          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri))))
+          .join('|'),
+        isExported: true,
+      })
+    } else if (typeof def.output.schema === 'object') {
+      //= export interface OutputSchema {...}
+      genObject(file, lexicons, lexUri, def.output.schema, `OutputSchema`)
+    }
+  }
 }
 
 export function stripScheme(uri: string): string {

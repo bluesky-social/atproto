@@ -12,7 +12,7 @@ import {
 } from './util'
 import * as mdGen from './mdgen'
 import { genClientApi } from './codegen/client'
-// import { genServerApi } from './codegen/server'
+import { genServerApi } from './codegen/server'
 
 const program = new Command()
 program.name('lex').description('Lexicon CLI').version('0.0.0')
@@ -72,7 +72,7 @@ program
     console.log('API generated.')
   })
 
-/*program
+program
   .command('gen-server')
   .description('Generate a TS server API')
   .argument('<outdir>', 'path of the directory to write to', toPath)
@@ -93,7 +93,7 @@ program
     }
     applyFileDiff(diff)
     console.log('API generated.')
-  })*/
+  })
 
 program.parse()
 
