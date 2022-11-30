@@ -46,11 +46,18 @@ export const lexString = z.object({
 })
 export type LexString = z.infer<typeof lexString>
 
+export const lexUnknown = z.object({
+  type: z.literal('unknown'),
+  description: z.string().optional(),
+})
+export type LexUnknown = z.infer<typeof lexUnknown>
+
 export const lexPrimitive = z.union([
   lexBoolean,
   lexNumber,
   lexInteger,
   lexString,
+  lexUnknown,
 ])
 export type LexPrimitive = z.infer<typeof lexPrimitive>
 
@@ -194,6 +201,7 @@ export const lexUserType = z.union([
   lexNumber,
   lexInteger,
   lexString,
+  lexUnknown,
 ])
 export type LexUserType = z.infer<typeof lexUserType>
 

@@ -87,6 +87,19 @@ export default {
         },
       },
     },
+    unknown: {
+      type: 'record',
+      description: 'A record',
+      key: 'tid',
+      record: {
+        type: 'object',
+        required: ['unknown'],
+        properties: {
+          unknown: { type: 'unknown' },
+          optUnknown: { type: 'unknown' },
+        },
+      },
+    },
     arrayLength: {
       type: 'record',
       record: {

@@ -26,6 +26,8 @@ export function validate(
       return Primitives.integer(lexicons, path, def, value)
     case 'string':
       return Primitives.string(lexicons, path, def, value)
+    case 'unknown':
+      return Primitives.unknown(lexicons, path, def, value)
     case 'object':
       return object(lexicons, path, def, value)
     case 'array':

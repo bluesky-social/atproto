@@ -24,6 +24,8 @@ export function validate(
       return integer(lexicons, path, def, value)
     case 'string':
       return string(lexicons, path, def, value)
+    case 'unknown':
+      return unknown(lexicons, path, def, value)
     default:
       return {
         success: false,
@@ -237,6 +239,23 @@ export function string(
           `${path} must not be shorter than ${def.minLength} characters`,
         ),
       }
+    }
+  }
+
+  return { success: true }
+}
+
+export function unknown(
+  lexicons: Lexicons,
+  path: string,
+  def: LexUserType,
+  value: unknown,
+): ValidationResult {
+  // type
+  if (!value || typeof value !== 'object') {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be an object`),
     }
   }
 

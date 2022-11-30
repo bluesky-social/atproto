@@ -200,6 +200,18 @@ describe('Record validation', () => {
     })
   })
 
+  it('Handles unknowns correctly', () => {
+    lex.assertValidRecord('com.example.kitchenSink#unknown', {
+      $type: 'com.example.kitchenSink#unknown',
+      unknown: { foo: 'bar' },
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.kitchenSink#unknown', {
+        $type: 'com.example.kitchenSink#unknown',
+      }),
+    ).toThrow('')
+  })
+
   it('Applies array length constraints', () => {
     lex.assertValidRecord('com.example.kitchenSink#arrayLength', {
       $type: 'com.example.kitchenSink#arrayLength',
