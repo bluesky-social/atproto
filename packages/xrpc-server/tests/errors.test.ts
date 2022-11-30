@@ -21,10 +21,10 @@ const SCHEMAS = [
 describe('Procedures', () => {
   let s: http.Server
   const server = xrpcServer.createServer(SCHEMAS)
-  server.method('io.example.error', (params: xrpcServer.Params) => {
-    if (params.which === 'foo') {
+  server.method('io.example.error', (ctx: { params: xrpcServer.Params }) => {
+    if (ctx.params.which === 'foo') {
       throw new xrpcServer.InvalidRequestError('It was this one!', 'Foo')
-    } else if (params.which === 'bar') {
+    } else if (ctx.params.which === 'bar') {
       return { status: 400, error: 'Bar', message: 'It was that one!' }
     } else {
       return { status: 400 }
