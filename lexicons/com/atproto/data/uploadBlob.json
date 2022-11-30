@@ -14,7 +14,7 @@
           "description": "The DID of the repo."
         },
         "data": {
-          "type:": "blob"
+          "type": "blob"
         } 
       }
     }

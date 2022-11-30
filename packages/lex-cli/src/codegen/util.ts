@@ -71,3 +71,25 @@ export function toScreamingSnakeCase(v: string): string {
   v = v.replace(/[.-]+/gi, '_') // convert dashes and dots into underscores
   return v.toUpperCase() // and scream!
 }
+
+// @TODO improve types
+export function stripBlobsFromBody(
+  obj: Record<string, any>,
+): Record<string, any> {
+  if (!obj.properties) return obj
+  const propertiesNoBlobs = {}
+  const requiredNoBlobs: string[] = []
+  for (const [key, val] of Object.entries(obj.properties)) {
+    if ((val as any).type !== 'blob') {
+      propertiesNoBlobs[key] = val
+      if ((obj.required || []).indexOf(key) > -1) {
+        requiredNoBlobs.push(key)
+      }
+    }
+  }
+  return {
+    ...obj,
+    required: requiredNoBlobs,
+    properties: propertiesNoBlobs,
+  }
+}

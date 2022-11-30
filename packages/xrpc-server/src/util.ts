@@ -84,6 +84,7 @@ export async function validateInput(
     if (missing.length > 0) {
       throw new InvalidRequestError(`Missing expected blob upload: ${missing}`)
     }
+    console.log(req.files)
   }
 
   // json schema

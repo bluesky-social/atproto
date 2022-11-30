@@ -15,9 +15,6 @@ export interface InputSchema {
    * The DID of the repo.
    */
   did: string;
-  data: {
-    [k: string]: unknown,
-  };
 }
 
 export interface HandlerSuccess {

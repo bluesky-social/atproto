@@ -214,7 +214,7 @@ export const methodSchemaDict: Record<string, MethodSchema> = {
             description: 'The DID of the repo.',
           },
           data: {
-            'type:': 'blob',
+            type: 'blob',
           },
         },
         $defs: {},

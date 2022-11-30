@@ -16,6 +16,7 @@ import {
   toCamelCase,
   toTitleCase,
   toScreamingSnakeCase,
+  stripBlobsFromBody,
 } from './util'
 
 export async function genServerApi(schemas: Schema[]): Promise<GeneratedAPI> {
@@ -291,10 +292,14 @@ const methodSchemaTs = (project, schema: MethodSchema) =>
       file.insertText(
         file.getFullText().length,
         '\n' +
-          (await jsonSchemaToTs.compile(schema.input?.schema, 'InputSchema', {
-            bannerComment: '',
-            additionalProperties: false,
-          })),
+          (await jsonSchemaToTs.compile(
+            stripBlobsFromBody(schema.input?.schema),
+            'InputSchema',
+            {
+              bannerComment: '',
+              additionalProperties: false,
+            },
+          )),
       )
     }
 
