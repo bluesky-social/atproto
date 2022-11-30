@@ -3,24 +3,25 @@ import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import xrpc, { XRPCError } from '@atproto/xrpc'
 
-const SCHEMAS = [
+const LEXICONS = [
   {
     lexicon: 1,
     id: 'io.example.error',
-    type: 'query',
-    parameters: {
-      type: 'object',
-      properties: {
-        which: { type: 'string', default: 'foo' },
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          which: { type: 'string', default: 'foo' },
+        },
+        errors: [{ name: 'Foo' }, { name: 'Bar' }],
       },
     },
-    errors: [{ name: 'Foo' }, { name: 'Bar' }],
   },
 ]
 
 describe('Procedures', () => {
   let s: http.Server
-  const server = xrpcServer.createServer(SCHEMAS)
+  const server = xrpcServer.createServer(LEXICONS)
   server.method('io.example.error', (params: xrpcServer.Params) => {
     if (params.which === 'foo') {
       throw new xrpcServer.InvalidRequestError('It was this one!', 'Foo')
@@ -31,7 +32,7 @@ describe('Procedures', () => {
     }
   })
   const client = xrpc.service(`http://localhost:8893`)
-  xrpc.addSchemas(SCHEMAS)
+  xrpc.addLexicons(LEXICONS)
   beforeAll(async () => {
     s = await createServer(8893, server)
   })

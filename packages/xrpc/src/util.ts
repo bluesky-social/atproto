@@ -1,4 +1,4 @@
-import { MethodSchema } from '@atproto/lexicon'
+import { LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
 import {
   CallOptions,
   Headers,
@@ -7,28 +7,28 @@ import {
   XRPCError,
 } from './types'
 
-export function getMethodSchemaHTTPMethod(schema: MethodSchema) {
-  if (schema.type === 'query') {
-    return 'get'
-  }
+export function getMethodSchemaHTTPMethod(
+  schema: LexXrpcProcedure | LexXrpcQuery,
+) {
   if (schema.type === 'procedure') {
     return 'post'
   }
-  throw new Error(`Invalid method type: ${schema.type}`)
+  return 'get'
 }
 
 export function constructMethodCallUri(
-  schema: MethodSchema,
+  nsid: string,
+  schema: LexXrpcProcedure | LexXrpcQuery,
   serviceUri: URL,
   params?: QueryParams,
 ): string {
   const uri = new URL(serviceUri)
-  uri.pathname = `/xrpc/${schema.id}`
+  uri.pathname = `/xrpc/${nsid}`
 
   // given parameters
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      const paramSchema = schema.parameters?.properties[key]
+      const paramSchema = schema.parameters?.[key]
       if (!paramSchema) {
         throw new Error(`Invalid query parameter: ${key}`)
       }
@@ -59,7 +59,7 @@ export function encodeQueryParam(
 }
 
 export function constructMethodCallHeaders(
-  schema: MethodSchema,
+  schema: LexXrpcProcedure | LexXrpcQuery,
   data?: any,
   opts?: CallOptions,
 ): Headers {

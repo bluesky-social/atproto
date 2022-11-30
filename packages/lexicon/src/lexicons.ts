@@ -36,7 +36,9 @@ export class Lexicons {
       lexiconDoc.parse(doc)
     } catch (e: any) {
       throw new LexiconDocMalformedError(
-        `Failed to parse schema definition`,
+        `Failed to parse schema definition ${
+          (doc as Record<string, string>).id
+        }`,
         doc,
         e.issues,
       )
