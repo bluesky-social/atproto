@@ -5,6 +5,14 @@
   "defs": {
     "main": {
       "type": "object",
+      "required": ["did", "declarationCid"],
+      "properties": {
+        "did": {"type": "string"},
+        "declarationCid": {"type": "string"}
+      }
+    },
+    "withInfo": {
+      "type": "object",
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},

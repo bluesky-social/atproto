@@ -42,8 +42,8 @@ export interface Assertion {
   cid: string;
   assertion: string;
   confirmation?: Confirmation;
-  author: AppBskyActorRef.Main;
-  subject: AppBskyActorRef.Main;
+  author: AppBskyActorRef.WithInfo;
+  subject: AppBskyActorRef.WithInfo;
   indexedAt: string;
   createdAt: string;
   [k: string]: unknown;

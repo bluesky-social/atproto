@@ -1,17 +1,12 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
+import * as AppBskyActorRef from '../actor/ref'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface Record {
-  originator: Originator;
+  originator: AppBskyActorRef.Main;
   assertion: ComAtprotoRepoStrongRef.Main;
   createdAt: string;
-  [k: string]: unknown;
-}
-
-export interface Originator {
-  did: string;
-  declarationCid: string;
   [k: string]: unknown;
 }

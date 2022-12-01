@@ -38,9 +38,9 @@ export function toKnownErr(e: any) {
 export interface FeedItem {
   uri: string;
   cid: string;
-  author: AppBskyActorRef.Main;
-  trendedBy?: AppBskyActorRef.Main;
-  repostedBy?: AppBskyActorRef.Main;
+  author: AppBskyActorRef.WithInfo;
+  trendedBy?: AppBskyActorRef.WithInfo;
+  repostedBy?: AppBskyActorRef.WithInfo;
   record: {};
   embed?: AppBskyFeedEmbed.Main;
   replyCount: number;

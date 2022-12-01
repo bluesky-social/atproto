@@ -20,7 +20,7 @@
           "type": "object",
           "required": ["subject", "memberships"],
           "properties": {
-            "subject": {"type": "ref", "ref": "app.bsky.actor.ref"},
+            "subject": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
             "cursor": {"type": "string"},
             "memberships": {
               "type": "array",

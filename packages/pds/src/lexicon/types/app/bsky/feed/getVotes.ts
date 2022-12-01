@@ -46,6 +46,6 @@ export interface Vote {
   direction: 'up' | 'down';
   indexedAt: string;
   createdAt: string;
-  actor: AppBskyActorRef.Main;
+  actor: AppBskyActorRef.WithInfo;
   [k: string]: unknown;
 }

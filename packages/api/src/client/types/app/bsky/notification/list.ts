@@ -36,7 +36,7 @@ export function toKnownErr(e: any) {
 export interface Notification {
   uri: string;
   cid: string;
-  author: AppBskyActorRef.Main;
+  author: AppBskyActorRef.WithInfo;
   /** Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'. */
   reason:
     | 'vote'

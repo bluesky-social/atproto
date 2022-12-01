@@ -14,7 +14,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  subject: AppBskyActorRef.Main;
+  subject: AppBskyActorRef.WithInfo;
   cursor?: string;
   memberships: Membership[];
   [k: string]: unknown;

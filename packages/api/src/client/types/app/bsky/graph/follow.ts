@@ -1,14 +1,10 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-export interface Record {
-  subject: Subject;
-  createdAt: string;
-  [k: string]: unknown;
-}
+import * as AppBskyActorRef from '../actor/ref'
 
-export interface Subject {
-  did: string;
-  declarationCid: string;
+export interface Record {
+  subject: AppBskyActorRef.Main;
+  createdAt: string;
   [k: string]: unknown;
 }

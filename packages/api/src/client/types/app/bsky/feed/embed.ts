@@ -18,7 +18,7 @@ export interface Media {
 
 export interface Record {
   type: 'record';
-  author: AppBskyActorRef.Main;
+  author: AppBskyActorRef.WithInfo;
   record: {};
   [k: string]: unknown;
 }

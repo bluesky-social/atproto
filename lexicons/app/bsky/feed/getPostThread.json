@@ -35,7 +35,7 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
-        "author": {"type": "ref", "ref": "app.bsky.actor.ref"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "record": {"type": "unknown"},
         "embed": {"type": "ref", "ref": "app.bsky.feed.embed"},
         "parent": {"type": "union", "refs": ["#post", "#notFoundPost"]},

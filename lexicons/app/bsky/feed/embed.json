@@ -31,7 +31,7 @@
       "required": ["type", "author", "record"],
       "properties": {
         "type": {"type": "string", "const": "record"},
-        "author": {"type": "ref", "ref": "app.bsky.actor.ref"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "record": {"type": "unknown"}
       }
     },

@@ -40,7 +40,7 @@ export type Handler = (
 export interface Notification {
   uri: string;
   cid: string;
-  author: AppBskyActorRef.Main;
+  author: AppBskyActorRef.WithInfo;
   /** Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'. */
   reason:
     | 'vote'

@@ -39,7 +39,7 @@
         "direction": {"type": "string", "enum": ["up", "down"]},
         "indexedAt": {"type": "datetime"},
         "createdAt": {"type": "datetime"},
-        "actor": {"type": "ref", "ref": "app.bsky.actor.ref"}
+        "actor": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"}
       }
     }
   }

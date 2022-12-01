@@ -41,7 +41,7 @@ export type Handler = (
 export interface Post {
   uri: string;
   cid: string;
-  author: AppBskyActorRef.Main;
+  author: AppBskyActorRef.WithInfo;
   record: {};
   embed?: AppBskyFeedEmbed.Main;
   parent?: Post | NotFoundPost;

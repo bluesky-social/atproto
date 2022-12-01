@@ -34,9 +34,9 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
-        "author": {"type": "ref", "ref": "app.bsky.actor.ref"},
-        "trendedBy": {"type": "ref", "ref": "app.bsky.actor.ref"},
-        "repostedBy": {"type": "ref", "ref": "app.bsky.actor.ref"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
+        "trendedBy": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
+        "repostedBy": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "record": {"type": "unknown"},
         "embed": {"type": "ref", "ref": "app.bsky.feed.embed"},
         "replyCount": {"type": "integer"},
