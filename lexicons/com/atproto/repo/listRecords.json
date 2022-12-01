@@ -26,7 +26,7 @@
             "cursor": {"type": "string"},
             "records": {
               "type": "array",
-              "items": "#record"
+              "items": {"type": "ref", "ref": "#record"}
             }
           }
         }

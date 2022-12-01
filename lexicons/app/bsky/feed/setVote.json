@@ -11,7 +11,7 @@
           "type": "object",
           "required": ["subject", "direction"],
           "properties": {
-            "subject": "#subject",
+            "subject": {"type": "ref", "ref": "#subject"},
             "direction": {
               "type": "string",
               "enum": ["up", "down", "none"]

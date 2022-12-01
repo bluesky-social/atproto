@@ -19,7 +19,7 @@
           "type": "object",
           "required": ["users"],
           "properties": {
-            "users": {"type": "array", "items": "#user"}
+            "users": {"type": "array", "items": {"type": "ref", "ref": "#user"}}
           }
         }
       }
@@ -29,7 +29,7 @@
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": "#declaration",
+        "declaration": {"type": "ref", "ref": "#declaration"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",

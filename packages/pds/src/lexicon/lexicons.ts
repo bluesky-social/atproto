@@ -238,11 +238,14 @@ export const lexicons: LexiconDoc[] = [
               },
               writes: {
                 type: 'array',
-                items: [
-                  'lex:com.atproto.repo.batchWrite#create',
-                  'lex:com.atproto.repo.batchWrite#update',
-                  'lex:com.atproto.repo.batchWrite#delete',
-                ],
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:com.atproto.repo.batchWrite#create',
+                    'lex:com.atproto.repo.batchWrite#update',
+                    'lex:com.atproto.repo.batchWrite#delete',
+                  ],
+                },
               },
             },
           },
@@ -542,7 +545,10 @@ export const lexicons: LexiconDoc[] = [
               },
               records: {
                 type: 'array',
-                items: 'lex:com.atproto.repo.listRecords#record',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.repo.listRecords#record',
+                },
               },
             },
           },
@@ -877,7 +883,10 @@ export const lexicons: LexiconDoc[] = [
               did: {
                 type: 'string',
               },
-              declaration: 'lex:app.bsky.actor.createScene#declaration',
+              declaration: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.createScene#declaration',
+              },
             },
           },
         },
@@ -941,7 +950,10 @@ export const lexicons: LexiconDoc[] = [
               did: {
                 type: 'string',
               },
-              declaration: 'lex:app.bsky.actor.getProfile#declaration',
+              declaration: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.getProfile#declaration',
+              },
               handle: {
                 type: 'string',
               },
@@ -968,7 +980,10 @@ export const lexicons: LexiconDoc[] = [
               postsCount: {
                 type: 'integer',
               },
-              myState: 'lex:app.bsky.actor.getProfile#myState',
+              myState: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.getProfile#myState',
+              },
             },
           },
         },
@@ -1035,7 +1050,10 @@ export const lexicons: LexiconDoc[] = [
               },
               actors: {
                 type: 'array',
-                items: 'lex:app.bsky.actor.getSuggestions#actor',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.getSuggestions#actor',
+                },
               },
             },
           },
@@ -1048,7 +1066,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.actor.getSuggestions#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.getSuggestions#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -1062,7 +1083,10 @@ export const lexicons: LexiconDoc[] = [
           indexedAt: {
             type: 'datetime',
           },
-          myState: 'lex:app.bsky.actor.getSuggestions#myState',
+          myState: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.getSuggestions#myState',
+          },
         },
       },
       myState: {
@@ -1151,7 +1175,10 @@ export const lexicons: LexiconDoc[] = [
               },
               users: {
                 type: 'array',
-                items: 'lex:app.bsky.actor.search#user',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.search#user',
+                },
               },
             },
           },
@@ -1164,7 +1191,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.actor.search#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.search#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -1228,7 +1258,10 @@ export const lexicons: LexiconDoc[] = [
             properties: {
               users: {
                 type: 'array',
-                items: 'lex:app.bsky.actor.searchTypeahead#user',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.searchTypeahead#user',
+                },
               },
             },
           },
@@ -1241,7 +1274,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.actor.searchTypeahead#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.searchTypeahead#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -1352,7 +1388,10 @@ export const lexicons: LexiconDoc[] = [
               },
               feed: {
                 type: 'array',
-                items: 'lex:app.bsky.feed.getAuthorFeed#feedItem',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.getAuthorFeed#feedItem',
+                },
               },
             },
           },
@@ -1378,17 +1417,29 @@ export const lexicons: LexiconDoc[] = [
           cid: {
             type: 'string',
           },
-          author: 'lex:app.bsky.feed.getAuthorFeed#actor',
-          trendedBy: 'lex:app.bsky.feed.getAuthorFeed#actor',
-          repostedBy: 'lex:app.bsky.feed.getAuthorFeed#actor',
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getAuthorFeed#actor',
+          },
+          trendedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getAuthorFeed#actor',
+          },
+          repostedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getAuthorFeed#actor',
+          },
           record: {
             type: 'unknown',
           },
-          embed: [
-            'lex:app.bsky.feed.getAuthorFeed#recordEmbed',
-            'lex:app.bsky.feed.getAuthorFeed#externalEmbed',
-            'lex:app.bsky.feed.getAuthorFeed#unknownEmbed',
-          ],
+          embed: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.getAuthorFeed#recordEmbed',
+              'lex:app.bsky.feed.getAuthorFeed#externalEmbed',
+              'lex:app.bsky.feed.getAuthorFeed#unknownEmbed',
+            ],
+          },
           replyCount: {
             type: 'integer',
           },
@@ -1404,7 +1455,10 @@ export const lexicons: LexiconDoc[] = [
           indexedAt: {
             type: 'datetime',
           },
-          myState: 'lex:app.bsky.feed.getAuthorFeed#myState',
+          myState: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getAuthorFeed#myState',
+          },
         },
       },
       myState: {
@@ -1428,7 +1482,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.feed.getAuthorFeed#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getAuthorFeed#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -1446,7 +1503,10 @@ export const lexicons: LexiconDoc[] = [
             type: 'string',
             const: 'record',
           },
-          author: 'lex:app.bsky.feed.getAuthorFeed#actor',
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getAuthorFeed#actor',
+          },
           record: {
             type: 'unknown',
           },
@@ -1525,10 +1585,13 @@ export const lexicons: LexiconDoc[] = [
             type: 'object',
             required: ['thread'],
             properties: {
-              thread: [
-                'lex:app.bsky.feed.getPostThread#post',
-                'lex:app.bsky.feed.getPostThread#notFoundPost',
-              ],
+              thread: {
+                type: 'union',
+                refs: [
+                  'lex:app.bsky.feed.getPostThread#post',
+                  'lex:app.bsky.feed.getPostThread#notFoundPost',
+                ],
+              },
             },
           },
         },
@@ -1558,28 +1621,40 @@ export const lexicons: LexiconDoc[] = [
           cid: {
             type: 'string',
           },
-          author: 'lex:app.bsky.feed.getPostThread#user',
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getPostThread#user',
+          },
           record: {
             type: 'unknown',
           },
-          embed: [
-            'lex:app.bsky.feed.getPostThread#recordEmbed',
-            'lex:app.bsky.feed.getPostThread#externalEmbed',
-            'lex:app.bsky.feed.getPostThread#unknownEmbed',
-          ],
-          parent: [
-            'lex:app.bsky.feed.getPostThread#post',
-            'lex:app.bsky.feed.getPostThread#notFoundPost',
-          ],
+          embed: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.getPostThread#recordEmbed',
+              'lex:app.bsky.feed.getPostThread#externalEmbed',
+              'lex:app.bsky.feed.getPostThread#unknownEmbed',
+            ],
+          },
+          parent: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.getPostThread#post',
+              'lex:app.bsky.feed.getPostThread#notFoundPost',
+            ],
+          },
           replyCount: {
             type: 'integer',
           },
           replies: {
             type: 'array',
-            items: [
-              'lex:app.bsky.feed.getPostThread#post',
-              'lex:app.bsky.feed.getPostThread#notFoundPost',
-            ],
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.getPostThread#post',
+                'lex:app.bsky.feed.getPostThread#notFoundPost',
+              ],
+            },
           },
           repostCount: {
             type: 'integer',
@@ -1593,7 +1668,10 @@ export const lexicons: LexiconDoc[] = [
           indexedAt: {
             type: 'datetime',
           },
-          myState: 'lex:app.bsky.feed.getPostThread#myState',
+          myState: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getPostThread#myState',
+          },
         },
       },
       notFoundPost: {
@@ -1629,7 +1707,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.feed.getPostThread#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getPostThread#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -1647,7 +1728,10 @@ export const lexicons: LexiconDoc[] = [
             type: 'string',
             const: 'record',
           },
-          author: 'lex:app.bsky.feed.getPostThread#user',
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getPostThread#user',
+          },
           record: {
             type: 'unknown',
           },
@@ -1746,7 +1830,10 @@ export const lexicons: LexiconDoc[] = [
               },
               repostedBy: {
                 type: 'array',
-                items: 'lex:app.bsky.feed.getRepostedBy#repostedBy',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.getRepostedBy#repostedBy',
+                },
               },
             },
           },
@@ -1759,7 +1846,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.feed.getRepostedBy#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getRepostedBy#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -1828,7 +1918,10 @@ export const lexicons: LexiconDoc[] = [
               },
               feed: {
                 type: 'array',
-                items: 'lex:app.bsky.feed.getTimeline#feedItem',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.getTimeline#feedItem',
+                },
               },
             },
           },
@@ -1854,17 +1947,29 @@ export const lexicons: LexiconDoc[] = [
           cid: {
             type: 'string',
           },
-          author: 'lex:app.bsky.feed.getTimeline#actor',
-          trendedBy: 'lex:app.bsky.feed.getTimeline#actor',
-          repostedBy: 'lex:app.bsky.feed.getTimeline#actor',
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getTimeline#actor',
+          },
+          trendedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getTimeline#actor',
+          },
+          repostedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getTimeline#actor',
+          },
           record: {
             type: 'unknown',
           },
-          embed: [
-            'lex:app.bsky.feed.getTimeline#recordEmbed',
-            'lex:app.bsky.feed.getTimeline#externalEmbed',
-            'lex:app.bsky.feed.getTimeline#unknownEmbed',
-          ],
+          embed: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.getTimeline#recordEmbed',
+              'lex:app.bsky.feed.getTimeline#externalEmbed',
+              'lex:app.bsky.feed.getTimeline#unknownEmbed',
+            ],
+          },
           replyCount: {
             type: 'integer',
           },
@@ -1880,7 +1985,10 @@ export const lexicons: LexiconDoc[] = [
           indexedAt: {
             type: 'datetime',
           },
-          myState: 'lex:app.bsky.feed.getTimeline#myState',
+          myState: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getTimeline#myState',
+          },
         },
       },
       myState: {
@@ -1904,7 +2012,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.feed.getTimeline#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getTimeline#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -1925,7 +2036,10 @@ export const lexicons: LexiconDoc[] = [
             type: 'string',
             const: 'record',
           },
-          author: 'lex:app.bsky.feed.getTimeline#actor',
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getTimeline#actor',
+          },
           record: {
             type: 'unknown',
           },
@@ -2028,7 +2142,10 @@ export const lexicons: LexiconDoc[] = [
               },
               votes: {
                 type: 'array',
-                items: 'lex:app.bsky.feed.getVotes#vote',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.getVotes#vote',
+                },
               },
             },
           },
@@ -2048,7 +2165,10 @@ export const lexicons: LexiconDoc[] = [
           createdAt: {
             type: 'datetime',
           },
-          actor: 'lex:app.bsky.feed.getVotes#actor',
+          actor: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getVotes#actor',
+          },
         },
       },
       actor: {
@@ -2058,7 +2178,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.feed.getVotes#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.getVotes#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -2097,7 +2220,10 @@ export const lexicons: LexiconDoc[] = [
         properties: {
           media: {
             type: 'array',
-            items: 'lex:app.bsky.feed.mediaEmbed#mediaEmbed',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.feed.mediaEmbed#mediaEmbed',
+            },
           },
         },
       },
@@ -2135,9 +2261,15 @@ export const lexicons: LexiconDoc[] = [
             },
             entities: {
               type: 'array',
-              items: 'lex:app.bsky.feed.post#entity',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.post#entity',
+              },
             },
-            reply: 'lex:app.bsky.feed.post#replyRef',
+            reply: {
+              type: 'ref',
+              ref: 'lex:app.bsky.feed.post#replyRef',
+            },
             createdAt: {
               type: 'datetime',
             },
@@ -2148,8 +2280,14 @@ export const lexicons: LexiconDoc[] = [
         type: 'object',
         required: ['root', 'parent'],
         properties: {
-          root: 'lex:app.bsky.feed.post#postRef',
-          parent: 'lex:app.bsky.feed.post#postRef',
+          root: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.post#postRef',
+          },
+          parent: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.post#postRef',
+          },
         },
       },
       postRef: {
@@ -2168,7 +2306,10 @@ export const lexicons: LexiconDoc[] = [
         type: 'object',
         required: ['index', 'type', 'value'],
         properties: {
-          index: 'lex:app.bsky.feed.post#textSlice',
+          index: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.post#textSlice',
+          },
           type: {
             type: 'string',
             description:
@@ -2206,7 +2347,10 @@ export const lexicons: LexiconDoc[] = [
           type: 'object',
           required: ['subject', 'createdAt'],
           properties: {
-            subject: 'lex:app.bsky.feed.repost#subject',
+            subject: {
+              type: 'ref',
+              ref: 'lex:app.bsky.feed.repost#subject',
+            },
             createdAt: {
               type: 'datetime',
             },
@@ -2240,7 +2384,10 @@ export const lexicons: LexiconDoc[] = [
             type: 'object',
             required: ['subject', 'direction'],
             properties: {
-              subject: 'lex:app.bsky.feed.setVote#subject',
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.setVote#subject',
+              },
               direction: {
                 type: 'string',
                 enum: ['up', 'down', 'none'],
@@ -2288,7 +2435,10 @@ export const lexicons: LexiconDoc[] = [
           type: 'object',
           required: ['subject', 'createdAt'],
           properties: {
-            subject: 'lex:app.bsky.feed.trend#subject',
+            subject: {
+              type: 'ref',
+              ref: 'lex:app.bsky.feed.trend#subject',
+            },
             createdAt: {
               type: 'datetime',
             },
@@ -2320,7 +2470,10 @@ export const lexicons: LexiconDoc[] = [
           type: 'object',
           required: ['subject', 'direction', 'createdAt'],
           properties: {
-            subject: 'lex:app.bsky.feed.vote#subject',
+            subject: {
+              type: 'ref',
+              ref: 'lex:app.bsky.feed.vote#subject',
+            },
             direction: {
               type: 'string',
               enum: ['up', 'down'],
@@ -2381,7 +2534,10 @@ export const lexicons: LexiconDoc[] = [
             assertion: {
               type: 'string',
             },
-            subject: 'lex:app.bsky.graph.assertion#subject',
+            subject: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.assertion#subject',
+            },
             createdAt: {
               type: 'datetime',
             },
@@ -2413,8 +2569,14 @@ export const lexicons: LexiconDoc[] = [
           type: 'object',
           required: ['originator', 'assertion', 'createdAt'],
           properties: {
-            originator: 'lex:app.bsky.graph.confirmation#originator',
-            assertion: 'lex:app.bsky.graph.confirmation#assertion',
+            originator: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.confirmation#originator',
+            },
+            assertion: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.confirmation#assertion',
+            },
             createdAt: {
               type: 'datetime',
             },
@@ -2459,7 +2621,10 @@ export const lexicons: LexiconDoc[] = [
           type: 'object',
           required: ['subject', 'createdAt'],
           properties: {
-            subject: 'lex:app.bsky.graph.follow#subject',
+            subject: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.follow#subject',
+            },
             createdAt: {
               type: 'datetime',
             },
@@ -2524,7 +2689,10 @@ export const lexicons: LexiconDoc[] = [
               },
               assertions: {
                 type: 'array',
-                items: 'lex:app.bsky.graph.getAssertions#assertion',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getAssertions#assertion',
+                },
               },
             },
           },
@@ -2551,9 +2719,18 @@ export const lexicons: LexiconDoc[] = [
           assertion: {
             type: 'string',
           },
-          confirmation: 'lex:app.bsky.graph.getAssertions#confirmation',
-          author: 'lex:app.bsky.graph.getAssertions#actor',
-          subject: 'lex:app.bsky.graph.getAssertions#actor',
+          confirmation: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getAssertions#confirmation',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getAssertions#actor',
+          },
+          subject: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getAssertions#actor',
+          },
           indexedAt: {
             type: 'datetime',
           },
@@ -2587,7 +2764,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.graph.getAssertions#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getAssertions#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -2646,13 +2826,19 @@ export const lexicons: LexiconDoc[] = [
             type: 'object',
             required: ['subject', 'followers'],
             properties: {
-              subject: 'lex:app.bsky.graph.getFollowers#subject',
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.graph.getFollowers#subject',
+              },
               cursor: {
                 type: 'string',
               },
               followers: {
                 type: 'array',
-                items: 'lex:app.bsky.graph.getFollowers#follower',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getFollowers#follower',
+                },
               },
             },
           },
@@ -2665,7 +2851,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.graph.getFollowers#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getFollowers#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -2682,7 +2871,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.graph.getFollowers#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getFollowers#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -2747,13 +2939,19 @@ export const lexicons: LexiconDoc[] = [
             type: 'object',
             required: ['subject', 'follows'],
             properties: {
-              subject: 'lex:app.bsky.graph.getFollows#subject',
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.graph.getFollows#subject',
+              },
               cursor: {
                 type: 'string',
               },
               follows: {
                 type: 'array',
-                items: 'lex:app.bsky.graph.getFollows#follow',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getFollows#follow',
+                },
               },
             },
           },
@@ -2766,7 +2964,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.graph.getFollows#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getFollows#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -2783,7 +2984,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.graph.getFollows#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getFollows#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -2848,13 +3052,19 @@ export const lexicons: LexiconDoc[] = [
             type: 'object',
             required: ['subject', 'members'],
             properties: {
-              subject: 'lex:app.bsky.graph.getMembers#subject',
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.graph.getMembers#subject',
+              },
               cursor: {
                 type: 'string',
               },
               members: {
                 type: 'array',
-                items: 'lex:app.bsky.graph.getMembers#member',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getMembers#member',
+                },
               },
             },
           },
@@ -2867,7 +3077,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.graph.getMembers#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getMembers#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -2884,7 +3097,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.graph.getMembers#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getMembers#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -2949,13 +3165,19 @@ export const lexicons: LexiconDoc[] = [
             type: 'object',
             required: ['subject', 'memberships'],
             properties: {
-              subject: 'lex:app.bsky.graph.getMemberships#subject',
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.graph.getMemberships#subject',
+              },
               cursor: {
                 type: 'string',
               },
               memberships: {
                 type: 'array',
-                items: 'lex:app.bsky.graph.getMemberships#membership',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getMemberships#membership',
+                },
               },
             },
           },
@@ -2968,7 +3190,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.graph.getMemberships#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getMemberships#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -2985,7 +3210,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.graph.getMemberships#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.getMemberships#declaration',
+          },
           handle: {
             type: 'string',
           },
@@ -3071,7 +3299,10 @@ export const lexicons: LexiconDoc[] = [
               },
               notifications: {
                 type: 'array',
-                items: 'lex:app.bsky.notification.list#notification',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.notification.list#notification',
+                },
               },
             },
           },
@@ -3095,7 +3326,10 @@ export const lexicons: LexiconDoc[] = [
           cid: {
             type: 'string',
           },
-          author: 'lex:app.bsky.notification.list#author',
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.list#author',
+          },
           reason: {
             type: 'string',
             description:
@@ -3122,7 +3356,10 @@ export const lexicons: LexiconDoc[] = [
           did: {
             type: 'string',
           },
-          declaration: 'lex:app.bsky.notification.list#declaration',
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.list#declaration',
+          },
           handle: {
             type: 'string',
           },

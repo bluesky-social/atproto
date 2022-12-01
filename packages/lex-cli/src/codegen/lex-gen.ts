@@ -99,9 +99,9 @@ export function genObject(
     for (const propKey in def.properties) {
       const req = def.required?.includes(propKey)
       const propDef = def.properties[propKey]
-      if (typeof propDef === 'string' || Array.isArray(propDef)) {
+      if (propDef.type === 'ref' || propDef.type === 'union') {
         //= propName: External|External
-        const refs = Array.isArray(propDef) ? propDef : [propDef]
+        const refs = propDef.type === 'union' ? propDef.refs : [propDef.ref]
         iface.addProperty({
           name: `${propKey}${req ? '' : '?'}`,
           type: refs
@@ -111,36 +111,32 @@ export function genObject(
             .join('|'),
         })
         continue
-      } else if (propDef && typeof propDef === 'object') {
+      } else {
         if (propDef.type === 'array') {
           //= propName: type[]
           let propAst
-          if (typeof propDef.items === 'string') {
+          if (propDef.items.type === 'ref') {
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
               type: `${refToType(
-                propDef.items,
+                propDef.items.ref,
                 stripScheme(stripHash(lexUri)),
                 imports,
               )}[]`,
             })
-          } else if (Array.isArray(propDef.items)) {
-            const types = propDef.items.map((item) =>
-              refToType(item, stripScheme(stripHash(lexUri)), imports),
+          } else if (propDef.items.type === 'union') {
+            const types = propDef.items.refs.map((ref) =>
+              refToType(ref, stripScheme(stripHash(lexUri)), imports),
             )
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
               type: `(${types.join('|')})[]`,
             })
-          } else if (typeof propDef.items === 'object') {
+          } else {
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
               type: `${primitiveOrBlobToType(propDef.items)}[]`,
             })
-          } else {
-            throw new Error(
-              `Unexpected items definition in ${lexUri}: ${typeof propDef.items}`,
-            )
           }
           genComment(propAst, propDef)
         } else {
@@ -153,10 +149,6 @@ export function genObject(
             propDef,
           )
         }
-      } else {
-        throw new Error(
-          `Unexpected property definition in ${lexUri}: ${typeof propDef}`,
-        )
       }
     }
     //= [k: string]: unknown
@@ -190,26 +182,26 @@ export function genArray(
   lexUri: string,
   def: LexArray,
 ) {
-  if (typeof def.items === 'string') {
+  if (def.items.type === 'ref') {
     file.addTypeAlias({
       name: toTitleCase(getHash(lexUri)),
       type: `${refToType(
-        def.items,
+        def.items.ref,
         stripScheme(stripHash(lexUri)),
         imports,
       )}[]`,
       isExported: true,
     })
-  } else if (Array.isArray(def.items)) {
-    const types = def.items.map((item) =>
-      refToType(item, stripScheme(stripHash(lexUri)), imports),
+  } else if (def.items.type === 'union') {
+    const types = def.items.refs.map((ref) =>
+      refToType(ref, stripScheme(stripHash(lexUri)), imports),
     )
     file.addTypeAlias({
       name: toTitleCase(getHash(lexUri)),
       type: `(${types.join('|')})[]`,
       isExported: true,
     })
-  } else if (typeof def.items === 'object') {
+  } else {
     genComment(
       file.addTypeAlias({
         name: toTitleCase(getHash(lexUri)),
@@ -217,10 +209,6 @@ export function genArray(
         isExported: true,
       }),
       def,
-    )
-  } else {
-    throw new Error(
-      `Unexpected items definition in ${lexUri}: ${typeof def.items}`,
     )
   }
 }
@@ -282,14 +270,12 @@ export function genXrpcInput(
   ]) as LexXrpcProcedure
 
   if (def.input?.schema) {
-    if (
-      typeof def.input.schema === 'string' ||
-      Array.isArray(def.input.schema)
-    ) {
+    if (def.input.schema.type === 'ref' || def.input.schema.type === 'union') {
       //= export type InputSchema = ...
-      const refs = Array.isArray(def.input.schema)
-        ? def.input.schema
-        : [def.input.schema]
+      const refs =
+        def.input.schema.type === 'union'
+          ? def.input.schema.refs
+          : [def.input.schema.ref]
       file.addTypeAlias({
         name: 'InputSchema',
         type: refs
@@ -297,7 +283,7 @@ export function genXrpcInput(
           .join('|'),
         isExported: true,
       })
-    } else if (typeof def.input.schema === 'object') {
+    } else {
       //= export interface InputSchema {...}
       genObject(file, imports, lexUri, def.input.schema, `InputSchema`)
     }
@@ -331,13 +317,14 @@ export function genXrpcOutput(
 
   if (def.output?.schema) {
     if (
-      typeof def.output.schema === 'string' ||
-      Array.isArray(def.output.schema)
+      def.output.schema.type === 'ref' ||
+      def.output.schema.type === 'union'
     ) {
       //= export type OutputSchema = ...
-      const refs = Array.isArray(def.output.schema)
-        ? def.output.schema
-        : [def.output.schema]
+      const refs =
+        def.output.schema.type === 'union'
+          ? def.output.schema.refs
+          : [def.output.schema.ref]
       file.addTypeAlias({
         name: 'OutputSchema',
         type: refs
@@ -345,7 +332,7 @@ export function genXrpcOutput(
           .join('|'),
         isExported: true,
       })
-    } else if (typeof def.output.schema === 'object') {
+    } else {
       //= export interface OutputSchema {...}
       genObject(file, imports, lexUri, def.output.schema, `OutputSchema`)
     }

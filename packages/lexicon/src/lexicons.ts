@@ -64,7 +64,7 @@ export class Lexicons {
     // WARNING
     // mutates the object
     // -prf
-    resolveDefUris(validatedDoc, uri)
+    resolveRefUris(validatedDoc, uri)
 
     this.docs.set(uri, validatedDoc)
     for (const [defUri, def] of iterDefs(validatedDoc)) {
@@ -180,23 +180,23 @@ function* iterDefs(doc: LexiconDoc): Generator<[string, LexUserType]> {
 // WARNING
 // this method mutates objects
 // -prf
-function resolveDefUris(obj: any, baseUri: string): any {
+function resolveRefUris(obj: any, baseUri: string): any {
   for (const k in obj) {
-    if (typeof obj[k] === 'string') {
-      if (obj[k].startsWith('#')) {
-        obj[k] = toLexUri(obj[k], baseUri)
-      }
+    if (obj.type === 'ref') {
+      obj.ref = toLexUri(obj.ref, baseUri)
+    } else if (obj.type === 'union') {
+      obj.refs = obj.refs.map((ref) => toLexUri(ref, baseUri))
     } else if (Array.isArray(obj[k])) {
       obj[k] = obj[k].map((item: any) => {
         if (typeof item === 'string') {
           return item.startsWith('#') ? toLexUri(item, baseUri) : item
         } else if (item && typeof item === 'object') {
-          return resolveDefUris(item, baseUri)
+          return resolveRefUris(item, baseUri)
         }
         return item
       })
     } else if (obj[k] && typeof obj[k] === 'object') {
-      obj[k] = resolveDefUris(obj[k], baseUri)
+      obj[k] = resolveRefUris(obj[k], baseUri)
     }
   }
   return obj

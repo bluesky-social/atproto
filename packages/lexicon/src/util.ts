@@ -1,5 +1,10 @@
 import { Lexicons } from './lexicons'
-import { LexUserType, ValidationError, ValidationResult } from './types'
+import {
+  LexUserType,
+  LexRefVariant,
+  ValidationError,
+  ValidationResult,
+} from './types'
 
 export function toLexUri(str: string, baseUri?: string): string {
   if (str.startsWith('lex:')) {
@@ -51,13 +56,13 @@ export function assertValidOneOf<T>(
 
 export function toConcreteTypes(
   lexicons: Lexicons,
-  defs: string | string[] | LexUserType,
+  def: LexRefVariant | LexUserType,
 ): LexUserType[] {
-  if (typeof defs === 'string') {
-    return [lexicons.getDefOrThrow(defs)]
-  } else if (Array.isArray(defs)) {
-    return defs.map((def) => lexicons.getDefOrThrow(def)).flat()
+  if (def.type === 'ref') {
+    return [lexicons.getDefOrThrow(def.ref)]
+  } else if (def.type === 'union') {
+    return def.refs.map((ref) => lexicons.getDefOrThrow(ref)).flat()
   } else {
-    return [defs]
+    return [def]
   }
 }

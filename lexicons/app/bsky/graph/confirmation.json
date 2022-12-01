@@ -9,8 +9,8 @@
         "type": "object",
         "required": ["originator", "assertion", "createdAt"],
         "properties": {
-          "originator": "#originator",
-          "assertion": "#assertion",
+          "originator": {"type": "ref", "ref": "#originator"},
+          "assertion": {"type": "ref", "ref": "#assertion"},
           "createdAt": {"type": "datetime"}
         }
       }

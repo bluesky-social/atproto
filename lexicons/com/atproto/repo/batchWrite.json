@@ -22,7 +22,7 @@
             },
             "writes": {
               "type": "array",
-              "items": ["#create", "#update", "#delete"]
+              "items": {"type": "union", "refs": ["#create", "#update", "#delete"]}
             }
           }
         }

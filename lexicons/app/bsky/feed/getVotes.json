@@ -26,7 +26,7 @@
             "cursor": {"type": "string"},
             "votes": {
               "type": "array",
-              "items": "#vote"
+              "items": {"type": "ref", "ref": "#vote"}
             }
           }
         }
@@ -39,7 +39,7 @@
         "direction": {"type": "string", "enum": ["up", "down"]},
         "indexedAt": {"type": "datetime"},
         "createdAt": {"type": "datetime"},
-        "actor": "#actor"
+        "actor": {"type": "ref", "ref": "#actor"}
       }
     },
     "actor": {
@@ -47,7 +47,7 @@
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": "#declaration",
+        "declaration": {"type": "ref", "ref": "#declaration"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",

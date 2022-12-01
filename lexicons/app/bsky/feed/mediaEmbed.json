@@ -7,7 +7,7 @@
       "description": "A list of media embedded in a post or document.",
       "required": ["media"],
       "properties": {
-        "media": {"type": "array", "items": "#mediaEmbed"}
+        "media": {"type": "array", "items": {"type": "ref", "ref": "#mediaEmbed"}}
       }
     },
     "mediaEmbed": {

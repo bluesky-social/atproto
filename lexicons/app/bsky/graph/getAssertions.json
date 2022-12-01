@@ -25,7 +25,7 @@
             "cursor": {"type": "string"},
             "assertions": {
               "type": "array",
-              "items": "#assertion"
+              "items": {"type": "ref", "ref": "#assertion"}
             }
           }
         }
@@ -38,9 +38,9 @@
         "uri": {"type": "string"},
         "cid": {"type": "string"},
         "assertion": {"type": "string"},
-        "confirmation": "#confirmation",
-        "author": "#actor",
-        "subject": "#actor",
+        "confirmation": {"type": "ref", "ref": "#confirmation"},
+        "author": {"type": "ref", "ref": "#actor"},
+        "subject": {"type": "ref", "ref": "#actor"},
         "indexedAt": {"type": "datetime"},
         "createdAt": {"type": "datetime"}
       }
@@ -60,7 +60,7 @@
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": "#declaration",
+        "declaration": {"type": "ref", "ref": "#declaration"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",

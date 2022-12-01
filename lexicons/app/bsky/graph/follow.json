@@ -10,7 +10,7 @@
         "type": "object",
         "required": ["subject", "createdAt"],
         "properties": {
-          "subject": "#subject",
+          "subject": {"type": "ref", "ref": "#subject"},
           "createdAt": {"type": "datetime"}
         }
       }

@@ -68,6 +68,26 @@ export const lexPrimitive = z.union([
 ])
 export type LexPrimitive = z.infer<typeof lexPrimitive>
 
+// references
+// =
+
+export const lexRef = z.object({
+  type: z.literal('ref'),
+  description: z.string().optional(),
+  ref: z.string(),
+})
+export type LexRef = z.infer<typeof lexRef>
+
+export const lexRefUnion = z.object({
+  type: z.literal('union'),
+  description: z.string().optional(),
+  refs: z.string().array(),
+})
+export type LexRefUnion = z.infer<typeof lexRefUnion>
+
+export const lexRefVariant = z.union([lexRef, lexRefUnion])
+export type LexRefVariant = z.infer<typeof lexRefVariant>
+
 // blobs
 // =
 
@@ -118,12 +138,7 @@ export type LexBlobVariant = z.infer<typeof lexBlobVariant>
 export const lexArray = z.object({
   type: z.literal('array'),
   description: z.string().optional(),
-  items: z.union([
-    lexPrimitive,
-    lexBlobVariant,
-    z.string(),
-    z.string().array(),
-  ]),
+  items: z.union([lexPrimitive, lexBlobVariant, lexRefVariant]),
   minLength: z.number().int().optional(),
   maxLength: z.number().int().optional(),
 })
@@ -140,15 +155,7 @@ export const lexObject = z.object({
   description: z.string().optional(),
   required: z.string().array().optional(),
   properties: z
-    .record(
-      z.union([
-        z.string(),
-        z.string().array(),
-        lexArray,
-        lexBlobVariant,
-        lexPrimitive,
-      ]),
-    )
+    .record(z.union([lexRefVariant, lexArray, lexBlobVariant, lexPrimitive]))
     .optional(),
 })
 export type LexObject = z.infer<typeof lexObject>
@@ -167,7 +174,7 @@ export type LexXrpcParameters = z.infer<typeof lexXrpcParameters>
 export const lexXrpcBody = z.object({
   description: z.string().optional(),
   encoding: z.union([z.string(), z.string().array()]),
-  schema: z.union([z.string(), z.string().array(), lexObject]).optional(),
+  schema: z.union([lexRefVariant, lexObject]).optional(),
 })
 export type LexXrpcBody = z.infer<typeof lexXrpcBody>
 
