@@ -31,6 +31,9 @@ export function decodeQueryParam(
   type: string,
   value: unknown,
 ): string | number | boolean | undefined {
+  if (!value) {
+    return undefined
+  }
   if (type === 'string' || type === 'datetime') {
     return String(value)
   }
