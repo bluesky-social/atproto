@@ -4,7 +4,7 @@
 import express from 'express'
 
 export interface QueryParams {
-  uri?: string;
+  uri: string;
   depth?: number;
 }
 

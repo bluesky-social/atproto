@@ -6,12 +6,15 @@
       "type": "query",
       "description": "General-purpose query for assertions.",
       "parameters": {
-        "author": {"type": "string"},
-        "subject": {"type": "string"},
-        "assertion": {"type": "string"},
-        "confirmed": {"type": "boolean"},
-        "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-        "before": {"type": "string"}
+        "type": "params",
+        "properties": {
+          "author": {"type": "string"},
+          "subject": {"type": "string"},
+          "assertion": {"type": "string"},
+          "confirmed": {"type": "boolean"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
       },
       "output": {
         "encoding": "application/json",

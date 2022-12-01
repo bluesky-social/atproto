@@ -1,5 +1,5 @@
 import { Lexicons } from '../lexicons'
-import { LexXrpcParameters, ValidationResult } from '../types'
+import { LexXrpcParameters, ValidationResult, ValidationError } from '../types'
 
 import * as PrimitiveValidators from './primitives'
 
@@ -17,12 +17,24 @@ export function params(
     value = {}
   }
 
-  // params
-  for (const key in def) {
-    if (typeof (value as Record<string, unknown>)[key] === 'undefined') {
-      continue // all params are optional
+  // required
+  if (Array.isArray(def.required)) {
+    for (const key of def.required) {
+      if (!(key in (value as Record<string, unknown>))) {
+        return {
+          success: false,
+          error: new ValidationError(`${path} must have the property "${key}"`),
+        }
+      }
     }
-    const paramDef = def[key]
+  }
+
+  // properties
+  for (const key in def.properties) {
+    if (typeof (value as Record<string, unknown>)[key] === 'undefined') {
+      continue // skip- if required, will have already failed
+    }
+    const paramDef = def.properties[key]
     const res = PrimitiveValidators.validate(
       lexicons,
       key,

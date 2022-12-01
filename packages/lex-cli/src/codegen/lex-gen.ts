@@ -256,11 +256,12 @@ export function genXrpcParams(
     isExported: true,
   })
   if (def.parameters) {
-    for (const paramKey in def.parameters) {
-      const paramDef = def.parameters[paramKey]
+    for (const paramKey in def.parameters.properties) {
+      const req = def.parameters.required?.includes(paramKey)
+      const paramDef = def.parameters.properties[paramKey]
       genComment(
         iface.addProperty({
-          name: `${paramKey}?`,
+          name: `${paramKey}${req ? '' : '?'}`,
           type: primitiveToType(paramDef),
         }),
         paramDef,

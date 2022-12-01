@@ -5,10 +5,14 @@
     "main": {
       "type": "query",
       "parameters": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
-        "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-        "before": {"type": "string"}
+        "type": "params",
+        "required": ["uri"],
+        "properties": {
+          "uri": {"type": "string"},
+          "cid": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
       },
       "output": {
         "encoding": "application/json",

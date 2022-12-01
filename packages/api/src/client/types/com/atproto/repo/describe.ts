@@ -5,7 +5,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
-  user?: string;
+  user: string;
 }
 
 export type InputSchema = undefined

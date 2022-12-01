@@ -1,37 +1,37 @@
 import { Lexicons } from '../src/index'
-import KitchenSink from './_scaffolds/schemas/kitchen-sink'
+import LexiconDocs from './_scaffolds/lexicons'
 
 describe('Lexicons collection', () => {
-  const lex = new Lexicons(KitchenSink)
+  const lex = new Lexicons(LexiconDocs)
 
   it('Adds schemas', () => {
-    expect(() => lex.add(KitchenSink[0])).toThrow()
+    expect(() => lex.add(LexiconDocs[0])).toThrow()
   })
 
   it('Correctly references all definitions', () => {
     expect(lex.getDef('com.example.kitchenSink')).toEqual(
-      KitchenSink[0].defs.main,
+      LexiconDocs[0].defs.main,
     )
     expect(lex.getDef('lex:com.example.kitchenSink')).toEqual(
-      KitchenSink[0].defs.main,
+      LexiconDocs[0].defs.main,
     )
     expect(lex.getDef('com.example.kitchenSink#main')).toEqual(
-      KitchenSink[0].defs.main,
+      LexiconDocs[0].defs.main,
     )
     expect(lex.getDef('lex:com.example.kitchenSink#main')).toEqual(
-      KitchenSink[0].defs.main,
+      LexiconDocs[0].defs.main,
     )
     expect(lex.getDef('com.example.kitchenSink#object')).toEqual(
-      KitchenSink[0].defs.object,
+      LexiconDocs[0].defs.object,
     )
     expect(lex.getDef('lex:com.example.kitchenSink#object')).toEqual(
-      KitchenSink[0].defs.object,
+      LexiconDocs[0].defs.object,
     )
   })
 })
 
 describe('Record validation', () => {
-  const lex = new Lexicons(KitchenSink)
+  const lex = new Lexicons(LexiconDocs)
 
   it('Passes valid schemas', () => {
     lex.assertValidRecord('com.example.kitchenSink', {
@@ -435,7 +435,7 @@ describe('Record validation', () => {
 })
 
 describe('XRPC parameter validation', () => {
-  const lex = new Lexicons(KitchenSink)
+  const lex = new Lexicons(LexiconDocs)
 
   it('Passes valid parameters', () => {
     lex.assertValidXrpcParams('com.example.query', {
@@ -452,27 +452,42 @@ describe('XRPC parameter validation', () => {
     })
   })
 
-  it('Treats all parameters as optional', () => {
-    lex.assertValidXrpcParams('com.example.query', {})
-    lex.assertValidXrpcParams('com.example.procedure', {})
+  it('Handles required correctly', () => {
+    lex.assertValidXrpcParams('com.example.query', {
+      boolean: true,
+      number: 123.45,
+      integer: 123,
+    })
+    expect(() =>
+      lex.assertValidXrpcParams('com.example.query', {
+        boolean: true,
+        number: 123.45,
+      }),
+    ).toThrow('Params must have the property "integer"')
   })
 
   it('Validates parameter types', () => {
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: 'string',
+        number: 123.45,
+        integer: 123,
+        string: 'string',
       }),
     ).toThrow('boolean must be a boolean')
     expect(() =>
       lex.assertValidXrpcParams('com.example.procedure', {
+        boolean: true,
         number: true,
+        integer: 123,
+        string: 'string',
       }),
     ).toThrow('number must be a number')
   })
 })
 
 describe('XRPC input validation', () => {
-  const lex = new Lexicons(KitchenSink)
+  const lex = new Lexicons(LexiconDocs)
 
   it('Passes valid inputs', () => {
     lex.assertValidXrpcInput('com.example.procedure', {
@@ -504,7 +519,7 @@ describe('XRPC input validation', () => {
 })
 
 describe('XRPC output validation', () => {
-  const lex = new Lexicons(KitchenSink)
+  const lex = new Lexicons(LexiconDocs)
 
   it('Passes valid outputs', () => {
     lex.assertValidXrpcOutput('com.example.query', {

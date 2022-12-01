@@ -156,7 +156,12 @@ export type LexObject = z.infer<typeof lexObject>
 // xrpc
 // =
 
-export const lexXrpcParameters = z.record(lexPrimitive)
+export const lexXrpcParameters = z.object({
+  type: z.literal('params'),
+  description: z.string().optional(),
+  required: z.string().array().optional(),
+  properties: z.record(lexPrimitive),
+})
 export type LexXrpcParameters = z.infer<typeof lexXrpcParameters>
 
 export const lexXrpcBody = z.object({

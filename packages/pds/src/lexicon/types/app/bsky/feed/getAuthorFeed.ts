@@ -4,7 +4,7 @@
 import express from 'express'
 
 export interface QueryParams {
-  author?: string;
+  author: string;
   limit?: number;
   before?: string;
 }

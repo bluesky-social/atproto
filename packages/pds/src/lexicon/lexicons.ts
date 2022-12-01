@@ -190,10 +190,13 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Provides the DID of a repo.',
         parameters: {
-          handle: {
-            type: 'string',
-            description:
-              "The handle to resolve. If not supplied, will resolve the host's own handle.",
+          type: 'params',
+          properties: {
+            handle: {
+              type: 'string',
+              description:
+                "The handle to resolve. If not supplied, will resolve the host's own handle.",
+            },
           },
         },
         output: {
@@ -392,9 +395,13 @@ export const lexicons: LexiconDoc[] = [
         description:
           'Get information about the repo, including the list of collections.',
         parameters: {
-          user: {
-            type: 'string',
-            description: 'The handle or DID of the repo.',
+          type: 'params',
+          required: ['user'],
+          properties: {
+            user: {
+              type: 'string',
+              description: 'The handle or DID of the repo.',
+            },
           },
         },
         output: {
@@ -441,22 +448,26 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Fetch a record.',
         parameters: {
-          user: {
-            type: 'string',
-            description: 'The handle or DID of the repo.',
-          },
-          collection: {
-            type: 'string',
-            description: 'The NSID of the collection.',
-          },
-          rkey: {
-            type: 'string',
-            description: 'The key of the record.',
-          },
-          cid: {
-            type: 'string',
-            description:
-              'The CID of the version of the record. If not specified, then return the most recent version.',
+          type: 'params',
+          required: ['user', 'collection', 'rkey'],
+          properties: {
+            user: {
+              type: 'string',
+              description: 'The handle or DID of the repo.',
+            },
+            collection: {
+              type: 'string',
+              description: 'The NSID of the collection.',
+            },
+            rkey: {
+              type: 'string',
+              description: 'The key of the record.',
+            },
+            cid: {
+              type: 'string',
+              description:
+                'The CID of the version of the record. If not specified, then return the most recent version.',
+            },
           },
         },
         output: {
@@ -488,32 +499,36 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'List a range of records in a collection.',
         parameters: {
-          user: {
-            type: 'string',
-            description: 'The handle or DID of the repo.',
-          },
-          collection: {
-            type: 'string',
-            description: 'The NSID of the record type.',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-            description: 'The number of records to return.',
-          },
-          before: {
-            type: 'string',
-            description: 'A TID to filter the range of records returned.',
-          },
-          after: {
-            type: 'string',
-            description: 'A TID to filter the range of records returned.',
-          },
-          reverse: {
-            type: 'boolean',
-            description: 'Reverse the order of the returned records?',
+          type: 'params',
+          required: ['user', 'collection'],
+          properties: {
+            user: {
+              type: 'string',
+              description: 'The handle or DID of the repo.',
+            },
+            collection: {
+              type: 'string',
+              description: 'The NSID of the record type.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+              description: 'The number of records to return.',
+            },
+            before: {
+              type: 'string',
+              description: 'A TID to filter the range of records returned.',
+            },
+            after: {
+              type: 'string',
+              description: 'A TID to filter the range of records returned.',
+            },
+            reverse: {
+              type: 'boolean',
+              description: 'Reverse the order of the returned records?',
+            },
           },
         },
         output: {
@@ -754,13 +769,17 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Gets the repo state.',
         parameters: {
-          did: {
-            type: 'string',
-            description: 'The DID of the repo.',
-          },
-          from: {
-            type: 'string',
-            description: 'A past commit CID.',
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            from: {
+              type: 'string',
+              description: 'A past commit CID.',
+            },
           },
         },
         output: {
@@ -777,9 +796,13 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Gets the current root CID of a repo.',
         parameters: {
-          did: {
-            type: 'string',
-            description: 'The DID of the repo.',
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
           },
         },
         output: {
@@ -805,9 +828,13 @@ export const lexicons: LexiconDoc[] = [
         type: 'procedure',
         description: 'Writes commits to a repo.',
         parameters: {
-          did: {
-            type: 'string',
-            description: 'The DID of the repo.',
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
           },
         },
         input: {
@@ -888,8 +915,12 @@ export const lexicons: LexiconDoc[] = [
       main: {
         type: 'query',
         parameters: {
-          actor: {
-            type: 'string',
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -980,14 +1011,17 @@ export const lexicons: LexiconDoc[] = [
         description:
           'Get a list of actors suggested for following. Used in discovery UIs.',
         parameters: {
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          cursor: {
-            type: 'string',
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1089,17 +1123,21 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Find users matching search criteria.',
         parameters: {
-          term: {
-            type: 'string',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          required: ['term'],
+          properties: {
+            term: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1168,14 +1206,18 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Find user suggestions for a search term.',
         parameters: {
-          term: {
-            type: 'string',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
+          type: 'params',
+          required: ['term'],
+          properties: {
+            term: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
           },
         },
         output: {
@@ -1282,17 +1324,21 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: "A view of a user's feed.",
         parameters: {
-          author: {
-            type: 'string',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          required: ['author'],
+          properties: {
+            author: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1462,11 +1508,15 @@ export const lexicons: LexiconDoc[] = [
       main: {
         type: 'query',
         parameters: {
-          uri: {
-            type: 'string',
-          },
-          depth: {
-            type: 'integer',
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            depth: {
+              type: 'integer',
+            },
           },
         },
         output: {
@@ -1659,20 +1709,24 @@ export const lexicons: LexiconDoc[] = [
       main: {
         type: 'query',
         parameters: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1747,17 +1801,20 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: "A view of the user's home timeline.",
         parameters: {
-          algorithm: {
-            type: 'string',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          properties: {
+            algorithm: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1930,24 +1987,28 @@ export const lexicons: LexiconDoc[] = [
       main: {
         type: 'query',
         parameters: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          direction: {
-            type: 'string',
-            enum: ['up', 'down'],
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+            direction: {
+              type: 'string',
+              enum: ['up', 'down'],
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -2427,26 +2488,29 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'General-purpose query for assertions.',
         parameters: {
-          author: {
-            type: 'string',
-          },
-          subject: {
-            type: 'string',
-          },
-          assertion: {
-            type: 'string',
-          },
-          confirmed: {
-            type: 'boolean',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          properties: {
+            author: {
+              type: 'string',
+            },
+            subject: {
+              type: 'string',
+            },
+            assertion: {
+              type: 'string',
+            },
+            confirmed: {
+              type: 'boolean',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -2559,17 +2623,21 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Who is following a user?',
         parameters: {
-          user: {
-            type: 'string',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          required: ['user'],
+          properties: {
+            user: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -2656,17 +2724,21 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Who is a user following?',
         parameters: {
-          user: {
-            type: 'string',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          required: ['user'],
+          properties: {
+            user: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -2753,17 +2825,21 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Who is a member of the group?',
         parameters: {
-          actor: {
-            type: 'string',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -2850,17 +2926,21 @@ export const lexicons: LexiconDoc[] = [
         type: 'query',
         description: 'Which groups is the actor a member of?',
         parameters: {
-          actor: {
-            type: 'string',
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -2967,14 +3047,17 @@ export const lexicons: LexiconDoc[] = [
       main: {
         type: 'query',
         parameters: {
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            default: 50,
-          },
-          before: {
-            type: 'string',
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {

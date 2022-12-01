@@ -5,8 +5,12 @@
     "main": {
       "type": "query",
       "parameters": {
-        "uri": {"type": "string"},
-        "depth": {"type": "integer"}
+        "type": "params",
+        "required": ["uri"],
+        "properties": {
+          "uri": {"type": "string"},
+          "depth": {"type": "integer"}
+        }
       },
       "output": {
         "encoding": "application/json",

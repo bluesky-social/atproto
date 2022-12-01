@@ -11,10 +11,14 @@ const LEXICONS = [
       main: {
         type: 'query',
         parameters: {
-          str: { type: 'string', minLength: 2, maxLength: 10 },
-          int: { type: 'integer', minimum: 2, maximum: 10 },
-          num: { type: 'number', minimum: 2, maximum: 10 },
-          bool: { type: 'boolean' },
+          type: 'params',
+          required: ['str', 'int', 'num', 'bool'],
+          properties: {
+            str: { type: 'string', minLength: 2, maxLength: 10 },
+            int: { type: 'integer', minimum: 2, maximum: 10 },
+            num: { type: 'number', minimum: 2, maximum: 10 },
+            bool: { type: 'boolean' },
+          },
         },
         output: {
           encoding: 'application/json',
@@ -81,14 +85,13 @@ describe('Parameters', () => {
         bool: true,
       }),
     ).rejects.toThrow('str must not be longer than 10 characters')
-    // TODO required params?
-    // await expect(
-    //   client.call('io.example.paramTest', {
-    //     int: 5,
-    //     num: 5.5,
-    //     bool: true,
-    //   }),
-    // ).rejects.toThrow(`parameters must have required property 'str'`)
+    await expect(
+      client.call('io.example.paramTest', {
+        int: 5,
+        num: 5.5,
+        bool: true,
+      }),
+    ).rejects.toThrow(`Params must have the property "str"`)
 
     await expect(
       client.call('io.example.paramTest', {
@@ -106,14 +109,13 @@ describe('Parameters', () => {
         bool: true,
       }),
     ).rejects.toThrow('int can not be greater than 10')
-    // TODO required params?
-    // await expect(
-    //   client.call('io.example.paramTest', {
-    //     str: 'valid',
-    //     num: 5.5,
-    //     bool: true,
-    //   }),
-    // ).rejects.toThrow(`parameters must have required property 'int'`)
+    await expect(
+      client.call('io.example.paramTest', {
+        str: 'valid',
+        num: 5.5,
+        bool: true,
+      }),
+    ).rejects.toThrow(`Params must have the property "int"`)
 
     await expect(
       client.call('io.example.paramTest', {
@@ -131,22 +133,20 @@ describe('Parameters', () => {
         bool: true,
       }),
     ).rejects.toThrow('num can not be greater than 10')
-    // TODO required params?
-    // await expect(
-    //   client.call('io.example.paramTest', {
-    //     str: 'valid',
-    //     int: 5,
-    //     bool: true,
-    //   }),
-    // ).rejects.toThrow(`parameters must have required property 'num'`)
+    await expect(
+      client.call('io.example.paramTest', {
+        str: 'valid',
+        int: 5,
+        bool: true,
+      }),
+    ).rejects.toThrow(`Params must have the property "num"`)
 
-    // TODO required params?
-    // await expect(
-    //   client.call('io.example.paramTest', {
-    //     str: 'valid',
-    //     int: 5,
-    //     num: 5.5,
-    //   }),
-    // ).rejects.toThrow(`parameters must have required property 'bool'`)
+    await expect(
+      client.call('io.example.paramTest', {
+        str: 'valid',
+        int: 5,
+        num: 5.5,
+      }),
+    ).rejects.toThrow(`Params must have the property "bool"`)
   })
 })

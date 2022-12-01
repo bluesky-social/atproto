@@ -6,8 +6,12 @@
       "type": "query",
       "description": "Find user suggestions for a search term.",
       "parameters": {
-        "term": {"type": "string"},
-        "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50}
+        "type": "params",
+        "required": ["term"],
+        "properties": {
+          "term": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50}
+        }
       },
       "output": {
         "encoding": "application/json",

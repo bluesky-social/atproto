@@ -5,7 +5,11 @@
     "main": {
       "type": "query",
       "parameters": {
-        "actor": {"type": "string"}
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": {"type": "string"}
+        }
       },
       "output": {
         "encoding": "application/json",

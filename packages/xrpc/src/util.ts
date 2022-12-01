@@ -28,7 +28,7 @@ export function constructMethodCallUri(
   // given parameters
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      const paramSchema = schema.parameters?.[key]
+      const paramSchema = schema.parameters?.properties?.[key]
       if (!paramSchema) {
         throw new Error(`Invalid query parameter: ${key}`)
       }

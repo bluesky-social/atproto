@@ -6,9 +6,13 @@
       "type": "query",
       "description": "Which groups is the actor a member of?",
       "parameters": {
-        "actor": {"type": "string"},
-        "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-        "before": {"type": "string"}
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
       },
       "output": {
         "encoding": "application/json",

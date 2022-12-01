@@ -11,7 +11,10 @@ const LEXICONS = [
       main: {
         type: 'procedure',
         parameters: {
-          message: { type: 'string' },
+          type: 'params',
+          properties: {
+            message: { type: 'string' },
+          },
         },
         output: {
           encoding: 'text/plain',

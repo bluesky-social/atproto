@@ -5,9 +5,9 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
-  user?: string;
+  user: string;
   /** The NSID of the record type. */
-  collection?: string;
+  collection: string;
   /** The number of records to return. */
   limit?: number;
   /** A TID to filter the range of records returned. */

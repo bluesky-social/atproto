@@ -6,9 +6,12 @@
       "type": "query",
       "description": "A view of the user's home timeline.",
       "parameters": {
-        "algorithm": {"type": "string"},
-        "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-        "before": {"type": "string"}
+        "type": "params",
+        "properties": {
+          "algorithm": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
       },
       "output": {
         "encoding": "application/json",

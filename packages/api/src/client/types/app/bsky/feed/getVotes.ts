@@ -4,7 +4,7 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  uri?: string;
+  uri: string;
   cid?: string;
   direction?: 'up' | 'down';
   limit?: number;

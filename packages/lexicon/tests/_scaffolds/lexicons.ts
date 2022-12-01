@@ -58,10 +58,14 @@ export default [
         type: 'query',
         description: 'A query',
         parameters: {
-          boolean: { type: 'boolean' },
-          number: { type: 'number' },
-          integer: { type: 'integer' },
-          string: { type: 'string' },
+          type: 'params',
+          required: ['boolean', 'number', 'integer'],
+          properties: {
+            boolean: { type: 'boolean' },
+            number: { type: 'number' },
+            integer: { type: 'integer' },
+            string: { type: 'string' },
+          },
         },
         output: {
           encoding: 'application/json',
@@ -78,10 +82,14 @@ export default [
         type: 'procedure',
         description: 'A procedure',
         parameters: {
-          boolean: { type: 'boolean' },
-          number: { type: 'number' },
-          integer: { type: 'integer' },
-          string: { type: 'string' },
+          type: 'params',
+          required: ['boolean', 'number', 'integer'],
+          properties: {
+            boolean: { type: 'boolean' },
+            number: { type: 'number' },
+            integer: { type: 'integer' },
+            string: { type: 'string' },
+          },
         },
         input: {
           encoding: 'application/json',

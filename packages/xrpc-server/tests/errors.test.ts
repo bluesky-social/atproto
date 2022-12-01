@@ -11,7 +11,10 @@ const LEXICONS = [
       main: {
         type: 'query',
         parameters: {
-          which: { type: 'string', default: 'foo' },
+          type: 'params',
+          properties: {
+            which: { type: 'string', default: 'foo' },
+          },
         },
         errors: [{ name: 'Foo' }, { name: 'Bar' }],
       },

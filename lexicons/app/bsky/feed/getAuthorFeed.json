@@ -6,9 +6,13 @@
       "type": "query",
       "description": "A view of a user's feed.",
       "parameters": {
-        "author": {"type": "string"},
-        "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-        "before": {"type": "string"}
+        "type": "params",
+        "required": ["author"],
+        "properties": {
+          "author": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
       },
       "output": {
         "encoding": "application/json",

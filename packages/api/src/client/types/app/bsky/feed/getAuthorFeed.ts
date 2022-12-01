@@ -4,7 +4,7 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  author?: string;
+  author: string;
   limit?: number;
   before?: string;
 }

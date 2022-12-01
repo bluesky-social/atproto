@@ -17,8 +17,11 @@ export function decodeQueryParams(
 ): Params {
   const decoded: Params = {}
   for (const k in params) {
-    if (def.parameters?.[k]) {
-      decoded[k] = decodeQueryParam(def.parameters[k]?.type, params[k])
+    if (def.parameters?.properties?.[k]) {
+      decoded[k] = decodeQueryParam(
+        def.parameters?.properties[k]?.type,
+        params[k],
+      )
     }
   }
   return decoded

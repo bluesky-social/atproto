@@ -11,7 +11,10 @@ const LEXICONS = [
       main: {
         type: 'query',
         parameters: {
-          message: { type: 'string' },
+          type: 'params',
+          properties: {
+            message: { type: 'string' },
+          },
         },
         output: {
           encoding: 'text/plain',
@@ -26,7 +29,10 @@ const LEXICONS = [
       main: {
         type: 'query',
         parameters: {
-          message: { type: 'string' },
+          type: 'params',
+          properties: {
+            message: { type: 'string' },
+          },
         },
         output: {
           encoding: 'application/octet-stream',
@@ -41,7 +47,10 @@ const LEXICONS = [
       main: {
         type: 'query',
         parameters: {
-          message: { type: 'string' },
+          type: 'params',
+          properties: {
+            message: { type: 'string' },
+          },
         },
         output: {
           encoding: 'application/json',

@@ -4,7 +4,7 @@
 import express from 'express'
 
 export interface QueryParams {
-  term?: string;
+  term: string;
   limit?: number;
 }
 
