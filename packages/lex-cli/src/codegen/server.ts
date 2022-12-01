@@ -15,6 +15,7 @@ import { NSID } from '@atproto/nsid'
 import { gen, lexiconsTs } from './common'
 import { GeneratedAPI } from '../types'
 import {
+  genImports,
   genUserType,
   genObject,
   genXrpcParams,
@@ -245,6 +246,8 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
     async (file) => {
+      const imports: Set<string> = new Set()
+
       const main = lexiconDoc.defs.main
       if (main?.type === 'query' || main?.type === 'procedure') {
         //= import express from 'express'
@@ -260,18 +263,19 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         if (defId === 'main') {
           if (def.type === 'query' || def.type === 'procedure') {
             genXrpcParams(file, lexicons, lexUri)
-            genXrpcInput(file, lexicons, lexUri)
-            genXrpcOutput(file, lexicons, lexUri)
+            genXrpcInput(file, imports, lexicons, lexUri)
+            genXrpcOutput(file, imports, lexicons, lexUri)
             genServerXrpcCommon(file, lexicons, lexUri)
           } else if (def.type === 'record') {
-            genServerRecord(file, lexicons, lexUri)
+            genServerRecord(file, imports, lexicons, lexUri)
           } else {
-            genUserType(file, lexicons, lexUri)
+            genUserType(file, imports, lexicons, lexUri)
           }
         } else {
-          genUserType(file, lexicons, lexUri)
+          genUserType(file, imports, lexicons, lexUri)
         }
       }
+      genImports(file, imports, lexiconDoc.id)
     },
   )
 
@@ -390,9 +394,14 @@ function genServerXrpcCommon(
   })
 }
 
-function genServerRecord(file: SourceFile, lexicons: Lexicons, lexUri: string) {
+function genServerRecord(
+  file: SourceFile,
+  imports: Set<string>,
+  lexicons: Lexicons,
+  lexUri: string,
+) {
   const def = lexicons.getDefOrThrow(lexUri, ['record']) as LexRecord
 
   //= export interface Record {...}
-  genObject(file, lexicons, lexUri, def.record, 'Record')
+  genObject(file, imports, lexUri, def.record, 'Record')
 }

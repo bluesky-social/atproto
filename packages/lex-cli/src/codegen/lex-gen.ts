@@ -1,30 +1,51 @@
 import { SourceFile, VariableDeclarationKind } from 'ts-morph'
+import { relative as getRelativePath } from 'path'
 import {
   Lexicons,
   LexUserType,
   LexObject,
   LexArray,
-  LexToken,
   LexXrpcProcedure,
   LexXrpcQuery,
 } from '@atproto/lexicon'
 import { toTitleCase, toScreamingSnakeCase } from './util'
 
+export function genImports(
+  file: SourceFile,
+  imports: Set<string>,
+  baseNsid: string,
+) {
+  const startPath = '/' + baseNsid.split('.').slice(0, -1).join('/')
+
+  for (const nsid of imports) {
+    const targetPath = '/' + nsid.split('.').join('/')
+    let resolvedPath = getRelativePath(startPath, targetPath)
+    if (!resolvedPath.startsWith('.')) {
+      resolvedPath = `./${resolvedPath}`
+    }
+    file.addImportDeclaration({
+      moduleSpecifier: resolvedPath,
+      namespaceImport: toTitleCase(nsid),
+    })
+  }
+}
+
 export function genUserType(
   file: SourceFile,
+  imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
 ) {
   const def = lexicons.getDefOrThrow(lexUri)
   switch (def.type) {
     case 'array':
-      genArray(file, lexicons, lexUri, def)
+      genArray(file, imports, lexUri, def)
       break
     case 'token':
-      genToken(file, lexicons, lexUri, def)
+      genToken(file, lexUri)
       break
     case 'object':
-      genObject(file, lexicons, lexUri, def)
+      genObject(file, imports, lexUri, def)
       break
 
     case 'blob':
@@ -36,7 +57,7 @@ export function genUserType(
     case 'integer':
     case 'string':
     case 'unknown':
-      genPrimitiveOrBlob(file, lexicons, lexUri, def)
+      genPrimitiveOrBlob(file, lexUri, def)
       break
 
     default:
@@ -48,7 +69,7 @@ export function genUserType(
 
 export function genObject(
   file: SourceFile,
-  lexicons: Lexicons,
+  imports: Set<string>,
   lexUri: string,
   def: LexObject,
   ifaceName?: string,
@@ -67,7 +88,9 @@ export function genObject(
         iface.addProperty({
           name: `${propKey}${req ? '' : '?'}`,
           type: refs
-            .map((ref) => refToType(ref, stripScheme(stripHash(lexUri))))
+            .map((ref) =>
+              refToType(ref, stripScheme(stripHash(lexUri)), imports),
+            )
             .join('|'),
         })
         continue
@@ -80,11 +103,12 @@ export function genObject(
               type: `${refToType(
                 propDef.items,
                 stripScheme(stripHash(lexUri)),
+                imports,
               )}[]`,
             })
           } else if (Array.isArray(propDef.items)) {
             const types = propDef.items.map((item) =>
-              refToType(item, stripScheme(stripHash(lexUri))),
+              refToType(item, stripScheme(stripHash(lexUri)), imports),
             )
             iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
@@ -122,12 +146,7 @@ export function genObject(
   }
 }
 
-export function genToken(
-  file: SourceFile,
-  lexicons: Lexicons,
-  lexUri: string,
-  def: LexToken,
-) {
+export function genToken(file: SourceFile, lexUri: string) {
   file.addVariableStatement({
     isExported: true,
     declarationKind: VariableDeclarationKind.Const,
@@ -142,19 +161,23 @@ export function genToken(
 
 export function genArray(
   file: SourceFile,
-  lexicons: Lexicons,
+  imports: Set<string>,
   lexUri: string,
   def: LexArray,
 ) {
   if (typeof def.items === 'string') {
     file.addTypeAlias({
       name: toTitleCase(getHash(lexUri)),
-      type: `${refToType(def.items, stripScheme(stripHash(lexUri)))}[]`,
+      type: `${refToType(
+        def.items,
+        stripScheme(stripHash(lexUri)),
+        imports,
+      )}[]`,
       isExported: true,
     })
   } else if (Array.isArray(def.items)) {
     const types = def.items.map((item) =>
-      refToType(item, stripScheme(stripHash(lexUri))),
+      refToType(item, stripScheme(stripHash(lexUri)), imports),
     )
     file.addTypeAlias({
       name: toTitleCase(getHash(lexUri)),
@@ -176,7 +199,6 @@ export function genArray(
 
 export function genPrimitiveOrBlob(
   file: SourceFile,
-  lexicons: Lexicons,
   lexUri: string,
   def: LexUserType,
 ) {
@@ -215,6 +237,7 @@ export function genXrpcParams(
 
 export function genXrpcInput(
   file: SourceFile,
+  imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
 ) {
@@ -235,13 +258,13 @@ export function genXrpcInput(
       file.addTypeAlias({
         name: 'InputSchema',
         type: refs
-          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri))))
+          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri)), imports))
           .join('|'),
         isExported: true,
       })
     } else if (typeof def.input.schema === 'object') {
       //= export interface InputSchema {...}
-      genObject(file, lexicons, lexUri, def.input.schema, `InputSchema`)
+      genObject(file, imports, lexUri, def.input.schema, `InputSchema`)
     }
   } else if (def.input?.encoding) {
     //= export type InputSchema = string | Uint8Array
@@ -262,6 +285,7 @@ export function genXrpcInput(
 
 export function genXrpcOutput(
   file: SourceFile,
+  imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
 ) {
@@ -282,13 +306,13 @@ export function genXrpcOutput(
       file.addTypeAlias({
         name: 'OutputSchema',
         type: refs
-          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri))))
+          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri)), imports))
           .join('|'),
         isExported: true,
       })
     } else if (typeof def.output.schema === 'object') {
       //= export interface OutputSchema {...}
-      genObject(file, lexicons, lexUri, def.output.schema, `OutputSchema`)
+      genObject(file, imports, lexUri, def.output.schema, `OutputSchema`)
     }
   }
 }
@@ -306,12 +330,23 @@ export function getHash(uri: string): string {
   return uri.split('#').pop() || ''
 }
 
-export function refToType(ref: string, baseNsid: string): string {
+export function refToType(
+  ref: string,
+  baseNsid: string,
+  imports: Set<string>,
+): string {
   // TODO: import external types!
   let [refBase, refHash] = ref.split('#')
   refBase = stripScheme(refBase)
   if (!refHash) refHash = 'main'
-  if (!refBase || baseNsid === refBase) return toTitleCase(refHash)
+
+  // internal
+  if (!refBase || baseNsid === refBase) {
+    return toTitleCase(refHash)
+  }
+
+  // external
+  imports.add(refBase)
   return `${toTitleCase(refBase)}.${toTitleCase(refHash)}`
 }
 
