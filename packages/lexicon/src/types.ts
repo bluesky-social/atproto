@@ -229,15 +229,32 @@ export const lexUserType = z.union([
 ])
 export type LexUserType = z.infer<typeof lexUserType>
 
-export const lexiconDoc = z.object({
-  lexicon: z.literal(1),
-  id: z.string().refine((v: string) => NSID.isValid(v), {
-    message: 'Must be a valid NSID',
-  }),
-  revision: z.number().optional(),
-  description: z.string().optional(),
-  defs: z.record(lexUserType),
-})
+export const lexiconDoc = z
+  .object({
+    lexicon: z.literal(1),
+    id: z.string().refine((v: string) => NSID.isValid(v), {
+      message: 'Must be a valid NSID',
+    }),
+    revision: z.number().optional(),
+    description: z.string().optional(),
+    defs: z.record(lexUserType),
+  })
+  .superRefine((doc: LexiconDoc, ctx) => {
+    for (const defId in doc.defs) {
+      const def = doc.defs[defId]
+      if (
+        defId !== 'main' &&
+        (def.type === 'record' ||
+          def.type === 'procedure' ||
+          def.type === 'query')
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Records, procedures, and queries must be the main definition.`,
+        })
+      }
+    }
+  })
 export type LexiconDoc = z.infer<typeof lexiconDoc>
 
 // helpers
