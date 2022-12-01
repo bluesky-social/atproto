@@ -4,7 +4,6 @@
 import express from 'express'
 import * as AppBskyActorRef from '../actor/ref'
 import * as AppBskyFeedEmbed from './embed'
-import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
   author: string;
@@ -61,13 +60,5 @@ export interface MyState {
   repost?: string;
   upvote?: string;
   downvote?: string;
-  [k: string]: unknown;
-}
-
-export interface Actor {
-  did: string;
-  declaration: AppBskySystemDeclRef.Main;
-  handle: string;
-  displayName?: string;
   [k: string]: unknown;
 }

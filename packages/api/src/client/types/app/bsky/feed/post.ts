@@ -1,6 +1,8 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+
 export interface Record {
   text: string;
   entities?: Entity[];
@@ -10,14 +12,8 @@ export interface Record {
 }
 
 export interface ReplyRef {
-  root: PostRef;
-  parent: PostRef;
-  [k: string]: unknown;
-}
-
-export interface PostRef {
-  uri: string;
-  cid: string;
+  root: ComAtprotoRepoStrongRef.Main;
+  parent: ComAtprotoRepoStrongRef.Main;
   [k: string]: unknown;
 }
 

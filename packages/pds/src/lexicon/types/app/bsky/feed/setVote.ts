@@ -2,11 +2,12 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  subject: Subject;
+  subject: ComAtprotoRepoStrongRef.Main;
   direction: 'up' | 'down' | 'none';
   [k: string]: unknown;
 }
@@ -39,9 +40,3 @@ export type Handler = (
   req: express.Request,
   res: express.Response
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Subject {
-  uri: string;
-  cid: string;
-  [k: string]: unknown;
-}

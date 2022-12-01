@@ -628,6 +628,25 @@ export const lexicons: LexiconDoc[] = [
   },
   {
     lexicon: 1,
+    id: 'com.atproto.repo.strongRef',
+    description: 'A URI with a content-hash fingerprint.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'com.atproto.server.getAccountsConfig',
     defs: {
       main: {
@@ -1508,26 +1527,6 @@ export const lexicons: LexiconDoc[] = [
           },
         },
       },
-      actor: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-        },
-      },
     },
   },
   {
@@ -1985,23 +1984,11 @@ export const lexicons: LexiconDoc[] = [
         properties: {
           root: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.post#postRef',
+            ref: 'lex:com.atproto.repo.strongRef',
           },
           parent: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.post#postRef',
-          },
-        },
-      },
-      postRef: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
+            ref: 'lex:com.atproto.repo.strongRef',
           },
         },
       },
@@ -2052,23 +2039,11 @@ export const lexicons: LexiconDoc[] = [
           properties: {
             subject: {
               type: 'ref',
-              ref: 'lex:app.bsky.feed.repost#subject',
+              ref: 'lex:com.atproto.repo.strongRef',
             },
             createdAt: {
               type: 'datetime',
             },
-          },
-        },
-      },
-      subject: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
           },
         },
       },
@@ -2089,7 +2064,7 @@ export const lexicons: LexiconDoc[] = [
             properties: {
               subject: {
                 type: 'ref',
-                ref: 'lex:app.bsky.feed.setVote#subject',
+                ref: 'lex:com.atproto.repo.strongRef',
               },
               direction: {
                 type: 'string',
@@ -2113,18 +2088,6 @@ export const lexicons: LexiconDoc[] = [
           },
         },
       },
-      subject: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-        },
-      },
     },
   },
   {
@@ -2140,23 +2103,11 @@ export const lexicons: LexiconDoc[] = [
           properties: {
             subject: {
               type: 'ref',
-              ref: 'lex:app.bsky.feed.trend#subject',
+              ref: 'lex:com.atproto.repo.strongRef',
             },
             createdAt: {
               type: 'datetime',
             },
-          },
-        },
-      },
-      subject: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
           },
         },
       },
@@ -2175,7 +2126,7 @@ export const lexicons: LexiconDoc[] = [
           properties: {
             subject: {
               type: 'ref',
-              ref: 'lex:app.bsky.feed.vote#subject',
+              ref: 'lex:com.atproto.repo.strongRef',
             },
             direction: {
               type: 'string',
@@ -2184,18 +2135,6 @@ export const lexicons: LexiconDoc[] = [
             createdAt: {
               type: 'datetime',
             },
-          },
-        },
-      },
-      subject: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
           },
         },
       },
@@ -2278,7 +2217,7 @@ export const lexicons: LexiconDoc[] = [
             },
             assertion: {
               type: 'ref',
-              ref: 'lex:app.bsky.graph.confirmation#assertion',
+              ref: 'lex:com.atproto.repo.strongRef',
             },
             createdAt: {
               type: 'datetime',
@@ -2294,18 +2233,6 @@ export const lexicons: LexiconDoc[] = [
             type: 'string',
           },
           declarationCid: {
-            type: 'string',
-          },
-        },
-      },
-      assertion: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
             type: 'string',
           },
         },
@@ -2592,7 +2519,7 @@ export const lexicons: LexiconDoc[] = [
             properties: {
               subject: {
                 type: 'ref',
-                ref: 'lex:app.bsky.graph.getFollows#subject',
+                ref: 'lex:app.bsky.actor.ref',
               },
               cursor: {
                 type: 'string',
@@ -2605,26 +2532,6 @@ export const lexicons: LexiconDoc[] = [
                 },
               },
             },
-          },
-        },
-      },
-      subject: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
           },
         },
       },
@@ -2689,7 +2596,7 @@ export const lexicons: LexiconDoc[] = [
             properties: {
               subject: {
                 type: 'ref',
-                ref: 'lex:app.bsky.graph.getMembers#subject',
+                ref: 'lex:app.bsky.actor.ref',
               },
               cursor: {
                 type: 'string',
@@ -2702,26 +2609,6 @@ export const lexicons: LexiconDoc[] = [
                 },
               },
             },
-          },
-        },
-      },
-      subject: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
           },
         },
       },
@@ -2786,7 +2673,7 @@ export const lexicons: LexiconDoc[] = [
             properties: {
               subject: {
                 type: 'ref',
-                ref: 'lex:app.bsky.graph.getMemberships#subject',
+                ref: 'lex:app.bsky.actor.ref',
               },
               cursor: {
                 type: 'string',
@@ -2799,26 +2686,6 @@ export const lexicons: LexiconDoc[] = [
                 },
               },
             },
-          },
-        },
-      },
-      subject: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
           },
         },
       },
@@ -2931,12 +2798,21 @@ export const lexicons: LexiconDoc[] = [
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.notification.list#author',
+            ref: 'lex:app.bsky.actor.ref',
           },
           reason: {
             type: 'string',
             description:
               "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'.",
+            knownValues: [
+              'vote',
+              'repost',
+              'trend',
+              'follow',
+              'invite',
+              'mention',
+              'reply',
+            ],
           },
           reasonSubject: {
             type: 'string',
@@ -2949,26 +2825,6 @@ export const lexicons: LexiconDoc[] = [
           },
           indexedAt: {
             type: 'datetime',
-          },
-        },
-      },
-      author: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
           },
         },
       },
@@ -3083,6 +2939,7 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
+  ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoServerGetAccountsConfig: 'com.atproto.server.getAccountsConfig',
   ComAtprotoSessionCreate: 'com.atproto.session.create',
   ComAtprotoSessionDelete: 'com.atproto.session.delete',

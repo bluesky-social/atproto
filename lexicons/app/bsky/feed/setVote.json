@@ -11,7 +11,7 @@
           "type": "object",
           "required": ["subject", "direction"],
           "properties": {
-            "subject": {"type": "ref", "ref": "#subject"},
+            "subject": {"type": "ref", "ref": "com.atproto.repo.strongRef"},
             "direction": {
               "type": "string",
               "enum": ["up", "down", "none"]
@@ -28,14 +28,6 @@
             "downvote": {"type": "string"}
           }
         }
-      }
-    },
-    "subject": {
-      "type": "object",
-      "required": ["uri", "cid"],
-      "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"}
       }
     }
   }

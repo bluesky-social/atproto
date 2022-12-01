@@ -10,7 +10,7 @@
         "required": ["originator", "assertion", "createdAt"],
         "properties": {
           "originator": {"type": "ref", "ref": "#originator"},
-          "assertion": {"type": "ref", "ref": "#assertion"},
+          "assertion": {"type": "ref", "ref": "com.atproto.repo.strongRef"},
           "createdAt": {"type": "datetime"}
         }
       }
@@ -21,14 +21,6 @@
       "properties": {
         "did": {"type": "string"},
         "declarationCid": {"type": "string"}
-      }
-    },
-    "assertion": {
-      "type": "object",
-      "required": ["uri", "cid"],
-      "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"}
       }
     }
   }

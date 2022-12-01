@@ -1,9 +1,11 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+
 export interface Record {
   originator: Originator;
-  assertion: Assertion;
+  assertion: ComAtprotoRepoStrongRef.Main;
   createdAt: string;
   [k: string]: unknown;
 }
@@ -11,11 +13,5 @@ export interface Record {
 export interface Originator {
   did: string;
   declarationCid: string;
-  [k: string]: unknown;
-}
-
-export interface Assertion {
-  uri: string;
-  cid: string;
   [k: string]: unknown;
 }

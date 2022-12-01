@@ -20,26 +20,13 @@
           "type": "object",
           "required": ["subject", "follows"],
           "properties": {
-            "subject": {"type": "ref", "ref": "#subject"},
+            "subject": {"type": "ref", "ref": "app.bsky.actor.ref"},
             "cursor": {"type": "string"},
             "follows": {
               "type": "array",
               "items": {"type": "ref", "ref": "#follow"}
             }
           }
-        }
-      }
-    },
-    "subject": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
         }
       }
     },

@@ -2,6 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
+import * as AppBskyActorRef from '../actor/ref'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -13,7 +14,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  subject: Subject;
+  subject: AppBskyActorRef.Main;
   cursor?: string;
   members: Member[];
   [k: string]: unknown;
@@ -38,14 +39,6 @@ export type Handler = (
   req: express.Request,
   res: express.Response
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Subject {
-  did: string;
-  declaration: AppBskySystemDeclRef.Main;
-  handle: string;
-  displayName?: string;
-  [k: string]: unknown;
-}
 
 export interface Member {
   did: string;

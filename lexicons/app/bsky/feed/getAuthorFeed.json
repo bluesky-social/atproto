@@ -55,19 +55,6 @@
         "upvote": {"type": "string"},
         "downvote": {"type": "string"}
       }
-    },
-    "actor": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        }
-      }
     }
   }
 }
