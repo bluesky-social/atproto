@@ -403,14 +403,26 @@ export function primitiveToType(def: LexPrimitive): string {
     case 'string':
       if (def.knownValues?.length) {
         return `${def.knownValues
-          .map((v) => `"${v}"`)
+          .map((v) => JSON.stringify(v))
           .join(' | ')} | (string & {})`
+      } else if (def.enum) {
+        return def.enum.map((v) => JSON.stringify(v)).join(' | ')
+      } else if (def.const) {
+        return JSON.stringify(def.const)
       }
       return 'string'
     case 'number':
     case 'integer':
+      if (def.enum) {
+        return def.enum.map((v) => JSON.stringify(v)).join(' | ')
+      } else if (def.const) {
+        return JSON.stringify(def.const)
+      }
       return 'number'
     case 'boolean':
+      if (def.const) {
+        return JSON.stringify(def.const)
+      }
       return 'boolean'
     case 'datetime':
       return 'string'

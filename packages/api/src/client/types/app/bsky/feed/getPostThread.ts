@@ -77,14 +77,14 @@ export interface User {
 }
 
 export interface RecordEmbed {
-  type: string;
+  type: 'record';
   author: User;
   record: {};
   [k: string]: unknown;
 }
 
 export interface ExternalEmbed {
-  type: string;
+  type: 'external';
   uri: string;
   title: string;
   description: string;

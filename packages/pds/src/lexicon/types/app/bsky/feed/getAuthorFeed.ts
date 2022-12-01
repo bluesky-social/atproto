@@ -70,14 +70,14 @@ export interface Actor {
 }
 
 export interface RecordEmbed {
-  type: string;
+  type: 'record';
   author: Actor;
   record: {};
   [k: string]: unknown;
 }
 
 export interface ExternalEmbed {
-  type: string;
+  type: 'external';
   uri: string;
   title: string;
   description: string;

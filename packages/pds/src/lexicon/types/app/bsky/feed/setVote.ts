@@ -7,7 +7,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   subject: Subject;
-  direction: string;
+  direction: 'up' | 'down' | 'none';
   [k: string]: unknown;
 }
 

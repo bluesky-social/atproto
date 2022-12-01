@@ -6,7 +6,7 @@ import express from 'express'
 export interface QueryParams {
   uri?: string;
   cid?: string;
-  direction?: string;
+  direction?: 'up' | 'down';
   limit?: number;
   before?: string;
 }
@@ -42,7 +42,7 @@ export type Handler = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Vote {
-  direction: string;
+  direction: 'up' | 'down';
   indexedAt: string;
   createdAt: string;
   actor: Actor;

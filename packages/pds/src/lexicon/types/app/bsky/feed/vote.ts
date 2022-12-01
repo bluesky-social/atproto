@@ -3,7 +3,7 @@
 */
 export interface Record {
   subject: Subject;
-  direction: string;
+  direction: 'up' | 'down';
   createdAt: string;
   [k: string]: unknown;
 }

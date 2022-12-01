@@ -6,7 +6,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 export interface QueryParams {
   uri?: string;
   cid?: string;
-  direction?: string;
+  direction?: 'up' | 'down';
   limit?: number;
   before?: string;
 }
@@ -38,7 +38,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface Vote {
-  direction: string;
+  direction: 'up' | 'down';
   indexedAt: string;
   createdAt: string;
   actor: Actor;

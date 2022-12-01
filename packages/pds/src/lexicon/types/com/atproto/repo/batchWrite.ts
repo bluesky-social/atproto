@@ -33,7 +33,7 @@ export type Handler = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Create {
-  action: string;
+  action: 'create';
   collection: string;
   rkey?: string;
   value: {};
@@ -41,7 +41,7 @@ export interface Create {
 }
 
 export interface Update {
-  action: string;
+  action: 'update';
   collection: string;
   rkey: string;
   value: {};
@@ -49,7 +49,7 @@ export interface Update {
 }
 
 export interface Delete {
-  action: string;
+  action: 'delete';
   collection: string;
   rkey: string;
   [k: string]: unknown;
