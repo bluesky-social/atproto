@@ -2,11 +2,13 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 export interface Record {
-  subject: {
-    did: string,
-    declarationCid: string,
-    [k: string]: unknown,
-  };
+  subject: Subject;
   createdAt: string;
+  [k: string]: unknown;
+}
+
+export interface Subject {
+  did: string;
+  declarationCid: string;
   [k: string]: unknown;
 }

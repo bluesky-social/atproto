@@ -5,7 +5,7 @@ import {
   Client as XrpcClient,
   ServiceClient as XrpcServiceClient,
 } from '@atproto/xrpc'
-import { methodSchemas, recordSchemas } from './schemas'
+import { lexicons } from './lexicons'
 import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 import * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
 import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
@@ -46,6 +46,8 @@ import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 import * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
 import * as AppBskyFeedVote from './types/app/bsky/feed/vote'
+import * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
+import * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
 import * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
 import * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -57,6 +59,8 @@ import * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMembershi
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskySystemActorScene from './types/app/bsky/system/actorScene'
+import * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 import * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
@@ -99,6 +103,8 @@ export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 export * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
 export * as AppBskyFeedVote from './types/app/bsky/feed/vote'
+export * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
+export * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
 export * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
 export * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -110,6 +116,8 @@ export * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMembershi
 export * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 export * as AppBskyNotificationList from './types/app/bsky/notification/list'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+export * as AppBskySystemActorScene from './types/app/bsky/system/actorScene'
+export * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export const APP_BSKY_GRAPH = {
@@ -125,7 +133,7 @@ export class Client {
   xrpc: XrpcClient = new XrpcClient()
 
   constructor() {
-    this.xrpc.addSchemas(methodSchemas)
+    this.xrpc.addLexicons(lexicons)
   }
 
   service(serviceUri: string | URL): ServiceClient {
@@ -641,7 +649,6 @@ export class ProfileRecord {
 
 export class FeedNS {
   _service: ServiceClient
-  mediaEmbed: MediaEmbedRecord
   post: PostRecord
   repost: RepostRecord
   trend: TrendRecord
@@ -649,7 +656,6 @@ export class FeedNS {
 
   constructor(service: ServiceClient) {
     this._service = service
-    this.mediaEmbed = new MediaEmbedRecord(service)
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
     this.trend = new TrendRecord(service)
@@ -720,71 +726,6 @@ export class FeedNS {
       .catch((e) => {
         throw AppBskyFeedSetVote.toKnownErr(e)
       })
-  }
-}
-
-export class MediaEmbedRecord {
-  _service: ServiceClient
-
-  constructor(service: ServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
-  ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskyFeedMediaEmbed.Record }[],
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.mediaEmbed',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{
-    uri: string,
-    cid: string,
-    value: AppBskyFeedMediaEmbed.Record,
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.mediaEmbed',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyFeedMediaEmbed.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
-    record.$type = 'app.bsky.feed.mediaEmbed'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.feed.mediaEmbed', ...params, record },
-      { encoding: 'application/json', headers }
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.mediaEmbed', ...params },
-      { headers }
-    )
   }
 }
 

@@ -4,7 +4,24 @@
 import express from 'express'
 
 export interface QueryParams {
-  actor: string;
+  actor?: string;
+}
+
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  did: string;
+  declaration: Declaration;
+  handle: string;
+  creator: string;
+  displayName?: string;
+  description?: string;
+  followersCount: number;
+  followsCount: number;
+  membersCount: number;
+  postsCount: number;
+  myState?: MyState;
+  [k: string]: unknown;
 }
 
 export type HandlerInput = undefined
@@ -20,36 +37,21 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
-
-export interface OutputSchema {
-  did: string;
-  declaration: Declaration;
-  handle: string;
-  creator: string;
-  displayName?: string;
-  description?: string;
-  followersCount: number;
-  followsCount: number;
-  membersCount: number;
-  postsCount: number;
-  myState?: {
-    follow?: string,
-    member?: string,
-  };
-}
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,
   req: express.Request,
   res: express.Response
 ) => Promise<HandlerOutput> | HandlerOutput
+
+export interface MyState {
+  follow?: string;
+  member?: string;
+  [k: string]: unknown;
+}
+
+export interface Declaration {
+  cid: string;
+  actorType: string;
+  [k: string]: unknown;
+}

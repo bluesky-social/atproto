@@ -4,10 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete the current session.",
-      "output": {
-        "encoding": "application/json"
-      }
+      "description": "Delete the current session."
     }
   }
 }

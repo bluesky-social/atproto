@@ -5,23 +5,21 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {}
 
+export interface InputSchema {
+  token: string;
+  password: string;
+  [k: string]: unknown;
+}
+
 export interface CallOptions {
   headers?: Headers;
   qp?: QueryParams;
   encoding: 'application/json';
 }
 
-export interface InputSchema {
-  token: string;
-  password: string;
-}
-
-export interface OutputSchema {}
-
 export interface Response {
   success: boolean;
   headers: Headers;
-  data: OutputSchema;
 }
 
 export class ExpiredTokenError extends XRPCError {

@@ -7,7 +7,7 @@ import Database from '.'
 
 export type DbRecordPlugin<T> = {
   collection: string
-  validateSchema: (obj: unknown) => ValidationResult
+  assertValidRecord: (obj: unknown) => void
   matchesSchema: (obj: unknown) => obj is T
   insert: (
     uri: AtUri,

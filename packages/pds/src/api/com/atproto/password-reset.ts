@@ -27,11 +27,6 @@ export default function (server: Server) {
 
         await mailer.sendResetPassword({ token }, { to: user.email })
       }
-
-      return {
-        encoding: 'application/json',
-        body: {},
-      }
     },
   )
 
@@ -68,11 +63,6 @@ export default function (server: Server) {
       // a user whose password has not changed since token issuance.
 
       await db.updateUserPassword(user.handle, password)
-
-      return {
-        encoding: 'application/json',
-        body: {},
-      }
     },
   )
 }

@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as locals from '../../../../locals'
@@ -17,6 +17,10 @@ export default function (server: Server) {
       const requester = auth.getUserDid(req)
       if (!requester) {
         throw new AuthRequiredError()
+      }
+
+      if (!author) {
+        throw new InvalidRequestError(`Must provide the "author" param`)
       }
 
       const userLookupCol = author.startsWith('did:')

@@ -101,10 +101,7 @@
       "type": "object",
       "required": ["type"],
       "properties": {
-        "type": {
-          "type": "string",
-          "not": {"enum": ["record", "external"]}
-        }
+        "type": {"type": "string"}
       }
     },
     "declaration": {

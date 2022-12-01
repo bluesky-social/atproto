@@ -4,10 +4,18 @@
 import express from 'express'
 
 export interface QueryParams {
-  /**
-   * The handle or DID of the repo.
-   */
-  user: string;
+  user?: string;
+}
+
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  handle: string;
+  did: string;
+  didDoc: {};
+  collections: string[];
+  handleIsCorrect: boolean;
+  [k: string]: unknown;
 }
 
 export type HandlerInput = undefined
@@ -23,15 +31,6 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {
-  handle: string;
-  did: string;
-  didDoc: {};
-  collections: string[];
-  handleIsCorrect: boolean;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

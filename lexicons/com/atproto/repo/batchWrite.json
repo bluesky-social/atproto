@@ -26,9 +26,6 @@
             }
           }
         }
-      },
-      "output": {
-        "encoding": "application/json"
       }
     },
     "create": {

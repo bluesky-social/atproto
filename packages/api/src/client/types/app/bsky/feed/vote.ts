@@ -3,10 +3,11 @@
 */
 export interface Record {
   subject: Subject;
-  direction: 'up' | 'down';
+  direction: string;
   createdAt: string;
   [k: string]: unknown;
 }
+
 export interface Subject {
   uri: string;
   cid: string;

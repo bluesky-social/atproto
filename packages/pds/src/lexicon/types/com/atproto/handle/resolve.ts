@@ -4,10 +4,14 @@
 import express from 'express'
 
 export interface QueryParams {
-  /**
-   * The handle to resolve. If not supplied, will resolve the host's own handle.
-   */
   handle?: string;
+}
+
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  did: string;
+  [k: string]: unknown;
 }
 
 export type HandlerInput = undefined
@@ -23,11 +27,6 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {
-  did: string;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

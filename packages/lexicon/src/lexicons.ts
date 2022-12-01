@@ -60,9 +60,15 @@ export class Lexicons {
     if (this.docs.has(uri)) {
       throw new Error(`${uri} has already been registered`)
     }
+
+    // WARNING
+    // mutates the object
+    // -prf
+    resolveDefUris(validatedDoc, uri)
+
     this.docs.set(uri, validatedDoc)
     for (const [defUri, def] of iterDefs(validatedDoc)) {
-      this.defs.set(defUri, resolveDefUris(def, uri))
+      this.defs.set(defUri, def)
     }
   }
 
@@ -174,48 +180,24 @@ function* iterDefs(doc: LexiconDoc): Generator<[string, LexUserType]> {
 // WARNING
 // this method mutates objects
 // -prf
-function resolveDefUris(def: LexUserType, baseUri: string): LexUserType {
-  if (def.type === 'object') {
-    if (def.properties) {
-      for (const k in def.properties) {
-        if (typeof def.properties[k] === 'string') {
-          def.properties[k] = toLexUri(def.properties[k] as string, baseUri)
+function resolveDefUris(obj: any, baseUri: string): any {
+  for (const k in obj) {
+    if (typeof obj[k] === 'string') {
+      if (obj[k].startsWith('#')) {
+        obj[k] = toLexUri(obj[k], baseUri)
+      }
+    } else if (Array.isArray(obj[k])) {
+      obj[k] = obj[k].map((item: any) => {
+        if (typeof item === 'string') {
+          return item.startsWith('#') ? toLexUri(item, baseUri) : item
+        } else if (item && typeof item === 'object') {
+          return resolveDefUris(item, baseUri)
         }
-      }
-    }
-  } else if (def.type === 'array') {
-    if (typeof def.items === 'string') {
-      def.items = toLexUri(def.items, baseUri)
-    } else if (Array.isArray(def.items)) {
-      def.items = def.items.map((item) => toLexUri(item, baseUri))
-    }
-  } else if (def.type === 'record') {
-    resolveDefUris(def.record, baseUri)
-  } else if (def.type === 'query' || def.type === 'procedure') {
-    if (def.output?.schema) {
-      if (typeof def.output.schema === 'string') {
-        def.output.schema = toLexUri(def.output.schema, baseUri)
-      } else if (Array.isArray(def.output.schema)) {
-        def.output.schema = def.output.schema.map((item) =>
-          toLexUri(item, baseUri),
-        )
-      } else {
-        resolveDefUris(def.output.schema, baseUri)
-      }
-    }
-    if (def.type === 'procedure') {
-      if (def.input?.schema) {
-        if (typeof def.input.schema === 'string') {
-          def.input.schema = toLexUri(def.input.schema, baseUri)
-        } else if (Array.isArray(def.input.schema)) {
-          def.input.schema = def.input.schema.map((item) =>
-            toLexUri(item, baseUri),
-          )
-        } else {
-          resolveDefUris(def.input.schema, baseUri)
-        }
-      }
+        return item
+      })
+    } else if (obj[k] && typeof obj[k] === 'object') {
+      obj[k] = resolveDefUris(obj[k], baseUri)
     }
   }
-  return def
+  return obj
 }

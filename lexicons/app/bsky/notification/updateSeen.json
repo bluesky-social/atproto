@@ -14,9 +14,6 @@
             "seenAt": { "type": "datetime" }
           }
         }
-      },
-      "output": {
-        "encoding": "application/json"
       }
     }
   }

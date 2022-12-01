@@ -102,10 +102,5 @@ export default function (server: Server) {
     }
 
     await revokeRefreshToken(db, refreshToken.jti)
-
-    return {
-      encoding: 'application/json',
-      body: {},
-    }
   })
 }

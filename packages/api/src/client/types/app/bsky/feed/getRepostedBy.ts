@@ -4,39 +4,24 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  uri: string;
+  uri?: string;
   cid?: string;
   limit?: number;
   before?: string;
 }
 
-export interface CallOptions {
-  headers?: Headers;
-}
-
 export type InputSchema = undefined
-
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
 
 export interface OutputSchema {
   uri: string;
   cid?: string;
   cursor?: string;
-  repostedBy: {
-    did: string,
-    declaration: Declaration,
-    handle: string,
-    displayName?: string,
-    createdAt?: string,
-    indexedAt: string,
-  }[];
+  repostedBy: RepostedBy[];
+  [k: string]: unknown;
 }
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
+
+export interface CallOptions {
+  headers?: Headers;
 }
 
 export interface Response {
@@ -49,4 +34,20 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
+}
+
+export interface RepostedBy {
+  did: string;
+  declaration: Declaration;
+  handle: string;
+  displayName?: string;
+  createdAt?: string;
+  indexedAt: string;
+  [k: string]: unknown;
+}
+
+export interface Declaration {
+  cid: string;
+  actorType: string;
+  [k: string]: unknown;
 }

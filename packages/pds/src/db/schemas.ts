@@ -1,10 +1,6 @@
-import { RecordSchemas } from '@atproto/lexicon'
-import { recordSchemas } from '../lexicon/schemas'
+import { Lexicons } from '@atproto/lexicon'
+import { lexicons } from '../lexicon/lexicons'
 
-export const records = new RecordSchemas()
+export const records = new Lexicons(lexicons)
 
-for (const schema of recordSchemas) {
-  records.add(schema)
-}
-
-export { ids } from '../lexicon/schemas'
+export { ids } from '../lexicon/lexicons'

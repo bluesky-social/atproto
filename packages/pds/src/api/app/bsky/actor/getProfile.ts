@@ -16,6 +16,10 @@ export default function (server: Server) {
         throw new AuthRequiredError()
       }
 
+      if (!actor) {
+        throw new InvalidRequestError(`Must provide the "actor" param`)
+      }
+
       const { ref } = db.db.dynamic
 
       const queryRes = await db.db

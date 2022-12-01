@@ -348,7 +348,7 @@ describe('crud operations', () => {
       record: {},
     })
     await expect(prom1).rejects.toThrow(
-      'The passed value does not declare a $type',
+      'Invalid app.bsky.feed.post record: Record/$type must be a string',
     )
   })
 
@@ -373,7 +373,9 @@ describe('crud operations', () => {
         collection: 'app.bsky.feed.post',
         record: { $type: 'app.bsky.feed.vote' },
       }),
-    ).rejects.toThrow('Record type app.bsky.feed.vote is not supported')
+    ).rejects.toThrow(
+      'Invalid app.bsky.feed.post record: Invalid $type: must be lex:app.bsky.feed.post, got app.bsky.feed.vote',
+    )
   })
 
   it('validates the record on write', async () => {
@@ -384,7 +386,7 @@ describe('crud operations', () => {
         record: { $type: 'app.bsky.feed.post' },
       }),
     ).rejects.toThrow(
-      "Failed app.bsky.feed.post validation for #/required: must have required property 'text'",
+      'Invalid app.bsky.feed.post record: Record must have the property "text"',
     )
   })
 

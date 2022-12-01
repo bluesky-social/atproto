@@ -68,34 +68,6 @@ export const lexPrimitive = z.union([
 ])
 export type LexPrimitive = z.infer<typeof lexPrimitive>
 
-// complex types
-// =
-
-export const lexArray = z.object({
-  type: z.literal('array'),
-  description: z.string().optional(),
-  items: z.union([lexPrimitive, z.string(), z.string().array()]),
-  minLength: z.number().int().optional(),
-  maxLength: z.number().int().optional(),
-})
-export type LexArray = z.infer<typeof lexArray>
-
-export const lexToken = z.object({
-  type: z.literal('token'),
-  description: z.string().optional(),
-})
-export type LexToken = z.infer<typeof lexToken>
-
-export const lexObject = z.object({
-  type: z.literal('object'),
-  description: z.string().optional(),
-  required: z.string().array().optional(),
-  properties: z
-    .record(z.union([z.string(), z.string().array(), lexArray, lexPrimitive]))
-    .optional(),
-})
-export type LexObject = z.infer<typeof lexObject>
-
 // blobs
 // =
 
@@ -136,6 +108,50 @@ export const lexAudio = z.object({
   maxLength: z.number().int().optional(),
 })
 export type LexAudio = z.infer<typeof lexAudio>
+
+export const lexBlobVariant = z.union([lexBlob, lexImage, lexVideo, lexAudio])
+export type LexBlobVariant = z.infer<typeof lexBlobVariant>
+
+// complex types
+// =
+
+export const lexArray = z.object({
+  type: z.literal('array'),
+  description: z.string().optional(),
+  items: z.union([
+    lexPrimitive,
+    lexBlobVariant,
+    z.string(),
+    z.string().array(),
+  ]),
+  minLength: z.number().int().optional(),
+  maxLength: z.number().int().optional(),
+})
+export type LexArray = z.infer<typeof lexArray>
+
+export const lexToken = z.object({
+  type: z.literal('token'),
+  description: z.string().optional(),
+})
+export type LexToken = z.infer<typeof lexToken>
+
+export const lexObject = z.object({
+  type: z.literal('object'),
+  description: z.string().optional(),
+  required: z.string().array().optional(),
+  properties: z
+    .record(
+      z.union([
+        z.string(),
+        z.string().array(),
+        lexArray,
+        lexBlobVariant,
+        lexPrimitive,
+      ]),
+    )
+    .optional(),
+})
+export type LexObject = z.infer<typeof lexObject>
 
 // xrpc
 // =

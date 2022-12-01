@@ -5,19 +5,15 @@ import express from 'express'
 
 export interface QueryParams {}
 
-export interface HandlerInput {
-  encoding: 'application/json';
-  body: InputSchema;
-}
-
 export interface InputSchema {
   token: string;
   password: string;
+  [k: string]: unknown;
 }
 
-export interface HandlerSuccess {
+export interface HandlerInput {
   encoding: 'application/json';
-  body: OutputSchema;
+  body: InputSchema;
 }
 
 export interface HandlerError {
@@ -26,10 +22,7 @@ export interface HandlerError {
   error?: 'ExpiredToken' | 'InvalidToken';
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {}
-
+export type HandlerOutput = HandlerError | void
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

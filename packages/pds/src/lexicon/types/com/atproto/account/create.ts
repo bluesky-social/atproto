@@ -5,17 +5,26 @@ import express from 'express'
 
 export interface QueryParams {}
 
-export interface HandlerInput {
-  encoding: 'application/json';
-  body: InputSchema;
-}
-
 export interface InputSchema {
   email: string;
   handle: string;
   inviteCode?: string;
   password: string;
   recoveryKey?: string;
+  [k: string]: unknown;
+}
+
+export interface OutputSchema {
+  accessJwt: string;
+  refreshJwt: string;
+  handle: string;
+  did: string;
+  [k: string]: unknown;
+}
+
+export interface HandlerInput {
+  encoding: 'application/json';
+  body: InputSchema;
 }
 
 export interface HandlerSuccess {
@@ -34,14 +43,6 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {
-  accessJwt: string;
-  refreshJwt: string;
-  handle: string;
-  did: string;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

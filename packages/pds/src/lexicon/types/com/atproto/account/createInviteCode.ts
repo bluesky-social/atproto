@@ -5,13 +5,19 @@ import express from 'express'
 
 export interface QueryParams {}
 
+export interface InputSchema {
+  useCount: number;
+  [k: string]: unknown;
+}
+
+export interface OutputSchema {
+  code: string;
+  [k: string]: unknown;
+}
+
 export interface HandlerInput {
   encoding: 'application/json';
   body: InputSchema;
-}
-
-export interface InputSchema {
-  useCount: number;
 }
 
 export interface HandlerSuccess {
@@ -25,11 +31,6 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {
-  code: string;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

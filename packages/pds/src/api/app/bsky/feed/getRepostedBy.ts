@@ -1,4 +1,5 @@
 import { Server } from '../../../../lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetRepostedBy from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
@@ -10,6 +11,10 @@ export default function (server: Server) {
       const { uri, limit, before, cid } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
+
+      if (!uri) {
+        throw new InvalidRequestError(`Must provide the "uri" param`)
+      }
 
       let builder = db.db
         .selectFrom('repost')

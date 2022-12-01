@@ -1,4 +1,5 @@
 import { Server } from '../../../../lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetVotes from '../../../../lexicon/types/app/bsky/feed/getVotes'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
@@ -10,6 +11,10 @@ export default function (server: Server) {
       const { uri, limit, before, cid, direction } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
+
+      if (!uri) {
+        throw new InvalidRequestError(`Must provide the "uri" param`)
+      }
 
       let builder = db.db
         .selectFrom('vote')
@@ -28,7 +33,7 @@ export default function (server: Server) {
           'profile.displayName as displayName',
         ])
 
-      if (direction) {
+      if (direction === 'up' || direction === 'down') {
         builder = builder.where('vote.direction', '=', direction)
       }
 

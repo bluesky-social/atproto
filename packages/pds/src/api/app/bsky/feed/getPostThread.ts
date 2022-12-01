@@ -19,6 +19,10 @@ export default function (server: Server) {
         throw new AuthRequiredError()
       }
 
+      if (!uri) {
+        throw new InvalidRequestError(`Must provide the "uri" param`)
+      }
+
       const queryRes = await postInfoBuilder(db.db, requester)
         .where('post.uri', '=', uri)
         .executeTakeFirst()

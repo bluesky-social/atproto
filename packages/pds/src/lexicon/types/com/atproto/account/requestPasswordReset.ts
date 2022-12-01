@@ -5,18 +5,14 @@ import express from 'express'
 
 export interface QueryParams {}
 
+export interface InputSchema {
+  email: string;
+  [k: string]: unknown;
+}
+
 export interface HandlerInput {
   encoding: 'application/json';
   body: InputSchema;
-}
-
-export interface InputSchema {
-  email: string;
-}
-
-export interface HandlerSuccess {
-  encoding: 'application/json';
-  body: OutputSchema;
 }
 
 export interface HandlerError {
@@ -24,10 +20,7 @@ export interface HandlerError {
   message?: string;
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {}
-
+export type HandlerOutput = HandlerError | void
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

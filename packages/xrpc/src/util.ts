@@ -42,10 +42,10 @@ export function constructMethodCallUri(
 }
 
 export function encodeQueryParam(
-  type: 'string' | 'number' | 'integer' | 'boolean',
+  type: 'string' | 'number' | 'integer' | 'boolean' | 'datetime' | 'unknown',
   value: any,
 ): string {
-  if (type === 'string') {
+  if (type === 'string' || type === 'unknown') {
     return String(value)
   }
   if (type === 'number') {
@@ -54,6 +54,11 @@ export function encodeQueryParam(
     return String(Number(value) | 0)
   } else if (type === 'boolean') {
     return value ? 'true' : 'false'
+  } else if (type === 'datetime') {
+    if (value instanceof Date) {
+      return value.toISOString()
+    }
+    return String(value)
   }
   throw new Error(`Unsupported query param type: ${type}`)
 }

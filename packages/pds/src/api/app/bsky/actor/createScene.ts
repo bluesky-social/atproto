@@ -4,7 +4,7 @@ import { PlcClient } from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
 import * as locals from '../../../../locals'
-import * as schema from '../../../../lexicon/schemas'
+import * as lexicons from '../../../../lexicon/lexicons'
 import { TID } from '@atproto/common'
 import { UserAlreadyExistsError } from '../../../../db'
 import * as repoUtil from '../../../../util/repo'
@@ -75,7 +75,7 @@ export default function (server: Server) {
       // Now that we have a real did, we create the declaration & replace the tempDid
       // and setup the repo root. This _should_ succeed under typical conditions.
       const declaration = {
-        $type: schema.ids.AppBskySystemDeclaration,
+        $type: lexicons.ids.AppBskySystemDeclaration,
         actorType: APP_BSKY_SYSTEM.ActorScene,
       }
       await dbTxn.finalizeDid(handle, did, tempDid, declaration)
@@ -101,13 +101,13 @@ export default function (server: Server) {
       const sceneWrites = await repoUtil.prepareCreates(did, [
         {
           action: 'create',
-          collection: schema.ids.AppBskySystemDeclaration,
+          collection: lexicons.ids.AppBskySystemDeclaration,
           rkey: 'self',
           value: declaration,
         },
         {
           action: 'create',
-          collection: schema.ids.AppBskyGraphAssertion,
+          collection: lexicons.ids.AppBskyGraphAssertion,
           rkey: TID.nextStr(),
           value: {
             assertion: APP_BSKY_GRAPH.AssertCreator,
@@ -120,7 +120,7 @@ export default function (server: Server) {
         },
         {
           action: 'create',
-          collection: schema.ids.AppBskyGraphAssertion,
+          collection: lexicons.ids.AppBskyGraphAssertion,
           rkey: TID.nextStr(),
           value: {
             assertion: APP_BSKY_GRAPH.AssertMember,
@@ -137,7 +137,7 @@ export default function (server: Server) {
       const userWrites = await repoUtil.prepareCreates(requester, [
         {
           action: 'create',
-          collection: schema.ids.AppBskyGraphConfirmation,
+          collection: lexicons.ids.AppBskyGraphConfirmation,
           rkey: TID.nextStr(),
           value: {
             originator: {
@@ -153,7 +153,7 @@ export default function (server: Server) {
         },
         {
           action: 'create',
-          collection: schema.ids.AppBskyGraphConfirmation,
+          collection: lexicons.ids.AppBskyGraphConfirmation,
           rkey: TID.nextStr(),
           value: {
             originator: {

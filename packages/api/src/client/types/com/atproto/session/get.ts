@@ -5,15 +5,16 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {}
 
-export interface CallOptions {
-  headers?: Headers;
-}
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   handle: string;
   did: string;
+  [k: string]: unknown;
+}
+
+export interface CallOptions {
+  headers?: Headers;
 }
 
 export interface Response {

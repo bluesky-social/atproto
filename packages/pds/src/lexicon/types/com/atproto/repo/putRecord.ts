@@ -5,32 +5,24 @@ import express from 'express'
 
 export interface QueryParams {}
 
+export interface InputSchema {
+  did: string;
+  collection: string;
+  rkey: string;
+  validate?: boolean;
+  record: {};
+  [k: string]: unknown;
+}
+
+export interface OutputSchema {
+  uri: string;
+  cid: string;
+  [k: string]: unknown;
+}
+
 export interface HandlerInput {
   encoding: 'application/json';
   body: InputSchema;
-}
-
-export interface InputSchema {
-  /**
-   * The DID of the repo.
-   */
-  did: string;
-  /**
-   * The NSID of the record type.
-   */
-  collection: string;
-  /**
-   * The TID of the record.
-   */
-  rkey: string;
-  /**
-   * Validate the record?
-   */
-  validate?: boolean;
-  /**
-   * The record to create.
-   */
-  record: {};
 }
 
 export interface HandlerSuccess {
@@ -44,12 +36,6 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {
-  uri: string;
-  cid: string;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,
