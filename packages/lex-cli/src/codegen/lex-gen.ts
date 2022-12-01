@@ -5,6 +5,8 @@ import {
   LexUserType,
   LexObject,
   LexArray,
+  LexPrimitive,
+  LexBlobVariant,
   LexXrpcProcedure,
   LexXrpcQuery,
 } from '@atproto/lexicon'
@@ -117,7 +119,7 @@ export function genObject(
           } else if (typeof propDef.items === 'object') {
             iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
-              type: `${primitiveOrBlobToType(propDef.items.type)}[]`,
+              type: `${primitiveOrBlobToType(propDef.items)}[]`,
             })
           } else {
             throw new Error(
@@ -128,7 +130,7 @@ export function genObject(
           //= propName: type
           iface.addProperty({
             name: `${propKey}${req ? '' : '?'}`,
-            type: primitiveOrBlobToType(propDef.type),
+            type: primitiveOrBlobToType(propDef),
           })
         }
       } else {
@@ -187,7 +189,7 @@ export function genArray(
   } else if (typeof def.items === 'object') {
     file.addTypeAlias({
       name: toTitleCase(getHash(lexUri)),
-      type: `${primitiveOrBlobToType(def.items.type)}[]`,
+      type: `${primitiveOrBlobToType(def.items)}[]`,
       isExported: true,
     })
   } else {
@@ -200,11 +202,11 @@ export function genArray(
 export function genPrimitiveOrBlob(
   file: SourceFile,
   lexUri: string,
-  def: LexUserType,
+  def: LexPrimitive | LexBlobVariant,
 ) {
   file.addTypeAlias({
     name: toTitleCase(getHash(lexUri)),
-    type: primitiveOrBlobToType(def.type),
+    type: primitiveOrBlobToType(def),
     isExported: true,
   })
 }
@@ -229,7 +231,7 @@ export function genXrpcParams(
       const paramDef = def.parameters[paramKey]
       iface.addProperty({
         name: `${paramKey}?`,
-        type: primitiveToType(paramDef.type),
+        type: primitiveToType(paramDef),
       })
     }
   }
@@ -350,21 +352,28 @@ export function refToType(
   return `${toTitleCase(refBase)}.${toTitleCase(refHash)}`
 }
 
-export function primitiveOrBlobToType(type: string): string {
-  switch (type) {
+export function primitiveOrBlobToType(
+  def: LexBlobVariant | LexPrimitive,
+): string {
+  switch (def.type) {
     case 'blob':
     case 'image':
     case 'video':
     case 'audio':
       return `{cid: string; mimeType: string; [k: string]: unknown}`
     default:
-      return primitiveToType(type)
+      return primitiveToType(def)
   }
 }
 
-export function primitiveToType(type: string): string {
-  switch (type) {
+export function primitiveToType(def: LexPrimitive): string {
+  switch (def.type) {
     case 'string':
+      if (def.knownValues?.length) {
+        return `${def.knownValues
+          .map((v) => `"${v}"`)
+          .join(' | ')} | (string & {})`
+      }
       return 'string'
     case 'number':
     case 'integer':
@@ -376,6 +385,6 @@ export function primitiveToType(type: string): string {
     case 'unknown':
       return '{}'
     default:
-      throw new Error(`Unexpected primitive type: ${type}`)
+      throw new Error(`Unexpected primitive type: ${JSON.stringify(def)}`)
   }
 }

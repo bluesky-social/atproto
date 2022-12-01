@@ -58,6 +58,9 @@ export interface Membership {
 
 export interface Declaration {
   cid: string;
-  actorType: string;
+  actorType:
+    | 'app.bsky.system.actorUser'
+    | 'app.bsky.system.actorScene'
+    | (string & {});
   [k: string]: unknown;
 }
