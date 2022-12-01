@@ -13,10 +13,6 @@ export default function (server: Server) {
   server.com.atproto.repo.describe(async (params, _in, _req, res) => {
     const { user } = params
 
-    if (!user) {
-      throw new InvalidRequestError(`Must provide the "user" param`)
-    }
-
     const { db, auth } = locals.get(res)
     const userObj = await db.getUser(user)
     if (userObj === null) {
@@ -50,13 +46,6 @@ export default function (server: Server) {
   server.com.atproto.repo.listRecords(async (params, _in, _req, res) => {
     const { user, collection, limit, before, after, reverse } = params
 
-    if (!user) {
-      throw new InvalidRequestError(`Must provide the "user" param`)
-    }
-    if (!collection) {
-      throw new InvalidRequestError(`Must provide the "collection" param`)
-    }
-
     const db = locals.db(res)
     const did = await db.getDidForActor(user)
     if (!did) {
@@ -88,10 +77,6 @@ export default function (server: Server) {
   server.com.atproto.repo.getRecord(async (params, _in, _req, res) => {
     const { user, collection, rkey, cid } = params
     const db = locals.db(res)
-
-    if (!user) {
-      throw new InvalidRequestError(`Must provide the "user" param`)
-    }
 
     const did = await db.getDidForActor(user)
     if (!did) {

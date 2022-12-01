@@ -9,9 +9,6 @@ export default function (server: Server) {
   server.com.atproto.sync.getRoot(async (params, _in, _req, res) => {
     const { did } = params
     const db = locals.db(res)
-    if (!did) {
-      throw new InvalidRequestError(`Must provide the "did" param`)
-    }
     const root = await db.getRepoRoot(did)
     if (root === null) {
       throw new InvalidRequestError(`Could not find root for DID: ${did}`)
@@ -25,9 +22,6 @@ export default function (server: Server) {
   server.com.atproto.sync.getRepo(async (params, _in, _req, res) => {
     const { did, from = null } = params
     const { db } = locals.get(res)
-    if (!did) {
-      throw new InvalidRequestError(`Must provide the "did" param`)
-    }
     const repoRoot = await db.getRepoRoot(did)
     if (repoRoot === null) {
       throw new InvalidRequestError(`Could not find repo for DID: ${did}`)

@@ -12,10 +12,6 @@ export default function (server: Server) {
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
-      if (!uri) {
-        throw new InvalidRequestError(`Must provide the "uri" param`)
-      }
-
       let builder = db.db
         .selectFrom('vote')
         .where('vote.subject', '=', uri)

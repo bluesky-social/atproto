@@ -12,10 +12,6 @@ export default function (server: Server) {
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
 
-      if (!actor) {
-        throw new InvalidRequestError(`Must provide the "actor" param`)
-      }
-
       const subject = await getActorInfo(db.db, actor).catch((_e) => {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       })

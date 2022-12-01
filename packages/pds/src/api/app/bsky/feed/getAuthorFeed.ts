@@ -19,10 +19,6 @@ export default function (server: Server) {
         throw new AuthRequiredError()
       }
 
-      if (!author) {
-        throw new InvalidRequestError(`Must provide the "author" param`)
-      }
-
       const userLookupCol = author.startsWith('did:')
         ? 'did_handle.did'
         : 'did_handle.handle'
