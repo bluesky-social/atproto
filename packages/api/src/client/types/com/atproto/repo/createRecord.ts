@@ -6,9 +6,13 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** The DID of the repo. */
   did: string;
+  /** The NSID of the record collection. */
   collection: string;
+  /** Validate the record? */
   validate?: boolean;
+  /** The record to create. */
   record: {};
   [k: string]: unknown;
 }

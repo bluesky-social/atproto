@@ -9,8 +9,22 @@ import {
   LexBlobVariant,
   LexXrpcProcedure,
   LexXrpcQuery,
+  LexToken,
 } from '@atproto/lexicon'
 import { toTitleCase, toScreamingSnakeCase } from './util'
+
+interface Commentable<T> {
+  addJsDoc: ({ description }: { description: string }) => T
+}
+export function genComment<T>(
+  commentable: Commentable<T>,
+  def: LexUserType,
+): T {
+  if (def.description) {
+    commentable.addJsDoc({ description: def.description })
+  }
+  return commentable as T
+}
 
 export function genImports(
   file: SourceFile,
@@ -44,7 +58,7 @@ export function genUserType(
       genArray(file, imports, lexUri, def)
       break
     case 'token':
-      genToken(file, lexUri)
+      genToken(file, lexUri, def)
       break
     case 'object':
       genObject(file, imports, lexUri, def)
@@ -80,6 +94,7 @@ export function genObject(
     name: ifaceName || toTitleCase(getHash(lexUri)),
     isExported: true,
   })
+  genComment(iface, def)
   if (def.properties) {
     for (const propKey in def.properties) {
       const req = def.required?.includes(propKey)
@@ -99,8 +114,9 @@ export function genObject(
       } else if (propDef && typeof propDef === 'object') {
         if (propDef.type === 'array') {
           //= propName: type[]
+          let propAst
           if (typeof propDef.items === 'string') {
-            iface.addProperty({
+            propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
               type: `${refToType(
                 propDef.items,
@@ -112,12 +128,12 @@ export function genObject(
             const types = propDef.items.map((item) =>
               refToType(item, stripScheme(stripHash(lexUri)), imports),
             )
-            iface.addProperty({
+            propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
               type: `(${types.join('|')})[]`,
             })
           } else if (typeof propDef.items === 'object') {
-            iface.addProperty({
+            propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
               type: `${primitiveOrBlobToType(propDef.items)}[]`,
             })
@@ -126,12 +142,16 @@ export function genObject(
               `Unexpected items definition in ${lexUri}: ${typeof propDef.items}`,
             )
           }
+          genComment(propAst, propDef)
         } else {
           //= propName: type
-          iface.addProperty({
-            name: `${propKey}${req ? '' : '?'}`,
-            type: primitiveOrBlobToType(propDef),
-          })
+          genComment(
+            iface.addProperty({
+              name: `${propKey}${req ? '' : '?'}`,
+              type: primitiveOrBlobToType(propDef),
+            }),
+            propDef,
+          )
         }
       } else {
         throw new Error(
@@ -148,17 +168,20 @@ export function genObject(
   }
 }
 
-export function genToken(file: SourceFile, lexUri: string) {
-  file.addVariableStatement({
-    isExported: true,
-    declarationKind: VariableDeclarationKind.Const,
-    declarations: [
-      {
-        name: toScreamingSnakeCase(getHash(lexUri)),
-        initializer: `"${stripScheme(lexUri)}"`,
-      },
-    ],
-  })
+export function genToken(file: SourceFile, lexUri: string, def: LexToken) {
+  genComment(
+    file.addVariableStatement({
+      isExported: true,
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: toScreamingSnakeCase(getHash(lexUri)),
+          initializer: `"${stripScheme(lexUri)}"`,
+        },
+      ],
+    }),
+    def,
+  )
 }
 
 export function genArray(
@@ -187,11 +210,14 @@ export function genArray(
       isExported: true,
     })
   } else if (typeof def.items === 'object') {
-    file.addTypeAlias({
-      name: toTitleCase(getHash(lexUri)),
-      type: `${primitiveOrBlobToType(def.items)}[]`,
-      isExported: true,
-    })
+    genComment(
+      file.addTypeAlias({
+        name: toTitleCase(getHash(lexUri)),
+        type: `${primitiveOrBlobToType(def.items)}[]`,
+        isExported: true,
+      }),
+      def,
+    )
   } else {
     throw new Error(
       `Unexpected items definition in ${lexUri}: ${typeof def.items}`,
@@ -204,11 +230,14 @@ export function genPrimitiveOrBlob(
   lexUri: string,
   def: LexPrimitive | LexBlobVariant,
 ) {
-  file.addTypeAlias({
-    name: toTitleCase(getHash(lexUri)),
-    type: primitiveOrBlobToType(def),
-    isExported: true,
-  })
+  genComment(
+    file.addTypeAlias({
+      name: toTitleCase(getHash(lexUri)),
+      type: primitiveOrBlobToType(def),
+      isExported: true,
+    }),
+    def,
+  )
 }
 
 export function genXrpcParams(
@@ -229,10 +258,13 @@ export function genXrpcParams(
   if (def.parameters) {
     for (const paramKey in def.parameters) {
       const paramDef = def.parameters[paramKey]
-      iface.addProperty({
-        name: `${paramKey}?`,
-        type: primitiveToType(paramDef),
-      })
+      genComment(
+        iface.addProperty({
+          name: `${paramKey}?`,
+          type: primitiveToType(paramDef),
+        }),
+        paramDef,
+      )
     }
   }
 }

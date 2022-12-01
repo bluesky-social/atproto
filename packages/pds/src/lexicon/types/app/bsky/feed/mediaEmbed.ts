@@ -1,6 +1,7 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
+/** A list of media embedded in a post or document. */
 export interface Main {
   media: MediaEmbed[];
   [k: string]: unknown;

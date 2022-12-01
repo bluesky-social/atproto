@@ -40,6 +40,7 @@ export interface Notification {
   uri: string;
   cid: string;
   author: Author;
+  /** Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'. */
   reason: string;
   reasonSubject?: string;
   record: {};

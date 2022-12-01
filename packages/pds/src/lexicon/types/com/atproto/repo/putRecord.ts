@@ -6,10 +6,15 @@ import express from 'express'
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** The DID of the repo. */
   did: string;
+  /** The NSID of the record type. */
   collection: string;
+  /** The TID of the record. */
   rkey: string;
+  /** Validate the record? */
   validate?: boolean;
+  /** The record to create. */
   record: {};
   [k: string]: unknown;
 }

@@ -23,6 +23,7 @@ export interface PostRef {
 
 export interface Entity {
   index: TextSlice;
+  /** Expected values are 'mention', 'hashtag', and 'link'. */
   type: string;
   value: string;
   [k: string]: unknown;

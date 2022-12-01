@@ -4,6 +4,7 @@
 import express from 'express'
 
 export interface QueryParams {
+  /** The handle or DID of the repo. */
   user?: string;
 }
 

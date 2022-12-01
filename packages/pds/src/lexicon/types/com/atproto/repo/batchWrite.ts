@@ -6,7 +6,9 @@ import express from 'express'
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** The DID of the repo. */
   did: string;
+  /** Validate the records? */
   validate?: boolean;
   writes: (Create | Update | Delete)[];
   [k: string]: unknown;
