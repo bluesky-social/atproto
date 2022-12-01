@@ -2,7 +2,8 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import * as AppBskySystemDeclRef from '../system/declRef'
+import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyFeedEmbed from './embed'
 
 export interface QueryParams {
   algorithm?: string;
@@ -37,11 +38,11 @@ export function toKnownErr(e: any) {
 export interface FeedItem {
   uri: string;
   cid: string;
-  author: Actor;
-  trendedBy?: Actor;
-  repostedBy?: Actor;
+  author: AppBskyActorRef.Main;
+  trendedBy?: AppBskyActorRef.Main;
+  repostedBy?: AppBskyActorRef.Main;
   record: {};
-  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
+  embed?: AppBskyFeedEmbed.Main;
   replyCount: number;
   repostCount: number;
   upvoteCount: number;
@@ -55,35 +56,5 @@ export interface MyState {
   repost?: string;
   upvote?: string;
   downvote?: string;
-  [k: string]: unknown;
-}
-
-export interface Actor {
-  did: string;
-  declaration: AppBskySystemDeclRef.Main;
-  handle: string;
-  actorType?: string;
-  displayName?: string;
-  [k: string]: unknown;
-}
-
-export interface RecordEmbed {
-  type: 'record';
-  author: Actor;
-  record: {};
-  [k: string]: unknown;
-}
-
-export interface ExternalEmbed {
-  type: 'external';
-  uri: string;
-  title: string;
-  description: string;
-  imageUri: string;
-  [k: string]: unknown;
-}
-
-export interface UnknownEmbed {
-  type: string;
   [k: string]: unknown;
 }

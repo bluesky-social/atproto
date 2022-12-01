@@ -2,7 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
-import * as AppBskySystemDeclRef from '../system/declRef'
+import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
   uri: string;
@@ -46,14 +46,6 @@ export interface Vote {
   direction: 'up' | 'down';
   indexedAt: string;
   createdAt: string;
-  actor: Actor;
-  [k: string]: unknown;
-}
-
-export interface Actor {
-  did: string;
-  declaration: AppBskySystemDeclRef.Main;
-  handle: string;
-  displayName?: string;
+  actor: AppBskyActorRef.Main;
   [k: string]: unknown;
 }

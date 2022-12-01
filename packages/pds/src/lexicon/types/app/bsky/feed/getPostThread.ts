@@ -2,7 +2,8 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
-import * as AppBskySystemDeclRef from '../system/declRef'
+import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyFeedEmbed from './embed'
 
 export interface QueryParams {
   uri: string;
@@ -40,9 +41,9 @@ export type Handler = (
 export interface Post {
   uri: string;
   cid: string;
-  author: User;
+  author: AppBskyActorRef.Main;
   record: {};
-  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
+  embed?: AppBskyFeedEmbed.Main;
   parent?: Post | NotFoundPost;
   replyCount: number;
   replies?: (Post | NotFoundPost)[];
@@ -64,34 +65,5 @@ export interface MyState {
   repost?: string;
   upvote?: string;
   downvote?: string;
-  [k: string]: unknown;
-}
-
-export interface User {
-  did: string;
-  declaration: AppBskySystemDeclRef.Main;
-  handle: string;
-  displayName?: string;
-  [k: string]: unknown;
-}
-
-export interface RecordEmbed {
-  type: 'record';
-  author: User;
-  record: {};
-  [k: string]: unknown;
-}
-
-export interface ExternalEmbed {
-  type: 'external';
-  uri: string;
-  title: string;
-  description: string;
-  imageUri: string;
-  [k: string]: unknown;
-}
-
-export interface UnknownEmbed {
-  type: string;
   [k: string]: unknown;
 }

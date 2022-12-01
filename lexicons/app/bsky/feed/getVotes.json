@@ -39,20 +39,7 @@
         "direction": {"type": "string", "enum": ["up", "down"]},
         "indexedAt": {"type": "datetime"},
         "createdAt": {"type": "datetime"},
-        "actor": {"type": "ref", "ref": "#actor"}
-      }
-    },
-    "actor": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        }
+        "actor": {"type": "ref", "ref": "app.bsky.actor.ref"}
       }
     }
   }

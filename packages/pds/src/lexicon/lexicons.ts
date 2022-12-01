@@ -1093,6 +1093,33 @@ export const lexicons: LexiconDoc[] = [
   },
   {
     lexicon: 1,
+    id: 'app.bsky.actor.ref',
+    description: 'A reference to an actor in the network.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['did', 'declaration', 'handle'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'app.bsky.actor.search',
     defs: {
       main: {
@@ -1274,6 +1301,96 @@ export const lexicons: LexiconDoc[] = [
   },
   {
     lexicon: 1,
+    id: 'app.bsky.feed.embed',
+    description:
+      'Content embedded in other content, such as an image or link embedded in a post.',
+    defs: {
+      main: {
+        type: 'object',
+        description: 'A list embeds in a post or document.',
+        required: ['media'],
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.embed#media',
+                'lex:app.bsky.feed.embed#record',
+                'lex:app.bsky.feed.embed#external',
+                'lex:app.bsky.feed.embed#unknown',
+              ],
+            },
+          },
+        },
+      },
+      media: {
+        type: 'object',
+        required: ['original'],
+        properties: {
+          alt: {
+            type: 'string',
+          },
+          thumb: {
+            type: 'image',
+          },
+          original: {
+            type: 'blob',
+          },
+        },
+      },
+      record: {
+        type: 'object',
+        required: ['type', 'author', 'record'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'record',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref',
+          },
+          record: {
+            type: 'unknown',
+          },
+        },
+      },
+      external: {
+        type: 'object',
+        required: ['type', 'uri', 'title', 'description', 'imageUri'],
+        properties: {
+          type: {
+            type: 'string',
+            const: 'external',
+          },
+          uri: {
+            type: 'string',
+          },
+          title: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          imageUri: {
+            type: 'string',
+          },
+        },
+      },
+      unknown: {
+        type: 'object',
+        required: ['type'],
+        properties: {
+          type: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'app.bsky.feed.getAuthorFeed',
     defs: {
       main: {
@@ -1339,26 +1456,22 @@ export const lexicons: LexiconDoc[] = [
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getAuthorFeed#actor',
+            ref: 'lex:app.bsky.actor.ref',
           },
           trendedBy: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getAuthorFeed#actor',
+            ref: 'lex:app.bsky.actor.ref',
           },
           repostedBy: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getAuthorFeed#actor',
+            ref: 'lex:app.bsky.actor.ref',
           },
           record: {
             type: 'unknown',
           },
           embed: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.feed.getAuthorFeed#recordEmbed',
-              'lex:app.bsky.feed.getAuthorFeed#externalEmbed',
-              'lex:app.bsky.feed.getAuthorFeed#unknownEmbed',
-            ],
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.embed',
           },
           replyCount: {
             type: 'integer',
@@ -1412,54 +1525,6 @@ export const lexicons: LexiconDoc[] = [
           displayName: {
             type: 'string',
             maxLength: 64,
-          },
-        },
-      },
-      recordEmbed: {
-        type: 'object',
-        required: ['type', 'author', 'record'],
-        properties: {
-          type: {
-            type: 'string',
-            const: 'record',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.getAuthorFeed#actor',
-          },
-          record: {
-            type: 'unknown',
-          },
-        },
-      },
-      externalEmbed: {
-        type: 'object',
-        required: ['type', 'uri', 'title', 'description', 'imageUri'],
-        properties: {
-          type: {
-            type: 'string',
-            const: 'external',
-          },
-          uri: {
-            type: 'string',
-          },
-          title: {
-            type: 'string',
-          },
-          description: {
-            type: 'string',
-          },
-          imageUri: {
-            type: 'string',
-          },
-        },
-      },
-      unknownEmbed: {
-        type: 'object',
-        required: ['type'],
-        properties: {
-          type: {
-            type: 'string',
           },
         },
       },
@@ -1527,18 +1592,14 @@ export const lexicons: LexiconDoc[] = [
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getPostThread#user',
+            ref: 'lex:app.bsky.actor.ref',
           },
           record: {
             type: 'unknown',
           },
           embed: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.feed.getPostThread#recordEmbed',
-              'lex:app.bsky.feed.getPostThread#externalEmbed',
-              'lex:app.bsky.feed.getPostThread#unknownEmbed',
-            ],
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.embed',
           },
           parent: {
             type: 'union',
@@ -1600,74 +1661,6 @@ export const lexicons: LexiconDoc[] = [
             type: 'string',
           },
           downvote: {
-            type: 'string',
-          },
-        },
-      },
-      user: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-        },
-      },
-      recordEmbed: {
-        type: 'object',
-        required: ['type', 'author', 'record'],
-        properties: {
-          type: {
-            type: 'string',
-            const: 'record',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.getPostThread#user',
-          },
-          record: {
-            type: 'unknown',
-          },
-        },
-      },
-      externalEmbed: {
-        type: 'object',
-        required: ['type', 'uri', 'title', 'description', 'imageUri'],
-        properties: {
-          type: {
-            type: 'string',
-            const: 'external',
-          },
-          uri: {
-            type: 'string',
-          },
-          title: {
-            type: 'string',
-          },
-          description: {
-            type: 'string',
-          },
-          imageUri: {
-            type: 'string',
-          },
-        },
-      },
-      unknownEmbed: {
-        type: 'object',
-        required: ['type'],
-        properties: {
-          type: {
             type: 'string',
           },
         },
@@ -1821,26 +1814,22 @@ export const lexicons: LexiconDoc[] = [
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getTimeline#actor',
+            ref: 'lex:app.bsky.actor.ref',
           },
           trendedBy: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getTimeline#actor',
+            ref: 'lex:app.bsky.actor.ref',
           },
           repostedBy: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getTimeline#actor',
+            ref: 'lex:app.bsky.actor.ref',
           },
           record: {
             type: 'unknown',
           },
           embed: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.feed.getTimeline#recordEmbed',
-              'lex:app.bsky.feed.getTimeline#externalEmbed',
-              'lex:app.bsky.feed.getTimeline#unknownEmbed',
-            ],
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.embed',
           },
           replyCount: {
             type: 'integer',
@@ -1873,77 +1862,6 @@ export const lexicons: LexiconDoc[] = [
             type: 'string',
           },
           downvote: {
-            type: 'string',
-          },
-        },
-      },
-      actor: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-        },
-      },
-      recordEmbed: {
-        type: 'object',
-        required: ['type', 'author', 'record'],
-        properties: {
-          type: {
-            type: 'string',
-            const: 'record',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.getTimeline#actor',
-          },
-          record: {
-            type: 'unknown',
-          },
-        },
-      },
-      externalEmbed: {
-        type: 'object',
-        required: ['type', 'uri', 'title', 'description', 'imageUri'],
-        properties: {
-          type: {
-            type: 'string',
-            const: 'external',
-          },
-          uri: {
-            type: 'string',
-          },
-          title: {
-            type: 'string',
-          },
-          description: {
-            type: 'string',
-          },
-          imageUri: {
-            type: 'string',
-          },
-        },
-      },
-      unknownEmbed: {
-        type: 'object',
-        required: ['type'],
-        properties: {
-          type: {
             type: 'string',
           },
         },
@@ -2023,62 +1941,7 @@ export const lexicons: LexiconDoc[] = [
           },
           actor: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getVotes#actor',
-          },
-        },
-      },
-      actor: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-        },
-      },
-    },
-  },
-  {
-    lexicon: 1,
-    id: 'app.bsky.feed.mediaEmbed',
-    defs: {
-      main: {
-        type: 'object',
-        description: 'A list of media embedded in a post or document.',
-        required: ['media'],
-        properties: {
-          media: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.feed.mediaEmbed#mediaEmbed',
-            },
-          },
-        },
-      },
-      mediaEmbed: {
-        type: 'object',
-        required: ['original'],
-        properties: {
-          alt: {
-            type: 'string',
-          },
-          thumb: {
-            type: 'image',
-          },
-          original: {
-            type: 'blob',
+            ref: 'lex:app.bsky.actor.ref',
           },
         },
       },
@@ -2565,11 +2428,11 @@ export const lexicons: LexiconDoc[] = [
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getAssertions#actor',
+            ref: 'lex:app.bsky.actor.ref',
           },
           subject: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getAssertions#actor',
+            ref: 'lex:app.bsky.actor.ref',
           },
           indexedAt: {
             type: 'datetime',
@@ -2594,26 +2457,6 @@ export const lexicons: LexiconDoc[] = [
           },
           createdAt: {
             type: 'datetime',
-          },
-        },
-      },
-      actor: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
           },
         },
       },
@@ -3252,15 +3095,16 @@ export const ids = {
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
   AppBskyActorProfile: 'app.bsky.actor.profile',
+  AppBskyActorRef: 'app.bsky.actor.ref',
   AppBskyActorSearch: 'app.bsky.actor.search',
   AppBskyActorSearchTypeahead: 'app.bsky.actor.searchTypeahead',
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
+  AppBskyFeedEmbed: 'app.bsky.feed.embed',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedGetVotes: 'app.bsky.feed.getVotes',
-  AppBskyFeedMediaEmbed: 'app.bsky.feed.mediaEmbed',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSetVote: 'app.bsky.feed.setVote',

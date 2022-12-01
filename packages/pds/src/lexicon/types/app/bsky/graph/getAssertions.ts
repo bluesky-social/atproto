@@ -2,7 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
-import * as AppBskySystemDeclRef from '../system/declRef'
+import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
   author?: string;
@@ -46,8 +46,8 @@ export interface Assertion {
   cid: string;
   assertion: string;
   confirmation?: Confirmation;
-  author: Actor;
-  subject: Actor;
+  author: AppBskyActorRef.Main;
+  subject: AppBskyActorRef.Main;
   indexedAt: string;
   createdAt: string;
   [k: string]: unknown;
@@ -58,13 +58,5 @@ export interface Confirmation {
   cid: string;
   indexedAt: string;
   createdAt: string;
-  [k: string]: unknown;
-}
-
-export interface Actor {
-  did: string;
-  declaration: AppBskySystemDeclRef.Main;
-  handle: string;
-  displayName?: string;
   [k: string]: unknown;
 }

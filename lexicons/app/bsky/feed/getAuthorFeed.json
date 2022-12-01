@@ -35,11 +35,11 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
-        "author": {"type": "ref", "ref": "#actor"},
-        "trendedBy": {"type": "ref", "ref": "#actor"},
-        "repostedBy": {"type": "ref", "ref": "#actor"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.ref"},
+        "trendedBy": {"type": "ref", "ref": "app.bsky.actor.ref"},
+        "repostedBy": {"type": "ref", "ref": "app.bsky.actor.ref"},
         "record": {"type": "unknown"},
-        "embed": {"type": "union", "refs": ["#recordEmbed", "#externalEmbed", "#unknownEmbed"]},
+        "embed": {"type": "ref", "ref": "app.bsky.feed.embed"},
         "replyCount": {"type": "integer"},
         "repostCount": {"type": "integer"},
         "upvoteCount": {"type": "integer"},
@@ -67,33 +67,6 @@
           "type": "string",
           "maxLength": 64
         }
-      }
-    },
-    "recordEmbed": {
-      "type": "object",
-      "required": ["type", "author", "record"],
-      "properties": {
-        "type": {"type": "string", "const": "record"},
-        "author": {"type": "ref", "ref": "#actor"},
-        "record": {"type": "unknown"}
-      }
-    },
-    "externalEmbed": {
-      "type": "object",
-      "required": ["type", "uri", "title", "description", "imageUri"],
-      "properties": {
-        "type": {"type": "string", "const": "external"},
-        "uri": {"type": "string"},
-        "title": {"type": "string"},
-        "description": {"type": "string"},
-        "imageUri": {"type": "string"}
-      }
-    },
-    "unknownEmbed": {
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {"type": "string"}
       }
     }
   }
