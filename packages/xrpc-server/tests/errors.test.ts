@@ -46,33 +46,33 @@ describe('Procedures', () => {
         which: 'foo',
       })
       throw new Error('Didnt throw')
-    } catch (e: any) {
+    } catch (e) {
       expect(e instanceof XRPCError).toBeTruthy()
-      expect(e.success).toBeFalsy()
-      expect(e.error).toBe('Foo')
-      expect(e.message).toBe('It was this one!')
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe('Foo')
+      expect((e as XRPCError).message).toBe('It was this one!')
     }
     try {
       await client.call('io.example.error', {
         which: 'bar',
       })
       throw new Error('Didnt throw')
-    } catch (e: any) {
+    } catch (e) {
       expect(e instanceof XRPCError).toBeTruthy()
-      expect(e.success).toBeFalsy()
-      expect(e.error).toBe('Bar')
-      expect(e.message).toBe('It was that one!')
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe('Bar')
+      expect((e as XRPCError).message).toBe('It was that one!')
     }
     try {
       await client.call('io.example.error', {
         which: 'other',
       })
       throw new Error('Didnt throw')
-    } catch (e: any) {
+    } catch (e) {
       expect(e instanceof XRPCError).toBeTruthy()
-      expect(e.success).toBeFalsy()
-      expect(e.error).toBe('InvalidRequest')
-      expect(e.message).toBe('Invalid Request')
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe('InvalidRequest')
+      expect((e as XRPCError).message).toBe('Invalid Request')
     }
   })
 })

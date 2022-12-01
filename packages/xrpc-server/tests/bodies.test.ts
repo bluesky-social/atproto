@@ -63,12 +63,12 @@ describe('Parameters', () => {
   const server = xrpcServer.createServer(LEXICONS)
   server.method(
     'io.example.validationTest',
-    (params: xrpcServer.Params, input?: xrpcServer.HandlerInput) => ({
+    (_params: xrpcServer.Params, input?: xrpcServer.HandlerInput) => ({
       encoding: 'json',
       body: input?.body,
     }),
   )
-  server.method('io.example.validationTest2', (params: xrpcServer.Params) => ({
+  server.method('io.example.validationTest2', (_params: xrpcServer.Params) => ({
     encoding: 'json',
     body: { wrong: 'data' },
   }))
@@ -99,7 +99,7 @@ describe('Parameters', () => {
     )
     await expect(
       client.call('io.example.validationTest', {}, {}),
-    ).rejects.toThrow(`Input must have the property \"foo\"`)
+    ).rejects.toThrow(`Input must have the property "foo"`)
     await expect(
       client.call('io.example.validationTest', {}, { foo: 123 }),
     ).rejects.toThrow(`Input/foo must be a string`)

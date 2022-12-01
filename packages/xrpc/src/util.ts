@@ -128,20 +128,20 @@ export function httpResponseBodyParse(
       try {
         const str = new TextDecoder().decode(data)
         return JSON.parse(str)
-      } catch (e: any) {
+      } catch (e) {
         throw new XRPCError(
           ResponseType.InvalidResponse,
-          `Failed to parse response body: ${e.toString()}`,
+          `Failed to parse response body: ${String(e)}`,
         )
       }
     }
     if (mimeType.startsWith('text/') && data?.byteLength) {
       try {
         return new TextDecoder().decode(data)
-      } catch (e: any) {
+      } catch (e) {
         throw new XRPCError(
           ResponseType.InvalidResponse,
-          `Failed to parse response body: ${e.toString()}`,
+          `Failed to parse response body: ${String(e)}`,
         )
       }
     }

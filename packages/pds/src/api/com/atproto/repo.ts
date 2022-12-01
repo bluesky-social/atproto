@@ -130,9 +130,11 @@ export default function (server: Server) {
         if (write.action === 'create' || write.action === 'update') {
           try {
             db.assertValidRecord(write.collection, write.value)
-          } catch (e: any) {
+          } catch (e) {
             throw new InvalidRequestError(
-              `Invalid ${write.collection} record: ${e.message}`,
+              `Invalid ${write.collection} record: ${
+                e instanceof Error ? e.message : String(e)
+              }`,
             )
           }
         }
@@ -178,9 +180,11 @@ export default function (server: Server) {
     if (validate) {
       try {
         db.assertValidRecord(collection, record)
-      } catch (e: any) {
+      } catch (e) {
         throw new InvalidRequestError(
-          `Invalid ${collection} record: ${e.message}`,
+          `Invalid ${collection} record: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
         )
       }
     }

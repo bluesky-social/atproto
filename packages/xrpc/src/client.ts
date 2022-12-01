@@ -138,8 +138,8 @@ async function defaultFetchHandler(
       headers: Object.fromEntries(res.headers.entries()),
       body: httpResponseBodyParse(res.headers.get('content-type'), resBody),
     }
-  } catch (e: any) {
-    throw new XRPCError(ResponseType.Unknown, e.toString())
+  } catch (e) {
+    throw new XRPCError(ResponseType.Unknown, String(e))
   }
 }
 

@@ -6,23 +6,23 @@ import chalk from 'chalk'
 import { GeneratedAPI, FileDiff } from './types'
 
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
-  const schemas: any[] = []
+  const docs: LexiconDoc[] = []
   for (const path of paths) {
     if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
       continue
     }
     try {
-      schemas.push(readLexicon(path))
-    } catch (e: any) {
+      docs.push(readLexicon(path))
+    } catch (e) {
       // skip
     }
   }
-  return schemas
+  return docs
 }
 
 export function readLexicon(path: string): LexiconDoc {
   let str: string
-  let obj: any
+  let obj: unknown
   try {
     str = fs.readFileSync(path, 'utf8')
   } catch (e) {
@@ -35,10 +35,14 @@ export function readLexicon(path: string): LexiconDoc {
     console.error(`Failed to parse JSON in file`, path)
     throw e
   }
-  if (typeof obj.lexicon === 'number') {
+  if (
+    obj &&
+    typeof obj === 'object' &&
+    typeof (obj as LexiconDoc).lexicon === 'number'
+  ) {
     try {
       lexiconDoc.parse(obj)
-      return obj
+      return obj as LexiconDoc
     } catch (e) {
       console.error(`Invalid lexicon`, path)
       if (e instanceof ZodError) {

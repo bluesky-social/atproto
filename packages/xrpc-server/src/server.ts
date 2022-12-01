@@ -106,8 +106,8 @@ export class Server {
       const params = decodeQueryParams(def, req.query)
       try {
         this.lex.assertValidXrpcParams(req.params.methodId, params)
-      } catch (e: any) {
-        throw new InvalidRequestError(e.message)
+      } catch (e) {
+        throw new InvalidRequestError(String(e))
       }
       const input = validateInput(req.params.methodId, def, req, this.lex)
 

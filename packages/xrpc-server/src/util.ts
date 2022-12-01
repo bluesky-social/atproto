@@ -80,8 +80,8 @@ export function validateInput(
   if (def.input?.schema) {
     try {
       lexicons.assertValidXrpcInput(nsid, req.body)
-    } catch (e: any) {
-      throw new InvalidRequestError(e.message)
+    } catch (e) {
+      throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
     }
   }
 
@@ -129,8 +129,8 @@ export function validateOutput(
   if (def.output?.schema) {
     try {
       lexicons.assertValidXrpcOutput(nsid, output?.body)
-    } catch (e: any) {
-      throw new InternalServerError(e.message)
+    } catch (e) {
+      throw new InternalServerError(e instanceof Error ? e.message : String(e))
     }
   }
 

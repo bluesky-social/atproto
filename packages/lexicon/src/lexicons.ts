@@ -42,7 +42,7 @@ export class Lexicons {
   add(doc: unknown): void {
     try {
       lexiconDoc.parse(doc)
-    } catch (e: any) {
+    } catch (e) {
       if (e instanceof ZodError) {
         throw new LexiconDocMalformedError(
           `Failed to parse schema definition ${

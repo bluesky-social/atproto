@@ -1,5 +1,4 @@
 import { AtUri } from '@atproto/uri'
-import { ValidationResult } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { DynamicReferenceBuilder } from 'kysely/dist/cjs/dynamic/dynamic-reference-builder'
 import { Message } from './message-queue/messages'

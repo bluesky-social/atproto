@@ -236,7 +236,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
       continue
     }
     //= type: TypeRecord
-    const name = NSID.parse(userType.nsid).name || ''!
+    const name = NSID.parse(userType.nsid).name || ''
     cls.addProperty({
       name: toCamelCase(name),
       type: `${toTitleCase(name)}Record`,
@@ -273,7 +273,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
       ...ns.userTypes
         .filter((ut) => ut.def.type === 'record')
         .map((ut) => {
-          const name = NSID.parse(ut.nsid).name || ''!
+          const name = NSID.parse(ut.nsid).name || ''
           return `this.${toCamelCase(name)} = new ${toTitleCase(
             name,
           )}Record(service)`
@@ -286,7 +286,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     if (userType.def.type !== 'query' && userType.def.type !== 'procedure') {
       continue
     }
-    const moduleName = toTitleCase(userType.nsid)!
+    const moduleName = toTitleCase(userType.nsid)
     const name = toCamelCase(NSID.parse(userType.nsid).name || '')
     const method = cls.addMethod({
       name,
