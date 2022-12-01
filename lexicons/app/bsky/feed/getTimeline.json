@@ -22,7 +22,7 @@
             "cursor": {"type": "string"},
             "feed": {
               "type": "array",
-              "items": "#feedItem"
+              "items": {"type": "ref", "ref": "#feedItem"}
             }
           }
         }
@@ -34,21 +34,17 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
-        "author": "#actor",
-        "trendedBy": "#actor",
-        "repostedBy": "#actor",
+        "author": {"type": "ref", "ref": "#actor"},
+        "trendedBy": {"type": "ref", "ref": "#actor"},
+        "repostedBy": {"type": "ref", "ref": "#actor"},
         "record": {"type": "unknown"},
-        "embed": [
-          "#recordEmbed",
-          "#externalEmbed",
-          "#unknownEmbed"
-        ],
+        "embed": {"type": "union", "refs": ["#recordEmbed", "#externalEmbed", "#unknownEmbed"]},
         "replyCount": {"type": "integer"},
         "repostCount": {"type": "integer"},
         "upvoteCount": {"type": "integer"},
         "downvoteCount": {"type": "integer"},
         "indexedAt": {"type": "datetime"},
-        "myState": "#myState"
+        "myState": {"type": "ref", "ref": "#myState"}
       }
     },
     "myState": {
@@ -64,7 +60,7 @@
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": "#declaration",
+        "declaration": {"type": "ref", "ref": "#declaration"},
         "handle": {"type": "string"},
         "actorType": {"type": "string"},
         "displayName": {
@@ -78,7 +74,7 @@
       "required": ["type", "author", "record"],
       "properties": {
         "type": {"type": "string", "const": "record"},
-        "author": "#actor",
+        "author": {"type": "ref", "ref": "#actor"},
         "record": {"type": "unknown"}
       }
     },

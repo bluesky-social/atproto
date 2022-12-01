@@ -20,11 +20,11 @@
           "type": "object",
           "required": ["subject", "followers"],
           "properties": {
-            "subject": "#subject",
+            "subject": {"type": "ref", "ref": "#subject"},
             "cursor": {"type": "string"},
             "followers": {
               "type": "array",
-              "items": "#follower"
+              "items": {"type": "ref", "ref": "#follower"}
             }
           }
         }
@@ -35,7 +35,7 @@
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": "#declaration",
+        "declaration": {"type": "ref", "ref": "#declaration"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",
@@ -48,7 +48,7 @@
       "required": ["did", "declaration", "handle", "indexedAt"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": "#declaration",
+        "declaration": {"type": "ref", "ref": "#declaration"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",

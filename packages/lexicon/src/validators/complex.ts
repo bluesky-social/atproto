@@ -3,6 +3,7 @@ import {
   LexArray,
   LexObject,
   LexUserType,
+  LexRefVariant,
   ValidationResult,
   ValidationError,
 } from '../types'

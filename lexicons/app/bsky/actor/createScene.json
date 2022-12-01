@@ -24,7 +24,7 @@
           "properties": {
             "handle": { "type": "string" },
             "did": { "type": "string" },
-            "declaration": "#declaration"
+            "declaration": {"type": "ref", "ref": "#declaration"}
           }
         }
       },

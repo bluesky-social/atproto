@@ -25,7 +25,7 @@
             "cursor": {"type": "string"},
             "repostedBy": {
               "type": "array",
-              "items": "#repostedBy"
+              "items": {"type": "ref", "ref": "#repostedBy"}
             }
           }
         }
@@ -36,7 +36,7 @@
       "required": ["did", "declaration", "handle", "indexedAt"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": "#declaration",
+        "declaration": {"type": "ref", "ref": "#declaration"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",

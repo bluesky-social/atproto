@@ -12,9 +12,9 @@
           "text": {"type": "string", "maxLength": 256},
           "entities": {
             "type": "array",
-            "items": "#entity"
+            "items": {"type": "ref", "ref": "#entity"}
           },
-          "reply": "#replyRef",
+          "reply": {"type": "ref", "ref": "#replyRef"},
           "createdAt": {"type": "datetime"}
         }
       }
@@ -23,8 +23,8 @@
       "type": "object",
       "required": ["root", "parent"],
       "properties": {
-        "root": "#postRef",
-        "parent": "#postRef"
+        "root": {"type": "ref", "ref": "#postRef"},
+        "parent": {"type": "ref", "ref": "#postRef"}
       }
     },
     "postRef": {
@@ -39,7 +39,7 @@
       "type": "object",
       "required": ["index", "type", "value"],
       "properties": {
-        "index": "#textSlice",
+        "index": {"type": "ref", "ref": "#textSlice"},
         "type": {
           "type": "string",
           "description": "Expected values are 'mention', 'hashtag', and 'link'."

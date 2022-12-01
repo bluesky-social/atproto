@@ -19,7 +19,7 @@ export default [
             'datetime',
           ],
           properties: {
-            object: '#object',
+            object: { type: 'ref', ref: '#object' },
             array: { type: 'array', items: { type: 'string' } },
             boolean: { type: 'boolean' },
             number: { type: 'number' },
@@ -33,7 +33,7 @@ export default [
         type: 'object',
         required: ['object', 'array', 'boolean', 'number', 'integer', 'string'],
         properties: {
-          object: '#subobject',
+          object: { type: 'ref', ref: '#subobject' },
           array: { type: 'array', items: { type: 'string' } },
           boolean: { type: 'boolean' },
           number: { type: 'number' },
@@ -69,7 +69,7 @@ export default [
         },
         output: {
           encoding: 'application/json',
-          schema: 'com.example.kitchenSink#object',
+          schema: { type: 'ref', ref: 'com.example.kitchenSink#object' },
         },
       },
     },
@@ -93,11 +93,11 @@ export default [
         },
         input: {
           encoding: 'application/json',
-          schema: 'com.example.kitchenSink#object',
+          schema: { type: 'ref', ref: 'com.example.kitchenSink#object' },
         },
         output: {
           encoding: 'application/json',
-          schema: 'com.example.kitchenSink#object',
+          schema: { type: 'ref', ref: 'com.example.kitchenSink#object' },
         },
       },
     },
@@ -111,7 +111,7 @@ export default [
         record: {
           type: 'object',
           properties: {
-            object: 'com.example.kitchenSink#object',
+            object: { type: 'ref', ref: 'com.example.kitchenSink#object' },
             array: { type: 'array', items: { type: 'string' } },
             boolean: { type: 'boolean' },
             number: { type: 'number' },

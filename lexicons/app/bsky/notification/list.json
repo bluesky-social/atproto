@@ -20,7 +20,7 @@
             "cursor": {"type": "string"},
             "notifications": {
               "type": "array",
-              "items": "#notification"
+              "items": {"type": "ref", "ref": "#notification"}
             }
           }
         }
@@ -32,7 +32,7 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string" },
-        "author": "#author",
+        "author": {"type": "ref", "ref": "#author"},
         "reason": {
           "type": "string",
           "description": "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'."
@@ -48,7 +48,7 @@
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": "#declaration",
+        "declaration": {"type": "ref", "ref": "#declaration"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",

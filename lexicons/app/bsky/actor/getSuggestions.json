@@ -21,7 +21,7 @@
             "cursor": {"type": "string"},
             "actors": {
               "type": "array",
-              "items": "#actor"
+              "items": {"type": "ref", "ref": "#actor"}
             }
           }
         }
@@ -32,7 +32,7 @@
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": "#declaration",
+        "declaration": {"type": "ref", "ref": "#declaration"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",
@@ -40,7 +40,7 @@
         },
         "description": {"type": "string"},
         "indexedAt": {"type": "datetime"},
-        "myState": "#myState"
+        "myState": {"type": "ref", "ref": "#myState"}
       }
     },
     "myState": {

@@ -18,7 +18,7 @@
           "required": ["did", "declaration", "handle", "creator", "followersCount", "followsCount", "membersCount", "postsCount"],
           "properties": {
             "did": {"type": "string"},
-            "declaration": "#declaration",
+            "declaration": {"type": "ref", "ref": "#declaration"},
             "handle": {"type": "string"},
             "creator": {"type": "string"},
             "displayName": {
@@ -33,7 +33,7 @@
             "followsCount": {"type": "integer"},
             "membersCount": {"type": "integer"},
             "postsCount": {"type": "integer"},
-            "myState": "#myState"
+            "myState": {"type": "ref", "ref": "#myState"}
           }
         }
       }
