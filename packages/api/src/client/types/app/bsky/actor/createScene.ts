@@ -2,6 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {}
 
@@ -14,7 +15,7 @@ export interface InputSchema {
 export interface OutputSchema {
   handle: string;
   did: string;
-  declaration: Declaration;
+  declaration: AppBskySystemDeclRef.Main;
   [k: string]: unknown;
 }
 
@@ -48,13 +49,4 @@ export function toKnownErr(e: any) {
     if (e.error === 'HandleNotAvailable') return new HandleNotAvailableError(e)
   }
   return e
-}
-
-export interface Declaration {
-  cid: string;
-  actorType:
-    | 'app.bsky.system.actorUser'
-    | 'app.bsky.system.actorScene'
-    | (string & {});
-  [k: string]: unknown;
 }

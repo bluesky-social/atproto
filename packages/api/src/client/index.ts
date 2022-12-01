@@ -61,6 +61,7 @@ import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskySystemActorScene from './types/app/bsky/system/actorScene'
 import * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
+import * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 import * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
@@ -118,6 +119,7 @@ export * as AppBskyNotificationList from './types/app/bsky/notification/list'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskySystemActorScene from './types/app/bsky/system/actorScene'
 export * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
+export * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export const APP_BSKY_GRAPH = {

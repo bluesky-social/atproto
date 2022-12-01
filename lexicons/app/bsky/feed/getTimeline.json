@@ -60,7 +60,7 @@
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "#declaration"},
+        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
         "handle": {"type": "string"},
         "actorType": {"type": "string"},
         "displayName": {
@@ -94,17 +94,6 @@
       "required": ["type"],
       "properties": {
         "type": {"type": "string"}
-      }
-    },
-    "declaration": {
-      "type": "object",
-      "required": ["cid", "actorType"],
-      "properties": {
-        "cid": {"type": "string"},
-        "actorType": {
-          "type": "string",
-          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-        }
       }
     }
   }

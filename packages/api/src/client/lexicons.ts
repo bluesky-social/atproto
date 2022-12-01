@@ -885,7 +885,7 @@ export const lexicons: LexiconDoc[] = [
               },
               declaration: {
                 type: 'ref',
-                ref: 'lex:app.bsky.actor.createScene#declaration',
+                ref: 'lex:app.bsky.system.declRef',
               },
             },
           },
@@ -898,22 +898,6 @@ export const lexicons: LexiconDoc[] = [
             name: 'HandleNotAvailable',
           },
         ],
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
-          },
-        },
       },
     },
   },
@@ -952,7 +936,7 @@ export const lexicons: LexiconDoc[] = [
               },
               declaration: {
                 type: 'ref',
-                ref: 'lex:app.bsky.actor.getProfile#declaration',
+                ref: 'lex:app.bsky.system.declRef',
               },
               handle: {
                 type: 'string',
@@ -996,22 +980,6 @@ export const lexicons: LexiconDoc[] = [
           },
           member: {
             type: 'string',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -1068,7 +1036,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.getSuggestions#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -1094,22 +1062,6 @@ export const lexicons: LexiconDoc[] = [
         properties: {
           follow: {
             type: 'string',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -1193,7 +1145,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.search#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -1207,22 +1159,6 @@ export const lexicons: LexiconDoc[] = [
           },
           indexedAt: {
             type: 'datetime',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -1276,7 +1212,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.searchTypeahead#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -1284,22 +1220,6 @@ export const lexicons: LexiconDoc[] = [
           displayName: {
             type: 'string',
             maxLength: 64,
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -1484,7 +1404,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getAuthorFeed#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -1540,22 +1460,6 @@ export const lexicons: LexiconDoc[] = [
         properties: {
           type: {
             type: 'string',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -1709,7 +1613,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getPostThread#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -1765,22 +1669,6 @@ export const lexicons: LexiconDoc[] = [
         properties: {
           type: {
             type: 'string',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -1848,7 +1736,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getRepostedBy#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -1862,22 +1750,6 @@ export const lexicons: LexiconDoc[] = [
           },
           indexedAt: {
             type: 'datetime',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -2014,7 +1886,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getTimeline#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2073,22 +1945,6 @@ export const lexicons: LexiconDoc[] = [
         properties: {
           type: {
             type: 'string',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -2180,7 +2036,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getVotes#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2188,22 +2044,6 @@ export const lexicons: LexiconDoc[] = [
           displayName: {
             type: 'string',
             maxLength: 64,
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -2766,7 +2606,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getAssertions#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2774,22 +2614,6 @@ export const lexicons: LexiconDoc[] = [
           displayName: {
             type: 'string',
             maxLength: 64,
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -2853,7 +2677,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getFollowers#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2873,7 +2697,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getFollowers#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2887,22 +2711,6 @@ export const lexicons: LexiconDoc[] = [
           },
           indexedAt: {
             type: 'datetime',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -2966,7 +2774,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getFollows#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2986,7 +2794,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getFollows#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -3000,22 +2808,6 @@ export const lexicons: LexiconDoc[] = [
           },
           indexedAt: {
             type: 'datetime',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -3079,7 +2871,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getMembers#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -3099,7 +2891,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getMembers#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -3113,22 +2905,6 @@ export const lexicons: LexiconDoc[] = [
           },
           indexedAt: {
             type: 'datetime',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -3192,7 +2968,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getMemberships#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -3212,7 +2988,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.getMemberships#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -3226,22 +3002,6 @@ export const lexicons: LexiconDoc[] = [
           },
           indexedAt: {
             type: 'datetime',
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -3358,7 +3118,7 @@ export const lexicons: LexiconDoc[] = [
           },
           declaration: {
             type: 'ref',
-            ref: 'lex:app.bsky.notification.list#declaration',
+            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -3366,22 +3126,6 @@ export const lexicons: LexiconDoc[] = [
           displayName: {
             type: 'string',
             maxLength: 64,
-          },
-        },
-      },
-      declaration: {
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
           },
         },
       },
@@ -3428,6 +3172,29 @@ export const lexicons: LexiconDoc[] = [
         type: 'token',
         description:
           "Actor type: User. Defined for app.bsky.system.declaration's actorType.",
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'app.bsky.system.declRef',
+    defs: {
+      main: {
+        description: 'A reference to a app.bsky.system.declaration record.',
+        type: 'object',
+        required: ['cid', 'actorType'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          actorType: {
+            type: 'string',
+            knownValues: [
+              'app.bsky.system.actorUser',
+              'app.bsky.system.actorScene',
+            ],
+          },
+        },
       },
     },
   },
@@ -3514,5 +3281,6 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskySystemActorScene: 'app.bsky.system.actorScene',
   AppBskySystemActorUser: 'app.bsky.system.actorUser',
+  AppBskySystemDeclRef: 'app.bsky.system.declRef',
   AppBskySystemDeclaration: 'app.bsky.system.declaration',
 }
