@@ -3,11 +3,13 @@
 */
 export interface Record {
   assertion: string;
-  subject: {
-    did: string,
-    declarationCid: string,
-    [k: string]: unknown,
-  };
+  subject: Subject;
   createdAt: string;
+  [k: string]: unknown;
+}
+
+export interface Subject {
+  did: string;
+  declarationCid: string;
   [k: string]: unknown;
 }

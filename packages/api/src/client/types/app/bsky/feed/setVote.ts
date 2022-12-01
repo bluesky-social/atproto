@@ -5,24 +5,22 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {}
 
-export interface CallOptions {
-  headers?: Headers;
-  qp?: QueryParams;
-  encoding: 'application/json';
-}
-
 export interface InputSchema {
   subject: Subject;
   direction: 'up' | 'down' | 'none';
-}
-export interface Subject {
-  uri: string;
-  cid: string;
+  [k: string]: unknown;
 }
 
 export interface OutputSchema {
   upvote?: string;
   downvote?: string;
+  [k: string]: unknown;
+}
+
+export interface CallOptions {
+  headers?: Headers;
+  qp?: QueryParams;
+  encoding: 'application/json';
 }
 
 export interface Response {
@@ -35,4 +33,10 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
+}
+
+export interface Subject {
+  uri: string;
+  cid: string;
+  [k: string]: unknown;
 }

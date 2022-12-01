@@ -1,8 +1,4 @@
-import {
-  methodSchema,
-  MethodSchema,
-  isValidMethodSchema,
-} from '@atproto/lexicon'
+import { Lexicons } from '@atproto/lexicon'
 import {
   getMethodSchemaHTTPMethod,
   constructMethodCallUri,
@@ -26,7 +22,7 @@ import {
 
 export class Client {
   fetch: FetchHandler = defaultFetchHandler
-  schemas: Map<string, MethodSchema> = new Map()
+  lex = new Lexicons()
 
   // method calls
   //
@@ -48,26 +44,18 @@ export class Client {
   // schemas
   // =
 
-  addSchema(schema: unknown) {
-    if (isValidMethodSchema(schema)) {
-      this.schemas.set(schema.id, schema)
-    } else {
-      methodSchema.parse(schema) // will throw with the validation error
+  addLexicon(doc: unknown) {
+    this.lex.add(doc)
+  }
+
+  addLexicons(docs: unknown[]) {
+    for (const doc of docs) {
+      this.addLexicon(doc)
     }
   }
 
-  addSchemas(schemas: unknown[]) {
-    for (const schema of schemas) {
-      this.addSchema(schema)
-    }
-  }
-
-  listSchemaIds(): string[] {
-    return Array.from(this.schemas.keys())
-  }
-
-  removeSchema(nsid: string) {
-    this.schemas.delete(nsid)
+  removeLexicon(uri: string) {
+    this.lex.remove(uri)
   }
 }
 
@@ -95,13 +83,16 @@ export class ServiceClient {
     data?: unknown,
     opts?: CallOptions,
   ) {
-    const schema = this.baseClient.schemas.get(methodNsid)
-    if (!schema) {
-      throw new Error(`Method schema not found: ${methodNsid}`)
+    const def = this.baseClient.lex.getDefOrThrow(methodNsid)
+    if (!def || (def.type !== 'query' && def.type !== 'procedure')) {
+      throw new Error(
+        `Invalid lexicon: ${methodNsid}. Must be a query or procedure.`,
+      )
     }
-    const httpMethod = getMethodSchemaHTTPMethod(schema)
-    const httpUri = constructMethodCallUri(schema, this.uri, params)
-    const httpHeaders = constructMethodCallHeaders(schema, data, {
+
+    const httpMethod = getMethodSchemaHTTPMethod(def)
+    const httpUri = constructMethodCallUri(methodNsid, def, this.uri, params)
+    const httpHeaders = constructMethodCallHeaders(def, data, {
       headers: {
         ...this.headers,
         ...opts?.headers,
@@ -147,8 +138,8 @@ async function defaultFetchHandler(
       headers: Object.fromEntries(res.headers.entries()),
       body: httpResponseBodyParse(res.headers.get('content-type'), resBody),
     }
-  } catch (e: any) {
-    throw new XRPCError(ResponseType.Unknown, e.toString())
+  } catch (e) {
+    throw new XRPCError(ResponseType.Unknown, String(e))
   }
 }
 

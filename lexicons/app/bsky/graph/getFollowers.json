@@ -1,79 +1,73 @@
 {
   "lexicon": 1,
   "id": "app.bsky.graph.getFollowers",
-  "type": "query",
-  "description": "Who is following a user?",
-  "parameters": {
-    "type": "object",
-    "required": ["user"],
-    "properties": {
-      "user": {"type": "string"},
-      "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-      "before": {"type": "string"}
-    }
-  },
-  "output": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["subject", "followers"],
-      "properties": {
-        "subject": {
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Who is following a user?",
+      "parameters": {
+        "type": "params",
+        "required": ["user"],
+        "properties": {
+          "user": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
           "type": "object",
-          "required": ["did", "declaration", "handle"],
+          "required": ["subject", "followers"],
           "properties": {
-            "did": {"type": "string"},
-            "declaration": {"$ref": "#/defs/declaration"},
-            "handle": {"type": "string"},
-            "displayName": {
-              "type": "string",
-              "maxLength": 64
-            }
-          }
-        },
-        "cursor": {"type": "string"},
-        "followers": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["did", "declaration", "handle", "indexedAt"],
-            "properties": {
-              "did": {"type": "string"},
-              "declaration": {"$ref": "#/defs/declaration"},
-              "handle": {"type": "string"},
-              "displayName": {
-                "type": "string",
-                "maxLength": 64
-              },
-              "createdAt": {"type": "string", "format": "date-time"},
-              "indexedAt": {"type": "string", "format": "date-time"}
+            "subject": "#subject",
+            "cursor": {"type": "string"},
+            "followers": {
+              "type": "array",
+              "items": "#follower"
             }
           }
         }
       }
-    }
-  },
-  "defs": {
+    },
+    "subject": {
+      "type": "object",
+      "required": ["did", "declaration", "handle"],
+      "properties": {
+        "did": {"type": "string"},
+        "declaration": "#declaration",
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        }
+      }
+    },
+    "follower": {
+      "type": "object",
+      "required": ["did", "declaration", "handle", "indexedAt"],
+      "properties": {
+        "did": {"type": "string"},
+        "declaration": "#declaration",
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "createdAt": {"type": "datetime"},
+        "indexedAt": {"type": "datetime"}
+      }
+    },
     "declaration": {
       "type": "object",
       "required": ["cid", "actorType"],
       "properties": {
         "cid": {"type": "string"},
         "actorType": {
-          "oneOf": [
-            {"$ref": "#/defs/actorKnown"},
-            {"$ref": "#/defs/actorUnknown"}
-          ]
+          "type": "string", 
+          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
         }
       }
-    },
-    "actorKnown": {
-      "type": "string",
-      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-    },
-    "actorUnknown": {
-      "type": "string",
-      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
   }
 }

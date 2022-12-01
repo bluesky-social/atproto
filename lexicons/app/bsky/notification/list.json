@@ -1,56 +1,59 @@
 {
   "lexicon": 1,
   "id": "app.bsky.notification.list",
-  "type": "query",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-      "before": {"type": "string"}
-    }
-  },
-  "output": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["notifications"],
-      "properties": {
-        "cursor": {"type": "string"},
-        "notifications": {
-          "type": "array",
-          "items": {"$ref": "#/defs/notification"}
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["notifications"],
+          "properties": {
+            "cursor": {"type": "string"},
+            "notifications": {
+              "type": "array",
+              "items": "#notification"
+            }
+          }
         }
       }
-    }
-  },
-  "defs": {
+    },
     "notification": {
       "type": "object",
       "required": ["uri", "cid", "author", "reason", "record", "isRead", "indexedAt"],
       "properties": {
-        "uri": {"type": "string", "format": "uri"},
+        "uri": {"type": "string"},
         "cid": {"type": "string" },
-        "author": {
-          "type": "object",
-          "required": ["did", "declaration", "handle"],
-          "properties": {
-            "did": {"type": "string"},
-            "declaration": {"$ref": "#/defs/declaration"},
-            "handle": {"type": "string"},
-            "displayName": {
-              "type": "string",
-              "maxLength": 64
-            }
-          }
-        },
+        "author": "#author",
         "reason": {
           "type": "string",
-          "$comment": "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'."
+          "description": "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'."
         },
         "reasonSubject": {"type": "string"},
-        "record": {"type": "object"},
+        "record": {"type": "unknown"},
         "isRead": {"type": "boolean"},
-        "indexedAt": {"type": "string", "format": "date-time"}
+        "indexedAt": {"type": "datetime"}
+      }
+    },
+    "author": {
+      "type": "object",
+      "required": ["did", "declaration", "handle"],
+      "properties": {
+        "did": {"type": "string"},
+        "declaration": "#declaration",
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        }
       }
     },
     "declaration": {
@@ -59,20 +62,10 @@
       "properties": {
         "cid": {"type": "string"},
         "actorType": {
-          "oneOf": [
-            {"$ref": "#/defs/actorKnown"},
-            {"$ref": "#/defs/actorUnknown"}
-          ]
+          "type": "string", 
+          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
         }
       }
-    },
-    "actorKnown": {
-      "type": "string",
-      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-    },
-    "actorUnknown": {
-      "type": "string",
-      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
   }
 }

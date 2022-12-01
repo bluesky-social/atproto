@@ -1,18 +1,15 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
-export interface Record {
+/** A list of media embedded in a post or document. */
+export interface Main {
   media: MediaEmbed[];
   [k: string]: unknown;
 }
+
 export interface MediaEmbed {
   alt?: string;
-  thumb?: MediaEmbedBlob;
-  original: MediaEmbedBlob;
-  [k: string]: unknown;
-}
-export interface MediaEmbedBlob {
-  mimeType: string;
-  blobId: string;
+  thumb?: { cid: string, mimeType: string, [k: string]: unknown };
+  original: { cid: string, mimeType: string, [k: string]: unknown };
   [k: string]: unknown;
 }

@@ -5,30 +5,23 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {}
 
-export interface CallOptions {
-  headers?: Headers;
-  qp?: QueryParams;
-  encoding: 'application/json';
-}
-
 export interface InputSchema {
   handle: string;
   recoveryKey?: string;
+  [k: string]: unknown;
 }
-
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
 
 export interface OutputSchema {
   handle: string;
   did: string;
   declaration: Declaration;
+  [k: string]: unknown;
 }
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
+
+export interface CallOptions {
+  headers?: Headers;
+  qp?: QueryParams;
+  encoding: 'application/json';
 }
 
 export interface Response {
@@ -55,4 +48,13 @@ export function toKnownErr(e: any) {
     if (e.error === 'HandleNotAvailable') return new HandleNotAvailableError(e)
   }
   return e
+}
+
+export interface Declaration {
+  cid: string;
+  actorType:
+    | 'app.bsky.system.actorUser'
+    | 'app.bsky.system.actorScene'
+    | (string & {});
+  [k: string]: unknown;
 }

@@ -4,10 +4,15 @@
 import express from 'express'
 
 export interface QueryParams {
-  /**
-   * The DID of the repo.
-   */
+  /** The DID of the repo. */
   did: string;
+}
+
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  root: string;
+  [k: string]: unknown;
 }
 
 export type HandlerInput = undefined
@@ -23,11 +28,6 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {
-  root: string;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

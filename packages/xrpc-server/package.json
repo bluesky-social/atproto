@@ -17,8 +17,6 @@
   "dependencies": {
     "@atproto/common": "*",
     "@atproto/lexicon": "*",
-    "ajv": "^8.11.0",
-    "ajv-formats": "^2.1.1",
     "express": "^4.17.2",
     "http-errors": "^2.0.0",
     "mime-types": "^2.1.35",

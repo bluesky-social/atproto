@@ -9,6 +9,14 @@ export interface QueryParams {
   before?: string;
 }
 
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  cursor?: string;
+  feed: FeedItem[];
+  [k: string]: unknown;
+}
+
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
@@ -22,16 +30,13 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
+export type Handler = (
+  params: QueryParams,
+  input: HandlerInput,
+  req: express.Request,
+  res: express.Response
+) => Promise<HandlerOutput> | HandlerOutput
 
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
-
-export interface OutputSchema {
-  cursor?: string;
-  feed: FeedItem[];
-}
 export interface FeedItem {
   uri: string;
   cid: string;
@@ -45,42 +50,52 @@ export interface FeedItem {
   upvoteCount: number;
   downvoteCount: number;
   indexedAt: string;
-  myState?: {
-    repost?: string,
-    upvote?: string,
-    downvote?: string,
-  };
+  myState?: MyState;
+  [k: string]: unknown;
 }
+
+export interface MyState {
+  repost?: string;
+  upvote?: string;
+  downvote?: string;
+  [k: string]: unknown;
+}
+
 export interface Actor {
   did: string;
   declaration: Declaration;
   handle: string;
   actorType?: string;
   displayName?: string;
+  [k: string]: unknown;
 }
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
-}
+
 export interface RecordEmbed {
   type: 'record';
   author: Actor;
   record: {};
+  [k: string]: unknown;
 }
+
 export interface ExternalEmbed {
   type: 'external';
   uri: string;
   title: string;
   description: string;
   imageUri: string;
-}
-export interface UnknownEmbed {
-  type: string;
+  [k: string]: unknown;
 }
 
-export type Handler = (
-  params: QueryParams,
-  input: HandlerInput,
-  req: express.Request,
-  res: express.Response
-) => Promise<HandlerOutput> | HandlerOutput
+export interface UnknownEmbed {
+  type: string;
+  [k: string]: unknown;
+}
+
+export interface Declaration {
+  cid: string;
+  actorType:
+    | 'app.bsky.system.actorUser'
+    | 'app.bsky.system.actorScene'
+    | (string & {});
+  [k: string]: unknown;
+}

@@ -1,29 +1,35 @@
 {
   "lexicon": 1,
   "id": "app.bsky.graph.confirmation",
-  "type": "record",
-  "key": "tid",
-  "record": {
-    "type": "object",
-    "required": ["originator", "assertion", "createdAt"],
-    "properties": {
-      "originator": {
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
         "type": "object",
-        "required": ["did", "declarationCid"],
+        "required": ["originator", "assertion", "createdAt"],
         "properties": {
-          "did": {"type": "string"},
-          "declarationCid": {"type": "string"}
+          "originator": "#originator",
+          "assertion": "#assertion",
+          "createdAt": {"type": "datetime"}
         }
-      },
-      "assertion": {
-        "type": "object",
-        "required": ["uri", "cid"],
-        "properties": {
-          "uri": {"type": "string"},
-          "cid": {"type": "string"}
-        }
-      },
-      "createdAt": {"type": "string", "format": "date-time"}
+      }
+    },
+    "originator": {
+      "type": "object",
+      "required": ["did", "declarationCid"],
+      "properties": {
+        "did": {"type": "string"},
+        "declarationCid": {"type": "string"}
+      }
+    },
+    "assertion": {
+      "type": "object",
+      "required": ["uri", "cid"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"}
+      }
     }
   }
 }

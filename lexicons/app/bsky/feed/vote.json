@@ -1,18 +1,20 @@
 {
   "lexicon": 1,
   "id": "app.bsky.feed.vote",
-  "type": "record",
-  "key": "tid",
-  "record": {
-    "type": "object",
-    "required": ["subject", "direction", "createdAt"],
-    "properties": {
-      "subject": {"$ref": "#/defs/subject"},
-      "direction": {"type": "string", "enum": ["up", "down"]},
-      "createdAt": {"type": "string", "format": "date-time"}
-    }
-  },
   "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "direction", "createdAt"],
+        "properties": {
+          "subject": "#subject",
+          "direction": {"type": "string", "enum": ["up", "down"]},
+          "createdAt": {"type": "datetime"}
+        }
+      }
+    },
     "subject": {
       "type": "object",
       "required": ["uri", "cid"],

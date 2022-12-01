@@ -8,6 +8,13 @@ export interface QueryParams {
   depth?: number;
 }
 
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  thread: Post | NotFoundPost;
+  [k: string]: unknown;
+}
+
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
@@ -22,15 +29,13 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
+export type Handler = (
+  params: QueryParams,
+  input: HandlerInput,
+  req: express.Request,
+  res: express.Response
+) => Promise<HandlerOutput> | HandlerOutput
 
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
-
-export interface OutputSchema {
-  thread: Post | NotFoundPost;
-}
 export interface Post {
   uri: string;
   cid: string;
@@ -44,45 +49,57 @@ export interface Post {
   upvoteCount: number;
   downvoteCount: number;
   indexedAt: string;
-  myState?: {
-    repost?: string,
-    upvote?: string,
-    downvote?: string,
-  };
+  myState?: MyState;
+  [k: string]: unknown;
 }
+
+export interface NotFoundPost {
+  uri: string;
+  notFound: boolean;
+  [k: string]: unknown;
+}
+
+export interface MyState {
+  repost?: string;
+  upvote?: string;
+  downvote?: string;
+  [k: string]: unknown;
+}
+
 export interface User {
   did: string;
   declaration: Declaration;
   handle: string;
   displayName?: string;
+  [k: string]: unknown;
 }
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
-}
+
 export interface RecordEmbed {
   type: 'record';
   author: User;
   record: {};
+  [k: string]: unknown;
 }
+
 export interface ExternalEmbed {
   type: 'external';
   uri: string;
   title: string;
   description: string;
   imageUri: string;
-}
-export interface UnknownEmbed {
-  type: string;
-}
-export interface NotFoundPost {
-  uri: string;
-  notFound: boolean;
+  [k: string]: unknown;
 }
 
-export type Handler = (
-  params: QueryParams,
-  input: HandlerInput,
-  req: express.Request,
-  res: express.Response
-) => Promise<HandlerOutput> | HandlerOutput
+export interface UnknownEmbed {
+  type: string;
+  [k: string]: unknown;
+}
+
+export interface Declaration {
+  cid: string;
+  actorType:
+    | 'app.bsky.system.actorUser'
+    | 'app.bsky.system.actorScene'
+    | (string & {});
+  [k: string]: unknown;
+}

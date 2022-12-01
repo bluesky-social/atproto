@@ -1,14 +1,14 @@
 import { Server } from '../../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as locals from '../../../../locals'
-import * as schema from '../../../../lexicon/schemas'
+import * as lexicons from '../../../../lexicon/lexicons'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import * as common from '@atproto/common'
 import * as repoUtil from '../../../../util/repo'
 
-const profileNsid = schema.ids.AppBskyActorProfile
+const profileNsid = lexicons.ids.AppBskyActorProfile
 
 export default function (server: Server) {
   server.app.bsky.actor.updateProfile(async (_params, input, req, res) => {

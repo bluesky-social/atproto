@@ -1,9 +1,8 @@
 import express from 'express'
-import { MethodSchema } from '@atproto/lexicon'
+import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
 import mime from 'mime-types'
-import Ajv, { ValidateFunction } from 'ajv'
-import addFormats from 'ajv-formats'
 import {
+  UndecodedParams,
   Params,
   HandlerInput,
   HandlerSuccess,
@@ -12,43 +11,58 @@ import {
   InternalServerError,
 } from './types'
 
-export const ajv = new Ajv({ useDefaults: true })
-addFormats(ajv)
-
-export const paramsAjv = new Ajv({ useDefaults: 'empty', coerceTypes: true })
-addFormats(paramsAjv)
-
-type ReqQuery = typeof express.request['query']
-
-export function validateReqParams(
-  reqParams: ReqQuery,
-  jsonValidator?: ValidateFunction,
+export function decodeQueryParams(
+  def: LexXrpcProcedure | LexXrpcQuery,
+  params: UndecodedParams,
 ): Params {
-  if (jsonValidator) {
-    if (!jsonValidator(reqParams)) {
-      throw new InvalidRequestError(
-        paramsAjv.errorsText(jsonValidator.errors, {
-          dataVar: 'parameters',
-        }),
+  const decoded: Params = {}
+  for (const k in params) {
+    if (def.parameters?.properties?.[k]) {
+      decoded[k] = decodeQueryParam(
+        def.parameters?.properties[k]?.type,
+        params[k],
       )
     }
   }
-  return reqParams
+  return decoded
+}
+
+export function decodeQueryParam(
+  type: string,
+  value: unknown,
+): string | number | boolean | undefined {
+  if (!value) {
+    return undefined
+  }
+  if (type === 'string' || type === 'datetime') {
+    return String(value)
+  }
+  if (type === 'number') {
+    return Number(String(value))
+  } else if (type === 'integer') {
+    return Number(String(value)) | 0
+  } else if (type === 'boolean') {
+    return value === 'true'
+  }
 }
 
 export function validateInput(
-  schema: MethodSchema,
+  nsid: string,
+  def: LexXrpcProcedure | LexXrpcQuery,
   req: express.Request,
-  jsonValidator?: ValidateFunction,
+  lexicons: Lexicons,
 ): HandlerInput | undefined {
   // request expectation
   const reqHasBody = hasBody(req)
-  if (reqHasBody && !schema.input) {
+  if (reqHasBody && (def.type !== 'procedure' || !def.input)) {
     throw new InvalidRequestError(
       `A request body was provided when none was expected`,
     )
   }
-  if (!reqHasBody && schema.input) {
+  if (def.type === 'query') {
+    return
+  }
+  if (!reqHasBody && def.input) {
     throw new InvalidRequestError(
       `A request body is expected but none was provided`,
     )
@@ -57,8 +71,8 @@ export function validateInput(
   // mimetype
   const inputEncoding = normalizeMime(req.headers['content-type'] || '')
   if (
-    schema.input?.encoding &&
-    (!inputEncoding || !isValidEncoding(schema.input?.encoding, inputEncoding))
+    def.input?.encoding &&
+    (!inputEncoding || !isValidEncoding(def.input?.encoding, inputEncoding))
   ) {
     throw new InvalidRequestError(`Invalid request encoding: ${inputEncoding}`)
   }
@@ -68,14 +82,12 @@ export function validateInput(
     return undefined
   }
 
-  // json schema
-  if (jsonValidator) {
-    if (!jsonValidator(req.body)) {
-      throw new InvalidRequestError(
-        ajv.errorsText(jsonValidator.errors, {
-          dataVar: 'input',
-        }),
-      )
+  // input schema
+  if (def.input?.schema) {
+    try {
+      lexicons.assertValidXrpcInput(nsid, req.body)
+    } catch (e) {
+      throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
     }
   }
 
@@ -86,9 +98,10 @@ export function validateInput(
 }
 
 export function validateOutput(
-  schema: MethodSchema,
+  nsid: string,
+  def: LexXrpcProcedure | LexXrpcQuery,
   output: HandlerSuccess | undefined,
-  jsonValidator?: ValidateFunction,
+  lexicons: Lexicons,
 ): HandlerSuccess | undefined {
   // initial validation
   if (output) {
@@ -96,12 +109,12 @@ export function validateOutput(
   }
 
   // response expectation
-  if (output?.body && !schema.output) {
+  if (output?.body && !def.output) {
     throw new InternalServerError(
       `A response body was provided when none was expected`,
     )
   }
-  if (!output?.body && schema.output) {
+  if (!output?.body && def.output) {
     throw new InternalServerError(
       `A response body is expected but none was provided`,
     )
@@ -109,23 +122,21 @@ export function validateOutput(
 
   // mimetype
   if (
-    schema.output?.encoding &&
+    def.output?.encoding &&
     (!output?.encoding ||
-      !isValidEncoding(schema.output?.encoding, output?.encoding))
+      !isValidEncoding(def.output?.encoding, output?.encoding))
   ) {
     throw new InternalServerError(
       `Invalid response encoding: ${output?.encoding}`,
     )
   }
 
-  // json schema
-  if (jsonValidator) {
-    if (!jsonValidator(output?.body)) {
-      throw new InternalServerError(
-        ajv.errorsText(jsonValidator.errors, {
-          dataVar: 'output',
-        }),
-      )
+  // output schema
+  if (def.output?.schema) {
+    try {
+      lexicons.assertValidXrpcOutput(nsid, output?.body)
+    } catch (e) {
+      throw new InternalServerError(e instanceof Error ? e.message : String(e))
     }
   }
 

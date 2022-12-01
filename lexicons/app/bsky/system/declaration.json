@@ -1,29 +1,21 @@
 {
   "lexicon": 1,
   "id": "app.bsky.system.declaration",
-  "description": "Context for an account that is considered intrinsic to it and alters the fundamental understanding of an account of changed. A declaration should be treated as immutable.",
-  "type": "record",
-  "key": "literal:self",
-  "record": {
-    "type": "object",
-    "required": ["actorType"],
-    "properties": {
-      "actorType": {
-        "oneOf": [
-          {"$ref": "#/defs/actorKnown"},
-          {"$ref": "#/defs/actorUnknown"}
-        ]
-      }
-    }
-  },
   "defs": {
-    "actorKnown": {
-      "type": "string",
-      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-    },
-    "actorUnknown": {
-      "type": "string",
-      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
+    "main": {
+      "description": "Context for an account that is considered intrinsic to it and alters the fundamental understanding of an account of changed. A declaration should be treated as immutable.",
+      "type": "record",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["actorType"],
+        "properties": {
+          "actorType": {
+            "type": "string", 
+            "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
+          }
+        }
+      }
     }
   }
 }

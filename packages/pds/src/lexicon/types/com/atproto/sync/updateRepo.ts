@@ -4,11 +4,11 @@
 import express from 'express'
 
 export interface QueryParams {
-  /**
-   * The DID of the repo.
-   */
+  /** The DID of the repo. */
   did: string;
 }
+
+export type InputSchema = string | Uint8Array
 
 export interface HandlerInput {
   encoding: 'application/cbor';

@@ -1,62 +1,63 @@
 {
   "lexicon": 1,
   "id": "app.bsky.feed.getAuthorFeed",
-  "type": "query",
-  "description": "A view of a user's feed.",
-  "parameters": {
-    "type": "object",
-    "required": ["author"],
-    "properties": {
-      "author": {"type": "string"},
-      "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-      "before": {"type": "string"}
-    }
-  },
-  "output": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["feed"],
-      "properties": {
-        "cursor": {"type": "string"},
-        "feed": {
-          "type": "array",
-          "items": {"$ref": "#/defs/feedItem"}
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "A view of a user's feed.",
+      "parameters": {
+        "type": "params",
+        "required": ["author"],
+        "properties": {
+          "author": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["feed"],
+          "properties": {
+            "cursor": {"type": "string"},
+            "feed": {
+              "type": "array",
+              "items": "#feedItem"
+            }
+          }
         }
       }
-    }
-  },
-  "defs": {
+    },
     "feedItem": {
       "type": "object",
       "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt"],
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
-        "author": {"$ref": "#/defs/actor"},
-        "trendedBy": {"$ref": "#/defs/actor"},
-        "repostedBy": {"$ref": "#/defs/actor"},
-        "record": {"type": "object"},
-        "embed": {
-          "oneOf": [
-            {"$ref": "#/defs/recordEmbed"},
-            {"$ref": "#/defs/externalEmbed"},
-            {"$ref": "#/defs/unknownEmbed"}
-          ]
-        },
+        "author": "#actor",
+        "trendedBy": "#actor",
+        "repostedBy": "#actor",
+        "record": {"type": "unknown"},
+        "embed": [
+          "#recordEmbed",
+          "#externalEmbed",
+          "#unknownEmbed"
+        ],
         "replyCount": {"type": "integer"},
         "repostCount": {"type": "integer"},
         "upvoteCount": {"type": "integer"},
         "downvoteCount": {"type": "integer"},
-        "indexedAt": {"type": "string", "format": "date-time"},
-        "myState": {
-          "type": "object",
-          "properties": {
-            "repost": {"type": "string"},
-            "upvote": {"type": "string"},
-            "downvote": {"type": "string"}
-          }
-        }
+        "indexedAt": {"type": "datetime"},
+        "myState": "#myState"
+      }
+    },
+    "myState": {
+      "type": "object",
+      "properties": {
+        "repost": {"type": "string"},
+        "upvote": {"type": "string"},
+        "downvote": {"type": "string"}
       }
     },
     "actor": {
@@ -64,7 +65,7 @@
       "required": ["did", "declaration", "handle"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": {"$ref": "#/defs/declaration"},
+        "declaration": "#declaration",
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",
@@ -76,16 +77,16 @@
       "type": "object",
       "required": ["type", "author", "record"],
       "properties": {
-        "type": {"const": "record"},
-        "author": {"$ref": "#/defs/actor"},
-        "record": {"type": "object"}
+        "type": {"type": "string", "const": "record"},
+        "author": "#actor",
+        "record": {"type": "unknown"}
       }
     },
     "externalEmbed": {
       "type": "object",
       "required": ["type", "uri", "title", "description", "imageUri"],
       "properties": {
-        "type": {"const": "external"},
+        "type": {"type": "string", "const": "external"},
         "uri": {"type": "string"},
         "title": {"type": "string"},
         "description": {"type": "string"},
@@ -96,10 +97,7 @@
       "type": "object",
       "required": ["type"],
       "properties": {
-        "type": {
-          "type": "string",
-          "not": {"enum": ["record", "external"]}
-        }
+        "type": {"type": "string"}
       }
     },
     "declaration": {
@@ -108,20 +106,10 @@
       "properties": {
         "cid": {"type": "string"},
         "actorType": {
-          "oneOf": [
-            {"$ref": "#/defs/actorKnown"},
-            {"$ref": "#/defs/actorUnknown"}
-          ]
+          "type": "string",
+          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
         }
       }
-    },
-    "actorKnown": {
-      "type": "string",
-      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-    },
-    "actorUnknown": {
-      "type": "string",
-      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
   }
 }

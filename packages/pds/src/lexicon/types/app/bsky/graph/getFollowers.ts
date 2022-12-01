@@ -9,6 +9,15 @@ export interface QueryParams {
   before?: string;
 }
 
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  subject: Subject;
+  cursor?: string;
+  followers: Follower[];
+  [k: string]: unknown;
+}
+
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
@@ -22,37 +31,36 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
-
-export interface OutputSchema {
-  subject: {
-    did: string,
-    declaration: Declaration,
-    handle: string,
-    displayName?: string,
-  };
-  cursor?: string;
-  followers: {
-    did: string,
-    declaration: Declaration,
-    handle: string,
-    displayName?: string,
-    createdAt?: string,
-    indexedAt: string,
-  }[];
-}
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,
   req: express.Request,
   res: express.Response
 ) => Promise<HandlerOutput> | HandlerOutput
+
+export interface Subject {
+  did: string;
+  declaration: Declaration;
+  handle: string;
+  displayName?: string;
+  [k: string]: unknown;
+}
+
+export interface Follower {
+  did: string;
+  declaration: Declaration;
+  handle: string;
+  displayName?: string;
+  createdAt?: string;
+  indexedAt: string;
+  [k: string]: unknown;
+}
+
+export interface Declaration {
+  cid: string;
+  actorType:
+    | 'app.bsky.system.actorUser'
+    | 'app.bsky.system.actorScene'
+    | (string & {});
+  [k: string]: unknown;
+}

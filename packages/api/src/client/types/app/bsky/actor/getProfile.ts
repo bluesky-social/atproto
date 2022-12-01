@@ -7,16 +7,7 @@ export interface QueryParams {
   actor: string;
 }
 
-export interface CallOptions {
-  headers?: Headers;
-}
-
 export type InputSchema = undefined
-
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
 
 export interface OutputSchema {
   did: string;
@@ -29,14 +20,12 @@ export interface OutputSchema {
   followsCount: number;
   membersCount: number;
   postsCount: number;
-  myState?: {
-    follow?: string,
-    member?: string,
-  };
+  myState?: MyState;
+  [k: string]: unknown;
 }
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
+
+export interface CallOptions {
+  headers?: Headers;
 }
 
 export interface Response {
@@ -49,4 +38,19 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
+}
+
+export interface MyState {
+  follow?: string;
+  member?: string;
+  [k: string]: unknown;
+}
+
+export interface Declaration {
+  cid: string;
+  actorType:
+    | 'app.bsky.system.actorUser'
+    | 'app.bsky.system.actorScene'
+    | (string & {});
+  [k: string]: unknown;
 }

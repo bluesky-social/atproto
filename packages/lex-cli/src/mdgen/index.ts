@@ -1,14 +1,5 @@
 import fs from 'fs'
-import {
-  methodSchema,
-  MethodSchema,
-  recordSchema,
-  RecordSchema,
-  tokenSchema,
-  TokenSchema,
-  Schema,
-} from '@atproto/lexicon'
-import * as jsonSchemaToTs from 'json-schema-to-typescript'
+import { LexiconDoc } from '@atproto/lexicon'
 
 const INSERT_START = [
   '<!-- START lex generated content. Please keep comment here to allow auto update -->',
@@ -18,7 +9,7 @@ const INSERT_END = [
   '<!-- END lex generated TOC please keep comment here to allow auto update -->',
 ]
 
-export async function process(outFilePath: string, schemas: Schema[]) {
+export async function process(outFilePath: string, lexicons: LexiconDoc[]) {
   let existingContent = ''
   try {
     existingContent = fs.readFileSync(outFilePath, 'utf8')
@@ -40,160 +31,32 @@ export async function process(outFilePath: string, schemas: Schema[]) {
   // generate & insert content
   fileLines.splice(startIndex, endIndex - startIndex + 1, [
     INSERT_START,
-    await genMdLines(schemas),
+    await genMdLines(lexicons),
     INSERT_END,
   ])
 
   fs.writeFileSync(outFilePath, merge(fileLines), 'utf8')
 }
 
-async function genMdLines(schemas: Schema[]): Promise<StringTree> {
-  let xprcMethods: StringTree = []
-  let recordTypes: StringTree = []
-  let tokenTypes: StringTree = []
-  for (const schema of schemas) {
-    console.log(schema.id)
-    if (methodSchema.safeParse(schema).success) {
-      xprcMethods = xprcMethods.concat(
-        await genMethodSchemaMd(schema as MethodSchema),
-      )
-    } else if (recordSchema.safeParse(schema).success) {
-      recordTypes = recordTypes.concat(
-        await genRecordSchemaMd(schema as RecordSchema),
-      )
-    } else if (tokenSchema.safeParse(schema).success) {
-      tokenTypes = tokenTypes.concat(genTokenSchemaMd(schema as TokenSchema))
+async function genMdLines(lexicons: LexiconDoc[]): Promise<StringTree> {
+  const doc: StringTree = []
+  for (const lexicon of lexicons) {
+    console.log(lexicon.id)
+    const desc: StringTree = []
+    if (lexicon.description) {
+      desc.push(lexicon.description, ``)
     }
+    doc.push([
+      `---`,
+      ``,
+      `## ${lexicon.id}`,
+      '',
+      desc,
+      '```json',
+      JSON.stringify(lexicon, null, 2),
+      '```',
+    ])
   }
-  const doc = [
-    recordTypes?.length ? recordTypes : undefined,
-    xprcMethods?.length ? xprcMethods : undefined,
-    tokenTypes?.length ? tokenTypes : undefined,
-  ]
-  return doc
-}
-
-async function genMethodSchemaMd(schema: MethodSchema): Promise<StringTree> {
-  const desc: StringTree = []
-  const params: StringTree = []
-  const input: StringTree = []
-  const output: StringTree = []
-  const doc: StringTree = [
-    `---`,
-    ``,
-    `## ${schema.id}`,
-    '',
-    desc,
-    params,
-    input,
-    output,
-  ]
-
-  desc.push(`<mark>RPC ${schema.type}</mark> ${schema.description || ''}`, ``)
-
-  if (schema.parameters) {
-    if (schema.type === 'query') {
-      params.push(`Parameters:`, ``)
-    } else if (schema.type === 'procedure') {
-      params.push(`QP options:`, ``)
-    }
-    params.push(`- Schema:`, ``)
-    params.push('```typescript')
-    params.push(
-      (
-        await jsonSchemaToTs.compile(schema.parameters, 'Parameters', {
-          bannerComment: '',
-          additionalProperties: false,
-        })
-      ).trim(),
-    )
-    params.push('```')
-    params.push('')
-  }
-
-  if (schema.input) {
-    input.push(`Parameters:`, ``)
-    if (schema.input.encoding) {
-      if (typeof schema.input.encoding === 'string') {
-        input.push(`- Encoding: ${schema.input.encoding}`)
-      } else if (Array.isArray(schema.input.encoding)) {
-        input.push(`- Possible encodings: ${schema.input.encoding.join(', ')}`)
-      }
-    }
-    if (schema.input.schema) {
-      input.push(`- Schema:`, ``)
-      input.push('```typescript')
-      input.push(
-        (
-          await jsonSchemaToTs.compile(schema.input.schema, 'Parameters', {
-            bannerComment: '',
-            additionalProperties: false,
-          })
-        ).trim(),
-      )
-      input.push('```')
-    }
-    input.push('')
-  }
-
-  if (schema.output) {
-    output.push(`Response:`, ``)
-    if (schema.output.encoding) {
-      if (typeof schema.output.encoding === 'string') {
-        output.push(`- Encoding: ${schema.output.encoding}`)
-      } else if (Array.isArray(schema.output.encoding)) {
-        output.push(
-          `- Possible encodings: ${schema.output.encoding.join(', ')}`,
-        )
-      }
-    }
-    if (schema.output.schema) {
-      output.push(`- Schema:`, ``)
-      output.push('```typescript')
-      output.push(
-        (
-          await jsonSchemaToTs.compile(schema.output.schema, 'Response', {
-            bannerComment: '',
-            additionalProperties: false,
-          })
-        ).trim(),
-      )
-      output.push('```')
-    }
-    output.push('')
-  }
-
-  return doc
-}
-
-async function genRecordSchemaMd(schema: RecordSchema): Promise<StringTree> {
-  const desc: StringTree = []
-  const record: StringTree = []
-  const doc: StringTree = [`---`, ``, `## ${schema.id}`, '', desc, record]
-
-  desc.push(`<mark>Record type</mark> ${schema.description || ''}`, ``)
-
-  if (schema.record) {
-    record.push('```typescript')
-    record.push(
-      (
-        await jsonSchemaToTs.compile(schema.record, 'Record', {
-          bannerComment: '',
-          additionalProperties: false,
-        })
-      ).trim(),
-    )
-    record.push('```')
-    record.push('')
-  }
-
-  return doc
-}
-
-function genTokenSchemaMd(schema: TokenSchema): StringTree {
-  const desc: StringTree = []
-  const doc: StringTree = [`---`, ``, `## ${schema.id}`, '', desc]
-  desc.push(`<mark>Token</mark> ${schema.description || ''}`, ``)
   return doc
 }
 

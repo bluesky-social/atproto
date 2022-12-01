@@ -1,29 +1,32 @@
 {
   "lexicon": 1,
   "id": "app.bsky.feed.post",
-  "type": "record",
-  "key": "tid",
-  "record": {
-    "type": "object",
-    "required": ["text", "createdAt"],
-    "properties": {
-      "text": {"type": "string", "maxLength": 256},
-      "entities": {
-        "type": "array",
-        "items": {"$ref": "#/defs/entity"}
-      },
-      "reply": {
-        "type": "object",
-        "required": ["root", "parent"],
-        "properties": {
-          "root": {"$ref": "#/defs/postRef"},
-          "parent": {"$ref": "#/defs/postRef"}
-        }
-      },
-      "createdAt": {"type": "string", "format": "date-time"}
-    }
-  },
   "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["text", "createdAt"],
+        "properties": {
+          "text": {"type": "string", "maxLength": 256},
+          "entities": {
+            "type": "array",
+            "items": "#entity"
+          },
+          "reply": "#replyRef",
+          "createdAt": {"type": "datetime"}
+        }
+      }
+    },
+    "replyRef":{
+      "type": "object",
+      "required": ["root", "parent"],
+      "properties": {
+        "root": "#postRef",
+        "parent": "#postRef"
+      }
+    },
     "postRef": {
       "type": "object",
       "required": ["uri", "cid"],
@@ -36,10 +39,10 @@
       "type": "object",
       "required": ["index", "type", "value"],
       "properties": {
-        "index": {"$ref": "#/defs/textSlice"},
+        "index": "#textSlice",
         "type": {
           "type": "string",
-          "$comment": "Expected values are 'mention', 'hashtag', and 'link'."
+          "description": "Expected values are 'mention', 'hashtag', and 'link'."
         },
         "value": {"type": "string"}
       }

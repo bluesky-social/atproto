@@ -18,22 +18,25 @@ const insertFn = async (
   obj: Vote.Record,
   timestamp?: string,
 ): Promise<IndexedVote | null> => {
-  const inserted = await db
-    .insertInto('vote')
-    .values({
-      uri: uri.toString(),
-      cid: cid.toString(),
-      direction: obj.direction,
-      creator: uri.host,
-      subject: obj.subject.uri,
-      subjectCid: obj.subject.cid,
-      createdAt: obj.createdAt,
-      indexedAt: timestamp || new Date().toISOString(),
-    })
-    .onConflict((oc) => oc.doNothing())
-    .returningAll()
-    .executeTakeFirst()
-  return inserted || null
+  if (obj.direction === 'up' || obj.direction === 'down') {
+    const inserted = await db
+      .insertInto('vote')
+      .values({
+        uri: uri.toString(),
+        cid: cid.toString(),
+        direction: obj.direction,
+        creator: uri.host,
+        subject: obj.subject.uri,
+        subjectCid: obj.subject.cid,
+        createdAt: obj.createdAt,
+        indexedAt: timestamp || new Date().toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .returningAll()
+      .executeTakeFirst()
+    return inserted || null
+  }
+  return null
 }
 
 const findDuplicate = async (

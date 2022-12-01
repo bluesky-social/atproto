@@ -1,66 +1,56 @@
 {
   "lexicon": 1,
   "id": "app.bsky.actor.search",
-  "type": "query",
-  "description": "Find users matching search criteria.",
-  "parameters": {
-    "type": "object",
-    "required": ["term"],
-    "properties": {
-      "term": {"type": "string"},
-      "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-      "before": {"type": "string"}
-    }
-  },
-  "output": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["users"],
-      "properties": {
-        "cursor": {"type": "string"},
-        "users": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["did", "declaration", "handle"],
-            "properties": {
-              "did": {"type": "string"},
-              "declaration": {"$ref": "#/defs/declaration"},
-              "handle": {"type": "string"},
-              "displayName": {
-                "type": "string",
-                "maxLength": 64
-              },
-              "description": {"type": "string"},
-              "indexedAt": {"type": "string", "format": "date-time"}
-            }
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Find users matching search criteria.",
+      "parameters": {
+        "type": "params",
+        "required": ["term"],
+        "properties": {
+          "term": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["users"],
+          "properties": {
+            "cursor": {"type": "string"},
+            "users": {"type": "array", "items": "#user"}
           }
         }
       }
-    }
-  },
-  "defs": {
+    },
+    "user": {
+      "type": "object",
+      "required": ["did", "declaration", "handle"],
+      "properties": {
+        "did": {"type": "string"},
+        "declaration": "#declaration",
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "description": {"type": "string"},
+        "indexedAt": {"type": "datetime"}
+      }
+    },
     "declaration": {
       "type": "object",
       "required": ["cid", "actorType"],
       "properties": {
         "cid": {"type": "string"},
         "actorType": {
-          "oneOf": [
-            {"$ref": "#/defs/actorKnown"},
-            {"$ref": "#/defs/actorUnknown"}
-          ]
+          "type": "string", 
+          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
         }
       }
-    },
-    "actorKnown": {
-      "type": "string",
-      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-    },
-    "actorUnknown": {
-      "type": "string",
-      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
   }
 }

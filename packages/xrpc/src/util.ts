@@ -1,4 +1,4 @@
-import { MethodSchema } from '@atproto/lexicon'
+import { LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
 import {
   CallOptions,
   Headers,
@@ -7,28 +7,28 @@ import {
   XRPCError,
 } from './types'
 
-export function getMethodSchemaHTTPMethod(schema: MethodSchema) {
-  if (schema.type === 'query') {
-    return 'get'
-  }
+export function getMethodSchemaHTTPMethod(
+  schema: LexXrpcProcedure | LexXrpcQuery,
+) {
   if (schema.type === 'procedure') {
     return 'post'
   }
-  throw new Error(`Invalid method type: ${schema.type}`)
+  return 'get'
 }
 
 export function constructMethodCallUri(
-  schema: MethodSchema,
+  nsid: string,
+  schema: LexXrpcProcedure | LexXrpcQuery,
   serviceUri: URL,
   params?: QueryParams,
 ): string {
   const uri = new URL(serviceUri)
-  uri.pathname = `/xrpc/${schema.id}`
+  uri.pathname = `/xrpc/${nsid}`
 
   // given parameters
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      const paramSchema = schema.parameters?.properties[key]
+      const paramSchema = schema.parameters?.properties?.[key]
       if (!paramSchema) {
         throw new Error(`Invalid query parameter: ${key}`)
       }
@@ -42,10 +42,10 @@ export function constructMethodCallUri(
 }
 
 export function encodeQueryParam(
-  type: 'string' | 'number' | 'integer' | 'boolean',
+  type: 'string' | 'number' | 'integer' | 'boolean' | 'datetime' | 'unknown',
   value: any,
 ): string {
-  if (type === 'string') {
+  if (type === 'string' || type === 'unknown') {
     return String(value)
   }
   if (type === 'number') {
@@ -54,12 +54,17 @@ export function encodeQueryParam(
     return String(Number(value) | 0)
   } else if (type === 'boolean') {
     return value ? 'true' : 'false'
+  } else if (type === 'datetime') {
+    if (value instanceof Date) {
+      return value.toISOString()
+    }
+    return String(value)
   }
   throw new Error(`Unsupported query param type: ${type}`)
 }
 
 export function constructMethodCallHeaders(
-  schema: MethodSchema,
+  schema: LexXrpcProcedure | LexXrpcQuery,
   data?: any,
   opts?: CallOptions,
 ): Headers {
@@ -123,20 +128,20 @@ export function httpResponseBodyParse(
       try {
         const str = new TextDecoder().decode(data)
         return JSON.parse(str)
-      } catch (e: any) {
+      } catch (e) {
         throw new XRPCError(
           ResponseType.InvalidResponse,
-          `Failed to parse response body: ${e.toString()}`,
+          `Failed to parse response body: ${String(e)}`,
         )
       }
     }
     if (mimeType.startsWith('text/') && data?.byteLength) {
       try {
         return new TextDecoder().decode(data)
-      } catch (e: any) {
+      } catch (e) {
         throw new XRPCError(
           ResponseType.InvalidResponse,
-          `Failed to parse response body: ${e.toString()}`,
+          `Failed to parse response body: ${String(e)}`,
         )
       }
     }

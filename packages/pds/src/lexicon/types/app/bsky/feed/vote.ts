@@ -7,6 +7,7 @@ export interface Record {
   createdAt: string;
   [k: string]: unknown;
 }
+
 export interface Subject {
   uri: string;
   cid: string;

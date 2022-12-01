@@ -1,5 +1,5 @@
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import { Schema } from '@atproto/lexicon'
+import { LexiconDoc } from '@atproto/lexicon'
 import prettier from 'prettier'
 import { GeneratedFile } from '../types'
 
@@ -10,13 +10,8 @@ const PRETTIER_OPTS = {
   singleQuote: true,
 }
 
-export const schemasTs = (project, schemas: Schema[]) =>
-  gen(project, '/schemas.ts', async (file) => {
-    const methodSchemas = schemas.filter(
-      (s) => s.type === 'query' || s.type === 'procedure',
-    )
-    const recordSchemas = schemas.filter((s) => s.type === 'record')
-
+export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
+  gen(project, '/lexicons.ts', async (file) => {
     const nsidToEnum = (nsid: string): string => {
       return nsid
         .split('.')
@@ -24,43 +19,22 @@ export const schemasTs = (project, schemas: Schema[]) =>
         .join('')
     }
 
-    //= import {RecordSchema, MethodSchema} from '@atproto/lexicon'
+    //= import {LexiconDoc} from '@atproto/lexicon'
     file
       .addImportDeclaration({
         moduleSpecifier: '@atproto/lexicon',
       })
-      .addNamedImports([{ name: 'MethodSchema' }, { name: 'RecordSchema' }])
+      .addNamedImports([{ name: 'LexiconDoc' }])
 
-    //= export const methodSchemaDict: Record<string, MethodSchema> = {...}
+    //= export const lexicons: LexiconDoc[] = [...]
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
-          name: 'methodSchemaDict',
-          type: 'Record<string, MethodSchema>',
-          initializer: JSON.stringify(
-            methodSchemas.reduce((acc, cur) => {
-              return {
-                ...acc,
-                [cur.id]: cur,
-              }
-            }, {}),
-            null,
-            2,
-          ),
-        },
-      ],
-    })
-    //= export const methodSchemas: MethodSchema[] = [...]
-    file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: 'methodSchemas',
-          type: 'MethodSchema[]',
-          initializer: 'Object.values(methodSchemaDict)',
+          name: 'lexicons',
+          type: 'LexiconDoc[]',
+          initializer: JSON.stringify(lexicons, null, 2),
         },
       ],
     })
@@ -73,46 +47,13 @@ export const schemasTs = (project, schemas: Schema[]) =>
         {
           name: 'ids',
           initializer: JSON.stringify(
-            recordSchemas.reduce((acc, cur) => {
+            lexicons.reduce((acc, cur) => {
               return {
                 ...acc,
                 [nsidToEnum(cur.id)]: cur.id,
               }
             }, {}),
           ),
-        },
-      ],
-    })
-    //= export const recordSchemaDict: Record<string, RecordSchema> = {...}
-    file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: 'recordSchemaDict',
-          type: 'Record<string, RecordSchema>',
-          initializer: JSON.stringify(
-            recordSchemas.reduce((acc, cur) => {
-              return {
-                ...acc,
-                [cur.id]: cur,
-              }
-            }, {}),
-            null,
-            2,
-          ),
-        },
-      ],
-    })
-    //= export const recordSchemas: RecordSchema[] = [...]
-    file.addVariableStatement({
-      isExported: true,
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: 'recordSchemas',
-          type: 'RecordSchema[]',
-          initializer: 'Object.values(recordSchemaDict)',
         },
       ],
     })
@@ -139,5 +80,3 @@ function banner() {
 */
 `
 }
-
-export const emptyObjectSchema = { type: 'object' } as const

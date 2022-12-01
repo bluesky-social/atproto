@@ -6,7 +6,7 @@ import {
   Server as XrpcServer,
   Options as XrpcOptions,
 } from '@atproto/xrpc-server'
-import { methodSchemas } from './schemas'
+import { lexicons } from './lexicons'
 import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 import * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
 import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
@@ -69,7 +69,7 @@ export class Server {
   app: AppNS
 
   constructor(options?: XrpcOptions) {
-    this.xrpc = createXrpcServer(methodSchemas, options)
+    this.xrpc = createXrpcServer(lexicons, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
   }

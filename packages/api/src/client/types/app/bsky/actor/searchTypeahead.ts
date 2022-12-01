@@ -8,28 +8,15 @@ export interface QueryParams {
   limit?: number;
 }
 
-export interface CallOptions {
-  headers?: Headers;
-}
-
 export type InputSchema = undefined
 
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
-
 export interface OutputSchema {
-  users: {
-    did: string,
-    declaration: Declaration,
-    handle: string,
-    displayName?: string,
-  }[];
+  users: User[];
+  [k: string]: unknown;
 }
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
+
+export interface CallOptions {
+  headers?: Headers;
 }
 
 export interface Response {
@@ -42,4 +29,21 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
+}
+
+export interface User {
+  did: string;
+  declaration: Declaration;
+  handle: string;
+  displayName?: string;
+  [k: string]: unknown;
+}
+
+export interface Declaration {
+  cid: string;
+  actorType:
+    | 'app.bsky.system.actorUser'
+    | 'app.bsky.system.actorScene'
+    | (string & {});
+  [k: string]: unknown;
 }

@@ -5,24 +5,15 @@ import express from 'express'
 
 export interface QueryParams {}
 
+export type InputSchema = undefined
 export type HandlerInput = undefined
-
-export interface HandlerSuccess {
-  encoding: '';
-  body: OutputSchema;
-}
 
 export interface HandlerError {
   status: number;
   message?: string;
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {
-  [k: string]: unknown;
-}
-
+export type HandlerOutput = HandlerError | void
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

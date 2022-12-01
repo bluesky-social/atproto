@@ -1,70 +1,64 @@
 {
   "lexicon": 1,
   "id": "app.bsky.actor.getSuggestions",
-  "type": "query",
-  "description": "Get a list of actors suggested for following. Used in discovery UIs.",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-      "cursor": {"type": "string"}
-    }
-  },
-  "output": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["actors"],
-      "properties": {
-        "cursor": {"type": "string"},
-        "actors": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["did", "declaration", "handle"],
-            "properties": {
-              "did": {"type": "string"},
-              "declaration": {"$ref": "#/defs/declaration"},
-              "handle": {"type": "string"},
-              "displayName": {
-                "type": "string",
-                "maxLength": 64
-              },
-              "description": {"type": "string"},
-              "indexedAt": {"type": "string", "format": "date-time"},
-              "myState": {
-                "type": "object",
-                "properties": {
-                  "follow": {"type": "string"}
-                }
-              }
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a list of actors suggested for following. Used in discovery UIs.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "cursor": {"type": "string"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["actors"],
+          "properties": {
+            "cursor": {"type": "string"},
+            "actors": {
+              "type": "array",
+              "items": "#actor"
             }
           }
         }
       }
-    }
-  },
-  "defs": {
+    },
+    "actor": {
+      "type": "object",
+      "required": ["did", "declaration", "handle"],
+      "properties": {
+        "did": {"type": "string"},
+        "declaration": "#declaration",
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "description": {"type": "string"},
+        "indexedAt": {"type": "datetime"},
+        "myState": "#myState"
+      }
+    },
+    "myState": {
+      "type": "object",
+      "properties": {
+        "follow": {"type": "string"}
+      }
+    },
     "declaration": {
       "type": "object",
       "required": ["cid", "actorType"],
       "properties": {
         "cid": {"type": "string"},
         "actorType": {
-          "oneOf": [
-            {"$ref": "#/defs/actorKnown"},
-            {"$ref": "#/defs/actorUnknown"}
-          ]
+          "type": "string", 
+          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
         }
       }
-    },
-    "actorKnown": {
-      "type": "string",
-      "enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-    },
-    "actorUnknown": {
-      "type": "string",
-      "not": {"enum": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]}
     }
   }
 }

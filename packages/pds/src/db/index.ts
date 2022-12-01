@@ -2,7 +2,7 @@ import assert from 'assert'
 import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
-import { ValidationResult, ValidationResultCode } from '@atproto/lexicon'
+import { ValidationError } from '@atproto/lexicon'
 import * as Declaration from './records/declaration'
 import * as Post from './records/post'
 import * as Vote from './records/vote'
@@ -338,21 +338,19 @@ export class Database {
     return res.map((row) => row.scene)
   }
 
-  validateRecord(collection: string, obj: unknown): ValidationResult {
+  assertValidRecord(collection: string, obj: unknown): void {
     let table
     try {
       table = this.findTableForCollection(collection)
     } catch (e) {
-      const result = new ValidationResult()
-      result._t(ValidationResultCode.Incompatible, `Schema not found`)
-      return result
+      throw new ValidationError(`Schema not found`)
     }
-    return table.validateSchema(obj)
+    table.assertValidRecord(obj)
   }
 
   canIndexRecord(collection: string, obj: unknown): boolean {
     const table = this.findTableForCollection(collection)
-    return table.validateSchema(obj).valid
+    return table.matchesSchema(obj)
   }
 
   async indexRecord(uri: AtUri, cid: CID, obj: unknown, timestamp?: string) {
