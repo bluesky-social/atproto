@@ -32,39 +32,16 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string" },
-        "author": {"type": "ref", "ref": "#author"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "reason": {
           "type": "string",
-          "description": "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'."
+          "description": "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'.",
+          "knownValues": ["vote", "repost", "trend", "follow", "invite", "mention", "reply"]
         },
         "reasonSubject": {"type": "string"},
         "record": {"type": "unknown"},
         "isRead": {"type": "boolean"},
         "indexedAt": {"type": "datetime"}
-      }
-    },
-    "author": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "#declaration"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        }
-      }
-    },
-    "declaration": {
-      "type": "object",
-      "required": ["cid", "actorType"],
-      "properties": {
-        "cid": {"type": "string"},
-        "actorType": {
-          "type": "string", 
-          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-        }
       }
     }
   }

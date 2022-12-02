@@ -2,6 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
+import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {}
 
@@ -14,7 +15,7 @@ export interface InputSchema {
 export interface OutputSchema {
   handle: string;
   did: string;
-  declaration: Declaration;
+  declaration: AppBskySystemDeclRef.Main;
   [k: string]: unknown;
 }
 
@@ -41,12 +42,3 @@ export type Handler = (
   req: express.Request,
   res: express.Response
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Declaration {
-  cid: string;
-  actorType:
-    | 'app.bsky.system.actorUser'
-    | 'app.bsky.system.actorScene'
-    | (string & {});
-  [k: string]: unknown;
-}

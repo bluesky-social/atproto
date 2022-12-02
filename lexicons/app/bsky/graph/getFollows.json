@@ -20,7 +20,7 @@
           "type": "object",
           "required": ["subject", "follows"],
           "properties": {
-            "subject": {"type": "ref", "ref": "#subject"},
+            "subject": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
             "cursor": {"type": "string"},
             "follows": {
               "type": "array",
@@ -30,25 +30,12 @@
         }
       }
     },
-    "subject": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "#declaration"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        }
-      }
-    },
     "follow": {
       "type": "object",
       "required": ["did", "declaration", "handle", "indexedAt"],
       "properties": {
         "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "#declaration"},
+        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",
@@ -56,17 +43,6 @@
         },
         "createdAt": {"type": "datetime"},
         "indexedAt": {"type": "datetime"}
-      }
-    },
-    "declaration": {
-      "type": "object",
-      "required": ["cid", "actorType"],
-      "properties": {
-        "cid": {"type": "string"},
-        "actorType": {
-          "type": "string", 
-          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-        }
       }
     }
   }

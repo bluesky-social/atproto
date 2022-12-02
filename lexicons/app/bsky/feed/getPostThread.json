@@ -35,9 +35,9 @@
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},
-        "author": {"type": "ref", "ref": "#user"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "record": {"type": "unknown"},
-        "embed": {"type": "union", "refs": ["#recordEmbed", "#externalEmbed", "#unknownEmbed"]},
+        "embed": {"type": "ref", "ref": "app.bsky.feed.embed"},
         "parent": {"type": "union", "refs": ["#post", "#notFoundPost"]},
         "replyCount": {"type": "integer"},
         "replies": {
@@ -65,57 +65,6 @@
         "repost": {"type": "string"},
         "upvote": {"type": "string"},
         "downvote": {"type": "string"}
-      }
-    },
-    "user": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "#declaration"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        }
-      }
-    },
-    "recordEmbed": {
-      "type": "object",
-      "required": ["type", "author", "record"],
-      "properties": {
-        "type": {"type": "string", "const": "record"},
-        "author": {"type": "ref", "ref": "#user"},
-        "record": {"type": "unknown"}
-      }
-    },
-    "externalEmbed": {
-      "type": "object",
-      "required": ["type", "uri", "title", "description", "imageUri"],
-      "properties": {
-        "type": {"type": "string", "const": "external"},
-        "uri": {"type": "string"},
-        "title": {"type": "string"},
-        "description": {"type": "string"},
-        "imageUri": {"type": "string"}
-      }
-    },
-    "unknownEmbed": {
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {"type": "string"}
-      }
-    },
-    "declaration": {
-      "type": "object",
-      "required": ["cid", "actorType"],
-      "properties": {
-        "cid": {"type": "string"},
-        "actorType": {
-          "type": "string", 
-          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-        }
       }
     }
   }

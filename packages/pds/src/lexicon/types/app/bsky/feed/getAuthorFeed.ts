@@ -2,6 +2,8 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
+import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyFeedEmbed from './embed'
 
 export interface QueryParams {
   author: string;
@@ -40,11 +42,11 @@ export type Handler = (
 export interface FeedItem {
   uri: string;
   cid: string;
-  author: Actor;
-  trendedBy?: Actor;
-  repostedBy?: Actor;
+  author: AppBskyActorRef.WithInfo;
+  trendedBy?: AppBskyActorRef.WithInfo;
+  repostedBy?: AppBskyActorRef.WithInfo;
   record: {};
-  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
+  embed?: AppBskyFeedEmbed.Main;
   replyCount: number;
   repostCount: number;
   upvoteCount: number;
@@ -58,43 +60,5 @@ export interface MyState {
   repost?: string;
   upvote?: string;
   downvote?: string;
-  [k: string]: unknown;
-}
-
-export interface Actor {
-  did: string;
-  declaration: Declaration;
-  handle: string;
-  displayName?: string;
-  [k: string]: unknown;
-}
-
-export interface RecordEmbed {
-  type: 'record';
-  author: Actor;
-  record: {};
-  [k: string]: unknown;
-}
-
-export interface ExternalEmbed {
-  type: 'external';
-  uri: string;
-  title: string;
-  description: string;
-  imageUri: string;
-  [k: string]: unknown;
-}
-
-export interface UnknownEmbed {
-  type: string;
-  [k: string]: unknown;
-}
-
-export interface Declaration {
-  cid: string;
-  actorType:
-    | 'app.bsky.system.actorUser'
-    | 'app.bsky.system.actorScene'
-    | (string & {});
   [k: string]: unknown;
 }
