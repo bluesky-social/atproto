@@ -10,7 +10,13 @@ import {
   HandlerError,
   handlerError,
 } from './types'
-import { decodeQueryParams, validateInput, validateOutput } from './util'
+import {
+  decodeQueryParams,
+  hasBody,
+  processBodyAsBytes,
+  validateInput,
+  validateOutput,
+} from './util'
 import log from './logger'
 
 export type Options = {
@@ -108,6 +114,12 @@ export class Server {
         this.lex.assertValidXrpcParams(req.params.methodId, params)
       } catch (e) {
         throw new InvalidRequestError(String(e))
+      }
+
+      // @TODO move to middleware
+      // if the req is not complete & the body was not caught by middleware
+      if (!req.complete && hasBody(req)) {
+        req.body = await processBodyAsBytes(req)
       }
       const input = validateInput(req.params.methodId, def, req, this.lex)
 

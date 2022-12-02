@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.data.uploadFile",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Upload a new file to be added to repo in a later request.",
+      "input": {
+        "encoding": "*/*"
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["cid"],
+          "properties": {
+            "cid": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

@@ -184,6 +184,32 @@ export const lexicons: LexiconDoc[] = [
   },
   {
     lexicon: 1,
+    id: 'com.atproto.data.uploadFile',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Upload a new file to be added to repo in a later request.',
+        input: {
+          encoding: '*/*',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cid'],
+            properties: {
+              cid: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'com.atproto.handle.resolve',
     defs: {
       main: {
@@ -3465,6 +3491,7 @@ export const ids = {
   ComAtprotoAccountRequestPasswordReset:
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
+  ComAtprotoDataUploadFile: 'com.atproto.data.uploadFile',
   ComAtprotoHandleResolve: 'com.atproto.handle.resolve',
   ComAtprotoRepoBatchWrite: 'com.atproto.repo.batchWrite',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',

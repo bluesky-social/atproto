@@ -8,6 +8,8 @@ import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
+import BlobDiskStore from '../src/storage/blobs-disk'
+import { RepoStorageDisk } from '../src/storage/repo-storage'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -72,7 +74,10 @@ export const runTestServer = async (
 
   await db.migrateToLatestOrThrow()
 
-  const { app, listener } = server(db, keypair, config)
+  const blobstore = await BlobDiskStore.create('blobs')
+  const repoStorage = new RepoStorageDisk(db, blobstore)
+
+  const { app, listener } = server(db, repoStorage, keypair, config)
   const pdsPort = (listener.address() as AddressInfo).port
 
   return {

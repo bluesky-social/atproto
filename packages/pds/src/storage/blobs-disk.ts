@@ -1,0 +1,52 @@
+import fs from 'fs'
+import { CID } from 'multiformats/cid'
+import { BlobStore } from '@atproto/repo'
+import { randomStr } from '@atproto/crypto'
+import { httpLogger as log } from '../logger'
+
+export class BlobDiskStore implements BlobStore {
+  location: string
+  tmpLocation: string
+
+  constructor(location: string, tmpLocation: string) {
+    this.location = location
+    this.tmpLocation = tmpLocation
+  }
+
+  static async create(
+    location: string,
+    tmpLocation?: string,
+  ): Promise<BlobDiskStore> {
+    const tmp = tmpLocation || '/tmp/atproto/blobs'
+    await Promise.all([
+      fs.promises.mkdir(location, { recursive: true }),
+      fs.promises.mkdir(tmp, { recursive: true }),
+    ])
+    return new BlobDiskStore(location, tmp)
+  }
+
+  private genKey() {
+    return randomStr(32, 'base32')
+  }
+
+  async putTempBytes(bytes: Uint8Array): Promise<string> {
+    const key = this.genKey()
+    const path = `${this.tmpLocation}/${key}`
+    await fs.promises.writeFile(path, bytes)
+    return key
+  }
+
+  async moveToPermanent(key: string, cid: CID): Promise<void> {
+    const tmpPath = `${this.tmpLocation}/${key}`
+    const permPath = `${this.location}/${cid.toString()}`
+    const data = await fs.promises.readFile(tmpPath)
+    await fs.promises.writeFile(permPath, data)
+    try {
+      await fs.promises.rm(tmpPath)
+    } catch (err) {
+      log.error({ err, tmpPath }, 'could not delete file from temp storage')
+    }
+  }
+}
+
+export default BlobDiskStore

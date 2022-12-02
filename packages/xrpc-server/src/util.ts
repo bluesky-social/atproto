@@ -152,6 +152,7 @@ export function normalizeMime(v: string) {
 }
 
 function isValidEncoding(possible: string | string[], value: string) {
+  if (possible === '*/*') return true
   const normalized = normalizeMime(value)
   if (!normalized) return false
   if (Array.isArray(possible)) {
@@ -160,8 +161,16 @@ function isValidEncoding(possible: string | string[], value: string) {
   return possible === normalized
 }
 
-function hasBody(req: express.Request) {
+export function hasBody(req: express.Request) {
   const contentLength = req.headers['content-length']
   const transferEncoding = req.headers['transfer-encoding']
   return (contentLength && parseInt(contentLength, 10) > 0) || transferEncoding
+}
+
+export function processBodyAsBytes(req: express.Request): Promise<Uint8Array> {
+  return new Promise((resolve) => {
+    const chunks: Buffer[] = []
+    req.on('data', (chunk) => chunks.push(chunk))
+    req.on('end', () => resolve(new Uint8Array(Buffer.concat(chunks))))
+  })
 }
