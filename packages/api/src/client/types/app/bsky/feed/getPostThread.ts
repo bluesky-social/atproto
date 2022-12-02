@@ -13,7 +13,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  thread: Post | NotFoundPost | { $type: string };
+  thread: Post | NotFoundPost | { $type: string, [k: string]: unknown };
   [k: string]: unknown;
 }
 
@@ -46,9 +46,9 @@ export interface Post {
   author: AppBskyActorRef.WithInfo;
   record: {};
   embed?: AppBskyFeedEmbed.Main;
-  parent?: Post | NotFoundPost | { $type: string };
+  parent?: Post | NotFoundPost | { $type: string, [k: string]: unknown };
   replyCount: number;
-  replies?: (Post | NotFoundPost | { $type: string })[];
+  replies?: (Post | NotFoundPost | { $type: string, [k: string]: unknown })[];
   repostCount: number;
   upvoteCount: number;
   downvoteCount: number;

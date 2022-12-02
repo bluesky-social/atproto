@@ -106,7 +106,7 @@ export function genObject(
           refToType(ref, stripScheme(stripHash(lexUri)), imports),
         )
         if (propDef.type === 'union' && !propDef.closed) {
-          types.push('{$type: string}')
+          types.push('{$type: string; [k: string]: unknown}')
         }
         iface.addProperty({
           name: `${propKey}${req ? '' : '?'}`,
@@ -131,7 +131,7 @@ export function genObject(
               refToType(ref, stripScheme(stripHash(lexUri)), imports),
             )
             if (!propDef.items.closed) {
-              types.push('{$type: string}')
+              types.push('{$type: string; [k: string]: unknown}')
             }
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
@@ -202,7 +202,7 @@ export function genArray(
       refToType(ref, stripScheme(stripHash(lexUri)), imports),
     )
     if (!def.items.closed) {
-      types.push('{$type: string}')
+      types.push('{$type: string; [k: string]: unknown}')
     }
     file.addTypeAlias({
       name: toTitleCase(getHash(lexUri)),
@@ -288,7 +288,7 @@ export function genXrpcInput(
         refToType(ref, stripScheme(stripHash(lexUri)), imports),
       )
       if (def.input.schema.type === 'union' && !def.input.schema.closed) {
-        types.push('{$type: string}')
+        types.push('{$type: string; [k: string]: unknown}')
       }
       file.addTypeAlias({
         name: 'InputSchema',
@@ -341,7 +341,7 @@ export function genXrpcOutput(
         refToType(ref, stripScheme(stripHash(lexUri)), imports),
       )
       if (def.output.schema.type === 'union' && !def.output.schema.closed) {
-        types.push('{$type: string}')
+        types.push('{$type: string; [k: string]: unknown}')
       }
       file.addTypeAlias({
         name: 'OutputSchema',
