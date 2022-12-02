@@ -151,13 +151,11 @@ export function normalizeMime(v: string) {
   return shortType
 }
 
-function isValidEncoding(possible: string | string[], value: string) {
+function isValidEncoding(possibleStr: string, value: string) {
+  const possible = possibleStr.split(',').map((v) => v.trim())
   const normalized = normalizeMime(value)
   if (!normalized) return false
-  if (Array.isArray(possible)) {
-    return possible.includes(normalized)
-  }
-  return possible === normalized
+  return possible.includes(normalized)
 }
 
 function hasBody(req: express.Request) {

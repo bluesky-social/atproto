@@ -173,7 +173,7 @@ export type LexXrpcParameters = z.infer<typeof lexXrpcParameters>
 
 export const lexXrpcBody = z.object({
   description: z.string().optional(),
-  encoding: z.union([z.string(), z.string().array()]),
+  encoding: z.string(),
   schema: z.union([lexRefVariant, lexObject]).optional(),
 })
 export type LexXrpcBody = z.infer<typeof lexXrpcBody>

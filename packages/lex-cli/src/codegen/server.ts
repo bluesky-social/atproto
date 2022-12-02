@@ -295,19 +295,15 @@ function genServerXrpcCommon(
       isExported: true,
     })
 
-    if (Array.isArray(def.input.encoding)) {
-      handlerInput.addProperty({
-        name: 'encoding',
-        type: def.input.encoding.map((v) => `'${v}'`).join(' | '),
-      })
-    } else if (typeof def.input.encoding === 'string') {
-      handlerInput.addProperty({
-        name: 'encoding',
-        type: `'${def.input.encoding}'`,
-      })
-    }
+    handlerInput.addProperty({
+      name: 'encoding',
+      type: def.input.encoding
+        .split(',')
+        .map((v) => `'${v.trim()}'`)
+        .join(' | '),
+    })
     if (def.input.schema) {
-      if (Array.isArray(def.input.encoding)) {
+      if (def.input.encoding.includes(',')) {
         handlerInput.addProperty({
           name: 'body',
           type: 'InputSchema | Uint8Array',
@@ -334,19 +330,17 @@ function genServerXrpcCommon(
       name: 'HandlerSuccess',
       isExported: true,
     })
-    if (Array.isArray(def.output.encoding)) {
+    if (def.output.encoding) {
       handlerSuccess.addProperty({
         name: 'encoding',
-        type: def.output.encoding.map((v) => `'${v}'`).join(' | '),
-      })
-    } else if (typeof def.output.encoding === 'string') {
-      handlerSuccess.addProperty({
-        name: 'encoding',
-        type: `'${def.output.encoding}'`,
+        type: def.output.encoding
+          .split(',')
+          .map((v) => `'${v.trim()}'`)
+          .join(' | '),
       })
     }
     if (def.output?.schema) {
-      if (Array.isArray(def.output.encoding)) {
+      if (def.output.encoding.includes(',')) {
         handlerSuccess.addProperty({
           name: 'body',
           type: 'OutputSchema | Uint8Array',
