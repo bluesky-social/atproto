@@ -223,6 +223,58 @@ describe('Record validation', () => {
     })
   })
 
+  it('Handles unions correctly', () => {
+    lex.assertValidRecord('com.example.union', {
+      $type: 'com.example.union',
+      unionOpen: {
+        $type: 'com.example.kitchenSink#object',
+        object: { boolean: true },
+        array: ['one', 'two'],
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+      },
+      unionClosed: {
+        $type: 'com.example.kitchenSink#subobject',
+        boolean: true,
+      },
+    })
+    lex.assertValidRecord('com.example.union', {
+      $type: 'com.example.union',
+      unionOpen: {
+        $type: 'com.example.other',
+      },
+      unionClosed: {
+        $type: 'com.example.kitchenSink#subobject',
+        boolean: true,
+      },
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.union', {
+        $type: 'com.example.union',
+        unionOpen: {},
+        unionClosed: {},
+      }),
+    ).toThrow(
+      'Record/unionOpen must be an object which includes the "$type" property',
+    )
+    expect(() =>
+      lex.assertValidRecord('com.example.union', {
+        $type: 'com.example.union',
+        unionOpen: {
+          $type: 'com.example.other',
+        },
+        unionClosed: {
+          $type: 'com.example.other',
+          boolean: true,
+        },
+      }),
+    ).toThrow(
+      'Record/unionClosed $type must be one of lex:com.example.kitchenSink#object, lex:com.example.kitchenSink#subobject',
+    )
+  })
+
   it('Handles unknowns correctly', () => {
     lex.assertValidRecord('com.example.unknown', {
       $type: 'com.example.unknown',
@@ -232,7 +284,7 @@ describe('Record validation', () => {
       lex.assertValidRecord('com.example.unknown', {
         $type: 'com.example.unknown',
       }),
-    ).toThrow('')
+    ).toThrow('Record must have the property "unknown"')
   })
 
   it('Applies array length constraints', () => {

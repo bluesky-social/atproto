@@ -12,7 +12,7 @@
           "type": "array",
           "items": {
             "type": "union",
-            "refs": ["#media", "#record", "#external", "#unknown"]
+            "refs": ["#media", "#record", "#external"]
           }
         }
       }
@@ -44,13 +44,6 @@
         "title": {"type": "string"},
         "description": {"type": "string"},
         "imageUri": {"type": "string"}
-      }
-    },
-    "unknown": {
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {"type": "string"}
       }
     }
   }
