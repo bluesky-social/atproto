@@ -16,7 +16,8 @@ import * as vote from './tables/vote'
 import * as repost from './tables/repost'
 import * as trend from './tables/trend'
 import * as follow from './tables/follow'
-import * as tempRepoBlob from './tables/temp-repo-blob'
+import * as blob from './tables/blob'
+import * as repoBlob from './tables/repo-blob'
 import * as messageQueue from './message-queue/tables/messageQueue'
 import * as messageQueueCursor from './message-queue/tables/messageQueueCursor'
 import * as sceneMemberCount from './message-queue/tables/sceneMemberCount'
@@ -40,7 +41,8 @@ export type DatabaseSchema = user.PartialDB &
   repost.PartialDB &
   trend.PartialDB &
   follow.PartialDB &
-  tempRepoBlob.PartialDB &
+  blob.PartialDB &
+  repoBlob.PartialDB &
   messageQueue.PartialDB &
   messageQueueCursor.PartialDB &
   sceneMemberCount.PartialDB &

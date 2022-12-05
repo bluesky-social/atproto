@@ -1,18 +1,30 @@
 import { Kysely } from 'kysely'
 
-const tempRepoBlobsTable = 'temp_repo_blob'
+const blobTable = 'blob'
+const repoBlobTable = 'repo_blob'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
-    .createTable(tempRepoBlobsTable)
-    .addColumn('tempKey', 'varchar', (col) => col.primaryKey())
-    .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('did', 'varchar', (col) => col.notNull())
+    .createTable(blobTable)
+    .addColumn('cid', 'varchar', (col) => col.primaryKey())
     .addColumn('mimeType', 'varchar', (col) => col.notNull())
+    .addColumn('size', 'integer', (col) => col.notNull())
+    .addColumn('tempKey', 'varchar')
+    .addColumn('width', 'integer')
+    .addColumn('height', 'integer')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .execute()
+  await db.schema
+    .createTable(repoBlobTable)
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('recordUri', 'varchar', (col) => col.notNull())
+    .addColumn('commit', 'varchar', (col) => col.notNull())
+    .addColumn('did', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint(`${repoBlobTable}_pkey`, ['cid', 'recordUri'])
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable(tempRepoBlobsTable).execute()
+  await db.schema.dropTable(repoBlobTable).execute()
+  await db.schema.dropTable(blobTable).execute()
 }

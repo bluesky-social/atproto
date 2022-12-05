@@ -29,24 +29,58 @@ export class BlobDiskStore implements BlobStore {
     return randomStr(32, 'base32')
   }
 
+  getTmpPath(key: string): string {
+    return `${this.tmpLocation}/${key}`
+  }
+
+  getStoredPath(cid: CID): string {
+    return `${this.location}/${cid.toString()}`
+  }
+
+  async hasTemp(key: string): Promise<boolean> {
+    return fileExists(this.getTmpPath(key))
+  }
+
+  async hasStored(cid: CID): Promise<boolean> {
+    return fileExists(this.getStoredPath(cid))
+  }
+
   async putTempBytes(bytes: Uint8Array): Promise<string> {
     const key = this.genKey()
-    const path = `${this.tmpLocation}/${key}`
-    await fs.promises.writeFile(path, bytes)
+    await fs.promises.writeFile(this.getTmpPath(key), bytes)
     return key
   }
 
   async moveToPermanent(key: string, cid: CID): Promise<void> {
-    const tmpPath = `${this.tmpLocation}/${key}`
-    const permPath = `${this.location}/${cid.toString()}`
-    const data = await fs.promises.readFile(tmpPath)
-    await fs.promises.writeFile(permPath, data)
+    const tmpPath = this.getTmpPath(key)
+    const storedPath = this.getStoredPath(cid)
+    const alreadyHas = await this.hasStored(cid)
+    if (!alreadyHas) {
+      const data = await fs.promises.readFile(tmpPath)
+      await fs.promises.writeFile(storedPath, data)
+    }
     try {
       await fs.promises.rm(tmpPath)
     } catch (err) {
       log.error({ err, tmpPath }, 'could not delete file from temp storage')
     }
   }
+}
+
+const fileExists = (location: string): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    fs.stat(location, (err) => {
+      if (err) {
+        if (err.code === 'ENOENT') {
+          return resolve(false)
+        } else {
+          return reject(err)
+        }
+      } else {
+        resolve(true)
+      }
+    })
+  })
 }
 
 export default BlobDiskStore
