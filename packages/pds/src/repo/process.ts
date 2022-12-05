@@ -4,13 +4,8 @@ import * as auth from '@atproto/auth'
 import Database from '../db'
 import SqlBlockstore from '../sql-blockstore'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import {
-  PreparedCreate,
-  PreparedUpdate,
-  PreparedDelete,
-  PreparedWrites,
-} from './types'
-import { associateBlob, makeBlobPermanent } from './blobs'
+import { PreparedCreate, PreparedWrites } from './types'
+import { processWriteBlobs } from './blobs'
 
 export const createRepo = async (
   dbTxn: Database,
@@ -43,21 +38,12 @@ export const processWrites = async (
 ) => {
   // make structural write to repo & send to indexing
   // @TODO get commitCid first so we can do all db actions in tandem
-  const [commit, _] = await Promise.all([
+  const [commit] = await Promise.all([
     writeToRepo(dbTxn, did, authStore, writes, now),
     indexWrites(dbTxn, writes, now),
   ])
   // make blobs permanent & associate w commit + recordUri in DB
-  const blobPromises: Promise<void>[] = []
-  for (const write of writes) {
-    if (write.action === 'create' || write.action === 'update') {
-      for (const blobCid of write.blobs) {
-        blobPromises.push(makeBlobPermanent(dbTxn, blobs, blobCid))
-        blobPromises.push(associateBlob(dbTxn, blobCid, write.uri, commit, did))
-      }
-    }
-  }
-  await Promise.all(blobPromises)
+  await processWriteBlobs(dbTxn, blobs, did, commit, writes)
 }
 
 export const writeToRepo = async (

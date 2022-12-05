@@ -1160,6 +1160,13 @@ export const lexicons: LexiconDoc[] = [
               type: 'string',
               maxLength: 256,
             },
+            avatar: {
+              type: 'image',
+              accept: ['image/png', 'image/jpeg'],
+              maxWidth: 500,
+              maxHeight: 500,
+              maxSize: 100000,
+            },
           },
         },
       },

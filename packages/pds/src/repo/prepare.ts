@@ -12,26 +12,46 @@ import {
   PreparedUpdate,
   PreparedDelete,
   PreparedWrites,
+  BlobRef,
 } from './types'
+
+import { ids as lexIds } from '../lexicon/lexicons'
+
+// @TODO do this dynamically off of schemas
+export const blobsForWrite = (
+  write: RecordCreateOp | RecordUpdateOp,
+): BlobRef[] => {
+  if (write.collection === lexIds.AppBskyActorProfile) {
+    if (write.value.avatar) {
+      return [
+        {
+          cid: CID.parse(write.value.avatar.cid),
+          mimeType: write.value.avatar.mimeType,
+          constraints: {
+            type: 'image',
+            accept: ['image/png', 'image/jpeg'],
+            maxWidth: 500,
+            maxHeight: 500,
+            maxSize: 100000,
+          },
+        },
+      ]
+    }
+  }
+  return []
+}
 
 export const prepareCreate = async (
   did: string,
   write: RecordCreateOp,
-  blobs: CID[] = [],
 ): Promise<PreparedCreate> => {
-  const record = {
-    ...write.value,
-    $type: write.collection,
-  }
+  write.value.$type = write.collection
   return {
     action: 'create',
     uri: AtUri.make(did, write.collection, write.rkey),
-    cid: await cidForData(record),
-    op: {
-      ...write,
-      value: record,
-    },
-    blobs,
+    cid: await cidForData(write.value),
+    op: write,
+    blobs: blobsForWrite(write),
   }
 }
 
@@ -45,21 +65,14 @@ export const prepareCreates = async (
 export const prepareUpdate = async (
   did: string,
   write: RecordUpdateOp,
-  blobs: CID[] = [],
 ): Promise<PreparedUpdate> => {
-  const record = {
-    ...write.value,
-    $type: write.collection,
-  }
+  write.value.$type = write.collection
   return {
     action: 'update',
     uri: AtUri.make(did, write.collection, write.rkey),
-    cid: await cidForData(record),
-    op: {
-      ...write,
-      value: record,
-    },
-    blobs,
+    cid: await cidForData(write.value),
+    op: write,
+    blobs: blobsForWrite(write),
   }
 }
 

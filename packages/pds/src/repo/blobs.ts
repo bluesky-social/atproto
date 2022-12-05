@@ -4,6 +4,8 @@ import Database from '../db'
 import { cidForData } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
+import { BlobRef, PreparedWrites } from './types'
+import { Blob as BlobTable } from '../db/tables/blob'
 
 export const addUntetheredBlob = async (
   dbTxn: Database,
@@ -29,24 +31,91 @@ export const addUntetheredBlob = async (
   return cid
 }
 
-export const makeBlobPermanent = async (
+export const processWriteBlobs = async (
   dbTxn: Database,
-  blobs: BlobStore,
-  blobCid: CID,
+  blobstore: BlobStore,
+  did: string,
+  commit: CID,
+  writes: PreparedWrites,
+) => {
+  const blobPromises: Promise<void>[] = []
+  for (const write of writes) {
+    if (write.action === 'create' || write.action === 'update') {
+      for (const blob of write.blobs) {
+        blobPromises.push(verifyBlobAndMakePermanent(dbTxn, blobstore, blob))
+        blobPromises.push(associateBlob(dbTxn, blob, write.uri, commit, did))
+      }
+    }
+  }
+  await Promise.all(blobPromises)
+}
+
+export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
+  const throwInvalid = (msg: string) => {
+    throw new InvalidRequestError(msg, 'InvalidBlob')
+  }
+  if (blob.constraints.maxSize && found.size > blob.constraints.maxSize) {
+    throwInvalid(
+      `Blob to large. Expected ${blob.constraints.maxSize}. Got: ${found.size}`,
+    )
+  }
+  if (blob.mimeType !== found.mimeType) {
+    throwInvalid(
+      `Referenced Mimetype does not match stored blob. Expected: ${found.mimeType}, Got: ${blob.mimeType}`,
+    )
+  }
+  if (blob.constraints.type === 'image') {
+    if (!blob.mimeType.startsWith('image')) {
+      throwInvalid(`Expected an image, got ${blob.mimeType}`)
+    }
+    if (
+      blob.constraints.maxHeight &&
+      found.height &&
+      found.height > blob.constraints.maxHeight
+    ) {
+      throwInvalid(
+        `Referenced image height is too large. Expected: ${blob.constraints.maxHeight}. Got: ${found.height}`,
+      )
+    }
+    if (
+      blob.constraints.maxWidth &&
+      found.width &&
+      found.width > blob.constraints.maxWidth
+    ) {
+      throwInvalid(
+        `Referenced image width is too large. Expected: ${blob.constraints.maxWidth}. Got: ${found.width}`,
+      )
+    }
+  }
+}
+
+export const verifyBlobAndMakePermanent = async (
+  dbTxn: Database,
+  blobstore: BlobStore,
+  blob: BlobRef,
 ): Promise<void> => {
   const found = await dbTxn.db
     .selectFrom('blob')
     .selectAll()
-    .where('cid', '=', blobCid.toString())
+    .where('cid', '=', blob.cid.toString())
     .executeTakeFirst()
   if (!found) {
     throw new InvalidRequestError(
-      `Could not found blob: ${blobCid.toString()}`,
+      `Could not found blob: ${blob.cid.toString()}`,
       'BlobNotFound',
     )
   }
   if (found.tempKey) {
-    await blobs.moveToPermanent(found.tempKey, blobCid)
+    verifyBlob(blob, found)
+    if (blob.constraints.maxSize) {
+      if (found.size > blob.constraints.maxSize) {
+        throw new InvalidRequestError(
+          `Blob to large. Expected ${blob.constraints.maxSize}. Got: ${found.size}`,
+          'InvalidBlob',
+        )
+      }
+    }
+    await blobstore.moveToPermanent(found.tempKey, blob.cid)
     await dbTxn.db
       .updateTable('blob')
       .set({ tempKey: null })
@@ -57,7 +126,7 @@ export const makeBlobPermanent = async (
 
 export const associateBlob = async (
   dbTxn: Database,
-  blobCid: CID,
+  blob: BlobRef,
   recordUri: AtUri,
   commit: CID,
   did: string,
@@ -65,7 +134,7 @@ export const associateBlob = async (
   await dbTxn.db
     .insertInto('repo_blob')
     .values({
-      cid: blobCid.toString(),
+      cid: blob.cid.toString(),
       recordUri: recordUri.toString(),
       commit: commit.toString(),
       did,
