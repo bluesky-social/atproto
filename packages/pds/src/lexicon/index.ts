@@ -1,10 +1,11 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import {
   createServer as createXrpcServer,
   Server as XrpcServer,
   Options as XrpcOptions,
+  AuthVerifier,
 } from '@atproto/xrpc-server'
 import { lexicons } from './lexicons'
 import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
@@ -112,34 +113,52 @@ export class AccountNS {
     this._server = server
   }
 
-  create(handler: ComAtprotoAccountCreate.Handler) {
-    const schema = 'com.atproto.account.create' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  create<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAccountCreate.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.account.create' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  createInviteCode(handler: ComAtprotoAccountCreateInviteCode.Handler) {
-    const schema = 'com.atproto.account.createInviteCode' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  createInviteCode<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAccountCreateInviteCode.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.account.createInviteCode' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  delete(handler: ComAtprotoAccountDelete.Handler) {
-    const schema = 'com.atproto.account.delete' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  delete<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAccountDelete.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.account.delete' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  get(handler: ComAtprotoAccountGet.Handler) {
-    const schema = 'com.atproto.account.get' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  get<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAccountGet.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.account.get' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  requestPasswordReset(handler: ComAtprotoAccountRequestPasswordReset.Handler) {
-    const schema = 'com.atproto.account.requestPasswordReset' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  requestPasswordReset<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAccountRequestPasswordReset.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.account.requestPasswordReset' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  resetPassword(handler: ComAtprotoAccountResetPassword.Handler) {
-    const schema = 'com.atproto.account.resetPassword' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  resetPassword<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAccountResetPassword.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.account.resetPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -150,9 +169,11 @@ export class HandleNS {
     this._server = server
   }
 
-  resolve(handler: ComAtprotoHandleResolve.Handler) {
-    const schema = 'com.atproto.handle.resolve' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  resolve<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoHandleResolve.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.handle.resolve' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -163,39 +184,53 @@ export class RepoNS {
     this._server = server
   }
 
-  batchWrite(handler: ComAtprotoRepoBatchWrite.Handler) {
-    const schema = 'com.atproto.repo.batchWrite' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  batchWrite<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoBatchWrite.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.batchWrite' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  createRecord(handler: ComAtprotoRepoCreateRecord.Handler) {
-    const schema = 'com.atproto.repo.createRecord' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  createRecord<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoCreateRecord.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.createRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  deleteRecord(handler: ComAtprotoRepoDeleteRecord.Handler) {
-    const schema = 'com.atproto.repo.deleteRecord' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  deleteRecord<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoDeleteRecord.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.deleteRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  describe(handler: ComAtprotoRepoDescribe.Handler) {
-    const schema = 'com.atproto.repo.describe' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  describe<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoDescribe.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.describe' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getRecord(handler: ComAtprotoRepoGetRecord.Handler) {
-    const schema = 'com.atproto.repo.getRecord' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getRecord<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoGetRecord.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.getRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  listRecords(handler: ComAtprotoRepoListRecords.Handler) {
-    const schema = 'com.atproto.repo.listRecords' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  listRecords<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoListRecords.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.listRecords' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  putRecord(handler: ComAtprotoRepoPutRecord.Handler) {
-    const schema = 'com.atproto.repo.putRecord' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  putRecord<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoPutRecord.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.putRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -206,9 +241,14 @@ export class ServerNS {
     this._server = server
   }
 
-  getAccountsConfig(handler: ComAtprotoServerGetAccountsConfig.Handler) {
-    const schema = 'com.atproto.server.getAccountsConfig' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getAccountsConfig<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerGetAccountsConfig.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.getAccountsConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -219,24 +259,32 @@ export class SessionNS {
     this._server = server
   }
 
-  create(handler: ComAtprotoSessionCreate.Handler) {
-    const schema = 'com.atproto.session.create' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  create<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSessionCreate.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.session.create' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  delete(handler: ComAtprotoSessionDelete.Handler) {
-    const schema = 'com.atproto.session.delete' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  delete<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSessionDelete.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.session.delete' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  get(handler: ComAtprotoSessionGet.Handler) {
-    const schema = 'com.atproto.session.get' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  get<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSessionGet.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.session.get' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  refresh(handler: ComAtprotoSessionRefresh.Handler) {
-    const schema = 'com.atproto.session.refresh' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  refresh<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSessionRefresh.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.session.refresh' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -247,19 +295,25 @@ export class SyncNS {
     this._server = server
   }
 
-  getRepo(handler: ComAtprotoSyncGetRepo.Handler) {
-    const schema = 'com.atproto.sync.getRepo' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetRepo.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getRoot(handler: ComAtprotoSyncGetRoot.Handler) {
-    const schema = 'com.atproto.sync.getRoot' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getRoot<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetRoot.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getRoot' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  updateRepo(handler: ComAtprotoSyncUpdateRepo.Handler) {
-    const schema = 'com.atproto.sync.updateRepo' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  updateRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncUpdateRepo.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.updateRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -298,34 +352,46 @@ export class ActorNS {
     this._server = server
   }
 
-  createScene(handler: AppBskyActorCreateScene.Handler) {
-    const schema = 'app.bsky.actor.createScene' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  createScene<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorCreateScene.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.createScene' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getProfile(handler: AppBskyActorGetProfile.Handler) {
-    const schema = 'app.bsky.actor.getProfile' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getProfile<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorGetProfile.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.getProfile' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getSuggestions(handler: AppBskyActorGetSuggestions.Handler) {
-    const schema = 'app.bsky.actor.getSuggestions' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getSuggestions<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorGetSuggestions.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.getSuggestions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  search(handler: AppBskyActorSearch.Handler) {
-    const schema = 'app.bsky.actor.search' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  search<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorSearch.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.search' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  searchTypeahead(handler: AppBskyActorSearchTypeahead.Handler) {
-    const schema = 'app.bsky.actor.searchTypeahead' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  searchTypeahead<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorSearchTypeahead.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.searchTypeahead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  updateProfile(handler: AppBskyActorUpdateProfile.Handler) {
-    const schema = 'app.bsky.actor.updateProfile' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  updateProfile<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorUpdateProfile.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.updateProfile' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -336,34 +402,46 @@ export class FeedNS {
     this._server = server
   }
 
-  getAuthorFeed(handler: AppBskyFeedGetAuthorFeed.Handler) {
-    const schema = 'app.bsky.feed.getAuthorFeed' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getAuthorFeed<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetAuthorFeed.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getAuthorFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getPostThread(handler: AppBskyFeedGetPostThread.Handler) {
-    const schema = 'app.bsky.feed.getPostThread' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getPostThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetPostThread.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getRepostedBy(handler: AppBskyFeedGetRepostedBy.Handler) {
-    const schema = 'app.bsky.feed.getRepostedBy' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getRepostedBy<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetRepostedBy.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getRepostedBy' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getTimeline(handler: AppBskyFeedGetTimeline.Handler) {
-    const schema = 'app.bsky.feed.getTimeline' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getTimeline<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetTimeline.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getTimeline' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getVotes(handler: AppBskyFeedGetVotes.Handler) {
-    const schema = 'app.bsky.feed.getVotes' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getVotes<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetVotes.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getVotes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  setVote(handler: AppBskyFeedSetVote.Handler) {
-    const schema = 'app.bsky.feed.setVote' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  setVote<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedSetVote.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.setVote' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -374,29 +452,39 @@ export class GraphNS {
     this._server = server
   }
 
-  getAssertions(handler: AppBskyGraphGetAssertions.Handler) {
-    const schema = 'app.bsky.graph.getAssertions' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getAssertions<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetAssertions.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getAssertions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getFollowers(handler: AppBskyGraphGetFollowers.Handler) {
-    const schema = 'app.bsky.graph.getFollowers' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getFollowers<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetFollowers.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getFollowers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getFollows(handler: AppBskyGraphGetFollows.Handler) {
-    const schema = 'app.bsky.graph.getFollows' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getFollows<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetFollows.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getFollows' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getMembers(handler: AppBskyGraphGetMembers.Handler) {
-    const schema = 'app.bsky.graph.getMembers' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getMembers<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetMembers.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  getMemberships(handler: AppBskyGraphGetMemberships.Handler) {
-    const schema = 'app.bsky.graph.getMemberships' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getMemberships<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetMemberships.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getMemberships' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -407,19 +495,25 @@ export class NotificationNS {
     this._server = server
   }
 
-  getCount(handler: AppBskyNotificationGetCount.Handler) {
-    const schema = 'app.bsky.notification.getCount' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  getCount<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyNotificationGetCount.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.notification.getCount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  list(handler: AppBskyNotificationList.Handler) {
-    const schema = 'app.bsky.notification.list' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  list<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyNotificationList.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.notification.list' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
-  updateSeen(handler: AppBskyNotificationUpdateSeen.Handler) {
-    const schema = 'app.bsky.notification.updateSeen' // @ts-ignore
-    return this._server.xrpc.method(schema, handler)
+  updateSeen<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyNotificationUpdateSeen.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.notification.updateSeen' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -430,3 +524,14 @@ export class SystemNS {
     this._server = server
   }
 }
+
+type ConfigOf<Auth, Handler> =
+  | Handler
+  | {
+      auth?: Auth
+      handler: Handler
+    }
+type ExtractAuth<AV extends AuthVerifier> = Extract<
+  Awaited<ReturnType<AV>>,
+  { credentials: unknown }
+>
