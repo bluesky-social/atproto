@@ -245,6 +245,7 @@ export const lexicons: LexiconDoc[] = [
                     'lex:com.atproto.repo.batchWrite#update',
                     'lex:com.atproto.repo.batchWrite#delete',
                   ],
+                  closed: true,
                 },
               },
             },
@@ -1349,7 +1350,6 @@ export const lexicons: LexiconDoc[] = [
                 'lex:app.bsky.feed.embed#media',
                 'lex:app.bsky.feed.embed#record',
                 'lex:app.bsky.feed.embed#external',
-                'lex:app.bsky.feed.embed#unknown',
               ],
             },
           },
@@ -1405,15 +1405,6 @@ export const lexicons: LexiconDoc[] = [
             type: 'string',
           },
           imageUri: {
-            type: 'string',
-          },
-        },
-      },
-      unknown: {
-        type: 'object',
-        required: ['type'],
-        properties: {
-          type: {
             type: 'string',
           },
         },
@@ -1659,6 +1650,7 @@ export const lexicons: LexiconDoc[] = [
           },
           notFound: {
             type: 'boolean',
+            const: true,
           },
         },
       },

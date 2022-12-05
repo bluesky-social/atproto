@@ -53,6 +53,7 @@ const getAncestors = async (
     .executeTakeFirst()
   if (!parentRes) {
     return {
+      $type: 'app.bsky.feed.getPostThread#notFoundPost',
       uri: parentUri,
       notFound: true,
     }
@@ -162,6 +163,7 @@ const rowToPost = (
   parent?: GetPostThread.Post,
 ): GetPostThread.Post => {
   return {
+    $type: 'app.bsky.feed.getPostThread#post',
     uri: row.uri,
     cid: row.cid,
     author: {

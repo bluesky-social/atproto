@@ -5,7 +5,12 @@ import * as AppBskyActorRef from '../actor/ref'
 
 /** A list embeds in a post or document. */
 export interface Main {
-  items?: (Media | Record | External | Unknown)[];
+  items?: (
+    | Media
+    | Record
+    | External
+    | { $type: string, [k: string]: unknown }
+  )[];
   [k: string]: unknown;
 }
 
@@ -29,10 +34,5 @@ export interface External {
   title: string;
   description: string;
   imageUri: string;
-  [k: string]: unknown;
-}
-
-export interface Unknown {
-  type: string;
   [k: string]: unknown;
 }

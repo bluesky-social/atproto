@@ -82,6 +82,7 @@ export const lexRefUnion = z.object({
   type: z.literal('union'),
   description: z.string().optional(),
   refs: z.string().array(),
+  closed: z.boolean().optional(),
 })
 export type LexRefUnion = z.infer<typeof lexRefUnion>
 
@@ -173,7 +174,7 @@ export type LexXrpcParameters = z.infer<typeof lexXrpcParameters>
 
 export const lexXrpcBody = z.object({
   description: z.string().optional(),
-  encoding: z.union([z.string(), z.string().array()]),
+  encoding: z.string(),
   schema: z.union([lexRefVariant, lexObject]).optional(),
 })
 export type LexXrpcBody = z.infer<typeof lexXrpcBody>
@@ -285,6 +286,14 @@ export function hasProp<K extends PropertyKey>(
   prop: K,
 ): data is Record<K, unknown> {
   return prop in data
+}
+
+export const discriminatedObject = z.object({ $type: z.string() })
+export type DiscriminatedObject = z.infer<typeof discriminatedObject>
+export function isDiscriminatedObject(
+  value: unknown,
+): value is DiscriminatedObject {
+  return discriminatedObject.safeParse(value).success
 }
 
 export class LexiconDocMalformedError extends Error {

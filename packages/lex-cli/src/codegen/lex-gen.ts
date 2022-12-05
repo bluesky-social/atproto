@@ -102,13 +102,15 @@ export function genObject(
       if (propDef.type === 'ref' || propDef.type === 'union') {
         //= propName: External|External
         const refs = propDef.type === 'union' ? propDef.refs : [propDef.ref]
+        const types = refs.map((ref) =>
+          refToType(ref, stripScheme(stripHash(lexUri)), imports),
+        )
+        if (propDef.type === 'union' && !propDef.closed) {
+          types.push('{$type: string; [k: string]: unknown}')
+        }
         iface.addProperty({
           name: `${propKey}${req ? '' : '?'}`,
-          type: refs
-            .map((ref) =>
-              refToType(ref, stripScheme(stripHash(lexUri)), imports),
-            )
-            .join('|'),
+          type: types.join('|'),
         })
         continue
       } else {
@@ -128,6 +130,9 @@ export function genObject(
             const types = propDef.items.refs.map((ref) =>
               refToType(ref, stripScheme(stripHash(lexUri)), imports),
             )
+            if (!propDef.items.closed) {
+              types.push('{$type: string; [k: string]: unknown}')
+            }
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
               type: `(${types.join('|')})[]`,
@@ -196,6 +201,9 @@ export function genArray(
     const types = def.items.refs.map((ref) =>
       refToType(ref, stripScheme(stripHash(lexUri)), imports),
     )
+    if (!def.items.closed) {
+      types.push('{$type: string; [k: string]: unknown}')
+    }
     file.addTypeAlias({
       name: toTitleCase(getHash(lexUri)),
       type: `(${types.join('|')})[]`,
@@ -276,11 +284,15 @@ export function genXrpcInput(
         def.input.schema.type === 'union'
           ? def.input.schema.refs
           : [def.input.schema.ref]
+      const types = refs.map((ref) =>
+        refToType(ref, stripScheme(stripHash(lexUri)), imports),
+      )
+      if (def.input.schema.type === 'union' && !def.input.schema.closed) {
+        types.push('{$type: string; [k: string]: unknown}')
+      }
       file.addTypeAlias({
         name: 'InputSchema',
-        type: refs
-          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri)), imports))
-          .join('|'),
+        type: types.join('|'),
         isExported: true,
       })
     } else {
@@ -325,11 +337,15 @@ export function genXrpcOutput(
         def.output.schema.type === 'union'
           ? def.output.schema.refs
           : [def.output.schema.ref]
+      const types = refs.map((ref) =>
+        refToType(ref, stripScheme(stripHash(lexUri)), imports),
+      )
+      if (def.output.schema.type === 'union' && !def.output.schema.closed) {
+        types.push('{$type: string; [k: string]: unknown}')
+      }
       file.addTypeAlias({
         name: 'OutputSchema',
-        type: refs
-          .map((ref) => refToType(ref, stripScheme(stripHash(lexUri)), imports))
-          .join('|'),
+        type: types.join('|'),
         isExported: true,
       })
     } else {

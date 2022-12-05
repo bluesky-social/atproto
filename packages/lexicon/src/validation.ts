@@ -1,6 +1,6 @@
 import { Lexicons } from './lexicons'
 import { LexRecord, LexXrpcProcedure, LexXrpcQuery } from './types'
-import { assertValidOneOf, toConcreteTypes } from './util'
+import { assertValidOneOf } from './util'
 
 import * as ComplexValidators from './validators/complex'
 import * as XrpcValidators from './validators/xrpc'
@@ -32,11 +32,7 @@ export function assertValidXrpcInput(
 ) {
   if (def.input?.schema) {
     // loop: all input schema definitions
-    assertValidOneOf(
-      'Input',
-      toConcreteTypes(lexicons, def.input.schema),
-      (def2) => ComplexValidators.object(lexicons, 'Input', def2, value),
-    )
+    assertValidOneOf(lexicons, 'Input', def.input.schema, value, true)
   }
 }
 
@@ -47,10 +43,6 @@ export function assertValidXrpcOutput(
 ) {
   if (def.output?.schema) {
     // loop: all output schema definitions
-    assertValidOneOf(
-      'Output',
-      toConcreteTypes(lexicons, def.output.schema),
-      (def2) => ComplexValidators.object(lexicons, 'Output', def2, value),
-    )
+    assertValidOneOf(lexicons, 'Output', def.output.schema, value, true)
   }
 }

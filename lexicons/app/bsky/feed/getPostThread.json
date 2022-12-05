@@ -56,7 +56,7 @@
       "required": ["uri", "notFound"],
       "properties": {
         "uri": {"type": "string"},
-        "notFound": {"type": "boolean"}
+        "notFound": {"type": "boolean", "const": true}
       }
     },
     "myState": {
