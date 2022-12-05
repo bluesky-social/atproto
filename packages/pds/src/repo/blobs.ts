@@ -64,6 +64,14 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
       `Referenced Mimetype does not match stored blob. Expected: ${found.mimeType}, Got: ${blob.mimeType}`,
     )
   }
+  if (
+    blob.constraints.accept &&
+    !acceptedMime(blob.mimeType, blob.constraints.accept)
+  ) {
+    throwInvalid(
+      `Referenced Mimetype is not accepted. Expected: ${blob.constraints.accept}, Got: ${blob.mimeType}`,
+    )
+  }
   if (blob.constraints.type === 'image') {
     if (!blob.mimeType.startsWith('image')) {
       throwInvalid(`Expected an image, got ${blob.mimeType}`)
@@ -87,6 +95,11 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
       )
     }
   }
+}
+
+const acceptedMime = (mime: string, accepted: string[]): boolean => {
+  if (accepted.indexOf('*/*') > -1) return true
+  return accepted.indexOf(mime) > -1
 }
 
 export const verifyBlobAndMakePermanent = async (

@@ -7,7 +7,7 @@ import * as locals from '../../../../locals'
 import * as lexicons from '../../../../lexicon/lexicons'
 import { TID } from '@atproto/common'
 import { UserAlreadyExistsError } from '../../../../db'
-import * as repoUtil from '../../../../util/repo'
+import * as repo from '../../../../repo'
 
 export default function (server: Server) {
   server.app.bsky.actor.createScene(async (_params, input, req, res) => {
@@ -98,7 +98,7 @@ export default function (server: Server) {
       const userAuth = locals.getAuthstore(res, requester)
       const sceneAuth = locals.getAuthstore(res, did)
 
-      const sceneWrites = await repoUtil.prepareCreates(did, [
+      const sceneWrites = await repo.prepareCreates(did, [
         {
           action: 'create',
           collection: lexicons.ids.AppBskySystemDeclaration,
@@ -134,7 +134,7 @@ export default function (server: Server) {
       ])
       const [sceneDeclaration, creatorAssert, memberAssert] = sceneWrites
 
-      const userWrites = await repoUtil.prepareCreates(requester, [
+      const userWrites = await repo.prepareCreates(requester, [
         {
           action: 'create',
           collection: lexicons.ids.AppBskyGraphConfirmation,
@@ -170,9 +170,9 @@ export default function (server: Server) {
       ])
 
       await Promise.all([
-        repoUtil.createRepo(dbTxn, did, sceneAuth, sceneWrites, now),
-        repoUtil.writeToRepo(dbTxn, requester, userAuth, userWrites, now),
-        repoUtil.indexWrites(dbTxn, [...sceneWrites, ...userWrites], now),
+        repo.createRepo(dbTxn, did, sceneAuth, sceneWrites, now),
+        repo.writeToRepo(dbTxn, requester, userAuth, userWrites, now),
+        repo.indexWrites(dbTxn, [...sceneWrites, ...userWrites], now),
       ])
 
       return {

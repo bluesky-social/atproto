@@ -9,7 +9,6 @@ import server, { ServerConfig, Database, App } from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
 import BlobDiskStore from '../src/storage/blobs-disk'
-import { RepoStorageDisk } from '../src/storage/repo-storage'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -61,6 +60,8 @@ export const runTestServer = async (
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
     publicUrl: 'https://pds.public.url',
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
+    blobstoreLocation: '/tmp/atproto_test/blobs',
+    blobstoreTmp: '/tmp/atproto_test/tmp',
     ...params,
   })
 
@@ -74,10 +75,12 @@ export const runTestServer = async (
 
   await db.migrateToLatestOrThrow()
 
-  const blobstore = await BlobDiskStore.create('blobs')
-  const repoStorage = new RepoStorageDisk(db, blobstore)
+  const blobstore = await BlobDiskStore.create(
+    config.blobstoreLocation,
+    config.blobstoreTmp,
+  )
 
-  const { app, listener } = server(db, repoStorage, keypair, config)
+  const { app, listener } = server(db, blobstore, keypair, config)
   const pdsPort = (listener.address() as AddressInfo).port
 
   return {

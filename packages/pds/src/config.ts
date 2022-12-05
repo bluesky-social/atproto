@@ -10,6 +10,9 @@ export interface ServerConfigValues {
   dbPostgresUrl?: string
   dbPostgresSchema?: string
 
+  blobstoreLocation: string
+  blobstoreTmp?: string
+
   jwtSecret: string
 
   didPlcUrl: string
@@ -76,6 +79,9 @@ export class ServerConfig {
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
 
+    const blobstoreLocation = process.env.BLOBSTORE_LOC || 'blobs'
+    const blobstoreTmp = process.env.BLOBSTORE_TMP
+
     const availableUserDomains = process.env.AVAILABLE_USER_DOMAINS
       ? process.env.AVAILABLE_USER_DOMAINS.split(',')
       : []
@@ -100,6 +106,8 @@ export class ServerConfig {
       port,
       dbPostgresUrl,
       dbPostgresSchema,
+      blobstoreLocation,
+      blobstoreTmp,
       jwtSecret,
       recoveryKey,
       didPlcUrl,
@@ -160,6 +168,14 @@ export class ServerConfig {
 
   get dbPostgresSchema() {
     return this.cfg.dbPostgresSchema
+  }
+
+  get blobstoreLocation() {
+    return this.cfg.blobstoreLocation
+  }
+
+  get blobstoreTmp() {
+    return this.cfg.blobstoreTmp
   }
 
   get jwtSecret() {

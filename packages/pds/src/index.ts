@@ -18,7 +18,7 @@ import { Locals } from './locals'
 import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
 import SqlMessageQueue from './db/message-queue'
-import { RepoStorage } from '@atproto/repo'
+import { BlobStore } from '@atproto/repo'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -28,7 +28,7 @@ export type App = express.Application
 
 const runServer = (
   db: Database,
-  repoStorage: RepoStorage,
+  blobstore: BlobStore,
   keypair: auth.DidableKey,
   cfg: ServerConfigValues,
 ) => {
@@ -59,7 +59,7 @@ const runServer = (
   const locals: Locals = {
     logger: httpLogger,
     db,
-    repoStorage,
+    blobstore,
     keypair,
     auth,
     config,

@@ -3,6 +3,7 @@ import * as crypto from '@atproto/crypto'
 import Database from './db'
 import server from './index'
 import { ServerConfig } from './config'
+import BlobDiskStore from './storage/blobs-disk'
 
 const run = async () => {
   const env = process.env.ENV
@@ -30,7 +31,12 @@ const run = async () => {
 
   await db.migrateToLatestOrThrow()
 
-  const { listener } = server(db, keypair, cfg)
+  const blobstore = await BlobDiskStore.create(
+    cfg.blobstoreLocation,
+    cfg.blobstoreTmp,
+  )
+
+  const { listener } = server(db, blobstore, keypair, cfg)
   listener.on('listening', () => {
     console.log(`🌞 ATP Data server is running at ${cfg.origin}`)
   })

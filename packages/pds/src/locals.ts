@@ -7,12 +7,12 @@ import { ServerConfig } from './config'
 import ServerAuth from './auth'
 import { ServerMailer } from './mailer'
 import { App } from '.'
-import { RepoStorage } from '@atproto/repo'
+import { BlobStore } from '@atproto/repo'
 
 export type Locals = {
   logger: pino.Logger
   db: Database
-  repoStorage: RepoStorage
+  blobstore: BlobStore
   keypair: DidableKey
   auth: ServerAuth
   config: ServerConfig
@@ -37,12 +37,12 @@ export const db = (res: HasLocals): Database => {
   return db as Database
 }
 
-export const repoStorage = (res: HasLocals): RepoStorage => {
-  const repoStorage = res.locals.repoStorage
-  if (!repoStorage) {
-    throw new Error('No RepoStorage object attached to server')
+export const blobstore = (res: HasLocals): BlobStore => {
+  const blobstore = res.locals.blobStore
+  if (!blobstore) {
+    throw new Error('No BlobStore object attached to server')
   }
-  return repoStorage as RepoStorage
+  return blobstore as BlobStore
 }
 
 export const keypair = (res: HasLocals): DidableKey => {
@@ -81,7 +81,7 @@ export const getLocals = (res: HasLocals): Locals => {
   return {
     logger: logger(res),
     db: db(res),
-    repoStorage: repoStorage(res),
+    blobstore: blobstore(res),
     keypair: keypair(res),
     auth: auth(res),
     config: config(res),
