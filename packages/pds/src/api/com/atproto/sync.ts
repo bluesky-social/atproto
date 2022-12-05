@@ -6,7 +6,7 @@ import { Repo } from '@atproto/repo'
 import SqlBlockstore from '../../../sql-blockstore'
 
 export default function (server: Server) {
-  server.com.atproto.sync.getRoot(async (params, _in, _req, res) => {
+  server.com.atproto.sync.getRoot(async ({ params, res }) => {
     const { did } = params
     const db = locals.db(res)
     const root = await db.getRepoRoot(did)
@@ -19,7 +19,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.sync.getRepo(async (params, _in, _req, res) => {
+  server.com.atproto.sync.getRepo(async ({ params, res }) => {
     const { did, from = null } = params
     const { db } = locals.get(res)
     const repoRoot = await db.getRepoRoot(did)
@@ -36,7 +36,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.sync.updateRepo(async (_params, _input, _req, _res) => {
+  server.com.atproto.sync.updateRepo(async () => {
     throw new InvalidRequestError('Not implemented')
   })
 }

@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import ServerAuth from '../../../../auth'
 import Database from '../../../../db'
 import { Server } from '../../../../lexicon'
 import * as Method from '../../../../lexicon/types/app/bsky/actor/search'
@@ -12,47 +13,49 @@ import {
 } from '../util/search'
 
 export default function (server: Server) {
-  server.app.bsky.actor.search(async (params, _input, req, res) => {
-    let { term, limit } = params
-    const { before } = params
-    const { db, auth } = locals.get(res)
-    auth.getUserDidOrThrow(req)
+  server.app.bsky.actor.search({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, res }) => {
+      let { term, limit } = params
+      const { before } = params
+      const { db } = locals.get(res)
 
-    term = cleanTerm(term || '')
-    limit = Math.min(limit ?? 25, 100)
+      term = cleanTerm(term || '')
+      limit = Math.min(limit ?? 25, 100)
 
-    if (!term) {
+      if (!term) {
+        return {
+          encoding: 'application/json',
+          body: {
+            users: [],
+          },
+        }
+      }
+
+      const results =
+        db.dialect === 'pg'
+          ? await getResultsPg(db, { term, limit, before })
+          : await getResultsSqlite(db, { term, limit, before })
+
+      const users = results.map((result) => ({
+        did: result.did,
+        declaration: getDeclarationSimple(result),
+        handle: result.handle,
+        displayName: result.displayName ?? undefined,
+        description: result.description ?? undefined,
+        indexedAt: result.indexedAt ?? undefined,
+      }))
+
+      const keyset = new SearchKeyset(sql``, sql``)
+
       return {
         encoding: 'application/json',
         body: {
-          users: [],
+          users,
+          cursor: keyset.packFromResult(results),
         },
       }
-    }
-
-    const results =
-      db.dialect === 'pg'
-        ? await getResultsPg(db, { term, limit, before })
-        : await getResultsSqlite(db, { term, limit, before })
-
-    const users = results.map((result) => ({
-      did: result.did,
-      declaration: getDeclarationSimple(result),
-      handle: result.handle,
-      displayName: result.displayName ?? undefined,
-      description: result.description ?? undefined,
-      indexedAt: result.indexedAt ?? undefined,
-    }))
-
-    const keyset = new SearchKeyset(sql``, sql``)
-
-    return {
-      encoding: 'application/json',
-      body: {
-        users,
-        cursor: keyset.packFromResult(results),
-      },
-    }
+    },
   })
 }
 

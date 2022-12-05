@@ -1,13 +1,13 @@
 import { Server } from '../../../../lexicon'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as GetRepostedBy from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclarationSimple } from '../util'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.feed.getRepostedBy(
-    async (params: GetRepostedBy.QueryParams, _input, _req, res) => {
+  server.app.bsky.feed.getRepostedBy({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, res }) => {
       const { uri, limit, before, cid } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
@@ -62,5 +62,5 @@ export default function (server: Server) {
         },
       }
     },
-  )
+  })
 }

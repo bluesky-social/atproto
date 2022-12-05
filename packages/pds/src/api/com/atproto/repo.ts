@@ -8,9 +8,10 @@ import * as locals from '../../../locals'
 import * as dbSchemas from '../../../db/schemas'
 import { TID } from '@atproto/common'
 import * as repoUtil from '../../../util/repo'
+import ServerAuth from '../../../auth'
 
 export default function (server: Server) {
-  server.com.atproto.repo.describe(async (params, _in, _req, res) => {
+  server.com.atproto.repo.describe(async ({ params, res }) => {
     const { user } = params
 
     const { db, auth } = locals.get(res)
@@ -43,7 +44,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repo.listRecords(async (params, _in, _req, res) => {
+  server.com.atproto.repo.listRecords(async ({ params, res }) => {
     const { user, collection, limit, before, after, reverse } = params
 
     const db = locals.db(res)
@@ -74,7 +75,7 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repo.getRecord(async (params, _in, _req, res) => {
+  server.com.atproto.repo.getRecord(async ({ params, res }) => {
     const { user, collection, rkey, cid } = params
     const db = locals.db(res)
 
@@ -95,146 +96,157 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repo.batchWrite(async (params, input, req, res) => {
-    const tx = input.body
-    const { did, validate } = tx
-    const { auth, db } = locals.get(res)
-    const requester = auth.getUserDid(req)
-    const authorized = await db.isUserControlledRepo(did, requester)
-    if (!authorized) {
-      throw new AuthRequiredError()
-    }
+  server.com.atproto.repo.batchWrite({
+    auth: ServerAuth.verifier,
+    handler: async ({ input, auth, res }) => {
+      const tx = input.body
+      const { did, validate } = tx
+      const { db } = locals.get(res)
+      const requester = auth.credentials.did
+      const authorized = await db.isUserControlledRepo(did, requester)
+      if (!authorized) {
+        throw new AuthRequiredError()
+      }
 
-    const authStore = locals.getAuthstore(res, did)
-    const hasUpdate = tx.writes.some((write) => write.action === 'update')
-    if (hasUpdate) {
-      throw new InvalidRequestError(`Updates are not yet supported.`)
-    }
-    if (validate) {
-      for (const write of tx.writes) {
-        if (write.action === 'create' || write.action === 'update') {
-          try {
-            db.assertValidRecord(write.collection, write.value)
-          } catch (e) {
-            throw new InvalidRequestError(
-              `Invalid ${write.collection} record: ${
-                e instanceof Error ? e.message : String(e)
-              }`,
-            )
+      const authStore = locals.getAuthstore(res, did)
+      const hasUpdate = tx.writes.some((write) => write.action === 'update')
+      if (hasUpdate) {
+        throw new InvalidRequestError(`Updates are not yet supported.`)
+      }
+      if (validate) {
+        for (const write of tx.writes) {
+          if (write.action === 'create' || write.action === 'update') {
+            try {
+              db.assertValidRecord(write.collection, write.value)
+            } catch (e) {
+              throw new InvalidRequestError(
+                `Invalid ${write.collection} record: ${
+                  e instanceof Error ? e.message : String(e)
+                }`,
+              )
+            }
           }
         }
       }
-    }
 
-    const writes = await repoUtil.prepareWrites(
-      did,
-      tx.writes.map((write) => {
-        if (write.action === 'create') {
-          return {
-            ...write,
-            rkey: write.rkey || TID.nextStr(),
-          } as RecordCreateOp
-        } else if (write.action === 'delete') {
-          return write as DeleteOp
-        } else {
-          throw new InvalidRequestError(`Action not supported: ${write.action}`)
-        }
-      }),
-    )
+      const writes = await repoUtil.prepareWrites(
+        did,
+        tx.writes.map((write) => {
+          if (write.action === 'create') {
+            return {
+              ...write,
+              rkey: write.rkey || TID.nextStr(),
+            } as RecordCreateOp
+          } else if (write.action === 'delete') {
+            return write as DeleteOp
+          } else {
+            throw new InvalidRequestError(
+              `Action not supported: ${write.action}`,
+            )
+          }
+        }),
+      )
 
-    await db.transaction(async (dbTxn) => {
-      const now = new Date().toISOString()
-      await Promise.all([
-        repoUtil.writeToRepo(dbTxn, did, authStore, writes, now),
-        repoUtil.indexWrites(dbTxn, writes, now),
-      ])
-    })
+      await db.transaction(async (dbTxn) => {
+        const now = new Date().toISOString()
+        await Promise.all([
+          repoUtil.writeToRepo(dbTxn, did, authStore, writes, now),
+          repoUtil.indexWrites(dbTxn, writes, now),
+        ])
+      })
+    },
   })
 
-  server.com.atproto.repo.createRecord(async (params, input, req, res) => {
-    const { did, collection, record } = input.body
-    const validate =
-      typeof input.body.validate === 'boolean' ? input.body.validate : true
-    const { auth, db } = locals.get(res)
-    const requester = auth.getUserDid(req)
-    const authorized = await db.isUserControlledRepo(did, requester)
-    if (!authorized) {
-      throw new AuthRequiredError()
-    }
-
-    if (validate) {
-      try {
-        db.assertValidRecord(collection, record)
-      } catch (e) {
-        throw new InvalidRequestError(
-          `Invalid ${collection} record: ${
-            e instanceof Error ? e.message : String(e)
-          }`,
-        )
+  server.com.atproto.repo.createRecord({
+    auth: ServerAuth.verifier,
+    handler: async ({ input, auth, res }) => {
+      const { did, collection, record } = input.body
+      const validate =
+        typeof input.body.validate === 'boolean' ? input.body.validate : true
+      const { db } = locals.get(res)
+      const requester = auth.credentials.did
+      const authorized = await db.isUserControlledRepo(did, requester)
+      if (!authorized) {
+        throw new AuthRequiredError()
       }
-    }
-    const authStore = locals.getAuthstore(res, did)
 
-    // determine key type. if undefined, repo assigns a TID
-    const keyType = (
-      dbSchemas.records.getDefOrThrow(collection, ['record']) as LexRecord
-    ).key
-    let rkey: string
-    if (keyType && keyType.startsWith('literal')) {
-      const split = keyType.split(':')
-      rkey = split[1]
-    } else {
-      rkey = TID.nextStr()
-    }
+      if (validate) {
+        try {
+          db.assertValidRecord(collection, record)
+        } catch (e) {
+          throw new InvalidRequestError(
+            `Invalid ${collection} record: ${
+              e instanceof Error ? e.message : String(e)
+            }`,
+          )
+        }
+      }
+      const authStore = locals.getAuthstore(res, did)
 
-    const now = new Date().toISOString()
-    const write = await repoUtil.prepareCreate(did, {
-      action: 'create',
-      collection,
-      rkey,
-      value: record,
-    })
+      // determine key type. if undefined, repo assigns a TID
+      const keyType = (
+        dbSchemas.records.getDefOrThrow(collection, ['record']) as LexRecord
+      ).key
+      let rkey: string
+      if (keyType && keyType.startsWith('literal')) {
+        const split = keyType.split(':')
+        rkey = split[1]
+      } else {
+        rkey = TID.nextStr()
+      }
 
-    await db.transaction(async (dbTxn) => {
-      await Promise.all([
-        repoUtil.writeToRepo(dbTxn, did, authStore, [write], now),
-        repoUtil.indexWrites(dbTxn, [write], now),
-      ])
-    })
+      const now = new Date().toISOString()
+      const write = await repoUtil.prepareCreate(did, {
+        action: 'create',
+        collection,
+        rkey,
+        value: record,
+      })
 
-    return {
-      encoding: 'application/json',
-      body: { uri: write.uri.toString(), cid: write.cid.toString() },
-    }
+      await db.transaction(async (dbTxn) => {
+        await Promise.all([
+          repoUtil.writeToRepo(dbTxn, did, authStore, [write], now),
+          repoUtil.indexWrites(dbTxn, [write], now),
+        ])
+      })
+
+      return {
+        encoding: 'application/json',
+        body: { uri: write.uri.toString(), cid: write.cid.toString() },
+      }
+    },
   })
 
-  server.com.atproto.repo.putRecord(async (_params, _input, _req, _res) => {
+  server.com.atproto.repo.putRecord(async () => {
     throw new InvalidRequestError(`Updates are not yet supported.`)
   })
 
-  server.com.atproto.repo.deleteRecord(async (_params, input, req, res) => {
-    const { did, collection, rkey } = input.body
-    const { auth, db } = locals.get(res)
-    const requester = auth.getUserDid(req)
-    const authorized = await db.isUserControlledRepo(did, requester)
-    if (!authorized) {
-      throw new AuthRequiredError()
-    }
+  server.com.atproto.repo.deleteRecord({
+    auth: ServerAuth.verifier,
+    handler: async ({ input, auth, res }) => {
+      const { did, collection, rkey } = input.body
+      const { db } = locals.get(res)
+      const requester = auth.credentials.did
+      const authorized = await db.isUserControlledRepo(did, requester)
+      if (!authorized) {
+        throw new AuthRequiredError()
+      }
 
-    const authStore = locals.getAuthstore(res, did)
-    const now = new Date().toISOString()
+      const authStore = locals.getAuthstore(res, did)
+      const now = new Date().toISOString()
 
-    const write = await repoUtil.prepareWrites(did, {
-      action: 'delete',
-      collection,
-      rkey,
-    })
+      const write = await repoUtil.prepareWrites(did, {
+        action: 'delete',
+        collection,
+        rkey,
+      })
 
-    await db.transaction(async (dbTxn) => {
-      await Promise.all([
-        repoUtil.writeToRepo(dbTxn, did, authStore, write, now),
-        repoUtil.indexWrites(dbTxn, write, now),
-      ])
-    })
+      await db.transaction(async (dbTxn) => {
+        await Promise.all([
+          repoUtil.writeToRepo(dbTxn, did, authStore, write, now),
+          repoUtil.indexWrites(dbTxn, write, now),
+        ])
+      })
+    },
   })
 }

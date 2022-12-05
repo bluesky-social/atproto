@@ -12,7 +12,7 @@ import * as repoUtil from '../../../util/repo'
 import { cidForData } from '@atproto/common'
 
 export default function (server: Server) {
-  server.com.atproto.server.getAccountsConfig((_params, _input, _req, res) => {
+  server.com.atproto.server.getAccountsConfig(({ res }) => {
     const cfg = locals.config(res)
 
     const availableUserDomains = cfg.availableUserDomains
@@ -28,7 +28,7 @@ export default function (server: Server) {
     throw new InvalidRequestError('Not implemented')
   })
 
-  server.com.atproto.account.create(async (_params, input, _req, res) => {
+  server.com.atproto.account.create(async ({ input, res }) => {
     const { email, password, inviteCode, recoveryKey } = input.body
     const { db, auth, config, keypair, logger } = locals.get(res)
 

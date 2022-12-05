@@ -1,16 +1,14 @@
-import { ForbiddenError } from '@atproto/xrpc-server'
 import * as crypto from '@atproto/crypto'
 import * as uint8arrays from 'uint8arrays'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
+import ServerAuth from '../../../auth'
 
 export default function (server: Server) {
-  server.com.atproto.account.createInviteCode(
-    async (_params, input, req, res) => {
-      const { auth, db, config, logger } = locals.get(res)
-      if (!auth.verifyAdmin(req)) {
-        throw new ForbiddenError()
-      }
+  server.com.atproto.account.createInviteCode({
+    auth: ServerAuth.adminVerifier,
+    handler: async ({ input, res }) => {
+      const { db, config, logger } = locals.get(res)
       const { useCount } = input.body
 
       // generate a 5 char b32 invite code - preceeded by the hostname
@@ -39,5 +37,5 @@ export default function (server: Server) {
         body: { code },
       }
     },
-  )
+  })
 }

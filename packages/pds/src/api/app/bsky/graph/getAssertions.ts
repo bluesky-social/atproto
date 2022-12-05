@@ -1,13 +1,14 @@
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as GetAssertions from '../../../../lexicon/types/app/bsky/graph/getAssertions'
 import { getActorInfo } from '../util'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.graph.getAssertions(
-    async (params: GetAssertions.QueryParams, _input, _req, res) => {
+  server.app.bsky.graph.getAssertions({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, res }) => {
       const { author, subject, assertion, confirmed, limit, before } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
@@ -149,5 +150,5 @@ export default function (server: Server) {
         },
       }
     },
-  )
+  })
 }

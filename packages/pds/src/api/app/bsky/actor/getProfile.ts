@@ -1,20 +1,17 @@
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
-import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
-import * as GetProfile from '../../../../lexicon/types/app/bsky/actor/getProfile'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll, actorWhereClause } from '../../../../db/util'
 import * as locals from '../../../../locals'
 import { getDeclarationSimple } from '../util'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.actor.getProfile(
-    async (params: GetProfile.QueryParams, _input, req, res) => {
+  server.app.bsky.actor.getProfile({
+    auth: ServerAuth.verifier,
+    handler: async ({ auth, params, res }) => {
       const { actor } = params
-      const { auth, db } = locals.get(res)
-
-      const requester = auth.getUserDid(req)
-      if (!requester) {
-        throw new AuthRequiredError()
-      }
+      const { db } = locals.get(res)
+      const requester = auth.credentials.did
 
       const { ref } = db.db.dynamic
 
@@ -95,5 +92,5 @@ export default function (server: Server) {
         },
       }
     },
-  )
+  })
 }
