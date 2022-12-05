@@ -22,9 +22,15 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint(`${repoBlobTable}_pkey`, ['cid', 'recordUri'])
     .execute()
+
+  await db.schema
+    .alterTable('profile')
+    .addColumn('avatarCid', 'varchar')
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
+  await db.schema.alterTable('profile').dropColumn('avatarCid').execute()
   await db.schema.dropTable(repoBlobTable).execute()
   await db.schema.dropTable(blobTable).execute()
 }

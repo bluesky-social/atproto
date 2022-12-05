@@ -43,12 +43,14 @@ export default function (server: Server) {
             ...current,
             displayName: input.body.displayName || current.displayName,
             description: input.body.description || current.description,
+            avatar: input.body.avatar || current.avatar,
           }
         } else {
           updated = {
             $type: profileNsid,
             displayName: input.body.displayName,
             description: input.body.description,
+            avatar: input.body.avatar,
           }
         }
         updated = common.noUndefinedVals(updated)
@@ -92,6 +94,7 @@ export default function (server: Server) {
               cid: profileCid.toString(),
               displayName: updated.displayName,
               description: updated.description,
+              avatarCid: updated.avatar?.cid,
               indexedAt: now,
             })
             .where('uri', '=', uri.toString())

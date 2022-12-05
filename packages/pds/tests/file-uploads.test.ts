@@ -1,7 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import * as Post from '../src/lexicon/types/app/bsky/feed/post'
-import { AtUri } from '@atproto/uri'
-import { CloseFn, paginateAll, runTestServer } from './_util'
+import { CloseFn, runTestServer } from './_util'
 import { randomBytes } from '@atproto/crypto'
 
 const alice = {
@@ -51,10 +49,25 @@ describe('file uploads', () => {
     bob.did = res2.data.did
   })
 
+  let cid: string
+
   it('uploads files', async () => {
     const bytes = randomBytes(1000)
     const res = await aliceClient.com.atproto.data.uploadFile(bytes, {
       encoding: 'image/png',
     } as any)
+    cid = res.data.cid
+  })
+
+  it('can reference the file', async () => {
+    await aliceClient.app.bsky.actor.updateProfile({
+      displayName: 'Alice',
+      avatar: { cid, mimeType: 'image/png' },
+    })
+
+    const profile = await aliceClient.app.bsky.actor.getProfile({
+      actor: 'alice.test',
+    })
+    expect(profile.data.avatar).toEqual(cid)
   })
 })

@@ -38,7 +38,7 @@ export const db = (res: HasLocals): Database => {
 }
 
 export const blobstore = (res: HasLocals): BlobStore => {
-  const blobstore = res.locals.blobStore
+  const blobstore = res.locals.blobstore
   if (!blobstore) {
     throw new Error('No BlobStore object attached to server')
   }

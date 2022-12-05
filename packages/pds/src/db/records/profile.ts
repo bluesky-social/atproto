@@ -25,6 +25,7 @@ const insertFn = async (
       creator: uri.host,
       displayName: obj.displayName,
       description: obj.description,
+      avatarCid: obj.avatar?.cid,
       indexedAt: new Date().toISOString(),
     })
     .onConflict((oc) => oc.doNothing())

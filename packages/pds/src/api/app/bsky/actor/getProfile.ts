@@ -32,6 +32,7 @@ export default function (server: Server) {
           'profile.uri as profileUri',
           'profile.displayName as displayName',
           'profile.description as description',
+          'profile.avatarCid as avatarCid',
           db.db
             .selectFrom('follow')
             .whereRef('creator', '=', ref('did_handle.did'))
@@ -84,6 +85,7 @@ export default function (server: Server) {
           creator: queryRes.owner || queryRes.did,
           displayName: queryRes.displayName || undefined,
           description: queryRes.description || undefined,
+          avatar: queryRes.avatarCid || undefined,
           followsCount: queryRes.followsCount,
           followersCount: queryRes.followersCount,
           membersCount: queryRes.membersCount,
