@@ -127,8 +127,8 @@ describe('Auth', () => {
 })
 
 function createBasicAuth(allowed: { username: string; password: string }) {
-  return function (req: express.Request) {
-    const header = req.headers.authorization ?? ''
+  return function (ctx: { req: express.Request }) {
+    const header = ctx.req.headers.authorization ?? ''
     if (!header.startsWith('Basic ')) {
       throw new AuthRequiredError()
     }

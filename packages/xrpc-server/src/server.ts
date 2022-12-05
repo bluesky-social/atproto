@@ -219,9 +219,9 @@ type RequestLocals = {
 }
 
 function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
-  return async function (req, _res, next) {
+  return async function (req, res, next) {
     try {
-      const result = await verifier(req)
+      const result = await verifier({ req, res })
       if (isHandlerError(result)) {
         throw XRPCError.fromError(result)
       }

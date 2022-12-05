@@ -43,9 +43,10 @@ export type XRPCHandler = (ctx: {
 
 export type AuthOutput = HandlerAuth | HandlerError
 
-export type AuthVerifier = (
-  req: express.Request,
-) => Promise<AuthOutput> | AuthOutput
+export type AuthVerifier = (ctx: {
+  req: express.Request
+  res: express.Response
+}) => Promise<AuthOutput> | AuthOutput
 
 export type XRPCHandlerConfig = {
   auth?: AuthVerifier
