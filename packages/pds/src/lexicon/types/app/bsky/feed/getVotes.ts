@@ -2,6 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
+import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
   uri: string;
@@ -45,23 +46,6 @@ export interface Vote {
   direction: 'up' | 'down';
   indexedAt: string;
   createdAt: string;
-  actor: Actor;
-  [k: string]: unknown;
-}
-
-export interface Actor {
-  did: string;
-  declaration: Declaration;
-  handle: string;
-  displayName?: string;
-  [k: string]: unknown;
-}
-
-export interface Declaration {
-  cid: string;
-  actorType:
-    | 'app.bsky.system.actorUser'
-    | 'app.bsky.system.actorScene'
-    | (string & {});
+  actor: AppBskyActorRef.WithInfo;
   [k: string]: unknown;
 }

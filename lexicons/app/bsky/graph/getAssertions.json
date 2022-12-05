@@ -39,8 +39,8 @@
         "cid": {"type": "string"},
         "assertion": {"type": "string"},
         "confirmation": {"type": "ref", "ref": "#confirmation"},
-        "author": {"type": "ref", "ref": "#actor"},
-        "subject": {"type": "ref", "ref": "#actor"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
+        "subject": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "indexedAt": {"type": "datetime"},
         "createdAt": {"type": "datetime"}
       }
@@ -53,30 +53,6 @@
         "cid": {"type": "string"},
         "indexedAt": {"type": "datetime"},
         "createdAt": {"type": "datetime"}
-      }
-    },
-    "actor": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "#declaration"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        }
-      }
-    },
-    "declaration": {
-      "type": "object",
-      "required": ["cid", "actorType"],
-      "properties": {
-        "cid": {"type": "string"},
-        "actorType": {
-          "type": "string", 
-          "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
-        }
       }
     }
   }

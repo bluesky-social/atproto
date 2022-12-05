@@ -23,16 +23,8 @@
       "type": "object",
       "required": ["root", "parent"],
       "properties": {
-        "root": {"type": "ref", "ref": "#postRef"},
-        "parent": {"type": "ref", "ref": "#postRef"}
-      }
-    },
-    "postRef": {
-      "type": "object",
-      "required": ["uri", "cid"],
-      "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"}
+        "root": {"type": "ref", "ref": "com.atproto.repo.strongRef"},
+        "parent": {"type": "ref", "ref": "com.atproto.repo.strongRef"}
       }
     },
     "entity": {

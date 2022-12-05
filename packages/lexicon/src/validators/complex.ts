@@ -3,11 +3,10 @@ import {
   LexArray,
   LexObject,
   LexUserType,
-  LexRefVariant,
   ValidationResult,
   ValidationError,
 } from '../types'
-import { validateOneOf, toConcreteTypes } from '../util'
+import { validateOneOf } from '../util'
 
 import * as Primitives from './primitives'
 import * as Blob from './blob'
@@ -92,13 +91,11 @@ export function array(
   }
 
   // items
-  const itemDefs = toConcreteTypes(lexicons, def.items)
+  const itemsDef = def.items
   for (let i = 0; i < (value as Array<unknown>).length; i++) {
-    const item = value[i]
+    const itemValue = value[i]
     const itemPath = `${path}/${i}`
-    const res = validateOneOf(itemPath, itemDefs, (itemDef) =>
-      validate(lexicons, itemPath, itemDef, item),
-    )
+    const res = validateOneOf(lexicons, itemPath, itemsDef, itemValue)
     if (!res.success) {
       return res
     }
@@ -138,14 +135,13 @@ export function object(
   // properties
   if (typeof def.properties === 'object') {
     for (const key in def.properties) {
-      if (typeof value[key] === 'undefined') {
+      const propValue = value[key]
+      if (typeof propValue === 'undefined') {
         continue // skip- if required, will have already failed
       }
-      const propDefs = toConcreteTypes(lexicons, def.properties[key])
+      const propDef = def.properties[key]
       const propPath = `${path}/${key}`
-      const res = validateOneOf(propPath, propDefs, (propDef) =>
-        validate(lexicons, propPath, propDef, value[key]),
-      )
+      const res = validateOneOf(lexicons, propPath, propDef, propValue)
       if (!res.success) {
         return res
       }

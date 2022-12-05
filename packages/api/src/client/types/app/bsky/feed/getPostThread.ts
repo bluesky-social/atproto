@@ -2,6 +2,8 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyFeedEmbed from './embed'
 
 export interface QueryParams {
   uri: string;
@@ -11,7 +13,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  thread: Post | NotFoundPost;
+  thread: Post | NotFoundPost | { $type: string, [k: string]: unknown };
   [k: string]: unknown;
 }
 
@@ -41,12 +43,12 @@ export function toKnownErr(e: any) {
 export interface Post {
   uri: string;
   cid: string;
-  author: User;
+  author: AppBskyActorRef.WithInfo;
   record: {};
-  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
-  parent?: Post | NotFoundPost;
+  embed?: AppBskyFeedEmbed.Main;
+  parent?: Post | NotFoundPost | { $type: string, [k: string]: unknown };
   replyCount: number;
-  replies?: (Post | NotFoundPost)[];
+  replies?: (Post | NotFoundPost | { $type: string, [k: string]: unknown })[];
   repostCount: number;
   upvoteCount: number;
   downvoteCount: number;
@@ -57,7 +59,7 @@ export interface Post {
 
 export interface NotFoundPost {
   uri: string;
-  notFound: boolean;
+  notFound: true;
   [k: string]: unknown;
 }
 
@@ -65,43 +67,5 @@ export interface MyState {
   repost?: string;
   upvote?: string;
   downvote?: string;
-  [k: string]: unknown;
-}
-
-export interface User {
-  did: string;
-  declaration: Declaration;
-  handle: string;
-  displayName?: string;
-  [k: string]: unknown;
-}
-
-export interface RecordEmbed {
-  type: 'record';
-  author: User;
-  record: {};
-  [k: string]: unknown;
-}
-
-export interface ExternalEmbed {
-  type: 'external';
-  uri: string;
-  title: string;
-  description: string;
-  imageUri: string;
-  [k: string]: unknown;
-}
-
-export interface UnknownEmbed {
-  type: string;
-  [k: string]: unknown;
-}
-
-export interface Declaration {
-  cid: string;
-  actorType:
-    | 'app.bsky.system.actorUser'
-    | 'app.bsky.system.actorScene'
-    | (string & {});
   [k: string]: unknown;
 }

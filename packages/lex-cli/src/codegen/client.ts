@@ -529,17 +529,13 @@ function genClientXrpcCommon(
     opts.addProperty({ name: 'qp?', type: 'QueryParams' })
   }
   if (def.type === 'procedure' && def.input) {
-    if (Array.isArray(def.input.encoding)) {
-      opts.addProperty({
-        name: 'encoding',
-        type: def.input.encoding.map((v) => `'${v}'`).join(' | '),
-      })
-    } else if (typeof def.input.encoding === 'string') {
-      opts.addProperty({
-        name: 'encoding',
-        type: `'${def.input.encoding}'`,
-      })
-    }
+    opts.addProperty({
+      name: 'encoding',
+      type: def.input.encoding
+        .split(',')
+        .map((v) => `'${v.trim()}'`)
+        .join(' | '),
+    })
   }
 
   // export interface Response {...}
@@ -550,7 +546,7 @@ function genClientXrpcCommon(
   res.addProperty({ name: 'success', type: 'boolean' })
   res.addProperty({ name: 'headers', type: 'Headers' })
   if (def.output?.schema) {
-    if (Array.isArray(def.output.encoding)) {
+    if (def.output.encoding.includes(',')) {
       res.addProperty({ name: 'data', type: 'OutputSchema | Uint8Array' })
     } else {
       res.addProperty({ name: 'data', type: 'OutputSchema' })

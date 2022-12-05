@@ -2,6 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
   limit?: number;
@@ -35,29 +36,20 @@ export function toKnownErr(e: any) {
 export interface Notification {
   uri: string;
   cid: string;
-  author: Author;
+  author: AppBskyActorRef.WithInfo;
   /** Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'. */
-  reason: string;
+  reason:
+    | 'vote'
+    | 'repost'
+    | 'trend'
+    | 'follow'
+    | 'invite'
+    | 'mention'
+    | 'reply'
+    | (string & {});
   reasonSubject?: string;
   record: {};
   isRead: boolean;
   indexedAt: string;
-  [k: string]: unknown;
-}
-
-export interface Author {
-  did: string;
-  declaration: Declaration;
-  handle: string;
-  displayName?: string;
-  [k: string]: unknown;
-}
-
-export interface Declaration {
-  cid: string;
-  actorType:
-    | 'app.bsky.system.actorUser'
-    | 'app.bsky.system.actorScene'
-    | (string & {});
   [k: string]: unknown;
 }

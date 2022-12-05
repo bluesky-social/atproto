@@ -2,6 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
+import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
   uri: string;
@@ -42,19 +43,10 @@ export type Handler = (
 
 export interface RepostedBy {
   did: string;
-  declaration: Declaration;
+  declaration: AppBskySystemDeclRef.Main;
   handle: string;
   displayName?: string;
   createdAt?: string;
   indexedAt: string;
-  [k: string]: unknown;
-}
-
-export interface Declaration {
-  cid: string;
-  actorType:
-    | 'app.bsky.system.actorUser'
-    | 'app.bsky.system.actorScene'
-    | (string & {});
   [k: string]: unknown;
 }
