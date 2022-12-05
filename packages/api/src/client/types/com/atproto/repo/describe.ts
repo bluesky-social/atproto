@@ -1,32 +1,32 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
-  user: string;
+  user: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  handle: string;
-  did: string;
-  didDoc: {};
-  collections: string[];
-  handleIsCorrect: boolean;
-  [k: string]: unknown;
+  handle: string
+  did: string
+  didDoc: {}
+  collections: string[]
+  handleIsCorrect: boolean
+  [k: string]: unknown
 }
 
 export interface CallOptions {
-  headers?: Headers;
+  headers?: Headers
 }
 
 export interface Response {
-  success: boolean;
-  headers: Headers;
-  data: OutputSchema;
+  success: boolean
+  headers: Headers
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

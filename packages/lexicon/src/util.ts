@@ -1,9 +1,11 @@
 import { Lexicons } from './lexicons'
+import * as ComplexValidators from './validators/complex'
 import {
   LexUserType,
   LexRefVariant,
   ValidationError,
   ValidationResult,
+  isDiscriminatedObject,
 } from './types'
 
 export function toLexUri(str: string, baseUri?: string): string {
@@ -19,20 +21,55 @@ export function toLexUri(str: string, baseUri?: string): string {
   return `lex:${str}`
 }
 
-export function validateOneOf<T>(
+export function validateOneOf(
+  lexicons: Lexicons,
   path: string,
-  items: Array<T>,
-  mapFn: (T) => ValidationResult,
+  def: LexRefVariant | LexUserType,
+  value: unknown,
+  mustBeObj = false, // this is the only type constraint we need currently (used by xrpc body schema validators)
 ): ValidationResult {
   let error
-  for (const item of items) {
-    const result = mapFn(item)
+
+  let concreteDefs
+  if (def.type === 'union') {
+    if (!isDiscriminatedObject(value)) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must be an object which includes the "$type" property`,
+        ),
+      }
+    }
+    if (!def.refs.includes(toLexUri(value.$type))) {
+      if (def.closed) {
+        return {
+          success: false,
+          error: new ValidationError(
+            `${path} $type must be one of ${def.refs.join(', ')}`,
+          ),
+        }
+      }
+      return { success: true }
+    } else {
+      concreteDefs = toConcreteTypes(lexicons, {
+        type: 'ref',
+        ref: value.$type,
+      })
+    }
+  } else {
+    concreteDefs = toConcreteTypes(lexicons, def)
+  }
+
+  for (const concreteDef of concreteDefs) {
+    const result = mustBeObj
+      ? ComplexValidators.object(lexicons, path, concreteDef, value)
+      : ComplexValidators.validate(lexicons, path, concreteDef, value)
     if (result.success) {
       return result
     }
     error ??= result.error
   }
-  if (items.length > 1) {
+  if (concreteDefs.length > 1) {
     return {
       success: false,
       error: new ValidationError(
@@ -43,12 +80,14 @@ export function validateOneOf<T>(
   return { success: false, error }
 }
 
-export function assertValidOneOf<T>(
+export function assertValidOneOf(
+  lexicons: Lexicons,
   path: string,
-  items: Array<T>,
-  mapFn: (T) => ValidationResult,
+  def: LexRefVariant | LexUserType,
+  value: unknown,
+  mustBeObj = false,
 ) {
-  const res = validateOneOf(path, items, mapFn)
+  const res = validateOneOf(lexicons, path, def, value, mustBeObj)
   if (!res.success) {
     throw res.error
   }

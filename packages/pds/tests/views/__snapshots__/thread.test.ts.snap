@@ -2,6 +2,7 @@
 
 exports[`pds thread views fetches ancestors 1`] = `
 Object {
+  "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
@@ -18,6 +19,7 @@ Object {
     "repost": "record(4)",
   },
   "parent": Object {
+    "$type": "app.bsky.feed.getPostThread#post",
     "author": Object {
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
@@ -32,6 +34,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {},
     "parent": Object {
+      "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
@@ -102,6 +105,7 @@ Object {
 
 exports[`pds thread views fetches deep post thread 1`] = `
 Object {
+  "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
@@ -124,6 +128,7 @@ Object {
   },
   "replies": Array [
     Object {
+      "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
@@ -137,6 +142,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "myState": Object {},
       "parent": Object {
+        "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
@@ -184,6 +190,7 @@ Object {
       "uri": "record(2)",
     },
     Object {
+      "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
@@ -198,6 +205,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "myState": Object {},
       "parent": Object {
+        "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
@@ -240,6 +248,7 @@ Object {
       },
       "replies": Array [
         Object {
+          "$type": "app.bsky.feed.getPostThread#post",
           "author": Object {
             "declaration": Object {
               "actorType": "app.bsky.system.actorUser",
@@ -256,6 +265,7 @@ Object {
             "repost": "record(5)",
           },
           "parent": Object {
+            "$type": "app.bsky.feed.getPostThread#post",
             "author": Object {
               "declaration": Object {
                 "actorType": "app.bsky.system.actorUser",
@@ -270,6 +280,7 @@ Object {
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "myState": Object {},
             "parent": Object {
+              "$type": "app.bsky.feed.getPostThread#post",
               "author": Object {
                 "declaration": Object {
                   "actorType": "app.bsky.system.actorUser",
@@ -352,6 +363,7 @@ Object {
 
 exports[`pds thread views fetches shallow post thread 1`] = `
 Object {
+  "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
@@ -374,6 +386,7 @@ Object {
   },
   "replies": Array [
     Object {
+      "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
@@ -387,6 +400,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "myState": Object {},
       "parent": Object {
+        "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
@@ -433,6 +447,7 @@ Object {
       "uri": "record(2)",
     },
     Object {
+      "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
@@ -447,6 +462,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "myState": Object {},
       "parent": Object {
+        "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
@@ -502,6 +518,7 @@ Object {
 
 exports[`pds thread views handles deleted posts correctly 1`] = `
 Object {
+  "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
@@ -522,6 +539,7 @@ Object {
   },
   "replies": Array [
     Object {
+      "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
@@ -536,6 +554,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "myState": Object {},
       "parent": Object {
+        "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
@@ -576,6 +595,7 @@ Object {
       },
       "replies": Array [
         Object {
+          "$type": "app.bsky.feed.getPostThread#post",
           "author": Object {
             "declaration": Object {
               "actorType": "app.bsky.system.actorUser",
@@ -590,6 +610,7 @@ Object {
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "myState": Object {},
           "parent": Object {
+            "$type": "app.bsky.feed.getPostThread#post",
             "author": Object {
               "declaration": Object {
                 "actorType": "app.bsky.system.actorUser",
@@ -604,6 +625,7 @@ Object {
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "myState": Object {},
             "parent": Object {
+              "$type": "app.bsky.feed.getPostThread#post",
               "author": Object {
                 "declaration": Object {
                   "actorType": "app.bsky.system.actorUser",
@@ -684,6 +706,7 @@ Object {
 
 exports[`pds thread views handles deleted posts correctly 2`] = `
 Object {
+  "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
@@ -712,6 +735,7 @@ Object {
 
 exports[`pds thread views handles deleted posts correctly 3`] = `
 Object {
+  "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
@@ -726,6 +750,7 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "myState": Object {},
   "parent": Object {
+    "$type": "app.bsky.feed.getPostThread#notFoundPost",
     "notFound": true,
     "uri": "record(2)",
   },
