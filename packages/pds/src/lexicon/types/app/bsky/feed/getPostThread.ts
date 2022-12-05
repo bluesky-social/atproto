@@ -2,10 +2,19 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
+import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyFeedEmbed from './embed'
 
 export interface QueryParams {
   uri: string;
   depth?: number;
+}
+
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  thread: Post | NotFoundPost;
+  [k: string]: unknown;
 }
 
 export type HandlerInput = undefined
@@ -22,21 +31,19 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
+export type Handler = (
+  params: QueryParams,
+  input: HandlerInput,
+  req: express.Request,
+  res: express.Response
+) => Promise<HandlerOutput> | HandlerOutput
 
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
-
-export interface OutputSchema {
-  thread: Post | NotFoundPost;
-}
 export interface Post {
   uri: string;
   cid: string;
-  author: User;
+  author: AppBskyActorRef.WithInfo;
   record: {};
-  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
+  embed?: AppBskyFeedEmbed.Main;
   parent?: Post | NotFoundPost;
   replyCount: number;
   replies?: (Post | NotFoundPost)[];
@@ -44,45 +51,19 @@ export interface Post {
   upvoteCount: number;
   downvoteCount: number;
   indexedAt: string;
-  myState?: {
-    repost?: string,
-    upvote?: string,
-    downvote?: string,
-  };
+  myState?: MyState;
+  [k: string]: unknown;
 }
-export interface User {
-  did: string;
-  declaration: Declaration;
-  handle: string;
-  displayName?: string;
-}
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
-}
-export interface RecordEmbed {
-  type: 'record';
-  author: User;
-  record: {};
-}
-export interface ExternalEmbed {
-  type: 'external';
-  uri: string;
-  title: string;
-  description: string;
-  imageUri: string;
-}
-export interface UnknownEmbed {
-  type: string;
-}
+
 export interface NotFoundPost {
   uri: string;
   notFound: boolean;
+  [k: string]: unknown;
 }
 
-export type Handler = (
-  params: QueryParams,
-  input: HandlerInput,
-  req: express.Request,
-  res: express.Response
-) => Promise<HandlerOutput> | HandlerOutput
+export interface MyState {
+  repost?: string;
+  upvote?: string;
+  downvote?: string;
+  [k: string]: unknown;
+}

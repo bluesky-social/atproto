@@ -3,7 +3,8 @@ import { isHttpError } from 'http-errors'
 import zod from 'zod'
 import { ResponseType, ResponseTypeStrings } from '@atproto/xrpc'
 
-export type Params = typeof express.request['query']
+export type UndecodedParams = typeof express.request['query']
+export type Params = Record<string, string | number | boolean | undefined>
 
 export const handlerInput = zod.object({
   encoding: zod.string(),

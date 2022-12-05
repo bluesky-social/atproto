@@ -2,6 +2,7 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
   uri: string;
@@ -11,37 +12,18 @@ export interface QueryParams {
   before?: string;
 }
 
-export interface CallOptions {
-  headers?: Headers;
-}
-
 export type InputSchema = undefined
-
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
 
 export interface OutputSchema {
   uri: string;
   cid?: string;
   cursor?: string;
-  votes: {
-    direction: 'up' | 'down',
-    indexedAt: string,
-    createdAt: string,
-    actor: Actor,
-  }[];
+  votes: Vote[];
+  [k: string]: unknown;
 }
-export interface Actor {
-  did: string;
-  declaration: Declaration;
-  handle: string;
-  displayName?: string;
-}
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
+
+export interface CallOptions {
+  headers?: Headers;
 }
 
 export interface Response {
@@ -54,4 +36,12 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
+}
+
+export interface Vote {
+  direction: 'up' | 'down';
+  indexedAt: string;
+  createdAt: string;
+  actor: AppBskyActorRef.WithInfo;
+  [k: string]: unknown;
 }

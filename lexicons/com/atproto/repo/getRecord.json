@@ -1,27 +1,31 @@
 {
   "lexicon": 1,
   "id": "com.atproto.repo.getRecord",
-  "type": "query",
-  "description": "Fetch a record.",
-  "parameters": {
-    "type": "object",
-    "required": ["user", "collection", "rkey"],
-    "properties": {
-      "user": {"type": "string", "description": "The handle or DID of the repo."},
-      "collection": {"type": "string", "description": "The NSID of the collection."},
-      "rkey": {"type": "string", "description": "The key of the record."},
-      "cid": {"type": "string", "description": "The CID of the version of the record. If not specified, then return the most recent version."}
-    }
-  },
-  "output": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["uri", "value"],
-      "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
-        "value": {"type": "object"}
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Fetch a record.",
+      "parameters": {
+        "type": "params",
+        "required": ["user", "collection", "rkey"],
+        "properties": {
+          "user": {"type": "string", "description": "The handle or DID of the repo."},
+          "collection": {"type": "string", "description": "The NSID of the collection."},
+          "rkey": {"type": "string", "description": "The key of the record."},
+          "cid": {"type": "string", "description": "The CID of the version of the record. If not specified, then return the most recent version."}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "value"],
+          "properties": {
+            "uri": {"type": "string"},
+            "cid": {"type": "string"},
+            "value": {"type": "unknown"}
+          }
+        }
       }
     }
   }

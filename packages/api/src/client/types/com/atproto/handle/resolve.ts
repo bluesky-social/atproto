@@ -4,20 +4,19 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  /**
-   * The handle to resolve. If not supplied, will resolve the host's own handle.
-   */
+  /** The handle to resolve. If not supplied, will resolve the host's own handle. */
   handle?: string;
-}
-
-export interface CallOptions {
-  headers?: Headers;
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
   did: string;
+  [k: string]: unknown;
+}
+
+export interface CallOptions {
+  headers?: Headers;
 }
 
 export interface Response {

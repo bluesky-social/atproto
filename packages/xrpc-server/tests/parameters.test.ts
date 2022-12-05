@@ -3,30 +3,34 @@ import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import xrpc from '@atproto/xrpc'
 
-const SCHEMAS = [
+const LEXICONS = [
   {
     lexicon: 1,
     id: 'io.example.paramTest',
-    type: 'query',
-    parameters: {
-      type: 'object',
-      required: ['str', 'int', 'num', 'bool'],
-      properties: {
-        str: { type: 'string', minLength: 2, maxLength: 10 },
-        int: { type: 'integer', minimum: 2, maximum: 10 },
-        num: { type: 'number', minimum: 2, maximum: 10 },
-        bool: { type: 'boolean' },
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['str', 'int', 'num', 'bool'],
+          properties: {
+            str: { type: 'string', minLength: 2, maxLength: 10 },
+            int: { type: 'integer', minimum: 2, maximum: 10 },
+            num: { type: 'number', minimum: 2, maximum: 10 },
+            bool: { type: 'boolean' },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+        },
       },
-    },
-    output: {
-      encoding: 'application/json',
     },
   },
 ]
 
 describe('Parameters', () => {
   let s: http.Server
-  const server = xrpcServer.createServer(SCHEMAS)
+  const server = xrpcServer.createServer(LEXICONS)
   server.method(
     'io.example.paramTest',
     (ctx: { params: xrpcServer.Params }) => ({
@@ -35,7 +39,7 @@ describe('Parameters', () => {
     }),
   )
   const client = xrpc.service(`http://localhost:8889`)
-  xrpc.addSchemas(SCHEMAS)
+  xrpc.addLexicons(LEXICONS)
   beforeAll(async () => {
     s = await createServer(8889, server)
   })
@@ -75,7 +79,7 @@ describe('Parameters', () => {
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow('parameters/str must NOT have fewer than 2 characters')
+    ).rejects.toThrow('str must not be shorter than 2 characters')
     await expect(
       client.call('io.example.paramTest', {
         str: 'loooooooooooooong',
@@ -83,14 +87,14 @@ describe('Parameters', () => {
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow('parameters/str must NOT have more than 10 characters')
+    ).rejects.toThrow('str must not be longer than 10 characters')
     await expect(
       client.call('io.example.paramTest', {
         int: 5,
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow(`parameters must have required property 'str'`)
+    ).rejects.toThrow(`Params must have the property "str"`)
 
     await expect(
       client.call('io.example.paramTest', {
@@ -99,7 +103,7 @@ describe('Parameters', () => {
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow('parameters/int must be >= 2')
+    ).rejects.toThrow('int can not be less than 2')
     await expect(
       client.call('io.example.paramTest', {
         str: 'valid',
@@ -107,14 +111,14 @@ describe('Parameters', () => {
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow('parameters/int must be <= 10')
+    ).rejects.toThrow('int can not be greater than 10')
     await expect(
       client.call('io.example.paramTest', {
         str: 'valid',
         num: 5.5,
         bool: true,
       }),
-    ).rejects.toThrow(`parameters must have required property 'int'`)
+    ).rejects.toThrow(`Params must have the property "int"`)
 
     await expect(
       client.call('io.example.paramTest', {
@@ -123,7 +127,7 @@ describe('Parameters', () => {
         num: -5.5,
         bool: true,
       }),
-    ).rejects.toThrow('parameters/num must be >= 2')
+    ).rejects.toThrow('num can not be less than 2')
     await expect(
       client.call('io.example.paramTest', {
         str: 'valid',
@@ -131,14 +135,14 @@ describe('Parameters', () => {
         num: 50.5,
         bool: true,
       }),
-    ).rejects.toThrow('parameters/num must be <= 10')
+    ).rejects.toThrow('num can not be greater than 10')
     await expect(
       client.call('io.example.paramTest', {
         str: 'valid',
         int: 5,
         bool: true,
       }),
-    ).rejects.toThrow(`parameters must have required property 'num'`)
+    ).rejects.toThrow(`Params must have the property "num"`)
 
     await expect(
       client.call('io.example.paramTest', {
@@ -146,6 +150,6 @@ describe('Parameters', () => {
         int: 5,
         num: 5.5,
       }),
-    ).rejects.toThrow(`parameters must have required property 'bool'`)
+    ).rejects.toThrow(`Params must have the property "bool"`)
   })
 })

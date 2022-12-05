@@ -1,13 +1,10 @@
 /**
 * GENERATED CODE - DO NOT MODIFY
 */
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+
 export interface Record {
-  subject: Subject;
+  subject: ComAtprotoRepoStrongRef.Main;
   createdAt: string;
-  [k: string]: unknown;
-}
-export interface Subject {
-  uri: string;
-  cid: string;
   [k: string]: unknown;
 }

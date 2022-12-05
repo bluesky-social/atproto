@@ -4,16 +4,13 @@
 import express from 'express'
 
 export interface QueryParams {
-  /**
-   * The DID of the repo.
-   */
+  /** The DID of the repo. */
   did: string;
-  /**
-   * A past commit CID.
-   */
+  /** A past commit CID. */
   from?: string;
 }
 
+export type InputSchema = undefined
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {

@@ -5,18 +5,13 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {}
 
-export interface CallOptions {
-  headers?: Headers;
-  qp?: QueryParams;
-  encoding: 'application/json';
-}
-
 export interface InputSchema {
   email: string;
   handle: string;
   inviteCode?: string;
   password: string;
   recoveryKey?: string;
+  [k: string]: unknown;
 }
 
 export interface OutputSchema {
@@ -24,6 +19,13 @@ export interface OutputSchema {
   refreshJwt: string;
   handle: string;
   did: string;
+  [k: string]: unknown;
+}
+
+export interface CallOptions {
+  headers?: Headers;
+  qp?: QueryParams;
+  encoding: 'application/json';
 }
 
 export interface Response {

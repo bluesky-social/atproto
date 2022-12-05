@@ -1,14 +1,18 @@
 {
   "lexicon": 1,
   "id": "app.bsky.notification.getCount",
-  "type": "query",
-  "output": {
-    "encoding": "application/json",
-    "schema": {
-      "type": "object",
-      "required": ["count"],
-      "properties": {
-        "count": { "type": "integer"}
+  "defs": {
+    "main": {
+      "type": "query",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["count"],
+          "properties": {
+            "count": { "type": "integer"}
+          }
+        }
       }
     }
   }

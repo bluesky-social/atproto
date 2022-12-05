@@ -5,24 +5,19 @@ import express from 'express'
 
 export interface QueryParams {}
 
+export interface InputSchema {
+  /** The DID of the repo. */
+  did: string;
+  /** The NSID of the record collection. */
+  collection: string;
+  /** The key of the record. */
+  rkey: string;
+  [k: string]: unknown;
+}
+
 export interface HandlerInput {
   encoding: 'application/json';
   body: InputSchema;
-}
-
-export interface InputSchema {
-  /**
-   * The DID of the repo.
-   */
-  did: string;
-  /**
-   * The NSID of the record collection.
-   */
-  collection: string;
-  /**
-   * The key of the record.
-   */
-  rkey: string;
 }
 
 export interface HandlerError {

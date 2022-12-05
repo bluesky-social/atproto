@@ -2,21 +2,25 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface QueryParams {}
+
+export interface InputSchema {
+  subject: ComAtprotoRepoStrongRef.Main;
+  direction: 'up' | 'down' | 'none';
+  [k: string]: unknown;
+}
+
+export interface OutputSchema {
+  upvote?: string;
+  downvote?: string;
+  [k: string]: unknown;
+}
 
 export interface HandlerInput {
   encoding: 'application/json';
   body: InputSchema;
-}
-
-export interface InputSchema {
-  subject: Subject;
-  direction: 'up' | 'down' | 'none';
-}
-export interface Subject {
-  uri: string;
-  cid: string;
 }
 
 export interface HandlerSuccess {
@@ -30,12 +34,6 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {
-  upvote?: string;
-  downvote?: string;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

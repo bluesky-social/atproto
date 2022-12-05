@@ -7,7 +7,7 @@ import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 import { grantRefreshToken } from './util/auth'
-import * as schema from '../../../lexicon/schemas'
+import * as lexicons from '../../../lexicon/lexicons'
 import * as repoUtil from '../../../util/repo'
 import { cidForData } from '@atproto/common'
 
@@ -124,7 +124,7 @@ export default function (server: Server) {
       // Now that we have a real did, we create the declaration & replace the tempDid
       // and setup the repo root. This _should_ succeed under typical conditions.
       const declaration = {
-        $type: schema.ids.AppBskySystemDeclaration,
+        $type: lexicons.ids.AppBskySystemDeclaration,
         actorType: APP_BSKY_SYSTEM.ActorUser,
       }
       await dbTxn.finalizeDid(handle, did, tempDid, declaration)
@@ -141,7 +141,7 @@ export default function (server: Server) {
 
       const write = await repoUtil.prepareCreate(did, {
         action: 'create',
-        collection: schema.ids.AppBskySystemDeclaration,
+        collection: lexicons.ids.AppBskySystemDeclaration,
         rkey: 'self',
         value: declaration,
       })

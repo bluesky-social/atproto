@@ -4,14 +4,28 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import { MethodSchema, RecordSchema, Schema } from '@atproto/lexicon'
+import {
+  Lexicons,
+  LexiconDoc,
+  LexXrpcProcedure,
+  LexXrpcQuery,
+  LexRecord,
+} from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
-import * as jsonSchemaToTs from 'json-schema-to-typescript'
-import { emptyObjectSchema, gen, schemasTs } from './common'
+import { gen, lexiconsTs } from './common'
 import { GeneratedAPI } from '../types'
 import {
-  schemasToNsidTree,
-  NsidNS,
+  genImports,
+  genUserType,
+  genObject,
+  genXrpcParams,
+  genXrpcInput,
+  genXrpcOutput,
+} from './lex-gen'
+import {
+  lexiconsToDefTree,
+  DefTreeNode,
+  DefTreeNodeUserType,
   schemasToNsidTokens,
   toCamelCase,
   toTitleCase,
@@ -26,30 +40,29 @@ const ATP_METHODS = {
   delete: 'com.atproto.repo.deleteRecord',
 }
 
-export async function genClientApi(schemas: Schema[]): Promise<GeneratedAPI> {
+export async function genClientApi(
+  lexiconDocs: LexiconDoc[],
+): Promise<GeneratedAPI> {
   const project = new Project({
     useInMemoryFileSystem: true,
     manipulationSettings: { indentationText: IndentationText.TwoSpaces },
   })
   const api: GeneratedAPI = { files: [] }
-  const nsidTree = schemasToNsidTree(schemas)
-  const nsidTokens = schemasToNsidTokens(schemas)
-  for (const schema of schemas) {
-    if (schema.type === 'query' || schema.type === 'procedure') {
-      api.files.push(await methodSchemaTs(project, schema))
-    } else if (schema.type === 'record') {
-      api.files.push(await recordSchemaTs(project, schema))
-    }
+  const lexicons = new Lexicons(lexiconDocs)
+  const nsidTree = lexiconsToDefTree(lexiconDocs)
+  const nsidTokens = schemasToNsidTokens(lexiconDocs)
+  for (const lexiconDoc of lexiconDocs) {
+    api.files.push(await lexiconTs(project, lexicons, lexiconDoc))
   }
-  api.files.push(await schemasTs(project, schemas))
-  api.files.push(await indexTs(project, schemas, nsidTree, nsidTokens))
+  api.files.push(await lexiconsTs(project, lexiconDocs))
+  api.files.push(await indexTs(project, lexiconDocs, nsidTree, nsidTokens))
   return api
 }
 
 const indexTs = (
   project: Project,
-  schemas: Schema[],
-  nsidTree: NsidNS[],
+  lexiconDocs: LexiconDoc[],
+  nsidTree: DefTreeNode[],
   nsidTokens: Record<string, string[]>,
 ) =>
   gen(project, '/index.ts', async (file) => {
@@ -61,21 +74,20 @@ const indexTs = (
       { name: 'Client', alias: 'XrpcClient' },
       { name: 'ServiceClient', alias: 'XrpcServiceClient' },
     ])
-    //= import {methodSchemas, recordSchemas} from './schemas'
+    //= import {lexicons} from './lexicons'
     file
-      .addImportDeclaration({ moduleSpecifier: './schemas' })
-      .addNamedImports([{ name: 'methodSchemas' }, { name: 'recordSchemas' }])
+      .addImportDeclaration({ moduleSpecifier: './lexicons' })
+      .addNamedImports([{ name: 'lexicons' }])
 
     // generate type imports and re-exports
-    for (const schema of schemas) {
-      if (schema.type === 'token') continue
-      const moduleSpecifier = `./types/${schema.id.split('.').join('/')}`
+    for (const lexicon of lexiconDocs) {
+      const moduleSpecifier = `./types/${lexicon.id.split('.').join('/')}`
       file
         .addImportDeclaration({ moduleSpecifier })
-        .setNamespaceImport(toTitleCase(schema.id))
+        .setNamespaceImport(toTitleCase(lexicon.id))
       file
         .addExportDeclaration({ moduleSpecifier })
-        .setNamespaceExport(toTitleCase(schema.id))
+        .setNamespaceExport(toTitleCase(lexicon.id))
     }
 
     // generate token enums
@@ -114,11 +126,9 @@ const indexTs = (
       initializer: 'new XrpcClient()',
     })
     //= constructor () {
-    //=   this.xrpc.addSchemas(methodSchemas)
+    //=   this.xrpc.addLexicons(lexicons)
     //= }
-    clientCls
-      .addConstructor()
-      .setBodyText(`this.xrpc.addSchemas(methodSchemas)`)
+    clientCls.addConstructor().setBodyText(`this.xrpc.addLexicons(lexicons)`)
     //= service(serviceUri: string | URL): ServiceClient {
     //=   return new ServiceClient(this, this.xrpc.service(serviceUri))
     //= }
@@ -209,7 +219,7 @@ const indexTs = (
     }
   })
 
-function genNamespaceCls(file: SourceFile, ns: NsidNS) {
+function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
   //= export class {ns}NS {...}
   const cls = file.addClass({
     name: ns.className,
@@ -221,12 +231,12 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
     type: 'ServiceClient',
   })
 
-  for (const schema of ns.schemas) {
-    if (schema.type !== 'record') {
+  for (const userType of ns.userTypes) {
+    if (userType.def.type !== 'record') {
       continue
     }
     //= type: TypeRecord
-    const name = NSID.parse(schema.id).name || ''
+    const name = NSID.parse(userType.nsid).name || ''
     cls.addProperty({
       name: toCamelCase(name),
       type: `${toTitleCase(name)}Record`,
@@ -260,10 +270,10 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
       ...ns.children.map(
         (ns) => `this.${ns.propName} = new ${ns.className}(service)`,
       ),
-      ...ns.schemas
-        .filter((s) => s.type === 'record')
-        .map((schema) => {
-          const name = NSID.parse(schema.id).name || ''
+      ...ns.userTypes
+        .filter((ut) => ut.def.type === 'record')
+        .map((ut) => {
+          const name = NSID.parse(ut.nsid).name || ''
           return `this.${toCamelCase(name)} = new ${toTitleCase(
             name,
           )}Record(service)`
@@ -272,22 +282,22 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
   )
 
   // methods
-  for (const schema of ns.schemas) {
-    if (schema.type !== 'query' && schema.type !== 'procedure') {
+  for (const userType of ns.userTypes) {
+    if (userType.def.type !== 'query' && userType.def.type !== 'procedure') {
       continue
     }
-    const moduleName = toTitleCase(schema.id)
-    const name = toCamelCase(NSID.parse(schema.id).name || '')
+    const moduleName = toTitleCase(userType.nsid)
+    const name = toCamelCase(NSID.parse(userType.nsid).name || '')
     const method = cls.addMethod({
       name,
       returnType: `Promise<${moduleName}.Response>`,
     })
-    if (schema.type === 'query') {
+    if (userType.def.type === 'query') {
       method.addParameter({
         name: 'params?',
         type: `${moduleName}.QueryParams`,
       })
-    } else if (schema.type === 'procedure') {
+    } else if (userType.def.type === 'procedure') {
       method.addParameter({
         name: 'data?',
         type: `${moduleName}.InputSchema`,
@@ -300,9 +310,9 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
     method.setBodyText(
       [
         `return this._service.xrpc`,
-        schema.type === 'query'
-          ? `.call('${schema.id}', params, undefined, opts)`
-          : `.call('${schema.id}', opts?.qp, data, opts)`,
+        userType.def.type === 'query'
+          ? `.call('${userType.nsid}', params, undefined, opts)`
+          : `.call('${userType.nsid}', opts?.qp, data, opts)`,
         `  .catch((e) => {`,
         `    throw ${moduleName}.toKnownErr(e)`,
         `  })`,
@@ -311,17 +321,17 @@ function genNamespaceCls(file: SourceFile, ns: NsidNS) {
   }
 
   // record api classes
-  for (const schema of ns.schemas) {
-    if (schema.type !== 'record') {
+  for (const userType of ns.userTypes) {
+    if (userType.def.type !== 'record') {
       continue
     }
-    genRecordCls(file, schema)
+    genRecordCls(file, userType)
   }
 }
 
-function genRecordCls(file: SourceFile, schema: RecordSchema) {
+function genRecordCls(file: SourceFile, userType: DefTreeNodeUserType) {
   //= export class {type}Record {...}
-  const name = NSID.parse(schema.id).name || ''
+  const name = NSID.parse(userType.nsid).name || ''
   const cls = file.addClass({
     name: `${toTitleCase(name)}Record`,
     isExported: true,
@@ -343,7 +353,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
   cons.setBodyText(`this._service = service`)
 
   // methods
-  const typeModule = toTitleCase(schema.id)
+  const typeModule = toTitleCase(userType.nsid)
   {
     //= list()
     const method = cls.addMethod({
@@ -357,7 +367,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     })
     method.setBodyText(
       [
-        `const res = await this._service.xrpc.call('${ATP_METHODS.list}', { collection: '${schema.id}', ...params })`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.list}', { collection: '${userType.nsid}', ...params })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -375,7 +385,7 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     })
     method.setBodyText(
       [
-        `const res = await this._service.xrpc.call('${ATP_METHODS.get}', { collection: '${schema.id}', ...params })`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.get}', { collection: '${userType.nsid}', ...params })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -403,8 +413,8 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
     })
     method.setBodyText(
       [
-        `record.$type = '${schema.id}'`,
-        `const res = await this._service.xrpc.call('${ATP_METHODS.create}', undefined, { collection: '${schema.id}', ...params, record }, {encoding: 'application/json', headers })`,
+        `record.$type = '${userType.nsid}'`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.create}', undefined, { collection: '${userType.nsid}', ...params, record }, {encoding: 'application/json', headers })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -430,8 +440,8 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
   //   })
   //   method.setBodyText(
   //     [
-  //       `record.$type = '${schema.id}'`,
-  //       `const res = await this._service.xrpc.call('${ATP_METHODS.put}', undefined, { collection: '${schema.id}', record, ...params }, {encoding: 'application/json', headers})`,
+  //       `record.$type = '${userType.nsid}'`,
+  //       `const res = await this._service.xrpc.call('${ATP_METHODS.put}', undefined, { collection: '${userType.nsid}', record, ...params }, {encoding: 'application/json', headers})`,
   //       `return res.data`,
   //     ].join('\n'),
   //   )
@@ -456,155 +466,143 @@ function genRecordCls(file: SourceFile, schema: RecordSchema) {
 
     method.setBodyText(
       [
-        `await this._service.xrpc.call('${ATP_METHODS.delete}', undefined, { collection: '${schema.id}', ...params }, { headers })`,
+        `await this._service.xrpc.call('${ATP_METHODS.delete}', undefined, { collection: '${userType.nsid}', ...params }, { headers })`,
       ].join('\n'),
     )
   }
 }
 
-const methodSchemaTs = (project, schema: MethodSchema) =>
-  gen(project, `/types/${schema.id.split('.').join('/')}.ts`, async (file) => {
-    //= import {Headers, XRPCError} from '@atproto/xrpc'
-    const xrpcImport = file.addImportDeclaration({
-      moduleSpecifier: '@atproto/xrpc',
-    })
-    xrpcImport.addNamedImports([{ name: 'Headers' }, { name: 'XRPCError' }])
+const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
+  gen(
+    project,
+    `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
+    async (file) => {
+      const imports: Set<string> = new Set()
 
-    //= export interface QueryParams {...}
-    file.insertText(
-      file.getFullText().length,
-      '\n' +
-        (await jsonSchemaToTs.compile(
-          schema.parameters ?? emptyObjectSchema,
-          'QueryParams',
-          {
-            bannerComment: '',
-            additionalProperties: false,
-          },
-        )),
-    )
-
-    //= export interface CallOptions {...}
-    const opts = file.addInterface({
-      name: 'CallOptions',
-      isExported: true,
-    })
-    opts.addProperty({ name: 'headers?', type: 'Headers' })
-    if (schema.type === 'procedure') {
-      opts.addProperty({ name: 'qp?', type: 'QueryParams' })
-    }
-    if (schema.input) {
-      if (Array.isArray(schema.input.encoding)) {
-        opts.addProperty({
-          name: 'encoding',
-          type: schema.input.encoding.map((v) => `'${v}'`).join(' | '),
+      const main = lexiconDoc.defs.main
+      if (main?.type === 'query' || main?.type === 'procedure') {
+        //= import {Headers, XRPCError} from '@atproto/xrpc'
+        const xrpcImport = file.addImportDeclaration({
+          moduleSpecifier: '@atproto/xrpc',
         })
-      } else if (typeof schema.input.encoding === 'string') {
-        opts.addProperty({
-          name: 'encoding',
-          type: `'${schema.input.encoding}'`,
-        })
+        xrpcImport.addNamedImports([{ name: 'Headers' }, { name: 'XRPCError' }])
       }
-    }
 
-    //= export interface InputSchema {...}
-    if (schema.input?.schema) {
-      file.insertText(
-        file.getFullText().length,
-        '\n' +
-          (await jsonSchemaToTs.compile(schema.input?.schema, 'InputSchema', {
-            bannerComment: '',
-            additionalProperties: false,
-          })),
-      )
-    } else if (schema.input?.encoding) {
-      file.addTypeAlias({
-        isExported: true,
-        name: 'InputSchema',
-        type: 'string | Uint8Array',
+      for (const defId in lexiconDoc.defs) {
+        const def = lexiconDoc.defs[defId]
+        const lexUri = `${lexiconDoc.id}#${defId}`
+        if (defId === 'main') {
+          if (def.type === 'query' || def.type === 'procedure') {
+            genXrpcParams(file, lexicons, lexUri)
+            genXrpcInput(file, imports, lexicons, lexUri)
+            genXrpcOutput(file, imports, lexicons, lexUri)
+            genClientXrpcCommon(file, lexicons, lexUri)
+          } else if (def.type === 'record') {
+            genClientRecord(file, imports, lexicons, lexUri)
+          } else {
+            genUserType(file, imports, lexicons, lexUri)
+          }
+        } else {
+          genUserType(file, imports, lexicons, lexUri)
+        }
+      }
+      genImports(file, imports, lexiconDoc.id)
+    },
+  )
+
+function genClientXrpcCommon(
+  file: SourceFile,
+  lexicons: Lexicons,
+  lexUri: string,
+) {
+  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure']) as
+    | LexXrpcQuery
+    | LexXrpcProcedure
+
+  //= export interface CallOptions {...}
+  const opts = file.addInterface({
+    name: 'CallOptions',
+    isExported: true,
+  })
+  opts.addProperty({ name: 'headers?', type: 'Headers' })
+  if (def.type === 'procedure') {
+    opts.addProperty({ name: 'qp?', type: 'QueryParams' })
+  }
+  if (def.type === 'procedure' && def.input) {
+    if (Array.isArray(def.input.encoding)) {
+      opts.addProperty({
+        name: 'encoding',
+        type: def.input.encoding.map((v) => `'${v}'`).join(' | '),
       })
+    } else if (typeof def.input.encoding === 'string') {
+      opts.addProperty({
+        name: 'encoding',
+        type: `'${def.input.encoding}'`,
+      })
+    }
+  }
+
+  // export interface Response {...}
+  const res = file.addInterface({
+    name: 'Response',
+    isExported: true,
+  })
+  res.addProperty({ name: 'success', type: 'boolean' })
+  res.addProperty({ name: 'headers', type: 'Headers' })
+  if (def.output?.schema) {
+    if (Array.isArray(def.output.encoding)) {
+      res.addProperty({ name: 'data', type: 'OutputSchema | Uint8Array' })
     } else {
-      file.addTypeAlias({
-        isExported: true,
-        name: 'InputSchema',
-        type: 'undefined',
-      })
+      res.addProperty({ name: 'data', type: 'OutputSchema' })
     }
+  } else if (def.output?.encoding) {
+    res.addProperty({ name: 'data', type: 'Uint8Array' })
+  }
 
-    //= export interface OutputSchema {...}
-    if (schema.output?.schema) {
-      file.insertText(
-        file.getFullText().length,
-        '\n' +
-          (await jsonSchemaToTs.compile(schema.output?.schema, 'OutputSchema', {
-            bannerComment: '',
-            additionalProperties: false,
-          })),
-      )
-    }
-
-    // export interface Response {...}
-    const res = file.addInterface({
-      name: 'Response',
+  // export class {errcode}Error {...}
+  const customErrors: { name: string; cls: string }[] = []
+  for (const error of def.errors || []) {
+    let name = toTitleCase(error.name)
+    if (!name.endsWith('Error')) name += 'Error'
+    const errCls = file.addClass({
+      name,
+      extends: 'XRPCError',
       isExported: true,
     })
-    res.addProperty({ name: 'success', type: 'boolean' })
-    res.addProperty({ name: 'headers', type: 'Headers' })
-    if (schema.output?.schema) {
-      if (Array.isArray(schema.output.encoding)) {
-        res.addProperty({ name: 'data', type: 'OutputSchema | Uint8Array' })
-      } else {
-        res.addProperty({ name: 'data', type: 'OutputSchema' })
-      }
-    } else if (schema.output?.encoding) {
-      res.addProperty({ name: 'data', type: 'Uint8Array' })
-    }
-
-    // export class {errcode}Error {...}
-    const customErrors: { name: string; cls: string }[] = []
-    for (const error of schema.errors || []) {
-      let name = toTitleCase(error.name)
-      if (!name.endsWith('Error')) name += 'Error'
-      const errCls = file.addClass({
-        name,
-        extends: 'XRPCError',
-        isExported: true,
+    errCls
+      .addConstructor({
+        parameters: [{ name: 'src', type: 'XRPCError' }],
       })
-      errCls
-        .addConstructor({
-          parameters: [{ name: 'src', type: 'XRPCError' }],
-        })
-        .setBodyText(`super(src.status, src.error, src.message)`)
-      customErrors.push({ name: error.name, cls: name })
-    }
+      .setBodyText(`super(src.status, src.error, src.message)`)
+    customErrors.push({ name: error.name, cls: name })
+  }
 
-    // export function toKnownErr(err: any) {...}
-    const toKnownErrFn = file.addFunction({
-      name: 'toKnownErr',
-      isExported: true,
-    })
-    toKnownErrFn.addParameter({ name: 'e', type: 'any' })
-    toKnownErrFn.setBodyText(
-      [
-        `if (e instanceof XRPCError) {`,
-        ...customErrors.map(
-          (err) => `if (e.error === '${err.name}') return new ${err.cls}(e)`,
-        ),
-        `}`,
-        `return e`,
-      ].join('\n'),
-    )
+  // export function toKnownErr(err: any) {...}
+  const toKnownErrFn = file.addFunction({
+    name: 'toKnownErr',
+    isExported: true,
   })
+  toKnownErrFn.addParameter({ name: 'e', type: 'any' })
+  toKnownErrFn.setBodyText(
+    [
+      `if (e instanceof XRPCError) {`,
+      ...customErrors.map(
+        (err) => `if (e.error === '${err.name}') return new ${err.cls}(e)`,
+      ),
+      `}`,
+      `return e`,
+    ].join('\n'),
+  )
+}
 
-const recordSchemaTs = (project, schema: RecordSchema) =>
-  gen(project, `/types/${schema.id.split('.').join('/')}.ts`, async (file) => {
-    //= export interface Record {...}
-    file.insertText(
-      file.getFullText().length,
-      '\n' +
-        (await jsonSchemaToTs.compile(schema.record || {}, 'Record', {
-          bannerComment: '',
-          additionalProperties: true,
-        })),
-    )
-  })
+function genClientRecord(
+  file: SourceFile,
+  imports: Set<string>,
+  lexicons: Lexicons,
+  lexUri: string,
+) {
+  const def = lexicons.getDefOrThrow(lexUri, ['record']) as LexRecord
+
+  //= export interface Record {...}
+  genObject(file, imports, lexUri, def.record, 'Record')
+}

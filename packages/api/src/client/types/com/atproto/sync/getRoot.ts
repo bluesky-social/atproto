@@ -4,20 +4,19 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  /**
-   * The DID of the repo.
-   */
+  /** The DID of the repo. */
   did: string;
-}
-
-export interface CallOptions {
-  headers?: Headers;
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
   root: string;
+  [k: string]: unknown;
+}
+
+export interface CallOptions {
+  headers?: Headers;
 }
 
 export interface Response {

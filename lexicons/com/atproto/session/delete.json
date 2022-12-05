@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
   "id": "com.atproto.session.delete",
-  "type": "procedure",
-  "description": "Delete the current session.",
-  "output": {
-    "encoding": "application/json",
-    "schema": {}
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete the current session."
+    }
   }
 }

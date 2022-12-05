@@ -3,52 +3,76 @@ import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import xrpc, { Client, XRPCError } from '@atproto/xrpc'
 
-const SCHEMAS = [
+const LEXICONS = [
   {
     lexicon: 1,
     id: 'io.example.error',
-    type: 'query',
-    parameters: {
-      type: 'object',
-      properties: {
-        which: { type: 'string', default: 'foo' },
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          properties: {
+            which: { type: 'string', default: 'foo' },
+          },
+        },
+        errors: [{ name: 'Foo' }, { name: 'Bar' }],
       },
     },
-    errors: [{ name: 'Foo' }, { name: 'Bar' }],
   },
   {
     lexicon: 1,
     id: 'io.example.query',
-    type: 'query',
+    defs: {
+      main: {
+        type: 'query',
+      },
+    },
   },
   {
     lexicon: 1,
     id: 'io.example.procedure',
-    type: 'procedure',
+    defs: {
+      main: {
+        type: 'procedure',
+      },
+    },
   },
 ]
 
-const MISMATCHED_SCHEMAS = [
+const MISMATCHED_LEXICONS = [
   {
     lexicon: 1,
     id: 'io.example.query',
-    type: 'procedure',
+    defs: {
+      main: {
+        type: 'procedure',
+      },
+    },
   },
   {
     lexicon: 1,
     id: 'io.example.procedure',
-    type: 'query',
+    defs: {
+      main: {
+        type: 'query',
+      },
+    },
   },
   {
     lexicon: 1,
     id: 'io.example.doesNotExist',
-    type: 'query',
+    defs: {
+      main: {
+        type: 'query',
+      },
+    },
   },
 ]
 
 describe('Errors', () => {
   let s: http.Server
-  const server = xrpcServer.createServer(SCHEMAS)
+  const server = xrpcServer.createServer(LEXICONS)
   server.method('io.example.error', (ctx: { params: xrpcServer.Params }) => {
     if (ctx.params.which === 'foo') {
       throw new xrpcServer.InvalidRequestError('It was this one!', 'Foo')
@@ -65,10 +89,10 @@ describe('Errors', () => {
     return undefined
   })
   const client = xrpc.service(`http://localhost:8893`)
-  xrpc.addSchemas(SCHEMAS)
+  xrpc.addLexicons(LEXICONS)
   const badXrpc = new Client()
   const badClient = badXrpc.service(`http://localhost:8893`)
-  badXrpc.addSchemas(MISMATCHED_SCHEMAS)
+  badXrpc.addLexicons(MISMATCHED_LEXICONS)
   beforeAll(async () => {
     s = await createServer(8893, server)
   })
@@ -82,33 +106,33 @@ describe('Errors', () => {
         which: 'foo',
       })
       throw new Error('Didnt throw')
-    } catch (e: any) {
+    } catch (e) {
       expect(e instanceof XRPCError).toBeTruthy()
-      expect(e.success).toBeFalsy()
-      expect(e.error).toBe('Foo')
-      expect(e.message).toBe('It was this one!')
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe('Foo')
+      expect((e as XRPCError).message).toBe('It was this one!')
     }
     try {
       await client.call('io.example.error', {
         which: 'bar',
       })
       throw new Error('Didnt throw')
-    } catch (e: any) {
+    } catch (e) {
       expect(e instanceof XRPCError).toBeTruthy()
-      expect(e.success).toBeFalsy()
-      expect(e.error).toBe('Bar')
-      expect(e.message).toBe('It was that one!')
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe('Bar')
+      expect((e as XRPCError).message).toBe('It was that one!')
     }
     try {
       await client.call('io.example.error', {
         which: 'other',
       })
       throw new Error('Didnt throw')
-    } catch (e: any) {
+    } catch (e) {
       expect(e instanceof XRPCError).toBeTruthy()
-      expect(e.success).toBeFalsy()
-      expect(e.error).toBe('InvalidRequest')
-      expect(e.message).toBe('Invalid Request')
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe('InvalidRequest')
+      expect((e as XRPCError).message).toBe('Invalid Request')
     }
   })
 

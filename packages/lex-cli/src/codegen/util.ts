@@ -1,26 +1,33 @@
-import { Schema } from '@atproto/lexicon'
+import { LexiconDoc, LexUserType } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 
-export interface NsidNS {
+export interface DefTreeNodeUserType {
+  nsid: string
+  def: LexUserType
+}
+
+export interface DefTreeNode {
   name: string
   className: string
   propName: string
-  children: NsidNS[]
-  schemas: Schema[]
+  children: DefTreeNode[]
+  userTypes: DefTreeNodeUserType[]
 }
 
-export function schemasToNsidTree(schemas: Schema[]): NsidNS[] {
-  const tree: NsidNS[] = []
-  for (const schema of schemas) {
-    if (schema.type === 'token') continue
-    const node = getOrCreateNode(tree, schema.id.split('.').slice(0, -1))
-    node.schemas.push(schema)
+export function lexiconsToDefTree(lexicons: LexiconDoc[]): DefTreeNode[] {
+  const tree: DefTreeNode[] = []
+  for (const lexicon of lexicons) {
+    if (!lexicon.defs.main) {
+      continue
+    }
+    const node = getOrCreateNode(tree, lexicon.id.split('.').slice(0, -1))
+    node.userTypes.push({ nsid: lexicon.id, def: lexicon.defs.main })
   }
   return tree
 }
 
-function getOrCreateNode(tree: NsidNS[], path: string[]): NsidNS {
-  let node: NsidNS | undefined
+function getOrCreateNode(tree: DefTreeNode[], path: string[]): DefTreeNode {
+  let node: DefTreeNode | undefined
   for (const segment of path) {
     node = tree.find((v) => v.name === segment)
     if (!node) {
@@ -29,8 +36,8 @@ function getOrCreateNode(tree: NsidNS[], path: string[]): NsidNS {
         className: `${toTitleCase(segment)}NS`,
         propName: toCamelCase(segment),
         children: [],
-        schemas: [],
-      } as NsidNS
+        userTypes: [],
+      } as DefTreeNode
       tree.push(node)
     }
     tree = node.children
@@ -40,34 +47,37 @@ function getOrCreateNode(tree: NsidNS[], path: string[]): NsidNS {
 }
 
 export function schemasToNsidTokens(
-  schemas: Schema[],
+  lexiconDocs: LexiconDoc[],
 ): Record<string, string[]> {
   const nsidTokens: Record<string, string[]> = {}
-  for (const schema of schemas) {
-    if (schema.type !== 'token') {
-      continue
-    }
-    const nsidp = NSID.parse(schema.id)
+  for (const lexiconDoc of lexiconDocs) {
+    const nsidp = NSID.parse(lexiconDoc.id)
     if (!nsidp.name) continue
-    const authority = nsidp.segments.slice(0, -1).join('.')
-    nsidTokens[authority] ??= []
-    nsidTokens[authority].push(nsidp.name)
+    for (const defId in lexiconDoc.defs) {
+      const def = lexiconDoc.defs[defId]
+      if (def.type !== 'token') continue
+      const authority = nsidp.segments.slice(0, -1).join('.')
+      nsidTokens[authority] ??= []
+      nsidTokens[authority].push(
+        nsidp.name + (defId === 'main' ? '' : `#${defId}`),
+      )
+    }
   }
   return nsidTokens
 }
 
 export function toTitleCase(v: string): string {
   v = v.replace(/^([a-z])/gi, (_, g) => g.toUpperCase()) // upper-case first letter
-  v = v.replace(/[.-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash or dot segments
+  v = v.replace(/[.#-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash, dot, or hash segments
   return v.replace(/[.-]/g, '') // remove lefover dashes or dots
 }
 
 export function toCamelCase(v: string): string {
-  v = v.replace(/[.-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash or dot segments
+  v = v.replace(/[.#-]([a-z])/gi, (_, g) => g.toUpperCase()) // uppercase any dash, dot, or hash segments
   return v.replace(/[.-]/g, '') // remove lefover dashes or dots
 }
 
 export function toScreamingSnakeCase(v: string): string {
-  v = v.replace(/[.-]+/gi, '_') // convert dashes and dots into underscores
+  v = v.replace(/[.#-]+/gi, '_') // convert dashes, dots, and hashes into underscores
   return v.toUpperCase() // and scream!
 }

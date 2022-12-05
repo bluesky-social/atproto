@@ -5,27 +5,31 @@ import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import { AuthRequiredError } from '../src'
 
-const SCHEMAS = [
+const LEXICONS = [
   {
     lexicon: 1,
     id: 'io.example.authTest',
-    type: 'procedure',
-    input: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        properties: {
-          present: { const: true },
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              present: { type: 'boolean', const: true },
+            },
+          },
         },
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        properties: {
-          username: { type: 'string' },
-          original: { type: 'string' },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              username: { type: 'string' },
+              original: { type: 'string' },
+            },
+          },
         },
       },
     },
@@ -34,7 +38,7 @@ const SCHEMAS = [
 
 describe('Auth', () => {
   let s: http.Server
-  const server = xrpcServer.createServer(SCHEMAS)
+  const server = xrpcServer.createServer(LEXICONS)
   server.method('io.example.authTest', {
     auth: createBasicAuth({ username: 'admin', password: 'password' }),
     handler: ({ auth }) => {
@@ -48,7 +52,7 @@ describe('Auth', () => {
     },
   })
   const client = xrpc.service(`http://localhost:8894`)
-  xrpc.addSchemas(SCHEMAS)
+  xrpc.addLexicons(LEXICONS)
   beforeAll(async () => {
     s = await createServer(8894, server)
   })
@@ -97,7 +101,7 @@ describe('Auth', () => {
       expect(e instanceof XRPCError).toBeTruthy()
       expect(e.success).toBeFalsy()
       expect(e.error).toBe('InvalidRequest')
-      expect(e.message).toBe('input/present must be equal to constant')
+      expect(e.message).toBe('Input/present must be true')
       expect(e.status).toBe(400)
     }
   })

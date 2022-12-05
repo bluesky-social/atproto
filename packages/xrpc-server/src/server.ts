@@ -3,12 +3,7 @@ import express, {
   NextFunction,
   RequestHandler,
 } from 'express'
-import { ValidateFunction } from 'ajv'
-import {
-  MethodSchema,
-  methodSchema,
-  isValidMethodSchema,
-} from '@atproto/lexicon'
+import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
 import {
   XRPCHandler,
   XRPCError,
@@ -22,13 +17,7 @@ import {
   AuthVerifier,
   isHandlerError,
 } from './types'
-import {
-  ajv,
-  paramsAjv,
-  validateReqParams,
-  validateInput,
-  validateOutput,
-} from './util'
+import { decodeQueryParams, validateInput, validateOutput } from './util'
 import log from './logger'
 
 export type Options = {
@@ -39,22 +28,19 @@ export type Options = {
   }
 }
 
-export function createServer(schemas?: unknown[], options?: Options) {
-  return new Server(schemas, options)
+export function createServer(lexicons?: unknown[], options?: Options) {
+  return new Server(lexicons, options)
 }
 
 export class Server {
   router = express.Router()
   routes = express.Router()
-  schemas: Map<string, MethodSchema> = new Map()
-  paramValidators: Map<string, ValidateFunction> = new Map()
-  inputValidators: Map<string, ValidateFunction> = new Map()
-  outputValidators: Map<string, ValidateFunction> = new Map()
+  lex = new Lexicons()
   middleware: Record<'json' | 'raw' | 'text', RequestHandler>
 
-  constructor(schemas?: unknown[], opts?: Options) {
-    if (schemas) {
-      this.addSchemas(schemas)
+  constructor(lexicons?: unknown[], opts?: Options) {
+    if (lexicons) {
+      this.addLexicons(lexicons)
     }
     this.router.use(this.routes)
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
@@ -76,49 +62,37 @@ export class Server {
   addMethod(nsid: string, configOrFn: XRPCHandlerConfig | XRPCHandler) {
     const config =
       typeof configOrFn === 'function' ? { handler: configOrFn } : configOrFn
-    const schema = this.schemas.get(nsid)
-    if (!schema) {
-      throw new Error(`No schema found for ${nsid}`)
+    const def = this.lex.getDef(nsid)
+    if (!def || (def.type !== 'query' && def.type !== 'procedure')) {
+      throw new Error(`Lex def for ${nsid} is not a query or a procedure`)
     }
-    this.addRoute(schema, config)
+    this.addRoute(nsid, def, config)
   }
 
   // schemas
   // =
 
-  addSchema(schema: unknown) {
-    if (isValidMethodSchema(schema)) {
-      this.schemas.set(schema.id, schema)
-      if (schema.parameters) {
-        this.paramValidators.set(
-          schema.id,
-          paramsAjv.compile(schema.parameters),
-        )
-      }
-      if (schema.input?.schema) {
-        this.inputValidators.set(schema.id, ajv.compile(schema.input.schema))
-      }
-      if (schema.output?.schema) {
-        this.outputValidators.set(schema.id, ajv.compile(schema.output.schema))
-      }
-    } else {
-      methodSchema.parse(schema) // will throw with the validation error
-    }
+  addLexicon(doc: unknown) {
+    this.lex.add(doc)
   }
 
-  addSchemas(schemas: unknown[]) {
-    for (const schema of schemas) {
-      this.addSchema(schema)
+  addLexicons(docs: unknown[]) {
+    for (const doc of docs) {
+      this.addLexicon(doc)
     }
   }
 
   // http
   // =
 
-  protected async addRoute(schema: MethodSchema, config: XRPCHandlerConfig) {
-    const verb: 'post' | 'get' = schema.type === 'procedure' ? 'post' : 'get'
+  protected async addRoute(
+    nsid: string,
+    def: LexXrpcQuery | LexXrpcProcedure,
+    config: XRPCHandlerConfig,
+  ) {
+    const verb: 'post' | 'get' = def.type === 'procedure' ? 'post' : 'get'
     const middleware: RequestHandler[] = []
-    middleware.push(createLocalsMiddleware(schema))
+    middleware.push(createLocalsMiddleware(nsid))
     if (config.auth) {
       middleware.push(createAuthMiddleware(config.auth))
     }
@@ -128,9 +102,9 @@ export class Server {
       middleware.push(this.middleware.text)
     }
     this.routes[verb](
-      `/xrpc/${schema.id}`,
+      `/xrpc/${nsid}`,
       ...middleware,
-      this.createHandler(schema, config.handler),
+      this.createHandler(nsid, def, config.handler),
     )
   }
 
@@ -139,18 +113,18 @@ export class Server {
     _res: express.Response,
     next: NextFunction,
   ) {
-    const schema = this.schemas.get(req.params.methodId)
-    if (!schema) {
+    const def = this.lex.getDef(req.params.methodId)
+    if (!def) {
       return next(new MethodNotImplementedError())
     }
     // validate method
-    if (schema.type === 'query' && req.method !== 'GET') {
+    if (def.type === 'query' && req.method !== 'GET') {
       return next(
         new InvalidRequestError(
           `Incorrect HTTP method (${req.method}) expected GET`,
         ),
       )
-    } else if (schema.type === 'procedure' && req.method !== 'POST') {
+    } else if (def.type === 'procedure' && req.method !== 'POST') {
       return next(
         new InvalidRequestError(
           `Incorrect HTTP method (${req.method}) expected POST`,
@@ -160,15 +134,27 @@ export class Server {
     return next()
   }
 
-  createHandler(schema: MethodSchema, handler: XRPCHandler): RequestHandler {
-    const paramValidator = this.paramValidators.get(schema.id)
-    const inputValidator = this.inputValidators.get(schema.id)
-    const outputValidator = this.outputValidators.get(schema.id)
+  createHandler(
+    nsid: string,
+    def: LexXrpcQuery | LexXrpcProcedure,
+    handler: XRPCHandler,
+  ): RequestHandler {
+    const validateReqInput = (req: express.Request) =>
+      validateInput(nsid, def, req, this.lex)
+    const validateResOutput = (output?: HandlerSuccess) =>
+      validateOutput(nsid, def, output, this.lex)
+    const assertValidXrpcParams = (params: unknown) =>
+      this.lex.assertValidXrpcParams(nsid, params)
     return async function (req, res, next) {
       try {
         // validate request
-        const params = validateReqParams(req.query, paramValidator)
-        const input = validateInput(schema, req, inputValidator)
+        const params = decodeQueryParams(def, req.query)
+        try {
+          assertValidXrpcParams(params)
+        } catch (e) {
+          throw new InvalidRequestError(String(e))
+        }
+        const input = validateReqInput(req)
         const locals: RequestLocals = req[kRequestLocals]
 
         // run the handler
@@ -186,11 +172,7 @@ export class Server {
 
         if (!outputUnvalidated || isHandlerSuccess(outputUnvalidated)) {
           // validate response
-          const output = validateOutput(
-            schema,
-            outputUnvalidated,
-            outputValidator,
-          )
+          const output = validateResOutput(outputUnvalidated)
           // send response
           if (
             output?.encoding === 'application/json' ||
@@ -223,9 +205,9 @@ function isHandlerSuccess(v: HandlerOutput): v is HandlerSuccess {
 
 const kRequestLocals = Symbol('requestLocals')
 
-function createLocalsMiddleware(schema: MethodSchema): RequestHandler {
+function createLocalsMiddleware(nsid: string): RequestHandler {
   return function (req, _res, next) {
-    const locals: RequestLocals = { auth: undefined, schemaId: schema.id }
+    const locals: RequestLocals = { auth: undefined, nsid }
     req[kRequestLocals] = locals
     return next()
   }
@@ -233,7 +215,7 @@ function createLocalsMiddleware(schema: MethodSchema): RequestHandler {
 
 type RequestLocals = {
   auth: HandlerAuth | undefined
-  schemaId: string
+  nsid: string
 }
 
 function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
@@ -254,7 +236,7 @@ function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
 
 const errorMiddleware: ErrorRequestHandler = function (err, req, res, next) {
   const locals: RequestLocals | undefined = req[kRequestLocals]
-  const methodSuffix = locals ? ` method ${locals.schemaId}` : ''
+  const methodSuffix = locals ? ` method ${locals.nsid}` : ''
   if (err instanceof XRPCError) {
     log.error(err, `error in xrpc${methodSuffix}`)
   } else {

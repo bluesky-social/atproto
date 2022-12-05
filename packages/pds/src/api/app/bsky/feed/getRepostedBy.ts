@@ -1,4 +1,5 @@
 import { Server } from '../../../../lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetRepostedBy from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'

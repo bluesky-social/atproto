@@ -1,17 +1,21 @@
 {
   "lexicon": 1,
   "id": "com.atproto.sync.getRepo",
-  "type": "query",
-  "description": "Gets the repo state.",
-  "parameters": {
-    "type": "object",
-    "required": ["did"],
-    "properties": {
-      "did": {"type": "string", "description": "The DID of the repo."},
-      "from": {"type": "string", "description": "A past commit CID."}
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Gets the repo state.",
+      "parameters": {
+        "type": "params",
+        "required": ["did"],
+        "properties": {
+          "did": {"type": "string", "description": "The DID of the repo."},
+          "from": {"type": "string", "description": "A past commit CID."}
+        }
+      },
+      "output": {
+        "encoding": "application/cbor"
+      }
     }
-  },
-  "output": {
-    "encoding": "application/cbor"
   }
 }

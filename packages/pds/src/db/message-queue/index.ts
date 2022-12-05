@@ -12,7 +12,7 @@ import { sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
 import { AuthStore } from '@atproto/auth'
 import * as repoUtil from '../../util/repo'
-import * as schema from '../../lexicon/schemas'
+import * as lexicons from '../../lexicon/lexicons'
 import { TID } from '@atproto/common'
 import { MessageQueue } from '../types'
 
@@ -300,7 +300,7 @@ export class SqlMessageQueue implements MessageQueue {
         const sceneAuth = this.getAuthStore(scene.did)
         const writes = await repoUtil.prepareWrites(scene.did, {
           action: 'create',
-          collection: schema.ids.AppBskyFeedTrend,
+          collection: lexicons.ids.AppBskyFeedTrend,
           rkey: TID.nextStr(),
           value: {
             subject: {

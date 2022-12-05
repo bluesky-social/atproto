@@ -2,6 +2,8 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyFeedEmbed from './embed'
 
 export interface QueryParams {
   author: string;
@@ -9,64 +11,16 @@ export interface QueryParams {
   before?: string;
 }
 
-export interface CallOptions {
-  headers?: Headers;
-}
-
 export type InputSchema = undefined
-
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
 
 export interface OutputSchema {
   cursor?: string;
   feed: FeedItem[];
+  [k: string]: unknown;
 }
-export interface FeedItem {
-  uri: string;
-  cid: string;
-  author: Actor;
-  trendedBy?: Actor;
-  repostedBy?: Actor;
-  record: {};
-  embed?: RecordEmbed | ExternalEmbed | UnknownEmbed;
-  replyCount: number;
-  repostCount: number;
-  upvoteCount: number;
-  downvoteCount: number;
-  indexedAt: string;
-  myState?: {
-    repost?: string,
-    upvote?: string,
-    downvote?: string,
-  };
-}
-export interface Actor {
-  did: string;
-  declaration: Declaration;
-  handle: string;
-  displayName?: string;
-}
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
-}
-export interface RecordEmbed {
-  type: 'record';
-  author: Actor;
-  record: {};
-}
-export interface ExternalEmbed {
-  type: 'external';
-  uri: string;
-  title: string;
-  description: string;
-  imageUri: string;
-}
-export interface UnknownEmbed {
-  type: string;
+
+export interface CallOptions {
+  headers?: Headers;
 }
 
 export interface Response {
@@ -79,4 +33,28 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
+}
+
+export interface FeedItem {
+  uri: string;
+  cid: string;
+  author: AppBskyActorRef.WithInfo;
+  trendedBy?: AppBskyActorRef.WithInfo;
+  repostedBy?: AppBskyActorRef.WithInfo;
+  record: {};
+  embed?: AppBskyFeedEmbed.Main;
+  replyCount: number;
+  repostCount: number;
+  upvoteCount: number;
+  downvoteCount: number;
+  indexedAt: string;
+  myState?: MyState;
+  [k: string]: unknown;
+}
+
+export interface MyState {
+  repost?: string;
+  upvote?: string;
+  downvote?: string;
+  [k: string]: unknown;
 }
