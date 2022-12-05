@@ -73,4 +73,25 @@ describe('server', () => {
       error: 'Service Unavailable',
     })
   })
+
+  it('limits size of json input.', async () => {
+    let error: AxiosError
+    try {
+      await axios.post(`${server.url}/xrpc/com.atproto.repo.createRecord`, {
+        data: 'x'.repeat(100 * 1024), // 100kb
+      })
+      throw new Error('Request should have failed')
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        error = err
+      } else {
+        throw err
+      }
+    }
+    expect(error.response?.status).toEqual(413)
+    expect(error.response?.data).toEqual({
+      error: 'PayloadTooLargeError',
+      message: 'request entity too large',
+    })
+  })
 })

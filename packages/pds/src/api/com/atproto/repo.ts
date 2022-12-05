@@ -1,9 +1,11 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
+import { LexRecord } from '@atproto/lexicon'
 import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
+import { DeleteOp, RecordCreateOp } from '@atproto/repo'
 import * as locals from '../../../locals'
-import * as schemas from '../../../lexicon/schemas'
+import * as dbSchemas from '../../../db/schemas'
 import { TID } from '@atproto/common'
 import * as repoUtil from '../../../util/repo'
 
@@ -111,10 +113,13 @@ export default function (server: Server) {
     if (validate) {
       for (const write of tx.writes) {
         if (write.action === 'create' || write.action === 'update') {
-          const validation = db.validateRecord(write.collection, write.value)
-          if (!validation.valid) {
+          try {
+            db.assertValidRecord(write.collection, write.value)
+          } catch (e) {
             throw new InvalidRequestError(
-              `Invalid ${write.collection} record: ${validation.error}`,
+              `Invalid ${write.collection} record: ${
+                e instanceof Error ? e.message : String(e)
+              }`,
             )
           }
         }
@@ -128,9 +133,9 @@ export default function (server: Server) {
           return {
             ...write,
             rkey: write.rkey || TID.nextStr(),
-          }
+          } as RecordCreateOp
         } else if (write.action === 'delete') {
-          return write
+          return write as DeleteOp
         } else {
           throw new InvalidRequestError(`Action not supported: ${write.action}`)
         }
@@ -144,11 +149,6 @@ export default function (server: Server) {
         repoUtil.indexWrites(dbTxn, writes, now),
       ])
     })
-
-    return {
-      encoding: 'application/json',
-      body: {},
-    }
   })
 
   server.com.atproto.repo.createRecord(async (params, input, req, res) => {
@@ -163,17 +163,22 @@ export default function (server: Server) {
     }
 
     if (validate) {
-      const validation = db.validateRecord(collection, record)
-      if (!validation.valid) {
+      try {
+        db.assertValidRecord(collection, record)
+      } catch (e) {
         throw new InvalidRequestError(
-          `Invalid ${collection} record: ${validation.error}`,
+          `Invalid ${collection} record: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
         )
       }
     }
     const authStore = locals.getAuthstore(res, did)
 
     // determine key type. if undefined, repo assigns a TID
-    const keyType = schemas.recordSchemaDict[collection]?.key
+    const keyType = (
+      dbSchemas.records.getDefOrThrow(collection, ['record']) as LexRecord
+    ).key
     let rkey: string
     if (keyType && keyType.startsWith('literal')) {
       const split = keyType.split(':')

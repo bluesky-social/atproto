@@ -38,10 +38,9 @@ describe('auth', () => {
     return data
   }
   const deleteSession = async (jwt) => {
-    const { data } = await client.com.atproto.session.delete(undefined, {
+    await client.com.atproto.session.delete(undefined, {
       headers: SeedClient.getHeaders(jwt),
     })
-    return data
   }
   const refreshSession = async (jwt) => {
     const { data } = await client.com.atproto.session.refresh(undefined, {

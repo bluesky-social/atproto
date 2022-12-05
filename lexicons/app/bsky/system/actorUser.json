@@ -1,6 +1,10 @@
 {
   "lexicon": 1,
   "id": "app.bsky.system.actorUser",
-  "type": "token",
-  "description": "Actor type: User. Defined for app.bsky.system.declaration's actorType."
+  "defs": {
+    "main": {
+      "type": "token",
+      "description": "Actor type: User. Defined for app.bsky.system.declaration's actorType."
+    }
+  }
 }

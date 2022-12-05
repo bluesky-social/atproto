@@ -1,4 +1,5 @@
 import { Server } from '../../../../lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as GetVotes from '../../../../lexicon/types/app/bsky/feed/getVotes'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
@@ -28,7 +29,7 @@ export default function (server: Server) {
           'profile.displayName as displayName',
         ])
 
-      if (direction) {
+      if (direction === 'up' || direction === 'down') {
         builder = builder.where('vote.direction', '=', direction)
       }
 

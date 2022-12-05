@@ -4,19 +4,17 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  /**
-   * The DID of the repo.
-   */
+  /** The DID of the repo. */
   did: string;
 }
+
+export type InputSchema = string | Uint8Array
 
 export interface CallOptions {
   headers?: Headers;
   qp?: QueryParams;
   encoding: 'application/cbor';
 }
-
-export type InputSchema = string | Uint8Array
 
 export interface Response {
   success: boolean;

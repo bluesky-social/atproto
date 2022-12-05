@@ -2,27 +2,26 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface QueryParams {}
 
-export interface CallOptions {
-  headers?: Headers;
-  qp?: QueryParams;
-  encoding: 'application/json';
-}
-
 export interface InputSchema {
-  subject: Subject;
+  subject: ComAtprotoRepoStrongRef.Main;
   direction: 'up' | 'down' | 'none';
-}
-export interface Subject {
-  uri: string;
-  cid: string;
+  [k: string]: unknown;
 }
 
 export interface OutputSchema {
   upvote?: string;
   downvote?: string;
+  [k: string]: unknown;
+}
+
+export interface CallOptions {
+  headers?: Headers;
+  qp?: QueryParams;
+  encoding: 'application/json';
 }
 
 export interface Response {

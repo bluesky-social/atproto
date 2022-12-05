@@ -3,61 +3,77 @@ import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import xrpc from '@atproto/xrpc'
 
-const SCHEMAS = [
+const LEXICONS = [
   {
     lexicon: 1,
     id: 'io.example.ping1',
-    type: 'procedure',
-    parameters: {
-      type: 'object',
-      properties: {
-        message: { type: 'string' },
+    defs: {
+      main: {
+        type: 'procedure',
+        parameters: {
+          type: 'params',
+          properties: {
+            message: { type: 'string' },
+          },
+        },
+        output: {
+          encoding: 'text/plain',
+        },
       },
-    },
-    output: {
-      encoding: 'text/plain',
     },
   },
   {
     lexicon: 1,
     id: 'io.example.ping2',
-    type: 'procedure',
-    input: {
-      encoding: 'text/plain',
-    },
-    output: {
-      encoding: 'text/plain',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'text/plain',
+        },
+        output: {
+          encoding: 'text/plain',
+        },
+      },
     },
   },
   {
     lexicon: 1,
     id: 'io.example.ping3',
-    type: 'procedure',
-    input: {
-      encoding: 'application/octet-stream',
-    },
-    output: {
-      encoding: 'application/octet-stream',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/octet-stream',
+        },
+        output: {
+          encoding: 'application/octet-stream',
+        },
+      },
     },
   },
   {
     lexicon: 1,
     id: 'io.example.ping4',
-    type: 'procedure',
-    input: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['message'],
-        properties: { message: { type: 'string' } },
-      },
-    },
-    output: {
-      encoding: 'application/json',
-      schema: {
-        type: 'object',
-        required: ['message'],
-        properties: { message: { type: 'string' } },
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['message'],
+            properties: { message: { type: 'string' } },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['message'],
+            properties: { message: { type: 'string' } },
+          },
+        },
       },
     },
   },
@@ -65,7 +81,7 @@ const SCHEMAS = [
 
 describe('Procedures', () => {
   let s: http.Server
-  const server = xrpcServer.createServer(SCHEMAS)
+  const server = xrpcServer.createServer(LEXICONS)
   server.method('io.example.ping1', (params: xrpcServer.Params) => {
     return { encoding: 'text/plain', body: params.message }
   })
@@ -91,7 +107,7 @@ describe('Procedures', () => {
     },
   )
   const client = xrpc.service(`http://localhost:8891`)
-  xrpc.addSchemas(SCHEMAS)
+  xrpc.addLexicons(LEXICONS)
   beforeAll(async () => {
     s = await createServer(8891, server)
   })

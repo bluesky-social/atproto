@@ -5,6 +5,14 @@ import express from 'express'
 
 export interface QueryParams {}
 
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  handle: string;
+  did: string;
+  [k: string]: unknown;
+}
+
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
@@ -18,12 +26,6 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export interface OutputSchema {
-  handle: string;
-  did: string;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,

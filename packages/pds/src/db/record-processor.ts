@@ -5,7 +5,6 @@ import { CID } from 'multiformats/cid'
 import { DatabaseSchema } from './database-schema'
 import { Message } from './message-queue/messages'
 import * as schemas from './schemas'
-import { RecordValidator, ValidationResult } from '@atproto/lexicon'
 
 type RecordProcessorParams<T, S> = {
   schemaId: string
@@ -28,21 +27,24 @@ type RecordProcessorParams<T, S> = {
 
 export class RecordProcessor<T, S> {
   collection: string
-  validator: RecordValidator
   constructor(
     private db: Kysely<DatabaseSchema>,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.collection = this.params.schemaId
-    this.validator = schemas.records.createRecordValidator(this.params.schemaId)
   }
 
   matchesSchema(obj: unknown): obj is T {
-    return this.validator.isValid(obj)
+    try {
+      this.assertValidRecord(obj)
+      return true
+    } catch {
+      return false
+    }
   }
 
-  validateSchema(obj: unknown): ValidationResult {
-    return this.validator.validate(obj)
+  assertValidRecord(obj: unknown): void {
+    schemas.records.assertValidRecord(this.params.schemaId, obj)
   }
 
   async insertRecord(

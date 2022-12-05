@@ -30,7 +30,7 @@ export class NSID {
     try {
       NSID.parse(nsid)
       return true
-    } catch (e: any) {
+    } catch (e) {
       return false
     }
   }

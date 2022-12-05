@@ -4,21 +4,17 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  /**
-   * The DID of the repo.
-   */
+  /** The DID of the repo. */
   did: string;
-  /**
-   * A past commit CID.
-   */
+  /** A past commit CID. */
   from?: string;
 }
+
+export type InputSchema = undefined
 
 export interface CallOptions {
   headers?: Headers;
 }
-
-export type InputSchema = undefined
 
 export interface Response {
   success: boolean;

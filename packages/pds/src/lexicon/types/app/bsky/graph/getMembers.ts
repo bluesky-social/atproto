@@ -2,11 +2,22 @@
 * GENERATED CODE - DO NOT MODIFY
 */
 import express from 'express'
+import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
   actor: string;
   limit?: number;
   before?: string;
+}
+
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  subject: AppBskyActorRef.WithInfo;
+  cursor?: string;
+  members: Member[];
+  [k: string]: unknown;
 }
 
 export type HandlerInput = undefined
@@ -22,37 +33,19 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-
-export type ActorKnown =
-  | 'app.bsky.system.actorUser'
-  | 'app.bsky.system.actorScene'
-export type ActorUnknown = string
-
-export interface OutputSchema {
-  subject: {
-    did: string,
-    declaration: Declaration,
-    handle: string,
-    displayName?: string,
-  };
-  cursor?: string;
-  members: {
-    did: string,
-    declaration: Declaration,
-    handle: string,
-    displayName?: string,
-    createdAt?: string,
-    indexedAt: string,
-  }[];
-}
-export interface Declaration {
-  cid: string;
-  actorType: ActorKnown | ActorUnknown;
-}
-
 export type Handler = (
   params: QueryParams,
   input: HandlerInput,
   req: express.Request,
   res: express.Response
 ) => Promise<HandlerOutput> | HandlerOutput
+
+export interface Member {
+  did: string;
+  declaration: AppBskySystemDeclRef.Main;
+  handle: string;
+  displayName?: string;
+  createdAt?: string;
+  indexedAt: string;
+  [k: string]: unknown;
+}

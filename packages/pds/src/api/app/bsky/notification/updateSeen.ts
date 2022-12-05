@@ -29,7 +29,5 @@ export default function (server: Server) {
       .set({ lastSeenNotifs: parsed })
       .where('handle', '=', user.handle)
       .executeTakeFirst()
-
-    return { encoding: 'application/json', body: {} }
   })
 }

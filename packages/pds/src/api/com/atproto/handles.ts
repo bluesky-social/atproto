@@ -21,7 +21,7 @@ export default function (server: Server) {
       }
       const user = await db.getUser(handle)
       if (!user) {
-        throw new InvalidRequestError('Unable to resolve halnde')
+        throw new InvalidRequestError('Unable to resolve handle')
       }
       did = user.did
     }

@@ -1,14 +1,10 @@
 {
   "lexicon": 1,
   "id": "com.atproto.account.delete",
-  "type": "procedure",
-  "description": "Delete an account.",
-  "input": {
-    "encoding": "",
-    "schema": {}
-  },
-  "output": {
-    "encoding": "",
-    "schema": {}
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete an account."
+    }
   }
 }

@@ -15,7 +15,7 @@ export default function (server: Server) {
     const { db, auth } = locals.get(res)
     auth.getUserDidOrThrow(req)
 
-    term = cleanTerm(term)
+    term = cleanTerm(term || '')
     limit = Math.min(limit ?? 25, 100)
 
     if (!term) {
@@ -49,7 +49,7 @@ export default function (server: Server) {
 }
 
 const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
-  return await getUserSearchQueryPg(db, { term, limit })
+  return await getUserSearchQueryPg(db, { term: term || '', limit })
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select([
       'did_handle.did as did',
@@ -62,7 +62,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
 }
 
 const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
-  return await getUserSearchQuerySqlite(db, { term, limit })
+  return await getUserSearchQuerySqlite(db, { term: term || '', limit })
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select([
       'did_handle.did as did',

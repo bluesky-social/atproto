@@ -1,5 +1,5 @@
 import { AtUri } from '@atproto/uri'
-import * as schema from '../../../../lexicon/schemas'
+import * as lexicons from '../../../../lexicon/lexicons'
 import { Server } from '../../../../lexicon'
 import * as locals from '../../../../locals'
 import * as repoUtil from '../../../../util/repo'
@@ -52,7 +52,7 @@ export default function (server: Server) {
       if (direction !== 'none') {
         create = await repoUtil.prepareCreate(requester, {
           action: 'create',
-          collection: schema.ids.AppBskyFeedVote,
+          collection: lexicons.ids.AppBskyFeedVote,
           rkey: TID.nextStr(),
           value: {
             direction,

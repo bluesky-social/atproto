@@ -4,14 +4,8 @@
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
-  /**
-   * The handle or DID of the repo.
-   */
+  /** The handle or DID of the repo. */
   user: string;
-}
-
-export interface CallOptions {
-  headers?: Headers;
 }
 
 export type InputSchema = undefined
@@ -22,6 +16,11 @@ export interface OutputSchema {
   didDoc: {};
   collections: string[];
   handleIsCorrect: boolean;
+  [k: string]: unknown;
+}
+
+export interface CallOptions {
+  headers?: Headers;
 }
 
 export interface Response {
