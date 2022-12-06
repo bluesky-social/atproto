@@ -14,7 +14,8 @@ export const addUntetheredBlob = async (
   bytes: Uint8Array,
 ): Promise<CID> => {
   const tempKey = await blobs.putTempBytes(bytes)
-  // @TODO calcualte cid with chunking
+  // @TODO calculate cid with chunking
+  // @TODO streaming
   const cid = await cidForData(bytes)
   await dbTxn.db
     .insertInto('blob')
@@ -56,7 +57,7 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
   }
   if (blob.constraints.maxSize && found.size > blob.constraints.maxSize) {
     throwInvalid(
-      `Blob to large. Expected ${blob.constraints.maxSize}. Got: ${found.size}`,
+      `Blob too large. Expected ${blob.constraints.maxSize}. Got: ${found.size}`,
     )
   }
   if (blob.mimeType !== found.mimeType) {
@@ -94,12 +95,30 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
         `Referenced image width is too large. Expected: ${blob.constraints.maxWidth}. Got: ${found.width}`,
       )
     }
+    if (
+      blob.constraints.minHeight &&
+      found.height &&
+      found.height < blob.constraints.minHeight
+    ) {
+      throwInvalid(
+        `Referenced image height is too small. Expected: ${blob.constraints.minHeight}. Got: ${found.height}`,
+      )
+    }
+    if (
+      blob.constraints.minWidth &&
+      found.width &&
+      found.width < blob.constraints.minWidth
+    ) {
+      throwInvalid(
+        `Referenced image width is too small. Expected: ${blob.constraints.minWidth}. Got: ${found.width}`,
+      )
+    }
   }
 }
 
 const acceptedMime = (mime: string, accepted: string[]): boolean => {
-  if (accepted.indexOf('*/*') > -1) return true
-  return accepted.indexOf(mime) > -1
+  if (accepted.includes('*/*')) return true
+  return accepted.includes(mime)
 }
 
 export const verifyBlobAndMakePermanent = async (
@@ -120,14 +139,6 @@ export const verifyBlobAndMakePermanent = async (
   }
   if (found.tempKey) {
     verifyBlob(blob, found)
-    if (blob.constraints.maxSize) {
-      if (found.size > blob.constraints.maxSize) {
-        throw new InvalidRequestError(
-          `Blob to large. Expected ${blob.constraints.maxSize}. Got: ${found.size}`,
-          'InvalidBlob',
-        )
-      }
-    }
     await blobstore.moveToPermanent(found.tempKey, blob.cid)
     await dbTxn.db
       .updateTable('blob')

@@ -9,6 +9,7 @@ import server, { ServerConfig, Database, App } from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
 import BlobDiskStore from '../src/storage/blobs-disk'
+import { BlobStore } from '@atproto/repo'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -19,6 +20,7 @@ export type TestServerInfo = {
   serverKey: string
   app: App
   db: Database
+  blobstore: BlobStore
   close: CloseFn
 }
 
@@ -89,6 +91,7 @@ export const runTestServer = async (
     serverKey: keypair.did(),
     app,
     db,
+    blobstore,
     close: async () => {
       await Promise.all([
         db.close(),

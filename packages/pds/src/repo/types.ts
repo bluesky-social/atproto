@@ -7,6 +7,8 @@ export type ImageConstraint = {
   accept?: string[]
   maxHeight?: number
   maxWidth?: number
+  minHeight?: number
+  minWidth?: number
   maxSize?: number
 }
 

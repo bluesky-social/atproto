@@ -1,6 +1,9 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
 import { randomBytes } from '@atproto/crypto'
+import { BlobStore } from '@atproto/repo'
+import { Database } from '../src'
+import fs from 'fs'
 
 const alice = {
   email: 'alice@test.com',
@@ -18,12 +21,16 @@ const bob = {
 describe('file uploads', () => {
   let client: AtpServiceClient
   let aliceClient: AtpServiceClient
+  let blobstore: BlobStore
+  let db: Database
   let close: CloseFn
 
   beforeAll(async () => {
     const server = await runTestServer({
       dbPostgresSchema: 'crud',
     })
+    blobstore = server.blobstore
+    db = server.db
     close = server.close
     client = AtpApi.service(server.url)
     aliceClient = AtpApi.service(server.url)
@@ -57,6 +64,15 @@ describe('file uploads', () => {
       encoding: 'image/png',
     } as any)
     cid = res.data.cid
+
+    const found = await db.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', cid)
+      .executeTakeFirst()
+    expect(found?.mimeType).toBe('image/png')
+    expect(found?.size).toBe(1000)
+    expect(found?.tempKey).toBeDefined()
   })
 
   it('can reference the file', async () => {
