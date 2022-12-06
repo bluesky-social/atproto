@@ -41,45 +41,50 @@ describe('pds follow views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches followers', async () => {
-    const aliceFollowers = await client.app.bsky.graph.getFollowers({
-      user: sc.dids.alice,
-    })
+    const aliceFollowers = await client.app.bsky.graph.getFollowers(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
     expect(getCursors(aliceFollowers.data.followers)).toEqual(
       getSortedCursors(aliceFollowers.data.followers),
     )
 
-    const bobFollowers = await client.app.bsky.graph.getFollowers({
-      user: sc.dids.bob,
-    })
+    const bobFollowers = await client.app.bsky.graph.getFollowers(
+      { user: sc.dids.bob },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
     expect(getCursors(bobFollowers.data.followers)).toEqual(
       getSortedCursors(bobFollowers.data.followers),
     )
 
-    const carolFollowers = await client.app.bsky.graph.getFollowers({
-      user: sc.dids.carol,
-    })
+    const carolFollowers = await client.app.bsky.graph.getFollowers(
+      { user: sc.dids.carol },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
     expect(getCursors(carolFollowers.data.followers)).toEqual(
       getSortedCursors(carolFollowers.data.followers),
     )
 
-    const danFollowers = await client.app.bsky.graph.getFollowers({
-      user: sc.dids.dan,
-    })
+    const danFollowers = await client.app.bsky.graph.getFollowers(
+      { user: sc.dids.dan },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
     expect(getCursors(danFollowers.data.followers)).toEqual(
       getSortedCursors(danFollowers.data.followers),
     )
 
-    const eveFollowers = await client.app.bsky.graph.getFollowers({
-      user: sc.dids.eve,
-    })
+    const eveFollowers = await client.app.bsky.graph.getFollowers(
+      { user: sc.dids.eve },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
     expect(getCursors(eveFollowers.data.followers)).toEqual(
@@ -88,23 +93,28 @@ describe('pds follow views', () => {
   })
 
   it('fetches followers by handle', async () => {
-    const byDid = await client.app.bsky.graph.getFollowers({
-      user: sc.dids.alice,
-    })
-    const byHandle = await client.app.bsky.graph.getFollowers({
-      user: sc.accounts[alice].handle,
-    })
+    const byDid = await client.app.bsky.graph.getFollowers(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
+    const byHandle = await client.app.bsky.graph.getFollowers(
+      { user: sc.accounts[alice].handle },
+      { headers: sc.getHeaders(alice) },
+    )
     expect(byHandle.data).toEqual(byDid.data)
   })
 
   it('paginates followers', async () => {
     const results = (results) => results.flatMap((res) => res.followers)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.graph.getFollowers({
-        user: sc.dids.alice,
-        before: cursor,
-        limit: 2,
-      })
+      const res = await client.app.bsky.graph.getFollowers(
+        {
+          user: sc.dids.alice,
+          before: cursor,
+          limit: 2,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
       return res.data
     }
 
@@ -113,54 +123,60 @@ describe('pds follow views', () => {
       expect(res.followers.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.graph.getFollowers({
-      user: sc.dids.alice,
-    })
+    const full = await client.app.bsky.graph.getFollowers(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(full.data.followers.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
   it('fetches follows', async () => {
-    const aliceFollowers = await client.app.bsky.graph.getFollows({
-      user: sc.dids.alice,
-    })
+    const aliceFollowers = await client.app.bsky.graph.getFollows(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
     expect(getCursors(aliceFollowers.data.follows)).toEqual(
       getSortedCursors(aliceFollowers.data.follows),
     )
 
-    const bobFollowers = await client.app.bsky.graph.getFollows({
-      user: sc.dids.bob,
-    })
+    const bobFollowers = await client.app.bsky.graph.getFollows(
+      { user: sc.dids.bob },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
     expect(getCursors(bobFollowers.data.follows)).toEqual(
       getSortedCursors(bobFollowers.data.follows),
     )
 
-    const carolFollowers = await client.app.bsky.graph.getFollows({
-      user: sc.dids.carol,
-    })
+    const carolFollowers = await client.app.bsky.graph.getFollows(
+      { user: sc.dids.carol },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
     expect(getCursors(carolFollowers.data.follows)).toEqual(
       getSortedCursors(carolFollowers.data.follows),
     )
 
-    const danFollowers = await client.app.bsky.graph.getFollows({
-      user: sc.dids.dan,
-    })
+    const danFollowers = await client.app.bsky.graph.getFollows(
+      { user: sc.dids.dan },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
     expect(getCursors(danFollowers.data.follows)).toEqual(
       getSortedCursors(danFollowers.data.follows),
     )
 
-    const eveFollowers = await client.app.bsky.graph.getFollows({
-      user: sc.dids.eve,
-    })
+    const eveFollowers = await client.app.bsky.graph.getFollows(
+      { user: sc.dids.eve },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
     expect(getCursors(eveFollowers.data.follows)).toEqual(
@@ -169,23 +185,28 @@ describe('pds follow views', () => {
   })
 
   it('fetches follows by handle', async () => {
-    const byDid = await client.app.bsky.graph.getFollows({
-      user: sc.dids.alice,
-    })
-    const byHandle = await client.app.bsky.graph.getFollows({
-      user: sc.accounts[alice].handle,
-    })
+    const byDid = await client.app.bsky.graph.getFollows(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
+    const byHandle = await client.app.bsky.graph.getFollows(
+      { user: sc.accounts[alice].handle },
+      { headers: sc.getHeaders(alice) },
+    )
     expect(byHandle.data).toEqual(byDid.data)
   })
 
   it('paginates follows', async () => {
     const results = (results) => results.flatMap((res) => res.follows)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.graph.getFollows({
-        user: sc.dids.alice,
-        before: cursor,
-        limit: 2,
-      })
+      const res = await client.app.bsky.graph.getFollows(
+        {
+          user: sc.dids.alice,
+          before: cursor,
+          limit: 2,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
       return res.data
     }
 
@@ -194,9 +215,10 @@ describe('pds follow views', () => {
       expect(res.follows.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.graph.getFollows({
-      user: sc.dids.alice,
-    })
+    const full = await client.app.bsky.graph.getFollows(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(full.data.follows.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))

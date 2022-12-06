@@ -44,27 +44,30 @@ describe('pds member views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches members', async () => {
-    const sceneMembers = await client.app.bsky.graph.getMembers({
-      actor: sc.scenes[scene].did,
-    })
+    const sceneMembers = await client.app.bsky.graph.getMembers(
+      { actor: sc.scenes[scene].did },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(sceneMembers.data)).toMatchSnapshot()
     expect(getCursors(sceneMembers.data.members)).toEqual(
       getSortedCursors(sceneMembers.data.members),
     )
 
-    const otherSceneMembers = await client.app.bsky.graph.getMembers({
-      actor: sc.scenes[otherScene].did,
-    })
+    const otherSceneMembers = await client.app.bsky.graph.getMembers(
+      { actor: sc.scenes[otherScene].did },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(otherSceneMembers.data)).toMatchSnapshot()
     expect(getCursors(otherSceneMembers.data.members)).toEqual(
       getSortedCursors(otherSceneMembers.data.members),
     )
 
-    const carolSceneMembers = await client.app.bsky.graph.getMembers({
-      actor: sc.scenes[carolScene].did,
-    })
+    const carolSceneMembers = await client.app.bsky.graph.getMembers(
+      { actor: sc.scenes[carolScene].did },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(carolSceneMembers.data)).toMatchSnapshot()
     expect(getCursors(carolSceneMembers.data.members)).toEqual(
@@ -73,23 +76,28 @@ describe('pds member views', () => {
   })
 
   it('fetches members by handle', async () => {
-    const byDid = await client.app.bsky.graph.getMembers({
-      actor: sc.scenes[scene].did,
-    })
-    const byHandle = await client.app.bsky.graph.getMembers({
-      actor: sc.scenes[scene].handle,
-    })
+    const byDid = await client.app.bsky.graph.getMembers(
+      { actor: sc.scenes[scene].did },
+      { headers: sc.getHeaders(alice) },
+    )
+    const byHandle = await client.app.bsky.graph.getMembers(
+      { actor: sc.scenes[scene].handle },
+      { headers: sc.getHeaders(alice) },
+    )
     expect(byHandle.data).toEqual(byDid.data)
   })
 
   it('paginates members', async () => {
     const results = (results) => results.flatMap((res) => res.members)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.graph.getMembers({
-        actor: sc.scenes[scene].did,
-        before: cursor,
-        limit: 2,
-      })
+      const res = await client.app.bsky.graph.getMembers(
+        {
+          actor: sc.scenes[scene].did,
+          before: cursor,
+          limit: 2,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
       return res.data
     }
 
@@ -98,45 +106,50 @@ describe('pds member views', () => {
       expect(res.members.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.graph.getMembers({
-      actor: sc.scenes[scene].did,
-    })
+    const full = await client.app.bsky.graph.getMembers(
+      { actor: sc.scenes[scene].did },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(full.data.members.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
   it('fetches memberships', async () => {
-    const aliceMemberships = await client.app.bsky.graph.getMemberships({
-      actor: sc.dids.alice,
-    })
+    const aliceMemberships = await client.app.bsky.graph.getMemberships(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(aliceMemberships.data)).toMatchSnapshot()
     expect(getCursors(aliceMemberships.data.memberships)).toEqual(
       getSortedCursors(aliceMemberships.data.memberships),
     )
 
-    const bobMemberships = await client.app.bsky.graph.getMemberships({
-      actor: sc.dids.bob,
-    })
+    const bobMemberships = await client.app.bsky.graph.getMemberships(
+      { actor: sc.dids.bob },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(bobMemberships.data)).toMatchSnapshot()
     expect(getCursors(bobMemberships.data.memberships)).toEqual(
       getSortedCursors(bobMemberships.data.memberships),
     )
 
-    const carolMemberships = await client.app.bsky.graph.getMemberships({
-      actor: sc.dids.carol,
-    })
+    const carolMemberships = await client.app.bsky.graph.getMemberships(
+      { actor: sc.dids.carol },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(carolMemberships.data)).toMatchSnapshot()
     expect(getCursors(carolMemberships.data.memberships)).toEqual(
       getSortedCursors(carolMemberships.data.memberships),
     )
 
-    const danMemberships = await client.app.bsky.graph.getMemberships({
-      actor: sc.dids.dan,
-    })
+    const danMemberships = await client.app.bsky.graph.getMemberships(
+      { actor: sc.dids.dan },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(danMemberships.data)).toMatchSnapshot()
     expect(getCursors(danMemberships.data.memberships)).toEqual(
@@ -145,23 +158,28 @@ describe('pds member views', () => {
   })
 
   it('fetches memberships by handle', async () => {
-    const byDid = await client.app.bsky.graph.getMemberships({
-      actor: sc.dids.alice,
-    })
-    const byHandle = await client.app.bsky.graph.getMemberships({
-      actor: sc.accounts[alice].handle,
-    })
+    const byDid = await client.app.bsky.graph.getMemberships(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
+    const byHandle = await client.app.bsky.graph.getMemberships(
+      { actor: sc.accounts[alice].handle },
+      { headers: sc.getHeaders(alice) },
+    )
     expect(byHandle.data).toEqual(byDid.data)
   })
 
   it('paginates memberships', async () => {
     const results = (results) => results.flatMap((res) => res.memberships)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.graph.getMemberships({
-        actor: sc.dids.alice,
-        before: cursor,
-        limit: 2,
-      })
+      const res = await client.app.bsky.graph.getMemberships(
+        {
+          actor: sc.dids.alice,
+          before: cursor,
+          limit: 2,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
       return res.data
     }
 
@@ -170,9 +188,10 @@ describe('pds member views', () => {
       expect(res.memberships.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.graph.getMemberships({
-      actor: sc.dids.alice,
-    })
+    const full = await client.app.bsky.graph.getMemberships(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(full.data.memberships.length).toEqual(3)
     expect(results(paginatedAll)).toEqual(results([full.data]))
@@ -180,21 +199,13 @@ describe('pds member views', () => {
 
   it('includes membership state in getProfile', async () => {
     const profile1 = await client.app.bsky.actor.getProfile(
-      {
-        actor: scene,
-      },
-      {
-        headers: sc.getHeaders(alice),
-      },
+      { actor: scene },
+      { headers: sc.getHeaders(alice) },
     )
     expect(profile1.data.myState?.member).toBeTruthy()
     const profile2 = await client.app.bsky.actor.getProfile(
-      {
-        actor: otherScene,
-      },
-      {
-        headers: sc.getHeaders(alice),
-      },
+      { actor: otherScene },
+      { headers: sc.getHeaders(alice) },
     )
     expect(profile2.data.myState?.member).toBeFalsy()
   })

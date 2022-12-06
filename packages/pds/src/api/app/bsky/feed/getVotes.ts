@@ -1,13 +1,13 @@
 import { Server } from '../../../../lexicon'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as GetVotes from '../../../../lexicon/types/app/bsky/feed/getVotes'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclarationSimple } from '../util'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.feed.getVotes(
-    async (params: GetVotes.QueryParams, _input, _req, res) => {
+  server.app.bsky.feed.getVotes({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, res }) => {
       const { uri, limit, before, cid, direction } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
@@ -67,5 +67,5 @@ export default function (server: Server) {
         },
       }
     },
-  )
+  })
 }

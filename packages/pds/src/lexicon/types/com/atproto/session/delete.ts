@@ -1,7 +1,8 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import express from 'express'
+import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
@@ -9,14 +10,15 @@ export type InputSchema = undefined
 export type HandlerInput = undefined
 
 export interface HandlerError {
-  status: number;
-  message?: string;
+  status: number
+  message?: string
 }
 
 export type HandlerOutput = HandlerError | void
-export type Handler = (
-  params: QueryParams,
-  input: HandlerInput,
-  req: express.Request,
+export type Handler<HA extends HandlerAuth = never> = (ctx: {
+  auth: HA
+  params: QueryParams
+  input: HandlerInput
+  req: express.Request
   res: express.Response
-) => Promise<HandlerOutput> | HandlerOutput
+}) => Promise<HandlerOutput> | HandlerOutput

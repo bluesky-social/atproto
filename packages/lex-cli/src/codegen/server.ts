@@ -73,6 +73,9 @@ const indexTs = (
       name: 'Options',
       alias: 'XrpcOptions',
     })
+    xrpcImport.addNamedImport({
+      name: 'AuthVerifier',
+    })
     //= import {lexicons} from './lexicons'
     file
       .addImportDeclaration({
@@ -173,6 +176,26 @@ const indexTs = (
           ),
         ].join('\n'),
       )
+
+    file.addTypeAlias({
+      name: 'ConfigOf',
+      typeParameters: [{ name: 'Auth' }, { name: 'Handler' }],
+      type: `
+        | Handler
+        | {
+          auth?: Auth
+          handler: Handler
+        }`,
+    })
+
+    file.addTypeAlias({
+      name: 'ExtractAuth',
+      typeParameters: [{ name: 'AV', constraint: 'AuthVerifier' }],
+      type: `Extract<
+        Awaited<ReturnType<AV>>,
+        { credentials: unknown }
+      >`,
+    })
   })
 
 function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
@@ -225,17 +248,18 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     const name = toCamelCase(NSID.parse(userType.nsid).name || '')
     const method = cls.addMethod({
       name,
+      typeParameters: [{ name: 'AV', constraint: 'AuthVerifier' }],
     })
     method.addParameter({
-      name: 'handler',
-      type: `${moduleName}.Handler`,
+      name: 'cfg',
+      type: `ConfigOf<AV, ${moduleName}.Handler<ExtractAuth<AV>>>`,
     })
     method.setBodyText(
       [
         // Placing schema on separate line, since the following one was being formatted
         // into multiple lines and causing the ts-ignore to ignore the wrong line.
-        `const schema = '${userType.nsid}' // @ts-ignore`,
-        `return this._server.xrpc.method(schema, handler)`,
+        `const nsid = '${userType.nsid}' // @ts-ignore`,
+        `return this._server.xrpc.method(nsid, cfg)`,
       ].join('\n'),
     )
   }
@@ -287,7 +311,10 @@ function genServerXrpcCommon(
   const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure']) as
     | LexXrpcQuery
     | LexXrpcProcedure
-
+  file.addImportDeclaration({
+    moduleSpecifier: '@atproto/xrpc-server',
+    namedImports: [{ name: 'HandlerAuth' }],
+  })
   //= export interface HandlerInput {...}
   if (def.type === 'procedure' && def.input?.encoding) {
     const handlerInput = file.addInterface({
@@ -379,12 +406,16 @@ function genServerXrpcCommon(
   file.addTypeAlias({
     name: 'Handler',
     isExported: true,
-    type: `(
-        params: QueryParams,
-        input: HandlerInput,
-        req: express.Request,
-        res: express.Response,
-      ) => Promise<HandlerOutput> | HandlerOutput`,
+    typeParameters: [
+      { name: 'HA', constraint: 'HandlerAuth', default: 'never' },
+    ],
+    type: `(ctx: {
+        auth: HA
+        params: QueryParams
+        input: HandlerInput
+        req: express.Request
+        res: express.Response
+      }) => Promise<HandlerOutput> | HandlerOutput`,
   })
 }
 

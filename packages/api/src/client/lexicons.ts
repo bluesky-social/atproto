@@ -1,6 +1,6 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import { LexiconDoc } from '@atproto/lexicon'
 
 export const lexicons: LexiconDoc[] = [

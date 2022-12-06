@@ -60,32 +60,38 @@ describe('pds assertion views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('requires an author or subject', async () => {
-    const promise = client.app.bsky.graph.getAssertions()
+    const promise = client.app.bsky.graph.getAssertions(
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
     await expect(promise).rejects.toThrow('Must provide an author or subject')
   })
 
   it('fetches assertions by author', async () => {
-    const sceneAssertions = await client.app.bsky.graph.getAssertions({
-      author: sc.scenes[scene].did,
-    })
+    const sceneAssertions = await client.app.bsky.graph.getAssertions(
+      { author: sc.scenes[scene].did },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(sceneAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(sceneAssertions.data.assertions)).toEqual(
       getSortedCursors(sceneAssertions.data.assertions),
     )
 
-    const otherSceneAssertions = await client.app.bsky.graph.getAssertions({
-      author: sc.scenes[otherScene].did,
-    })
+    const otherSceneAssertions = await client.app.bsky.graph.getAssertions(
+      { author: sc.scenes[otherScene].did },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(otherSceneAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(otherSceneAssertions.data.assertions)).toEqual(
       getSortedCursors(otherSceneAssertions.data.assertions),
     )
 
-    const carolSceneAssertions = await client.app.bsky.graph.getAssertions({
-      author: sc.scenes[carolScene].did,
-    })
+    const carolSceneAssertions = await client.app.bsky.graph.getAssertions(
+      { author: sc.scenes[carolScene].did },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(carolSceneAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(carolSceneAssertions.data.assertions)).toEqual(
@@ -94,9 +100,10 @@ describe('pds assertion views', () => {
   })
 
   it('fetches assertions by subject', async () => {
-    const aliceAssertions = await client.app.bsky.graph.getAssertions({
-      subject: sc.accounts[alice].did,
-    })
+    const aliceAssertions = await client.app.bsky.graph.getAssertions(
+      { subject: sc.accounts[alice].did },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(aliceAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(aliceAssertions.data.assertions)).toEqual(
@@ -105,10 +112,13 @@ describe('pds assertion views', () => {
   })
 
   it('fetches assertions by author & subject', async () => {
-    const aliceSceneAssertions = await client.app.bsky.graph.getAssertions({
-      author: sc.scenes[scene].did,
-      subject: sc.accounts[alice].did,
-    })
+    const aliceSceneAssertions = await client.app.bsky.graph.getAssertions(
+      {
+        author: sc.scenes[scene].did,
+        subject: sc.accounts[alice].did,
+      },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(aliceSceneAssertions.data.assertions)).toMatchSnapshot()
     expect(getCursors(aliceSceneAssertions.data.assertions)).toEqual(
@@ -117,10 +127,13 @@ describe('pds assertion views', () => {
   })
 
   it('fetches assertions by author filtered by confirmation status', async () => {
-    const sceneAssertionsConfirmed = await client.app.bsky.graph.getAssertions({
-      author: sc.scenes[scene].did,
-      confirmed: true,
-    })
+    const sceneAssertionsConfirmed = await client.app.bsky.graph.getAssertions(
+      {
+        author: sc.scenes[scene].did,
+        confirmed: true,
+      },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(
       forSnapshot(sceneAssertionsConfirmed.data.assertions),
@@ -130,10 +143,13 @@ describe('pds assertion views', () => {
     )
 
     const sceneAssertionsUnconfirmed =
-      await client.app.bsky.graph.getAssertions({
-        author: sc.scenes[scene].did,
-        confirmed: false,
-      })
+      await client.app.bsky.graph.getAssertions(
+        {
+          author: sc.scenes[scene].did,
+          confirmed: false,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
 
     expect(
       forSnapshot(sceneAssertionsUnconfirmed.data.assertions),
@@ -143,10 +159,13 @@ describe('pds assertion views', () => {
     )
 
     const otherSceneAssertionsConfirmed =
-      await client.app.bsky.graph.getAssertions({
-        author: sc.scenes[otherScene].did,
-        confirmed: true,
-      })
+      await client.app.bsky.graph.getAssertions(
+        {
+          author: sc.scenes[otherScene].did,
+          confirmed: true,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
 
     expect(
       forSnapshot(otherSceneAssertionsConfirmed.data.assertions),
@@ -156,10 +175,13 @@ describe('pds assertion views', () => {
     )
 
     const otherSceneAssertionsUnconfirmed =
-      await client.app.bsky.graph.getAssertions({
-        author: sc.scenes[otherScene].did,
-        confirmed: false,
-      })
+      await client.app.bsky.graph.getAssertions(
+        {
+          author: sc.scenes[otherScene].did,
+          confirmed: false,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
 
     expect(
       forSnapshot(otherSceneAssertionsUnconfirmed.data.assertions),
@@ -169,10 +191,13 @@ describe('pds assertion views', () => {
     )
 
     const carolSceneAssertionsConfirmed =
-      await client.app.bsky.graph.getAssertions({
-        author: sc.scenes[carolScene].did,
-        confirmed: true,
-      })
+      await client.app.bsky.graph.getAssertions(
+        {
+          author: sc.scenes[carolScene].did,
+          confirmed: true,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
 
     expect(
       forSnapshot(carolSceneAssertionsConfirmed.data.assertions),
@@ -182,10 +207,13 @@ describe('pds assertion views', () => {
     )
 
     const carolSceneAssertionsUnconfirmed =
-      await client.app.bsky.graph.getAssertions({
-        author: sc.scenes[carolScene].did,
-        confirmed: true,
-      })
+      await client.app.bsky.graph.getAssertions(
+        {
+          author: sc.scenes[carolScene].did,
+          confirmed: true,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
 
     expect(
       forSnapshot(carolSceneAssertionsUnconfirmed.data.assertions),
@@ -196,20 +224,26 @@ describe('pds assertion views', () => {
   })
 
   it('fetches assertions by author filtered by type', async () => {
-    const sceneAssertionsMember = await client.app.bsky.graph.getAssertions({
-      author: sc.scenes[scene].did,
-      assertion: 'app.bsky.graph.assertMember',
-    })
+    const sceneAssertionsMember = await client.app.bsky.graph.getAssertions(
+      {
+        author: sc.scenes[scene].did,
+        assertion: 'app.bsky.graph.assertMember',
+      },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(sceneAssertionsMember.data.assertions)).toMatchSnapshot()
     expect(getCursors(sceneAssertionsMember.data.assertions)).toEqual(
       getSortedCursors(sceneAssertionsMember.data.assertions),
     )
 
-    const sceneAssertionsCreator = await client.app.bsky.graph.getAssertions({
-      author: sc.scenes[scene].did,
-      assertion: 'app.bsky.graph.assertCreator',
-    })
+    const sceneAssertionsCreator = await client.app.bsky.graph.getAssertions(
+      {
+        author: sc.scenes[scene].did,
+        assertion: 'app.bsky.graph.assertCreator',
+      },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(
       forSnapshot(sceneAssertionsCreator.data.assertions),
@@ -221,11 +255,14 @@ describe('pds assertion views', () => {
 
   it('paginates assertions', async () => {
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.graph.getAssertions({
-        author: sc.scenes[scene].did,
-        before: cursor,
-        limit: 2,
-      })
+      const res = await client.app.bsky.graph.getAssertions(
+        {
+          author: sc.scenes[scene].did,
+          before: cursor,
+          limit: 2,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
       return res.data
     }
 

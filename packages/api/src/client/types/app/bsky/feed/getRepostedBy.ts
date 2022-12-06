@@ -1,34 +1,34 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import { Headers, XRPCError } from '@atproto/xrpc'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
-  uri: string;
-  cid?: string;
-  limit?: number;
-  before?: string;
+  uri: string
+  cid?: string
+  limit?: number
+  before?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  uri: string;
-  cid?: string;
-  cursor?: string;
-  repostedBy: RepostedBy[];
-  [k: string]: unknown;
+  uri: string
+  cid?: string
+  cursor?: string
+  repostedBy: RepostedBy[]
+  [k: string]: unknown
 }
 
 export interface CallOptions {
-  headers?: Headers;
+  headers?: Headers
 }
 
 export interface Response {
-  success: boolean;
-  headers: Headers;
-  data: OutputSchema;
+  success: boolean
+  headers: Headers
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {
@@ -38,11 +38,11 @@ export function toKnownErr(e: any) {
 }
 
 export interface RepostedBy {
-  did: string;
-  declaration: AppBskySystemDeclRef.Main;
-  handle: string;
-  displayName?: string;
-  createdAt?: string;
-  indexedAt: string;
-  [k: string]: unknown;
+  did: string
+  declaration: AppBskySystemDeclRef.Main
+  handle: string
+  displayName?: string
+  createdAt?: string
+  indexedAt: string
+  [k: string]: unknown
 }

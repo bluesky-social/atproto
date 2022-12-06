@@ -1,28 +1,28 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   /** The DID of the repo. */
-  did: string;
+  did: string
   /** Validate the records? */
-  validate?: boolean;
-  writes: (Create | Update | Delete)[];
-  [k: string]: unknown;
+  validate?: boolean
+  writes: (Create | Update | Delete)[]
+  [k: string]: unknown
 }
 
 export interface CallOptions {
-  headers?: Headers;
-  qp?: QueryParams;
-  encoding: 'application/json';
+  headers?: Headers
+  qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {
-  success: boolean;
-  headers: Headers;
+  success: boolean
+  headers: Headers
 }
 
 export function toKnownErr(e: any) {
@@ -32,24 +32,24 @@ export function toKnownErr(e: any) {
 }
 
 export interface Create {
-  action: 'create';
-  collection: string;
-  rkey?: string;
-  value: {};
-  [k: string]: unknown;
+  action: 'create'
+  collection: string
+  rkey?: string
+  value: {}
+  [k: string]: unknown
 }
 
 export interface Update {
-  action: 'update';
-  collection: string;
-  rkey: string;
-  value: {};
-  [k: string]: unknown;
+  action: 'update'
+  collection: string
+  rkey: string
+  value: {}
+  [k: string]: unknown
 }
 
 export interface Delete {
-  action: 'delete';
-  collection: string;
-  rkey: string;
-  [k: string]: unknown;
+  action: 'delete'
+  collection: string
+  rkey: string
+  [k: string]: unknown
 }
