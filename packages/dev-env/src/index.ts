@@ -84,6 +84,8 @@ export class DevEnvServer {
             emailNoReplyAddress: 'noreply@blueskyweb.xyz',
             adminPassword: 'password',
             inviteRequired: false,
+            privacyPolicyUrl: 'https://example.com/privacy',
+            termsOfServiceUrl: 'https://example.com/tos',
           }).listener,
         )
         break
