@@ -8,7 +8,7 @@ export interface ImageProcessor {
 
 export type Options = Dimensions & {
   format: 'jpeg' | 'png'
-  // When 'cover', scale to fill given dimensions, cropping if necessary.
+  // When 'cover' (default), scale to fill given dimensions, cropping if necessary.
   // When 'inside', scale to fit within given dimensions.
   fit?: 'cover' | 'inside'
   // When false (default), do not scale up.
