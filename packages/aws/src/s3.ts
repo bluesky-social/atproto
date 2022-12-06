@@ -26,11 +26,11 @@ export class S3BlobStore implements BlobStore {
   }
 
   private getTmpPath(key: string): string {
-    return `temp/${key}`
+    return `tmp/${key}`
   }
 
   private getStoredPath(cid: CID): string {
-    return `stored/${cid.toString()}`
+    return `blocks/${cid.toString()}`
   }
 
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
