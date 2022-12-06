@@ -5,7 +5,7 @@ import { BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
 import { httpLogger as log } from '../logger'
 
-export class BlobDiskStore implements BlobStore {
+export class DiskBlobStore implements BlobStore {
   location: string
   tmpLocation: string
 
@@ -17,13 +17,13 @@ export class BlobDiskStore implements BlobStore {
   static async create(
     location: string,
     tmpLocation?: string,
-  ): Promise<BlobDiskStore> {
+  ): Promise<DiskBlobStore> {
     const tmp = tmpLocation || '/tmp/atproto/blobs'
     await Promise.all([
       fs.promises.mkdir(location, { recursive: true }),
       fs.promises.mkdir(tmp, { recursive: true }),
     ])
-    return new BlobDiskStore(location, tmp)
+    return new DiskBlobStore(location, tmp)
   }
 
   private genKey() {
@@ -52,7 +52,7 @@ export class BlobDiskStore implements BlobStore {
     return key
   }
 
-  async moveToPermanent(key: string, cid: CID): Promise<void> {
+  async makePermanent(key: string, cid: CID): Promise<void> {
     const tmpPath = this.getTmpPath(key)
     const storedPath = this.getStoredPath(cid)
     const alreadyHas = await this.hasStored(cid)
@@ -65,6 +65,14 @@ export class BlobDiskStore implements BlobStore {
     } catch (err) {
       log.error({ err, tmpPath }, 'could not delete file from temp storage')
     }
+  }
+
+  async getBytes(cid: CID): Promise<Uint8Array> {
+    return fs.promises.readFile(this.getStoredPath(cid))
+  }
+
+  getStream(cid: CID): stream.Readable {
+    return fs.createReadStream(this.getStoredPath(cid))
   }
 }
 
@@ -84,4 +92,4 @@ const fileExists = (location: string): Promise<boolean> => {
   })
 }
 
-export default BlobDiskStore
+export default DiskBlobStore

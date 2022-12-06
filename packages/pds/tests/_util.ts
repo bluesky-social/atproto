@@ -8,8 +8,8 @@ import * as uint8arrays from 'uint8arrays'
 import server, { ServerConfig, Database, App } from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
-import BlobDiskStore from '../src/storage/blobs-disk'
-import { BlobStore } from '@atproto/repo'
+import DiskBlobStore from '../src/storage/disk-blobstore'
+import { randomStr } from '@atproto/crypto'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -20,7 +20,7 @@ export type TestServerInfo = {
   serverKey: string
   app: App
   db: Database
-  blobstore: BlobStore
+  blobstore: DiskBlobStore
   close: CloseFn
 }
 
@@ -46,6 +46,8 @@ export const runTestServer = async (
     'https://pds.public.url',
   )
 
+  const blobstoreLoc = '/tmp/' + randomStr(5, 'base32')
+
   const config = new ServerConfig({
     debugMode: true,
     version: '0.0.0',
@@ -62,8 +64,8 @@ export const runTestServer = async (
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
     publicUrl: 'https://pds.public.url',
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
-    blobstoreLocation: '/tmp/atproto_test/blobs',
-    blobstoreTmp: '/tmp/atproto_test/tmp',
+    blobstoreLocation: `${blobstoreLoc}/blobs`,
+    blobstoreTmp: `${blobstoreLoc}/tmp`,
     ...params,
   })
 
@@ -77,7 +79,7 @@ export const runTestServer = async (
 
   await db.migrateToLatestOrThrow()
 
-  const blobstore = await BlobDiskStore.create(
+  const blobstore = await DiskBlobStore.create(
     config.blobstoreLocation,
     config.blobstoreTmp,
   )

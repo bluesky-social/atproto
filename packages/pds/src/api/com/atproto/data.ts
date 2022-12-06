@@ -9,7 +9,7 @@ export default function (server: Server) {
     handler: async ({ input, res }) => {
       const { db, blobstore } = locals.get(res)
 
-      const cid = await repo.addUntetheredBlobStream(
+      const cid = await repo.addUntetheredBlob(
         db,
         blobstore,
         input.encoding,

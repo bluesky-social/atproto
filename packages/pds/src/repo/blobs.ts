@@ -9,7 +9,7 @@ import { AtUri } from '@atproto/uri'
 import { BlobRef, PreparedWrites } from './types'
 import { Blob as BlobTable } from '../db/tables/blob'
 
-export const addUntetheredBlobStream = async (
+export const addUntetheredBlob = async (
   dbTxn: Database,
   blobstore: BlobStore,
   mimeType: string,
@@ -153,7 +153,7 @@ export const verifyBlobAndMakePermanent = async (
   }
   if (found.tempKey) {
     verifyBlob(blob, found)
-    await blobstore.moveToPermanent(found.tempKey, blob.cid)
+    await blobstore.makePermanent(found.tempKey, blob.cid)
     await dbTxn.db
       .updateTable('blob')
       .set({ tempKey: null })

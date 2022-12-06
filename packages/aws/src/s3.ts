@@ -10,15 +10,16 @@ export type S3Config = { bucket: string } & Omit<
 >
 
 export class S3BlobStore implements BlobStore {
-  constructor(private client: aws.S3, private bucket: string) {}
+  private client: aws.S3
+  private bucket: string
 
-  static load(cfg: S3Config) {
+  constructor(cfg: S3Config) {
     const { bucket, ...rest } = cfg
-    const client = new aws.S3({
+    this.bucket = bucket
+    this.client = new aws.S3({
       ...rest,
       apiVersion: '2006-03-01',
     })
-    return new S3BlobStore(client, bucket)
   }
 
   private genKey() {
@@ -43,7 +44,7 @@ export class S3BlobStore implements BlobStore {
     return key
   }
 
-  async moveToPermanent(key: string, cid: CID): Promise<void> {
+  async makePermanent(key: string, cid: CID): Promise<void> {
     const tmpPath = this.getTmpPath(key)
     await this.client.copyObject({
       Bucket: this.bucket,
@@ -55,5 +56,17 @@ export class S3BlobStore implements BlobStore {
       Bucket: this.bucket,
       Key: tmpPath,
     })
+  }
+
+  async getBytes(cid: CID): Promise<Uint8Array> {
+    const res = await this.client.getObject({
+      Bucket: this.bucket,
+      Key: this.getStoredPath(cid),
+    })
+    if (res.Body) {
+      return res.Body.transformToByteArray()
+    } else {
+      throw new Error(`Could not get blob: ${cid.toString()}`)
+    }
   }
 }

@@ -1,8 +1,10 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
 import { randomBytes } from '@atproto/crypto'
-import { BlobStore } from '@atproto/repo'
+import { CID } from 'multiformats/cid'
 import { Database } from '../src'
+import DiskBlobStore from '../src/storage/disk-blobstore'
+import * as uint8arrays from 'uint8arrays'
 
 const alice = {
   email: 'alice@test.com',
@@ -20,7 +22,7 @@ const bob = {
 describe('file uploads', () => {
   let client: AtpServiceClient
   let aliceClient: AtpServiceClient
-  let blobstore: BlobStore
+  let blobstore: DiskBlobStore
   let db: Database
   let close: CloseFn
 
@@ -72,6 +74,7 @@ describe('file uploads', () => {
     expect(found?.mimeType).toBe('image/png')
     expect(found?.size).toBe(1000)
     expect(found?.tempKey).toBeDefined()
+    expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
   })
 
   it('can reference the file', async () => {
@@ -84,5 +87,17 @@ describe('file uploads', () => {
       actor: 'alice.test',
     })
     expect(profile.data.avatar).toEqual(cid)
+  })
+
+  it('after referencing the file is moved to permanent storage', async () => {
+    const found = await db.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', cid)
+      .executeTakeFirst()
+
+    expect(found?.tempKey).toBeNull()
+    expect(await blobstore.hasTemp(found?.tempKey as string)).toBeFalsy()
+    expect(await blobstore.hasStored(CID.parse(cid))).toBeTruthy()
   })
 })

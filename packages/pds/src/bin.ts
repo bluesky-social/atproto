@@ -3,7 +3,7 @@ import * as crypto from '@atproto/crypto'
 import Database from './db'
 import server from './index'
 import { ServerConfig } from './config'
-import BlobDiskStore from './storage/blobs-disk'
+import DiskBlobStore from './storage/disk-blobstore'
 
 const run = async () => {
   const env = process.env.ENV
@@ -31,7 +31,7 @@ const run = async () => {
 
   await db.migrateToLatestOrThrow()
 
-  const blobstore = await BlobDiskStore.create(
+  const blobstore = await DiskBlobStore.create(
     cfg.blobstoreLocation,
     cfg.blobstoreTmp,
   )
