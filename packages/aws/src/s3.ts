@@ -48,7 +48,7 @@ export class S3BlobStore implements BlobStore {
     const tmpPath = this.getTmpPath(key)
     await this.client.copyObject({
       Bucket: this.bucket,
-      CopySource: tmpPath,
+      CopySource: `${this.bucket}/${tmpPath}`,
       Key: this.getStoredPath(cid),
     })
 
@@ -70,3 +70,5 @@ export class S3BlobStore implements BlobStore {
     }
   }
 }
+
+export default S3BlobStore

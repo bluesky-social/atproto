@@ -1,7 +1,6 @@
 import fs from 'fs'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
-import { randomBytes } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import { Database } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
