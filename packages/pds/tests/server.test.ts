@@ -1,19 +1,29 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
+import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { handler as errorHandler } from '../src/error'
 import * as locals from '../src/locals'
+import { SeedClient } from './seeds/client'
+import usersSeed from './seeds/users'
 
 describe('server', () => {
   let server: TestServerInfo
   let close: CloseFn
+  let client: AtpServiceClient
+  let sc: SeedClient
+  let alice: string
 
   beforeAll(async () => {
     server = await runTestServer({
       dbPostgresSchema: 'server',
     })
     close = server.close
+    client = AtpApi.service(server.url)
+    sc = new SeedClient(client)
+    await usersSeed(sc)
+    alice = sc.dids.alice
   })
 
   afterAll(async () => {
@@ -77,9 +87,13 @@ describe('server', () => {
   it('limits size of json input.', async () => {
     let error: AxiosError
     try {
-      await axios.post(`${server.url}/xrpc/com.atproto.repo.createRecord`, {
-        data: 'x'.repeat(100 * 1024), // 100kb
-      })
+      await axios.post(
+        `${server.url}/xrpc/com.atproto.repo.createRecord`,
+        {
+          data: 'x'.repeat(100 * 1024), // 100kb
+        },
+        { headers: sc.getHeaders(alice) },
+      )
       throw new Error('Request should have failed')
     } catch (err) {
       if (axios.isAxiosError(err)) {

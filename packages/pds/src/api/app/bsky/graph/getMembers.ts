@@ -1,13 +1,14 @@
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as GetMembers from '../../../../lexicon/types/app/bsky/graph/getMembers'
 import { getActorInfo, getDeclarationSimple } from '../util'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.graph.getMembers(
-    async (params: GetMembers.QueryParams, _input, _req, res) => {
+  server.app.bsky.graph.getMembers({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, res }) => {
       const { actor, limit, before } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
@@ -67,5 +68,5 @@ export default function (server: Server) {
         },
       }
     },
-  )
+  })
 }

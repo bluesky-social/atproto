@@ -1,7 +1,6 @@
 import { sql } from 'kysely'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 import * as locals from '../../../../locals'
 import { isEnum } from '../util'
 import {
@@ -12,18 +11,16 @@ import {
 } from '../util/feed'
 import { countAll } from '../../../../db/util'
 import { paginate } from '../../../../db/pagination'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.feed.getTimeline(
-    async (params: GetTimeline.QueryParams, _input, req, res) => {
-      const { auth, db } = locals.get(res)
+  server.app.bsky.feed.getTimeline({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, auth, res }) => {
+      const { db } = locals.get(res)
       const { algorithm, limit, before } = params
       const { ref } = db.db.dynamic
-
-      const requester = auth.getUserDid(req)
-      if (!requester) {
-        throw new AuthRequiredError()
-      }
+      const requester = auth.credentials.did
 
       let feedAlgorithm: FeedAlgorithm
       if (isEnum(FeedAlgorithm, algorithm)) {
@@ -187,5 +184,5 @@ export default function (server: Server) {
         },
       }
     },
-  )
+  })
 }

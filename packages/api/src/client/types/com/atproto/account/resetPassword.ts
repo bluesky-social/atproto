@@ -1,25 +1,25 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  token: string;
-  password: string;
-  [k: string]: unknown;
+  token: string
+  password: string
+  [k: string]: unknown
 }
 
 export interface CallOptions {
-  headers?: Headers;
-  qp?: QueryParams;
-  encoding: 'application/json';
+  headers?: Headers
+  qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {
-  success: boolean;
-  headers: Headers;
+  success: boolean
+  headers: Headers
 }
 
 export class ExpiredTokenError extends XRPCError {

@@ -43,9 +43,10 @@ describe('pds repost views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches reposted-by for a post', async () => {
-    const view = await client.app.bsky.feed.getRepostedBy({
-      uri: sc.posts[alice][2].ref.uriStr,
-    })
+    const view = await client.app.bsky.feed.getRepostedBy(
+      { uri: sc.posts[alice][2].ref.uriStr },
+      { headers: sc.getHeaders(alice) },
+    )
     expect(view.data.uri).toEqual(sc.posts[sc.dids.alice][2].ref.uriStr)
     expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
     expect(getCursors(view.data.repostedBy)).toEqual(
@@ -54,9 +55,10 @@ describe('pds repost views', () => {
   })
 
   it('fetches reposted-by for a reply', async () => {
-    const view = await client.app.bsky.feed.getRepostedBy({
-      uri: sc.replies[bob][0].ref.uriStr,
-    })
+    const view = await client.app.bsky.feed.getRepostedBy(
+      { uri: sc.replies[bob][0].ref.uriStr },
+      { headers: sc.getHeaders(alice) },
+    )
     expect(view.data.uri).toEqual(sc.replies[sc.dids.bob][0].ref.uriStr)
     expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
     expect(getCursors(view.data.repostedBy)).toEqual(
@@ -67,11 +69,14 @@ describe('pds repost views', () => {
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.repostedBy)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.feed.getRepostedBy({
-        uri: sc.posts[alice][2].ref.uriStr,
-        before: cursor,
-        limit: 2,
-      })
+      const res = await client.app.bsky.feed.getRepostedBy(
+        {
+          uri: sc.posts[alice][2].ref.uriStr,
+          before: cursor,
+          limit: 2,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
       return res.data
     }
 
@@ -80,9 +85,10 @@ describe('pds repost views', () => {
       expect(res.repostedBy.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.feed.getRepostedBy({
-      uri: sc.posts[alice][2].ref.uriStr,
-    })
+    const full = await client.app.bsky.feed.getRepostedBy(
+      { uri: sc.posts[alice][2].ref.uriStr },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(full.data.repostedBy.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))

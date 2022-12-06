@@ -12,6 +12,12 @@ export const handlerInput = zod.object({
 })
 export type HandlerInput = zod.infer<typeof handlerInput>
 
+export const handlerAuth = zod.object({
+  credentials: zod.any(),
+  artifacts: zod.any(),
+})
+export type HandlerAuth = zod.infer<typeof handlerAuth>
+
 export const handlerSuccess = zod.object({
   encoding: zod.string(),
   body: zod.any(),
@@ -27,12 +33,25 @@ export type HandlerError = zod.infer<typeof handlerError>
 
 export type HandlerOutput = HandlerSuccess | HandlerError
 
-export type XRPCHandler = (
-  params: Params,
-  input: HandlerInput | undefined,
-  req: express.Request,
-  res: express.Response,
-) => Promise<HandlerOutput> | HandlerOutput | undefined
+export type XRPCHandler = (ctx: {
+  auth: HandlerAuth | undefined
+  params: Params
+  input: HandlerInput | undefined
+  req: express.Request
+  res: express.Response
+}) => Promise<HandlerOutput> | HandlerOutput | undefined
+
+export type AuthOutput = HandlerAuth | HandlerError
+
+export type AuthVerifier = (ctx: {
+  req: express.Request
+  res: express.Response
+}) => Promise<AuthOutput> | AuthOutput
+
+export type XRPCHandlerConfig = {
+  auth?: AuthVerifier
+  handler: XRPCHandler
+}
 
 export class XRPCError extends Error {
   constructor(
@@ -58,14 +77,26 @@ export class XRPCError extends Error {
   }
 
   static fromError(error: unknown) {
+    if (error instanceof XRPCError) {
+      return error
+    }
+    let resultErr: XRPCError
     if (isHttpError(error)) {
-      return new XRPCError(error.status, error.message, error.name)
+      resultErr = new XRPCError(error.status, error.message, error.name)
+    } else if (isHandlerError(error)) {
+      resultErr = new XRPCError(error.status, error.message, error.error)
+    } else if (error instanceof Error) {
+      resultErr = new InternalServerError(error.message)
+    } else {
+      resultErr = new InternalServerError('Unexpected internal server error')
     }
-    if (error instanceof Error) {
-      return new InternalServerError(error.message)
-    }
-    return new InternalServerError()
+    resultErr.cause = error
+    return resultErr
   }
+}
+
+export function isHandlerError(v: unknown): v is HandlerError {
+  return handlerError.safeParse(v).success
 }
 
 export class InvalidRequestError extends XRPCError {
@@ -107,5 +138,11 @@ export class NotEnoughResoucesError extends XRPCError {
 export class UpstreamTimeoutError extends XRPCError {
   constructor(errorMessage?: string, customErrorName?: string) {
     super(ResponseType.UpstreamTimeout, errorMessage, customErrorName)
+  }
+}
+
+export class MethodNotImplementedError extends XRPCError {
+  constructor(errorMessage?: string, customErrorName?: string) {
+    super(ResponseType.MethodNotImplemented, errorMessage, customErrorName)
   }
 }

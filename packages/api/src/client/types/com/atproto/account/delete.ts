@@ -1,6 +1,6 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {}
@@ -8,13 +8,13 @@ export interface QueryParams {}
 export type InputSchema = undefined
 
 export interface CallOptions {
-  headers?: Headers;
-  qp?: QueryParams;
+  headers?: Headers
+  qp?: QueryParams
 }
 
 export interface Response {
-  success: boolean;
-  headers: Headers;
+  success: boolean
+  headers: Headers
 }
 
 export function toKnownErr(e: any) {
