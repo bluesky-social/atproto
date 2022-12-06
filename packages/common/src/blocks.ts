@@ -1,6 +1,8 @@
 import { CID } from 'multiformats/cid'
 import * as Block from 'multiformats/block'
+import * as rawCodec from 'multiformats/codecs/raw'
 import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
+import * as mf from 'multiformats'
 import * as blockCodec from '@ipld/dag-cbor'
 
 export const valueToIpldBlock = async (
@@ -11,6 +13,11 @@ export const valueToIpldBlock = async (
     codec: blockCodec,
     hasher: blockHasher,
   })
+}
+
+export const sha256RawToCid = (hash: Uint8Array): CID => {
+  const digest = mf.digest.create(blockHasher.code, hash)
+  return CID.createV1(rawCodec.code, digest)
 }
 
 export const cidForData = async (data: unknown): Promise<CID> => {

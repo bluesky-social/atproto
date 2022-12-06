@@ -3,7 +3,6 @@ import { CloseFn, runTestServer } from './_util'
 import { randomBytes } from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { Database } from '../src'
-import fs from 'fs'
 
 const alice = {
   email: 'alice@test.com',

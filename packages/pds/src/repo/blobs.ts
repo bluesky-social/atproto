@@ -1,28 +1,40 @@
+import stream from 'stream'
+import crypto from 'crypto'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
-import { cidForData } from '@atproto/common'
+import { sha256RawToCid } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
 import { BlobRef, PreparedWrites } from './types'
 import { Blob as BlobTable } from '../db/tables/blob'
 
-export const addUntetheredBlob = async (
+export const addUntetheredBlobStream = async (
   dbTxn: Database,
   blobs: BlobStore,
   mimeType: string,
-  bytes: Uint8Array,
+  stream: stream.Readable,
 ): Promise<CID> => {
-  const tempKey = await blobs.putTempBytes(bytes)
-  // @TODO calculate cid with chunking
-  // @TODO streaming
-  const cid = await cidForData(bytes)
+  let size = 0
+  const hash = crypto.createHash('sha256')
+  const { file, tempKey } = blobs.getTempWritableStream()
+
+  for await (const chunk of stream) {
+    file.write(chunk)
+    hash.write(chunk)
+    size += chunk.length
+  }
+  file.end()
+  hash.end()
+
+  const sha256 = hash.read()
+  const cid = sha256RawToCid(sha256)
   await dbTxn.db
     .insertInto('blob')
     .values({
       cid: cid.toString(),
       mimeType,
-      size: bytes.length,
+      size,
       tempKey,
       width: null,
       height: null,

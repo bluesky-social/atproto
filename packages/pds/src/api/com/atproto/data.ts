@@ -1,27 +1,27 @@
 import { Server } from '../../../lexicon'
-import { AuthRequiredError } from '@atproto/xrpc-server'
 import * as locals from '../../../locals'
 import * as repo from '../../../repo'
+import ServerAuth from '../../../auth'
 
 export default function (server: Server) {
-  server.com.atproto.data.uploadFile(async (_params, input, req, res) => {
-    const { db, blobstore, auth } = locals.get(res)
+  server.com.atproto.data.uploadFile({
+    auth: ServerAuth.verifier,
+    handler: async ({ input, req, res }) => {
+      const { db, blobstore } = locals.get(res)
 
-    const requester = auth.getUserDid(req)
-    if (!requester) {
-      throw new AuthRequiredError()
-    }
-    const cid = await repo.addUntetheredBlob(
-      db,
-      blobstore,
-      input.encoding,
-      input.body,
-    )
-    return {
-      encoding: 'application/json',
-      body: {
-        cid: cid.toString(),
-      },
-    }
+      const cid = await repo.addUntetheredBlobStream(
+        db,
+        blobstore,
+        input.encoding,
+        req,
+      )
+
+      return {
+        encoding: 'application/json',
+        body: {
+          cid: cid.toString(),
+        },
+      }
+    },
   })
 }

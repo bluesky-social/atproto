@@ -1,4 +1,5 @@
 import fs from 'fs'
+import stream from 'stream'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
@@ -49,6 +50,14 @@ export class BlobDiskStore implements BlobStore {
     const key = this.genKey()
     await fs.promises.writeFile(this.getTmpPath(key), bytes)
     return key
+  }
+
+  getTempWritableStream(): { file: stream.Writable; tempKey: string } {
+    const key = this.genKey()
+    return {
+      file: fs.createWriteStream(this.getTmpPath(key)),
+      tempKey: key,
+    }
   }
 
   async moveToPermanent(key: string, cid: CID): Promise<void> {
