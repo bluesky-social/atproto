@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/aws-kms",
+  "name": "@atproto/aws",
   "version": "0.0.1",
   "main": "src/index.ts",
   "license": "MIT",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@atproto/crypto": "*",
     "@aws-sdk/client-kms": "^3.196.0",
+    "@aws-sdk/client-s3": "^3.224.0",
     "@noble/secp256k1": "^1.7.0",
     "key-encoder": "^2.0.3"
   }

@@ -4,6 +4,7 @@ import { countAll, actorWhereClause } from '../../../../db/util'
 import * as locals from '../../../../locals'
 import { getDeclarationSimple } from '../util'
 import ServerAuth from '../../../../auth'
+import { image } from '@atproto/lexicon/src/validators/blob'
 
 export default function (server: Server) {
   server.app.bsky.actor.getProfile({
