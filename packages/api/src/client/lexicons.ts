@@ -669,7 +669,22 @@ export const lexicons: LexiconDoc[] = [
                   type: 'string',
                 },
               },
+              links: {
+                type: 'ref',
+                ref: 'lex:com.atproto.server.getAccountsConfig#links',
+              },
             },
+          },
+        },
+      },
+      links: {
+        type: 'object',
+        properties: {
+          privacyPolicy: {
+            type: 'string',
+          },
+          termsOfService: {
+            type: 'string',
           },
         },
       },
