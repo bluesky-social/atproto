@@ -1,23 +1,19 @@
 import { sql } from 'kysely'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as locals from '../../../../locals'
 import { FeedItemType, rowToFeedItem, FeedKeyset } from '../util/feed'
 import { countAll } from '../../../../db/util'
 import { paginate } from '../../../../db/pagination'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.feed.getAuthorFeed(
-    async (params: GetAuthorFeed.QueryParams, _input, req, res) => {
-      const { auth, db } = locals.get(res)
+  server.app.bsky.feed.getAuthorFeed({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, auth, res }) => {
+      const { db } = locals.get(res)
       const { author, limit, before } = params
+      const requester = auth.credentials.did
       const { ref } = db.db.dynamic
-
-      const requester = auth.getUserDid(req)
-      if (!requester) {
-        throw new AuthRequiredError()
-      }
 
       const userLookupCol = author.startsWith('did:')
         ? 'did_handle.did'
@@ -167,5 +163,5 @@ export default function (server: Server) {
         },
       }
     },
-  )
+  })
 }

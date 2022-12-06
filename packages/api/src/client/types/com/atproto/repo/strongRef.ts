@@ -1,8 +1,8 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 export interface Main {
-  uri: string;
-  cid: string;
-  [k: string]: unknown;
+  uri: string
+  cid: string
+  [k: string]: unknown
 }

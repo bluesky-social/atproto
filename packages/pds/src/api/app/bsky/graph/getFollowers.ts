@@ -1,13 +1,14 @@
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as GetFollowers from '../../../../lexicon/types/app/bsky/graph/getFollowers'
 import { getActorInfo, getDeclarationSimple } from '../util'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.graph.getFollowers(
-    async (params: GetFollowers.QueryParams, _input, _req, res) => {
+  server.app.bsky.graph.getFollowers({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, res }) => {
       const { user, limit, before } = params
       const { db } = locals.get(res)
       const { ref } = db.db.dynamic
@@ -61,5 +62,5 @@ export default function (server: Server) {
         },
       }
     },
-  )
+  })
 }

@@ -1,6 +1,6 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import {
   Client as XrpcClient,
   ServiceClient as XrpcServiceClient,
@@ -211,7 +211,7 @@ export class AccountNS {
 
   create(
     data?: ComAtprotoAccountCreate.InputSchema,
-    opts?: ComAtprotoAccountCreate.CallOptions
+    opts?: ComAtprotoAccountCreate.CallOptions,
   ): Promise<ComAtprotoAccountCreate.Response> {
     return this._service.xrpc
       .call('com.atproto.account.create', opts?.qp, data, opts)
@@ -222,7 +222,7 @@ export class AccountNS {
 
   createInviteCode(
     data?: ComAtprotoAccountCreateInviteCode.InputSchema,
-    opts?: ComAtprotoAccountCreateInviteCode.CallOptions
+    opts?: ComAtprotoAccountCreateInviteCode.CallOptions,
   ): Promise<ComAtprotoAccountCreateInviteCode.Response> {
     return this._service.xrpc
       .call('com.atproto.account.createInviteCode', opts?.qp, data, opts)
@@ -233,7 +233,7 @@ export class AccountNS {
 
   delete(
     data?: ComAtprotoAccountDelete.InputSchema,
-    opts?: ComAtprotoAccountDelete.CallOptions
+    opts?: ComAtprotoAccountDelete.CallOptions,
   ): Promise<ComAtprotoAccountDelete.Response> {
     return this._service.xrpc
       .call('com.atproto.account.delete', opts?.qp, data, opts)
@@ -244,7 +244,7 @@ export class AccountNS {
 
   get(
     params?: ComAtprotoAccountGet.QueryParams,
-    opts?: ComAtprotoAccountGet.CallOptions
+    opts?: ComAtprotoAccountGet.CallOptions,
   ): Promise<ComAtprotoAccountGet.Response> {
     return this._service.xrpc
       .call('com.atproto.account.get', params, undefined, opts)
@@ -255,7 +255,7 @@ export class AccountNS {
 
   requestPasswordReset(
     data?: ComAtprotoAccountRequestPasswordReset.InputSchema,
-    opts?: ComAtprotoAccountRequestPasswordReset.CallOptions
+    opts?: ComAtprotoAccountRequestPasswordReset.CallOptions,
   ): Promise<ComAtprotoAccountRequestPasswordReset.Response> {
     return this._service.xrpc
       .call('com.atproto.account.requestPasswordReset', opts?.qp, data, opts)
@@ -266,7 +266,7 @@ export class AccountNS {
 
   resetPassword(
     data?: ComAtprotoAccountResetPassword.InputSchema,
-    opts?: ComAtprotoAccountResetPassword.CallOptions
+    opts?: ComAtprotoAccountResetPassword.CallOptions,
   ): Promise<ComAtprotoAccountResetPassword.Response> {
     return this._service.xrpc
       .call('com.atproto.account.resetPassword', opts?.qp, data, opts)
@@ -285,7 +285,7 @@ export class DataNS {
 
   uploadFile(
     data?: ComAtprotoDataUploadFile.InputSchema,
-    opts?: ComAtprotoDataUploadFile.CallOptions
+    opts?: ComAtprotoDataUploadFile.CallOptions,
   ): Promise<ComAtprotoDataUploadFile.Response> {
     return this._service.xrpc
       .call('com.atproto.data.uploadFile', opts?.qp, data, opts)
@@ -304,7 +304,7 @@ export class HandleNS {
 
   resolve(
     params?: ComAtprotoHandleResolve.QueryParams,
-    opts?: ComAtprotoHandleResolve.CallOptions
+    opts?: ComAtprotoHandleResolve.CallOptions,
   ): Promise<ComAtprotoHandleResolve.Response> {
     return this._service.xrpc
       .call('com.atproto.handle.resolve', params, undefined, opts)
@@ -323,7 +323,7 @@ export class RepoNS {
 
   batchWrite(
     data?: ComAtprotoRepoBatchWrite.InputSchema,
-    opts?: ComAtprotoRepoBatchWrite.CallOptions
+    opts?: ComAtprotoRepoBatchWrite.CallOptions,
   ): Promise<ComAtprotoRepoBatchWrite.Response> {
     return this._service.xrpc
       .call('com.atproto.repo.batchWrite', opts?.qp, data, opts)
@@ -334,7 +334,7 @@ export class RepoNS {
 
   createRecord(
     data?: ComAtprotoRepoCreateRecord.InputSchema,
-    opts?: ComAtprotoRepoCreateRecord.CallOptions
+    opts?: ComAtprotoRepoCreateRecord.CallOptions,
   ): Promise<ComAtprotoRepoCreateRecord.Response> {
     return this._service.xrpc
       .call('com.atproto.repo.createRecord', opts?.qp, data, opts)
@@ -345,7 +345,7 @@ export class RepoNS {
 
   deleteRecord(
     data?: ComAtprotoRepoDeleteRecord.InputSchema,
-    opts?: ComAtprotoRepoDeleteRecord.CallOptions
+    opts?: ComAtprotoRepoDeleteRecord.CallOptions,
   ): Promise<ComAtprotoRepoDeleteRecord.Response> {
     return this._service.xrpc
       .call('com.atproto.repo.deleteRecord', opts?.qp, data, opts)
@@ -356,7 +356,7 @@ export class RepoNS {
 
   describe(
     params?: ComAtprotoRepoDescribe.QueryParams,
-    opts?: ComAtprotoRepoDescribe.CallOptions
+    opts?: ComAtprotoRepoDescribe.CallOptions,
   ): Promise<ComAtprotoRepoDescribe.Response> {
     return this._service.xrpc
       .call('com.atproto.repo.describe', params, undefined, opts)
@@ -367,7 +367,7 @@ export class RepoNS {
 
   getRecord(
     params?: ComAtprotoRepoGetRecord.QueryParams,
-    opts?: ComAtprotoRepoGetRecord.CallOptions
+    opts?: ComAtprotoRepoGetRecord.CallOptions,
   ): Promise<ComAtprotoRepoGetRecord.Response> {
     return this._service.xrpc
       .call('com.atproto.repo.getRecord', params, undefined, opts)
@@ -378,7 +378,7 @@ export class RepoNS {
 
   listRecords(
     params?: ComAtprotoRepoListRecords.QueryParams,
-    opts?: ComAtprotoRepoListRecords.CallOptions
+    opts?: ComAtprotoRepoListRecords.CallOptions,
   ): Promise<ComAtprotoRepoListRecords.Response> {
     return this._service.xrpc
       .call('com.atproto.repo.listRecords', params, undefined, opts)
@@ -389,7 +389,7 @@ export class RepoNS {
 
   putRecord(
     data?: ComAtprotoRepoPutRecord.InputSchema,
-    opts?: ComAtprotoRepoPutRecord.CallOptions
+    opts?: ComAtprotoRepoPutRecord.CallOptions,
   ): Promise<ComAtprotoRepoPutRecord.Response> {
     return this._service.xrpc
       .call('com.atproto.repo.putRecord', opts?.qp, data, opts)
@@ -408,7 +408,7 @@ export class ServerNS {
 
   getAccountsConfig(
     params?: ComAtprotoServerGetAccountsConfig.QueryParams,
-    opts?: ComAtprotoServerGetAccountsConfig.CallOptions
+    opts?: ComAtprotoServerGetAccountsConfig.CallOptions,
   ): Promise<ComAtprotoServerGetAccountsConfig.Response> {
     return this._service.xrpc
       .call('com.atproto.server.getAccountsConfig', params, undefined, opts)
@@ -427,7 +427,7 @@ export class SessionNS {
 
   create(
     data?: ComAtprotoSessionCreate.InputSchema,
-    opts?: ComAtprotoSessionCreate.CallOptions
+    opts?: ComAtprotoSessionCreate.CallOptions,
   ): Promise<ComAtprotoSessionCreate.Response> {
     return this._service.xrpc
       .call('com.atproto.session.create', opts?.qp, data, opts)
@@ -438,7 +438,7 @@ export class SessionNS {
 
   delete(
     data?: ComAtprotoSessionDelete.InputSchema,
-    opts?: ComAtprotoSessionDelete.CallOptions
+    opts?: ComAtprotoSessionDelete.CallOptions,
   ): Promise<ComAtprotoSessionDelete.Response> {
     return this._service.xrpc
       .call('com.atproto.session.delete', opts?.qp, data, opts)
@@ -449,7 +449,7 @@ export class SessionNS {
 
   get(
     params?: ComAtprotoSessionGet.QueryParams,
-    opts?: ComAtprotoSessionGet.CallOptions
+    opts?: ComAtprotoSessionGet.CallOptions,
   ): Promise<ComAtprotoSessionGet.Response> {
     return this._service.xrpc
       .call('com.atproto.session.get', params, undefined, opts)
@@ -460,7 +460,7 @@ export class SessionNS {
 
   refresh(
     data?: ComAtprotoSessionRefresh.InputSchema,
-    opts?: ComAtprotoSessionRefresh.CallOptions
+    opts?: ComAtprotoSessionRefresh.CallOptions,
   ): Promise<ComAtprotoSessionRefresh.Response> {
     return this._service.xrpc
       .call('com.atproto.session.refresh', opts?.qp, data, opts)
@@ -479,7 +479,7 @@ export class SyncNS {
 
   getRepo(
     params?: ComAtprotoSyncGetRepo.QueryParams,
-    opts?: ComAtprotoSyncGetRepo.CallOptions
+    opts?: ComAtprotoSyncGetRepo.CallOptions,
   ): Promise<ComAtprotoSyncGetRepo.Response> {
     return this._service.xrpc
       .call('com.atproto.sync.getRepo', params, undefined, opts)
@@ -490,7 +490,7 @@ export class SyncNS {
 
   getRoot(
     params?: ComAtprotoSyncGetRoot.QueryParams,
-    opts?: ComAtprotoSyncGetRoot.CallOptions
+    opts?: ComAtprotoSyncGetRoot.CallOptions,
   ): Promise<ComAtprotoSyncGetRoot.Response> {
     return this._service.xrpc
       .call('com.atproto.sync.getRoot', params, undefined, opts)
@@ -501,7 +501,7 @@ export class SyncNS {
 
   updateRepo(
     data?: ComAtprotoSyncUpdateRepo.InputSchema,
-    opts?: ComAtprotoSyncUpdateRepo.CallOptions
+    opts?: ComAtprotoSyncUpdateRepo.CallOptions,
   ): Promise<ComAtprotoSyncUpdateRepo.Response> {
     return this._service.xrpc
       .call('com.atproto.sync.updateRepo', opts?.qp, data, opts)
@@ -550,7 +550,7 @@ export class ActorNS {
 
   createScene(
     data?: AppBskyActorCreateScene.InputSchema,
-    opts?: AppBskyActorCreateScene.CallOptions
+    opts?: AppBskyActorCreateScene.CallOptions,
   ): Promise<AppBskyActorCreateScene.Response> {
     return this._service.xrpc
       .call('app.bsky.actor.createScene', opts?.qp, data, opts)
@@ -561,7 +561,7 @@ export class ActorNS {
 
   getProfile(
     params?: AppBskyActorGetProfile.QueryParams,
-    opts?: AppBskyActorGetProfile.CallOptions
+    opts?: AppBskyActorGetProfile.CallOptions,
   ): Promise<AppBskyActorGetProfile.Response> {
     return this._service.xrpc
       .call('app.bsky.actor.getProfile', params, undefined, opts)
@@ -572,7 +572,7 @@ export class ActorNS {
 
   getSuggestions(
     params?: AppBskyActorGetSuggestions.QueryParams,
-    opts?: AppBskyActorGetSuggestions.CallOptions
+    opts?: AppBskyActorGetSuggestions.CallOptions,
   ): Promise<AppBskyActorGetSuggestions.Response> {
     return this._service.xrpc
       .call('app.bsky.actor.getSuggestions', params, undefined, opts)
@@ -583,7 +583,7 @@ export class ActorNS {
 
   search(
     params?: AppBskyActorSearch.QueryParams,
-    opts?: AppBskyActorSearch.CallOptions
+    opts?: AppBskyActorSearch.CallOptions,
   ): Promise<AppBskyActorSearch.Response> {
     return this._service.xrpc
       .call('app.bsky.actor.search', params, undefined, opts)
@@ -594,7 +594,7 @@ export class ActorNS {
 
   searchTypeahead(
     params?: AppBskyActorSearchTypeahead.QueryParams,
-    opts?: AppBskyActorSearchTypeahead.CallOptions
+    opts?: AppBskyActorSearchTypeahead.CallOptions,
   ): Promise<AppBskyActorSearchTypeahead.Response> {
     return this._service.xrpc
       .call('app.bsky.actor.searchTypeahead', params, undefined, opts)
@@ -605,7 +605,7 @@ export class ActorNS {
 
   updateProfile(
     data?: AppBskyActorUpdateProfile.InputSchema,
-    opts?: AppBskyActorUpdateProfile.CallOptions
+    opts?: AppBskyActorUpdateProfile.CallOptions,
   ): Promise<AppBskyActorUpdateProfile.Response> {
     return this._service.xrpc
       .call('app.bsky.actor.updateProfile', opts?.qp, data, opts)
@@ -623,10 +623,10 @@ export class ProfileRecord {
   }
 
   async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskyActorProfile.Record }[],
+    cursor?: string
+    records: { uri: string; value: AppBskyActorProfile.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
       collection: 'app.bsky.actor.profile',
@@ -636,8 +636,8 @@ export class ProfileRecord {
   }
 
   async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, cid: string, value: AppBskyActorProfile.Record }> {
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyActorProfile.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
       collection: 'app.bsky.actor.profile',
       ...params,
@@ -651,27 +651,27 @@ export class ProfileRecord {
       'collection' | 'record'
     >,
     record: AppBskyActorProfile.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
     record.$type = 'app.bsky.actor.profile'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
       { collection: 'app.bsky.actor.profile', ...params, record },
-      { encoding: 'application/json', headers }
+      { encoding: 'application/json', headers },
     )
     return res.data
   }
 
   async delete(
     params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<void> {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.actor.profile', ...params },
-      { headers }
+      { headers },
     )
   }
 }
@@ -693,7 +693,7 @@ export class FeedNS {
 
   getAuthorFeed(
     params?: AppBskyFeedGetAuthorFeed.QueryParams,
-    opts?: AppBskyFeedGetAuthorFeed.CallOptions
+    opts?: AppBskyFeedGetAuthorFeed.CallOptions,
   ): Promise<AppBskyFeedGetAuthorFeed.Response> {
     return this._service.xrpc
       .call('app.bsky.feed.getAuthorFeed', params, undefined, opts)
@@ -704,7 +704,7 @@ export class FeedNS {
 
   getPostThread(
     params?: AppBskyFeedGetPostThread.QueryParams,
-    opts?: AppBskyFeedGetPostThread.CallOptions
+    opts?: AppBskyFeedGetPostThread.CallOptions,
   ): Promise<AppBskyFeedGetPostThread.Response> {
     return this._service.xrpc
       .call('app.bsky.feed.getPostThread', params, undefined, opts)
@@ -715,7 +715,7 @@ export class FeedNS {
 
   getRepostedBy(
     params?: AppBskyFeedGetRepostedBy.QueryParams,
-    opts?: AppBskyFeedGetRepostedBy.CallOptions
+    opts?: AppBskyFeedGetRepostedBy.CallOptions,
   ): Promise<AppBskyFeedGetRepostedBy.Response> {
     return this._service.xrpc
       .call('app.bsky.feed.getRepostedBy', params, undefined, opts)
@@ -726,7 +726,7 @@ export class FeedNS {
 
   getTimeline(
     params?: AppBskyFeedGetTimeline.QueryParams,
-    opts?: AppBskyFeedGetTimeline.CallOptions
+    opts?: AppBskyFeedGetTimeline.CallOptions,
   ): Promise<AppBskyFeedGetTimeline.Response> {
     return this._service.xrpc
       .call('app.bsky.feed.getTimeline', params, undefined, opts)
@@ -737,7 +737,7 @@ export class FeedNS {
 
   getVotes(
     params?: AppBskyFeedGetVotes.QueryParams,
-    opts?: AppBskyFeedGetVotes.CallOptions
+    opts?: AppBskyFeedGetVotes.CallOptions,
   ): Promise<AppBskyFeedGetVotes.Response> {
     return this._service.xrpc
       .call('app.bsky.feed.getVotes', params, undefined, opts)
@@ -748,7 +748,7 @@ export class FeedNS {
 
   setVote(
     data?: AppBskyFeedSetVote.InputSchema,
-    opts?: AppBskyFeedSetVote.CallOptions
+    opts?: AppBskyFeedSetVote.CallOptions,
   ): Promise<AppBskyFeedSetVote.Response> {
     return this._service.xrpc
       .call('app.bsky.feed.setVote', opts?.qp, data, opts)
@@ -766,10 +766,10 @@ export class PostRecord {
   }
 
   async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskyFeedPost.Record }[],
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedPost.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
       collection: 'app.bsky.feed.post',
@@ -779,8 +779,8 @@ export class PostRecord {
   }
 
   async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, cid: string, value: AppBskyFeedPost.Record }> {
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedPost.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
       collection: 'app.bsky.feed.post',
       ...params,
@@ -794,27 +794,27 @@ export class PostRecord {
       'collection' | 'record'
     >,
     record: AppBskyFeedPost.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
     record.$type = 'app.bsky.feed.post'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
       { collection: 'app.bsky.feed.post', ...params, record },
-      { encoding: 'application/json', headers }
+      { encoding: 'application/json', headers },
     )
     return res.data
   }
 
   async delete(
     params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<void> {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.post', ...params },
-      { headers }
+      { headers },
     )
   }
 }
@@ -827,10 +827,10 @@ export class RepostRecord {
   }
 
   async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskyFeedRepost.Record }[],
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedRepost.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
       collection: 'app.bsky.feed.repost',
@@ -840,8 +840,8 @@ export class RepostRecord {
   }
 
   async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, cid: string, value: AppBskyFeedRepost.Record }> {
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedRepost.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
       collection: 'app.bsky.feed.repost',
       ...params,
@@ -855,27 +855,27 @@ export class RepostRecord {
       'collection' | 'record'
     >,
     record: AppBskyFeedRepost.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
     record.$type = 'app.bsky.feed.repost'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
       { collection: 'app.bsky.feed.repost', ...params, record },
-      { encoding: 'application/json', headers }
+      { encoding: 'application/json', headers },
     )
     return res.data
   }
 
   async delete(
     params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<void> {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.repost', ...params },
-      { headers }
+      { headers },
     )
   }
 }
@@ -888,10 +888,10 @@ export class TrendRecord {
   }
 
   async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskyFeedTrend.Record }[],
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedTrend.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
       collection: 'app.bsky.feed.trend',
@@ -901,8 +901,8 @@ export class TrendRecord {
   }
 
   async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, cid: string, value: AppBskyFeedTrend.Record }> {
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedTrend.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
       collection: 'app.bsky.feed.trend',
       ...params,
@@ -916,27 +916,27 @@ export class TrendRecord {
       'collection' | 'record'
     >,
     record: AppBskyFeedTrend.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
     record.$type = 'app.bsky.feed.trend'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
       { collection: 'app.bsky.feed.trend', ...params, record },
-      { encoding: 'application/json', headers }
+      { encoding: 'application/json', headers },
     )
     return res.data
   }
 
   async delete(
     params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<void> {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.trend', ...params },
-      { headers }
+      { headers },
     )
   }
 }
@@ -949,10 +949,10 @@ export class VoteRecord {
   }
 
   async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskyFeedVote.Record }[],
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedVote.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
       collection: 'app.bsky.feed.vote',
@@ -962,8 +962,8 @@ export class VoteRecord {
   }
 
   async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, cid: string, value: AppBskyFeedVote.Record }> {
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedVote.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
       collection: 'app.bsky.feed.vote',
       ...params,
@@ -977,27 +977,27 @@ export class VoteRecord {
       'collection' | 'record'
     >,
     record: AppBskyFeedVote.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
     record.$type = 'app.bsky.feed.vote'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
       { collection: 'app.bsky.feed.vote', ...params, record },
-      { encoding: 'application/json', headers }
+      { encoding: 'application/json', headers },
     )
     return res.data
   }
 
   async delete(
     params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<void> {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.vote', ...params },
-      { headers }
+      { headers },
     )
   }
 }
@@ -1017,7 +1017,7 @@ export class GraphNS {
 
   getAssertions(
     params?: AppBskyGraphGetAssertions.QueryParams,
-    opts?: AppBskyGraphGetAssertions.CallOptions
+    opts?: AppBskyGraphGetAssertions.CallOptions,
   ): Promise<AppBskyGraphGetAssertions.Response> {
     return this._service.xrpc
       .call('app.bsky.graph.getAssertions', params, undefined, opts)
@@ -1028,7 +1028,7 @@ export class GraphNS {
 
   getFollowers(
     params?: AppBskyGraphGetFollowers.QueryParams,
-    opts?: AppBskyGraphGetFollowers.CallOptions
+    opts?: AppBskyGraphGetFollowers.CallOptions,
   ): Promise<AppBskyGraphGetFollowers.Response> {
     return this._service.xrpc
       .call('app.bsky.graph.getFollowers', params, undefined, opts)
@@ -1039,7 +1039,7 @@ export class GraphNS {
 
   getFollows(
     params?: AppBskyGraphGetFollows.QueryParams,
-    opts?: AppBskyGraphGetFollows.CallOptions
+    opts?: AppBskyGraphGetFollows.CallOptions,
   ): Promise<AppBskyGraphGetFollows.Response> {
     return this._service.xrpc
       .call('app.bsky.graph.getFollows', params, undefined, opts)
@@ -1050,7 +1050,7 @@ export class GraphNS {
 
   getMembers(
     params?: AppBskyGraphGetMembers.QueryParams,
-    opts?: AppBskyGraphGetMembers.CallOptions
+    opts?: AppBskyGraphGetMembers.CallOptions,
   ): Promise<AppBskyGraphGetMembers.Response> {
     return this._service.xrpc
       .call('app.bsky.graph.getMembers', params, undefined, opts)
@@ -1061,7 +1061,7 @@ export class GraphNS {
 
   getMemberships(
     params?: AppBskyGraphGetMemberships.QueryParams,
-    opts?: AppBskyGraphGetMemberships.CallOptions
+    opts?: AppBskyGraphGetMemberships.CallOptions,
   ): Promise<AppBskyGraphGetMemberships.Response> {
     return this._service.xrpc
       .call('app.bsky.graph.getMemberships', params, undefined, opts)
@@ -1079,10 +1079,10 @@ export class AssertionRecord {
   }
 
   async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskyGraphAssertion.Record }[],
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphAssertion.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
       collection: 'app.bsky.graph.assertion',
@@ -1092,11 +1092,11 @@ export class AssertionRecord {
   }
 
   async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
   ): Promise<{
-    uri: string,
-    cid: string,
-    value: AppBskyGraphAssertion.Record,
+    uri: string
+    cid: string
+    value: AppBskyGraphAssertion.Record
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
       collection: 'app.bsky.graph.assertion',
@@ -1111,27 +1111,27 @@ export class AssertionRecord {
       'collection' | 'record'
     >,
     record: AppBskyGraphAssertion.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
     record.$type = 'app.bsky.graph.assertion'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
       { collection: 'app.bsky.graph.assertion', ...params, record },
-      { encoding: 'application/json', headers }
+      { encoding: 'application/json', headers },
     )
     return res.data
   }
 
   async delete(
     params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<void> {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.graph.assertion', ...params },
-      { headers }
+      { headers },
     )
   }
 }
@@ -1144,10 +1144,10 @@ export class ConfirmationRecord {
   }
 
   async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskyGraphConfirmation.Record }[],
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphConfirmation.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
       collection: 'app.bsky.graph.confirmation',
@@ -1157,11 +1157,11 @@ export class ConfirmationRecord {
   }
 
   async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
   ): Promise<{
-    uri: string,
-    cid: string,
-    value: AppBskyGraphConfirmation.Record,
+    uri: string
+    cid: string
+    value: AppBskyGraphConfirmation.Record
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
       collection: 'app.bsky.graph.confirmation',
@@ -1176,27 +1176,27 @@ export class ConfirmationRecord {
       'collection' | 'record'
     >,
     record: AppBskyGraphConfirmation.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
     record.$type = 'app.bsky.graph.confirmation'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
       { collection: 'app.bsky.graph.confirmation', ...params, record },
-      { encoding: 'application/json', headers }
+      { encoding: 'application/json', headers },
     )
     return res.data
   }
 
   async delete(
     params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<void> {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.graph.confirmation', ...params },
-      { headers }
+      { headers },
     )
   }
 }
@@ -1209,10 +1209,10 @@ export class FollowRecord {
   }
 
   async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskyGraphFollow.Record }[],
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphFollow.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
       collection: 'app.bsky.graph.follow',
@@ -1222,8 +1222,8 @@ export class FollowRecord {
   }
 
   async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
-  ): Promise<{ uri: string, cid: string, value: AppBskyGraphFollow.Record }> {
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyGraphFollow.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
       collection: 'app.bsky.graph.follow',
       ...params,
@@ -1237,27 +1237,27 @@ export class FollowRecord {
       'collection' | 'record'
     >,
     record: AppBskyGraphFollow.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
     record.$type = 'app.bsky.graph.follow'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
       { collection: 'app.bsky.graph.follow', ...params, record },
-      { encoding: 'application/json', headers }
+      { encoding: 'application/json', headers },
     )
     return res.data
   }
 
   async delete(
     params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<void> {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.graph.follow', ...params },
-      { headers }
+      { headers },
     )
   }
 }
@@ -1271,7 +1271,7 @@ export class NotificationNS {
 
   getCount(
     params?: AppBskyNotificationGetCount.QueryParams,
-    opts?: AppBskyNotificationGetCount.CallOptions
+    opts?: AppBskyNotificationGetCount.CallOptions,
   ): Promise<AppBskyNotificationGetCount.Response> {
     return this._service.xrpc
       .call('app.bsky.notification.getCount', params, undefined, opts)
@@ -1282,7 +1282,7 @@ export class NotificationNS {
 
   list(
     params?: AppBskyNotificationList.QueryParams,
-    opts?: AppBskyNotificationList.CallOptions
+    opts?: AppBskyNotificationList.CallOptions,
   ): Promise<AppBskyNotificationList.Response> {
     return this._service.xrpc
       .call('app.bsky.notification.list', params, undefined, opts)
@@ -1293,7 +1293,7 @@ export class NotificationNS {
 
   updateSeen(
     data?: AppBskyNotificationUpdateSeen.InputSchema,
-    opts?: AppBskyNotificationUpdateSeen.CallOptions
+    opts?: AppBskyNotificationUpdateSeen.CallOptions,
   ): Promise<AppBskyNotificationUpdateSeen.Response> {
     return this._service.xrpc
       .call('app.bsky.notification.updateSeen', opts?.qp, data, opts)
@@ -1321,10 +1321,10 @@ export class DeclarationRecord {
   }
 
   async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
-    cursor?: string,
-    records: { uri: string, value: AppBskySystemDeclaration.Record }[],
+    cursor?: string
+    records: { uri: string; value: AppBskySystemDeclaration.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
       collection: 'app.bsky.system.declaration',
@@ -1334,11 +1334,11 @@ export class DeclarationRecord {
   }
 
   async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
   ): Promise<{
-    uri: string,
-    cid: string,
-    value: AppBskySystemDeclaration.Record,
+    uri: string
+    cid: string
+    value: AppBskySystemDeclaration.Record
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
       collection: 'app.bsky.system.declaration',
@@ -1353,27 +1353,27 @@ export class DeclarationRecord {
       'collection' | 'record'
     >,
     record: AppBskySystemDeclaration.Record,
-    headers?: Record<string, string>
-  ): Promise<{ uri: string, cid: string }> {
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
     record.$type = 'app.bsky.system.declaration'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
       { collection: 'app.bsky.system.declaration', ...params, record },
-      { encoding: 'application/json', headers }
+      { encoding: 'application/json', headers },
     )
     return res.data
   }
 
   async delete(
     params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<void> {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.system.declaration', ...params },
-      { headers }
+      { headers },
     )
   }
 }

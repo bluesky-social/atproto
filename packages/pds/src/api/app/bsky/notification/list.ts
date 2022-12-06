@@ -1,22 +1,19 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
 import { Server } from '../../../../lexicon'
-import * as List from '../../../../lexicon/types/app/bsky/notification/list'
 import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclaration } from '../util'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.notification.list(
-    async (params: List.QueryParams, _input, req, res) => {
-      const { auth, db } = locals.get(res)
+  server.app.bsky.notification.list({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, auth, res }) => {
+      const { db } = locals.get(res)
       const { limit, before } = params
+      const requester = auth.credentials.did
       const { ref } = db.db.dynamic
-
-      const requester = auth.getUserDid(req)
-      if (!requester) {
-        throw new AuthRequiredError()
-      }
 
       let notifBuilder = db.db
         .selectFrom('user_notification as notif')
@@ -90,7 +87,7 @@ export default function (server: Server) {
         },
       }
     },
-  )
+  })
 }
 
 type NotifRow = { indexedAt: string; cid: string }

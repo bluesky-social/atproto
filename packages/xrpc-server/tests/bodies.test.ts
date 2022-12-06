@@ -58,17 +58,17 @@ const LEXICONS = [
   },
 ]
 
-describe('Parameters', () => {
+describe('Bodies', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
   server.method(
     'io.example.validationTest',
-    (_params: xrpcServer.Params, input?: xrpcServer.HandlerInput) => ({
+    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => ({
       encoding: 'json',
-      body: input?.body,
+      body: ctx.input?.body,
     }),
   )
-  server.method('io.example.validationTest2', (_params: xrpcServer.Params) => ({
+  server.method('io.example.validationTest2', () => ({
     encoding: 'json',
     body: { wrong: 'data' },
   }))

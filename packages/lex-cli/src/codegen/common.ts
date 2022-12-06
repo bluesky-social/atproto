@@ -4,10 +4,11 @@ import prettier from 'prettier'
 import { GeneratedFile } from '../types'
 
 const PRETTIER_OPTS = {
-  parser: 'babel',
+  parser: 'babel-ts',
   tabWidth: 2,
   semi: false,
   singleQuote: true,
+  trailingComma: 'all' as const,
 }
 
 export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
@@ -76,7 +77,7 @@ export async function gen(
 
 function banner() {
   return `/**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 `
 }

@@ -68,17 +68,20 @@ const LEXICONS = [
 describe('Queries', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
-  server.method('io.example.ping1', (params: xrpcServer.Params) => {
-    return { encoding: 'text/plain', body: params.message }
+  server.method('io.example.ping1', (ctx: { params: xrpcServer.Params }) => {
+    return { encoding: 'text/plain', body: ctx.params.message }
   })
-  server.method('io.example.ping2', (params: xrpcServer.Params) => {
+  server.method('io.example.ping2', (ctx: { params: xrpcServer.Params }) => {
     return {
       encoding: 'application/octet-stream',
-      body: new TextEncoder().encode(String(params.message)),
+      body: new TextEncoder().encode(String(ctx.params.message)),
     }
   })
-  server.method('io.example.ping3', (params: xrpcServer.Params) => {
-    return { encoding: 'application/json', body: { message: params.message } }
+  server.method('io.example.ping3', (ctx: { params: xrpcServer.Params }) => {
+    return {
+      encoding: 'application/json',
+      body: { message: ctx.params.message },
+    }
   })
   const client = xrpc.service(`http://localhost:8890`)
   xrpc.addLexicons(LEXICONS)

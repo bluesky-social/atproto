@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import * as GetPostThread from '../../../../lexicon/types/app/bsky/feed/getPostThread'
@@ -7,17 +7,15 @@ import * as locals from '../../../../locals'
 import { DatabaseSchema } from '../../../../db/database-schema'
 import { countAll } from '../../../../db/util'
 import { getDeclaration } from '../util'
+import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
-  server.app.bsky.feed.getPostThread(
-    async (params: GetPostThread.QueryParams, _input, req, res) => {
+  server.app.bsky.feed.getPostThread({
+    auth: ServerAuth.verifier,
+    handler: async ({ params, auth, res }) => {
       const { uri, depth = 6 } = params
-      const { auth, db } = locals.get(res)
-
-      const requester = auth.getUserDid(req)
-      if (!requester) {
-        throw new AuthRequiredError()
-      }
+      const { db } = locals.get(res)
+      const requester = auth.credentials.did
 
       const queryRes = await postInfoBuilder(db.db, requester)
         .where('post.uri', '=', uri)
@@ -40,7 +38,7 @@ export default function (server: Server) {
         body: { thread },
       }
     },
-  )
+  })
 }
 
 const getAncestors = async (

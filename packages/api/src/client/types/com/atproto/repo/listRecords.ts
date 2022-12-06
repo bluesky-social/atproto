@@ -1,39 +1,39 @@
 /**
-* GENERATED CODE - DO NOT MODIFY
-*/
+ * GENERATED CODE - DO NOT MODIFY
+ */
 import { Headers, XRPCError } from '@atproto/xrpc'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
-  user: string;
+  user: string
   /** The NSID of the record type. */
-  collection: string;
+  collection: string
   /** The number of records to return. */
-  limit?: number;
+  limit?: number
   /** A TID to filter the range of records returned. */
-  before?: string;
+  before?: string
   /** A TID to filter the range of records returned. */
-  after?: string;
+  after?: string
   /** Reverse the order of the returned records? */
-  reverse?: boolean;
+  reverse?: boolean
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string;
-  records: Record[];
-  [k: string]: unknown;
+  cursor?: string
+  records: Record[]
+  [k: string]: unknown
 }
 
 export interface CallOptions {
-  headers?: Headers;
+  headers?: Headers
 }
 
 export interface Response {
-  success: boolean;
-  headers: Headers;
-  data: OutputSchema;
+  success: boolean
+  headers: Headers
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {
@@ -43,8 +43,8 @@ export function toKnownErr(e: any) {
 }
 
 export interface Record {
-  uri: string;
-  cid: string;
-  value: {};
-  [k: string]: unknown;
+  uri: string
+  cid: string
+  value: {}
+  [k: string]: unknown
 }

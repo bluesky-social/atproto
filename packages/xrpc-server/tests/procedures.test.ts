@@ -82,27 +82,27 @@ const LEXICONS = [
 describe('Procedures', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
-  server.method('io.example.ping1', (params: xrpcServer.Params) => {
-    return { encoding: 'text/plain', body: params.message }
+  server.method('io.example.ping1', (ctx: { params: xrpcServer.Params }) => {
+    return { encoding: 'text/plain', body: ctx.params.message }
   })
   server.method(
     'io.example.ping2',
-    (params: xrpcServer.Params, input?: xrpcServer.HandlerInput) => {
-      return { encoding: 'text/plain', body: input?.body }
+    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
+      return { encoding: 'text/plain', body: ctx.input?.body }
     },
   )
   server.method(
     'io.example.ping3',
-    (params: xrpcServer.Params, input?: xrpcServer.HandlerInput) => {
-      return { encoding: 'application/octet-stream', body: input?.body }
+    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
+      return { encoding: 'application/octet-stream', body: ctx.input?.body }
     },
   )
   server.method(
     'io.example.ping4',
-    (params: xrpcServer.Params, input?: xrpcServer.HandlerInput) => {
+    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
       return {
         encoding: 'application/json',
-        body: { message: input?.body?.message },
+        body: { message: ctx.input?.body?.message },
       }
     },
   )

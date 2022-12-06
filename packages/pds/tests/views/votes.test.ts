@@ -46,9 +46,10 @@ describe('pds vote views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches post votes', async () => {
-    const alicePost = await client.app.bsky.feed.getVotes({
-      uri: sc.posts[alice][1].ref.uriStr,
-    })
+    const alicePost = await client.app.bsky.feed.getVotes(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(alicePost.data)).toMatchSnapshot()
     expect(getCursors(alicePost.data.votes)).toEqual(
@@ -57,9 +58,10 @@ describe('pds vote views', () => {
   })
 
   it('fetches reply votes', async () => {
-    const bobReply = await client.app.bsky.feed.getVotes({
-      uri: sc.replies[bob][0].ref.uriStr,
-    })
+    const bobReply = await client.app.bsky.feed.getVotes(
+      { uri: sc.replies[bob][0].ref.uriStr },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(forSnapshot(bobReply.data)).toMatchSnapshot()
     expect(getCursors(bobReply.data.votes)).toEqual(
@@ -70,11 +72,14 @@ describe('pds vote views', () => {
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.votes)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.feed.getVotes({
-        uri: sc.posts[alice][1].ref.uriStr,
-        before: cursor,
-        limit: 2,
-      })
+      const res = await client.app.bsky.feed.getVotes(
+        {
+          uri: sc.posts[alice][1].ref.uriStr,
+          before: cursor,
+          limit: 2,
+        },
+        { headers: sc.getHeaders(alice) },
+      )
       return res.data
     }
 
@@ -83,28 +88,38 @@ describe('pds vote views', () => {
       expect(res.votes.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.feed.getVotes({
-      uri: sc.posts[alice][1].ref.uriStr,
-    })
+    const full = await client.app.bsky.feed.getVotes(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(full.data.votes.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
   it('filters by direction', async () => {
-    const full = await client.app.bsky.feed.getVotes({
-      uri: sc.posts[alice][1].ref.uriStr,
-    })
+    const full = await client.app.bsky.feed.getVotes(
+      {
+        uri: sc.posts[alice][1].ref.uriStr,
+      },
+      { headers: sc.getHeaders(alice) },
+    )
 
-    const upvotes = await client.app.bsky.feed.getVotes({
-      uri: sc.posts[alice][1].ref.uriStr,
-      direction: 'up',
-    })
+    const upvotes = await client.app.bsky.feed.getVotes(
+      {
+        uri: sc.posts[alice][1].ref.uriStr,
+        direction: 'up',
+      },
+      { headers: sc.getHeaders(alice) },
+    )
 
-    const downvotes = await client.app.bsky.feed.getVotes({
-      uri: sc.posts[alice][1].ref.uriStr,
-      direction: 'down',
-    })
+    const downvotes = await client.app.bsky.feed.getVotes(
+      {
+        uri: sc.posts[alice][1].ref.uriStr,
+        direction: 'down',
+      },
+      { headers: sc.getHeaders(alice) },
+    )
 
     expect(upvotes.data.votes.length).toEqual(2)
     upvotes.data.votes.forEach((vote) => {

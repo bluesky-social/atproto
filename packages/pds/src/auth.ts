@@ -1,10 +1,15 @@
 import * as auth from '@atproto/auth'
 import * as crypto from '@atproto/crypto'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  ForbiddenError,
+  InvalidRequestError,
+} from '@atproto/xrpc-server'
 import * as uint8arrays from 'uint8arrays'
 import { DidResolver } from '@atproto/did-resolver'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
+import * as locals from './locals'
 
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
@@ -15,6 +20,7 @@ export type ServerAuthOpts = {
   adminPass: string
 }
 
+// @TODO sync-up with current method names, consider backwards compat.
 export enum AuthScopes {
   Access = 'com.atproto.access',
   Refresh = 'com.atproto.refresh',
@@ -40,6 +46,43 @@ export class ServerAuth {
     this._adminPass = opts.adminPass
     this.didResolver = opts.didResolver
     this.verifier = new auth.Verifier({ didResolver: opts.didResolver })
+  }
+
+  static async verifier(ctx: { req: express.Request; res: express.Response }) {
+    const { auth } = locals.get(ctx.res)
+    return {
+      credentials: {
+        did: await auth.getUserDidOrThrow(ctx.req, AuthScopes.Access),
+        scope: AuthScopes.Access,
+      },
+      artifacts: auth.getToken(ctx.req),
+    }
+  }
+
+  static async refreshVerifier(ctx: {
+    req: express.Request
+    res: express.Response
+  }) {
+    const { auth } = locals.get(ctx.res)
+    return {
+      credentials: {
+        did: await auth.getUserDidOrThrow(ctx.req, AuthScopes.Refresh),
+        scope: AuthScopes.Refresh,
+      },
+      artifacts: auth.getToken(ctx.req),
+    }
+  }
+
+  static async adminVerifier(ctx: {
+    req: express.Request
+    res: express.Response
+  }) {
+    const { auth } = locals.get(ctx.res)
+    const admin = auth.verifyAdmin(ctx.req)
+    if (!admin) {
+      throw new AuthRequiredError()
+    }
+    return { credentials: { admin } }
   }
 
   createAccessToken(did: string, expiresIn?: string | number) {
