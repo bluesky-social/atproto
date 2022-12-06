@@ -11,15 +11,15 @@ import { Blob as BlobTable } from '../db/tables/blob'
 
 export const addUntetheredBlobStream = async (
   dbTxn: Database,
-  blobs: BlobStore,
+  blobstore: BlobStore,
   mimeType: string,
-  stream: stream.Readable,
+  blobStream: stream.Readable,
 ): Promise<CID> => {
   let size = 0
   const hash = crypto.createHash('sha256')
-  const { file, tempKey } = blobs.getTempWritableStream()
-
-  for await (const chunk of stream) {
+  const file = new stream.PassThrough()
+  const tempKeyPromise = blobstore.putTemp(file)
+  for await (const chunk of blobStream) {
     file.write(chunk)
     hash.write(chunk)
     size += chunk.length
@@ -27,8 +27,10 @@ export const addUntetheredBlobStream = async (
   file.end()
   hash.end()
 
+  const tempKey = await tempKeyPromise
   const sha256 = hash.read()
   const cid = sha256RawToCid(sha256)
+
   await dbTxn.db
     .insertInto('blob')
     .values({

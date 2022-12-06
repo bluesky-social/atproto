@@ -46,18 +46,10 @@ export class BlobDiskStore implements BlobStore {
     return fileExists(this.getStoredPath(cid))
   }
 
-  async putTempBytes(bytes: Uint8Array): Promise<string> {
+  async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
     const key = this.genKey()
     await fs.promises.writeFile(this.getTmpPath(key), bytes)
     return key
-  }
-
-  getTempWritableStream(): { file: stream.Writable; tempKey: string } {
-    const key = this.genKey()
-    return {
-      file: fs.createWriteStream(this.getTmpPath(key)),
-      tempKey: key,
-    }
   }
 
   async moveToPermanent(key: string, cid: CID): Promise<void> {
