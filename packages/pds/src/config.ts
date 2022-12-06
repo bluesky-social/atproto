@@ -19,6 +19,8 @@ export interface ServerConfigValues {
   adminPassword: string
 
   inviteRequired: boolean
+  privacyPolicyUrl?: string
+  termsOfServiceUrl?: string
 
   blockstoreLocation?: string
   databaseLocation?: string
@@ -72,6 +74,8 @@ export class ServerConfig {
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
 
     const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
+    const privacyPolicyUrl = process.env.PRIVACY_POLICY_URL
+    const termsOfServiceUrl = process.env.TERMS_OF_SERVICE_URL
 
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
@@ -106,6 +110,8 @@ export class ServerConfig {
       serverDid,
       adminPassword,
       inviteRequired,
+      privacyPolicyUrl,
+      termsOfServiceUrl,
       blockstoreLocation,
       databaseLocation,
       availableUserDomains,
@@ -184,6 +190,26 @@ export class ServerConfig {
 
   get inviteRequired() {
     return this.cfg.inviteRequired
+  }
+
+  get privacyPolicyUrl() {
+    if (
+      this.cfg.privacyPolicyUrl &&
+      this.cfg.privacyPolicyUrl.startsWith('/')
+    ) {
+      return this.publicUrl + this.cfg.privacyPolicyUrl
+    }
+    return this.cfg.privacyPolicyUrl
+  }
+
+  get termsOfServiceUrl() {
+    if (
+      this.cfg.termsOfServiceUrl &&
+      this.cfg.termsOfServiceUrl.startsWith('/')
+    ) {
+      return this.publicUrl + this.cfg.termsOfServiceUrl
+    }
+    return this.cfg.termsOfServiceUrl
   }
 
   get blockstoreLocation() {

@@ -11,6 +11,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   inviteCodeRequired?: boolean
   availableUserDomains: string[]
+  links?: Links
   [k: string]: unknown
 }
 
@@ -34,3 +35,9 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   req: express.Request
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
+
+export interface Links {
+  privacyPolicy?: string
+  termsOfService?: string
+  [k: string]: unknown
+}

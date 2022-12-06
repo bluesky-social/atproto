@@ -45,6 +45,8 @@ describe('account', () => {
   beforeAll(async () => {
     const server = await util.runTestServer({
       inviteRequired: true,
+      termsOfServiceUrl: 'https://example.com/tos',
+      privacyPolicyUrl: '/privacy-policy',
       dbPostgresSchema: 'account',
     })
     close = server.close
@@ -86,6 +88,10 @@ describe('account', () => {
     expect(res.data.inviteCodeRequired).toBe(true)
     expect(res.data.availableUserDomains[0]).toBe('.test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
+    expect(res.data.links?.privacyPolicy).toBe(
+      'https://pds.public.url/privacy-policy',
+    )
+    expect(res.data.links?.termsOfService).toBe('https://example.com/tos')
   })
 
   it('fails on invalid handles', async () => {
