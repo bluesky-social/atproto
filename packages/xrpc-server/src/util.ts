@@ -1,4 +1,5 @@
 import express from 'express'
+import stream from 'stream'
 import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
 import mime from 'mime-types'
 import {
@@ -82,18 +83,23 @@ export function validateInput(
     return undefined
   }
 
-  // input schema
+  // if input schema, validate
+  let body
   if (def.input?.schema) {
     try {
       lexicons.assertValidXrpcInput(nsid, req.body)
     } catch (e) {
       throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
     }
+    body = req.body
+  } else {
+    body = new stream.PassThrough()
+    req.pipe(body)
   }
 
   return {
     encoding: inputEncoding,
-    body: req.body,
+    body,
   }
 }
 

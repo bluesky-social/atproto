@@ -6,14 +6,14 @@ import ServerAuth from '../../../auth'
 export default function (server: Server) {
   server.com.atproto.data.uploadFile({
     auth: ServerAuth.verifier,
-    handler: async ({ input, req, res }) => {
+    handler: async ({ input, res }) => {
       const { db, blobstore } = locals.get(res)
 
       const cid = await repo.addUntetheredBlobStream(
         db,
         blobstore,
         input.encoding,
-        req,
+        input.body,
       )
 
       return {

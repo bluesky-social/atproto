@@ -279,6 +279,19 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           moduleSpecifier: 'express',
           defaultImport: 'express',
         })
+
+        const streamingInput =
+          main?.type === 'procedure' &&
+          main.input?.encoding &&
+          !main.input.schema
+        const streamingOutput = main.output?.encoding && !main.output.schema
+        if (streamingInput || streamingOutput) {
+          //= import stream from 'stream'
+          file.addImportDeclaration({
+            moduleSpecifier: 'stream',
+            defaultImport: 'stream',
+          })
+        }
       }
 
       for (const defId in lexiconDoc.defs) {
@@ -333,13 +346,13 @@ function genServerXrpcCommon(
       if (def.input.encoding.includes(',')) {
         handlerInput.addProperty({
           name: 'body',
-          type: 'InputSchema | Uint8Array',
+          type: 'InputSchema | stream.Readable',
         })
       } else {
         handlerInput.addProperty({ name: 'body', type: 'InputSchema' })
       }
     } else if (def.input.encoding) {
-      handlerInput.addProperty({ name: 'body', type: 'Uint8Array' })
+      handlerInput.addProperty({ name: 'body', type: 'stream.Readable' })
     }
   } else {
     file.addTypeAlias({
@@ -370,13 +383,16 @@ function genServerXrpcCommon(
       if (def.output.encoding.includes(',')) {
         handlerSuccess.addProperty({
           name: 'body',
-          type: 'OutputSchema | Uint8Array',
+          type: 'OutputSchema | Uint8Array | stream.Readable',
         })
       } else {
         handlerSuccess.addProperty({ name: 'body', type: 'OutputSchema' })
       }
     } else if (def.output?.encoding) {
-      handlerSuccess.addProperty({ name: 'body', type: 'Uint8Array' })
+      handlerSuccess.addProperty({
+        name: 'body',
+        type: 'Uint8Array | stream.Readable',
+      })
     }
   }
 
