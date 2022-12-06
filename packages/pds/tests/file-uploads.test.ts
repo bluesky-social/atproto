@@ -1,3 +1,4 @@
+import fs from 'fs'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
 import { randomBytes } from '@atproto/crypto'
@@ -57,22 +58,25 @@ describe('file uploads', () => {
     bob.did = res2.data.did
   })
 
-  let cid: string
+  let smallCid: CID
+  let smallFile: Uint8Array
 
   it('uploads files', async () => {
-    const bytes = randomBytes(1000)
-    const res = await aliceClient.com.atproto.data.uploadFile(bytes, {
-      encoding: 'image/png',
+    smallFile = await fs.promises.readFile(
+      'tests/fixtures/key-portrait-small.jpg',
+    )
+    const res = await aliceClient.com.atproto.data.uploadFile(smallFile, {
+      encoding: 'image/jpeg',
     } as any)
-    cid = res.data.cid
+    smallCid = CID.parse(res.data.cid)
 
     const found = await db.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', cid)
+      .where('cid', '=', smallCid.toString())
       .executeTakeFirst()
-    expect(found?.mimeType).toBe('image/png')
-    expect(found?.size).toBe(1000)
+    expect(found?.mimeType).toBe('image/jpeg')
+    expect(found?.size).toBe(smallFile.length)
     expect(found?.tempKey).toBeDefined()
     expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
   })
@@ -80,24 +84,61 @@ describe('file uploads', () => {
   it('can reference the file', async () => {
     await aliceClient.app.bsky.actor.updateProfile({
       displayName: 'Alice',
-      avatar: { cid, mimeType: 'image/png' },
+      avatar: { cid: smallCid.toString(), mimeType: 'image/jpeg' },
     })
 
     const profile = await aliceClient.app.bsky.actor.getProfile({
       actor: 'alice.test',
     })
-    expect(profile.data.avatar).toEqual(cid)
+    expect(profile.data.avatar).toEqual(smallCid.toString())
   })
 
-  it('after referencing the file is moved to permanent storage', async () => {
+  it('after being referenced, the file is moved to permanent storage', async () => {
     const found = await db.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', cid)
+      .where('cid', '=', smallCid.toString())
       .executeTakeFirst()
 
     expect(found?.tempKey).toBeNull()
     expect(await blobstore.hasTemp(found?.tempKey as string)).toBeFalsy()
-    expect(await blobstore.hasStored(CID.parse(cid))).toBeTruthy()
+    expect(await blobstore.hasStored(smallCid)).toBeTruthy()
+    const storedBytes = await blobstore.getBytes(smallCid)
+    expect(uint8arrays.equals(smallFile, storedBytes)).toBeTruthy()
+  })
+
+  let largeCid: CID
+  let largeFile: Uint8Array
+
+  it('does not allow referencing a file that is outside blob constraints', async () => {
+    largeFile = await fs.promises.readFile(
+      'tests/fixtures/key-portrait-large.jpg',
+    )
+    const res = await aliceClient.com.atproto.data.uploadFile(largeFile, {
+      encoding: 'image/jpeg',
+    } as any)
+    largeCid = CID.parse(res.data.cid)
+
+    const profilePromise = aliceClient.app.bsky.actor.updateProfile({
+      avatar: { cid: largeCid.toString(), mimeType: 'image/jpeg' },
+    })
+
+    await expect(profilePromise).rejects.toThrow()
+    const profile = await aliceClient.app.bsky.actor.getProfile({
+      actor: 'alice.test',
+    })
+    expect(profile.data.avatar).toEqual(smallCid.toString())
+  })
+
+  it('does not make a blob permanent if referencing failed', async () => {
+    const found = await db.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', largeCid.toString())
+      .executeTakeFirst()
+
+    expect(found?.tempKey).toBeDefined()
+    expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
+    expect(await blobstore.hasStored(largeCid)).toBeFalsy()
   })
 })
