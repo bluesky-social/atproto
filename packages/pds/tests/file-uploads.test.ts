@@ -74,9 +74,12 @@ describe('file uploads', () => {
       .selectAll()
       .where('cid', '=', smallCid.toString())
       .executeTakeFirst()
+    console.log(found)
     expect(found?.mimeType).toBe('image/jpeg')
     expect(found?.size).toBe(smallFile.length)
     expect(found?.tempKey).toBeDefined()
+    expect(found?.width).toBe(87)
+    expect(found?.height).toBe(150)
     expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
   })
 

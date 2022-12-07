@@ -8,6 +8,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
 import { BlobRef, PreparedWrites } from './types'
 import { Blob as BlobTable } from '../db/tables/blob'
+import * as img from '../image'
 
 export const addUntetheredBlob = async (
   dbTxn: Database,
@@ -17,17 +18,28 @@ export const addUntetheredBlob = async (
 ): Promise<CID> => {
   let size = 0
   const hash = crypto.createHash('sha256')
-  const file = new stream.PassThrough()
-  const tempKeyPromise = blobstore.putTemp(file)
+  const fileStream = new stream.PassThrough()
+  const tempKeyPromise = blobstore.putTemp(fileStream)
+  const imgStream = mimeType.startsWith('image')
+    ? new stream.PassThrough()
+    : null
+  const imgInfoPromise = imgStream ? img.getInfo(imgStream) : null
   for await (const chunk of blobStream) {
-    file.write(chunk)
+    fileStream.write(chunk)
     hash.write(chunk)
+    if (imgStream) {
+      imgStream.write(chunk)
+    }
     size += chunk.length
   }
-  file.end()
+  fileStream.end()
   hash.end()
+  if (imgStream) {
+    imgStream.end()
+  }
 
   const tempKey = await tempKeyPromise
+  const imgInfo = imgInfoPromise ? await imgInfoPromise : null
   const sha256 = hash.read()
   const cid = sha256RawToCid(sha256)
 
@@ -38,8 +50,8 @@ export const addUntetheredBlob = async (
       mimeType,
       size,
       tempKey,
-      width: null,
-      height: null,
+      width: imgInfo?.width || null,
+      height: imgInfo?.height || null,
       createdAt: new Date().toISOString(),
     })
     .execute()
