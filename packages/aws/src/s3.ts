@@ -58,16 +58,26 @@ export class S3BlobStore implements BlobStore {
     })
   }
 
-  async getBytes(cid: CID): Promise<Uint8Array> {
+  private async getObject(cid: CID) {
     const res = await this.client.getObject({
       Bucket: this.bucket,
       Key: this.getStoredPath(cid),
     })
     if (res.Body) {
-      return res.Body.transformToByteArray()
+      return res.Body
     } else {
       throw new Error(`Could not get blob: ${cid.toString()}`)
     }
+  }
+
+  async getBytes(cid: CID): Promise<Uint8Array> {
+    const res = await this.getObject(cid)
+    return res.transformToByteArray()
+  }
+
+  async getStream(cid: CID): Promise<stream.Readable> {
+    const res = await this.getObject(cid)
+    return res as stream.Readable
   }
 }
 

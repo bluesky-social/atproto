@@ -1,4 +1,5 @@
-import fs from 'fs'
+import fs from 'fs/promises'
+import fsSync from 'fs'
 import stream from 'stream'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
@@ -20,8 +21,8 @@ export class DiskBlobStore implements BlobStore {
   ): Promise<DiskBlobStore> {
     const tmp = tmpLocation || '/tmp/atproto/blobs'
     await Promise.all([
-      fs.promises.mkdir(location, { recursive: true }),
-      fs.promises.mkdir(tmp, { recursive: true }),
+      fs.mkdir(location, { recursive: true }),
+      fs.mkdir(tmp, { recursive: true }),
     ])
     return new DiskBlobStore(location, tmp)
   }
@@ -48,7 +49,7 @@ export class DiskBlobStore implements BlobStore {
 
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
     const key = this.genKey()
-    await fs.promises.writeFile(this.getTmpPath(key), bytes)
+    await fs.writeFile(this.getTmpPath(key), bytes)
     return key
   }
 
@@ -57,28 +58,28 @@ export class DiskBlobStore implements BlobStore {
     const storedPath = this.getStoredPath(cid)
     const alreadyHas = await this.hasStored(cid)
     if (!alreadyHas) {
-      const data = await fs.promises.readFile(tmpPath)
-      await fs.promises.writeFile(storedPath, data)
+      const data = await fs.readFile(tmpPath)
+      await fs.writeFile(storedPath, data)
     }
     try {
-      await fs.promises.rm(tmpPath)
+      await fs.rm(tmpPath)
     } catch (err) {
       log.error({ err, tmpPath }, 'could not delete file from temp storage')
     }
   }
 
   async getBytes(cid: CID): Promise<Uint8Array> {
-    return fs.promises.readFile(this.getStoredPath(cid))
+    return fs.readFile(this.getStoredPath(cid))
   }
 
-  getStream(cid: CID): stream.Readable {
-    return fs.createReadStream(this.getStoredPath(cid))
+  async getStream(cid: CID): Promise<stream.Readable> {
+    return fsSync.createReadStream(this.getStoredPath(cid))
   }
 }
 
 const fileExists = (location: string): Promise<boolean> => {
   return new Promise((resolve, reject) => {
-    fs.stat(location, (err) => {
+    fsSync.stat(location, (err) => {
       if (err) {
         if (err.code === 'ENOENT') {
           return resolve(false)
