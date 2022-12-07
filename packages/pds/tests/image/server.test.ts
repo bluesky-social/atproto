@@ -2,7 +2,7 @@ import * as http from 'http'
 import { AddressInfo } from 'net'
 import * as uint8arrays from 'uint8arrays'
 import axios, { AxiosInstance } from 'axios'
-import { getInfo } from '../../src/image'
+import { getInfo } from '../../src/image/sharp'
 import {
   BlobDiskCache,
   BlobDiskStorage,

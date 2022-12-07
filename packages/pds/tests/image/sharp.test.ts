@@ -1,5 +1,5 @@
 import { createReadStream } from 'fs'
-import { Options, getInfo, resize } from '../../src/image'
+import { Options, getInfo, resize } from '../../src/image/sharp'
 
 describe('sharp image processor', () => {
   it('scales up to cover.', async () => {

@@ -2,6 +2,8 @@ import { Readable } from 'stream'
 import sharp from 'sharp'
 import { formatsToMimes, forwardStreamErrors, Options } from './util'
 
+export type { Options }
+
 export async function resize(stream: Readable, options: Options) {
   const { height, width, min = false, fit = 'cover', format, quality } = options
 
