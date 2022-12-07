@@ -9,7 +9,6 @@ import { BlobDiskCache, ImageProcessingServer } from '../../src/image/server'
 import { DiskBlobStore } from '../../src'
 import { cidForData } from '@atproto/common'
 import { CID } from 'multiformats/cid'
-import { runTestServer } from '../_util'
 
 describe('image processing server', () => {
   let server: ImageProcessingServer
