@@ -88,11 +88,6 @@ describe('file uploads', () => {
       displayName: 'Alice',
       avatar: { cid: smallCid.toString(), mimeType: 'image/jpeg' },
     })
-
-    const profile = await aliceClient.app.bsky.actor.getProfile({
-      actor: 'alice.test',
-    })
-    expect(profile.data.avatar).toEqual(smallCid.toString())
   })
 
   it('after being referenced, the file is moved to permanent storage', async () => {
@@ -126,10 +121,6 @@ describe('file uploads', () => {
     })
 
     await expect(profilePromise).rejects.toThrow()
-    const profile = await aliceClient.app.bsky.actor.getProfile({
-      actor: 'alice.test',
-    })
-    expect(profile.data.avatar).toEqual(smallCid.toString())
   })
 
   it('does not make a blob permanent if referencing failed', async () => {

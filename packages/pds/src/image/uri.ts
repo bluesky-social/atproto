@@ -20,7 +20,7 @@ export class ImageUriBuilder {
       typeof key === 'string' ? uint8arrays.fromString(key, 'hex') : key
   }
 
-  getSignedPath(opts: Options & { cid: CID }) {
+  getSignedPath(opts: Options & { cid: CID }): string {
     const path = ImageUriBuilder.getPath(opts)
     const saltedPath = uint8arrays.concat([
       this.salt,
@@ -30,7 +30,7 @@ export class ImageUriBuilder {
     return `/${sig}${path}`
   }
 
-  getSignedUri(opts: Options & { cid: CID }) {
+  getSignedUri(opts: Options & { cid: CID }): string {
     const path = this.getSignedPath(opts)
     return this.endpoint + path
   }
