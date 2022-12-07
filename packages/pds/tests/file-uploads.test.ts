@@ -98,7 +98,6 @@ describe('file uploads', () => {
       .executeTakeFirst()
 
     expect(found?.tempKey).toBeNull()
-    expect(await blobstore.hasTemp(found?.tempKey as string)).toBeFalsy()
     expect(await blobstore.hasStored(smallCid)).toBeTruthy()
     const storedBytes = await blobstore.getBytes(smallCid)
     expect(uint8arrays.equals(smallFile, storedBytes)).toBeTruthy()

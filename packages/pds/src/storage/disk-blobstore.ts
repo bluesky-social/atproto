@@ -1,6 +1,8 @@
 import fs from 'fs/promises'
 import fsSync from 'fs'
 import stream from 'stream'
+import os from 'os'
+import path from 'path'
 import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
@@ -20,7 +22,7 @@ export class DiskBlobStore implements BlobStore {
     location: string,
     tmpLocation?: string,
   ): Promise<DiskBlobStore> {
-    const tmp = tmpLocation || '/tmp/atproto/blobs'
+    const tmp = tmpLocation || path.join(os.tmpdir(), 'atproto/blobs')
     await Promise.all([
       fs.mkdir(location, { recursive: true }),
       fs.mkdir(tmp, { recursive: true }),
@@ -33,11 +35,11 @@ export class DiskBlobStore implements BlobStore {
   }
 
   getTmpPath(key: string): string {
-    return `${this.tmpLocation}/${key}`
+    return path.join(this.tmpLocation, key)
   }
 
   getStoredPath(cid: CID): string {
-    return `${this.location}/${cid.toString()}`
+    return path.join(this.location, cid.toString())
   }
 
   async hasTemp(key: string): Promise<boolean> {

@@ -1,5 +1,7 @@
 import { AddressInfo } from 'net'
 import http from 'http'
+import os from 'os'
+import path from 'path'
 import * as crypto from '@atproto/crypto'
 import * as plc from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
@@ -51,7 +53,7 @@ export const runTestServer = async (
     'https://pds.public.url',
   )
 
-  const blobstoreLoc = '/tmp/' + randomStr(5, 'base32')
+  const blobstoreLoc = path.join(os.tmpdir(), randomStr(5, 'base32'))
 
   const config = new ServerConfig({
     debugMode: true,
