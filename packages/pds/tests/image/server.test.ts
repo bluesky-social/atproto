@@ -110,6 +110,6 @@ describe('image processing server', () => {
       }),
     )
     expect(res.status).toEqual(404)
-    expect(res.data).toEqual({ error: 'NotFound', message: 'Image not found' })
+    expect(res.data).toEqual({ message: 'Image not found' })
   })
 })

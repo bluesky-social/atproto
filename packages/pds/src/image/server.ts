@@ -4,7 +4,7 @@ import os from 'os'
 import path from 'path'
 import { PassThrough, Readable } from 'stream'
 import express, { ErrorRequestHandler, NextFunction } from 'express'
-import { InvalidRequestError, XRPCError } from '@atproto/xrpc-server'
+import createError, { isHttpError } from 'http-errors'
 import { BadPathError, ImageUriBuilder } from './uri'
 import log from './logger'
 import { resize } from './sharp'
@@ -73,10 +73,10 @@ export class ImageProcessingServer {
       )
     } catch (err: unknown) {
       if (err instanceof BadPathError) {
-        return next(new InvalidRequestError(err.message))
+        return next(createError(400, err))
       }
       if (err instanceof BlobNotFoundError) {
-        return next(new XRPCError(404, 'Image not found', 'NotFound'))
+        return next(createError(404, 'Image not found'))
       }
       return next(err)
     }
@@ -84,7 +84,7 @@ export class ImageProcessingServer {
 }
 
 const errorMiddleware: ErrorRequestHandler = function (err, _req, res, next) {
-  if (err instanceof XRPCError) {
+  if (isHttpError(err)) {
     log.error(err, `error: ${err.message}`)
   } else {
     log.error(err, 'unhandled exception')
@@ -92,8 +92,10 @@ const errorMiddleware: ErrorRequestHandler = function (err, _req, res, next) {
   if (res.headersSent) {
     return next(err)
   }
-  const xrpcError = XRPCError.fromError(err)
-  return res.status(xrpcError.type).json(xrpcError.payload)
+  const httpError = createError(err)
+  return res.status(httpError.status).json({
+    message: httpError.expose ? httpError.message : 'Internal Server Error',
+  })
 }
 
 function getMime(format: Options['format']) {
