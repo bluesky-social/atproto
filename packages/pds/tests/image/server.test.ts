@@ -2,6 +2,7 @@ import * as http from 'http'
 import { AddressInfo } from 'net'
 import * as uint8arrays from 'uint8arrays'
 import axios, { AxiosInstance } from 'axios'
+import { getInfo } from '../../src/image'
 import {
   BlobDiskCache,
   BlobDiskStorage,
@@ -46,7 +47,7 @@ describe('image processing server', () => {
       { responseType: 'stream' },
     )
 
-    const info = await server.processor.getInfo(res.data)
+    const info = await getInfo(res.data)
     expect(info).toEqual(
       expect.objectContaining({
         height: 500,

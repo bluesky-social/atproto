@@ -1,2 +1,2 @@
 export * from './sharp'
-export type { ImageProcessor, Options, ImageInfo } from './util'
+export type { Options, ImageInfo } from './util'

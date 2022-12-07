@@ -1,5 +1,5 @@
 import { createReadStream } from 'fs'
-import { Options, SharpImageProcessor } from '../../src/image'
+import { Options, getInfo, resize } from '../../src/image'
 
 describe('sharp image processor', () => {
   it('scales up to cover.', async () => {
@@ -178,9 +178,8 @@ describe('sharp image processor', () => {
   })
 
   async function processFixture(fixture: string, options: Options) {
-    const processor = new SharpImageProcessor()
     const image = createReadStream(`${__dirname}/fixtures/${fixture}`)
-    const resized = await processor.resize(image, options)
-    return await processor.getInfo(resized)
+    const resized = await resize(image, options)
+    return await getInfo(resized)
   }
 })

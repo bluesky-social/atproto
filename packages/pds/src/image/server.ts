@@ -7,12 +7,11 @@ import express, { ErrorRequestHandler, NextFunction } from 'express'
 import { InvalidRequestError, XRPCError } from '@atproto/xrpc-server'
 import { BadPathError, ImageUriBuilder } from './uri'
 import log from './logger'
-import { SharpImageProcessor } from './sharp'
+import { resize } from './sharp'
 import { forwardStreamErrors, formatsToMimes, Options } from './util'
 
 export class ImageProcessingServer {
   app = express()
-  processor = new SharpImageProcessor()
   uriBuilder: ImageUriBuilder
 
   constructor(
@@ -54,7 +53,7 @@ export class ImageProcessingServer {
       // Non-cached flow
 
       const imageStream = await this.storage.get(options.fileId)
-      const processedImage = await this.processor.resize(imageStream, options)
+      const processedImage = await resize(imageStream, options)
 
       // Cache in the background
       this.cache
