@@ -1,6 +1,7 @@
 import { Readable } from 'stream'
 import sharp from 'sharp'
-import { formatsToMimes, forwardStreamErrors, ImageInfo, Options } from './util'
+import { forwardStreamErrors } from '@atproto/common'
+import { formatsToMimes, ImageInfo, Options } from './util'
 
 export type { Options }
 

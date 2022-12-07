@@ -66,9 +66,7 @@ export class MemoryBlobStore implements BlobStore {
 
   async getStream(cid: CID): Promise<stream.Readable> {
     const bytes = await this.getBytes(cid)
-    const fileStream = new stream.PassThrough()
-    fileStream.write(bytes)
-    return fileStream
+    return stream.Readable.from(bytes)
   }
 }
 

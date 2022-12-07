@@ -1,5 +1,4 @@
 import express from 'express'
-import stream from 'stream'
 import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
 import mime from 'mime-types'
 import {
@@ -11,6 +10,7 @@ import {
   InvalidRequestError,
   InternalServerError,
 } from './types'
+import { cloneStream } from '@atproto/common'
 
 export function decodeQueryParams(
   def: LexXrpcProcedure | LexXrpcQuery,
@@ -98,8 +98,7 @@ export function validateInput(
   if (req.complete) {
     body = req.body
   } else {
-    body = new stream.PassThrough()
-    req.pipe(body)
+    body = cloneStream(req)
   }
 
   return {

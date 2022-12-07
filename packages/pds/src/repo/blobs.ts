@@ -1,14 +1,14 @@
 import stream from 'stream'
-import crypto from 'crypto'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
-import { sha256RawToCid } from '@atproto/common'
+import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
 import { BlobRef, PreparedWrites } from './types'
 import { Blob as BlobTable } from '../db/tables/blob'
 import * as img from '../image'
+import { sha256Stream } from '@atproto/crypto'
 
 export const addUntetheredBlob = async (
   dbTxn: Database,
@@ -16,31 +16,23 @@ export const addUntetheredBlob = async (
   mimeType: string,
   blobStream: stream.Readable,
 ): Promise<CID> => {
-  let size = 0
-  const hash = crypto.createHash('sha256')
-  const fileStream = new stream.PassThrough()
-  const tempKeyPromise = blobstore.putTemp(fileStream)
-  const imgStream = mimeType.startsWith('image')
-    ? new stream.PassThrough()
-    : null
-  const imgInfoPromise = imgStream ? img.getInfo(imgStream) : null
-  for await (const chunk of blobStream) {
-    fileStream.write(chunk)
-    hash.write(chunk)
-    if (imgStream) {
-      imgStream.write(chunk)
+  const maybeGetImgInfo = async (
+    readable: stream.Readable,
+  ): Promise<img.ImageInfo | null> => {
+    if (mimeType.startsWith('image')) {
+      return img.getInfo(readable)
+    } else {
+      return null
     }
-    size += chunk.length
-  }
-  fileStream.end()
-  hash.end()
-  if (imgStream) {
-    imgStream.end()
   }
 
-  const tempKey = await tempKeyPromise
-  const imgInfo = imgInfoPromise ? await imgInfoPromise : null
-  const sha256 = hash.read()
+  const [tempKey, size, sha256, imgInfo] = await Promise.all([
+    blobstore.putTemp(cloneStream(blobStream)),
+    streamSize(cloneStream(blobStream)),
+    sha256Stream(cloneStream(blobStream)),
+    maybeGetImgInfo(cloneStream(blobStream)),
+  ])
+
   const cid = sha256RawToCid(sha256)
 
   await dbTxn.db

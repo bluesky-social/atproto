@@ -2,15 +2,19 @@ import fs from 'fs/promises'
 import fsSync from 'fs'
 import os from 'os'
 import path from 'path'
-import { PassThrough, Readable } from 'stream'
+import { Readable } from 'stream'
 import express, { ErrorRequestHandler, NextFunction } from 'express'
 import createError, { isHttpError } from 'http-errors'
 import { BadPathError, ImageUriBuilder } from './uri'
 import log from './logger'
 import { resize } from './sharp'
-import { forwardStreamErrors, formatsToMimes, Options } from './util'
+import { formatsToMimes, Options } from './util'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
-import { isErrnoException } from '@atproto/common'
+import {
+  cloneStream,
+  forwardStreamErrors,
+  isErrnoException,
+} from '@atproto/common'
 
 export class ImageProcessingServer {
   app = express()
@@ -154,10 +158,4 @@ export class BlobDiskCache implements BlobCache {
   async clear() {
     await fs.rm(this.tempDir, { recursive: true, force: true })
   }
-}
-
-function cloneStream(stream: Readable) {
-  const passthrough = new PassThrough()
-  forwardStreamErrors(stream, passthrough)
-  return stream.pipe(passthrough)
 }

@@ -33,7 +33,7 @@ export interface ServerConfigValues {
   imgUriSalt: string
   imgUriKey: string
   imgUriEndpoint?: string
-  blobCache?: string
+  blobCacheLocation?: string
 
   appUrlPasswordReset: string
   emailSmtpUrl?: string
@@ -101,7 +101,7 @@ export class ServerConfig {
       process.env.IMG_URI_KEY ||
       'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8'
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
-    const blobCache = process.env.BLOB_CACHE
+    const blobCacheLocation = process.env.BLOB_CACHE_LOC
 
     const appUrlPasswordReset =
       process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
@@ -139,7 +139,7 @@ export class ServerConfig {
       imgUriSalt,
       imgUriKey,
       imgUriEndpoint,
-      blobCache,
+      blobCacheLocation,
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
@@ -277,8 +277,8 @@ export class ServerConfig {
     return this.cfg.imgUriEndpoint
   }
 
-  get blobCache() {
-    return this.cfg.blobCache
+  get blobCacheLocation() {
+    return this.cfg.blobCacheLocation
   }
 
   get appUrlPasswordReset() {

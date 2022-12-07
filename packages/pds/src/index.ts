@@ -61,7 +61,7 @@ const runServer = (
 
   let imgUriEndpoint = config.imgUriEndpoint
   if (!imgUriEndpoint) {
-    const imgProcessingCache = new BlobDiskCache(config.blobCache)
+    const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
     const imgProcessingServer = new ImageProcessingServer(
       config.imgUriSalt,
       config.imgUriKey,
