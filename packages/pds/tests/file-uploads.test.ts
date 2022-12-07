@@ -28,7 +28,7 @@ describe('file uploads', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'crud',
+      dbPostgresSchema: 'file-uploads',
     })
     blobstore = server.blobstore as DiskBlobStore
     db = server.db
@@ -62,7 +62,7 @@ describe('file uploads', () => {
 
   it('uploads files', async () => {
     smallFile = await fs.promises.readFile(
-      'tests/fixtures/key-portrait-small.jpg',
+      'tests/image/fixtures/key-portrait-small.jpg',
     )
     const res = await aliceClient.com.atproto.data.uploadFile(smallFile, {
       encoding: 'image/jpeg',
@@ -74,7 +74,7 @@ describe('file uploads', () => {
       .selectAll()
       .where('cid', '=', smallCid.toString())
       .executeTakeFirst()
-    console.log(found)
+
     expect(found?.mimeType).toBe('image/jpeg')
     expect(found?.size).toBe(smallFile.length)
     expect(found?.tempKey).toBeDefined()
@@ -114,7 +114,7 @@ describe('file uploads', () => {
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
     largeFile = await fs.promises.readFile(
-      'tests/fixtures/key-portrait-large.jpg',
+      'tests/image/fixtures/key-portrait-large.jpg',
     )
     const res = await aliceClient.com.atproto.data.uploadFile(largeFile, {
       encoding: 'image/jpeg',

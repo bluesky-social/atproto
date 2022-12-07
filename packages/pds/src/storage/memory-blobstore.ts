@@ -1,6 +1,6 @@
 import stream from 'stream'
 import { CID } from 'multiformats/cid'
-import { BlobStore } from '@atproto/repo'
+import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
 import { streamToArray } from '@atproto/common'
 
@@ -37,16 +37,29 @@ export class MemoryBlobStore implements BlobStore {
   async makePermanent(key: string, cid: CID): Promise<void> {
     const value = this.temp.get(key)
     if (!value) {
-      throw new Error(`Temp blob does not exist: ${key}`)
+      throw new BlobNotFoundError()
     }
     this.blocks.set(cid.toString(), value)
     this.temp.delete(key)
   }
 
+  async putPermanent(
+    cid: CID,
+    bytes: Uint8Array | stream.Readable,
+  ): Promise<void> {
+    let byteArray: Uint8Array
+    if (ArrayBuffer.isView(bytes)) {
+      byteArray = bytes
+    } else {
+      byteArray = await streamToArray(bytes)
+    }
+    this.blocks.set(cid.toString(), byteArray)
+  }
+
   async getBytes(cid: CID): Promise<Uint8Array> {
     const value = this.blocks.get(cid.toString())
     if (!value) {
-      throw new Error(`blob does not exist: ${cid.toString()}`)
+      throw new BlobNotFoundError()
     }
     return value
   }

@@ -68,6 +68,8 @@ export const runTestServer = async (
     appUrlPasswordReset: 'app://forgot-password',
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
     publicUrl: 'https://pds.public.url',
+    imgUriSalt: 'ndBCIfV1W85fVfR0ZMJ+Hg==',
+    imgUriKey: '8j7NFCg1Al9Cw9ss8l3YE5VsF4OSdgJWIR+dMV+KtNg=',
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
     blobstoreLocation: `${blobstoreLoc}/blobs`,
     blobstoreTmp: `${blobstoreLoc}/tmp`,

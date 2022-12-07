@@ -17,7 +17,10 @@ const run = async () => {
   let db: Database
 
   const keypair = await crypto.EcdsaKeypair.create()
-  const cfg = ServerConfig.readEnv({ recoveryKey: keypair.did() })
+  const cfg = ServerConfig.readEnv({
+    serverDid: keypair.did(),
+    recoveryKey: keypair.did(),
+  })
 
   if (cfg.dbPostgresUrl) {
     db = Database.postgres({

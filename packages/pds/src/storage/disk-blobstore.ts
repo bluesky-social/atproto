@@ -2,9 +2,10 @@ import fs from 'fs/promises'
 import fsSync from 'fs'
 import stream from 'stream'
 import { CID } from 'multiformats/cid'
-import { BlobStore } from '@atproto/repo'
+import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
 import { httpLogger as log } from '../logger'
+import { isErrnoException } from '@atproto/common'
 
 export class DiskBlobStore implements BlobStore {
   location: string
@@ -68,12 +69,34 @@ export class DiskBlobStore implements BlobStore {
     }
   }
 
+  async putPermanent(
+    cid: CID,
+    bytes: Uint8Array | stream.Readable,
+  ): Promise<void> {
+    await fs.writeFile(this.getStoredPath(cid), bytes)
+  }
+
   async getBytes(cid: CID): Promise<Uint8Array> {
-    return fs.readFile(this.getStoredPath(cid))
+    try {
+      return await fs.readFile(this.getStoredPath(cid))
+    } catch (err) {
+      if (isErrnoException(err) && err.code === 'ENOENT') {
+        throw new BlobNotFoundError()
+      }
+      throw err
+    }
   }
 
   async getStream(cid: CID): Promise<stream.Readable> {
-    return fsSync.createReadStream(this.getStoredPath(cid))
+    try {
+      const handle = await fs.open(this.getStoredPath(cid), 'r')
+      return handle.createReadStream()
+    } catch (err) {
+      if (isErrnoException(err) && err.code === 'ENOENT') {
+        throw new BlobNotFoundError()
+      }
+      throw err
+    }
   }
 }
 

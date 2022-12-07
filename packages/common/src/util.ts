@@ -63,3 +63,9 @@ export const asyncFilter = async <T>(
   const results = await Promise.all(arr.map((t) => fn(t)))
   return arr.filter((_, i) => results[i])
 }
+
+export const isErrnoException = (
+  err: unknown,
+): err is NodeJS.ErrnoException => {
+  return !!err && 'code' in err
+}

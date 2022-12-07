@@ -19,6 +19,8 @@ import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
 import SqlMessageQueue from './db/message-queue'
 import { BlobStore } from '@atproto/repo'
+import { ImageUriBuilder } from './image/uri'
+import { BlobDiskCache, ImageProcessingServer } from './image/server'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -57,12 +59,32 @@ const runServer = (
   app.use(cors())
   app.use(loggerMiddleware)
 
+  let imgUriEndpoint = config.imgUriEndpoint
+  if (!imgUriEndpoint) {
+    const imgProcessingCache = new BlobDiskCache(config.blobCache)
+    const imgProcessingServer = new ImageProcessingServer(
+      config.imgUriSalt,
+      config.imgUriKey,
+      blobstore,
+      imgProcessingCache,
+    )
+    app.use('/image', imgProcessingServer.app)
+    imgUriEndpoint = `${config.publicUrl}/image`
+  }
+
+  const imgUriBuilder = new ImageUriBuilder(
+    imgUriEndpoint,
+    cfg.imgUriSalt,
+    cfg.imgUriKey,
+  )
+
   const locals: Locals = {
     logger: httpLogger,
     db,
     blobstore,
     keypair,
     auth,
+    imgUriBuilder,
     config,
     mailer,
   }

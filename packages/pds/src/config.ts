@@ -30,6 +30,11 @@ export interface ServerConfigValues {
 
   availableUserDomains: string[]
 
+  imgUriSalt: string
+  imgUriKey: string
+  imgUriEndpoint?: string
+  blobCache?: string
+
   appUrlPasswordReset: string
   emailSmtpUrl?: string
   emailNoReplyAddress: string
@@ -90,6 +95,12 @@ export class ServerConfig {
       ? process.env.AVAILABLE_USER_DOMAINS.split(',')
       : []
 
+    const imgUriSalt = process.env.IMG_URI_SALT || 'ndBCIfV1W85fVfR0ZMJ+Hg=='
+    const imgUriKey =
+      process.env.IMG_URI_KEY || '8j7NFCg1Al9Cw9ss8l3YE5VsF4OSdgJWIR+dMV+KtNg='
+    const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
+    const blobCache = process.env.BLOB_CACHE
+
     const appUrlPasswordReset =
       process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
 
@@ -123,6 +134,10 @@ export class ServerConfig {
       blockstoreLocation,
       databaseLocation,
       availableUserDomains,
+      imgUriSalt,
+      imgUriKey,
+      imgUriEndpoint,
+      blobCache,
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
@@ -246,6 +261,22 @@ export class ServerConfig {
 
   get availableUserDomains() {
     return this.cfg.availableUserDomains
+  }
+
+  get imgUriSalt() {
+    return this.cfg.imgUriSalt
+  }
+
+  get imgUriKey() {
+    return this.cfg.imgUriKey
+  }
+
+  get imgUriEndpoint() {
+    return this.cfg.imgUriEndpoint
+  }
+
+  get blobCache() {
+    return this.cfg.blobCache
   }
 
   get appUrlPasswordReset() {
