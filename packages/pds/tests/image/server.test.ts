@@ -28,8 +28,9 @@ describe('image processing server', () => {
     })
   })
 
-  afterAll(() => {
+  afterAll(async () => {
     if (httpServer) httpServer.close()
+    if (server) await server.cache.clear()
   })
 
   it('processes image from storage.', async () => {
@@ -60,6 +61,23 @@ describe('image processing server', () => {
         'content-length': '14605',
       }),
     )
+  })
+
+  it('caches results.', async () => {
+    const path = server.uriBuilder.getSignedPath({
+      fileId: 'key-landscape-small.jpg',
+      format: 'jpeg',
+      width: 25, // Special number for this test
+      height: 25,
+    })
+    const res1 = await client.get(path, { responseType: 'arraybuffer' })
+    expect(res1.headers['x-cache']).toEqual('miss')
+    const res2 = await client.get(path, { responseType: 'arraybuffer' })
+    expect(res2.headers['x-cache']).toEqual('hit')
+    const res3 = await client.get(path, { responseType: 'arraybuffer' })
+    expect(res3.headers['x-cache']).toEqual('hit')
+    expect(Buffer.compare(res1.data, res2.data)).toEqual(0)
+    expect(Buffer.compare(res1.data, res3.data)).toEqual(0)
   })
 
   it('errors on bad signature.', async () => {

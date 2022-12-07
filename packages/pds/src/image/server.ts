@@ -40,6 +40,7 @@ export class ImageProcessingServer {
       try {
         const cachedImage = await this.cache.get(options.signature)
         res.statusCode = 200
+        res.setHeader('x-cache', 'hit')
         res.setHeader('content-type', getMime(options.format))
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
         res.setHeader('content-length', cachedImage.size)
@@ -54,12 +55,14 @@ export class ImageProcessingServer {
 
       const imageStream = await this.storage.get(options.fileId)
       const processedImage = await this.processor.resize(imageStream, options)
+
       // Cache in the background
       this.cache
-        .put(options.signature, streamClone(processedImage))
+        .put(options.signature, cloneStream(processedImage))
         .catch((err) => log.error(err, 'failed to cache image'))
       // Respond
       res.statusCode = 200
+      res.setHeader('x-cache', 'miss')
       res.setHeader('content-type', getMime(options.format))
       res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
       forwardStreamErrors(processedImage, res)
@@ -81,7 +84,7 @@ export class ImageProcessingServer {
   }
 }
 
-const errorMiddleware: ErrorRequestHandler = function (err, req, res, next) {
+const errorMiddleware: ErrorRequestHandler = function (err, _req, res, next) {
   if (err instanceof XRPCError) {
     log.error(err, `error: ${err.message}`)
   } else {
@@ -176,7 +179,7 @@ export class BlobDiskCache implements BlobCache {
   }
 }
 
-function streamClone(stream: Readable) {
+function cloneStream(stream: Readable) {
   const passthrough = new PassThrough()
   forwardStreamErrors(stream, passthrough)
   return stream.pipe(passthrough)
