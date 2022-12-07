@@ -20,7 +20,7 @@
     "@babel/preset-env": "^7.18.6",
     "@npmcli/package-json": "^3.0.0",
     "@types/jest": "^28.1.4",
-    "@types/node": "^15.6.2",
+    "@types/node": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^5.38.1",
     "@typescript-eslint/parser": "^5.38.1",
     "babel-eslint": "^10.1.0",
