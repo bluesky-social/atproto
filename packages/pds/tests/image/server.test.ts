@@ -2,7 +2,11 @@ import * as http from 'http'
 import { AddressInfo } from 'net'
 import * as uint8arrays from 'uint8arrays'
 import axios, { AxiosInstance } from 'axios'
-import { BlobDiskStorage, ImageProcessingServer } from '../../src/image/server'
+import {
+  BlobDiskCache,
+  BlobDiskStorage,
+  ImageProcessingServer,
+} from '../../src/image/server'
 
 describe('image processing server', () => {
   let server: ImageProcessingServer
@@ -14,7 +18,8 @@ describe('image processing server', () => {
     const salt = b64Bytes('ndBCIfV1W85fVfR0ZMJ+Hg==')
     const key = b64Bytes('8j7NFCg1Al9Cw9ss8l3YE5VsF4OSdgJWIR+dMV+KtNg=')
     const storage = new BlobDiskStorage(`${__dirname}/fixtures`)
-    server = new ImageProcessingServer(salt, key, storage)
+    const cache = new BlobDiskCache()
+    server = new ImageProcessingServer(salt, key, storage, cache)
     httpServer = server.app.listen()
     const { port } = httpServer.address() as AddressInfo
     client = axios.create({

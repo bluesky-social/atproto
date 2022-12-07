@@ -1,10 +1,12 @@
 import fs from 'fs/promises'
+import fsSync from 'fs'
+import os from 'os'
 import path from 'path'
+import { PassThrough, Readable } from 'stream'
 import express, { ErrorRequestHandler, NextFunction } from 'express'
 import { InvalidRequestError, XRPCError } from '@atproto/xrpc-server'
 import { BadPathError, ImageUriBuilder } from './uri'
 import log from './logger'
-import { Readable } from 'stream'
 import { SharpImageProcessor } from './sharp'
 import { forwardStreamErrors, formatsToMimes, Options } from './util'
 
@@ -17,6 +19,7 @@ export class ImageProcessingServer {
     protected salt: Uint8Array,
     protected key: Uint8Array,
     protected storage: BlobStorage,
+    public cache: BlobCache,
   ) {
     this.uriBuilder = new ImageUriBuilder(salt, key)
     this.app.get('*', this.handler.bind(this))
@@ -31,8 +34,31 @@ export class ImageProcessingServer {
     try {
       const path = req.path
       const options = this.uriBuilder.getVerifiedOptions(path)
+
+      // Cached flow
+
+      try {
+        const cachedImage = await this.cache.get(options.signature)
+        res.statusCode = 200
+        res.setHeader('content-type', getMime(options.format))
+        res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
+        res.setHeader('content-length', cachedImage.size)
+        forwardStreamErrors(cachedImage, res)
+        return cachedImage.pipe(res)
+      } catch (err) {
+        // Ignore BlobNotFoundError and move on to non-cached flow
+        if (!(err instanceof BlobNotFoundError)) throw err
+      }
+
+      // Non-cached flow
+
       const imageStream = await this.storage.get(options.fileId)
       const processedImage = await this.processor.resize(imageStream, options)
+      // Cache in the background
+      this.cache
+        .put(options.signature, streamClone(processedImage))
+        .catch((err) => log.error(err, 'failed to cache image'))
+      // Respond
       res.statusCode = 200
       res.setHeader('content-type', getMime(options.format))
       res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
@@ -98,6 +124,62 @@ export class BlobDiskStorage implements BlobStorage {
       throw err
     }
   }
+}
+
+export interface BlobCache extends BlobStorage {
+  get(fileId: string): Promise<Readable & { size: number }>
+  put(fileId: string, stream: Readable): Promise<void>
+  clear(): Promise<void>
+}
+
+export class BlobDiskCache implements BlobCache {
+  tempDir: string
+  constructor(basePath?: string) {
+    this.tempDir = basePath || path.join(os.tmpdir(), 'pds--processed-images')
+    if (!path.isAbsolute(this.tempDir)) {
+      throw new Error('Must provide an absolute path')
+    }
+    try {
+      fsSync.mkdirSync(this.tempDir, { recursive: true })
+    } catch (err) {
+      // All good if cache dir already exists
+      if (isErrnoException(err) && err.code === 'EEXIST') return
+    }
+  }
+
+  async get(fileId: string) {
+    try {
+      const handle = await fs.open(path.join(this.tempDir, fileId), 'r')
+      const { size } = await handle.stat()
+      return Object.assign(handle.createReadStream(), { size })
+    } catch (err) {
+      if (isErrnoException(err) && err.code === 'ENOENT') {
+        throw new BlobNotFoundError()
+      }
+      throw err
+    }
+  }
+
+  async put(fileId: string, stream: Readable) {
+    const filename = path.join(this.tempDir, fileId)
+    try {
+      await fs.writeFile(filename, stream, { flag: 'wx' })
+    } catch (err) {
+      // Do not overwrite existing file, just ignore the error
+      if (isErrnoException(err) && err.code === 'EEXIST') return
+      throw err
+    }
+  }
+
+  async clear() {
+    await fs.rm(this.tempDir, { recursive: true, force: true })
+  }
+}
+
+function streamClone(stream: Readable) {
+  const passthrough = new PassThrough()
+  forwardStreamErrors(stream, passthrough)
+  return stream.pipe(passthrough)
 }
 
 function isErrnoException(err: unknown): err is NodeJS.ErrnoException {
