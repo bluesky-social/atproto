@@ -58,6 +58,17 @@ export class S3BlobStore implements BlobStore {
     })
   }
 
+  async putPermanent(
+    cid: CID,
+    bytes: Uint8Array | stream.Readable,
+  ): Promise<void> {
+    await this.client.putObject({
+      Bucket: this.bucket,
+      Body: bytes,
+      Key: this.getStoredPath(cid),
+    })
+  }
+
   private async getObject(cid: CID) {
     const res = await this.client.getObject({
       Bucket: this.bucket,

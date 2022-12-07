@@ -8,8 +8,9 @@ describe('image uri builder', () => {
 
   beforeAll(async () => {
     const endpoint = 'https://example.com'
-    const salt = 'ndBCIfV1W85fVfR0ZMJ+Hg=='
-    const key = '8j7NFCg1Al9Cw9ss8l3YE5VsF4OSdgJWIR+dMV+KtNg='
+    const salt = '9dd04221f5755bce5f55f47464c27e1e'
+    const key =
+      'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8'
     uriBuilder = new ImageUriBuilder(endpoint, salt, key)
     cid = await cidForData('test cid')
   })

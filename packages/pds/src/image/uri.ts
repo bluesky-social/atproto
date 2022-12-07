@@ -15,9 +15,9 @@ export class ImageUriBuilder {
   ) {
     this.endpoint = endpoint
     this.salt =
-      typeof salt === 'string' ? uint8arrays.fromString(salt, 'base64') : salt
+      typeof salt === 'string' ? uint8arrays.fromString(salt, 'hex') : salt
     this.key =
-      typeof key === 'string' ? uint8arrays.fromString(key, 'base64') : key
+      typeof key === 'string' ? uint8arrays.fromString(key, 'hex') : key
   }
 
   getSignedPath(opts: Options & { cid: CID }) {

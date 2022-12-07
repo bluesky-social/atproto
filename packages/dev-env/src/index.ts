@@ -89,6 +89,9 @@ export class DevEnvServer {
             emailNoReplyAddress: 'noreply@blueskyweb.xyz',
             adminPassword: 'password',
             inviteRequired: false,
+            imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
+            imgUriKey:
+              'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
             privacyPolicyUrl: 'https://example.com/privacy',
             termsOfServiceUrl: 'https://example.com/tos',
           }).listener,
