@@ -84,13 +84,18 @@ export function validateInput(
   }
 
   // if input schema, validate
-  let body
   if (def.input?.schema) {
     try {
       lexicons.assertValidXrpcInput(nsid, req.body)
     } catch (e) {
       throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
     }
+  }
+
+  // if middleware already got the body, we pass that along as input
+  // otherwise, we pipe it into a readable stream
+  let body
+  if (req.complete) {
     body = req.body
   } else {
     body = new stream.PassThrough()

@@ -23,6 +23,7 @@ import { BlobStore } from '@atproto/repo'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
+export { DiskBlobStore, MemoryBlobStore } from './storage'
 
 export type App = express.Application
 

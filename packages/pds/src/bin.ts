@@ -3,7 +3,8 @@ import * as crypto from '@atproto/crypto'
 import Database from './db'
 import server from './index'
 import { ServerConfig } from './config'
-import DiskBlobStore from './storage/disk-blobstore'
+import { DiskBlobStore, MemoryBlobStore } from './storage'
+import { BlobStore } from '@atproto/repo'
 
 const run = async () => {
   const env = process.env.ENV
@@ -31,10 +32,15 @@ const run = async () => {
 
   await db.migrateToLatestOrThrow()
 
-  const blobstore = await DiskBlobStore.create(
-    cfg.blobstoreLocation,
-    cfg.blobstoreTmp,
-  )
+  let blobstore: BlobStore
+  if (cfg.blobstoreLocation) {
+    blobstore = await DiskBlobStore.create(
+      cfg.blobstoreLocation,
+      cfg.blobstoreTmp,
+    )
+  } else {
+    blobstore = new MemoryBlobStore()
+  }
 
   const { listener } = server(db, blobstore, keypair, cfg)
   listener.on('listening', () => {

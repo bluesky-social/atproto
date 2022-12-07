@@ -30,7 +30,7 @@ describe('file uploads', () => {
     const server = await runTestServer({
       dbPostgresSchema: 'crud',
     })
-    blobstore = server.blobstore
+    blobstore = server.blobstore as DiskBlobStore
     db = server.db
     close = server.close
     client = AtpApi.service(server.url)

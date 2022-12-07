@@ -5,7 +5,12 @@ import * as plc from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
-import server, { ServerConfig, Database, App } from '../src/index'
+import server, {
+  ServerConfig,
+  Database,
+  App,
+  MemoryBlobStore,
+} from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
 import DiskBlobStore from '../src/storage/disk-blobstore'
@@ -20,7 +25,7 @@ export type TestServerInfo = {
   serverKey: string
   app: App
   db: Database
-  blobstore: DiskBlobStore
+  blobstore: DiskBlobStore | MemoryBlobStore
   close: CloseFn
 }
 
@@ -79,10 +84,13 @@ export const runTestServer = async (
 
   await db.migrateToLatestOrThrow()
 
-  const blobstore = await DiskBlobStore.create(
-    config.blobstoreLocation,
-    config.blobstoreTmp,
-  )
+  const blobstore =
+    config.blobstoreLocation !== undefined
+      ? await DiskBlobStore.create(
+          config.blobstoreLocation,
+          config.blobstoreTmp,
+        )
+      : new MemoryBlobStore()
 
   const { app, listener } = server(db, blobstore, keypair, config)
   const pdsPort = (listener.address() as AddressInfo).port
