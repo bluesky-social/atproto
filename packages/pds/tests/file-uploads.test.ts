@@ -2,9 +2,11 @@ import fs from 'fs/promises'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
 import { CID } from 'multiformats/cid'
-import { Database } from '../src'
+import { Database, ServerConfig } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import * as uint8arrays from 'uint8arrays'
+import * as image from '../src/image'
+import axios from 'axios'
 
 const alice = {
   email: 'alice@test.com',
@@ -24,6 +26,8 @@ describe('file uploads', () => {
   let aliceClient: AtpServiceClient
   let blobstore: DiskBlobStore
   let db: Database
+  let cfg: ServerConfig
+  let serverUrl: string
   let close: CloseFn
 
   beforeAll(async () => {
@@ -35,6 +39,8 @@ describe('file uploads', () => {
     close = server.close
     client = AtpApi.service(server.url)
     aliceClient = AtpApi.service(server.url)
+    cfg = server.cfg
+    serverUrl = server.url
   })
 
   afterAll(async () => {
@@ -99,6 +105,24 @@ describe('file uploads', () => {
     expect(await blobstore.hasStored(smallCid)).toBeTruthy()
     const storedBytes = await blobstore.getBytes(smallCid)
     expect(uint8arrays.equals(smallFile, storedBytes)).toBeTruthy()
+  })
+
+  it('serves the referenced blob', async () => {
+    const profile = await aliceClient.app.bsky.actor.getProfile({
+      actor: 'alice.test',
+    })
+    const avatar = profile.data.avatar as string
+    expect(typeof avatar).toBe('string')
+    const url = avatar.replace(cfg.publicUrl, serverUrl)
+    const res = await axios.get(url, { responseType: 'stream' })
+    expect(res.headers['content-type']).toBe('image/jpeg')
+    const info = await image.getInfo(res.data)
+    expect(info).toEqual(
+      expect.objectContaining({
+        height: 250,
+        width: 250,
+      }),
+    )
   })
 
   let largeCid: CID

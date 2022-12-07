@@ -78,8 +78,10 @@ export default function (server: Server) {
         ? imgUriBuilder.getSignedUri({
             cid: CID.parse(queryRes.avatarCid),
             format: 'jpeg',
+            fit: 'cover',
             height: 250,
             width: 250,
+            min: true,
           })
         : undefined
 
