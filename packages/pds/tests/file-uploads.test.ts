@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'fs/promises'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
 import { CID } from 'multiformats/cid'
@@ -61,9 +61,7 @@ describe('file uploads', () => {
   let smallFile: Uint8Array
 
   it('uploads files', async () => {
-    smallFile = await fs.promises.readFile(
-      'tests/image/fixtures/key-portrait-small.jpg',
-    )
+    smallFile = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
     const res = await aliceClient.com.atproto.data.uploadFile(smallFile, {
       encoding: 'image/jpeg',
     } as any)
@@ -107,9 +105,7 @@ describe('file uploads', () => {
   let largeFile: Uint8Array
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
-    largeFile = await fs.promises.readFile(
-      'tests/image/fixtures/key-portrait-large.jpg',
-    )
+    largeFile = await fs.readFile('tests/image/fixtures/key-portrait-large.jpg')
     const res = await aliceClient.com.atproto.data.uploadFile(largeFile, {
       encoding: 'image/jpeg',
     } as any)
