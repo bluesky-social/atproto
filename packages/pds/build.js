@@ -23,6 +23,7 @@ require('esbuild').build({
     'better-sqlite3',
     // Referenced in pg driver, but optional and we don't use it
     'pg-native',
+    'sharp',
   ],
   plugins: [].concat(buildShallow ? [nodeExternalsPlugin()] : []).concat([
     copy({
