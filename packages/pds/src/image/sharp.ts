@@ -1,8 +1,13 @@
 import { Readable } from 'stream'
 import sharp from 'sharp'
-import { formatsToMimes, forwardStreamErrors, Options } from './util'
+import { formatsToMimes, forwardStreamErrors, ImageInfo, Options } from './util'
 
-export const resize = async (stream: Readable, options: Options) => {
+export type { Options }
+
+export async function resize(
+  stream: Readable,
+  options: Options,
+): Promise<Readable> {
   const { height, width, min = false, fit = 'cover', format, quality } = options
 
   let processor = sharp()
@@ -39,7 +44,7 @@ export const resize = async (stream: Readable, options: Options) => {
   return stream.pipe(processor)
 }
 
-export const getInfo = async (stream: Readable) => {
+export async function getInfo(stream: Readable): Promise<ImageInfo> {
   const processor = sharp()
 
   forwardStreamErrors(stream, processor)

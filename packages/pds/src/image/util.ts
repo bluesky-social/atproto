@@ -1,10 +1,5 @@
-import { Readable, Stream } from 'stream'
+import { Stream } from 'stream'
 import { FormatEnum } from 'sharp'
-
-export interface ImageProcessor {
-  resize(stream: Readable, options: Options): Promise<Readable>
-  getInfo(stream: Readable): Promise<ImageInfo>
-}
 
 export type Options = Dimensions & {
   format: 'jpeg' | 'png'

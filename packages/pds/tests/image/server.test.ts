@@ -2,7 +2,12 @@ import * as http from 'http'
 import { AddressInfo } from 'net'
 import * as uint8arrays from 'uint8arrays'
 import axios, { AxiosInstance } from 'axios'
-import { BlobDiskStorage, ImageProcessingServer } from '../../src/image/server'
+import { getInfo } from '../../src/image/sharp'
+import {
+  BlobDiskCache,
+  BlobDiskStorage,
+  ImageProcessingServer,
+} from '../../src/image/server'
 
 describe('image processing server', () => {
   let server: ImageProcessingServer
@@ -14,7 +19,8 @@ describe('image processing server', () => {
     const salt = b64Bytes('ndBCIfV1W85fVfR0ZMJ+Hg==')
     const key = b64Bytes('8j7NFCg1Al9Cw9ss8l3YE5VsF4OSdgJWIR+dMV+KtNg=')
     const storage = new BlobDiskStorage(`${__dirname}/fixtures`)
-    server = new ImageProcessingServer(salt, key, storage)
+    const cache = new BlobDiskCache()
+    server = new ImageProcessingServer(salt, key, storage, cache)
     httpServer = server.app.listen()
     const { port } = httpServer.address() as AddressInfo
     client = axios.create({
@@ -23,8 +29,9 @@ describe('image processing server', () => {
     })
   })
 
-  afterAll(() => {
+  afterAll(async () => {
     if (httpServer) httpServer.close()
+    if (server) await server.cache.clear()
   })
 
   it('processes image from storage.', async () => {
@@ -40,7 +47,7 @@ describe('image processing server', () => {
       { responseType: 'stream' },
     )
 
-    const info = await server.processor.getInfo(res.data)
+    const info = await getInfo(res.data)
     expect(info).toEqual(
       expect.objectContaining({
         height: 500,
@@ -55,6 +62,23 @@ describe('image processing server', () => {
         'content-length': '14605',
       }),
     )
+  })
+
+  it('caches results.', async () => {
+    const path = server.uriBuilder.getSignedPath({
+      fileId: 'key-landscape-small.jpg',
+      format: 'jpeg',
+      width: 25, // Special number for this test
+      height: 25,
+    })
+    const res1 = await client.get(path, { responseType: 'arraybuffer' })
+    expect(res1.headers['x-cache']).toEqual('miss')
+    const res2 = await client.get(path, { responseType: 'arraybuffer' })
+    expect(res2.headers['x-cache']).toEqual('hit')
+    const res3 = await client.get(path, { responseType: 'arraybuffer' })
+    expect(res3.headers['x-cache']).toEqual('hit')
+    expect(Buffer.compare(res1.data, res2.data)).toEqual(0)
+    expect(Buffer.compare(res1.data, res3.data)).toEqual(0)
   })
 
   it('errors on bad signature.', async () => {
@@ -86,6 +110,6 @@ describe('image processing server', () => {
       }),
     )
     expect(res.status).toEqual(404)
-    expect(res.data).toEqual({ error: 'NotFound', message: 'Image not found' })
+    expect(res.data).toEqual({ message: 'Image not found' })
   })
 })

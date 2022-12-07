@@ -17,10 +17,16 @@ export default function (server: Server) {
 
     const availableUserDomains = cfg.availableUserDomains
     const inviteCodeRequired = cfg.inviteRequired
+    const privacyPolicy = cfg.privacyPolicyUrl
+    const termsOfService = cfg.termsOfServiceUrl
 
     return {
       encoding: 'application/json',
-      body: { availableUserDomains, inviteCodeRequired },
+      body: {
+        availableUserDomains,
+        inviteCodeRequired,
+        links: { privacyPolicy, termsOfService },
+      },
     }
   })
 
