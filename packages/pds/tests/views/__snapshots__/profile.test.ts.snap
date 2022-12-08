@@ -20,6 +20,7 @@ Object {
 
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
+  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -58,6 +59,7 @@ Object {
 
 exports[`pds profile views fetches own profile 1`] = `
 Object {
+  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -77,6 +79,7 @@ Object {
 
 exports[`pds profile views fetches scene's profile 1`] = `
 Object {
+  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(1)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorScene",
@@ -118,6 +121,7 @@ Object {
 
 exports[`pds profile views handles partial updates 1`] = `
 Object {
+  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -137,6 +141,7 @@ Object {
 
 exports[`pds profile views handles scene profile updates 1`] = `
 Object {
+  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(1)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorScene",
@@ -158,6 +163,7 @@ Object {
 
 exports[`pds profile views updates profile 1`] = `
 Object {
+  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",

@@ -15,7 +15,7 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ params, res }) => {
       let { term, limit } = params
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
 
       term = cleanTerm(term || '')
       limit = Math.min(limit ?? 25, 100)
@@ -39,6 +39,9 @@ export default function (server: Server) {
         declaration: getDeclarationSimple(result),
         handle: result.handle,
         displayName: result.displayName ?? undefined,
+        avatar: result.avatarCid
+          ? imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
+          : undefined,
       }))
 
       return {
@@ -60,6 +63,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
       'did_handle.actorType as actorType',
       'did_handle.handle as handle',
       'profile.displayName as displayName',
+      'profile.avatarCid as avatarCid',
     ])
     .execute()
 }
@@ -73,6 +77,7 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit }) => {
       'did_handle.actorType as actorType',
       'did_handle.handle as handle',
       'profile.displayName as displayName',
+      'profile.avatarCid as avatarCid',
     ])
     .execute()
 }
@@ -87,5 +92,6 @@ type GetResultsFn = (
     actorType: string
     handle: string
     displayName: string | null
+    avatarCid: string | null
   }[]
 >

@@ -8,13 +8,15 @@ import { DatabaseSchema } from '../../../../db/database-schema'
 import { countAll } from '../../../../db/util'
 import { getDeclaration } from '../util'
 import ServerAuth from '../../../../auth'
+import { CID } from 'multiformats/cid'
+import { ImageUriBuilder } from '../../../../image/uri'
 
 export default function (server: Server) {
   server.app.bsky.feed.getPostThread({
     auth: ServerAuth.verifier,
     handler: async ({ params, auth, res }) => {
       const { uri, depth = 6 } = params
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
       const requester = auth.credentials.did
 
       const queryRes = await postInfoBuilder(db.db, requester)
@@ -25,12 +27,23 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
 
-      const thread = rowToPost(queryRes)
+      const thread = rowToPost(imgUriBuilder, queryRes)
       if (depth > 0) {
-        thread.replies = await getReplies(db.db, thread, depth - 1, requester)
+        thread.replies = await getReplies(
+          db.db,
+          imgUriBuilder,
+          thread,
+          depth - 1,
+          requester,
+        )
       }
       if (queryRes.parent !== null) {
-        thread.parent = await getAncestors(db.db, queryRes.parent, requester)
+        thread.parent = await getAncestors(
+          db.db,
+          imgUriBuilder,
+          queryRes.parent,
+          requester,
+        )
       }
 
       return {
@@ -43,6 +56,7 @@ export default function (server: Server) {
 
 const getAncestors = async (
   db: Kysely<DatabaseSchema>,
+  imgUriBuilder: ImageUriBuilder,
   parentUri: string,
   requester: string,
 ): Promise<GetPostThread.Post | GetPostThread.NotFoundPost> => {
@@ -56,15 +70,21 @@ const getAncestors = async (
       notFound: true,
     }
   }
-  const parentObj = rowToPost(parentRes)
+  const parentObj = rowToPost(imgUriBuilder, parentRes)
   if (parentRes.parent !== null) {
-    parentObj.parent = await getAncestors(db, parentRes.parent, requester)
+    parentObj.parent = await getAncestors(
+      db,
+      imgUriBuilder,
+      parentRes.parent,
+      requester,
+    )
   }
   return parentObj
 }
 
 const getReplies = async (
   db: Kysely<DatabaseSchema>,
+  imgUriBuilder: ImageUriBuilder,
   parent: GetPostThread.Post,
   depth: number,
   requester: string,
@@ -75,9 +95,15 @@ const getReplies = async (
     .execute()
   const got = await Promise.all(
     res.map(async (row) => {
-      const post = rowToPost(row, parent)
+      const post = rowToPost(imgUriBuilder, row, parent)
       if (depth > 0) {
-        post.replies = await getReplies(db, post, depth - 1, requester)
+        post.replies = await getReplies(
+          db,
+          imgUriBuilder,
+          post,
+          depth - 1,
+          requester,
+        )
       }
       return post
     }),
@@ -107,6 +133,7 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
       'author.actorType as authorActorType',
       'author.handle as authorHandle',
       'author_profile.displayName as authorDisplayName',
+      'author_profile.avatarCid as authorAvatarCid',
       'ipld_block.content as recordBytes',
       'ipld_block.indexedAt as indexedAt',
       db
@@ -157,6 +184,7 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
 // converts the raw SQL output to a Post object
 // unfortunately not type-checked yet, so change with caution!
 const rowToPost = (
+  imgUriBuilder: ImageUriBuilder,
   row: any,
   parent?: GetPostThread.Post,
 ): GetPostThread.Post => {
@@ -169,6 +197,9 @@ const rowToPost = (
       declaration: getDeclaration('author', row),
       handle: row.authorHandle,
       displayName: row.authorDisplayName || undefined,
+      avatar: row.authorAvatarCid
+        ? imgUriBuilder.getCommonSignedUri('avatar', row.authorAvatarCid)
+        : undefined,
     },
     record: common.ipldBytesToRecord(row.recordBytes),
     parent: parent ? { ...parent } : undefined,

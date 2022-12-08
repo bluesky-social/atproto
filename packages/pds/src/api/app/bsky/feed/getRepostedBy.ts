@@ -9,7 +9,7 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ params, res }) => {
       const { uri, limit, before, cid } = params
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
       const { ref } = db.db.dynamic
 
       let builder = db.db
@@ -23,6 +23,7 @@ export default function (server: Server) {
           'did_handle.actorType as actorType',
           'did_handle.handle as handle',
           'profile.displayName as displayName',
+          'profile.avatarCid as avatarCid',
           'repost.cid as cid',
           'repost.createdAt as createdAt',
           'repost.indexedAt as indexedAt',
@@ -48,6 +49,9 @@ export default function (server: Server) {
         declaration: getDeclarationSimple(row),
         handle: row.handle,
         displayName: row.displayName || undefined,
+        avatar: row.avatarCid
+          ? imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
+          : undefined,
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,
       }))

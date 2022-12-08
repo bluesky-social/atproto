@@ -10,7 +10,7 @@ export default function (server: Server) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ServerAuth.verifier,
     handler: async ({ params, auth, res }) => {
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
       const { author, limit, before } = params
       const requester = auth.credentials.did
       const { ref } = db.db.dynamic
@@ -95,12 +95,14 @@ export default function (server: Server) {
           'author.handle as authorHandle',
           'author.actorType as authorActorType',
           'author_profile.displayName as authorDisplayName',
+          'author_profile.avatarCid as authorAvatarCid',
           'originator.did as originatorDid',
           'originator.declarationCid as originatorDeclarationCid',
           'originator.actorType as originatorActorType',
           'originator.handle as originatorHandle',
           'originator.actorType as originatorActorType',
           'originator_profile.displayName as originatorDisplayName',
+          'originator_profile.avatarCid as originatorAvatarCid',
           db.db
             .selectFrom('vote')
             .whereRef('subject', '=', ref('postUri'))
@@ -153,7 +155,7 @@ export default function (server: Server) {
       })
 
       const queryRes = await feedItemsQb.execute()
-      const feed = queryRes.map(rowToFeedItem)
+      const feed = queryRes.map(rowToFeedItem(imgUriBuilder))
 
       return {
         encoding: 'application/json',

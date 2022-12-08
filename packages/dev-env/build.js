@@ -12,6 +12,7 @@ require('esbuild')
       'better-sqlite3',
       // Referenced in pg driver, but optional and we don't use it
       'pg-native',
+      'sharp',
     ],
     plugins: [
       copy({

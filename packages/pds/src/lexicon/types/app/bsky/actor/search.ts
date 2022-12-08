@@ -45,6 +45,7 @@ export interface User {
   declaration: AppBskySystemDeclRef.Main
   handle: string
   displayName?: string
+  avatar?: string
   description?: string
   indexedAt?: string
   [k: string]: unknown

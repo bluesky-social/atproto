@@ -3,6 +3,8 @@ import * as uint8arrays from 'uint8arrays'
 import { CID } from 'multiformats/cid'
 import { Options } from './util'
 
+type CommonSignedUris = 'avatar'
+
 export class ImageUriBuilder {
   public endpoint: string
   private salt: Uint8Array
@@ -33,6 +35,23 @@ export class ImageUriBuilder {
   getSignedUri(opts: Options & { cid: CID }): string {
     const path = this.getSignedPath(opts)
     return this.endpoint + path
+  }
+
+  getCommonSignedUri(
+    id: CommonSignedUris,
+    cid: string | CID,
+  ): string | undefined {
+    if (id === 'avatar') {
+      return this.getSignedUri({
+        cid: typeof cid === 'string' ? CID.parse(cid) : cid,
+        format: 'jpeg',
+        fit: 'cover',
+        height: 250,
+        width: 250,
+        min: true,
+      })
+    }
+    return undefined
   }
 
   getVerifiedOptions(path: string): Options & { cid: CID; signature: string } {

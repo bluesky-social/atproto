@@ -42,6 +42,7 @@
           "type": "string",
           "maxLength": 64
         },
+        "avatar": {"type": "string"},
         "createdAt": {"type": "datetime"},
         "indexedAt": {"type": "datetime"}
       }

@@ -22,7 +22,8 @@
     "@atproto/uri": "*",
     "chalk": "^5.0.1",
     "dotenv": "^16.0.1",
-    "get-port": "^6.1.2"
+    "get-port": "^6.1.2",
+    "sharp": "^0.31.2"
   },
   "devDependencies": {
     "ts-node": "^10.8.1"

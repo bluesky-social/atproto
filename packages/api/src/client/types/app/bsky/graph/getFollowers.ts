@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import * as AppBskyActorRef from '../actor/ref'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -13,7 +14,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  subject: Subject
+  subject: AppBskyActorRef.WithInfo
   cursor?: string
   followers: Follower[]
   [k: string]: unknown
@@ -35,19 +36,12 @@ export function toKnownErr(e: any) {
   return e
 }
 
-export interface Subject {
-  did: string
-  declaration: AppBskySystemDeclRef.Main
-  handle: string
-  displayName?: string
-  [k: string]: unknown
-}
-
 export interface Follower {
   did: string
   declaration: AppBskySystemDeclRef.Main
   handle: string
   displayName?: string
+  avatar?: string
   createdAt?: string
   indexedAt: string
   [k: string]: unknown

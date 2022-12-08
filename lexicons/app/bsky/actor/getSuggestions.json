@@ -39,6 +39,7 @@
           "maxLength": 64
         },
         "description": {"type": "string"},
+        "avatar": {"type": "string"},
         "indexedAt": {"type": "datetime"},
         "myState": {"type": "ref", "ref": "#myState"}
       }
