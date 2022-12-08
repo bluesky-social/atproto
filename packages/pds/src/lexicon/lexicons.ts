@@ -205,6 +205,11 @@ export const lexicons: LexiconDoc[] = [
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidBlob',
+          },
+        ],
       },
     },
   },
