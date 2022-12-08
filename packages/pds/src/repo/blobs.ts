@@ -9,6 +9,7 @@ import { BlobRef, PreparedWrites } from './types'
 import { Blob as BlobTable } from '../db/tables/blob'
 import * as img from '../image'
 import { sha256Stream } from '@atproto/crypto'
+import { fileTypeFromStream } from 'file-type'
 
 export const addUntetheredBlob = async (
   dbTxn: Database,
@@ -16,21 +17,12 @@ export const addUntetheredBlob = async (
   mimeType: string,
   blobStream: stream.Readable,
 ): Promise<CID> => {
-  const maybeGetImgInfo = async (
-    readable: stream.Readable,
-  ): Promise<img.ImageInfo | null> => {
-    if (mimeType.startsWith('image')) {
-      return img.getInfo(readable)
-    } else {
-      return null
-    }
-  }
-
-  const [tempKey, size, sha256, imgInfo] = await Promise.all([
+  const [tempKey, size, sha256, imgInfo, fileType] = await Promise.all([
     blobstore.putTemp(cloneStream(blobStream)),
     streamSize(cloneStream(blobStream)),
     sha256Stream(cloneStream(blobStream)),
-    maybeGetImgInfo(cloneStream(blobStream)),
+    img.maybeGetInfo(cloneStream(blobStream)),
+    fileTypeFromStream(blobStream),
   ])
 
   const cid = sha256RawToCid(sha256)
@@ -39,7 +31,7 @@ export const addUntetheredBlob = async (
     .insertInto('blob')
     .values({
       cid: cid.toString(),
-      mimeType,
+      mimeType: fileType?.mime || mimeType,
       size,
       tempKey,
       width: imgInfo?.width || null,

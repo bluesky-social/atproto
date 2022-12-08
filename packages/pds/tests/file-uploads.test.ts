@@ -7,6 +7,7 @@ import DiskBlobStore from '../src/storage/disk-blobstore'
 import * as uint8arrays from 'uint8arrays'
 import * as image from '../src/image'
 import axios from 'axios'
+import { randomBytes } from '@atproto/crypto'
 
 const alice = {
   email: 'alice@test.com',
@@ -189,5 +190,39 @@ describe('file uploads', () => {
       .where('cid', '=', uploadAfterPermanent.cid)
       .executeTakeFirstOrThrow()
     expect(blob.tempKey).toEqual(null)
+  })
+
+  it('corrects a bad mimetype', async () => {
+    const file = await fs.readFile(
+      'tests/image/fixtures/key-landscape-large.jpg',
+    )
+    const res = await aliceClient.com.atproto.blob.upload(file, {
+      encoding: 'video/mp4',
+    } as any)
+
+    const found = await db.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.cid.toString())
+      .executeTakeFirst()
+
+    expect(found?.mimeType).toBe('image/jpeg')
+    expect(found?.width).toBe(1280)
+    expect(found?.height).toBe(742)
+  })
+
+  it('handles unknown mimetypes', async () => {
+    const file = await randomBytes(20000)
+    const res = await aliceClient.com.atproto.blob.upload(file, {
+      encoding: 'test/fake',
+    } as any)
+
+    const found = await db.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.cid.toString())
+      .executeTakeFirst()
+
+    expect(found?.mimeType).toBe('test/fake')
   })
 })

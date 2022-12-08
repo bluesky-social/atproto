@@ -1,6 +1,6 @@
 import { Readable } from 'stream'
 import sharp from 'sharp'
-import { forwardStreamErrors } from '@atproto/common'
+import { errHasMsg, forwardStreamErrors } from '@atproto/common'
 import { formatsToMimes, ImageInfo, Options } from './util'
 
 export type { Options }
@@ -45,21 +45,31 @@ export async function resize(
   return stream.pipe(processor)
 }
 
-export async function getInfo(stream: Readable): Promise<ImageInfo> {
+export async function maybeGetInfo(
+  stream: Readable,
+): Promise<ImageInfo | null> {
   const processor = sharp()
 
   forwardStreamErrors(stream, processor)
-  const { size, height, width, format } = await stream
-    .pipe(processor)
-    .metadata()
+  stream.pipe(processor)
 
+  let metadata
+  try {
+    metadata = await processor.metadata()
+  } catch (err) {
+    if (errHasMsg(err, 'Input buffer contains unsupported image format')) {
+      return null
+    }
+    throw err
+  }
+  const { size, height, width, format } = metadata
   if (
     size === undefined ||
     height === undefined ||
     width === undefined ||
     format === undefined
   ) {
-    throw new Error('could not obtain all image metadata')
+    return null
   }
 
   return {
@@ -68,4 +78,12 @@ export async function getInfo(stream: Readable): Promise<ImageInfo> {
     size,
     mime: formatsToMimes[format] ?? ('unknown' as const),
   }
+}
+
+export async function getInfo(stream: Readable): Promise<ImageInfo> {
+  const maybeInfo = await maybeGetInfo(stream)
+  if (!maybeInfo) {
+    throw new Error('could not obtain all image metadata')
+  }
+  return maybeInfo
 }
