@@ -12,6 +12,7 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoDataUploadFile from './types/com/atproto/data/uploadFile'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
@@ -72,6 +73,7 @@ export * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 export * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 export * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 export * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+export * as ComAtprotoDataUploadFile from './types/com/atproto/data/uploadFile'
 export * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 export * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
@@ -181,6 +183,7 @@ export class ComNS {
 export class AtprotoNS {
   _service: ServiceClient
   account: AccountNS
+  data: DataNS
   handle: HandleNS
   repo: RepoNS
   server: ServerNS
@@ -190,6 +193,7 @@ export class AtprotoNS {
   constructor(service: ServiceClient) {
     this._service = service
     this.account = new AccountNS(service)
+    this.data = new DataNS(service)
     this.handle = new HandleNS(service)
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
@@ -268,6 +272,25 @@ export class AccountNS {
       .call('com.atproto.account.resetPassword', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAccountResetPassword.toKnownErr(e)
+      })
+  }
+}
+
+export class DataNS {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  uploadFile(
+    data?: ComAtprotoDataUploadFile.InputSchema,
+    opts?: ComAtprotoDataUploadFile.CallOptions,
+  ): Promise<ComAtprotoDataUploadFile.Response> {
+    return this._service.xrpc
+      .call('com.atproto.data.uploadFile', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoDataUploadFile.toKnownErr(e)
       })
   }
 }

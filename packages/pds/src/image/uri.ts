@@ -1,11 +1,26 @@
 import { createHmac } from 'crypto'
 import * as uint8arrays from 'uint8arrays'
+import { CID } from 'multiformats/cid'
 import { Options } from './util'
 
 export class ImageUriBuilder {
-  constructor(public salt: Uint8Array, public key: Uint8Array) {}
+  public endpoint: string
+  private salt: Uint8Array
+  private key: Uint8Array
 
-  getSignedPath(opts: Options & { fileId: string }) {
+  constructor(
+    endpoint: string,
+    salt: Uint8Array | string,
+    key: Uint8Array | string,
+  ) {
+    this.endpoint = endpoint
+    this.salt =
+      typeof salt === 'string' ? uint8arrays.fromString(salt, 'hex') : salt
+    this.key =
+      typeof key === 'string' ? uint8arrays.fromString(key, 'hex') : key
+  }
+
+  getSignedPath(opts: Options & { cid: CID }): string {
     const path = ImageUriBuilder.getPath(opts)
     const saltedPath = uint8arrays.concat([
       this.salt,
@@ -15,9 +30,12 @@ export class ImageUriBuilder {
     return `/${sig}${path}`
   }
 
-  getVerifiedOptions(
-    path: string,
-  ): Options & { fileId: string; signature: string } {
+  getSignedUri(opts: Options & { cid: CID }): string {
+    const path = this.getSignedPath(opts)
+    return this.endpoint + path
+  }
+
+  getVerifiedOptions(path: string): Options & { cid: CID; signature: string } {
     if (path.at(0) !== '/') {
       throw new BadPathError('Invalid path: does not start with a slash')
     }
@@ -42,7 +60,7 @@ export class ImageUriBuilder {
     }
   }
 
-  static getPath(opts: Options & { fileId: string }) {
+  static getPath(opts: Options & { cid: CID }) {
     const fit = opts.fit === 'inside' ? 'fit' : 'fill' // fit default is 'cover'
     const enlarge = opts.min === true ? 1 : 0 // min default is false
     const resize = `rs:${fit}:${opts.width}:${opts.height}:${enlarge}:0` // final ':0' is for interop with imgproxy
@@ -50,15 +68,14 @@ export class ImageUriBuilder {
       opts.min && typeof opts.min === 'object' ? `mw:${opts.min.width}` : null
     const minHeight =
       opts.min && typeof opts.min === 'object' ? `mh:${opts.min.height}` : null
-    const enc = encodeURIComponent
     return (
       `/` +
       [resize, minWidth, minHeight].filter(Boolean).join('/') +
-      `/plain/${enc(opts.fileId)}@${opts.format}`
+      `/plain/${opts.cid.toString()}@${opts.format}`
     )
   }
 
-  static getOptions(path: string): Options & { fileId: string } {
+  static getOptions(path: string): Options & { cid: CID } {
     if (path.at(0) !== '/') {
       throw new BadPathError('Invalid path: does not start with a slash')
     }
@@ -66,10 +83,10 @@ export class ImageUriBuilder {
     if (parts.at(-2) !== 'plain') {
       throw new BadPathError('Invalid path')
     }
-    const fileIdAndFormat = parts.at(-1)
-    const [fileId, format, ...others] = fileIdAndFormat?.split('@') ?? []
-    if (!fileId || (format !== 'png' && format !== 'jpeg') || others.length) {
-      throw new BadPathError('Invalid path: bad fileId/format part')
+    const cidAndFormat = parts.at(-1)
+    const [cid, format, ...others] = cidAndFormat?.split('@') ?? []
+    if (!cid || (format !== 'png' && format !== 'jpeg') || others.length) {
+      throw new BadPathError('Invalid path: bad cid/format part')
     }
     const resizePart = parts.find((part) => part.startsWith('rs:'))
     const minWidthPart = parts.find((part) => part.startsWith('mw:'))
@@ -95,9 +112,8 @@ export class ImageUriBuilder {
     ) {
       throw new BadPathError('Invalid path: bad min width/height param')
     }
-    const dec = decodeURIComponent
     return {
-      fileId: dec(fileId),
+      cid: CID.parse(cid),
       format,
       height: toInt(height),
       width: toInt(width),

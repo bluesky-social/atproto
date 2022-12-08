@@ -18,15 +18,20 @@ import { Locals } from './locals'
 import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
 import SqlMessageQueue from './db/message-queue'
+import { BlobStore } from '@atproto/repo'
+import { ImageUriBuilder } from './image/uri'
+import { BlobDiskCache, ImageProcessingServer } from './image/server'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
+export { DiskBlobStore, MemoryBlobStore } from './storage'
 
 export type App = express.Application
 
 const runServer = (
   db: Database,
+  blobstore: BlobStore,
   keypair: auth.DidableKey,
   cfg: ServerConfigValues,
 ) => {
@@ -54,11 +59,32 @@ const runServer = (
   app.use(cors())
   app.use(loggerMiddleware)
 
+  let imgUriEndpoint = config.imgUriEndpoint
+  if (!imgUriEndpoint) {
+    const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
+    const imgProcessingServer = new ImageProcessingServer(
+      config.imgUriSalt,
+      config.imgUriKey,
+      blobstore,
+      imgProcessingCache,
+    )
+    app.use('/image', imgProcessingServer.app)
+    imgUriEndpoint = `${config.publicUrl}/image`
+  }
+
+  const imgUriBuilder = new ImageUriBuilder(
+    imgUriEndpoint,
+    cfg.imgUriSalt,
+    cfg.imgUriKey,
+  )
+
   const locals: Locals = {
     logger: httpLogger,
     db,
+    blobstore,
     keypair,
     auth,
+    imgUriBuilder,
     config,
     mailer,
   }

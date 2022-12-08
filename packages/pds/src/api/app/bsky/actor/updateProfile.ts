@@ -6,7 +6,7 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import * as common from '@atproto/common'
-import * as repoUtil from '../../../../util/repo'
+import * as repo from '../../../../repo'
 import ServerAuth from '../../../../auth'
 
 const profileNsid = lexicons.ids.AppBskyActorProfile
@@ -15,7 +15,7 @@ export default function (server: Server) {
   server.app.bsky.actor.updateProfile({
     auth: ServerAuth.verifier,
     handler: async ({ auth, input, res }) => {
-      const { db } = locals.get(res)
+      const { db, blobstore } = locals.get(res)
       const requester = auth.credentials.did
 
       const did = input.body.did || requester
@@ -45,12 +45,14 @@ export default function (server: Server) {
               ...current,
               displayName: input.body.displayName || current.displayName,
               description: input.body.description || current.description,
+              avatar: input.body.avatar || current.avatar,
             }
           } else {
             updated = {
               $type: profileNsid,
               displayName: input.body.displayName,
               description: input.body.description,
+              avatar: input.body.avatar,
             }
           }
           updated = common.noUndefinedVals(updated)
@@ -60,14 +62,21 @@ export default function (server: Server) {
             )
           }
 
-          const writes = await repoUtil.prepareWrites(did, {
+          const writes = await repo.prepareWrites(did, {
             action: current ? 'update' : 'create',
             collection: profileNsid,
             rkey: 'self',
             value: updated,
           })
 
-          await repoUtil.writeToRepo(dbTxn, did, authStore, writes, now)
+          const commit = await repo.writeToRepo(
+            dbTxn,
+            did,
+            authStore,
+            writes,
+            now,
+          )
+          await repo.processWriteBlobs(dbTxn, blobstore, did, commit, writes)
 
           const write = writes[0]
           let profileCid: CID
@@ -87,6 +96,7 @@ export default function (server: Server) {
                 cid: profileCid.toString(),
                 displayName: updated.displayName,
                 description: updated.description,
+                avatarCid: updated.avatar?.cid,
                 indexedAt: now,
               })
               .where('uri', '=', uri.toString())

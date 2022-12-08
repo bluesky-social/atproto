@@ -1,13 +1,22 @@
 import { AddressInfo } from 'net'
 import http from 'http'
+import os from 'os'
+import path from 'path'
 import * as crypto from '@atproto/crypto'
 import * as plc from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
-import server, { ServerConfig, Database, App } from '../src/index'
+import server, {
+  ServerConfig,
+  Database,
+  App,
+  MemoryBlobStore,
+} from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
+import DiskBlobStore from '../src/storage/disk-blobstore'
+import { randomStr } from '@atproto/crypto'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -18,6 +27,7 @@ export type TestServerInfo = {
   serverKey: string
   app: App
   db: Database
+  blobstore: DiskBlobStore | MemoryBlobStore
   close: CloseFn
 }
 
@@ -43,6 +53,8 @@ export const runTestServer = async (
     'https://pds.public.url',
   )
 
+  const blobstoreLoc = path.join(os.tmpdir(), randomStr(5, 'base32'))
+
   const config = new ServerConfig({
     debugMode: true,
     version: '0.0.0',
@@ -58,7 +70,12 @@ export const runTestServer = async (
     appUrlPasswordReset: 'app://forgot-password',
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
     publicUrl: 'https://pds.public.url',
+    imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
+    imgUriKey:
+      'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
+    blobstoreLocation: `${blobstoreLoc}/blobs`,
+    blobstoreTmp: `${blobstoreLoc}/tmp`,
     ...params,
   })
 
@@ -72,7 +89,15 @@ export const runTestServer = async (
 
   await db.migrateToLatestOrThrow()
 
-  const { app, listener } = server(db, keypair, config)
+  const blobstore =
+    config.blobstoreLocation !== undefined
+      ? await DiskBlobStore.create(
+          config.blobstoreLocation,
+          config.blobstoreTmp,
+        )
+      : new MemoryBlobStore()
+
+  const { app, listener } = server(db, blobstore, keypair, config)
   const pdsPort = (listener.address() as AddressInfo).port
 
   return {
@@ -81,6 +106,7 @@ export const runTestServer = async (
     serverKey: keypair.did(),
     app,
     db,
+    blobstore,
     close: async () => {
       await Promise.all([
         db.close(),

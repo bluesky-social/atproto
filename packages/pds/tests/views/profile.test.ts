@@ -1,3 +1,4 @@
+import fs from 'fs/promises'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { runTestServer, forSnapshot, CloseFn } from '../_util'
 import { SeedClient } from '../seeds/client'
@@ -87,6 +88,26 @@ describe('pds profile views', () => {
   it('handles partial updates', async () => {
     await client.app.bsky.actor.updateProfile(
       { description: 'blah blah' },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceForAlice = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
+  it('handles avatars', async () => {
+    const img = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
+    const res = await client.com.atproto.data.uploadFile(img, {
+      headers: sc.getHeaders(alice),
+      encoding: 'image/jpeg',
+    } as any)
+
+    await client.app.bsky.actor.updateProfile(
+      { avatar: { cid: res.data.cid, mimeType: 'image/jpeg' } },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 

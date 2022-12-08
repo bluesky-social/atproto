@@ -8,7 +8,7 @@ import { countAll } from '../../../db/util'
 import { UserAlreadyExistsError } from '../../../db'
 import { grantRefreshToken } from './util/auth'
 import * as lexicons from '../../../lexicon/lexicons'
-import * as repoUtil from '../../../util/repo'
+import * as repo from '../../../repo'
 import { cidForData } from '@atproto/common'
 
 export default function (server: Server) {
@@ -145,7 +145,7 @@ export default function (server: Server) {
           .execute()
       }
 
-      const write = await repoUtil.prepareCreate(did, {
+      const write = await repo.prepareCreate(did, {
         action: 'create',
         collection: lexicons.ids.AppBskySystemDeclaration,
         rkey: 'self',
@@ -154,8 +154,8 @@ export default function (server: Server) {
 
       // Setup repo root
       const authStore = locals.getAuthstore(res, did)
-      await repoUtil.createRepo(dbTxn, did, authStore, [write], now)
-      await repoUtil.indexWrites(dbTxn, [write], now)
+      await repo.createRepo(dbTxn, did, authStore, [write], now)
+      await repo.indexWrites(dbTxn, [write], now)
 
       const declarationCid = await cidForData(declaration)
       const access = auth.createAccessToken(did)

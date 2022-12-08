@@ -1,7 +1,10 @@
 import http from 'http'
 import chalk from 'chalk'
 import crytpo from 'crypto'
-import PDSServer, { Database as PDSDatabase } from '@atproto/pds'
+import PDSServer, {
+  Database as PDSDatabase,
+  MemoryBlobStore,
+} from '@atproto/pds'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import AtpApi, { ServiceClient } from '@atproto/api'
@@ -59,6 +62,8 @@ export class DevEnvServer {
         await db.migrateToLatestOrThrow()
         const keypair = await crypto.EcdsaKeypair.create()
 
+        const blobstore = new MemoryBlobStore()
+
         const plcClient = new plc.PlcClient(this.env.plcUrl)
         const serverDid = await plcClient.createDid(
           keypair,
@@ -68,7 +73,7 @@ export class DevEnvServer {
         )
 
         this.inst = await onServerReady(
-          PDSServer(db, keypair, {
+          PDSServer(db, blobstore, keypair, {
             debugMode: true,
             version: '0.0.0',
             scheme: 'http',
@@ -84,6 +89,9 @@ export class DevEnvServer {
             emailNoReplyAddress: 'noreply@blueskyweb.xyz',
             adminPassword: 'password',
             inviteRequired: false,
+            imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
+            imgUriKey:
+              'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
             privacyPolicyUrl: 'https://example.com/privacy',
             termsOfServiceUrl: 'https://example.com/tos',
           }).listener,

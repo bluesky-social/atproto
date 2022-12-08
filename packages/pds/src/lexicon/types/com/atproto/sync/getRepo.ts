@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import stream from 'stream'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
@@ -16,7 +17,7 @@ export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/cbor'
-  body: Uint8Array
+  body: Uint8Array | stream.Readable
 }
 
 export interface HandlerError {

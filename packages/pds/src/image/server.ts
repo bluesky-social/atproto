@@ -2,25 +2,31 @@ import fs from 'fs/promises'
 import fsSync from 'fs'
 import os from 'os'
 import path from 'path'
-import { PassThrough, Readable } from 'stream'
+import { Readable } from 'stream'
 import express, { ErrorRequestHandler, NextFunction } from 'express'
 import createError, { isHttpError } from 'http-errors'
 import { BadPathError, ImageUriBuilder } from './uri'
 import log from './logger'
 import { resize } from './sharp'
-import { forwardStreamErrors, formatsToMimes, Options } from './util'
+import { formatsToMimes, Options } from './util'
+import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import {
+  cloneStream,
+  forwardStreamErrors,
+  isErrnoException,
+} from '@atproto/common'
 
 export class ImageProcessingServer {
   app = express()
   uriBuilder: ImageUriBuilder
 
   constructor(
-    protected salt: Uint8Array,
-    protected key: Uint8Array,
-    protected storage: BlobStorage,
+    protected salt: string | Uint8Array,
+    protected key: string | Uint8Array,
+    protected storage: BlobStore,
     public cache: BlobCache,
   ) {
-    this.uriBuilder = new ImageUriBuilder(salt, key)
+    this.uriBuilder = new ImageUriBuilder('', salt, key)
     this.app.get('*', this.handler.bind(this))
     this.app.use(errorMiddleware)
   }
@@ -52,7 +58,7 @@ export class ImageProcessingServer {
 
       // Non-cached flow
 
-      const imageStream = await this.storage.get(options.fileId)
+      const imageStream = await this.storage.getStream(options.cid)
       const processedImage = await resize(imageStream, options)
 
       // Cache in the background
@@ -104,33 +110,7 @@ function getMime(format: Options['format']) {
   return mime
 }
 
-export interface BlobStorage {
-  get(fileId: string): Promise<Readable>
-}
-
-export class BlobNotFoundError extends Error {}
-
-export class BlobDiskStorage implements BlobStorage {
-  constructor(public basePath: string) {
-    if (!path.isAbsolute(this.basePath)) {
-      throw new Error('Must provide an absolute path')
-    }
-  }
-
-  async get(fileId: string) {
-    try {
-      const handle = await fs.open(path.join(this.basePath, fileId), 'r')
-      return handle.createReadStream()
-    } catch (err) {
-      if (isErrnoException(err) && err.code === 'ENOENT') {
-        throw new BlobNotFoundError()
-      }
-      throw err
-    }
-  }
-}
-
-export interface BlobCache extends BlobStorage {
+export interface BlobCache {
   get(fileId: string): Promise<Readable & { size: number }>
   put(fileId: string, stream: Readable): Promise<void>
   clear(): Promise<void>
@@ -178,14 +158,4 @@ export class BlobDiskCache implements BlobCache {
   async clear() {
     await fs.rm(this.tempDir, { recursive: true, force: true })
   }
-}
-
-function cloneStream(stream: Readable) {
-  const passthrough = new PassThrough()
-  forwardStreamErrors(stream, passthrough)
-  return stream.pipe(passthrough)
-}
-
-function isErrnoException(err: unknown): err is NodeJS.ErrnoException {
-  return !!err && 'code' in err
 }

@@ -4,13 +4,14 @@ import { countAll, actorWhereClause } from '../../../../db/util'
 import * as locals from '../../../../locals'
 import { getDeclarationSimple } from '../util'
 import ServerAuth from '../../../../auth'
+import { CID } from 'multiformats/cid'
 
 export default function (server: Server) {
   server.app.bsky.actor.getProfile({
     auth: ServerAuth.verifier,
     handler: async ({ auth, params, res }) => {
       const { actor } = params
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
       const requester = auth.credentials.did
 
       const { ref } = db.db.dynamic
@@ -29,6 +30,7 @@ export default function (server: Server) {
           'profile.uri as profileUri',
           'profile.displayName as displayName',
           'profile.description as description',
+          'profile.avatarCid as avatarCid',
           db.db
             .selectFrom('follow')
             .whereRef('creator', '=', ref('did_handle.did'))
@@ -72,6 +74,17 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Profile not found`)
       }
 
+      const avatar = queryRes.avatarCid
+        ? imgUriBuilder.getSignedUri({
+            cid: CID.parse(queryRes.avatarCid),
+            format: 'jpeg',
+            fit: 'cover',
+            height: 250,
+            width: 250,
+            min: true,
+          })
+        : undefined
+
       return {
         encoding: 'application/json',
         body: {
@@ -81,6 +94,7 @@ export default function (server: Server) {
           creator: queryRes.owner || queryRes.did,
           displayName: queryRes.displayName || undefined,
           description: queryRes.description || undefined,
+          avatar: avatar,
           followsCount: queryRes.followsCount,
           followersCount: queryRes.followersCount,
           membersCount: queryRes.membersCount,

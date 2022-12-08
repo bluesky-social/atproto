@@ -7,7 +7,7 @@ import { DeleteOp, RecordCreateOp } from '@atproto/repo'
 import * as locals from '../../../locals'
 import * as dbSchemas from '../../../db/schemas'
 import { TID } from '@atproto/common'
-import * as repoUtil from '../../../util/repo'
+import * as repo from '../../../repo'
 import ServerAuth from '../../../auth'
 
 export default function (server: Server) {
@@ -101,7 +101,7 @@ export default function (server: Server) {
     handler: async ({ input, auth, res }) => {
       const tx = input.body
       const { did, validate } = tx
-      const { db } = locals.get(res)
+      const { db, blobstore } = locals.get(res)
       const requester = auth.credentials.did
       const authorized = await db.isUserControlledRepo(did, requester)
       if (!authorized) {
@@ -129,7 +129,7 @@ export default function (server: Server) {
         }
       }
 
-      const writes = await repoUtil.prepareWrites(
+      const writes = await repo.prepareWrites(
         did,
         tx.writes.map((write) => {
           if (write.action === 'create') {
@@ -149,10 +149,7 @@ export default function (server: Server) {
 
       await db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
-        await Promise.all([
-          repoUtil.writeToRepo(dbTxn, did, authStore, writes, now),
-          repoUtil.indexWrites(dbTxn, writes, now),
-        ])
+        await repo.processWrites(dbTxn, did, authStore, blobstore, writes, now)
       })
     },
   })
@@ -163,7 +160,7 @@ export default function (server: Server) {
       const { did, collection, record } = input.body
       const validate =
         typeof input.body.validate === 'boolean' ? input.body.validate : true
-      const { db } = locals.get(res)
+      const { db, blobstore } = locals.get(res)
       const requester = auth.credentials.did
       const authorized = await db.isUserControlledRepo(did, requester)
       if (!authorized) {
@@ -196,7 +193,7 @@ export default function (server: Server) {
       }
 
       const now = new Date().toISOString()
-      const write = await repoUtil.prepareCreate(did, {
+      const write = await repo.prepareCreate(did, {
         action: 'create',
         collection,
         rkey,
@@ -204,10 +201,7 @@ export default function (server: Server) {
       })
 
       await db.transaction(async (dbTxn) => {
-        await Promise.all([
-          repoUtil.writeToRepo(dbTxn, did, authStore, [write], now),
-          repoUtil.indexWrites(dbTxn, [write], now),
-        ])
+        await repo.processWrites(dbTxn, did, authStore, blobstore, [write], now)
       })
 
       return {
@@ -225,7 +219,7 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ input, auth, res }) => {
       const { did, collection, rkey } = input.body
-      const { db } = locals.get(res)
+      const { db, blobstore } = locals.get(res)
       const requester = auth.credentials.did
       const authorized = await db.isUserControlledRepo(did, requester)
       if (!authorized) {
@@ -235,17 +229,14 @@ export default function (server: Server) {
       const authStore = locals.getAuthstore(res, did)
       const now = new Date().toISOString()
 
-      const write = await repoUtil.prepareWrites(did, {
+      const write = await repo.prepareWrites(did, {
         action: 'delete',
         collection,
         rkey,
       })
 
       await db.transaction(async (dbTxn) => {
-        await Promise.all([
-          repoUtil.writeToRepo(dbTxn, did, authStore, write, now),
-          repoUtil.indexWrites(dbTxn, write, now),
-        ])
+        await repo.processWrites(dbTxn, did, authStore, blobstore, write, now)
       })
     },
   })

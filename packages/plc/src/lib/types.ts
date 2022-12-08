@@ -7,7 +7,6 @@ const cid = z
     message: 'Not a CID',
   })
   .transform((obj: unknown) => mf.CID.asCID(obj) as mf.CID)
-export type CID = z.infer<typeof cid>
 
 const documentData = z.object({
   did: z.string(),

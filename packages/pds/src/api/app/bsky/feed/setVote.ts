@@ -2,7 +2,7 @@ import { AtUri } from '@atproto/uri'
 import * as lexicons from '../../../../lexicon/lexicons'
 import { Server } from '../../../../lexicon'
 import * as locals from '../../../../locals'
-import * as repoUtil from '../../../../util/repo'
+import * as repo from '../../../../repo'
 import { TID } from '@atproto/common'
 import { DeleteOp } from '@atproto/repo'
 import ServerAuth from '../../../../auth'
@@ -39,7 +39,7 @@ export default function (server: Server) {
           return existingVotes[0].uri
         }
 
-        const writes = await repoUtil.prepareWrites(requester, [
+        const writes = await repo.prepareWrites(requester, [
           ...existingVotes.map((vote): DeleteOp => {
             const uri = new AtUri(vote.uri)
             return {
@@ -50,10 +50,10 @@ export default function (server: Server) {
           }),
         ])
 
-        let create: repoUtil.PreparedCreate | undefined
+        let create: repo.PreparedCreate | undefined
 
         if (direction !== 'none') {
-          create = await repoUtil.prepareCreate(requester, {
+          create = await repo.prepareCreate(requester, {
             action: 'create',
             collection: lexicons.ids.AppBskyFeedVote,
             rkey: TID.nextStr(),
@@ -66,8 +66,10 @@ export default function (server: Server) {
           writes.push(create)
         }
 
-        await repoUtil.writeToRepo(dbTxn, requester, authStore, writes, now)
-        await repoUtil.indexWrites(dbTxn, writes, now)
+        await Promise.all([
+          await repo.writeToRepo(dbTxn, requester, authStore, writes, now),
+          await repo.indexWrites(dbTxn, writes, now),
+        ])
 
         return create?.uri.toString()
       })

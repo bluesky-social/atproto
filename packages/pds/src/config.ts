@@ -10,6 +10,9 @@ export interface ServerConfigValues {
   dbPostgresUrl?: string
   dbPostgresSchema?: string
 
+  blobstoreLocation?: string
+  blobstoreTmp?: string
+
   jwtSecret: string
 
   didPlcUrl: string
@@ -26,6 +29,11 @@ export interface ServerConfigValues {
   databaseLocation?: string
 
   availableUserDomains: string[]
+
+  imgUriSalt: string
+  imgUriKey: string
+  imgUriEndpoint?: string
+  blobCacheLocation?: string
 
   appUrlPasswordReset: string
   emailSmtpUrl?: string
@@ -80,9 +88,20 @@ export class ServerConfig {
     const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
 
+    const blobstoreLocation = process.env.BLOBSTORE_LOC
+    const blobstoreTmp = process.env.BLOBSTORE_TMP
+
     const availableUserDomains = process.env.AVAILABLE_USER_DOMAINS
       ? process.env.AVAILABLE_USER_DOMAINS.split(',')
       : []
+
+    const imgUriSalt =
+      process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
+    const imgUriKey =
+      process.env.IMG_URI_KEY ||
+      'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8'
+    const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
+    const blobCacheLocation = process.env.BLOB_CACHE_LOC
 
     const appUrlPasswordReset =
       process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
@@ -104,6 +123,8 @@ export class ServerConfig {
       port,
       dbPostgresUrl,
       dbPostgresSchema,
+      blobstoreLocation,
+      blobstoreTmp,
       jwtSecret,
       recoveryKey,
       didPlcUrl,
@@ -115,6 +136,10 @@ export class ServerConfig {
       blockstoreLocation,
       databaseLocation,
       availableUserDomains,
+      imgUriSalt,
+      imgUriKey,
+      imgUriEndpoint,
+      blobCacheLocation,
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
@@ -166,6 +191,14 @@ export class ServerConfig {
 
   get dbPostgresSchema() {
     return this.cfg.dbPostgresSchema
+  }
+
+  get blobstoreLocation() {
+    return this.cfg.blobstoreLocation
+  }
+
+  get blobstoreTmp() {
+    return this.cfg.blobstoreTmp
   }
 
   get jwtSecret() {
@@ -230,6 +263,22 @@ export class ServerConfig {
 
   get availableUserDomains() {
     return this.cfg.availableUserDomains
+  }
+
+  get imgUriSalt() {
+    return this.cfg.imgUriSalt
+  }
+
+  get imgUriKey() {
+    return this.cfg.imgUriKey
+  }
+
+  get imgUriEndpoint() {
+    return this.cfg.imgUriEndpoint
+  }
+
+  get blobCacheLocation() {
+    return this.cfg.blobCacheLocation
   }
 
   get appUrlPasswordReset() {

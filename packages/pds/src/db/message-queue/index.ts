@@ -11,7 +11,7 @@ import {
 import { sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
 import { AuthStore } from '@atproto/auth'
-import * as repoUtil from '../../util/repo'
+import * as repo from '../../repo'
 import * as lexicons from '../../lexicon/lexicons'
 import { TID } from '@atproto/common'
 import { MessageQueue } from '../types'
@@ -298,7 +298,7 @@ export class SqlMessageQueue implements MessageQueue {
 
         // this is a "threshold vote" that makes the post trend
         const sceneAuth = this.getAuthStore(scene.did)
-        const writes = await repoUtil.prepareWrites(scene.did, {
+        const writes = await repo.prepareWrites(scene.did, {
           action: 'create',
           collection: lexicons.ids.AppBskyFeedTrend,
           rkey: TID.nextStr(),
@@ -318,8 +318,8 @@ export class SqlMessageQueue implements MessageQueue {
           .execute()
 
         await Promise.all([
-          repoUtil.writeToRepo(db, scene.did, sceneAuth, writes, now),
-          repoUtil.indexWrites(db, writes, now),
+          repo.writeToRepo(db, scene.did, sceneAuth, writes, now),
+          repo.indexWrites(db, writes, now),
           setTrendPosted,
         ])
       }),

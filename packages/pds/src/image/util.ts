@@ -1,4 +1,3 @@
-import { Stream } from 'stream'
 import { FormatEnum } from 'sharp'
 
 export type Options = Dimensions & {
@@ -20,16 +19,6 @@ export type ImageInfo = Dimensions & {
 }
 
 export type Dimensions = { height: number; width: number }
-
-export function forwardStreamErrors(...streams: Stream[]) {
-  for (let i = 0; i < streams.length; ++i) {
-    const stream = streams[i]
-    const next = streams[i + 1]
-    if (next) {
-      stream.once('error', (err) => next.emit('error', err))
-    }
-  }
-}
 
 export const formatsToMimes: { [s in keyof FormatEnum]?: `image/${string}` } = {
   jpg: 'image/jpeg',

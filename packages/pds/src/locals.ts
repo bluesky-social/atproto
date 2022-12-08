@@ -7,12 +7,16 @@ import { ServerConfig } from './config'
 import ServerAuth from './auth'
 import { ServerMailer } from './mailer'
 import { App } from '.'
+import { BlobStore } from '@atproto/repo'
+import { ImageUriBuilder } from './image/uri'
 
 export type Locals = {
   logger: pino.Logger
   db: Database
+  blobstore: BlobStore
   keypair: DidableKey
   auth: ServerAuth
+  imgUriBuilder: ImageUriBuilder
   config: ServerConfig
   mailer: ServerMailer
 }
@@ -33,6 +37,14 @@ export const db = (res: HasLocals): Database => {
     throw new Error('No Database object attached to server')
   }
   return db as Database
+}
+
+export const blobstore = (res: HasLocals): BlobStore => {
+  const blobstore = res.locals.blobstore
+  if (!blobstore) {
+    throw new Error('No BlobStore object attached to server')
+  }
+  return blobstore as BlobStore
 }
 
 export const keypair = (res: HasLocals): DidableKey => {
@@ -67,12 +79,22 @@ export const auth = (res: HasLocals): ServerAuth => {
   return auth as ServerAuth
 }
 
+export const imgUriBuilder = (res: HasLocals): ImageUriBuilder => {
+  const imgUriBuilder = res.locals.imgUriBuilder
+  if (!imgUriBuilder) {
+    throw new Error('No ImageUriBuilder object attached to server')
+  }
+  return imgUriBuilder as ImageUriBuilder
+}
+
 export const getLocals = (res: HasLocals): Locals => {
   return {
     logger: logger(res),
     db: db(res),
+    blobstore: blobstore(res),
     keypair: keypair(res),
     auth: auth(res),
+    imgUriBuilder: imgUriBuilder(res),
     config: config(res),
     mailer: mailer(res),
   }

@@ -1,18 +1,20 @@
 import { Server } from '../../../lexicon'
-import handles from './handles'
-import session from './session'
 import account from './account'
+import data from './data'
+import handles from './handles'
+import invites from './invites'
 import passwordReset from './password-reset'
 import repo from './repo'
+import session from './session'
 import sync from './sync'
-import invites from './invites'
 
 export default function (server: Server) {
-  handles(server)
-  session(server)
   account(server)
+  data(server)
+  handles(server)
+  invites(server)
   passwordReset(server)
   repo(server)
+  session(server)
   sync(server)
-  invites(server)
 }

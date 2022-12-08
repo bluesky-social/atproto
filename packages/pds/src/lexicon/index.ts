@@ -14,6 +14,7 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoDataUploadFile from './types/com/atproto/data/uploadFile'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
@@ -89,6 +90,7 @@ export class ComNS {
 export class AtprotoNS {
   _server: Server
   account: AccountNS
+  data: DataNS
   handle: HandleNS
   repo: RepoNS
   server: ServerNS
@@ -98,6 +100,7 @@ export class AtprotoNS {
   constructor(server: Server) {
     this._server = server
     this.account = new AccountNS(server)
+    this.data = new DataNS(server)
     this.handle = new HandleNS(server)
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
@@ -158,6 +161,21 @@ export class AccountNS {
     cfg: ConfigOf<AV, ComAtprotoAccountResetPassword.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.account.resetPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class DataNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  uploadFile<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoDataUploadFile.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.data.uploadFile' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

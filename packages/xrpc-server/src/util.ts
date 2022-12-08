@@ -10,6 +10,7 @@ import {
   InvalidRequestError,
   InternalServerError,
 } from './types'
+import { cloneStream } from '@atproto/common'
 
 export function decodeQueryParams(
   def: LexXrpcProcedure | LexXrpcQuery,
@@ -82,7 +83,7 @@ export function validateInput(
     return undefined
   }
 
-  // input schema
+  // if input schema, validate
   if (def.input?.schema) {
     try {
       lexicons.assertValidXrpcInput(nsid, req.body)
@@ -91,9 +92,18 @@ export function validateInput(
     }
   }
 
+  // if middleware already got the body, we pass that along as input
+  // otherwise, we pipe it into a readable stream
+  let body
+  if (req.complete) {
+    body = req.body
+  } else {
+    body = cloneStream(req)
+  }
+
   return {
     encoding: inputEncoding,
-    body: req.body,
+    body,
   }
 }
 
@@ -155,11 +165,20 @@ function isValidEncoding(possibleStr: string, value: string) {
   const possible = possibleStr.split(',').map((v) => v.trim())
   const normalized = normalizeMime(value)
   if (!normalized) return false
+  if (possible.includes('*/*')) return true
   return possible.includes(normalized)
 }
 
-function hasBody(req: express.Request) {
+export function hasBody(req: express.Request) {
   const contentLength = req.headers['content-length']
   const transferEncoding = req.headers['transfer-encoding']
   return (contentLength && parseInt(contentLength, 10) > 0) || transferEncoding
+}
+
+export function processBodyAsBytes(req: express.Request): Promise<Uint8Array> {
+  return new Promise((resolve) => {
+    const chunks: Buffer[] = []
+    req.on('data', (chunk) => chunks.push(chunk))
+    req.on('end', () => resolve(new Uint8Array(Buffer.concat(chunks))))
+  })
 }
