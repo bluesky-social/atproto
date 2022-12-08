@@ -1,4 +1,5 @@
 import * as aws from '@aws-sdk/client-s3'
+import { Upload } from '@aws-sdk/lib-storage'
 import { BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
@@ -8,6 +9,9 @@ export type S3Config = { bucket: string } & Omit<
   aws.S3ClientConfig,
   'apiVersion'
 >
+
+// @NOTE we use Upload rather than client.putObject because stream
+// length is not known in advance. See also aws/aws-sdk-js-v3#2348.
 
 export class S3BlobStore implements BlobStore {
   private client: aws.S3
@@ -36,11 +40,14 @@ export class S3BlobStore implements BlobStore {
 
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
     const key = this.genKey()
-    await this.client.putObject({
-      Bucket: this.bucket,
-      Body: bytes,
-      Key: this.getTmpPath(key),
-    })
+    await new Upload({
+      client: this.client,
+      params: {
+        Bucket: this.bucket,
+        Body: bytes,
+        Key: this.getTmpPath(key),
+      },
+    }).done()
     return key
   }
 
@@ -62,11 +69,14 @@ export class S3BlobStore implements BlobStore {
     cid: CID,
     bytes: Uint8Array | stream.Readable,
   ): Promise<void> {
-    await this.client.putObject({
-      Bucket: this.bucket,
-      Body: bytes,
-      Key: this.getStoredPath(cid),
-    })
+    await new Upload({
+      client: this.client,
+      params: {
+        Bucket: this.bucket,
+        Body: bytes,
+        Key: this.getStoredPath(cid),
+      },
+    }).done()
   }
 
   private async getObject(cid: CID) {
