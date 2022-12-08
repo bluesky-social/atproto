@@ -135,6 +135,9 @@ export class BlobDiskCache implements BlobCache {
     try {
       const handle = await fs.open(path.join(this.tempDir, fileId), 'r')
       const { size } = await handle.stat()
+      if (size === 0) {
+        throw new BlobNotFoundError()
+      }
       return Object.assign(handle.createReadStream(), { size })
     } catch (err) {
       if (isErrnoException(err) && err.code === 'ENOENT') {
