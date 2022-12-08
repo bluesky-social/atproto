@@ -205,6 +205,11 @@ export const lexicons: LexiconDoc[] = [
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidBlob',
+          },
+        ],
       },
     },
   },
@@ -1158,7 +1163,7 @@ export const lexicons: LexiconDoc[] = [
               accept: ['image/png', 'image/jpeg'],
               maxWidth: 500,
               maxHeight: 500,
-              maxSize: 100000,
+              maxSize: 300000,
             },
           },
         },

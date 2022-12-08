@@ -2,7 +2,7 @@ import stream from 'stream'
 import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
-import { streamToArray } from '@atproto/common'
+import { bytesToStream, streamToArray } from '@atproto/common'
 
 export class MemoryBlobStore implements BlobStore {
   temp: Map<string, Uint8Array> = new Map()
@@ -66,7 +66,7 @@ export class MemoryBlobStore implements BlobStore {
 
   async getStream(cid: CID): Promise<stream.Readable> {
     const bytes = await this.getBytes(cid)
-    return stream.Readable.from(bytes)
+    return bytesToStream(bytes)
   }
 }
 
