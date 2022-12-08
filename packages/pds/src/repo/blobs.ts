@@ -46,6 +46,12 @@ export const addUntetheredBlob = async (
       height: imgInfo?.height || null,
       createdAt: new Date().toISOString(),
     })
+    .onConflict((oc) =>
+      oc
+        .column('cid')
+        .doUpdateSet({ tempKey })
+        .where('blob.tempKey', 'is not', null),
+    )
     .execute()
   return cid
 }
@@ -151,7 +157,7 @@ export const verifyBlobAndMakePermanent = async (
     .executeTakeFirst()
   if (!found) {
     throw new InvalidRequestError(
-      `Could not found blob: ${blob.cid.toString()}`,
+      `Could not find blob: ${blob.cid.toString()}`,
       'BlobNotFound',
     )
   }
