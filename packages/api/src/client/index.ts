@@ -12,7 +12,7 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
-import * as ComAtprotoDataUploadFile from './types/com/atproto/data/uploadFile'
+import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
@@ -73,7 +73,7 @@ export * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 export * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 export * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 export * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
-export * as ComAtprotoDataUploadFile from './types/com/atproto/data/uploadFile'
+export * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 export * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 export * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
@@ -183,7 +183,7 @@ export class ComNS {
 export class AtprotoNS {
   _service: ServiceClient
   account: AccountNS
-  data: DataNS
+  blob: BlobNS
   handle: HandleNS
   repo: RepoNS
   server: ServerNS
@@ -193,7 +193,7 @@ export class AtprotoNS {
   constructor(service: ServiceClient) {
     this._service = service
     this.account = new AccountNS(service)
-    this.data = new DataNS(service)
+    this.blob = new BlobNS(service)
     this.handle = new HandleNS(service)
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
@@ -276,21 +276,21 @@ export class AccountNS {
   }
 }
 
-export class DataNS {
+export class BlobNS {
   _service: ServiceClient
 
   constructor(service: ServiceClient) {
     this._service = service
   }
 
-  uploadFile(
-    data?: ComAtprotoDataUploadFile.InputSchema,
-    opts?: ComAtprotoDataUploadFile.CallOptions,
-  ): Promise<ComAtprotoDataUploadFile.Response> {
+  upload(
+    data?: ComAtprotoBlobUpload.InputSchema,
+    opts?: ComAtprotoBlobUpload.CallOptions,
+  ): Promise<ComAtprotoBlobUpload.Response> {
     return this._service.xrpc
-      .call('com.atproto.data.uploadFile', opts?.qp, data, opts)
+      .call('com.atproto.blob.upload', opts?.qp, data, opts)
       .catch((e) => {
-        throw ComAtprotoDataUploadFile.toKnownErr(e)
+        throw ComAtprotoBlobUpload.toKnownErr(e)
       })
   }
 }

@@ -1,6 +1,6 @@
 import { Server } from '../../../lexicon'
 import account from './account'
-import data from './data'
+import blob from './blob'
 import handles from './handles'
 import invites from './invites'
 import passwordReset from './password-reset'
@@ -10,7 +10,7 @@ import sync from './sync'
 
 export default function (server: Server) {
   account(server)
-  data(server)
+  blob(server)
   handles(server)
   invites(server)
   passwordReset(server)
