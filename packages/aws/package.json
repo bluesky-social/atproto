@@ -18,6 +18,7 @@
     "@atproto/crypto": "*",
     "@aws-sdk/client-kms": "^3.196.0",
     "@aws-sdk/client-s3": "^3.224.0",
+    "@aws-sdk/lib-storage": "^3.226.0",
     "@noble/secp256k1": "^1.7.0",
     "key-encoder": "^2.0.3"
   }
