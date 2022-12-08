@@ -23,3 +23,10 @@ export const streamSize = async (stream: Readable): Promise<number> => {
   }
   return size
 }
+
+export const bytesToStream = (bytes: Uint8Array): Readable => {
+  const stream = new Readable()
+  stream.push(bytes)
+  stream.push(null)
+  return stream
+}
