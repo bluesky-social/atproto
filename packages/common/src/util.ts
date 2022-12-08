@@ -69,3 +69,7 @@ export const isErrnoException = (
 ): err is NodeJS.ErrnoException => {
   return !!err && 'code' in err
 }
+
+export const errHasMsg = (err: unknown, msg: string): boolean => {
+  return !!err && typeof err === 'object' && err['message'] === msg
+}
