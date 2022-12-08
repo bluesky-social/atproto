@@ -71,7 +71,7 @@ describe('file uploads', () => {
 
   it('uploads files', async () => {
     smallFile = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
-    const res = await aliceClient.com.atproto.data.uploadFile(smallFile, {
+    const res = await aliceClient.com.atproto.blob.upload(smallFile, {
       encoding: 'image/jpeg',
     } as any)
     smallCid = CID.parse(res.data.cid)
@@ -133,7 +133,7 @@ describe('file uploads', () => {
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
     largeFile = await fs.readFile('tests/image/fixtures/key-portrait-large.jpg')
-    const res = await aliceClient.com.atproto.data.uploadFile(largeFile, {
+    const res = await aliceClient.com.atproto.blob.upload(largeFile, {
       encoding: 'image/jpeg',
     } as any)
     largeCid = CID.parse(res.data.cid)
@@ -161,14 +161,12 @@ describe('file uploads', () => {
     const file = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
-    const { data: uploadA } = await aliceClient.com.atproto.data.uploadFile(
-      file,
-      { encoding: 'image/jpeg' } as any,
-    )
-    const { data: uploadB } = await bobClient.com.atproto.data.uploadFile(
-      file,
-      { encoding: 'image/jpeg' } as any,
-    )
+    const { data: uploadA } = await aliceClient.com.atproto.blob.upload(file, {
+      encoding: 'image/jpeg',
+    } as any)
+    const { data: uploadB } = await bobClient.com.atproto.blob.upload(file, {
+      encoding: 'image/jpeg',
+    } as any)
     expect(uploadA).toEqual(uploadB)
     const { data: profileA } = await aliceClient.app.bsky.actor.updateProfile({
       displayName: 'Alice',
@@ -181,7 +179,7 @@ describe('file uploads', () => {
     })
     expect((profileB.record as any).avatar.cid).toEqual(uploadA.cid)
     const { data: uploadAfterPermanent } =
-      await aliceClient.com.atproto.data.uploadFile(file, {
+      await aliceClient.com.atproto.blob.upload(file, {
         encoding: 'image/jpeg',
       } as any)
     expect(uploadAfterPermanent).toEqual(uploadA)

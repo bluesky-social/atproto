@@ -4,7 +4,7 @@ import * as repo from '../../../repo'
 import ServerAuth from '../../../auth'
 
 export default function (server: Server) {
-  server.com.atproto.data.uploadFile({
+  server.com.atproto.blob.upload({
     auth: ServerAuth.verifier,
     handler: async ({ input, res }) => {
       const { db, blobstore } = locals.get(res)

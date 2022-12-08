@@ -101,7 +101,7 @@ describe('pds profile views', () => {
 
   it('handles avatars', async () => {
     const img = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
-    const res = await client.com.atproto.data.uploadFile(img, {
+    const res = await client.com.atproto.blob.upload(img, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     } as any)

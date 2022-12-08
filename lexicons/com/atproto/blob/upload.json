@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.data.uploadFile",
+  "id": "com.atproto.blob.upload",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Upload a new file to be added to repo in a later request.",
+      "description": "Upload a new blob to be added to repo in a later request.",
       "input": {
         "encoding": "*/*"
       },

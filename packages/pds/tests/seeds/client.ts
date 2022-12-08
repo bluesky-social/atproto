@@ -147,7 +147,7 @@ export class SeedClient {
 
     let avatarCid
     {
-      const res = await this.client.com.atproto.data.uploadFile(AVATAR_IMG, {
+      const res = await this.client.com.atproto.blob.upload(AVATAR_IMG, {
         encoding: 'image/jpeg',
         headers: this.getHeaders(fromUser || by),
       } as any)
