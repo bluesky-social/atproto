@@ -102,9 +102,9 @@ const runServer = (
 
   const apiServer = API({
     payload: {
-      jsonLimit: '100kb',
-      textLimit: '100kb',
-      rawLimit: '5mb',
+      jsonLimit: 100 * 1024, // 100kb
+      textLimit: 100 * 1024, // 100kb
+      blobLimit: 5 * 1024 * 1024, // 5mb
     },
   })
   app.use(health.router)
