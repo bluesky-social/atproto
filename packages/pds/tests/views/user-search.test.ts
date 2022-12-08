@@ -189,6 +189,9 @@ const declaration = {
   cid: 'cids(0)',
 }
 
+const avatar =
+  'https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg'
+
 const snapTypeaheadPg = [
   {
     did: 'user(0)',
@@ -200,18 +203,21 @@ const snapTypeaheadPg = [
     declaration,
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
+    avatar,
   },
   {
     did: 'user(2)',
     declaration,
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
+    avatar,
   },
   {
     did: 'user(3)',
     declaration,
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
+    avatar,
   },
   {
     did: 'user(4)',
@@ -223,12 +229,14 @@ const snapTypeaheadPg = [
     declaration,
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
+    avatar,
   },
   {
     did: 'user(6)',
     declaration,
     displayName: 'Rachel Kshlerin',
     handle: 'cayla-marquardt39.test',
+    avatar,
   },
 ]
 
@@ -238,6 +246,7 @@ const snapTypeaheadSqlite = [
     declaration,
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
+    avatar,
   },
   {
     did: 'user(1)',
@@ -254,18 +263,21 @@ const snapTypeaheadSqlite = [
     declaration,
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
+    avatar,
   },
   {
     did: 'user(4)',
     declaration,
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
+    avatar,
   },
   {
     did: 'user(5)',
     declaration,
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
+    avatar,
   },
 ]
 
@@ -282,6 +294,7 @@ const snapSearchPg = [
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
+    avatar,
   },
   {
     description: '',
@@ -290,6 +303,7 @@ const snapSearchPg = [
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',
+    avatar,
   },
   {
     description: '',
@@ -298,6 +312,7 @@ const snapSearchPg = [
     displayName: 'Carlton Abernathy IV',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
+    avatar,
   },
   {
     did: 'user(4)',
@@ -311,6 +326,7 @@ const snapSearchPg = [
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
+    avatar,
   },
   {
     description: '',
@@ -319,6 +335,7 @@ const snapSearchPg = [
     displayName: 'Rachel Kshlerin',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'cayla-marquardt39.test',
+    avatar,
   },
 ]
 
@@ -330,6 +347,7 @@ const snapSearchSqlite = [
     displayName: 'Carlton Abernathy IV',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
+    avatar,
   },
   {
     did: 'user(1)',
@@ -348,6 +366,7 @@ const snapSearchSqlite = [
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
+    avatar,
   },
   {
     description: '',
@@ -356,6 +375,7 @@ const snapSearchSqlite = [
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
+    avatar,
   },
   {
     description: '',
@@ -364,5 +384,6 @@ const snapSearchSqlite = [
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',
+    avatar,
   },
 ]

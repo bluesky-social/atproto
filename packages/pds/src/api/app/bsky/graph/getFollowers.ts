@@ -10,12 +10,14 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ params, res }) => {
       const { user, limit, before } = params
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
       const { ref } = db.db.dynamic
 
-      const subject = await getActorInfo(db.db, user).catch((_e) => {
-        throw new InvalidRequestError(`User not found: ${user}`)
-      })
+      const subject = await getActorInfo(db.db, imgUriBuilder, user).catch(
+        (_e) => {
+          throw new InvalidRequestError(`User not found: ${user}`)
+        },
+      )
 
       let followersReq = db.db
         .selectFrom('follow')
@@ -28,6 +30,7 @@ export default function (server: Server) {
           'creator.actorType as actorType',
           'creator.handle as handle',
           'profile.displayName as displayName',
+          'profile.avatarCid as avatarCid',
           'follow.cid as cid',
           'follow.createdAt as createdAt',
           'follow.indexedAt as indexedAt',
@@ -49,6 +52,9 @@ export default function (server: Server) {
         declaration: getDeclarationSimple(row),
         handle: row.handle,
         displayName: row.displayName || undefined,
+        avatar: row.avatarCid
+          ? imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
+          : undefined,
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,
       }))

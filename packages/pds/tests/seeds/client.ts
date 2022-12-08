@@ -1,9 +1,12 @@
+import fs from 'fs/promises'
 import { APP_BSKY_GRAPH, ServiceClient } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
+
+let AVATAR_IMG: Uint8Array | undefined
 
 export class RecordRef {
   uri: AtUri
@@ -69,6 +72,7 @@ export class SeedClient {
     {
       displayName: string
       description: string
+      avatar: { cid: string; mimeType: string }
       ref: RecordRef
     }
   >
@@ -137,15 +141,35 @@ export class SeedClient {
     description: string,
     fromUser?: string,
   ) {
-    const res = await this.client.app.bsky.actor.profile.create(
-      { did: by },
-      { displayName, description },
-      this.getHeaders(fromUser || by),
+    AVATAR_IMG ??= await fs.readFile(
+      'tests/image/fixtures/key-portrait-small.jpg',
     )
-    this.profiles[by] = {
-      displayName,
-      description,
-      ref: new RecordRef(res.uri, res.cid),
+
+    let avatarCid
+    {
+      const res = await this.client.com.atproto.data.uploadFile(AVATAR_IMG, {
+        encoding: 'image/jpeg',
+        headers: this.getHeaders(fromUser || by),
+      } as any)
+      avatarCid = res.data.cid
+    }
+
+    {
+      const res = await this.client.app.bsky.actor.profile.create(
+        { did: by },
+        {
+          displayName,
+          description,
+          avatar: { cid: avatarCid, mimeType: 'image/jpeg' },
+        },
+        this.getHeaders(fromUser || by),
+      )
+      this.profiles[by] = {
+        displayName,
+        description,
+        avatar: { cid: avatarCid, mimeType: 'image/jpeg' },
+        ref: new RecordRef(res.uri, res.cid),
+      }
     }
     return this.profiles[by]
   }

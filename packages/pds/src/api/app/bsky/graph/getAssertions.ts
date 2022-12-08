@@ -10,23 +10,23 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ params, res }) => {
       const { author, subject, assertion, confirmed, limit, before } = params
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
       const { ref } = db.db.dynamic
 
       if (!author && !subject) {
         throw new InvalidRequestError(`Must provide an author or subject`)
       }
 
-      const authorInfo =
-        author &&
-        (await getActorInfo(db.db, author).catch((_e) => {
-          throw new InvalidRequestError(`Actor not found: ${author}`)
-        }))
-      const subjectInfo =
-        subject &&
-        (await getActorInfo(db.db, subject).catch((_e) => {
-          throw new InvalidRequestError(`Actor not found: ${subject}`)
-        }))
+      const authorInfo = author
+        ? await getActorInfo(db.db, imgUriBuilder, author).catch((_e) => {
+            throw new InvalidRequestError(`Actor not found: ${author}`)
+          })
+        : undefined
+      const subjectInfo = subject
+        ? await getActorInfo(db.db, imgUriBuilder, subject).catch((_e) => {
+            throw new InvalidRequestError(`Actor not found: ${subject}`)
+          })
+        : undefined
 
       let assertionsReq = db.db
         .selectFrom('assertion')
@@ -68,11 +68,13 @@ export default function (server: Server) {
           'author.declarationCid as authorDeclarationCid',
           'author.actorType as authorActorType',
           'authorProfile.displayName as authorDisplayName',
+          'authorProfile.avatarCid as authorAvatarCid',
           'subject.did as subjectDid',
           'subject.handle as subjectHandle',
           'subject.declarationCid as subjectDeclarationCid',
           'subject.actorType as subjectActorType',
           'subjectProfile.displayName as subjectDisplayName',
+          'subjectProfile.avatarCid as subjectAvatarCid',
           'assertion.createdAt as createdAt',
           'assertion.indexedAt as indexedAt',
         ])
@@ -128,6 +130,11 @@ export default function (server: Server) {
             actorType: row.authorActorType,
           },
           displayName: row.authorDisplayName || undefined,
+          avatar:
+            authorInfo?.avatar ||
+            (row.authorAvatarCid
+              ? imgUriBuilder.getCommonSignedUri('avatar', row.authorAvatarCid)
+              : undefined),
         },
         subject: {
           did: row.subjectDid,
@@ -137,6 +144,11 @@ export default function (server: Server) {
             actorType: row.subjectActorType,
           },
           displayName: row.subjectDisplayName || undefined,
+          avatar:
+            subjectInfo?.avatar ||
+            (row.subjectAvatarCid
+              ? imgUriBuilder.getCommonSignedUri('avatar', row.subjectAvatarCid)
+              : undefined),
         },
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,

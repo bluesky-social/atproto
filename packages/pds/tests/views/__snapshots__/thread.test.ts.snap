@@ -4,6 +4,7 @@ exports[`pds thread views fetches ancestors 1`] = `
 Object {
   "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
+    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(1)",
@@ -21,6 +22,7 @@ Object {
   "parent": Object {
     "$type": "app.bsky.feed.getPostThread#post",
     "author": Object {
+      "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
@@ -36,6 +38,7 @@ Object {
     "parent": Object {
       "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
+        "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
           "cid": "cids(1)",
@@ -107,6 +110,7 @@ exports[`pds thread views fetches deep post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
+    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(1)",
@@ -144,6 +148,7 @@ Object {
       "parent": Object {
         "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
             "cid": "cids(1)",
@@ -192,6 +197,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
+        "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
           "cid": "cids(1)",
@@ -207,6 +213,7 @@ Object {
       "parent": Object {
         "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
             "cid": "cids(1)",
@@ -250,6 +257,7 @@ Object {
         Object {
           "$type": "app.bsky.feed.getPostThread#post",
           "author": Object {
+            "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
             "declaration": Object {
               "actorType": "app.bsky.system.actorUser",
               "cid": "cids(1)",
@@ -267,6 +275,7 @@ Object {
           "parent": Object {
             "$type": "app.bsky.feed.getPostThread#post",
             "author": Object {
+              "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
               "declaration": Object {
                 "actorType": "app.bsky.system.actorUser",
                 "cid": "cids(1)",
@@ -282,6 +291,7 @@ Object {
             "parent": Object {
               "$type": "app.bsky.feed.getPostThread#post",
               "author": Object {
+                "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
                 "declaration": Object {
                   "actorType": "app.bsky.system.actorUser",
                   "cid": "cids(1)",
@@ -365,6 +375,7 @@ exports[`pds thread views fetches shallow post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
+    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(1)",
@@ -402,6 +413,7 @@ Object {
       "parent": Object {
         "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
             "cid": "cids(1)",
@@ -449,6 +461,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
+        "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
           "cid": "cids(1)",
@@ -464,6 +477,7 @@ Object {
       "parent": Object {
         "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
             "cid": "cids(1)",
@@ -520,6 +534,7 @@ exports[`pds thread views handles deleted posts correctly 1`] = `
 Object {
   "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
+    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(1)",
@@ -541,6 +556,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.getPostThread#post",
       "author": Object {
+        "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
           "cid": "cids(1)",
@@ -556,6 +572,7 @@ Object {
       "parent": Object {
         "$type": "app.bsky.feed.getPostThread#post",
         "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
             "cid": "cids(1)",
@@ -597,6 +614,7 @@ Object {
         Object {
           "$type": "app.bsky.feed.getPostThread#post",
           "author": Object {
+            "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
             "declaration": Object {
               "actorType": "app.bsky.system.actorUser",
               "cid": "cids(1)",
@@ -612,6 +630,7 @@ Object {
           "parent": Object {
             "$type": "app.bsky.feed.getPostThread#post",
             "author": Object {
+              "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
               "declaration": Object {
                 "actorType": "app.bsky.system.actorUser",
                 "cid": "cids(1)",
@@ -627,6 +646,7 @@ Object {
             "parent": Object {
               "$type": "app.bsky.feed.getPostThread#post",
               "author": Object {
+                "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
                 "declaration": Object {
                   "actorType": "app.bsky.system.actorUser",
                   "cid": "cids(1)",
@@ -708,6 +728,7 @@ exports[`pds thread views handles deleted posts correctly 2`] = `
 Object {
   "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
+    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(1)",
@@ -737,6 +758,7 @@ exports[`pds thread views handles deleted posts correctly 3`] = `
 Object {
   "$type": "app.bsky.feed.getPostThread#post",
   "author": Object {
+    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(1)",

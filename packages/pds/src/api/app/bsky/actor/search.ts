@@ -18,7 +18,7 @@ export default function (server: Server) {
     handler: async ({ params, res }) => {
       let { term, limit } = params
       const { before } = params
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
 
       term = cleanTerm(term || '')
       limit = Math.min(limit ?? 25, 100)
@@ -43,6 +43,9 @@ export default function (server: Server) {
         handle: result.handle,
         displayName: result.displayName ?? undefined,
         description: result.description ?? undefined,
+        avatar: result.avatarCid
+          ? imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
+          : undefined,
         indexedAt: result.indexedAt ?? undefined,
       }))
 
@@ -70,6 +73,7 @@ const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
       'did_handle.declarationCid as declarationCid',
       'profile.displayName as displayName',
       'profile.description as description',
+      'profile.avatarCid as avatarCid',
       'profile.indexedAt as indexedAt',
     ])
     .execute()
@@ -86,6 +90,7 @@ const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
       'did_handle.declarationCid as declarationCid',
       'profile.displayName as displayName',
       'profile.description as description',
+      'profile.avatarCid as avatarCid',
       'profile.indexedAt as indexedAt',
     ])
     .execute()
@@ -102,6 +107,7 @@ type GetResultsFn = (
     handle: string
     displayName: string | null
     description: string | null
+    avatarCid: string | null
     distance: number
     indexedAt: string | null
   }[]

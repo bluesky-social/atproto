@@ -10,7 +10,7 @@ export default function (server: Server) {
   server.app.bsky.notification.list({
     auth: ServerAuth.verifier,
     handler: async ({ params, auth, res }) => {
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
       const { limit, before } = params
       const requester = auth.credentials.did
       const { ref } = db.db.dynamic
@@ -33,6 +33,7 @@ export default function (server: Server) {
           'author.actorType as authorActorType',
           'author.handle as authorHandle',
           'author_profile.displayName as authorDisplayName',
+          'author_profile.avatarCid as authorAvatarCid',
           'notif.reason as reason',
           'notif.reasonSubject as reasonSubject',
           'notif.indexedAt as indexedAt',
@@ -71,6 +72,9 @@ export default function (server: Server) {
           declaration: getDeclaration('author', notif),
           handle: notif.authorHandle,
           displayName: notif.authorDisplayName || undefined,
+          avatar: notif.authorAvatarCid
+            ? imgUriBuilder.getCommonSignedUri('avatar', notif.authorAvatarCid)
+            : undefined,
         },
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,

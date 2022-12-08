@@ -21,7 +21,8 @@
         "displayName": {
           "type": "string",
           "maxLength": 64
-        }
+        },
+        "avatar": { "type": "string" }
       }
     }
   }

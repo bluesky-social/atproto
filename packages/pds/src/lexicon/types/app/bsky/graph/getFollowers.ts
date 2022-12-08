@@ -3,6 +3,7 @@
  */
 import express from 'express'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as AppBskyActorRef from '../actor/ref'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -14,7 +15,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  subject: Subject
+  subject: AppBskyActorRef.WithInfo
   cursor?: string
   followers: Follower[]
   [k: string]: unknown
@@ -41,19 +42,12 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
 
-export interface Subject {
-  did: string
-  declaration: AppBskySystemDeclRef.Main
-  handle: string
-  displayName?: string
-  [k: string]: unknown
-}
-
 export interface Follower {
   did: string
   declaration: AppBskySystemDeclRef.Main
   handle: string
   displayName?: string
+  avatar?: string
   createdAt?: string
   indexedAt: string
   [k: string]: unknown

@@ -1,16 +1,20 @@
 import { Kysely } from 'kysely'
 import { DatabaseSchema } from '../../../../db/database-schema'
 import * as util from '../../../../db/util'
+import { CID } from 'multiformats/cid'
+import { ImageUriBuilder } from '../../../../image/uri'
 
 type ActorInfo = {
   did: string
   declaration: Declaration
   handle: string
   displayName: string | undefined
+  avatar: string | undefined
 }
 
 export const getActorInfo = async (
   db: Kysely<DatabaseSchema>,
+  imgUriBuilder: ImageUriBuilder,
   actor: string,
 ): Promise<ActorInfo> => {
   const actorInfo = await db
@@ -23,6 +27,7 @@ export const getActorInfo = async (
       'did_handle.actorType as actorType',
       'did_handle.handle as handle',
       'profile.displayName as displayName',
+      'profile.avatarCid as avatarCid',
     ])
     .executeTakeFirst()
   if (!actorInfo) {
@@ -33,6 +38,16 @@ export const getActorInfo = async (
     declaration: getDeclarationSimple(actorInfo),
     handle: actorInfo.handle,
     displayName: actorInfo.displayName || undefined,
+    avatar: actorInfo.avatarCid
+      ? imgUriBuilder.getSignedUri({
+          cid: CID.parse(actorInfo.avatarCid),
+          format: 'jpeg',
+          fit: 'cover',
+          height: 250,
+          width: 250,
+          min: true,
+        })
+      : undefined,
   }
 }
 

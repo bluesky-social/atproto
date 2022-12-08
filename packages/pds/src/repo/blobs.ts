@@ -37,6 +37,7 @@ export const addUntetheredBlob = async (
 
   await dbTxn.db
     .insertInto('blob')
+    // .ignore()
     .values({
       cid: cid.toString(),
       mimeType,

@@ -1112,6 +1112,9 @@ export const lexicons: LexiconDoc[] = [
           description: {
             type: 'string',
           },
+          avatar: {
+            type: 'string',
+          },
           indexedAt: {
             type: 'datetime',
           },
@@ -1197,6 +1200,9 @@ export const lexicons: LexiconDoc[] = [
             type: 'string',
             maxLength: 64,
           },
+          avatar: {
+            type: 'string',
+          },
         },
       },
     },
@@ -1264,6 +1270,9 @@ export const lexicons: LexiconDoc[] = [
             type: 'string',
             maxLength: 64,
           },
+          avatar: {
+            type: 'string',
+          },
           description: {
             type: 'string',
           },
@@ -1330,6 +1339,9 @@ export const lexicons: LexiconDoc[] = [
           displayName: {
             type: 'string',
             maxLength: 64,
+          },
+          avatar: {
+            type: 'string',
           },
         },
       },
@@ -1798,6 +1810,9 @@ export const lexicons: LexiconDoc[] = [
           displayName: {
             type: 'string',
             maxLength: 64,
+          },
+          avatar: {
+            type: 'string',
           },
           createdAt: {
             type: 'datetime',
@@ -2448,7 +2463,7 @@ export const lexicons: LexiconDoc[] = [
             properties: {
               subject: {
                 type: 'ref',
-                ref: 'lex:app.bsky.graph.getFollowers#subject',
+                ref: 'lex:app.bsky.actor.ref#withInfo',
               },
               cursor: {
                 type: 'string',
@@ -2461,26 +2476,6 @@ export const lexicons: LexiconDoc[] = [
                 },
               },
             },
-          },
-        },
-      },
-      subject: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
           },
         },
       },
@@ -2501,6 +2496,9 @@ export const lexicons: LexiconDoc[] = [
           displayName: {
             type: 'string',
             maxLength: 64,
+          },
+          avatar: {
+            type: 'string',
           },
           createdAt: {
             type: 'datetime',

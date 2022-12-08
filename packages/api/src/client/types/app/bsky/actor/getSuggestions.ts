@@ -39,6 +39,7 @@ export interface Actor {
   handle: string
   displayName?: string
   description?: string
+  avatar?: string
   indexedAt?: string
   myState?: MyState
   [k: string]: unknown

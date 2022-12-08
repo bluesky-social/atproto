@@ -10,12 +10,14 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ params, res }) => {
       const { actor, limit, before } = params
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
       const { ref } = db.db.dynamic
 
-      const subject = await getActorInfo(db.db, actor).catch((_e) => {
-        throw new InvalidRequestError(`Actor not found: ${actor}`)
-      })
+      const subject = await getActorInfo(db.db, imgUriBuilder, actor).catch(
+        (_e) => {
+          throw new InvalidRequestError(`Actor not found: ${actor}`)
+        },
+      )
 
       let membersReq = db.db
         .selectFrom('assertion')
@@ -34,6 +36,7 @@ export default function (server: Server) {
           'subject.declarationCid as declarationCid',
           'subject.actorType as actorType',
           'profile.displayName as displayName',
+          'profile.avatarCid as avatarCid',
           'assertion.cid as cid',
           'assertion.createdAt as createdAt',
           'assertion.indexedAt as indexedAt',
@@ -55,6 +58,9 @@ export default function (server: Server) {
         handle: row.handle,
         declaration: getDeclarationSimple(row),
         displayName: row.displayName || undefined,
+        avatar: row.avatarCid
+          ? imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
+          : undefined,
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,
       }))

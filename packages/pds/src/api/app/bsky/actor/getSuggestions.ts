@@ -9,7 +9,7 @@ export default function (server: Server) {
     handler: async ({ params, auth, res }) => {
       let { limit } = params
       const { cursor } = params
-      const { db } = locals.get(res)
+      const { db, imgUriBuilder } = locals.get(res)
       const requester = auth.credentials.did
       limit = Math.min(limit ?? 25, 100)
 
@@ -27,6 +27,7 @@ export default function (server: Server) {
           'profile.uri as profileUri',
           'profile.displayName as displayName',
           'profile.description as description',
+          'profile.avatarCid as avatarCid',
           'profile.indexedAt as indexedAt',
           'user.createdAt as createdAt',
           db.db
@@ -50,6 +51,9 @@ export default function (server: Server) {
         declaration: getDeclarationSimple(result),
         displayName: result.displayName ?? undefined,
         description: result.description ?? undefined,
+        avatar: result.avatarCid
+          ? imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
+          : undefined,
         indexedAt: result.indexedAt ?? undefined,
         myState: {
           follow: result.requesterFollow || undefined,

@@ -46,6 +46,7 @@ Object {
     },
     Object {
       "actor": Object {
+        "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
           "cid": "cids(0)",
