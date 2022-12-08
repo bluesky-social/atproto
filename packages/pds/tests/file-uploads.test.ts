@@ -24,6 +24,7 @@ const bob = {
 describe('file uploads', () => {
   let client: AtpServiceClient
   let aliceClient: AtpServiceClient
+  let bobClient: AtpServiceClient
   let blobstore: DiskBlobStore
   let db: Database
   let cfg: ServerConfig
@@ -32,13 +33,14 @@ describe('file uploads', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'file-uploads',
+      dbPostgresSchema: 'file_uploads',
     })
     blobstore = server.blobstore as DiskBlobStore
     db = server.db
     close = server.close
     client = AtpApi.service(server.url)
     aliceClient = AtpApi.service(server.url)
+    bobClient = AtpApi.service(server.url)
     cfg = server.cfg
     serverUrl = server.url
   })
@@ -60,6 +62,7 @@ describe('file uploads', () => {
       handle: bob.handle,
       password: bob.password,
     })
+    bobClient.setHeader('authorization', `Bearer ${res2.data.accessJwt}`)
     bob.did = res2.data.did
   })
 
@@ -152,5 +155,41 @@ describe('file uploads', () => {
     expect(found?.tempKey).toBeDefined()
     expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
     expect(await blobstore.hasStored(largeCid)).toBeFalsy()
+  })
+
+  it('permits duplicate uploads of the same file', async () => {
+    const file = await fs.readFile(
+      'tests/image/fixtures/key-landscape-small.jpg',
+    )
+    const { data: uploadA } = await aliceClient.com.atproto.data.uploadFile(
+      file,
+      { encoding: 'image/jpeg' } as any,
+    )
+    const { data: uploadB } = await bobClient.com.atproto.data.uploadFile(
+      file,
+      { encoding: 'image/jpeg' } as any,
+    )
+    expect(uploadA).toEqual(uploadB)
+    const { data: profileA } = await aliceClient.app.bsky.actor.updateProfile({
+      displayName: 'Alice',
+      avatar: { cid: uploadA.cid, mimeType: 'image/jpeg' },
+    })
+    expect((profileA.record as any).avatar.cid).toEqual(uploadA.cid)
+    const { data: profileB } = await bobClient.app.bsky.actor.updateProfile({
+      displayName: 'Bob',
+      avatar: { cid: uploadB.cid, mimeType: 'image/jpeg' },
+    })
+    expect((profileB.record as any).avatar.cid).toEqual(uploadA.cid)
+    const { data: uploadAfterPermanent } =
+      await aliceClient.com.atproto.data.uploadFile(file, {
+        encoding: 'image/jpeg',
+      } as any)
+    expect(uploadAfterPermanent).toEqual(uploadA)
+    const blob = await db.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', uploadAfterPermanent.cid)
+      .executeTakeFirstOrThrow()
+    expect(blob.tempKey).toEqual(null)
   })
 })
