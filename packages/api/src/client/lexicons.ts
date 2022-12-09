@@ -1021,6 +1021,9 @@ export const schemaDict = {
               avatar: {
                 type: 'string',
               },
+              banner: {
+                type: 'string',
+              },
               followersCount: {
                 type: 'integer',
               },
@@ -1388,6 +1391,13 @@ export const schemaDict = {
                 maxWidth: 500,
                 maxHeight: 500,
                 maxSize: 100000,
+              },
+              banner: {
+                type: 'image',
+                accept: ['image/png', 'image/jpeg'],
+                maxWidth: 1500,
+                maxHeight: 500,
+                maxSize: 500000,
               },
             },
           },

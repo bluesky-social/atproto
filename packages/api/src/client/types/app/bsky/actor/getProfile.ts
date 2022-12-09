@@ -18,6 +18,7 @@ export interface OutputSchema {
   displayName?: string
   description?: string
   avatar?: string
+  banner?: string
   followersCount: number
   followsCount: number
   membersCount: number
