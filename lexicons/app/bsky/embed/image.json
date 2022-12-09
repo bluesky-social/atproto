@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.embed.image",
+  "description": "An image embedded in some other form of content",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["image", "alt"],
+      "properties": {
+        "image": {
+            "type": "image",
+            "accept": ["image/*"],
+            "maxWidth": 500,
+            "maxHeight": 500,
+            "maxSize": 300000
+        },
+        "alt": {"type": "string"}
+      }
+    }
+  }
+}

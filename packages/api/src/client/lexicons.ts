@@ -1423,70 +1423,16 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedEmbed: {
+  AppBskyEmbedExternal: {
     lexicon: 1,
-    id: 'app.bsky.feed.embed',
+    id: 'app.bsky.embed.external',
     description:
-      'Content embedded in other content, such as an image or link embedded in a post.',
+      'An representation of some externally linked content, embedded in another form of content',
     defs: {
       main: {
         type: 'object',
-        description: 'A list embeds in a post or document.',
-        required: ['media'],
+        required: ['title', 'description', 'imageUri'],
         properties: {
-          items: {
-            type: 'array',
-            items: {
-              type: 'union',
-              refs: [
-                'lex:app.bsky.feed.embed#media',
-                'lex:app.bsky.feed.embed#record',
-                'lex:app.bsky.feed.embed#external',
-              ],
-            },
-          },
-        },
-      },
-      media: {
-        type: 'object',
-        required: ['original'],
-        properties: {
-          alt: {
-            type: 'string',
-          },
-          thumb: {
-            type: 'image',
-          },
-          original: {
-            type: 'blob',
-          },
-        },
-      },
-      record: {
-        type: 'object',
-        required: ['type', 'author', 'record'],
-        properties: {
-          type: {
-            type: 'string',
-            const: 'record',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          record: {
-            type: 'unknown',
-          },
-        },
-      },
-      external: {
-        type: 'object',
-        required: ['type', 'uri', 'title', 'description', 'imageUri'],
-        properties: {
-          type: {
-            type: 'string',
-            const: 'external',
-          },
           uri: {
             type: 'string',
           },
@@ -1496,7 +1442,34 @@ export const schemaDict = {
           description: {
             type: 'string',
           },
-          imageUri: {
+          thumb: {
+            type: 'image',
+            accept: ['image/*'],
+            maxWidth: 500,
+            maxHeight: 500,
+            maxSize: 300000,
+          },
+        },
+      },
+    },
+  },
+  AppBskyEmbedImage: {
+    lexicon: 1,
+    id: 'app.bsky.embed.image',
+    description: 'An image embedded in some other form of content',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['image', 'alt'],
+        properties: {
+          image: {
+            type: 'image',
+            accept: ['image/*'],
+            maxWidth: 500,
+            maxHeight: 500,
+            maxSize: 300000,
+          },
+          alt: {
             type: 'string',
           },
         },
@@ -2071,6 +2044,13 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.feed.post#replyRef',
             },
+            embeds: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.post#images',
+                'lex:app.bsky.feed.post#external',
+              ],
+            },
             createdAt: {
               type: 'datetime',
             },
@@ -2120,6 +2100,30 @@ export const schemaDict = {
           end: {
             type: 'integer',
             minimum: 0,
+          },
+        },
+      },
+      images: {
+        type: 'object',
+        required: ['embed'],
+        properties: {
+          embed: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.embed.image',
+            },
+            maxLength: 4,
+          },
+        },
+      },
+      external: {
+        type: 'object',
+        required: ['embed'],
+        properties: {
+          embed: {
+            type: 'ref',
+            ref: 'lex:com.atproto.embed.external',
           },
         },
       },
@@ -3005,7 +3009,8 @@ export const ids = {
   AppBskyActorSearch: 'app.bsky.actor.search',
   AppBskyActorSearchTypeahead: 'app.bsky.actor.searchTypeahead',
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
-  AppBskyFeedEmbed: 'app.bsky.feed.embed',
+  AppBskyEmbedExternal: 'app.bsky.embed.external',
+  AppBskyEmbedImage: 'app.bsky.embed.image',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',

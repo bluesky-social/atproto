@@ -2,11 +2,14 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import * as ComAtprotoEmbedImage from '../../../com/atproto/embed/image'
+import * as ComAtprotoEmbedExternal from '../../../com/atproto/embed/external'
 
 export interface Record {
   text: string
   entities?: Entity[]
   reply?: ReplyRef
+  embeds?: Images | External | { $type: string; [k: string]: unknown }
   createdAt: string
   [k: string]: unknown
 }
@@ -28,5 +31,15 @@ export interface Entity {
 export interface TextSlice {
   start: number
   end: number
+  [k: string]: unknown
+}
+
+export interface Images {
+  embed: ComAtprotoEmbedImage.Main[]
+  [k: string]: unknown
+}
+
+export interface External {
+  embed: ComAtprotoEmbedExternal.Main
   [k: string]: unknown
 }

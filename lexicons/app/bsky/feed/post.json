@@ -15,6 +15,7 @@
             "items": {"type": "ref", "ref": "#entity"}
           },
           "reply": {"type": "ref", "ref": "#replyRef"},
+          "embeds": { "type": "union", "refs": ["#images", "#external"]},
           "createdAt": {"type": "datetime"}
         }
       }
@@ -45,6 +46,27 @@
       "properties": {
         "start": {"type": "integer", "minimum": 0},
         "end": {"type": "integer", "minimum": 0}
+      }
+    },
+    "images": {
+      "type": "object",
+      "required": ["embed"],
+      "properties": {
+        "embed": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.embed.image"},
+          "maxLength": 4
+        }
+      }
+    },
+    "external": {
+      "type": "object",
+      "required": ["embed"],
+      "properties": {
+        "embed": {
+          "type": "ref",
+          "ref": "com.atproto.embed.external"
+        }
       }
     }
   }

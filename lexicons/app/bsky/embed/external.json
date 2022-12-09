@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.embed.external",
+  "description": "An representation of some externally linked content, embedded in another form of content",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required":  ["title", "description", "imageUri"],
+      "properties": {
+        "uri": {"type": "string"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "thumb": {
+          "type": "image",
+          "accept": ["image/*"],
+          "maxWidth": 500,
+          "maxHeight": 500,
+          "maxSize": 300000
+        }
+      }
+    }
+  }
+}
