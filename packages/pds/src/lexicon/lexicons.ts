@@ -17,11 +17,21 @@ export const schemaDict = {
             type: 'object',
             required: ['handle', 'email', 'password'],
             properties: {
-              email: { type: 'string' },
-              handle: { type: 'string' },
-              inviteCode: { type: 'string' },
-              password: { type: 'string' },
-              recoveryKey: { type: 'string' },
+              email: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              inviteCode: {
+                type: 'string',
+              },
+              password: {
+                type: 'string',
+              },
+              recoveryKey: {
+                type: 'string',
+              },
             },
           },
         },
@@ -31,18 +41,34 @@ export const schemaDict = {
             type: 'object',
             required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
             properties: {
-              accessJwt: { type: 'string' },
-              refreshJwt: { type: 'string' },
-              handle: { type: 'string' },
-              did: { type: 'string' },
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+              },
             },
           },
         },
         errors: [
-          { name: 'InvalidHandle' },
-          { name: 'InvalidPassword' },
-          { name: 'InvalidInviteCode' },
-          { name: 'HandleNotAvailable' },
+          {
+            name: 'InvalidHandle',
+          },
+          {
+            name: 'InvalidPassword',
+          },
+          {
+            name: 'InvalidInviteCode',
+          },
+          {
+            name: 'HandleNotAvailable',
+          },
         ],
       },
     },
@@ -59,7 +85,11 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['useCount'],
-            properties: { useCount: { type: 'integer' } },
+            properties: {
+              useCount: {
+                type: 'integer',
+              },
+            },
           },
         },
         output: {
@@ -67,7 +97,11 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['code'],
-            properties: { code: { type: 'string' } },
+            properties: {
+              code: {
+                type: 'string',
+              },
+            },
           },
         },
       },
@@ -76,13 +110,21 @@ export const schemaDict = {
   ComAtprotoAccountDelete: {
     lexicon: 1,
     id: 'com.atproto.account.delete',
-    defs: { main: { type: 'procedure', description: 'Delete an account.' } },
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Delete an account.',
+      },
+    },
   },
   ComAtprotoAccountGet: {
     lexicon: 1,
     id: 'com.atproto.account.get',
     defs: {
-      main: { type: 'query', description: 'Get information about an account.' },
+      main: {
+        type: 'query',
+        description: 'Get information about an account.',
+      },
     },
   },
   ComAtprotoAccountRequestPasswordReset: {
@@ -97,7 +139,11 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['email'],
-            properties: { email: { type: 'string' } },
+            properties: {
+              email: {
+                type: 'string',
+              },
+            },
           },
         },
       },
@@ -116,12 +162,23 @@ export const schemaDict = {
             type: 'object',
             required: ['token', 'password'],
             properties: {
-              token: { type: 'string' },
-              password: { type: 'string' },
+              token: {
+                type: 'string',
+              },
+              password: {
+                type: 'string',
+              },
             },
           },
         },
-        errors: [{ name: 'ExpiredToken' }, { name: 'InvalidToken' }],
+        errors: [
+          {
+            name: 'ExpiredToken',
+          },
+          {
+            name: 'InvalidToken',
+          },
+        ],
       },
     },
   },
@@ -133,16 +190,26 @@ export const schemaDict = {
         type: 'procedure',
         description:
           'Upload a new blob to be added to repo in a later request.',
-        input: { encoding: '*/*' },
+        input: {
+          encoding: '*/*',
+        },
         output: {
           encoding: 'application/json',
           schema: {
             type: 'object',
             required: ['cid'],
-            properties: { cid: { type: 'string' } },
+            properties: {
+              cid: {
+                type: 'string',
+              },
+            },
           },
         },
-        errors: [{ name: 'InvalidBlob' }],
+        errors: [
+          {
+            name: 'InvalidBlob',
+          },
+        ],
       },
     },
   },
@@ -168,7 +235,11 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['did'],
-            properties: { did: { type: 'string' } },
+            properties: {
+              did: {
+                type: 'string',
+              },
+            },
           },
         },
       },
@@ -187,7 +258,10 @@ export const schemaDict = {
             type: 'object',
             required: ['did', 'writes'],
             properties: {
-              did: { type: 'string', description: 'The DID of the repo.' },
+              did: {
+                type: 'string',
+                description: 'The DID of the repo.',
+              },
               validate: {
                 type: 'boolean',
                 default: true,
@@ -213,29 +287,54 @@ export const schemaDict = {
         type: 'object',
         required: ['action', 'collection', 'value'],
         properties: {
-          action: { type: 'string', const: 'create' },
-          collection: { type: 'string' },
-          rkey: { type: 'string' },
-          value: { type: 'unknown' },
+          action: {
+            type: 'string',
+            const: 'create',
+          },
+          collection: {
+            type: 'string',
+          },
+          rkey: {
+            type: 'string',
+          },
+          value: {
+            type: 'unknown',
+          },
         },
       },
       update: {
         type: 'object',
         required: ['action', 'collection', 'rkey', 'value'],
         properties: {
-          action: { type: 'string', const: 'update' },
-          collection: { type: 'string' },
-          rkey: { type: 'string' },
-          value: { type: 'unknown' },
+          action: {
+            type: 'string',
+            const: 'update',
+          },
+          collection: {
+            type: 'string',
+          },
+          rkey: {
+            type: 'string',
+          },
+          value: {
+            type: 'unknown',
+          },
         },
       },
       delete: {
         type: 'object',
         required: ['action', 'collection', 'rkey'],
         properties: {
-          action: { type: 'string', const: 'delete' },
-          collection: { type: 'string' },
-          rkey: { type: 'string' },
+          action: {
+            type: 'string',
+            const: 'delete',
+          },
+          collection: {
+            type: 'string',
+          },
+          rkey: {
+            type: 'string',
+          },
         },
       },
     },
@@ -253,7 +352,10 @@ export const schemaDict = {
             type: 'object',
             required: ['did', 'collection', 'record'],
             properties: {
-              did: { type: 'string', description: 'The DID of the repo.' },
+              did: {
+                type: 'string',
+                description: 'The DID of the repo.',
+              },
               collection: {
                 type: 'string',
                 description: 'The NSID of the record collection.',
@@ -263,7 +365,10 @@ export const schemaDict = {
                 default: true,
                 description: 'Validate the record?',
               },
-              record: { type: 'unknown', description: 'The record to create.' },
+              record: {
+                type: 'unknown',
+                description: 'The record to create.',
+              },
             },
           },
         },
@@ -272,7 +377,14 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['uri', 'cid'],
-            properties: { uri: { type: 'string' }, cid: { type: 'string' } },
+            properties: {
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+            },
           },
         },
       },
@@ -291,12 +403,18 @@ export const schemaDict = {
             type: 'object',
             required: ['did', 'collection', 'rkey'],
             properties: {
-              did: { type: 'string', description: 'The DID of the repo.' },
+              did: {
+                type: 'string',
+                description: 'The DID of the repo.',
+              },
               collection: {
                 type: 'string',
                 description: 'The NSID of the record collection.',
               },
-              rkey: { type: 'string', description: 'The key of the record.' },
+              rkey: {
+                type: 'string',
+                description: 'The key of the record.',
+              },
             },
           },
         },
@@ -333,11 +451,24 @@ export const schemaDict = {
               'handleIsCorrect',
             ],
             properties: {
-              handle: { type: 'string' },
-              did: { type: 'string' },
-              didDoc: { type: 'unknown' },
-              collections: { type: 'array', items: { type: 'string' } },
-              handleIsCorrect: { type: 'boolean' },
+              handle: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+              },
+              didDoc: {
+                type: 'unknown',
+              },
+              collections: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              handleIsCorrect: {
+                type: 'boolean',
+              },
             },
           },
         },
@@ -363,7 +494,10 @@ export const schemaDict = {
               type: 'string',
               description: 'The NSID of the collection.',
             },
-            rkey: { type: 'string', description: 'The key of the record.' },
+            rkey: {
+              type: 'string',
+              description: 'The key of the record.',
+            },
             cid: {
               type: 'string',
               description:
@@ -377,9 +511,15 @@ export const schemaDict = {
             type: 'object',
             required: ['uri', 'value'],
             properties: {
-              uri: { type: 'string' },
-              cid: { type: 'string' },
-              value: { type: 'unknown' },
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+              value: {
+                type: 'unknown',
+              },
             },
           },
         },
@@ -432,7 +572,9 @@ export const schemaDict = {
             type: 'object',
             required: ['records'],
             properties: {
-              cursor: { type: 'string' },
+              cursor: {
+                type: 'string',
+              },
               records: {
                 type: 'array',
                 items: {
@@ -448,9 +590,15 @@ export const schemaDict = {
         type: 'object',
         required: ['uri', 'cid', 'value'],
         properties: {
-          uri: { type: 'string' },
-          cid: { type: 'string' },
-          value: { type: 'unknown' },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          value: {
+            type: 'unknown',
+          },
         },
       },
     },
@@ -468,18 +616,27 @@ export const schemaDict = {
             type: 'object',
             required: ['did', 'collection', 'rkey', 'record'],
             properties: {
-              did: { type: 'string', description: 'The DID of the repo.' },
+              did: {
+                type: 'string',
+                description: 'The DID of the repo.',
+              },
               collection: {
                 type: 'string',
                 description: 'The NSID of the record type.',
               },
-              rkey: { type: 'string', description: 'The TID of the record.' },
+              rkey: {
+                type: 'string',
+                description: 'The TID of the record.',
+              },
               validate: {
                 type: 'boolean',
                 default: true,
                 description: 'Validate the record?',
               },
-              record: { type: 'unknown', description: 'The record to create.' },
+              record: {
+                type: 'unknown',
+                description: 'The record to create.',
+              },
             },
           },
         },
@@ -488,7 +645,14 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['uri', 'cid'],
-            properties: { uri: { type: 'string' }, cid: { type: 'string' } },
+            properties: {
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+            },
           },
         },
       },
@@ -502,7 +666,14 @@ export const schemaDict = {
       main: {
         type: 'object',
         required: ['uri', 'cid'],
-        properties: { uri: { type: 'string' }, cid: { type: 'string' } },
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
       },
     },
   },
@@ -520,10 +691,14 @@ export const schemaDict = {
             type: 'object',
             required: ['availableUserDomains'],
             properties: {
-              inviteCodeRequired: { type: 'boolean' },
+              inviteCodeRequired: {
+                type: 'boolean',
+              },
               availableUserDomains: {
                 type: 'array',
-                items: { type: 'string' },
+                items: {
+                  type: 'string',
+                },
               },
               links: {
                 type: 'ref',
@@ -536,8 +711,12 @@ export const schemaDict = {
       links: {
         type: 'object',
         properties: {
-          privacyPolicy: { type: 'string' },
-          termsOfService: { type: 'string' },
+          privacyPolicy: {
+            type: 'string',
+          },
+          termsOfService: {
+            type: 'string',
+          },
         },
       },
     },
@@ -555,8 +734,12 @@ export const schemaDict = {
             type: 'object',
             required: ['handle', 'password'],
             properties: {
-              handle: { type: 'string' },
-              password: { type: 'string' },
+              handle: {
+                type: 'string',
+              },
+              password: {
+                type: 'string',
+              },
             },
           },
         },
@@ -566,10 +749,18 @@ export const schemaDict = {
             type: 'object',
             required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
             properties: {
-              accessJwt: { type: 'string' },
-              refreshJwt: { type: 'string' },
-              handle: { type: 'string' },
-              did: { type: 'string' },
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+              },
             },
           },
         },
@@ -580,7 +771,10 @@ export const schemaDict = {
     lexicon: 1,
     id: 'com.atproto.session.delete',
     defs: {
-      main: { type: 'procedure', description: 'Delete the current session.' },
+      main: {
+        type: 'procedure',
+        description: 'Delete the current session.',
+      },
     },
   },
   ComAtprotoSessionGet: {
@@ -595,7 +789,14 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['handle', 'did'],
-            properties: { handle: { type: 'string' }, did: { type: 'string' } },
+            properties: {
+              handle: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+              },
+            },
           },
         },
       },
@@ -614,10 +815,18 @@ export const schemaDict = {
             type: 'object',
             required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
             properties: {
-              accessJwt: { type: 'string' },
-              refreshJwt: { type: 'string' },
-              handle: { type: 'string' },
-              did: { type: 'string' },
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+              },
             },
           },
         },
@@ -635,11 +844,19 @@ export const schemaDict = {
           type: 'params',
           required: ['did'],
           properties: {
-            did: { type: 'string', description: 'The DID of the repo.' },
-            from: { type: 'string', description: 'A past commit CID.' },
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            from: {
+              type: 'string',
+              description: 'A past commit CID.',
+            },
           },
         },
-        output: { encoding: 'application/cbor' },
+        output: {
+          encoding: 'application/cbor',
+        },
       },
     },
   },
@@ -654,7 +871,10 @@ export const schemaDict = {
           type: 'params',
           required: ['did'],
           properties: {
-            did: { type: 'string', description: 'The DID of the repo.' },
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
           },
         },
         output: {
@@ -662,7 +882,11 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['root'],
-            properties: { root: { type: 'string' } },
+            properties: {
+              root: {
+                type: 'string',
+              },
+            },
           },
         },
       },
@@ -679,10 +903,15 @@ export const schemaDict = {
           type: 'params',
           required: ['did'],
           properties: {
-            did: { type: 'string', description: 'The DID of the repo.' },
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
           },
         },
-        input: { encoding: 'application/cbor' },
+        input: {
+          encoding: 'application/cbor',
+        },
       },
     },
   },
@@ -699,8 +928,12 @@ export const schemaDict = {
             type: 'object',
             required: ['handle'],
             properties: {
-              handle: { type: 'string' },
-              recoveryKey: { type: 'string' },
+              handle: {
+                type: 'string',
+              },
+              recoveryKey: {
+                type: 'string',
+              },
             },
           },
         },
@@ -710,13 +943,27 @@ export const schemaDict = {
             type: 'object',
             required: ['handle', 'did', 'declaration'],
             properties: {
-              handle: { type: 'string' },
-              did: { type: 'string' },
-              declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
+              handle: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+              },
+              declaration: {
+                type: 'ref',
+                ref: 'lex:app.bsky.system.declRef',
+              },
             },
           },
         },
-        errors: [{ name: 'InvalidHandle' }, { name: 'HandleNotAvailable' }],
+        errors: [
+          {
+            name: 'InvalidHandle',
+          },
+          {
+            name: 'HandleNotAvailable',
+          },
+        ],
       },
     },
   },
@@ -729,7 +976,11 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           required: ['actor'],
-          properties: { actor: { type: 'string' } },
+          properties: {
+            actor: {
+              type: 'string',
+            },
+          },
         },
         output: {
           encoding: 'application/json',
@@ -746,17 +997,42 @@ export const schemaDict = {
               'postsCount',
             ],
             properties: {
-              did: { type: 'string' },
-              declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-              handle: { type: 'string' },
-              creator: { type: 'string' },
-              displayName: { type: 'string', maxLength: 64 },
-              description: { type: 'string', maxLength: 256 },
-              avatar: { type: 'string' },
-              followersCount: { type: 'integer' },
-              followsCount: { type: 'integer' },
-              membersCount: { type: 'integer' },
-              postsCount: { type: 'integer' },
+              did: {
+                type: 'string',
+              },
+              declaration: {
+                type: 'ref',
+                ref: 'lex:app.bsky.system.declRef',
+              },
+              handle: {
+                type: 'string',
+              },
+              creator: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+              description: {
+                type: 'string',
+                maxLength: 256,
+              },
+              avatar: {
+                type: 'string',
+              },
+              followersCount: {
+                type: 'integer',
+              },
+              followsCount: {
+                type: 'integer',
+              },
+              membersCount: {
+                type: 'integer',
+              },
+              postsCount: {
+                type: 'integer',
+              },
               myState: {
                 type: 'ref',
                 ref: 'lex:app.bsky.actor.getProfile#myState',
@@ -767,7 +1043,14 @@ export const schemaDict = {
       },
       myState: {
         type: 'object',
-        properties: { follow: { type: 'string' }, member: { type: 'string' } },
+        properties: {
+          follow: {
+            type: 'string',
+          },
+          member: {
+            type: 'string',
+          },
+        },
       },
     },
   },
@@ -782,8 +1065,15 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            cursor: { type: 'string' },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -792,7 +1082,9 @@ export const schemaDict = {
             type: 'object',
             required: ['actors'],
             properties: {
-              cursor: { type: 'string' },
+              cursor: {
+                type: 'string',
+              },
               actors: {
                 type: 'array',
                 items: {
@@ -808,20 +1100,43 @@ export const schemaDict = {
         type: 'object',
         required: ['did', 'declaration', 'handle'],
         properties: {
-          did: { type: 'string' },
-          declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-          handle: { type: 'string' },
-          displayName: { type: 'string', maxLength: 64 },
-          description: { type: 'string' },
-          avatar: { type: 'string' },
-          indexedAt: { type: 'datetime' },
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          description: {
+            type: 'string',
+          },
+          avatar: {
+            type: 'string',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
           myState: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.getSuggestions#myState',
           },
         },
       },
-      myState: { type: 'object', properties: { follow: { type: 'string' } } },
+      myState: {
+        type: 'object',
+        properties: {
+          follow: {
+            type: 'string',
+          },
+        },
+      },
     },
   },
   AppBskyActorProfile: {
@@ -835,8 +1150,14 @@ export const schemaDict = {
           type: 'object',
           required: ['displayName'],
           properties: {
-            displayName: { type: 'string', maxLength: 64 },
-            description: { type: 'string', maxLength: 256 },
+            displayName: {
+              type: 'string',
+              maxLength: 64,
+            },
+            description: {
+              type: 'string',
+              maxLength: 256,
+            },
             avatar: {
               type: 'image',
               accept: ['image/png', 'image/jpeg'],
@@ -865,19 +1186,35 @@ export const schemaDict = {
         type: 'object',
         required: ['did', 'declarationCid'],
         properties: {
-          did: { type: 'string' },
-          declarationCid: { type: 'string' },
+          did: {
+            type: 'string',
+          },
+          declarationCid: {
+            type: 'string',
+          },
         },
       },
       withInfo: {
         type: 'object',
         required: ['did', 'declaration', 'handle'],
         properties: {
-          did: { type: 'string' },
-          declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-          handle: { type: 'string' },
-          displayName: { type: 'string', maxLength: 64 },
-          avatar: { type: 'string' },
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          avatar: {
+            type: 'string',
+          },
         },
       },
     },
@@ -893,9 +1230,18 @@ export const schemaDict = {
           type: 'params',
           required: ['term'],
           properties: {
-            term: { type: 'string' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            term: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -904,10 +1250,15 @@ export const schemaDict = {
             type: 'object',
             required: ['users'],
             properties: {
-              cursor: { type: 'string' },
+              cursor: {
+                type: 'string',
+              },
               users: {
                 type: 'array',
-                items: { type: 'ref', ref: 'lex:app.bsky.actor.search#user' },
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.search#user',
+                },
               },
             },
           },
@@ -917,13 +1268,29 @@ export const schemaDict = {
         type: 'object',
         required: ['did', 'declaration', 'handle'],
         properties: {
-          did: { type: 'string' },
-          declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-          handle: { type: 'string' },
-          displayName: { type: 'string', maxLength: 64 },
-          avatar: { type: 'string' },
-          description: { type: 'string' },
-          indexedAt: { type: 'datetime' },
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          avatar: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
         },
       },
     },
@@ -939,8 +1306,15 @@ export const schemaDict = {
           type: 'params',
           required: ['term'],
           properties: {
-            term: { type: 'string' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
+            term: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
           },
         },
         output: {
@@ -964,11 +1338,23 @@ export const schemaDict = {
         type: 'object',
         required: ['did', 'declaration', 'handle'],
         properties: {
-          did: { type: 'string' },
-          declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-          handle: { type: 'string' },
-          displayName: { type: 'string', maxLength: 64 },
-          avatar: { type: 'string' },
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          avatar: {
+            type: 'string',
+          },
         },
       },
     },
@@ -985,9 +1371,17 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {
-              did: { type: 'string' },
-              displayName: { type: 'string', maxLength: 64 },
-              description: { type: 'string', maxLength: 256 },
+              did: {
+                type: 'string',
+              },
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+              description: {
+                type: 'string',
+                maxLength: 256,
+              },
               avatar: {
                 type: 'image',
                 accept: ['image/png', 'image/jpeg'],
@@ -1004,9 +1398,15 @@ export const schemaDict = {
             type: 'object',
             required: ['uri', 'cid', 'record'],
             properties: {
-              uri: { type: 'string' },
-              cid: { type: 'string' },
-              record: { type: 'unknown' },
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+              record: {
+                type: 'unknown',
+              },
             },
           },
         },
@@ -1041,29 +1441,54 @@ export const schemaDict = {
         type: 'object',
         required: ['original'],
         properties: {
-          alt: { type: 'string' },
-          thumb: { type: 'image' },
-          original: { type: 'blob' },
+          alt: {
+            type: 'string',
+          },
+          thumb: {
+            type: 'image',
+          },
+          original: {
+            type: 'blob',
+          },
         },
       },
       record: {
         type: 'object',
         required: ['type', 'author', 'record'],
         properties: {
-          type: { type: 'string', const: 'record' },
-          author: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          record: { type: 'unknown' },
+          type: {
+            type: 'string',
+            const: 'record',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          record: {
+            type: 'unknown',
+          },
         },
       },
       external: {
         type: 'object',
         required: ['type', 'uri', 'title', 'description', 'imageUri'],
         properties: {
-          type: { type: 'string', const: 'external' },
-          uri: { type: 'string' },
-          title: { type: 'string' },
-          description: { type: 'string' },
-          imageUri: { type: 'string' },
+          type: {
+            type: 'string',
+            const: 'external',
+          },
+          uri: {
+            type: 'string',
+          },
+          title: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          imageUri: {
+            type: 'string',
+          },
         },
       },
     },
@@ -1079,9 +1504,18 @@ export const schemaDict = {
           type: 'params',
           required: ['author'],
           properties: {
-            author: { type: 'string' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            author: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1090,7 +1524,9 @@ export const schemaDict = {
             type: 'object',
             required: ['feed'],
             properties: {
-              cursor: { type: 'string' },
+              cursor: {
+                type: 'string',
+              },
               feed: {
                 type: 'array',
                 items: {
@@ -1116,18 +1552,46 @@ export const schemaDict = {
           'indexedAt',
         ],
         properties: {
-          uri: { type: 'string' },
-          cid: { type: 'string' },
-          author: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          trendedBy: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          repostedBy: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          record: { type: 'unknown' },
-          embed: { type: 'ref', ref: 'lex:app.bsky.feed.embed' },
-          replyCount: { type: 'integer' },
-          repostCount: { type: 'integer' },
-          upvoteCount: { type: 'integer' },
-          downvoteCount: { type: 'integer' },
-          indexedAt: { type: 'datetime' },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          trendedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          repostedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          record: {
+            type: 'unknown',
+          },
+          embed: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.embed',
+          },
+          replyCount: {
+            type: 'integer',
+          },
+          repostCount: {
+            type: 'integer',
+          },
+          upvoteCount: {
+            type: 'integer',
+          },
+          downvoteCount: {
+            type: 'integer',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
           myState: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.getAuthorFeed#myState',
@@ -1137,9 +1601,15 @@ export const schemaDict = {
       myState: {
         type: 'object',
         properties: {
-          repost: { type: 'string' },
-          upvote: { type: 'string' },
-          downvote: { type: 'string' },
+          repost: {
+            type: 'string',
+          },
+          upvote: {
+            type: 'string',
+          },
+          downvote: {
+            type: 'string',
+          },
         },
       },
     },
@@ -1153,7 +1623,14 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           required: ['uri'],
-          properties: { uri: { type: 'string' }, depth: { type: 'integer' } },
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            depth: {
+              type: 'integer',
+            },
+          },
         },
         output: {
           encoding: 'application/json',
@@ -1171,7 +1648,11 @@ export const schemaDict = {
             },
           },
         },
-        errors: [{ name: 'NotFound' }],
+        errors: [
+          {
+            name: 'NotFound',
+          },
+        ],
       },
       post: {
         type: 'object',
@@ -1187,11 +1668,23 @@ export const schemaDict = {
           'indexedAt',
         ],
         properties: {
-          uri: { type: 'string' },
-          cid: { type: 'string' },
-          author: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          record: { type: 'unknown' },
-          embed: { type: 'ref', ref: 'lex:app.bsky.feed.embed' },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          record: {
+            type: 'unknown',
+          },
+          embed: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.embed',
+          },
           parent: {
             type: 'union',
             refs: [
@@ -1199,7 +1692,9 @@ export const schemaDict = {
               'lex:app.bsky.feed.getPostThread#notFoundPost',
             ],
           },
-          replyCount: { type: 'integer' },
+          replyCount: {
+            type: 'integer',
+          },
           replies: {
             type: 'array',
             items: {
@@ -1210,10 +1705,18 @@ export const schemaDict = {
               ],
             },
           },
-          repostCount: { type: 'integer' },
-          upvoteCount: { type: 'integer' },
-          downvoteCount: { type: 'integer' },
-          indexedAt: { type: 'datetime' },
+          repostCount: {
+            type: 'integer',
+          },
+          upvoteCount: {
+            type: 'integer',
+          },
+          downvoteCount: {
+            type: 'integer',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
           myState: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.getPostThread#myState',
@@ -1224,16 +1727,27 @@ export const schemaDict = {
         type: 'object',
         required: ['uri', 'notFound'],
         properties: {
-          uri: { type: 'string' },
-          notFound: { type: 'boolean', const: true },
+          uri: {
+            type: 'string',
+          },
+          notFound: {
+            type: 'boolean',
+            const: true,
+          },
         },
       },
       myState: {
         type: 'object',
         properties: {
-          repost: { type: 'string' },
-          upvote: { type: 'string' },
-          downvote: { type: 'string' },
+          repost: {
+            type: 'string',
+          },
+          upvote: {
+            type: 'string',
+          },
+          downvote: {
+            type: 'string',
+          },
         },
       },
     },
@@ -1248,10 +1762,21 @@ export const schemaDict = {
           type: 'params',
           required: ['uri'],
           properties: {
-            uri: { type: 'string' },
-            cid: { type: 'string' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1260,9 +1785,15 @@ export const schemaDict = {
             type: 'object',
             required: ['uri', 'repostedBy'],
             properties: {
-              uri: { type: 'string' },
-              cid: { type: 'string' },
-              cursor: { type: 'string' },
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+              cursor: {
+                type: 'string',
+              },
               repostedBy: {
                 type: 'array',
                 items: {
@@ -1278,13 +1809,29 @@ export const schemaDict = {
         type: 'object',
         required: ['did', 'declaration', 'handle', 'indexedAt'],
         properties: {
-          did: { type: 'string' },
-          declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-          handle: { type: 'string' },
-          displayName: { type: 'string', maxLength: 64 },
-          avatar: { type: 'string' },
-          createdAt: { type: 'datetime' },
-          indexedAt: { type: 'datetime' },
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          avatar: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
         },
       },
     },
@@ -1299,9 +1846,18 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            algorithm: { type: 'string' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            algorithm: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1310,7 +1866,9 @@ export const schemaDict = {
             type: 'object',
             required: ['feed'],
             properties: {
-              cursor: { type: 'string' },
+              cursor: {
+                type: 'string',
+              },
               feed: {
                 type: 'array',
                 items: {
@@ -1336,18 +1894,46 @@ export const schemaDict = {
           'indexedAt',
         ],
         properties: {
-          uri: { type: 'string' },
-          cid: { type: 'string' },
-          author: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          trendedBy: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          repostedBy: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          record: { type: 'unknown' },
-          embed: { type: 'ref', ref: 'lex:app.bsky.feed.embed' },
-          replyCount: { type: 'integer' },
-          repostCount: { type: 'integer' },
-          upvoteCount: { type: 'integer' },
-          downvoteCount: { type: 'integer' },
-          indexedAt: { type: 'datetime' },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          trendedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          repostedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          record: {
+            type: 'unknown',
+          },
+          embed: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.embed',
+          },
+          replyCount: {
+            type: 'integer',
+          },
+          repostCount: {
+            type: 'integer',
+          },
+          upvoteCount: {
+            type: 'integer',
+          },
+          downvoteCount: {
+            type: 'integer',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
           myState: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.getTimeline#myState',
@@ -1357,9 +1943,15 @@ export const schemaDict = {
       myState: {
         type: 'object',
         properties: {
-          repost: { type: 'string' },
-          upvote: { type: 'string' },
-          downvote: { type: 'string' },
+          repost: {
+            type: 'string',
+          },
+          upvote: {
+            type: 'string',
+          },
+          downvote: {
+            type: 'string',
+          },
         },
       },
     },
@@ -1374,11 +1966,25 @@ export const schemaDict = {
           type: 'params',
           required: ['uri'],
           properties: {
-            uri: { type: 'string' },
-            cid: { type: 'string' },
-            direction: { type: 'string', enum: ['up', 'down'] },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+            direction: {
+              type: 'string',
+              enum: ['up', 'down'],
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1387,12 +1993,21 @@ export const schemaDict = {
             type: 'object',
             required: ['uri', 'votes'],
             properties: {
-              uri: { type: 'string' },
-              cid: { type: 'string' },
-              cursor: { type: 'string' },
+              uri: {
+                type: 'string',
+              },
+              cid: {
+                type: 'string',
+              },
+              cursor: {
+                type: 'string',
+              },
               votes: {
                 type: 'array',
-                items: { type: 'ref', ref: 'lex:app.bsky.feed.getVotes#vote' },
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.getVotes#vote',
+                },
               },
             },
           },
@@ -1402,10 +2017,20 @@ export const schemaDict = {
         type: 'object',
         required: ['direction', 'indexedAt', 'createdAt', 'actor'],
         properties: {
-          direction: { type: 'string', enum: ['up', 'down'] },
-          indexedAt: { type: 'datetime' },
-          createdAt: { type: 'datetime' },
-          actor: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
+          direction: {
+            type: 'string',
+            enum: ['up', 'down'],
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+          actor: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
         },
       },
     },
@@ -1421,18 +2046,32 @@ export const schemaDict = {
           type: 'object',
           required: ['text', 'createdAt'],
           properties: {
-            text: { type: 'string', maxLength: 256 },
+            text: {
+              type: 'string',
+              maxLength: 256,
+            },
             entities: {
               type: 'array',
-              items: { type: 'ref', ref: 'lex:app.bsky.feed.post#entity' },
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.post#entity',
+              },
             },
-            reply: { type: 'ref', ref: 'lex:app.bsky.feed.post#replyRef' },
+            reply: {
+              type: 'ref',
+              ref: 'lex:app.bsky.feed.post#replyRef',
+            },
             media: {
               type: 'array',
-              items: { type: 'ref', ref: 'lex:app.bsky.feed.post#media' },
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.post#media',
+              },
               maxLength: 4,
             },
-            createdAt: { type: 'datetime' },
+            createdAt: {
+              type: 'datetime',
+            },
           },
         },
       },
@@ -1440,29 +2079,46 @@ export const schemaDict = {
         type: 'object',
         required: ['root', 'parent'],
         properties: {
-          root: { type: 'ref', ref: 'lex:com.atproto.repo.strongRef' },
-          parent: { type: 'ref', ref: 'lex:com.atproto.repo.strongRef' },
+          root: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
+          parent: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
         },
       },
       entity: {
         type: 'object',
         required: ['index', 'type', 'value'],
         properties: {
-          index: { type: 'ref', ref: 'lex:app.bsky.feed.post#textSlice' },
+          index: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.post#textSlice',
+          },
           type: {
             type: 'string',
             description:
               "Expected values are 'mention', 'hashtag', and 'link'.",
           },
-          value: { type: 'string' },
+          value: {
+            type: 'string',
+          },
         },
       },
       textSlice: {
         type: 'object',
         required: ['start', 'end'],
         properties: {
-          start: { type: 'integer', minimum: 0 },
-          end: { type: 'integer', minimum: 0 },
+          start: {
+            type: 'integer',
+            minimum: 0,
+          },
+          end: {
+            type: 'integer',
+            minimum: 0,
+          },
         },
       },
       media: {
@@ -1485,8 +2141,13 @@ export const schemaDict = {
           type: 'object',
           required: ['subject', 'createdAt'],
           properties: {
-            subject: { type: 'ref', ref: 'lex:com.atproto.repo.strongRef' },
-            createdAt: { type: 'datetime' },
+            subject: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            createdAt: {
+              type: 'datetime',
+            },
           },
         },
       },
@@ -1505,8 +2166,14 @@ export const schemaDict = {
             type: 'object',
             required: ['subject', 'direction'],
             properties: {
-              subject: { type: 'ref', ref: 'lex:com.atproto.repo.strongRef' },
-              direction: { type: 'string', enum: ['up', 'down', 'none'] },
+              subject: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.strongRef',
+              },
+              direction: {
+                type: 'string',
+                enum: ['up', 'down', 'none'],
+              },
             },
           },
         },
@@ -1515,8 +2182,12 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {
-              upvote: { type: 'string' },
-              downvote: { type: 'string' },
+              upvote: {
+                type: 'string',
+              },
+              downvote: {
+                type: 'string',
+              },
             },
           },
         },
@@ -1534,8 +2205,13 @@ export const schemaDict = {
           type: 'object',
           required: ['subject', 'createdAt'],
           properties: {
-            subject: { type: 'ref', ref: 'lex:com.atproto.repo.strongRef' },
-            createdAt: { type: 'datetime' },
+            subject: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            createdAt: {
+              type: 'datetime',
+            },
           },
         },
       },
@@ -1552,9 +2228,17 @@ export const schemaDict = {
           type: 'object',
           required: ['subject', 'direction', 'createdAt'],
           properties: {
-            subject: { type: 'ref', ref: 'lex:com.atproto.repo.strongRef' },
-            direction: { type: 'string', enum: ['up', 'down'] },
-            createdAt: { type: 'datetime' },
+            subject: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            direction: {
+              type: 'string',
+              enum: ['up', 'down'],
+            },
+            createdAt: {
+              type: 'datetime',
+            },
           },
         },
       },
@@ -1593,9 +2277,16 @@ export const schemaDict = {
           type: 'object',
           required: ['assertion', 'subject', 'createdAt'],
           properties: {
-            assertion: { type: 'string' },
-            subject: { type: 'ref', ref: 'lex:app.bsky.actor.ref' },
-            createdAt: { type: 'datetime' },
+            assertion: {
+              type: 'string',
+            },
+            subject: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.ref',
+            },
+            createdAt: {
+              type: 'datetime',
+            },
           },
         },
       },
@@ -1612,9 +2303,17 @@ export const schemaDict = {
           type: 'object',
           required: ['originator', 'assertion', 'createdAt'],
           properties: {
-            originator: { type: 'ref', ref: 'lex:app.bsky.actor.ref' },
-            assertion: { type: 'ref', ref: 'lex:com.atproto.repo.strongRef' },
-            createdAt: { type: 'datetime' },
+            originator: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.ref',
+            },
+            assertion: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            createdAt: {
+              type: 'datetime',
+            },
           },
         },
       },
@@ -1632,8 +2331,13 @@ export const schemaDict = {
           type: 'object',
           required: ['subject', 'createdAt'],
           properties: {
-            subject: { type: 'ref', ref: 'lex:app.bsky.actor.ref' },
-            createdAt: { type: 'datetime' },
+            subject: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.ref',
+            },
+            createdAt: {
+              type: 'datetime',
+            },
           },
         },
       },
@@ -1649,12 +2353,27 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            author: { type: 'string' },
-            subject: { type: 'string' },
-            assertion: { type: 'string' },
-            confirmed: { type: 'boolean' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            author: {
+              type: 'string',
+            },
+            subject: {
+              type: 'string',
+            },
+            assertion: {
+              type: 'string',
+            },
+            confirmed: {
+              type: 'boolean',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1663,7 +2382,9 @@ export const schemaDict = {
             type: 'object',
             required: ['assertions'],
             properties: {
-              cursor: { type: 'string' },
+              cursor: {
+                type: 'string',
+              },
               assertions: {
                 type: 'array',
                 items: {
@@ -1687,27 +2408,51 @@ export const schemaDict = {
           'createdAt',
         ],
         properties: {
-          uri: { type: 'string' },
-          cid: { type: 'string' },
-          assertion: { type: 'string' },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          assertion: {
+            type: 'string',
+          },
           confirmation: {
             type: 'ref',
             ref: 'lex:app.bsky.graph.getAssertions#confirmation',
           },
-          author: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          subject: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-          indexedAt: { type: 'datetime' },
-          createdAt: { type: 'datetime' },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          subject: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
+          createdAt: {
+            type: 'datetime',
+          },
         },
       },
       confirmation: {
         type: 'object',
         required: ['uri', 'cid', 'indexedAt', 'createdAt'],
         properties: {
-          uri: { type: 'string' },
-          cid: { type: 'string' },
-          indexedAt: { type: 'datetime' },
-          createdAt: { type: 'datetime' },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
+          createdAt: {
+            type: 'datetime',
+          },
         },
       },
     },
@@ -1723,9 +2468,18 @@ export const schemaDict = {
           type: 'params',
           required: ['user'],
           properties: {
-            user: { type: 'string' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            user: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1734,8 +2488,13 @@ export const schemaDict = {
             type: 'object',
             required: ['subject', 'followers'],
             properties: {
-              subject: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-              cursor: { type: 'string' },
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.ref#withInfo',
+              },
+              cursor: {
+                type: 'string',
+              },
               followers: {
                 type: 'array',
                 items: {
@@ -1751,13 +2510,29 @@ export const schemaDict = {
         type: 'object',
         required: ['did', 'declaration', 'handle', 'indexedAt'],
         properties: {
-          did: { type: 'string' },
-          declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-          handle: { type: 'string' },
-          displayName: { type: 'string', maxLength: 64 },
-          avatar: { type: 'string' },
-          createdAt: { type: 'datetime' },
-          indexedAt: { type: 'datetime' },
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          avatar: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
         },
       },
     },
@@ -1773,9 +2548,18 @@ export const schemaDict = {
           type: 'params',
           required: ['user'],
           properties: {
-            user: { type: 'string' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            user: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1784,8 +2568,13 @@ export const schemaDict = {
             type: 'object',
             required: ['subject', 'follows'],
             properties: {
-              subject: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-              cursor: { type: 'string' },
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.ref#withInfo',
+              },
+              cursor: {
+                type: 'string',
+              },
               follows: {
                 type: 'array',
                 items: {
@@ -1801,12 +2590,26 @@ export const schemaDict = {
         type: 'object',
         required: ['did', 'declaration', 'handle', 'indexedAt'],
         properties: {
-          did: { type: 'string' },
-          declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-          handle: { type: 'string' },
-          displayName: { type: 'string', maxLength: 64 },
-          createdAt: { type: 'datetime' },
-          indexedAt: { type: 'datetime' },
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
         },
       },
     },
@@ -1822,9 +2625,18 @@ export const schemaDict = {
           type: 'params',
           required: ['actor'],
           properties: {
-            actor: { type: 'string' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            actor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1833,8 +2645,13 @@ export const schemaDict = {
             type: 'object',
             required: ['subject', 'members'],
             properties: {
-              subject: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-              cursor: { type: 'string' },
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.ref#withInfo',
+              },
+              cursor: {
+                type: 'string',
+              },
               members: {
                 type: 'array',
                 items: {
@@ -1850,12 +2667,26 @@ export const schemaDict = {
         type: 'object',
         required: ['did', 'declaration', 'handle', 'indexedAt'],
         properties: {
-          did: { type: 'string' },
-          declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-          handle: { type: 'string' },
-          displayName: { type: 'string', maxLength: 64 },
-          createdAt: { type: 'datetime' },
-          indexedAt: { type: 'datetime' },
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
         },
       },
     },
@@ -1871,9 +2702,18 @@ export const schemaDict = {
           type: 'params',
           required: ['actor'],
           properties: {
-            actor: { type: 'string' },
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            actor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1882,8 +2722,13 @@ export const schemaDict = {
             type: 'object',
             required: ['subject', 'memberships'],
             properties: {
-              subject: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
-              cursor: { type: 'string' },
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.ref#withInfo',
+              },
+              cursor: {
+                type: 'string',
+              },
               memberships: {
                 type: 'array',
                 items: {
@@ -1899,12 +2744,26 @@ export const schemaDict = {
         type: 'object',
         required: ['did', 'declaration', 'handle', 'indexedAt'],
         properties: {
-          did: { type: 'string' },
-          declaration: { type: 'ref', ref: 'lex:app.bsky.system.declRef' },
-          handle: { type: 'string' },
-          displayName: { type: 'string', maxLength: 64 },
-          createdAt: { type: 'datetime' },
-          indexedAt: { type: 'datetime' },
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
         },
       },
     },
@@ -1920,7 +2779,11 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['count'],
-            properties: { count: { type: 'integer' } },
+            properties: {
+              count: {
+                type: 'integer',
+              },
+            },
           },
         },
       },
@@ -1935,8 +2798,15 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-            before: { type: 'string' },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -1945,7 +2815,9 @@ export const schemaDict = {
             type: 'object',
             required: ['notifications'],
             properties: {
-              cursor: { type: 'string' },
+              cursor: {
+                type: 'string',
+              },
               notifications: {
                 type: 'array',
                 items: {
@@ -1969,9 +2841,16 @@ export const schemaDict = {
           'indexedAt',
         ],
         properties: {
-          uri: { type: 'string' },
-          cid: { type: 'string' },
-          author: { type: 'ref', ref: 'lex:app.bsky.actor.ref#withInfo' },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
           reason: {
             type: 'string',
             description:
@@ -1986,10 +2865,18 @@ export const schemaDict = {
               'reply',
             ],
           },
-          reasonSubject: { type: 'string' },
-          record: { type: 'unknown' },
-          isRead: { type: 'boolean' },
-          indexedAt: { type: 'datetime' },
+          reasonSubject: {
+            type: 'string',
+          },
+          record: {
+            type: 'unknown',
+          },
+          isRead: {
+            type: 'boolean',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
         },
       },
     },
@@ -2006,7 +2893,11 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['seenAt'],
-            properties: { seenAt: { type: 'datetime' } },
+            properties: {
+              seenAt: {
+                type: 'datetime',
+              },
+            },
           },
         },
       },
@@ -2043,7 +2934,9 @@ export const schemaDict = {
         type: 'object',
         required: ['cid', 'actorType'],
         properties: {
-          cid: { type: 'string' },
+          cid: {
+            type: 'string',
+          },
           actorType: {
             type: 'string',
             knownValues: [
@@ -2081,7 +2974,7 @@ export const schemaDict = {
     },
   },
 }
-export const schemas: LexiconDoc[] = Object.values(schemaDict)
+export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAccountCreate: 'com.atproto.account.create',
