@@ -50,9 +50,9 @@
     },
     "images": {
       "type": "object",
-      "required": ["embed"],
+      "required": ["images"],
       "properties": {
-        "embed": {
+        "images": {
           "type": "array",
           "items": {"type": "ref", "ref": "com.atproto.embed.image"},
           "maxLength": 4
@@ -61,9 +61,9 @@
     },
     "external": {
       "type": "object",
-      "required": ["embed"],
+      "required": ["external"],
       "properties": {
-        "embed": {
+        "external": {
           "type": "ref",
           "ref": "com.atproto.embed.external"
         }

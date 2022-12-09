@@ -2105,9 +2105,9 @@ export const schemaDict = {
       },
       images: {
         type: 'object',
-        required: ['embed'],
+        required: ['images'],
         properties: {
-          embed: {
+          images: {
             type: 'array',
             items: {
               type: 'ref',
@@ -2119,9 +2119,9 @@ export const schemaDict = {
       },
       external: {
         type: 'object',
-        required: ['embed'],
+        required: ['external'],
         properties: {
-          embed: {
+          external: {
             type: 'ref',
             ref: 'lex:com.atproto.embed.external',
           },

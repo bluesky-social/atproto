@@ -35,11 +35,11 @@ export interface TextSlice {
 }
 
 export interface Images {
-  embed: ComAtprotoEmbedImage.Main[]
+  images: ComAtprotoEmbedImage.Main[]
   [k: string]: unknown
 }
 
 export interface External {
-  embed: ComAtprotoEmbedExternal.Main
+  external: ComAtprotoEmbedExternal.Main
   [k: string]: unknown
 }
