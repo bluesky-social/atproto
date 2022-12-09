@@ -23,23 +23,23 @@ export const blobsForWrite = (
   write: RecordCreateOp | RecordUpdateOp,
 ): BlobRef[] => {
   if (write.collection === lex.ids.AppBskyActorProfile) {
+    const doc = lex.schemaDict.AppBskyActorProfile
+    const refs: BlobRef[] = []
     if (write.value.avatar) {
-      const doc = lex.schemaDict.AppBskyActorProfile
-      return [
-        {
-          cid: CID.parse(write.value.avatar.cid),
-          mimeType: write.value.avatar.mimeType,
-          constraints: doc.defs.main.record.properties
-            .avatar as ImageConstraint,
-        },
-        {
-          cid: CID.parse(write.value.banner.cid),
-          mimeType: write.value.banner.mimeType,
-          constraints: doc.defs.main.record.properties
-            .banner as ImageConstraint,
-        },
-      ]
+      refs.push({
+        cid: CID.parse(write.value.avatar.cid),
+        mimeType: write.value.avatar.mimeType,
+        constraints: doc.defs.main.record.properties.avatar as ImageConstraint,
+      })
     }
+    if (write.value.banner) {
+      refs.push({
+        cid: CID.parse(write.value.banner.cid),
+        mimeType: write.value.banner.mimeType,
+        constraints: doc.defs.main.record.properties.banner as ImageConstraint,
+      })
+    }
+    return refs
   }
   return []
 }

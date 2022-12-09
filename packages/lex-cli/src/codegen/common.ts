@@ -42,12 +42,14 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
               }),
               {},
             ),
+            null,
+            2,
           ),
         },
       ],
     })
 
-    //= export const schemas: LexiconDoc[] = Object.values(schemaDict)
+    //= export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
@@ -55,7 +57,7 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
         {
           name: 'schemas',
           type: 'LexiconDoc[]',
-          initializer: 'Object.values(schemaDict)',
+          initializer: 'Object.values(schemaDict) as LexiconDoc[]',
         },
       ],
     })
