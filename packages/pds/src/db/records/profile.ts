@@ -26,6 +26,7 @@ const insertFn = async (
       displayName: obj.displayName,
       description: obj.description,
       avatarCid: obj.avatar?.cid,
+      bannerCid: obj.banner?.cid,
       indexedAt: new Date().toISOString(),
     })
     .onConflict((oc) => oc.doNothing())
