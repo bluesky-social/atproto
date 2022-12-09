@@ -29,7 +29,7 @@
             "accept": ["image/png", "image/jpeg"],
             "maxWidth": 1500,
             "maxHeight": 500,
-            "maxSize": 1000000
+            "maxSize": 500000
           }
         }
       }

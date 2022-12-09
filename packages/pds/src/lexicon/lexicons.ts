@@ -1170,7 +1170,7 @@ export const schemaDict = {
               accept: ['image/png', 'image/jpeg'],
               maxWidth: 1500,
               maxHeight: 500,
-              maxSize: 1000000,
+              maxSize: 500000,
             },
           },
         },
@@ -2061,14 +2061,6 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.feed.post#replyRef',
             },
-            media: {
-              type: 'array',
-              items: {
-                type: 'ref',
-                ref: 'lex:app.bsky.feed.post#media',
-              },
-              maxLength: 4,
-            },
             createdAt: {
               type: 'datetime',
             },
@@ -2120,13 +2112,6 @@ export const schemaDict = {
             minimum: 0,
           },
         },
-      },
-      media: {
-        type: 'image',
-        accept: ['image/png', 'image/jpeg'],
-        maxWidth: 500,
-        maxHeight: 500,
-        maxSize: 300000,
       },
     },
   },
