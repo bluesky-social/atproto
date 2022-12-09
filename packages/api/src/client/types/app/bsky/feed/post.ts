@@ -7,6 +7,7 @@ export interface Record {
   text: string
   entities?: Entity[]
   reply?: ReplyRef
+  media?: Media[]
   createdAt: string
   [k: string]: unknown
 }
@@ -30,3 +31,5 @@ export interface TextSlice {
   end: number
   [k: string]: unknown
 }
+
+export type Media = { cid: string; mimeType: string; [k: string]: unknown }

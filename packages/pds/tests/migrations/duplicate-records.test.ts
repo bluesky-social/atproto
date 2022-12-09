@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/uri'
 import { Database } from '../../src'
 import { cidForData, TID } from '@atproto/common'
-import * as schemas from '../../src/db/schemas'
+import * as lex from '../../src/lexicon/lexicons'
 import { APP_BSKY_GRAPH } from '../../src/lexicon'
 
 describe('duplicate record', () => {
@@ -37,15 +37,11 @@ describe('duplicate record', () => {
   }
 
   it('has duplicate records', async () => {
-    const subjectUri = AtUri.make(
-      did,
-      schemas.ids.AppBskyFeedPost,
-      TID.nextStr(),
-    )
+    const subjectUri = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await cidForData({ test: 'blah' })
     const subjectDid = 'did:example:bob'
     const repost = {
-      $type: schemas.ids.AppBskyFeedRepost,
+      $type: lex.ids.AppBskyFeedRepost,
       subject: {
         uri: subjectUri.toString(),
         cid: subjectCid.toString(),
@@ -54,7 +50,7 @@ describe('duplicate record', () => {
     }
     await indexRecord(repost, 5)
     const trend = {
-      $type: schemas.ids.AppBskyFeedTrend,
+      $type: lex.ids.AppBskyFeedTrend,
       subject: {
         uri: subjectUri.toString(),
         cid: subjectCid.toString(),
@@ -63,7 +59,7 @@ describe('duplicate record', () => {
     }
     await indexRecord(trend, 5)
     const vote = {
-      $type: schemas.ids.AppBskyFeedVote,
+      $type: lex.ids.AppBskyFeedVote,
       direction: 'up',
       subject: {
         uri: subjectUri.toString(),
@@ -73,7 +69,7 @@ describe('duplicate record', () => {
     }
     await indexRecord(vote, 5)
     const follow = {
-      $type: schemas.ids.AppBskyGraphFollow,
+      $type: lex.ids.AppBskyGraphFollow,
       subject: {
         did: subjectDid,
         declarationCid: subjectCid.toString(),
@@ -82,7 +78,7 @@ describe('duplicate record', () => {
     }
     await indexRecord(follow, 5)
     const assertMember = {
-      $type: schemas.ids.AppBskyGraphAssertion,
+      $type: lex.ids.AppBskyGraphAssertion,
       assertion: APP_BSKY_GRAPH.AssertMember,
       subject: {
         did: subjectDid,
@@ -92,7 +88,7 @@ describe('duplicate record', () => {
     }
     await indexRecord(assertMember, 5)
     const assertCreator = {
-      $type: schemas.ids.AppBskyGraphAssertion,
+      $type: lex.ids.AppBskyGraphAssertion,
       assertion: APP_BSKY_GRAPH.AssertCreator,
       subject: {
         did: subjectDid,

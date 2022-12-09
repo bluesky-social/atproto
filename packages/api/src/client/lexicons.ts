@@ -1165,6 +1165,13 @@ export const lexicons: LexiconDoc[] = [
               maxHeight: 500,
               maxSize: 300000,
             },
+            banner: {
+              type: 'image',
+              accept: ['image/png', 'image/jpeg'],
+              maxWidth: 1500,
+              maxHeight: 500,
+              maxSize: 1000000,
+            },
           },
         },
       },
@@ -2054,6 +2061,14 @@ export const lexicons: LexiconDoc[] = [
               type: 'ref',
               ref: 'lex:app.bsky.feed.post#replyRef',
             },
+            media: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.post#media',
+              },
+              maxLength: 4,
+            },
             createdAt: {
               type: 'datetime',
             },
@@ -2105,6 +2120,13 @@ export const lexicons: LexiconDoc[] = [
             minimum: 0,
           },
         },
+      },
+      media: {
+        type: 'image',
+        accept: ['image/png', 'image/jpeg'],
+        maxWidth: 500,
+        maxHeight: 500,
+        maxSize: 300000,
       },
     },
   },

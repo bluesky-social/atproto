@@ -15,6 +15,11 @@
             "items": {"type": "ref", "ref": "#entity"}
           },
           "reply": {"type": "ref", "ref": "#replyRef"},
+          "media": {
+            "type": "array",
+            "items": {"type": "ref", "ref": "#media"},
+            "maxLength": 4
+          },
           "createdAt": {"type": "datetime"}
         }
       }
@@ -46,6 +51,13 @@
         "start": {"type": "integer", "minimum": 0},
         "end": {"type": "integer", "minimum": 0}
       }
+    },
+    "media": {
+      "type": "image",
+      "accept": ["image/png", "image/jpeg"],
+      "maxWidth": 500,
+      "maxHeight": 500,
+      "maxSize": 300000
     }
   }
 }

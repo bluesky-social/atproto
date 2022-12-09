@@ -25,17 +25,50 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
       .addImportDeclaration({
         moduleSpecifier: '@atproto/lexicon',
       })
-      .addNamedImports([{ name: 'LexiconDoc' }])
+      .addNamedImports([{ name: 'LexiconDoc' }, { name: 'Lexicons' }])
 
-    //= export const lexicons: LexiconDoc[] = [...]
+    //= export const schemaDict: Record<string, LexiconDoc> = {...}
+    file.addVariableStatement({
+      isExported: true,
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: 'schemaDict',
+          initializer: JSON.stringify(
+            lexicons.reduce(
+              (acc, cur) => ({
+                ...acc,
+                [nsidToEnum(cur.id)]: cur,
+              }),
+              {},
+            ),
+          ),
+        },
+      ],
+    })
+
+    //= export const schemas: LexiconDoc[] = Object.values(schemaDict)
+    file.addVariableStatement({
+      isExported: true,
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name: 'schemas',
+          type: 'LexiconDoc[]',
+          initializer: 'Object.values(schemaDict)',
+        },
+      ],
+    })
+
+    //= export const lexicons: Lexicons = new Lexicons(schemas)
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
           name: 'lexicons',
-          type: 'LexiconDoc[]',
-          initializer: JSON.stringify(lexicons, null, 2),
+          type: 'Lexicons',
+          initializer: 'new Lexicons(schemas)',
         },
       ],
     })

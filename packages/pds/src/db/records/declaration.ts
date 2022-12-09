@@ -2,13 +2,13 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Declaration from '../../lexicon/types/app/bsky/system/declaration'
-import * as schemas from '../schemas'
+import * as lex from '../../lexicon/lexicons'
 import { DidHandle } from '../tables/did-handle'
 import { Message } from '../message-queue/messages'
 import RecordProcessor from '../record-processor'
 import DatabaseSchema from '../database-schema'
 
-const schemaId = schemas.ids.AppBskySystemDeclaration
+const lexId = lex.ids.AppBskySystemDeclaration
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
@@ -47,7 +47,7 @@ export type PluginType = RecordProcessor<Declaration.Record, DidHandle>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
-    schemaId,
+    lexId,
     insertFn,
     findDuplicate,
     deleteFn,
