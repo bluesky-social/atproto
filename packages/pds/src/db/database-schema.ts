@@ -18,10 +18,10 @@ import * as trend from './tables/trend'
 import * as follow from './tables/follow'
 import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
-import * as messageQueue from './message-queue/tables/messageQueue'
-import * as messageQueueCursor from './message-queue/tables/messageQueueCursor'
-import * as sceneMemberCount from './message-queue/tables/sceneMemberCount'
-import * as sceneVotesOnPost from './message-queue/tables/sceneVotesOnPost'
+import * as messageQueue from './message-queue/tables/message-queue'
+import * as messageQueueCursor from './message-queue/tables/message-queue-cursor'
+import * as sceneMemberCount from './message-queue/tables/scene-member-count'
+import * as sceneVotesOnPost from './message-queue/tables/scene-votes-on-post'
 
 export type DatabaseSchema = user.PartialDB &
   didHandle.PartialDB &

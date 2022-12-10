@@ -1,12 +1,12 @@
 import { DidableKey } from '@atproto/crypto'
 import ServerAuth from '../../auth'
 import { MessageQueue } from '../../db/types'
-import AddMember from './add-member'
-import RemoveMember from './remove-member'
-import AddUpvote from './add-upvote'
-import RemoveUpvote from './remove-upvote'
-import CreateNotification from './create-notification'
-import DeleteNotifications from './delete-notifications'
+import AddMemberConsumer from './add-member'
+import RemoveMemberConsumer from './remove-member'
+import AddUpvoteConsumer from './add-upvote'
+import RemoveUpvoteConsumer from './remove-upvote'
+import CreateNotificationConsumer from './create-notification'
+import DeleteNotificationsConsumer from './delete-notifications'
 
 export const listen = (
   messageQueue: MessageQueue,
@@ -16,13 +16,10 @@ export const listen = (
   const getAuthStore = (did: string) => {
     return auth.verifier.loadAuthStore(keypair, [], did)
   }
-  messageQueue.listen('add_member', new AddMember().listener)
-  messageQueue.listen('remove_member', new RemoveMember().listener)
-  messageQueue.listen('add_upvote', new AddUpvote(getAuthStore).listener)
-  messageQueue.listen('remove_upvote', new RemoveUpvote().listener)
-  messageQueue.listen('create_notification', new CreateNotification().listener)
-  messageQueue.listen(
-    'delete_notifications',
-    new DeleteNotifications().listener,
-  )
+  messageQueue.listen('add_member', new AddMemberConsumer())
+  messageQueue.listen('remove_member', new RemoveMemberConsumer())
+  messageQueue.listen('add_upvote', new AddUpvoteConsumer(getAuthStore))
+  messageQueue.listen('remove_upvote', new RemoveUpvoteConsumer())
+  messageQueue.listen('create_notification', new CreateNotificationConsumer())
+  messageQueue.listen('delete_notifications', new DeleteNotificationsConsumer())
 }

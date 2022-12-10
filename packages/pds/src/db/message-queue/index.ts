@@ -1,6 +1,6 @@
 import Database from '..'
 import { dbLogger as log } from '../../logger'
-import { Listener, BaseMessage as Msg } from '../../stream/types'
+import { Listenable, Listener, MessageOfType } from '../../stream/types'
 import { MessageQueue } from '../types'
 
 export class SqlMessageQueue implements MessageQueue {
@@ -12,7 +12,10 @@ export class SqlMessageQueue implements MessageQueue {
     this.ensureCaughtUp()
   }
 
-  async send(tx: Database, messages: Msg | Msg[]): Promise<void> {
+  async send(
+    tx: Database,
+    messages: MessageOfType | MessageOfType[],
+  ): Promise<void> {
     const msgArray = Array.isArray(messages) ? messages : [messages]
     if (msgArray.length === 0) return
     const now = new Date().toISOString()
@@ -29,8 +32,12 @@ export class SqlMessageQueue implements MessageQueue {
     }
   }
 
-  listen<T extends string, M extends Msg<T>>(topic: T, listener: Listener<M>) {
+  listen<T extends string, M extends MessageOfType<T>>(
+    topic: T,
+    listenable: Listenable<M>,
+  ) {
     const listeners = this.listeners.get(topic) ?? []
+    const listener = 'listener' in listenable ? listenable.listener : listenable
     listeners.push(listener as Listener) // @TODO avoid upcast
     this.listeners.set(topic, listeners)
   }
@@ -78,7 +85,7 @@ export class SqlMessageQueue implements MessageQueue {
       if (res.length === 0) return
 
       for (const row of res) {
-        const message: Msg = JSON.parse(row.message)
+        const message: MessageOfType = JSON.parse(row.message)
         await this.handleMessage(dbTxn, message)
       }
       const nextCursor = res[res.length - 1].id + 1
@@ -110,7 +117,7 @@ export class SqlMessageQueue implements MessageQueue {
       // all caught up
       if (!res) return
 
-      const message: Msg = JSON.parse(res.message)
+      const message: MessageOfType = JSON.parse(res.message)
       await this.handleMessage(dbTxn, message)
 
       const nextCursor = res.id + 1
@@ -123,7 +130,7 @@ export class SqlMessageQueue implements MessageQueue {
     })
   }
 
-  private async handleMessage(db: Database, message: Msg) {
+  private async handleMessage(db: Database, message: MessageOfType) {
     const listeners = this.listeners.get(message.type)
     if (!listeners?.length) {
       return log.error({ message }, `no listeners for event: ${message.type}`)
