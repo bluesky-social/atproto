@@ -22,11 +22,11 @@ export type RemoveUpvote = {
   subject: string
 }
 
-export type CreateNotification = NotficationInfo & {
+export type CreateNotification = NotificationInfo & {
   type: 'create_notification'
 }
 
-export type NotficationInfo = {
+export type NotificationInfo = {
   userDid: string
   author: string
   recordUri: string
@@ -83,7 +83,7 @@ export const removeUpvote = (user: string, subject: string): RemoveUpvote => ({
 })
 
 export const createNotification = (
-  notif: NotficationInfo,
+  notif: NotificationInfo,
 ): CreateNotification => ({
   type: 'create_notification',
   ...notif,
