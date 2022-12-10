@@ -23,3 +23,14 @@ export abstract class Consumer<M extends MessageOfType> {
     return this.dispatch.bind(this)
   }
 }
+
+export interface MessageQueue {
+  send(tx: Database, message: MessageOfType | MessageOfType[]): Promise<void>
+  listen<T extends string, M extends MessageOfType<T>>(
+    topic: T,
+    listenable: Listenable<M>,
+  ): void
+  processNext(): Promise<void>
+  processAll(): Promise<void>
+  destroy(): void
+}

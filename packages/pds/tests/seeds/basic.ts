@@ -1,4 +1,4 @@
-import { MessageQueue } from '../../src/db/types'
+import { MessageQueue } from '../../src/stream/types'
 import { SeedClient } from './client'
 import scenesSeed from './scenes'
 import usersSeed from './users'

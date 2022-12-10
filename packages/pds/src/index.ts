@@ -19,7 +19,7 @@ import { ServerConfig, ServerConfigValues } from './config'
 import { Locals } from './locals'
 import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
-import SqlMessageQueue from './db/message-queue'
+import SqlMessageQueue from './stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 

@@ -25,7 +25,7 @@ import { CtxMigrationProvider } from './migrations/provider'
 import { DidHandle } from './tables/did-handle'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
 import { APP_BSKY_GRAPH } from '../lexicon'
-import { MessageQueue } from './types'
+import { MessageQueue } from '../stream/types'
 
 export class Database {
   migrator: Migrator

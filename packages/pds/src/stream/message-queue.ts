@@ -1,7 +1,6 @@
-import Database from '..'
-import { dbLogger as log } from '../../logger'
-import { Listenable, Listener, MessageOfType } from '../../stream/types'
-import { MessageQueue } from '../types'
+import Database from '../db'
+import { dbLogger as log } from '../logger'
+import { MessageQueue, Listenable, Listener, MessageOfType } from './types'
 
 export class SqlMessageQueue implements MessageQueue {
   private cursorExists = false

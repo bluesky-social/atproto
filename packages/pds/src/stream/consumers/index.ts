@@ -1,12 +1,12 @@
 import { DidableKey } from '@atproto/crypto'
 import ServerAuth from '../../auth'
-import { MessageQueue } from '../../db/types'
 import AddMemberConsumer from './add-member'
 import RemoveMemberConsumer from './remove-member'
 import AddUpvoteConsumer from './add-upvote'
 import RemoveUpvoteConsumer from './remove-upvote'
 import CreateNotificationConsumer from './create-notification'
 import DeleteNotificationsConsumer from './delete-notifications'
+import { MessageQueue } from '../types'
 
 export const listen = (
   messageQueue: MessageQueue,
