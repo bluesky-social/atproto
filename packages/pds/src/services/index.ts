@@ -10,7 +10,7 @@ export function createServices(
 ): Services {
   const actor = new ActorService(db)
   const record = new RecordService(db, messageQueue)
-  const repo = new RepoService(db)
+  const repo = new RepoService(db, messageQueue)
   return { actor, record, repo }
 }
 

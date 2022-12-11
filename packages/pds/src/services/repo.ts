@@ -1,12 +1,20 @@
 import { CID } from 'multiformats/cid'
-import { dbLogger as log } from '../logger'
+import * as auth from '@atproto/auth'
+import { BlobStore, Repo } from '@atproto/repo'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../db'
+import { dbLogger as log } from '../logger'
+import { MessageQueue } from '../stream/types'
+import SqlBlockstore from '../sql-blockstore'
+import { processWriteBlobs } from '../repo/blobs'
+import { PreparedCreate, PreparedWrites } from '../repo/types'
+import { RecordService } from '../services/record'
 
 export class RepoService {
-  constructor(public db: Database) {}
+  constructor(public db: Database, public messageQueue: MessageQueue) {}
 
   using(db: Database) {
-    return new RepoService(db)
+    return new RepoService(db, this.messageQueue)
   }
 
   async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {
@@ -67,5 +75,84 @@ export class RepoService {
       .select('scene.owner')
       .executeTakeFirst()
     return !!found
+  }
+
+  async createRepo(
+    did: string,
+    authStore: auth.AuthStore,
+    writes: PreparedCreate[],
+    now: string,
+  ) {
+    this.db.assertTransaction()
+    const blockstore = new SqlBlockstore(this.db, did, now)
+    const writeOps = writes.map((write) => write.op)
+    const repo = await Repo.create(blockstore, did, authStore, writeOps)
+    await this.db.db
+      .insertInto('repo_root')
+      .values({
+        did: did,
+        root: repo.cid.toString(),
+        indexedAt: now,
+      })
+      .execute()
+  }
+
+  async processWrites(
+    did: string,
+    authStore: auth.AuthStore,
+    blobs: BlobStore,
+    writes: PreparedWrites,
+    now: string,
+  ) {
+    // make structural write to repo & send to indexing
+    // @TODO get commitCid first so we can do all db actions in tandem
+    const [commit] = await Promise.all([
+      this.writeToRepo(did, authStore, writes, now),
+      this.indexWrites(writes, now),
+    ])
+    // make blobs permanent & associate w commit + recordUri in DB
+    await processWriteBlobs(this.db, blobs, did, commit, writes)
+  }
+
+  async writeToRepo(
+    did: string,
+    authStore: auth.AuthStore,
+    writes: PreparedWrites,
+    now: string,
+  ): Promise<CID> {
+    this.db.assertTransaction()
+    const blockstore = new SqlBlockstore(this.db, did, now)
+    const currRoot = await this.getRepoRoot(did, true)
+    if (!currRoot) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
+    const writeOps = writes.map((write) => write.op)
+    const repo = await Repo.load(blockstore, currRoot)
+    const updated = await repo
+      .stageUpdate(writeOps)
+      .createCommit(authStore, async (prev, curr) => {
+        const success = await this.updateRepoRoot(did, curr, prev, now)
+        if (!success) {
+          throw new Error('Repo root update failed, could not linearize')
+        }
+        return null
+      })
+    return updated.cid
+  }
+
+  async indexWrites(writes: PreparedWrites, now: string) {
+    this.db.assertTransaction()
+    const recordTxn = new RecordService(this.db, this.messageQueue)
+    await Promise.all(
+      writes.map(async (write) => {
+        if (write.action === 'create') {
+          await recordTxn.indexRecord(write.uri, write.cid, write.op.value, now)
+        } else if (write.action === 'delete') {
+          await recordTxn.deleteRecord(write.uri)
+        }
+      }),
+    )
   }
 }

@@ -36,8 +36,7 @@ export default function (server: Server) {
 
   server.com.atproto.account.create(async ({ input, res }) => {
     const { email, password, inviteCode, recoveryKey } = input.body
-    const { db, services, auth, config, keypair, logger, messageQueue } =
-      locals.get(res)
+    const { db, services, auth, config, keypair, logger } = locals.get(res)
 
     let handle: string
     try {
@@ -62,6 +61,7 @@ export default function (server: Server) {
 
     const result = await db.transaction(async (dbTxn) => {
       const actorTxn = services.actor.using(dbTxn)
+      const repoTxn = services.repo.using(dbTxn)
       if (config.inviteRequired) {
         if (!inviteCode) {
           throw new InvalidRequestError(
@@ -156,8 +156,8 @@ export default function (server: Server) {
 
       // Setup repo root
       const authStore = locals.getAuthstore(res, did)
-      await repo.createRepo(dbTxn, did, authStore, [write], now)
-      await repo.indexWrites(dbTxn, messageQueue, [write], now)
+      await repoTxn.createRepo(did, authStore, [write], now)
+      await repoTxn.indexWrites([write], now)
 
       const declarationCid = await cidForData(declaration)
       const access = auth.createAccessToken(did)

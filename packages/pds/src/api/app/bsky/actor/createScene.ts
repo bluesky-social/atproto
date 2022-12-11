@@ -14,8 +14,7 @@ export default function (server: Server) {
   server.app.bsky.actor.createScene({
     auth: ServerAuth.verifier,
     handler: async ({ auth, input, res }) => {
-      const { db, services, config, keypair, logger, messageQueue } =
-        locals.get(res)
+      const { db, services, config, keypair, logger } = locals.get(res)
       const { recoveryKey } = input.body
       const requester = auth.credentials.did
 
@@ -42,6 +41,7 @@ export default function (server: Server) {
 
       const result = await db.transaction(async (dbTxn) => {
         const actorTxn = services.actor.using(dbTxn)
+        const repoTxn = services.repo.using(dbTxn)
         // Pre-register before going out to PLC to get a real did
         try {
           await actorTxn.preregisterDid(handle, tempDid)
@@ -171,14 +171,9 @@ export default function (server: Server) {
         ])
 
         await Promise.all([
-          repo.createRepo(dbTxn, did, sceneAuth, sceneWrites, now),
-          repo.writeToRepo(dbTxn, requester, userAuth, userWrites, now),
-          repo.indexWrites(
-            dbTxn,
-            messageQueue,
-            [...sceneWrites, ...userWrites],
-            now,
-          ),
+          repoTxn.createRepo(did, sceneAuth, sceneWrites, now),
+          repoTxn.writeToRepo(requester, userAuth, userWrites, now),
+          repoTxn.indexWrites([...sceneWrites, ...userWrites], now),
         ])
 
         return {

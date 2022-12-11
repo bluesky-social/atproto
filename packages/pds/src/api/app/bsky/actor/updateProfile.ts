@@ -34,6 +34,7 @@ export default function (server: Server) {
           dbTxn,
         ): Promise<{ profileCid: CID; updated: Profile.Record }> => {
           const recordTxn = services.record.using(dbTxn)
+          const repoTxn = services.repo.using(dbTxn)
           const now = new Date().toISOString()
 
           let updated
@@ -73,13 +74,7 @@ export default function (server: Server) {
             value: updated,
           })
 
-          const commit = await repo.writeToRepo(
-            dbTxn,
-            did,
-            authStore,
-            writes,
-            now,
-          )
+          const commit = await repoTxn.writeToRepo(did, authStore, writes, now)
           await repo.processWriteBlobs(dbTxn, blobstore, did, commit, writes)
 
           const write = writes[0]

@@ -7,6 +7,7 @@ import * as lexicons from '../../lexicon/lexicons'
 import { Consumer, MessageQueue } from '../types'
 import { AddUpvote } from '../messages'
 import { ActorService } from '../../services/actor'
+import { RepoService } from '../../services/repo'
 
 export default class extends Consumer<AddUpvote> {
   constructor(private getAuthStore: GetAuthStoreFn) {
@@ -102,9 +103,11 @@ export default class extends Consumer<AddUpvote> {
           .where('subject', '=', scene.subject)
           .execute()
 
+        const repoTxn = new RepoService(db, messageQueue)
+
         await Promise.all([
-          repo.writeToRepo(db, scene.did, sceneAuth, writes, now),
-          repo.indexWrites(db, messageQueue, writes, now),
+          repoTxn.writeToRepo(scene.did, sceneAuth, writes, now),
+          repoTxn.indexWrites(writes, now),
           setTrendPosted,
         ])
       }),

@@ -101,7 +101,7 @@ export default function (server: Server) {
     handler: async ({ input, auth, res }) => {
       const tx = input.body
       const { did, validate } = tx
-      const { db, blobstore, services, messageQueue } = locals.get(res)
+      const { db, blobstore, services } = locals.get(res)
       const requester = auth.credentials.did
       const authorized = await services.repo.isUserControlledRepo(
         did,
@@ -152,15 +152,8 @@ export default function (server: Server) {
 
       await db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
-        await repo.processWrites(
-          dbTxn,
-          messageQueue,
-          did,
-          authStore,
-          blobstore,
-          writes,
-          now,
-        )
+        const repoTxn = services.repo.using(dbTxn)
+        await repoTxn.processWrites(did, authStore, blobstore, writes, now)
       })
     },
   })
@@ -171,7 +164,7 @@ export default function (server: Server) {
       const { did, collection, record } = input.body
       const validate =
         typeof input.body.validate === 'boolean' ? input.body.validate : true
-      const { db, blobstore, services, messageQueue } = locals.get(res)
+      const { db, blobstore, services } = locals.get(res)
       const requester = auth.credentials.did
       const authorized = await services.repo.isUserControlledRepo(
         did,
@@ -215,15 +208,8 @@ export default function (server: Server) {
       })
 
       await db.transaction(async (dbTxn) => {
-        await repo.processWrites(
-          dbTxn,
-          messageQueue,
-          did,
-          authStore,
-          blobstore,
-          [write],
-          now,
-        )
+        const repoTxn = services.repo.using(dbTxn)
+        await repoTxn.processWrites(did, authStore, blobstore, [write], now)
       })
 
       return {
@@ -241,7 +227,7 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ input, auth, res }) => {
       const { did, collection, rkey } = input.body
-      const { db, services, blobstore, messageQueue } = locals.get(res)
+      const { db, services, blobstore } = locals.get(res)
       const requester = auth.credentials.did
       const authorized = await services.repo.isUserControlledRepo(
         did,
@@ -261,15 +247,8 @@ export default function (server: Server) {
       })
 
       await db.transaction(async (dbTxn) => {
-        await repo.processWrites(
-          dbTxn,
-          messageQueue,
-          did,
-          authStore,
-          blobstore,
-          write,
-          now,
-        )
+        const repoTxn = services.repo.using(dbTxn)
+        await repoTxn.processWrites(did, authStore, blobstore, write, now)
       })
     },
   })
