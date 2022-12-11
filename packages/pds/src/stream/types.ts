@@ -8,7 +8,6 @@ export type MessageOfType<T extends string = string> = {
 export type Listener<M extends MessageOfType = MessageOfType> = (ctx: {
   message: M
   db: Database
-  messageQueue: MessageQueue
 }) => Promise<void | MessageOfType[]>
 
 export type Listenable<M extends MessageOfType = MessageOfType> =

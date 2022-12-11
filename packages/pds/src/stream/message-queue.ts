@@ -136,7 +136,7 @@ export class SqlMessageQueue implements MessageQueue {
     }
     for (const listener of listeners) {
       try {
-        await listener({ message, db, messageQueue: this }) // @TODO returned side effects
+        await listener({ message, db }) // @TODO returned side effects
       } catch (err) {
         log.error({ message, err }, `unable to handle event: ${message.type}`)
       }
