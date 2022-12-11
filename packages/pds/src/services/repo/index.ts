@@ -2,19 +2,27 @@ import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
 import { BlobStore, Repo } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import Database from '../db'
-import { dbLogger as log } from '../logger'
-import { MessageQueue } from '../stream/types'
-import SqlBlockstore from '../sql-blockstore'
-import { processWriteBlobs } from '../repo/blobs'
-import { PreparedCreate, PreparedWrites } from '../repo/types'
-import { RecordService } from '../services/record'
+import Database from '../../db'
+import { dbLogger as log } from '../../logger'
+import { MessageQueue } from '../../stream/types'
+import SqlBlockstore from '../../sql-blockstore'
+import { PreparedCreate, PreparedWrites } from '../../repo/types'
+import { RecordService } from '../record'
+import { RepoBlobs } from './blobs'
 
 export class RepoService {
-  constructor(public db: Database, public messageQueue: MessageQueue) {}
+  blobs: RepoBlobs
+
+  constructor(
+    public db: Database,
+    public messageQueue: MessageQueue,
+    public blobstore: BlobStore,
+  ) {
+    this.blobs = new RepoBlobs(db, blobstore)
+  }
 
   using(db: Database) {
-    return new RepoService(db, this.messageQueue)
+    return new RepoService(db, this.messageQueue, this.blobstore)
   }
 
   async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {
@@ -100,7 +108,6 @@ export class RepoService {
   async processWrites(
     did: string,
     authStore: auth.AuthStore,
-    blobs: BlobStore,
     writes: PreparedWrites,
     now: string,
   ) {
@@ -111,7 +118,7 @@ export class RepoService {
       this.indexWrites(writes, now),
     ])
     // make blobs permanent & associate w commit + recordUri in DB
-    await processWriteBlobs(this.db, blobs, did, commit, writes)
+    await this.blobs.processWriteBlobs(did, commit, writes)
   }
 
   async writeToRepo(

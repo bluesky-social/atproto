@@ -8,18 +8,19 @@ import { Consumer, MessageQueue } from '../types'
 import { AddUpvote } from '../messages'
 import { ActorService } from '../../services/actor'
 import { RepoService } from '../../services/repo'
+import { BlobStore } from '@atproto/repo'
 
 export default class extends Consumer<AddUpvote> {
-  constructor(private getAuthStore: GetAuthStoreFn) {
+  constructor(
+    private getAuthStore: GetAuthStoreFn,
+    private messageQueue: MessageQueue,
+    private blobstore: BlobStore,
+  ) {
     super()
   }
 
-  async dispatch(ctx: {
-    message: AddUpvote
-    db: Database
-    messageQueue: MessageQueue
-  }) {
-    const { message, db, messageQueue } = ctx
+  async dispatch(ctx: { message: AddUpvote; db: Database }) {
+    const { message, db } = ctx
     const actorTxn = new ActorService(db)
     const userScenes = await actorTxn.getScenesForUser(message.user)
     if (userScenes.length < 1) return
@@ -45,14 +46,13 @@ export default class extends Consumer<AddUpvote> {
         )
         .execute()
     }
-    await this.checkTrending(db, messageQueue, userScenes, message.subject)
+    await this.checkTrending(db, userScenes, message.subject)
   }
 
   // Side effects
   // -------------
   private async checkTrending(
     db: Database,
-    messageQueue: MessageQueue,
     scenes: string[],
     subject: string,
   ): Promise<void> {
@@ -103,7 +103,7 @@ export default class extends Consumer<AddUpvote> {
           .where('subject', '=', scene.subject)
           .execute()
 
-        const repoTxn = new RepoService(db, messageQueue)
+        const repoTxn = new RepoService(db, this.messageQueue, this.blobstore)
 
         await Promise.all([
           repoTxn.writeToRepo(scene.did, sceneAuth, writes, now),

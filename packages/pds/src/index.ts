@@ -46,9 +46,9 @@ const runServer = (
   })
 
   const messageQueue = new SqlMessageQueue('pds', db)
-  streamConsumers.listen(messageQueue, auth, keypair)
+  streamConsumers.listen(messageQueue, blobstore, auth, keypair)
 
-  const services = createServices(db, messageQueue)
+  const services = createServices(db, messageQueue, blobstore)
 
   const mailTransport =
     config.emailSmtpUrl !== undefined

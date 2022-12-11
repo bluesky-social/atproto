@@ -3,12 +3,12 @@ import { Database } from '../../src'
 import { cidForData, TID } from '@atproto/common'
 import * as schemas from '../../src/db/schemas'
 import { APP_BSKY_GRAPH } from '../../src/lexicon'
-import { createServices, Services } from '../../src/services'
 import SqlMessageQueue from '../../src/stream/message-queue'
+import { RecordService } from '../../src/services/record'
 
 describe('duplicate record', () => {
   let db: Database
-  let services: Services
+  let recordSvc: RecordService
 
   beforeAll(async () => {
     if (process.env.DB_POSTGRES_URL) {
@@ -20,7 +20,7 @@ describe('duplicate record', () => {
       db = Database.memory()
     }
     await db.migrator.migrateTo('_20221021T162202001Z')
-    services = createServices(db, new SqlMessageQueue('pds', db))
+    recordSvc = new RecordService(db, new SqlMessageQueue('pds', db))
   })
 
   afterAll(async () => {
@@ -35,7 +35,7 @@ describe('duplicate record', () => {
     await db.transaction(async (tx) => {
       for (let i = 0; i < times; i++) {
         const uri = AtUri.make(did, collection, TID.nextStr())
-        await services.record.using(tx).indexRecord(uri, cid, record)
+        await recordSvc.using(tx).indexRecord(uri, cid, record)
       }
     })
   }

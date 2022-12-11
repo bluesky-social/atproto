@@ -15,7 +15,7 @@ export default function (server: Server) {
   server.app.bsky.actor.updateProfile({
     auth: ServerAuth.verifier,
     handler: async ({ auth, input, res }) => {
-      const { db, services, blobstore } = locals.get(res)
+      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
 
       const did = input.body.did || requester
@@ -75,7 +75,7 @@ export default function (server: Server) {
           })
 
           const commit = await repoTxn.writeToRepo(did, authStore, writes, now)
-          await repo.processWriteBlobs(dbTxn, blobstore, did, commit, writes)
+          await repoTxn.blobs.processWriteBlobs(did, commit, writes)
 
           const write = writes[0]
           let profileCid: CID
