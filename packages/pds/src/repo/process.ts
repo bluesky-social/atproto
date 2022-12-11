@@ -6,6 +6,11 @@ import SqlBlockstore from '../sql-blockstore'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { PreparedCreate, PreparedWrites } from './types'
 import { processWriteBlobs } from './blobs'
+import { RecordService } from '../services/record'
+import { RepoService } from '../services/repo'
+import { MessageQueue } from '../stream/types'
+
+// @TODO move these into repo service, with db and queue bound rather than parameter
 
 export const createRepo = async (
   dbTxn: Database,
@@ -30,6 +35,7 @@ export const createRepo = async (
 
 export const processWrites = async (
   dbTxn: Database,
+  messageQueue: MessageQueue,
   did: string,
   authStore: auth.AuthStore,
   blobs: BlobStore,
@@ -40,7 +46,7 @@ export const processWrites = async (
   // @TODO get commitCid first so we can do all db actions in tandem
   const [commit] = await Promise.all([
     writeToRepo(dbTxn, did, authStore, writes, now),
-    indexWrites(dbTxn, writes, now),
+    indexWrites(dbTxn, messageQueue, writes, now),
   ])
   // make blobs permanent & associate w commit + recordUri in DB
   await processWriteBlobs(dbTxn, blobs, did, commit, writes)
@@ -54,8 +60,9 @@ export const writeToRepo = async (
   now: string,
 ): Promise<CID> => {
   dbTxn.assertTransaction()
+  const repoTxn = new RepoService(dbTxn)
   const blockstore = new SqlBlockstore(dbTxn, did, now)
-  const currRoot = await dbTxn.getRepoRoot(did, true)
+  const currRoot = await repoTxn.getRepoRoot(did, true)
   if (!currRoot) {
     throw new InvalidRequestError(
       `${did} is not a registered repo on this server`,
@@ -66,7 +73,7 @@ export const writeToRepo = async (
   const updated = await repo
     .stageUpdate(writeOps)
     .createCommit(authStore, async (prev, curr) => {
-      const success = await dbTxn.updateRepoRoot(did, curr, prev, now)
+      const success = await repoTxn.updateRepoRoot(did, curr, prev, now)
       if (!success) {
         throw new Error('Repo root update failed, could not linearize')
       }
@@ -77,16 +84,18 @@ export const writeToRepo = async (
 
 export const indexWrites = async (
   dbTxn: Database,
+  messageQueue: MessageQueue,
   writes: PreparedWrites,
   now: string,
 ) => {
   dbTxn.assertTransaction()
+  const recordTxn = new RecordService(dbTxn, messageQueue)
   await Promise.all(
     writes.map(async (write) => {
       if (write.action === 'create') {
-        await dbTxn.indexRecord(write.uri, write.cid, write.op.value, now)
+        await recordTxn.indexRecord(write.uri, write.cid, write.op.value, now)
       } else if (write.action === 'delete') {
-        await dbTxn.deleteRecord(write.uri)
+        await recordTxn.deleteRecord(write.uri)
       }
     }),
   )

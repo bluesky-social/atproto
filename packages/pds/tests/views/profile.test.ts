@@ -12,7 +12,6 @@ describe('pds profile views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
-  let carol: string
   let dan: string
   let scene: string
 
@@ -26,7 +25,6 @@ describe('pds profile views', () => {
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    carol = sc.dids.carol
     dan = sc.dids.dan
     scene = sc.scenes['scene.test'].did
   })

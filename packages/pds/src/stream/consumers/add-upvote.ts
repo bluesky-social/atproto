@@ -1,21 +1,26 @@
 import { sql } from 'kysely'
 import { TID } from '@atproto/common'
+import { AuthStore } from '@atproto/auth'
 import Database from '../../db'
 import * as repo from '../../repo'
 import * as lexicons from '../../lexicon/lexicons'
-import { Consumer } from '../types'
+import { Consumer, MessageQueue } from '../types'
 import { AddUpvote } from '../messages'
-import { AuthStore } from '@atproto/auth'
-type GetAuthStoreFn = (did: string) => AuthStore
+import { ActorService } from '../../services/actor'
 
 export default class extends Consumer<AddUpvote> {
   constructor(private getAuthStore: GetAuthStoreFn) {
     super()
   }
 
-  async dispatch(ctx: { db: Database; message: AddUpvote }) {
-    const { db, message } = ctx
-    const userScenes = await db.getScenesForUser(message.user)
+  async dispatch(ctx: {
+    message: AddUpvote
+    db: Database
+    messageQueue: MessageQueue
+  }) {
+    const { message, db, messageQueue } = ctx
+    const actorTxn = new ActorService(db)
+    const userScenes = await actorTxn.getScenesForUser(message.user)
     if (userScenes.length < 1) return
     const updated = await db.db
       .updateTable('scene_votes_on_post')
@@ -39,13 +44,14 @@ export default class extends Consumer<AddUpvote> {
         )
         .execute()
     }
-    await this.checkTrending(db, userScenes, message.subject)
+    await this.checkTrending(db, messageQueue, userScenes, message.subject)
   }
 
   // Side effects
   // -------------
   private async checkTrending(
     db: Database,
+    messageQueue: MessageQueue,
     scenes: string[],
     subject: string,
   ): Promise<void> {
@@ -98,10 +104,12 @@ export default class extends Consumer<AddUpvote> {
 
         await Promise.all([
           repo.writeToRepo(db, scene.did, sceneAuth, writes, now),
-          repo.indexWrites(db, writes, now),
+          repo.indexWrites(db, messageQueue, writes, now),
           setTrendPosted,
         ])
       }),
     )
   }
 }
+
+type GetAuthStoreFn = (did: string) => AuthStore

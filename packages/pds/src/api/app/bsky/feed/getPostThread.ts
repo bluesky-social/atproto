@@ -8,7 +8,6 @@ import { DatabaseSchema } from '../../../../db/database-schema'
 import { countAll } from '../../../../db/util'
 import { getDeclaration } from '../util'
 import ServerAuth from '../../../../auth'
-import { CID } from 'multiformats/cid'
 import { ImageUriBuilder } from '../../../../image/uri'
 
 export default function (server: Server) {

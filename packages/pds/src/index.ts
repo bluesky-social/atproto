@@ -22,6 +22,7 @@ import { createTransport } from 'nodemailer'
 import SqlMessageQueue from './stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
+import { createServices } from './services'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -45,8 +46,9 @@ const runServer = (
   })
 
   const messageQueue = new SqlMessageQueue('pds', db)
-  db.setMessageQueue(messageQueue)
   streamConsumers.listen(messageQueue, auth, keypair)
+
+  const services = createServices(db, messageQueue)
 
   const mailTransport =
     config.emailSmtpUrl !== undefined
@@ -87,6 +89,8 @@ const runServer = (
     imgUriBuilder,
     config,
     mailer,
+    services,
+    messageQueue,
   }
 
   app.locals = locals

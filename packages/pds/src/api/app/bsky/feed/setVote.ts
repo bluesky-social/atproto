@@ -12,7 +12,7 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ auth, input, res }) => {
       const { subject, direction } = input.body
-      const { db } = locals.get(res)
+      const { db, messageQueue } = locals.get(res)
 
       const requester = auth.credentials.did
       const authStore = await locals.getAuthstore(res, requester)
@@ -68,7 +68,7 @@ export default function (server: Server) {
 
         await Promise.all([
           await repo.writeToRepo(dbTxn, requester, authStore, writes, now),
-          await repo.indexWrites(dbTxn, writes, now),
+          await repo.indexWrites(dbTxn, messageQueue, writes, now),
         ])
 
         return create?.uri.toString()
