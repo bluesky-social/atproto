@@ -7,8 +7,8 @@ import { Consumer } from '../types'
 export default class extends Consumer<RemoveUpvote> {
   async dispatch(ctx: { db: Database; message: RemoveUpvote }) {
     const { db, message } = ctx
-    const actorService = new ActorService(db)
-    const userScenes = await actorService.getScenesForUser(message.user)
+    const actorTxn = new ActorService(db)
+    const userScenes = await actorTxn.getScenesForUser(message.user)
     if (userScenes.length === 0) return
     await db.db
       .updateTable('scene_votes_on_post')
