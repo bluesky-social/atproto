@@ -4,7 +4,7 @@ import { CID } from 'multiformats/cid'
 import * as Declaration from '../../lexicon/types/app/bsky/system/declaration'
 import * as lex from '../../lexicon/lexicons'
 import { DidHandle } from '../tables/did-handle'
-import { Message } from '../message-queue/messages'
+import { Message } from '../../stream/messages'
 import RecordProcessor from '../record-processor'
 import DatabaseSchema from '../database-schema'
 

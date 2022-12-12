@@ -7,18 +7,19 @@ import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import * as auth from '@atproto/auth'
+import { BlobStore } from '@atproto/repo'
+import { DidResolver } from '@atproto/did-resolver'
 import API, { health } from './api'
 import Database from './db'
 import ServerAuth from './auth'
+import * as streamConsumers from './stream/consumers'
 import * as error from './error'
 import { httpLogger, loggerMiddleware } from './logger'
 import { ServerConfig, ServerConfigValues } from './config'
-import { DidResolver } from '@atproto/did-resolver'
 import { Locals } from './locals'
 import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
 import SqlMessageQueue from './db/message-queue'
-import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 
@@ -43,10 +44,9 @@ const runServer = (
     didResolver,
   })
 
-  const messageQueue = new SqlMessageQueue('pds', db, (did: string) => {
-    return auth.verifier.loadAuthStore(keypair, [], did)
-  })
+  const messageQueue = new SqlMessageQueue('pds', db)
   db.setMessageQueue(messageQueue)
+  streamConsumers.listen(messageQueue, auth, keypair)
 
   const mailTransport =
     config.emailSmtpUrl !== undefined

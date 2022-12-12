@@ -4,7 +4,7 @@ import { CID } from 'multiformats/cid'
 import * as Profile from '../../lexicon/types/app/bsky/actor/profile'
 import { Profile as IndexedProfile } from '../tables/profile'
 import * as lex from '../../lexicon/lexicons'
-import { Message } from '../message-queue/messages'
+import { Message } from '../../stream/messages'
 import DatabaseSchema from '../database-schema'
 import RecordProcessor from '../record-processor'
 
