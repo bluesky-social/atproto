@@ -76,13 +76,13 @@ const indexTs = (
     xrpcImport.addNamedImport({
       name: 'AuthVerifier',
     })
-    //= import {lexicons} from './lexicons'
+    //= import {schemas} from './lexicons'
     file
       .addImportDeclaration({
         moduleSpecifier: './lexicons',
       })
       .addNamedImport({
-        name: 'lexicons',
+        name: 'schemas',
       })
 
     // generate type imports
@@ -159,7 +159,7 @@ const indexTs = (
     }
 
     //= constructor (options?: XrpcOptions) {
-    //=  this.xrpc = createXrpcServer(lexicons, options)
+    //=  this.xrpc = createXrpcServer(schemas, options)
     //=  {namespace declarations}
     //= }
     serverCls
@@ -170,7 +170,7 @@ const indexTs = (
       })
       .setBodyText(
         [
-          'this.xrpc = createXrpcServer(lexicons, options)',
+          'this.xrpc = createXrpcServer(schemas, options)',
           ...nsidTree.map(
             (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
           ),

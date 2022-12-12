@@ -4,10 +4,10 @@ import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { DatabaseSchema } from './database-schema'
 import { Message } from './message-queue/messages'
-import * as schemas from './schemas'
+import { lexicons } from '../lexicon/lexicons'
 
 type RecordProcessorParams<T, S> = {
-  schemaId: string
+  lexId: string
   insertFn: (
     db: Kysely<DatabaseSchema>,
     uri: AtUri,
@@ -31,7 +31,7 @@ export class RecordProcessor<T, S> {
     private db: Kysely<DatabaseSchema>,
     private params: RecordProcessorParams<T, S>,
   ) {
-    this.collection = this.params.schemaId
+    this.collection = this.params.lexId
   }
 
   matchesSchema(obj: unknown): obj is T {
@@ -44,7 +44,7 @@ export class RecordProcessor<T, S> {
   }
 
   assertValidRecord(obj: unknown): void {
-    schemas.records.assertValidRecord(this.params.schemaId, obj)
+    lexicons.assertValidRecord(this.params.lexId, obj)
   }
 
   async insertRecord(
@@ -54,7 +54,7 @@ export class RecordProcessor<T, S> {
     timestamp?: string,
   ): Promise<Message[]> {
     if (!this.matchesSchema(obj)) {
-      throw new Error(`Record does not match schema: ${this.params.schemaId}`)
+      throw new Error(`Record does not match schema: ${this.params.lexId}`)
     }
     const inserted = await this.params.insertFn(
       this.db,

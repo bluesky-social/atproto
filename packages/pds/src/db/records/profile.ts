@@ -3,12 +3,12 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../lexicon/types/app/bsky/actor/profile'
 import { Profile as IndexedProfile } from '../tables/profile'
-import * as schemas from '../schemas'
+import * as lex from '../../lexicon/lexicons'
 import { Message } from '../message-queue/messages'
 import DatabaseSchema from '../database-schema'
 import RecordProcessor from '../record-processor'
 
-const schemaId = schemas.ids.AppBskyActorProfile
+const lexId = lex.ids.AppBskyActorProfile
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
@@ -26,6 +26,7 @@ const insertFn = async (
       displayName: obj.displayName,
       description: obj.description,
       avatarCid: obj.avatar?.cid,
+      bannerCid: obj.banner?.cid,
       indexedAt: new Date().toISOString(),
     })
     .onConflict((oc) => oc.doNothing())
@@ -62,7 +63,7 @@ export type PluginType = RecordProcessor<Profile.Record, IndexedProfile>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
-    schemaId,
+    lexId,
     insertFn,
     findDuplicate,
     deleteFn,

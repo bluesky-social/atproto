@@ -7,6 +7,7 @@ export interface Profile {
   displayName: string
   description: string | null
   avatarCid: string | null
+  bannerCid: string | null
   indexedAt: string
 }
 export type PartialDB = { [tableName]: Profile }

@@ -30,6 +30,7 @@
               "maxLength": 256
             },
             "avatar": { "type": "string" },
+            "banner": { "type": "string" },
             "followersCount": {"type": "integer"},
             "followsCount": {"type": "integer"},
             "membersCount": {"type": "integer"},

@@ -5,7 +5,7 @@ import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
 import { DeleteOp, RecordCreateOp } from '@atproto/repo'
 import * as locals from '../../../locals'
-import * as dbSchemas from '../../../db/schemas'
+import { lexicons } from '../../../lexicon/lexicons'
 import { TID } from '@atproto/common'
 import * as repo from '../../../repo'
 import ServerAuth from '../../../auth'
@@ -182,7 +182,7 @@ export default function (server: Server) {
 
       // determine key type. if undefined, repo assigns a TID
       const keyType = (
-        dbSchemas.records.getDefOrThrow(collection, ['record']) as LexRecord
+        lexicons.getDefOrThrow(collection, ['record']) as LexRecord
       ).key
       let rkey: string
       if (keyType && keyType.startsWith('literal')) {

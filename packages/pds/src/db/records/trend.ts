@@ -2,14 +2,14 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import * as Trend from '../../lexicon/types/app/bsky/feed/trend'
 import { Trend as IndexedTrend } from '../tables/trend'
-import * as schemas from '../schemas'
+import * as lex from '../../lexicon/lexicons'
 import { CID } from 'multiformats/cid'
 import * as messages from '../message-queue/messages'
 import { Message } from '../message-queue/messages'
 import DatabaseSchema from '../database-schema'
 import RecordProcessor from '../record-processor'
 
-const schemaId = schemas.ids.AppBskyFeedTrend
+const lexId = lex.ids.AppBskyFeedTrend
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
@@ -86,7 +86,7 @@ export type PluginType = RecordProcessor<Trend.Record, IndexedTrend>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
-    schemaId,
+    lexId,
     insertFn,
     findDuplicate,
     deleteFn,

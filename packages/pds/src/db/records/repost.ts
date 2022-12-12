@@ -2,14 +2,14 @@ import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import * as Repost from '../../lexicon/types/app/bsky/feed/repost'
 import { Repost as IndexedRepost } from '../tables/repost'
-import * as schemas from '../schemas'
+import * as lex from '../../lexicon/lexicons'
 import { CID } from 'multiformats/cid'
 import * as messages from '../message-queue/messages'
 import { Message } from '../message-queue/messages'
 import { DatabaseSchema } from '../database-schema'
 import RecordProcessor from '../record-processor'
 
-const schemaId = schemas.ids.AppBskyFeedRepost
+const lexId = lex.ids.AppBskyFeedRepost
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
@@ -86,7 +86,7 @@ export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
-    schemaId,
+    lexId,
     insertFn,
     findDuplicate,
     deleteFn,

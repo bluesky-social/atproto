@@ -13,30 +13,33 @@ import {
   PreparedDelete,
   PreparedWrites,
   BlobRef,
+  ImageConstraint,
 } from './types'
 
-import { ids as lexIds } from '../lexicon/lexicons'
+import * as lex from '../lexicon/lexicons'
 
 // @TODO do this dynamically off of schemas
 export const blobsForWrite = (
   write: RecordCreateOp | RecordUpdateOp,
 ): BlobRef[] => {
-  if (write.collection === lexIds.AppBskyActorProfile) {
+  if (write.collection === lex.ids.AppBskyActorProfile) {
+    const doc = lex.schemaDict.AppBskyActorProfile
+    const refs: BlobRef[] = []
     if (write.value.avatar) {
-      return [
-        {
-          cid: CID.parse(write.value.avatar.cid),
-          mimeType: write.value.avatar.mimeType,
-          constraints: {
-            type: 'image',
-            accept: ['image/png', 'image/jpeg'],
-            maxWidth: 500,
-            maxHeight: 500,
-            maxSize: 300000,
-          },
-        },
-      ]
+      refs.push({
+        cid: CID.parse(write.value.avatar.cid),
+        mimeType: write.value.avatar.mimeType,
+        constraints: doc.defs.main.record.properties.avatar as ImageConstraint,
+      })
     }
+    if (write.value.banner) {
+      refs.push({
+        cid: CID.parse(write.value.banner.cid),
+        mimeType: write.value.banner.mimeType,
+        constraints: doc.defs.main.record.properties.banner as ImageConstraint,
+      })
+    }
+    return refs
   }
   return []
 }

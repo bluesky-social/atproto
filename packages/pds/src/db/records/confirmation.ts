@@ -3,14 +3,14 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Confirmation from '../../lexicon/types/app/bsky/graph/confirmation'
 import { Assertion as IndexedAssertion } from '../tables/assertion'
-import * as schemas from '../schemas'
+import * as lex from '../../lexicon/lexicons'
 import * as messages from '../message-queue/messages'
 import { Message } from '../message-queue/messages'
 import { APP_BSKY_GRAPH } from '../../lexicon'
 import DatabaseSchema from '../database-schema'
 import RecordProcessor from '../record-processor'
 
-const schemaId = schemas.ids.AppBskyGraphConfirmation
+const lexId = lex.ids.AppBskyGraphConfirmation
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
@@ -89,7 +89,7 @@ export type PluginType = RecordProcessor<Confirmation.Record, IndexedAssertion>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
-    schemaId,
+    lexId,
     insertFn,
     findDuplicate,
     deleteFn,

@@ -3,7 +3,7 @@ import * as uint8arrays from 'uint8arrays'
 import { CID } from 'multiformats/cid'
 import { Options } from './util'
 
-type CommonSignedUris = 'avatar'
+type CommonSignedUris = 'avatar' | 'banner'
 
 export class ImageUriBuilder {
   public endpoint: string
@@ -47,6 +47,15 @@ export class ImageUriBuilder {
         format: 'jpeg',
         fit: 'cover',
         height: 250,
+        width: 250,
+        min: true,
+      })
+    } else if (id === 'banner') {
+      return this.getSignedUri({
+        cid: typeof cid === 'string' ? CID.parse(cid) : cid,
+        format: 'jpeg',
+        fit: 'cover',
+        height: 750,
         width: 250,
         min: true,
       })

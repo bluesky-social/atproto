@@ -3,7 +3,7 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Post from '../../lexicon/types/app/bsky/feed/post'
 import * as PostTables from '../tables/post'
-import * as schemas from '../schemas'
+import * as lex from '../../lexicon/lexicons'
 import * as messages from '../message-queue/messages'
 import { Message } from '../message-queue/messages'
 import DatabaseSchema from '../database-schema'
@@ -14,7 +14,7 @@ type IndexedPost = {
   entities: PostTables.PostEntity[]
 }
 
-const schemaId = schemas.ids.AppBskyFeedPost
+const lexId = lex.ids.AppBskyFeedPost
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
@@ -129,7 +129,7 @@ export type PluginType = RecordProcessor<Post.Record, IndexedPost>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
-    schemaId,
+    lexId,
     insertFn,
     findDuplicate,
     deleteFn,

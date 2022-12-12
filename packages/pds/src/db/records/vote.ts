@@ -3,13 +3,13 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Vote from '../../lexicon/types/app/bsky/feed/vote'
 import { Vote as IndexedVote } from '../tables/vote'
-import * as schemas from '../schemas'
+import * as lex from '../../lexicon/lexicons'
 import * as messages from '../message-queue/messages'
 import { Message } from '../message-queue/messages'
 import { DatabaseSchema } from '../database-schema'
 import RecordProcessor from '../record-processor'
 
-const schemaId = schemas.ids.AppBskyFeedVote
+const lexId = lex.ids.AppBskyFeedVote
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
@@ -107,7 +107,7 @@ export type PluginType = RecordProcessor<Vote.Record, IndexedVote>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
-    schemaId,
+    lexId,
     insertFn,
     findDuplicate,
     deleteFn,
