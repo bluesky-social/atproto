@@ -3,7 +3,7 @@ import * as common from '@atproto/common'
 import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { DatabaseSchema } from './database-schema'
-import { Message } from './message-queue/messages'
+import { Message } from '../stream/messages'
 import { lexicons } from '../lexicon/lexicons'
 
 type RecordProcessorParams<T, S> = {
