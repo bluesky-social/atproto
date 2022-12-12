@@ -195,7 +195,7 @@ describe('Bodies', () => {
     expect(compressed.cid).toEqual(expectedCid.toString())
   })
 
-  it('supports max blob size', async () => {
+  it('supports max blob size (based on content-length)', async () => {
     const bytes = randomBytes(BLOB_LIMIT + 1)
 
     // Exactly the number of allowed bytes
@@ -215,9 +215,14 @@ describe('Bodies', () => {
     const bytes = randomBytes(BLOB_LIMIT + 1)
 
     // Exactly the number of allowed bytes
-    await client.call('io.example.blobTest', {}, bytes.slice(0, BLOB_LIMIT), {
-      encoding: 'application/octet-stream',
-    })
+    await client.call(
+      'io.example.blobTest',
+      {},
+      streamFrom(bytes.slice(0, BLOB_LIMIT)),
+      {
+        encoding: 'application/octet-stream',
+      },
+    )
 
     // Over the number of allowed bytes. Stream bytes so that content-length isn't included in request.
     const promise = client.call('io.example.blobTest', {}, streamFrom(bytes), {
