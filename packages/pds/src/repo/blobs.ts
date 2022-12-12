@@ -10,7 +10,7 @@ import { BlobRef, PreparedWrites } from './types'
 import { Blob as BlobTable } from '../db/tables/blob'
 import * as img from '../image'
 import { sha256Stream } from '@atproto/crypto'
-import { fileTypeFromStream } from 'file-type'
+import { fromStream as fileTypeFromStream } from 'file-type'
 
 export const addUntetheredBlob = async (
   dbTxn: Database,
