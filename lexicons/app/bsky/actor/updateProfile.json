@@ -47,7 +47,10 @@
             "record": {"type": "unknown"}
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "InvalidBlob"}
+      ]
     }
   }
 }

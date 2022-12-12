@@ -205,11 +205,6 @@ export const schemaDict = {
             },
           },
         },
-        errors: [
-          {
-            name: 'InvalidBlob',
-          },
-        ],
       },
     },
   },
@@ -1420,6 +1415,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidBlob',
+          },
+        ],
       },
     },
   },
