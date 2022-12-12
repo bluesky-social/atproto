@@ -15,7 +15,7 @@ export interface OutputSchema {
 export interface CallOptions {
   headers?: Headers
   qp?: QueryParams
-  encoding: '*/*'
+  encoding: string
 }
 
 export interface Response {
