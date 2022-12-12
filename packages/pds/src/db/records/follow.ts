@@ -3,13 +3,13 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../lexicon/types/app/bsky/graph/follow'
 import { Follow as IndexedFollow } from '../tables/follow'
-import * as schemas from '../schemas'
+import * as lex from '../../lexicon/lexicons'
 import * as messages from '../../stream/messages'
 import { Message } from '../../stream/messages'
 import DatabaseSchema from '../database-schema'
 import RecordProcessor from '../record-processor'
 
-const schemaId = schemas.ids.AppBskyGraphFollow
+const lexId = lex.ids.AppBskyGraphFollow
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
@@ -85,7 +85,7 @@ export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
-    schemaId,
+    lexId,
     insertFn,
     findDuplicate,
     deleteFn,

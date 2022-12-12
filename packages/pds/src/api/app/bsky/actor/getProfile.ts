@@ -31,6 +31,7 @@ export default function (server: Server) {
           'profile.displayName as displayName',
           'profile.description as description',
           'profile.avatarCid as avatarCid',
+          'profile.bannerCid as bannerCid',
           db.db
             .selectFrom('follow')
             .whereRef('creator', '=', ref('did_handle.did'))
@@ -78,6 +79,10 @@ export default function (server: Server) {
         ? imgUriBuilder.getCommonSignedUri('avatar', queryRes.avatarCid)
         : undefined
 
+      const banner = queryRes.bannerCid
+        ? imgUriBuilder.getCommonSignedUri('banner', queryRes.bannerCid)
+        : undefined
+
       return {
         encoding: 'application/json',
         body: {
@@ -88,6 +93,7 @@ export default function (server: Server) {
           displayName: queryRes.displayName || undefined,
           description: queryRes.description || undefined,
           avatar: avatar,
+          banner: banner,
           followsCount: queryRes.followsCount,
           followersCount: queryRes.followersCount,
           membersCount: queryRes.membersCount,

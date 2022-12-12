@@ -74,10 +74,10 @@ const indexTs = (
       { name: 'Client', alias: 'XrpcClient' },
       { name: 'ServiceClient', alias: 'XrpcServiceClient' },
     ])
-    //= import {lexicons} from './lexicons'
+    //= import {schemas} from './lexicons'
     file
       .addImportDeclaration({ moduleSpecifier: './lexicons' })
-      .addNamedImports([{ name: 'lexicons' }])
+      .addNamedImports([{ name: 'schemas' }])
 
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
@@ -126,9 +126,9 @@ const indexTs = (
       initializer: 'new XrpcClient()',
     })
     //= constructor () {
-    //=   this.xrpc.addLexicons(lexicons)
+    //=   this.xrpc.addLexicons(schemas)
     //= }
-    clientCls.addConstructor().setBodyText(`this.xrpc.addLexicons(lexicons)`)
+    clientCls.addConstructor().setBodyText(`this.xrpc.addLexicons(schemas)`)
     //= service(serviceUri: string | URL): ServiceClient {
     //=   return new ServiceClient(this, this.xrpc.service(serviceUri))
     //= }

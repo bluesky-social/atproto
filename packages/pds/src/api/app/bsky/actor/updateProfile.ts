@@ -46,6 +46,7 @@ export default function (server: Server) {
               displayName: input.body.displayName || current.displayName,
               description: input.body.description || current.description,
               avatar: input.body.avatar || current.avatar,
+              banner: input.body.banner || current.banner,
             }
           } else {
             updated = {
@@ -53,6 +54,7 @@ export default function (server: Server) {
               displayName: input.body.displayName,
               description: input.body.description,
               avatar: input.body.avatar,
+              banner: input.body.banner,
             }
           }
           updated = common.noUndefinedVals(updated)
@@ -97,6 +99,7 @@ export default function (server: Server) {
                 displayName: updated.displayName,
                 description: updated.description,
                 avatarCid: updated.avatar?.cid,
+                bannerCid: updated.banner?.cid,
                 indexedAt: now,
               })
               .where('uri', '=', uri.toString())

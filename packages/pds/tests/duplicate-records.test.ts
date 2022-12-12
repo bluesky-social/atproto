@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/uri'
 import { CloseFn, runTestServer } from './_util'
 import { Database } from '../src'
-import * as schemas from '../src/db/schemas'
+import * as lex from '../src/lexicon/lexicons'
 import { cidForData, TID, valueToIpldBytes } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { APP_BSKY_GRAPH } from '../src/lexicon'
@@ -50,9 +50,9 @@ describe('duplicate record', () => {
   }
 
   it('dedupes reposts', async () => {
-    const subject = AtUri.make(did, schemas.ids.AppBskyFeedPost, TID.nextStr())
+    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await putBlock(db, { test: 'blah' })
-    const coll = schemas.ids.AppBskyFeedRepost
+    const coll = lex.ids.AppBskyFeedRepost
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
       for (let i = 0; i < 5; i++) {
@@ -90,9 +90,9 @@ describe('duplicate record', () => {
   })
 
   it('dedupes trends', async () => {
-    const subject = AtUri.make(did, schemas.ids.AppBskyFeedPost, TID.nextStr())
+    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await putBlock(db, { test: 'blah' })
-    const coll = schemas.ids.AppBskyFeedTrend
+    const coll = lex.ids.AppBskyFeedTrend
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
       for (let i = 0; i < 5; i++) {
@@ -130,9 +130,9 @@ describe('duplicate record', () => {
   })
 
   it('dedupes votes', async () => {
-    const subject = AtUri.make(did, schemas.ids.AppBskyFeedPost, TID.nextStr())
+    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await putBlock(db, { test: 'blah' })
-    const coll = schemas.ids.AppBskyFeedVote
+    const coll = lex.ids.AppBskyFeedVote
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
       for (let i = 0; i < 5; i++) {
@@ -180,7 +180,7 @@ describe('duplicate record', () => {
 
   it('dedupes follows', async () => {
     const subjectCid = await putBlock(db, { test: 'blah' })
-    const coll = schemas.ids.AppBskyGraphFollow
+    const coll = lex.ids.AppBskyGraphFollow
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
       for (let i = 0; i < 5; i++) {
@@ -223,7 +223,7 @@ describe('duplicate record', () => {
     const assertCids: CID[] = []
     // make assertions
     await db.transaction(async (tx) => {
-      const coll = schemas.ids.AppBskyGraphAssertion
+      const coll = lex.ids.AppBskyGraphAssertion
       for (let i = 0; i < 5; i++) {
         const assertion = {
           $type: coll,
@@ -245,7 +245,7 @@ describe('duplicate record', () => {
     const confirmCids: CID[] = []
     // make confirms on first assert
     await db.transaction(async (tx) => {
-      const coll = schemas.ids.AppBskyGraphConfirmation
+      const coll = lex.ids.AppBskyGraphConfirmation
       for (let i = 0; i < 5; i++) {
         const follow = {
           $type: coll,

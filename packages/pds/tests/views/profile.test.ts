@@ -99,15 +99,27 @@ describe('pds profile views', () => {
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
   })
 
-  it('handles avatars', async () => {
-    const img = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
-    const res = await client.com.atproto.blob.upload(img, {
+  it('handles avatars & banners', async () => {
+    const avatarImg = await fs.readFile(
+      'tests/image/fixtures/key-portrait-small.jpg',
+    )
+    const bannerImg = await fs.readFile(
+      'tests/image/fixtures/key-landscape-small.jpg',
+    )
+    const avatarRes = await client.com.atproto.blob.upload(avatarImg, {
+      headers: sc.getHeaders(alice),
+      encoding: 'image/jpeg',
+    } as any)
+    const bannerRes = await client.com.atproto.blob.upload(bannerImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     } as any)
 
     await client.app.bsky.actor.updateProfile(
-      { avatar: { cid: res.data.cid, mimeType: 'image/jpeg' } },
+      {
+        avatar: { cid: avatarRes.data.cid, mimeType: 'image/jpeg' },
+        banner: { cid: bannerRes.data.cid, mimeType: 'image/jpeg' },
+      },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
