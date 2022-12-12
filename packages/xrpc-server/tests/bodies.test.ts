@@ -1,10 +1,10 @@
 import * as http from 'http'
 import { Readable } from 'stream'
 import { gzipSync } from 'zlib'
-import { createServer, closeServer } from './_util'
 import xrpc from '@atproto/xrpc'
-import { cidForData } from '@atproto/common'
+import { bytesToStream, cidForData } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
+import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import logger from '../src/logger'
 
@@ -212,32 +212,29 @@ describe('Bodies', () => {
   })
 
   it('supports max blob size (missing content-length)', async () => {
+    // We stream bytes in these tests so that content-length isn't included.
     const bytes = randomBytes(BLOB_LIMIT + 1)
 
     // Exactly the number of allowed bytes
     await client.call(
       'io.example.blobTest',
       {},
-      streamFrom(bytes.slice(0, BLOB_LIMIT)),
+      bytesToStream(bytes.slice(0, BLOB_LIMIT)),
       {
         encoding: 'application/octet-stream',
       },
     )
 
-    // Over the number of allowed bytes. Stream bytes so that content-length isn't included in request.
-    const promise = client.call('io.example.blobTest', {}, streamFrom(bytes), {
-      encoding: 'application/octet-stream',
-    })
+    // Over the number of allowed bytes.
+    const promise = client.call(
+      'io.example.blobTest',
+      {},
+      bytesToStream(bytes),
+      {
+        encoding: 'application/octet-stream',
+      },
+    )
 
     await expect(promise).rejects.toThrow('request entity too large')
   })
 })
-
-function streamFrom(bytes: Uint8Array): Readable {
-  return new Readable({
-    read() {
-      this.push(bytes)
-      this.push(null)
-    },
-  })
-}

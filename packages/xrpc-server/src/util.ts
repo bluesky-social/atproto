@@ -1,9 +1,9 @@
-import { Readable, Transform, TransformCallback } from 'stream'
+import { Readable, Transform } from 'stream'
 import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
 import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
-import { forwardStreamErrors } from '@atproto/common'
+import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
 import {
   UndecodedParams,
   Params,
@@ -217,24 +217,13 @@ function decodeBodyStream(
   }
 
   if (maxSize !== undefined) {
-    const maxSizeChecker = new MaxSizeChecker(maxSize)
+    const maxSizeChecker = new MaxSizeChecker(
+      maxSize,
+      () => new XRPCError(413, 'request entity too large'),
+    )
     forwardStreamErrors(stream, maxSizeChecker)
     stream = stream.pipe(maxSizeChecker)
   }
 
   return stream
-}
-
-class MaxSizeChecker extends Transform {
-  totalSize = 0
-  constructor(public maxSize: number) {
-    super()
-  }
-  _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
-    this.totalSize += chunk.length
-    if (this.totalSize > this.maxSize) {
-      return this.destroy(new XRPCError(413, 'request entity too large'))
-    }
-    return cb(null, chunk)
-  }
 }
