@@ -31,6 +31,7 @@
     "@atproto/uri": "*",
     "@atproto/xrpc-server": "*",
     "better-sqlite3": "^7.6.2",
+    "bytes": "^3.1.2",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.17.2",
