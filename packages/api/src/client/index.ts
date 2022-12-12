@@ -5,7 +5,7 @@ import {
   Client as XrpcClient,
   ServiceClient as XrpcServiceClient,
 } from '@atproto/xrpc'
-import { lexicons } from './lexicons'
+import { schemas } from './lexicons'
 import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 import * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
 import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
@@ -141,7 +141,7 @@ export class Client {
   xrpc: XrpcClient = new XrpcClient()
 
   constructor() {
-    this.xrpc.addLexicons(lexicons)
+    this.xrpc.addLexicons(schemas)
   }
 
   service(serviceUri: string | URL): ServiceClient {

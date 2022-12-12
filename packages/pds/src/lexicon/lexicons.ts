@@ -1,10 +1,10 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { LexiconDoc } from '@atproto/lexicon'
+import { LexiconDoc, Lexicons } from '@atproto/lexicon'
 
-export const lexicons: LexiconDoc[] = [
-  {
+export const schemaDict = {
+  ComAtprotoAccountCreate: {
     lexicon: 1,
     id: 'com.atproto.account.create',
     defs: {
@@ -73,7 +73,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoAccountCreateInviteCode: {
     lexicon: 1,
     id: 'com.atproto.account.createInviteCode',
     defs: {
@@ -107,7 +107,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoAccountDelete: {
     lexicon: 1,
     id: 'com.atproto.account.delete',
     defs: {
@@ -117,7 +117,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoAccountGet: {
     lexicon: 1,
     id: 'com.atproto.account.get',
     defs: {
@@ -127,7 +127,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoAccountRequestPasswordReset: {
     lexicon: 1,
     id: 'com.atproto.account.requestPasswordReset',
     defs: {
@@ -149,7 +149,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoAccountResetPassword: {
     lexicon: 1,
     id: 'com.atproto.account.resetPassword',
     defs: {
@@ -182,7 +182,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoBlobUpload: {
     lexicon: 1,
     id: 'com.atproto.blob.upload',
     defs: {
@@ -213,7 +213,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoHandleResolve: {
     lexicon: 1,
     id: 'com.atproto.handle.resolve',
     defs: {
@@ -245,7 +245,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoRepoBatchWrite: {
     lexicon: 1,
     id: 'com.atproto.repo.batchWrite',
     defs: {
@@ -339,7 +339,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoRepoCreateRecord: {
     lexicon: 1,
     id: 'com.atproto.repo.createRecord',
     defs: {
@@ -390,7 +390,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoRepoDeleteRecord: {
     lexicon: 1,
     id: 'com.atproto.repo.deleteRecord',
     defs: {
@@ -421,7 +421,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoRepoDescribe: {
     lexicon: 1,
     id: 'com.atproto.repo.describe',
     defs: {
@@ -475,7 +475,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoRepoGetRecord: {
     lexicon: 1,
     id: 'com.atproto.repo.getRecord',
     defs: {
@@ -526,7 +526,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoRepoListRecords: {
     lexicon: 1,
     id: 'com.atproto.repo.listRecords',
     defs: {
@@ -603,7 +603,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoRepoPutRecord: {
     lexicon: 1,
     id: 'com.atproto.repo.putRecord',
     defs: {
@@ -658,7 +658,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoRepoStrongRef: {
     lexicon: 1,
     id: 'com.atproto.repo.strongRef',
     description: 'A URI with a content-hash fingerprint.',
@@ -677,7 +677,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoServerGetAccountsConfig: {
     lexicon: 1,
     id: 'com.atproto.server.getAccountsConfig',
     defs: {
@@ -721,7 +721,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoSessionCreate: {
     lexicon: 1,
     id: 'com.atproto.session.create',
     defs: {
@@ -767,7 +767,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoSessionDelete: {
     lexicon: 1,
     id: 'com.atproto.session.delete',
     defs: {
@@ -777,7 +777,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoSessionGet: {
     lexicon: 1,
     id: 'com.atproto.session.get',
     defs: {
@@ -802,7 +802,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoSessionRefresh: {
     lexicon: 1,
     id: 'com.atproto.session.refresh',
     defs: {
@@ -833,7 +833,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoSyncGetRepo: {
     lexicon: 1,
     id: 'com.atproto.sync.getRepo',
     defs: {
@@ -860,7 +860,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoSyncGetRoot: {
     lexicon: 1,
     id: 'com.atproto.sync.getRoot',
     defs: {
@@ -892,7 +892,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  ComAtprotoSyncUpdateRepo: {
     lexicon: 1,
     id: 'com.atproto.sync.updateRepo',
     defs: {
@@ -915,7 +915,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyActorCreateScene: {
     lexicon: 1,
     id: 'app.bsky.actor.createScene',
     defs: {
@@ -967,7 +967,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyActorGetProfile: {
     lexicon: 1,
     id: 'app.bsky.actor.getProfile',
     defs: {
@@ -1021,6 +1021,9 @@ export const lexicons: LexiconDoc[] = [
               avatar: {
                 type: 'string',
               },
+              banner: {
+                type: 'string',
+              },
               followersCount: {
                 type: 'integer',
               },
@@ -1054,7 +1057,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyActorGetSuggestions: {
     lexicon: 1,
     id: 'app.bsky.actor.getSuggestions',
     defs: {
@@ -1139,7 +1142,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyActorProfile: {
     lexicon: 1,
     id: 'app.bsky.actor.profile',
     defs: {
@@ -1165,12 +1168,19 @@ export const lexicons: LexiconDoc[] = [
               maxHeight: 500,
               maxSize: 300000,
             },
+            banner: {
+              type: 'image',
+              accept: ['image/png', 'image/jpeg'],
+              maxWidth: 1500,
+              maxHeight: 500,
+              maxSize: 500000,
+            },
           },
         },
       },
     },
   },
-  {
+  AppBskyActorRef: {
     lexicon: 1,
     id: 'app.bsky.actor.ref',
     description: 'A reference to an actor in the network.',
@@ -1212,7 +1222,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyActorSearch: {
     lexicon: 1,
     id: 'app.bsky.actor.search',
     defs: {
@@ -1288,7 +1298,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyActorSearchTypeahead: {
     lexicon: 1,
     id: 'app.bsky.actor.searchTypeahead',
     defs: {
@@ -1352,7 +1362,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyActorUpdateProfile: {
     lexicon: 1,
     id: 'app.bsky.actor.updateProfile',
     defs: {
@@ -1382,6 +1392,13 @@ export const lexicons: LexiconDoc[] = [
                 maxHeight: 500,
                 maxSize: 100000,
               },
+              banner: {
+                type: 'image',
+                accept: ['image/png', 'image/jpeg'],
+                maxWidth: 1500,
+                maxHeight: 500,
+                maxSize: 500000,
+              },
             },
           },
         },
@@ -1406,7 +1423,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedEmbed: {
     lexicon: 1,
     id: 'app.bsky.feed.embed',
     description:
@@ -1486,7 +1503,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedGetAuthorFeed: {
     lexicon: 1,
     id: 'app.bsky.feed.getAuthorFeed',
     defs: {
@@ -1607,7 +1624,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
     defs: {
@@ -1745,7 +1762,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedGetRepostedBy: {
     lexicon: 1,
     id: 'app.bsky.feed.getRepostedBy',
     defs: {
@@ -1829,7 +1846,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedGetTimeline: {
     lexicon: 1,
     id: 'app.bsky.feed.getTimeline',
     defs: {
@@ -1949,7 +1966,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedGetVotes: {
     lexicon: 1,
     id: 'app.bsky.feed.getVotes',
     defs: {
@@ -2028,7 +2045,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedPost: {
     lexicon: 1,
     id: 'app.bsky.feed.post',
     defs: {
@@ -2108,7 +2125,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedRepost: {
     lexicon: 1,
     id: 'app.bsky.feed.repost',
     defs: {
@@ -2131,7 +2148,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedSetVote: {
     lexicon: 1,
     id: 'app.bsky.feed.setVote',
     defs: {
@@ -2172,7 +2189,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedTrend: {
     lexicon: 1,
     id: 'app.bsky.feed.trend',
     defs: {
@@ -2195,7 +2212,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyFeedVote: {
     lexicon: 1,
     id: 'app.bsky.feed.vote',
     defs: {
@@ -2222,7 +2239,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphAssertCreator: {
     lexicon: 1,
     id: 'app.bsky.graph.assertCreator',
     defs: {
@@ -2233,7 +2250,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphAssertMember: {
     lexicon: 1,
     id: 'app.bsky.graph.assertMember',
     defs: {
@@ -2244,7 +2261,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphAssertion: {
     lexicon: 1,
     id: 'app.bsky.graph.assertion',
     defs: {
@@ -2270,7 +2287,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphConfirmation: {
     lexicon: 1,
     id: 'app.bsky.graph.confirmation',
     defs: {
@@ -2297,7 +2314,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphFollow: {
     lexicon: 1,
     id: 'app.bsky.graph.follow',
     defs: {
@@ -2321,7 +2338,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphGetAssertions: {
     lexicon: 1,
     id: 'app.bsky.graph.getAssertions',
     defs: {
@@ -2435,7 +2452,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphGetFollowers: {
     lexicon: 1,
     id: 'app.bsky.graph.getFollowers',
     defs: {
@@ -2515,7 +2532,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphGetFollows: {
     lexicon: 1,
     id: 'app.bsky.graph.getFollows',
     defs: {
@@ -2592,7 +2609,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphGetMembers: {
     lexicon: 1,
     id: 'app.bsky.graph.getMembers',
     defs: {
@@ -2669,7 +2686,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyGraphGetMemberships: {
     lexicon: 1,
     id: 'app.bsky.graph.getMemberships',
     defs: {
@@ -2746,7 +2763,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyNotificationGetCount: {
     lexicon: 1,
     id: 'app.bsky.notification.getCount',
     defs: {
@@ -2767,7 +2784,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyNotificationList: {
     lexicon: 1,
     id: 'app.bsky.notification.list',
     defs: {
@@ -2859,7 +2876,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskyNotificationUpdateSeen: {
     lexicon: 1,
     id: 'app.bsky.notification.updateSeen',
     defs: {
@@ -2881,7 +2898,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskySystemActorScene: {
     lexicon: 1,
     id: 'app.bsky.system.actorScene',
     defs: {
@@ -2892,7 +2909,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskySystemActorUser: {
     lexicon: 1,
     id: 'app.bsky.system.actorUser',
     defs: {
@@ -2903,7 +2920,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskySystemDeclRef: {
     lexicon: 1,
     id: 'app.bsky.system.declRef',
     defs: {
@@ -2926,7 +2943,7 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-  {
+  AppBskySystemDeclaration: {
     lexicon: 1,
     id: 'app.bsky.system.declaration',
     defs: {
@@ -2951,7 +2968,9 @@ export const lexicons: LexiconDoc[] = [
       },
     },
   },
-]
+}
+export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAccountCreate: 'com.atproto.account.create',
   ComAtprotoAccountCreateInviteCode: 'com.atproto.account.createInviteCode',
