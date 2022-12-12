@@ -21,7 +21,7 @@ describe('duplicate record', () => {
     } else {
       db = Database.memory()
     }
-    const messageQueue = new SqlMessageQueue('pds', db)
+    messageQueue = new SqlMessageQueue('pds', db)
     await db.migrator.migrateTo('_20221021T162202001Z')
     recordSvc = new RecordService(db, messageQueue)
   })
