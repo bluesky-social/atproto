@@ -39,9 +39,31 @@ export class InvalidBlobError extends XRPCError {
   }
 }
 
+export class BlobTooLargeError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class InvalidMimeTypeError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class InvalidImageDimensionsError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'InvalidBlob') return new InvalidBlobError(e)
+    if (e.error === 'BlobTooLarge') return new BlobTooLargeError(e)
+    if (e.error === 'InvalidMimeType') return new InvalidMimeTypeError(e)
+    if (e.error === 'InvalidImageDimensions')
+      return new InvalidImageDimensionsError(e)
   }
   return e
 }

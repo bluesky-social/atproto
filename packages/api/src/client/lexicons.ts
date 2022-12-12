@@ -1419,6 +1419,15 @@ export const schemaDict = {
           {
             name: 'InvalidBlob',
           },
+          {
+            name: 'BlobTooLarge',
+          },
+          {
+            name: 'InvalidMimeType',
+          },
+          {
+            name: 'InvalidImageDimensions',
+          },
         ],
       },
     },

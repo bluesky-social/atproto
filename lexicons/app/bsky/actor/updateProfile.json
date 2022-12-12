@@ -49,7 +49,10 @@
         }
       },
       "errors": [
-        {"name": "InvalidBlob"}
+        {"name": "InvalidBlob"},
+        {"name": "BlobTooLarge"},
+        {"name": "InvalidMimeType"},
+        {"name": "InvalidImageDimensions"}
       ]
     }
   }
