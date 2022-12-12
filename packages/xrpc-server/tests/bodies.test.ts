@@ -1,7 +1,11 @@
 import * as http from 'http'
+import { Readable } from 'stream'
+import { gzipSync } from 'zlib'
+import xrpc from '@atproto/xrpc'
+import { bytesToStream, cidForData } from '@atproto/common'
+import { randomBytes } from '@atproto/crypto'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
-import xrpc from '@atproto/xrpc'
 import logger from '../src/logger'
 
 const LEXICONS = [
@@ -56,11 +60,39 @@ const LEXICONS = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'io.example.blobTest',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: '*/*',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cid'],
+            properties: {
+              cid: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  },
 ]
+
+const BLOB_LIMIT = 5000
 
 describe('Bodies', () => {
   let s: http.Server
-  const server = xrpcServer.createServer(LEXICONS)
+  const server = xrpcServer.createServer(LEXICONS, {
+    payload: {
+      blobLimit: BLOB_LIMIT,
+    },
+  })
   server.method(
     'io.example.validationTest',
     (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => ({
@@ -72,6 +104,22 @@ describe('Bodies', () => {
     encoding: 'json',
     body: { wrong: 'data' },
   }))
+  server.method(
+    'io.example.blobTest',
+    async (ctx: { input?: xrpcServer.HandlerInput }) => {
+      if (!(ctx.input?.body instanceof Readable))
+        throw new Error('Input not readable')
+      const buffers: Buffer[] = []
+      for await (const data of ctx.input.body) {
+        buffers.push(data)
+      }
+      const cid = await cidForData(Buffer.concat(buffers))
+      return {
+        encoding: 'json',
+        body: { cid: cid.toString() },
+      }
+    },
+  )
   const client = xrpc.service(`http://localhost:8892`)
   xrpc.addLexicons(LEXICONS)
   beforeAll(async () => {
@@ -117,5 +165,76 @@ describe('Bodies', () => {
       'Internal Server Error',
     )
     expect(error).toEqual(`Output must have the property "foo"`)
+  })
+
+  it('supports blobs and compression', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForData(bytes)
+
+    const { data: uncompressed } = await client.call(
+      'io.example.blobTest',
+      {},
+      bytes,
+      {
+        encoding: 'application/octet-stream',
+      },
+    )
+    expect(uncompressed.cid).toEqual(expectedCid.toString())
+
+    const { data: compressed } = await client.call(
+      'io.example.blobTest',
+      {},
+      gzipSync(bytes),
+      {
+        encoding: 'application/octet-stream',
+        headers: {
+          'content-encoding': 'gzip',
+        },
+      },
+    )
+    expect(compressed.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports max blob size (based on content-length)', async () => {
+    const bytes = randomBytes(BLOB_LIMIT + 1)
+
+    // Exactly the number of allowed bytes
+    await client.call('io.example.blobTest', {}, bytes.slice(0, BLOB_LIMIT), {
+      encoding: 'application/octet-stream',
+    })
+
+    // Over the number of allowed bytes
+    const promise = client.call('io.example.blobTest', {}, bytes, {
+      encoding: 'application/octet-stream',
+    })
+
+    await expect(promise).rejects.toThrow('request entity too large')
+  })
+
+  it('supports max blob size (missing content-length)', async () => {
+    // We stream bytes in these tests so that content-length isn't included.
+    const bytes = randomBytes(BLOB_LIMIT + 1)
+
+    // Exactly the number of allowed bytes
+    await client.call(
+      'io.example.blobTest',
+      {},
+      bytesToStream(bytes.slice(0, BLOB_LIMIT)),
+      {
+        encoding: 'application/octet-stream',
+      },
+    )
+
+    // Over the number of allowed bytes.
+    const promise = client.call(
+      'io.example.blobTest',
+      {},
+      bytesToStream(bytes),
+      {
+        encoding: 'application/octet-stream',
+      },
+    )
+
+    await expect(promise).rejects.toThrow('request entity too large')
   })
 })

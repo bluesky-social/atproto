@@ -47,7 +47,13 @@
             "record": {"type": "unknown"}
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "InvalidBlob"},
+        {"name": "BlobTooLarge"},
+        {"name": "InvalidMimeType"},
+        {"name": "InvalidImageDimensions"}
+      ]
     }
   }
 }

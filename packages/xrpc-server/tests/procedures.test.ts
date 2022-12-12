@@ -1,7 +1,8 @@
 import * as http from 'http'
+import { Readable } from 'stream'
+import xrpc from '@atproto/xrpc'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
-import xrpc from '@atproto/xrpc'
 
 const LEXICONS = [
   {
@@ -93,8 +94,20 @@ describe('Procedures', () => {
   )
   server.method(
     'io.example.ping3',
-    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
-      return { encoding: 'application/octet-stream', body: ctx.input?.body }
+    async (ctx: {
+      params: xrpcServer.Params
+      input?: xrpcServer.HandlerInput
+    }) => {
+      if (!(ctx.input?.body instanceof Readable))
+        throw new Error('Input not readable')
+      const buffers: Buffer[] = []
+      for await (const data of ctx.input.body) {
+        buffers.push(data)
+      }
+      return {
+        encoding: 'application/octet-stream',
+        body: Buffer.concat(buffers),
+      }
     },
   )
   server.method(

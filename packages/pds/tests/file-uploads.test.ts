@@ -1,4 +1,5 @@
 import fs from 'fs/promises'
+import { gzipSync } from 'zlib'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
 import { CID } from 'multiformats/cid'
@@ -190,6 +191,19 @@ describe('file uploads', () => {
       .where('cid', '=', uploadAfterPermanent.cid)
       .executeTakeFirstOrThrow()
     expect(blob.tempKey).toEqual(null)
+  })
+
+  it('supports compression during upload', async () => {
+    const { data: uploaded } = await aliceClient.com.atproto.blob.upload(
+      gzipSync(smallFile),
+      {
+        encoding: 'image/jpeg',
+        headers: {
+          'content-encoding': 'gzip',
+        },
+      } as any,
+    )
+    expect(uploaded.cid).toEqual(smallCid.toString())
   })
 
   it('corrects a bad mimetype', async () => {

@@ -1,6 +1,6 @@
 import stream from 'stream'
 import { CID } from 'multiformats/cid'
-import { fileTypeFromStream } from 'file-type'
+import { fromStream as fileTypeFromStream } from 'file-type'
 import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { sha256Stream } from '@atproto/crypto'

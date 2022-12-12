@@ -1,6 +1,9 @@
+import { Readable, Transform } from 'stream'
+import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
-import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
 import mime from 'mime-types'
+import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
+import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
 import {
   UndecodedParams,
   Params,
@@ -9,8 +12,9 @@ import {
   handlerSuccess,
   InvalidRequestError,
   InternalServerError,
+  Options,
+  XRPCError,
 } from './types'
-import { cloneStream } from '@atproto/common'
 
 export function decodeQueryParams(
   def: LexXrpcProcedure | LexXrpcQuery,
@@ -51,6 +55,7 @@ export function validateInput(
   nsid: string,
   def: LexXrpcProcedure | LexXrpcQuery,
   req: express.Request,
+  opts: Options,
   lexicons: Lexicons,
 ): HandlerInput | undefined {
   // request expectation
@@ -93,12 +98,12 @@ export function validateInput(
   }
 
   // if middleware already got the body, we pass that along as input
-  // otherwise, we pipe it into a readable stream
+  // otherwise, we pass along a decoded readable stream
   let body
   if (req.complete) {
     body = req.body
   } else {
-    body = cloneStream(req)
+    body = decodeBodyStream(req, opts.payload?.blobLimit)
   }
 
   return {
@@ -181,4 +186,44 @@ export function processBodyAsBytes(req: express.Request): Promise<Uint8Array> {
     req.on('data', (chunk) => chunks.push(chunk))
     req.on('end', () => resolve(new Uint8Array(Buffer.concat(chunks))))
   })
+}
+
+function decodeBodyStream(
+  req: express.Request,
+  maxSize: number | undefined,
+): Readable {
+  let stream: Readable = req
+  const contentEncoding = req.headers['content-encoding']
+  const contentLength = req.headers['content-length']
+
+  if (
+    maxSize !== undefined &&
+    contentLength &&
+    parseInt(contentLength, 10) > maxSize
+  ) {
+    throw new XRPCError(413, 'request entity too large')
+  }
+
+  let decoder: Transform | undefined
+  if (contentEncoding === 'gzip') {
+    decoder = createGunzip()
+  } else if (contentEncoding === 'deflate') {
+    decoder = createDeflate()
+  }
+
+  if (decoder) {
+    forwardStreamErrors(stream, decoder)
+    stream = stream.pipe(decoder)
+  }
+
+  if (maxSize !== undefined) {
+    const maxSizeChecker = new MaxSizeChecker(
+      maxSize,
+      () => new XRPCError(413, 'request entity too large'),
+    )
+    forwardStreamErrors(stream, maxSizeChecker)
+    stream = stream.pipe(maxSizeChecker)
+  }
+
+  return stream
 }

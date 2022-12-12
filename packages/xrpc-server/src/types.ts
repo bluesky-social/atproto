@@ -3,6 +3,14 @@ import { isHttpError } from 'http-errors'
 import zod from 'zod'
 import { ResponseType, ResponseTypeStrings } from '@atproto/xrpc'
 
+export type Options = {
+  payload?: {
+    jsonLimit?: number
+    blobLimit?: number
+    textLimit?: number
+  }
+}
+
 export type UndecodedParams = typeof express.request['query']
 export type Params = Record<string, string | number | boolean | undefined>
 

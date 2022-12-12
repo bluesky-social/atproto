@@ -10,11 +10,13 @@ export type Listener<M extends MessageOfType = MessageOfType> = (ctx: {
   db: Database
 }) => Promise<void | MessageOfType[]>
 
-export type Listenable<M extends MessageOfType = MessageOfType> =
-  | Listener<M>
-  | { listener: Listener<M> }
+export interface Listenable<M extends MessageOfType = MessageOfType> {
+  listener: Listener<M>
+}
 
-export abstract class Consumer<M extends MessageOfType> {
+export abstract class Consumer<M extends MessageOfType>
+  implements Listenable<M>
+{
   abstract dispatch(ctx: {
     db: Database
     message: M
