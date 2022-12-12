@@ -37,8 +37,7 @@ export class SqlMessageQueue implements MessageQueue {
     listenable: Listenable<M>,
   ) {
     const listeners = this.listeners.get(topic) ?? []
-    const listener = 'listener' in listenable ? listenable.listener : listenable
-    listeners.push(listener as Listener) // @TODO avoid upcast
+    listeners.push(listenable.listener as Listener) // @TODO avoid upcast
     this.listeners.set(topic, listeners)
   }
 
