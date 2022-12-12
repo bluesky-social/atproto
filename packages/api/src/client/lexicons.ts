@@ -1441,7 +1441,7 @@ export const schemaDict = {
       },
       external: {
         type: 'object',
-        required: ['title', 'description', 'thumb'],
+        required: ['uri', 'title', 'description', 'thumb'],
         properties: {
           uri: {
             type: 'string',
@@ -1455,9 +1455,37 @@ export const schemaDict = {
           thumb: {
             type: 'image',
             accept: ['image/*'],
-            maxWidth: 500,
-            maxHeight: 500,
-            maxSize: 300000,
+            maxWidth: 250,
+            maxHeight: 250,
+            maxSize: 100000,
+          },
+        },
+      },
+      presented: {
+        type: 'object',
+        required: ['external'],
+        properties: {
+          external: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#presentedExternal',
+          },
+        },
+      },
+      presentedExternal: {
+        type: 'object',
+        required: ['uri', 'title', 'description', 'thumb'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          title: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          thumb: {
+            type: 'string',
           },
         },
       },
@@ -1492,6 +1520,35 @@ export const schemaDict = {
             maxWidth: 500,
             maxHeight: 500,
             maxSize: 300000,
+          },
+          alt: {
+            type: 'string',
+          },
+        },
+      },
+      presented: {
+        type: 'object',
+        required: ['images'],
+        properties: {
+          images: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.embed.images#presentedImage',
+            },
+            maxLength: 4,
+          },
+        },
+      },
+      presentedImage: {
+        type: 'object',
+        required: ['thumb', 'fullsize', 'alt'],
+        properties: {
+          thumb: {
+            type: 'string',
+          },
+          fullsize: {
+            type: 'string',
           },
           alt: {
             type: 'string',
@@ -1580,9 +1637,12 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
-          embed: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.embed',
+          embeds: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.images#presented',
+              'lex:app.bsky.embed.external#presented',
+            ],
           },
           replyCount: {
             type: 'integer',
@@ -1688,9 +1748,12 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
-          embed: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.embed',
+          embeds: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.images#presented',
+              'lex:app.bsky.embed.external#presented',
+            ],
           },
           parent: {
             type: 'union',
@@ -1922,9 +1985,12 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
-          embed: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.embed',
+          embeds: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.images#presented',
+              'lex:app.bsky.embed.external#presented',
+            ],
           },
           replyCount: {
             type: 'integer',
@@ -2068,7 +2134,7 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.feed.post#replyRef',
             },
-            embeds: {
+            embed: {
               type: 'union',
               refs: [
                 'lex:app.bsky.embed.images',

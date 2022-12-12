@@ -9,7 +9,7 @@ export interface Record {
   text: string
   entities?: Entity[]
   reply?: ReplyRef
-  embeds?:
+  embed?:
     | AppBskyEmbedImages.Main
     | AppBskyEmbedExternal.Main
     | { $type: string; [k: string]: unknown }
