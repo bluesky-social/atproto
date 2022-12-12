@@ -55,8 +55,8 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'cover',
-        height: 750,
-        width: 250,
+        height: 250,
+        width: 750,
         min: true,
       })
     }
