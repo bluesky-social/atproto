@@ -11,3 +11,15 @@ export interface Image {
   alt: string
   [k: string]: unknown
 }
+
+export interface Presented {
+  images: PresentedImage[]
+  [k: string]: unknown
+}
+
+export interface PresentedImage {
+  thumb: string
+  fullsize: string
+  alt: string
+  [k: string]: unknown
+}

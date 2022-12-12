@@ -3,13 +3,31 @@ import { getDeclaration } from '.'
 import { TimeCidKeyset } from '../../../../db/pagination'
 import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
+import { Presented as PresentedImage } from '../../../../lexicon/types/app/bsky/embed/images'
+import { Presented as PresentedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { CID } from 'multiformats/cid'
 import { ImageUriBuilder } from '../../../../image/uri'
+import Database from '../../../../db'
+import { embedsForPosts } from './embeds'
+
+type FeedEmbeds = {
+  [uri: string]: PresentedImage | PresentedExternal
+}
 
 // Present post and repost results into FeedItems
-// @TODO add embeds
+// Including links to embedded media
+export const composeFeed = async (
+  db: Database,
+  imgUriBuilder: ImageUriBuilder,
+  rows: FeedRow[],
+): Promise<FeedItem[]> => {
+  const feedUris = rows.map((row) => row.postUri)
+  const embeds = await embedsForPosts(db.db, imgUriBuilder, feedUris)
+  return rows.map(rowToFeedItem(imgUriBuilder, embeds))
+}
+
 export const rowToFeedItem =
-  (imgUriBuilder: ImageUriBuilder) =>
+  (imgUriBuilder: ImageUriBuilder, embeds: FeedEmbeds) =>
   (row: FeedRow): FeedItem => ({
     uri: row.postUri,
     cid: row.postCid,
@@ -19,6 +37,7 @@ export const rowToFeedItem =
     repostedBy:
       row.type === 'repost' ? rowToOriginator(imgUriBuilder, row) : undefined,
     record: common.ipldBytesToRecord(row.recordBytes),
+    embeds: embeds[row.postUri],
     replyCount: row.replyCount,
     repostCount: row.repostCount,
     upvoteCount: row.upvoteCount,

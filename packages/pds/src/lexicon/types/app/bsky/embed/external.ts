@@ -13,3 +13,16 @@ export interface External {
   thumb: { cid: string; mimeType: string; [k: string]: unknown }
   [k: string]: unknown
 }
+
+export interface Presented {
+  external: PresentedExternal
+  [k: string]: unknown
+}
+
+export interface PresentedExternal {
+  uri: string
+  title: string
+  description: string
+  thumb: string
+  [k: string]: unknown
+}

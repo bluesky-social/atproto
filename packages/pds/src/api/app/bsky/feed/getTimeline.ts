@@ -6,8 +6,8 @@ import { isEnum } from '../util'
 import {
   FeedAlgorithm,
   FeedItemType,
-  rowToFeedItem,
   FeedKeyset,
+  composeFeed,
 } from '../util/feed'
 import { countAll } from '../../../../db/util'
 import { paginate } from '../../../../db/pagination'
@@ -176,7 +176,7 @@ export default function (server: Server) {
       })
 
       const queryRes = await feedItemsQb.execute()
-      const feed = queryRes.map(rowToFeedItem(imgUriBuilder))
+      const feed = await composeFeed(db, imgUriBuilder, queryRes)
 
       return {
         encoding: 'application/json',

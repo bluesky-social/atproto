@@ -27,6 +27,26 @@
         },
         "alt": {"type": "string"}
       }
+    },
+    "presented": {
+      "type": "object",
+      "required": ["images"],
+      "properties": {
+        "images": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "#presentedImage"},
+          "maxLength": 4
+        }
+      }
+    },
+    "presentedImage": {
+      "type": "object",
+      "required": ["thumb", "fullsize", "alt"],
+      "properties": {
+        "thumb": {"type": "string"},
+        "fullsize": {"type": "string"},
+        "alt": {"type": "string"}
+      }
     }
   }
 }

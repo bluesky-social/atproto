@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import * as locals from '../../../../locals'
-import { FeedItemType, rowToFeedItem, FeedKeyset } from '../util/feed'
+import { FeedItemType, FeedKeyset, composeFeed } from '../util/feed'
 import { countAll } from '../../../../db/util'
 import { paginate } from '../../../../db/pagination'
 import ServerAuth from '../../../../auth'
@@ -155,7 +155,7 @@ export default function (server: Server) {
       })
 
       const queryRes = await feedItemsQb.execute()
-      const feed = queryRes.map(rowToFeedItem(imgUriBuilder))
+      const feed = await composeFeed(db, imgUriBuilder, queryRes)
 
       return {
         encoding: 'application/json',
