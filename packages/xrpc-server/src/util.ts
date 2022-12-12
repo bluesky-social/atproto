@@ -1,5 +1,5 @@
-import { Readable } from 'stream'
-import { createDeflate, createGunzip, Deflate, Gunzip } from 'zlib'
+import { Readable, Transform, TransformCallback } from 'stream'
+import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
 import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
@@ -192,6 +192,7 @@ function decodeBodyStream(
   req: express.Request,
   maxSize: number | undefined,
 ): Readable {
+  let stream: Readable = req
   const contentEncoding = req.headers['content-encoding']
   const contentLength = req.headers['content-length']
 
@@ -203,7 +204,7 @@ function decodeBodyStream(
     throw new XRPCError(413, 'request entity too large')
   }
 
-  let decoder: Gunzip | Deflate | undefined
+  let decoder: Transform | undefined
   if (contentEncoding === 'gzip') {
     decoder = createGunzip()
   } else if (contentEncoding === 'deflate') {
@@ -211,9 +212,29 @@ function decodeBodyStream(
   }
 
   if (decoder) {
-    forwardStreamErrors(req, decoder)
-    return req.pipe(decoder)
+    forwardStreamErrors(stream, decoder)
+    stream = stream.pipe(decoder)
   }
 
-  return req
+  if (maxSize !== undefined) {
+    const maxSizeChecker = new MaxSizeChecker(maxSize)
+    forwardStreamErrors(stream, maxSizeChecker)
+    stream = stream.pipe(maxSizeChecker)
+  }
+
+  return stream
+}
+
+class MaxSizeChecker extends Transform {
+  totalSize = 0
+  constructor(public maxSize: number) {
+    super()
+  }
+  _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
+    this.totalSize += chunk.length
+    if (this.totalSize > this.maxSize) {
+      return this.destroy(new XRPCError(413, 'request entity too large'))
+    }
+    return cb(null, chunk)
+  }
 }

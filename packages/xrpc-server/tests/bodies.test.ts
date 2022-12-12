@@ -210,4 +210,29 @@ describe('Bodies', () => {
 
     await expect(promise).rejects.toThrow('request entity too large')
   })
+
+  it('supports max blob size (missing content-length)', async () => {
+    const bytes = randomBytes(BLOB_LIMIT + 1)
+
+    // Exactly the number of allowed bytes
+    await client.call('io.example.blobTest', {}, bytes.slice(0, BLOB_LIMIT), {
+      encoding: 'application/octet-stream',
+    })
+
+    // Over the number of allowed bytes. Stream bytes so that content-length isn't included in request.
+    const promise = client.call('io.example.blobTest', {}, streamFrom(bytes), {
+      encoding: 'application/octet-stream',
+    })
+
+    await expect(promise).rejects.toThrow('request entity too large')
+  })
 })
+
+function streamFrom(bytes: Uint8Array): Readable {
+  return new Readable({
+    read() {
+      this.push(bytes)
+      this.push(null)
+    },
+  })
+}
