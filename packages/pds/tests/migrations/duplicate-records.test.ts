@@ -5,9 +5,11 @@ import * as schemas from '../../src/db/schemas'
 import { APP_BSKY_GRAPH } from '../../src/lexicon'
 import SqlMessageQueue from '../../src/stream/message-queue'
 import { RecordService } from '../../src/services/record'
+import { MessageQueue } from '../../src/stream/types'
 
 describe('duplicate record', () => {
   let db: Database
+  let messageQueue: MessageQueue
   let recordSvc: RecordService
 
   beforeAll(async () => {
@@ -19,11 +21,13 @@ describe('duplicate record', () => {
     } else {
       db = Database.memory()
     }
+    const messageQueue = new SqlMessageQueue('pds', db)
     await db.migrator.migrateTo('_20221021T162202001Z')
-    recordSvc = new RecordService(db, new SqlMessageQueue('pds', db))
+    recordSvc = new RecordService(db, messageQueue)
   })
 
   afterAll(async () => {
+    await messageQueue.destroy()
     await db.close()
   })
 
