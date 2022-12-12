@@ -5,7 +5,17 @@
   "defs": {
     "main": {
       "type": "object",
-      "required":  ["title", "description", "imageUri"],
+      "required": ["external"],
+      "properties": {
+        "external": {
+          "type": "ref",
+          "ref": "#external"
+        }
+      }
+    },
+    "external": {
+      "type": "object",
+      "required":  ["uri", "title", "description", "thumb"],
       "properties": {
         "uri": {"type": "string"},
         "title": {"type": "string"},

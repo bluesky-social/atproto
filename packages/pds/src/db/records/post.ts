@@ -1,8 +1,13 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Post from '../../lexicon/types/app/bsky/feed/post'
-import * as PostTables from '../tables/post'
+import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
+import { Main as ImagesEmbedFragment } from '../../lexicon/types/app/bsky/embed/images'
+import { Main as ExternalEmbedFragment } from '../../lexicon/types/app/bsky/embed/external'
+import { Post } from '../tables/post'
+import { PostEntity } from '../tables/post-entity'
+import { PostEmbedImage } from '../tables/post-embed-image'
+import { PostEmbedExternal } from '../tables/post-embed-external'
 import * as lex from '../../lexicon/lexicons'
 import * as messages from '../../stream/messages'
 import { Message } from '../../stream/messages'
@@ -10,8 +15,9 @@ import DatabaseSchema from '../database-schema'
 import RecordProcessor from '../record-processor'
 
 type IndexedPost = {
-  post: PostTables.Post
-  entities: PostTables.PostEntity[]
+  post: Post
+  entities: PostEntity[]
+  embed?: PostEmbedImage[] | PostEmbedExternal
 }
 
 const lexId = lex.ids.AppBskyFeedPost
@@ -20,7 +26,7 @@ const insertFn = async (
   db: Kysely<DatabaseSchema>,
   uri: AtUri,
   cid: CID,
-  obj: Post.Record,
+  obj: PostRecord,
   timestamp?: string,
 ): Promise<IndexedPost | null> => {
   const entities = (obj.entities || []).map((entity) => ({
@@ -48,7 +54,7 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
-  let insertedEntities: PostTables.PostEntity[] = []
+  let insertedEntities: PostEntity[] = []
   if (entities.length > 0) {
     insertedEntities = await db
       .insertInto('post_entity')
@@ -56,8 +62,30 @@ const insertFn = async (
       .returningAll()
       .execute()
   }
+  let embed: PostEmbedImage[] | PostEmbedExternal | undefined
+  if (obj.embed) {
+    if (obj.embed.$type === 'app.bsky.embed.images') {
+      embed = (obj.embed as ImagesEmbedFragment).images.map((img, i) => ({
+        postUri: uri.toString(),
+        position: i,
+        imageCid: img.image.cid,
+        alt: img.alt,
+      }))
+      await db.insertInto('post_embed_image').values(embed).execute()
+    } else if (obj.embed.$type === 'app.bsky.embed.external') {
+      const external = (obj.embed as ExternalEmbedFragment).external
+      embed = {
+        postUri: uri.toString(),
+        uri: external.uri,
+        title: external.title,
+        description: external.description,
+        thumbCid: external.thumb.cid,
+      }
+      await db.insertInto('post_embed_external').values(embed).execute()
+    }
+  }
   return insertedPost
-    ? { post: insertedPost, entities: insertedEntities }
+    ? { post: insertedPost, entities: insertedEntities, embed }
     : null
 }
 
@@ -114,7 +142,25 @@ const deleteFn = async (
     .where('postUri', '=', uri.toString())
     .returningAll()
     .execute()
-  return deleted ? { post: deleted, entities: deletedEntities } : null
+  let deletedEmbed: PostEmbedImage[] | PostEmbedExternal | undefined
+  const deletedImgs = await db
+    .deleteFrom('post_embed_image')
+    .where('postUri', '=', uri.toString())
+    .returningAll()
+    .execute()
+  if (deletedImgs) {
+    deletedEmbed = deletedImgs
+  } else {
+    const deletedExternals = await db
+      .deleteFrom('post_embed_external')
+      .where('postUri', '=', uri.toString())
+      .returningAll()
+      .executeTakeFirst()
+    deletedEmbed = deletedExternals || undefined
+  }
+  return deleted
+    ? { post: deleted, entities: deletedEntities, embed: deletedEmbed }
+    : null
 }
 
 const eventsForDelete = (
@@ -125,7 +171,7 @@ const eventsForDelete = (
   return [messages.deleteNotifications(deleted.post.uri)]
 }
 
-export type PluginType = RecordProcessor<Post.Record, IndexedPost>
+export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {

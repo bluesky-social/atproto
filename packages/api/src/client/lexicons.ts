@@ -1431,7 +1431,17 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'object',
-        required: ['title', 'description', 'imageUri'],
+        required: ['external'],
+        properties: {
+          external: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#external',
+          },
+        },
+      },
+      external: {
+        type: 'object',
+        required: ['title', 'description', 'thumb'],
         properties: {
           uri: {
             type: 'string',
@@ -1453,12 +1463,26 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyEmbedImage: {
+  AppBskyEmbedImages: {
     lexicon: 1,
-    id: 'app.bsky.embed.image',
-    description: 'An image embedded in some other form of content',
+    id: 'app.bsky.embed.images',
+    description: 'A set of images embedded in some other form of content',
     defs: {
       main: {
+        type: 'object',
+        required: ['images'],
+        properties: {
+          images: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.embed.images#image',
+            },
+            maxLength: 4,
+          },
+        },
+      },
+      image: {
         type: 'object',
         required: ['image', 'alt'],
         properties: {
@@ -2047,8 +2071,8 @@ export const schemaDict = {
             embeds: {
               type: 'union',
               refs: [
-                'lex:app.bsky.feed.post#images',
-                'lex:app.bsky.feed.post#external',
+                'lex:app.bsky.embed.images',
+                'lex:app.bsky.embed.external',
               ],
             },
             createdAt: {
@@ -2100,30 +2124,6 @@ export const schemaDict = {
           end: {
             type: 'integer',
             minimum: 0,
-          },
-        },
-      },
-      images: {
-        type: 'object',
-        required: ['images'],
-        properties: {
-          images: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.embed.image',
-            },
-            maxLength: 4,
-          },
-        },
-      },
-      external: {
-        type: 'object',
-        required: ['external'],
-        properties: {
-          external: {
-            type: 'ref',
-            ref: 'lex:com.atproto.embed.external',
           },
         },
       },
@@ -3010,7 +3010,7 @@ export const ids = {
   AppBskyActorSearchTypeahead: 'app.bsky.actor.searchTypeahead',
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
-  AppBskyEmbedImage: 'app.bsky.embed.image',
+  AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
