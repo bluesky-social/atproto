@@ -35,6 +35,11 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?:
+    | 'InvalidBlob'
+    | 'BlobTooLarge'
+    | 'InvalidMimeType'
+    | 'InvalidImageDimensions'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

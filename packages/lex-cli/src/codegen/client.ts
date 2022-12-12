@@ -529,12 +529,16 @@ function genClientXrpcCommon(
     opts.addProperty({ name: 'qp?', type: 'QueryParams' })
   }
   if (def.type === 'procedure' && def.input) {
-    opts.addProperty({
-      name: 'encoding',
-      type: def.input.encoding
+    let encodingType = 'string'
+    if (def.input.encoding !== '*/*') {
+      encodingType = def.input.encoding
         .split(',')
         .map((v) => `'${v.trim()}'`)
-        .join(' | '),
+        .join(' | ')
+    }
+    opts.addProperty({
+      name: 'encoding',
+      type: encodingType,
     })
   }
 

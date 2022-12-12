@@ -1,6 +1,7 @@
 import stream from 'stream'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
+import bytes from 'bytes'
 import Database from '../db'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -68,17 +69,21 @@ export const processWriteBlobs = async (
 }
 
 export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
-  const throwInvalid = (msg: string) => {
-    throw new InvalidRequestError(msg, 'InvalidBlob')
+  const throwInvalid = (msg: string, errName = 'InvalidBlob') => {
+    throw new InvalidRequestError(msg, errName)
   }
   if (blob.constraints.maxSize && found.size > blob.constraints.maxSize) {
     throwInvalid(
-      `Blob too large. Expected ${blob.constraints.maxSize}. Got: ${found.size}`,
+      `This file is too large. It is ${bytes.format(
+        found.size,
+      )} but the maximum size is ${bytes.format(blob.constraints.maxSize)}.`,
+      'BlobTooLarge',
     )
   }
   if (blob.mimeType !== found.mimeType) {
     throwInvalid(
       `Referenced Mimetype does not match stored blob. Expected: ${found.mimeType}, Got: ${blob.mimeType}`,
+      'InvalidMimeType',
     )
   }
   if (
@@ -86,12 +91,16 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
     !acceptedMime(blob.mimeType, blob.constraints.accept)
   ) {
     throwInvalid(
-      `Referenced Mimetype is not accepted. Expected: ${blob.constraints.accept}, Got: ${blob.mimeType}`,
+      `Wrong type of file. It is ${blob.mimeType} but it must match ${blob.constraints.accept}.`,
+      'InvalidMimeType',
     )
   }
   if (blob.constraints.type === 'image') {
     if (!blob.mimeType.startsWith('image')) {
-      throwInvalid(`Expected an image, got ${blob.mimeType}`)
+      throwInvalid(
+        `Wrong type of file. Expected an image, got ${blob.mimeType}`,
+        'InvalidMimeType',
+      )
     }
     if (
       blob.constraints.maxHeight &&
@@ -99,7 +108,8 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
       found.height > blob.constraints.maxHeight
     ) {
       throwInvalid(
-        `Referenced image height is too large. Expected: ${blob.constraints.maxHeight}. Got: ${found.height}`,
+        `This image is too tall. It is ${found.height} pixels high, but the limit is ${blob.constraints.maxHeight} pixels.`,
+        'InvalidImageDimensions',
       )
     }
     if (
@@ -108,7 +118,8 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
       found.width > blob.constraints.maxWidth
     ) {
       throwInvalid(
-        `Referenced image width is too large. Expected: ${blob.constraints.maxWidth}. Got: ${found.width}`,
+        `This image is too wide. It is ${found.width} pixels wide, but the limit is ${blob.constraints.maxWidth} pixels.`,
+        'InvalidImageDimensions',
       )
     }
     if (
@@ -117,7 +128,8 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
       found.height < blob.constraints.minHeight
     ) {
       throwInvalid(
-        `Referenced image height is too small. Expected: ${blob.constraints.minHeight}. Got: ${found.height}`,
+        `This image is too short. It is ${found.height} pixels high, but the limit is ${blob.constraints.minHeight} pixels.`,
+        'InvalidImageDimensions',
       )
     }
     if (
@@ -126,7 +138,8 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
       found.width < blob.constraints.minWidth
     ) {
       throwInvalid(
-        `Referenced image width is too small. Expected: ${blob.constraints.minWidth}. Got: ${found.width}`,
+        `This image is too narrow. It is ${found.width} pixels wide, but the limit is ${blob.constraints.minWidth} pixels.`,
+        'InvalidImageDimensions',
       )
     }
   }
