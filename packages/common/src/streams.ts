@@ -1,4 +1,10 @@
-import { Stream, Readable, PassThrough } from 'stream'
+import {
+  Stream,
+  Readable,
+  PassThrough,
+  Transform,
+  TransformCallback,
+} from 'stream'
 
 export const forwardStreamErrors = (...streams: Stream[]) => {
   for (let i = 0; i < streams.length; ++i) {
@@ -29,4 +35,18 @@ export const bytesToStream = (bytes: Uint8Array): Readable => {
   stream.push(bytes)
   stream.push(null)
   return stream
+}
+
+export class MaxSizeChecker extends Transform {
+  totalSize = 0
+  constructor(public maxSize: number, public createError: () => Error) {
+    super()
+  }
+  _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
+    this.totalSize += chunk.length
+    if (this.totalSize > this.maxSize) {
+      return this.destroy(this.createError())
+    }
+    return cb(null, chunk)
+  }
 }

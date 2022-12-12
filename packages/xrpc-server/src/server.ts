@@ -1,3 +1,4 @@
+import { Readable } from 'stream'
 import express, {
   ErrorRequestHandler,
   NextFunction,
@@ -16,17 +17,10 @@ import {
   HandlerAuth,
   AuthVerifier,
   isHandlerError,
+  Options,
 } from './types'
 import { decodeQueryParams, validateInput, validateOutput } from './util'
 import log from './logger'
-
-export type Options = {
-  payload?: {
-    jsonLimit?: string | number
-    rawLimit?: string | number
-    textLimit?: string | number
-  }
-}
 
 export function createServer(lexicons?: unknown[], options?: Options) {
   return new Server(lexicons, options)
@@ -36,7 +30,8 @@ export class Server {
   router = express.Router()
   routes = express.Router()
   lex = new Lexicons()
-  middleware: Record<'json' | 'raw' | 'text', RequestHandler>
+  options: Options
+  middleware: Record<'json' | 'text', RequestHandler>
 
   constructor(lexicons?: unknown[], opts?: Options) {
     if (lexicons) {
@@ -45,9 +40,9 @@ export class Server {
     this.router.use(this.routes)
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
     this.router.use(errorMiddleware)
+    this.options = opts ?? {}
     this.middleware = {
       json: express.json({ limit: opts?.payload?.jsonLimit }),
-      raw: express.raw({ limit: opts?.payload?.rawLimit }),
       text: express.text({ limit: opts?.payload?.textLimit }),
     }
   }
@@ -98,7 +93,6 @@ export class Server {
     }
     if (verb === 'post') {
       middleware.push(this.middleware.json)
-      middleware.push(this.middleware.raw)
       middleware.push(this.middleware.text)
     }
     this.routes[verb](
@@ -140,7 +134,7 @@ export class Server {
     handler: XRPCHandler,
   ): RequestHandler {
     const validateReqInput = (req: express.Request) =>
-      validateInput(nsid, def, req, this.lex)
+      validateInput(nsid, def, req, this.options, this.lex)
     const validateResOutput = (output?: HandlerSuccess) =>
       validateOutput(nsid, def, output, this.lex)
     const assertValidXrpcParams = (params: unknown) =>
@@ -155,6 +149,12 @@ export class Server {
           throw new InvalidRequestError(String(e))
         }
         const input = validateReqInput(req)
+
+        if (input?.body instanceof Readable) {
+          // If the body stream errors at any time, abort the request
+          input.body.once('error', next)
+        }
+
         const locals: RequestLocals = req[kRequestLocals]
 
         // run the handler
