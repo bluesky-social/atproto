@@ -74,8 +74,12 @@ export class ImageUriBuilder {
         width: 250,
         min: true,
       })
+    } else {
+      const exhaustiveCheck: never = id
+      throw new Error(
+        `Unrecognized requested common uri type: ${exhaustiveCheck}`,
+      )
     }
-    throw new Error(`Unrecognized requested common uri type: ${id}`)
   }
 
   getVerifiedOptions(path: string): Options & { cid: CID; signature: string } {
