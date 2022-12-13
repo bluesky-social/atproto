@@ -37,7 +37,13 @@
         "cid": {"type": "string"},
         "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "record": {"type": "unknown"},
-        "embed": {"type": "ref", "ref": "app.bsky.feed.embed"},
+        "embed": {
+          "type": "union",
+          "refs": [
+            "app.bsky.embed.images#presented",
+            "app.bsky.embed.external#presented"
+          ]
+        },
         "parent": {"type": "union", "refs": ["#post", "#notFoundPost"]},
         "replyCount": {"type": "integer"},
         "replies": {

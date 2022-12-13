@@ -22,7 +22,17 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   await sc.follow(dan, sc.actorRef(bob))
   await sc.post(alice, posts.alice[0])
   await sc.post(bob, posts.bob[0])
-  await sc.post(carol, posts.carol[0])
+  const img1 = await sc.uploadFile(
+    carol,
+    'tests/image/fixtures/key-landscape-small.jpg',
+    'image/jpeg',
+  )
+  const img2 = await sc.uploadFile(
+    carol,
+    'tests/image/fixtures/key-portrait-small.jpg',
+    'image/jpeg',
+  )
+  await sc.post(carol, posts.carol[0], undefined, [img1, img2])
   await sc.post(dan, posts.dan[0])
   await sc.post(dan, posts.dan[1], [
     {
@@ -44,11 +54,18 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
 
   await mq?.processAll()
 
+  const replyImg = await sc.uploadFile(
+    bob,
+    'tests/image/fixtures/key-landscape-small.jpg',
+    'image/jpeg',
+  )
   await sc.reply(
     bob,
     sc.posts[alice][1].ref,
     sc.posts[alice][1].ref,
     replies.bob[0],
+    undefined,
+    [replyImg],
   )
   await sc.reply(
     carol,

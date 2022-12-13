@@ -3,7 +3,7 @@ import * as uint8arrays from 'uint8arrays'
 import { CID } from 'multiformats/cid'
 import { Options } from './util'
 
-type CommonSignedUris = 'avatar' | 'banner'
+type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 export class ImageUriBuilder {
   public endpoint: string
@@ -37,10 +37,7 @@ export class ImageUriBuilder {
     return this.endpoint + path
   }
 
-  getCommonSignedUri(
-    id: CommonSignedUris,
-    cid: string | CID,
-  ): string | undefined {
+  getCommonSignedUri(id: CommonSignedUris, cid: string | CID): string {
     if (id === 'avatar') {
       return this.getSignedUri({
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
@@ -59,8 +56,30 @@ export class ImageUriBuilder {
         width: 750,
         min: true,
       })
+    } else if (id === 'feed_fullsize') {
+      return this.getSignedUri({
+        cid: typeof cid === 'string' ? CID.parse(cid) : cid,
+        format: 'jpeg',
+        fit: 'cover',
+        height: 500,
+        width: 500,
+        min: true,
+      })
+    } else if (id === 'feed_thumbnail') {
+      return this.getSignedUri({
+        cid: typeof cid === 'string' ? CID.parse(cid) : cid,
+        format: 'jpeg',
+        fit: 'cover',
+        height: 250,
+        width: 250,
+        min: true,
+      })
+    } else {
+      const exhaustiveCheck: never = id
+      throw new Error(
+        `Unrecognized requested common uri type: ${exhaustiveCheck}`,
+      )
     }
-    return undefined
   }
 
   getVerifiedOptions(path: string): Options & { cid: CID; signature: string } {

@@ -1,12 +1,18 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import * as AppBskyEmbedImages from '../embed/images'
+import * as AppBskyEmbedExternal from '../embed/external'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface Record {
   text: string
   entities?: Entity[]
   reply?: ReplyRef
+  embed?:
+    | AppBskyEmbedImages.Main
+    | AppBskyEmbedExternal.Main
+    | { $type: string; [k: string]: unknown }
   createdAt: string
   [k: string]: unknown
 }

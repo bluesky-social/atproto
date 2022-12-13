@@ -8,8 +8,8 @@ import { DatabaseSchema } from '../../../../db/database-schema'
 import { countAll } from '../../../../db/util'
 import { getDeclaration } from '../util'
 import ServerAuth from '../../../../auth'
-import { CID } from 'multiformats/cid'
 import { ImageUriBuilder } from '../../../../image/uri'
+import { embedsForPosts, FeedEmbeds } from '../util/embeds'
 
 export default function (server: Server) {
   server.app.bsky.feed.getPostThread({
@@ -27,7 +27,8 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
 
-      const thread = rowToPost(imgUriBuilder, queryRes)
+      const embeds = await embedsForPosts(db.db, imgUriBuilder, [queryRes.uri])
+      const thread = rowToPost(imgUriBuilder, embeds, queryRes)
       if (depth > 0) {
         thread.replies = await getReplies(
           db.db,
@@ -70,7 +71,8 @@ const getAncestors = async (
       notFound: true,
     }
   }
-  const parentObj = rowToPost(imgUriBuilder, parentRes)
+  const embeds = await embedsForPosts(db, imgUriBuilder, [parentRes.uri])
+  const parentObj = rowToPost(imgUriBuilder, embeds, parentRes)
   if (parentRes.parent !== null) {
     parentObj.parent = await getAncestors(
       db,
@@ -93,9 +95,11 @@ const getReplies = async (
     .where('post.replyParent', '=', parent.uri)
     .orderBy('post.createdAt', 'desc')
     .execute()
+  const postUris = res.map((row) => row.uri)
+  const embeds = await embedsForPosts(db, imgUriBuilder, postUris)
   const got = await Promise.all(
     res.map(async (row) => {
-      const post = rowToPost(imgUriBuilder, row, parent)
+      const post = rowToPost(imgUriBuilder, embeds, row, parent)
       if (depth > 0) {
         post.replies = await getReplies(
           db,
@@ -185,6 +189,7 @@ const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
 // unfortunately not type-checked yet, so change with caution!
 const rowToPost = (
   imgUriBuilder: ImageUriBuilder,
+  embeds: FeedEmbeds,
   row: any,
   parent?: GetPostThread.Post,
 ): GetPostThread.Post => {
@@ -202,6 +207,7 @@ const rowToPost = (
         : undefined,
     },
     record: common.ipldBytesToRecord(row.recordBytes),
+    embed: embeds[row.uri],
     parent: parent ? { ...parent } : undefined,
     replyCount: row.replyCount || 0,
     upvoteCount: row.upvoteCount || 0,

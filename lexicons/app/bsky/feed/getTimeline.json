@@ -38,7 +38,13 @@
         "trendedBy": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "repostedBy": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "record": {"type": "unknown"},
-        "embed": {"type": "ref", "ref": "app.bsky.feed.embed"},
+        "embed": {
+          "type": "union",
+          "refs": [
+            "app.bsky.embed.images#presented",
+            "app.bsky.embed.external#presented"
+          ]
+        },
         "replyCount": {"type": "integer"},
         "repostCount": {"type": "integer"},
         "upvoteCount": {"type": "integer"},
