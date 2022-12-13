@@ -37,7 +37,7 @@
         "cid": {"type": "string"},
         "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "record": {"type": "unknown"},
-        "embeds": {
+        "embed": {
           "type": "union",
           "refs": [
             "app.bsky.embed.images#presented",

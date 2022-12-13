@@ -46,7 +46,7 @@ export interface Post {
   cid: string
   author: AppBskyActorRef.WithInfo
   record: {}
-  embeds?:
+  embed?:
     | AppBskyEmbedImages.Presented
     | AppBskyEmbedExternal.Presented
     | { $type: string; [k: string]: unknown }

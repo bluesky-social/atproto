@@ -1637,7 +1637,7 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
-          embeds: {
+          embed: {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.images#presented',
@@ -1748,7 +1748,7 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
-          embeds: {
+          embed: {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.images#presented',
@@ -1985,7 +1985,7 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
-          embeds: {
+          embed: {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.images#presented',

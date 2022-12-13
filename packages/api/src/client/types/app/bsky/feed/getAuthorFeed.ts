@@ -43,7 +43,7 @@ export interface FeedItem {
   trendedBy?: AppBskyActorRef.WithInfo
   repostedBy?: AppBskyActorRef.WithInfo
   record: {}
-  embeds?:
+  embed?:
     | AppBskyEmbedImages.Presented
     | AppBskyEmbedExternal.Presented
     | { $type: string; [k: string]: unknown }

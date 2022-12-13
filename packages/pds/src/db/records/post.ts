@@ -13,6 +13,7 @@ import * as messages from '../../stream/messages'
 import { Message } from '../../stream/messages'
 import DatabaseSchema from '../database-schema'
 import RecordProcessor from '../record-processor'
+import { imgUriBuilder } from '../../locals'
 
 type IndexedPost = {
   post: Post
@@ -64,7 +65,7 @@ const insertFn = async (
   }
   let embed: PostEmbedImage[] | PostEmbedExternal | undefined
   if (obj.embed) {
-    if (obj.embed.$type === 'app.bsky.embed.images') {
+    if (obj.embed.$type === 'app.bksy.embed.images') {
       embed = (obj.embed as ImagesEmbedFragment).images.map((img, i) => ({
         postUri: uri.toString(),
         position: i,

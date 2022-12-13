@@ -207,6 +207,7 @@ const rowToPost = (
         : undefined,
     },
     record: common.ipldBytesToRecord(row.recordBytes),
+    embed: embeds[row.uri],
     parent: parent ? { ...parent } : undefined,
     replyCount: row.replyCount || 0,
     upvoteCount: row.upvoteCount || 0,
