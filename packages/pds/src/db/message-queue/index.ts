@@ -136,7 +136,12 @@ export class SqlMessageQueue implements MessageQueue {
     }
     for (const listener of listeners) {
       try {
-        await listener({ db, message }) // @TODO returned side effects
+        const effects = await listener({ message, db })
+        for (const effect of effects ?? []) {
+          // @NOTE today these effects are handled immediately, but in the future
+          // they will likely be sent so that their processing can be parallelized.
+          await this.handleMessage(db, effect)
+        }
       } catch (err) {
         log.error({ message, err }, `unable to handle event: ${message.type}`)
       }

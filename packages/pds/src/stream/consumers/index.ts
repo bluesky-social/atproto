@@ -7,6 +7,7 @@ import AddUpvoteConsumer from './add-upvote'
 import RemoveUpvoteConsumer from './remove-upvote'
 import CreateNotificationConsumer from './create-notification'
 import DeleteNotificationsConsumer from './delete-notifications'
+import SceneVotesOnPostConsumer from './scene-votes-on-post'
 
 export const listen = (
   messageQueue: MessageQueue,
@@ -18,7 +19,11 @@ export const listen = (
   }
   messageQueue.listen('add_member', new AddMemberConsumer())
   messageQueue.listen('remove_member', new RemoveMemberConsumer())
-  messageQueue.listen('add_upvote', new AddUpvoteConsumer(getAuthStore))
+  messageQueue.listen('add_upvote', new AddUpvoteConsumer())
+  messageQueue.listen(
+    'scene_votes_on_post__table_updates',
+    new SceneVotesOnPostConsumer(getAuthStore),
+  )
   messageQueue.listen('remove_upvote', new RemoveUpvoteConsumer())
   messageQueue.listen('create_notification', new CreateNotificationConsumer())
   messageQueue.listen('delete_notifications', new DeleteNotificationsConsumer())
