@@ -44,7 +44,8 @@
           "refs": [
             "app.bsky.embed.images#presented",
             "app.bsky.embed.external#presented"
-        ]},
+          ]
+        },
         "replyCount": {"type": "integer"},
         "repostCount": {"type": "integer"},
         "upvoteCount": {"type": "integer"},
