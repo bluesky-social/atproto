@@ -38,8 +38,8 @@ Object {
       "images": Array [
         Object {
           "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/wRIUrVZeZYnont3JRoe98oCWf0Lu0F3nvjpmluY3UX8/rs:fill:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/0jNI6lTTaZXx7i4Cf1D6uaZcxr9HmPis1N3EoT-m1Xw/rs:fill:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
         },
       ],
     },
@@ -235,8 +235,8 @@ Object {
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://pds.public.url/image/wRIUrVZeZYnont3JRoe98oCWf0Lu0F3nvjpmluY3UX8/rs:fill:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            "thumb": "https://pds.public.url/image/0jNI6lTTaZXx7i4Cf1D6uaZcxr9HmPis1N3EoT-m1Xw/rs:fill:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
           },
         ],
       },
@@ -335,8 +335,8 @@ Object {
               "images": Array [
                 Object {
                   "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                  "fullsize": "https://pds.public.url/image/wRIUrVZeZYnont3JRoe98oCWf0Lu0F3nvjpmluY3UX8/rs:fill:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-                  "thumb": "https://pds.public.url/image/0jNI6lTTaZXx7i4Cf1D6uaZcxr9HmPis1N3EoT-m1Xw/rs:fill:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+                  "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+                  "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
                 },
               ],
             },
@@ -543,8 +543,8 @@ Object {
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://pds.public.url/image/wRIUrVZeZYnont3JRoe98oCWf0Lu0F3nvjpmluY3UX8/rs:fill:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            "thumb": "https://pds.public.url/image/0jNI6lTTaZXx7i4Cf1D6uaZcxr9HmPis1N3EoT-m1Xw/rs:fill:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
           },
         ],
       },

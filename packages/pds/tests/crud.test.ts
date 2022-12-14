@@ -183,7 +183,7 @@ describe('crud operations', () => {
         text: "Here's a key!",
         createdAt: new Date().toISOString(),
         embed: {
-          $type: 'app.bksy.embed.images',
+          $type: 'app.bsky.embed.images',
           images: [
             { image: { cid: image.cid, mimeType: 'image/jpeg' }, alt: '' },
           ],
