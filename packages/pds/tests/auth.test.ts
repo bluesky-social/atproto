@@ -94,6 +94,14 @@ describe('auth', () => {
     )
   })
 
+  it('fails on session creation with a bad password', async () => {
+    const sessionPromise = createSession({
+      handle: 'bob.test',
+      password: 'wrong-pass',
+    })
+    await expect(sessionPromise).rejects.toThrow('Invalid handle or password')
+  })
+
   it('provides valid access and refresh token on session refresh.', async () => {
     const account = await createAccount({
       handle: 'carol.test',
