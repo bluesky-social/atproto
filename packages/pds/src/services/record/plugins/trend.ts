@@ -1,15 +1,15 @@
 import { Kysely } from 'kysely'
-import { AtUri } from '@atproto/uri'
-import * as Trend from '../../lexicon/types/app/bsky/feed/trend'
-import { Trend as IndexedTrend } from '../tables/trend'
-import * as lex from '../../lexicon/lexicons'
 import { CID } from 'multiformats/cid'
-import * as messages from '../../stream/messages'
-import { Message } from '../../stream/messages'
-import DatabaseSchema from '../database-schema'
-import RecordProcessor from '../record-processor'
+import { AtUri } from '@atproto/uri'
+import * as Trend from '../../../lexicon/types/app/bsky/feed/trend'
+import * as lex from '../../../lexicon/lexicons'
+import * as messages from '../../../stream/messages'
+import { Message } from '../../../stream/messages'
+import DatabaseSchema from '../../../db/database-schema'
+import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedTrend
+type IndexedTrend = DatabaseSchema['trend']
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,

@@ -1,31 +1,31 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
-import * as Repost from '../../lexicon/types/app/bsky/feed/repost'
-import { Repost as IndexedRepost } from '../tables/repost'
-import * as lex from '../../lexicon/lexicons'
 import { CID } from 'multiformats/cid'
-import * as messages from '../../stream/messages'
-import { Message } from '../../stream/messages'
-import { DatabaseSchema } from '../database-schema'
-import RecordProcessor from '../record-processor'
+import * as Follow from '../../../lexicon/types/app/bsky/graph/follow'
+import * as lex from '../../../lexicon/lexicons'
+import * as messages from '../../../stream/messages'
+import { Message } from '../../../stream/messages'
+import DatabaseSchema from '../../../db/database-schema'
+import RecordProcessor from '../processor'
 
-const lexId = lex.ids.AppBskyFeedRepost
+const lexId = lex.ids.AppBskyGraphFollow
+type IndexedFollow = DatabaseSchema['follow']
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
   uri: AtUri,
   cid: CID,
-  obj: Repost.Record,
+  obj: Follow.Record,
   timestamp?: string,
-): Promise<IndexedRepost | null> => {
+): Promise<IndexedFollow | null> => {
   const inserted = await db
-    .insertInto('repost')
+    .insertInto('follow')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
-      subject: obj.subject.uri,
-      subjectCid: obj.subject.cid,
+      subjectDid: obj.subject.did,
+      subjectDeclarationCid: obj.subject.declarationCid,
       createdAt: obj.createdAt,
       indexedAt: timestamp || new Date().toISOString(),
     })
@@ -38,36 +38,35 @@ const insertFn = async (
 const findDuplicate = async (
   db: Kysely<DatabaseSchema>,
   uri: AtUri,
-  obj: Repost.Record,
+  obj: Follow.Record,
 ): Promise<AtUri | null> => {
   const found = await db
-    .selectFrom('repost')
+    .selectFrom('follow')
     .where('creator', '=', uri.host)
-    .where('subject', '=', obj.subject.uri)
+    .where('subjectDid', '=', obj.subject.did)
     .selectAll()
     .executeTakeFirst()
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (obj: IndexedRepost): Message[] => {
-  const subjectUri = new AtUri(obj.subject)
-  const notif = messages.createNotification({
-    userDid: subjectUri.host,
-    author: obj.creator,
-    recordUri: obj.uri,
-    recordCid: obj.cid,
-    reason: 'repost',
-    reasonSubject: subjectUri.toString(),
-  })
-  return [notif]
+const eventsForInsert = (obj: IndexedFollow): Message[] => {
+  return [
+    messages.createNotification({
+      userDid: obj.subjectDid,
+      author: obj.creator,
+      recordUri: obj.uri,
+      recordCid: obj.cid,
+      reason: 'follow',
+    }),
+  ]
 }
 
 const deleteFn = async (
   db: Kysely<DatabaseSchema>,
   uri: AtUri,
-): Promise<IndexedRepost | null> => {
+): Promise<IndexedFollow | null> => {
   const deleted = await db
-    .deleteFrom('repost')
+    .deleteFrom('follow')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -75,14 +74,14 @@ const deleteFn = async (
 }
 
 const eventsForDelete = (
-  deleted: IndexedRepost,
-  replacedBy: IndexedRepost | null,
+  deleted: IndexedFollow,
+  replacedBy: IndexedFollow | null,
 ): Message[] => {
   if (replacedBy) return []
   return [messages.deleteNotifications(deleted.uri)]
 }
 
-export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
+export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
