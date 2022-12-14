@@ -50,6 +50,12 @@ export type DeleteNotifications = {
   recordUri: string
 }
 
+export type SceneVotesOnPostTableUpdates = {
+  type: 'scene_votes_on_post__table_updates'
+  dids: string[]
+  subject: string
+}
+
 export type Message =
   | AddMember
   | RemoveMember
@@ -57,6 +63,7 @@ export type Message =
   | RemoveUpvote
   | CreateNotification
   | DeleteNotifications
+  | SceneVotesOnPostTableUpdates
 
 export const addMember = (scene: string, member: string): AddMember => ({
   type: 'add_member',
@@ -94,4 +101,13 @@ export const deleteNotifications = (
 ): DeleteNotifications => ({
   type: 'delete_notifications',
   recordUri,
+})
+
+export const sceneVotesOnPostTableUpdates = (
+  dids: string[],
+  subject: string,
+): SceneVotesOnPostTableUpdates => ({
+  type: 'scene_votes_on_post__table_updates',
+  dids,
+  subject,
 })

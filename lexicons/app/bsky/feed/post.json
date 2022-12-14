@@ -15,6 +15,7 @@
             "items": {"type": "ref", "ref": "#entity"}
           },
           "reply": {"type": "ref", "ref": "#replyRef"},
+          "embed": { "type": "union", "refs": ["app.bsky.embed.images", "app.bsky.embed.external"]},
           "createdAt": {"type": "datetime"}
         }
       }

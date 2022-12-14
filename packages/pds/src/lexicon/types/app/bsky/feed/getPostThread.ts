@@ -4,7 +4,8 @@
 import express from 'express'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorRef from '../actor/ref'
-import * as AppBskyFeedEmbed from './embed'
+import * as AppBskyEmbedImages from '../embed/images'
+import * as AppBskyEmbedExternal from '../embed/external'
 
 export interface QueryParams {
   uri: string
@@ -45,7 +46,10 @@ export interface Post {
   cid: string
   author: AppBskyActorRef.WithInfo
   record: {}
-  embed?: AppBskyFeedEmbed.Main
+  embed?:
+    | AppBskyEmbedImages.Presented
+    | AppBskyEmbedExternal.Presented
+    | { $type: string; [k: string]: unknown }
   parent?: Post | NotFoundPost | { $type: string; [k: string]: unknown }
   replyCount: number
   replies?: (Post | NotFoundPost | { $type: string; [k: string]: unknown })[]

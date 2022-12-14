@@ -348,6 +348,7 @@ export class AppNS {
 export class BskyNS {
   _server: Server
   actor: ActorNS
+  embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
@@ -356,6 +357,7 @@ export class BskyNS {
   constructor(server: Server) {
     this._server = server
     this.actor = new ActorNS(server)
+    this.embed = new EmbedNS(server)
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
     this.notification = new NotificationNS(server)
@@ -410,6 +412,14 @@ export class ActorNS {
   ) {
     const nsid = 'app.bsky.actor.updateProfile' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class EmbedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 

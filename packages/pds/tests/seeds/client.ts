@@ -8,6 +8,11 @@ import { CID } from 'multiformats/cid'
 
 let AVATAR_IMG: Uint8Array | undefined
 
+type ImageRef = {
+  image: { cid: string; mimeType: string }
+  alt: string
+}
+
 export class RecordRef {
   uri: AtUri
   cid: CID
@@ -188,10 +193,21 @@ export class SeedClient {
     return this.follows[from][to.did]
   }
 
-  async post(by: string, text: string, entities?: any) {
+  async post(by: string, text: string, entities?: any, images?: ImageRef[]) {
+    const embed = images
+      ? {
+          $type: 'app.bksy.embed.images',
+          images,
+        }
+      : undefined
     const res = await this.client.app.bsky.feed.post.create(
       { did: by },
-      { text: text, entities, createdAt: new Date().toISOString() },
+      {
+        text: text,
+        entities,
+        embed,
+        createdAt: new Date().toISOString(),
+      },
       this.getHeaders(by),
     )
     this.posts[by] ??= []
@@ -213,6 +229,19 @@ export class SeedClient {
     )
   }
 
+  async uploadFile(
+    by: string,
+    filePath: string,
+    encoding: string,
+  ): Promise<ImageRef> {
+    const file = await fs.readFile(filePath)
+    const res = await this.client.com.atproto.blob.upload(file, {
+      headers: this.getHeaders(by),
+      encoding,
+    } as any)
+    return { image: { cid: res.data.cid, mimeType: encoding }, alt: filePath }
+  }
+
   async vote(direction: 'up' | 'down', by: string, subject: RecordRef) {
     const res = await this.client.app.bsky.feed.vote.create(
       { did: by },
@@ -224,7 +253,20 @@ export class SeedClient {
     return this.votes[direction][by][subject.uriStr]
   }
 
-  async reply(by: string, root: RecordRef, parent: RecordRef, text: string) {
+  async reply(
+    by: string,
+    root: RecordRef,
+    parent: RecordRef,
+    text: string,
+    entities?: any,
+    images?: ImageRef[],
+  ) {
+    const embed = images
+      ? {
+          $type: 'app.bksy.embed.images',
+          images,
+        }
+      : undefined
     const res = await this.client.app.bsky.feed.post.create(
       { did: by },
       {
@@ -233,6 +275,8 @@ export class SeedClient {
           root: root.raw,
           parent: parent.raw,
         },
+        entities,
+        embed,
         createdAt: new Date().toISOString(),
       },
       this.getHeaders(by),

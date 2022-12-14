@@ -13,16 +13,6 @@ export interface Post {
   indexedAt: string
 }
 
-export const supportingTableName = 'post_entity'
-export interface PostEntity {
-  postUri: string
-  startIndex: number
-  endIndex: number
-  type: string
-  value: string
-}
-
 export type PartialDB = {
   [tableName]: Post
-  [supportingTableName]: PostEntity
 }

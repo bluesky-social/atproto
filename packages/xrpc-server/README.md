@@ -4,26 +4,37 @@
 
 ```typescript
 import * as xrpc from '@atproto/xrpc-server'
+import express from 'express'
 
 // create xrpc server
 const server = xrpc.createServer([{
-    xrpc: 1,
+    lexicon: 1,
     id: 'io.example.ping',
-    type: 'query',
-    parameters: { message: { type: 'string' } },
-    output: {
-      encoding: 'text/plain',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          properties: { message: { type: 'string' } },
+        },
+        output: {
+          encoding: 'application/json',
+        },
+      },
     },
   }
 ])
-server.method('io.example.ping', (params: xrpcServer.Params) => {
-  return { encoding: 'text/plain', body: params.message }
-})
+
+function ping(ctx: {auth: xrpc.HandlerAuth | undefined, params: xrpc.Params, input: xrpc.HandlerInput | undefined, req: express.Request, res: express.Response}) {
+  return { encoding: 'application/json', body: {message: ctx.params.message }}
+}
+
+server.method('io.example.ping', ping)
 
 // mount in express
 const app = express()
 app.use(server.router)
-app.listen(port)
+app.listen(8080)
 ```
 
 ## License

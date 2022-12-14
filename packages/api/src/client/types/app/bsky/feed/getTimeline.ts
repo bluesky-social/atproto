@@ -3,7 +3,8 @@
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
 import * as AppBskyActorRef from '../actor/ref'
-import * as AppBskyFeedEmbed from './embed'
+import * as AppBskyEmbedImages from '../embed/images'
+import * as AppBskyEmbedExternal from '../embed/external'
 
 export interface QueryParams {
   algorithm?: string
@@ -42,7 +43,10 @@ export interface FeedItem {
   trendedBy?: AppBskyActorRef.WithInfo
   repostedBy?: AppBskyActorRef.WithInfo
   record: {}
-  embed?: AppBskyFeedEmbed.Main
+  embed?:
+    | AppBskyEmbedImages.Presented
+    | AppBskyEmbedExternal.Presented
+    | { $type: string; [k: string]: unknown }
   replyCount: number
   repostCount: number
   upvoteCount: number
