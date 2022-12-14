@@ -1450,7 +1450,7 @@ export const schemaDict = {
       },
       external: {
         type: 'object',
-        required: ['uri', 'title', 'description', 'thumb'],
+        required: ['uri', 'title', 'description'],
         properties: {
           uri: {
             type: 'string',
@@ -1482,7 +1482,7 @@ export const schemaDict = {
       },
       presentedExternal: {
         type: 'object',
-        required: ['uri', 'title', 'description', 'thumb'],
+        required: ['uri', 'title', 'description'],
         properties: {
           uri: {
             type: 'string',

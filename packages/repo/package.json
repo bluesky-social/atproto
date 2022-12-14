@@ -23,7 +23,6 @@
     "@atproto/nsid": "*",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
-    "ipld-hashmap": "^2.1.10",
     "multiformats": "^9.6.4",
     "uint8arrays": "3.0.0",
     "zod": "^3.14.2"

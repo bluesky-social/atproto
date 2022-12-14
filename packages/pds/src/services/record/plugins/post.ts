@@ -64,7 +64,7 @@ const insertFn = async (
   }
   let embed: PostEmbedImage[] | PostEmbedExternal | undefined
   if (obj.embed) {
-    if (obj.embed.$type === 'app.bksy.embed.images') {
+    if (obj.embed.$type === 'app.bsky.embed.images') {
       embed = (obj.embed as ImagesEmbedFragment).images.map((img, i) => ({
         postUri: uri.toString(),
         position: i,
@@ -79,7 +79,7 @@ const insertFn = async (
         uri: external.uri,
         title: external.title,
         description: external.description,
-        thumbCid: external.thumb.cid,
+        thumbCid: external.thumb?.cid || null,
       }
       await db.insertInto('post_embed_external').values(embed).execute()
     }

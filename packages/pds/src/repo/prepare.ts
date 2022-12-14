@@ -40,6 +40,31 @@ export const blobsForWrite = (
       })
     }
     return refs
+  } else if (write.collection === lex.ids.AppBskyFeedPost) {
+    const refs: BlobRef[] = []
+    const embed = write.value?.embed
+    if (embed?.$type === 'app.bsky.embed.images') {
+      const doc = lex.schemaDict.AppBskyEmbedImages
+      for (let i = 0; i < embed.images?.length || 0; i++) {
+        const img = embed.images[i]
+        refs.push({
+          cid: CID.parse(img.image.cid),
+          mimeType: img.image.mimeType,
+          constraints: doc.defs.image.properties.image as ImageConstraint,
+        })
+      }
+    } else if (
+      write.value?.embed?.$type === 'app.bsky.embed.external' &&
+      embed.external.thumb?.cid
+    ) {
+      const doc = lex.schemaDict.AppBskyEmbedExternal
+      refs.push({
+        cid: CID.parse(embed.external.thumb.cid),
+        mimeType: embed.external.thumb.mimeType,
+        constraints: doc.defs.external.properties.thumb as ImageConstraint,
+      })
+    }
+    return refs
   }
   return []
 }

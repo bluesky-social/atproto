@@ -131,12 +131,12 @@ Array [
     "cid": "cids(0)",
     "downvoteCount": 0,
     "embed": Object {
-      "$type": "app.bksy.embed.images#presented",
+      "$type": "app.bsky.embed.images#presented",
       "images": Array [
         Object {
           "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/wRIUrVZeZYnont3JRoe98oCWf0Lu0F3nvjpmluY3UX8/rs:fill:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/0jNI6lTTaZXx7i4Cf1D6uaZcxr9HmPis1N3EoT-m1Xw/rs:fill:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
         },
       ],
     },
@@ -146,7 +146,7 @@ Array [
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "embed": Object {
-        "$type": "app.bksy.embed.images",
+        "$type": "app.bsky.embed.images",
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -317,17 +317,17 @@ Array [
     "cid": "cids(4)",
     "downvoteCount": 0,
     "embed": Object {
-      "$type": "app.bksy.embed.images#presented",
+      "$type": "app.bsky.embed.images#presented",
       "images": Array [
         Object {
           "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/wRIUrVZeZYnont3JRoe98oCWf0Lu0F3nvjpmluY3UX8/rs:fill:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/0jNI6lTTaZXx7i4Cf1D6uaZcxr9HmPis1N3EoT-m1Xw/rs:fill:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
         },
         Object {
           "alt": "tests/image/fixtures/key-portrait-small.jpg",
-          "fullsize": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-          "thumb": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "fullsize": "https://pds.public.url/image/IBdh1uYxiSsHAl6Ai0aAwpmO_JdnuNJhb12PSD5ZNYg/rs:fit:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "thumb": "https://pds.public.url/image/ELecCwtuiF4W0nLWO5UVRtmQlq7vpFDN8GuZtHB1cBc/rs:fit:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         },
       ],
     },
@@ -337,7 +337,7 @@ Array [
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "embed": Object {
-        "$type": "app.bksy.embed.images",
+        "$type": "app.bsky.embed.images",
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -476,17 +476,17 @@ Array [
     "cid": "cids(0)",
     "downvoteCount": 0,
     "embed": Object {
-      "$type": "app.bksy.embed.images#presented",
+      "$type": "app.bsky.embed.images#presented",
       "images": Array [
         Object {
           "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/wRIUrVZeZYnont3JRoe98oCWf0Lu0F3nvjpmluY3UX8/rs:fill:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/0jNI6lTTaZXx7i4Cf1D6uaZcxr9HmPis1N3EoT-m1Xw/rs:fill:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
         },
         Object {
           "alt": "tests/image/fixtures/key-portrait-small.jpg",
-          "fullsize": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-          "thumb": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "fullsize": "https://pds.public.url/image/IBdh1uYxiSsHAl6Ai0aAwpmO_JdnuNJhb12PSD5ZNYg/rs:fit:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "thumb": "https://pds.public.url/image/ELecCwtuiF4W0nLWO5UVRtmQlq7vpFDN8GuZtHB1cBc/rs:fit:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         },
       ],
     },
@@ -496,7 +496,7 @@ Array [
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "embed": Object {
-        "$type": "app.bksy.embed.images",
+        "$type": "app.bsky.embed.images",
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",

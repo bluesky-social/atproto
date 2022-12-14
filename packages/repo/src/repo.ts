@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { CarWriter } from '@ipld/car'
-import { BlockWriter } from '@ipld/car/lib/writer-browser'
+import { BlockWriter } from '@ipld/car/writer'
 import {
   RepoRoot,
   Commit,

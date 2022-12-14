@@ -2,7 +2,7 @@
 // For each one, add them to this list, add them to 
 // "workspaces.nohoist" in the root package.json, and
 // make sure that a babel.config.js is in the package root
-const esModules = ['ipld-hashmap', 'get-port', 'node-fetch'].join('|')
+const esModules = ['get-port', 'node-fetch'].join('|')
 
 // jestconfig.base.js
 module.exports = {
