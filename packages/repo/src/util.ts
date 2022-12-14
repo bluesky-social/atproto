@@ -81,7 +81,7 @@ export const diffToWriteOps = (
   ])
 }
 
-export const parseRecordKey = (key) => {
+export const parseRecordKey = (key: string) => {
   const parts = key.split('/')
   if (parts.length !== 2) throw new Error(`Invalid record key: ${key}`)
   return { collection: parts[0], rkey: parts[1] }
