@@ -10,14 +10,17 @@ export function createServices(
   messageQueue: MessageQueue,
   blobstore: BlobStore,
 ): Services {
-  const actor = new ActorService(db)
-  const record = new RecordService(db, messageQueue)
-  const repo = new RepoService(db, messageQueue, blobstore)
-  return { actor, record, repo }
+  return {
+    actor: ActorService.creator(),
+    record: RecordService.creator(messageQueue),
+    repo: RepoService.creator(messageQueue, blobstore),
+  }
 }
 
 export type Services = {
-  actor: ActorService
-  record: RecordService
-  repo: RepoService
+  actor: FromDb<ActorService>
+  record: FromDb<RecordService>
+  repo: FromDb<RepoService>
 }
+
+type FromDb<T> = (db: Database) => T

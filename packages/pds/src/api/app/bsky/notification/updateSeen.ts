@@ -18,7 +18,7 @@ export default function (server: Server) {
         throw new InvalidRequestError('Invalid date')
       }
 
-      const user = await services.actor.getUser(requester)
+      const user = await services.actor(db).getUser(requester)
       if (!user) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }

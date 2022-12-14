@@ -40,8 +40,8 @@ export default function (server: Server) {
       const now = new Date().toISOString()
 
       const result = await db.transaction(async (dbTxn) => {
-        const actorTxn = services.actor.using(dbTxn)
-        const repoTxn = services.repo.using(dbTxn)
+        const actorTxn = services.actor(dbTxn)
+        const repoTxn = services.repo(dbTxn)
         // Pre-register before going out to PLC to get a real did
         try {
           await actorTxn.preregisterDid(handle, tempDid)

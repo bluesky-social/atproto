@@ -8,9 +8,9 @@ export default function (server: Server) {
   server.com.atproto.session.get({
     auth: ServerAuth.verifier,
     handler: async ({ auth, res }) => {
-      const { services } = locals.get(res)
+      const { db, services } = locals.get(res)
       const did = auth.credentials.did
-      const user = await services.actor.getUser(did)
+      const user = await services.actor(db).getUser(did)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,
@@ -27,12 +27,14 @@ export default function (server: Server) {
     const { password } = input.body
     const handle = input.body.handle.toLowerCase()
     const { db, services, auth } = locals.get(res)
-    const validPass = await services.actor.verifyUserPassword(handle, password)
+    const validPass = await services
+      .actor(db)
+      .verifyUserPassword(handle, password)
     if (!validPass) {
       throw new AuthRequiredError('Invalid handle or password')
     }
 
-    const user = await services.actor.getUser(handle)
+    const user = await services.actor(db).getUser(handle)
     if (!user) {
       throw new InvalidRequestError(
         `Could not find user info for account: ${handle}`,
@@ -59,7 +61,7 @@ export default function (server: Server) {
     handler: async ({ req, res, ...ctx }) => {
       const { db, services, auth } = locals.get(res)
       const did = ctx.auth.credentials.did
-      const user = await services.actor.getUser(did)
+      const user = await services.actor(db).getUser(did)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,

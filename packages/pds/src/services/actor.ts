@@ -10,8 +10,8 @@ import { APP_BSKY_GRAPH } from '../lexicon'
 export class ActorService {
   constructor(public db: Database) {}
 
-  using(db: Database) {
-    return new ActorService(db)
+  static creator() {
+    return (db: Database) => new ActorService(db)
   }
 
   async getUser(handleOrDid: string): Promise<(User & DidHandle) | null> {

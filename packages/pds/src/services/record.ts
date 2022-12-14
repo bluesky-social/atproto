@@ -42,8 +42,8 @@ export class RecordService {
     }
   }
 
-  using(db: Database) {
-    return new RecordService(db, this.messageQueue)
+  static creator(messageQueue: MessageQueue) {
+    return (db: Database) => new RecordService(db, messageQueue)
   }
 
   assertValidRecord(collection: string, obj: unknown): void {

@@ -6,12 +6,11 @@ export default function (server: Server) {
   server.com.atproto.blob.upload({
     auth: ServerAuth.verifier,
     handler: async ({ input, res }) => {
-      const { services } = locals.get(res)
+      const { db, services } = locals.get(res)
 
-      const cid = await services.repo.blobs.addUntetheredBlob(
-        input.encoding,
-        input.body,
-      )
+      const cid = await services
+        .repo(db)
+        .blobs.addUntetheredBlob(input.encoding, input.body)
 
       return {
         encoding: 'application/json',

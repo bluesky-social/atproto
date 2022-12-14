@@ -19,10 +19,9 @@ export default function (server: Server) {
       const requester = auth.credentials.did
 
       const did = input.body.did || requester
-      const authorized = await services.repo.isUserControlledRepo(
-        did,
-        requester,
-      )
+      const authorized = await services
+        .repo(db)
+        .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
@@ -33,8 +32,8 @@ export default function (server: Server) {
         async (
           dbTxn,
         ): Promise<{ profileCid: CID; updated: Profile.Record }> => {
-          const recordTxn = services.record.using(dbTxn)
-          const repoTxn = services.repo.using(dbTxn)
+          const recordTxn = services.record(dbTxn)
+          const repoTxn = services.repo(dbTxn)
           const now = new Date().toISOString()
 
           let updated

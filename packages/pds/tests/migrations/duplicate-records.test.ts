@@ -10,7 +10,6 @@ import { MessageQueue } from '../../src/stream/types'
 describe('duplicate record', () => {
   let db: Database
   let messageQueue: MessageQueue
-  let recordSvc: RecordService
 
   beforeAll(async () => {
     if (process.env.DB_POSTGRES_URL) {
@@ -23,7 +22,6 @@ describe('duplicate record', () => {
     }
     messageQueue = new SqlMessageQueue('pds', db)
     await db.migrator.migrateTo('_20221021T162202001Z')
-    recordSvc = new RecordService(db, messageQueue)
   })
 
   afterAll(async () => {
@@ -37,9 +35,10 @@ describe('duplicate record', () => {
     const collection = record.$type
     const cid = await cidForData(record)
     await db.transaction(async (tx) => {
+      const recordTx = new RecordService(tx, messageQueue)
       for (let i = 0; i < times; i++) {
         const uri = AtUri.make(did, collection, TID.nextStr())
-        await recordSvc.using(tx).indexRecord(uri, cid, record)
+        await recordTx.indexRecord(uri, cid, record)
       }
     })
   }

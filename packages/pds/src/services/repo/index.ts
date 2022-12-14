@@ -21,8 +21,8 @@ export class RepoService {
     this.blobs = new RepoBlobs(db, blobstore)
   }
 
-  using(db: Database) {
-    return new RepoService(db, this.messageQueue, this.blobstore)
+  static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
+    return (db: Database) => new RepoService(db, messageQueue, blobstore)
   }
 
   async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {

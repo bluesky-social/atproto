@@ -19,7 +19,7 @@ export default function (server: Server) {
       const now = new Date().toISOString()
 
       const voteUri = await db.transaction(async (dbTxn) => {
-        const repoTxn = services.repo.using(dbTxn)
+        const repoTxn = services.repo(dbTxn)
         const existingVotes = await dbTxn.db
           .selectFrom('vote')
           .select(['uri', 'direction'])
