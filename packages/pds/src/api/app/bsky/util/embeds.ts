@@ -29,7 +29,7 @@ export const embedsForPosts = async (
   const imgEmbeds = images.reduce((acc, cur) => {
     if (!acc[cur.postUri]) {
       acc[cur.postUri] = {
-        $type: 'app.bksy.embed.images#presented',
+        $type: 'app.bsky.embed.images#presented',
         images: [],
       }
     }
@@ -43,15 +43,14 @@ export const embedsForPosts = async (
   return externals.reduce((acc, cur) => {
     if (!acc[cur.postUri]) {
       acc[cur.postUri] = {
-        $type: 'app.bksy.embed.external#presented',
+        $type: 'app.bsky.embed.external#presented',
         external: {
           uri: cur.uri,
           title: cur.title,
           description: cur.description,
-          thumb: imgUriBuilder.getCommonSignedUri(
-            'feed_thumbnail',
-            cur.thumbCid,
-          ),
+          thumb: cur.thumbCid
+            ? imgUriBuilder.getCommonSignedUri('feed_thumbnail', cur.thumbCid)
+            : undefined,
         },
       }
     }

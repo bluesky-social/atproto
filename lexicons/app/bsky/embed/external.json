@@ -15,7 +15,7 @@
     },
     "external": {
       "type": "object",
-      "required":  ["uri", "title", "description", "thumb"],
+      "required":  ["uri", "title", "description"],
       "properties": {
         "uri": {"type": "string"},
         "title": {"type": "string"},
@@ -41,7 +41,7 @@
     },
     "presentedExternal": {
       "type": "object",
-      "required":  ["uri", "title", "description", "thumb"],
+      "required":  ["uri", "title", "description"],
       "properties": {
         "uri": {"type": "string"},
         "title": {"type": "string"},

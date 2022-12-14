@@ -147,6 +147,13 @@ export const verifyBlob = (blob: BlobRef, found: BlobTable) => {
 
 const acceptedMime = (mime: string, accepted: string[]): boolean => {
   if (accepted.includes('*/*')) return true
+  const globs = accepted.filter((a) => a.endsWith('/*'))
+  for (const glob of globs) {
+    const [start] = glob.split('/')
+    if (mime.startsWith(`${start}/`)) {
+      return true
+    }
+  }
   return accepted.includes(mime)
 }
 

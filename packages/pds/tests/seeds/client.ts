@@ -196,7 +196,7 @@ export class SeedClient {
   async post(by: string, text: string, entities?: any, images?: ImageRef[]) {
     const embed = images
       ? {
-          $type: 'app.bksy.embed.images',
+          $type: 'app.bsky.embed.images',
           images,
         }
       : undefined
@@ -263,7 +263,7 @@ export class SeedClient {
   ) {
     const embed = images
       ? {
-          $type: 'app.bksy.embed.images',
+          $type: 'app.bsky.embed.images',
           images,
         }
       : undefined

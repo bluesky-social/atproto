@@ -77,7 +77,7 @@ Array [
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "embed": Object {
-        "$type": "app.bksy.embed.images",
+        "$type": "app.bsky.embed.images",
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -490,7 +490,7 @@ Array [
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "embed": Object {
-        "$type": "app.bksy.embed.images",
+        "$type": "app.bsky.embed.images",
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",

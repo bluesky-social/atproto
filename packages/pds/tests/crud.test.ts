@@ -1,7 +1,11 @@
+import fs from 'fs/promises'
+import { CID } from 'multiformats/cid'
+import { AtUri } from '@atproto/uri'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
-import { AtUri } from '@atproto/uri'
 import { CloseFn, paginateAll, runTestServer } from './_util'
+import { getLocals, Locals } from '../src/locals'
+import { BlobNotFoundError } from '@atproto/repo'
 
 const alice = {
   email: 'alice@test.com',
@@ -17,6 +21,7 @@ const bob = {
 }
 
 describe('crud operations', () => {
+  let locals: Locals
   let client: AtpServiceClient
   let aliceClient: AtpServiceClient
   let close: CloseFn
@@ -25,6 +30,7 @@ describe('crud operations', () => {
     const server = await runTestServer({
       dbPostgresSchema: 'crud',
     })
+    locals = getLocals(server.app)
     close = server.close
     client = AtpApi.service(server.url)
     aliceClient = AtpApi.service(server.url)
@@ -154,6 +160,52 @@ describe('crud operations', () => {
       user: alice.did,
     })
     expect(res3.records.length).toBe(0)
+  })
+
+  it('attaches images to a post', async () => {
+    const { blobstore } = locals
+    const file = await fs.readFile(
+      'tests/image/fixtures/key-landscape-small.jpg',
+    )
+    const { data: image } = await aliceClient.com.atproto.blob.upload(file, {
+      encoding: 'image/jpeg',
+    })
+    const imageCid = CID.parse(image.cid)
+    // Expect blobstore not to have image yet
+    await expect(blobstore.getBytes(imageCid)).rejects.toThrow(
+      BlobNotFoundError,
+    )
+    // Associate image with post, image should be placed in blobstore
+    const res = await aliceClient.app.bsky.feed.post.create(
+      { did: alice.did },
+      {
+        $type: 'app.bsky.feed.post',
+        text: "Here's a key!",
+        createdAt: new Date().toISOString(),
+        embed: {
+          $type: 'app.bsky.embed.images',
+          images: [
+            { image: { cid: image.cid, mimeType: 'image/jpeg' }, alt: '' },
+          ],
+        },
+      },
+    )
+    // Ensure image is on post record
+    const postUri = new AtUri(res.uri)
+    const post = await aliceClient.app.bsky.feed.post.get({
+      rkey: postUri.rkey,
+      user: alice.did,
+    })
+    const images = post.value.embed?.images as { image: { cid: string } }[]
+    expect(images.length).toEqual(1)
+    expect(images[0].image.cid).toEqual(image.cid)
+    // Ensure that the uploaded image is now in the blobstore, i.e. doesn't throw BlobNotFoundError
+    await blobstore.getBytes(imageCid)
+    // Cleanup
+    await aliceClient.app.bsky.feed.post.delete({
+      rkey: postUri.rkey,
+      did: alice.did,
+    })
   })
 
   it('creates records with the correct key described by the schema', async () => {
