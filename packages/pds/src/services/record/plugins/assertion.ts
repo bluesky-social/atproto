@@ -17,7 +17,7 @@ const insertFn = async (
   cid: CID,
   obj: Assertion.Record,
   timestamp?: string,
-): Promise<DatabaseSchema['assertion'] | null> => {
+): Promise<IndexedAssertion | null> => {
   const inserted = await db
     .insertInto('assertion')
     .values({
