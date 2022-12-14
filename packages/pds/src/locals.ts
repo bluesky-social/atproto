@@ -10,7 +10,7 @@ import { App } from '.'
 import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
-import { MessageQueue } from './stream/types'
+import { MessageQueue } from './event-stream/types'
 
 export type Locals = {
   logger: pino.Logger

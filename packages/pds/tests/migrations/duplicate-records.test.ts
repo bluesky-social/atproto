@@ -3,9 +3,9 @@ import { Database } from '../../src'
 import { cidForData, TID } from '@atproto/common'
 import * as lex from '../../src/lexicon/lexicons'
 import { APP_BSKY_GRAPH } from '../../src/lexicon'
-import SqlMessageQueue from '../../src/stream/message-queue'
+import SqlMessageQueue from '../../src/event-stream/message-queue'
 import { RecordService } from '../../src/services/record'
-import { MessageQueue } from '../../src/stream/types'
+import { MessageQueue } from '../../src/event-stream/types'
 
 describe('duplicate record', () => {
   let db: Database

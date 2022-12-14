@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { DynamicReferenceBuilder } from 'kysely/dist/cjs/dynamic/dynamic-reference-builder'
-import { Message } from '../stream/messages'
+import { Message } from '../event-stream/messages'
 
 export type DbRecordPlugin<T> = {
   collection: string

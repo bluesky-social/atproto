@@ -1,6 +1,6 @@
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
-import { MessageQueue } from '../stream/types'
+import { MessageQueue } from '../event-stream/types'
 import { ActorService } from './actor'
 import { RecordService } from './record'
 import { RepoService } from './repo'

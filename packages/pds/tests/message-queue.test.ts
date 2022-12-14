@@ -5,7 +5,7 @@ import { runTestServer, CloseFn } from './_util'
 import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
 import scenesSeed from './seeds/scenes'
-import { MessageQueue } from '../src/stream/types'
+import { MessageQueue } from '../src/event-stream/types'
 
 describe('db', () => {
   let close: CloseFn

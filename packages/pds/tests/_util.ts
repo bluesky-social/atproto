@@ -18,7 +18,7 @@ import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import * as locals from '../src/locals'
-import { MessageQueue } from '../src/stream/types'
+import { MessageQueue } from '../src/event-stream/types'
 import { Services } from '../src/services'
 
 const ADMIN_PASSWORD = 'admin-pass'

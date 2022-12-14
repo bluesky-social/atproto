@@ -3,7 +3,7 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../../lexicon/types/app/bsky/actor/profile'
 import * as lex from '../../../lexicon/lexicons'
-import { Message } from '../../../stream/messages'
+import { Message } from '../../../event-stream/messages'
 import DatabaseSchema from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 

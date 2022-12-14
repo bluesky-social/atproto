@@ -13,7 +13,7 @@ import * as Follow from './plugins/follow'
 import * as Assertion from './plugins/assertion'
 import * as Confirmation from './plugins/confirmation'
 import * as Profile from './plugins/profile'
-import { MessageQueue } from '../../stream/types'
+import { MessageQueue } from '../../event-stream/types'
 
 export class RecordService {
   records: {
