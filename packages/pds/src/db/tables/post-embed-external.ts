@@ -5,7 +5,7 @@ export interface PostEmbedExternal {
   uri: string
   title: string
   description: string
-  thumbCid: string
+  thumbCid?: string
 }
 
 export type PartialDB = {

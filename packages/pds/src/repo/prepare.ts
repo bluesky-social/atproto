@@ -53,7 +53,10 @@ export const blobsForWrite = (
           constraints: doc.defs.image.properties.image as ImageConstraint,
         })
       }
-    } else if (write.value?.embed?.$type === 'app.bsky.embed.external') {
+    } else if (
+      write.value?.embed?.$type === 'app.bsky.embed.external' &&
+      embed.external.thumb?.cid
+    ) {
       const doc = lex.schemaDict.AppBskyEmbedExternal
       refs.push({
         cid: CID.parse(embed.external.thumb.cid),

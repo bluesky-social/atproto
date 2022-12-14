@@ -48,10 +48,9 @@ export const embedsForPosts = async (
           uri: cur.uri,
           title: cur.title,
           description: cur.description,
-          thumb: imgUriBuilder.getCommonSignedUri(
-            'feed_thumbnail',
-            cur.thumbCid,
-          ),
+          thumb: cur.thumbCid
+            ? imgUriBuilder.getCommonSignedUri('feed_thumbnail', cur.thumbCid)
+            : undefined,
         },
       }
     }
