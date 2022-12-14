@@ -19,11 +19,8 @@
   "dependencies": {
     "@atproto/lexicon": "*",
     "@atproto/nsid": "*",
-    "ajv": "^8.11.0",
-    "ajv-formats": "^2.1.1",
     "chalk": "^5.1.1",
     "commander": "^9.4.0",
-    "json-pointer": "^0.6.2",
     "ts-morph": "^16.0.0",
     "yesno": "^0.4.0"
   }
