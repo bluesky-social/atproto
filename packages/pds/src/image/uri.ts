@@ -4,6 +4,7 @@ import { CID } from 'multiformats/cid'
 import { Options } from './util'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
+const VALID_FITS = ['cover', 'contain', 'inside', 'outside']
 
 export class ImageUriBuilder {
   public endpoint: string
@@ -60,7 +61,7 @@ export class ImageUriBuilder {
       return this.getSignedUri({
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
-        fit: 'cover',
+        fit: 'inside',
         height: 500,
         width: 500,
         min: true,
@@ -69,7 +70,7 @@ export class ImageUriBuilder {
       return this.getSignedUri({
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
-        fit: 'cover',
+        fit: 'inside',
         height: 250,
         width: 250,
         min: true,
@@ -108,7 +109,7 @@ export class ImageUriBuilder {
   }
 
   static getPath(opts: Options & { cid: CID }) {
-    const fit = opts.fit === 'inside' ? 'fit' : 'fill' // fit default is 'cover'
+    const fit = VALID_FITS.includes(opts.fit || '') ? opts.fit : 'cover' // fit default is 'cover'
     const enlarge = opts.min === true ? 1 : 0 // min default is false
     const resize = `rs:${fit}:${opts.width}:${opts.height}:${enlarge}:0` // final ':0' is for interop with imgproxy
     const minWidth =
@@ -141,7 +142,7 @@ export class ImageUriBuilder {
     const [, fit, width, height, enlarge] = resizePart?.split(':') ?? []
     const [, minWidth] = minWidthPart?.split(':') ?? []
     const [, minHeight] = minHeightPart?.split(':') ?? []
-    if (fit !== 'fill' && fit !== 'fit') {
+    if (!VALID_FITS.includes(fit)) {
       throw new BadPathError('Invalid path: bad resize fit param')
     }
     if (isNaN(toInt(width)) || isNaN(toInt(height))) {
@@ -164,7 +165,7 @@ export class ImageUriBuilder {
       format,
       height: toInt(height),
       width: toInt(width),
-      fit: fit === 'fill' ? 'cover' : 'inside',
+      fit: VALID_FITS.includes(fit) ? (fit as Options['fit']) : 'cover',
       min:
         minWidth && minHeight
           ? { width: toInt(minWidth), height: toInt(minHeight) }
