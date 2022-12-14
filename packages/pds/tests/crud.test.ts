@@ -204,7 +204,7 @@ describe('crud operations', () => {
     // Cleanup
     await aliceClient.app.bsky.feed.post.delete({
       rkey: postUri.rkey,
-      user: alice.did,
+      did: alice.did,
     })
   })
 
