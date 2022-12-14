@@ -393,29 +393,33 @@ describe('crud operations', () => {
   // Validation
   // --------------
 
-  it('requires a $type on records', async () => {
-    const prom1 = aliceClient.com.atproto.repo.createRecord({
+  it('defaults an undefined $type on records', async () => {
+    const res = await aliceClient.com.atproto.repo.createRecord({
       did: alice.did,
       collection: 'app.bsky.feed.post',
-      record: {},
+      record: {
+        text: 'blah',
+        createdAt: new Date().toISOString(),
+      },
     })
-    await expect(prom1).rejects.toThrow(
-      'Invalid app.bsky.feed.post record: Record/$type must be a string',
-    )
+    const uri = new AtUri(res.data.uri)
+    const got = await client.com.atproto.repo.getRecord({
+      user: alice.did,
+      collection: uri.collection,
+      rkey: uri.rkey,
+    })
+    expect(got.data.value['$type']).toBe(uri.collection)
   })
 
   it('requires the schema to be known if validating', async () => {
-    // const prom1 = client.com.atproto.repo.listRecords(url, {
-    //   user: alice.did,
-    //   type: 'com.example.foobar',
-    // })
-    // await expect(prom1).rejects.toThrow('Schema not found: com.example.foobar')
-    const prom2 = aliceClient.com.atproto.repo.createRecord({
+    const prom = aliceClient.com.atproto.repo.createRecord({
       did: alice.did,
       collection: 'com.example.foobar',
       record: { $type: 'com.example.foobar' },
     })
-    await expect(prom2).rejects.toThrow('Schema not found')
+    await expect(prom).rejects.toThrow(
+      'Lexicon not found: lex:com.example.foobar',
+    )
   })
 
   it('requires the $type to match the schema', async () => {
@@ -426,7 +430,7 @@ describe('crud operations', () => {
         record: { $type: 'app.bsky.feed.vote' },
       }),
     ).rejects.toThrow(
-      'Invalid app.bsky.feed.post record: Invalid $type: must be lex:app.bsky.feed.post, got app.bsky.feed.vote',
+      'Invalid $type: expected app.bsky.feed.post, got app.bsky.feed.vote',
     )
   })
 
@@ -441,96 +445,4 @@ describe('crud operations', () => {
       'Invalid app.bsky.feed.post record: Record must have the property "text"',
     )
   })
-
-  // TODO: does it?
-  // it('validates the record on read', async () => {
-  //   const res1 = await client.com.atproto.repo.createRecord(
-  //     url,
-  //     {did: alice.did, type: 'app.bsky.feed.post', validate: false },
-  //     {
-  //       encoding: 'application/json',
-  //       data: { $type: 'app.bsky.feed.post', record: 'is bad' },
-  //     },
-  //   )
-  //   const res2 = await client.com.atproto.repo.createRecord(
-  //     url,
-  //     { did: alice.did, type: 'app.bsky.feed.post', validate: false },
-  //     {
-  //       encoding: 'application/json',
-  //       data: { $type: 'com.example.unknown', dunno: 'lol' },
-  //     },
-  //   )
-  //   const res3 = await client.com.atproto.repo.listRecords(url, {
-  //     user: alice.did,
-  //     type: 'app.bsky.feed.post',
-  //   })
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[0].value.record).toBe('is bad')
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[0].valid).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[0].fullySupported).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[0].compatible).toBeTruthy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[0].error).toBe(
-  //     `Failed app.bsky.feed.post validation for #/required: must have required property 'text'`,
-  //   )
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[1].value.dunno).toBe('lol')
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[1].valid).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[1].fullySupported).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[1].compatible).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res3.data.records[1].error).toBe(
-  //     `Record type com.example.unknown is not supported`,
-  //   )
-  //   const res4 = await client.com.atproto.repo.getRecord(url, {
-  //     user: alice.did,
-  //     type: 'app.bsky.feed.post',
-  //     tid: new AtUri(res1.data.uri).rkey,
-  //   })
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res4.data.value.record).toBe('is bad')
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res4.data.valid).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res4.data.fullySupported).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res4.data.compatible).toBeTruthy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res4.data.error).toBe(
-  //     `Failed app.bsky.feed.post validation for #/required: must have required property 'text'`,
-  //   )
-  //   const res5 = await client.com.atproto.repo.getRecord(url, {
-  //     user: alice.did,
-  //     type: 'app.bsky.feed.post',
-  //     tid: new AtUri(res2.data.uri).rkey,
-  //   })
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res5.data.value.dunno).toBe('lol')
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res5.data.valid).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res5.data.fullySupported).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res5.data.compatible).toBeFalsy()
-  //   /** @ts-ignore TODO!!! */
-  //   expect(res5.data.error).toBe(
-  //     `Record type com.example.unknown is not supported`,
-  //   )
-  //   await client.com.atproto.repo.deleteRecord(url, {
-  //     did: alice.did,
-  //     type: 'app.bsky.feed.post',
-  //     tid: new AtUri(res1.data.uri).rkey,
-  //   })
-  //   await client.com.atproto.repo.deleteRecord(url, {
-  //     did: alice.did,
-  //     type: 'app.bsky.feed.post',
-  //     tid: new AtUri(res2.data.uri).rkey,
-  //   })
-  // })
 })

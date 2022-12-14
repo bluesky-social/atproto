@@ -53,3 +53,5 @@ export type PreparedWrites = (
   | PreparedUpdate
   | PreparedDelete
 )[]
+
+export class InvalidRecordError extends Error {}
