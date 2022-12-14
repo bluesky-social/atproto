@@ -80,7 +80,7 @@ const insertFn = async (
         uri: external.uri,
         title: external.title,
         description: external.description,
-        thumbCid: external.thumb?.cid,
+        thumbCid: external.thumb?.cid || null,
       }
       await db.insertInto('post_embed_external').values(embed).execute()
     }
