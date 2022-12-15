@@ -9,6 +9,8 @@ import { ServerMailer } from './mailer'
 import { App } from '.'
 import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
+import { Services } from './services'
+import { MessageQueue } from './event-stream/types'
 
 export type Locals = {
   logger: pino.Logger
@@ -19,6 +21,8 @@ export type Locals = {
   imgUriBuilder: ImageUriBuilder
   config: ServerConfig
   mailer: ServerMailer
+  services: Services
+  messageQueue: MessageQueue
 }
 
 type HasLocals = App | Response
@@ -87,6 +91,22 @@ export const imgUriBuilder = (res: HasLocals): ImageUriBuilder => {
   return imgUriBuilder as ImageUriBuilder
 }
 
+export const services = (res: HasLocals): Services => {
+  const services = res.locals.services
+  if (!services) {
+    throw new Error('No Services object attached to server')
+  }
+  return services as Services
+}
+
+export const messageQueue = (res: HasLocals): MessageQueue => {
+  const messageQueue = res.locals.messageQueue
+  if (!messageQueue) {
+    throw new Error('No MessageQueue object attached to server')
+  }
+  return messageQueue as MessageQueue
+}
+
 export const getLocals = (res: HasLocals): Locals => {
   return {
     logger: logger(res),
@@ -97,6 +117,8 @@ export const getLocals = (res: HasLocals): Locals => {
     imgUriBuilder: imgUriBuilder(res),
     config: config(res),
     mailer: mailer(res),
+    services: services(res),
+    messageQueue: messageQueue(res),
   }
 }
 export const get = getLocals

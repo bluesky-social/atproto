@@ -8,7 +8,7 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ input, auth, res }) => {
       const { seenAt } = input.body
-      const { db } = locals.get(res)
+      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
 
       let parsed: string
@@ -18,7 +18,7 @@ export default function (server: Server) {
         throw new InvalidRequestError('Invalid date')
       }
 
-      const user = await db.getUser(requester)
+      const user = await services.actor(db).getUser(requester)
       if (!user) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }

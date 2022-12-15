@@ -17,8 +17,8 @@ export default function (server: Server) {
   server.com.atproto.repo.describe(async ({ params, res }) => {
     const { user } = params
 
-    const { db, auth } = locals.get(res)
-    const userObj = await db.getUser(user)
+    const { db, auth, services } = locals.get(res)
+    const userObj = await services.actor(db).getUser(user)
     if (userObj === null) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
@@ -33,7 +33,9 @@ export default function (server: Server) {
     const handle = didResolver.getHandle(didDoc)
     const handleIsCorrect = handle === userObj.handle
 
-    const collections = await db.listCollectionsForDid(userObj.did)
+    const collections = await services
+      .record(db)
+      .listCollectionsForDid(userObj.did)
 
     return {
       encoding: 'application/json',
@@ -50,20 +52,22 @@ export default function (server: Server) {
   server.com.atproto.repo.listRecords(async ({ params, res }) => {
     const { user, collection, limit, before, after, reverse } = params
 
-    const db = locals.db(res)
-    const did = await db.getDidForActor(user)
+    const { db, services } = locals.get(res)
+    const did = await services.actor(db).getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
-    const records = await db.listRecordsForCollection(
-      did,
-      collection,
-      limit || 50,
-      reverse || false,
-      before,
-      after,
-    )
+    const records = await services
+      .record(db)
+      .listRecordsForCollection(
+        did,
+        collection,
+        limit || 50,
+        reverse || false,
+        before,
+        after,
+      )
 
     const lastRecord = records.at(-1)
     const lastUri = lastRecord && new AtUri(lastRecord?.uri)
@@ -80,16 +84,16 @@ export default function (server: Server) {
 
   server.com.atproto.repo.getRecord(async ({ params, res }) => {
     const { user, collection, rkey, cid } = params
-    const db = locals.db(res)
+    const { db, services } = locals.get(res)
 
-    const did = await db.getDidForActor(user)
+    const did = await services.actor(db).getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
     const uri = new AtUri(`${did}/${collection}/${rkey}`)
 
-    const record = await db.getRecord(uri, cid || null)
+    const record = await services.record(db).getRecord(uri, cid || null)
     if (!record) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
@@ -104,9 +108,11 @@ export default function (server: Server) {
     handler: async ({ input, auth, res }) => {
       const tx = input.body
       const { did, validate } = tx
-      const { db, blobstore } = locals.get(res)
+      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
-      const authorized = await db.isUserControlledRepo(did, requester)
+      const authorized = await services
+        .repo(db)
+        .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
@@ -146,7 +152,8 @@ export default function (server: Server) {
 
       await db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
-        await repo.processWrites(dbTxn, did, authStore, blobstore, writes, now)
+        const repoTxn = services.repo(dbTxn)
+        await repoTxn.processWrites(did, authStore, writes, now)
       })
     },
   })
@@ -157,9 +164,11 @@ export default function (server: Server) {
       const { did, collection, record } = input.body
       const validate =
         typeof input.body.validate === 'boolean' ? input.body.validate : true
-      const { db, blobstore } = locals.get(res)
+      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
-      const authorized = await db.isUserControlledRepo(did, requester)
+      const authorized = await services
+        .repo(db)
+        .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
@@ -189,7 +198,8 @@ export default function (server: Server) {
       }
 
       await db.transaction(async (dbTxn) => {
-        await repo.processWrites(dbTxn, did, authStore, blobstore, [write], now)
+        const repoTxn = services.repo(dbTxn)
+        await repoTxn.processWrites(did, authStore, [write], now)
       })
 
       return {
@@ -207,9 +217,11 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ input, auth, res }) => {
       const { did, collection, rkey } = input.body
-      const { db, blobstore } = locals.get(res)
+      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
-      const authorized = await db.isUserControlledRepo(did, requester)
+      const authorized = await services
+        .repo(db)
+        .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
@@ -224,7 +236,8 @@ export default function (server: Server) {
       })
 
       await db.transaction(async (dbTxn) => {
-        await repo.processWrites(dbTxn, did, authStore, blobstore, write, now)
+        const repoTxn = services.repo(dbTxn)
+        await repoTxn.processWrites(did, authStore, write, now)
       })
     },
   })

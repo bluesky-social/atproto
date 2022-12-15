@@ -2,14 +2,14 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { PlcClient } from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
+import { cidForData } from '@atproto/common'
 import { Server, APP_BSKY_SYSTEM } from '../../../lexicon'
 import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
-import { UserAlreadyExistsError } from '../../../db'
 import { grantRefreshToken } from './util/auth'
 import * as lex from '../../../lexicon/lexicons'
 import * as repo from '../../../repo'
-import { cidForData } from '@atproto/common'
+import { UserAlreadyExistsError } from '../../../services/actor'
 
 export default function (server: Server) {
   server.com.atproto.server.getAccountsConfig(({ res }) => {
@@ -36,7 +36,7 @@ export default function (server: Server) {
 
   server.com.atproto.account.create(async ({ input, res }) => {
     const { email, password, inviteCode, recoveryKey } = input.body
-    const { db, auth, config, keypair, logger } = locals.get(res)
+    const { db, services, auth, config, keypair, logger } = locals.get(res)
 
     let handle: string
     try {
@@ -60,6 +60,8 @@ export default function (server: Server) {
     const now = new Date().toISOString()
 
     const result = await db.transaction(async (dbTxn) => {
+      const actorTxn = services.actor(dbTxn)
+      const repoTxn = services.repo(dbTxn)
       if (config.inviteRequired) {
         if (!inviteCode) {
           throw new InvalidRequestError(
@@ -93,7 +95,7 @@ export default function (server: Server) {
 
       // Pre-register user before going out to PLC to get a real did
       try {
-        await dbTxn.preregisterDid(handle, tempDid)
+        await actorTxn.preregisterDid(handle, tempDid)
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
           throw new InvalidRequestError(`Handle already taken: ${handle}`)
@@ -101,7 +103,7 @@ export default function (server: Server) {
         throw err
       }
       try {
-        await dbTxn.registerUser(email, handle, password)
+        await actorTxn.registerUser(email, handle, password)
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
           throw new InvalidRequestError(`Email already taken: ${email}`)
@@ -133,7 +135,7 @@ export default function (server: Server) {
         $type: lex.ids.AppBskySystemDeclaration,
         actorType: APP_BSKY_SYSTEM.ActorUser,
       }
-      await dbTxn.finalizeDid(handle, did, tempDid, declaration)
+      await actorTxn.finalizeDid(handle, did, tempDid, declaration)
       if (config.inviteRequired && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')
@@ -154,8 +156,8 @@ export default function (server: Server) {
 
       // Setup repo root
       const authStore = locals.getAuthstore(res, did)
-      await repo.createRepo(dbTxn, did, authStore, [write], now)
-      await repo.indexWrites(dbTxn, [write], now)
+      await repoTxn.createRepo(did, authStore, [write], now)
+      await repoTxn.indexWrites([write], now)
 
       const declarationCid = await cidForData(declaration)
       const access = auth.createAccessToken(did)

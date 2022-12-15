@@ -1,16 +1,16 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Confirmation from '../../lexicon/types/app/bsky/graph/confirmation'
-import { Assertion as IndexedAssertion } from '../tables/assertion'
-import * as lex from '../../lexicon/lexicons'
-import * as messages from '../../stream/messages'
-import { Message } from '../../stream/messages'
-import { APP_BSKY_GRAPH } from '../../lexicon'
-import DatabaseSchema from '../database-schema'
-import RecordProcessor from '../record-processor'
+import * as Confirmation from '../../../lexicon/types/app/bsky/graph/confirmation'
+import * as lex from '../../../lexicon/lexicons'
+import * as messages from '../../../event-stream/messages'
+import { Message } from '../../../event-stream/messages'
+import { APP_BSKY_GRAPH } from '../../../lexicon'
+import DatabaseSchema from '../../../db/database-schema'
+import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyGraphConfirmation
+type IndexedAssertion = DatabaseSchema['assertion']
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,

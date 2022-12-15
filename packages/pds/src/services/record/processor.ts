@@ -1,10 +1,10 @@
-import { AtUri } from '@atproto/uri'
-import * as common from '@atproto/common'
 import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { DatabaseSchema } from './database-schema'
-import { Message } from '../stream/messages'
-import { lexicons } from '../lexicon/lexicons'
+import { AtUri } from '@atproto/uri'
+import * as common from '@atproto/common'
+import DatabaseSchema from '../../db/database-schema'
+import { Message } from '../../event-stream/messages'
+import { lexicons } from '../../lexicon/lexicons'
 
 type RecordProcessorParams<T, S> = {
   lexId: string

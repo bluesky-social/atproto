@@ -12,16 +12,17 @@ import { DidResolver } from '@atproto/did-resolver'
 import API, { health } from './api'
 import Database from './db'
 import ServerAuth from './auth'
-import * as streamConsumers from './stream/consumers'
+import * as streamConsumers from './event-stream/consumers'
 import * as error from './error'
 import { httpLogger, loggerMiddleware } from './logger'
 import { ServerConfig, ServerConfigValues } from './config'
 import { Locals } from './locals'
 import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
-import SqlMessageQueue from './db/message-queue'
+import SqlMessageQueue from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
+import { createServices } from './services'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -45,8 +46,9 @@ const runServer = (
   })
 
   const messageQueue = new SqlMessageQueue('pds', db)
-  db.setMessageQueue(messageQueue)
-  streamConsumers.listen(messageQueue, auth, keypair)
+  streamConsumers.listen(messageQueue, blobstore, auth, keypair)
+
+  const services = createServices(db, messageQueue, blobstore)
 
   const mailTransport =
     config.emailSmtpUrl !== undefined
@@ -87,6 +89,8 @@ const runServer = (
     imgUriBuilder,
     config,
     mailer,
+    services,
+    messageQueue,
   }
 
   app.locals = locals

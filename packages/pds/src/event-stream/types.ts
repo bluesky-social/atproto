@@ -6,8 +6,8 @@ export type MessageOfType<T extends string = string> = {
 }
 
 export type Listener<M extends MessageOfType = MessageOfType> = (ctx: {
-  db: Database
   message: M
+  db: Database
 }) => Promise<void | MessageOfType[]>
 
 export interface Listenable<M extends MessageOfType = MessageOfType> {
@@ -24,4 +24,15 @@ export abstract class Consumer<M extends MessageOfType>
   get listener() {
     return this.dispatch.bind(this)
   }
+}
+
+export interface MessageQueue {
+  send(tx: Database, message: MessageOfType | MessageOfType[]): Promise<void>
+  listen<T extends string, M extends MessageOfType<T>>(
+    topic: T,
+    listenable: Listenable<M>,
+  ): void
+  processNext(): Promise<void>
+  processAll(): Promise<void>
+  destroy(): void
 }

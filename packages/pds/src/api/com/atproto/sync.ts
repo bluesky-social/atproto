@@ -8,8 +8,8 @@ import SqlBlockstore from '../../../sql-blockstore'
 export default function (server: Server) {
   server.com.atproto.sync.getRoot(async ({ params, res }) => {
     const { did } = params
-    const db = locals.db(res)
-    const root = await db.getRepoRoot(did)
+    const { db, services } = locals.get(res)
+    const root = await services.repo(db).getRepoRoot(did)
     if (root === null) {
       throw new InvalidRequestError(`Could not find root for DID: ${did}`)
     }
@@ -21,8 +21,8 @@ export default function (server: Server) {
 
   server.com.atproto.sync.getRepo(async ({ params, res }) => {
     const { did, from = null } = params
-    const { db } = locals.get(res)
-    const repoRoot = await db.getRepoRoot(did)
+    const { db, services } = locals.get(res)
+    const repoRoot = await services.repo(db).getRepoRoot(did)
     if (repoRoot === null) {
       throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
     }
