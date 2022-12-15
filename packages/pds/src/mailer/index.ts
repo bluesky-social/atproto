@@ -44,11 +44,16 @@ export class ServerMailer {
       ...params,
       config: ServerMailer.getEmailConfig(this.config),
     })
-    return await this.transporter.sendMail({
+    const res = await this.transporter.sendMail({
       ...mailOpts,
       from: mailOpts.from ?? this.config.emailNoReplyAddress,
       html,
     })
+    if (!this.config.emailSmtpUrl) {
+      console.log('No SMTP URL has been configured. Intended to send email:')
+      console.log(JSON.stringify(res, null, 2))
+    }
+    return res
   }
 
   private compile(name) {
