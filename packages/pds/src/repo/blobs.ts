@@ -6,7 +6,7 @@ import Database from '../db'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
-import { BlobRef, PreparedWrites } from './types'
+import { BlobRef, PreparedWrite } from './types'
 import { Blob as BlobTable } from '../db/tables/blob'
 import * as img from '../image'
 import { sha256Stream } from '@atproto/crypto'
@@ -54,7 +54,7 @@ export const processWriteBlobs = async (
   blobstore: BlobStore,
   did: string,
   commit: CID,
-  writes: PreparedWrites,
+  writes: PreparedWrite[],
 ) => {
   const blobPromises: Promise<void>[] = []
   for (const write of writes) {

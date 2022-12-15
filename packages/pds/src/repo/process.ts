@@ -4,8 +4,9 @@ import * as auth from '@atproto/auth'
 import Database from '../db'
 import SqlBlockstore from '../sql-blockstore'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { PreparedCreate, PreparedWrites } from './types'
+import { PreparedCreate, PreparedWrite } from './types'
 import { processWriteBlobs } from './blobs'
+import { createWriteToOp, writeToOp } from './prepare'
 
 export const createRepo = async (
   dbTxn: Database,
@@ -16,7 +17,7 @@ export const createRepo = async (
 ) => {
   dbTxn.assertTransaction()
   const blockstore = new SqlBlockstore(dbTxn, did, now)
-  const writeOps = writes.map((write) => write.op)
+  const writeOps = writes.map(createWriteToOp)
   const repo = await Repo.create(blockstore, did, authStore, writeOps)
   await dbTxn.db
     .insertInto('repo_root')
@@ -33,7 +34,7 @@ export const processWrites = async (
   did: string,
   authStore: auth.AuthStore,
   blobs: BlobStore,
-  writes: PreparedWrites,
+  writes: PreparedWrite[],
   now: string,
 ) => {
   // make structural write to repo & send to indexing
@@ -50,7 +51,7 @@ export const writeToRepo = async (
   dbTxn: Database,
   did: string,
   authStore: auth.AuthStore,
-  writes: PreparedWrites,
+  writes: PreparedWrite[],
   now: string,
 ): Promise<CID> => {
   dbTxn.assertTransaction()
@@ -61,7 +62,7 @@ export const writeToRepo = async (
       `${did} is not a registered repo on this server`,
     )
   }
-  const writeOps = writes.map((write) => write.op)
+  const writeOps = writes.map(writeToOp)
   const repo = await Repo.load(blockstore, currRoot)
   const updated = await repo
     .stageUpdate(writeOps)
@@ -77,14 +78,14 @@ export const writeToRepo = async (
 
 export const indexWrites = async (
   dbTxn: Database,
-  writes: PreparedWrites,
+  writes: PreparedWrite[],
   now: string,
 ) => {
   dbTxn.assertTransaction()
   await Promise.all(
     writes.map(async (write) => {
       if (write.action === 'create') {
-        await dbTxn.indexRecord(write.uri, write.cid, write.op.value, now)
+        await dbTxn.indexRecord(write.uri, write.cid, write.record, now)
       } else if (write.action === 'delete') {
         await dbTxn.deleteRecord(write.uri)
       }

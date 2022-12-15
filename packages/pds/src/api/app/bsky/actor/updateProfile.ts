@@ -64,23 +64,28 @@ export default function (server: Server) {
             )
           }
 
-          const writes = await repo.prepareWrites(did, {
-            action: current ? 'update' : 'create',
-            collection: profileNsid,
-            rkey: 'self',
-            value: updated,
-          })
+          const write = current
+            ? await repo.prepareUpdate({
+                did,
+                collection: profileNsid,
+                rkey: 'self',
+                record: updated,
+              })
+            : await repo.prepareCreate({
+                did,
+                collection: profileNsid,
+                record: updated,
+              })
 
           const commit = await repo.writeToRepo(
             dbTxn,
             did,
             authStore,
-            writes,
+            [write],
             now,
           )
-          await repo.processWriteBlobs(dbTxn, blobstore, did, commit, writes)
+          await repo.processWriteBlobs(dbTxn, blobstore, did, commit, [write])
 
-          const write = writes[0]
           let profileCid: CID
           if (write.action === 'update') {
             profileCid = write.cid
@@ -108,9 +113,9 @@ export default function (server: Server) {
             profileCid = write.cid
             await dbTxn.indexRecord(uri, profileCid, updated, now)
           } else {
-            // should never hit this
+            const exhaustiveCheck: never = write
             throw new Error(
-              `Unsupported action on update profile: ${write.action}`,
+              `Unsupported action on update profile: ${exhaustiveCheck}`,
             )
           }
 
