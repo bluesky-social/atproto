@@ -3,21 +3,18 @@ import SqlMessageQueue from '../../src/event-stream/message-queue'
 import { Pool } from 'pg'
 import { sql } from 'kysely'
 
-const dbPostgresUrl = process.env.DB_POSTGRES_URL
-const describePgOnly = dbPostgresUrl ? describe : describe.skip
-
-describePgOnly('benchmark', () => {
-  let pool: Pool
+describe('benchmark', () => {
   let db: Database
   let messageQueue: SqlMessageQueue
 
   beforeAll(async () => {
-    if (!dbPostgresUrl) throw new Error('Benchmarks are postgres-only')
-    pool = new Pool({ connectionString: dbPostgresUrl, max: 10 })
-    db = Database.postgres({
-      pool,
-      schema: 'event_stream_bench',
-    })
+    const dbPostgresUrl = process.env.DB_POSTGRES_URL
+    db = dbPostgresUrl
+      ? Database.postgres({
+          pool: new Pool({ connectionString: dbPostgresUrl, max: 10 }),
+          schema: 'event_stream_bench',
+        })
+      : Database.memory()
     await db.migrateToLatestOrThrow()
   })
 
@@ -53,9 +50,9 @@ describePgOnly('benchmark', () => {
 
     const start = Date.now()
     await sql`select 1`.execute(db.db) // Should not be blocked by work on the queue
-    expect(Date.now() - start).toBeLessThan(10)
+    expect(Date.now() - start).toBeLessThan(20)
 
-    // Ensure all are processed
+    // Ensure all messages are processed
     await messageQueue.processingQueue?.onIdle()
     expect(processed).toEqual(50)
   })
