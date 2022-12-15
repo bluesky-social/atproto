@@ -5,6 +5,7 @@ import { htmlToText } from 'nodemailer-html-to-text'
 import Mail from 'nodemailer/lib/mailer'
 import SMTPTransport from 'nodemailer/lib/smtp-transport'
 import { ServerConfig } from '../config'
+import { mailerLogger } from '../logger'
 
 export class ServerMailer {
   private config: ServerConfig
@@ -50,8 +51,10 @@ export class ServerMailer {
       html,
     })
     if (!this.config.emailSmtpUrl) {
-      console.log('No SMTP URL has been configured. Intended to send email:')
-      console.log(JSON.stringify(res, null, 2))
+      mailerLogger.debug(
+        'No SMTP URL has been configured. Intended to send email:\n' +
+          JSON.stringify(res, null, 2),
+      )
     }
     return res
   }
