@@ -1,10 +1,6 @@
 import * as auth from '@atproto/auth'
 import * as crypto from '@atproto/crypto'
-import {
-  AuthRequiredError,
-  ForbiddenError,
-  InvalidRequestError,
-} from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as uint8arrays from 'uint8arrays'
 import { DidResolver } from '@atproto/did-resolver'
 import express from 'express'
@@ -24,7 +20,6 @@ export type ServerAuthOpts = {
 export enum AuthScopes {
   Access = 'com.atproto.access',
   Refresh = 'com.atproto.refresh',
-  ResetPassword = 'com.atproto.resetAccountPassword',
 }
 
 export type AuthToken = {

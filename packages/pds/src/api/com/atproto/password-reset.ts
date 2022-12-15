@@ -1,70 +1,59 @@
-import jwt from 'jsonwebtoken'
-import { AuthScopes } from '../../../auth'
-import { ServerConfig } from '../../../config'
-import { User } from '../../../db/tables/user'
+import { randomStr } from '@atproto/crypto'
+import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.com.atproto.account.requestPasswordReset(async ({ input, res }) => {
-    const { db, services, mailer, config } = locals.get(res)
+    const { db, services, mailer } = locals.get(res)
     const email = input.body.email.toLowerCase()
 
     const user = await services.actor(db).getUserByEmail(email)
 
     if (user) {
-      // By signing with the password hash, this jwt becomes invalid once the user changes their password.
-      // This allows us to ensure it's essentially single-use (combined with the jwt's short-livedness).
-      const token = jwt.sign(
-        {
-          sub: user.did,
-          scope: AuthScopes.ResetPassword,
-        },
-        getSigningKey(user, config),
-        { expiresIn: '15mins' },
-      )
-
+      const token = getSixDigitToken()
+      const grantedAt = new Date().toISOString()
+      await db.db
+        .updateTable('user')
+        .where('handle', '=', user.handle)
+        .set({
+          passwordResetToken: token,
+          passwordResetGrantedAt: grantedAt,
+        })
+        .execute()
       await mailer.sendResetPassword({ token }, { to: user.email })
     }
   })
 
   server.com.atproto.account.resetPassword(async ({ input, res }) => {
-    const { db, services, config } = locals.get(res)
+    const { db, services } = locals.get(res)
     const { token, password } = input.body
 
-    const tokenBody = jwt.decode(token)
-    if (tokenBody === null || typeof tokenBody === 'string') {
-      return createInvalidTokenError('Malformed token')
+    const tokenInfo = await db.db
+      .selectFrom('user')
+      .select(['handle', 'passwordResetGrantedAt'])
+      .where('passwordResetToken', '=', token)
+      .executeTakeFirst()
+
+    if (!tokenInfo?.passwordResetGrantedAt) {
+      return createInvalidTokenError()
     }
 
-    const { sub: did, scope } = tokenBody
-    if (typeof did !== 'string' || scope !== AuthScopes.ResetPassword) {
-      return createInvalidTokenError('Malformed token')
+    const now = new Date()
+    const grantedAt = new Date(tokenInfo.passwordResetGrantedAt)
+    const expiresAt = new Date(grantedAt.getTime() + 15 * minsToMs)
+
+    if (now > expiresAt) {
+      await unsetResetToken(db, tokenInfo.handle)
+      return createExpiredTokenError()
     }
 
-    const user = await services.actor(db).getUser(did)
-    if (!user) {
-      return createInvalidTokenError('Token could not be verified')
-    }
-
-    try {
-      jwt.verify(token, getSigningKey(user, config))
-    } catch (err) {
-      if (err instanceof jwt.TokenExpiredError) {
-        return createExpiredTokenError()
-      }
-      return createInvalidTokenError('Token could not be verified')
-    }
-
-    // Token had correct scope, was not expired, and referenced
-    // a user whose password has not changed since token issuance.
-
-    await services.actor(db).updateUserPassword(user.handle, password)
+    await db.transaction(async (dbTxn) => {
+      await unsetResetToken(dbTxn, tokenInfo.handle)
+      await services.actor(dbTxn).updateUserPassword(tokenInfo.handle, password)
+    })
   })
 }
-
-const getSigningKey = (user: User, config: ServerConfig) =>
-  `${config.jwtSecret}::${user.password}`
 
 type ErrorResponse = {
   status: number
@@ -72,12 +61,14 @@ type ErrorResponse = {
   message: string
 }
 
-const createInvalidTokenError = (
-  message: string,
-): ErrorResponse & { error: 'InvalidToken' } => ({
+const minsToMs = 60 * 1000
+
+const createInvalidTokenError = (): ErrorResponse & {
+  error: 'InvalidToken'
+} => ({
   status: 400,
   error: 'InvalidToken',
-  message,
+  message: 'Token is invalid',
 })
 
 const createExpiredTokenError = (): ErrorResponse & {
@@ -87,3 +78,16 @@ const createExpiredTokenError = (): ErrorResponse & {
   error: 'ExpiredToken',
   message: 'The password reset token has expired',
 })
+
+const getSixDigitToken = () => randomStr(4, 'base10').slice(0, 6)
+
+const unsetResetToken = async (db: Database, handle: string) => {
+  await db.db
+    .updateTable('user')
+    .where('handle', '=', handle)
+    .set({
+      passwordResetToken: null,
+      passwordResetGrantedAt: null,
+    })
+    .execute()
+}

@@ -5,6 +5,7 @@ import * as jwt from 'jsonwebtoken'
 import { parseBasicAuth } from './auth'
 
 export const dbLogger = subsystemLogger('pds:db')
+export const mailerLogger = subsystemLogger('pds:mailer')
 export const httpLogger = subsystemLogger('pds')
 
 export const loggerMiddleware = pinoHttp({
