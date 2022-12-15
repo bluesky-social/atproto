@@ -1,13 +1,17 @@
 import { sql } from 'kysely'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { getWriteOpLog } from '@atproto/repo'
-import { Database } from '../../src'
+import { getWriteOpLog, RecordWriteOp } from '@atproto/repo'
 import SqlBlockstore from '../../src/sql-blockstore'
-import { indexWrites, prepareWrites } from '../../src/repo'
 import { Locals, get as getLocals } from '../../src/locals'
 import basicSeed from '../seeds/basic'
 import { SeedClient } from '../seeds/client'
 import { forSnapshot, runTestServer, TestServerInfo } from '../_util'
+import {
+  prepareCreate,
+  prepareDelete,
+  prepareUpdate,
+  PreparedWrite,
+} from '../../src/repo'
 
 describe('sync', () => {
   let server: TestServerInfo
@@ -17,12 +21,12 @@ describe('sync', () => {
 
   beforeAll(async () => {
     server = await runTestServer({
-      dbPostgresSchema: 'stream_sync',
+      dbPostgresSchema: 'event_stream_sync',
     })
     locals = getLocals(server.app)
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
-    await basicSeed(sc, locals.db.messageQueue)
+    await basicSeed(sc, locals.messageQueue)
   })
 
   afterAll(async () => {
@@ -30,7 +34,7 @@ describe('sync', () => {
   })
 
   it('rebuilds timeline indexes from repo state.', async () => {
-    const { db } = locals
+    const { db, services, messageQueue } = locals
     const { ref } = db.db.dynamic
     // Destroy indexes
     await Promise.all(
@@ -49,7 +53,7 @@ describe('sync', () => {
         .map(([, did]) => did)
         .map(async (did) => ({
           did,
-          opLog: await getOpLog(db, did),
+          opLog: await getOpLog(did),
         })),
     )
     const indexOps = repoOpLogs.flatMap(({ did, opLog }) =>
@@ -60,9 +64,11 @@ describe('sync', () => {
     for (const op of indexOps) {
       const now = new Date(ts++).toISOString()
       const writes = await prepareWrites(op.did, op.ops)
-      await db.transaction((dbTxn) => indexWrites(dbTxn, writes, now))
+      await db.transaction((dbTxn) =>
+        services.repo(dbTxn).indexWrites(writes, now),
+      )
     }
-    await db.messageQueue?.processAll()
+    await messageQueue.processAll()
     // Check indexed timeline
     const aliceTL = await client.app.bsky.feed.getTimeline(
       {},
@@ -71,11 +77,47 @@ describe('sync', () => {
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
   })
 
-  async function getOpLog(db: Database, did: string) {
-    const repoRoot = await db.getRepoRoot(did)
+  async function getOpLog(did: string) {
+    const { db, services } = locals
+    const repoRoot = await services.repo(db).getRepoRoot(did)
     if (!repoRoot) throw new Error('Missing repo root')
     const blockstore = new SqlBlockstore(db, did)
     return await getWriteOpLog(blockstore, null, repoRoot)
+  }
+
+  function prepareWrites(
+    did: string,
+    ops: RecordWriteOp[],
+  ): Promise<PreparedWrite[]> {
+    return Promise.all(
+      ops.map((op) => {
+        const { action } = op
+        if (action === 'create') {
+          return prepareCreate({
+            did,
+            collection: op.collection,
+            rkey: op.rkey,
+            record: op.value,
+          })
+        } else if (action === 'update') {
+          return prepareUpdate({
+            did,
+            collection: op.collection,
+            rkey: op.rkey,
+            record: op.value,
+          })
+        } else if (action === 'delete') {
+          return prepareDelete({
+            did,
+            collection: op.collection,
+            rkey: op.rkey,
+          })
+        } else {
+          const exhaustiveCheck: never = action
+          throw new Error(`Unhandled case: ${exhaustiveCheck}`)
+        }
+      }),
+    )
   }
 
   const indexedTables = [
