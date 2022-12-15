@@ -1,7 +1,7 @@
-import { Database } from '../../src'
-import SqlMessageQueue from '../../src/event-stream/message-queue'
 import { Pool } from 'pg'
 import { sql } from 'kysely'
+import { Database } from '../../src'
+import SqlMessageQueue from '../../src/event-stream/message-queue'
 
 describe('event stream concurrency', () => {
   let db: Database
