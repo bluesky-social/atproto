@@ -1,13 +1,13 @@
 import { AtUri } from '@atproto/uri'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { Database } from '../src'
-import { runTestServer, CloseFn } from './_util'
-import { SeedClient } from './seeds/client'
-import usersSeed from './seeds/users'
-import scenesSeed from './seeds/scenes'
-import { MessageQueue } from '../src/event-stream/types'
+import { Database } from '../../src'
+import { runTestServer, CloseFn } from '../_util'
+import { SeedClient } from '../seeds/client'
+import usersSeed from '../seeds/users'
+import scenesSeed from '../seeds/scenes'
+import { MessageQueue } from '../../src/event-stream/types'
 
-describe('db', () => {
+describe('message queue', () => {
   let close: CloseFn
   let client: AtpServiceClient
   let sc: SeedClient
@@ -18,7 +18,7 @@ describe('db', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'message_queue',
+      dbPostgresSchema: 'event_stream_message_queue',
     })
     close = server.close
     db = server.db

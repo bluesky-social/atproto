@@ -45,6 +45,7 @@
     "multiformats": "^9.6.4",
     "nodemailer": "^6.8.0",
     "nodemailer-html-to-text": "^3.2.0",
+    "p-queue": "^6.6.2",
     "pg": "^8.8.0",
     "pino": "^8.6.1",
     "pino-http": "^8.2.1",
