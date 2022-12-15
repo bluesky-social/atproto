@@ -4,7 +4,7 @@ import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.com.atproto.handle.resolve(async ({ params, res }) => {
-    const { db, config } = locals.get(res)
+    const { db, services, config } = locals.get(res)
 
     const handle = params.handle
 
@@ -19,7 +19,7 @@ export default function (server: Server) {
       if (!supportedHandle) {
         throw new InvalidRequestError('Not a supported handle domain')
       }
-      const user = await db.getUser(handle)
+      const user = await services.actor(db).getUser(handle)
       if (!user) {
         throw new InvalidRequestError('Unable to resolve handle')
       }

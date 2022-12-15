@@ -23,7 +23,7 @@ describe('pds notification views', () => {
     app = server.app
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
-    await basicSeed(sc, server.db.messageQueue)
+    await basicSeed(sc, server.messageQueue)
     alice = sc.dids.alice
   })
 

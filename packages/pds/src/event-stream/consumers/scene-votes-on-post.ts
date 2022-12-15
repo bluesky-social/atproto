@@ -1,18 +1,24 @@
 import { TID } from '@atproto/common'
 import { AuthStore } from '@atproto/auth'
+import { BlobStore } from '@atproto/repo'
 import Database from '../../db'
 import * as repo from '../../repo'
 import * as lexicons from '../../lexicon/lexicons'
-import { Consumer } from '../types'
+import { RepoService } from '../../services/repo'
+import { Consumer, MessageQueue } from '../types'
 import { SceneVotesOnPostTableUpdates } from '../messages'
 
 export default class extends Consumer<SceneVotesOnPostTableUpdates> {
-  constructor(private getAuthStore: GetAuthStoreFn) {
+  constructor(
+    private getAuthStore: GetAuthStoreFn,
+    private messageQueue: MessageQueue,
+    private blobstore: BlobStore,
+  ) {
     super()
   }
 
-  async dispatch(ctx: { db: Database; message: SceneVotesOnPostTableUpdates }) {
-    const { db, message } = ctx
+  async dispatch(ctx: { message: SceneVotesOnPostTableUpdates; db: Database }) {
+    const { message, db } = ctx
     const { dids: scenes, subject } = message
     if (scenes.length === 0) return
     const state = await db.db
@@ -61,9 +67,11 @@ export default class extends Consumer<SceneVotesOnPostTableUpdates> {
           .where('subject', '=', scene.subject)
           .execute()
 
+        const repoTxn = new RepoService(db, this.messageQueue, this.blobstore)
+
         await Promise.all([
-          repo.writeToRepo(db, scene.did, sceneAuth, writes, now),
-          repo.indexWrites(db, writes, now),
+          repoTxn.writeToRepo(scene.did, sceneAuth, writes, now),
+          repoTxn.indexWrites(writes, now),
           setTrendPosted,
         ])
       }),

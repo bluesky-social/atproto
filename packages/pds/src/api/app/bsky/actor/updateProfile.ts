@@ -15,11 +15,13 @@ export default function (server: Server) {
   server.app.bsky.actor.updateProfile({
     auth: ServerAuth.verifier,
     handler: async ({ auth, input, res }) => {
-      const { db, blobstore } = locals.get(res)
+      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
 
       const did = input.body.did || requester
-      const authorized = await db.isUserControlledRepo(did, requester)
+      const authorized = await services
+        .repo(db)
+        .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
@@ -30,13 +32,15 @@ export default function (server: Server) {
         async (
           dbTxn,
         ): Promise<{ profileCid: CID; updated: Profile.Record }> => {
+          const recordTxn = services.record(dbTxn)
+          const repoTxn = services.repo(dbTxn)
           const now = new Date().toISOString()
 
           let updated
           const uri = AtUri.make(did, profileNsid, 'self')
-          const current = (await dbTxn.getRecord(uri, null))?.value
+          const current = (await recordTxn.getRecord(uri, null))?.value
           if (current) {
-            if (!db.records.profile.matchesSchema(current)) {
+            if (!recordTxn.records.profile.matchesSchema(current)) {
               // @TODO need a way to get a profile out of a broken state
               throw new InvalidRequestError('could not parse current profile')
             }
@@ -58,7 +62,7 @@ export default function (server: Server) {
             }
           }
           updated = common.noUndefinedVals(updated)
-          if (!db.records.profile.matchesSchema(updated)) {
+          if (!recordTxn.records.profile.matchesSchema(updated)) {
             throw new InvalidRequestError(
               'requested updates do not produce a valid profile doc',
             )
@@ -71,14 +75,8 @@ export default function (server: Server) {
             value: updated,
           })
 
-          const commit = await repo.writeToRepo(
-            dbTxn,
-            did,
-            authStore,
-            writes,
-            now,
-          )
-          await repo.processWriteBlobs(dbTxn, blobstore, did, commit, writes)
+          const commit = await repoTxn.writeToRepo(did, authStore, writes, now)
+          await repoTxn.blobs.processWriteBlobs(did, commit, writes)
 
           const write = writes[0]
           let profileCid: CID
@@ -106,7 +104,7 @@ export default function (server: Server) {
               .execute()
           } else if (write.action === 'create') {
             profileCid = write.cid
-            await dbTxn.indexRecord(uri, profileCid, updated, now)
+            await recordTxn.indexRecord(uri, profileCid, updated, now)
           } else {
             // should never hit this
             throw new Error(

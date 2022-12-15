@@ -2,11 +2,13 @@ import { sql } from 'kysely'
 import Database from '../../db'
 import { Consumer } from '../types'
 import { AddUpvote, sceneVotesOnPostTableUpdates } from '../messages'
+import { ActorService } from '../../services/actor'
 
 export default class extends Consumer<AddUpvote> {
-  async dispatch(ctx: { db: Database; message: AddUpvote }) {
-    const { db, message } = ctx
-    const userScenes = await db.getScenesForUser(message.user)
+  async dispatch(ctx: { message: AddUpvote; db: Database }) {
+    const { message, db } = ctx
+    const actorTxn = new ActorService(db)
+    const userScenes = await actorTxn.getScenesForUser(message.user)
     if (userScenes.length < 1) return
     const updated = await db.db
       .updateTable('scene_votes_on_post')

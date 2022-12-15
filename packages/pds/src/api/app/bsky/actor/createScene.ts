@@ -6,15 +6,15 @@ import * as handleLib from '@atproto/handle'
 import * as locals from '../../../../locals'
 import * as lex from '../../../../lexicon/lexicons'
 import { TID } from '@atproto/common'
-import { UserAlreadyExistsError } from '../../../../db'
 import * as repo from '../../../../repo'
 import ServerAuth from '../../../../auth'
+import { UserAlreadyExistsError } from '../../../../services/actor'
 
 export default function (server: Server) {
   server.app.bsky.actor.createScene({
     auth: ServerAuth.verifier,
     handler: async ({ auth, input, res }) => {
-      const { db, config, keypair, logger } = locals.get(res)
+      const { db, services, config, keypair, logger } = locals.get(res)
       const { recoveryKey } = input.body
       const requester = auth.credentials.did
 
@@ -40,9 +40,11 @@ export default function (server: Server) {
       const now = new Date().toISOString()
 
       const result = await db.transaction(async (dbTxn) => {
+        const actorTxn = services.actor(dbTxn)
+        const repoTxn = services.repo(dbTxn)
         // Pre-register before going out to PLC to get a real did
         try {
-          await dbTxn.preregisterDid(handle, tempDid)
+          await actorTxn.preregisterDid(handle, tempDid)
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
             throw new InvalidRequestError(
@@ -77,7 +79,7 @@ export default function (server: Server) {
           $type: lex.ids.AppBskySystemDeclaration,
           actorType: APP_BSKY_SYSTEM.ActorScene,
         }
-        await dbTxn.finalizeDid(handle, did, tempDid, declaration)
+        await actorTxn.finalizeDid(handle, did, tempDid, declaration)
         await dbTxn.db
           .insertInto('scene')
           .values({ handle, owner: requester, createdAt: now })
@@ -169,9 +171,9 @@ export default function (server: Server) {
         ])
 
         await Promise.all([
-          repo.createRepo(dbTxn, did, sceneAuth, sceneWrites, now),
-          repo.writeToRepo(dbTxn, requester, userAuth, userWrites, now),
-          repo.indexWrites(dbTxn, [...sceneWrites, ...userWrites], now),
+          repoTxn.createRepo(did, sceneAuth, sceneWrites, now),
+          repoTxn.writeToRepo(requester, userAuth, userWrites, now),
+          repoTxn.indexWrites([...sceneWrites, ...userWrites], now),
         ])
 
         return {

@@ -1,11 +1,8 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
+import { runTestServer, CloseFn } from '../_util'
 import { SeedClient } from '../seeds/client'
-import usersBulkSeed from '../seeds/users-bulk'
-import { App } from '../../src'
 
 describe('pds user search views', () => {
-  let app: App
   let client: AtpServiceClient
   let close: CloseFn
   let sc: SeedClient
@@ -16,7 +13,6 @@ describe('pds user search views', () => {
       dbPostgresSchema: 'views_suggestions',
     })
     close = server.close
-    app = server.app
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     const users = [
@@ -72,6 +68,7 @@ describe('pds user search views', () => {
       { limit: 3 },
       { headers },
     )
+    // @TODO test contents of result
   })
 
   it('paginates', async () => {

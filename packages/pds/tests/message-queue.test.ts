@@ -1,16 +1,18 @@
+import { AtUri } from '@atproto/uri'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { Database } from '../src'
 import { runTestServer, CloseFn } from './_util'
 import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
 import scenesSeed from './seeds/scenes'
-import { AtUri } from '@atproto/uri'
+import { MessageQueue } from '../src/event-stream/types'
 
 describe('db', () => {
   let close: CloseFn
   let client: AtpServiceClient
   let sc: SeedClient
   let db: Database
+  let messageQueue: MessageQueue
 
   let uri1: AtUri, uri2: AtUri
 
@@ -20,11 +22,12 @@ describe('db', () => {
     })
     close = server.close
     db = server.db
+    messageQueue = server.messageQueue
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     await usersSeed(sc)
     await scenesSeed(sc)
-    await db.messageQueue?.processAll()
+    await messageQueue.processAll()
 
     const post1 = await sc.post(sc.dids.alice, 'test1')
     const post2 = await sc.post(sc.dids.bob, 'test2')
@@ -54,28 +57,28 @@ describe('db', () => {
   })
 
   it('handles vote increments', async () => {
-    await db.messageQueue?.send(db, {
+    await messageQueue.send(db, {
       type: 'add_upvote',
       user: sc.dids.alice,
       subject: uri1.toString(),
     })
-    await db.messageQueue?.send(db, {
+    await messageQueue.send(db, {
       type: 'add_upvote',
       user: sc.dids.bob,
       subject: uri1.toString(),
     })
-    await db.messageQueue?.send(db, {
+    await messageQueue.send(db, {
       type: 'add_upvote',
       user: sc.dids.carol,
       subject: uri1.toString(),
     })
-    await db.messageQueue?.send(db, {
+    await messageQueue.send(db, {
       type: 'add_upvote',
       user: sc.dids.alice,
       subject: uri2.toString(),
     })
 
-    await db.messageQueue?.processAll()
+    await messageQueue.processAll()
 
     const res = await db.db
       .selectFrom('scene_votes_on_post')

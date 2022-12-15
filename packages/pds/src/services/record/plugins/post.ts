@@ -1,20 +1,19 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
-import { Main as ImagesEmbedFragment } from '../../lexicon/types/app/bsky/embed/images'
-import { Main as ExternalEmbedFragment } from '../../lexicon/types/app/bsky/embed/external'
-import { Post } from '../tables/post'
-import { PostEntity } from '../tables/post-entity'
-import { PostEmbedImage } from '../tables/post-embed-image'
-import { PostEmbedExternal } from '../tables/post-embed-external'
-import * as lex from '../../lexicon/lexicons'
-import * as messages from '../../stream/messages'
-import { Message } from '../../stream/messages'
-import DatabaseSchema from '../database-schema'
-import RecordProcessor from '../record-processor'
-import { imgUriBuilder } from '../../locals'
+import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
+import { Main as ImagesEmbedFragment } from '../../../lexicon/types/app/bsky/embed/images'
+import { Main as ExternalEmbedFragment } from '../../../lexicon/types/app/bsky/embed/external'
+import * as lex from '../../../lexicon/lexicons'
+import * as messages from '../../../event-stream/messages'
+import { Message } from '../../../event-stream/messages'
+import DatabaseSchema from '../../../db/database-schema'
+import RecordProcessor from '../processor'
 
+type Post = DatabaseSchema['post']
+type PostEntity = DatabaseSchema['post_entity']
+type PostEmbedImage = DatabaseSchema['post_embed_image']
+type PostEmbedExternal = DatabaseSchema['post_embed_external']
 type IndexedPost = {
   post: Post
   entities: PostEntity[]

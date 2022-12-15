@@ -1,14 +1,14 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Declaration from '../../lexicon/types/app/bsky/system/declaration'
-import * as lex from '../../lexicon/lexicons'
-import { DidHandle } from '../tables/did-handle'
-import { Message } from '../../stream/messages'
-import RecordProcessor from '../record-processor'
-import DatabaseSchema from '../database-schema'
+import * as Declaration from '../../../lexicon/types/app/bsky/system/declaration'
+import * as lex from '../../../lexicon/lexicons'
+import { Message } from '../../../event-stream/messages'
+import DatabaseSchema from '../../../db/database-schema'
+import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskySystemDeclaration
+type DidHandle = DatabaseSchema['did_handle']
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,

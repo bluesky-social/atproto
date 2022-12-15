@@ -12,13 +12,14 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ auth, input, res }) => {
       const { subject, direction } = input.body
-      const { db } = locals.get(res)
+      const { db, services } = locals.get(res)
 
       const requester = auth.credentials.did
       const authStore = await locals.getAuthstore(res, requester)
       const now = new Date().toISOString()
 
       const voteUri = await db.transaction(async (dbTxn) => {
+        const repoTxn = services.repo(dbTxn)
         const existingVotes = await dbTxn.db
           .selectFrom('vote')
           .select(['uri', 'direction'])
@@ -67,8 +68,8 @@ export default function (server: Server) {
         }
 
         await Promise.all([
-          await repo.writeToRepo(dbTxn, requester, authStore, writes, now),
-          await repo.indexWrites(dbTxn, writes, now),
+          await repoTxn.writeToRepo(requester, authStore, writes, now),
+          await repoTxn.indexWrites(writes, now),
         ])
 
         return create?.uri.toString()
