@@ -30,9 +30,10 @@ export class Database {
     return new Database(db, 'sqlite')
   }
 
-  static postgres(opts: { url: string; schema?: string }): Database {
-    const { url, schema } = opts
-    const pool = new PgPool({ connectionString: url })
+  static postgres(opts: PgOptions): Database {
+    const { schema } = opts
+    const pool =
+      'pool' in opts ? opts.pool : new PgPool({ connectionString: opts.url })
 
     // Select count(*) and other pg bigints as js integer
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
@@ -101,3 +102,7 @@ export type Dialect = 'pg' | 'sqlite'
 
 // Can use with typeof to get types for partial queries
 export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })
+
+type PgOptions =
+  | { url: string; schema?: string }
+  | { pool: PgPool; schema?: string }
