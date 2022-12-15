@@ -1,15 +1,15 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Assertion from '../../lexicon/types/app/bsky/graph/assertion'
-import { Assertion as IndexedAssertion } from '../tables/assertion'
-import * as lex from '../../lexicon/lexicons'
-import * as messages from '../../stream/messages'
-import { Message } from '../../stream/messages'
-import DatabaseSchema from '../database-schema'
-import RecordProcessor from '../record-processor'
+import * as Assertion from '../../../lexicon/types/app/bsky/graph/assertion'
+import * as lex from '../../../lexicon/lexicons'
+import * as messages from '../../../event-stream/messages'
+import { Message } from '../../../event-stream/messages'
+import DatabaseSchema from '../../../db/database-schema'
+import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyGraphAssertion
+type IndexedAssertion = DatabaseSchema['assertion']
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,

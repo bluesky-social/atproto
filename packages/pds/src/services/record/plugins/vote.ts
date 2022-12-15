@@ -1,15 +1,15 @@
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Vote from '../../lexicon/types/app/bsky/feed/vote'
-import { Vote as IndexedVote } from '../tables/vote'
-import * as lex from '../../lexicon/lexicons'
-import * as messages from '../../stream/messages'
-import { Message } from '../../stream/messages'
-import { DatabaseSchema } from '../database-schema'
-import RecordProcessor from '../record-processor'
+import * as Vote from '../../../lexicon/types/app/bsky/feed/vote'
+import * as lex from '../../../lexicon/lexicons'
+import * as messages from '../../../event-stream/messages'
+import { Message } from '../../../event-stream/messages'
+import { DatabaseSchema } from '../../../db/database-schema'
+import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedVote
+type IndexedVote = DatabaseSchema['vote']
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,

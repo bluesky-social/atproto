@@ -8,9 +8,9 @@ export default function (server: Server) {
   server.com.atproto.session.get({
     auth: ServerAuth.verifier,
     handler: async ({ auth, res }) => {
-      const { db } = locals.get(res)
+      const { db, services } = locals.get(res)
       const did = auth.credentials.did
-      const user = await db.getUser(did)
+      const user = await services.actor(db).getUser(did)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,
@@ -26,13 +26,15 @@ export default function (server: Server) {
   server.com.atproto.session.create(async ({ input, res }) => {
     const { password } = input.body
     const handle = input.body.handle.toLowerCase()
-    const { db, auth } = locals.get(res)
-    const validPass = await db.verifyUserPassword(handle, password)
+    const { db, services, auth } = locals.get(res)
+    const validPass = await services
+      .actor(db)
+      .verifyUserPassword(handle, password)
     if (!validPass) {
       throw new AuthRequiredError('Invalid handle or password')
     }
 
-    const user = await db.getUser(handle)
+    const user = await services.actor(db).getUser(handle)
     if (!user) {
       throw new InvalidRequestError(
         `Could not find user info for account: ${handle}`,
@@ -57,9 +59,9 @@ export default function (server: Server) {
   server.com.atproto.session.refresh({
     auth: ServerAuth.refreshVerifier,
     handler: async ({ req, res, ...ctx }) => {
-      const { db, auth } = locals.get(res)
+      const { db, services, auth } = locals.get(res)
       const did = ctx.auth.credentials.did
-      const user = await db.getUser(did)
+      const user = await services.actor(db).getUser(did)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,

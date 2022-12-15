@@ -13,6 +13,9 @@ export const embedsForPosts = async (
   imgUriBuilder: ImageUriBuilder,
   postUris: string[],
 ): Promise<FeedEmbeds> => {
+  if (postUris.length < 1) {
+    return {}
+  }
   const imgPromise = db
     .selectFrom('post_embed_image')
     .selectAll()

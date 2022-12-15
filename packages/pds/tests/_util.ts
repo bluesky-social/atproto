@@ -5,6 +5,7 @@ import path from 'path'
 import * as crypto from '@atproto/crypto'
 import * as plc from '@atproto/plc'
 import { AtUri } from '@atproto/uri'
+import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import server, {
@@ -16,7 +17,9 @@ import server, {
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
 import DiskBlobStore from '../src/storage/disk-blobstore'
-import { randomStr } from '@atproto/crypto'
+import * as locals from '../src/locals'
+import { MessageQueue } from '../src/event-stream/types'
+import { Services } from '../src/services'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -27,6 +30,8 @@ export type TestServerInfo = {
   serverKey: string
   app: App
   db: Database
+  messageQueue: MessageQueue
+  services: Services
   blobstore: DiskBlobStore | MemoryBlobStore
   close: CloseFn
 }
@@ -99,6 +104,7 @@ export const runTestServer = async (
 
   const { app, listener } = server(db, blobstore, keypair, config)
   const pdsPort = (listener.address() as AddressInfo).port
+  const { services, messageQueue } = locals.get(app)
 
   return {
     url: `http://localhost:${pdsPort}`,
@@ -106,8 +112,11 @@ export const runTestServer = async (
     serverKey: keypair.did(),
     app,
     db,
+    services,
+    messageQueue,
     blobstore,
     close: async () => {
+      await messageQueue.destroy()
       await Promise.all([
         db.close(),
         closeServer(listener),

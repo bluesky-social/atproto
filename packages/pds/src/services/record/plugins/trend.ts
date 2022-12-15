@@ -1,25 +1,25 @@
 import { Kysely } from 'kysely'
-import { AtUri } from '@atproto/uri'
-import * as Repost from '../../lexicon/types/app/bsky/feed/repost'
-import { Repost as IndexedRepost } from '../tables/repost'
-import * as lex from '../../lexicon/lexicons'
 import { CID } from 'multiformats/cid'
-import * as messages from '../../stream/messages'
-import { Message } from '../../stream/messages'
-import { DatabaseSchema } from '../database-schema'
-import RecordProcessor from '../record-processor'
+import { AtUri } from '@atproto/uri'
+import * as Trend from '../../../lexicon/types/app/bsky/feed/trend'
+import * as lex from '../../../lexicon/lexicons'
+import * as messages from '../../../event-stream/messages'
+import { Message } from '../../../event-stream/messages'
+import DatabaseSchema from '../../../db/database-schema'
+import RecordProcessor from '../processor'
 
-const lexId = lex.ids.AppBskyFeedRepost
+const lexId = lex.ids.AppBskyFeedTrend
+type IndexedTrend = DatabaseSchema['trend']
 
 const insertFn = async (
   db: Kysely<DatabaseSchema>,
   uri: AtUri,
   cid: CID,
-  obj: Repost.Record,
+  obj: Trend.Record,
   timestamp?: string,
-): Promise<IndexedRepost | null> => {
+): Promise<IndexedTrend | null> => {
   const inserted = await db
-    .insertInto('repost')
+    .insertInto('trend')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
@@ -38,10 +38,10 @@ const insertFn = async (
 const findDuplicate = async (
   db: Kysely<DatabaseSchema>,
   uri: AtUri,
-  obj: Repost.Record,
+  obj: Trend.Record,
 ): Promise<AtUri | null> => {
   const found = await db
-    .selectFrom('repost')
+    .selectFrom('trend')
     .where('creator', '=', uri.host)
     .where('subject', '=', obj.subject.uri)
     .selectAll()
@@ -49,14 +49,14 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (obj: IndexedRepost): Message[] => {
+const eventsForInsert = (obj: IndexedTrend): Message[] => {
   const subjectUri = new AtUri(obj.subject)
   const notif = messages.createNotification({
     userDid: subjectUri.host,
     author: obj.creator,
     recordUri: obj.uri,
     recordCid: obj.cid,
-    reason: 'repost',
+    reason: 'trend',
     reasonSubject: subjectUri.toString(),
   })
   return [notif]
@@ -65,9 +65,9 @@ const eventsForInsert = (obj: IndexedRepost): Message[] => {
 const deleteFn = async (
   db: Kysely<DatabaseSchema>,
   uri: AtUri,
-): Promise<IndexedRepost | null> => {
+): Promise<IndexedTrend | null> => {
   const deleted = await db
-    .deleteFrom('repost')
+    .deleteFrom('trend')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -75,14 +75,14 @@ const deleteFn = async (
 }
 
 const eventsForDelete = (
-  deleted: IndexedRepost,
-  replacedBy: IndexedRepost | null,
+  deleted: IndexedTrend,
+  replacedBy: IndexedTrend | null,
 ): Message[] => {
   if (replacedBy) return []
   return [messages.deleteNotifications(deleted.uri)]
 }
 
-export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
+export type PluginType = RecordProcessor<Trend.Record, IndexedTrend>
 
 export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
   return new RecordProcessor(db, {
