@@ -1,8 +1,7 @@
 import * as common from '@atproto/common'
 import { getDeclaration } from '.'
 import { TimeCidKeyset } from '../../../../db/pagination'
-import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
+import { Main as FeedItem } from '../../../../lexicon/types/app/bsky/feed/item'
 import { CID } from 'multiformats/cid'
 import { ImageUriBuilder } from '../../../../image/uri'
 import Database from '../../../../db'
@@ -75,8 +74,6 @@ export enum FeedAlgorithm {
   Firehose = 'firehose',
   ReverseChronological = 'reverse-chronological',
 }
-
-type FeedItem = GetAuthorFeed.FeedItem & GetTimeline.FeedItem
 
 export type FeedItemType = 'post' | 'repost' | 'trend'
 

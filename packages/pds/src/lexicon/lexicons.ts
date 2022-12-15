@@ -1604,87 +1604,10 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.feed.getAuthorFeed#feedItem',
+                  ref: 'lex:app.bsky.feed.item',
                 },
               },
             },
-          },
-        },
-      },
-      feedItem: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'author',
-          'record',
-          'replyCount',
-          'repostCount',
-          'upvoteCount',
-          'downvoteCount',
-          'indexedAt',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          trendedBy: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          repostedBy: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          record: {
-            type: 'unknown',
-          },
-          embed: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.embed.images#presented',
-              'lex:app.bsky.embed.external#presented',
-            ],
-          },
-          replyCount: {
-            type: 'integer',
-          },
-          repostCount: {
-            type: 'integer',
-          },
-          upvoteCount: {
-            type: 'integer',
-          },
-          downvoteCount: {
-            type: 'integer',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-          myState: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.getAuthorFeed#myState',
-          },
-        },
-      },
-      myState: {
-        type: 'object',
-        properties: {
-          repost: {
-            type: 'string',
-          },
-          upvote: {
-            type: 'string',
-          },
-          downvote: {
-            type: 'string',
           },
         },
       },
@@ -1798,7 +1721,7 @@ export const schemaDict = {
           },
           myState: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.getPostThread#myState',
+            ref: 'lex:app.bsky.feed.myState',
           },
         },
       },
@@ -1812,20 +1735,6 @@ export const schemaDict = {
           notFound: {
             type: 'boolean',
             const: true,
-          },
-        },
-      },
-      myState: {
-        type: 'object',
-        properties: {
-          repost: {
-            type: 'string',
-          },
-          upvote: {
-            type: 'string',
-          },
-          downvote: {
-            type: 'string',
           },
         },
       },
@@ -1952,87 +1861,10 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.feed.getTimeline#feedItem',
+                  ref: 'lex:app.bsky.feed.item',
                 },
               },
             },
-          },
-        },
-      },
-      feedItem: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'author',
-          'record',
-          'replyCount',
-          'repostCount',
-          'upvoteCount',
-          'downvoteCount',
-          'indexedAt',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          trendedBy: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          repostedBy: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          record: {
-            type: 'unknown',
-          },
-          embed: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.embed.images#presented',
-              'lex:app.bsky.embed.external#presented',
-            ],
-          },
-          replyCount: {
-            type: 'integer',
-          },
-          repostCount: {
-            type: 'integer',
-          },
-          upvoteCount: {
-            type: 'integer',
-          },
-          downvoteCount: {
-            type: 'integer',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-          myState: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.getTimeline#myState',
-          },
-        },
-      },
-      myState: {
-        type: 'object',
-        properties: {
-          repost: {
-            type: 'string',
-          },
-          upvote: {
-            type: 'string',
-          },
-          downvote: {
-            type: 'string',
           },
         },
       },
@@ -2112,6 +1944,95 @@ export const schemaDict = {
           actor: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedItem: {
+    lexicon: 1,
+    id: 'app.bsky.feed.item',
+    defs: {
+      main: {
+        type: 'object',
+        required: [
+          'uri',
+          'cid',
+          'author',
+          'record',
+          'replyCount',
+          'repostCount',
+          'upvoteCount',
+          'downvoteCount',
+          'indexedAt',
+        ],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          trendedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          repostedBy: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          record: {
+            type: 'unknown',
+          },
+          embed: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.images#presented',
+              'lex:app.bsky.embed.external#presented',
+            ],
+          },
+          replyCount: {
+            type: 'integer',
+          },
+          repostCount: {
+            type: 'integer',
+          },
+          upvoteCount: {
+            type: 'integer',
+          },
+          downvoteCount: {
+            type: 'integer',
+          },
+          indexedAt: {
+            type: 'datetime',
+          },
+          myState: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.myState',
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedMyState: {
+    lexicon: 1,
+    id: 'app.bsky.feed.myState',
+    defs: {
+      main: {
+        type: 'object',
+        properties: {
+          repost: {
+            type: 'string',
+          },
+          upvote: {
+            type: 'string',
+          },
+          downvote: {
+            type: 'string',
           },
         },
       },
@@ -3091,6 +3012,8 @@ export const ids = {
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedGetVotes: 'app.bsky.feed.getVotes',
+  AppBskyFeedItem: 'app.bsky.feed.item',
+  AppBskyFeedMyState: 'app.bsky.feed.myState',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSetVote: 'app.bsky.feed.setVote',

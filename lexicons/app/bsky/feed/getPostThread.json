@@ -54,7 +54,7 @@
         "upvoteCount": {"type": "integer"},
         "downvoteCount": {"type": "integer"},
         "indexedAt": {"type": "datetime"},
-        "myState": {"type": "ref", "ref": "#myState"}
+        "myState": {"type": "ref", "ref": "app.bsky.feed.myState"}
       }
     },
     "notFoundPost": {
@@ -63,14 +63,6 @@
       "properties": {
         "uri": {"type": "string"},
         "notFound": {"type": "boolean", "const": true}
-      }
-    },
-    "myState": {
-      "type": "object",
-      "properties": {
-        "repost": {"type": "string"},
-        "upvote": {"type": "string"},
-        "downvote": {"type": "string"}
       }
     }
   }

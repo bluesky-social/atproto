@@ -1,0 +1,14 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.myState",
+  "defs": {
+    "main": {
+      "type": "object",
+      "properties": {
+        "repost": {"type": "string"},
+        "upvote": {"type": "string"},
+        "downvote": {"type": "string"}
+      }
+    }
+  }
+}

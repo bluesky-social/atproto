@@ -6,6 +6,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorRef from '../actor/ref'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
+import * as AppBskyFeedMyState from './myState'
 
 export interface QueryParams {
   uri: string
@@ -57,19 +58,12 @@ export interface Post {
   upvoteCount: number
   downvoteCount: number
   indexedAt: string
-  myState?: MyState
+  myState?: AppBskyFeedMyState.Main
   [k: string]: unknown
 }
 
 export interface NotFoundPost {
   uri: string
   notFound: true
-  [k: string]: unknown
-}
-
-export interface MyState {
-  repost?: string
-  upvote?: string
-  downvote?: string
   [k: string]: unknown
 }

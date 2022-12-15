@@ -14,8 +14,7 @@ import server, {
   App,
   MemoryBlobStore,
 } from '../src/index'
-import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
-import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
+import { Main as FeedItem } from '../src/lexicon/types/app/bsky/feed/item'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import * as locals from '../src/locals'
 import { MessageQueue } from '../src/event-stream/types'
@@ -193,8 +192,6 @@ export const forSnapshot = (obj: unknown) => {
 }
 
 // Feed testing utils
-
-type FeedItem = GetAuthorFeed.FeedItem & GetTimeline.FeedItem
 
 export const getOriginator = (item: FeedItem) =>
   item.repostedBy ? item.repostedBy.did : item.author.did
