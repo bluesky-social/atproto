@@ -3,7 +3,7 @@ import SqlMessageQueue from '../../src/event-stream/message-queue'
 import { Pool } from 'pg'
 import { sql } from 'kysely'
 
-describe('event stream concurrency', () => {
+describe('benchmark', () => {
   let db: Database
   let messageQueue: SqlMessageQueue
 
@@ -12,7 +12,7 @@ describe('event stream concurrency', () => {
     db = dbPostgresUrl
       ? Database.postgres({
           pool: new Pool({ connectionString: dbPostgresUrl, max: 10 }),
-          schema: 'event_stream_concurrency',
+          schema: 'event_stream_bench',
         })
       : Database.memory()
     await db.migrateToLatestOrThrow()
