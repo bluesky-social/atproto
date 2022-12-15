@@ -1,14 +1,17 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
-import { LexRecord } from '@atproto/lexicon'
 import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
 import { DeleteOp, RecordCreateOp } from '@atproto/repo'
 import * as locals from '../../../locals'
-import { lexicons } from '../../../lexicon/lexicons'
 import { TID } from '@atproto/common'
 import * as repo from '../../../repo'
 import ServerAuth from '../../../auth'
+import {
+  InvalidRecordError,
+  PreparedCreate,
+  PreparedWrites,
+} from '../../../repo'
 
 export default function (server: Server) {
   server.com.atproto.repo.describe(async ({ params, res }) => {
@@ -119,41 +122,33 @@ export default function (server: Server) {
       if (hasUpdate) {
         throw new InvalidRequestError(`Updates are not yet supported.`)
       }
-      if (validate) {
-        for (const write of tx.writes) {
-          if (write.action === 'create' || write.action === 'update') {
-            try {
-              services
-                .record(db)
-                .assertValidRecord(write.collection, write.value)
-            } catch (e) {
+
+      let writes: PreparedWrites
+      try {
+        writes = await repo.prepareWrites(
+          did,
+          tx.writes.map((write) => {
+            if (write.action === 'create') {
+              return {
+                ...write,
+                rkey: write.rkey || TID.nextStr(),
+              } as RecordCreateOp
+            } else if (write.action === 'delete') {
+              return write as DeleteOp
+            } else {
               throw new InvalidRequestError(
-                `Invalid ${write.collection} record: ${
-                  e instanceof Error ? e.message : String(e)
-                }`,
+                `Action not supported: ${write.action}`,
               )
             }
-          }
+          }),
+          validate,
+        )
+      } catch (err) {
+        if (err instanceof InvalidRecordError) {
+          throw new InvalidRequestError(err.message)
         }
+        throw err
       }
-
-      const writes = await repo.prepareWrites(
-        did,
-        tx.writes.map((write) => {
-          if (write.action === 'create') {
-            return {
-              ...write,
-              rkey: write.rkey || TID.nextStr(),
-            } as RecordCreateOp
-          } else if (write.action === 'delete') {
-            return write as DeleteOp
-          } else {
-            throw new InvalidRequestError(
-              `Action not supported: ${write.action}`,
-            )
-          }
-        }),
-      )
 
       await db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
@@ -177,39 +172,30 @@ export default function (server: Server) {
       if (!authorized) {
         throw new AuthRequiredError()
       }
-
-      if (validate) {
-        try {
-          services.record(db).assertValidRecord(collection, record)
-        } catch (e) {
-          throw new InvalidRequestError(
-            `Invalid ${collection} record: ${
-              e instanceof Error ? e.message : String(e)
-            }`,
-          )
-        }
-      }
       const authStore = locals.getAuthstore(res, did)
 
       // determine key type. if undefined, repo assigns a TID
-      const keyType = (
-        lexicons.getDefOrThrow(collection, ['record']) as LexRecord
-      ).key
-      let rkey: string
-      if (keyType && keyType.startsWith('literal')) {
-        const split = keyType.split(':')
-        rkey = split[1]
-      } else {
-        rkey = TID.nextStr()
-      }
+      const rkey = repo.determineRkey(collection)
 
       const now = new Date().toISOString()
-      const write = await repo.prepareCreate(did, {
-        action: 'create',
-        collection,
-        rkey,
-        value: record,
-      })
+      let write: PreparedCreate
+      try {
+        write = await repo.prepareCreate(
+          did,
+          {
+            action: 'create',
+            collection,
+            rkey,
+            value: record,
+          },
+          validate,
+        )
+      } catch (err) {
+        if (err instanceof InvalidRecordError) {
+          throw new InvalidRequestError(err.message)
+        }
+        throw err
+      }
 
       await db.transaction(async (dbTxn) => {
         const repoTxn = services.repo(dbTxn)
