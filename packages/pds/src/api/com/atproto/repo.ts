@@ -2,15 +2,13 @@ import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
-import { DeleteOp, RecordCreateOp } from '@atproto/repo'
 import * as locals from '../../../locals'
-import { TID } from '@atproto/common'
 import * as repo from '../../../repo'
 import ServerAuth from '../../../auth'
 import {
   InvalidRecordError,
   PreparedCreate,
-  PreparedWrites,
+  PreparedWrite,
 } from '../../../repo'
 
 export default function (server: Server) {
@@ -116,6 +114,11 @@ export default function (server: Server) {
       if (!authorized) {
         throw new AuthRequiredError()
       }
+      if (validate === false) {
+        throw new InvalidRequestError(
+          'Unvalidated writes are not yet supported.',
+        )
+      }
 
       const authStore = locals.getAuthstore(res, did)
       const hasUpdate = tx.writes.some((write) => write.action === 'update')
@@ -123,25 +126,30 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Updates are not yet supported.`)
       }
 
-      let writes: PreparedWrites
+      let writes: PreparedWrite[]
       try {
-        writes = await repo.prepareWrites(
-          did,
+        writes = await Promise.all(
           tx.writes.map((write) => {
             if (write.action === 'create') {
-              return {
-                ...write,
-                rkey: write.rkey || TID.nextStr(),
-              } as RecordCreateOp
+              return repo.prepareCreate({
+                did,
+                collection: write.collection,
+                record: write.value,
+                rkey: write.rkey,
+                validate,
+              })
             } else if (write.action === 'delete') {
-              return write as DeleteOp
+              return repo.prepareDelete({
+                did,
+                collection: write.collection,
+                rkey: write.rkey,
+              })
             } else {
               throw new InvalidRequestError(
                 `Action not supported: ${write.action}`,
               )
             }
           }),
-          validate,
         )
       } catch (err) {
         if (err instanceof InvalidRecordError) {
@@ -173,6 +181,11 @@ export default function (server: Server) {
         throw new AuthRequiredError()
       }
       const authStore = locals.getAuthstore(res, did)
+      if (validate === false) {
+        throw new InvalidRequestError(
+          'Unvalidated writes are not yet supported.',
+        )
+      }
 
       // determine key type. if undefined, repo assigns a TID
       const rkey = repo.determineRkey(collection)
@@ -180,16 +193,13 @@ export default function (server: Server) {
       const now = new Date().toISOString()
       let write: PreparedCreate
       try {
-        write = await repo.prepareCreate(
+        write = await repo.prepareCreate({
           did,
-          {
-            action: 'create',
-            collection,
-            rkey,
-            value: record,
-          },
+          collection,
+          record,
+          rkey,
           validate,
-        )
+        })
       } catch (err) {
         if (err instanceof InvalidRecordError) {
           throw new InvalidRequestError(err.message)
@@ -229,15 +239,10 @@ export default function (server: Server) {
       const authStore = locals.getAuthstore(res, did)
       const now = new Date().toISOString()
 
-      const write = await repo.prepareWrites(did, {
-        action: 'delete',
-        collection,
-        rkey,
-      })
+      const write = await repo.prepareDelete({ did, collection, rkey })
 
       await db.transaction(async (dbTxn) => {
-        const repoTxn = services.repo(dbTxn)
-        await repoTxn.processWrites(did, authStore, write, now)
+        await services.repo(dbTxn).processWrites(did, authStore, [write], now)
       })
     },
   })

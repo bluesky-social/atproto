@@ -6,9 +6,10 @@ import Database from '../../db'
 import { dbLogger as log } from '../../logger'
 import { MessageQueue } from '../../event-stream/types'
 import SqlBlockstore from '../../sql-blockstore'
-import { PreparedCreate, PreparedWrites } from '../../repo/types'
+import { PreparedCreate, PreparedWrite } from '../../repo/types'
 import { RecordService } from '../record'
 import { RepoBlobs } from './blobs'
+import { createWriteToOp, writeToOp } from '../../repo'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -93,7 +94,7 @@ export class RepoService {
   ) {
     this.db.assertTransaction()
     const blockstore = new SqlBlockstore(this.db, did, now)
-    const writeOps = writes.map((write) => write.op)
+    const writeOps = writes.map(createWriteToOp)
     const repo = await Repo.create(blockstore, did, authStore, writeOps)
     await this.db.db
       .insertInto('repo_root')
@@ -108,7 +109,7 @@ export class RepoService {
   async processWrites(
     did: string,
     authStore: auth.AuthStore,
-    writes: PreparedWrites,
+    writes: PreparedWrite[],
     now: string,
   ) {
     // make structural write to repo & send to indexing
@@ -124,7 +125,7 @@ export class RepoService {
   async writeToRepo(
     did: string,
     authStore: auth.AuthStore,
-    writes: PreparedWrites,
+    writes: PreparedWrite[],
     now: string,
   ): Promise<CID> {
     this.db.assertTransaction()
@@ -135,7 +136,7 @@ export class RepoService {
         `${did} is not a registered repo on this server`,
       )
     }
-    const writeOps = writes.map((write) => write.op)
+    const writeOps = writes.map(writeToOp)
     const repo = await Repo.load(blockstore, currRoot)
     const updated = await repo
       .stageUpdate(writeOps)
@@ -149,13 +150,13 @@ export class RepoService {
     return updated.cid
   }
 
-  async indexWrites(writes: PreparedWrites, now: string) {
+  async indexWrites(writes: PreparedWrite[], now: string) {
     this.db.assertTransaction()
     const recordTxn = new RecordService(this.db, this.messageQueue)
     await Promise.all(
       writes.map(async (write) => {
         if (write.action === 'create') {
-          await recordTxn.indexRecord(write.uri, write.cid, write.op.value, now)
+          await recordTxn.indexRecord(write.uri, write.cid, write.record, now)
         } else if (write.action === 'delete') {
           await recordTxn.deleteRecord(write.uri)
         }

@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import { DeleteOp, RecordCreateOp, RecordUpdateOp } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 
 export type ImageConstraint = {
@@ -30,7 +29,7 @@ export type PreparedCreate = {
   action: 'create'
   uri: AtUri
   cid: CID
-  op: RecordCreateOp
+  record: Record<string, unknown>
   blobs: BlobRef[]
 }
 
@@ -38,20 +37,15 @@ export type PreparedUpdate = {
   action: 'update'
   uri: AtUri
   cid: CID
-  op: RecordUpdateOp
+  record: Record<string, unknown>
   blobs: BlobRef[]
 }
 
 export type PreparedDelete = {
   action: 'delete'
   uri: AtUri
-  op: DeleteOp
 }
 
-export type PreparedWrites = (
-  | PreparedCreate
-  | PreparedUpdate
-  | PreparedDelete
-)[]
+export type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
 
 export class InvalidRecordError extends Error {}

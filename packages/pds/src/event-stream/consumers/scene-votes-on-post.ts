@@ -1,4 +1,3 @@
-import { TID } from '@atproto/common'
 import { AuthStore } from '@atproto/auth'
 import { BlobStore } from '@atproto/repo'
 import Database from '../../db'
@@ -48,11 +47,10 @@ export default class extends Consumer<SceneVotesOnPostTableUpdates> {
 
         // this is a "threshold vote" that makes the post trend
         const sceneAuth = this.getAuthStore(scene.did)
-        const writes = await repo.prepareWrites(scene.did, {
-          action: 'create',
+        const write = await repo.prepareCreate({
+          did: scene.did,
           collection: lexicons.ids.AppBskyFeedTrend,
-          rkey: TID.nextStr(),
-          value: {
+          record: {
             subject: {
               uri: scene.subject,
               cid: scene.subjectCid,
@@ -70,8 +68,8 @@ export default class extends Consumer<SceneVotesOnPostTableUpdates> {
         const repoTxn = new RepoService(db, this.messageQueue, this.blobstore)
 
         await Promise.all([
-          repoTxn.writeToRepo(scene.did, sceneAuth, writes, now),
-          repoTxn.indexWrites(writes, now),
+          repoTxn.writeToRepo(scene.did, sceneAuth, [write], now),
+          repoTxn.indexWrites([write], now),
           setTrendPosted,
         ])
       }),

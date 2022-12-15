@@ -147,11 +147,10 @@ export default function (server: Server) {
           .execute()
       }
 
-      const write = await repo.prepareCreate(did, {
-        action: 'create',
+      const write = await repo.prepareCreate({
+        did,
         collection: lex.ids.AppBskySystemDeclaration,
-        rkey: 'self',
-        value: declaration,
+        record: declaration,
       })
 
       // Setup repo root

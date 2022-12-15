@@ -5,7 +5,6 @@ import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
 import * as locals from '../../../../locals'
 import * as lex from '../../../../lexicon/lexicons'
-import { TID } from '@atproto/common'
 import * as repo from '../../../../repo'
 import ServerAuth from '../../../../auth'
 import { UserAlreadyExistsError } from '../../../../services/actor'
@@ -99,18 +98,16 @@ export default function (server: Server) {
         const userAuth = locals.getAuthstore(res, requester)
         const sceneAuth = locals.getAuthstore(res, did)
 
-        const sceneWrites = await repo.prepareCreates(did, [
-          {
-            action: 'create',
+        const sceneWrites = await Promise.all([
+          repo.prepareCreate({
+            did,
             collection: lex.ids.AppBskySystemDeclaration,
-            rkey: 'self',
-            value: declaration,
-          },
-          {
-            action: 'create',
+            record: declaration,
+          }),
+          repo.prepareCreate({
+            did,
             collection: lex.ids.AppBskyGraphAssertion,
-            rkey: TID.nextStr(),
-            value: {
+            record: {
               assertion: APP_BSKY_GRAPH.AssertCreator,
               subject: {
                 did: requester,
@@ -118,12 +115,11 @@ export default function (server: Server) {
               },
               createdAt: now,
             },
-          },
-          {
-            action: 'create',
+          }),
+          repo.prepareCreate({
+            did,
             collection: lex.ids.AppBskyGraphAssertion,
-            rkey: TID.nextStr(),
-            value: {
+            record: {
               assertion: APP_BSKY_GRAPH.AssertMember,
               subject: {
                 did: requester,
@@ -131,16 +127,15 @@ export default function (server: Server) {
               },
               createdAt: now,
             },
-          },
+          }),
         ])
         const [sceneDeclaration, creatorAssert, memberAssert] = sceneWrites
 
-        const userWrites = await repo.prepareCreates(requester, [
-          {
-            action: 'create',
+        const userWrites = await Promise.all([
+          repo.prepareCreate({
+            did: requester,
             collection: lex.ids.AppBskyGraphConfirmation,
-            rkey: TID.nextStr(),
-            value: {
+            record: {
               originator: {
                 did: requester,
                 declarationCid: sceneDeclaration.cid.toString(),
@@ -151,12 +146,11 @@ export default function (server: Server) {
               },
               createdAt: now,
             },
-          },
-          {
-            action: 'create',
+          }),
+          repo.prepareCreate({
+            did: requester,
             collection: lex.ids.AppBskyGraphConfirmation,
-            rkey: TID.nextStr(),
-            value: {
+            record: {
               originator: {
                 did: requester,
                 declarationCid: sceneDeclaration.cid.toString(),
@@ -167,7 +161,7 @@ export default function (server: Server) {
               },
               createdAt: now,
             },
-          },
+          }),
         ])
 
         await Promise.all([

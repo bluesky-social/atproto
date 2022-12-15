@@ -7,7 +7,7 @@ import { AtUri } from '@atproto/uri'
 import { sha256Stream } from '@atproto/crypto'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BlobRef, PreparedWrites } from '../../repo/types'
+import { BlobRef, PreparedWrite } from '../../repo/types'
 import Database from '../../db'
 import { Blob as BlobTable } from '../../db/tables/blob'
 import * as img from '../../image'
@@ -50,7 +50,7 @@ export class RepoBlobs {
     return cid
   }
 
-  async processWriteBlobs(did: string, commit: CID, writes: PreparedWrites) {
+  async processWriteBlobs(did: string, commit: CID, writes: PreparedWrite[]) {
     const blobPromises: Promise<void>[] = []
     for (const write of writes) {
       if (write.action === 'create' || write.action === 'update') {
