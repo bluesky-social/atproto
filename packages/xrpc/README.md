@@ -5,18 +5,25 @@
 ```typescript
 import xrpc from '@atproto/xrpc'
 
-xrpc.addSchema({
-  xrpc: 1,
+xrpc.addLexicon({
+  lexicon: 1,
   id: 'io.example.ping',
-  type: 'query',
-  description: 'Ping the server',
-  parameters: {message: { type: 'string' }},
-  output: {
-    encoding: 'application/json',
-    schema: {
-      type: 'object',
-      required: ['message'],
-      properties: {message: { type: 'string' }},
+  defs: {
+    main: {
+      type: 'query',
+      description: 'Ping the server',
+      parameters: {
+        type: 'params',
+        properties: {message: { type: 'string' }}
+      },
+      output: {
+        encoding: 'application/json',
+        schema: {
+          type: 'object',
+          required: ['message'],
+          properties: {message: { type: 'string' }},
+        },
+      }
     },
   },
 })
@@ -28,14 +35,21 @@ const res2 = await xrpc.service('https://example.com').call('io.example.ping', {
 res2.encoding // => 'application/json'
 res2.body // => {message: 'hello world'}
 
-xrpc.addSchema({
-  xrpc: 1,
+xrpc.addLexicon({
+  lexicon: 1,
   id: 'io.example.writeJsonFile',
-  type: 'procedure',
-  description: 'Write a JSON file',
-  parameters: {fileName: { type: 'string' }},
-  input: {
-    encoding: 'application/json'
+  defs: {
+    main: {
+      type: 'procedure',
+      description: 'Write a JSON file',
+      parameters: {
+        type: 'params',
+        properties: {fileName: { type: 'string' }},
+      },
+      input: {
+        encoding: 'application/json'
+      },
+    },
   },
 })
 

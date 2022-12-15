@@ -38,7 +38,8 @@ import * as AppBskyActorRef from './types/app/bsky/actor/ref'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-import * as AppBskyFeedEmbed from './types/app/bsky/feed/embed'
+import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
+import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -99,7 +100,8 @@ export * as AppBskyActorRef from './types/app/bsky/actor/ref'
 export * as AppBskyActorSearch from './types/app/bsky/actor/search'
 export * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-export * as AppBskyFeedEmbed from './types/app/bsky/feed/embed'
+export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
+export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -524,6 +526,7 @@ export class AppNS {
 export class BskyNS {
   _service: ServiceClient
   actor: ActorNS
+  embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
@@ -532,6 +535,7 @@ export class BskyNS {
   constructor(service: ServiceClient) {
     this._service = service
     this.actor = new ActorNS(service)
+    this.embed = new EmbedNS(service)
     this.feed = new FeedNS(service)
     this.graph = new GraphNS(service)
     this.notification = new NotificationNS(service)
@@ -673,6 +677,14 @@ export class ProfileRecord {
       { collection: 'app.bsky.actor.profile', ...params },
       { headers },
     )
+  }
+}
+
+export class EmbedNS {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
   }
 }
 

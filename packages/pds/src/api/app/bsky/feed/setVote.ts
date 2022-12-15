@@ -3,8 +3,6 @@ import * as lexicons from '../../../../lexicon/lexicons'
 import { Server } from '../../../../lexicon'
 import * as locals from '../../../../locals'
 import * as repo from '../../../../repo'
-import { TID } from '@atproto/common'
-import { DeleteOp } from '@atproto/repo'
 import ServerAuth from '../../../../auth'
 
 export default function (server: Server) {
@@ -12,13 +10,14 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ auth, input, res }) => {
       const { subject, direction } = input.body
-      const { db } = locals.get(res)
+      const { db, services } = locals.get(res)
 
       const requester = auth.credentials.did
       const authStore = await locals.getAuthstore(res, requester)
       const now = new Date().toISOString()
 
       const voteUri = await db.transaction(async (dbTxn) => {
+        const repoTxn = services.repo(dbTxn)
         const existingVotes = await dbTxn.db
           .selectFrom('vote')
           .select(['uri', 'direction'])
@@ -39,25 +38,24 @@ export default function (server: Server) {
           return existingVotes[0].uri
         }
 
-        const writes = await repo.prepareWrites(requester, [
-          ...existingVotes.map((vote): DeleteOp => {
+        const writes: repo.PreparedWrite[] = await Promise.all(
+          existingVotes.map((vote) => {
             const uri = new AtUri(vote.uri)
-            return {
-              action: 'delete',
+            return repo.prepareDelete({
+              did: requester,
               collection: uri.collection,
               rkey: uri.rkey,
-            }
+            })
           }),
-        ])
+        )
 
         let create: repo.PreparedCreate | undefined
 
         if (direction !== 'none') {
-          create = await repo.prepareCreate(requester, {
-            action: 'create',
+          create = await repo.prepareCreate({
+            did: requester,
             collection: lexicons.ids.AppBskyFeedVote,
-            rkey: TID.nextStr(),
-            value: {
+            record: {
               direction,
               subject,
               createdAt: now,
@@ -67,8 +65,8 @@ export default function (server: Server) {
         }
 
         await Promise.all([
-          await repo.writeToRepo(dbTxn, requester, authStore, writes, now),
-          await repo.indexWrites(dbTxn, writes, now),
+          await repoTxn.writeToRepo(requester, authStore, writes, now),
+          await repoTxn.indexWrites(writes, now),
         ])
 
         return create?.uri.toString()

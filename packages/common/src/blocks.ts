@@ -5,9 +5,7 @@ import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
 import * as mf from 'multiformats'
 import * as blockCodec from '@ipld/dag-cbor'
 
-export const valueToIpldBlock = async (
-  data: unknown,
-): Promise<Block.Block<unknown>> => {
+export const valueToIpldBlock = async (data: unknown) => {
   return Block.encode({
     value: data,
     codec: blockCodec,

@@ -27,8 +27,8 @@ describe('Repo Benchmarks', () => {
         $type: 'app.bsky.post',
         text: util.randomStr(150),
         reply: {
-          root: 'at://did:plc:1234abdefeoi23/app.bksy.post/12345678912345',
-          parent: 'at://did:plc:1234abdefeoi23/app.bksy.post/12345678912345',
+          root: 'at://did:plc:1234abdefeoi23/app.bsky.post/12345678912345',
+          parent: 'at://did:plc:1234abdefeoi23/app.bsky.post/12345678912345',
         },
         createdAt: new Date().toISOString(),
       })

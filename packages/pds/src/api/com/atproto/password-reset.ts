@@ -7,10 +7,10 @@ import * as locals from '../../../locals'
 
 export default function (server: Server) {
   server.com.atproto.account.requestPasswordReset(async ({ input, res }) => {
-    const { db, mailer, config } = locals.get(res)
+    const { db, services, mailer, config } = locals.get(res)
     const email = input.body.email.toLowerCase()
 
-    const user = await db.getUserByEmail(email)
+    const user = await services.actor(db).getUserByEmail(email)
 
     if (user) {
       // By signing with the password hash, this jwt becomes invalid once the user changes their password.
@@ -29,7 +29,7 @@ export default function (server: Server) {
   })
 
   server.com.atproto.account.resetPassword(async ({ input, res }) => {
-    const { db, config } = locals.get(res)
+    const { db, services, config } = locals.get(res)
     const { token, password } = input.body
 
     const tokenBody = jwt.decode(token)
@@ -42,7 +42,7 @@ export default function (server: Server) {
       return createInvalidTokenError('Malformed token')
     }
 
-    const user = await db.getUser(did)
+    const user = await services.actor(db).getUser(did)
     if (!user) {
       return createInvalidTokenError('Token could not be verified')
     }
@@ -59,7 +59,7 @@ export default function (server: Server) {
     // Token had correct scope, was not expired, and referenced
     // a user whose password has not changed since token issuance.
 
-    await db.updateUserPassword(user.handle, password)
+    await services.actor(db).updateUserPassword(user.handle, password)
   })
 }
 

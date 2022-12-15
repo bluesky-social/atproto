@@ -1,21 +1,22 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
-import { LexRecord } from '@atproto/lexicon'
 import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
-import { DeleteOp, RecordCreateOp } from '@atproto/repo'
 import * as locals from '../../../locals'
-import { lexicons } from '../../../lexicon/lexicons'
-import { TID } from '@atproto/common'
 import * as repo from '../../../repo'
 import ServerAuth from '../../../auth'
+import {
+  InvalidRecordError,
+  PreparedCreate,
+  PreparedWrite,
+} from '../../../repo'
 
 export default function (server: Server) {
   server.com.atproto.repo.describe(async ({ params, res }) => {
     const { user } = params
 
-    const { db, auth } = locals.get(res)
-    const userObj = await db.getUser(user)
+    const { db, auth, services } = locals.get(res)
+    const userObj = await services.actor(db).getUser(user)
     if (userObj === null) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
@@ -30,7 +31,9 @@ export default function (server: Server) {
     const handle = didResolver.getHandle(didDoc)
     const handleIsCorrect = handle === userObj.handle
 
-    const collections = await db.listCollectionsForDid(userObj.did)
+    const collections = await services
+      .record(db)
+      .listCollectionsForDid(userObj.did)
 
     return {
       encoding: 'application/json',
@@ -47,20 +50,22 @@ export default function (server: Server) {
   server.com.atproto.repo.listRecords(async ({ params, res }) => {
     const { user, collection, limit, before, after, reverse } = params
 
-    const db = locals.db(res)
-    const did = await db.getDidForActor(user)
+    const { db, services } = locals.get(res)
+    const did = await services.actor(db).getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
-    const records = await db.listRecordsForCollection(
-      did,
-      collection,
-      limit || 50,
-      reverse || false,
-      before,
-      after,
-    )
+    const records = await services
+      .record(db)
+      .listRecordsForCollection(
+        did,
+        collection,
+        limit || 50,
+        reverse || false,
+        before,
+        after,
+      )
 
     const lastRecord = records.at(-1)
     const lastUri = lastRecord && new AtUri(lastRecord?.uri)
@@ -77,16 +82,16 @@ export default function (server: Server) {
 
   server.com.atproto.repo.getRecord(async ({ params, res }) => {
     const { user, collection, rkey, cid } = params
-    const db = locals.db(res)
+    const { db, services } = locals.get(res)
 
-    const did = await db.getDidForActor(user)
+    const did = await services.actor(db).getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
     const uri = new AtUri(`${did}/${collection}/${rkey}`)
 
-    const record = await db.getRecord(uri, cid || null)
+    const record = await services.record(db).getRecord(uri, cid || null)
     if (!record) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
@@ -101,11 +106,18 @@ export default function (server: Server) {
     handler: async ({ input, auth, res }) => {
       const tx = input.body
       const { did, validate } = tx
-      const { db, blobstore } = locals.get(res)
+      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
-      const authorized = await db.isUserControlledRepo(did, requester)
+      const authorized = await services
+        .repo(db)
+        .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
+      }
+      if (validate === false) {
+        throw new InvalidRequestError(
+          'Unvalidated writes are not yet supported.',
+        )
       }
 
       const authStore = locals.getAuthstore(res, did)
@@ -113,43 +125,43 @@ export default function (server: Server) {
       if (hasUpdate) {
         throw new InvalidRequestError(`Updates are not yet supported.`)
       }
-      if (validate) {
-        for (const write of tx.writes) {
-          if (write.action === 'create' || write.action === 'update') {
-            try {
-              db.assertValidRecord(write.collection, write.value)
-            } catch (e) {
+
+      let writes: PreparedWrite[]
+      try {
+        writes = await Promise.all(
+          tx.writes.map((write) => {
+            if (write.action === 'create') {
+              return repo.prepareCreate({
+                did,
+                collection: write.collection,
+                record: write.value,
+                rkey: write.rkey,
+                validate,
+              })
+            } else if (write.action === 'delete') {
+              return repo.prepareDelete({
+                did,
+                collection: write.collection,
+                rkey: write.rkey,
+              })
+            } else {
               throw new InvalidRequestError(
-                `Invalid ${write.collection} record: ${
-                  e instanceof Error ? e.message : String(e)
-                }`,
+                `Action not supported: ${write.action}`,
               )
             }
-          }
+          }),
+        )
+      } catch (err) {
+        if (err instanceof InvalidRecordError) {
+          throw new InvalidRequestError(err.message)
         }
+        throw err
       }
-
-      const writes = await repo.prepareWrites(
-        did,
-        tx.writes.map((write) => {
-          if (write.action === 'create') {
-            return {
-              ...write,
-              rkey: write.rkey || TID.nextStr(),
-            } as RecordCreateOp
-          } else if (write.action === 'delete') {
-            return write as DeleteOp
-          } else {
-            throw new InvalidRequestError(
-              `Action not supported: ${write.action}`,
-            )
-          }
-        }),
-      )
 
       await db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
-        await repo.processWrites(dbTxn, did, authStore, blobstore, writes, now)
+        const repoTxn = services.repo(dbTxn)
+        await repoTxn.processWrites(did, authStore, writes, now)
       })
     },
   })
@@ -160,48 +172,44 @@ export default function (server: Server) {
       const { did, collection, record } = input.body
       const validate =
         typeof input.body.validate === 'boolean' ? input.body.validate : true
-      const { db, blobstore } = locals.get(res)
+      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
-      const authorized = await db.isUserControlledRepo(did, requester)
+      const authorized = await services
+        .repo(db)
+        .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
-
-      if (validate) {
-        try {
-          db.assertValidRecord(collection, record)
-        } catch (e) {
-          throw new InvalidRequestError(
-            `Invalid ${collection} record: ${
-              e instanceof Error ? e.message : String(e)
-            }`,
-          )
-        }
-      }
       const authStore = locals.getAuthstore(res, did)
+      if (validate === false) {
+        throw new InvalidRequestError(
+          'Unvalidated writes are not yet supported.',
+        )
+      }
 
       // determine key type. if undefined, repo assigns a TID
-      const keyType = (
-        lexicons.getDefOrThrow(collection, ['record']) as LexRecord
-      ).key
-      let rkey: string
-      if (keyType && keyType.startsWith('literal')) {
-        const split = keyType.split(':')
-        rkey = split[1]
-      } else {
-        rkey = TID.nextStr()
-      }
+      const rkey = repo.determineRkey(collection)
 
       const now = new Date().toISOString()
-      const write = await repo.prepareCreate(did, {
-        action: 'create',
-        collection,
-        rkey,
-        value: record,
-      })
+      let write: PreparedCreate
+      try {
+        write = await repo.prepareCreate({
+          did,
+          collection,
+          record,
+          rkey,
+          validate,
+        })
+      } catch (err) {
+        if (err instanceof InvalidRecordError) {
+          throw new InvalidRequestError(err.message)
+        }
+        throw err
+      }
 
       await db.transaction(async (dbTxn) => {
-        await repo.processWrites(dbTxn, did, authStore, blobstore, [write], now)
+        const repoTxn = services.repo(dbTxn)
+        await repoTxn.processWrites(did, authStore, [write], now)
       })
 
       return {
@@ -219,9 +227,11 @@ export default function (server: Server) {
     auth: ServerAuth.verifier,
     handler: async ({ input, auth, res }) => {
       const { did, collection, rkey } = input.body
-      const { db, blobstore } = locals.get(res)
+      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
-      const authorized = await db.isUserControlledRepo(did, requester)
+      const authorized = await services
+        .repo(db)
+        .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
@@ -229,14 +239,10 @@ export default function (server: Server) {
       const authStore = locals.getAuthstore(res, did)
       const now = new Date().toISOString()
 
-      const write = await repo.prepareWrites(did, {
-        action: 'delete',
-        collection,
-        rkey,
-      })
+      const write = await repo.prepareDelete({ did, collection, rkey })
 
       await db.transaction(async (dbTxn) => {
-        await repo.processWrites(dbTxn, did, authStore, blobstore, write, now)
+        await services.repo(dbTxn).processWrites(did, authStore, [write], now)
       })
     },
   })

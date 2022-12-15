@@ -12,16 +12,19 @@ import * as notification from './tables/user-notification'
 import * as assertion from './tables/assertion'
 import * as profile from './tables/profile'
 import * as post from './tables/post'
+import * as postEntity from './tables/post-entity'
+import * as postEmbedImage from './tables/post-embed-image'
+import * as postEmbedExternal from './tables/post-embed-external'
 import * as vote from './tables/vote'
 import * as repost from './tables/repost'
 import * as trend from './tables/trend'
 import * as follow from './tables/follow'
 import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
-import * as messageQueue from './message-queue/tables/message-queue'
-import * as messageQueueCursor from './message-queue/tables/message-queue-cursor'
-import * as sceneMemberCount from './message-queue/tables/scene-member-count'
-import * as sceneVotesOnPost from './message-queue/tables/scene-votes-on-post'
+import * as messageQueue from './tables/message-queue'
+import * as messageQueueCursor from './tables/message-queue-cursor'
+import * as sceneMemberCount from './tables/scene-member-count'
+import * as sceneVotesOnPost from './tables/scene-votes-on-post'
 
 export type DatabaseSchema = user.PartialDB &
   didHandle.PartialDB &
@@ -37,6 +40,9 @@ export type DatabaseSchema = user.PartialDB &
   assertion.PartialDB &
   profile.PartialDB &
   post.PartialDB &
+  postEntity.PartialDB &
+  postEmbedImage.PartialDB &
+  postEmbedExternal.PartialDB &
   vote.PartialDB &
   repost.PartialDB &
   trend.PartialDB &
