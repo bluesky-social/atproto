@@ -2,31 +2,28 @@ import { randomStr } from '@atproto/crypto'
 import Database from '../../../db'
 import { Server } from '../../../lexicon'
 import * as locals from '../../../locals'
-import { debugCatch } from '../../../util/debug'
 
 export default function (server: Server) {
-  server.com.atproto.account.requestPasswordReset(
-    debugCatch(async ({ input, res }) => {
-      const { db, services, mailer } = locals.get(res)
-      const email = input.body.email.toLowerCase()
+  server.com.atproto.account.requestPasswordReset(async ({ input, res }) => {
+    const { db, services, mailer } = locals.get(res)
+    const email = input.body.email.toLowerCase()
 
-      const user = await services.actor(db).getUserByEmail(email)
+    const user = await services.actor(db).getUserByEmail(email)
 
-      if (user) {
-        const token = getSixDigitToken()
-        const grantedAt = new Date().toISOString()
-        await db.db
-          .updateTable('user')
-          .where('handle', '=', user.handle)
-          .set({
-            passwordResetToken: token,
-            passwordResetGrantedAt: grantedAt,
-          })
-          .execute()
-        await mailer.sendResetPassword({ token }, { to: user.email })
-      }
-    }),
-  )
+    if (user) {
+      const token = getSixDigitToken()
+      const grantedAt = new Date().toISOString()
+      await db.db
+        .updateTable('user')
+        .where('handle', '=', user.handle)
+        .set({
+          passwordResetToken: token,
+          passwordResetGrantedAt: grantedAt,
+        })
+        .execute()
+      await mailer.sendResetPassword({ token }, { to: user.email })
+    }
+  })
 
   server.com.atproto.account.resetPassword(async ({ input, res }) => {
     const { db, services } = locals.get(res)
