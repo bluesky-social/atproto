@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.myState",
+  "id": "app.bsky.feed.viewerState",
   "defs": {
     "main": {
       "type": "object",

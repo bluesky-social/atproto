@@ -20,7 +20,7 @@
           "properties": {
             "thread": {
               "type": "union",
-              "refs": ["#post", "#notFoundPost"]
+              "refs": ["#postInThread", "#notFoundPost"]
             }
           }
         }
@@ -29,32 +29,17 @@
         {"name": "NotFound"}
       ]
     },
-    "post": {
+    "postInThread": {
       "type": "object",
       "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt"],
       "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
-        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
-        "record": {"type": "unknown"},
-        "embed": {
-          "type": "union",
-          "refs": [
-            "app.bsky.embed.images#presented",
-            "app.bsky.embed.external#presented"
-          ]
-        },
-        "parent": {"type": "union", "refs": ["#post", "#notFoundPost"]},
-        "replyCount": {"type": "integer"},
+        "post": {"type": "post", "ref": "app.bsky.feed.post#view"},
+        "parent": {"type": "union", "refs": ["#postInThread", "#notFoundPost"]},
         "replies": {
           "type": "array",
-          "items": {"type": "union", "refs": ["#post", "#notFoundPost"]}
+          "items": {"type": "union", "refs": ["#postInThread", "#notFoundPost"]}
         },
-        "repostCount": {"type": "integer"},
-        "upvoteCount": {"type": "integer"},
-        "downvoteCount": {"type": "integer"},
-        "indexedAt": {"type": "datetime"},
-        "myState": {"type": "ref", "ref": "app.bsky.feed.myState"}
+        "viewer": {"type": "ref", "ref": "app.bsky.feed.viewState"}
       }
     },
     "notFoundPost": {
