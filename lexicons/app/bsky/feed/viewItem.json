@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.postInFeed",
+  "id": "app.bsky.feed.feedViewPost",
   "defs": {
     "main": {
       "type": "object",
-      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt"],
+      "required": ["post", "viewer"],
       "properties": {
         "post": {"type": "ref", "ref": "app.bsky.actor.post#view"},
         "reply": {"type": "ref", "ref": "#replyRef"},

@@ -29,9 +29,9 @@
         {"name": "NotFound"}
       ]
     },
-    "postInThread": {
+    "threadViewPost": {
       "type": "object",
-      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt"],
+      "required": ["post", "viewer"],
       "properties": {
         "post": {"type": "post", "ref": "app.bsky.feed.post#view"},
         "parent": {"type": "union", "refs": ["#postInThread", "#notFoundPost"]},
