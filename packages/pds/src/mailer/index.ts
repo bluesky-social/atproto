@@ -5,6 +5,7 @@ import { htmlToText } from 'nodemailer-html-to-text'
 import Mail from 'nodemailer/lib/mailer'
 import SMTPTransport from 'nodemailer/lib/smtp-transport'
 import { ServerConfig } from '../config'
+import { mailerLogger } from '../logger'
 
 export class ServerMailer {
   private config: ServerConfig
@@ -44,11 +45,18 @@ export class ServerMailer {
       ...params,
       config: ServerMailer.getEmailConfig(this.config),
     })
-    return await this.transporter.sendMail({
+    const res = await this.transporter.sendMail({
       ...mailOpts,
       from: mailOpts.from ?? this.config.emailNoReplyAddress,
       html,
     })
+    if (!this.config.emailSmtpUrl) {
+      mailerLogger.debug(
+        'No SMTP URL has been configured. Intended to send email:\n' +
+          JSON.stringify(res, null, 2),
+      )
+    }
+    return res
   }
 
   private compile(name) {

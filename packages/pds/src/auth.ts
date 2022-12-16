@@ -19,7 +19,6 @@ export type ServerAuthOpts = {
 export enum AuthScopes {
   Access = 'com.atproto.access',
   Refresh = 'com.atproto.refresh',
-  ResetPassword = 'com.atproto.resetAccountPassword',
 }
 
 export type AuthToken = {

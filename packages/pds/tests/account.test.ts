@@ -6,17 +6,16 @@ import AtpApi, {
 } from '@atproto/api'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
-import { sign } from 'jsonwebtoken'
 import Mail from 'nodemailer/lib/mailer'
 import { Database, ServerConfig } from '../src'
 import * as util from './_util'
-import { AuthScopes } from '../src/auth'
 import { ServerMailer } from '../src/mailer'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
 const password = 'test123'
 const passwordAlt = 'test456'
+const minsToMs = 60 * 1000
 
 const createInviteCode = async (
   client: AtpServiceClient,
@@ -340,7 +339,7 @@ describe('account', () => {
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/token=(.+?)"/)?.[1]
+    mail.html?.toString().match(/>(\d{6})</)?.[1]
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(
@@ -401,27 +400,26 @@ describe('account', () => {
   })
 
   it('allows only unexpired password reset tokens', async () => {
-    const user = await db.db
-      .selectFrom('user')
-      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
-      .selectAll()
-      .where('did', '=', did)
-      .executeTakeFirst()
-    if (!user) {
-      return expect(user).toBeTruthy()
-    }
+    await client.com.atproto.account.requestPasswordReset({ email })
 
-    const signingKey = `${cfg.jwtSecret}::${user.password}`
-    const expiredToken = await sign(
-      { sub: did, scope: AuthScopes.ResetPassword },
-      signingKey,
-      { expiresIn: -1 },
-    )
+    const user = await db.db
+      .updateTable('user')
+      .where('email', '=', email)
+      .set({
+        passwordResetGrantedAt: new Date(
+          Date.now() - 16 * minsToMs,
+        ).toISOString(),
+      })
+      .returning(['passwordResetToken'])
+      .executeTakeFirst()
+    if (!user?.passwordResetToken) {
+      throw new Error('Missing reset token')
+    }
 
     // Use of expired token fails
     await expect(
       client.com.atproto.account.resetPassword({
-        token: expiredToken,
+        token: user.passwordResetToken,
         password: passwordAlt,
       }),
     ).rejects.toThrow(ResetAccountPassword.ExpiredTokenError)
