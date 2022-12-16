@@ -129,6 +129,8 @@ describe('sync', () => {
     'follow',
     'post',
     'post_entity',
+    'post_embed_image',
+    'post_embed_external',
     'repost',
     'vote',
     'scene',
