@@ -94,8 +94,8 @@ export const runTestServer = async (
     url: `http://localhost:${pdsPort}`,
     ctx: pds.ctx,
     close: async () => {
-      await pds.destroy(true)
-      await plcServer.destroy(true)
+      await pds.destroy()
+      await plcServer.destroy()
     },
   }
 }
