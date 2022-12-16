@@ -99,7 +99,12 @@ export class DevEnvServer {
             termsOfServiceUrl: 'https://example.com/tos',
           },
         })
-        this.inst = await onServerReady(pds.server)
+        try {
+          await pds.start()
+          console.log(`${this.description} started ${chalk.gray(this.url)}`)
+        } catch (err) {
+          console.log(`${this.description} failed to start:`, err)
+        }
         break
       }
       case ServerType.DidPlaceholder: {

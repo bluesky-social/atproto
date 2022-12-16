@@ -34,16 +34,11 @@ export { DiskBlobStore, MemoryBlobStore } from './storage'
 export class PDS {
   public ctx: AppContext
   public app: express.Application
-  public server: http.Server
+  public server?: http.Server
 
-  constructor(opts: {
-    ctx: AppContext
-    app: express.Application
-    server: http.Server
-  }) {
+  constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
-    this.server = opts.server
   }
 
   static create(opts: {
@@ -119,21 +114,34 @@ export class PDS {
     app.use(apiServer.xrpc.router)
     app.use(error.handler)
 
-    const server = app.listen(config.port)
     return new PDS({
       ctx,
       app,
-      server,
+    })
+  }
+
+  async start(): Promise<http.Server> {
+    const server = this.app.listen(this.ctx.cfg.port)
+    this.server = server
+    return new Promise((resolve, reject) => {
+      server.on('listening', () => {
+        resolve(server)
+      })
+      server.on('error', (err) => {
+        reject(err)
+      })
     })
   }
 
   async destroy(force = false): Promise<void> {
     await this.ctx.messageQueue.destroy()
-    const terminator = createHttpTerminator({
-      server: this.server,
-      gracefulTerminationTimeout: force ? 0 : 5000,
-    })
-    await terminator.terminate()
+    if (this.server) {
+      const terminator = createHttpTerminator({
+        server: this.server,
+        gracefulTerminationTimeout: force ? 0 : 5000,
+      })
+      await terminator.terminate()
+    }
     await this.ctx.db.close()
   }
 }

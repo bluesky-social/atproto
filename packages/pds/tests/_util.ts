@@ -87,7 +87,8 @@ export const runTestServer = async (
       : new MemoryBlobStore()
 
   const pds = PDS.create({ db, blobstore, keypair, cfg: cfg })
-  const pdsPort = (pds.server.address() as AddressInfo).port
+  const pdsServer = await pds.start()
+  const pdsPort = (pdsServer.address() as AddressInfo).port
 
   return {
     url: `http://localhost:${pdsPort}`,

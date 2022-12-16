@@ -46,9 +46,8 @@ const run = async () => {
   }
 
   const pds = PDS.create({ db, blobstore, keypair, cfg })
-  pds.server.on('listening', () => {
-    console.log(`🌞 ATP Data server is running at ${cfg.origin}`)
-  })
+  await pds.start()
+  console.log(`🌞 ATP Data server is running at ${cfg.origin}`)
 }
 
 run()
