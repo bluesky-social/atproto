@@ -10,6 +10,10 @@ import * as crypto from '@atproto/crypto'
 import AtpApi, { ServiceClient } from '@atproto/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
+interface Startable {
+  start(): Promise<http.Server>
+}
+
 interface Destroyable {
   destroy(): Promise<void>
 }
@@ -43,17 +47,13 @@ export class DevEnvServer {
       throw new Error('Already started')
     }
 
-    const awaitServerReady = (s: http.Server): Promise<http.Server> => {
-      return new Promise((resolve, reject) => {
-        s.on('listening', () => {
-          console.log(`${this.description} started ${chalk.gray(this.url)}`)
-          resolve(s)
-        })
-        s.on('error', (e: Error) => {
-          console.log(`${this.description} failed to start:`, e)
-          reject(e)
-        })
-      })
+    const startServer = async (server: Startable): Promise<void> => {
+      try {
+        await server.start()
+        console.log(`${this.description} started ${chalk.gray(this.url)}`)
+      } catch (err) {
+        console.log(`${this.description} failed to start:`, err)
+      }
     }
 
     switch (this.type) {
@@ -103,12 +103,7 @@ export class DevEnvServer {
             termsOfServiceUrl: 'https://example.com/tos',
           },
         })
-        try {
-          await pds.start()
-          console.log(`${this.description} started ${chalk.gray(this.url)}`)
-        } catch (err) {
-          console.log(`${this.description} failed to start:`, err)
-        }
+        await startServer(pds)
         this.inst = pds
         break
       }
@@ -116,7 +111,7 @@ export class DevEnvServer {
         const db = plc.Database.memory()
         await db.migrateToLatestOrThrow()
         const plcServer = plc.PlcServer.create({ db, port: this.port })
-        await awaitServerReady(plcServer.server)
+        await startServer(plcServer)
         this.inst = plcServer
         break
       }

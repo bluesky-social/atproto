@@ -26,7 +26,8 @@ export const runTestServer = async (opts: {
   await db.migrateToLatestOrThrow()
 
   const plc = PlcServer.create({ db })
-  const { port } = plc.server.address() as AddressInfo
+  const plcServer = await plc.start()
+  const { port } = plcServer.address() as AddressInfo
 
   return {
     ctx: plc.ctx,

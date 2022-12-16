@@ -5,15 +5,20 @@ export class AppContext {
     private opts: {
       db: Database
       version: string
+      port?: number
     },
   ) {}
 
-  get db(): Database {
+  get db() {
     return this.opts.db
   }
 
-  get version(): string {
+  get version() {
     return this.opts.version
+  }
+
+  get port() {
+    return this.opts.port
   }
 }
 

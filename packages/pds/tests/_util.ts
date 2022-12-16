@@ -31,7 +31,8 @@ export const runTestServer = async (
   const plcDb = plc.Database.memory()
   await plcDb.migrateToLatestOrThrow()
   const plcServer = plc.PlcServer.create({ db: plcDb })
-  const plcPort = (plcServer.server.address() as AddressInfo).port
+  const plcListener = await plcServer.start()
+  const plcPort = (plcListener.address() as AddressInfo).port
   const plcUrl = `http://localhost:${plcPort}`
 
   const recoveryKey = (await crypto.EcdsaKeypair.create()).did()

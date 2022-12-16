@@ -20,16 +20,11 @@ export * from './context'
 export class PlcServer {
   public ctx: AppContext
   public app: express.Application
-  public server: http.Server
+  public server?: http.Server
 
-  constructor(opts: {
-    ctx: AppContext
-    app: express.Application
-    server: http.Server
-  }) {
+  constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
-    this.server = opts.server
   }
 
   static create(opts: {
@@ -46,25 +41,39 @@ export class PlcServer {
     const ctx = new AppContext({
       db: opts.db,
       version: opts.version || '0.0.0',
+      port: opts.port,
     })
 
     app.use('/', createRouter(ctx))
     app.use(error.handler)
 
-    const server = app.listen(opts.port)
     return new PlcServer({
       ctx,
       app,
-      server,
+    })
+  }
+
+  async start(): Promise<http.Server> {
+    const server = this.app.listen(this.ctx.port)
+    this.server = server
+    return new Promise((resolve, reject) => {
+      server.on('listening', () => {
+        resolve(server)
+      })
+      server.on('error', (err) => {
+        reject(err)
+      })
     })
   }
 
   async destroy(force = false) {
-    const terminator = createHttpTerminator({
-      server: this.server,
-      gracefulTerminationTimeout: force ? 0 : 5000,
-    })
-    await terminator.terminate()
+    if (this.server) {
+      const terminator = createHttpTerminator({
+        server: this.server,
+        gracefulTerminationTimeout: force ? 0 : 5000,
+      })
+      await terminator.terminate()
+    }
     await this.ctx.db.close()
   }
 }

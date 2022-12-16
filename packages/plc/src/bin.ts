@@ -28,9 +28,8 @@ const run = async () => {
   const port = isNaN(envPort) ? 2582 : envPort
 
   const plc = PlcServer.create({ db, port })
-  plc.server.on('listening', () => {
-    console.log(`👤 PLC server is running at http://localhost:${port}`)
-  })
+  await plc.start()
+  console.log(`👤 PLC server is running at http://localhost:${port}`)
 }
 
 run()

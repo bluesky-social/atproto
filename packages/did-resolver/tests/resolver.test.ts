@@ -24,6 +24,7 @@ describe('resolver', () => {
     await plcDB.migrateToLatestOrThrow()
     const plcPort = await getPort()
     const plcServer = PlcServer.create({ db: plcDB, port: plcPort })
+    await plcServer.start()
 
     plcUrl = 'http://localhost:' + plcPort
     resolver = new DidResolver({ plcUrl })
