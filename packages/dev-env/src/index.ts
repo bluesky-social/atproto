@@ -10,8 +10,12 @@ import * as crypto from '@atproto/crypto'
 import AtpApi, { ServiceClient } from '@atproto/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
+interface Destroyable {
+  destroy(): Promise<void>
+}
+
 export class DevEnvServer {
-  inst?: http.Server
+  inst?: Destroyable
 
   constructor(
     private env: DevEnv,
@@ -39,7 +43,7 @@ export class DevEnvServer {
       throw new Error('Already started')
     }
 
-    const onServerReady = (s: http.Server): Promise<http.Server> => {
+    const awaitServerReady = (s: http.Server): Promise<http.Server> => {
       return new Promise((resolve, reject) => {
         s.on('listening', () => {
           console.log(`${this.description} started ${chalk.gray(this.url)}`)
@@ -105,12 +109,15 @@ export class DevEnvServer {
         } catch (err) {
           console.log(`${this.description} failed to start:`, err)
         }
+        this.inst = pds
         break
       }
       case ServerType.DidPlaceholder: {
         const db = plc.Database.memory()
         await db.migrateToLatestOrThrow()
-        this.inst = await onServerReady(plc.server(db, this.port).listener)
+        const plcServer = plc.PlcServer.create({ db, port: this.port })
+        await awaitServerReady(plcServer.server)
+        this.inst = plcServer
         break
       }
       default:
@@ -119,15 +126,9 @@ export class DevEnvServer {
   }
 
   async close() {
-    const closeServer = (s: http.Server): Promise<void> => {
-      return new Promise((resolve) => {
-        console.log(`Closing ${this.description}`)
-        s.close(() => resolve())
-      })
-    }
-
     if (this.inst) {
-      await closeServer(this.inst)
+      console.log(`Closing ${this.description}`)
+      await this.inst.destroy()
     }
   }
 

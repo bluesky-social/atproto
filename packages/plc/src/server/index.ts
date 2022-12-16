@@ -6,45 +6,67 @@ import 'express-async-errors'
 
 import express from 'express'
 import cors from 'cors'
+import http from 'http'
 import { Database } from './db'
 import * as error from './error'
-import router from './routes'
-import { Locals } from './locals'
-import { loggerMiddleware, logger } from './logger'
+import createRouter from './routes'
+import { loggerMiddleware } from './logger'
+import AppContext from './context'
+import { createHttpTerminator } from 'http-terminator'
+
 export * from './db'
+export * from './context'
 
-export type App = express.Application
+export class PlcServer {
+  public ctx: AppContext
+  public app: express.Application
+  public server: http.Server
 
-export const server = (db: Database, port?: number, _version?: string) => {
-  const version = _version || '0.0.0'
-  const app = express()
-  app.use(express.json({ limit: '100kb' }))
-  app.use(cors())
-
-  app.use(loggerMiddleware)
-
-  const locals: Locals = {
-    logger,
-    version,
-    db,
+  constructor(opts: {
+    ctx: AppContext
+    app: express.Application
+    server: http.Server
+  }) {
+    this.ctx = opts.ctx
+    this.app = opts.app
+    this.server = opts.server
   }
 
-  app.locals = locals
+  static create(opts: {
+    db: Database
+    port?: number
+    version?: string
+  }): PlcServer {
+    const app = express()
+    app.use(express.json({ limit: '100kb' }))
+    app.use(cors())
 
-  app.use((req, res, next) => {
-    const reqLocals: Locals = {
-      ...locals,
-      logger: req.log, // This logger is request-specific
-    }
-    res.locals = reqLocals
-    next()
-  })
+    app.use(loggerMiddleware)
 
-  app.use('/', router)
-  app.use(error.handler)
+    const ctx = new AppContext({
+      db: opts.db,
+      version: opts.version || '0.0.0',
+    })
 
-  const listener = app.listen(port)
-  return { app, listener }
+    app.use('/', createRouter(ctx))
+    app.use(error.handler)
+
+    const server = app.listen(opts.port)
+    return new PlcServer({
+      ctx,
+      app,
+      server,
+    })
+  }
+
+  async destroy(force = false) {
+    const terminator = createHttpTerminator({
+      server: this.server,
+      gracefulTerminationTimeout: force ? 0 : 5000,
+    })
+    await terminator.terminate()
+    await this.ctx.db.close()
+  }
 }
 
-export default server
+export default PlcServer

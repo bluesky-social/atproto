@@ -30,6 +30,7 @@
     "dotenv": "^16.0.2",
     "express": "^4.17.2",
     "express-async-errors": "^3.1.1",
+    "http-terminator": "^3.2.0",
     "kysely": "^0.22.0",
     "pg": "^8.8.0",
     "pino": "^8.6.1",

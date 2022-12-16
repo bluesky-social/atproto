@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import { Database } from './server/db'
-import { server } from './server'
+import PlcServer from './server'
 
 const run = async () => {
   const env = process.env.ENV
@@ -27,8 +27,8 @@ const run = async () => {
   const envPort = parseInt(process.env.PORT || '')
   const port = isNaN(envPort) ? 2582 : envPort
 
-  const { listener } = server(db, port)
-  listener.on('listening', () => {
+  const plc = PlcServer.create({ db, port })
+  plc.server.on('listening', () => {
     console.log(`👤 PLC server is running at http://localhost:${port}`)
   })
 }
