@@ -1,5 +1,6 @@
 export interface MessageQueueCursor {
   consumer: string
+  topic: string
   cursor: number
 }
 

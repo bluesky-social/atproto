@@ -5,6 +5,13 @@ export type MessageOfType<T extends string = string> = {
   [s: string]: unknown
 }
 
+export function isMessageOfType<T extends string>(
+  msg: MessageOfType,
+  type: T,
+): msg is MessageOfType<T> {
+  return msg.type === type
+}
+
 export type Listener<M extends MessageOfType = MessageOfType> = (ctx: {
   message: M
   db: Database
