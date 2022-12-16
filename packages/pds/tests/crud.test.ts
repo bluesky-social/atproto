@@ -4,8 +4,8 @@ import { AtUri } from '@atproto/uri'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { CloseFn, paginateAll, runTestServer } from './_util'
-import { getLocals, Locals } from '../src/locals'
 import { BlobNotFoundError } from '@atproto/repo'
+import AppContext from '../src/context'
 
 const alice = {
   email: 'alice@test.com',
@@ -21,7 +21,7 @@ const bob = {
 }
 
 describe('crud operations', () => {
-  let locals: Locals
+  let ctx: AppContext
   let client: AtpServiceClient
   let aliceClient: AtpServiceClient
   let close: CloseFn
@@ -30,7 +30,7 @@ describe('crud operations', () => {
     const server = await runTestServer({
       dbPostgresSchema: 'crud',
     })
-    locals = getLocals(server.app)
+    ctx = server.ctx
     close = server.close
     client = AtpApi.service(server.url)
     aliceClient = AtpApi.service(server.url)
@@ -163,7 +163,6 @@ describe('crud operations', () => {
   })
 
   it('attaches images to a post', async () => {
-    const { blobstore } = locals
     const file = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
@@ -172,7 +171,7 @@ describe('crud operations', () => {
     })
     const imageCid = CID.parse(image.cid)
     // Expect blobstore not to have image yet
-    await expect(blobstore.getBytes(imageCid)).rejects.toThrow(
+    await expect(ctx.blobstore.getBytes(imageCid)).rejects.toThrow(
       BlobNotFoundError,
     )
     // Associate image with post, image should be placed in blobstore
@@ -200,7 +199,7 @@ describe('crud operations', () => {
     expect(images.length).toEqual(1)
     expect(images[0].image.cid).toEqual(image.cid)
     // Ensure that the uploaded image is now in the blobstore, i.e. doesn't throw BlobNotFoundError
-    await blobstore.getBytes(imageCid)
+    await ctx.blobstore.getBytes(imageCid)
     // Cleanup
     await aliceClient.app.bsky.feed.post.delete({
       rkey: postUri.rkey,

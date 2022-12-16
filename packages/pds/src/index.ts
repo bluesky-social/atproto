@@ -31,8 +31,6 @@ export { ServerConfig } from './config'
 export { Database } from './db'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 
-export type App = express.Application
-
 export class PDS {
   public ctx: AppContext
   public app: express.Application

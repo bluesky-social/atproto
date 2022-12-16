@@ -1,16 +1,17 @@
+import { Database } from '../src'
 import SqlBlockstore from '../src/sql-blockstore'
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
-import * as locals from '../src/locals'
+import { CloseFn, runTestServer } from './_util'
 
 describe('sql blockstore', () => {
-  let server: TestServerInfo
+  let db: Database
   let close: CloseFn
 
   beforeAll(async () => {
-    server = await runTestServer({
+    const server = await runTestServer({
       dbPostgresSchema: 'sql_blockstore',
     })
     close = server.close
+    db = server.ctx.db
   })
 
   afterAll(async () => {
@@ -18,7 +19,6 @@ describe('sql blockstore', () => {
   })
 
   it('puts and gets blocks.', async () => {
-    const { db } = locals.get(server.app)
     const did = 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
 
     const cid = await db.transaction(async (dbTxn) => {
@@ -35,7 +35,6 @@ describe('sql blockstore', () => {
   })
 
   it('allows same content to be put multiple times by the same did.', async () => {
-    const { db } = locals.get(server.app)
     const did = 'did:key:zQ3shtxV1FrJfhqE1dvxYRcCknWNjHc3c5X1y3ZSoPDi2aur2'
 
     const cidA = await db.transaction(async (dbTxn) => {
