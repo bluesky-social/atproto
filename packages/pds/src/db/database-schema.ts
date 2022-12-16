@@ -1,3 +1,4 @@
+import { Kysely } from 'kysely'
 import * as user from './tables/user'
 import * as didHandle from './tables/did-handle'
 import * as scene from './tables/scene'
@@ -25,7 +26,6 @@ import * as messageQueue from './tables/message-queue'
 import * as messageQueueCursor from './tables/message-queue-cursor'
 import * as sceneMemberCount from './tables/scene-member-count'
 import * as sceneVotesOnPost from './tables/scene-votes-on-post'
-import { Kysely } from 'kysely'
 
 export type DatabaseSchemaType = user.PartialDB &
   didHandle.PartialDB &

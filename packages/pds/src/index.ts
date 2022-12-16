@@ -7,6 +7,7 @@ import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import http from 'http'
+import events from 'events'
 import { DidableKey } from '@atproto/auth'
 import { BlobStore } from '@atproto/repo'
 import { DidResolver } from '@atproto/did-resolver'
@@ -126,21 +127,13 @@ export class PDS {
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.terminator = createHttpTerminator({ server })
-    return new Promise((resolve, reject) => {
-      server.on('listening', () => {
-        resolve(server)
-      })
-      server.on('error', (err) => {
-        reject(err)
-      })
-    })
+    await events.once(server, 'listening')
+    return server
   }
 
   async destroy(): Promise<void> {
     await this.ctx.messageQueue.destroy()
-    if (this.terminator) {
-      await this.terminator.terminate
-    }
+    await this.terminator?.terminate()
     await this.ctx.db.close()
   }
 }

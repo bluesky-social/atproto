@@ -7,6 +7,7 @@ import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import http from 'http'
+import events from 'events'
 import { Database } from './db'
 import * as error from './error'
 import createRouter from './routes'
@@ -58,20 +59,12 @@ export class PlcServer {
     const server = this.app.listen(this.ctx.port)
     this.server = server
     this.terminator = createHttpTerminator({ server })
-    return new Promise((resolve, reject) => {
-      server.on('listening', () => {
-        resolve(server)
-      })
-      server.on('error', (err) => {
-        reject(err)
-      })
-    })
+    await events.once(server, 'listening')
+    return server
   }
 
   async destroy() {
-    if (this.terminator) {
-      await this.terminator.terminate()
-    }
+    await this.terminator?.terminate()
     await this.ctx.db.close()
   }
 }
