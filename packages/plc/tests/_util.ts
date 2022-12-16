@@ -33,7 +33,7 @@ export const runTestServer = async (opts: {
     ctx: plc.ctx,
     url: `http://localhost:${port}`,
     close: async () => {
-      await plc.destroy(true)
+      await plc.destroy()
     },
   }
 }

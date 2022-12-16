@@ -12,7 +12,7 @@ import * as error from './error'
 import createRouter from './routes'
 import { loggerMiddleware } from './logger'
 import AppContext from './context'
-import { createHttpTerminator } from 'http-terminator'
+import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 
 export * from './db'
 export * from './context'
@@ -21,6 +21,7 @@ export class PlcServer {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
+  private terminator?: HttpTerminator
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -56,6 +57,7 @@ export class PlcServer {
   async start(): Promise<http.Server> {
     const server = this.app.listen(this.ctx.port)
     this.server = server
+    this.terminator = createHttpTerminator({ server })
     return new Promise((resolve, reject) => {
       server.on('listening', () => {
         resolve(server)
@@ -66,13 +68,9 @@ export class PlcServer {
     })
   }
 
-  async destroy(force = false) {
-    if (this.server) {
-      const terminator = createHttpTerminator({
-        server: this.server,
-        gracefulTerminationTimeout: force ? 0 : 5000,
-      })
-      await terminator.terminate()
+  async destroy() {
+    if (this.terminator) {
+      await this.terminator.terminate()
     }
     await this.ctx.db.close()
   }
