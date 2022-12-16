@@ -72,8 +72,11 @@ export class DevEnvServer {
           `http://localhost:${this.port}`,
         )
 
-        this.inst = await onServerReady(
-          PDSServer(db, blobstore, keypair, {
+        const pds = PDSServer.create({
+          db,
+          blobstore,
+          keypair,
+          cfg: {
             debugMode: true,
             version: '0.0.0',
             scheme: 'http',
@@ -94,8 +97,9 @@ export class DevEnvServer {
               'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
             privacyPolicyUrl: 'https://example.com/privacy',
             termsOfServiceUrl: 'https://example.com/tos',
-          }).listener,
-        )
+          },
+        })
+        this.inst = await onServerReady(pds.server)
         break
       }
       case ServerType.DidPlaceholder: {
