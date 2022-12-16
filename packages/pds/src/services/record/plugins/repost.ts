@@ -1,18 +1,17 @@
-import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
 import * as lex from '../../../lexicon/lexicons'
 import { CID } from 'multiformats/cid'
 import * as messages from '../../../event-stream/messages'
 import { Message } from '../../../event-stream/messages'
-import { DatabaseSchema } from '../../../db/database-schema'
+import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedRepost
-type IndexedRepost = DatabaseSchema['repost']
+type IndexedRepost = DatabaseSchemaType['repost']
 
 const insertFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
   obj: Repost.Record,
@@ -36,7 +35,7 @@ const insertFn = async (
 }
 
 const findDuplicate = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   obj: Repost.Record,
 ): Promise<AtUri | null> => {
@@ -63,7 +62,7 @@ const eventsForInsert = (obj: IndexedRepost): Message[] => {
 }
 
 const deleteFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
 ): Promise<IndexedRepost | null> => {
   const deleted = await db
@@ -84,7 +83,7 @@ const eventsForDelete = (
 
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 
-export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
+export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
     insertFn,

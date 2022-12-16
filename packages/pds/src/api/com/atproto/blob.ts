@@ -1,10 +1,9 @@
 import { Server } from '../../../lexicon'
-import ServerAuth from '../../../auth'
 import AppContext from '../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.blob.upload({
-    auth: ServerAuth.verifier,
+    auth: ctx.accessVerifier,
     handler: async ({ input }) => {
       const cid = await ctx.services
         .repo(ctx.db)

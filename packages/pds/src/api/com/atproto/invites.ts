@@ -1,12 +1,11 @@
 import * as crypto from '@atproto/crypto'
 import * as uint8arrays from 'uint8arrays'
 import { Server } from '../../../lexicon'
-import ServerAuth from '../../../auth'
 import AppContext from '../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.account.createInviteCode({
-    auth: ServerAuth.adminVerifier,
+    auth: ctx.adminVerifier,
     handler: async ({ input, req }) => {
       const { useCount } = input.body
 

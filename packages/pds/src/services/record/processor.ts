@@ -1,4 +1,3 @@
-import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
@@ -9,18 +8,18 @@ import { lexicons } from '../../lexicon/lexicons'
 type RecordProcessorParams<T, S> = {
   lexId: string
   insertFn: (
-    db: Kysely<DatabaseSchema>,
+    db: DatabaseSchema,
     uri: AtUri,
     cid: CID,
     obj: T,
     timestamp?: string,
   ) => Promise<S | null>
   findDuplicate: (
-    db: Kysely<DatabaseSchema>,
+    db: DatabaseSchema,
     uri: AtUri,
     obj: T,
   ) => Promise<AtUri | null>
-  deleteFn: (db: Kysely<DatabaseSchema>, uri: AtUri) => Promise<S | null>
+  deleteFn: (db: DatabaseSchema, uri: AtUri) => Promise<S | null>
   eventsForInsert: (obj: S) => Message[]
   eventsForDelete: (prev: S, replacedBy: S | null) => Message[]
 }
@@ -28,7 +27,7 @@ type RecordProcessorParams<T, S> = {
 export class RecordProcessor<T, S> {
   collection: string
   constructor(
-    private db: Kysely<DatabaseSchema>,
+    private db: DatabaseSchema,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.collection = this.params.lexId

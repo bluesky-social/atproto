@@ -1,8 +1,7 @@
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { Server } from '../../../../lexicon'
 import * as Method from '../../../../lexicon/types/app/bsky/actor/search'
-import * as locals from '../../../../locals'
 import { getDeclarationSimple } from '../util'
 import {
   cleanTerm,
@@ -10,12 +9,11 @@ import {
   getUserSearchQuerySqlite,
 } from '../util/search'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchTypeahead({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ params }) => {
       let { term, limit } = params
-      const { db, imgUriBuilder } = locals.get(res)
 
       term = cleanTerm(term || '')
       limit = Math.min(limit ?? 25, 100)
@@ -30,9 +28,9 @@ export default function (server: Server) {
       }
 
       const results =
-        db.dialect === 'pg'
-          ? await getResultsPg(db, { term, limit })
-          : await getResultsSqlite(db, { term, limit })
+        ctx.db.dialect === 'pg'
+          ? await getResultsPg(ctx.db, { term, limit })
+          : await getResultsSqlite(ctx.db, { term, limit })
 
       const users = results.map((result) => ({
         did: result.did,
@@ -40,7 +38,7 @@ export default function (server: Server) {
         handle: result.handle,
         displayName: result.displayName ?? undefined,
         avatar: result.avatarCid
-          ? imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
+          ? ctx.imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
           : undefined,
       }))
 

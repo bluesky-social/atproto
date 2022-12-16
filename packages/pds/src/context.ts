@@ -2,7 +2,7 @@ import { DidableKey } from '@atproto/auth'
 import * as plc from '@atproto/plc'
 import { Database } from './db'
 import { ServerConfig } from './config'
-import ServerAuth from './auth'
+import * as auth from './auth'
 import { ServerMailer } from './mailer'
 import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
@@ -15,7 +15,7 @@ export class AppContext {
       db: Database
       blobstore: BlobStore
       keypair: DidableKey
-      auth: ServerAuth
+      auth: auth.ServerAuth
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       mailer: ServerMailer
@@ -36,8 +36,20 @@ export class AppContext {
     return this.opts.keypair
   }
 
-  get auth(): ServerAuth {
+  get auth(): auth.ServerAuth {
     return this.opts.auth
+  }
+
+  get accessVerifier() {
+    return auth.accessVerifier(this.auth)
+  }
+
+  get refreshVerifier() {
+    return auth.refreshVerifier(this.auth)
+  }
+
+  get adminVerifier() {
+    return auth.adminVerifier(this.auth)
   }
 
   get imgUriBuilder(): ImageUriBuilder {

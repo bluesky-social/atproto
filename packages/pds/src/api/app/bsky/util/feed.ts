@@ -5,18 +5,18 @@ import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAutho
 import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 import { CID } from 'multiformats/cid'
 import { ImageUriBuilder } from '../../../../image/uri'
-import Database from '../../../../db'
 import { embedsForPosts, FeedEmbeds } from './embeds'
+import DatabaseSchema from '../../../../db/database-schema'
 
 // Present post and repost results into FeedItems
 // Including links to embedded media
 export const composeFeed = async (
-  db: Database,
+  db: DatabaseSchema,
   imgUriBuilder: ImageUriBuilder,
   rows: FeedRow[],
 ): Promise<FeedItem[]> => {
   const feedUris = rows.map((row) => row.postUri)
-  const embeds = await embedsForPosts(db.db, imgUriBuilder, feedUris)
+  const embeds = await embedsForPosts(db, imgUriBuilder, feedUris)
   return rows.map(rowToFeedItem(imgUriBuilder, embeds))
 }
 

@@ -1,6 +1,6 @@
 import { BlobStore } from '@atproto/repo'
 import { DidableKey } from '@atproto/crypto'
-import ServerAuth from '../../auth'
+import { ServerAuth } from '../../auth'
 import AddMemberConsumer from './add-member'
 import RemoveMemberConsumer from './remove-member'
 import AddUpvoteConsumer from './add-upvote'

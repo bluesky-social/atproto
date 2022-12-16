@@ -1,34 +1,33 @@
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getActorInfo } from '../util'
-import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getAssertions({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ params }) => {
       const { author, subject, assertion, confirmed, limit, before } = params
-      const { db, imgUriBuilder } = locals.get(res)
-      const { ref } = db.db.dynamic
+      const db = ctx.db.db
+      const { ref } = db.dynamic
 
       if (!author && !subject) {
         throw new InvalidRequestError(`Must provide an author or subject`)
       }
 
       const authorInfo = author
-        ? await getActorInfo(db.db, imgUriBuilder, author).catch((_e) => {
+        ? await getActorInfo(db, ctx.imgUriBuilder, author).catch((_e) => {
             throw new InvalidRequestError(`Actor not found: ${author}`)
           })
         : undefined
       const subjectInfo = subject
-        ? await getActorInfo(db.db, imgUriBuilder, subject).catch((_e) => {
+        ? await getActorInfo(db, ctx.imgUriBuilder, subject).catch((_e) => {
             throw new InvalidRequestError(`Actor not found: ${subject}`)
           })
         : undefined
 
-      let assertionsReq = db.db
+      let assertionsReq = db
         .selectFrom('assertion')
         .if(typeof assertion === 'string', (q) =>
           q.where('assertion.assertion', '=', assertion as string),
@@ -133,7 +132,10 @@ export default function (server: Server) {
           avatar:
             authorInfo?.avatar ||
             (row.authorAvatarCid
-              ? imgUriBuilder.getCommonSignedUri('avatar', row.authorAvatarCid)
+              ? ctx.imgUriBuilder.getCommonSignedUri(
+                  'avatar',
+                  row.authorAvatarCid,
+                )
               : undefined),
         },
         subject: {
@@ -147,7 +149,10 @@ export default function (server: Server) {
           avatar:
             subjectInfo?.avatar ||
             (row.subjectAvatarCid
-              ? imgUriBuilder.getCommonSignedUri('avatar', row.subjectAvatarCid)
+              ? ctx.imgUriBuilder.getCommonSignedUri(
+                  'avatar',
+                  row.subjectAvatarCid,
+                )
               : undefined),
         },
         createdAt: row.createdAt,

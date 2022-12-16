@@ -1,18 +1,16 @@
 import { Server } from '../../../../lexicon'
-import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclarationSimple } from '../util'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getVotes({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ params }) => {
       const { uri, limit, before, cid, direction } = params
-      const { db, imgUriBuilder } = locals.get(res)
-      const { ref } = db.db.dynamic
+      const { ref } = ctx.db.db.dynamic
 
-      let builder = db.db
+      let builder = ctx.db.db
         .selectFrom('vote')
         .where('vote.subject', '=', uri)
         .innerJoin('did_handle', 'vote.creator', 'did_handle.did')
@@ -56,7 +54,7 @@ export default function (server: Server) {
           handle: row.handle,
           displayName: row.displayName || undefined,
           avatar: row.avatarCid
-            ? imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
+            ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
             : undefined,
         },
       }))

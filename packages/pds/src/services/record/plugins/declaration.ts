@@ -1,17 +1,16 @@
-import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Declaration from '../../../lexicon/types/app/bsky/system/declaration'
 import * as lex from '../../../lexicon/lexicons'
 import { Message } from '../../../event-stream/messages'
-import DatabaseSchema from '../../../db/database-schema'
+import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskySystemDeclaration
-type DidHandle = DatabaseSchema['did_handle']
+type DidHandle = DatabaseSchemaType['did_handle']
 
 const insertFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
   obj: Declaration.Record,
@@ -45,7 +44,7 @@ const eventsForDelete = (): Message[] => {
 
 export type PluginType = RecordProcessor<Declaration.Record, DidHandle>
 
-export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
+export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
     insertFn,

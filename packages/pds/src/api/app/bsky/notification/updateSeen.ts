@@ -1,14 +1,12 @@
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as locals from '../../../../locals'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
-    auth: ServerAuth.verifier,
-    handler: async ({ input, auth, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ input, auth }) => {
       const { seenAt } = input.body
-      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
 
       let parsed: string
@@ -18,12 +16,12 @@ export default function (server: Server) {
         throw new InvalidRequestError('Invalid date')
       }
 
-      const user = await services.actor(db).getUser(requester)
+      const user = await ctx.services.actor(ctx.db).getUser(requester)
       if (!user) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }
 
-      await db.db
+      await ctx.db.db
         .updateTable('user')
         .set({ lastSeenNotifs: parsed })
         .where('handle', '=', user.handle)

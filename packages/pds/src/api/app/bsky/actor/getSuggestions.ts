@@ -1,21 +1,20 @@
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import * as locals from '../../../../locals'
 import { getDeclarationSimple } from '../util'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getSuggestions({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, auth, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ params, auth }) => {
       let { limit } = params
       const { cursor } = params
-      const { db, imgUriBuilder } = locals.get(res)
       const requester = auth.credentials.did
       limit = Math.min(limit ?? 25, 100)
 
-      const { ref } = db.db.dynamic
+      const db = ctx.db.db
+      const { ref } = db.dynamic
 
-      const suggestionsReq = db.db
+      const suggestionsReq = db
         .selectFrom('user')
         .innerJoin('did_handle', 'user.handle', 'did_handle.handle')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
@@ -30,7 +29,7 @@ export default function (server: Server) {
           'profile.avatarCid as avatarCid',
           'profile.indexedAt as indexedAt',
           'user.createdAt as createdAt',
-          db.db
+          db
             .selectFrom('follow')
             .where('creator', '=', requester)
             .whereRef('subjectDid', '=', ref('did_handle.did'))
@@ -52,7 +51,7 @@ export default function (server: Server) {
         displayName: result.displayName ?? undefined,
         description: result.description ?? undefined,
         avatar: result.avatarCid
-          ? imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
+          ? ctx.imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
           : undefined,
         indexedAt: result.indexedAt ?? undefined,
         myState: {

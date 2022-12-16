@@ -7,12 +7,12 @@ import 'express-async-errors'
 import express from 'express'
 import cors from 'cors'
 import http from 'http'
-import * as auth from '@atproto/auth'
+import { DidableKey } from '@atproto/auth'
 import { BlobStore } from '@atproto/repo'
 import { DidResolver } from '@atproto/did-resolver'
 import API, { health } from './api'
 import Database from './db'
-import ServerAuth from './auth'
+import { ServerAuth } from './auth'
 import * as streamConsumers from './event-stream/consumers'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
@@ -33,31 +33,27 @@ export { DiskBlobStore, MemoryBlobStore } from './storage'
 
 export type App = express.Application
 
-type Opts = {
-  ctx: AppContext
-  app: express.Application
-  server: http.Server
-}
-
-type CreateOpts = {
-  db: Database
-  blobstore: BlobStore
-  keypair: auth.DidableKey
-  cfg: ServerConfigValues
-}
-
 export class PDS {
   public ctx: AppContext
   public app: express.Application
   public server: http.Server
 
-  constructor(opts: Opts) {
+  constructor(opts: {
+    ctx: AppContext
+    app: express.Application
+    server: http.Server
+  }) {
     this.ctx = opts.ctx
     this.app = opts.app
     this.server = opts.server
   }
 
-  static create(opts: CreateOpts): PDS {
+  static create(opts: {
+    db: Database
+    blobstore: BlobStore
+    keypair: DidableKey
+    cfg: ServerConfigValues
+  }): PDS {
     const { db, blobstore, keypair, cfg } = opts
     const config = new ServerConfig(opts.cfg)
     const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
@@ -70,7 +66,7 @@ export class PDS {
     const messageQueue = new SqlMessageQueue('pds', db)
     streamConsumers.listen(messageQueue, blobstore, auth, keypair)
 
-    const services = createServices(db, messageQueue, blobstore)
+    const services = createServices(messageQueue, blobstore)
 
     const mailTransport =
       config.emailSmtpUrl !== undefined
@@ -114,15 +110,6 @@ export class PDS {
       imgUriBuilder,
     })
 
-    // app.use((req, res, next) => {
-    //   const reqLocals: Locals = {
-    //     ...locals,
-    //     logger: req.log, // This logger is request-specific
-    //   }
-    //   res.locals = reqLocals
-    //   next()
-    // })
-
     const apiServer = API(ctx, {
       payload: {
         jsonLimit: 100 * 1024, // 100kb
@@ -130,7 +117,7 @@ export class PDS {
         blobLimit: 5 * 1024 * 1024, // 5mb
       },
     })
-    app.use(health.router)
+    app.use(health.createRouter(ctx))
     app.use(apiServer.xrpc.router)
     app.use(error.handler)
 

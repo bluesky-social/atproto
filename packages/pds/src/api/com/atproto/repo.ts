@@ -3,7 +3,6 @@ import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
 import * as repo from '../../../repo'
-import ServerAuth from '../../../auth'
 import {
   InvalidRecordError,
   PreparedCreate,
@@ -99,7 +98,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.repo.batchWrite({
-    auth: ServerAuth.verifier,
+    auth: ctx.accessVerifier,
     handler: async ({ input, auth }) => {
       const tx = input.body
       const { did, validate } = tx
@@ -163,7 +162,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.repo.createRecord({
-    auth: ServerAuth.verifier,
+    auth: ctx.accessVerifier,
     handler: async ({ input, auth }) => {
       const { did, collection, record } = input.body
       const validate =
@@ -219,7 +218,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.repo.deleteRecord({
-    auth: ServerAuth.verifier,
+    auth: ctx.accessVerifier,
     handler: async ({ input, auth }) => {
       const { did, collection, rkey } = input.body
       const requester = auth.credentials.did

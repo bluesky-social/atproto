@@ -8,31 +8,18 @@ import { AtUri } from '@atproto/uri'
 import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
-import server, {
-  ServerConfig,
-  Database,
-  App,
-  MemoryBlobStore,
-} from '../src/index'
+import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
 import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
 import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
 import DiskBlobStore from '../src/storage/disk-blobstore'
-import * as locals from '../src/locals'
-import { MessageQueue } from '../src/event-stream/types'
-import { Services } from '../src/services'
+import AppContext from '../src/context'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
-  cfg: ServerConfig
-  serverKey: string
-  app: App
-  db: Database
-  messageQueue: MessageQueue
-  services: Services
-  blobstore: DiskBlobStore | MemoryBlobStore
+  ctx: AppContext
   close: CloseFn
 }
 
@@ -60,7 +47,7 @@ export const runTestServer = async (
 
   const blobstoreLoc = path.join(os.tmpdir(), randomStr(5, 'base32'))
 
-  const config = new ServerConfig({
+  const cfg = new ServerConfig({
     debugMode: true,
     version: '0.0.0',
     scheme: 'http',
@@ -85,44 +72,29 @@ export const runTestServer = async (
   })
 
   const db =
-    config.dbPostgresUrl !== undefined
+    cfg.dbPostgresUrl !== undefined
       ? Database.postgres({
-          url: config.dbPostgresUrl,
-          schema: config.dbPostgresSchema,
+          url: cfg.dbPostgresUrl,
+          schema: cfg.dbPostgresSchema,
         })
       : Database.memory()
 
   await db.migrateToLatestOrThrow()
 
   const blobstore =
-    config.blobstoreLocation !== undefined
-      ? await DiskBlobStore.create(
-          config.blobstoreLocation,
-          config.blobstoreTmp,
-        )
+    cfg.blobstoreLocation !== undefined
+      ? await DiskBlobStore.create(cfg.blobstoreLocation, cfg.blobstoreTmp)
       : new MemoryBlobStore()
 
-  const { app, listener } = server(db, blobstore, keypair, config)
-  const pdsPort = (listener.address() as AddressInfo).port
-  const { services, messageQueue } = locals.get(app)
+  const pds = PDS.create({ db, blobstore, keypair, cfg: cfg })
+  const pdsPort = (pds.server.address() as AddressInfo).port
 
   return {
     url: `http://localhost:${pdsPort}`,
-    cfg: config,
-    serverKey: keypair.did(),
-    app,
-    db,
-    services,
-    messageQueue,
-    blobstore,
+    ctx: pds.ctx,
     close: async () => {
-      await messageQueue.destroy()
-      await Promise.all([
-        db.close(),
-        closeServer(listener),
-        closeServer(plcServer.listener),
-        plcDb.close(),
-      ])
+      await pds.destroy()
+      await Promise.all([closeServer(plcServer.listener), plcDb.close()])
     },
   }
 }

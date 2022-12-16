@@ -1,11 +1,11 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import ServerAuth, { AuthScopes } from '../../../auth'
+import { AuthScopes } from '../../../auth'
 import AppContext from '../../../context'
 import { Server } from '../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.session.get({
-    auth: ServerAuth.verifier,
+    auth: ctx.accessVerifier,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
       const user = await ctx.services.actor(ctx.db).getUser(did)
@@ -54,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.session.refresh({
-    auth: ServerAuth.refreshVerifier,
+    auth: ctx.refreshVerifier,
     handler: async ({ req, auth }) => {
       const did = auth.credentials.did
       const user = await ctx.services.actor(ctx.db).getUser(did)
