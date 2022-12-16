@@ -1,5 +1,4 @@
 import { AddressInfo } from 'net'
-import http from 'http'
 import os from 'os'
 import path from 'path'
 import * as crypto from '@atproto/crypto'
@@ -31,8 +30,9 @@ export const runTestServer = async (
   // run plc server
   const plcDb = plc.Database.memory()
   await plcDb.migrateToLatestOrThrow()
-  const plcServer = plc.server(plcDb)
-  const plcPort = (plcServer.listener.address() as AddressInfo).port
+  const plcServer = plc.PlcServer.create({ db: plcDb })
+  const plcListener = await plcServer.start()
+  const plcPort = (plcListener.address() as AddressInfo).port
   const plcUrl = `http://localhost:${plcPort}`
 
   const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
@@ -95,18 +95,9 @@ export const runTestServer = async (
     ctx: pds.ctx,
     close: async () => {
       await pds.destroy()
-      await Promise.all([closeServer(plcServer.listener), plcDb.close()])
+      await plcServer.destroy()
     },
   }
-}
-
-const closeServer = (s: http.Server): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    s.close((err) => {
-      if (err) reject(err)
-      resolve()
-    })
-  })
 }
 
 export const adminAuth = () => {
