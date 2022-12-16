@@ -23,7 +23,7 @@ import SqlMessageQueue from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
-import { createHttpTerminator } from 'http-terminator'
+import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
 
 export type { ServerConfigValues } from './config'
@@ -35,6 +35,7 @@ export class PDS {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
+  private terminator?: HttpTerminator
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -123,6 +124,7 @@ export class PDS {
   async start(): Promise<http.Server> {
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
+    this.terminator = createHttpTerminator({ server })
     return new Promise((resolve, reject) => {
       server.on('listening', () => {
         resolve(server)
@@ -133,14 +135,10 @@ export class PDS {
     })
   }
 
-  async destroy(force = false): Promise<void> {
+  async destroy(): Promise<void> {
     await this.ctx.messageQueue.destroy()
-    if (this.server) {
-      const terminator = createHttpTerminator({
-        server: this.server,
-        gracefulTerminationTimeout: force ? 0 : 5000,
-      })
-      await terminator.terminate()
+    if (this.terminator) {
+      await this.terminator.terminate
     }
     await this.ctx.db.close()
   }
