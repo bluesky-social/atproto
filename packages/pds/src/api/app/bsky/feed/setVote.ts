@@ -1,23 +1,21 @@
 import { AtUri } from '@atproto/uri'
 import * as lexicons from '../../../../lexicon/lexicons'
 import { Server } from '../../../../lexicon'
-import * as locals from '../../../../locals'
 import * as repo from '../../../../repo'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.setVote({
-    auth: ServerAuth.verifier,
-    handler: async ({ auth, input, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, input }) => {
       const { subject, direction } = input.body
-      const { db, services } = locals.get(res)
 
       const requester = auth.credentials.did
-      const authStore = await locals.getAuthstore(res, requester)
+      const authStore = await ctx.getAuthstore(requester)
       const now = new Date().toISOString()
 
-      const voteUri = await db.transaction(async (dbTxn) => {
-        const repoTxn = services.repo(dbTxn)
+      const voteUri = await ctx.db.transaction(async (dbTxn) => {
+        const repoTxn = ctx.services.repo(dbTxn)
         const existingVotes = await dbTxn.db
           .selectFrom('vote')
           .select(['uri', 'direction'])

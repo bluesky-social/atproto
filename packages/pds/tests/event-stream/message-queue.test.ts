@@ -21,8 +21,8 @@ describe('message queue', () => {
       dbPostgresSchema: 'event_stream_message_queue',
     })
     close = server.close
-    db = server.db
-    messageQueue = server.messageQueue
+    db = server.ctx.db
+    messageQueue = server.ctx.messageQueue
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     await usersSeed(sc)

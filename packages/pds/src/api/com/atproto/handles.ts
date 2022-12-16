@@ -1,25 +1,23 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as locals from '../../../locals'
+import AppContext from '../../../context'
 
-export default function (server: Server) {
-  server.com.atproto.handle.resolve(async ({ params, res }) => {
-    const { db, services, config } = locals.get(res)
-
+export default function (server: Server, ctx: AppContext) {
+  server.com.atproto.handle.resolve(async ({ params }) => {
     const handle = params.handle
 
     let did = ''
-    if (!handle || handle === config.hostname) {
+    if (!handle || handle === ctx.cfg.hostname) {
       // self
-      did = config.serverDid
+      did = ctx.cfg.serverDid
     } else {
-      const supportedHandle = config.availableUserDomains.some((host) =>
+      const supportedHandle = ctx.cfg.availableUserDomains.some((host) =>
         handle.endsWith(host),
       )
       if (!supportedHandle) {
         throw new InvalidRequestError('Not a supported handle domain')
       }
-      const user = await services.actor(db).getUser(handle)
+      const user = await ctx.services.actor(ctx.db).getUser(handle)
       if (!user) {
         throw new InvalidRequestError('Unable to resolve handle')
       }

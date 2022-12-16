@@ -1,19 +1,18 @@
 import { randomStr } from '@atproto/crypto'
-import Database from '../../../db'
+import AppContext from '../../../context'
 import { Server } from '../../../lexicon'
-import * as locals from '../../../locals'
+import Database from '../../../db'
 
-export default function (server: Server) {
-  server.com.atproto.account.requestPasswordReset(async ({ input, res }) => {
-    const { db, services, mailer } = locals.get(res)
+export default function (server: Server, ctx: AppContext) {
+  server.com.atproto.account.requestPasswordReset(async ({ input }) => {
     const email = input.body.email.toLowerCase()
 
-    const user = await services.actor(db).getUserByEmail(email)
+    const user = await ctx.services.actor(ctx.db).getUserByEmail(email)
 
     if (user) {
       const token = getSixDigitToken()
       const grantedAt = new Date().toISOString()
-      await db.db
+      await ctx.db.db
         .updateTable('user')
         .where('handle', '=', user.handle)
         .set({
@@ -21,15 +20,14 @@ export default function (server: Server) {
           passwordResetGrantedAt: grantedAt,
         })
         .execute()
-      await mailer.sendResetPassword({ token }, { to: user.email })
+      await ctx.mailer.sendResetPassword({ token }, { to: user.email })
     }
   })
 
-  server.com.atproto.account.resetPassword(async ({ input, res }) => {
-    const { db, services } = locals.get(res)
+  server.com.atproto.account.resetPassword(async ({ input }) => {
     const { token, password } = input.body
 
-    const tokenInfo = await db.db
+    const tokenInfo = await ctx.db.db
       .selectFrom('user')
       .select(['handle', 'passwordResetGrantedAt'])
       .where('passwordResetToken', '=', token)
@@ -44,13 +42,15 @@ export default function (server: Server) {
     const expiresAt = new Date(grantedAt.getTime() + 15 * minsToMs)
 
     if (now > expiresAt) {
-      await unsetResetToken(db, tokenInfo.handle)
+      await unsetResetToken(ctx.db, tokenInfo.handle)
       return createExpiredTokenError()
     }
 
-    await db.transaction(async (dbTxn) => {
+    await ctx.db.transaction(async (dbTxn) => {
       await unsetResetToken(dbTxn, tokenInfo.handle)
-      await services.actor(dbTxn).updateUserPassword(tokenInfo.handle, password)
+      await ctx.services
+        .actor(dbTxn)
+        .updateUserPassword(tokenInfo.handle, password)
     })
   })
 }

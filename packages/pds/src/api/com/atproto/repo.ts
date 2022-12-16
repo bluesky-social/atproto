@@ -2,28 +2,26 @@ import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
-import * as locals from '../../../locals'
 import * as repo from '../../../repo'
-import ServerAuth from '../../../auth'
 import {
   InvalidRecordError,
   PreparedCreate,
   PreparedWrite,
 } from '../../../repo'
+import AppContext from '../../../context'
 
-export default function (server: Server) {
-  server.com.atproto.repo.describe(async ({ params, res }) => {
+export default function (server: Server, ctx: AppContext) {
+  server.com.atproto.repo.describe(async ({ params }) => {
     const { user } = params
 
-    const { db, auth, services } = locals.get(res)
-    const userObj = await services.actor(db).getUser(user)
+    const userObj = await ctx.services.actor(ctx.db).getUser(user)
     if (userObj === null) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
     let didDoc
     try {
-      didDoc = await auth.didResolver.ensureResolveDid(userObj.did)
+      didDoc = await ctx.auth.didResolver.ensureResolveDid(userObj.did)
     } catch (err) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }
@@ -31,8 +29,8 @@ export default function (server: Server) {
     const handle = didResolver.getHandle(didDoc)
     const handleIsCorrect = handle === userObj.handle
 
-    const collections = await services
-      .record(db)
+    const collections = await ctx.services
+      .record(ctx.db)
       .listCollectionsForDid(userObj.did)
 
     return {
@@ -47,17 +45,16 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repo.listRecords(async ({ params, res }) => {
+  server.com.atproto.repo.listRecords(async ({ params }) => {
     const { user, collection, limit, before, after, reverse } = params
 
-    const { db, services } = locals.get(res)
-    const did = await services.actor(db).getDidForActor(user)
+    const did = await ctx.services.actor(ctx.db).getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
-    const records = await services
-      .record(db)
+    const records = await ctx.services
+      .record(ctx.db)
       .listRecordsForCollection(
         did,
         collection,
@@ -80,18 +77,17 @@ export default function (server: Server) {
     }
   })
 
-  server.com.atproto.repo.getRecord(async ({ params, res }) => {
+  server.com.atproto.repo.getRecord(async ({ params }) => {
     const { user, collection, rkey, cid } = params
-    const { db, services } = locals.get(res)
 
-    const did = await services.actor(db).getDidForActor(user)
+    const did = await ctx.services.actor(ctx.db).getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
     const uri = new AtUri(`${did}/${collection}/${rkey}`)
 
-    const record = await services.record(db).getRecord(uri, cid || null)
+    const record = await ctx.services.record(ctx.db).getRecord(uri, cid || null)
     if (!record) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
@@ -102,14 +98,13 @@ export default function (server: Server) {
   })
 
   server.com.atproto.repo.batchWrite({
-    auth: ServerAuth.verifier,
-    handler: async ({ input, auth, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ input, auth }) => {
       const tx = input.body
       const { did, validate } = tx
-      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
-      const authorized = await services
-        .repo(db)
+      const authorized = await ctx.services
+        .repo(ctx.db)
         .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
@@ -120,7 +115,7 @@ export default function (server: Server) {
         )
       }
 
-      const authStore = locals.getAuthstore(res, did)
+      const authStore = ctx.getAuthstore(did)
       const hasUpdate = tx.writes.some((write) => write.action === 'update')
       if (hasUpdate) {
         throw new InvalidRequestError(`Updates are not yet supported.`)
@@ -158,29 +153,28 @@ export default function (server: Server) {
         throw err
       }
 
-      await db.transaction(async (dbTxn) => {
+      await ctx.db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
-        const repoTxn = services.repo(dbTxn)
+        const repoTxn = ctx.services.repo(dbTxn)
         await repoTxn.processWrites(did, authStore, writes, now)
       })
     },
   })
 
   server.com.atproto.repo.createRecord({
-    auth: ServerAuth.verifier,
-    handler: async ({ input, auth, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ input, auth }) => {
       const { did, collection, record } = input.body
       const validate =
         typeof input.body.validate === 'boolean' ? input.body.validate : true
-      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
-      const authorized = await services
-        .repo(db)
+      const authorized = await ctx.services
+        .repo(ctx.db)
         .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
-      const authStore = locals.getAuthstore(res, did)
+      const authStore = ctx.getAuthstore(did)
       if (validate === false) {
         throw new InvalidRequestError(
           'Unvalidated writes are not yet supported.',
@@ -207,8 +201,8 @@ export default function (server: Server) {
         throw err
       }
 
-      await db.transaction(async (dbTxn) => {
-        const repoTxn = services.repo(dbTxn)
+      await ctx.db.transaction(async (dbTxn) => {
+        const repoTxn = ctx.services.repo(dbTxn)
         await repoTxn.processWrites(did, authStore, [write], now)
       })
 
@@ -224,25 +218,26 @@ export default function (server: Server) {
   })
 
   server.com.atproto.repo.deleteRecord({
-    auth: ServerAuth.verifier,
-    handler: async ({ input, auth, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ input, auth }) => {
       const { did, collection, rkey } = input.body
-      const { db, services } = locals.get(res)
       const requester = auth.credentials.did
-      const authorized = await services
-        .repo(db)
+      const authorized = await ctx.services
+        .repo(ctx.db)
         .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
 
-      const authStore = locals.getAuthstore(res, did)
+      const authStore = ctx.getAuthstore(did)
       const now = new Date().toISOString()
 
       const write = await repo.prepareDelete({ did, collection, rkey })
 
-      await db.transaction(async (dbTxn) => {
-        await services.repo(dbTxn).processWrites(did, authStore, [write], now)
+      await ctx.db.transaction(async (dbTxn) => {
+        await ctx.services
+          .repo(dbTxn)
+          .processWrites(did, authStore, [write], now)
       })
     },
   })

@@ -1,7 +1,6 @@
 import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import * as locals from '../../../../locals'
 import { isEnum } from '../util'
 import {
   FeedAlgorithm,
@@ -11,15 +10,15 @@ import {
 } from '../util/feed'
 import { countAll } from '../../../../db/util'
 import { paginate } from '../../../../db/pagination'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, auth, res }) => {
-      const { db, imgUriBuilder } = locals.get(res)
+    auth: ctx.accessVerifier,
+    handler: async ({ params, auth }) => {
       const { algorithm, limit, before } = params
-      const { ref } = db.db.dynamic
+      const db = ctx.db.db
+      const { ref } = db.dynamic
       const requester = auth.credentials.did
 
       let feedAlgorithm: FeedAlgorithm
@@ -31,7 +30,7 @@ export default function (server: Server) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      let postsQb = db.db
+      let postsQb = db
         .selectFrom('post')
         .select([
           sql<FeedItemType>`${'post'}`.as('type'),
@@ -41,7 +40,7 @@ export default function (server: Server) {
           'indexedAt as cursor',
         ])
 
-      let repostsQb = db.db
+      let repostsQb = db
         .selectFrom('repost')
         .select([
           sql<FeedItemType>`${'repost'}`.as('type'),
@@ -51,7 +50,7 @@ export default function (server: Server) {
           'indexedAt as cursor',
         ])
 
-      let trendsQb = db.db
+      let trendsQb = db
         .selectFrom('trend')
         .select([
           sql<FeedItemType>`${'trend'}`.as('type'),
@@ -65,7 +64,7 @@ export default function (server: Server) {
         // All posts
       } else if (feedAlgorithm === FeedAlgorithm.ReverseChronological) {
         // Followee's posts/reposts/trends, and requester's posts
-        const followingIdsSubquery = db.db
+        const followingIdsSubquery = db
           .selectFrom('follow')
           .select('follow.subjectDid')
           .where('follow.creator', '=', requester)
@@ -83,7 +82,7 @@ export default function (server: Server) {
         throw new Error(`Unhandled case: ${exhaustiveCheck}`)
       }
 
-      let feedItemsQb = db.db
+      let feedItemsQb = db
         .selectFrom(postsQb.union(repostsQb).union(trendsQb).as('feed_items'))
         .innerJoin('post', 'post.uri', 'postUri')
         .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
@@ -124,42 +123,42 @@ export default function (server: Server) {
           'originator.actorType as originatorActorType',
           'originator_profile.displayName as originatorDisplayName',
           'originator_profile.avatarCid as originatorAvatarCid',
-          db.db
+          db
             .selectFrom('vote')
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'up')
             .select(countAll.as('count'))
             .as('upvoteCount'),
-          db.db
+          db
             .selectFrom('vote')
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'down')
             .select(countAll.as('count'))
             .as('downvoteCount'),
-          db.db
+          db
             .selectFrom('repost')
             .whereRef('subject', '=', ref('postUri'))
             .select(countAll.as('count'))
             .as('repostCount'),
-          db.db
+          db
             .selectFrom('post')
             .whereRef('replyParent', '=', ref('postUri'))
             .select(countAll.as('count'))
             .as('replyCount'),
-          db.db
+          db
             .selectFrom('repost')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
             .select('uri')
             .as('requesterRepost'),
-          db.db
+          db
             .selectFrom('vote')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'up')
             .select('uri')
             .as('requesterUpvote'),
-          db.db
+          db
             .selectFrom('vote')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
@@ -176,7 +175,7 @@ export default function (server: Server) {
       })
 
       const queryRes = await feedItemsQb.execute()
-      const feed = await composeFeed(db, imgUriBuilder, queryRes)
+      const feed = await composeFeed(db, ctx.imgUriBuilder, queryRes)
 
       return {
         encoding: 'application/json',

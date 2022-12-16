@@ -1,18 +1,17 @@
-import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Vote from '../../../lexicon/types/app/bsky/feed/vote'
 import * as lex from '../../../lexicon/lexicons'
 import * as messages from '../../../event-stream/messages'
 import { Message } from '../../../event-stream/messages'
-import { DatabaseSchema } from '../../../db/database-schema'
+import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedVote
-type IndexedVote = DatabaseSchema['vote']
+type IndexedVote = DatabaseSchemaType['vote']
 
 const insertFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
   obj: Vote.Record,
@@ -40,7 +39,7 @@ const insertFn = async (
 }
 
 const findDuplicate = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   obj: Vote.Record,
 ): Promise<AtUri | null> => {
@@ -72,7 +71,7 @@ const eventsForInsert = (obj: IndexedVote): Message[] => {
 }
 
 const deleteFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
 ): Promise<IndexedVote | null> => {
   const deleted = await db
@@ -105,7 +104,7 @@ const eventsForDelete = (
 
 export type PluginType = RecordProcessor<Vote.Record, IndexedVote>
 
-export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
+export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
     insertFn,

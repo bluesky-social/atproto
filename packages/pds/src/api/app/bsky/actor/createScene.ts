@@ -1,19 +1,16 @@
 import { Server, APP_BSKY_SYSTEM, APP_BSKY_GRAPH } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { PlcClient } from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
-import * as locals from '../../../../locals'
 import * as lex from '../../../../lexicon/lexicons'
 import * as repo from '../../../../repo'
-import ServerAuth from '../../../../auth'
 import { UserAlreadyExistsError } from '../../../../services/actor'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.createScene({
-    auth: ServerAuth.verifier,
-    handler: async ({ auth, input, res }) => {
-      const { db, services, config, keypair, logger } = locals.get(res)
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, input, req }) => {
       const { recoveryKey } = input.body
       const requester = auth.credentials.did
 
@@ -21,7 +18,7 @@ export default function (server: Server) {
       try {
         handle = handleLib.normalizeAndEnsureValid(
           input.body.handle,
-          config.availableUserDomains,
+          ctx.cfg.availableUserDomains,
         )
       } catch (err) {
         if (err instanceof handleLib.InvalidHandleError) {
@@ -38,9 +35,9 @@ export default function (server: Server) {
       const tempDid = crypto.randomStr(16, 'base32')
       const now = new Date().toISOString()
 
-      const result = await db.transaction(async (dbTxn) => {
-        const actorTxn = services.actor(dbTxn)
-        const repoTxn = services.repo(dbTxn)
+      const result = await ctx.db.transaction(async (dbTxn) => {
+        const actorTxn = ctx.services.actor(dbTxn)
+        const repoTxn = ctx.services.repo(dbTxn)
         // Pre-register before going out to PLC to get a real did
         try {
           await actorTxn.preregisterDid(handle, tempDid)
@@ -55,18 +52,17 @@ export default function (server: Server) {
         }
 
         // Generate a real did with PLC
-        const plcClient = new PlcClient(config.didPlcUrl)
         let did: string
         try {
-          did = await plcClient.createDid(
-            keypair,
-            recoveryKey || config.recoveryKey,
+          did = await ctx.plcClient.createDid(
+            ctx.keypair,
+            recoveryKey || ctx.cfg.recoveryKey,
             handle,
-            config.publicUrl,
+            ctx.cfg.publicUrl,
           )
         } catch (err) {
-          logger.error(
-            { didKey: keypair.did(), handle },
+          req.log.error(
+            { didKey: ctx.keypair.did(), handle },
             'failed to create did:plc',
           )
           throw err
@@ -95,8 +91,8 @@ export default function (server: Server) {
             `Could not locate user declaration for ${requester}`,
           )
         }
-        const userAuth = locals.getAuthstore(res, requester)
-        const sceneAuth = locals.getAuthstore(res, did)
+        const userAuth = ctx.getAuthstore(requester)
+        const sceneAuth = ctx.getAuthstore(did)
 
         const sceneWrites = await Promise.all([
           repo.prepareCreate({

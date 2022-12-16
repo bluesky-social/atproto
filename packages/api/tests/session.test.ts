@@ -3,7 +3,6 @@ import {
   runTestServer,
   TestServerInfo,
 } from '@atproto/pds/tests/_util'
-import * as locals from '@atproto/pds/src/locals'
 import { sessionClient, Session, SessionServiceClient } from '..'
 
 describe('session', () => {
@@ -184,7 +183,7 @@ describe('session', () => {
   it('refreshes and retries request when access token is expired.', async () => {
     const sessions: (Session | undefined)[] = []
     client.sessionManager.on('session', (session) => sessions.push(session))
-    const { auth } = locals.get(server.app)
+    const auth = server.ctx.auth
 
     const { data: sessionInfo } = await client.com.atproto.session.get({})
     const accessExpired = await auth.createAccessToken(sessionInfo.did, -1)
@@ -213,7 +212,7 @@ describe('session', () => {
   it('unsets session when refresh token becomes expired.', async () => {
     const sessions: (Session | undefined)[] = []
     client.sessionManager.on('session', (session) => sessions.push(session))
-    const { auth } = locals.get(server.app)
+    const auth = server.ctx.auth
 
     const { data: sessionInfo } = await client.com.atproto.session.get({})
     const accessExpired = await auth.createAccessToken(sessionInfo.did, -1)

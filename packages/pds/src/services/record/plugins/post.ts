@@ -1,4 +1,3 @@
-import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
@@ -7,13 +6,13 @@ import { Main as ExternalEmbedFragment } from '../../../lexicon/types/app/bsky/e
 import * as lex from '../../../lexicon/lexicons'
 import * as messages from '../../../event-stream/messages'
 import { Message } from '../../../event-stream/messages'
-import DatabaseSchema from '../../../db/database-schema'
+import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 
-type Post = DatabaseSchema['post']
-type PostEntity = DatabaseSchema['post_entity']
-type PostEmbedImage = DatabaseSchema['post_embed_image']
-type PostEmbedExternal = DatabaseSchema['post_embed_external']
+type Post = DatabaseSchemaType['post']
+type PostEntity = DatabaseSchemaType['post_entity']
+type PostEmbedImage = DatabaseSchemaType['post_embed_image']
+type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type IndexedPost = {
   post: Post
   entities: PostEntity[]
@@ -23,7 +22,7 @@ type IndexedPost = {
 const lexId = lex.ids.AppBskyFeedPost
 
 const insertFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
   obj: PostRecord,
@@ -129,7 +128,7 @@ const eventsForInsert = (obj: IndexedPost): Message[] => {
 }
 
 const deleteFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
 ): Promise<IndexedPost | null> => {
   const deleted = await db
@@ -173,7 +172,7 @@ const eventsForDelete = (
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
-export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
+export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
     insertFn,

@@ -1,21 +1,19 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
 import { Server } from '../../../../lexicon'
-import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclaration } from '../util'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.list({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, auth, res }) => {
-      const { db, imgUriBuilder } = locals.get(res)
+    auth: ctx.accessVerifier,
+    handler: async ({ params, auth }) => {
       const { limit, before } = params
       const requester = auth.credentials.did
-      const { ref } = db.db.dynamic
+      const { ref } = ctx.db.db.dynamic
 
-      let notifBuilder = db.db
+      let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
         .where('notif.userDid', '=', requester)
         .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
@@ -51,7 +49,7 @@ export default function (server: Server) {
       })
 
       const [user, notifs] = await Promise.all([
-        db.db
+        ctx.db.db
           .selectFrom('user')
           .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
           .selectAll()
@@ -73,7 +71,10 @@ export default function (server: Server) {
           handle: notif.authorHandle,
           displayName: notif.authorDisplayName || undefined,
           avatar: notif.authorAvatarCid
-            ? imgUriBuilder.getCommonSignedUri('avatar', notif.authorAvatarCid)
+            ? ctx.imgUriBuilder.getCommonSignedUri(
+                'avatar',
+                notif.authorAvatarCid,
+              )
             : undefined,
         },
         reason: notif.reason,

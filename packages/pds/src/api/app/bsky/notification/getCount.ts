@@ -1,16 +1,14 @@
 import { Server } from '../../../../lexicon'
-import * as locals from '../../../../locals'
 import { countAll } from '../../../../db/util'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getCount({
-    auth: ServerAuth.verifier,
-    handler: async ({ auth, res }) => {
-      const { db } = locals.get(res)
+    auth: ctx.accessVerifier,
+    handler: async ({ auth }) => {
       const requester = auth.credentials.did
 
-      const result = await db.db
+      const result = await ctx.db.db
         .selectFrom('user_notification as notif')
         .select(countAll.as('count'))
         .innerJoin('did_handle', 'did_handle.did', 'notif.userDid')

@@ -40,6 +40,7 @@
     "file-type": "^16.5.4",
     "handlebars": "^4.7.7",
     "http-errors": "^2.0.0",
+    "http-terminator": "^3.2.0",
     "jsonwebtoken": "^8.5.1",
     "kysely": "^0.22.0",
     "multiformats": "^9.6.4",

@@ -2,11 +2,7 @@ import getPort from 'get-port'
 import { AtpData, DidResolver } from '../src'
 import { DidWebServer } from './web/server'
 import DidWebDb from './web/db'
-import {
-  Database as DidPlcDb,
-  server as runPlcServer,
-  PlcClient,
-} from '@atproto/plc'
+import { Database as DidPlcDb, PlcServer, PlcClient } from '@atproto/plc'
 import { DIDDocument } from 'did-resolver'
 import { EcdsaKeypair } from '@atproto/crypto'
 
@@ -27,15 +23,15 @@ describe('resolver', () => {
     const plcDB = DidPlcDb.memory()
     await plcDB.migrateToLatestOrThrow()
     const plcPort = await getPort()
-    const plcServer = await runPlcServer(plcDB, plcPort)
+    const plcServer = PlcServer.create({ db: plcDB, port: plcPort })
+    await plcServer.start()
 
     plcUrl = 'http://localhost:' + plcPort
     resolver = new DidResolver({ plcUrl })
 
     close = async () => {
       await webServer.close()
-      await plcDB.close()
-      await plcServer.listener.close()
+      await plcServer.destroy()
     }
   })
 

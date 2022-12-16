@@ -1,25 +1,25 @@
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getActorInfo, getDeclarationSimple } from '../util'
-import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getMemberships({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ params }) => {
       const { actor, limit, before } = params
-      const { db, imgUriBuilder } = locals.get(res)
-      const { ref } = db.db.dynamic
+      const { ref } = ctx.db.db.dynamic
 
-      const subject = await getActorInfo(db.db, imgUriBuilder, actor).catch(
-        (_e) => {
-          throw new InvalidRequestError(`Actor not found: ${actor}`)
-        },
-      )
+      const subject = await getActorInfo(
+        ctx.db.db,
+        ctx.imgUriBuilder,
+        actor,
+      ).catch((_e) => {
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
+      })
 
-      let membershipsReq = db.db
+      let membershipsReq = ctx.db.db
         .selectFrom('assertion')
         .where('assertion.subjectDid', '=', subject.did)
         .innerJoin('did_handle as creator', 'creator.did', 'assertion.creator')
@@ -55,7 +55,7 @@ export default function (server: Server) {
         declaration: getDeclarationSimple(row),
         displayName: row.displayName || undefined,
         avatar: row.avatarCid
-          ? imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
+          ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
           : undefined,
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,

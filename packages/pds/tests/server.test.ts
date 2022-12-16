@@ -4,13 +4,14 @@ import axios, { AxiosError } from 'axios'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { handler as errorHandler } from '../src/error'
-import * as locals from '../src/locals'
 import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
+import { Database } from '../src'
 
 describe('server', () => {
   let server: TestServerInfo
   let close: CloseFn
+  let db: Database
   let client: AtpServiceClient
   let sc: SeedClient
   let alice: string
@@ -20,6 +21,7 @@ describe('server', () => {
       dbPostgresSchema: 'server',
     })
     close = server.close
+    db = server.ctx.db
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     await usersSeed(sc)
@@ -64,7 +66,6 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
-    const { db } = locals.get(server.app)
     await db.db.destroy()
     let error: AxiosError
     try {

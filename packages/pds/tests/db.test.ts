@@ -1,17 +1,16 @@
-import { App } from '../src'
-import * as locals from '../src/locals'
+import { Database } from '../src'
 import { runTestServer, CloseFn } from './_util'
 
 describe('db', () => {
   let close: CloseFn
-  let app: App
+  let db: Database
 
   beforeAll(async () => {
     const server = await runTestServer({
       dbPostgresSchema: 'db',
     })
     close = server.close
-    app = server.app
+    db = server.ctx.db
   })
 
   afterAll(async () => {
@@ -22,7 +21,6 @@ describe('db', () => {
 
   describe('transaction()', () => {
     it('commits changes', async () => {
-      const { db } = locals.get(app)
       const result = await db.transaction(async (dbTxn) => {
         return await dbTxn.db
           .insertInto('repo_root')
@@ -55,7 +53,6 @@ describe('db', () => {
     })
 
     it('rolls-back changes on failure', async () => {
-      const { db } = locals.get(app)
       const promise = db.transaction(async (dbTxn) => {
         await dbTxn.db
           .insertInto('repo_root')
@@ -82,8 +79,6 @@ describe('db', () => {
     })
 
     it('indicates isTransaction', async () => {
-      const { db } = locals.get(app)
-
       expect(db.isTransaction).toEqual(false)
 
       await db.transaction(async (dbTxn) => {
@@ -95,8 +90,6 @@ describe('db', () => {
     })
 
     it('asserts transaction', async () => {
-      const { db } = locals.get(app)
-
       expect(() => db.assertTransaction()).toThrow('Transaction required')
 
       await db.transaction(async (dbTxn) => {

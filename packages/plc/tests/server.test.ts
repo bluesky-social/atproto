@@ -4,15 +4,14 @@ import * as document from '../src/lib/document'
 import { CloseFn, runTestServer } from './_util'
 import { cidForData } from '@atproto/common'
 import { AxiosError } from 'axios'
-import { App } from '../src'
-import * as locals from '../src/server/locals'
+import { Database } from '../src'
 
 describe('PLC server', () => {
   let handle = 'alice.example.com'
   let atpPds = 'example.com'
 
-  let app: App
   let close: CloseFn
+  let db: Database
   let client: PlcClient
 
   let signingKey: EcdsaKeypair
@@ -25,7 +24,7 @@ describe('PLC server', () => {
       dbPostgresSchema: 'server',
     })
 
-    app = server.app
+    db = server.ctx.db
     close = server.close
     client = new PlcClient(server.url)
     signingKey = await EcdsaKeypair.create()
@@ -170,7 +169,6 @@ describe('PLC server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
-    const { db } = locals.get(app)
     await db.db.destroy()
     let error: AxiosError
     try {

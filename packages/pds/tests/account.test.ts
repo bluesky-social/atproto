@@ -7,9 +7,9 @@ import AtpApi, {
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import Mail from 'nodemailer/lib/mailer'
-import { App, ServerConfig } from '../src'
-import * as locals from '../src/locals'
+import { Database, ServerConfig } from '../src'
 import * as util from './_util'
+import { ServerMailer } from '../src/mailer'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -37,7 +37,8 @@ describe('account', () => {
   let serverKey: string
   let client: AtpServiceClient
   let close: util.CloseFn
-  let app: App
+  let mailer: ServerMailer
+  let db: Database
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
@@ -49,14 +50,14 @@ describe('account', () => {
       dbPostgresSchema: 'account',
     })
     close = server.close
-    app = server.app
+    mailer = server.ctx.mailer
+    db = server.ctx.db
+    cfg = server.ctx.cfg
     serverUrl = server.url
-    cfg = server.cfg
-    serverKey = server.serverKey
+    serverKey = server.ctx.keypair.did()
     client = AtpApi.service(serverUrl)
 
     // Catch emails for use in tests
-    const { mailer } = locals.get(app)
     _origSendMail = mailer.transporter.sendMail
     mailer.transporter.sendMail = async (opts) => {
       const result = await _origSendMail.call(mailer.transporter, opts)
@@ -66,7 +67,6 @@ describe('account', () => {
   })
 
   afterAll(async () => {
-    const { mailer } = locals.get(app)
     mailer.transporter.sendMail = _origSendMail
     if (close) {
       await close()
@@ -400,8 +400,6 @@ describe('account', () => {
   })
 
   it('allows only unexpired password reset tokens', async () => {
-    const { db } = locals.get(app)
-
     await client.com.atproto.account.requestPasswordReset({ email })
 
     const user = await db.db

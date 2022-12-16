@@ -10,8 +10,16 @@ import * as crypto from '@atproto/crypto'
 import AtpApi, { ServiceClient } from '@atproto/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
+interface Startable {
+  start(): Promise<http.Server>
+}
+
+interface Destroyable {
+  destroy(): Promise<void>
+}
+
 export class DevEnvServer {
-  inst?: http.Server
+  inst?: Destroyable
 
   constructor(
     private env: DevEnv,
@@ -39,17 +47,13 @@ export class DevEnvServer {
       throw new Error('Already started')
     }
 
-    const onServerReady = (s: http.Server): Promise<http.Server> => {
-      return new Promise((resolve, reject) => {
-        s.on('listening', () => {
-          console.log(`${this.description} started ${chalk.gray(this.url)}`)
-          resolve(s)
-        })
-        s.on('error', (e: Error) => {
-          console.log(`${this.description} failed to start:`, e)
-          reject(e)
-        })
-      })
+    const startServer = async (server: Startable): Promise<void> => {
+      try {
+        await server.start()
+        console.log(`${this.description} started ${chalk.gray(this.url)}`)
+      } catch (err) {
+        console.log(`${this.description} failed to start:`, err)
+      }
     }
 
     switch (this.type) {
@@ -72,8 +76,11 @@ export class DevEnvServer {
           `http://localhost:${this.port}`,
         )
 
-        this.inst = await onServerReady(
-          PDSServer(db, blobstore, keypair, {
+        const pds = PDSServer.create({
+          db,
+          blobstore,
+          keypair,
+          cfg: {
             debugMode: true,
             version: '0.0.0',
             scheme: 'http',
@@ -94,14 +101,18 @@ export class DevEnvServer {
               'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
             privacyPolicyUrl: 'https://example.com/privacy',
             termsOfServiceUrl: 'https://example.com/tos',
-          }).listener,
-        )
+          },
+        })
+        await startServer(pds)
+        this.inst = pds
         break
       }
       case ServerType.DidPlaceholder: {
         const db = plc.Database.memory()
         await db.migrateToLatestOrThrow()
-        this.inst = await onServerReady(plc.server(db, this.port).listener)
+        const plcServer = plc.PlcServer.create({ db, port: this.port })
+        await startServer(plcServer)
+        this.inst = plcServer
         break
       }
       default:
@@ -110,15 +121,9 @@ export class DevEnvServer {
   }
 
   async close() {
-    const closeServer = (s: http.Server): Promise<void> => {
-      return new Promise((resolve) => {
-        console.log(`Closing ${this.description}`)
-        s.close(() => resolve())
-      })
-    }
-
     if (this.inst) {
-      await closeServer(this.inst)
+      console.log(`Closing ${this.description}`)
+      await this.inst.destroy()
     }
   }
 

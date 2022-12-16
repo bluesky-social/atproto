@@ -2,7 +2,7 @@ import assert from 'assert'
 import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
-import { DatabaseSchema } from './database-schema'
+import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
@@ -10,7 +10,7 @@ import { CtxMigrationProvider } from './migrations/provider'
 export class Database {
   migrator: Migrator
   constructor(
-    public db: Kysely<DatabaseSchema>,
+    public db: DatabaseSchema,
     public dialect: Dialect,
     public schema?: string,
   ) {
@@ -22,7 +22,7 @@ export class Database {
   }
 
   static sqlite(location: string): Database {
-    const db = new Kysely<DatabaseSchema>({
+    const db = new Kysely<DatabaseSchemaType>({
       dialect: new SqliteDialect({
         database: new SqliteDB(location),
       }),
@@ -51,7 +51,7 @@ export class Database {
       )
     }
 
-    const db = new Kysely<DatabaseSchema>({
+    const db = new Kysely<DatabaseSchemaType>({
       dialect: new PostgresDialect({ pool }),
     })
 
