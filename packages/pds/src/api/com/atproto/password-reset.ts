@@ -1,16 +1,15 @@
 import jwt from 'jsonwebtoken'
 import { AuthScopes } from '../../../auth'
 import { ServerConfig } from '../../../config'
+import AppContext from '../../../context'
 import { User } from '../../../db/tables/user'
 import { Server } from '../../../lexicon'
-import * as locals from '../../../locals'
 
-export default function (server: Server) {
-  server.com.atproto.account.requestPasswordReset(async ({ input, res }) => {
-    const { db, services, mailer, config } = locals.get(res)
+export default function (server: Server, ctx: AppContext) {
+  server.com.atproto.account.requestPasswordReset(async ({ input }) => {
     const email = input.body.email.toLowerCase()
 
-    const user = await services.actor(db).getUserByEmail(email)
+    const user = await ctx.services.actor(ctx.db).getUserByEmail(email)
 
     if (user) {
       // By signing with the password hash, this jwt becomes invalid once the user changes their password.
@@ -20,16 +19,15 @@ export default function (server: Server) {
           sub: user.did,
           scope: AuthScopes.ResetPassword,
         },
-        getSigningKey(user, config),
+        getSigningKey(user, ctx.cfg),
         { expiresIn: '15mins' },
       )
 
-      await mailer.sendResetPassword({ token }, { to: user.email })
+      await ctx.mailer.sendResetPassword({ token }, { to: user.email })
     }
   })
 
-  server.com.atproto.account.resetPassword(async ({ input, res }) => {
-    const { db, services, config } = locals.get(res)
+  server.com.atproto.account.resetPassword(async ({ input }) => {
     const { token, password } = input.body
 
     const tokenBody = jwt.decode(token)
@@ -42,13 +40,13 @@ export default function (server: Server) {
       return createInvalidTokenError('Malformed token')
     }
 
-    const user = await services.actor(db).getUser(did)
+    const user = await ctx.services.actor(ctx.db).getUser(did)
     if (!user) {
       return createInvalidTokenError('Token could not be verified')
     }
 
     try {
-      jwt.verify(token, getSigningKey(user, config))
+      jwt.verify(token, getSigningKey(user, ctx.cfg))
     } catch (err) {
       if (err instanceof jwt.TokenExpiredError) {
         return createExpiredTokenError()
@@ -59,7 +57,7 @@ export default function (server: Server) {
     // Token had correct scope, was not expired, and referenced
     // a user whose password has not changed since token issuance.
 
-    await services.actor(db).updateUserPassword(user.handle, password)
+    await ctx.services.actor(ctx.db).updateUserPassword(user.handle, password)
   })
 }
 

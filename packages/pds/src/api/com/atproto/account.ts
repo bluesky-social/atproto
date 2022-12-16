@@ -1,24 +1,20 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { PlcClient } from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
 import { cidForData } from '@atproto/common'
 import { Server, APP_BSKY_SYSTEM } from '../../../lexicon'
-import * as locals from '../../../locals'
 import { countAll } from '../../../db/util'
-import { grantRefreshToken } from './util/auth'
 import * as lex from '../../../lexicon/lexicons'
 import * as repo from '../../../repo'
 import { UserAlreadyExistsError } from '../../../services/actor'
+import AppContext from '../../../context'
 
-export default function (server: Server) {
-  server.com.atproto.server.getAccountsConfig(({ res }) => {
-    const cfg = locals.config(res)
-
-    const availableUserDomains = cfg.availableUserDomains
-    const inviteCodeRequired = cfg.inviteRequired
-    const privacyPolicy = cfg.privacyPolicyUrl
-    const termsOfService = cfg.termsOfServiceUrl
+export default function (server: Server, ctx: AppContext) {
+  server.com.atproto.server.getAccountsConfig(() => {
+    const availableUserDomains = ctx.cfg.availableUserDomains
+    const inviteCodeRequired = ctx.cfg.inviteRequired
+    const privacyPolicy = ctx.cfg.privacyPolicyUrl
+    const termsOfService = ctx.cfg.termsOfServiceUrl
 
     return {
       encoding: 'application/json',
@@ -34,15 +30,14 @@ export default function (server: Server) {
     throw new InvalidRequestError('Not implemented')
   })
 
-  server.com.atproto.account.create(async ({ input, res }) => {
+  server.com.atproto.account.create(async ({ input, req }) => {
     const { email, password, inviteCode, recoveryKey } = input.body
-    const { db, services, auth, config, keypair, logger } = locals.get(res)
 
     let handle: string
     try {
       handle = handleLib.normalizeAndEnsureValid(
         input.body.handle,
-        config.availableUserDomains,
+        ctx.cfg.availableUserDomains,
       )
     } catch (err) {
       if (err instanceof handleLib.InvalidHandleError) {
@@ -59,10 +54,10 @@ export default function (server: Server) {
     const tempDid = crypto.randomStr(16, 'base32')
     const now = new Date().toISOString()
 
-    const result = await db.transaction(async (dbTxn) => {
-      const actorTxn = services.actor(dbTxn)
-      const repoTxn = services.repo(dbTxn)
-      if (config.inviteRequired) {
+    const result = await ctx.db.transaction(async (dbTxn) => {
+      const actorTxn = ctx.services.actor(dbTxn)
+      const repoTxn = ctx.services.repo(dbTxn)
+      if (ctx.cfg.inviteRequired) {
         if (!inviteCode) {
           throw new InvalidRequestError(
             'No invite code provided',
@@ -85,7 +80,7 @@ export default function (server: Server) {
           .executeTakeFirstOrThrow()
 
         if (!invite || invite.disabled || invite.availableUses <= useCount) {
-          logger.info({ handle, email, inviteCode }, 'invalid invite code')
+          req.log.info({ handle, email, inviteCode }, 'invalid invite code')
           throw new InvalidRequestError(
             'Provided invite code not available',
             'InvalidInviteCode',
@@ -112,18 +107,17 @@ export default function (server: Server) {
       }
 
       // Generate a real did with PLC
-      const plcClient = new PlcClient(config.didPlcUrl)
       let did: string
       try {
-        did = await plcClient.createDid(
-          keypair,
-          recoveryKey || config.recoveryKey,
+        did = await ctx.plcClient.createDid(
+          ctx.keypair,
+          recoveryKey || ctx.cfg.recoveryKey,
           handle,
-          config.publicUrl,
+          ctx.cfg.publicUrl,
         )
       } catch (err) {
-        logger.error(
-          { didKey: keypair.did(), handle },
+        req.log.error(
+          { didKey: ctx.keypair.did(), handle },
           'failed to create did:plc',
         )
         throw err
@@ -136,7 +130,7 @@ export default function (server: Server) {
         actorType: APP_BSKY_SYSTEM.ActorUser,
       }
       await actorTxn.finalizeDid(handle, did, tempDid, declaration)
-      if (config.inviteRequired && inviteCode) {
+      if (ctx.cfg.inviteRequired && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')
           .values({
@@ -154,14 +148,14 @@ export default function (server: Server) {
       })
 
       // Setup repo root
-      const authStore = locals.getAuthstore(res, did)
+      const authStore = ctx.getAuthstore(did)
       await repoTxn.createRepo(did, authStore, [write], now)
       await repoTxn.indexWrites([write], now)
 
       const declarationCid = await cidForData(declaration)
-      const access = auth.createAccessToken(did)
-      const refresh = auth.createRefreshToken(did)
-      await grantRefreshToken(dbTxn, refresh.payload)
+      const access = ctx.auth.createAccessToken(did)
+      const refresh = ctx.auth.createRefreshToken(did)
+      await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload)
 
       return {
         did,

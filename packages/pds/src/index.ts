@@ -6,6 +6,7 @@ import 'express-async-errors'
 
 import express from 'express'
 import cors from 'cors'
+import http from 'http'
 import * as auth from '@atproto/auth'
 import { BlobStore } from '@atproto/repo'
 import { DidResolver } from '@atproto/did-resolver'
@@ -14,15 +15,16 @@ import Database from './db'
 import ServerAuth from './auth'
 import * as streamConsumers from './event-stream/consumers'
 import * as error from './error'
-import { httpLogger, loggerMiddleware } from './logger'
+import { loggerMiddleware } from './logger'
 import { ServerConfig, ServerConfigValues } from './config'
-import { Locals } from './locals'
 import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
 import SqlMessageQueue from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
+import { createHttpTerminator } from 'http-terminator'
+import AppContext from './context'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -31,92 +33,124 @@ export { DiskBlobStore, MemoryBlobStore } from './storage'
 
 export type App = express.Application
 
-const runServer = (
-  db: Database,
-  blobstore: BlobStore,
-  keypair: auth.DidableKey,
-  cfg: ServerConfigValues,
-) => {
-  const config = new ServerConfig(cfg)
-  const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
-  const auth = new ServerAuth({
-    jwtSecret: cfg.jwtSecret,
-    adminPass: cfg.adminPassword,
-    didResolver,
-  })
-
-  const messageQueue = new SqlMessageQueue('pds', db)
-  streamConsumers.listen(messageQueue, blobstore, auth, keypair)
-
-  const services = createServices(db, messageQueue, blobstore)
-
-  const mailTransport =
-    config.emailSmtpUrl !== undefined
-      ? createTransport(config.emailSmtpUrl)
-      : createTransport({ jsonTransport: true })
-
-  const mailer = new ServerMailer(mailTransport, config)
-
-  const app = express()
-  app.use(cors())
-  app.use(loggerMiddleware)
-
-  let imgUriEndpoint = config.imgUriEndpoint
-  if (!imgUriEndpoint) {
-    const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
-    const imgProcessingServer = new ImageProcessingServer(
-      config.imgUriSalt,
-      config.imgUriKey,
-      blobstore,
-      imgProcessingCache,
-    )
-    app.use('/image', imgProcessingServer.app)
-    imgUriEndpoint = `${config.publicUrl}/image`
-  }
-
-  const imgUriBuilder = new ImageUriBuilder(
-    imgUriEndpoint,
-    cfg.imgUriSalt,
-    cfg.imgUriKey,
-  )
-
-  const locals: Locals = {
-    logger: httpLogger,
-    db,
-    blobstore,
-    keypair,
-    auth,
-    imgUriBuilder,
-    config,
-    mailer,
-    services,
-    messageQueue,
-  }
-
-  app.locals = locals
-
-  app.use((req, res, next) => {
-    const reqLocals: Locals = {
-      ...locals,
-      logger: req.log, // This logger is request-specific
-    }
-    res.locals = reqLocals
-    next()
-  })
-
-  const apiServer = API({
-    payload: {
-      jsonLimit: 100 * 1024, // 100kb
-      textLimit: 100 * 1024, // 100kb
-      blobLimit: 5 * 1024 * 1024, // 5mb
-    },
-  })
-  app.use(health.router)
-  app.use(apiServer.xrpc.router)
-  app.use(error.handler)
-
-  const listener = app.listen(config.port)
-  return { app, listener }
+type Opts = {
+  ctx: AppContext
+  app: express.Application
+  server: http.Server
 }
 
-export default runServer
+type CreateOpts = {
+  db: Database
+  blobstore: BlobStore
+  keypair: auth.DidableKey
+  cfg: ServerConfigValues
+}
+
+export class PDS {
+  public ctx: AppContext
+  public app: express.Application
+  public server: http.Server
+
+  constructor(opts: Opts) {
+    this.ctx = opts.ctx
+    this.app = opts.app
+    this.server = opts.server
+  }
+
+  static create(opts: CreateOpts): PDS {
+    const { db, blobstore, keypair, cfg } = opts
+    const config = new ServerConfig(opts.cfg)
+    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
+    const auth = new ServerAuth({
+      jwtSecret: cfg.jwtSecret,
+      adminPass: cfg.adminPassword,
+      didResolver,
+    })
+
+    const messageQueue = new SqlMessageQueue('pds', db)
+    streamConsumers.listen(messageQueue, blobstore, auth, keypair)
+
+    const services = createServices(db, messageQueue, blobstore)
+
+    const mailTransport =
+      config.emailSmtpUrl !== undefined
+        ? createTransport(config.emailSmtpUrl)
+        : createTransport({ jsonTransport: true })
+
+    const mailer = new ServerMailer(mailTransport, config)
+
+    const app = express()
+    app.use(cors())
+    app.use(loggerMiddleware)
+
+    let imgUriEndpoint = config.imgUriEndpoint
+    if (!imgUriEndpoint) {
+      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
+      const imgProcessingServer = new ImageProcessingServer(
+        config.imgUriSalt,
+        config.imgUriKey,
+        blobstore,
+        imgProcessingCache,
+      )
+      app.use('/image', imgProcessingServer.app)
+      imgUriEndpoint = `${config.publicUrl}/image`
+    }
+
+    const imgUriBuilder = new ImageUriBuilder(
+      imgUriEndpoint,
+      config.imgUriSalt,
+      config.imgUriKey,
+    )
+
+    const ctx = new AppContext({
+      db,
+      blobstore,
+      keypair,
+      cfg: config,
+      auth,
+      messageQueue,
+      services,
+      mailer,
+      imgUriBuilder,
+    })
+
+    // app.use((req, res, next) => {
+    //   const reqLocals: Locals = {
+    //     ...locals,
+    //     logger: req.log, // This logger is request-specific
+    //   }
+    //   res.locals = reqLocals
+    //   next()
+    // })
+
+    const apiServer = API(ctx, {
+      payload: {
+        jsonLimit: 100 * 1024, // 100kb
+        textLimit: 100 * 1024, // 100kb
+        blobLimit: 5 * 1024 * 1024, // 5mb
+      },
+    })
+    app.use(health.router)
+    app.use(apiServer.xrpc.router)
+    app.use(error.handler)
+
+    const server = app.listen(config.port)
+    return new PDS({
+      ctx,
+      app,
+      server,
+    })
+  }
+
+  async destroy(force = false): Promise<void> {
+    await this.ctx.messageQueue.destroy()
+    const terminator = createHttpTerminator({
+      server: this.server,
+      gracefulTerminationTimeout: force ? 0 : 5000,
+    })
+    await terminator.terminate()
+    await this.ctx.db.close()
+  }
+}
+
+export default PDS
