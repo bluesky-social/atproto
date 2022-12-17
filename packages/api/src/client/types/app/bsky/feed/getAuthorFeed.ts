@@ -2,7 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import * as AppBskyFeedItem from './item'
+import * as AppBskyFeedFeedViewPost from './feedViewPost'
 
 export interface QueryParams {
   author: string
@@ -14,7 +14,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  feed: AppBskyFeedItem.Main[]
+  feed: AppBskyFeedFeedViewPost.Main[]
   [k: string]: unknown
 }
 

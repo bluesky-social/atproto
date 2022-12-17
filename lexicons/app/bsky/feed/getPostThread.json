@@ -20,7 +20,7 @@
           "properties": {
             "thread": {
               "type": "union",
-              "refs": ["#postInThread", "#notFoundPost"]
+              "refs": ["#threadViewPost", "#notFoundPost"]
             }
           }
         }
@@ -31,15 +31,14 @@
     },
     "threadViewPost": {
       "type": "object",
-      "required": ["post", "viewer"],
+      "required": ["post"],
       "properties": {
-        "post": {"type": "post", "ref": "app.bsky.feed.post#view"},
-        "parent": {"type": "union", "refs": ["#postInThread", "#notFoundPost"]},
+        "post": {"type": "ref", "ref": "app.bsky.feed.post#view"},
+        "parent": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]},
         "replies": {
           "type": "array",
-          "items": {"type": "union", "refs": ["#postInThread", "#notFoundPost"]}
-        },
-        "viewer": {"type": "ref", "ref": "app.bsky.feed.viewState"}
+          "items": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]}
+        }
       }
     },
     "notFoundPost": {

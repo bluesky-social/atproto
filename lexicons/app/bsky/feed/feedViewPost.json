@@ -8,8 +8,7 @@
       "properties": {
         "post": {"type": "ref", "ref": "app.bsky.actor.post#view"},
         "reply": {"type": "ref", "ref": "#replyRef"},
-        "reason": {"type": "union", "refs": ["#reasonTrend", "#reasonRepost"]},
-        "viewer": {"type": "ref", "ref": "app.bsky.feed.viewerState"}
+        "reason": {"type": "union", "refs": ["#reasonTrend", "#reasonRepost"]}
       }
     },
     "replyRef": {
@@ -18,14 +17,6 @@
       "properties": {
         "root": {"type": "ref", "ref": "app.bsky.actor.post#view"},
         "parent": {"type": "ref", "ref": "app.bsky.actor.post#view"}
-      }
-    },
-    "viewerState": {
-      "type": "object",
-      "properties": {
-        "repost": {"type": "string"},
-        "upvote": {"type": "string"},
-        "downvote": {"type": "string"}
       }
     },
     "reasonTrend": {

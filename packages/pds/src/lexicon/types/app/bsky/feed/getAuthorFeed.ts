@@ -3,7 +3,7 @@
  */
 import express from 'express'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedItem from './item'
+import * as AppBskyFeedFeedViewPost from './feedViewPost'
 
 export interface QueryParams {
   author: string
@@ -15,7 +15,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  feed: AppBskyFeedItem.Main[]
+  feed: AppBskyFeedFeedViewPost.Main[]
   [k: string]: unknown
 }
 
