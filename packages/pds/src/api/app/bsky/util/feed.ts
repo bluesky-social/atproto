@@ -3,9 +3,7 @@ import { TimeCidKeyset } from '../../../../db/pagination'
 import { Main as FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/feedViewPost'
 import { View as PostView } from '../../../../lexicon/types/app/bsky/feed/post'
 import { ImageUriBuilder } from '../../../../image/uri'
-import Database from '../../../../db'
 import { embedsForPosts, FeedEmbeds } from './embeds'
-import { Kysely } from 'kysely'
 import DatabaseSchema from '../../../../db/database-schema'
 import { countAll } from '../../../../db/util'
 
@@ -23,7 +21,7 @@ export type FeedRow = {
 // Present post and repost results into FeedViewPosts
 // Including links to embedded media
 export const composeFeed = async (
-  db: Database,
+  db: DatabaseSchema,
   imgUriBuilder: ImageUriBuilder,
   rows: FeedRow[],
   requester: string,
@@ -38,9 +36,9 @@ export const composeFeed = async (
     if (row.replyRoot) postUris.add(row.replyRoot)
   }
   const [actors, posts, embeds] = await Promise.all([
-    getActorViews(db.db, imgUriBuilder, Array.from(actorDids)),
-    getPostViews(db.db, Array.from(postUris), requester),
-    embedsForPosts(db.db, imgUriBuilder, Array.from(postUris)),
+    getActorViews(db, imgUriBuilder, Array.from(actorDids)),
+    getPostViews(db, Array.from(postUris), requester),
+    embedsForPosts(db, imgUriBuilder, Array.from(postUris)),
   ])
 
   const feed: FeedViewPost[] = []
@@ -117,7 +115,7 @@ export type ActorView = {
 export type ActorViewMap = { [did: string]: ActorView }
 
 export const getActorViews = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   imgUriBuilder: ImageUriBuilder,
   dids: string[],
 ): Promise<ActorViewMap> => {
@@ -172,7 +170,7 @@ export type PostInfo = {
 export type PostInfoMap = { [uri: string]: PostInfo }
 
 export const getPostViews = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   postUris: string[],
   requester: string,
 ): Promise<PostInfoMap> => {

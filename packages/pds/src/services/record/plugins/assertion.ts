@@ -1,18 +1,17 @@
-import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Assertion from '../../../lexicon/types/app/bsky/graph/assertion'
 import * as lex from '../../../lexicon/lexicons'
 import * as messages from '../../../event-stream/messages'
 import { Message } from '../../../event-stream/messages'
-import DatabaseSchema from '../../../db/database-schema'
+import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyGraphAssertion
-type IndexedAssertion = DatabaseSchema['assertion']
+type IndexedAssertion = DatabaseSchemaType['assertion']
 
 const insertFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
   obj: Assertion.Record,
@@ -41,7 +40,7 @@ const insertFn = async (
 }
 
 const findDuplicate = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   obj: Assertion.Record,
 ): Promise<AtUri | null> => {
@@ -68,7 +67,7 @@ const eventsForInsert = (obj: IndexedAssertion): Message[] => {
 }
 
 const deleteFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
 ): Promise<IndexedAssertion | null> => {
   const deleted = await db
@@ -96,7 +95,7 @@ const eventsForDelete = (
 
 export type PluginType = RecordProcessor<Assertion.Record, IndexedAssertion>
 
-export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
+export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
     insertFn,

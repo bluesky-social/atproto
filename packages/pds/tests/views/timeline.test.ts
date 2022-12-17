@@ -29,7 +29,7 @@ describe('timeline views', () => {
     close = server.close
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
-    await basicSeed(sc, server.messageQueue)
+    await basicSeed(sc, server.ctx.messageQueue)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol

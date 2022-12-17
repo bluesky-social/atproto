@@ -1,23 +1,21 @@
-import { Kysely } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import * as GetPostThread from '../../../../lexicon/types/app/bsky/feed/getPostThread'
-import * as locals from '../../../../locals'
-import { DatabaseSchema } from '../../../../db/database-schema'
+import DatabaseSchema from '../../../../db/database-schema'
 import { countAll } from '../../../../db/util'
 import { getDeclaration } from '../util'
-import ServerAuth from '../../../../auth'
 import { ImageUriBuilder } from '../../../../image/uri'
 import { embedsForPosts, FeedEmbeds } from '../util/embeds'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, auth, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ params, auth }) => {
       const { uri, depth = 6 } = params
-      const { db, imgUriBuilder } = locals.get(res)
       const requester = auth.credentials.did
+      const { db, imgUriBuilder } = ctx
 
       const queryRes = await postInfoBuilder(db.db, requester)
         .where('post.uri', '=', uri)
@@ -56,7 +54,7 @@ export default function (server: Server) {
 }
 
 const getAncestors = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   imgUriBuilder: ImageUriBuilder,
   parentUri: string,
   requester: string,
@@ -85,7 +83,7 @@ const getAncestors = async (
 }
 
 const getReplies = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   imgUriBuilder: ImageUriBuilder,
   parent: GetPostThread.Post,
   depth: number,
@@ -117,7 +115,7 @@ const getReplies = async (
 
 // selects all the needed info about a post, just need to supply the `where` clause
 // @TODO break this query up, share parts with home/author feeds
-const postInfoBuilder = (db: Kysely<DatabaseSchema>, requester: string) => {
+const postInfoBuilder = (db: DatabaseSchema, requester: string) => {
   const { ref } = db.dynamic
   return db
     .selectFrom('post')

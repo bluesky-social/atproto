@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import * as crypto from '@atproto/crypto'
 import Database from './db'
-import server from './index'
+import PDS from './index'
 import { ServerConfig } from './config'
 import { DiskBlobStore, MemoryBlobStore } from './storage'
 import { BlobStore } from '@atproto/repo'
@@ -45,10 +45,9 @@ const run = async () => {
     blobstore = new MemoryBlobStore()
   }
 
-  const { listener } = server(db, blobstore, keypair, cfg)
-  listener.on('listening', () => {
-    console.log(`🌞 ATP Data server is running at ${cfg.origin}`)
-  })
+  const pds = PDS.create({ db, blobstore, keypair, cfg })
+  await pds.start()
+  console.log(`🌞 ATP Data server is running at ${cfg.origin}`)
 }
 
 run()

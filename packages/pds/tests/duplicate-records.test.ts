@@ -17,8 +17,8 @@ describe('duplicate record', () => {
     const server = await runTestServer({
       dbPostgresSchema: 'duplicates',
     })
-    db = server.db
-    services = server.services
+    db = server.ctx.db
+    services = server.ctx.services
     close = server.close
     did = 'did:example:alice'
   })

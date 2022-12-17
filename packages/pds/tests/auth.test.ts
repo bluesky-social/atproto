@@ -1,7 +1,6 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { SeedClient } from './seeds/client'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
-import * as locals from '../src/locals'
 
 describe('auth', () => {
   let server: TestServerInfo
@@ -166,8 +165,7 @@ describe('auth', () => {
       email: 'holga@test.com',
       password: 'password',
     })
-    const { auth } = locals.get(server.app)
-    const refresh = auth.createRefreshToken(account.did, -1)
+    const refresh = server.ctx.auth.createRefreshToken(account.did, -1)
     const refreshExpired = refreshSession(refresh.jwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
     await deleteSession(refresh.jwt) // No problem revoking an expired token

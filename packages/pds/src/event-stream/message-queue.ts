@@ -1,3 +1,4 @@
+import PQueue from 'p-queue'
 import Database from '../db'
 import { dbLogger as log } from '../logger'
 import { MessageQueue, Listenable, Listener, MessageOfType } from './types'
@@ -6,9 +7,11 @@ export class SqlMessageQueue implements MessageQueue {
   private cursorExists = false
   private ensureCaughtUpTimeout: ReturnType<typeof setTimeout> | undefined
   private listeners: Map<string, Listener[]> = new Map()
+  public processingQueue: PQueue | null // null during teardown
 
-  constructor(private name: string, private db: Database) {
+  constructor(private name: string, private db: Database, concurrency = 1) {
     this.ensureCaughtUp()
+    this.processingQueue = new PQueue({ concurrency })
   }
 
   async send(
@@ -59,10 +62,13 @@ export class SqlMessageQueue implements MessageQueue {
     this.ensureCaughtUpTimeout = setTimeout(() => this.ensureCaughtUp(), 60000) // 1 min
   }
 
-  destroy() {
-    if (this.ensureCaughtUpTimeout) {
-      clearTimeout(this.ensureCaughtUpTimeout)
-    }
+  async destroy() {
+    clearTimeout(this.ensureCaughtUpTimeout)
+    const processingQueue = this.processingQueue
+    this.processingQueue = null // Stop accepting new items
+    processingQueue?.pause() // Stop processing items
+    processingQueue?.clear() // Clear unprocessed items
+    await processingQueue?.onIdle() // Complete in-process items
   }
 
   async processAll(): Promise<void> {
@@ -96,6 +102,10 @@ export class SqlMessageQueue implements MessageQueue {
   }
 
   async processNext(): Promise<void> {
+    await this.processingQueue?.add(() => this.processNextConcurrent())
+  }
+
+  private async processNextConcurrent(): Promise<void> {
     await this.ensureCursor()
     await this.db.transaction(async (dbTxn) => {
       let builder = dbTxn.db
@@ -111,7 +121,10 @@ export class SqlMessageQueue implements MessageQueue {
         builder = builder.forUpdate()
       }
 
+      // @NOTE this will block until in-flight messages are processed, and will be
+      // holding onto resources in the meantime e.g. a db connection from the pool.
       const res = await builder.executeTakeFirst()
+
       // all caught up
       if (!res) return
 

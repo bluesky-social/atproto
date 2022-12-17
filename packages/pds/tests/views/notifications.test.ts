@@ -2,14 +2,13 @@ import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import * as locals from '../../src/locals'
-import { App } from '../../src'
+import { Database } from '../../src'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/list'
 
 describe('pds notification views', () => {
   let client: AtpServiceClient
   let close: CloseFn
-  let app: App
+  let db: Database
   let sc: SeedClient
 
   // account dids, for convenience
@@ -20,10 +19,10 @@ describe('pds notification views', () => {
       dbPostgresSchema: 'views_noitifications',
     })
     close = server.close
-    app = server.app
+    db = server.ctx.db
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
-    await basicSeed(sc, server.messageQueue)
+    await basicSeed(sc, server.ctx.messageQueue)
     alice = sc.dids.alice
   })
 
@@ -100,8 +99,6 @@ describe('pds notification views', () => {
   })
 
   it('updates notifications last seen', async () => {
-    const { db } = locals.get(app)
-
     const full = await client.app.bsky.notification.list(
       {},
       {

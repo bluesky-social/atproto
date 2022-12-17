@@ -4,6 +4,8 @@ export interface User {
   password: string
   lastSeenNotifs: string
   createdAt: string
+  passwordResetToken: string | null
+  passwordResetGrantedAt: string | null
 }
 
 export const tableName = 'user'

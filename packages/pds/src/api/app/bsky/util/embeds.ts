@@ -1,7 +1,6 @@
 import { Presented as PresentedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { Presented as PresentedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { ImageUriBuilder } from '../../../../image/uri'
-import { Kysely } from 'kysely'
 import DatabaseSchema from '../../../../db/database-schema'
 
 export type FeedEmbeds = {
@@ -9,7 +8,7 @@ export type FeedEmbeds = {
 }
 
 export const embedsForPosts = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   imgUriBuilder: ImageUriBuilder,
   postUris: string[],
 ): Promise<FeedEmbeds> => {

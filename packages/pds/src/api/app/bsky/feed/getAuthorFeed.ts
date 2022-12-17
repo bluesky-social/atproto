@@ -1,29 +1,28 @@
 import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
-import * as locals from '../../../../locals'
 import { FeedItemType, FeedKeyset, composeFeed } from '../util/feed'
 import { countAll } from '../../../../db/util'
 import { paginate } from '../../../../db/pagination'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, auth, res }) => {
-      const { db, imgUriBuilder } = locals.get(res)
+    auth: ctx.accessVerifier,
+    handler: async ({ params, auth }) => {
       const { author, limit, before } = params
       const requester = auth.credentials.did
-      const { ref } = db.db.dynamic
+      const db = ctx.db.db
+      const { ref } = db.dynamic
 
       const userLookupCol = author.startsWith('did:')
         ? 'did_handle.did'
         : 'did_handle.handle'
-      const userQb = db.db
+      const userQb = db
         .selectFrom('did_handle')
         .selectAll()
         .where(userLookupCol, '=', author)
 
-      const postsQb = db.db
+      const postsQb = db
         .selectFrom('post')
         .whereExists(
           userQb.whereRef('did_handle.did', '=', ref('post.creator')),
@@ -36,7 +35,7 @@ export default function (server: Server) {
           'indexedAt as cursor',
         ])
 
-      const repostsQb = db.db
+      const repostsQb = db
         .selectFrom('repost')
         .whereExists(
           userQb.whereRef('did_handle.did', '=', ref('repost.creator')),
@@ -49,7 +48,7 @@ export default function (server: Server) {
           'indexedAt as cursor',
         ])
 
-      const trendsQb = db.db
+      const trendsQb = db
         .selectFrom('trend')
         .whereExists(
           userQb.whereRef('did_handle.did', '=', ref('trend.creator')),
@@ -62,7 +61,7 @@ export default function (server: Server) {
           'indexedAt as cursor',
         ])
 
-      let feedItemsQb = db.db
+      let feedItemsQb = db
         .selectFrom(postsQb.union(repostsQb).union(trendsQb).as('feed_items'))
         .innerJoin('post', 'post.uri', 'postUri')
         .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
@@ -103,42 +102,42 @@ export default function (server: Server) {
           'originator.actorType as originatorActorType',
           'originator_profile.displayName as originatorDisplayName',
           'originator_profile.avatarCid as originatorAvatarCid',
-          db.db
+          db
             .selectFrom('vote')
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'up')
             .select(countAll.as('count'))
             .as('upvoteCount'),
-          db.db
+          db
             .selectFrom('vote')
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'down')
             .select(countAll.as('count'))
             .as('downvoteCount'),
-          db.db
+          db
             .selectFrom('repost')
             .whereRef('subject', '=', ref('postUri'))
             .select(countAll.as('count'))
             .as('repostCount'),
-          db.db
+          db
             .selectFrom('post')
             .whereRef('replyParent', '=', ref('postUri'))
             .select(countAll.as('count'))
             .as('replyCount'),
-          db.db
+          db
             .selectFrom('repost')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
             .select('uri')
             .as('requesterRepost'),
-          db.db
+          db
             .selectFrom('vote')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
             .where('direction', '=', 'up')
             .select('uri')
             .as('requesterUpvote'),
-          db.db
+          db
             .selectFrom('vote')
             .where('creator', '=', requester)
             .whereRef('subject', '=', ref('postUri'))
@@ -155,7 +154,7 @@ export default function (server: Server) {
       })
 
       const queryRes = await feedItemsQb.execute()
-      const feed = await composeFeed(db, imgUriBuilder, queryRes)
+      const feed = await composeFeed(db, ctx.imgUriBuilder, queryRes)
 
       return {
         encoding: 'application/json',

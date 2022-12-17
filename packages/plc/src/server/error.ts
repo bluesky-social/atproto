@@ -1,9 +1,7 @@
 import { ErrorRequestHandler } from 'express'
-import * as locals from './locals'
 
-export const handler: ErrorRequestHandler = (err, _req, res, next) => {
-  const { logger } = locals.get(res)
-  logger.info(
+export const handler: ErrorRequestHandler = (err, req, res, next) => {
+  req.log.info(
     err,
     ServerError.is(err)
       ? 'handled server error'

@@ -1,3 +1,4 @@
+import { Kysely } from 'kysely'
 import * as user from './tables/user'
 import * as didHandle from './tables/did-handle'
 import * as scene from './tables/scene'
@@ -26,7 +27,7 @@ import * as messageQueueCursor from './tables/message-queue-cursor'
 import * as sceneMemberCount from './tables/scene-member-count'
 import * as sceneVotesOnPost from './tables/scene-votes-on-post'
 
-export type DatabaseSchema = user.PartialDB &
+export type DatabaseSchemaType = user.PartialDB &
   didHandle.PartialDB &
   scene.PartialDB &
   refreshToken.PartialDB &
@@ -53,5 +54,7 @@ export type DatabaseSchema = user.PartialDB &
   messageQueueCursor.PartialDB &
   sceneMemberCount.PartialDB &
   sceneVotesOnPost.PartialDB
+
+export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
 export default DatabaseSchema

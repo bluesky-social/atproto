@@ -1,39 +1,37 @@
 import { Server } from '../../../../lexicon'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import * as locals from '../../../../locals'
 import * as lexicons from '../../../../lexicon/lexicons'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import * as common from '@atproto/common'
 import * as repo from '../../../../repo'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
 const profileNsid = lexicons.ids.AppBskyActorProfile
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.updateProfile({
-    auth: ServerAuth.verifier,
-    handler: async ({ auth, input, res }) => {
-      const { db, services } = locals.get(res)
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
 
       const did = input.body.did || requester
-      const authorized = await services
-        .repo(db)
+      const authorized = await ctx.services
+        .repo(ctx.db)
         .isUserControlledRepo(did, requester)
       if (!authorized) {
         throw new AuthRequiredError()
       }
-      const authStore = await locals.getAuthstore(res, did)
+      const authStore = await ctx.getAuthstore(did)
       const uri = new AtUri(`${did}/${profileNsid}/self`)
 
-      const { profileCid, updated } = await db.transaction(
+      const { profileCid, updated } = await ctx.db.transaction(
         async (
           dbTxn,
         ): Promise<{ profileCid: CID; updated: Profile.Record }> => {
-          const recordTxn = services.record(dbTxn)
-          const repoTxn = services.repo(dbTxn)
+          const recordTxn = ctx.services.record(dbTxn)
+          const repoTxn = ctx.services.repo(dbTxn)
           const now = new Date().toISOString()
 
           let updated

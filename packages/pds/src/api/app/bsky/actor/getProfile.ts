@@ -1,21 +1,21 @@
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll, actorWhereClause } from '../../../../db/util'
-import * as locals from '../../../../locals'
 import { getDeclarationSimple } from '../util'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
-    auth: ServerAuth.verifier,
-    handler: async ({ auth, params, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, params }) => {
       const { actor } = params
-      const { db, imgUriBuilder } = locals.get(res)
       const requester = auth.credentials.did
 
-      const { ref } = db.db.dynamic
+      const db = ctx.db.db
 
-      const queryRes = await db.db
+      const { ref } = db.dynamic
+
+      const queryRes = await db
         .selectFrom('did_handle')
         .where(actorWhereClause(actor))
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
@@ -31,35 +31,35 @@ export default function (server: Server) {
           'profile.description as description',
           'profile.avatarCid as avatarCid',
           'profile.bannerCid as bannerCid',
-          db.db
+          db
             .selectFrom('follow')
             .whereRef('creator', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
             .as('followsCount'),
-          db.db
+          db
             .selectFrom('follow')
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
             .as('followersCount'),
-          db.db
+          db
             .selectFrom('assertion')
             .whereRef('assertion.creator', '=', ref('did_handle.did'))
             .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
             .where('assertion.confirmUri', 'is not', null)
             .select(countAll.as('count'))
             .as('membersCount'),
-          db.db
+          db
             .selectFrom('post')
             .whereRef('creator', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
             .as('postsCount'),
-          db.db
+          db
             .selectFrom('follow')
             .where('creator', '=', requester)
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterFollow'),
-          db.db
+          db
             .selectFrom('assertion')
             .whereRef('creator', '=', ref('did_handle.did'))
             .where('assertion', '=', APP_BSKY_GRAPH.AssertMember)
@@ -75,11 +75,11 @@ export default function (server: Server) {
       }
 
       const avatar = queryRes.avatarCid
-        ? imgUriBuilder.getCommonSignedUri('avatar', queryRes.avatarCid)
+        ? ctx.imgUriBuilder.getCommonSignedUri('avatar', queryRes.avatarCid)
         : undefined
 
       const banner = queryRes.bannerCid
-        ? imgUriBuilder.getCommonSignedUri('banner', queryRes.bannerCid)
+        ? ctx.imgUriBuilder.getCommonSignedUri('banner', queryRes.bannerCid)
         : undefined
 
       return {

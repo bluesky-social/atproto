@@ -1,5 +1,4 @@
-import { Kysely } from 'kysely'
-import { DatabaseSchema } from '../../../../db/database-schema'
+import DatabaseSchema from '../../../../db/database-schema'
 import * as util from '../../../../db/util'
 import { CID } from 'multiformats/cid'
 import { ImageUriBuilder } from '../../../../image/uri'
@@ -13,7 +12,7 @@ type ActorInfo = {
 }
 
 export const getActorInfo = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   imgUriBuilder: ImageUriBuilder,
   actor: string,
 ): Promise<ActorInfo> => {

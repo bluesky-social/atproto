@@ -1,7 +1,6 @@
 import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import * as locals from '../../../../locals'
 import {
   FeedAlgorithm,
   FeedItemType,
@@ -10,27 +9,27 @@ import {
   FeedRow,
 } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, auth, res }) => {
-      const { db, imgUriBuilder } = locals.get(res)
+    auth: ctx.accessVerifier,
+    handler: async ({ params, auth }) => {
       const { algorithm, limit, before } = params
-      const { ref } = db.db.dynamic
+      const db = ctx.db.db
+      const { ref } = db.dynamic
       const requester = auth.credentials.did
 
       if (algorithm && algorithm !== FeedAlgorithm.ReverseChronological) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      const followingIdsSubquery = db.db
+      const followingIdsSubquery = db
         .selectFrom('follow')
         .select('follow.subjectDid')
         .where('follow.creator', '=', requester)
 
-      const postsQb = db.db
+      const postsQb = db
         .selectFrom('post')
         .select([
           sql<FeedItemType>`${'post'}`.as('type'),
@@ -45,7 +44,7 @@ export default function (server: Server) {
         .where('creator', '=', requester)
         .orWhere('creator', 'in', followingIdsSubquery)
 
-      const repostsQb = db.db
+      const repostsQb = db
         .selectFrom('repost')
         .innerJoin('post', 'post.uri', 'repost.subject')
         .select([
@@ -61,7 +60,7 @@ export default function (server: Server) {
         .where('creator', '=', requester)
         .orWhere('creator', 'in', followingIdsSubquery)
 
-      const trendsQb = db.db
+      const trendsQb = db
         .selectFrom('trend')
         .innerJoin('post', 'post.uri', 'trend.subject')
         .select([
@@ -78,7 +77,7 @@ export default function (server: Server) {
         .orWhere('creator', 'in', followingIdsSubquery)
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
-      let feedItemsQb = db.db
+      let feedItemsQb = db
         .selectFrom(postsQb.union(repostsQb).union(trendsQb).as('feed_items'))
         .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
@@ -87,7 +86,12 @@ export default function (server: Server) {
         keyset,
       })
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await composeFeed(db, imgUriBuilder, feedItems, requester)
+      const feed = await composeFeed(
+        db,
+        ctx.imgUriBuilder,
+        feedItems,
+        requester,
+      )
 
       return {
         encoding: 'application/json',

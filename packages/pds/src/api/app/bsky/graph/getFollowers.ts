@@ -1,25 +1,25 @@
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getActorInfo, getDeclarationSimple } from '../util'
-import * as locals from '../../../../locals'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import ServerAuth from '../../../../auth'
+import AppContext from '../../../../context'
 
-export default function (server: Server) {
+export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollowers({
-    auth: ServerAuth.verifier,
-    handler: async ({ params, res }) => {
+    auth: ctx.accessVerifier,
+    handler: async ({ params }) => {
       const { user, limit, before } = params
-      const { db, imgUriBuilder } = locals.get(res)
-      const { ref } = db.db.dynamic
+      const { ref } = ctx.db.db.dynamic
 
-      const subject = await getActorInfo(db.db, imgUriBuilder, user).catch(
-        (_e) => {
-          throw new InvalidRequestError(`User not found: ${user}`)
-        },
-      )
+      const subject = await getActorInfo(
+        ctx.db.db,
+        ctx.imgUriBuilder,
+        user,
+      ).catch((_e) => {
+        throw new InvalidRequestError(`User not found: ${user}`)
+      })
 
-      let followersReq = db.db
+      let followersReq = ctx.db.db
         .selectFrom('follow')
         .where('follow.subjectDid', '=', subject.did)
         .innerJoin('did_handle as creator', 'creator.did', 'follow.creator')
@@ -53,7 +53,7 @@ export default function (server: Server) {
         handle: row.handle,
         displayName: row.displayName || undefined,
         avatar: row.avatarCid
-          ? imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
+          ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
           : undefined,
         createdAt: row.createdAt,
         indexedAt: row.indexedAt,

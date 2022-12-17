@@ -37,13 +37,13 @@ describe('file uploads', () => {
     const server = await runTestServer({
       dbPostgresSchema: 'file_uploads',
     })
-    blobstore = server.blobstore as DiskBlobStore
-    db = server.db
+    blobstore = server.ctx.blobstore as DiskBlobStore
+    db = server.ctx.db
     close = server.close
     client = AtpApi.service(server.url)
     aliceClient = AtpApi.service(server.url)
     bobClient = AtpApi.service(server.url)
-    cfg = server.cfg
+    cfg = server.ctx.cfg
     serverUrl = server.url
   })
 

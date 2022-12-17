@@ -1,5 +1,4 @@
 import { AddressInfo } from 'net'
-import http from 'http'
 import os from 'os'
 import path from 'path'
 import * as crypto from '@atproto/crypto'
@@ -8,30 +7,17 @@ import { AtUri } from '@atproto/uri'
 import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
-import server, {
-  ServerConfig,
-  Database,
-  App,
-  MemoryBlobStore,
-} from '../src/index'
-import { Main as FeedItem } from '../src/lexicon/types/app/bsky/feed/item'
+import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
+import { Main as FeedViewPost } from '../src/lexicon/types/app/bsky/feed/feedViewPost'
 import DiskBlobStore from '../src/storage/disk-blobstore'
-import * as locals from '../src/locals'
-import { MessageQueue } from '../src/event-stream/types'
-import { Services } from '../src/services'
+import AppContext from '../src/context'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
-  cfg: ServerConfig
-  serverKey: string
-  app: App
-  db: Database
-  messageQueue: MessageQueue
-  services: Services
-  blobstore: DiskBlobStore | MemoryBlobStore
+  ctx: AppContext
   close: CloseFn
 }
 
@@ -43,8 +29,9 @@ export const runTestServer = async (
   // run plc server
   const plcDb = plc.Database.memory()
   await plcDb.migrateToLatestOrThrow()
-  const plcServer = plc.server(plcDb)
-  const plcPort = (plcServer.listener.address() as AddressInfo).port
+  const plcServer = plc.PlcServer.create({ db: plcDb })
+  const plcListener = await plcServer.start()
+  const plcPort = (plcListener.address() as AddressInfo).port
   const plcUrl = `http://localhost:${plcPort}`
 
   const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
@@ -59,7 +46,7 @@ export const runTestServer = async (
 
   const blobstoreLoc = path.join(os.tmpdir(), randomStr(5, 'base32'))
 
-  const config = new ServerConfig({
+  const cfg = new ServerConfig({
     debugMode: true,
     version: '0.0.0',
     scheme: 'http',
@@ -84,55 +71,32 @@ export const runTestServer = async (
   })
 
   const db =
-    config.dbPostgresUrl !== undefined
+    cfg.dbPostgresUrl !== undefined
       ? Database.postgres({
-          url: config.dbPostgresUrl,
-          schema: config.dbPostgresSchema,
+          url: cfg.dbPostgresUrl,
+          schema: cfg.dbPostgresSchema,
         })
       : Database.memory()
 
   await db.migrateToLatestOrThrow()
 
   const blobstore =
-    config.blobstoreLocation !== undefined
-      ? await DiskBlobStore.create(
-          config.blobstoreLocation,
-          config.blobstoreTmp,
-        )
+    cfg.blobstoreLocation !== undefined
+      ? await DiskBlobStore.create(cfg.blobstoreLocation, cfg.blobstoreTmp)
       : new MemoryBlobStore()
 
-  const { app, listener } = server(db, blobstore, keypair, config)
-  const pdsPort = (listener.address() as AddressInfo).port
-  const { services, messageQueue } = locals.get(app)
+  const pds = PDS.create({ db, blobstore, keypair, cfg: cfg })
+  const pdsServer = await pds.start()
+  const pdsPort = (pdsServer.address() as AddressInfo).port
 
   return {
     url: `http://localhost:${pdsPort}`,
-    cfg: config,
-    serverKey: keypair.did(),
-    app,
-    db,
-    services,
-    messageQueue,
-    blobstore,
+    ctx: pds.ctx,
     close: async () => {
-      await messageQueue.destroy()
-      await Promise.all([
-        db.close(),
-        closeServer(listener),
-        closeServer(plcServer.listener),
-        plcDb.close(),
-      ])
+      await pds.destroy()
+      await plcServer.destroy()
     },
   }
-}
-
-const closeServer = (s: http.Server): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    s.close((err) => {
-      if (err) reject(err)
-      resolve()
-    })
-  })
 }
 
 export const adminAuth = () => {
@@ -193,7 +157,7 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-export const getOriginator = (item: FeedItem) =>
+export const getOriginator = (item: FeedViewPost) =>
   item.repostedBy ? item.repostedBy.did : item.author.did
 
 // Useful for remapping ids in snapshot testing, to make snapshots deterministic.

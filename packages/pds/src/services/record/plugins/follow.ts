@@ -1,18 +1,17 @@
-import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../../lexicon/types/app/bsky/graph/follow'
 import * as lex from '../../../lexicon/lexicons'
 import * as messages from '../../../event-stream/messages'
 import { Message } from '../../../event-stream/messages'
-import DatabaseSchema from '../../../db/database-schema'
+import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyGraphFollow
-type IndexedFollow = DatabaseSchema['follow']
+type IndexedFollow = DatabaseSchemaType['follow']
 
 const insertFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
   obj: Follow.Record,
@@ -36,7 +35,7 @@ const insertFn = async (
 }
 
 const findDuplicate = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
   obj: Follow.Record,
 ): Promise<AtUri | null> => {
@@ -62,7 +61,7 @@ const eventsForInsert = (obj: IndexedFollow): Message[] => {
 }
 
 const deleteFn = async (
-  db: Kysely<DatabaseSchema>,
+  db: DatabaseSchema,
   uri: AtUri,
 ): Promise<IndexedFollow | null> => {
   const deleted = await db
@@ -83,7 +82,7 @@ const eventsForDelete = (
 
 export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
 
-export const makePlugin = (db: Kysely<DatabaseSchema>): PluginType => {
+export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
     insertFn,

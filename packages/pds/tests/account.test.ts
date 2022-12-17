@@ -6,17 +6,16 @@ import AtpApi, {
 } from '@atproto/api'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
-import { sign } from 'jsonwebtoken'
 import Mail from 'nodemailer/lib/mailer'
-import { App, ServerConfig } from '../src'
-import * as locals from '../src/locals'
+import { Database, ServerConfig } from '../src'
 import * as util from './_util'
-import { AuthScopes } from '../src/auth'
+import { ServerMailer } from '../src/mailer'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
 const password = 'test123'
 const passwordAlt = 'test456'
+const minsToMs = 60 * 1000
 
 const createInviteCode = async (
   client: AtpServiceClient,
@@ -38,7 +37,8 @@ describe('account', () => {
   let serverKey: string
   let client: AtpServiceClient
   let close: util.CloseFn
-  let app: App
+  let mailer: ServerMailer
+  let db: Database
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
@@ -50,14 +50,14 @@ describe('account', () => {
       dbPostgresSchema: 'account',
     })
     close = server.close
-    app = server.app
+    mailer = server.ctx.mailer
+    db = server.ctx.db
+    cfg = server.ctx.cfg
     serverUrl = server.url
-    cfg = server.cfg
-    serverKey = server.serverKey
+    serverKey = server.ctx.keypair.did()
     client = AtpApi.service(serverUrl)
 
     // Catch emails for use in tests
-    const { mailer } = locals.get(app)
     _origSendMail = mailer.transporter.sendMail
     mailer.transporter.sendMail = async (opts) => {
       const result = await _origSendMail.call(mailer.transporter, opts)
@@ -67,7 +67,6 @@ describe('account', () => {
   })
 
   afterAll(async () => {
-    const { mailer } = locals.get(app)
     mailer.transporter.sendMail = _origSendMail
     if (close) {
       await close()
@@ -340,7 +339,7 @@ describe('account', () => {
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/token=(.+?)"/)?.[1]
+    mail.html?.toString().match(/>(\d{6})</)?.[1]
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(
@@ -401,29 +400,26 @@ describe('account', () => {
   })
 
   it('allows only unexpired password reset tokens', async () => {
-    const { config, db } = locals.get(app)
+    await client.com.atproto.account.requestPasswordReset({ email })
 
     const user = await db.db
-      .selectFrom('user')
-      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
-      .selectAll()
-      .where('did', '=', did)
+      .updateTable('user')
+      .where('email', '=', email)
+      .set({
+        passwordResetGrantedAt: new Date(
+          Date.now() - 16 * minsToMs,
+        ).toISOString(),
+      })
+      .returning(['passwordResetToken'])
       .executeTakeFirst()
-    if (!user) {
-      return expect(user).toBeTruthy()
+    if (!user?.passwordResetToken) {
+      throw new Error('Missing reset token')
     }
-
-    const signingKey = `${config.jwtSecret}::${user.password}`
-    const expiredToken = await sign(
-      { sub: did, scope: AuthScopes.ResetPassword },
-      signingKey,
-      { expiresIn: -1 },
-    )
 
     // Use of expired token fails
     await expect(
       client.com.atproto.account.resetPassword({
-        token: expiredToken,
+        token: user.passwordResetToken,
         password: passwordAlt,
       }),
     ).rejects.toThrow(ResetAccountPassword.ExpiredTokenError)

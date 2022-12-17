@@ -2,12 +2,11 @@ import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
-import { App } from '../../src'
-import * as locals from '../../src/locals'
+import { Database } from '../../src'
 
 describe('pds user search views', () => {
-  let app: App
   let client: AtpServiceClient
+  let db: Database
   let close: CloseFn
   let sc: SeedClient
   let headers: { [s: string]: string }
@@ -17,7 +16,7 @@ describe('pds user search views', () => {
       dbPostgresSchema: 'views_user_search',
     })
     close = server.close
-    app = server.app
+    db = server.ctx.db
     client = AtpApi.service(server.url)
     sc = new SeedClient(client)
     await usersBulkSeed(sc)
@@ -47,7 +46,7 @@ describe('pds user search views', () => {
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
 
-    if (locals.get(app).db.dialect === 'pg') {
+    if (db.dialect === 'pg') {
       expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
     } else {
       expect(handles).not.toContain('cayla-marquardt39.test')
@@ -65,7 +64,7 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    if (locals.get(app).db.dialect === 'pg') {
+    if (db.dialect === 'pg') {
       expect(forSnapshot(result.data.users)).toEqual(snapTypeaheadPg)
     } else {
       expect(forSnapshot(result.data.users)).toEqual(snapTypeaheadSqlite)
@@ -116,7 +115,7 @@ describe('pds user search views', () => {
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
 
-    if (locals.get(app).db.dialect === 'pg') {
+    if (db.dialect === 'pg') {
       expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
     } else {
       expect(handles).not.toContain('cayla-marquardt39.test')
@@ -134,7 +133,7 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    if (locals.get(app).db.dialect === 'pg') {
+    if (db.dialect === 'pg') {
       expect(forSnapshot(result.data.users)).toEqual(snapSearchPg)
     } else {
       expect(forSnapshot(result.data.users)).toEqual(snapSearchSqlite)
