@@ -1572,7 +1572,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'object',
-        required: ['post', 'viewer'],
+        required: ['post'],
         properties: {
           post: {
             type: 'ref',

@@ -32,13 +32,13 @@ export default function (server: Server, ctx: AppContext) {
 
       const repostsQb = feedService
         .selectRepostQb()
-        .where('creator', '=', requester)
-        .orWhere('creator', 'in', followingIdsSubquery)
+        .where('repost.creator', '=', requester)
+        .orWhere('repost.creator', 'in', followingIdsSubquery)
 
       const trendsQb = feedService
         .selectTrendQb()
-        .where('creator', '=', requester)
-        .orWhere('creator', 'in', followingIdsSubquery)
+        .where('trend.creator', '=', requester)
+        .orWhere('trend.creator', 'in', followingIdsSubquery)
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db
@@ -50,7 +50,9 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
       const feedItems: FeedRow[] = await feedItemsQb.execute()
+      console.log('COMPOSING')
       const feed = await composeFeed(feedService, feedItems, requester)
+      console.log(feed)
 
       return {
         encoding: 'application/json',

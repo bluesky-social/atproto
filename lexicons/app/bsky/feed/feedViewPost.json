@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": ["post", "viewer"],
+      "required": ["post"],
       "properties": {
         "post": {"type": "ref", "ref": "app.bsky.feed.post#view"},
         "reply": {"type": "ref", "ref": "#replyRef"},

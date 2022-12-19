@@ -48,7 +48,7 @@ export const composeFeed = async (
           ? {
               $type: reasonType,
               by: actors[row.originatorDid],
-              indexedAt: 'blah', //@TODO fix
+              indexedAt: row.cursor,
             }
           : undefined,
         reply:

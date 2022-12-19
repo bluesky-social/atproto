@@ -38,13 +38,13 @@ export class FeedService {
       .innerJoin('post', 'post.uri', 'repost.subject')
       .select([
         sql<FeedItemType>`${'repost'}`.as('type'),
-        'uri as postUri',
-        'cid as postCid',
-        'creator as originatorDid',
+        'post.uri as postUri',
+        'post.cid as postCid',
+        'repost.creator as originatorDid',
         'post.creator as authorDid',
         'post.replyParent as replyParent',
         'post.replyRoot as replyRoot',
-        'indexedAt as cursor',
+        'repost.indexedAt as cursor',
       ])
   }
 
@@ -54,13 +54,13 @@ export class FeedService {
       .innerJoin('post', 'post.uri', 'trend.subject')
       .select([
         sql<FeedItemType>`${'trend'}`.as('type'),
-        'uri as postUri',
-        'cid as postCid',
-        'creator as originatorDid',
+        'post.uri as postUri',
+        'post.cid as postCid',
+        'trend.creator as originatorDid',
         'post.creator as authorDid',
         'post.replyParent as replyParent',
         'post.replyRoot as replyRoot',
-        'indexedAt as cursor',
+        'trend.indexedAt as cursor',
       ])
   }
 
@@ -117,43 +117,43 @@ export class FeedService {
         'ipld_block.indexedAt as indexedAt',
         db
           .selectFrom('vote')
-          .whereRef('subject', '=', ref('postUri'))
+          .whereRef('subject', '=', ref('post.uri'))
           .where('direction', '=', 'up')
           .select(countAll.as('count'))
           .as('upvoteCount'),
         db
           .selectFrom('vote')
-          .whereRef('subject', '=', ref('postUri'))
+          .whereRef('subject', '=', ref('post.uri'))
           .where('direction', '=', 'down')
           .select(countAll.as('count'))
           .as('downvoteCount'),
         db
           .selectFrom('repost')
-          .whereRef('subject', '=', ref('postUri'))
+          .whereRef('subject', '=', ref('post.uri'))
           .select(countAll.as('count'))
           .as('repostCount'),
         db
           .selectFrom('post')
-          .whereRef('replyParent', '=', ref('postUri'))
+          .whereRef('replyParent', '=', ref('post.uri'))
           .select(countAll.as('count'))
           .as('replyCount'),
         db
           .selectFrom('repost')
           .where('creator', '=', requester)
-          .whereRef('subject', '=', ref('postUri'))
+          .whereRef('subject', '=', ref('post.uri'))
           .select('uri')
           .as('requesterRepost'),
         db
           .selectFrom('vote')
           .where('creator', '=', requester)
-          .whereRef('subject', '=', ref('postUri'))
+          .whereRef('subject', '=', ref('post.uri'))
           .where('direction', '=', 'up')
           .select('uri')
           .as('requesterUpvote'),
         db
           .selectFrom('vote')
           .where('creator', '=', requester)
-          .whereRef('subject', '=', ref('postUri'))
+          .whereRef('subject', '=', ref('post.uri'))
           .where('direction', '=', 'down')
           .select('uri')
           .as('requesterDownvote'),
@@ -233,8 +233,8 @@ export class FeedService {
     embeds: FeedEmbeds,
   ): PostView | undefined {
     const post = posts[uri]
-    if (!post) return undefined
     const author = actors[post.creator]
+    if (!post || !author) return undefined
     return {
       uri: post.uri,
       cid: post.cid,

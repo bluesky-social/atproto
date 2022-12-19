@@ -157,8 +157,13 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-export const getOriginator = (item: FeedViewPost) =>
-  item.repostedBy ? item.repostedBy.did : item.author.did
+export const getOriginator = (item: FeedViewPost) => {
+  if (!item.reason) {
+    return item.post.author.did
+  } else {
+    return (item.reason.by as { [did: string]: string }).did
+  }
+}
 
 // Useful for remapping ids in snapshot testing, to make snapshots deterministic.
 // E.g. you may use this to map this:
