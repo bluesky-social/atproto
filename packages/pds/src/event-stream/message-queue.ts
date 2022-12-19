@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import PQueue from 'p-queue'
 import Database from '../db'
 import { dbLogger as log } from '../logger'
@@ -49,7 +48,8 @@ export class SqlMessageQueue implements MessageQueue {
   ) {
     const topicQueue =
       this.topicQueues.get(topic) ?? new TopicQueue(this, this.db, topic)
-    topicQueue.listen(listenable as Listenable) // @TODO avoid upcast
+    topicQueue.listen(listenable as Listenable) // @TODO avoid upcasts
+    this.topicQueues.set(topic, topicQueue as TopicQueue)
   }
 
   async destroy() {
@@ -98,7 +98,7 @@ class TopicQueue<T extends string = string> {
   private cursorExists = false
   private ensureCaughtUpTimeout: ReturnType<typeof setTimeout> | undefined
   private listeners: Listener<MessageOfType<T>>[] = []
-  public processingQueue: PQueue | null // null during teardown
+  public processingQueue: PQueue | null = new PQueue({ concurrency: 1 }) // null during teardown
 
   constructor(
     private parent: SqlMessageQueue,
@@ -106,7 +106,6 @@ class TopicQueue<T extends string = string> {
     public topic: T,
   ) {
     this.ensureCaughtUp()
-    this.processingQueue = new PQueue({ concurrency: 1 })
   }
 
   listen(listenable: Listenable<MessageOfType<T>>) {
@@ -150,25 +149,53 @@ class TopicQueue<T extends string = string> {
   }
 
   private async processBatch(count: number | 'all'): Promise<void> {
+    // TODO assuming topic is '*'
     await this.ensureCursor()
     await this.db.transaction(async (dbTxn) => {
+      let eligibleCursors = dbTxn.db
+        .selectFrom('message_queue_cursor')
+        .where('consumer', '=', this.parent.name)
+      if (this.topic !== ANY_TOPIC) {
+        eligibleCursors = eligibleCursors.where('topic', '=', this.topic)
+      }
+
+      const maybeAnyCursor = eligibleCursors.where('topic', '=', ANY_TOPIC)
+
+      if (this.db.dialect !== 'sqlite') {
+        eligibleCursors = eligibleCursors.forUpdate()
+      }
+
       let builder = dbTxn.db
-        .selectFrom('message_queue_cursor as cursor')
-        .innerJoin('message_queue', (join) =>
-          join
-            .onRef('cursor.topic', '=', 'message_queue.topic')
-            .onRef('cursor.cursor', '<=', 'message_queue.id'),
+        .selectFrom('message_queue as message')
+        .leftJoin(
+          eligibleCursors.selectAll().as('cursor'),
+          'cursor.topic',
+          'message.topic',
         )
-        .where('cursor.consumer', '=', this.parent.name)
-        .where('cursor.topic', '=', this.topic)
+        .where((qb) => {
+          return (
+            qb
+              // Topic cursor exists but not processed by it
+              .where((q) => q.whereRef('message.id', '>=', 'cursor.cursor'))
+              // Topic cursor doesn't exist and not processed by *-cursor (if *-cursor is eligible)
+              .orWhere((q) =>
+                q
+                  .where('cursor.cursor', 'is', null)
+                  .whereRef(
+                    'message.id',
+                    '>=',
+                    maybeAnyCursor.select('cursor'),
+                  ),
+              )
+          )
+        })
         .orderBy('id', 'asc')
         .selectAll()
+
       if (count !== 'all') {
         builder = builder.limit(count)
       }
-      if (this.db.dialect !== 'sqlite') {
-        builder = builder.forUpdate()
-      }
+
       const res = await builder.execute()
       const lastResult = res.at(-1)
 
