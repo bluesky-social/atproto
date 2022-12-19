@@ -50,9 +50,7 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      console.log('COMPOSING')
       const feed = await composeFeed(feedService, feedItems, requester)
-      console.log(feed)
 
       return {
         encoding: 'application/json',
