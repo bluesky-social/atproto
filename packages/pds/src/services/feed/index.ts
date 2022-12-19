@@ -26,8 +26,8 @@ export class FeedService {
         'cid as postCid',
         'creator as originatorDid',
         'creator as authorDid',
-        'replyParent',
-        'replyRoot',
+        'replyParent as replyParent',
+        'replyRoot as replyRoot',
         'indexedAt as cursor',
       ])
   }

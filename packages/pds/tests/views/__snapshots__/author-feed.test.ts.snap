@@ -38,6 +38,90 @@ Array [
       "uri": "record(0)",
       "viewer": Object {},
     },
+    "reply": Object {
+      "parent": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(1)",
+          "displayName": "bobby",
+          "handle": "bob.test",
+        },
+        "cid": "cids(3)",
+        "downvoteCount": 0,
+        "embed": Object {
+          "$type": "app.bsky.embed.images#presented",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            },
+          ],
+        },
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "embed": Object {
+            "$type": "app.bsky.embed.images",
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "cid": "cids(4)",
+                  "mimeType": "image/jpeg",
+                },
+              },
+            ],
+          },
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(2)",
+              "uri": "record(1)",
+            },
+            "root": Object {
+              "cid": "cids(2)",
+              "uri": "record(1)",
+            },
+          },
+          "text": "hear that",
+        },
+        "replyCount": 0,
+        "repostCount": 0,
+        "upvoteCount": 0,
+        "uri": "record(2)",
+        "viewer": Object {},
+      },
+      "root": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+        },
+        "cid": "cids(2)",
+        "downvoteCount": 1,
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "again",
+        },
+        "replyCount": 0,
+        "repostCount": 1,
+        "upvoteCount": 2,
+        "uri": "record(1)",
+        "viewer": Object {},
+      },
+    },
   },
   Object {
     "post": Object {
@@ -51,7 +135,7 @@ Array [
         "displayName": "ali",
         "handle": "alice.test",
       },
-      "cid": "cids(4)",
+      "cid": "cids(5)",
       "downvoteCount": 1,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
@@ -105,7 +189,7 @@ Array [
         "displayName": "ali",
         "handle": "alice.test",
       },
-      "cid": "cids(5)",
+      "cid": "cids(6)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
@@ -183,6 +267,62 @@ Array [
       "uri": "record(0)",
       "viewer": Object {},
     },
+    "reply": Object {
+      "parent": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(1)",
+          "displayName": "ali",
+          "handle": "alice.test",
+        },
+        "cid": "cids(3)",
+        "downvoteCount": 1,
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "again",
+        },
+        "replyCount": 0,
+        "repostCount": 1,
+        "upvoteCount": 2,
+        "uri": "record(1)",
+        "viewer": Object {
+          "upvote": "record(2)",
+        },
+      },
+      "root": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(1)",
+          "displayName": "ali",
+          "handle": "alice.test",
+        },
+        "cid": "cids(3)",
+        "downvoteCount": 1,
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "again",
+        },
+        "replyCount": 0,
+        "repostCount": 1,
+        "upvoteCount": 2,
+        "uri": "record(1)",
+        "viewer": Object {
+          "upvote": "record(2)",
+        },
+      },
+    },
   },
   Object {
     "post": Object {
@@ -207,7 +347,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(2)",
+      "uri": "record(3)",
       "viewer": Object {},
     },
   },
@@ -234,7 +374,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(3)",
+      "uri": "record(4)",
       "viewer": Object {},
     },
   },
@@ -326,6 +466,62 @@ Array [
       "uri": "record(2)",
       "viewer": Object {},
     },
+    "reply": Object {
+      "parent": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(1)",
+          "displayName": "ali",
+          "handle": "alice.test",
+        },
+        "cid": "cids(3)",
+        "downvoteCount": 1,
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "again",
+        },
+        "replyCount": 0,
+        "repostCount": 1,
+        "upvoteCount": 2,
+        "uri": "record(3)",
+        "viewer": Object {
+          "downvote": "record(4)",
+        },
+      },
+      "root": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(1)",
+          "displayName": "ali",
+          "handle": "alice.test",
+        },
+        "cid": "cids(3)",
+        "downvoteCount": 1,
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "again",
+        },
+        "replyCount": 0,
+        "repostCount": 1,
+        "upvoteCount": 2,
+        "uri": "record(3)",
+        "viewer": Object {
+          "downvote": "record(4)",
+        },
+      },
+    },
   },
   Object {
     "post": Object {
@@ -382,7 +578,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 2,
-      "uri": "record(4)",
+      "uri": "record(5)",
       "viewer": Object {},
     },
   },
@@ -655,6 +851,92 @@ Array [
       "uri": "record(0)",
       "viewer": Object {},
     },
+    "reply": Object {
+      "parent": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(1)",
+          "displayName": "bobby",
+          "handle": "bob.test",
+        },
+        "cid": "cids(3)",
+        "downvoteCount": 0,
+        "embed": Object {
+          "$type": "app.bsky.embed.images#presented",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            },
+          ],
+        },
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "embed": Object {
+            "$type": "app.bsky.embed.images",
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "cid": "cids(4)",
+                  "mimeType": "image/jpeg",
+                },
+              },
+            ],
+          },
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(2)",
+              "uri": "record(1)",
+            },
+            "root": Object {
+              "cid": "cids(2)",
+              "uri": "record(1)",
+            },
+          },
+          "text": "hear that",
+        },
+        "replyCount": 0,
+        "repostCount": 0,
+        "upvoteCount": 0,
+        "uri": "record(2)",
+        "viewer": Object {},
+      },
+      "root": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+        },
+        "cid": "cids(2)",
+        "downvoteCount": 1,
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "again",
+        },
+        "replyCount": 0,
+        "repostCount": 1,
+        "upvoteCount": 2,
+        "uri": "record(1)",
+        "viewer": Object {
+          "downvote": "record(3)",
+        },
+      },
+    },
   },
   Object {
     "post": Object {
@@ -668,7 +950,7 @@ Array [
         "displayName": "ali",
         "handle": "alice.test",
       },
-      "cid": "cids(4)",
+      "cid": "cids(5)",
       "downvoteCount": 1,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
@@ -679,9 +961,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 1,
-      "uri": "record(3)",
+      "uri": "record(4)",
       "viewer": Object {
-        "upvote": "record(4)",
+        "upvote": "record(5)",
       },
     },
   },
@@ -710,7 +992,7 @@ Array [
       "upvoteCount": 2,
       "uri": "record(1)",
       "viewer": Object {
-        "downvote": "record(5)",
+        "downvote": "record(3)",
       },
     },
   },
@@ -726,7 +1008,7 @@ Array [
         "displayName": "ali",
         "handle": "alice.test",
       },
-      "cid": "cids(5)",
+      "cid": "cids(6)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {

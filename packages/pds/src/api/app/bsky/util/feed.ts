@@ -1,3 +1,4 @@
+import { AtUri } from '@atproto/uri'
 import { TimeCidKeyset } from '../../../../db/pagination'
 import { Main as FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/feedViewPost'
 import { FeedRow, FeedService } from '../../../../services/feed'
@@ -15,8 +16,14 @@ export const composeFeed = async (
     actorDids.add(row.originatorDid)
     actorDids.add(row.authorDid)
     postUris.add(row.postUri)
-    if (row.replyParent) postUris.add(row.replyParent)
-    if (row.replyRoot) postUris.add(row.replyRoot)
+    if (row.replyParent) {
+      postUris.add(row.replyParent)
+      actorDids.add(new AtUri(row.replyParent).host)
+    }
+    if (row.replyRoot) {
+      postUris.add(row.replyRoot)
+      actorDids.add(new AtUri(row.replyRoot).host)
+    }
   }
   const [actors, posts, embeds] = await Promise.all([
     feedService.getActorViews(Array.from(actorDids)),
