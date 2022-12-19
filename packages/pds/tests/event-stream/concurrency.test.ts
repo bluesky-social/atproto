@@ -53,7 +53,7 @@ describe('event stream concurrency', () => {
     expect(Date.now() - start).toBeLessThan(20)
 
     // Ensure all messages are processed
-    await messageQueue.processingQueue?.onIdle()
+    await messageQueue.processAll()
     expect(processed).toEqual(50)
   })
 })

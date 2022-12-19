@@ -3,9 +3,13 @@ import { Database } from '../../src'
 import { cidForData, TID } from '@atproto/common'
 import * as lex from '../../src/lexicon/lexicons'
 import { APP_BSKY_GRAPH } from '../../src/lexicon'
-import SqlMessageQueue from '../../src/event-stream/message-queue'
+import {
+  Listenable,
+  MaybeAnyTopic,
+  MessageOfType,
+  MessageQueue,
+} from '../../src/event-stream/types'
 import { RecordService } from '../../src/services/record'
-import { MessageQueue } from '../../src/event-stream/types'
 
 describe('duplicate record', () => {
   let db: Database
@@ -20,7 +24,7 @@ describe('duplicate record', () => {
     } else {
       db = Database.memory()
     }
-    messageQueue = new SqlMessageQueue('pds', db)
+    messageQueue = new StubMessageQueue()
     await db.migrator.migrateTo('_20221021T162202001Z')
   })
 
@@ -132,3 +136,17 @@ describe('duplicate record', () => {
     expect(assertionCount).toBe(2)
   })
 })
+
+class StubMessageQueue implements MessageQueue {
+  async send(
+    _tx: Database,
+    _message: MessageOfType<string> | MessageOfType<string>[],
+  ): Promise<void> {}
+  listen<T extends string, M extends MessageOfType<MaybeAnyTopic<T>>>(
+    _topic: T,
+    _listenable: Listenable<M>,
+  ): void {}
+  async processNext(): Promise<void> {}
+  async processAll(): Promise<void> {}
+  destroy(): void {}
+}

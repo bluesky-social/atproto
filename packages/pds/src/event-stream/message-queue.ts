@@ -158,17 +158,15 @@ class TopicQueue<T extends string = string> {
       if (this.topic !== ANY_TOPIC) {
         eligibleCursors = eligibleCursors.where('topic', '=', this.topic)
       }
-
       const maybeAnyCursor = eligibleCursors.where('topic', '=', ANY_TOPIC)
-
-      if (this.db.dialect !== 'sqlite') {
-        eligibleCursors = eligibleCursors.forUpdate()
-      }
 
       let builder = dbTxn.db
         .selectFrom('message_queue as message')
         .leftJoin(
-          eligibleCursors.selectAll().as('cursor'),
+          eligibleCursors
+            .if(this.db.dialect !== 'sqlite', (q) => q.forUpdate())
+            .selectAll()
+            .as('cursor'),
           'cursor.topic',
           'message.topic',
         )
@@ -212,7 +210,7 @@ class TopicQueue<T extends string = string> {
         .updateTable('message_queue_cursor')
         .set({ cursor: nextCursor })
         .where('consumer', '=', this.parent.name)
-        .where('topic', '=', this.topic)
+        .where('topic', 'in', eligibleCursors.select('topic'))
         .execute()
     })
   }
