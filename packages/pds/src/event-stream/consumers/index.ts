@@ -8,7 +8,17 @@ import SceneVotesOnPostConsumer from './scene-votes-on-post'
 import RemoveUpvoteConsumer from './remove-upvote'
 import CreateNotificationConsumer from './create-notification'
 import DeleteNotificationsConsumer from './delete-notifications'
-import { MessageQueue } from '../types'
+import { MessageOfType, MessageQueue } from '../types'
+import Database from '../../db'
+import {
+  isAddMember,
+  isAddUpvote,
+  isCreateNotification,
+  isDeleteNotifications,
+  isRemoveMember,
+  isRemoveUpvote,
+  isSceneVotesOnPostTableUpdates,
+} from '../messages'
 
 export const listen = (
   messageQueue: MessageQueue,
@@ -19,14 +29,38 @@ export const listen = (
   const getAuthStore = (did: string) => {
     return auth.verifier.loadAuthStore(keypair, [], did)
   }
-  messageQueue.listen('add_member', new AddMemberConsumer())
-  messageQueue.listen('remove_member', new RemoveMemberConsumer())
-  messageQueue.listen('add_upvote', new AddUpvoteConsumer())
-  messageQueue.listen(
-    'scene_votes_on_post__table_updates',
-    new SceneVotesOnPostConsumer(getAuthStore, messageQueue, blobstore),
+
+  const addMemberConsumer = new AddMemberConsumer()
+  const removeMemberConsumer = new RemoveMemberConsumer()
+  const addUpvoteConsumer = new AddUpvoteConsumer()
+  const sceneVotesOnPostConsumer = new SceneVotesOnPostConsumer(
+    getAuthStore,
+    messageQueue,
+    blobstore,
   )
-  messageQueue.listen('remove_upvote', new RemoveUpvoteConsumer())
-  messageQueue.listen('create_notification', new CreateNotificationConsumer())
-  messageQueue.listen('delete_notifications', new DeleteNotificationsConsumer())
+  const removeUpvoteConsumer = new RemoveUpvoteConsumer()
+  const createNotificationConsumer = new CreateNotificationConsumer()
+  const deleteNotificationsConsumer = new DeleteNotificationsConsumer()
+
+  messageQueue.listen('*', {
+    async listener(ctx: { message: MessageOfType; db: Database }) {
+      const { message, db } = ctx
+      if (isAddMember(message)) {
+        return addMemberConsumer.dispatch({ message, db })
+      } else if (isRemoveMember(message)) {
+        return removeMemberConsumer.dispatch({ message, db })
+      } else if (isAddUpvote(message)) {
+        return addUpvoteConsumer.dispatch({ message, db })
+      } else if (isSceneVotesOnPostTableUpdates(message)) {
+        return sceneVotesOnPostConsumer.dispatch({ message, db })
+      } else if (isRemoveUpvote(message)) {
+        return removeUpvoteConsumer.dispatch({ message, db })
+      } else if (isCreateNotification(message)) {
+        return createNotificationConsumer.dispatch({ message, db })
+      } else if (isDeleteNotifications(message)) {
+        return deleteNotificationsConsumer.dispatch({ message, db })
+      }
+      throw new Error('Catch-all listener could not handle message')
+    },
+  })
 }

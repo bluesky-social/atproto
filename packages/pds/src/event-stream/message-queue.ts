@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import PQueue from 'p-queue'
 import Database from '../db'
 import { dbLogger as log } from '../logger'
@@ -7,7 +8,10 @@ import {
   Listener,
   MessageOfType,
   isMessageOfType,
+  MaybeAnyTopic,
 } from './types'
+
+const ANY_TOPIC = '*'
 
 export class SqlMessageQueue implements MessageQueue {
   private topicQueues: Map<string, TopicQueue> = new Map()
@@ -39,7 +43,7 @@ export class SqlMessageQueue implements MessageQueue {
     }
   }
 
-  listen<T extends string, M extends MessageOfType<T>>(
+  listen<T extends string, M extends MessageOfType<MaybeAnyTopic<T>>>(
     topic: T,
     listenable: Listenable<M>,
   ) {
@@ -74,11 +78,11 @@ export class SqlMessageQueue implements MessageQueue {
   }
 
   private hasTopic(topic: string) {
-    return this.topicQueues.has(topic)
+    return this.topicQueues.has(topic) || this.topicQueues.has(ANY_TOPIC)
   }
 
   private getTopicQueue(topic: string) {
-    return this.topicQueues.get(topic)
+    return this.topicQueues.get(topic) ?? this.topicQueues.get(ANY_TOPIC)
   }
 
   private getTopicQueueOrThrow(topic: string) {
@@ -137,7 +141,15 @@ class TopicQueue<T extends string = string> {
     await processingQueue?.onIdle() // Complete in-process items
   }
 
+  async processNext(): Promise<void> {
+    await this.processingQueue?.add(() => this.processBatch(1))
+  }
+
   async processAll(): Promise<void> {
+    await this.processingQueue?.add(() => this.processBatch('all'))
+  }
+
+  private async processBatch(count: number | 'all'): Promise<void> {
     await this.ensureCursor()
     await this.db.transaction(async (dbTxn) => {
       let builder = dbTxn.db
@@ -151,6 +163,9 @@ class TopicQueue<T extends string = string> {
         .where('cursor.topic', '=', this.topic)
         .orderBy('id', 'asc')
         .selectAll()
+      if (count !== 'all') {
+        builder = builder.limit(count)
+      }
       if (this.db.dialect !== 'sqlite') {
         builder = builder.forUpdate()
       }
@@ -175,63 +190,30 @@ class TopicQueue<T extends string = string> {
     })
   }
 
-  async processNext(): Promise<void> {
-    await this.processingQueue?.add(() => this.processNextConcurrent())
-  }
-
-  private async processNextConcurrent(): Promise<void> {
-    await this.ensureCursor()
-    await this.db.transaction(async (dbTxn) => {
-      let builder = dbTxn.db
-        .selectFrom('message_queue_cursor as cursor')
-        .innerJoin('message_queue', (join) =>
-          join
-            .onRef('cursor.topic', '=', 'message_queue.topic')
-            .onRef('cursor.cursor', '<=', 'message_queue.id'),
-        )
-        .where('cursor.consumer', '=', this.parent.name)
-        .where('cursor.topic', '=', this.topic)
-        .orderBy('id', 'asc')
-        .limit(1)
-        .selectAll()
-      if (this.db.dialect !== 'sqlite') {
-        builder = builder.forUpdate()
-      }
-
-      // @NOTE this will block until in-flight messages are processed, and will be
-      // holding onto resources in the meantime e.g. a db connection from the pool.
-      const res = await builder.executeTakeFirst()
-
-      // all caught up
-      if (!res) return
-
-      const message: MessageOfType = JSON.parse(res.message)
-      await this.handleMessage(dbTxn, message)
-
-      const nextCursor = res.id + 1
-      await dbTxn.db
-        .updateTable('message_queue_cursor')
-        .set({ cursor: nextCursor })
-        .where('consumer', '=', this.parent.name)
-        .where('topic', '=', this.topic)
-        .returningAll()
-        .execute()
-    })
-  }
-
   private async handleMessage(db: Database, message: MessageOfType) {
-    if (!isMessageOfType(message, this.topic)) {
-      return log.error(
-        { message },
-        `message type does not match topic "${this.topic}": ${message.type}`,
-      )
-    }
-    for (const listener of this.listeners) {
-      try {
-        const effects = await listener({ message, db })
-        await this.parent.send(db, effects ?? [])
-      } catch (err) {
-        log.error({ message, err }, `unable to handle event: ${message.type}`)
+    if (this.topic === ANY_TOPIC) {
+      for (const listener of this.listeners as Listener[]) {
+        try {
+          const effects = await listener({ message, db })
+          await this.parent.send(db, effects ?? [])
+        } catch (err) {
+          log.error({ message, err }, `unable to handle event: ${message.type}`)
+        }
+      }
+    } else {
+      if (!isMessageOfType(message, this.topic)) {
+        return log.error(
+          { message },
+          `message type does not match topic "${this.topic}": ${message.type}`,
+        )
+      }
+      for (const listener of this.listeners) {
+        try {
+          const effects = await listener({ message, db })
+          await this.parent.send(db, effects ?? [])
+        } catch (err) {
+          log.error({ message, err }, `unable to handle event: ${message.type}`)
+        }
       }
     }
   }

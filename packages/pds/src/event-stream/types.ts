@@ -35,7 +35,7 @@ export abstract class Consumer<M extends MessageOfType>
 
 export interface MessageQueue {
   send(tx: Database, message: MessageOfType | MessageOfType[]): Promise<void>
-  listen<T extends string, M extends MessageOfType<T>>(
+  listen<T extends string, M extends MessageOfType<MaybeAnyTopic<T>>>(
     topic: T,
     listenable: Listenable<M>,
   ): void
@@ -43,3 +43,5 @@ export interface MessageQueue {
   processAll(): Promise<void>
   destroy(): void
 }
+
+export type MaybeAnyTopic<T extends string> = T extends '*' ? string : T
