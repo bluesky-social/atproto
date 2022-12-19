@@ -1,5 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { Main as FeedItem } from '../../src/lexicon/types/app/bsky/feed/item'
+import { Main as FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/feedViewPost'
 import {
   runTestServer,
   forSnapshot,
@@ -41,7 +41,7 @@ describe('timeline views', () => {
   })
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
-    const expectOriginatorFollowedBy = (did) => (item: FeedItem) => {
+    const expectOriginatorFollowedBy = (did) => (item: FeedViewPost) => {
       const originator = getOriginator(item)
       // The user expects to see posts & reposts from themselves and follows
       if (did !== originator) {

@@ -6,7 +6,7 @@
       "type": "object",
       "required": ["post", "viewer"],
       "properties": {
-        "post": {"type": "ref", "ref": "app.bsky.actor.post#view"},
+        "post": {"type": "ref", "ref": "app.bsky.feed.post#view"},
         "reply": {"type": "ref", "ref": "#replyRef"},
         "reason": {"type": "union", "refs": ["#reasonTrend", "#reasonRepost"]}
       }
@@ -15,8 +15,8 @@
       "type": "object",
       "required": ["root", "parent"],
       "properties": {
-        "root": {"type": "ref", "ref": "app.bsky.actor.post#view"},
-        "parent": {"type": "ref", "ref": "app.bsky.actor.post#view"}
+        "root": {"type": "ref", "ref": "app.bsky.feed.post#view"},
+        "parent": {"type": "ref", "ref": "app.bsky.feed.post#view"}
       }
     },
     "reasonTrend": {

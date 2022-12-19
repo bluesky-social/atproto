@@ -1,19 +1,19 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import * as AppBskyActorPost from '../actor/post'
+import * as AppBskyFeedPost from './post'
 import * as AppBskyActorRef from '../actor/ref'
 
 export interface Main {
-  post: AppBskyActorPost.View
+  post: AppBskyFeedPost.View
   reply?: ReplyRef
   reason?: ReasonTrend | ReasonRepost | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
 export interface ReplyRef {
-  root: AppBskyActorPost.View
-  parent: AppBskyActorPost.View
+  root: AppBskyFeedPost.View
+  parent: AppBskyFeedPost.View
   [k: string]: unknown
 }
 

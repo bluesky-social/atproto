@@ -1,15 +1,9 @@
-import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import {
-  FeedAlgorithm,
-  FeedItemType,
-  FeedKeyset,
-  composeFeed,
-  FeedRow,
-} from '../util/feed'
+import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
+import { FeedRow } from '../../../../services/feed'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -24,55 +18,25 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
+      const feedService = ctx.services.feed(ctx.db, ctx.imgUriBuilder)
+
       const followingIdsSubquery = db
         .selectFrom('follow')
         .select('follow.subjectDid')
         .where('follow.creator', '=', requester)
 
-      const postsQb = db
-        .selectFrom('post')
-        .select([
-          sql<FeedItemType>`${'post'}`.as('type'),
-          'uri as postUri',
-          'cid as postCid',
-          'creator as originatorDid',
-          'creator as authorDid',
-          'replyParent',
-          'replyRoot',
-          'indexedAt as cursor',
-        ])
+      const postsQb = feedService
+        .selectPostQb()
         .where('creator', '=', requester)
         .orWhere('creator', 'in', followingIdsSubquery)
 
-      const repostsQb = db
-        .selectFrom('repost')
-        .innerJoin('post', 'post.uri', 'repost.subject')
-        .select([
-          sql<FeedItemType>`${'repost'}`.as('type'),
-          'post.uri as postUri',
-          'post.cid as postCid',
-          'creator as originatorDid',
-          'post.creator as authorDid',
-          'post.replyParent as replyParent',
-          'post.replyRoot as replyRoot',
-          'indexedAt as cursor',
-        ])
+      const repostsQb = feedService
+        .selectRepostQb()
         .where('creator', '=', requester)
         .orWhere('creator', 'in', followingIdsSubquery)
 
-      const trendsQb = db
-        .selectFrom('trend')
-        .innerJoin('post', 'post.uri', 'trend.subject')
-        .select([
-          sql<FeedItemType>`${'trend'}`.as('type'),
-          'post.uri as postUri',
-          'post.cid as postCid',
-          'creator as originatorDid',
-          'post.creator as authorDid',
-          'post.replyParent as replyParent',
-          'post.replyRoot as replyRoot',
-          'indexedAt as cursor',
-        ])
+      const trendsQb = feedService
+        .selectTrendQb()
         .where('creator', '=', requester)
         .orWhere('creator', 'in', followingIdsSubquery)
 
@@ -86,12 +50,7 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await composeFeed(
-        db,
-        ctx.imgUriBuilder,
-        feedItems,
-        requester,
-      )
+      const feed = await composeFeed(feedService, feedItems, requester)
 
       return {
         encoding: 'application/json',

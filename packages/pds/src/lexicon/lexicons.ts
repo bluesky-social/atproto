@@ -1576,7 +1576,7 @@ export const schemaDict = {
         properties: {
           post: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.post#view',
+            ref: 'lex:app.bsky.feed.post#view',
           },
           reply: {
             type: 'ref',
@@ -1597,11 +1597,11 @@ export const schemaDict = {
         properties: {
           root: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.post#view',
+            ref: 'lex:app.bsky.feed.post#view',
           },
           parent: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.post#view',
+            ref: 'lex:app.bsky.feed.post#view',
           },
         },
       },
