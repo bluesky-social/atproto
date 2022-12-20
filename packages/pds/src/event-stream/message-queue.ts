@@ -13,7 +13,7 @@ import {
 const ANY_TOPIC = '*'
 
 export class SqlMessageQueue implements MessageQueue {
-  private topicQueues: Map<string, TopicQueue> = new Map()
+  public topicQueues: Map<string, TopicQueue> = new Map()
 
   constructor(public name: string, private db: Database) {}
 
@@ -149,21 +149,26 @@ class TopicQueue<T extends string = string> {
   }
 
   private async processBatch(count: number | 'all'): Promise<void> {
-    // TODO assuming topic is '*'
     await this.ensureCursor()
     await this.db.transaction(async (dbTxn) => {
-      let eligibleCursors = dbTxn.db
+      const involvedCursors = dbTxn.db
         .selectFrom('message_queue_cursor')
         .where('consumer', '=', this.parent.name)
-      if (this.topic !== ANY_TOPIC) {
-        eligibleCursors = eligibleCursors.where('topic', '=', this.topic)
-      }
-      const maybeAnyCursor = eligibleCursors.where('topic', '=', ANY_TOPIC)
+        .if(this.topic !== ANY_TOPIC, (qb) =>
+          qb.where('topic', 'in', [this.topic, ANY_TOPIC]),
+        )
+
+      // Matches *-cursor when this.topic is ANY_TOPIC
+      const maybeAnyCursor = dbTxn.db
+        .selectFrom('message_queue_cursor')
+        .where('consumer', '=', this.parent.name)
+        .where('topic', '=', ANY_TOPIC)
+        .where('topic', '=', this.topic)
 
       let builder = dbTxn.db
         .selectFrom('message_queue as message')
         .leftJoin(
-          eligibleCursors
+          involvedCursors
             .if(this.db.dialect !== 'sqlite', (q) => q.forUpdate())
             .selectAll()
             .as('cursor'),
@@ -210,7 +215,9 @@ class TopicQueue<T extends string = string> {
         .updateTable('message_queue_cursor')
         .set({ cursor: nextCursor })
         .where('consumer', '=', this.parent.name)
-        .where('topic', 'in', eligibleCursors.select('topic'))
+        .if(this.topic !== ANY_TOPIC, (qb) =>
+          qb.where('topic', '=', this.topic),
+        )
         .execute()
     })
   }
