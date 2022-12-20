@@ -42,7 +42,7 @@
     },
     "textSlice": {
       "type": "object",
-      "description": "A text segment. Start is inclusive, end is exclusive."
+      "description": "A text segment. Start is inclusive, end is exclusive.",
       "required": ["start", "end"],
       "properties": {
         "start": {"type": "integer", "minimum": 0},
