@@ -167,13 +167,14 @@ describe('event stream concurrency', () => {
 
     const eventTag = ['a', 'b']
 
-    for (let batch = 0; batch < 10; ++batch) {
+    for (let batch = 0; batch < 25; ++batch) {
+      // TODO check-out adding a wait here, ensure all is still rosy
       await Promise.all(
-        [...Array(50)]
+        [...Array(20)]
           .map((_, i) => ({
             type: `event_${eventTag[i % 2]}`,
             tag: eventTag[i % 2],
-            id: batch * 50 + i,
+            id: batch * 20 + i,
           }))
           .map((msg, i) => {
             if ([0, 3].includes(i % 4)) {
@@ -183,16 +184,17 @@ describe('event stream concurrency', () => {
             }
           }),
       )
-      await Promise.all([queueIdle(messageQueue), queueIdle(messageQueue2)])
     }
 
-    expect(Object.keys(processedById).length).toEqual(500)
+    await Promise.all([queueIdle(messageQueue), queueIdle(messageQueue2)])
+
     expect(processedByType.a).toEqual(250)
     expect(processedByType.b).toEqual(250)
     expect(processedByQueue[1] + processedByQueue[2]).toEqual(500)
     expect(
       processedByTopic.a + processedByTopic.b + processedByTopic['*'],
     ).toEqual(500)
+    expect(Object.keys(processedById).length).toEqual(500)
   })
 })
 

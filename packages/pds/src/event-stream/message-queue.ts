@@ -158,6 +158,23 @@ class TopicQueue<T extends string = string> {
     await this.processingQueue?.add(() => this.processBatch('all'))
   }
 
+  /*
+   * There are two kinds of cursors: the *-cursor or "any" cursor, and cursors for specific topics.
+   * We need to ensure that the messages in a topic are processed in order, one at a time.
+   *
+   * When processing a *-cursor:
+   * a. Lock every cursor, since this cursor could process messages in any topic.
+   * b. Lookup the lowest unprocessed messages. That would be messages that are either unprocessed by their
+   *    topic's cursor, or if their topic doesn't have a cursor, are unprocessed by the *-cursor.
+   * c. Process messages in order, lowest first.
+   * d. Move all cursors forward: we just processed the lowest unprocessed messages across any topic.
+   *
+   * When processing a topic-cursor:
+   * a. Lock the topic's cursor and the *-cursor: these are the only cursors that may process messages from the topic.
+   * b. Lookup the lowest unprocessed messages within the topic.
+   * c. Process messages in order, lowest first.
+   * d. Move topic's cursor forward.
+   */
   private async processBatch(count: number | 'all'): Promise<void> {
     await this.db.transaction(async (dbTxn) => {
       await this.ensureCursor(dbTxn)
@@ -196,7 +213,7 @@ class TopicQueue<T extends string = string> {
         )
         .where((qb) => {
           if (this.topic !== ANY_TOPIC || anyCursor === undefined) {
-            // Processing one specific topic.
+            // Processing a specific topic.
             // Topic cursor exists but not processed by it:
             return qb.whereRef('message.id', '>=', 'cursor.cursor')
           }
@@ -204,7 +221,7 @@ class TopicQueue<T extends string = string> {
           const anyCursorValue = anyCursor.cursor
           return (
             qb
-              // Topic cursor exists but not processed by it:
+              // Topic cursor exists and message not processed by it:
               .whereRef('message.id', '>=', 'cursor.cursor')
               // Topic cursor doesn't exist and not processed by *-cursor:
               .orWhere((q) =>
@@ -235,9 +252,11 @@ class TopicQueue<T extends string = string> {
       const nextCursor = lastResult.id + 1
       // If processed a specific topic, update its cursor.
       // If processed *-topic, update all cursors.
+      // Don't allow cursors to ever move backwards.
       await dbTxn.db
         .updateTable('message_queue_cursor')
         .set({ cursor: nextCursor })
+        .where('cursor', '<', nextCursor)
         .where('consumer', '=', this.parent.name)
         .if(this.topic !== ANY_TOPIC, (qb) =>
           qb.where('topic', '=', this.topic),
