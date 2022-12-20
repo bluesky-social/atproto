@@ -133,8 +133,8 @@ export class FeedService {
           .select(countAll.as('count'))
           .as('repostCount'),
         db
-          .selectFrom('post')
-          .whereRef('replyParent', '=', ref('post.uri'))
+          .selectFrom('post as reply')
+          .whereRef('reply.replyParent', '=', ref('post.uri'))
           .select(countAll.as('count'))
           .as('replyCount'),
         db
