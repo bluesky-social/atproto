@@ -166,6 +166,7 @@ const getChildrenData = async (
   const children = await feedService
     .selectPostQb()
     .where('post.replyParent', '=', uri)
+    .orderBy('post.createdAt', 'desc')
     .execute()
   return Promise.all(
     children.map(async (row) => ({
