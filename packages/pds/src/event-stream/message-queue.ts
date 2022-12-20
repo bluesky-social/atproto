@@ -179,46 +179,33 @@ class TopicQueue<T extends string = string> {
     await this.db.transaction(async (dbTxn) => {
       await this.ensureCursor(dbTxn)
 
-      let anyCursor: MessageQueueCursor | undefined
-      if (this.db.dialect !== 'sqlite') {
-        // Lock relevant cursors
-        const cursors = await dbTxn.db
-          .selectFrom('message_queue_cursor')
-          .selectAll()
-          .forUpdate()
-          .where('consumer', '=', this.parent.name)
-          .if(this.topic !== ANY_TOPIC, (qb) =>
-            qb.where('topic', 'in', [this.topic, ANY_TOPIC]),
-          )
-          .execute()
-        anyCursor = cursors.find((c) => c.topic === ANY_TOPIC)
-      } else {
-        anyCursor = await dbTxn.db
-          .selectFrom('message_queue_cursor')
-          .selectAll()
-          .where('consumer', '=', this.parent.name)
-          .where('topic', '=', ANY_TOPIC)
-          .executeTakeFirst()
-      }
+      const eligibleCursors = dbTxn.db
+        .selectFrom('message_queue_cursor')
+        .selectAll()
+        .where('consumer', '=', this.parent.name)
+        .if(this.topic !== ANY_TOPIC, (qb) =>
+          qb.where('topic', 'in', [this.topic, ANY_TOPIC]),
+        )
+        .if(this.db.dialect !== 'sqlite', (qb) => qb.forUpdate())
+
+      const anyCursor = dbTxn.db
+        .selectFrom('message_queue_cursor')
+        .where('consumer', '=', this.parent.name)
+        .where('topic', '=', ANY_TOPIC)
 
       let builder = dbTxn.db
         .selectFrom('message_queue as message')
-        .leftJoin('message_queue_cursor as cursor', (join) =>
-          join
-            .on('cursor.consumer', '=', this.parent.name)
-            .onRef('cursor.topic', '=', 'message.topic'),
-        )
+        .leftJoin(eligibleCursors.as('cursor'), 'cursor.topic', 'message.topic')
         .if(this.topic !== ANY_TOPIC, (qb) =>
           qb.where('message.topic', '=', this.topic),
         )
         .where((qb) => {
-          if (this.topic !== ANY_TOPIC || anyCursor === undefined) {
+          if (this.topic !== ANY_TOPIC) {
             // Processing a specific topic.
             // Topic cursor exists but not processed by it:
             return qb.whereRef('message.id', '>=', 'cursor.cursor')
           }
           // Processing any topic.
-          const anyCursorValue = anyCursor.cursor
           return (
             qb
               // Topic cursor exists and message not processed by it:
@@ -227,7 +214,7 @@ class TopicQueue<T extends string = string> {
               .orWhere((q) =>
                 q
                   .where('cursor.cursor', 'is', null)
-                  .where('message.id', '>=', anyCursorValue),
+                  .where('message.id', '>=', anyCursor.select('cursor')),
               )
           )
         })
