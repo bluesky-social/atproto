@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      const feedService = ctx.services.feed(ctx.db, ctx.imgUriBuilder)
+      const feedService = ctx.services.feed(ctx.db)
 
       const userLookupCol = author.startsWith('did:')
         ? 'did_handle.did'

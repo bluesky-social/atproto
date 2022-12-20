@@ -12,9 +12,8 @@ export * from './types'
 export class FeedService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
 
-  static creator() {
-    return (db: Database, imgUriBuilder: ImageUriBuilder) =>
-      new FeedService(db, imgUriBuilder)
+  static creator(imgUriBuilder: ImageUriBuilder) {
+    return (db: Database) => new FeedService(db, imgUriBuilder)
   }
 
   selectPostQb() {

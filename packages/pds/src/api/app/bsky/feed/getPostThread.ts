@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       const { uri, depth = 6 } = params
       const requester = auth.credentials.did
 
-      const feedService = ctx.services.feed(ctx.db, ctx.imgUriBuilder)
+      const feedService = ctx.services.feed(ctx.db)
 
       const threadData = await getThreadData(feedService, uri, depth)
       if (!threadData) {

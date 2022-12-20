@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      const feedService = ctx.services.feed(ctx.db, ctx.imgUriBuilder)
+      const feedService = ctx.services.feed(ctx.db)
 
       const followingIdsSubquery = db
         .selectFrom('follow')

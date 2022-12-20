@@ -8,14 +8,16 @@ import { FeedService } from './feed'
 import { RecordService } from './record'
 import { RepoService } from './repo'
 
-export function createServices(
-  messageQueue: MessageQueue,
-  blobstore: BlobStore,
-): Services {
+export function createServices(resources: {
+  messageQueue: MessageQueue
+  blobstore: BlobStore
+  imgUriBuilder: ImageUriBuilder
+}): Services {
+  const { messageQueue, blobstore, imgUriBuilder } = resources
   return {
     actor: ActorService.creator(),
     auth: AuthService.creator(),
-    feed: FeedService.creator(),
+    feed: FeedService.creator(imgUriBuilder),
     record: RecordService.creator(messageQueue),
     repo: RepoService.creator(messageQueue, blobstore),
   }
@@ -24,13 +26,9 @@ export function createServices(
 export type Services = {
   actor: FromDb<ActorService>
   auth: FromDb<AuthService>
-  feed: FromDbAndImgBuilder<FeedService>
+  feed: FromDb<FeedService>
   record: FromDb<RecordService>
   repo: FromDb<RepoService>
 }
 
 type FromDb<T> = (db: Database) => T
-type FromDbAndImgBuilder<T> = (
-  db: Database,
-  imgUriBuilder: ImageUriBuilder,
-) => T
