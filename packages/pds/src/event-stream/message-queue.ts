@@ -1,5 +1,7 @@
+import { sql } from 'kysely'
 import PQueue from 'p-queue'
 import Database from '../db'
+import { MessageQueueCursor } from '../db/tables/message-queue-cursor'
 import { dbLogger as log } from '../logger'
 import {
   MessageQueue,
@@ -112,11 +114,19 @@ class TopicQueue<T extends string = string> {
     this.listeners.push(listenable.listener)
   }
 
-  private async ensureCursor(): Promise<void> {
+  private async ensureCursor(tx: Database): Promise<void> {
     if (this.cursorExists) return
-    await this.db.db
+    const anyCursor = tx.db
+      .selectFrom('message_queue_cursor')
+      .where('consumer', '=', this.parent.name)
+      .where('topic', '=', ANY_TOPIC)
+    await tx.db
       .insertInto('message_queue_cursor')
-      .values({ consumer: this.parent.name, topic: this.topic, cursor: 1 })
+      .values({
+        consumer: this.parent.name,
+        topic: this.topic,
+        cursor: sql`coalesce(${anyCursor.select('cursor')}, 1)`,
+      })
       .onConflict((oc) => oc.doNothing())
       .execute()
     this.cursorExists = true
@@ -149,46 +159,58 @@ class TopicQueue<T extends string = string> {
   }
 
   private async processBatch(count: number | 'all'): Promise<void> {
-    await this.ensureCursor()
     await this.db.transaction(async (dbTxn) => {
-      const involvedCursors = dbTxn.db
-        .selectFrom('message_queue_cursor')
-        .where('consumer', '=', this.parent.name)
-        .if(this.topic !== ANY_TOPIC, (qb) =>
-          qb.where('topic', 'in', [this.topic, ANY_TOPIC]),
-        )
+      await this.ensureCursor(dbTxn)
 
-      // Matches *-cursor when this.topic is ANY_TOPIC
-      const maybeAnyCursor = dbTxn.db
-        .selectFrom('message_queue_cursor')
-        .where('consumer', '=', this.parent.name)
-        .where('topic', '=', ANY_TOPIC)
-        .where('topic', '=', this.topic)
+      let anyCursor: MessageQueueCursor | undefined
+      if (this.db.dialect !== 'sqlite') {
+        // Lock relevant cursors
+        const cursors = await dbTxn.db
+          .selectFrom('message_queue_cursor')
+          .selectAll()
+          .forUpdate()
+          .where('consumer', '=', this.parent.name)
+          .if(this.topic !== ANY_TOPIC, (qb) =>
+            qb.where('topic', 'in', [this.topic, ANY_TOPIC]),
+          )
+          .execute()
+        anyCursor = cursors.find((c) => c.topic === ANY_TOPIC)
+      } else {
+        anyCursor = await dbTxn.db
+          .selectFrom('message_queue_cursor')
+          .selectAll()
+          .where('consumer', '=', this.parent.name)
+          .where('topic', '=', ANY_TOPIC)
+          .executeTakeFirst()
+      }
 
       let builder = dbTxn.db
         .selectFrom('message_queue as message')
-        .leftJoin(
-          involvedCursors
-            .if(this.db.dialect !== 'sqlite', (q) => q.forUpdate())
-            .selectAll()
-            .as('cursor'),
-          'cursor.topic',
-          'message.topic',
+        .leftJoin('message_queue_cursor as cursor', (join) =>
+          join
+            .on('cursor.consumer', '=', this.parent.name)
+            .onRef('cursor.topic', '=', 'message.topic'),
+        )
+        .if(this.topic !== ANY_TOPIC, (qb) =>
+          qb.where('message.topic', '=', this.topic),
         )
         .where((qb) => {
+          if (this.topic !== ANY_TOPIC || anyCursor === undefined) {
+            // Processing one specific topic.
+            // Topic cursor exists but not processed by it:
+            return qb.whereRef('message.id', '>=', 'cursor.cursor')
+          }
+          // Processing any topic.
+          const anyCursorValue = anyCursor.cursor
           return (
             qb
-              // Topic cursor exists but not processed by it
-              .where((q) => q.whereRef('message.id', '>=', 'cursor.cursor'))
-              // Topic cursor doesn't exist and not processed by *-cursor (if *-cursor is eligible)
+              // Topic cursor exists but not processed by it:
+              .whereRef('message.id', '>=', 'cursor.cursor')
+              // Topic cursor doesn't exist and not processed by *-cursor:
               .orWhere((q) =>
                 q
                   .where('cursor.cursor', 'is', null)
-                  .whereRef(
-                    'message.id',
-                    '>=',
-                    maybeAnyCursor.select('cursor'),
-                  ),
+                  .where('message.id', '>=', anyCursorValue),
               )
           )
         })
@@ -211,6 +233,8 @@ class TopicQueue<T extends string = string> {
       }
 
       const nextCursor = lastResult.id + 1
+      // If processed a specific topic, update its cursor.
+      // If processed *-topic, update all cursors.
       await dbTxn.db
         .updateTable('message_queue_cursor')
         .set({ cursor: nextCursor })
