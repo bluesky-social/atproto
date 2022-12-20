@@ -133,13 +133,13 @@ const getThreadData = async (
   return {
     post,
     parent: post.replyParent
-      ? await getAncestorData(feedService, post.replyParent)
+      ? await getParentData(feedService, post.replyParent)
       : undefined,
-    replies: await getReleventChildren(feedService, uri, depth),
+    replies: await getChildrenData(feedService, uri, depth),
   }
 }
 
-const getAncestorData = async (
+const getParentData = async (
   feedService: FeedService,
   uri: string,
 ): Promise<PostThread | ParentNotFoundError> => {
@@ -151,13 +151,13 @@ const getAncestorData = async (
   return {
     post,
     parent: post.replyParent
-      ? await getAncestorData(feedService, post.replyParent)
+      ? await getParentData(feedService, post.replyParent)
       : undefined,
     replies: [],
   }
 }
 
-const getReleventChildren = async (
+const getChildrenData = async (
   feedService: FeedService,
   uri: string,
   depth: number,
@@ -170,7 +170,7 @@ const getReleventChildren = async (
   return Promise.all(
     children.map(async (row) => ({
       post: row,
-      replies: await getReleventChildren(feedService, uri, depth - 1),
+      replies: await getChildrenData(feedService, row.postUri, depth - 1),
     })),
   )
 }
