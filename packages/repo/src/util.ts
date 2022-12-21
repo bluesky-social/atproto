@@ -18,15 +18,15 @@ export const ucanForOperation = async (
 }
 
 export const getWriteOpLog = async (
-  blockstore: RepoStorage,
-  earliest: CID | null,
+  storage: RepoStorage,
   latest: CID,
+  earliest: CID | null,
 ): Promise<RecordWriteOp[][]> => {
-  const commits = await blockstore.getCommitPath(latest, earliest)
+  const commits = await storage.getCommitPath(latest, earliest)
   if (!commits) throw new Error('Could not find shared history')
-  const heads = await Promise.all(commits.map((c) => Repo.load(blockstore, c)))
+  const heads = await Promise.all(commits.map((c) => Repo.load(storage, c)))
   // Turn commit path into list of diffs
-  let prev: DataStore = await MST.create(blockstore) // Empty
+  let prev: DataStore = await MST.create(storage) // Empty
   const msts = heads.map((h) => h.data)
   const diffs: DataDiff[] = []
   for (const mst of msts) {
@@ -34,22 +34,22 @@ export const getWriteOpLog = async (
     prev = mst
   }
   // Map MST diffs to write ops
-  return Promise.all(diffs.map((diff) => diffToWriteOps(blockstore, diff)))
+  return Promise.all(diffs.map((diff) => diffToWriteOps(storage, diff)))
 }
 
 export const diffToWriteOps = (
-  blockstore: RepoStorage,
+  storage: RepoStorage,
   diff: DataDiff,
 ): Promise<RecordWriteOp[]> => {
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseRecordKey(add.key)
-      const value = await blockstore.getUnchecked(add.cid)
+      const value = await storage.getUnchecked(add.cid)
       return { action: 'create' as const, collection, rkey, value }
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseRecordKey(upd.key)
-      const value = await blockstore.getUnchecked(upd.cid)
+      const value = await storage.getUnchecked(upd.cid)
       return { action: 'update' as const, collection, rkey, value }
     }),
     ...diff.deleteList().map((del) => {

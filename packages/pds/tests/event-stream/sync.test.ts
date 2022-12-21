@@ -82,7 +82,7 @@ describe('sync', () => {
     const storage = new SqlRepoStorage(db, did)
     const root = await storage.getHead()
     if (!root) throw new Error('Missing repo root')
-    return await getWriteOpLog(storage, null, root)
+    return await getWriteOpLog(storage, root, null)
   }
 
   function prepareWrites(

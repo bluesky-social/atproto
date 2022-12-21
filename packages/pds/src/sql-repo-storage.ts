@@ -189,7 +189,7 @@ export class SqlRepoStorage extends RepoStorage {
       .selectFrom('ancestor')
       .select('commit')
       .execute()
-    return res.map((row) => CID.parse(row.commit))
+    return res.map((row) => CID.parse(row.commit)).reverse()
   }
 
   async destroySaved(): Promise<void> {
