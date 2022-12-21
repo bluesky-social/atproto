@@ -6,7 +6,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.setVote({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const { subject, direction } = input.body
 

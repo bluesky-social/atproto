@@ -19,6 +19,7 @@ export const getActorInfo = async (
   const actorInfo = await db
     .selectFrom('did_handle')
     .where(util.actorWhereClause(actor))
+    .where(util.actorNotSoftDeletedClause())
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select([
       'did_handle.did as did',

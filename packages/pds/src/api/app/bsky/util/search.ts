@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../../../db'
-import { DbRef } from '../../../../db/util'
+import { actorNotSoftDeletedClause, DbRef } from '../../../../db/util'
 import { GenericKeyset, paginate } from '../../../../db/pagination'
 
 export const getUserSearchQueryPg = (
@@ -20,7 +20,7 @@ export const getUserSearchQueryPg = (
   const distanceAccount = distance(term, ref('handle'))
   let accountsQb = db.db
     .selectFrom('did_handle')
-    .where('did_handle.takedownId', 'is', null)
+    .where(actorNotSoftDeletedClause())
     .where(distanceAccount, '<', threshold)
     .select(['did_handle.did as did', distanceAccount.as('distance')])
   accountsQb = paginate(accountsQb, {
@@ -35,7 +35,7 @@ export const getUserSearchQueryPg = (
   let profilesQb = db.db
     .selectFrom('profile')
     .innerJoin('did_handle', 'did_handle.did', 'profile.creator')
-    .where('did_handle.takedownId', 'is', null)
+    .where(actorNotSoftDeletedClause())
     .where(distanceProfile, '<', threshold)
     .select(['did_handle.did as did', distanceProfile.as('distance')])
   profilesQb = paginate(profilesQb, {
@@ -107,7 +107,7 @@ export const getUserSearchQuerySqlite = (
 
   return db.db
     .selectFrom('did_handle')
-    .where('did_handle.takedownId', 'is', null)
+    .where(actorNotSoftDeletedClause())
     .where((q) => {
       safeWords.forEach((word) => {
         // Match word prefixes against contents of handle and displayName

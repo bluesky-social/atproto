@@ -3,6 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getActorInfo, getDeclarationSimple } from '../util'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
+import { actorNotSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
@@ -23,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('follow')
         .where('follow.creator', '=', creator.did)
         .innerJoin('did_handle as subject', 'subject.did', 'follow.subjectDid')
-        .where('subject.takedownId', 'is', null)
+        .where(actorNotSoftDeletedClause(ref('subject')))
         .leftJoin('profile', 'profile.creator', 'follow.subjectDid')
         .select([
           'subject.did as did',

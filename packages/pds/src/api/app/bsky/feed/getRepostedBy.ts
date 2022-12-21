@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclarationSimple } from '../util'
 import AppContext from '../../../../context'
+import { actorNotSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getRepostedBy({
@@ -14,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('repost')
         .where('repost.subject', '=', uri)
         .innerJoin('did_handle', 'did_handle.did', 'repost.creator')
-        .where('did_handle.takedownId', 'is', null)
+        .where(actorNotSoftDeletedClause())
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .select([
           'did_handle.did as did',

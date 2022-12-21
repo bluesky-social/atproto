@@ -12,7 +12,7 @@ const profileNsid = lexicons.ids.AppBskyActorProfile
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.updateProfile({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
 

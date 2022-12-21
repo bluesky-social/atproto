@@ -1,6 +1,10 @@
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { countAll, actorWhereClause } from '../../../../db/util'
+import {
+  countAll,
+  actorWhereClause,
+  actorSoftDeleted,
+} from '../../../../db/util'
 import { getDeclarationSimple } from '../util'
 import AppContext from '../../../../context'
 
@@ -12,7 +16,6 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
 
       const db = ctx.db.db
-
       const { ref } = db.dynamic
 
       const queryRes = await db
@@ -21,6 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .leftJoin('scene', 'scene.handle', 'did_handle.handle')
         .select([
+          'did_handle.takedownId',
           'did_handle.did as did',
           'did_handle.handle as handle',
           'did_handle.actorType as actorType',
@@ -72,6 +76,12 @@ export default function (server: Server, ctx: AppContext) {
 
       if (!queryRes) {
         throw new InvalidRequestError(`Profile not found`)
+      }
+      if (actorSoftDeleted(queryRes)) {
+        throw new InvalidRequestError(
+          'Account has been taken down',
+          'AccountTakedown',
+        )
       }
 
       const avatar = queryRes.avatarCid

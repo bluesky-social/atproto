@@ -6,6 +6,7 @@ import { User } from '../db/tables/user'
 import { DidHandle } from '../db/tables/did-handle'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
 import { APP_BSKY_GRAPH } from '../lexicon'
+import { actorNotSoftDeletedClause } from '../db/util'
 
 export class ActorService {
   constructor(public db: Database) {}
@@ -21,7 +22,7 @@ export class ActorService {
     let query = this.db.db
       .selectFrom('user')
       .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
-      .if(!includeSoftDeleted, (qb) => qb.where('takedownId', 'is', null))
+      .if(!includeSoftDeleted, (qb) => qb.where(actorNotSoftDeletedClause()))
       .selectAll()
     if (handleOrDid.startsWith('did:')) {
       query = query.where('did', '=', handleOrDid)
@@ -39,7 +40,7 @@ export class ActorService {
     const found = await this.db.db
       .selectFrom('user')
       .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
-      .if(!includeSoftDeleted, (qb) => qb.where('takedownId', 'is', null))
+      .if(!includeSoftDeleted, (qb) => qb.where(actorNotSoftDeletedClause()))
       .selectAll()
       .where('email', '=', email.toLowerCase())
       .executeTakeFirst()
@@ -53,7 +54,7 @@ export class ActorService {
     if (handleOrDid.startsWith('did:')) return handleOrDid
     const found = await this.db.db
       .selectFrom('did_handle')
-      .if(!includeSoftDeleted, (qb) => qb.where('takedownId', 'is', null))
+      .if(!includeSoftDeleted, (qb) => qb.where(actorNotSoftDeletedClause()))
       .where('handle', '=', handleOrDid)
       .select('did')
       .executeTakeFirst()
