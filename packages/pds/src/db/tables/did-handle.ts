@@ -3,6 +3,7 @@ export interface DidHandle {
   handle: string
   actorType: string
   declarationCid: string
+  takedownId: number | null
 }
 
 export const tableName = 'did_handle'
