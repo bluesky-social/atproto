@@ -91,7 +91,7 @@ export class Repo {
 
     const commitCid = await storage.stage(commit)
 
-    await storage.commitStaged(commitCid)
+    await storage.commitStaged(commitCid, null)
 
     log.info({ did }, `created repo`)
     return new Repo({
@@ -105,8 +105,12 @@ export class Repo {
     })
   }
 
-  static async load(storage: RepoStorage, cid: CID) {
-    const commit = await storage.get(cid, def.commit)
+  static async load(storage: RepoStorage, cid?: CID) {
+    const commitCid = cid || (await storage.getHead())
+    if (!commitCid) {
+      throw new Error('No cid provided and none in storage')
+    }
+    const commit = await storage.get(commitCid, def.commit)
     const root = await storage.get(commit.root, def.repoRoot)
     const meta = await storage.get(root.meta, def.repoMeta)
     const data = await MST.load(storage, root.data)
@@ -117,7 +121,7 @@ export class Repo {
       commit,
       root,
       meta,
-      cid,
+      cid: commitCid,
       stagedWrites: [],
     })
   }
@@ -186,7 +190,7 @@ export class Repo {
       sig: await authStore.sign(rootCid.bytes),
     }
     const commitCid = await this.storage.stage(commit)
-    await this.storage.commitStaged(commitCid)
+    await this.storage.commitStaged(commitCid, this.cid)
 
     return this.updateRepo({
       cid: commitCid,

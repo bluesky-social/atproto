@@ -4,10 +4,15 @@ import { def } from '../types'
 
 export class MemoryBlockstore extends RepoStorage {
   blocks: Map<string, Uint8Array>
+  head: CID | null = null
 
   constructor() {
     super()
     this.blocks = new Map()
+  }
+
+  async getHead(): Promise<CID | null> {
+    return this.head
   }
 
   async getSavedBytes(cid: CID): Promise<Uint8Array | null> {
@@ -28,9 +33,10 @@ export class MemoryBlockstore extends RepoStorage {
     })
   }
 
-  async commitStaged(_commit: CID): Promise<void> {
+  async commitStaged(commit: CID, _prev: CID | null): Promise<void> {
     await this.putMany(this.staged)
     this.clearStaged()
+    this.head = commit
   }
 
   async getCommitPath(

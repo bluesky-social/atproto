@@ -15,11 +15,12 @@ export abstract class RepoStorage {
     this.temp = new Map()
   }
 
+  abstract getHead(forUpdate?: boolean): Promise<CID | null>
   abstract getSavedBytes(cid: CID): Promise<Uint8Array | null>
   abstract hasSavedBlock(cid: CID): Promise<boolean>
   abstract putBlock(cid: CID, block: Uint8Array): Promise<void>
   abstract putMany(blocks: Map<string, Uint8Array>): Promise<void>
-  abstract commitStaged(commit: CID): Promise<void>
+  abstract commitStaged(commit: CID, prev: CID | null): Promise<void>
   abstract getCommitPath(
     latest: CID,
     earliest: CID | null,
