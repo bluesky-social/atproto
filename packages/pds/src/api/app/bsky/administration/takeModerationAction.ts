@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
       const action = _action as 'takedown'
       const subject = _subject as ActorRef.Main
 
-      const actor = await services.actor(db).getUser(subject.did)
+      const actor = await services.actor(db).getUser(subject.did, true)
       if (!actor || actor.declarationCid !== subject.declarationCid) {
         throw new Error('Actor does not exist')
       }

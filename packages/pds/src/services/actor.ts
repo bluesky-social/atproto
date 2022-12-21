@@ -14,10 +14,14 @@ export class ActorService {
     return (db: Database) => new ActorService(db)
   }
 
-  async getUser(handleOrDid: string): Promise<(User & DidHandle) | null> {
+  async getUser(
+    handleOrDid: string,
+    includeSoftDeleted = false,
+  ): Promise<(User & DidHandle) | null> {
     let query = this.db.db
       .selectFrom('user')
       .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
+      .if(!includeSoftDeleted, (qb) => qb.where('takedownId', 'is', null))
       .selectAll()
     if (handleOrDid.startsWith('did:')) {
       query = query.where('did', '=', handleOrDid)
@@ -28,10 +32,14 @@ export class ActorService {
     return found || null
   }
 
-  async getUserByEmail(email: string): Promise<(User & DidHandle) | null> {
+  async getUserByEmail(
+    email: string,
+    includeSoftDeleted = false,
+  ): Promise<(User & DidHandle) | null> {
     const found = await this.db.db
       .selectFrom('user')
       .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
+      .if(!includeSoftDeleted, (qb) => qb.where('takedownId', 'is', null))
       .selectAll()
       .where('email', '=', email.toLowerCase())
       .executeTakeFirst()
