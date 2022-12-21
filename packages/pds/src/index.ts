@@ -62,8 +62,6 @@ export class PDS {
     const messageQueue = new SqlMessageQueue('pds', db)
     streamConsumers.listen(messageQueue, blobstore, auth, keypair)
 
-    const services = createServices(messageQueue, blobstore)
-
     const mailTransport =
       config.emailSmtpUrl !== undefined
         ? createTransport(config.emailSmtpUrl)
@@ -93,6 +91,8 @@ export class PDS {
       config.imgUriSalt,
       config.imgUriKey,
     )
+
+    const services = createServices({ messageQueue, blobstore, imgUriBuilder })
 
     const ctx = new AppContext({
       db,

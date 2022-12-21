@@ -1,111 +1,78 @@
-import * as common from '@atproto/common'
-import { getDeclaration } from '.'
+import { AtUri } from '@atproto/uri'
 import { TimeCidKeyset } from '../../../../db/pagination'
-import * as GetAuthorFeed from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import * as GetTimeline from '../../../../lexicon/types/app/bsky/feed/getTimeline'
-import { CID } from 'multiformats/cid'
-import { ImageUriBuilder } from '../../../../image/uri'
-import { embedsForPosts, FeedEmbeds } from './embeds'
-import DatabaseSchema from '../../../../db/database-schema'
+import { Main as FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/feedViewPost'
+import { FeedRow, FeedService } from '../../../../services/feed'
 
-// Present post and repost results into FeedItems
+// Present post and repost results into FeedViewPosts
 // Including links to embedded media
 export const composeFeed = async (
-  db: DatabaseSchema,
-  imgUriBuilder: ImageUriBuilder,
+  feedService: FeedService,
   rows: FeedRow[],
-): Promise<FeedItem[]> => {
-  const feedUris = rows.map((row) => row.postUri)
-  const embeds = await embedsForPosts(db, imgUriBuilder, feedUris)
-  return rows.map(rowToFeedItem(imgUriBuilder, embeds))
-}
+  requester: string,
+): Promise<FeedViewPost[]> => {
+  const actorDids = new Set<string>()
+  const postUris = new Set<string>()
+  for (const row of rows) {
+    actorDids.add(row.originatorDid)
+    actorDids.add(row.authorDid)
+    postUris.add(row.postUri)
+    if (row.replyParent) {
+      postUris.add(row.replyParent)
+      actorDids.add(new AtUri(row.replyParent).host)
+    }
+    if (row.replyRoot) {
+      postUris.add(row.replyRoot)
+      actorDids.add(new AtUri(row.replyRoot).host)
+    }
+  }
+  const [actors, posts, embeds] = await Promise.all([
+    feedService.getActorViews(Array.from(actorDids)),
+    feedService.getPostViews(Array.from(postUris), requester),
+    feedService.embedsForPosts(Array.from(postUris)),
+  ])
 
-export const rowToFeedItem =
-  (imgUriBuilder: ImageUriBuilder, embeds: FeedEmbeds) =>
-  (row: FeedRow): FeedItem => ({
-    uri: row.postUri,
-    cid: row.postCid,
-    author: rowToAuthor(imgUriBuilder, row),
-    trendedBy:
-      row.type === 'trend' ? rowToOriginator(imgUriBuilder, row) : undefined,
-    repostedBy:
-      row.type === 'repost' ? rowToOriginator(imgUriBuilder, row) : undefined,
-    record: common.ipldBytesToRecord(row.recordBytes),
-    embed: embeds[row.postUri],
-    replyCount: row.replyCount,
-    repostCount: row.repostCount,
-    upvoteCount: row.upvoteCount,
-    downvoteCount: row.downvoteCount,
-    indexedAt: row.indexedAt,
-    myState: {
-      repost: row.requesterRepost ?? undefined,
-      upvote: row.requesterUpvote ?? undefined,
-      downvote: row.requesterDownvote ?? undefined,
-    },
-  })
+  const feed: FeedViewPost[] = []
+  for (const row of rows) {
+    const post = feedService.formatPostView(row.postUri, actors, posts, embeds)
+    const originator = actors[row.originatorDid]
+    if (post && originator) {
+      let reasonType: string | undefined
+      if (row.type === 'trend') {
+        reasonType = 'app.bsky.feed.feedViewPost#reasonTrend'
+      } else if (row.type === 'repost') {
+        reasonType = 'app.bsky.feed.feedViewPost#reasonRepost'
+      }
+      const replyParent = row.replyParent
+        ? feedService.formatPostView(row.replyParent, actors, posts, embeds)
+        : undefined
+      const replyRoot = row.replyRoot
+        ? feedService.formatPostView(row.replyRoot, actors, posts, embeds)
+        : undefined
 
-const rowToAuthor = (imgUriBuilder: ImageUriBuilder, row: FeedRow) => ({
-  did: row.authorDid,
-  declaration: getDeclaration('author', row),
-  handle: row.authorHandle,
-  displayName: row.authorDisplayName ?? undefined,
-  avatar: row.authorAvatarCid
-    ? imgUriBuilder.getCommonSignedUri('avatar', row.authorAvatarCid)
-    : undefined,
-})
-
-const rowToOriginator = (imgUriBuilder: ImageUriBuilder, row: FeedRow) => ({
-  did: row.originatorDid,
-  declaration: getDeclaration('originator', row),
-  handle: row.originatorHandle,
-  displayName: row.originatorDisplayName ?? undefined,
-  avatar: row.originatorAvatarCid
-    ? imgUriBuilder.getSignedUri({
-        cid: CID.parse(row.originatorAvatarCid),
-        format: 'jpeg',
-        fit: 'cover',
-        height: 250,
-        width: 250,
-        min: true,
+      feed.push({
+        post,
+        reason: reasonType
+          ? {
+              $type: reasonType,
+              by: actors[row.originatorDid],
+              indexedAt: row.cursor,
+            }
+          : undefined,
+        reply:
+          replyRoot && replyParent
+            ? {
+                root: replyRoot,
+                parent: replyParent,
+              }
+            : undefined,
       })
-    : undefined,
-})
+    }
+  }
+  return feed
+}
 
 export enum FeedAlgorithm {
-  Firehose = 'firehose',
   ReverseChronological = 'reverse-chronological',
-}
-
-type FeedItem = GetAuthorFeed.FeedItem & GetTimeline.FeedItem
-
-export type FeedItemType = 'post' | 'repost' | 'trend'
-
-type FeedRow = {
-  type: FeedItemType
-  postUri: string
-  postCid: string
-  cursor: string
-  recordBytes: Uint8Array
-  indexedAt: string
-  authorDid: string
-  authorDeclarationCid: string
-  authorActorType: string
-  authorHandle: string
-  authorDisplayName: string | null
-  authorAvatarCid: string | null
-  originatorDid: string
-  originatorDeclarationCid: string
-  originatorActorType: string
-  originatorHandle: string
-  originatorDisplayName: string | null
-  originatorAvatarCid: string | null
-  upvoteCount: number
-  downvoteCount: number
-  repostCount: number
-  replyCount: number
-  requesterRepost: string | null
-  requesterUpvote: string | null
-  requesterDownvote: string | null
 }
 
 export class FeedKeyset extends TimeCidKeyset<FeedRow> {

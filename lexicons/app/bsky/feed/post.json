@@ -48,6 +48,37 @@
         "start": {"type": "integer", "minimum": 0},
         "end": {"type": "integer", "minimum": 0}
       }
+    },
+    "view": {
+      "type": "object",
+      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt", "viewer"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
+        "record": {"type": "unknown"},
+        "embed": {
+          "type": "union",
+          "refs": [
+            "app.bsky.embed.images#presented",
+            "app.bsky.embed.external#presented"
+          ]
+        },
+        "replyCount": {"type": "integer"},
+        "repostCount": {"type": "integer"},
+        "upvoteCount": {"type": "integer"},
+        "downvoteCount": {"type": "integer"},
+        "indexedAt": {"type": "datetime"},
+        "viewer": {"type": "ref", "ref": "#viewerState"}
+      }
+    },
+    "viewerState": {
+      "type": "object",
+      "properties": {
+        "repost": {"type": "string"},
+        "upvote": {"type": "string"},
+        "downvote": {"type": "string"}
+      }
     }
   }
 }
