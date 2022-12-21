@@ -13,6 +13,8 @@ export default function (server: Server, ctx: AppContext) {
         .select(countAll.as('count'))
         .innerJoin('did_handle', 'did_handle.did', 'notif.userDid')
         .innerJoin('user', 'user.handle', 'did_handle.handle')
+        .innerJoin('did_handle as author', 'author.did', 'notif.author')
+        .where('author.takedownId', 'is', null)
         .where('did_handle.did', '=', requester)
         .whereRef('notif.indexedAt', '>', 'user.lastSeenNotifs')
         .executeTakeFirst()

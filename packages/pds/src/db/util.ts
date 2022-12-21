@@ -10,9 +10,13 @@ import {
 
 export const actorWhereClause = (actor: string) => {
   if (actor.startsWith('did:')) {
-    return sql<0 | 1>`"did_handle"."did" = ${actor}`
+    return sql<
+      0 | 1
+    >`("did_handle"."did" = ${actor} and "did_handle"."takedownId" is null)`
   } else {
-    return sql<0 | 1>`"did_handle"."handle" = ${actor}`
+    return sql<
+      0 | 1
+    >`("did_handle"."handle" = ${actor} and "did_handle"."takedownId" is null)`
   }
 }
 

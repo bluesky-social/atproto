@@ -23,6 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('assertion')
         .where('assertion.subjectDid', '=', subject.did)
         .innerJoin('did_handle as creator', 'creator.did', 'assertion.creator')
+        .where('creator.takedownId', 'is', null)
         .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
         .where('assertion.confirmUri', 'is not', null)
         .leftJoin('profile', 'profile.creator', 'creator.did')

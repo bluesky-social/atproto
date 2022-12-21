@@ -46,10 +46,14 @@ export class ActorService {
     return found || null
   }
 
-  async getDidForActor(handleOrDid: string): Promise<string | null> {
+  async getDidForActor(
+    handleOrDid: string,
+    includeSoftDeleted = false,
+  ): Promise<string | null> {
     if (handleOrDid.startsWith('did:')) return handleOrDid
     const found = await this.db.db
       .selectFrom('did_handle')
+      .if(!includeSoftDeleted, (qb) => qb.where('takedownId', 'is', null))
       .where('handle', '=', handleOrDid)
       .select('did')
       .executeTakeFirst()

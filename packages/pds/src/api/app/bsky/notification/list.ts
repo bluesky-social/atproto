@@ -18,6 +18,7 @@ export default function (server: Server, ctx: AppContext) {
         .where('notif.userDid', '=', requester)
         .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
+        .where('author.takedownId', 'is', null)
         .leftJoin(
           'profile as author_profile',
           'author_profile.creator',

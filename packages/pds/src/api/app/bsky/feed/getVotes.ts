@@ -14,6 +14,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('vote')
         .where('vote.subject', '=', uri)
         .innerJoin('did_handle', 'vote.creator', 'did_handle.did')
+        .where('did_handle.takedownId', 'is', null)
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .select([
           'vote.cid as cid',

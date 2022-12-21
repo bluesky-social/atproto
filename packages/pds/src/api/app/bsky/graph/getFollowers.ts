@@ -23,6 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('follow')
         .where('follow.subjectDid', '=', subject.did)
         .innerJoin('did_handle as creator', 'creator.did', 'follow.creator')
+        .where('creator.takedownId', 'is', null)
         .leftJoin('profile', 'profile.creator', 'follow.creator')
         .select([
           'creator.did as did',

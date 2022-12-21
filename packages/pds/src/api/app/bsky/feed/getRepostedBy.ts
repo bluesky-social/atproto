@@ -14,6 +14,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('repost')
         .where('repost.subject', '=', uri)
         .innerJoin('did_handle', 'did_handle.did', 'repost.creator')
+        .where('did_handle.takedownId', 'is', null)
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .select([
           'did_handle.did as did',
