@@ -37,6 +37,12 @@ export default function (server: Server, ctx: AppContext) {
         `Could not find user info for account: ${handle}`,
       )
     }
+    if (user.takedownId !== null) {
+      throw new AuthRequiredError(
+        'Account has been taken down',
+        'AccountTakedown',
+      )
+    }
 
     const access = ctx.auth.createAccessToken(user.did)
     const refresh = ctx.auth.createRefreshToken(user.did)
@@ -61,6 +67,12 @@ export default function (server: Server, ctx: AppContext) {
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,
+        )
+      }
+      if (user.takedownId !== null) {
+        throw new AuthRequiredError(
+          'Account has been taken down',
+          'AccountTakedown',
         )
       }
 

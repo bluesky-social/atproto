@@ -759,6 +759,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+        ],
       },
     },
   },
@@ -825,6 +830,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+        ],
       },
     },
   },
