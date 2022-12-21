@@ -7,6 +7,9 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ./build.js --update-main-to-dist",
+    "update-main-to-src": "node ./build.js --update-main-to-src",
+    "prepublish": "npm run update-main-to-dist && npm run build",
+    "postpublish": "npm run update-main-to-src",
     "test": "jest"
   },
   "license": "MIT",
