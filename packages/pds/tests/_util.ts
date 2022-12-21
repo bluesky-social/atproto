@@ -85,7 +85,7 @@ export const runTestServer = async (
       ? await DiskBlobStore.create(cfg.blobstoreLocation, cfg.blobstoreTmp)
       : new MemoryBlobStore()
 
-  const pds = PDS.create({ db, blobstore, keypair, cfg: cfg })
+  const pds = PDS.create({ db, blobstore, keypair, config: cfg })
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port
 
