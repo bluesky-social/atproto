@@ -10,6 +10,12 @@ if (process.argv.includes('--update-main-to-dist')) {
     .then((pkg) => pkg.update({ main: 'dist/index.js' }))
     .then((pkg) => pkg.save())
 }
+if (process.argv.includes('--update-main-to-src')) {
+  return pkgJson
+    .load(__dirname)
+    .then((pkg) => pkg.update({ main: 'src/index.ts' }))
+    .then((pkg) => pkg.save())
+}
 
 require('esbuild').build({
   logLevel: 'info',

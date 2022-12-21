@@ -1,12 +1,15 @@
 {
   "name": "@atproto/api",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "src/index.ts",
   "scripts": {
     "codegen": "lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ./build.js --update-main-to-dist",
+    "update-main-to-src": "node ./build.js --update-main-to-src",
+    "prepublish": "npm run update-main-to-dist && npm run build",
+    "postpublish": "npm run update-main-to-src",
     "test": "jest"
   },
   "license": "MIT",
