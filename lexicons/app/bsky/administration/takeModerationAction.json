@@ -1,0 +1,30 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.administration.takeModerationAction",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Take a moderation action on an actor.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["action", "subject", "rationale", "createdBy"],
+          "properties": {
+            "action": {"type": "string", "knownValues": ["takedown"]},
+            "subject": {"type": "union", "refs": ["app.bsky.actor.ref"]},
+            "rationale": {"type": "string"},
+            "createdBy": {"type": "string"}
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "app.bsky.administration.moderationAction#view"
+        }
+      }
+    }
+  }
+}

@@ -38,6 +38,9 @@ import * as AppBskyActorRef from './types/app/bsky/actor/ref'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
+import * as AppBskyAdministrationModerationAction from './types/app/bsky/administration/moderationAction'
+import * as AppBskyAdministrationReverseModerationAction from './types/app/bsky/administration/reverseModerationAction'
+import * as AppBskyAdministrationTakeModerationAction from './types/app/bsky/administration/takeModerationAction'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyFeedFeedViewPost from './types/app/bsky/feed/feedViewPost'
@@ -101,6 +104,9 @@ export * as AppBskyActorRef from './types/app/bsky/actor/ref'
 export * as AppBskyActorSearch from './types/app/bsky/actor/search'
 export * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
+export * as AppBskyAdministrationModerationAction from './types/app/bsky/administration/moderationAction'
+export * as AppBskyAdministrationReverseModerationAction from './types/app/bsky/administration/reverseModerationAction'
+export * as AppBskyAdministrationTakeModerationAction from './types/app/bsky/administration/takeModerationAction'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyFeedFeedViewPost from './types/app/bsky/feed/feedViewPost'
@@ -528,6 +534,7 @@ export class AppNS {
 export class BskyNS {
   _service: ServiceClient
   actor: ActorNS
+  administration: AdministrationNS
   embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
@@ -537,6 +544,7 @@ export class BskyNS {
   constructor(service: ServiceClient) {
     this._service = service
     this.actor = new ActorNS(service)
+    this.administration = new AdministrationNS(service)
     this.embed = new EmbedNS(service)
     this.feed = new FeedNS(service)
     this.graph = new GraphNS(service)
@@ -679,6 +687,46 @@ export class ProfileRecord {
       { collection: 'app.bsky.actor.profile', ...params },
       { headers },
     )
+  }
+}
+
+export class AdministrationNS {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  reverseModerationAction(
+    data?: AppBskyAdministrationReverseModerationAction.InputSchema,
+    opts?: AppBskyAdministrationReverseModerationAction.CallOptions,
+  ): Promise<AppBskyAdministrationReverseModerationAction.Response> {
+    return this._service.xrpc
+      .call(
+        'app.bsky.administration.reverseModerationAction',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyAdministrationReverseModerationAction.toKnownErr(e)
+      })
+  }
+
+  takeModerationAction(
+    data?: AppBskyAdministrationTakeModerationAction.InputSchema,
+    opts?: AppBskyAdministrationTakeModerationAction.CallOptions,
+  ): Promise<AppBskyAdministrationTakeModerationAction.Response> {
+    return this._service.xrpc
+      .call(
+        'app.bsky.administration.takeModerationAction',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyAdministrationTakeModerationAction.toKnownErr(e)
+      })
   }
 }
 

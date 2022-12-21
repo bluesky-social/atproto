@@ -37,6 +37,8 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
+import * as AppBskyAdministrationReverseModerationAction from './types/app/bsky/administration/reverseModerationAction'
+import * as AppBskyAdministrationTakeModerationAction from './types/app/bsky/administration/takeModerationAction'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -348,6 +350,7 @@ export class AppNS {
 export class BskyNS {
   _server: Server
   actor: ActorNS
+  administration: AdministrationNS
   embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
@@ -357,6 +360,7 @@ export class BskyNS {
   constructor(server: Server) {
     this._server = server
     this.actor = new ActorNS(server)
+    this.administration = new AdministrationNS(server)
     this.embed = new EmbedNS(server)
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
@@ -411,6 +415,34 @@ export class ActorNS {
     cfg: ConfigOf<AV, AppBskyActorUpdateProfile.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.actor.updateProfile' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AdministrationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  reverseModerationAction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyAdministrationReverseModerationAction.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.administration.reverseModerationAction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  takeModerationAction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyAdministrationTakeModerationAction.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.administration.takeModerationAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
