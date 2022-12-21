@@ -161,10 +161,14 @@ describe('pds vote views', () => {
       }
 
       post = await getPost()
+      console.log(post.thread)
       expect(
-        (post.thread as AppBskyFeedGetPostThread.Post).downvoteCount,
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
+          .downvoteCount,
       ).toEqual(0)
-      expect((post.thread as AppBskyFeedGetPostThread.Post).myState).toEqual({})
+      expect(
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost).viewer,
+      ).toEqual({})
 
       // Upvote
       const { data: upvoted } = await client.app.bsky.feed.setVote(
@@ -181,14 +185,16 @@ describe('pds vote views', () => {
       expect(upvoted.upvote).not.toBeUndefined()
       expect(upvoted.downvote).toBeUndefined()
       expect(
-        (post.thread as AppBskyFeedGetPostThread.Post).upvoteCount,
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
+          .upvoteCount,
       ).toEqual(1)
       expect(
-        (post.thread as AppBskyFeedGetPostThread.Post).downvoteCount,
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
+          .downvoteCount,
       ).toEqual(0)
-      expect((post.thread as AppBskyFeedGetPostThread.Post).myState).toEqual(
-        upvoted,
-      )
+      expect(
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost).viewer,
+      ).toEqual(upvoted)
 
       // Downvote
       const { data: downvoted } = await client.app.bsky.feed.setVote(
@@ -205,14 +211,16 @@ describe('pds vote views', () => {
       expect(downvoted.upvote).toBeUndefined()
       expect(downvoted.downvote).not.toBeUndefined()
       expect(
-        (post.thread as AppBskyFeedGetPostThread.Post).upvoteCount,
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
+          .upvoteCount,
       ).toEqual(0)
       expect(
-        (post.thread as AppBskyFeedGetPostThread.Post).downvoteCount,
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
+          .downvoteCount,
       ).toEqual(1)
-      expect((post.thread as AppBskyFeedGetPostThread.Post).myState).toEqual(
-        downvoted,
-      )
+      expect(
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost).viewer,
+      ).toEqual(downvoted)
 
       // No vote
       const { data: novoted } = await client.app.bsky.feed.setVote(
@@ -229,14 +237,16 @@ describe('pds vote views', () => {
       expect(novoted.upvote).toBeUndefined()
       expect(novoted.downvote).toBeUndefined()
       expect(
-        (post.thread as AppBskyFeedGetPostThread.Post).upvoteCount,
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
+          .upvoteCount,
       ).toEqual(0)
       expect(
-        (post.thread as AppBskyFeedGetPostThread.Post).downvoteCount,
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
+          .downvoteCount,
       ).toEqual(0)
-      expect((post.thread as AppBskyFeedGetPostThread.Post).myState).toEqual(
-        novoted,
-      )
+      expect(
+        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost).viewer,
+      ).toEqual(novoted)
     })
 
     it('no-ops when already in correct state', async () => {

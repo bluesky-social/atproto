@@ -8,8 +8,7 @@ import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
-import * as GetAuthorFeed from '../src/lexicon/types/app/bsky/feed/getAuthorFeed'
-import * as GetTimeline from '../src/lexicon/types/app/bsky/feed/getTimeline'
+import { Main as FeedViewPost } from '../src/lexicon/types/app/bsky/feed/feedViewPost'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import AppContext from '../src/context'
 
@@ -158,10 +157,13 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-type FeedItem = GetAuthorFeed.FeedItem & GetTimeline.FeedItem
-
-export const getOriginator = (item: FeedItem) =>
-  item.repostedBy ? item.repostedBy.did : item.author.did
+export const getOriginator = (item: FeedViewPost) => {
+  if (!item.reason) {
+    return item.post.author.did
+  } else {
+    return (item.reason.by as { [did: string]: string }).did
+  }
+}
 
 // Useful for remapping ids in snapshot testing, to make snapshots deterministic.
 // E.g. you may use this to map this:

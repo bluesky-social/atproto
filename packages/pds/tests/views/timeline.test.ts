@@ -1,5 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import * as Timeline from '../../src/lexicon/types/app/bsky/feed/getTimeline'
+import { Main as FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/feedViewPost'
 import {
   runTestServer,
   forSnapshot,
@@ -41,7 +41,7 @@ describe('timeline views', () => {
   })
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
-    const expectOriginatorFollowedBy = (did) => (item: Timeline.FeedItem) => {
+    const expectOriginatorFollowedBy = (did) => (item: FeedViewPost) => {
       const originator = getOriginator(item)
       // The user expects to see posts & reposts from themselves and follows
       if (did !== originator) {
@@ -90,26 +90,6 @@ describe('timeline views', () => {
     danTL.data.feed.forEach(expectOriginatorFollowedBy(dan))
   })
 
-  it("fetches authenticated user's home feed w/ firehose algorithm", async () => {
-    const aliceTL = await client.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.Firehose },
-      {
-        headers: sc.getHeaders(alice),
-      },
-    )
-
-    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
-
-    const carolTL = await client.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.Firehose },
-      {
-        headers: sc.getHeaders(carol),
-      },
-    )
-
-    expect(forSnapshot(carolTL.data.feed)).toMatchSnapshot()
-  })
-
   it("fetches authenticated user's home feed w/ default algorithm", async () => {
     const defaultTL = await client.app.bsky.feed.getTimeline(
       {},
@@ -153,36 +133,6 @@ describe('timeline views', () => {
     )
 
     expect(full.data.feed.length).toEqual(7)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
-  })
-
-  it('paginates firehose feed', async () => {
-    const results = (results) => results.flatMap((res) => res.feed)
-    const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.feed.getTimeline(
-        {
-          algorithm: FeedAlgorithm.Firehose,
-          before: cursor,
-          limit: 5,
-        },
-        { headers: sc.getHeaders(alice) },
-      )
-      return res.data
-    }
-
-    const paginatedAll = await paginateAll(paginator)
-    paginatedAll.forEach((res) =>
-      expect(res.feed.length).toBeLessThanOrEqual(5),
-    )
-
-    const full = await client.app.bsky.feed.getTimeline(
-      {
-        algorithm: FeedAlgorithm.Firehose,
-      },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(full.data.feed.length).toEqual(15)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

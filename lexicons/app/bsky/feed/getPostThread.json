@@ -20,7 +20,7 @@
           "properties": {
             "thread": {
               "type": "union",
-              "refs": ["#post", "#notFoundPost"]
+              "refs": ["#threadViewPost", "#notFoundPost"]
             }
           }
         }
@@ -29,32 +29,16 @@
         {"name": "NotFound"}
       ]
     },
-    "post": {
+    "threadViewPost": {
       "type": "object",
-      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt"],
+      "required": ["post"],
       "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
-        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
-        "record": {"type": "unknown"},
-        "embed": {
-          "type": "union",
-          "refs": [
-            "app.bsky.embed.images#presented",
-            "app.bsky.embed.external#presented"
-          ]
-        },
-        "parent": {"type": "union", "refs": ["#post", "#notFoundPost"]},
-        "replyCount": {"type": "integer"},
+        "post": {"type": "ref", "ref": "app.bsky.feed.post#view"},
+        "parent": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]},
         "replies": {
           "type": "array",
-          "items": {"type": "union", "refs": ["#post", "#notFoundPost"]}
-        },
-        "repostCount": {"type": "integer"},
-        "upvoteCount": {"type": "integer"},
-        "downvoteCount": {"type": "integer"},
-        "indexedAt": {"type": "datetime"},
-        "myState": {"type": "ref", "ref": "#myState"}
+          "items": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]}
+        }
       }
     },
     "notFoundPost": {
@@ -63,14 +47,6 @@
       "properties": {
         "uri": {"type": "string"},
         "notFound": {"type": "boolean", "const": true}
-      }
-    },
-    "myState": {
-      "type": "object",
-      "properties": {
-        "repost": {"type": "string"},
-        "upvote": {"type": "string"},
-        "downvote": {"type": "string"}
       }
     }
   }
