@@ -17,7 +17,7 @@ import { ServerAuth } from './auth'
 import * as streamConsumers from './event-stream/consumers'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
-import { ServerConfig, ServerConfigValues } from './config'
+import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createTransport } from 'nodemailer'
 import SqlMessageQueue from './event-stream/message-queue'
@@ -48,21 +48,18 @@ export class PDS {
     db: Database
     blobstore: BlobStore
     keypair: DidableKey
-    cfg: ServerConfigValues
+    config: ServerConfig
   }): PDS {
-    const { db, blobstore, keypair, cfg } = opts
-    const config = new ServerConfig(opts.cfg)
+    const { db, blobstore, keypair, config } = opts
     const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
     const auth = new ServerAuth({
-      jwtSecret: cfg.jwtSecret,
-      adminPass: cfg.adminPassword,
+      jwtSecret: config.jwtSecret,
+      adminPass: config.adminPassword,
       didResolver,
     })
 
     const messageQueue = new SqlMessageQueue('pds', db)
     streamConsumers.listen(messageQueue, blobstore, auth, keypair)
-
-    const services = createServices(messageQueue, blobstore)
 
     const mailTransport =
       config.emailSmtpUrl !== undefined
@@ -93,6 +90,8 @@ export class PDS {
       config.imgUriSalt,
       config.imgUriKey,
     )
+
+    const services = createServices({ messageQueue, blobstore, imgUriBuilder })
 
     const ctx = new AppContext({
       db,

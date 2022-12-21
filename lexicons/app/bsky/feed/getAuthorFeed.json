@@ -23,43 +23,10 @@
             "cursor": {"type": "string"},
             "feed": {
               "type": "array",
-              "items": {"type": "ref", "ref": "#feedItem"}
+              "items": {"type": "ref", "ref": "app.bsky.feed.feedViewPost"}
             }
           }
         }
-      }
-    },
-    "feedItem": {
-      "type": "object",
-      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt"],
-      "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
-        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
-        "trendedBy": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
-        "repostedBy": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
-        "record": {"type": "unknown"},
-        "embed": {
-          "type": "union",
-          "refs": [
-            "app.bsky.embed.images#presented",
-            "app.bsky.embed.external#presented"
-          ]
-        },
-        "replyCount": {"type": "integer"},
-        "repostCount": {"type": "integer"},
-        "upvoteCount": {"type": "integer"},
-        "downvoteCount": {"type": "integer"},
-        "indexedAt": {"type": "datetime"},
-        "myState": {"type": "ref", "ref": "#myState"}
-      }
-    },
-    "myState": {
-      "type": "object",
-      "properties": {
-        "repost": {"type": "string"},
-        "upvote": {"type": "string"},
-        "downvote": {"type": "string"}
       }
     }
   }
