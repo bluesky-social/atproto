@@ -48,8 +48,9 @@ export class RepoService {
     prev: CID,
     timestamp?: string,
   ): Promise<boolean> {
+    this.db.assertTransaction()
     log.debug({ did, root: root.toString() }, 'updating repo root')
-    const res = await this.db.db
+    const updateRoot = this.db.db
       .updateTable('repo_root')
       .set({
         root: root.toString(),
@@ -58,6 +59,15 @@ export class RepoService {
       .where('did', '=', did)
       .where('root', '=', prev.toString())
       .executeTakeFirst()
+    const insertCommitHistory = this.db.db
+      .insertInto('repo_commit_history')
+      .values({
+        commit: root.toString(),
+        prev: prev.toString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+    const [res] = await Promise.all([updateRoot, insertCommitHistory])
     if (res.numUpdatedRows > 0) {
       log.info({ did, root: root.toString() }, 'updated repo root')
       return true

@@ -3,7 +3,7 @@ import * as auth from '@atproto/auth'
 import Repo from './repo'
 import { DataDiff, MST } from './mst'
 import { IpldStore } from './blockstore'
-import { DataStore, RecordWriteOp, def } from './types'
+import { DataStore, RecordWriteOp } from './types'
 
 export const ucanForOperation = async (
   prevData: DataStore,
@@ -17,34 +17,12 @@ export const ucanForOperation = async (
   return auth.encodeUcan(ucanForOp)
 }
 
-export const getCommitPath = async (
-  blockstore: IpldStore,
-  earliest: CID | null,
-  latest: CID,
-): Promise<CID[] | null> => {
-  let curr: CID | null = latest
-  const path: CID[] = []
-  while (curr !== null) {
-    path.push(curr)
-    const commit = await blockstore.get(curr, def.commit)
-    if (earliest && curr.equals(earliest)) {
-      return path.reverse()
-    }
-    const root = await blockstore.get(commit.root, def.repoRoot)
-    if (!earliest && root.prev === null) {
-      return path.reverse()
-    }
-    curr = root.prev
-  }
-  return null
-}
-
 export const getWriteOpLog = async (
   blockstore: IpldStore,
   earliest: CID | null,
   latest: CID,
 ): Promise<RecordWriteOp[][]> => {
-  const commits = await getCommitPath(blockstore, earliest, latest)
+  const commits = await blockstore.getCommitPath(latest, earliest)
   if (!commits) throw new Error('Could not find shared history')
   const heads = await Promise.all(commits.map((c) => Repo.load(blockstore, c)))
   // Turn commit path into list of diffs

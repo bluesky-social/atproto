@@ -1,4 +1,5 @@
 import * as auth from '@atproto/auth'
+import { CID } from 'multiformats/cid'
 import { IpldStore } from './blockstore'
 import { DataDiff } from './mst'
 import Repo from './repo'
@@ -9,11 +10,10 @@ export const loadRepoFromCar = async (
   blockstore: IpldStore,
   verifier: auth.Verifier,
 ): Promise<Repo> => {
-  const root = await blockstore.stageCar(carBytes)
-  const repo = await Repo.load(blockstore, root)
-  await verify.verifyUpdates(blockstore, null, repo.cid, verifier)
-  await blockstore.saveStaged()
-  return repo
+  const { root } = await blockstore.loadDiff(carBytes, (root: CID) => {
+    return verify.verifyUpdates(blockstore, null, root, verifier)
+  })
+  return Repo.load(blockstore, root)
 }
 
 export const loadDiff = async (
@@ -22,15 +22,10 @@ export const loadDiff = async (
   verifier: auth.Verifier,
 ): Promise<{ repo: Repo; diff: DataDiff }> => {
   const blockstore = repo.blockstore
-  const root = await blockstore.stageCar(diffCar)
-  const diff = await verify.verifyUpdates(
-    repo.blockstore,
-    repo.cid,
-    root,
-    verifier,
-  )
+  const { root, diff } = await blockstore.loadDiff(diffCar, (root: CID) => {
+    return verify.verifyUpdates(blockstore, repo.cid, root, verifier)
+  })
   const updatedRepo = await Repo.load(blockstore, root)
-  await blockstore.saveStaged()
   return {
     repo: updatedRepo,
     diff,

@@ -89,9 +89,9 @@ export class Repo {
       sig: await authStore.sign(rootCid.bytes),
     }
 
-    const cid = await blockstore.stage(commit)
+    const commitCid = await blockstore.stage(commit)
 
-    await blockstore.saveStaged()
+    await blockstore.commitStaged(commitCid)
 
     log.info({ did }, `created repo`)
     return new Repo({
@@ -100,7 +100,7 @@ export class Repo {
       commit,
       root,
       meta,
-      cid,
+      cid: commitCid,
       stagedWrites: [],
     })
   }
@@ -152,10 +152,7 @@ export class Repo {
     })
   }
 
-  async createCommit(
-    authStore: auth.AuthStore,
-    performUpdate?: (prev: CID, curr: CID) => Promise<CID | null>,
-  ): Promise<Repo> {
+  async createCommit(authStore: auth.AuthStore): Promise<Repo> {
     let data = this.data
     for (const write of this.stagedWrites) {
       if (write.action === 'create') {
@@ -189,19 +186,7 @@ export class Repo {
       sig: await authStore.sign(rootCid.bytes),
     }
     const commitCid = await this.blockstore.stage(commit)
-
-    if (performUpdate) {
-      const rebaseOn = await performUpdate(this.cid, commitCid)
-      if (rebaseOn) {
-        await this.blockstore.clearStaged()
-        const rebaseRepo = await Repo.load(this.blockstore, rebaseOn)
-        return rebaseRepo.createCommit(authStore, performUpdate)
-      } else {
-        await this.blockstore.saveStaged()
-      }
-    } else {
-      await this.blockstore.saveStaged()
-    }
+    await this.blockstore.commitStaged(commitCid)
 
     return this.updateRepo({
       cid: commitCid,
@@ -236,7 +221,7 @@ export class Repo {
 
   async getDiffCar(to: CID | null): Promise<Uint8Array> {
     return this.openCar((car: BlockWriter) => {
-      return this.writeCommitsToCarStream(car, to, this.cid)
+      return this.writeCommitsToCarStream(car, this.cid, to)
     })
   }
 
@@ -270,14 +255,10 @@ export class Repo {
 
   async writeCommitsToCarStream(
     car: BlockWriter,
-    oldestCommit: CID | null,
-    recentCommit: CID,
+    latest: CID,
+    earliest: CID | null,
   ): Promise<void> {
-    const commitPath = await util.getCommitPath(
-      this.blockstore,
-      oldestCommit,
-      recentCommit,
-    )
+    const commitPath = await this.blockstore.getCommitPath(latest, earliest)
     if (commitPath === null) {
       throw new Error('Could not find shared history')
     }

@@ -3,7 +3,6 @@ import * as auth from '@atproto/auth'
 import { IpldStore } from './blockstore'
 import Repo from './repo'
 import { DataDiff } from './mst'
-import * as util from './util'
 import { def } from './types'
 
 export const verifyUpdates = async (
@@ -12,9 +11,9 @@ export const verifyUpdates = async (
   latest: CID,
   verifier: auth.Verifier,
 ): Promise<DataDiff> => {
-  const commitPath = await util.getCommitPath(blockstore, earliest, latest)
+  const commitPath = await blockstore.getCommitPath(latest, earliest)
   if (commitPath === null) {
-    throw new Error('Could not find shared history')
+    throw new RepoVerificationError('Could not find shared history')
   }
   const fullDiff = new DataDiff()
   if (commitPath.length === 0) return fullDiff
@@ -24,7 +23,7 @@ export const verifyUpdates = async (
     const diff = await prevRepo.data.diff(nextRepo.data)
 
     if (!nextRepo.root.meta.equals(prevRepo.root.meta)) {
-      throw new Error('Not supported: repo metadata updated')
+      throw new RepoVerificationError('Not supported: repo metadata updated')
     }
 
     let didForSignature: string
@@ -52,7 +51,9 @@ export const verifyUpdates = async (
       nextRepo.commit.sig,
     )
     if (!validSig) {
-      throw new Error(`Invalid signature on commit: ${nextRepo.cid.toString()}`)
+      throw new RepoVerificationError(
+        `Invalid signature on commit: ${nextRepo.cid.toString()}`,
+      )
     }
 
     fullDiff.addDiff(diff)
@@ -60,3 +61,5 @@ export const verifyUpdates = async (
   }
   return fullDiff
 }
+
+export class RepoVerificationError extends Error {}

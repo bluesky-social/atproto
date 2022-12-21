@@ -5,6 +5,8 @@ import * as scene from './tables/scene'
 import * as repoRoot from './tables/repo-root'
 import * as refreshToken from './tables/refresh-token'
 import * as record from './tables/record'
+import * as repoCommitBlock from './tables/repo-commit-block'
+import * as repoCommitHistory from './tables/repo-commit-history'
 import * as ipldBlock from './tables/ipld-block'
 import * as ipldBlockCreator from './tables/ipld-block-creator'
 import * as inviteCode from './tables/invite-code'
@@ -33,6 +35,8 @@ export type DatabaseSchemaType = user.PartialDB &
   refreshToken.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
+  repoCommitBlock.PartialDB &
+  repoCommitHistory.PartialDB &
   ipldBlock.PartialDB &
   ipldBlockCreator.PartialDB &
   inviteCode.PartialDB &

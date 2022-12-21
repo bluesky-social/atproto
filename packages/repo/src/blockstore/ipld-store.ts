@@ -3,12 +3,12 @@ import { BlockWriter } from '@ipld/car/writer'
 
 import * as common from '@atproto/common'
 import { check, util, valueToIpldBlock } from '@atproto/common'
-import { BlockReader } from '@ipld/car/api'
-import CidSet from '../cid-set'
 import { CarReader } from '@ipld/car/reader'
+import { DataDiff } from '../mst'
 
 export abstract class IpldStore {
   staged: Map<string, Uint8Array>
+  temp: Map<string, Uint8Array>
 
   constructor() {
     this.staged = new Map()
@@ -16,7 +16,12 @@ export abstract class IpldStore {
 
   abstract getSavedBytes(cid: CID): Promise<Uint8Array | null>
   abstract hasSavedBlock(cid: CID): Promise<boolean>
-  abstract saveStaged(): Promise<void>
+  abstract saveMany(blocks: Map<string, Uint8Array>): Promise<void>
+  abstract commitStaged(commit: CID): Promise<void>
+  abstract getCommitPath(
+    latest: CID,
+    earliest: CID | null,
+  ): Promise<CID[] | null>
   abstract destroySaved(): Promise<void>
 
   async stageBytes(k: CID, v: Uint8Array): Promise<void> {
@@ -62,13 +67,6 @@ export abstract class IpldStore {
     return !has
   }
 
-  async checkMissing(cids: CidSet): Promise<CidSet> {
-    const missing = await util.asyncFilter(cids.toList(), (c) => {
-      return this.isMissing(c)
-    })
-    return new CidSet(missing)
-  }
-
   async clearStaged(): Promise<void> {
     this.staged.clear()
   }
@@ -82,20 +80,27 @@ export abstract class IpldStore {
     car.put({ cid, bytes: await this.getBytes(cid) })
   }
 
-  async stageCar(buf: Uint8Array): Promise<CID> {
+  async loadDiff(
+    buf: Uint8Array,
+    verify: (root: CID) => Promise<DataDiff>,
+  ): Promise<{ root: CID; diff: DataDiff }> {
     const car = await CarReader.fromBytes(buf)
     const roots = await car.getRoots()
     if (roots.length !== 1) {
       throw new Error(`Expected one root, got ${roots.length}`)
     }
-    const rootCid = roots[0]
-    await this.stageCarBlocks(car)
-    return rootCid
-  }
-
-  async stageCarBlocks(car: BlockReader): Promise<void> {
+    const root = roots[0]
     for await (const block of car.blocks()) {
-      await this.stageBytes(block.cid, block.bytes)
+      this.temp.set(block.cid.toString(), block.bytes)
+    }
+    try {
+      const diff = await verify(root)
+      await this.saveMany(this.temp)
+      this.temp.clear()
+      return { root, diff }
+    } catch (err) {
+      this.temp.clear()
+      throw err
     }
   }
 }

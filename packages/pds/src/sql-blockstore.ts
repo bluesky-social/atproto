@@ -3,6 +3,7 @@ import { CID } from 'multiformats/cid'
 import Database from './db'
 import { IpldBlock } from './db/tables/ipld-block'
 import { IpldBlockCreator } from './db/tables/ipld-block-creator'
+import { RepoCommitBlock } from './db/tables/repo-commit-block'
 
 export class SqlBlockstore extends IpldStore {
   constructor(
@@ -31,10 +32,11 @@ export class SqlBlockstore extends IpldStore {
     return !!found
   }
 
-  async saveStaged(): Promise<void> {
+  async saveStaged(commitCid: CID): Promise<void> {
     this.db.assertTransaction()
     const blocks: IpldBlock[] = []
     const creators: IpldBlockCreator[] = []
+    const commitBlocks: RepoCommitBlock[] = []
     for (const staged of this.staged.entries()) {
       const [cid, bytes] = staged
       blocks.push({
@@ -47,6 +49,10 @@ export class SqlBlockstore extends IpldStore {
         cid: cid.toString(),
         did: this.did,
       })
+      commitBlocks.push({
+        commit: commitCid.toString(),
+        block: cid.toString(),
+      })
     }
     const insertBlocks = this.db.db
       .insertInto('ipld_block')
@@ -58,7 +64,12 @@ export class SqlBlockstore extends IpldStore {
       .values(creators)
       .onConflict((oc) => oc.doNothing())
       .execute()
-    await Promise.all([insertBlocks, insertCreators])
+    const insertCommit = this.db.db
+      .insertInto('repo_commit_block')
+      .values(commitBlocks)
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+    await Promise.all([insertBlocks, insertCreators, insertCommit])
     this.clearStaged()
   }
 

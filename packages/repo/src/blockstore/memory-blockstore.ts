@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import IpldStore from './ipld-store'
+import { def } from '../types'
 
 export class MemoryBlockstore extends IpldStore {
   blocks: Map<string, Uint8Array>
@@ -17,11 +18,36 @@ export class MemoryBlockstore extends IpldStore {
     return this.blocks.has(cid.toString())
   }
 
-  async saveStaged(): Promise<void> {
-    this.staged.forEach((val, key) => {
+  async saveMany(blocks: Map<string, Uint8Array>): Promise<void> {
+    blocks.forEach((val, key) => {
       this.blocks.set(key, val)
     })
+  }
+
+  async commitStaged(_commit: CID): Promise<void> {
+    await this.saveMany(this.staged)
     this.clearStaged()
+  }
+
+  async getCommitPath(
+    latest: CID,
+    earliest: CID | null,
+  ): Promise<CID[] | null> {
+    let curr: CID | null = latest
+    const path: CID[] = []
+    while (curr !== null) {
+      path.push(curr)
+      const commit = await this.get(curr, def.commit)
+      if (earliest && curr.equals(earliest)) {
+        return path.reverse()
+      }
+      const root = await this.get(commit.root, def.repoRoot)
+      if (!earliest && root.prev === null) {
+        return path.reverse()
+      }
+      curr = root.prev
+    }
+    return null
   }
 
   async sizeInBytes(): Promise<number> {
