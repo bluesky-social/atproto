@@ -50,15 +50,7 @@ export class RepoService {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const writeOps = writes.map(createWriteToOp)
-    const repo = await Repo.create(storage, did, authStore, writeOps)
-    await this.db.db
-      .insertInto('repo_root')
-      .values({
-        did: did,
-        root: repo.cid.toString(),
-        indexedAt: now,
-      })
-      .execute()
+    await Repo.create(storage, did, authStore, writeOps)
   }
 
   async processWrites(

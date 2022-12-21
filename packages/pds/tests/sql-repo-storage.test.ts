@@ -19,16 +19,14 @@ describe('sql repo storage', () => {
     await close()
   })
 
-  let currCommit: CID
-
   it('puts and gets blocks.', async () => {
     const did = 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
 
     const cid = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       const cid = await storage.stage({ my: 'block' })
-      currCommit = await storage.stage({ my: 'commit' })
-      await storage.commitStaged(currCommit, null)
+      const commit = await storage.stage({ my: 'commit' })
+      await storage.commitStaged(commit, null)
       return cid
     })
 
@@ -41,21 +39,21 @@ describe('sql repo storage', () => {
   it('allows same content to be put multiple times by the same did.', async () => {
     const did = 'did:key:zQ3shtxV1FrJfhqE1dvxYRcCknWNjHc3c5X1y3ZSoPDi2aur2'
 
+    let currCommit: CID
+
     const cidA = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       const cid = await storage.stage({ my: 'block' })
-      const commitCid = await storage.stage({ my: 'commit1' })
-      await storage.commitStaged(commitCid, currCommit)
-      currCommit = commitCid
+      currCommit = await storage.stage({ my: 'commit1' })
+      await storage.commitStaged(currCommit, null)
       return cid
     })
 
     const cidB = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       const cid = await storage.stage({ my: 'block' })
-      const commitCid = await storage.stage({ my: 'commit2' })
-      await storage.commitStaged(commitCid, currCommit)
-      currCommit = commitCid
+      const commit = await storage.stage({ my: 'commit2' })
+      await storage.commitStaged(commit, currCommit)
       return cid
     })
 
