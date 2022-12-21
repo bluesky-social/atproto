@@ -9,6 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
+      const adminService = services.admin(db)
       const {
         action: _action,
         subject: _subject,
@@ -33,30 +34,23 @@ export default function (server: Server, ctx: AppContext) {
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
-        const now = new Date().toISOString()
+        const adminTxn = services.admin(dbTxn)
+        const now = new Date()
 
-        const result = await dbTxn.db
-          .insertInto('moderation_action')
-          .values({
-            action,
-            subjectType: 'actor',
-            subjectDid: subject.did,
-            subjectDeclarationCid: subject.declarationCid,
-            createdAt: now,
-            createdBy,
-            rationale,
-          })
-          .returningAll()
-          .executeTakeFirstOrThrow()
+        const result = await adminTxn.logModAction({
+          action,
+          subject,
+          createdBy,
+          rationale,
+          createdAt: now,
+        })
 
         if (result.action === 'takedown') {
           await authTxn.revokeRefreshTokensByDid(subject.did)
-          await dbTxn.db
-            .updateTable('did_handle')
-            .set({ takedownId: result.id })
-            .where('did', '=', subject.did)
-            .where('takedownId', 'is', null)
-            .executeTakeFirst()
+          await adminTxn.takedownActorByDid({
+            takedownId: result.id,
+            did: subject.did,
+          })
         }
 
         return result
@@ -64,21 +58,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: {
-          id: moderationAction.id,
-          action: moderationAction.action,
-          subject: {
-            $type: ids.AppBskyActorRef,
-            did: moderationAction.subjectDid,
-            declarationCid: moderationAction.subjectDeclarationCid,
-          },
-          rationale: moderationAction.rationale,
-          createdAt: moderationAction.createdAt,
-          createdBy: moderationAction.createdBy,
-          reversedAt: moderationAction.reversedAt ?? undefined,
-          reversedBy: moderationAction.reversedBy ?? undefined,
-          reversedRationale: moderationAction.reversedRationale ?? undefined,
-        },
+        body: adminService.formatModActionView(moderationAction),
       }
     },
   })

@@ -1,24 +1,20 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.administration.reverseModerationAction({
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
-      const { db } = ctx
+      const { db, services } = ctx
+      const adminService = services.admin(db)
       const { id, reversedBy, reversedRationale } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const now = new Date().toISOString()
+        const adminTxn = services.admin(dbTxn)
+        const now = new Date()
 
-        const existing = await dbTxn.db
-          .selectFrom('moderation_action')
-          .selectAll()
-          .where('id', '=', id)
-          .executeTakeFirst()
-
+        const existing = await adminTxn.getModAction(id)
         if (!existing) {
           throw new InvalidRequestError('Moderation action does not exist')
         }
@@ -28,23 +24,15 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await dbTxn.db
-          .updateTable('moderation_action')
-          .where('id', '=', id)
-          .set({
-            reversedAt: now,
-            reversedBy,
-            reversedRationale,
-          })
-          .returningAll()
-          .executeTakeFirstOrThrow()
+        const result = await adminTxn.logReverseModAction({
+          id,
+          reversedAt: now,
+          reversedBy,
+          reversedRationale,
+        })
 
         if (result.action === 'takedown' && result.subjectDid !== null) {
-          await dbTxn.db
-            .updateTable('did_handle')
-            .set({ takedownId: null })
-            .where('did', '=', result.subjectDid)
-            .execute()
+          await adminTxn.reverseTakedownActorByDid({ did: result.subjectDid })
         }
 
         return result
@@ -52,21 +40,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: {
-          id: moderationAction.id,
-          action: moderationAction.action,
-          subject: {
-            $type: ids.AppBskyActorRef,
-            did: moderationAction.subjectDid,
-            declarationCid: moderationAction.subjectDeclarationCid,
-          },
-          rationale: moderationAction.rationale,
-          createdAt: moderationAction.createdAt,
-          createdBy: moderationAction.createdBy,
-          reversedAt: moderationAction.reversedAt ?? undefined,
-          reversedBy: moderationAction.reversedBy ?? undefined,
-          reversedRationale: moderationAction.reversedRationale ?? undefined,
-        },
+        body: adminService.formatModActionView(moderationAction),
       }
     },
   })
