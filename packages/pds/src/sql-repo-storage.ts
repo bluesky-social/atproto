@@ -193,7 +193,7 @@ export class SqlRepoStorage extends RepoStorage {
   }
 
   async destroySaved(): Promise<void> {
-    throw new Error('Destruction of SQL blockstore not allowed at runtime')
+    throw new Error('Destruction of SQL repo storage not allowed at runtime')
   }
 }
 

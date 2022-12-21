@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { getWriteOpLog, RecordWriteOp } from '@atproto/repo'
-import SqlBlockstore from '../../src/sql-blockstore'
+import SqlRepoStorage from '../../src/sql-repo-storage'
 import basicSeed from '../seeds/basic'
 import { SeedClient } from '../seeds/client'
 import { forSnapshot, runTestServer, TestServerInfo } from '../_util'
@@ -78,11 +78,11 @@ describe('sync', () => {
   })
 
   async function getOpLog(did: string) {
-    const { db, services } = ctx
-    const repoRoot = await services.repo(db).getRepoRoot(did)
-    if (!repoRoot) throw new Error('Missing repo root')
-    const blockstore = new SqlBlockstore(db, did)
-    return await getWriteOpLog(blockstore, null, repoRoot)
+    const { db } = ctx
+    const storage = new SqlRepoStorage(db, did)
+    const root = await storage.getHead()
+    if (!root) throw new Error('Missing repo root')
+    return await getWriteOpLog(storage, null, root)
   }
 
   function prepareWrites(
