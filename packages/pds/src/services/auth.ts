@@ -26,4 +26,12 @@ export class AuthService {
       .executeTakeFirst()
     return numDeletedRows > 0
   }
+
+  async revokeRefreshTokensByDid(did: string) {
+    const { numDeletedRows } = await this.db.db
+      .deleteFrom('refresh_token')
+      .where('did', '=', did)
+      .executeTakeFirst()
+    return numDeletedRows > 0
+  }
 }

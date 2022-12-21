@@ -26,6 +26,7 @@ import * as messageQueue from './tables/message-queue'
 import * as messageQueueCursor from './tables/message-queue-cursor'
 import * as sceneMemberCount from './tables/scene-member-count'
 import * as sceneVotesOnPost from './tables/scene-votes-on-post'
+import * as moderation from './tables/moderation'
 
 export type DatabaseSchemaType = user.PartialDB &
   didHandle.PartialDB &
@@ -53,7 +54,8 @@ export type DatabaseSchemaType = user.PartialDB &
   messageQueue.PartialDB &
   messageQueueCursor.PartialDB &
   sceneMemberCount.PartialDB &
-  sceneVotesOnPost.PartialDB
+  sceneVotesOnPost.PartialDB &
+  moderation.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
