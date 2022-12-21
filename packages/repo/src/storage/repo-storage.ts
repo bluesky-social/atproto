@@ -2,21 +2,23 @@ import { CID } from 'multiformats/cid'
 import { BlockWriter } from '@ipld/car/writer'
 
 import * as common from '@atproto/common'
-import { check, util, valueToIpldBlock } from '@atproto/common'
+import { check, valueToIpldBlock } from '@atproto/common'
 import { CarReader } from '@ipld/car/reader'
 import { DataDiff } from '../mst'
 
-export abstract class IpldStore {
+export abstract class RepoStorage {
   staged: Map<string, Uint8Array>
   temp: Map<string, Uint8Array>
 
   constructor() {
     this.staged = new Map()
+    this.temp = new Map()
   }
 
   abstract getSavedBytes(cid: CID): Promise<Uint8Array | null>
   abstract hasSavedBlock(cid: CID): Promise<boolean>
-  abstract saveMany(blocks: Map<string, Uint8Array>): Promise<void>
+  abstract putBlock(cid: CID, block: Uint8Array): Promise<void>
+  abstract putMany(blocks: Map<string, Uint8Array>): Promise<void>
   abstract commitStaged(commit: CID): Promise<void>
   abstract getCommitPath(
     latest: CID,
@@ -35,10 +37,11 @@ export abstract class IpldStore {
   }
 
   async getBytes(cid: CID): Promise<Uint8Array> {
-    const fromStaged = this.staged.get(cid.toString())
-    if (fromStaged) return fromStaged
-    const fromBlocks = await this.getSavedBytes(cid)
-    if (fromBlocks) return fromBlocks
+    const found =
+      this.staged.get(cid.toString()) ||
+      this.temp.get(cid.toString()) ||
+      (await this.getSavedBytes(cid))
+    if (found) return found
     throw new Error(`Not found: ${cid.toString()}`)
   }
 
@@ -59,7 +62,11 @@ export abstract class IpldStore {
   }
 
   async has(cid: CID): Promise<boolean> {
-    return this.staged.has(cid.toString()) || this.hasSavedBlock(cid)
+    return (
+      this.staged.has(cid.toString()) ||
+      this.temp.has(cid.toString()) ||
+      this.hasSavedBlock(cid)
+    )
   }
 
   async isMissing(cid: CID): Promise<boolean> {
@@ -95,7 +102,7 @@ export abstract class IpldStore {
     }
     try {
       const diff = await verify(root)
-      await this.saveMany(this.temp)
+      await this.putMany(this.temp)
       this.temp.clear()
       return { root, diff }
     } catch (err) {
@@ -105,4 +112,4 @@ export abstract class IpldStore {
   }
 }
 
-export default IpldStore
+export default RepoStorage

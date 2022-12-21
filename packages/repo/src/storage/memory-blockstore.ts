@@ -1,8 +1,8 @@
 import { CID } from 'multiformats/cid'
-import IpldStore from './ipld-store'
+import RepoStorage from './repo-storage'
 import { def } from '../types'
 
-export class MemoryBlockstore extends IpldStore {
+export class MemoryBlockstore extends RepoStorage {
   blocks: Map<string, Uint8Array>
 
   constructor() {
@@ -18,14 +18,18 @@ export class MemoryBlockstore extends IpldStore {
     return this.blocks.has(cid.toString())
   }
 
-  async saveMany(blocks: Map<string, Uint8Array>): Promise<void> {
+  async putBlock(cid: CID, block: Uint8Array): Promise<void> {
+    this.blocks.set(cid.toString(), block)
+  }
+
+  async putMany(blocks: Map<string, Uint8Array>): Promise<void> {
     blocks.forEach((val, key) => {
       this.blocks.set(key, val)
     })
   }
 
   async commitStaged(_commit: CID): Promise<void> {
-    await this.saveMany(this.staged)
+    await this.putMany(this.staged)
     this.clearStaged()
   }
 

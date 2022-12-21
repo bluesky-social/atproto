@@ -11,14 +11,14 @@ import {
   RecordWriteOp,
 } from './types'
 import { streamToArray } from '@atproto/common'
-import IpldStore from './blockstore/ipld-store'
+import { RepoStorage } from './storage'
 import * as auth from '@atproto/auth'
 import { MST } from './mst'
 import log from './logger'
 import * as util from './util'
 
 type Params = {
-  blockstore: IpldStore
+  storage: RepoStorage
   data: DataStore
   commit: Commit
   root: RepoRoot
@@ -28,7 +28,7 @@ type Params = {
 }
 
 export class Repo {
-  blockstore: IpldStore
+  storage: RepoStorage
   data: DataStore
   commit: Commit
   root: RepoRoot
@@ -37,7 +37,7 @@ export class Repo {
   stagedWrites: RecordWriteOp[]
 
   constructor(params: Params) {
-    this.blockstore = params.blockstore
+    this.storage = params.storage
     this.data = params.data
     this.commit = params.commit
     this.root = params.root
@@ -47,7 +47,7 @@ export class Repo {
   }
 
   static async create(
-    blockstore: IpldStore,
+    storage: RepoStorage,
     did: string,
     authStore: auth.AuthStore,
     initialRecords: RecordCreateOp[] = [],
@@ -58,12 +58,12 @@ export class Repo {
       if (foundUcan === null) {
         throw new Error(`No valid Ucan for creating repo`)
       }
-      tokenCid = await blockstore.stage(auth.encodeUcan(foundUcan))
+      tokenCid = await storage.stage(auth.encodeUcan(foundUcan))
     }
 
-    let data = await MST.create(blockstore)
+    let data = await MST.create(storage)
     for (const write of initialRecords) {
-      const cid = await blockstore.stage(write.value)
+      const cid = await storage.stage(write.value)
       const dataKey = write.collection + '/' + write.rkey
       data = await data.add(dataKey, cid)
     }
@@ -74,7 +74,7 @@ export class Repo {
       version: 1,
       datastore: 'mst',
     }
-    const metaCid = await blockstore.stage(meta)
+    const metaCid = await storage.stage(meta)
 
     const root: RepoRoot = {
       meta: metaCid,
@@ -83,19 +83,19 @@ export class Repo {
       data: dataCid,
     }
 
-    const rootCid = await blockstore.stage(root)
+    const rootCid = await storage.stage(root)
     const commit: Commit = {
       root: rootCid,
       sig: await authStore.sign(rootCid.bytes),
     }
 
-    const commitCid = await blockstore.stage(commit)
+    const commitCid = await storage.stage(commit)
 
-    await blockstore.commitStaged(commitCid)
+    await storage.commitStaged(commitCid)
 
     log.info({ did }, `created repo`)
     return new Repo({
-      blockstore,
+      storage,
       data,
       commit,
       root,
@@ -105,14 +105,14 @@ export class Repo {
     })
   }
 
-  static async load(blockstore: IpldStore, cid: CID) {
-    const commit = await blockstore.get(cid, def.commit)
-    const root = await blockstore.get(commit.root, def.repoRoot)
-    const meta = await blockstore.get(root.meta, def.repoMeta)
-    const data = await MST.load(blockstore, root.data)
+  static async load(storage: RepoStorage, cid: CID) {
+    const commit = await storage.get(cid, def.commit)
+    const root = await storage.get(commit.root, def.repoRoot)
+    const meta = await storage.get(root.meta, def.repoMeta)
+    const data = await MST.load(storage, root.data)
     log.info({ did: meta.did }, 'loaded repo for')
     return new Repo({
-      blockstore,
+      storage,
       data,
       commit,
       root,
@@ -124,7 +124,7 @@ export class Repo {
 
   private updateRepo(params: Partial<Params>): Repo {
     return new Repo({
-      blockstore: params.blockstore || this.blockstore,
+      storage: params.storage || this.storage,
       data: params.data || this.data,
       commit: params.commit || this.commit,
       root: params.root || this.root,
@@ -142,7 +142,7 @@ export class Repo {
     const dataKey = collection + '/' + rkey
     const cid = await this.data.get(dataKey)
     if (!cid) return null
-    return this.blockstore.getUnchecked(cid)
+    return this.storage.getUnchecked(cid)
   }
 
   stageUpdate(write: RecordWriteOp | RecordWriteOp[]): Repo {
@@ -156,11 +156,11 @@ export class Repo {
     let data = this.data
     for (const write of this.stagedWrites) {
       if (write.action === 'create') {
-        const cid = await this.blockstore.stage(write.value)
+        const cid = await this.storage.stage(write.value)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.add(dataKey, cid)
       } else if (write.action === 'update') {
-        const cid = await this.blockstore.stage(write.value)
+        const cid = await this.storage.stage(write.value)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.update(dataKey, cid)
       } else if (write.action === 'delete') {
@@ -171,7 +171,7 @@ export class Repo {
     const token = (await authStore.canSignForDid(this.did))
       ? null
       : await util.ucanForOperation(this.data, data, this.did, authStore)
-    const tokenCid = token ? await this.blockstore.stage(token) : null
+    const tokenCid = token ? await this.storage.stage(token) : null
 
     const dataCid = await data.stage()
     const root: RepoRoot = {
@@ -180,13 +180,13 @@ export class Repo {
       auth_token: tokenCid,
       data: dataCid,
     }
-    const rootCid = await this.blockstore.stage(root)
+    const rootCid = await this.storage.stage(root)
     const commit: Commit = {
       root: rootCid,
       sig: await authStore.sign(rootCid.bytes),
     }
-    const commitCid = await this.blockstore.stage(commit)
-    await this.blockstore.commitStaged(commitCid)
+    const commitCid = await this.storage.stage(commit)
+    await this.storage.commitStaged(commitCid)
 
     return this.updateRepo({
       cid: commitCid,
@@ -200,14 +200,14 @@ export class Repo {
   async revert(count: number): Promise<Repo> {
     let revertTo = this.cid
     for (let i = 0; i < count; i++) {
-      const commit = await this.blockstore.get(revertTo, def.commit)
-      const root = await this.blockstore.get(commit.root, def.repoRoot)
+      const commit = await this.storage.get(revertTo, def.commit)
+      const root = await this.storage.get(commit.root, def.repoRoot)
       if (root.prev === null) {
         throw new Error(`Could not revert ${count} commits`)
       }
       revertTo = root.prev
     }
-    return Repo.load(this.blockstore, revertTo)
+    return Repo.load(this.storage, revertTo)
   }
 
   // CAR FILES
@@ -242,13 +242,13 @@ export class Repo {
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    const commit = await this.blockstore.get(this.cid, def.commit)
-    const root = await this.blockstore.get(commit.root, def.repoRoot)
-    await this.blockstore.addToCar(car, this.cid)
-    await this.blockstore.addToCar(car, commit.root)
-    await this.blockstore.addToCar(car, root.meta)
+    const commit = await this.storage.get(this.cid, def.commit)
+    const root = await this.storage.get(commit.root, def.repoRoot)
+    await this.storage.addToCar(car, this.cid)
+    await this.storage.addToCar(car, commit.root)
+    await this.storage.addToCar(car, root.meta)
     if (root.auth_token) {
-      await this.blockstore.addToCar(car, root.auth_token)
+      await this.storage.addToCar(car, root.auth_token)
     }
     await this.data.writeToCarStream(car)
   }
@@ -258,31 +258,31 @@ export class Repo {
     latest: CID,
     earliest: CID | null,
   ): Promise<void> {
-    const commitPath = await this.blockstore.getCommitPath(latest, earliest)
+    const commitPath = await this.storage.getCommitPath(latest, earliest)
     if (commitPath === null) {
       throw new Error('Could not find shared history')
     }
     if (commitPath.length === 0) return
-    const firstHeadInPath = await Repo.load(this.blockstore, commitPath[0])
+    const firstHeadInPath = await Repo.load(this.storage, commitPath[0])
     // handle the first commit
     let prevHead: Repo | null =
       firstHeadInPath.root.prev !== null
-        ? await Repo.load(this.blockstore, firstHeadInPath.root.prev)
+        ? await Repo.load(this.storage, firstHeadInPath.root.prev)
         : null
     for (const commit of commitPath) {
-      const nextHead = await Repo.load(this.blockstore, commit)
-      await this.blockstore.addToCar(car, nextHead.cid)
-      await this.blockstore.addToCar(car, nextHead.commit.root)
-      await this.blockstore.addToCar(car, nextHead.root.meta)
+      const nextHead = await Repo.load(this.storage, commit)
+      await this.storage.addToCar(car, nextHead.cid)
+      await this.storage.addToCar(car, nextHead.commit.root)
+      await this.storage.addToCar(car, nextHead.root.meta)
       if (nextHead.root.auth_token) {
-        await this.blockstore.addToCar(car, nextHead.root.auth_token)
+        await this.storage.addToCar(car, nextHead.root.auth_token)
       }
       if (prevHead === null) {
         await nextHead.data.writeToCarStream(car)
       } else {
         const diff = await prevHead.data.diff(nextHead.data)
         await Promise.all(
-          diff.newCidList().map((cid) => this.blockstore.addToCar(car, cid)),
+          diff.newCidList().map((cid) => this.storage.addToCar(car, cid)),
         )
       }
       prevHead = nextHead

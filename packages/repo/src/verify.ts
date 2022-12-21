@@ -1,25 +1,25 @@
 import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
-import { IpldStore } from './blockstore'
+import { RepoStorage } from './storage'
 import Repo from './repo'
 import { DataDiff } from './mst'
 import { def } from './types'
 
 export const verifyUpdates = async (
-  blockstore: IpldStore,
+  storage: RepoStorage,
   earliest: CID | null,
   latest: CID,
   verifier: auth.Verifier,
 ): Promise<DataDiff> => {
-  const commitPath = await blockstore.getCommitPath(latest, earliest)
+  const commitPath = await storage.getCommitPath(latest, earliest)
   if (commitPath === null) {
     throw new RepoVerificationError('Could not find shared history')
   }
   const fullDiff = new DataDiff()
   if (commitPath.length === 0) return fullDiff
-  let prevRepo = await Repo.load(blockstore, commitPath[0])
+  let prevRepo = await Repo.load(storage, commitPath[0])
   for (const commit of commitPath.slice(1)) {
-    const nextRepo = await Repo.load(blockstore, commit)
+    const nextRepo = await Repo.load(storage, commit)
     const diff = await prevRepo.data.diff(nextRepo.data)
 
     if (!nextRepo.root.meta.equals(prevRepo.root.meta)) {
@@ -29,7 +29,7 @@ export const verifyUpdates = async (
     let didForSignature: string
     if (nextRepo.root.auth_token) {
       // verify auth token covers all necessary writes
-      const encodedToken = await blockstore.get(
+      const encodedToken = await storage.get(
         nextRepo.root.auth_token,
         def.string,
       )

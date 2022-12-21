@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
 import Repo from './repo'
 import { DataDiff, MST } from './mst'
-import { IpldStore } from './blockstore'
+import { RepoStorage } from './storage'
 import { DataStore, RecordWriteOp } from './types'
 
 export const ucanForOperation = async (
@@ -18,7 +18,7 @@ export const ucanForOperation = async (
 }
 
 export const getWriteOpLog = async (
-  blockstore: IpldStore,
+  blockstore: RepoStorage,
   earliest: CID | null,
   latest: CID,
 ): Promise<RecordWriteOp[][]> => {
@@ -38,7 +38,7 @@ export const getWriteOpLog = async (
 }
 
 export const diffToWriteOps = (
-  blockstore: IpldStore,
+  blockstore: RepoStorage,
   diff: DataDiff,
 ): Promise<RecordWriteOp[]> => {
   return Promise.all([

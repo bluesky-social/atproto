@@ -1,7 +1,7 @@
 import * as auth from '@atproto/auth'
 import { TID } from '@atproto/common'
 import { Repo, RepoRoot, verifyUpdates, ucanForOperation } from '../src'
-import { MemoryBlockstore } from '../src/blockstore'
+import { MemoryBlockstore } from '../src/storage'
 import * as sync from '../src/sync'
 
 import * as util from './_util'

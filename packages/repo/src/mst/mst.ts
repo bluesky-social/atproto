@@ -1,7 +1,7 @@
 import z from 'zod'
 import { CID } from 'multiformats'
 
-import IpldStore from '../blockstore/ipld-store'
+import { RepoStorage } from '../storage'
 import { def, cidForData } from '@atproto/common'
 import { DataDiff } from './diff'
 import { DataStore } from '../types'
@@ -62,7 +62,7 @@ export type MstOpts = {
 }
 
 export class MST implements DataStore {
-  blockstore: IpldStore
+  storage: RepoStorage
   fanout: Fanout
   entries: NodeEntry[] | null
   layer: number | null
@@ -70,13 +70,13 @@ export class MST implements DataStore {
   outdatedPointer = false
 
   constructor(
-    blockstore: IpldStore,
+    storage: RepoStorage,
     fanout: Fanout,
     pointer: CID,
     entries: NodeEntry[] | null,
     layer: number | null,
   ) {
-    this.blockstore = blockstore
+    this.storage = storage
     this.fanout = fanout
     this.entries = entries
     this.layer = layer
@@ -84,29 +84,29 @@ export class MST implements DataStore {
   }
 
   static async create(
-    blockstore: IpldStore,
+    storage: RepoStorage,
     entries: NodeEntry[] = [],
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
     const pointer = await util.cidForEntries(entries)
     const { layer = 0, fanout = DEFAULT_MST_FANOUT } = opts || {}
-    return new MST(blockstore, fanout, pointer, entries, layer)
+    return new MST(storage, fanout, pointer, entries, layer)
   }
 
   static async fromData(
-    blockstore: IpldStore,
+    storage: RepoStorage,
     data: NodeData,
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
     const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
-    const entries = await util.deserializeNodeData(blockstore, data, opts)
+    const entries = await util.deserializeNodeData(storage, data, opts)
     const pointer = await cidForData(data)
-    return new MST(blockstore, fanout, pointer, entries, layer)
+    return new MST(storage, fanout, pointer, entries, layer)
   }
 
-  static load(blockstore: IpldStore, cid: CID, opts?: Partial<MstOpts>): MST {
+  static load(storage: RepoStorage, cid: CID, opts?: Partial<MstOpts>): MST {
     const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
-    return new MST(blockstore, fanout, cid, null, layer)
+    return new MST(storage, fanout, cid, null, layer)
   }
 
   // Immutability
@@ -115,7 +115,7 @@ export class MST implements DataStore {
   // We never mutate an MST, we just return a new MST with updated values
   async newTree(entries: NodeEntry[]): Promise<MST> {
     const mst = new MST(
-      this.blockstore,
+      this.storage,
       this.fanout,
       this.pointer,
       entries,
@@ -132,13 +132,13 @@ export class MST implements DataStore {
   async getEntries(): Promise<NodeEntry[]> {
     if (this.entries) return [...this.entries]
     if (this.pointer) {
-      const data = await this.blockstore.get(this.pointer, nodeDataDef)
+      const data = await this.storage.get(this.pointer, nodeDataDef)
       const firstLeaf = data.e[0]
       const layer =
         firstLeaf !== undefined
           ? await util.leadingZerosOnHash(firstLeaf.k, this.fanout)
           : undefined
-      this.entries = await util.deserializeNodeData(this.blockstore, data, {
+      this.entries = await util.deserializeNodeData(this.storage, data, {
         layer,
         fanout: this.fanout,
       })
@@ -197,7 +197,7 @@ export class MST implements DataStore {
   // Core functionality
   // -------------------
 
-  // Persist the MST to the blockstore
+  // Persist the MST to repo storage
   // If the topmost tree only has one entry and it's a subtree, we can eliminate the topmost tree
   // However, lower trees with only one entry must be preserved
   async stage(): Promise<CID> {
@@ -206,7 +206,7 @@ export class MST implements DataStore {
 
   async stageRecurse(trimTop = false): Promise<CID> {
     const pointer = await this.getPointer()
-    const alreadyHas = await this.blockstore.has(pointer)
+    const alreadyHas = await this.storage.has(pointer)
     if (alreadyHas) return pointer
     const entries = await this.getEntries()
     if (entries.length === 1 && trimTop) {
@@ -216,7 +216,7 @@ export class MST implements DataStore {
       }
     }
     const data = util.serializeNodeData(entries)
-    await this.blockstore.stage(data)
+    await this.storage.stage(data)
     for (const entry of entries) {
       if (entry.isTree()) {
         await entry.stageRecurse(false)
@@ -288,7 +288,7 @@ export class MST implements DataStore {
       if (left) updated.push(left)
       updated.push(new Leaf(key, value))
       if (right) updated.push(right)
-      const newRoot = await MST.create(this.blockstore, updated, {
+      const newRoot = await MST.create(this.storage, updated, {
         layer: keyZeros,
         fanout: this.fanout,
       })
@@ -604,7 +604,7 @@ export class MST implements DataStore {
 
   async createChild(): Promise<MST> {
     const layer = await this.getLayer()
-    return MST.create(this.blockstore, [], {
+    return MST.create(this.storage, [], {
       layer: layer - 1,
       fanout: this.fanout,
     })
@@ -612,7 +612,7 @@ export class MST implements DataStore {
 
   async createParent(): Promise<MST> {
     const layer = await this.getLayer()
-    const parent = await MST.create(this.blockstore, [this], {
+    const parent = await MST.create(this.storage, [this], {
       layer: layer + 1,
       fanout: this.fanout,
     })
@@ -747,9 +747,9 @@ export class MST implements DataStore {
     for await (const entry of this.walk()) {
       if (entry.isTree()) {
         const pointer = await entry.getPointer()
-        await this.blockstore.addToCar(car, pointer)
+        await this.storage.addToCar(car, pointer)
       } else {
-        await this.blockstore.addToCar(car, entry.value)
+        await this.storage.addToCar(car, entry.value)
       }
     }
   }
