@@ -44,7 +44,7 @@ describe('MST Benchmarks', () => {
 
       const doneAdding = Date.now()
 
-      const root = await mst.stage()
+      const root = await util.saveMst(mst)
 
       const doneSaving = Date.now()
 
@@ -63,7 +63,7 @@ describe('MST Benchmarks', () => {
         let proofSize = 0
         for (const entry of path) {
           if (entry.isTree()) {
-            const bytes = await blockstore.getBytes(entry.pointer)
+            const bytes = await blockstore.guaranteeBytes(entry.pointer)
             proofSize += bytes.byteLength
           }
         }

@@ -23,9 +23,10 @@ describe('Repo Benchmarks', () => {
       if (i % 500 === 0) {
         console.log(i)
       }
-      await repo
-        .stageUpdate({
-          action: 'create',
+
+      await repo.applyCommit(
+        {
+          action: 'create' as const,
           collection: 'app.bsky.post',
           rkey: TID.nextStr(),
           value: {
@@ -38,8 +39,9 @@ describe('Repo Benchmarks', () => {
             },
             createdAt: new Date().toISOString(),
           },
-        })
-        .createCommit(authStore)
+        },
+        authStore,
+      )
     }
 
     console.log('SIZE: ', await blockstore.sizeInBytes())
