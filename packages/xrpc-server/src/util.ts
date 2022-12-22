@@ -100,7 +100,7 @@ export function validateInput(
   // if middleware already got the body, we pass that along as input
   // otherwise, we pass along a decoded readable stream
   let body
-  if (req.complete) {
+  if (req.readableEnded) {
     body = req.body
   } else {
     body = decodeBodyStream(req, opts.payload?.blobLimit)
