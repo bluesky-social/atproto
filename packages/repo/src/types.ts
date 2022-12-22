@@ -3,6 +3,7 @@ import { BlockWriter } from '@ipld/car/writer'
 import { def as common } from '@atproto/common'
 import { CID } from 'multiformats'
 import { DataDiff } from './mst'
+import BlockMap from './block-map'
 
 const repoMeta = z.object({
   did: z.string(),
@@ -25,58 +26,40 @@ const commit = z.object({
 })
 export type Commit = z.infer<typeof commit>
 
-export const cidCreateOp = z.object({
-  action: z.literal('create'),
-  collection: z.string(),
-  rkey: z.string(),
-  cid: common.cid,
-})
-export type CidCreateOp = z.infer<typeof cidCreateOp>
+export type RecordCreateOp = {
+  action: 'create'
+  collection: string
+  rkey: string
+  value: unknown
+}
 
-export const cidUpdateOp = z.object({
-  action: z.literal('update'),
-  collection: z.string(),
-  rkey: z.string(),
-  cid: common.cid,
-})
-export type CidUpdateOp = z.infer<typeof cidUpdateOp>
+export type RecordUpdateOp = {
+  action: 'update'
+  collection: string
+  rkey: string
+  value: unknown
+}
 
-export const deleteOp = z.object({
-  action: z.literal('delete'),
-  collection: z.string(),
-  rkey: z.string(),
-})
-export type DeleteOp = z.infer<typeof deleteOp>
+export type RecordDeleteOp = {
+  action: 'delete'
+  collection: string
+  rkey: string
+}
 
-export const cidWriteOp = z.union([cidCreateOp, cidUpdateOp, deleteOp])
-export type CidWriteOp = z.infer<typeof cidWriteOp>
-
-export const recordCreateOp = z.object({
-  action: z.literal('create'),
-  collection: z.string(),
-  rkey: z.string(),
-  value: z.any(),
-})
-export type RecordCreateOp = z.infer<typeof recordCreateOp>
-
-export const recordUpdateOp = z.object({
-  action: z.literal('update'),
-  collection: z.string(),
-  rkey: z.string(),
-  value: z.any(),
-})
-export type RecordUpdateOp = z.infer<typeof recordUpdateOp>
-
-export const recordWriteOp = z.union([recordCreateOp, recordUpdateOp, deleteOp])
-export type RecordWriteOp = z.infer<typeof recordWriteOp>
+export type RecordWriteOp = RecordCreateOp | RecordUpdateOp | RecordDeleteOp
 
 export const def = {
   ...common,
   repoMeta,
   repoRoot,
   commit,
-  cidWriteOp,
-  recordWriteOp,
+}
+
+export type CommitData = {
+  root: CID
+  prev: CID | null
+  blocks: BlockMap
+  ops: RecordWriteOp[]
 }
 
 export interface CarStreamable {
@@ -96,6 +79,6 @@ export interface DataStore {
   list(count: number, after?: string, before?: string): Promise<DataValue[]>
   listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
   diff(other: DataStore): Promise<DataDiff>
-  stage(): Promise<CID>
+  blockDiff(): Promise<{ root: CID; blocks: BlockMap }>
   writeToCarStream(car: BlockWriter): Promise<void>
 }

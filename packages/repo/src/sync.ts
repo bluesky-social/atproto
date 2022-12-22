@@ -4,12 +4,14 @@ import { RepoStorage } from './storage'
 import { DataDiff } from './mst'
 import Repo from './repo'
 import * as verify from './verify'
+import * as util from './util'
 
 export const loadRepoFromCar = async (
   carBytes: Uint8Array,
   storage: RepoStorage,
   verifier: auth.Verifier,
 ): Promise<Repo> => {
+  const car = await util.readCar(carBytes)
   const { root } = await storage.loadDiff(carBytes, (root: CID) => {
     return verify.verifyUpdates(storage, null, root, verifier)
   })

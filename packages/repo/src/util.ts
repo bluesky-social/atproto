@@ -4,6 +4,8 @@ import Repo from './repo'
 import { DataDiff, MST } from './mst'
 import { RepoStorage } from './storage'
 import { DataStore, RecordWriteOp } from './types'
+import BlockMap from './block-map'
+import { CarReader } from '@ipld/car/reader'
 
 export const ucanForOperation = async (
   prevData: DataStore,
@@ -15,6 +17,25 @@ export const ucanForOperation = async (
   const neededCaps = diff.neededCapabilities(rootDid)
   const ucanForOp = await authStore.createUcanForCaps(rootDid, neededCaps, 30)
   return auth.encodeUcan(ucanForOp)
+}
+
+export const readCar = async (
+  bytes: Uint8Array,
+): Promise<{ root: CID; blocks: BlockMap }> => {
+  const car = await CarReader.fromBytes(bytes)
+  const roots = await car.getRoots()
+  if (roots.length !== 1) {
+    throw new Error(`Expected one root, got ${roots.length}`)
+  }
+  const root = roots[0]
+  const blocks = new BlockMap()
+  for await (const block of car.blocks()) {
+    blocks.set(block.cid, block.bytes)
+  }
+  return {
+    root,
+    blocks,
+  }
 }
 
 export const getWriteOpLog = async (

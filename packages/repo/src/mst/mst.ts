@@ -8,6 +8,7 @@ import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
 import MstWalker from './walker'
+import BlockMap from '../block-map'
 
 /**
  * This is an implementation of a Merkle Search Tree (MST)
@@ -197,32 +198,36 @@ export class MST implements DataStore {
   // Core functionality
   // -------------------
 
-  // Persist the MST to repo storage
+  // Return the necessary blocks to persist the MST to repo storage
   // If the topmost tree only has one entry and it's a subtree, we can eliminate the topmost tree
   // However, lower trees with only one entry must be preserved
-  async stage(): Promise<CID> {
-    return this.stageRecurse(true)
+  async blockDiff(): Promise<{ root: CID; blocks: BlockMap }> {
+    return this.blockDiffRecurse(true)
   }
 
-  async stageRecurse(trimTop = false): Promise<CID> {
+  async blockDiffRecurse(
+    trimTop = false,
+  ): Promise<{ root: CID; blocks: BlockMap }> {
+    const blocks = new BlockMap()
     const pointer = await this.getPointer()
     const alreadyHas = await this.storage.has(pointer)
-    if (alreadyHas) return pointer
+    if (alreadyHas) return { root: pointer, blocks }
     const entries = await this.getEntries()
     if (entries.length === 1 && trimTop) {
       const node = entries[0]
       if (node.isTree()) {
-        return node.stageRecurse(true)
+        return node.blockDiffRecurse(true)
       }
     }
     const data = util.serializeNodeData(entries)
-    await this.storage.stage(data)
+    await blocks.add(data)
     for (const entry of entries) {
       if (entry.isTree()) {
-        await entry.stageRecurse(false)
+        const subtree = await entry.blockDiffRecurse(false)
+        blocks.addMap(subtree.blocks)
       }
     }
-    return pointer
+    return { root: pointer, blocks: blocks }
   }
 
   // Adds a new leaf for the given key/value pair

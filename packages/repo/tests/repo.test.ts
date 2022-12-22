@@ -30,37 +30,40 @@ describe('Repo', () => {
   it('does basic operations', async () => {
     const rkey = TID.nextStr()
     const record = util.generateObject()
-    repo = await repo
-      .stageUpdate({
+    repo = await repo.applyCommit(
+      {
         action: 'create',
         collection: collName,
         rkey: rkey,
         value: record,
-      })
-      .createCommit(authStore)
+      },
+      authStore,
+    )
 
     let got = await repo.getRecord(collName, rkey)
     expect(got).toEqual(record)
 
     const updatedRecord = util.generateObject()
-    repo = await repo
-      .stageUpdate({
+    repo = await repo.applyCommit(
+      {
         action: 'update',
         collection: collName,
         rkey: rkey,
         value: updatedRecord,
-      })
-      .createCommit(authStore)
+      },
+      authStore,
+    )
     got = await repo.getRecord(collName, rkey)
     expect(got).toEqual(updatedRecord)
 
-    repo = await repo
-      .stageUpdate({
+    repo = await repo.applyCommit(
+      {
         action: 'delete',
         collection: collName,
         rkey: rkey,
-      })
-      .createCommit(authStore)
+      },
+      authStore,
+    )
     got = await repo.getRecord(collName, rkey)
     expect(got).toBeNull()
   })

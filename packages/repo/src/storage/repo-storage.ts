@@ -2,49 +2,26 @@ import { CID } from 'multiformats/cid'
 import { BlockWriter } from '@ipld/car/writer'
 
 import * as common from '@atproto/common'
-import { check, valueToIpldBlock } from '@atproto/common'
-import { CarReader } from '@ipld/car/reader'
+import { check } from '@atproto/common'
 import { DataDiff } from '../mst'
+import { CommitData } from '../types'
+import BlockMap from '../block-map'
+import * as util from '../util'
 
 export abstract class RepoStorage {
-  staged: Map<string, Uint8Array>
-  temp: Map<string, Uint8Array>
-
-  constructor() {
-    this.staged = new Map()
-    this.temp = new Map()
-  }
+  temp: BlockMap = new BlockMap()
 
   abstract getHead(forUpdate?: boolean): Promise<CID | null>
   abstract getSavedBytes(cid: CID): Promise<Uint8Array | null>
-  abstract hasSavedBlock(cid: CID): Promise<boolean>
+  abstract hasSavedBytes(cid: CID): Promise<boolean>
   abstract putBlock(cid: CID, block: Uint8Array): Promise<void>
-  abstract putMany(blocks: Map<string, Uint8Array>): Promise<void>
-  abstract commitStaged(commit: CID, prev: CID | null): Promise<void>
+  abstract putMany(blocks: BlockMap): Promise<void>
+  abstract applyCommit(commit: CommitData): Promise<void>
   abstract getCommitPath(
     latest: CID,
     earliest: CID | null,
   ): Promise<CID[] | null>
-  abstract destroySaved(): Promise<void>
-
-  async stageBytes(k: CID, v: Uint8Array): Promise<void> {
-    this.staged.set(k.toString(), v)
-  }
-
-  async stage(value: unknown): Promise<CID> {
-    const block = await valueToIpldBlock(value)
-    await this.stageBytes(block.cid, block.bytes)
-    return block.cid
-  }
-
-  async getBytes(cid: CID): Promise<Uint8Array> {
-    const found =
-      this.staged.get(cid.toString()) ||
-      this.temp.get(cid.toString()) ||
-      (await this.getSavedBytes(cid))
-    if (found) return found
-    throw new Error(`Not found: ${cid.toString()}`)
-  }
+  abstract destroy(): Promise<void>
 
   async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
     const value = await this.getUnchecked(cid)
@@ -59,15 +36,26 @@ export abstract class RepoStorage {
 
   async getUnchecked(cid: CID): Promise<unknown> {
     const bytes = await this.getBytes(cid)
+    if (!bytes) {
+      throw new Error(`Not found: ${cid.toString()}`)
+    }
     return common.ipldBytesToValue(bytes)
   }
 
+  async getBytes(cid: CID): Promise<Uint8Array | null> {
+    return this.temp.get(cid) || (await this.getSavedBytes(cid))
+  }
+
+  async guaranteeBytes(cid: CID): Promise<Uint8Array> {
+    const bytes = await this.getBytes(cid)
+    if (!bytes) {
+      throw new Error(`Not found: ${cid.toString()}`)
+    }
+    return bytes
+  }
+
   async has(cid: CID): Promise<boolean> {
-    return (
-      this.staged.has(cid.toString()) ||
-      this.temp.has(cid.toString()) ||
-      this.hasSavedBlock(cid)
-    )
+    return this.temp.has(cid) || (await this.hasSavedBytes(cid))
   }
 
   async isMissing(cid: CID): Promise<boolean> {
@@ -75,32 +63,16 @@ export abstract class RepoStorage {
     return !has
   }
 
-  async clearStaged(): Promise<void> {
-    this.staged.clear()
-  }
-
-  async destroy(): Promise<void> {
-    this.clearStaged()
-    await this.destroySaved()
-  }
-
   async addToCar(car: BlockWriter, cid: CID) {
-    car.put({ cid, bytes: await this.getBytes(cid) })
+    car.put({ cid, bytes: await this.guaranteeBytes(cid) })
   }
 
   async loadDiff(
-    buf: Uint8Array,
+    carBytes: Uint8Array,
     verify: (root: CID) => Promise<DataDiff>,
   ): Promise<{ root: CID; diff: DataDiff }> {
-    const car = await CarReader.fromBytes(buf)
-    const roots = await car.getRoots()
-    if (roots.length !== 1) {
-      throw new Error(`Expected one root, got ${roots.length}`)
-    }
-    const root = roots[0]
-    for await (const block of car.blocks()) {
-      this.temp.set(block.cid.toString(), block.bytes)
-    }
+    const { root, blocks } = await util.readCar(carBytes)
+    this.temp.addMap(blocks)
     try {
       const diff = await verify(root)
       await this.putMany(this.temp)

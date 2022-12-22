@@ -9,13 +9,14 @@ import {
   RepoMeta,
   RecordCreateOp,
   RecordWriteOp,
+  CommitData,
 } from './types'
 import { streamToArray } from '@atproto/common'
 import { RepoStorage } from './storage'
 import * as auth from '@atproto/auth'
 import { MST } from './mst'
 import log from './logger'
-import * as util from './util'
+import BlockMap from './block-map'
 
 type Params = {
   storage: RepoStorage
@@ -24,7 +25,6 @@ type Params = {
   root: RepoRoot
   meta: RepoMeta
   cid: CID
-  stagedWrites: RecordWriteOp[]
 }
 
 export class Repo {
@@ -34,7 +34,6 @@ export class Repo {
   root: RepoRoot
   meta: RepoMeta
   cid: CID
-  stagedWrites: RecordWriteOp[]
 
   constructor(params: Params) {
     this.storage = params.storage
@@ -43,7 +42,55 @@ export class Repo {
     this.root = params.root
     this.meta = params.meta
     this.cid = params.cid
-    this.stagedWrites = params.stagedWrites
+  }
+
+  static async formatInitCommit(
+    storage: RepoStorage,
+    did: string,
+    authStore: auth.AuthStore,
+    initialRecords: RecordCreateOp[] = [],
+  ): Promise<CommitData> {
+    if (!(await authStore.canSignForDid(did))) {
+      throw new Error(`provided authStore cannot sign for did: ${did}`)
+    }
+    const newBlocks = new BlockMap()
+
+    let data = await MST.create(storage)
+    for (const write of initialRecords) {
+      const cid = await newBlocks.add(write.value)
+      const dataKey = write.collection + '/' + write.rkey
+      data = await data.add(dataKey, cid)
+    }
+    const dataDiff = await data.blockDiff()
+    newBlocks.addMap(dataDiff.blocks)
+
+    const meta: RepoMeta = {
+      did,
+      version: 1,
+      datastore: 'mst',
+    }
+    const metaCid = await newBlocks.add(meta)
+
+    const root: RepoRoot = {
+      meta: metaCid,
+      prev: null,
+      auth_token: null,
+      data: dataDiff.root,
+    }
+    const rootCid = await newBlocks.add(root)
+
+    const commit: Commit = {
+      root: rootCid,
+      sig: await authStore.sign(rootCid.bytes),
+    }
+    const commitCid = await newBlocks.add(commit)
+
+    return {
+      root: commitCid,
+      prev: null,
+      blocks: newBlocks,
+      ops: initialRecords,
+    }
   }
 
   static async create(
@@ -52,57 +99,15 @@ export class Repo {
     authStore: auth.AuthStore,
     initialRecords: RecordCreateOp[] = [],
   ): Promise<Repo> {
-    let tokenCid: CID | null = null
-    if (!(await authStore.canSignForDid(did))) {
-      const foundUcan = await authStore.findUcan(auth.maintenanceCap(did))
-      if (foundUcan === null) {
-        throw new Error(`No valid Ucan for creating repo`)
-      }
-      tokenCid = await storage.stage(auth.encodeUcan(foundUcan))
-    }
-
-    let data = await MST.create(storage)
-    for (const write of initialRecords) {
-      const cid = await storage.stage(write.value)
-      const dataKey = write.collection + '/' + write.rkey
-      data = await data.add(dataKey, cid)
-    }
-    const dataCid = await data.stage()
-
-    const meta: RepoMeta = {
-      did,
-      version: 1,
-      datastore: 'mst',
-    }
-    const metaCid = await storage.stage(meta)
-
-    const root: RepoRoot = {
-      meta: metaCid,
-      prev: null,
-      auth_token: tokenCid,
-      data: dataCid,
-    }
-
-    const rootCid = await storage.stage(root)
-    const commit: Commit = {
-      root: rootCid,
-      sig: await authStore.sign(rootCid.bytes),
-    }
-
-    const commitCid = await storage.stage(commit)
-
-    await storage.commitStaged(commitCid, null)
-
-    log.info({ did }, `created repo`)
-    return new Repo({
+    const commit = await Repo.formatInitCommit(
       storage,
-      data,
-      commit,
-      root,
-      meta,
-      cid: commitCid,
-      stagedWrites: [],
-    })
+      did,
+      authStore,
+      initialRecords,
+    )
+    await storage.applyCommit(commit)
+    log.info({ did }, `created repo`)
+    return Repo.load(storage, commit.root)
   }
 
   static async load(storage: RepoStorage, cid?: CID) {
@@ -122,19 +127,6 @@ export class Repo {
       root,
       meta,
       cid: commitCid,
-      stagedWrites: [],
-    })
-  }
-
-  private updateRepo(params: Partial<Params>): Repo {
-    return new Repo({
-      storage: params.storage || this.storage,
-      data: params.data || this.data,
-      commit: params.commit || this.commit,
-      root: params.root || this.root,
-      meta: params.meta || this.meta,
-      cid: params.cid || this.cid,
-      stagedWrites: params.stagedWrites || this.stagedWrites,
     })
   }
 
@@ -149,22 +141,24 @@ export class Repo {
     return this.storage.getUnchecked(cid)
   }
 
-  stageUpdate(write: RecordWriteOp | RecordWriteOp[]): Repo {
-    const writeArr = Array.isArray(write) ? write : [write]
-    return this.updateRepo({
-      stagedWrites: [...this.stagedWrites, ...writeArr],
-    })
-  }
+  async createCommit(
+    toWrite: RecordWriteOp | RecordWriteOp[],
+    authStore: auth.AuthStore,
+  ): Promise<CommitData> {
+    if (!(await authStore.canSignForDid(this.did))) {
+      throw new Error(`provided authStore cannot sign for did: ${this.did}`)
+    }
+    const writes = Array.isArray(toWrite) ? toWrite : [toWrite]
+    const newBlocks = new BlockMap()
 
-  async createCommit(authStore: auth.AuthStore): Promise<Repo> {
     let data = this.data
-    for (const write of this.stagedWrites) {
+    for (const write of writes) {
       if (write.action === 'create') {
-        const cid = await this.storage.stage(write.value)
+        const cid = await newBlocks.add(write.value)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.add(dataKey, cid)
       } else if (write.action === 'update') {
-        const cid = await this.storage.stage(write.value)
+        const cid = await newBlocks.add(write.value)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.update(dataKey, cid)
       } else if (write.action === 'delete') {
@@ -172,33 +166,39 @@ export class Repo {
         data = await data.delete(dataKey)
       }
     }
-    const token = (await authStore.canSignForDid(this.did))
-      ? null
-      : await util.ucanForOperation(this.data, data, this.did, authStore)
-    const tokenCid = token ? await this.storage.stage(token) : null
 
-    const dataCid = await data.stage()
+    const dataDiff = await data.blockDiff()
+    newBlocks.addMap(dataDiff.blocks)
+
     const root: RepoRoot = {
       meta: this.root.meta,
       prev: this.cid,
-      auth_token: tokenCid,
-      data: dataCid,
+      auth_token: null,
+      data: dataDiff.root,
     }
-    const rootCid = await this.storage.stage(root)
+    const rootCid = await newBlocks.add(root)
+
     const commit: Commit = {
       root: rootCid,
       sig: await authStore.sign(rootCid.bytes),
     }
-    const commitCid = await this.storage.stage(commit)
-    await this.storage.commitStaged(commitCid, this.cid)
+    const commitCid = await newBlocks.add(commit)
 
-    return this.updateRepo({
-      cid: commitCid,
-      root,
-      commit,
-      data,
-      stagedWrites: [],
-    })
+    return {
+      root: commitCid,
+      prev: this.cid,
+      blocks: newBlocks,
+      ops: writes,
+    }
+  }
+
+  async applyCommit(
+    toWrite: RecordWriteOp | RecordWriteOp[],
+    authStore: auth.AuthStore,
+  ): Promise<Repo> {
+    const commit = await this.createCommit(toWrite, authStore)
+    await this.storage.applyCommit(commit)
+    return Repo.load(this.storage, commit.root)
   }
 
   async revert(count: number): Promise<Repo> {
