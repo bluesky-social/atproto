@@ -21,21 +21,34 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('reversedBy', 'varchar')
     .addColumn('reversedRationale', 'text')
   await builder.execute()
-  await db.schema.alterTable('did_handle').addColumn('takedownId', 'integer')
   await db.schema
     .alterTable('did_handle')
-    .addForeignKeyConstraint(
-      'did_handle_takedown_id_fkey',
-      ['takedownId'],
-      'moderation_action',
-      ['id'],
-    )
+    .addColumn('takedownId', 'integer')
+    .execute()
+  if (dialect !== 'sqlite') {
+    // Would have to recreate table in sqlite to add this constraint
+    await db.schema
+      .alterTable('did_handle')
+      .addForeignKeyConstraint(
+        'did_handle_takedown_id_fkey',
+        ['takedownId'],
+        'moderation_action',
+        ['id'],
+      )
+      .execute()
+  }
 }
 
-export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema
-    .alterTable('did_handle')
-    .dropConstraint('did_handle_takedown_id_fkey')
-  await db.schema.alterTable('did_handle').dropColumn('takedownId')
+export async function down(
+  db: Kysely<unknown>,
+  dialect: Dialect,
+): Promise<void> {
+  if (dialect !== 'sqlite') {
+    await db.schema
+      .alterTable('did_handle')
+      .dropConstraint('did_handle_takedown_id_fkey')
+      .execute()
+  }
+  await db.schema.alterTable('did_handle').dropColumn('takedownId').execute()
   await db.schema.dropTable('moderation_action').execute()
 }
