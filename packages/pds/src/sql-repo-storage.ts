@@ -1,9 +1,9 @@
-import { RepoStorage } from '@atproto/repo'
+import { CommitData, RepoStorage } from '@atproto/repo'
+import BlockMap from '@atproto/repo/src/block-map'
 import { CID } from 'multiformats/cid'
 import Database from './db'
 import { IpldBlock } from './db/tables/ipld-block'
 import { IpldBlockCreator } from './db/tables/ipld-block-creator'
-import { RepoCommitBlock } from './db/tables/repo-commit-block'
 
 export class SqlRepoStorage extends RepoStorage {
   constructor(
@@ -39,6 +39,11 @@ export class SqlRepoStorage extends RepoStorage {
     return found ? found.content : null
   }
 
+  async hasSavedBytes(cid: CID): Promise<boolean> {
+    const got = await this.getSavedBytes(cid)
+    return !!got
+  }
+
   async hasSavedBlock(cid: CID): Promise<boolean> {
     const found = await this.db.db
       .selectFrom('ipld_block')
@@ -71,12 +76,11 @@ export class SqlRepoStorage extends RepoStorage {
     await Promise.all([insertBlock, insertCreator])
   }
 
-  async putMany(toPut: Map<string, Uint8Array>): Promise<void> {
+  async putMany(toPut: BlockMap): Promise<void> {
     this.db.assertTransaction()
     const blocks: IpldBlock[] = []
     const creators: IpldBlockCreator[] = []
-    for (const staged of toPut.entries()) {
-      const [cid, bytes] = staged
+    toPut.forEach((bytes, cid) => {
       blocks.push({
         cid: cid.toString(),
         size: bytes.length,
@@ -87,7 +91,7 @@ export class SqlRepoStorage extends RepoStorage {
         cid: cid.toString(),
         did: this.did,
       })
-    }
+    })
     const insertBlocks = this.db.db
       .insertInto('ipld_block')
       .values(blocks)
@@ -101,28 +105,27 @@ export class SqlRepoStorage extends RepoStorage {
     await Promise.all([insertBlocks, insertCreators])
   }
 
-  async commitStaged(commit: CID, prev: CID | null): Promise<void> {
+  async applyCommit(commit: CommitData): Promise<void> {
     this.db.assertTransaction()
-    const commitBlocks: RepoCommitBlock[] = []
-    this.staged.forEach((_bytes, cid) => {
-      commitBlocks.push({
-        commit: commit.toString(),
-        block: cid.toString(),
-      })
-    })
-    const insertBlocks = this.putMany(this.staged)
+    const commitBlocks = commit.blocks.entries().map((block) => ({
+      commit: commit.root.toString(),
+      block: block.cid.toString(),
+    }))
+    const insertBlocks = this.putMany(commit.blocks)
     const insertCommit = this.db.db
       .insertInto('repo_commit_block')
       .values(commitBlocks)
       .onConflict((oc) => oc.doNothing())
       .execute()
     const updateRoot =
-      prev === null ? this.insertRoot(commit) : this.updateRoot(commit, prev)
+      commit.prev === null
+        ? this.insertRoot(commit.root)
+        : this.updateRoot(commit.root, commit.prev)
     const insertCommitHistory = this.db.db
       .insertInto('repo_commit_history')
       .values({
-        commit: commit.toString(),
-        prev: prev ? prev.toString() : null,
+        commit: commit.root.toString(),
+        prev: commit.prev ? commit.prev.toString() : null,
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
@@ -132,7 +135,6 @@ export class SqlRepoStorage extends RepoStorage {
       updateRoot,
       insertCommitHistory,
     ])
-    this.clearStaged()
   }
 
   private async insertRoot(commit: CID): Promise<void> {
@@ -192,7 +194,7 @@ export class SqlRepoStorage extends RepoStorage {
     return res.map((row) => CID.parse(row.commit)).reverse()
   }
 
-  async destroySaved(): Promise<void> {
+  async destroy(): Promise<void> {
     throw new Error('Destruction of SQL repo storage not allowed at runtime')
   }
 }

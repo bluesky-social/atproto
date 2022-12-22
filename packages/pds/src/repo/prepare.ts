@@ -14,7 +14,7 @@ import {
 import * as lex from '../lexicon/lexicons'
 import { LexiconDefNotFoundError } from '@atproto/lexicon'
 import {
-  DeleteOp,
+  RecordDeleteOp,
   RecordCreateOp,
   RecordUpdateOp,
   RecordWriteOp,
@@ -186,7 +186,7 @@ export const updateWriteToOp = (write: PreparedUpdate): RecordUpdateOp => ({
   value: write.record,
 })
 
-export const deleteWriteToOp = (write: PreparedDelete): DeleteOp => ({
+export const deleteWriteToOp = (write: PreparedDelete): RecordDeleteOp => ({
   action: 'delete',
   collection: write.uri.collection,
   rkey: write.uri.rkey,

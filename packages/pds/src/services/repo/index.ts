@@ -85,7 +85,7 @@ export class RepoService {
     }
     const writeOps = writes.map(writeToOp)
     const repo = await Repo.load(storage, currRoot)
-    const updated = await repo.stageUpdate(writeOps).createCommit(authStore)
+    const updated = await repo.applyCommit(writeOps, authStore)
     return updated.cid
   }
 

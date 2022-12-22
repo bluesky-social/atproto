@@ -30,14 +30,14 @@ export type RecordCreateOp = {
   action: 'create'
   collection: string
   rkey: string
-  value: unknown
+  value: Record<string, unknown>
 }
 
 export type RecordUpdateOp = {
   action: 'update'
   collection: string
   rkey: string
-  value: unknown
+  value: Record<string, unknown>
 }
 
 export type RecordDeleteOp = {

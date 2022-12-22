@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
+import { def } from '@atproto/common'
 import Repo from './repo'
 import { DataDiff, MST } from './mst'
 import { RepoStorage } from './storage'
@@ -65,12 +66,12 @@ export const diffToWriteOps = (
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseRecordKey(add.key)
-      const value = await storage.getUnchecked(add.cid)
+      const value = await storage.get(add.cid, def.record)
       return { action: 'create' as const, collection, rkey, value }
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseRecordKey(upd.key)
-      const value = await storage.getUnchecked(upd.cid)
+      const value = await storage.get(upd.cid, def.record)
       return { action: 'update' as const, collection, rkey, value }
     }),
     ...diff.deleteList().map((del) => {
