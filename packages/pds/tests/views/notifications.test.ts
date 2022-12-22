@@ -16,7 +16,7 @@ describe('pds notification views', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'views_noitifications',
+      dbPostgresSchema: 'views_notifications',
     })
     close = server.close
     db = server.ctx.db

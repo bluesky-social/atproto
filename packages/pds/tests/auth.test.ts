@@ -1,6 +1,8 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import * as CreateSession from '@atproto/api/src/client/types/com/atproto/session/create'
+import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/session/refresh'
 import { SeedClient } from './seeds/client'
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
+import { adminAuth, CloseFn, runTestServer, TestServerInfo } from './_util'
 
 describe('auth', () => {
   let server: TestServerInfo
@@ -169,5 +171,67 @@ describe('auth', () => {
     const refreshExpired = refreshSession(refresh.jwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
     await deleteSession(refresh.jwt) // No problem revoking an expired token
+  })
+
+  it('actor takedown disallows fresh session.', async () => {
+    const account = await createAccount({
+      handle: 'iris.test',
+      email: 'iris@test.com',
+      password: 'password',
+    })
+    const { data: profile } = await client.app.bsky.actor.getProfile(
+      { actor: account.did },
+      { headers: SeedClient.getHeaders(account.accessJwt) },
+    )
+    await client.app.bsky.administration.takeModerationAction(
+      {
+        action: 'takedown',
+        subject: {
+          $type: 'app.bsky.actor.ref',
+          did: profile.did,
+          declarationCid: profile.declaration.cid,
+        },
+        createdBy: 'X',
+        rationale: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    await expect(
+      createSession({ handle: 'iris.test', password: 'password' }),
+    ).rejects.toThrow(CreateSession.AccountTakedownError)
+  })
+
+  it('actor takedown disallows refresh session.', async () => {
+    const account = await createAccount({
+      handle: 'jared.test',
+      email: 'jared@test.com',
+      password: 'password',
+    })
+    const { data: profile } = await client.app.bsky.actor.getProfile(
+      { actor: account.did },
+      { headers: SeedClient.getHeaders(account.accessJwt) },
+    )
+    await client.app.bsky.administration.takeModerationAction(
+      {
+        action: 'takedown',
+        subject: {
+          $type: 'app.bsky.actor.ref',
+          did: profile.did,
+          declarationCid: profile.declaration.cid,
+        },
+        createdBy: 'X',
+        rationale: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    await expect(refreshSession(account.refreshJwt)).rejects.toThrow(
+      RefreshSession.AccountTakedownError,
+    )
   })
 })

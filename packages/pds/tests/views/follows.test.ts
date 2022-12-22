@@ -5,6 +5,7 @@ import {
   CloseFn,
   constantDate,
   paginateAll,
+  adminAuth,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
@@ -132,6 +133,50 @@ describe('pds follow views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('blocks followers by actor takedown', async () => {
+    const { data: danProfile } = await client.app.bsky.actor.getProfile(
+      { actor: sc.dids.dan },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    const { data: modAction } =
+      await client.app.bsky.administration.takeModerationAction(
+        {
+          action: 'takedown',
+          subject: {
+            $type: 'app.bsky.actor.ref',
+            did: danProfile.did,
+            declarationCid: danProfile.declaration.cid,
+          },
+          createdBy: 'X',
+          rationale: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const aliceFollowers = await client.app.bsky.graph.getFollowers(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
+
+    await client.app.bsky.administration.reverseModerationAction(
+      {
+        id: modAction.id,
+        reversedBy: 'X',
+        reversedRationale: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
+
   it('fetches follows', async () => {
     const aliceFollowers = await client.app.bsky.graph.getFollows(
       { user: sc.dids.alice },
@@ -222,5 +267,49 @@ describe('pds follow views', () => {
 
     expect(full.data.follows.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('blocks follows by actor takedown', async () => {
+    const { data: danProfile } = await client.app.bsky.actor.getProfile(
+      { actor: sc.dids.dan },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    const { data: modAction } =
+      await client.app.bsky.administration.takeModerationAction(
+        {
+          action: 'takedown',
+          subject: {
+            $type: 'app.bsky.actor.ref',
+            did: danProfile.did,
+            declarationCid: danProfile.declaration.cid,
+          },
+          createdBy: 'X',
+          rationale: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const aliceFollows = await client.app.bsky.graph.getFollows(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceFollows.data)).toMatchSnapshot()
+
+    await client.app.bsky.administration.reverseModerationAction(
+      {
+        id: modAction.id,
+        reversedBy: 'X',
+        reversedRationale: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
   })
 })

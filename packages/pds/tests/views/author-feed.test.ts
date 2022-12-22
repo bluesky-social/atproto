@@ -1,5 +1,11 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  CloseFn,
+  paginateAll,
+  adminAuth,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -127,5 +133,43 @@ describe('pds author feed views', () => {
 
     expect(full.data.feed.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('blocked by actor takedown.', async () => {
+    const { data: preBlock } = await client.app.bsky.feed.getAuthorFeed(
+      { author: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+
+    expect(preBlock.feed.length).toBeGreaterThan(0)
+
+    const { data: profile } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+
+    await client.app.bsky.administration.takeModerationAction(
+      {
+        action: 'takedown',
+        subject: {
+          $type: 'app.bsky.actor.ref',
+          did: profile.did,
+          declarationCid: profile.declaration.cid,
+        },
+        createdBy: 'X',
+        rationale: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+
+    const { data: postBlock } = await client.app.bsky.feed.getAuthorFeed(
+      { author: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+
+    expect(postBlock.feed.length).toEqual(0)
   })
 })

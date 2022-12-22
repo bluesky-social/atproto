@@ -6,6 +6,7 @@ import {
   CloseFn,
   getOriginator,
   paginateAll,
+  adminAuth,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -134,5 +135,56 @@ describe('timeline views', () => {
 
     expect(full.data.feed.length).toEqual(7)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('blocks posts, reposts, replies by actor takedown', async () => {
+    const { data: bobProfile } = await client.app.bsky.actor.getProfile(
+      { actor: bob },
+      { headers: sc.getHeaders(alice) },
+    )
+    const { data: danProfile } = await client.app.bsky.actor.getProfile(
+      { actor: dan },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    await client.app.bsky.administration.takeModerationAction(
+      {
+        action: 'takedown',
+        subject: {
+          $type: 'app.bsky.actor.ref',
+          did: bobProfile.did,
+          declarationCid: bobProfile.declaration.cid,
+        },
+        createdBy: 'X',
+        rationale: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    await client.app.bsky.administration.takeModerationAction(
+      {
+        action: 'takedown',
+        subject: {
+          $type: 'app.bsky.actor.ref',
+          did: danProfile.did,
+          declarationCid: danProfile.declaration.cid,
+        },
+        createdBy: 'X',
+        rationale: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+
+    const aliceTL = await client.app.bsky.feed.getTimeline(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
   })
 })

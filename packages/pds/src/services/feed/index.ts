@@ -121,6 +121,8 @@ export class FeedService {
       .selectFrom('post')
       .where('post.uri', 'in', postUris)
       .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
+      .innerJoin('did_handle', 'did_handle.did', 'post.creator')
+      .where(actorNotSoftDeletedClause())
       .select([
         'post.uri as uri',
         'post.cid as cid',
@@ -245,7 +247,7 @@ export class FeedService {
     embeds: FeedEmbeds,
   ): PostView | undefined {
     const post = posts[uri]
-    const author = actors[post.creator]
+    const author = actors[post?.creator]
     if (!post || !author) return undefined
     return {
       uri: post.uri,

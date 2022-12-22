@@ -1,5 +1,11 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  CloseFn,
+  paginateAll,
+  adminAuth,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 import { Database } from '../../src'
@@ -38,7 +44,7 @@ describe('pds user search views', () => {
     const shouldContain = [
       'cara-wiegand69.test',
       'eudora-dietrich4.test', // Carol Littel
-      'shane-torphy52.test', //Sadie Carter
+      'shane-torphy52.test', // Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
       'carolina-mcdermott77.test',
@@ -176,6 +182,37 @@ describe('pds user search views', () => {
     )
 
     expect(result.data.users).toEqual([])
+  })
+
+  it('search blocks by actor takedown', async () => {
+    const { data: caraProfile } = await client.app.bsky.actor.getProfile(
+      { actor: 'cara-wiegand69.test' },
+      { headers },
+    )
+    await client.app.bsky.administration.takeModerationAction(
+      {
+        action: 'takedown',
+        subject: {
+          $type: 'app.bsky.actor.ref',
+          did: caraProfile.did,
+          declarationCid: caraProfile.declaration.cid,
+        },
+        createdBy: 'X',
+        rationale: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    const result = await client.app.bsky.actor.searchTypeahead(
+      { term: 'car' },
+      { headers },
+    )
+    const handles = result.data.users.map((u) => u.handle)
+    expect(handles).toContain('carlos6.test')
+    expect(handles).toContain('carolina-mcdermott77.test')
+    expect(handles).not.toContain('cara-wiegand69.test')
   })
 })
 

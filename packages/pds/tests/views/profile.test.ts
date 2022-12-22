@@ -1,6 +1,6 @@
 import fs from 'fs/promises'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn } from '../_util'
+import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -198,5 +198,33 @@ describe('pds profile views', () => {
     )
 
     expect(byHandle.data).toEqual(byDid.data)
+  })
+
+  it('blocked by actor takedown', async () => {
+    const { data: profile } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+    await client.app.bsky.administration.takeModerationAction(
+      {
+        action: 'takedown',
+        subject: {
+          $type: 'app.bsky.actor.ref',
+          did: profile.did,
+          declarationCid: profile.declaration.cid,
+        },
+        createdBy: 'X',
+        rationale: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    const promise = client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+    await expect(promise).rejects.toThrow('Account has been taken down')
   })
 })

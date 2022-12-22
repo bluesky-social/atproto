@@ -27,18 +27,27 @@ export default function (server: Server, ctx: AppContext) {
 
       const postsQb = feedService
         .selectPostQb()
-        .where('creator', '=', requester)
-        .orWhere('creator', 'in', followingIdsSubquery)
+        .where((qb) =>
+          qb
+            .where('creator', '=', requester)
+            .orWhere('creator', 'in', followingIdsSubquery),
+        )
 
       const repostsQb = feedService
         .selectRepostQb()
-        .where('repost.creator', '=', requester)
-        .orWhere('repost.creator', 'in', followingIdsSubquery)
+        .where((qb) =>
+          qb
+            .where('repost.creator', '=', requester)
+            .orWhere('repost.creator', 'in', followingIdsSubquery),
+        )
 
       const trendsQb = feedService
         .selectTrendQb()
-        .where('trend.creator', '=', requester)
-        .orWhere('trend.creator', 'in', followingIdsSubquery)
+        .where((qb) =>
+          qb
+            .where('trend.creator', '=', requester)
+            .orWhere('trend.creator', 'in', followingIdsSubquery),
+        )
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db
