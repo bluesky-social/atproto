@@ -55,10 +55,13 @@ export const def = {
   commit,
 }
 
-export type CommitData = {
+export type CommitBlockData = {
   root: CID
   prev: CID | null
   blocks: BlockMap
+}
+
+export type CommitData = CommitBlockData & {
   ops: RecordWriteOp[]
 }
 
