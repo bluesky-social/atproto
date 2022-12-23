@@ -1,4 +1,4 @@
-import { CommitData, RepoStorage } from '@atproto/repo'
+import { CommitBlockData, CommitData, RepoStorage } from '@atproto/repo'
 import BlockMap from '@atproto/repo/src/block-map'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
@@ -226,6 +226,38 @@ export class SqlRepoStorage extends RepoStorage {
       .select('commit')
       .execute()
     return res.map((row) => CID.parse(row.commit)).reverse()
+  }
+
+  async getCommits(
+    latest: CID,
+    earliest: CID | null,
+  ): Promise<CommitBlockData[] | null> {
+    const commitPath = await this.getCommitPath(latest, earliest)
+    if (!commitPath) return null
+    const commitStrs = commitPath.map((commit) => commit.toString())
+    if (commitStrs.length < 1) return []
+    const res = await this.db.db
+      .selectFrom('repo_commit_block')
+      .innerJoin('ipld_block', 'ipld_block.cid', 'repo_commit_block.block')
+      .select([
+        'repo_commit_block.commit',
+        'ipld_block.cid',
+        'ipld_block.content',
+      ])
+      .where('commit', 'in', commitStrs)
+      .execute()
+    const sortedBlocks: { [commit: string]: BlockMap } = {}
+    res.forEach((row) => {
+      if (!sortedBlocks[row.commit]) {
+        sortedBlocks[row.commit] = new BlockMap()
+      }
+      sortedBlocks[row.commit].set(CID.parse(row.commit), row.content)
+    })
+    return commitPath.map((commit) => ({
+      root: commit,
+      prev: null,
+      blocks: sortedBlocks[commit.toString()] || new BlockMap(),
+    }))
   }
 
   async destroy(): Promise<void> {

@@ -4,7 +4,7 @@ import { BlockWriter } from '@ipld/car/writer'
 import * as common from '@atproto/common'
 import { check } from '@atproto/common'
 import { DataDiff } from '../mst'
-import { CommitData } from '../types'
+import { CommitBlockData, CommitData } from '../types'
 import BlockMap from '../block-map'
 import * as util from '../util'
 
@@ -21,6 +21,10 @@ export abstract class RepoStorage {
     latest: CID,
     earliest: CID | null,
   ): Promise<CID[] | null>
+  abstract getCommits(
+    latest: CID,
+    earliest: CID | null,
+  ): Promise<CommitBlockData[] | null>
   abstract destroy(): Promise<void>
 
   async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
