@@ -1,5 +1,6 @@
 import { CommitData, RepoStorage } from '@atproto/repo'
 import BlockMap from '@atproto/repo/src/block-map'
+import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import Database from './db'
 import { IpldBlock } from './db/tables/ipld-block'
@@ -59,6 +60,12 @@ export class SqlRepoStorage extends RepoStorage {
     if (cached) return cached
     const found = await this.db.db
       .selectFrom('ipld_block')
+      .innerJoin(
+        'ipld_block_creator as creator',
+        'creator.cid',
+        'ipld_block.cid',
+      )
+      .where('creator.did', '=', this.did)
       .where('cid', '=', cid.toString())
       .select('content')
       .executeTakeFirst()
@@ -112,18 +119,24 @@ export class SqlRepoStorage extends RepoStorage {
         did: this.did,
       })
     })
-    const insertBlocks = this.db.db
-      .insertInto('ipld_block')
-      .values(blocks)
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-    const insertCreators = this.db.db
-      .insertInto('ipld_block_creator')
-      .values(creators)
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-    await Promise.all([insertBlocks, insertCreators])
-    this.cache.addMap(toPut)
+    const promises: Promise<unknown>[] = []
+    chunkArray(blocks, 500).forEach((batch) => {
+      const promise = this.db.db
+        .insertInto('ipld_block')
+        .values(batch)
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+      promises.push(promise)
+    })
+    chunkArray(creators, 500).forEach((batch) => {
+      const promise = this.db.db
+        .insertInto('ipld_block_creator')
+        .values(batch)
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+      promises.push(promise)
+    })
+    await Promise.all(promises)
   }
 
   async applyCommit(commit: CommitData): Promise<void> {

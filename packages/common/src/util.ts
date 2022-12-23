@@ -73,3 +73,14 @@ export const isErrnoException = (
 export const errHasMsg = (err: unknown, msg: string): boolean => {
   return !!err && typeof err === 'object' && err['message'] === msg
 }
+
+export const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
+  return arr.reduce((acc, cur, i) => {
+    const chunkI = Math.floor(i / chunkSize)
+    if (!acc[chunkI]) {
+      acc[chunkI] = []
+    }
+    acc[chunkI].push(cur)
+    return acc
+  }, [] as T[][])
+}
