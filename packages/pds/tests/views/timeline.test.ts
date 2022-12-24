@@ -147,32 +147,32 @@ describe('timeline views', () => {
       { headers: sc.getHeaders(alice) },
     )
 
-    await client.app.bsky.administration.takeModerationAction(
+    await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'takedown',
+        action: 'app.bsky.admin.actionTakedown',
         subject: {
           $type: 'app.bsky.actor.ref',
           did: bobProfile.did,
           declarationCid: bobProfile.declaration.cid,
         },
         createdBy: 'X',
-        rationale: 'Y',
+        reason: 'Y',
       },
       {
         encoding: 'application/json',
         headers: { authorization: adminAuth() },
       },
     )
-    await client.app.bsky.administration.takeModerationAction(
+    await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'takedown',
+        action: 'app.bsky.admin.actionTakedown',
         subject: {
           $type: 'app.bsky.actor.ref',
           did: danProfile.did,
           declarationCid: danProfile.declaration.cid,
         },
         createdBy: 'X',
-        rationale: 'Y',
+        reason: 'Y',
       },
       {
         encoding: 'application/json',

@@ -132,16 +132,16 @@ describe('pds thread views', () => {
     )
 
     const { data: modAction } =
-      await client.app.bsky.administration.takeModerationAction(
+      await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'takedown',
+          action: 'app.bsky.admin.actionTakedown',
           subject: {
             $type: 'app.bsky.actor.ref',
             did: aliceProfile.did,
             declarationCid: aliceProfile.declaration.cid,
           },
           createdBy: 'X',
-          rationale: 'Y',
+          reason: 'Y',
         },
         {
           encoding: 'application/json',
@@ -159,11 +159,11 @@ describe('pds thread views', () => {
       AppBskyFeedGetPostThread.NotFoundError,
     )
 
-    await client.app.bsky.administration.reverseModerationAction(
+    await client.app.bsky.admin.reverseModerationAction(
       {
         id: modAction.id,
-        reversedBy: 'X',
-        reversedRationale: 'Y',
+        createdBy: 'X',
+        reason: 'Y',
       },
       {
         encoding: 'application/json',
@@ -179,16 +179,16 @@ describe('pds thread views', () => {
     )
 
     const { data: modAction } =
-      await client.app.bsky.administration.takeModerationAction(
+      await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'takedown',
+          action: 'app.bsky.admin.actionTakedown',
           subject: {
             $type: 'app.bsky.actor.ref',
             did: carolProfile.did,
             declarationCid: carolProfile.declaration.cid,
           },
           createdBy: 'X',
-          rationale: 'Y',
+          reason: 'Y',
         },
         {
           encoding: 'application/json',
@@ -204,11 +204,11 @@ describe('pds thread views', () => {
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
-    await client.app.bsky.administration.reverseModerationAction(
+    await client.app.bsky.admin.reverseModerationAction(
       {
         id: modAction.id,
-        reversedBy: 'X',
-        reversedRationale: 'Y',
+        createdBy: 'X',
+        reason: 'Y',
       },
       {
         encoding: 'application/json',
@@ -224,16 +224,16 @@ describe('pds thread views', () => {
     )
 
     const { data: modAction } =
-      await client.app.bsky.administration.takeModerationAction(
+      await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'takedown',
+          action: 'app.bsky.admin.actionTakedown',
           subject: {
             $type: 'app.bsky.actor.ref',
             did: aliceProfile.did,
             declarationCid: aliceProfile.declaration.cid,
           },
           createdBy: 'X',
-          rationale: 'Y',
+          reason: 'Y',
         },
         {
           encoding: 'application/json',
@@ -251,11 +251,11 @@ describe('pds thread views', () => {
       AppBskyFeedGetPostThread.NotFoundError,
     )
 
-    await client.app.bsky.administration.reverseModerationAction(
+    await client.app.bsky.admin.reverseModerationAction(
       {
         id: modAction.id,
-        reversedBy: 'X',
-        reversedRationale: 'Y',
+        createdBy: 'X',
+        reason: 'Y',
       },
       {
         encoding: 'application/json',

@@ -2,18 +2,18 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import * as AppBskyAdministrationModerationAction from './moderationAction'
+import * as AppBskyAdminModerationAction from './moderationAction'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   id: number
-  reversedBy: string
-  reversedRationale: string
+  reason: string
+  createdBy: string
   [k: string]: unknown
 }
 
-export type OutputSchema = AppBskyAdministrationModerationAction.View
+export type OutputSchema = AppBskyAdminModerationAction.View
 
 export interface CallOptions {
   headers?: Headers

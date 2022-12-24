@@ -4,16 +4,16 @@ export const moderationActionTableName = 'moderation_action'
 
 export interface ModerationAction {
   id: Generated<number>
-  action: 'takedown'
+  action: 'app.bsky.admin.actionTakedown'
   subjectType: 'actor'
   subjectDid: string | null
   subjectDeclarationCid: string | null
-  rationale: string
+  reason: string
   createdAt: string
   createdBy: string
   reversedAt: string | null
   reversedBy: string | null
-  reversedRationale: string | null
+  reversedReason: string | null
 }
 
 export type PartialDB = {

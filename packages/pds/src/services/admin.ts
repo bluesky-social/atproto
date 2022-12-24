@@ -1,9 +1,9 @@
 import { Selectable } from 'kysely'
 import Database from '../db'
 import { ModerationAction } from '../db/tables/moderation'
-import { View as ModerationActionView } from '../lexicon/types/app/bsky/administration/moderationAction'
-import { InputSchema as TakeModAction } from '../lexicon/types/app/bsky/administration/takeModerationAction'
-import { InputSchema as ReverseModAction } from '../lexicon/types/app/bsky/administration/reverseModerationAction'
+import { View as ModerationActionView } from '../lexicon/types/app/bsky/admin/moderationAction'
+import { InputSchema as TakeModAction } from '../lexicon/types/app/bsky/admin/takeModerationAction'
+import { InputSchema as ReverseModAction } from '../lexicon/types/app/bsky/admin/reverseModerationAction'
 import * as ActorRef from '../lexicon/types/app/bsky/actor/ref'
 import { ids } from '../lexicon/lexicons'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -27,18 +27,12 @@ export class AdminService {
 
   async logModAction(
     info: TakeModAction & {
-      action: 'takedown'
+      action: 'app.bsky.admin.actionTakedown'
       subject: ActorRef.Main
       createdAt?: Date
     },
   ): Promise<Selectable<ModerationAction>> {
-    const {
-      action,
-      createdBy,
-      rationale,
-      subject,
-      createdAt = new Date(),
-    } = info
+    const { action, createdBy, reason, subject, createdAt = new Date() } = info
 
     return await this.db.db
       .insertInto('moderation_action')
@@ -49,24 +43,24 @@ export class AdminService {
         subjectDeclarationCid: subject.declarationCid,
         createdAt: createdAt.toISOString(),
         createdBy,
-        rationale,
+        reason,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
   }
 
   async logReverseModAction(
-    info: ReverseModAction & { reversedAt: Date },
+    info: ReverseModAction & { createdAt: Date },
   ): Promise<Selectable<ModerationAction>> {
-    const { id, reversedBy, reversedRationale, reversedAt = new Date() } = info
+    const { id, createdBy, reason, createdAt = new Date() } = info
 
     const result = await this.db.db
       .updateTable('moderation_action')
       .where('id', '=', id)
       .set({
-        reversedAt: reversedAt.toISOString(),
-        reversedBy,
-        reversedRationale,
+        reversedAt: createdAt.toISOString(),
+        reversedBy: createdBy,
+        reversedReason: reason,
       })
       .returningAll()
       .executeTakeFirst()
@@ -109,12 +103,19 @@ export class AdminService {
         did: modAction.subjectDid,
         declarationCid: modAction.subjectDeclarationCid,
       },
-      rationale: modAction.rationale,
+      reason: modAction.reason,
       createdAt: modAction.createdAt,
       createdBy: modAction.createdBy,
-      reversedAt: modAction.reversedAt ?? undefined,
-      reversedBy: modAction.reversedBy ?? undefined,
-      reversedRationale: modAction.reversedRationale ?? undefined,
+      reversal:
+        modAction.reversedAt !== null &&
+        modAction.reversedBy !== null &&
+        modAction.reversedReason !== null
+          ? {
+              createdAt: modAction.reversedAt,
+              createdBy: modAction.reversedBy,
+              reason: modAction.reversedReason,
+            }
+          : undefined,
     }
   }
 }

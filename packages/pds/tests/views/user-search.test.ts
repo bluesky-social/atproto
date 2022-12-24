@@ -189,16 +189,16 @@ describe('pds user search views', () => {
       { actor: 'cara-wiegand69.test' },
       { headers },
     )
-    await client.app.bsky.administration.takeModerationAction(
+    await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'takedown',
+        action: 'app.bsky.admin.actionTakedown',
         subject: {
           $type: 'app.bsky.actor.ref',
           did: caraProfile.did,
           declarationCid: caraProfile.declaration.cid,
         },
         createdBy: 'X',
-        rationale: 'Y',
+        reason: 'Y',
       },
       {
         encoding: 'application/json',

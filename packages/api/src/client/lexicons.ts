@@ -1442,9 +1442,20 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyAdministrationModerationAction: {
+  AppBskyAdminActionTakedown: {
     lexicon: 1,
-    id: 'app.bsky.administration.moderationAction',
+    id: 'app.bsky.admin.actionTakedown',
+    defs: {
+      main: {
+        type: 'token',
+        description:
+          "Moderation action type: Takedown. Defined for app.bsky.admin.moderationAction's action.",
+      },
+    },
+  },
+  AppBskyAdminModerationAction: {
+    lexicon: 1,
+    id: 'app.bsky.admin.moderationAction',
     defs: {
       view: {
         type: 'object',
@@ -1452,7 +1463,7 @@ export const schemaDict = {
           'id',
           'action',
           'subject',
-          'rationale',
+          'reason',
           'createdBy',
           'createdAt',
         ],
@@ -1462,13 +1473,13 @@ export const schemaDict = {
           },
           action: {
             type: 'string',
-            knownValues: ['takedown'],
+            knownValues: ['app.bsky.admin.actionTakedown'],
           },
           subject: {
             type: 'union',
             refs: ['lex:app.bsky.actor.ref'],
           },
-          rationale: {
+          reason: {
             type: 'string',
           },
           createdBy: {
@@ -1477,22 +1488,32 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
           },
-          reversedBy: {
+          reversal: {
+            type: 'ref',
+            ref: 'lex:app.bsky.admin.moderationAction#reversal',
+          },
+        },
+      },
+      reversal: {
+        type: 'object',
+        required: ['reason', 'createdBy', 'createdAt'],
+        properties: {
+          reason: {
             type: 'string',
           },
-          reversedAt: {
+          createdBy: {
             type: 'string',
           },
-          reversedRationale: {
+          createdAt: {
             type: 'string',
           },
         },
       },
     },
   },
-  AppBskyAdministrationReverseModerationAction: {
+  AppBskyAdminReverseModerationAction: {
     lexicon: 1,
-    id: 'app.bsky.administration.reverseModerationAction',
+    id: 'app.bsky.admin.reverseModerationAction',
     defs: {
       main: {
         type: 'procedure',
@@ -1501,52 +1522,12 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['id', 'reversedBy', 'reversedRationale'],
+            required: ['id', 'reason', 'createdBy'],
             properties: {
               id: {
                 type: 'integer',
               },
-              reversedBy: {
-                type: 'string',
-              },
-              reversedRationale: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:app.bsky.administration.moderationAction#view',
-          },
-        },
-      },
-    },
-  },
-  AppBskyAdministrationTakeModerationAction: {
-    lexicon: 1,
-    id: 'app.bsky.administration.takeModerationAction',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Take a moderation action on an actor.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['action', 'subject', 'rationale', 'createdBy'],
-            properties: {
-              action: {
-                type: 'string',
-                knownValues: ['takedown'],
-              },
-              subject: {
-                type: 'union',
-                refs: ['lex:app.bsky.actor.ref'],
-              },
-              rationale: {
+              reason: {
                 type: 'string',
               },
               createdBy: {
@@ -1559,7 +1540,47 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:app.bsky.administration.moderationAction#view',
+            ref: 'lex:app.bsky.admin.moderationAction#view',
+          },
+        },
+      },
+    },
+  },
+  AppBskyAdminTakeModerationAction: {
+    lexicon: 1,
+    id: 'app.bsky.admin.takeModerationAction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Take a moderation action on an actor.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['action', 'subject', 'reason', 'createdBy'],
+            properties: {
+              action: {
+                type: 'string',
+                knownValues: ['app.bsky.admin.actionTakedown'],
+              },
+              subject: {
+                type: 'union',
+                refs: ['lex:app.bsky.actor.ref'],
+              },
+              reason: {
+                type: 'string',
+              },
+              createdBy: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.admin.moderationAction#view',
           },
         },
       },
@@ -3142,12 +3163,10 @@ export const ids = {
   AppBskyActorSearch: 'app.bsky.actor.search',
   AppBskyActorSearchTypeahead: 'app.bsky.actor.searchTypeahead',
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
-  AppBskyAdministrationModerationAction:
-    'app.bsky.administration.moderationAction',
-  AppBskyAdministrationReverseModerationAction:
-    'app.bsky.administration.reverseModerationAction',
-  AppBskyAdministrationTakeModerationAction:
-    'app.bsky.administration.takeModerationAction',
+  AppBskyAdminActionTakedown: 'app.bsky.admin.actionTakedown',
+  AppBskyAdminModerationAction: 'app.bsky.admin.moderationAction',
+  AppBskyAdminReverseModerationAction: 'app.bsky.admin.reverseModerationAction',
+  AppBskyAdminTakeModerationAction: 'app.bsky.admin.takeModerationAction',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyFeedFeedViewPost: 'app.bsky.feed.feedViewPost',

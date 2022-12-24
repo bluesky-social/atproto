@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.administration.takeModerationAction",
+  "id": "app.bsky.admin.takeModerationAction",
   "defs": {
     "main": {
       "type": "procedure",
@@ -9,11 +9,11 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["action", "subject", "rationale", "createdBy"],
+          "required": ["action", "subject", "reason", "createdBy"],
           "properties": {
-            "action": {"type": "string", "knownValues": ["takedown"]},
+            "action": {"type": "string", "knownValues": ["app.bsky.admin.actionTakedown"]},
             "subject": {"type": "union", "refs": ["app.bsky.actor.ref"]},
-            "rationale": {"type": "string"},
+            "reason": {"type": "string"},
             "createdBy": {"type": "string"}
           }
         }
@@ -22,7 +22,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "app.bsky.administration.moderationAction#view"
+          "ref": "app.bsky.admin.moderationAction#view"
         }
       }
     }

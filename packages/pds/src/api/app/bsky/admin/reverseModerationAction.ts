@@ -3,12 +3,12 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.administration.reverseModerationAction({
+  server.app.bsky.admin.reverseModerationAction({
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
       const adminService = services.admin(db)
-      const { id, reversedBy, reversedRationale } = input.body
+      const { id, createdBy, reason } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const adminTxn = services.admin(dbTxn)
@@ -26,12 +26,15 @@ export default function (server: Server, ctx: AppContext) {
 
         const result = await adminTxn.logReverseModAction({
           id,
-          reversedAt: now,
-          reversedBy,
-          reversedRationale,
+          createdAt: now,
+          createdBy,
+          reason,
         })
 
-        if (result.action === 'takedown' && result.subjectDid !== null) {
+        if (
+          result.action === 'app.bsky.admin.actionTakedown' &&
+          result.subjectDid !== null
+        ) {
           await adminTxn.reverseTakedownActorByDid({ did: result.subjectDid })
         }
 

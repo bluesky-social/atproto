@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.admin.moderationAction",
+  "defs": {
+    "view": {
+      "type": "object",
+      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt"],
+      "properties": {
+        "id": {"type": "integer"},
+        "action": {"type": "string", "knownValues": ["app.bsky.admin.actionTakedown"]},
+        "subject": {"type": "union", "refs": ["app.bsky.actor.ref"]},
+        "reason": {"type": "string"},
+        "createdBy": {"type": "string"},
+        "createdAt": {"type": "string"},
+        "reversal": {"type": "ref", "ref": "#reversal"}
+      }
+    },
+    "reversal": {
+      "type": "object",
+      "required": ["reason", "createdBy", "createdAt"],
+      "properties": {
+        "reason": {"type": "string"},
+        "createdBy": {"type": "string"},
+        "createdAt": {"type": "string"}
+      }
+    }
+  }
+}

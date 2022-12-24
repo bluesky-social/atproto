@@ -37,8 +37,8 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-import * as AppBskyAdministrationReverseModerationAction from './types/app/bsky/administration/reverseModerationAction'
-import * as AppBskyAdministrationTakeModerationAction from './types/app/bsky/administration/takeModerationAction'
+import * as AppBskyAdminReverseModerationAction from './types/app/bsky/admin/reverseModerationAction'
+import * as AppBskyAdminTakeModerationAction from './types/app/bsky/admin/takeModerationAction'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -54,6 +54,9 @@ import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getC
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 
+export const APP_BSKY_ADMIN = {
+  ActionTakedown: 'app.bsky.admin.actionTakedown',
+}
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
   AssertMember: 'app.bsky.graph.assertMember',
@@ -350,7 +353,7 @@ export class AppNS {
 export class BskyNS {
   _server: Server
   actor: ActorNS
-  administration: AdministrationNS
+  admin: AdminNS
   embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
@@ -360,7 +363,7 @@ export class BskyNS {
   constructor(server: Server) {
     this._server = server
     this.actor = new ActorNS(server)
-    this.administration = new AdministrationNS(server)
+    this.admin = new AdminNS(server)
     this.embed = new EmbedNS(server)
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
@@ -419,7 +422,7 @@ export class ActorNS {
   }
 }
 
-export class AdministrationNS {
+export class AdminNS {
   _server: Server
 
   constructor(server: Server) {
@@ -429,20 +432,20 @@ export class AdministrationNS {
   reverseModerationAction<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      AppBskyAdministrationReverseModerationAction.Handler<ExtractAuth<AV>>
+      AppBskyAdminReverseModerationAction.Handler<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'app.bsky.administration.reverseModerationAction' // @ts-ignore
+    const nsid = 'app.bsky.admin.reverseModerationAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
   takeModerationAction<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      AppBskyAdministrationTakeModerationAction.Handler<ExtractAuth<AV>>
+      AppBskyAdminTakeModerationAction.Handler<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'app.bsky.administration.takeModerationAction' // @ts-ignore
+    const nsid = 'app.bsky.admin.takeModerationAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

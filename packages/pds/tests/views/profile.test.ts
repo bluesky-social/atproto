@@ -205,16 +205,16 @@ describe('pds profile views', () => {
       { actor: alice },
       { headers: sc.getHeaders(bob) },
     )
-    await client.app.bsky.administration.takeModerationAction(
+    await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'takedown',
+        action: 'app.bsky.admin.actionTakedown',
         subject: {
           $type: 'app.bsky.actor.ref',
           did: profile.did,
           declarationCid: profile.declaration.cid,
         },
         createdBy: 'X',
-        rationale: 'Y',
+        reason: 'Y',
       },
       {
         encoding: 'application/json',

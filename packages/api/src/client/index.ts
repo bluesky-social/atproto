@@ -38,9 +38,10 @@ import * as AppBskyActorRef from './types/app/bsky/actor/ref'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-import * as AppBskyAdministrationModerationAction from './types/app/bsky/administration/moderationAction'
-import * as AppBskyAdministrationReverseModerationAction from './types/app/bsky/administration/reverseModerationAction'
-import * as AppBskyAdministrationTakeModerationAction from './types/app/bsky/administration/takeModerationAction'
+import * as AppBskyAdminActionTakedown from './types/app/bsky/admin/actionTakedown'
+import * as AppBskyAdminModerationAction from './types/app/bsky/admin/moderationAction'
+import * as AppBskyAdminReverseModerationAction from './types/app/bsky/admin/reverseModerationAction'
+import * as AppBskyAdminTakeModerationAction from './types/app/bsky/admin/takeModerationAction'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyFeedFeedViewPost from './types/app/bsky/feed/feedViewPost'
@@ -104,9 +105,10 @@ export * as AppBskyActorRef from './types/app/bsky/actor/ref'
 export * as AppBskyActorSearch from './types/app/bsky/actor/search'
 export * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-export * as AppBskyAdministrationModerationAction from './types/app/bsky/administration/moderationAction'
-export * as AppBskyAdministrationReverseModerationAction from './types/app/bsky/administration/reverseModerationAction'
-export * as AppBskyAdministrationTakeModerationAction from './types/app/bsky/administration/takeModerationAction'
+export * as AppBskyAdminActionTakedown from './types/app/bsky/admin/actionTakedown'
+export * as AppBskyAdminModerationAction from './types/app/bsky/admin/moderationAction'
+export * as AppBskyAdminReverseModerationAction from './types/app/bsky/admin/reverseModerationAction'
+export * as AppBskyAdminTakeModerationAction from './types/app/bsky/admin/takeModerationAction'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyFeedFeedViewPost from './types/app/bsky/feed/feedViewPost'
@@ -138,6 +140,9 @@ export * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 export * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
+export const APP_BSKY_ADMIN = {
+  ActionTakedown: 'app.bsky.admin.actionTakedown',
+}
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
   AssertMember: 'app.bsky.graph.assertMember',
@@ -534,7 +539,7 @@ export class AppNS {
 export class BskyNS {
   _service: ServiceClient
   actor: ActorNS
-  administration: AdministrationNS
+  admin: AdminNS
   embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
@@ -544,7 +549,7 @@ export class BskyNS {
   constructor(service: ServiceClient) {
     this._service = service
     this.actor = new ActorNS(service)
-    this.administration = new AdministrationNS(service)
+    this.admin = new AdminNS(service)
     this.embed = new EmbedNS(service)
     this.feed = new FeedNS(service)
     this.graph = new GraphNS(service)
@@ -690,7 +695,7 @@ export class ProfileRecord {
   }
 }
 
-export class AdministrationNS {
+export class AdminNS {
   _service: ServiceClient
 
   constructor(service: ServiceClient) {
@@ -698,34 +703,24 @@ export class AdministrationNS {
   }
 
   reverseModerationAction(
-    data?: AppBskyAdministrationReverseModerationAction.InputSchema,
-    opts?: AppBskyAdministrationReverseModerationAction.CallOptions,
-  ): Promise<AppBskyAdministrationReverseModerationAction.Response> {
+    data?: AppBskyAdminReverseModerationAction.InputSchema,
+    opts?: AppBskyAdminReverseModerationAction.CallOptions,
+  ): Promise<AppBskyAdminReverseModerationAction.Response> {
     return this._service.xrpc
-      .call(
-        'app.bsky.administration.reverseModerationAction',
-        opts?.qp,
-        data,
-        opts,
-      )
+      .call('app.bsky.admin.reverseModerationAction', opts?.qp, data, opts)
       .catch((e) => {
-        throw AppBskyAdministrationReverseModerationAction.toKnownErr(e)
+        throw AppBskyAdminReverseModerationAction.toKnownErr(e)
       })
   }
 
   takeModerationAction(
-    data?: AppBskyAdministrationTakeModerationAction.InputSchema,
-    opts?: AppBskyAdministrationTakeModerationAction.CallOptions,
-  ): Promise<AppBskyAdministrationTakeModerationAction.Response> {
+    data?: AppBskyAdminTakeModerationAction.InputSchema,
+    opts?: AppBskyAdminTakeModerationAction.CallOptions,
+  ): Promise<AppBskyAdminTakeModerationAction.Response> {
     return this._service.xrpc
-      .call(
-        'app.bsky.administration.takeModerationAction',
-        opts?.qp,
-        data,
-        opts,
-      )
+      .call('app.bsky.admin.takeModerationAction', opts?.qp, data, opts)
       .catch((e) => {
-        throw AppBskyAdministrationTakeModerationAction.toKnownErr(e)
+        throw AppBskyAdminTakeModerationAction.toKnownErr(e)
       })
   }
 }

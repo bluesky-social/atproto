@@ -5,13 +5,18 @@ import * as AppBskyActorRef from '../actor/ref'
 
 export interface View {
   id: number
-  action: 'takedown' | (string & {})
+  action: 'app.bsky.admin.actionTakedown' | (string & {})
   subject: AppBskyActorRef.Main | { $type: string; [k: string]: unknown }
-  rationale: string
+  reason: string
   createdBy: string
   createdAt: string
-  reversedBy?: string
-  reversedAt?: string
-  reversedRationale?: string
+  reversal?: Reversal
+  [k: string]: unknown
+}
+
+export interface Reversal {
+  reason: string
+  createdBy: string
+  createdAt: string
   [k: string]: unknown
 }

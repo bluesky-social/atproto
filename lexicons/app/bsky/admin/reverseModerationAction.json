@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.administration.reverseModerationAction",
+  "id": "app.bsky.admin.reverseModerationAction",
   "defs": {
     "main": {
       "type": "procedure",
@@ -9,11 +9,11 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["id", "reversedBy", "reversedRationale"],
+          "required": ["id", "reason", "createdBy"],
           "properties": {
             "id": {"type": "integer"},
-            "reversedBy": {"type": "string"},
-            "reversedRationale": {"type": "string"}
+            "reason": {"type": "string"},
+            "createdBy": {"type": "string"}
           }
         }
       },
@@ -21,7 +21,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "app.bsky.administration.moderationAction#view"
+          "ref": "app.bsky.admin.moderationAction#view"
         }
       }
     }

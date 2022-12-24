@@ -140,16 +140,16 @@ describe('pds follow views', () => {
     )
 
     const { data: modAction } =
-      await client.app.bsky.administration.takeModerationAction(
+      await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'takedown',
+          action: 'app.bsky.admin.actionTakedown',
           subject: {
             $type: 'app.bsky.actor.ref',
             did: danProfile.did,
             declarationCid: danProfile.declaration.cid,
           },
           createdBy: 'X',
-          rationale: 'Y',
+          reason: 'Y',
         },
         {
           encoding: 'application/json',
@@ -164,11 +164,11 @@ describe('pds follow views', () => {
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
 
-    await client.app.bsky.administration.reverseModerationAction(
+    await client.app.bsky.admin.reverseModerationAction(
       {
         id: modAction.id,
-        reversedBy: 'X',
-        reversedRationale: 'Y',
+        createdBy: 'X',
+        reason: 'Y',
       },
       {
         encoding: 'application/json',
@@ -276,16 +276,16 @@ describe('pds follow views', () => {
     )
 
     const { data: modAction } =
-      await client.app.bsky.administration.takeModerationAction(
+      await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'takedown',
+          action: 'app.bsky.admin.actionTakedown',
           subject: {
             $type: 'app.bsky.actor.ref',
             did: danProfile.did,
             declarationCid: danProfile.declaration.cid,
           },
           createdBy: 'X',
-          rationale: 'Y',
+          reason: 'Y',
         },
         {
           encoding: 'application/json',
@@ -300,11 +300,11 @@ describe('pds follow views', () => {
 
     expect(forSnapshot(aliceFollows.data)).toMatchSnapshot()
 
-    await client.app.bsky.administration.reverseModerationAction(
+    await client.app.bsky.admin.reverseModerationAction(
       {
         id: modAction.id,
-        reversedBy: 'X',
-        reversedRationale: 'Y',
+        createdBy: 'X',
+        reason: 'Y',
       },
       {
         encoding: 'application/json',

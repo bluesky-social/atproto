@@ -20,8 +20,8 @@ import getNotifications from './notification/list'
 import getNotificationCount from './notification/getCount'
 import getSuggestions from './actor/getSuggestions'
 import postNotificationsSeen from './notification/updateSeen'
-import takeModerationAction from './administration/takeModerationAction'
-import reverseModerationAction from './administration/reverseModerationAction'
+import takeModerationAction from './admin/takeModerationAction'
+import reverseModerationAction from './admin/reverseModerationAction'
 
 export default function (server: Server, ctx: AppContext) {
   createScene(server, ctx)

@@ -5,7 +5,7 @@ import * as ActorRef from '../../../../lexicon/types/app/bsky/actor/ref'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.administration.takeModerationAction({
+  server.app.bsky.admin.takeModerationAction({
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
@@ -13,18 +13,18 @@ export default function (server: Server, ctx: AppContext) {
       const {
         action: _action,
         subject: _subject,
-        rationale,
+        reason,
         createdBy,
       } = input.body
 
-      if (_action !== 'takedown') {
+      if (_action !== 'app.bsky.admin.actionTakedown') {
         throw new InvalidRequestError('Unsupported action')
       }
       if (_subject.$type !== ids.AppBskyActorRef) {
         throw new InvalidRequestError('Unsupported subject type')
       }
 
-      const action = _action as 'takedown'
+      const action = _action as 'app.bsky.admin.actionTakedown'
       const subject = _subject as ActorRef.Main
 
       const actor = await services.actor(db).getUser(subject.did, true)
@@ -41,11 +41,11 @@ export default function (server: Server, ctx: AppContext) {
           action,
           subject,
           createdBy,
-          rationale,
+          reason,
           createdAt: now,
         })
 
-        if (result.action === 'takedown') {
+        if (result.action === 'app.bsky.admin.actionTakedown') {
           await authTxn.revokeRefreshTokensByDid(subject.did)
           await adminTxn.takedownActorByDid({
             takedownId: result.id,

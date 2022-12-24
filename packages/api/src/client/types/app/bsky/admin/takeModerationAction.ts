@@ -3,19 +3,19 @@
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
 import * as AppBskyActorRef from '../actor/ref'
-import * as AppBskyAdministrationModerationAction from './moderationAction'
+import * as AppBskyAdminModerationAction from './moderationAction'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  action: 'takedown' | (string & {})
+  action: 'app.bsky.admin.actionTakedown' | (string & {})
   subject: AppBskyActorRef.Main | { $type: string; [k: string]: unknown }
-  rationale: string
+  reason: string
   createdBy: string
   [k: string]: unknown
 }
 
-export type OutputSchema = AppBskyAdministrationModerationAction.View
+export type OutputSchema = AppBskyAdminModerationAction.View
 
 export interface CallOptions {
   headers?: Headers
