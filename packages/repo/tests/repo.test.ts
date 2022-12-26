@@ -4,6 +4,7 @@ import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
 import { TID } from '@atproto/common'
+import { WriteOpAction } from '../src'
 
 describe('Repo', () => {
   const verifier = new auth.Verifier()
@@ -32,7 +33,7 @@ describe('Repo', () => {
     const record = util.generateObject()
     repo = await repo.applyCommit(
       {
-        action: 'create',
+        action: WriteOpAction.Create,
         collection: collName,
         rkey: rkey,
         value: record,
@@ -46,7 +47,7 @@ describe('Repo', () => {
     const updatedRecord = util.generateObject()
     repo = await repo.applyCommit(
       {
-        action: 'update',
+        action: WriteOpAction.Update,
         collection: collName,
         rkey: rkey,
         value: updatedRecord,
@@ -58,7 +59,7 @@ describe('Repo', () => {
 
     repo = await repo.applyCommit(
       {
-        action: 'delete',
+        action: WriteOpAction.Delete,
         collection: collName,
         rkey: rkey,
       },
