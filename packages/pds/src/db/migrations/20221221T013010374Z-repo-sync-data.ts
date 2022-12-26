@@ -79,10 +79,7 @@ export async function up(db: DatabaseSchema): Promise<void> {
     return Promise.all(promises)
   }
 
-  const userRoots = await db
-    .selectFrom('repo_root')
-    .select(['did', 'root'])
-    .execute()
+  const userRoots = await db.selectFrom('repo_root').selectAll().execute()
 
   await Promise.all(
     userRoots.map((row) => migrateUser(row.did, CID.parse(row.root))),
