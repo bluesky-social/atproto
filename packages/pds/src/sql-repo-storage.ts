@@ -66,7 +66,7 @@ export class SqlRepoStorage extends RepoStorage {
         'ipld_block.cid',
       )
       .where('creator.did', '=', this.did)
-      .where('cid', '=', cid.toString())
+      .where('ipld_block.cid', '=', cid.toString())
       .select('content')
       .executeTakeFirst()
     if (!found) return null
