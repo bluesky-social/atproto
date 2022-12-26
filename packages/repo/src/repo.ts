@@ -89,7 +89,6 @@ export class Repo {
       root: commitCid,
       prev: null,
       blocks: newBlocks,
-      ops: initialRecords,
     }
   }
 
@@ -188,7 +187,6 @@ export class Repo {
       root: commitCid,
       prev: this.cid,
       blocks: newBlocks,
-      ops: writes,
     }
   }
 

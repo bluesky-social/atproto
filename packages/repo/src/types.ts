@@ -57,12 +57,11 @@ export const def = {
 
 export type CommitBlockData = {
   root: CID
-  prev: CID | null
   blocks: BlockMap
 }
 
 export type CommitData = CommitBlockData & {
-  ops: RecordWriteOp[]
+  prev: CID | null
 }
 
 export interface CarStreamable {

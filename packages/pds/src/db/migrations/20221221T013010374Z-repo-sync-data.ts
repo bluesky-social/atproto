@@ -45,7 +45,9 @@ export async function up(db: DatabaseSchema): Promise<void> {
     const commitBlock: RepoCommitBlock[] = []
     const commitHistory: RepoCommitHistory[] = []
 
-    commitData.forEach((commit) => {
+    for (let i = 0; i < commitData.length; i++) {
+      const commit = commitData[i]
+      const prev = commitData[i - 1]
       commit.blocks.forEach((_bytes, cid) => {
         commitBlock.push({
           commit: commit.root.toString(),
@@ -54,9 +56,9 @@ export async function up(db: DatabaseSchema): Promise<void> {
       })
       commitHistory.push({
         commit: commit.root.toString(),
-        prev: commit.prev ? commit.prev.toString() : null,
+        prev: prev ? prev.root.toString() : null,
       })
-    })
+    }
     const promises: Promise<unknown>[] = []
     chunkArray(commitBlock, 500).forEach((batch) => {
       promises.push(

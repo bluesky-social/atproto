@@ -251,7 +251,7 @@ export class SqlRepoStorage extends RepoStorage {
       if (!sortedBlocks[row.commit]) {
         sortedBlocks[row.commit] = new BlockMap()
       }
-      sortedBlocks[row.commit].set(CID.parse(row.commit), row.content)
+      sortedBlocks[row.commit].set(CID.parse(row.cid), row.content)
     })
     return commitPath.map((commit) => ({
       root: commit,

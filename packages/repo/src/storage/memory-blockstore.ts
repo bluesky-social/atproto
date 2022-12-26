@@ -98,7 +98,6 @@ export class MemoryBlockstore extends RepoStorage {
       }
       commitData.push({
         root: commitCid,
-        prev: root.prev,
         blocks,
       })
       prevData = data
