@@ -32,6 +32,7 @@ export interface Entity {
   [k: string]: unknown
 }
 
+/** A text segment. Start is inclusive, end is exclusive. */
 export interface TextSlice {
   start: number
   end: number

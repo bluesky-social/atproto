@@ -36,7 +36,7 @@ export async function resize(
 
   // Output to specified format
   if (format === 'jpeg') {
-    processor = processor.jpeg({ quality: quality ?? 80 })
+    processor = processor.jpeg({ quality: quality ?? 100 })
   } else if (format === 'png') {
     processor = processor.png({ quality: quality ?? 100 })
   }
