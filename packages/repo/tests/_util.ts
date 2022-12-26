@@ -5,7 +5,7 @@ import { Repo } from '../src/repo'
 import { RepoStorage } from '../src/storage'
 import { DataDiff, MST } from '../src/mst'
 import fs from 'fs'
-import { RecordWriteOp } from '../src'
+import { RecordWriteOp, WriteOpAction } from '../src'
 
 type IdMapping = Record<string, CID>
 
@@ -93,7 +93,7 @@ export const fillRepo = async (
       const rkey = TID.nextStr()
       collData[rkey] = object
       writes.push({
-        action: 'create',
+        action: WriteOpAction.Create,
         collection: collName,
         rkey,
         value: object,
@@ -130,7 +130,7 @@ export const editRepo = async (
       const rkey = TID.nextStr()
       collData[rkey] = object
       writes.push({
-        action: 'create',
+        action: WriteOpAction.Create,
         collection: collName,
         rkey,
         value: object,
@@ -142,7 +142,7 @@ export const editRepo = async (
       const object = generateObject()
       const rkey = toUpdate[i][0]
       writes.push({
-        action: 'update',
+        action: WriteOpAction.Update,
         collection: collName,
         rkey,
         value: object,
@@ -154,7 +154,7 @@ export const editRepo = async (
     for (let i = 0; i < toDelete.length; i++) {
       const rkey = toDelete[i][0]
       writes.push({
-        action: 'delete',
+        action: WriteOpAction.Delete,
         collection: collName,
         rkey,
       })

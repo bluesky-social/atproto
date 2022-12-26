@@ -1,6 +1,6 @@
 import * as auth from '@atproto/auth'
 import { TID } from '@atproto/common'
-import { MemoryBlockstore, Repo } from '../src'
+import { MemoryBlockstore, Repo, WriteOpAction } from '../src'
 import * as util from '../tests/_util'
 
 describe('Repo Benchmarks', () => {
@@ -26,7 +26,7 @@ describe('Repo Benchmarks', () => {
 
       await repo.applyCommit(
         {
-          action: 'create' as const,
+          action: WriteOpAction.Create,
           collection: 'app.bsky.post',
           rkey: TID.nextStr(),
           value: {

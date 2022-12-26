@@ -26,22 +26,28 @@ const commit = z.object({
 })
 export type Commit = z.infer<typeof commit>
 
+export enum WriteOpAction {
+  Create = 'create',
+  Update = 'update',
+  Delete = 'delete',
+}
+
 export type RecordCreateOp = {
-  action: 'create'
+  action: WriteOpAction.Create
   collection: string
   rkey: string
   value: Record<string, unknown>
 }
 
 export type RecordUpdateOp = {
-  action: 'update'
+  action: WriteOpAction.Update
   collection: string
   rkey: string
   value: Record<string, unknown>
 }
 
 export type RecordDeleteOp = {
-  action: 'delete'
+  action: WriteOpAction.Delete
   collection: string
   rkey: string
 }

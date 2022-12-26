@@ -7,6 +7,7 @@ import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import * as common from '@atproto/common'
 import * as repo from '../../../../repo'
 import AppContext from '../../../../context'
+import { WriteOpAction } from '@atproto/repo'
 
 const profileNsid = lexicons.ids.AppBskyActorProfile
 
@@ -83,7 +84,7 @@ export default function (server: Server, ctx: AppContext) {
           await repoTxn.blobs.processWriteBlobs(did, commit, [write])
 
           let profileCid: CID
-          if (write.action === 'update') {
+          if (write.action === WriteOpAction.Update) {
             profileCid = write.cid
             // Update profile record
             await dbTxn.db
@@ -105,7 +106,7 @@ export default function (server: Server, ctx: AppContext) {
               })
               .where('uri', '=', uri.toString())
               .execute()
-          } else if (write.action === 'create') {
+          } else if (write.action === WriteOpAction.Create) {
             profileCid = write.cid
             await recordTxn.indexRecord(uri, profileCid, updated, now)
           } else {
