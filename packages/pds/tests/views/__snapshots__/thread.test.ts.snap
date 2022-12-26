@@ -9,7 +9,7 @@ Object {
       "$type": "app.bksy.feed.getPostThread#threadViewPost",
       "post": Object {
         "author": Object {
-          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
             "cid": "cids(1)",
@@ -38,7 +38,7 @@ Object {
     },
     "post": Object {
       "author": Object {
-        "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "declaration": Object {
           "actorType": "app.bsky.system.actorUser",
           "cid": "cids(1)",
@@ -54,8 +54,8 @@ Object {
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "fullsize": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
           },
         ],
       },
@@ -97,7 +97,7 @@ Object {
   },
   "post": Object {
     "author": Object {
-      "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
@@ -141,7 +141,7 @@ Object {
   "$type": "app.bksy.feed.getPostThread#threadViewPost",
   "post": Object {
     "author": Object {
-      "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
@@ -208,7 +208,7 @@ Object {
       "$type": "app.bksy.feed.getPostThread#threadViewPost",
       "post": Object {
         "author": Object {
-          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
             "cid": "cids(1)",
@@ -224,8 +224,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-              "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "fullsize": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
             },
           ],
         },
@@ -268,7 +268,7 @@ Object {
           "$type": "app.bksy.feed.getPostThread#threadViewPost",
           "post": Object {
             "author": Object {
-              "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+              "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
               "declaration": Object {
                 "actorType": "app.bsky.system.actorUser",
                 "cid": "cids(1)",
@@ -316,7 +316,7 @@ Object {
   "$type": "app.bksy.feed.getPostThread#threadViewPost",
   "post": Object {
     "author": Object {
-      "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
@@ -382,7 +382,7 @@ Object {
       "$type": "app.bksy.feed.getPostThread#threadViewPost",
       "post": Object {
         "author": Object {
-          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
             "cid": "cids(1)",
@@ -398,8 +398,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-              "thumb": "https://pds.public.url/image/oyYvmnCYEULJ70JgyQHrekEVfqR3bfHMucQ7p7yXhvQ/rs:fit:250:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "fullsize": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
             },
           ],
         },
@@ -447,7 +447,7 @@ Object {
   "$type": "app.bksy.feed.getPostThread#threadViewPost",
   "post": Object {
     "author": Object {
-      "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
@@ -475,7 +475,7 @@ Object {
       "$type": "app.bksy.feed.getPostThread#threadViewPost",
       "post": Object {
         "author": Object {
-          "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "declaration": Object {
             "actorType": "app.bsky.system.actorUser",
             "cid": "cids(1)",
@@ -513,7 +513,7 @@ Object {
           "$type": "app.bksy.feed.getPostThread#threadViewPost",
           "post": Object {
             "author": Object {
-              "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+              "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
               "declaration": Object {
                 "actorType": "app.bsky.system.actorUser",
                 "cid": "cids(1)",
@@ -559,7 +559,7 @@ Object {
   "$type": "app.bksy.feed.getPostThread#threadViewPost",
   "post": Object {
     "author": Object {
-      "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
@@ -596,7 +596,7 @@ Object {
   },
   "post": Object {
     "author": Object {
-      "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
