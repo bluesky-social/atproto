@@ -1,4 +1,5 @@
 import { CID } from 'multiformats/cid'
+import { CarReader } from '@ipld/car/reader'
 import * as auth from '@atproto/auth'
 import { def } from '@atproto/common'
 import Repo from './repo'
@@ -6,7 +7,6 @@ import { DataDiff, MST } from './mst'
 import { RepoStorage } from './storage'
 import { DataStore, RecordWriteOp } from './types'
 import BlockMap from './block-map'
-import { CarReader } from '@ipld/car/reader'
 
 export const ucanForOperation = async (
   prevData: DataStore,
@@ -31,7 +31,7 @@ export const readCar = async (
   const root = roots[0]
   const blocks = new BlockMap()
   for await (const block of car.blocks()) {
-    blocks.set(block.cid, block.bytes)
+    await blocks.set(block.cid, block.bytes)
   }
   return {
     root,
