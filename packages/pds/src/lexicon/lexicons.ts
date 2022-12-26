@@ -1159,15 +1159,15 @@ export const schemaDict = {
             avatar: {
               type: 'image',
               accept: ['image/png', 'image/jpeg'],
-              maxWidth: 500,
-              maxHeight: 500,
+              maxWidth: 1000,
+              maxHeight: 1000,
               maxSize: 300000,
             },
             banner: {
               type: 'image',
               accept: ['image/png', 'image/jpeg'],
-              maxWidth: 1500,
-              maxHeight: 500,
+              maxWidth: 3000,
+              maxHeight: 1000,
               maxSize: 500000,
             },
           },
@@ -1464,9 +1464,9 @@ export const schemaDict = {
           thumb: {
             type: 'image',
             accept: ['image/*'],
-            maxWidth: 250,
-            maxHeight: 250,
-            maxSize: 100000,
+            maxWidth: 1000,
+            maxHeight: 1000,
+            maxSize: 300000,
           },
         },
       },
@@ -1526,8 +1526,8 @@ export const schemaDict = {
           image: {
             type: 'image',
             accept: ['image/*'],
-            maxWidth: 500,
-            maxHeight: 500,
+            maxWidth: 1000,
+            maxHeight: 1000,
             maxSize: 300000,
           },
           alt: {
@@ -2044,6 +2044,7 @@ export const schemaDict = {
       },
       textSlice: {
         type: 'object',
+        description: 'A text segment. Start is inclusive, end is exclusive.',
         required: ['start', 'end'],
         properties: {
           start: {

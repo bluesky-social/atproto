@@ -21,8 +21,8 @@
         "image": {
             "type": "image",
             "accept": ["image/*"],
-            "maxWidth": 500,
-            "maxHeight": 500,
+            "maxWidth": 1000,
+            "maxHeight": 1000,
             "maxSize": 300000
         },
         "alt": {"type": "string"}
