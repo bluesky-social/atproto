@@ -10,6 +10,7 @@ import {
   RecordCreateOp,
   RecordWriteOp,
   CommitData,
+  WriteOpAction,
 } from './types'
 import { streamToArray } from '@atproto/common'
 import { RepoStorage } from './storage'
@@ -152,15 +153,15 @@ export class Repo {
 
     let data = this.data
     for (const write of writes) {
-      if (write.action === 'create') {
+      if (write.action === WriteOpAction.Create) {
         const cid = await newBlocks.add(write.value)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.add(dataKey, cid)
-      } else if (write.action === 'update') {
+      } else if (write.action === WriteOpAction.Update) {
         const cid = await newBlocks.add(write.value)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.update(dataKey, cid)
-      } else if (write.action === 'delete') {
+      } else if (write.action === WriteOpAction.Delete) {
         const dataKey = write.collection + '/' + write.rkey
         data = await data.delete(dataKey)
       }

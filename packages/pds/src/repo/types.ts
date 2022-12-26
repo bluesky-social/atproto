@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
+import { WriteOpAction } from '@atproto/repo'
 
 export type ImageConstraint = {
   type: 'image'
@@ -26,7 +27,7 @@ export type BlobRef = {
 }
 
 export type PreparedCreate = {
-  action: 'create'
+  action: WriteOpAction.Create
   uri: AtUri
   cid: CID
   record: Record<string, unknown>
@@ -34,7 +35,7 @@ export type PreparedCreate = {
 }
 
 export type PreparedUpdate = {
-  action: 'update'
+  action: WriteOpAction.Update
   uri: AtUri
   cid: CID
   record: Record<string, unknown>
@@ -42,7 +43,7 @@ export type PreparedUpdate = {
 }
 
 export type PreparedDelete = {
-  action: 'delete'
+  action: WriteOpAction.Delete
   uri: AtUri
 }
 

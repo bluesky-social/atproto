@@ -5,7 +5,14 @@ import { def } from '@atproto/common'
 import Repo from './repo'
 import { DataDiff, MST } from './mst'
 import { RepoStorage } from './storage'
-import { DataStore, RecordWriteOp } from './types'
+import {
+  DataStore,
+  RecordCreateOp,
+  RecordDeleteOp,
+  RecordUpdateOp,
+  RecordWriteOp,
+  WriteOpAction,
+} from './types'
 import BlockMap from './block-map'
 
 export const ucanForOperation = async (
@@ -67,16 +74,30 @@ export const diffToWriteOps = (
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseRecordKey(add.key)
       const value = await storage.get(add.cid, def.record)
-      return { action: 'create' as const, collection, rkey, value }
+      return {
+        action: WriteOpAction.Create,
+        collection,
+        rkey,
+        value,
+      } as RecordCreateOp
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseRecordKey(upd.key)
       const value = await storage.get(upd.cid, def.record)
-      return { action: 'update' as const, collection, rkey, value }
+      return {
+        action: WriteOpAction.Update,
+        collection,
+        rkey,
+        value,
+      } as RecordUpdateOp
     }),
     ...diff.deleteList().map((del) => {
       const { collection, rkey } = parseRecordKey(del.key)
-      return { action: 'delete' as const, collection, rkey }
+      return {
+        action: WriteOpAction.Delete,
+        collection,
+        rkey,
+      } as RecordDeleteOp
     }),
   ])
 }
