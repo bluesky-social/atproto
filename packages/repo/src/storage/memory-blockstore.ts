@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import RepoStorage from './repo-storage'
-import { CommitBlockData, CommitData, DataStore, def } from '../types'
+import { CommitBlockData, CommitData, def } from '../types'
 import BlockMap from '../block-map'
 import { MST } from '../mst'
 
@@ -81,17 +81,15 @@ export class MemoryBlockstore extends RepoStorage {
     const commitPath = await this.getCommitPath(latest, earliest)
     if (commitPath === null) return null
     const commitData: CommitBlockData[] = []
-    let prevData: DataStore = await MST.create(this)
+    let prevData: MST | null = null
     for (const commitCid of commitPath) {
       const commit = await this.get(commitCid, def.commit)
       const root = await this.get(commit.root, def.repoRoot)
       const data = await MST.load(this, root.data)
-      const dataDiff = await prevData.diff(data)
-      const blocks = await this.getMany([
-        commitCid,
-        commit.root,
-        ...dataDiff.newCidList(),
-      ])
+      const newCids = prevData
+        ? (await prevData.diff(data)).newCidList()
+        : (await data.allCids()).toList()
+      const blocks = await this.getMany([commitCid, commit.root, ...newCids])
       if (!root.prev) {
         const metaBytes = await this.guaranteeBytes(root.meta)
         blocks.set(root.meta, metaBytes)
