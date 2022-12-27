@@ -828,6 +828,34 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncGetCheckout: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getCheckout',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the repo state.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            commit: {
+              type: 'string',
+              description:
+                'The commit to get the checkout from. Defaults to current HEAD.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/cbor',
+        },
+      },
+    },
+  },
   ComAtprotoSyncGetRepo: {
     lexicon: 1,
     id: 'com.atproto.sync.getRepo',
@@ -2044,6 +2072,7 @@ export const schemaDict = {
       },
       textSlice: {
         type: 'object',
+        description: 'A text segment. Start is inclusive, end is exclusive.',
         required: ['start', 'end'],
         properties: {
           start: {
@@ -2997,6 +3026,7 @@ export const ids = {
   ComAtprotoSessionDelete: 'com.atproto.session.delete',
   ComAtprotoSessionGet: 'com.atproto.session.get',
   ComAtprotoSessionRefresh: 'com.atproto.session.refresh',
+  ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncGetRoot: 'com.atproto.sync.getRoot',
   ComAtprotoSyncUpdateRepo: 'com.atproto.sync.updateRepo',

@@ -79,6 +79,37 @@ export class SqlRepoStorage extends RepoStorage {
     return !!got
   }
 
+  async getManySavedBytes(cids: CID[]): Promise<BlockMap> {
+    const blocks = new BlockMap()
+    const toCheckDb: string[] = []
+    for (const cid of cids) {
+      const cached = this.cache.get(cid)
+      if (cached) {
+        blocks.set(cid, cached)
+      } else {
+        toCheckDb.push(cid.toString())
+      }
+    }
+    if (toCheckDb.length < 1) return blocks
+    const res = await this.db.db
+      .selectFrom('ipld_block')
+      .innerJoin(
+        'ipld_block_creator as creator',
+        'creator.cid',
+        'ipld_block.cid',
+      )
+      .where('creator.did', '=', this.did)
+      .where('ipld_block.cid', 'in', toCheckDb)
+      .select(['ipld_block.cid as cid', 'ipld_block.content as content'])
+      .execute()
+    for (const row of res) {
+      const cid = CID.parse(row.cid)
+      this.cache.set(cid, row.content)
+      blocks.set(cid, row.content)
+    }
+    return blocks
+  }
+
   async putBlock(cid: CID, block: Uint8Array): Promise<void> {
     this.db.assertTransaction()
     const insertBlock = this.db.db
@@ -227,15 +258,11 @@ export class SqlRepoStorage extends RepoStorage {
       .execute()
     return res.map((row) => CID.parse(row.commit)).reverse()
   }
-
-  async getCommits(
-    latest: CID,
-    earliest: CID | null,
-  ): Promise<CommitBlockData[] | null> {
-    const commitPath = await this.getCommitPath(latest, earliest)
-    if (!commitPath) return null
-    const commitStrs = commitPath.map((commit) => commit.toString())
-    if (commitStrs.length < 1) return []
+  async getBlocksForCommits(
+    commits: CID[],
+  ): Promise<{ [commit: string]: BlockMap }> {
+    if (commits.length === 0) return {}
+    const commitStrs = commits.map((commit) => commit.toString())
     const res = await this.db.db
       .selectFrom('repo_commit_block')
       .innerJoin('ipld_block', 'ipld_block.cid', 'repo_commit_block.block')
@@ -246,18 +273,15 @@ export class SqlRepoStorage extends RepoStorage {
       ])
       .where('commit', 'in', commitStrs)
       .execute()
-    const sortedBlocks: { [commit: string]: BlockMap } = {}
-    res.forEach((row) => {
-      if (!sortedBlocks[row.commit]) {
-        sortedBlocks[row.commit] = new BlockMap()
+    return res.reduce((acc, cur) => {
+      if (!acc[cur.commit]) {
+        acc[cur.commit] = new BlockMap()
       }
-      sortedBlocks[row.commit].set(CID.parse(row.cid), row.content)
-    })
-    return commitPath.map((commit) => ({
-      root: commit,
-      prev: null,
-      blocks: sortedBlocks[commit.toString()] || new BlockMap(),
-    }))
+      const cid = CID.parse(cur.cid)
+      acc[cur.commit].set(cid, cur.content)
+      this.cache.set(cid, cur.content)
+      return acc
+    }, {})
   }
 
   async destroy(): Promise<void> {

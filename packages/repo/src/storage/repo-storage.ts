@@ -13,6 +13,7 @@ export abstract class RepoStorage {
 
   abstract getHead(forUpdate?: boolean): Promise<CID | null>
   abstract getSavedBytes(cid: CID): Promise<Uint8Array | null>
+  abstract getManySavedBytes(cids: CID[]): Promise<BlockMap>
   abstract hasSavedBytes(cid: CID): Promise<boolean>
   abstract putBlock(cid: CID, block: Uint8Array): Promise<void>
   abstract putMany(blocks: BlockMap): Promise<void>
@@ -21,10 +22,9 @@ export abstract class RepoStorage {
     latest: CID,
     earliest: CID | null,
   ): Promise<CID[] | null>
-  abstract getCommits(
-    latest: CID,
-    earliest: CID | null,
-  ): Promise<CommitBlockData[] | null>
+  abstract getBlocksForCommits(
+    commits: CID[],
+  ): Promise<{ [commit: string]: BlockMap }>
   abstract destroy(): Promise<void>
 
   async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
@@ -50,6 +50,22 @@ export abstract class RepoStorage {
     return this.temp.get(cid) || (await this.getSavedBytes(cid))
   }
 
+  async getMany(cids: CID[]): Promise<BlockMap> {
+    const toReturn = new BlockMap()
+    const checkSaved: CID[] = []
+    for (const cid of cids) {
+      const gotTemp = this.temp.get(cid)
+      if (gotTemp) {
+        toReturn.set(cid, gotTemp)
+      } else {
+        checkSaved.push(cid)
+      }
+    }
+    const savedBytes = await this.getManySavedBytes(cids)
+    toReturn.addMap(savedBytes)
+    return toReturn
+  }
+
   async guaranteeBytes(cid: CID): Promise<Uint8Array> {
     const bytes = await this.getBytes(cid)
     if (!bytes) {
@@ -65,6 +81,19 @@ export abstract class RepoStorage {
   async isMissing(cid: CID): Promise<boolean> {
     const has = await this.has(cid)
     return !has
+  }
+
+  async getCommits(
+    latest: CID,
+    earliest: CID | null,
+  ): Promise<CommitBlockData[] | null> {
+    const commitPath = await this.getCommitPath(latest, earliest)
+    if (!commitPath) return null
+    const blocksByCommits = await this.getBlocksForCommits(commitPath)
+    return commitPath.map((commit) => ({
+      root: commit,
+      blocks: blocksByCommits[commit.toString()] || new BlockMap(),
+    }))
   }
 
   async addToCar(car: BlockWriter, cid: CID) {

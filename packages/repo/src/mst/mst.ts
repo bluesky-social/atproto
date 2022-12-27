@@ -2,7 +2,7 @@ import z from 'zod'
 import { CID } from 'multiformats'
 
 import { RepoStorage } from '../storage'
-import { def, cidForData } from '@atproto/common'
+import { def, cidForData, check, ipldBytesToValue } from '@atproto/common'
 import { DataDiff } from './diff'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
@@ -766,13 +766,42 @@ export class MST implements DataStore {
   // Sync Protocol
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
-    for await (const entry of this.walk()) {
-      if (entry.isTree()) {
-        const pointer = await entry.getPointer()
-        await this.storage.addToCar(car, pointer)
+    const entries = await this.getEntries()
+    const leaves: CID[] = []
+    let toFetch: CID[] = []
+    for (const entry of entries) {
+      if (entry.isLeaf()) {
+        leaves.push(entry.value)
       } else {
-        await this.storage.addToCar(car, entry.value)
+        toFetch.push(await entry.getPointer())
       }
+    }
+    while (toFetch.length > 0) {
+      const nextLayer: CID[] = []
+      const fetched = await this.storage.getMany(toFetch)
+      for (const cid of toFetch) {
+        const found = fetched.get(cid)
+        if (!found) {
+          throw new Error(`Could not find block with CID: ${cid.toString()}`)
+        }
+        await car.put({ cid, bytes: found })
+        const value = ipldBytesToValue(found)
+        const nodeData = check.assure(nodeDataDef, value)
+        const entries = await util.deserializeNodeData(this.storage, nodeData)
+
+        for (const entry of entries) {
+          if (entry.isLeaf()) {
+            leaves.push(entry.value)
+          } else {
+            nextLayer.push(await entry.getPointer())
+          }
+        }
+      }
+      toFetch = nextLayer
+    }
+    const leafData = await this.storage.getMany(leaves)
+    for (const leaf of leafData.entries()) {
+      await car.put(leaf)
     }
   }
 

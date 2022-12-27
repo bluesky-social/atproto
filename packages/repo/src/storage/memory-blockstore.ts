@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import RepoStorage from './repo-storage'
-import { CommitBlockData, CommitData, def } from '../types'
+import { CommitData, def } from '../types'
 import BlockMap from '../block-map'
 import { MST } from '../mst'
 
@@ -19,6 +19,29 @@ export class MemoryBlockstore extends RepoStorage {
 
   async getSavedBytes(cid: CID): Promise<Uint8Array | null> {
     return this.blocks.get(cid) || null
+  }
+
+  async getMany(cids: CID[]): Promise<BlockMap> {
+    const blocks = new BlockMap()
+    await Promise.all(
+      cids.map(async (cid) => {
+        const bytes = await this.getBytes(cid)
+        if (bytes) {
+          blocks.set(cid, bytes)
+        }
+      }),
+    )
+    return blocks
+  }
+
+  async getManySavedBytes(cids: CID[]): Promise<BlockMap> {
+    return cids.reduce((acc, cur) => {
+      const got = this.blocks.get(cur)
+      if (got) {
+        acc.set(cur, got)
+      }
+      return acc
+    }, new BlockMap())
   }
 
   async hasSavedBytes(cid: CID): Promise<boolean> {
@@ -61,28 +84,12 @@ export class MemoryBlockstore extends RepoStorage {
     return null
   }
 
-  async getMany(cids: CID[]): Promise<BlockMap> {
-    const blocks = new BlockMap()
-    await Promise.all(
-      cids.map(async (cid) => {
-        const bytes = await this.getBytes(cid)
-        if (bytes) {
-          blocks.set(cid, bytes)
-        }
-      }),
-    )
-    return blocks
-  }
-
-  async getCommits(
-    latest: CID,
-    earliest: CID | null,
-  ): Promise<CommitBlockData[] | null> {
-    const commitPath = await this.getCommitPath(latest, earliest)
-    if (commitPath === null) return null
-    const commitData: CommitBlockData[] = []
+  async getBlocksForCommits(
+    commits: CID[],
+  ): Promise<{ [commit: string]: BlockMap }> {
+    const commitData: { [commit: string]: BlockMap } = {}
     let prevData: MST | null = null
-    for (const commitCid of commitPath) {
+    for (const commitCid of commits) {
       const commit = await this.get(commitCid, def.commit)
       const root = await this.get(commit.root, def.repoRoot)
       const data = await MST.load(this, root.data)
@@ -94,10 +101,7 @@ export class MemoryBlockstore extends RepoStorage {
         const metaBytes = await this.guaranteeBytes(root.meta)
         blocks.set(root.meta, metaBytes)
       }
-      commitData.push({
-        root: commitCid,
-        blocks,
-      })
+      commitData[commitCid.toString()] = blocks
       prevData = data
     }
     return commitData
