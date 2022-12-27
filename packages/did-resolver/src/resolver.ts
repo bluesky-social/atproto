@@ -4,6 +4,7 @@ import {
   DIDResolutionOptions,
   DIDResolutionResult,
 } from 'did-resolver'
+import * as crypto from '@atproto/crypto'
 import * as web from './web-resolver'
 import * as plc from './plc-resolver'
 import * as atpDid from './atp-did'
@@ -54,6 +55,21 @@ export class DidResolver {
   async resolveAtpData(did: string): Promise<atpDid.AtpData> {
     const didDocument = await this.ensureResolveDid(did)
     return atpDid.ensureAtpDocument(didDocument)
+  }
+
+  async verifySignature(
+    did: string,
+    data: Uint8Array,
+    sig: Uint8Array,
+  ): Promise<boolean> {
+    let didKey: string
+    if (did.startsWith('did:key:')) {
+      didKey = did
+    } else {
+      const data = await this.resolveAtpData(did)
+      didKey = data.signingKey
+    }
+    return crypto.verifySignature(didKey, data, sig)
   }
 }
 

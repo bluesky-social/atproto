@@ -14,7 +14,7 @@ import {
 } from './types'
 import { streamToArray } from '@atproto/common'
 import { RepoStorage } from './storage'
-import * as auth from '@atproto/auth'
+import * as crypto from '@atproto/crypto'
 import { MST } from './mst'
 import log from './logger'
 import BlockMap from './block-map'
@@ -48,12 +48,9 @@ export class Repo {
   static async formatInitCommit(
     storage: RepoStorage,
     did: string,
-    authStore: auth.AuthStore,
+    keypair: crypto.Keypair,
     initialRecords: RecordCreateOp[] = [],
   ): Promise<CommitData> {
-    if (!(await authStore.canSignForDid(did))) {
-      throw new Error(`provided authStore cannot sign for did: ${did}`)
-    }
     const newBlocks = new BlockMap()
 
     let data = await MST.create(storage)
@@ -75,14 +72,13 @@ export class Repo {
     const root: RepoRoot = {
       meta: metaCid,
       prev: null,
-      auth_token: null,
       data: dataDiff.root,
     }
     const rootCid = await newBlocks.add(root)
 
     const commit: Commit = {
       root: rootCid,
-      sig: await authStore.sign(rootCid.bytes),
+      sig: await keypair.sign(rootCid.bytes),
     }
     const commitCid = await newBlocks.add(commit)
 
@@ -96,13 +92,13 @@ export class Repo {
   static async create(
     storage: RepoStorage,
     did: string,
-    authStore: auth.AuthStore,
+    keypair: crypto.Keypair,
     initialRecords: RecordCreateOp[] = [],
   ): Promise<Repo> {
     const commit = await Repo.formatInitCommit(
       storage,
       did,
-      authStore,
+      keypair,
       initialRecords,
     )
     await storage.applyCommit(commit)
@@ -143,11 +139,8 @@ export class Repo {
 
   async createCommit(
     toWrite: RecordWriteOp | RecordWriteOp[],
-    authStore: auth.AuthStore,
+    keypair: crypto.Keypair,
   ): Promise<CommitData> {
-    if (!(await authStore.canSignForDid(this.did))) {
-      throw new Error(`provided authStore cannot sign for did: ${this.did}`)
-    }
     const writes = Array.isArray(toWrite) ? toWrite : [toWrite]
     const newBlocks = new BlockMap()
 
@@ -173,14 +166,13 @@ export class Repo {
     const root: RepoRoot = {
       meta: this.root.meta,
       prev: this.cid,
-      auth_token: null,
       data: dataDiff.root,
     }
     const rootCid = await newBlocks.add(root)
 
     const commit: Commit = {
       root: rootCid,
-      sig: await authStore.sign(rootCid.bytes),
+      sig: await keypair.sign(rootCid.bytes),
     }
     const commitCid = await newBlocks.add(commit)
 
@@ -193,9 +185,9 @@ export class Repo {
 
   async applyCommit(
     toWrite: RecordWriteOp | RecordWriteOp[],
-    authStore: auth.AuthStore,
+    keypair: crypto.Keypair,
   ): Promise<Repo> {
-    const commit = await this.createCommit(toWrite, authStore)
+    const commit = await this.createCommit(toWrite, keypair)
     await this.storage.applyCommit(commit)
     return Repo.load(this.storage, commit.root)
   }
@@ -251,9 +243,6 @@ export class Repo {
     await this.storage.addToCar(car, this.cid)
     await this.storage.addToCar(car, commit.root)
     await this.storage.addToCar(car, root.meta)
-    if (root.auth_token) {
-      await this.storage.addToCar(car, root.auth_token)
-    }
     await this.data.writeToCarStream(car)
   }
 

@@ -1,6 +1,6 @@
 import { CID } from 'multiformats'
 import { cidForData, TID, valueToIpldBlock } from '@atproto/common'
-import * as auth from '@atproto/auth'
+import * as crypto from '@atproto/crypto'
 import { Repo } from '../src/repo'
 import { RepoStorage } from '../src/storage'
 import { DataDiff, MST } from '../src/mst'
@@ -81,7 +81,7 @@ export type RepoData = Record<string, CollectionData>
 
 export const fillRepo = async (
   repo: Repo,
-  authStore: auth.AuthStore,
+  keypair: crypto.Keypair,
   itemsPerCollection: number,
 ): Promise<{ repo: Repo; data: RepoData }> => {
   const repoData: RepoData = {}
@@ -101,7 +101,7 @@ export const fillRepo = async (
     }
     repoData[collName] = collData
   }
-  const updated = await repo.applyCommit(writes, authStore)
+  const updated = await repo.applyCommit(writes, keypair)
   return {
     repo: updated,
     data: repoData,
@@ -111,7 +111,7 @@ export const fillRepo = async (
 export const editRepo = async (
   repo: Repo,
   prevData: RepoData,
-  authStore: auth.AuthStore,
+  keypair: crypto.Keypair,
   params: {
     adds?: number
     updates?: number
@@ -162,7 +162,7 @@ export const editRepo = async (
     }
     repoData[collName] = collData
   }
-  const updated = await repo.applyCommit(writes, authStore)
+  const updated = await repo.applyCommit(writes, keypair)
   return {
     repo: updated,
     data: repoData,

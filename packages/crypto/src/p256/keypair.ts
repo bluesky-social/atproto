@@ -6,12 +6,13 @@ import * as ucan from '@ucans/core'
 import * as did from '../did'
 import * as operations from './operations'
 import { P256_JWT_ALG } from '../const'
+import { Keypair } from '../types'
 
 export type EcdsaKeypairOptions = {
   exportable: boolean
 }
 
-export class EcdsaKeypair implements ucan.DidableKey {
+export class EcdsaKeypair implements Keypair {
   jwtAlg = P256_JWT_ALG
   private publicKey: Uint8Array
   private keypair: CryptoKeyPair

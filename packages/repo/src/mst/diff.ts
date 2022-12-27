@@ -1,7 +1,5 @@
-import * as auth from '@atproto/auth'
 import { CID } from 'multiformats'
 import CidSet from '../cid-set'
-import { parseRecordKey } from '../util'
 
 export class DataDiff {
   adds: Record<string, DataAdd> = {}
@@ -79,13 +77,6 @@ export class DataDiff {
       ...Object.keys(this.deletes),
     ]
     return [...new Set(keys)]
-  }
-
-  neededCapabilities(rootDid: string): auth.ucans.Capability[] {
-    return this.updatedKeys().map((key) => {
-      const { collection, rkey } = parseRecordKey(key)
-      return auth.writeCap(rootDid, collection, rkey)
-    })
   }
 }
 

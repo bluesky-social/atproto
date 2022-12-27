@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import * as auth from '@atproto/auth'
+import * as crypto from '@atproto/crypto'
 import { BlobStore, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
@@ -15,14 +15,20 @@ export class RepoService {
 
   constructor(
     public db: Database,
+    public keypair: crypto.Keypair,
     public messageQueue: MessageQueue,
     public blobstore: BlobStore,
   ) {
     this.blobs = new RepoBlobs(db, blobstore)
   }
 
-  static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
-    return (db: Database) => new RepoService(db, messageQueue, blobstore)
+  static creator(
+    keypair: crypto.Keypair,
+    messageQueue: MessageQueue,
+    blobstore: BlobStore,
+  ) {
+    return (db: Database) =>
+      new RepoService(db, keypair, messageQueue, blobstore)
   }
 
   async isUserControlledRepo(
@@ -41,28 +47,18 @@ export class RepoService {
     return !!found
   }
 
-  async createRepo(
-    did: string,
-    authStore: auth.AuthStore,
-    writes: PreparedCreate[],
-    now: string,
-  ) {
+  async createRepo(did: string, writes: PreparedCreate[], now: string) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const writeOps = writes.map(createWriteToOp)
-    await Repo.create(storage, did, authStore, writeOps)
+    await Repo.create(storage, did, this.keypair, writeOps)
   }
 
-  async processWrites(
-    did: string,
-    authStore: auth.AuthStore,
-    writes: PreparedWrite[],
-    now: string,
-  ) {
+  async processWrites(did: string, writes: PreparedWrite[], now: string) {
     // make structural write to repo & send to indexing
     // @TODO get commitCid first so we can do all db actions in tandem
     const [commit] = await Promise.all([
-      this.writeToRepo(did, authStore, writes, now),
+      this.writeToRepo(did, writes, now),
       this.indexWrites(writes, now),
     ])
     // make blobs permanent & associate w commit + recordUri in DB
@@ -71,7 +67,6 @@ export class RepoService {
 
   async writeToRepo(
     did: string,
-    authStore: auth.AuthStore,
     writes: PreparedWrite[],
     now: string,
   ): Promise<CID> {
@@ -85,7 +80,7 @@ export class RepoService {
     }
     const writeOps = writes.map(writeToOp)
     const repo = await Repo.load(storage, currRoot)
-    const updated = await repo.applyCommit(writeOps, authStore)
+    const updated = await repo.applyCommit(writeOps, this.keypair)
     return updated.cid
   }
 

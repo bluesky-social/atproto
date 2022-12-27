@@ -1,29 +1,27 @@
-import * as auth from '@atproto/auth'
-
+import * as crypto from '@atproto/crypto'
 import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
 import { TID } from '@atproto/common'
 import { WriteOpAction } from '../src'
+import { Secp256k1Keypair } from '@atproto/crypto'
 
 describe('Repo', () => {
-  const verifier = new auth.Verifier()
   const collName = 'com.example.posts'
 
-  let blockstore: MemoryBlockstore
-  let authStore: auth.AuthStore
+  let storage: MemoryBlockstore
+  let keypair: crypto.Keypair
   let repo: Repo
   let repoData: util.RepoData
 
   it('creates repo', async () => {
-    blockstore = new MemoryBlockstore()
-    authStore = await verifier.createTempAuthStore()
-    await authStore.claimFull()
-    repo = await Repo.create(blockstore, await authStore.did(), authStore)
+    storage = new MemoryBlockstore()
+    keypair = await Secp256k1Keypair.create()
+    repo = await Repo.create(storage, keypair.did(), keypair)
   })
 
   it('has proper metadata', async () => {
-    expect(repo.meta.did).toEqual(await authStore.did())
+    expect(repo.meta.did).toEqual(keypair.did())
     expect(repo.meta.version).toBe(1)
     expect(repo.meta.datastore).toBe('mst')
   })
@@ -38,7 +36,7 @@ describe('Repo', () => {
         rkey: rkey,
         value: record,
       },
-      authStore,
+      keypair,
     )
 
     let got = await repo.getRecord(collName, rkey)
@@ -52,7 +50,7 @@ describe('Repo', () => {
         rkey: rkey,
         value: updatedRecord,
       },
-      authStore,
+      keypair,
     )
     got = await repo.getRecord(collName, rkey)
     expect(got).toEqual(updatedRecord)
@@ -63,21 +61,21 @@ describe('Repo', () => {
         collection: collName,
         rkey: rkey,
       },
-      authStore,
+      keypair,
     )
     got = await repo.getRecord(collName, rkey)
     expect(got).toBeNull()
   })
 
   it('adds content collections', async () => {
-    const filled = await util.fillRepo(repo, authStore, 100)
+    const filled = await util.fillRepo(repo, keypair, 100)
     repo = filled.repo
     repoData = filled.data
     await util.checkRepo(repo, repoData)
   })
 
   it('edits and deletes content', async () => {
-    const edited = await util.editRepo(repo, repoData, authStore, {
+    const edited = await util.editRepo(repo, repoData, keypair, {
       adds: 20,
       updates: 20,
       deletes: 20,
@@ -88,7 +86,7 @@ describe('Repo', () => {
 
   it('adds a valid signature to commit', async () => {
     const commit = await repo.commit
-    const verified = await verifier.verifySignature(
+    const verified = await crypto.verifySignature(
       repo.did,
       commit.root.bytes,
       commit.sig,
@@ -97,14 +95,14 @@ describe('Repo', () => {
   })
 
   it('sets correct DID', async () => {
-    expect(repo.did).toEqual(await authStore.did())
+    expect(repo.did).toEqual(await keypair.did())
   })
 
   it('loads from blockstore', async () => {
-    const reloadedRepo = await Repo.load(blockstore, repo.cid)
+    const reloadedRepo = await Repo.load(storage, repo.cid)
 
     await util.checkRepo(reloadedRepo, repoData)
-    expect(repo.meta.did).toEqual(await authStore.did())
+    expect(repo.meta.did).toEqual(keypair.did())
     expect(repo.meta.version).toBe(1)
     expect(repo.meta.datastore).toBe('mst')
   })

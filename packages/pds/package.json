@@ -21,7 +21,6 @@
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {
-    "@atproto/auth": "*",
     "@atproto/common": "*",
     "@atproto/crypto": "*",
     "@atproto/did-resolver": "*",

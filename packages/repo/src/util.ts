@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import { CarReader } from '@ipld/car/reader'
-import * as auth from '@atproto/auth'
 import { def } from '@atproto/common'
 import Repo from './repo'
 import { DataDiff, MST } from './mst'
@@ -14,18 +13,6 @@ import {
   WriteOpAction,
 } from './types'
 import BlockMap from './block-map'
-
-export const ucanForOperation = async (
-  prevData: DataStore,
-  newData: DataStore,
-  rootDid: string,
-  authStore: auth.AuthStore,
-): Promise<string> => {
-  const diff = await prevData.diff(newData)
-  const neededCaps = diff.neededCapabilities(rootDid)
-  const ucanForOp = await authStore.createUcanForCaps(rootDid, neededCaps, 30)
-  return auth.encodeUcan(ucanForOp)
-}
 
 export const readCar = async (
   bytes: Uint8Array,

@@ -1,15 +1,14 @@
 import { CID } from 'multiformats/cid'
-import * as auth from '@atproto/auth'
+import { DidResolver } from '@atproto/did-resolver'
 import { RepoStorage } from './storage'
 import Repo from './repo'
 import { DataDiff } from './mst'
-import { def } from './types'
 
 export const verifyUpdates = async (
   storage: RepoStorage,
-  earliest: CID | null,
   latest: CID,
-  verifier: auth.Verifier,
+  earliest: CID | null,
+  didResolver: DidResolver,
 ): Promise<DataDiff> => {
   const commitPath = await storage.getCommitPath(latest, earliest)
   if (commitPath === null) {
@@ -26,27 +25,9 @@ export const verifyUpdates = async (
       throw new RepoVerificationError('Not supported: repo metadata updated')
     }
 
-    let didForSignature: string
-    if (nextRepo.root.auth_token) {
-      // verify auth token covers all necessary writes
-      const encodedToken = await storage.get(
-        nextRepo.root.auth_token,
-        def.string,
-      )
-      const token = await verifier.validateUcan(encodedToken)
-      const neededCaps = diff.neededCapabilities(prevRepo.did)
-      for (const cap of neededCaps) {
-        await verifier.verifyAtpUcan(token, prevRepo.did, cap)
-      }
-      didForSignature = token.payload.iss
-    } else {
-      didForSignature = prevRepo.did
-    }
-
     // verify signature matches repo root + auth token
-    // const commit = await toRepo.getCommit()
-    const validSig = await verifier.verifySignature(
-      didForSignature,
+    const validSig = await didResolver.verifySignature(
+      nextRepo.did,
       nextRepo.commit.root.bytes,
       nextRepo.commit.sig,
     )

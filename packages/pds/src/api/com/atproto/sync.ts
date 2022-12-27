@@ -39,20 +39,12 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getCheckout(async ({ params }) => {
     const { did } = params
     const storage = new SqlRepoStorage(ctx.db, did)
-    const commit = params.commit
-      ? CID.parse(params.commit)
-      : await storage.getHead()
-    if (!commit) {
-      throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-    }
-    const blocks = await storage.getBlocksForCommits([commit])
-
-    const repo = await Repo.load(storage, root)
-    const fromCid = from ? common.strToCid.parse(from) : null
-    const diff = await repo.getDiffCar(fromCid)
+    const commit = params.commit ? CID.parse(params.commit) : undefined
+    const repo = await Repo.load(storage, commit)
+    const checkout = await repo.getCarNoHistory()
     return {
       encoding: 'application/cbor',
-      body: Buffer.from(diff),
+      body: Buffer.from(checkout),
     }
   })
 

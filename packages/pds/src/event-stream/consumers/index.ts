@@ -1,6 +1,5 @@
 import { BlobStore } from '@atproto/repo'
-import { DidableKey } from '@atproto/crypto'
-import { ServerAuth } from '../../auth'
+import * as crypto from '@atproto/crypto'
 import AddMemberConsumer from './add-member'
 import RemoveMemberConsumer from './remove-member'
 import AddUpvoteConsumer from './add-upvote'
@@ -13,18 +12,14 @@ import { MessageQueue } from '../types'
 export const listen = (
   messageQueue: MessageQueue,
   blobstore: BlobStore,
-  auth: ServerAuth,
-  keypair: DidableKey,
+  keypair: crypto.Keypair,
 ) => {
-  const getAuthStore = (did: string) => {
-    return auth.verifier.loadAuthStore(keypair, [], did)
-  }
   messageQueue.listen('add_member', new AddMemberConsumer())
   messageQueue.listen('remove_member', new RemoveMemberConsumer())
   messageQueue.listen('add_upvote', new AddUpvoteConsumer())
   messageQueue.listen(
     'scene_votes_on_post__table_updates',
-    new SceneVotesOnPostConsumer(getAuthStore, messageQueue, blobstore),
+    new SceneVotesOnPostConsumer(keypair, messageQueue, blobstore),
   )
   messageQueue.listen('remove_upvote', new RemoveUpvoteConsumer())
   messageQueue.listen('create_notification', new CreateNotificationConsumer())

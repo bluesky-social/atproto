@@ -15,7 +15,7 @@ export type RepoMeta = z.infer<typeof repoMeta>
 const repoRoot = z.object({
   meta: common.cid,
   prev: common.cid.nullable(),
-  auth_token: common.cid.nullable(),
+  auth_token: common.cid.nullable().optional(),
   data: common.cid,
 })
 export type RepoRoot = z.infer<typeof repoRoot>

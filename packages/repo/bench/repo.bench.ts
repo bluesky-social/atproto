@@ -1,21 +1,20 @@
-import * as auth from '@atproto/auth'
 import { TID } from '@atproto/common'
+import * as crypto from '@atproto/crypto'
+import { Secp256k1Keypair } from '@atproto/crypto'
 import { MemoryBlockstore, Repo, WriteOpAction } from '../src'
 import * as util from '../tests/_util'
 
 describe('Repo Benchmarks', () => {
-  const verifier = new auth.Verifier()
   const size = 10000
 
   let blockstore: MemoryBlockstore
-  let authStore: auth.AuthStore
+  let keypair: crypto.Keypair
   let repo: Repo
 
   beforeAll(async () => {
     blockstore = new MemoryBlockstore()
-    authStore = await verifier.createTempAuthStore()
-    await authStore.claimFull()
-    repo = await Repo.create(blockstore, await authStore.did(), authStore)
+    keypair = await Secp256k1Keypair.create()
+    repo = await Repo.create(blockstore, await keypair.did(), keypair)
   })
 
   it('calculates size', async () => {
@@ -40,7 +39,7 @@ describe('Repo Benchmarks', () => {
             createdAt: new Date().toISOString(),
           },
         },
-        authStore,
+        keypair,
       )
     }
 

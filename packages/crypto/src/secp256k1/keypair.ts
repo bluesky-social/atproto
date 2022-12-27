@@ -3,12 +3,13 @@ import * as secp from '@noble/secp256k1'
 import * as uint8arrays from 'uint8arrays'
 import * as did from '../did'
 import { SECP256K1_JWT_ALG } from '../const'
+import { Keypair } from '../types'
 
 export type Secp256k1KeypairOptions = {
   exportable: boolean
 }
 
-export class Secp256k1Keypair implements ucan.DidableKey {
+export class Secp256k1Keypair implements Keypair {
   jwtAlg = SECP256K1_JWT_ALG
   private publicKey: Uint8Array
 
