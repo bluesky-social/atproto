@@ -44,7 +44,8 @@
       "type": "object",
       "properties": {
         "follow": {"type": "string"},
-        "member": {"type": "string"}
+        "member": {"type": "string"},
+        "muted": {"type": "boolean"}
       }
     }
   }

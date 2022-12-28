@@ -3,11 +3,12 @@ import { FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { debugCatch } from '../../../../util/debug'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
+    handler: debugCatch(async ({ params, auth }) => {
       const { author, limit, before } = params
       const requester = auth.credentials.did
       const db = ctx.db.db
@@ -22,6 +23,10 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('did_handle')
         .selectAll()
         .where(userLookupCol, '=', author)
+      const mutedQb = db
+        .selectFrom('mute')
+        .select('did')
+        .where('mutedByDid', '=', requester)
 
       const postsQb = feedService
         .selectPostQb()
@@ -34,12 +39,14 @@ export default function (server: Server, ctx: AppContext) {
         .whereExists(
           userQb.whereRef('did_handle.did', '=', ref('repost.creator')),
         )
+        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide reposts of muted content
 
       const trendsQb = feedService
         .selectTrendQb()
         .whereExists(
           userQb.whereRef('did_handle.did', '=', ref('trend.creator')),
         )
+        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide trends of muted content
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db
@@ -61,6 +68,6 @@ export default function (server: Server, ctx: AppContext) {
           cursor: keyset.packFromResult(feedItems),
         },
       }
-    },
+    }),
   })
 }

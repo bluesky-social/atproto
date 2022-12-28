@@ -17,6 +17,9 @@ Object {
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "downvoteCount": 1,
@@ -46,6 +49,9 @@ Object {
         "did": "user(1)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(3)",
       "downvoteCount": 0,
@@ -105,6 +111,9 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "downvoteCount": 0,
@@ -149,6 +158,9 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "downvoteCount": 1,
@@ -177,6 +189,9 @@ Object {
           },
           "did": "user(1)",
           "handle": "carol.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "downvoteCount": 0,
@@ -216,6 +231,9 @@ Object {
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 0,
@@ -276,6 +294,9 @@ Object {
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
+              "viewer": Object {
+                "muted": false,
+              },
             },
             "cid": "cids(5)",
             "downvoteCount": 0,
@@ -324,6 +345,9 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "downvoteCount": 1,
@@ -352,6 +376,9 @@ Object {
           },
           "did": "user(1)",
           "handle": "carol.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "downvoteCount": 0,
@@ -390,6 +417,9 @@ Object {
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 0,
@@ -455,6 +485,9 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "downvoteCount": 0,
@@ -483,6 +516,9 @@ Object {
           "did": "user(1)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "downvoteCount": 0,
@@ -521,6 +557,9 @@ Object {
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
+              "viewer": Object {
+                "muted": false,
+              },
             },
             "cid": "cids(3)",
             "downvoteCount": 0,
@@ -567,6 +606,9 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "downvoteCount": 0,
@@ -604,6 +646,9 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "downvoteCount": 0,

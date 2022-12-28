@@ -13,6 +13,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "downvoteCount": 1,
@@ -37,6 +40,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
@@ -50,6 +56,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(2)",
       "downvoteCount": 0,
@@ -85,6 +94,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(3)",
       "downvoteCount": 0,
@@ -110,6 +122,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(2)",
       "downvoteCount": 0,
@@ -144,6 +159,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
@@ -157,6 +175,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(4)",
       "downvoteCount": 0,
@@ -193,6 +214,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -218,6 +242,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -244,6 +271,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(5)",
       "downvoteCount": 0,
@@ -307,6 +337,9 @@ Array [
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(8)",
       "downvoteCount": 0,
@@ -365,6 +398,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -390,6 +426,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -418,6 +457,9 @@ Array [
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(9)",
       "downvoteCount": 0,
@@ -445,6 +487,9 @@ Array [
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(10)",
       "downvoteCount": 0,
@@ -472,6 +517,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(11)",
       "downvoteCount": 0,
@@ -508,6 +556,9 @@ Array [
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(8)",
         "downvoteCount": 0,
@@ -565,6 +616,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -593,6 +647,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(12)",
       "downvoteCount": 1,
@@ -620,6 +677,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "downvoteCount": 1,
@@ -647,6 +707,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(13)",
       "downvoteCount": 0,

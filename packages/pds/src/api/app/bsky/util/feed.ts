@@ -26,7 +26,7 @@ export const composeFeed = async (
     }
   }
   const [actors, posts, embeds] = await Promise.all([
-    feedService.getActorViews(Array.from(actorDids)),
+    feedService.getActorViews(Array.from(actorDids), requester),
     feedService.getPostViews(Array.from(postUris), requester),
     feedService.embedsForPosts(Array.from(postUris)),
   ])

@@ -67,6 +67,12 @@ export default function (server: Server, ctx: AppContext) {
             .where('subjectDid', '=', requester)
             .select('confirmUri')
             .as('requesterMember'),
+          db
+            .selectFrom('mute')
+            .whereRef('did', '=', ref('did_handle.did'))
+            .where('mutedByDid', '=', requester)
+            .select('did')
+            .as('requesterMuted'),
         ])
         .executeTakeFirst()
 
@@ -100,6 +106,7 @@ export default function (server: Server, ctx: AppContext) {
           myState: {
             follow: queryRes.requesterFollow || undefined,
             member: queryRes.requesterMember || undefined,
+            muted: !!queryRes.requesterMuted,
           },
         },
       }

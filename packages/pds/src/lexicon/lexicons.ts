@@ -1048,6 +1048,9 @@ export const schemaDict = {
           member: {
             type: 'string',
           },
+          muted: {
+            type: 'boolean',
+          },
         },
       },
     },
@@ -1212,6 +1215,18 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#viewerState',
+          },
+        },
+      },
+      viewerState: {
+        type: 'object',
+        properties: {
+          muted: {
+            type: 'boolean',
           },
         },
       },
@@ -2124,6 +2139,9 @@ export const schemaDict = {
           },
           downvote: {
             type: 'string',
+          },
+          muted: {
+            type: 'boolean',
           },
         },
       },
