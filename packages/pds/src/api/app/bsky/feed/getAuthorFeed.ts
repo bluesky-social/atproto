@@ -3,12 +3,11 @@ import { FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../../services/feed'
-import { debugCatch } from '../../../../util/debug'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.accessVerifier,
-    handler: debugCatch(async ({ params, auth }) => {
+    handler: async ({ params, auth }) => {
       const { author, limit, before } = params
       const requester = auth.credentials.did
       const db = ctx.db.db
@@ -68,6 +67,6 @@ export default function (server: Server, ctx: AppContext) {
           cursor: keyset.packFromResult(feedItems),
         },
       }
-    }),
+    },
   })
 }
