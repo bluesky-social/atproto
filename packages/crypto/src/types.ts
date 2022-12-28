@@ -7,3 +7,13 @@ export interface Didable {
 }
 
 export interface Keypair extends Signer, Didable {}
+
+export type DidKeyPlugin = {
+  prefix: Uint8Array
+  jwtAlg: string
+  verifySignature: (
+    did: string,
+    msg: Uint8Array,
+    data: Uint8Array,
+  ) => Promise<boolean>
+}

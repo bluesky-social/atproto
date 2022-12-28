@@ -1,8 +1,6 @@
 import { webcrypto } from 'one-webcrypto'
 import * as uint8arrays from 'uint8arrays'
-
-import * as ucan from '@ucans/core'
-
+import { SupportedEncodings } from 'uint8arrays/util/bases'
 import * as did from '../did'
 import * as operations from './operations'
 import { P256_JWT_ALG } from '../const'
@@ -57,7 +55,7 @@ export class EcdsaKeypair implements Keypair {
     return this.publicKey
   }
 
-  publicKeyStr(encoding: ucan.Encodings = 'base64pad'): string {
+  publicKeyStr(encoding: SupportedEncodings = 'base64pad'): string {
     return uint8arrays.toString(this.publicKey, encoding)
   }
 
