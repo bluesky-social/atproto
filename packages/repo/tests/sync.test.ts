@@ -41,14 +41,8 @@ describe('Sync', () => {
     const car = await aliceRepo.getFullHistory()
     const loaded = await sync.loadFullRepo(bobBlockstore, car, didResolver)
     bobRepo = await Repo.load(bobBlockstore, loaded.root)
-    // const diff = await verifyUpdates(
-    //   bobBlockstore,
-    //   bobRepo.cid,
-    //   null,
-    //   didResolver,
-    // )
     await util.checkRepo(bobRepo, repoData)
-    // await util.checkRepoDiff(diff, {}, repoData)
+    await util.checkRepoDiff(loaded.ops, {}, repoData)
   })
 
   it('syncs a repo that is behind', async () => {
@@ -65,7 +59,7 @@ describe('Sync', () => {
     const loaded = await sync.loadDiff(bobRepo, diffCar, didResolver)
     bobRepo = await Repo.load(bobBlockstore, loaded.root)
     await util.checkRepo(bobRepo, repoData)
-    // await util.checkRepoDiff(loaded.diff, beforeData, repoData)
+    await util.checkRepoDiff(loaded.ops, beforeData, repoData)
   })
 
   it('throws on a bad signature', async () => {

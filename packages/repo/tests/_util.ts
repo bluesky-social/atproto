@@ -1,11 +1,10 @@
 import fs from 'fs'
 import { CID } from 'multiformats'
-import { cidForData, TID, valueToIpldBlock } from '@atproto/common'
+import { TID, valueToIpldBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { Repo } from '../src/repo'
 import { RepoStorage } from '../src/storage'
 import { MST } from '../src/mst'
-import DataDiff from '../src/data-diff'
 import { RecordWriteOp, WriteOpAction } from '../src'
 
 type IdMapping = Record<string, CID>
@@ -181,42 +180,27 @@ export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
 }
 
 export const checkRepoDiff = async (
-  diff: DataDiff,
+  ops: RecordWriteOp[],
   before: RepoData,
   after: RepoData,
 ): Promise<void> => {
-  const getObjectCid = async (
-    key: string,
-    data: RepoData,
-  ): Promise<CID | undefined> => {
-    const parts = key.split('/')
-    const collection = parts[0]
-    const obj = (data[collection] || {})[parts[1]]
-    return obj === undefined ? undefined : cidForData(obj)
+  const getVal = (op: RecordWriteOp, data: RepoData) => {
+    return (data[op.collection] || {})[op.rkey]
   }
 
-  for (const add of diff.addList()) {
-    const beforeCid = await getObjectCid(add.key, before)
-    const afterCid = await getObjectCid(add.key, after)
-
-    expect(beforeCid).toBeUndefined()
-    expect(afterCid).toEqual(add.cid)
-  }
-
-  for (const update of diff.updateList()) {
-    const beforeCid = await getObjectCid(update.key, before)
-    const afterCid = await getObjectCid(update.key, after)
-
-    expect(beforeCid).toEqual(update.prev)
-    expect(afterCid).toEqual(update.cid)
-  }
-
-  for (const del of diff.deleteList()) {
-    const beforeCid = await getObjectCid(del.key, before)
-    const afterCid = await getObjectCid(del.key, after)
-
-    expect(beforeCid).toEqual(del.cid)
-    expect(afterCid).toBeUndefined()
+  for (const op of ops) {
+    if (op.action === WriteOpAction.Create) {
+      expect(getVal(op, before)).toBeUndefined()
+      expect(getVal(op, after)).toEqual(op.value)
+    } else if (op.action === WriteOpAction.Update) {
+      expect(getVal(op, before)).toBeDefined()
+      expect(getVal(op, after)).toEqual(op.value)
+    } else if (op.action === WriteOpAction.Delete) {
+      expect(getVal(op, before)).toBeDefined()
+      expect(getVal(op, after)).toBeUndefined()
+    } else {
+      throw new Error('unexpected op type')
+    }
   }
 }
 
