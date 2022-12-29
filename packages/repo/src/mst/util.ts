@@ -1,6 +1,6 @@
 import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
-import IpldStore from '../blockstore/ipld-store'
+import { RepoStorage } from '../storage'
 import { sha256 } from '@atproto/crypto'
 import { MST, Leaf, NodeEntry, NodeData, MstOpts, Fanout } from './mst'
 import { cidForData } from '@atproto/common'
@@ -39,7 +39,7 @@ export const layerForEntries = async (
 }
 
 export const deserializeNodeData = async (
-  blockstore: IpldStore,
+  storage: RepoStorage,
   data: NodeData,
   opts?: Partial<MstOpts>,
 ): Promise<NodeEntry[]> => {
@@ -47,7 +47,7 @@ export const deserializeNodeData = async (
   const entries: NodeEntry[] = []
   if (data.l !== null) {
     entries.push(
-      await MST.load(blockstore, data.l, {
+      await MST.load(storage, data.l, {
         layer: layer ? layer - 1 : undefined,
         fanout,
       }),
@@ -60,7 +60,7 @@ export const deserializeNodeData = async (
     lastKey = key
     if (entry.t !== null) {
       entries.push(
-        await MST.load(blockstore, entry.t, {
+        await MST.load(storage, entry.t, {
           layer: layer ? layer - 1 : undefined,
           fanout,
         }),

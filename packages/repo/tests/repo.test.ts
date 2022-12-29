@@ -1,7 +1,7 @@
 import * as auth from '@atproto/auth'
 
 import { Repo } from '../src/repo'
-import { MemoryBlockstore } from '../src/blockstore'
+import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
 import { TID } from '@atproto/common'
 

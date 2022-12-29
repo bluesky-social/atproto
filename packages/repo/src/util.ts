@@ -2,8 +2,8 @@ import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
 import Repo from './repo'
 import { DataDiff, MST } from './mst'
-import { IpldStore } from './blockstore'
-import { DataStore, RecordWriteOp, def } from './types'
+import { RepoStorage } from './storage'
+import { DataStore, RecordWriteOp } from './types'
 
 export const ucanForOperation = async (
   prevData: DataStore,
@@ -17,38 +17,16 @@ export const ucanForOperation = async (
   return auth.encodeUcan(ucanForOp)
 }
 
-export const getCommitPath = async (
-  blockstore: IpldStore,
-  earliest: CID | null,
-  latest: CID,
-): Promise<CID[] | null> => {
-  let curr: CID | null = latest
-  const path: CID[] = []
-  while (curr !== null) {
-    path.push(curr)
-    const commit = await blockstore.get(curr, def.commit)
-    if (earliest && curr.equals(earliest)) {
-      return path.reverse()
-    }
-    const root = await blockstore.get(commit.root, def.repoRoot)
-    if (!earliest && root.prev === null) {
-      return path.reverse()
-    }
-    curr = root.prev
-  }
-  return null
-}
-
 export const getWriteOpLog = async (
-  blockstore: IpldStore,
-  earliest: CID | null,
+  storage: RepoStorage,
   latest: CID,
+  earliest: CID | null,
 ): Promise<RecordWriteOp[][]> => {
-  const commits = await getCommitPath(blockstore, earliest, latest)
+  const commits = await storage.getCommitPath(latest, earliest)
   if (!commits) throw new Error('Could not find shared history')
-  const heads = await Promise.all(commits.map((c) => Repo.load(blockstore, c)))
+  const heads = await Promise.all(commits.map((c) => Repo.load(storage, c)))
   // Turn commit path into list of diffs
-  let prev: DataStore = await MST.create(blockstore) // Empty
+  let prev: DataStore = await MST.create(storage) // Empty
   const msts = heads.map((h) => h.data)
   const diffs: DataDiff[] = []
   for (const mst of msts) {
@@ -56,22 +34,22 @@ export const getWriteOpLog = async (
     prev = mst
   }
   // Map MST diffs to write ops
-  return Promise.all(diffs.map((diff) => diffToWriteOps(blockstore, diff)))
+  return Promise.all(diffs.map((diff) => diffToWriteOps(storage, diff)))
 }
 
 export const diffToWriteOps = (
-  blockstore: IpldStore,
+  storage: RepoStorage,
   diff: DataDiff,
 ): Promise<RecordWriteOp[]> => {
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseRecordKey(add.key)
-      const value = await blockstore.getUnchecked(add.cid)
+      const value = await storage.getUnchecked(add.cid)
       return { action: 'create' as const, collection, rkey, value }
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseRecordKey(upd.key)
-      const value = await blockstore.getUnchecked(upd.cid)
+      const value = await storage.getUnchecked(upd.cid)
       return { action: 'update' as const, collection, rkey, value }
     }),
     ...diff.deleteList().map((del) => {

@@ -1,36 +1,35 @@
 import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
-import { IpldStore } from './blockstore'
+import { RepoStorage } from './storage'
 import Repo from './repo'
 import { DataDiff } from './mst'
-import * as util from './util'
 import { def } from './types'
 
 export const verifyUpdates = async (
-  blockstore: IpldStore,
+  storage: RepoStorage,
   earliest: CID | null,
   latest: CID,
   verifier: auth.Verifier,
 ): Promise<DataDiff> => {
-  const commitPath = await util.getCommitPath(blockstore, earliest, latest)
+  const commitPath = await storage.getCommitPath(latest, earliest)
   if (commitPath === null) {
-    throw new Error('Could not find shared history')
+    throw new RepoVerificationError('Could not find shared history')
   }
   const fullDiff = new DataDiff()
   if (commitPath.length === 0) return fullDiff
-  let prevRepo = await Repo.load(blockstore, commitPath[0])
+  let prevRepo = await Repo.load(storage, commitPath[0])
   for (const commit of commitPath.slice(1)) {
-    const nextRepo = await Repo.load(blockstore, commit)
+    const nextRepo = await Repo.load(storage, commit)
     const diff = await prevRepo.data.diff(nextRepo.data)
 
     if (!nextRepo.root.meta.equals(prevRepo.root.meta)) {
-      throw new Error('Not supported: repo metadata updated')
+      throw new RepoVerificationError('Not supported: repo metadata updated')
     }
 
     let didForSignature: string
     if (nextRepo.root.auth_token) {
       // verify auth token covers all necessary writes
-      const encodedToken = await blockstore.get(
+      const encodedToken = await storage.get(
         nextRepo.root.auth_token,
         def.string,
       )
@@ -52,7 +51,9 @@ export const verifyUpdates = async (
       nextRepo.commit.sig,
     )
     if (!validSig) {
-      throw new Error(`Invalid signature on commit: ${nextRepo.cid.toString()}`)
+      throw new RepoVerificationError(
+        `Invalid signature on commit: ${nextRepo.cid.toString()}`,
+      )
     }
 
     fullDiff.addDiff(diff)
@@ -60,3 +61,5 @@ export const verifyUpdates = async (
   }
   return fullDiff
 }
+
+export class RepoVerificationError extends Error {}

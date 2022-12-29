@@ -1,7 +1,7 @@
 import { MST, DataAdd, DataUpdate, DataDelete } from '../src/mst'
 import { countPrefixLen } from '../src/mst/util'
 
-import { MemoryBlockstore } from '../src/blockstore'
+import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
 
 import { CID } from 'multiformats'

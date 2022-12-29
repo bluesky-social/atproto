@@ -31,7 +31,7 @@ describe('MST Benchmarks', () => {
   // const fanouts: Fanout[] = [8, 16, 32]
   const fanouts: Fanout[] = [16, 32]
   it('benchmarks various fanouts', async () => {
-    let benches: BenchmarkData[] = []
+    const benches: BenchmarkData[] = []
     for (const fanout of fanouts) {
       const blockstore = new MemoryBlockstore()
       let mst = await MST.create(blockstore, [], { fanout })
@@ -44,11 +44,11 @@ describe('MST Benchmarks', () => {
 
       const doneAdding = Date.now()
 
-      const root = await mst.save()
+      const root = await mst.stage()
 
       const doneSaving = Date.now()
 
-      let reloaded = await MST.load(blockstore, root, { fanout })
+      const reloaded = await MST.load(blockstore, root, { fanout })
       const widthTracker = new NodeWidths()
       for await (const entry of reloaded.walk()) {
         await widthTracker.trackEntry(entry)

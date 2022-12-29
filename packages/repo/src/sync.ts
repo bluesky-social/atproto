@@ -1,19 +1,19 @@
 import * as auth from '@atproto/auth'
-import { IpldStore } from './blockstore'
+import { CID } from 'multiformats/cid'
+import { RepoStorage } from './storage'
 import { DataDiff } from './mst'
 import Repo from './repo'
 import * as verify from './verify'
 
 export const loadRepoFromCar = async (
   carBytes: Uint8Array,
-  blockstore: IpldStore,
+  storage: RepoStorage,
   verifier: auth.Verifier,
 ): Promise<Repo> => {
-  const root = await blockstore.stageCar(carBytes)
-  const repo = await Repo.load(blockstore, root)
-  await verify.verifyUpdates(blockstore, null, repo.cid, verifier)
-  await blockstore.saveStaged()
-  return repo
+  const { root } = await storage.loadDiff(carBytes, (root: CID) => {
+    return verify.verifyUpdates(storage, null, root, verifier)
+  })
+  return Repo.load(storage, root)
 }
 
 export const loadDiff = async (
@@ -21,16 +21,11 @@ export const loadDiff = async (
   diffCar: Uint8Array,
   verifier: auth.Verifier,
 ): Promise<{ repo: Repo; diff: DataDiff }> => {
-  const blockstore = repo.blockstore
-  const root = await blockstore.stageCar(diffCar)
-  const diff = await verify.verifyUpdates(
-    repo.blockstore,
-    repo.cid,
-    root,
-    verifier,
-  )
-  const updatedRepo = await Repo.load(blockstore, root)
-  await blockstore.saveStaged()
+  const storage = repo.storage
+  const { root, diff } = await storage.loadDiff(diffCar, (root: CID) => {
+    return verify.verifyUpdates(storage, repo.cid, root, verifier)
+  })
+  const updatedRepo = await Repo.load(storage, root)
   return {
     repo: updatedRepo,
     diff,

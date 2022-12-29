@@ -25,7 +25,6 @@ export interface ServerConfigValues {
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
-  blockstoreLocation?: string
   databaseLocation?: string
 
   availableUserDomains: string[]
@@ -85,7 +84,6 @@ export class ServerConfig {
     const privacyPolicyUrl = process.env.PRIVACY_POLICY_URL
     const termsOfServiceUrl = process.env.TERMS_OF_SERVICE_URL
 
-    const blockstoreLocation = process.env.BLOCKSTORE_LOC
     const databaseLocation = process.env.DATABASE_LOC
 
     const blobstoreLocation = process.env.BLOBSTORE_LOC
@@ -133,7 +131,6 @@ export class ServerConfig {
       inviteRequired,
       privacyPolicyUrl,
       termsOfServiceUrl,
-      blockstoreLocation,
       databaseLocation,
       availableUserDomains,
       imgUriSalt,
@@ -243,14 +240,6 @@ export class ServerConfig {
       return this.publicUrl + this.cfg.termsOfServiceUrl
     }
     return this.cfg.termsOfServiceUrl
-  }
-
-  get blockstoreLocation() {
-    return this.cfg.blockstoreLocation
-  }
-
-  get useMemoryBlockstore() {
-    return !this.blockstoreLocation
   }
 
   get databaseLocation() {

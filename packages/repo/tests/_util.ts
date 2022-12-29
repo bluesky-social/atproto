@@ -1,20 +1,21 @@
 import { CID } from 'multiformats'
 import { TID } from '@atproto/common'
 import * as auth from '@atproto/auth'
-import IpldStore from '../src/blockstore/ipld-store'
 import { Repo } from '../src/repo'
-import { MemoryBlockstore } from '../src/blockstore'
+import { RepoStorage, MemoryBlockstore } from '../src/storage'
 import { DataDiff, MST } from '../src/mst'
 import fs from 'fs'
 import { RecordWriteOp } from '../src'
 
 type IdMapping = Record<string, CID>
 
-const fakeStore = new MemoryBlockstore()
+const fakeStorage = new MemoryBlockstore()
 
-export const randomCid = async (store: IpldStore = fakeStore): Promise<CID> => {
+export const randomCid = async (
+  storage: RepoStorage = fakeStorage,
+): Promise<CID> => {
   const str = randomStr(50)
-  return store.stage({ test: str })
+  return storage.stage({ test: str })
 }
 
 export const generateBulkTids = (count: number): TID[] => {
@@ -27,7 +28,7 @@ export const generateBulkTids = (count: number): TID[] => {
 
 export const generateBulkTidMapping = async (
   count: number,
-  blockstore: IpldStore = fakeStore,
+  blockstore: RepoStorage = fakeStorage,
 ): Promise<IdMapping> => {
   const ids = generateBulkTids(count)
   const obj: IdMapping = {}
@@ -191,7 +192,7 @@ export const checkRepoDiff = async (
     const parts = key.split('/')
     const collection = parts[0]
     const obj = (data[collection] || {})[parts[1]]
-    return obj === undefined ? undefined : fakeStore.stage(obj)
+    return obj === undefined ? undefined : fakeStorage.stage(obj)
   }
 
   for (const add of diff.addList()) {
