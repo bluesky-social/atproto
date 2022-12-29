@@ -1,7 +1,8 @@
 import { CID } from 'multiformats/cid'
 import RepoStorage from './repo-storage'
-import { CommitData, def } from '../types'
+import { CommitBlockData, CommitData, def } from '../types'
 import BlockMap from '../block-map'
+import { MST } from '../mst'
 
 export class MemoryBlockstore extends RepoStorage {
   blocks: BlockMap
@@ -58,6 +59,48 @@ export class MemoryBlockstore extends RepoStorage {
       curr = root.prev
     }
     return null
+  }
+
+  async getMany(cids: CID[]): Promise<BlockMap> {
+    const blocks = new BlockMap()
+    await Promise.all(
+      cids.map(async (cid) => {
+        const bytes = await this.getBytes(cid)
+        if (bytes) {
+          blocks.set(cid, bytes)
+        }
+      }),
+    )
+    return blocks
+  }
+
+  async getCommits(
+    latest: CID,
+    earliest: CID | null,
+  ): Promise<CommitBlockData[] | null> {
+    const commitPath = await this.getCommitPath(latest, earliest)
+    if (commitPath === null) return null
+    const commitData: CommitBlockData[] = []
+    let prevData: MST | null = null
+    for (const commitCid of commitPath) {
+      const commit = await this.get(commitCid, def.commit)
+      const root = await this.get(commit.root, def.repoRoot)
+      const data = await MST.load(this, root.data)
+      const newCids = prevData
+        ? (await prevData.diff(data)).newCidList()
+        : (await data.allCids()).toList()
+      const blocks = await this.getMany([commitCid, commit.root, ...newCids])
+      if (!root.prev) {
+        const metaBytes = await this.guaranteeBytes(root.meta)
+        blocks.set(root.meta, metaBytes)
+      }
+      commitData.push({
+        root: commitCid,
+        blocks,
+      })
+      prevData = data
+    }
+    return commitData
   }
 
   async sizeInBytes(): Promise<number> {

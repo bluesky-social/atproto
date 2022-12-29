@@ -90,7 +90,6 @@ export class Repo {
       root: commitCid,
       prev: null,
       blocks: newBlocks,
-      ops: initialRecords,
     }
   }
 
@@ -189,7 +188,6 @@ export class Repo {
       root: commitCid,
       prev: this.cid,
       blocks: newBlocks,
-      ops: writes,
     }
   }
 
@@ -238,12 +236,13 @@ export class Repo {
     fn: (car: BlockWriter) => Promise<void>,
   ): Promise<Uint8Array> {
     const { writer, out } = CarWriter.create([this.cid])
+    const bytes = streamToArray(out)
     try {
       await fn(writer)
     } finally {
       writer.close()
     }
-    return streamToArray(out)
+    return bytes
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
@@ -263,34 +262,15 @@ export class Repo {
     latest: CID,
     earliest: CID | null,
   ): Promise<void> {
-    const commitPath = await this.storage.getCommitPath(latest, earliest)
-    if (commitPath === null) {
+    const commits = await this.storage.getCommits(latest, earliest)
+    if (commits === null) {
       throw new Error('Could not find shared history')
     }
-    if (commitPath.length === 0) return
-    const firstHeadInPath = await Repo.load(this.storage, commitPath[0])
-    // handle the first commit
-    let prevHead: Repo | null =
-      firstHeadInPath.root.prev !== null
-        ? await Repo.load(this.storage, firstHeadInPath.root.prev)
-        : null
-    for (const commit of commitPath) {
-      const nextHead = await Repo.load(this.storage, commit)
-      await this.storage.addToCar(car, nextHead.cid)
-      await this.storage.addToCar(car, nextHead.commit.root)
-      await this.storage.addToCar(car, nextHead.root.meta)
-      if (nextHead.root.auth_token) {
-        await this.storage.addToCar(car, nextHead.root.auth_token)
+    if (commits.length === 0) return
+    for (const commit of commits) {
+      for (const entry of commit.blocks.entries()) {
+        await car.put(entry)
       }
-      if (prevHead === null) {
-        await nextHead.data.writeToCarStream(car)
-      } else {
-        const diff = await prevHead.data.diff(nextHead.data)
-        await Promise.all(
-          diff.newCidList().map((cid) => this.storage.addToCar(car, cid)),
-        )
-      }
-      prevHead = nextHead
     }
   }
 }

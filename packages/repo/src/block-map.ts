@@ -1,5 +1,6 @@
 import { valueToIpldBlock } from '@atproto/common'
 import { CID } from 'multiformats/cid'
+import * as uint8arrays from 'uint8arrays'
 
 export class BlockMap {
   private map: Map<string, Uint8Array> = new Map()
@@ -42,6 +43,24 @@ export class BlockMap {
     toAdd.forEach((bytes, cid) => {
       this.set(cid, bytes)
     })
+  }
+
+  get size(): number {
+    return this.map.size
+  }
+
+  equals(other: BlockMap): boolean {
+    if (this.size !== other.size) {
+      return false
+    }
+    for (const entry of this.entries()) {
+      const otherBytes = other.get(entry.cid)
+      if (!otherBytes) return false
+      if (!uint8arrays.equals(entry.bytes, otherBytes)) {
+        return false
+      }
+    }
+    return true
   }
 }
 

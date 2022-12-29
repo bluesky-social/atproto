@@ -9,6 +9,7 @@ import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
 import MstWalker from './walker'
 import BlockMap from '../block-map'
+import CidSet from '../cid-set'
 
 /**
  * This is an implementation of a Merkle Search Tree (MST)
@@ -729,6 +730,22 @@ export class MST implements DataStore {
       nodes.push(entry)
     }
     return nodes
+  }
+
+  // Walks tree & returns all cids
+  async allCids(): Promise<CidSet> {
+    const cids = new CidSet()
+    const entries = await this.getEntries()
+    for (const entry of entries) {
+      if (entry.isLeaf()) {
+        cids.add(entry.value)
+      } else {
+        const subtreeCids = await entry.allCids()
+        cids.addSet(subtreeCids)
+      }
+    }
+    cids.add(await this.getPointer())
+    return cids
   }
 
   // Walks tree & returns all leaves
