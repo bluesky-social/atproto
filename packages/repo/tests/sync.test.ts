@@ -1,7 +1,7 @@
 import * as crypto from '@atproto/crypto'
 import { TID } from '@atproto/common'
 import { DidResolver } from '@atproto/did-resolver'
-import { Repo, RepoRoot, verifyUpdates } from '../src'
+import { Repo, RepoRoot } from '../src'
 import BlockMap from '../src/block-map'
 import { MemoryBlockstore } from '../src/storage'
 import * as sync from '../src/sync'
@@ -22,14 +22,15 @@ describe('Sync', () => {
     bobBlockstore = new MemoryBlockstore()
   })
 
+  let bobRepo: Repo
+
   it('syncs an empty repo', async () => {
     const car = await aliceRepo.getFullHistory()
-    const repoBob = await sync.loadRepoFromCar(car, bobBlockstore, didResolver)
-    const data = await repoBob.data.list(10)
+    const loaded = await sync.loadFullRepo(bobBlockstore, car, didResolver)
+    bobRepo = await Repo.load(bobBlockstore, loaded.root)
+    const data = await bobRepo.data.list(10)
     expect(data.length).toBe(0)
   })
-
-  let bobRepo: Repo
 
   it('syncs a repo that is starting from scratch', async () => {
     const filled = await util.fillRepo(aliceRepo, aliceKey, 100)
@@ -38,15 +39,16 @@ describe('Sync', () => {
     await aliceRepo.getFullHistory()
 
     const car = await aliceRepo.getFullHistory()
-    bobRepo = await sync.loadRepoFromCar(car, bobBlockstore, didResolver)
-    const diff = await verifyUpdates(
-      bobBlockstore,
-      bobRepo.cid,
-      null,
-      didResolver,
-    )
+    const loaded = await sync.loadFullRepo(bobBlockstore, car, didResolver)
+    bobRepo = await Repo.load(bobBlockstore, loaded.root)
+    // const diff = await verifyUpdates(
+    //   bobBlockstore,
+    //   bobRepo.cid,
+    //   null,
+    //   didResolver,
+    // )
     await util.checkRepo(bobRepo, repoData)
-    await util.checkRepoDiff(diff, {}, repoData)
+    // await util.checkRepoDiff(diff, {}, repoData)
   })
 
   it('syncs a repo that is behind', async () => {
@@ -61,8 +63,9 @@ describe('Sync', () => {
     repoData = edited.data
     const diffCar = await aliceRepo.getDiffCar(bobRepo.cid)
     const loaded = await sync.loadDiff(bobRepo, diffCar, didResolver)
-    await util.checkRepo(loaded.repo, repoData)
-    await util.checkRepoDiff(loaded.diff, beforeData, repoData)
+    bobRepo = await Repo.load(bobBlockstore, loaded.root)
+    await util.checkRepo(bobRepo, repoData)
+    // await util.checkRepoDiff(loaded.diff, beforeData, repoData)
   })
 
   it('throws on a bad signature', async () => {
@@ -73,18 +76,18 @@ describe('Sync', () => {
       `com.example.test/${TID.next()}`,
       cid,
     )
-    const dataDiff = await updatedData.blockDiff()
-    blocks.addMap(dataDiff.blocks)
+    const unstoredData = await updatedData.getUnstoredBlocks()
+    blocks.addMap(unstoredData.blocks)
     const root: RepoRoot = {
       meta: aliceRepo.root.meta,
       prev: aliceRepo.cid,
-      data: dataDiff.root,
+      data: unstoredData.root,
     }
     const rootCid = await blocks.add(root)
     // we generated a bad sig by signing the data cid instead of root cid
     const commit = {
       root: rootCid,
-      sig: await aliceKey.sign(dataDiff.root.bytes),
+      sig: await aliceKey.sign(unstoredData.root.bytes),
     }
     const commitCid = await blocks.add(commit)
     await aliceBlockstore.putMany(blocks)

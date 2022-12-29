@@ -5,6 +5,7 @@ import { MST } from '../mst'
 import { RepoStorage } from './types'
 import * as util from './util'
 import { check } from '@atproto/common'
+import DataDiff from '../data-diff'
 
 export class MemoryBlockstore implements RepoStorage {
   blocks: BlockMap
@@ -105,10 +106,12 @@ export class MemoryBlockstore implements RepoStorage {
       const commit = await this.get(commitCid, def.commit)
       const root = await this.get(commit.root, def.repoRoot)
       const data = await MST.load(this, root.data)
-      const newCids = prevData
-        ? (await prevData.diff(data)).newCidList()
-        : (await data.allCids()).toList()
-      const blocks = await this.getBlocks([commitCid, commit.root, ...newCids])
+      const diff = await DataDiff.of(data, prevData)
+      const blocks = await this.getBlocks([
+        commitCid,
+        commit.root,
+        ...diff.newCidList(),
+      ])
       if (!root.prev) {
         const metaBytes = await this.getBytes(root.meta)
         if (!metaBytes) {

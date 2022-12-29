@@ -1,10 +1,11 @@
+import fs from 'fs'
 import { CID } from 'multiformats'
 import { cidForData, TID, valueToIpldBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { Repo } from '../src/repo'
 import { RepoStorage } from '../src/storage'
-import { DataDiff, MST } from '../src/mst'
-import fs from 'fs'
+import { MST } from '../src/mst'
+import DataDiff from '../src/data-diff'
 import { RecordWriteOp, WriteOpAction } from '../src'
 
 type IdMapping = Record<string, CID>
@@ -219,9 +220,9 @@ export const checkRepoDiff = async (
   }
 }
 
-export const saveMst = async (mst: MST): Promise<CID> => {
-  const diff = await mst.blockDiff()
-  await mst.storage.putMany(diff.blocks)
+export const saveMst = async (storage: RepoStorage, mst: MST): Promise<CID> => {
+  const diff = await mst.getUnstoredBlocks()
+  await storage.putMany(diff.blocks)
   return diff.root
 }
 

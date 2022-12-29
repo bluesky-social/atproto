@@ -50,8 +50,8 @@ export class Repo extends ReadableRepo {
       const dataKey = write.collection + '/' + write.rkey
       data = await data.add(dataKey, cid)
     }
-    const dataDiff = await data.blockDiff()
-    newBlocks.addMap(dataDiff.blocks)
+    const unstoredData = await data.getUnstoredBlocks()
+    newBlocks.addMap(unstoredData.blocks)
 
     const meta: RepoMeta = {
       did,
@@ -63,7 +63,7 @@ export class Repo extends ReadableRepo {
     const root: RepoRoot = {
       meta: metaCid,
       prev: null,
-      data: dataDiff.root,
+      data: unstoredData.root,
     }
     const rootCid = await newBlocks.add(root)
 
@@ -140,13 +140,13 @@ export class Repo extends ReadableRepo {
       }
     }
 
-    const dataDiff = await data.blockDiff()
-    newBlocks.addMap(dataDiff.blocks)
+    const unstoredData = await data.getUnstoredBlocks()
+    newBlocks.addMap(unstoredData.blocks)
 
     const root: RepoRoot = {
       meta: this.root.meta,
       prev: this.cid,
-      data: dataDiff.root,
+      data: unstoredData.root,
     }
     const rootCid = await newBlocks.add(root)
 

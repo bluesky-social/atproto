@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { BlockWriter } from '@ipld/car/writer'
 import { def as common } from '@atproto/common'
 import { CID } from 'multiformats'
-import { DataDiff } from './mst'
 import BlockMap from './block-map'
 
 const repoMeta = z.object({
@@ -112,7 +111,6 @@ export interface DataStore {
   get(key: string): Promise<CID | null>
   list(count?: number, after?: string, before?: string): Promise<DataValue[]>
   listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
-  diff(other: DataStore): Promise<DataDiff>
-  blockDiff(): Promise<{ root: CID; blocks: BlockMap }>
+  getUnstoredBlocks(): Promise<{ root: CID; blocks: BlockMap }>
   writeToCarStream(car: BlockWriter): Promise<void>
 }

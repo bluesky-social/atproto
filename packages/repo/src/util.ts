@@ -8,7 +8,8 @@ import {
   verifyCidForCborBytes,
 } from '@atproto/common'
 import Repo from './repo'
-import { DataDiff, MST } from './mst'
+import { MST } from './mst'
+import DataDiff from './data-diff'
 import { RepoStorage } from './storage'
 import {
   DataStore,
@@ -61,7 +62,7 @@ export const getWriteOpLog = async (
   const msts = heads.map((h) => h.data)
   const diffs: DataDiff[] = []
   for (const mst of msts) {
-    diffs.push(await prev.diff(mst))
+    diffs.push(await DataDiff.of(mst, prev))
     prev = mst
   }
   const fullDiff = collapseDiffs(diffs)
