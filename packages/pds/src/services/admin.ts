@@ -1,12 +1,14 @@
 import { Selectable } from 'kysely'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../db'
 import { ModerationAction } from '../db/tables/moderation'
-import { View as ModerationActionView } from '../lexicon/types/app/bsky/admin/moderationAction'
+import {
+  TAKEDOWN,
+  View as ModerationActionView,
+  SubjectActor,
+} from '../lexicon/types/app/bsky/admin/moderationAction'
 import { InputSchema as TakeModAction } from '../lexicon/types/app/bsky/admin/takeModerationAction'
 import { InputSchema as ReverseModAction } from '../lexicon/types/app/bsky/admin/reverseModerationAction'
-import * as ActorRef from '../lexicon/types/app/bsky/actor/ref'
-import { ids } from '../lexicon/lexicons'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class AdminService {
   constructor(public db: Database) {}
@@ -27,8 +29,8 @@ export class AdminService {
 
   async logModAction(
     info: TakeModAction & {
-      action: 'app.bsky.admin.actionTakedown'
-      subject: ActorRef.Main
+      action: typeof TAKEDOWN
+      subject: SubjectActor
       createdAt?: Date
     },
   ): Promise<Selectable<ModerationAction>> {
@@ -38,9 +40,8 @@ export class AdminService {
       .insertInto('moderation_action')
       .values({
         action,
-        subjectType: 'actor',
+        subjectType: 'app.bsky.admin.moderationAction#subjectActor',
         subjectDid: subject.did,
-        subjectDeclarationCid: subject.declarationCid,
         createdAt: createdAt.toISOString(),
         createdBy,
         reason,
@@ -92,16 +93,17 @@ export class AdminService {
   formatModActionView(
     modAction: Selectable<ModerationAction>,
   ): ModerationActionView {
-    if (modAction.subjectType !== 'actor') {
+    if (
+      modAction.subjectType !== 'app.bsky.admin.moderationAction#subjectActor'
+    ) {
       throw new Error('Only supports format moderation actions on actors')
     }
     return {
       id: modAction.id,
       action: modAction.action,
       subject: {
-        $type: ids.AppBskyActorRef,
+        $type: modAction.subjectType,
         did: modAction.subjectDid,
-        declarationCid: modAction.subjectDeclarationCid,
       },
       reason: modAction.reason,
       createdAt: modAction.createdAt,

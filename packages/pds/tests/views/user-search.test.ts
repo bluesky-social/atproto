@@ -1,4 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
 import {
   runTestServer,
   forSnapshot,
@@ -185,17 +186,12 @@ describe('pds user search views', () => {
   })
 
   it('search blocks by actor takedown', async () => {
-    const { data: caraProfile } = await client.app.bsky.actor.getProfile(
-      { actor: 'cara-wiegand69.test' },
-      { headers },
-    )
     await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'app.bsky.admin.actionTakedown',
+        action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.actor.ref',
-          did: caraProfile.did,
-          declarationCid: caraProfile.declaration.cid,
+          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          did: sc.dids['cara-wiegand69.test'],
         },
         createdBy: 'X',
         reason: 'Y',

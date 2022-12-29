@@ -38,7 +38,6 @@ import * as AppBskyActorRef from './types/app/bsky/actor/ref'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-import * as AppBskyAdminActionTakedown from './types/app/bsky/admin/actionTakedown'
 import * as AppBskyAdminModerationAction from './types/app/bsky/admin/moderationAction'
 import * as AppBskyAdminReverseModerationAction from './types/app/bsky/admin/reverseModerationAction'
 import * as AppBskyAdminTakeModerationAction from './types/app/bsky/admin/takeModerationAction'
@@ -105,7 +104,6 @@ export * as AppBskyActorRef from './types/app/bsky/actor/ref'
 export * as AppBskyActorSearch from './types/app/bsky/actor/search'
 export * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-export * as AppBskyAdminActionTakedown from './types/app/bsky/admin/actionTakedown'
 export * as AppBskyAdminModerationAction from './types/app/bsky/admin/moderationAction'
 export * as AppBskyAdminReverseModerationAction from './types/app/bsky/admin/reverseModerationAction'
 export * as AppBskyAdminTakeModerationAction from './types/app/bsky/admin/takeModerationAction'
@@ -141,7 +139,7 @@ export * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export const APP_BSKY_ADMIN = {
-  ActionTakedown: 'app.bsky.admin.actionTakedown',
+  ModerationActionTakedown: 'app.bsky.admin.moderationAction#takedown',
 }
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',

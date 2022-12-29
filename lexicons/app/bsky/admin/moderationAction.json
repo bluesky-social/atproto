@@ -7,8 +7,8 @@
       "required": ["id", "action", "subject", "reason", "createdBy", "createdAt"],
       "properties": {
         "id": {"type": "integer"},
-        "action": {"type": "string", "knownValues": ["app.bsky.admin.actionTakedown"]},
-        "subject": {"type": "union", "refs": ["app.bsky.actor.ref"]},
+        "action": {"type": "string", "knownValues": ["app.bsky.admin.moderationAction#takedown"]},
+        "subject": {"type": "union", "refs": ["#subjectActor"]},
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"},
@@ -23,6 +23,17 @@
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"}
       }
+    },
+    "subjectActor": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {"type": "string"}
+      }
+    },
+    "takedown": {
+      "type": "token",
+      "description": "Moderation action type: Takedown."
     }
   }
 }

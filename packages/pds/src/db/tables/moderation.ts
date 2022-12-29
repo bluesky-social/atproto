@@ -1,13 +1,13 @@
 import { Generated } from 'kysely'
+import { TAKEDOWN } from '../../lexicon/types/app/bsky/admin/moderationAction'
 
 export const moderationActionTableName = 'moderation_action'
 
 export interface ModerationAction {
   id: Generated<number>
-  action: 'app.bsky.admin.actionTakedown'
-  subjectType: 'actor'
+  action: typeof TAKEDOWN
+  subjectType: 'app.bsky.admin.moderationAction#subjectActor'
   subjectDid: string | null
-  subjectDeclarationCid: string | null
   reason: string
   createdAt: string
   createdBy: string

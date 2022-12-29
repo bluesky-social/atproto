@@ -1442,17 +1442,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyAdminActionTakedown: {
-    lexicon: 1,
-    id: 'app.bsky.admin.actionTakedown',
-    defs: {
-      main: {
-        type: 'token',
-        description:
-          "Moderation action type: Takedown. Defined for app.bsky.admin.moderationAction's action.",
-      },
-    },
-  },
   AppBskyAdminModerationAction: {
     lexicon: 1,
     id: 'app.bsky.admin.moderationAction',
@@ -1473,11 +1462,11 @@ export const schemaDict = {
           },
           action: {
             type: 'string',
-            knownValues: ['app.bsky.admin.actionTakedown'],
+            knownValues: ['app.bsky.admin.moderationAction#takedown'],
           },
           subject: {
             type: 'union',
-            refs: ['lex:app.bsky.actor.ref'],
+            refs: ['lex:app.bsky.admin.moderationAction#subjectActor'],
           },
           reason: {
             type: 'string',
@@ -1508,6 +1497,19 @@ export const schemaDict = {
             type: 'string',
           },
         },
+      },
+      subjectActor: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+        },
+      },
+      takedown: {
+        type: 'token',
+        description: 'Moderation action type: Takedown.',
       },
     },
   },
@@ -1561,11 +1563,11 @@ export const schemaDict = {
             properties: {
               action: {
                 type: 'string',
-                knownValues: ['app.bsky.admin.actionTakedown'],
+                knownValues: ['app.bsky.admin.moderationAction#takedown'],
               },
               subject: {
                 type: 'union',
-                refs: ['lex:app.bsky.actor.ref'],
+                refs: ['lex:app.bsky.admin.moderationAction#subjectActor'],
               },
               reason: {
                 type: 'string',
@@ -3163,7 +3165,6 @@ export const ids = {
   AppBskyActorSearch: 'app.bsky.actor.search',
   AppBskyActorSearchTypeahead: 'app.bsky.actor.searchTypeahead',
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
-  AppBskyAdminActionTakedown: 'app.bsky.admin.actionTakedown',
   AppBskyAdminModerationAction: 'app.bsky.admin.moderationAction',
   AppBskyAdminReverseModerationAction: 'app.bsky.admin.reverseModerationAction',
   AppBskyAdminTakeModerationAction: 'app.bsky.admin.takeModerationAction',

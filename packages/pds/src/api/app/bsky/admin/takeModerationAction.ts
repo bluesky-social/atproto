@@ -1,8 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import * as ActorRef from '../../../../lexicon/types/app/bsky/actor/ref'
 import AppContext from '../../../../context'
+import {
+  TAKEDOWN,
+  SubjectActor,
+} from '../../../../lexicon/types/app/bsky/admin/moderationAction'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.admin.takeModerationAction({
@@ -17,18 +19,18 @@ export default function (server: Server, ctx: AppContext) {
         createdBy,
       } = input.body
 
-      if (_action !== 'app.bsky.admin.actionTakedown') {
+      if (_action !== TAKEDOWN) {
         throw new InvalidRequestError('Unsupported action')
       }
-      if (_subject.$type !== ids.AppBskyActorRef) {
+      if (_subject.$type !== 'app.bsky.admin.moderationAction#subjectActor') {
         throw new InvalidRequestError('Unsupported subject type')
       }
 
-      const action = _action as 'app.bsky.admin.actionTakedown'
-      const subject = _subject as ActorRef.Main
+      const action = _action as typeof TAKEDOWN
+      const subject = _subject as SubjectActor
 
       const actor = await services.actor(db).getUser(subject.did, true)
-      if (!actor || actor.declarationCid !== subject.declarationCid) {
+      if (!actor) {
         throw new Error('Actor does not exist')
       }
 
@@ -45,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
           createdAt: now,
         })
 
-        if (result.action === 'app.bsky.admin.actionTakedown') {
+        if (result.action === TAKEDOWN) {
           await authTxn.revokeRefreshTokensByDid(subject.did)
           await adminTxn.takedownActorByDid({
             takedownId: result.id,

@@ -1,4 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/session/create'
 import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/session/refresh'
 import { SeedClient } from './seeds/client'
@@ -179,17 +180,12 @@ describe('auth', () => {
       email: 'iris@test.com',
       password: 'password',
     })
-    const { data: profile } = await client.app.bsky.actor.getProfile(
-      { actor: account.did },
-      { headers: SeedClient.getHeaders(account.accessJwt) },
-    )
     await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'app.bsky.admin.actionTakedown',
+        action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.actor.ref',
-          did: profile.did,
-          declarationCid: profile.declaration.cid,
+          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          did: account.did,
         },
         createdBy: 'X',
         reason: 'Y',
@@ -210,17 +206,12 @@ describe('auth', () => {
       email: 'jared@test.com',
       password: 'password',
     })
-    const { data: profile } = await client.app.bsky.actor.getProfile(
-      { actor: account.did },
-      { headers: SeedClient.getHeaders(account.accessJwt) },
-    )
     await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'app.bsky.admin.actionTakedown',
+        action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.actor.ref',
-          did: profile.did,
-          declarationCid: profile.declaration.cid,
+          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          did: account.did,
         },
         createdBy: 'X',
         reason: 'Y',

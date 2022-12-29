@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { TAKEDOWN } from '../../../../lexicon/types/app/bsky/admin/moderationAction'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
@@ -31,10 +32,7 @@ export default function (server: Server, ctx: AppContext) {
           reason,
         })
 
-        if (
-          result.action === 'app.bsky.admin.actionTakedown' &&
-          result.subjectDid !== null
-        ) {
+        if (result.action === TAKEDOWN && result.subjectDid !== null) {
           await adminTxn.reverseTakedownActorByDid({ did: result.subjectDid })
         }
 

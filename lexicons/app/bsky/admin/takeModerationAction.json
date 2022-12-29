@@ -11,8 +11,8 @@
           "type": "object",
           "required": ["action", "subject", "reason", "createdBy"],
           "properties": {
-            "action": {"type": "string", "knownValues": ["app.bsky.admin.actionTakedown"]},
-            "subject": {"type": "union", "refs": ["app.bsky.actor.ref"]},
+            "action": {"type": "string", "knownValues": ["app.bsky.admin.moderationAction#takedown"]},
+            "subject": {"type": "union", "refs": ["app.bsky.admin.moderationAction#subjectActor"]},
             "reason": {"type": "string"},
             "createdBy": {"type": "string"}
           }

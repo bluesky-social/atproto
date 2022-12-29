@@ -9,18 +9,17 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
       : builder.addColumn('id', 'integer', (col) =>
           col.autoIncrement().primaryKey(),
         )
-  builder = builder
+  await builder
     .addColumn('action', 'varchar', (col) => col.notNull())
     .addColumn('subjectType', 'varchar', (col) => col.notNull())
     .addColumn('subjectDid', 'varchar')
-    .addColumn('subjectDeclarationCid', 'varchar')
     .addColumn('reason', 'text', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('createdBy', 'varchar', (col) => col.notNull())
     .addColumn('reversedAt', 'varchar')
     .addColumn('reversedBy', 'varchar')
     .addColumn('reversedReason', 'text')
-  await builder.execute()
+    .execute()
   await db.schema
     .alterTable('did_handle')
     .addColumn('takedownId', 'integer')

@@ -55,7 +55,7 @@ import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 
 export const APP_BSKY_ADMIN = {
-  ActionTakedown: 'app.bsky.admin.actionTakedown',
+  ModerationActionTakedown: 'app.bsky.admin.moderationAction#takedown',
 }
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',

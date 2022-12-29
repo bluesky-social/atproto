@@ -2,6 +2,7 @@ import AtpApi, {
   ServiceClient as AtpServiceClient,
   AppBskyFeedGetPostThread,
 } from '@atproto/api'
+import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -126,19 +127,13 @@ describe('pds thread views', () => {
   })
 
   it('blocks post by actor takedown', async () => {
-    const { data: aliceProfile } = await client.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(bob) },
-    )
-
     const { data: modAction } =
       await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'app.bsky.admin.actionTakedown',
+          action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.actor.ref',
-            did: aliceProfile.did,
-            declarationCid: aliceProfile.declaration.cid,
+            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            did: alice,
           },
           createdBy: 'X',
           reason: 'Y',
@@ -173,19 +168,13 @@ describe('pds thread views', () => {
   })
 
   it('blocks replies by actor takedown', async () => {
-    const { data: carolProfile } = await client.app.bsky.actor.getProfile(
-      { actor: carol },
-      { headers: sc.getHeaders(bob) },
-    )
-
     const { data: modAction } =
       await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'app.bsky.admin.actionTakedown',
+          action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.actor.ref',
-            did: carolProfile.did,
-            declarationCid: carolProfile.declaration.cid,
+            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            did: carol,
           },
           createdBy: 'X',
           reason: 'Y',
@@ -218,19 +207,13 @@ describe('pds thread views', () => {
   })
 
   it('blocks ancestors by actor takedown', async () => {
-    const { data: aliceProfile } = await client.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(bob) },
-    )
-
     const { data: modAction } =
       await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'app.bsky.admin.actionTakedown',
+          action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.actor.ref',
-            did: aliceProfile.did,
-            declarationCid: aliceProfile.declaration.cid,
+            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            did: alice,
           },
           createdBy: 'X',
           reason: 'Y',

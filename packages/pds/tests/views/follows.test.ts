@@ -1,4 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
 import {
   runTestServer,
   forSnapshot,
@@ -134,19 +135,13 @@ describe('pds follow views', () => {
   })
 
   it('blocks followers by actor takedown', async () => {
-    const { data: danProfile } = await client.app.bsky.actor.getProfile(
-      { actor: sc.dids.dan },
-      { headers: sc.getHeaders(alice) },
-    )
-
     const { data: modAction } =
       await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'app.bsky.admin.actionTakedown',
+          action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.actor.ref',
-            did: danProfile.did,
-            declarationCid: danProfile.declaration.cid,
+            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            did: sc.dids.dan,
           },
           createdBy: 'X',
           reason: 'Y',
@@ -270,19 +265,13 @@ describe('pds follow views', () => {
   })
 
   it('blocks follows by actor takedown', async () => {
-    const { data: danProfile } = await client.app.bsky.actor.getProfile(
-      { actor: sc.dids.dan },
-      { headers: sc.getHeaders(alice) },
-    )
-
     const { data: modAction } =
       await client.app.bsky.admin.takeModerationAction(
         {
-          action: 'app.bsky.admin.actionTakedown',
+          action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.actor.ref',
-            did: danProfile.did,
-            declarationCid: danProfile.declaration.cid,
+            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            did: sc.dids.dan,
           },
           createdBy: 'X',
           reason: 'Y',

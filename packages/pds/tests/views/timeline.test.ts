@@ -1,4 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
 import { Main as FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/feedViewPost'
 import {
   runTestServer,
@@ -138,22 +139,12 @@ describe('timeline views', () => {
   })
 
   it('blocks posts, reposts, replies by actor takedown', async () => {
-    const { data: bobProfile } = await client.app.bsky.actor.getProfile(
-      { actor: bob },
-      { headers: sc.getHeaders(alice) },
-    )
-    const { data: danProfile } = await client.app.bsky.actor.getProfile(
-      { actor: dan },
-      { headers: sc.getHeaders(alice) },
-    )
-
     await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'app.bsky.admin.actionTakedown',
+        action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.actor.ref',
-          did: bobProfile.did,
-          declarationCid: bobProfile.declaration.cid,
+          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          did: bob,
         },
         createdBy: 'X',
         reason: 'Y',
@@ -165,11 +156,10 @@ describe('timeline views', () => {
     )
     await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'app.bsky.admin.actionTakedown',
+        action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.actor.ref',
-          did: danProfile.did,
-          declarationCid: danProfile.declaration.cid,
+          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          did: dan,
         },
         createdBy: 'X',
         reason: 'Y',

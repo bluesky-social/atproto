@@ -1,5 +1,6 @@
 import fs from 'fs/promises'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -107,11 +108,11 @@ describe('pds profile views', () => {
     const avatarRes = await client.com.atproto.blob.upload(avatarImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
-    } as any)
+    })
     const bannerRes = await client.com.atproto.blob.upload(bannerImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
-    } as any)
+    })
 
     await client.app.bsky.actor.updateProfile(
       {
@@ -201,17 +202,12 @@ describe('pds profile views', () => {
   })
 
   it('blocked by actor takedown', async () => {
-    const { data: profile } = await client.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(bob) },
-    )
     await client.app.bsky.admin.takeModerationAction(
       {
-        action: 'app.bsky.admin.actionTakedown',
+        action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.actor.ref',
-          did: profile.did,
-          declarationCid: profile.declaration.cid,
+          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          did: alice,
         },
         createdBy: 'X',
         reason: 'Y',
