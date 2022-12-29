@@ -99,6 +99,32 @@ describe('pds author feed views', () => {
     expect(forSnapshot(sceneForCarol.data.feed)).toMatchSnapshot()
   })
 
+  it('omits reposts from muted users.', async () => {
+    await client.app.bsky.graph.mute(
+      { user: alice }, // Has a repost by dan: will be omitted from dan's feed
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+    await client.app.bsky.graph.mute(
+      { user: dan }, // Feed author: their posts will still appear
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+    const bobForDan = await client.app.bsky.feed.getAuthorFeed(
+      { author: sc.accounts[dan].handle },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(forSnapshot(bobForDan.data.feed)).toMatchSnapshot()
+
+    await client.app.bsky.graph.unmute(
+      { user: alice },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+    await client.app.bsky.graph.unmute(
+      { user: dan },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+  })
+
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {

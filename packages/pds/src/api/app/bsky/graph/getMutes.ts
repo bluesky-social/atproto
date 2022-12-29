@@ -2,7 +2,6 @@ import { Server } from '../../../../lexicon'
 import { getDeclarationSimple } from '../util'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { actorNotSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getMutes({
@@ -14,8 +13,7 @@ export default function (server: Server, ctx: AppContext) {
 
       let mutesReq = ctx.db.db
         .selectFrom('mute')
-        .innerJoin('did_handle as actor', 'actor.did', 'mute.did')
-        .where(actorNotSoftDeletedClause(ref('actor')))
+        .innerJoin('did_handle as actor', 'actor.did', 'mute.did') // TODO omit soft deleted
         .leftJoin('profile', 'profile.creator', 'mute.did')
         .where('mute.mutedByDid', '=', requester)
         .select([

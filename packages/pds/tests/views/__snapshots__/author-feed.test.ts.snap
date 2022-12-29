@@ -888,6 +888,77 @@ Array [
 ]
 `;
 
+exports[`pds author feed views omits reposts from muted users. 1`] = `
+Array [
+  Object {
+    "post": Object {
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "handle": "dan.test",
+        "viewer": Object {
+          "muted": true,
+        },
+      },
+      "cid": "cids(0)",
+      "downvoteCount": 0,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "entities": Array [
+          Object {
+            "index": Object {
+              "end": 18,
+              "start": 0,
+            },
+            "type": "mention",
+            "value": "user(1)",
+          },
+        ],
+        "text": "@alice.bluesky.xyz is the best",
+      },
+      "replyCount": 0,
+      "repostCount": 1,
+      "upvoteCount": 0,
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+  },
+  Object {
+    "post": Object {
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "handle": "dan.test",
+        "viewer": Object {
+          "muted": true,
+        },
+      },
+      "cid": "cids(2)",
+      "downvoteCount": 0,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "dan here!",
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "upvoteCount": 0,
+      "uri": "record(1)",
+      "viewer": Object {},
+    },
+  },
+]
+`;
+
 exports[`pds author feed views reflects fetching user's state in the feed. 1`] = `
 Array [
   Object {
