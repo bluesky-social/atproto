@@ -13,7 +13,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  mutes?: Mute[]
+  mutes: Mute[]
   [k: string]: unknown
 }
 

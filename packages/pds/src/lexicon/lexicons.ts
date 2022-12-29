@@ -2810,7 +2810,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['subject', 'follows'],
+            required: ['mutes'],
             properties: {
               cursor: {
                 type: 'string',

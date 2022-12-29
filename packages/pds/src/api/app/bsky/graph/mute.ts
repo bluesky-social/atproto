@@ -14,6 +14,9 @@ export default function (server: Server, ctx: AppContext) {
       if (!subject) {
         throw new InvalidRequestError(`Actor not found: ${user}`)
       }
+      if (subject.did === requester) {
+        throw new InvalidRequestError('Cannot mute oneself')
+      }
 
       await services.actor(db).mute({
         did: subject.did,
