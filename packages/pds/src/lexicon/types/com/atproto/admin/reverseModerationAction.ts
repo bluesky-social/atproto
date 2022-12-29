@@ -3,7 +3,7 @@
  */
 import express from 'express'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyAdminModerationAction from './moderationAction'
+import * as ComAtprotoAdminModerationAction from './moderationAction'
 
 export interface QueryParams {}
 
@@ -14,7 +14,7 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
-export type OutputSchema = AppBskyAdminModerationAction.View
+export type OutputSchema = ComAtprotoAdminModerationAction.View
 
 export interface HandlerInput {
   encoding: 'application/json'

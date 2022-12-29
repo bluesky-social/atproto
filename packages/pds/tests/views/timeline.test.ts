@@ -1,5 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import { Main as FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/feedViewPost'
 import {
   runTestServer,
@@ -139,11 +139,11 @@ describe('timeline views', () => {
   })
 
   it('blocks posts, reposts, replies by actor takedown', async () => {
-    await client.app.bsky.admin.takeModerationAction(
+    await client.com.atproto.admin.takeModerationAction(
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          $type: 'com.atproto.admin.moderationAction#subjectRepo',
           did: bob,
         },
         createdBy: 'X',
@@ -154,11 +154,11 @@ describe('timeline views', () => {
         headers: { authorization: adminAuth() },
       },
     )
-    await client.app.bsky.admin.takeModerationAction(
+    await client.com.atproto.admin.takeModerationAction(
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          $type: 'com.atproto.admin.moderationAction#subjectRepo',
           did: dan,
         },
         createdBy: 'X',

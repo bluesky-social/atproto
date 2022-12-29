@@ -1,5 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/session/create'
 import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/session/refresh'
 import { SeedClient } from './seeds/client'
@@ -180,11 +180,11 @@ describe('auth', () => {
       email: 'iris@test.com',
       password: 'password',
     })
-    await client.app.bsky.admin.takeModerationAction(
+    await client.com.atproto.admin.takeModerationAction(
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          $type: 'com.atproto.admin.moderationAction#subjectRepo',
           did: account.did,
         },
         createdBy: 'X',
@@ -206,11 +206,11 @@ describe('auth', () => {
       email: 'jared@test.com',
       password: 'password',
     })
-    await client.app.bsky.admin.takeModerationAction(
+    await client.com.atproto.admin.takeModerationAction(
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          $type: 'com.atproto.admin.moderationAction#subjectRepo',
           did: account.did,
         },
         createdBy: 'X',

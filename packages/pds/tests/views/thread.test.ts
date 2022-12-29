@@ -2,7 +2,7 @@ import AtpApi, {
   ServiceClient as AtpServiceClient,
   AppBskyFeedGetPostThread,
 } from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -128,11 +128,11 @@ describe('pds thread views', () => {
 
   it('blocks post by actor takedown', async () => {
     const { data: modAction } =
-      await client.app.bsky.admin.takeModerationAction(
+      await client.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            $type: 'com.atproto.admin.moderationAction#subjectRepo',
             did: alice,
           },
           createdBy: 'X',
@@ -154,7 +154,7 @@ describe('pds thread views', () => {
       AppBskyFeedGetPostThread.NotFoundError,
     )
 
-    await client.app.bsky.admin.reverseModerationAction(
+    await client.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
         createdBy: 'X',
@@ -169,11 +169,11 @@ describe('pds thread views', () => {
 
   it('blocks replies by actor takedown', async () => {
     const { data: modAction } =
-      await client.app.bsky.admin.takeModerationAction(
+      await client.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            $type: 'com.atproto.admin.moderationAction#subjectRepo',
             did: carol,
           },
           createdBy: 'X',
@@ -193,7 +193,7 @@ describe('pds thread views', () => {
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
-    await client.app.bsky.admin.reverseModerationAction(
+    await client.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
         createdBy: 'X',
@@ -208,11 +208,11 @@ describe('pds thread views', () => {
 
   it('blocks ancestors by actor takedown', async () => {
     const { data: modAction } =
-      await client.app.bsky.admin.takeModerationAction(
+      await client.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            $type: 'com.atproto.admin.moderationAction#subjectRepo',
             did: alice,
           },
           createdBy: 'X',
@@ -234,7 +234,7 @@ describe('pds thread views', () => {
       AppBskyFeedGetPostThread.NotFoundError,
     )
 
-    await client.app.bsky.admin.reverseModerationAction(
+    await client.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
         createdBy: 'X',

@@ -1,6 +1,7 @@
 import AppContext from '../../../context'
 import { Server } from '../../../lexicon'
 import account from './account'
+import admin from './admin'
 import blob from './blob'
 import handles from './handles'
 import invites from './invites'
@@ -11,6 +12,7 @@ import sync from './sync'
 
 export default function (server: Server, ctx: AppContext) {
   account(server, ctx)
+  admin(server, ctx)
   blob(server, ctx)
   handles(server, ctx)
   invites(server, ctx)

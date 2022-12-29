@@ -5,10 +5,10 @@ import { ModerationAction } from '../db/tables/moderation'
 import {
   TAKEDOWN,
   View as ModerationActionView,
-  SubjectActor,
-} from '../lexicon/types/app/bsky/admin/moderationAction'
-import { InputSchema as TakeModAction } from '../lexicon/types/app/bsky/admin/takeModerationAction'
-import { InputSchema as ReverseModAction } from '../lexicon/types/app/bsky/admin/reverseModerationAction'
+  SubjectRepo,
+} from '../lexicon/types/com/atproto/admin/moderationAction'
+import { InputSchema as TakeModAction } from '../lexicon/types/com/atproto/admin/takeModerationAction'
+import { InputSchema as ReverseModAction } from '../lexicon/types/com/atproto/admin/reverseModerationAction'
 
 export class AdminService {
   constructor(public db: Database) {}
@@ -30,7 +30,7 @@ export class AdminService {
   async logModAction(
     info: TakeModAction & {
       action: typeof TAKEDOWN
-      subject: SubjectActor
+      subject: SubjectRepo
       createdAt?: Date
     },
   ): Promise<Selectable<ModerationAction>> {
@@ -40,7 +40,7 @@ export class AdminService {
       .insertInto('moderation_action')
       .values({
         action,
-        subjectType: 'app.bsky.admin.moderationAction#subjectActor',
+        subjectType: 'com.atproto.admin.moderationAction#subjectRepo',
         subjectDid: subject.did,
         createdAt: createdAt.toISOString(),
         createdBy,
@@ -94,7 +94,7 @@ export class AdminService {
     modAction: Selectable<ModerationAction>,
   ): ModerationActionView {
     if (
-      modAction.subjectType !== 'app.bsky.admin.moderationAction#subjectActor'
+      modAction.subjectType !== 'com.atproto.admin.moderationAction#subjectRepo'
     ) {
       throw new Error('Only supports format moderation actions on actors')
     }

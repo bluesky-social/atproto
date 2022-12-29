@@ -1,5 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import {
   runTestServer,
   forSnapshot,
@@ -144,11 +144,11 @@ describe('pds author feed views', () => {
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    await client.app.bsky.admin.takeModerationAction(
+    await client.com.atproto.admin.takeModerationAction(
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'app.bsky.admin.moderationAction#subjectActor',
+          $type: 'com.atproto.admin.moderationAction#subjectRepo',
           did: alice,
         },
         createdBy: 'X',

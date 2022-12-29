@@ -14,6 +14,8 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
@@ -37,8 +39,6 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
-import * as AppBskyAdminReverseModerationAction from './types/app/bsky/admin/reverseModerationAction'
-import * as AppBskyAdminTakeModerationAction from './types/app/bsky/admin/takeModerationAction'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -54,8 +54,8 @@ import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getC
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 
-export const APP_BSKY_ADMIN = {
-  ModerationActionTakedown: 'app.bsky.admin.moderationAction#takedown',
+export const COM_ATPROTO_ADMIN = {
+  ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
 }
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
@@ -95,6 +95,7 @@ export class ComNS {
 export class AtprotoNS {
   _server: Server
   account: AccountNS
+  admin: AdminNS
   blob: BlobNS
   handle: HandleNS
   repo: RepoNS
@@ -105,6 +106,7 @@ export class AtprotoNS {
   constructor(server: Server) {
     this._server = server
     this.account = new AccountNS(server)
+    this.admin = new AdminNS(server)
     this.blob = new BlobNS(server)
     this.handle = new HandleNS(server)
     this.repo = new RepoNS(server)
@@ -166,6 +168,34 @@ export class AccountNS {
     cfg: ConfigOf<AV, ComAtprotoAccountResetPassword.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.account.resetPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AdminNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  reverseModerationAction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminReverseModerationAction.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.reverseModerationAction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  takeModerationAction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminTakeModerationAction.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.takeModerationAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -353,7 +383,6 @@ export class AppNS {
 export class BskyNS {
   _server: Server
   actor: ActorNS
-  admin: AdminNS
   embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
@@ -363,7 +392,6 @@ export class BskyNS {
   constructor(server: Server) {
     this._server = server
     this.actor = new ActorNS(server)
-    this.admin = new AdminNS(server)
     this.embed = new EmbedNS(server)
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
@@ -418,34 +446,6 @@ export class ActorNS {
     cfg: ConfigOf<AV, AppBskyActorUpdateProfile.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.actor.updateProfile' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class AdminNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  reverseModerationAction<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyAdminReverseModerationAction.Handler<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.admin.reverseModerationAction' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  takeModerationAction<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyAdminTakeModerationAction.Handler<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.admin.takeModerationAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

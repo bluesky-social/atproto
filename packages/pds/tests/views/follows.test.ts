@@ -1,5 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/app/bsky/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import {
   runTestServer,
   forSnapshot,
@@ -136,11 +136,11 @@ describe('pds follow views', () => {
 
   it('blocks followers by actor takedown', async () => {
     const { data: modAction } =
-      await client.app.bsky.admin.takeModerationAction(
+      await client.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            $type: 'com.atproto.admin.moderationAction#subjectRepo',
             did: sc.dids.dan,
           },
           createdBy: 'X',
@@ -159,7 +159,7 @@ describe('pds follow views', () => {
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
 
-    await client.app.bsky.admin.reverseModerationAction(
+    await client.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
         createdBy: 'X',
@@ -266,11 +266,11 @@ describe('pds follow views', () => {
 
   it('blocks follows by actor takedown', async () => {
     const { data: modAction } =
-      await client.app.bsky.admin.takeModerationAction(
+      await client.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'app.bsky.admin.moderationAction#subjectActor',
+            $type: 'com.atproto.admin.moderationAction#subjectRepo',
             did: sc.dids.dan,
           },
           createdBy: 'X',
@@ -289,7 +289,7 @@ describe('pds follow views', () => {
 
     expect(forSnapshot(aliceFollows.data)).toMatchSnapshot()
 
-    await client.app.bsky.admin.reverseModerationAction(
+    await client.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
         createdBy: 'X',

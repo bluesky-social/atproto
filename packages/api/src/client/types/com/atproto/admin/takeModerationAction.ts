@@ -2,18 +2,21 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import * as AppBskyAdminModerationAction from './moderationAction'
+import * as ComAtprotoAdminModerationAction from './moderationAction'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  id: number
+  action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
+  subject:
+    | ComAtprotoAdminModerationAction.SubjectRepo
+    | { $type: string; [k: string]: unknown }
   reason: string
   createdBy: string
   [k: string]: unknown
 }
 
-export type OutputSchema = AppBskyAdminModerationAction.View
+export type OutputSchema = ComAtprotoAdminModerationAction.View
 
 export interface CallOptions {
   headers?: Headers

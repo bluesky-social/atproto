@@ -182,6 +182,152 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminModerationAction: {
+    lexicon: 1,
+    id: 'com.atproto.admin.moderationAction',
+    defs: {
+      view: {
+        type: 'object',
+        required: [
+          'id',
+          'action',
+          'subject',
+          'reason',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          action: {
+            type: 'string',
+            knownValues: ['com.atproto.admin.moderationAction#takedown'],
+          },
+          subject: {
+            type: 'union',
+            refs: ['lex:com.atproto.admin.moderationAction#subjectRepo'],
+          },
+          reason: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+          },
+          reversal: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#reversal',
+          },
+        },
+      },
+      reversal: {
+        type: 'object',
+        required: ['reason', 'createdBy', 'createdAt'],
+        properties: {
+          reason: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+          },
+        },
+      },
+      subjectRepo: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+        },
+      },
+      takedown: {
+        type: 'token',
+        description: 'Moderation action type: Takedown.',
+      },
+    },
+  },
+  ComAtprotoAdminReverseModerationAction: {
+    lexicon: 1,
+    id: 'com.atproto.admin.reverseModerationAction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Reverse a moderation action.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['id', 'reason', 'createdBy'],
+            properties: {
+              id: {
+                type: 'integer',
+              },
+              reason: {
+                type: 'string',
+              },
+              createdBy: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#view',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminTakeModerationAction: {
+    lexicon: 1,
+    id: 'com.atproto.admin.takeModerationAction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Take a moderation action on a repo.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['action', 'subject', 'reason', 'createdBy'],
+            properties: {
+              action: {
+                type: 'string',
+                knownValues: ['com.atproto.admin.moderationAction#takedown'],
+              },
+              subject: {
+                type: 'union',
+                refs: ['lex:com.atproto.admin.moderationAction#subjectRepo'],
+              },
+              reason: {
+                type: 'string',
+              },
+              createdBy: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#view',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoBlobUpload: {
     lexicon: 1,
     id: 'com.atproto.blob.upload',
@@ -1439,152 +1585,6 @@ export const schemaDict = {
             name: 'InvalidImageDimensions',
           },
         ],
-      },
-    },
-  },
-  AppBskyAdminModerationAction: {
-    lexicon: 1,
-    id: 'app.bsky.admin.moderationAction',
-    defs: {
-      view: {
-        type: 'object',
-        required: [
-          'id',
-          'action',
-          'subject',
-          'reason',
-          'createdBy',
-          'createdAt',
-        ],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          action: {
-            type: 'string',
-            knownValues: ['app.bsky.admin.moderationAction#takedown'],
-          },
-          subject: {
-            type: 'union',
-            refs: ['lex:app.bsky.admin.moderationAction#subjectActor'],
-          },
-          reason: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-          },
-          createdAt: {
-            type: 'string',
-          },
-          reversal: {
-            type: 'ref',
-            ref: 'lex:app.bsky.admin.moderationAction#reversal',
-          },
-        },
-      },
-      reversal: {
-        type: 'object',
-        required: ['reason', 'createdBy', 'createdAt'],
-        properties: {
-          reason: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-          },
-          createdAt: {
-            type: 'string',
-          },
-        },
-      },
-      subjectActor: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-        },
-      },
-      takedown: {
-        type: 'token',
-        description: 'Moderation action type: Takedown.',
-      },
-    },
-  },
-  AppBskyAdminReverseModerationAction: {
-    lexicon: 1,
-    id: 'app.bsky.admin.reverseModerationAction',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Reverse a moderation action.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['id', 'reason', 'createdBy'],
-            properties: {
-              id: {
-                type: 'integer',
-              },
-              reason: {
-                type: 'string',
-              },
-              createdBy: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:app.bsky.admin.moderationAction#view',
-          },
-        },
-      },
-    },
-  },
-  AppBskyAdminTakeModerationAction: {
-    lexicon: 1,
-    id: 'app.bsky.admin.takeModerationAction',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Take a moderation action on an actor.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['action', 'subject', 'reason', 'createdBy'],
-            properties: {
-              action: {
-                type: 'string',
-                knownValues: ['app.bsky.admin.moderationAction#takedown'],
-              },
-              subject: {
-                type: 'union',
-                refs: ['lex:app.bsky.admin.moderationAction#subjectActor'],
-              },
-              reason: {
-                type: 'string',
-              },
-              createdBy: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:app.bsky.admin.moderationAction#view',
-          },
-        },
       },
     },
   },
@@ -3139,6 +3139,10 @@ export const ids = {
   ComAtprotoAccountRequestPasswordReset:
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
+  ComAtprotoAdminModerationAction: 'com.atproto.admin.moderationAction',
+  ComAtprotoAdminReverseModerationAction:
+    'com.atproto.admin.reverseModerationAction',
+  ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoBlobUpload: 'com.atproto.blob.upload',
   ComAtprotoHandleResolve: 'com.atproto.handle.resolve',
   ComAtprotoRepoBatchWrite: 'com.atproto.repo.batchWrite',
@@ -3165,9 +3169,6 @@ export const ids = {
   AppBskyActorSearch: 'app.bsky.actor.search',
   AppBskyActorSearchTypeahead: 'app.bsky.actor.searchTypeahead',
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
-  AppBskyAdminModerationAction: 'app.bsky.admin.moderationAction',
-  AppBskyAdminReverseModerationAction: 'app.bsky.admin.reverseModerationAction',
-  AppBskyAdminTakeModerationAction: 'app.bsky.admin.takeModerationAction',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyFeedFeedViewPost: 'app.bsky.feed.feedViewPost',
