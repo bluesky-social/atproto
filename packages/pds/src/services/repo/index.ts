@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
-import { BlobStore, Repo } from '@atproto/repo'
+import { BlobStore, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -85,7 +85,7 @@ export class RepoService {
     }
     const writeOps = writes.map(writeToOp)
     const repo = await Repo.load(storage, currRoot)
-    const updated = await repo.stageUpdate(writeOps).createCommit(authStore)
+    const updated = await repo.applyCommit(writeOps, authStore)
     return updated.cid
   }
 
@@ -94,9 +94,9 @@ export class RepoService {
     const recordTxn = new RecordService(this.db, this.messageQueue)
     await Promise.all(
       writes.map(async (write) => {
-        if (write.action === 'create') {
+        if (write.action === WriteOpAction.Create) {
           await recordTxn.indexRecord(write.uri, write.cid, write.record, now)
-        } else if (write.action === 'delete') {
+        } else if (write.action === WriteOpAction.Delete) {
           await recordTxn.deleteRecord(write.uri)
         }
       }),

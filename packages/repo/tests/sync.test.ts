@@ -1,6 +1,7 @@
 import * as auth from '@atproto/auth'
 import { TID } from '@atproto/common'
 import { Repo, RepoRoot, verifyUpdates, ucanForOperation } from '../src'
+import BlockMap from '../src/block-map'
 import { MemoryBlockstore } from '../src/storage'
 import * as sync from '../src/sync'
 
@@ -66,7 +67,8 @@ describe('Sync', () => {
 
   it('throws an error on invalid UCANs', async () => {
     const obj = util.generateObject()
-    const cid = await aliceBlockstore.stage(obj)
+    const blocks = new BlockMap()
+    const cid = await blocks.add(obj)
     const updatedData = await aliceRepo.data.add(
       `com.example.test/${TID.next()}`,
       cid,
@@ -74,20 +76,22 @@ describe('Sync', () => {
     // we create an unrelated token for bob & try to permission alice's repo commit with it
     const bobAuth = await verifier.createTempAuthStore()
     const badUcan = await bobAuth.claimFull()
-    const auth_token = await aliceBlockstore.stage(auth.encodeUcan(badUcan))
-    const dataCid = await updatedData.stage()
+    const auth_token = await blocks.add(auth.encodeUcan(badUcan))
+    const dataDiff = await updatedData.blockDiff()
+    blocks.addMap(dataDiff.blocks)
     const root: RepoRoot = {
       meta: aliceRepo.root.meta,
       prev: aliceRepo.cid,
       auth_token,
-      data: dataCid,
+      data: dataDiff.root,
     }
-    const rootCid = await aliceBlockstore.stage(root)
+    const rootCid = await blocks.add(root)
     const commit = {
       root: rootCid,
       sig: await aliceAuth.sign(rootCid.bytes),
     }
-    const commitCid = await aliceBlockstore.stage(commit)
+    const commitCid = await blocks.add(commit)
+    await aliceBlockstore.putMany(blocks)
     const badAliceRepo = await Repo.load(aliceBlockstore, commitCid)
     const diffCar = await badAliceRepo.getDiffCar(bobRepo.cid)
     await expect(sync.loadDiff(bobRepo, diffCar, verifier)).rejects.toThrow()
@@ -96,7 +100,8 @@ describe('Sync', () => {
 
   it('throws on a bad signature', async () => {
     const obj = util.generateObject()
-    const cid = await aliceBlockstore.stage(obj)
+    const blocks = new BlockMap()
+    const cid = await blocks.add(obj)
     const updatedData = await aliceRepo.data.add(
       `com.example.test/${TID.next()}`,
       cid,
@@ -107,21 +112,23 @@ describe('Sync', () => {
       aliceRepo.did,
       aliceAuth,
     )
-    const authCid = await aliceBlockstore.stage(authToken)
-    const dataCid = await updatedData.stage()
+    const authCid = await blocks.add(authToken)
+    const dataDiff = await updatedData.blockDiff()
+    blocks.addMap(dataDiff.blocks)
     const root: RepoRoot = {
       meta: aliceRepo.root.meta,
       prev: aliceRepo.cid,
       auth_token: authCid,
-      data: dataCid,
+      data: dataDiff.root,
     }
-    const rootCid = await aliceBlockstore.stage(root)
+    const rootCid = await blocks.add(root)
     // we generated a bad sig by signing the data cid instead of root cid
     const commit = {
       root: rootCid,
-      sig: await aliceAuth.sign(dataCid.bytes),
+      sig: await aliceAuth.sign(dataDiff.root.bytes),
     }
-    const commitCid = await aliceBlockstore.stage(commit)
+    const commitCid = await blocks.add(commit)
+    await aliceBlockstore.putMany(blocks)
     const badAliceRepo = await Repo.load(aliceBlockstore, commitCid)
     const diffCar = await badAliceRepo.getDiffCar(bobRepo.cid)
     await expect(sync.loadDiff(bobRepo, diffCar, verifier)).rejects.toThrow()

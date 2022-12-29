@@ -1,14 +1,15 @@
 import { CID } from 'multiformats/cid'
 import RepoStorage from './repo-storage'
-import { def } from '../types'
+import { CommitData, def } from '../types'
+import BlockMap from '../block-map'
 
 export class MemoryBlockstore extends RepoStorage {
-  blocks: Map<string, Uint8Array>
+  blocks: BlockMap
   head: CID | null = null
 
   constructor() {
     super()
-    this.blocks = new Map()
+    this.blocks = new BlockMap()
   }
 
   async getHead(): Promise<CID | null> {
@@ -16,27 +17,26 @@ export class MemoryBlockstore extends RepoStorage {
   }
 
   async getSavedBytes(cid: CID): Promise<Uint8Array | null> {
-    return this.blocks.get(cid.toString()) || null
+    return this.blocks.get(cid) || null
   }
 
-  async hasSavedBlock(cid: CID): Promise<boolean> {
-    return this.blocks.has(cid.toString())
+  async hasSavedBytes(cid: CID): Promise<boolean> {
+    return this.blocks.has(cid)
   }
 
   async putBlock(cid: CID, block: Uint8Array): Promise<void> {
-    this.blocks.set(cid.toString(), block)
+    this.blocks.set(cid, block)
   }
 
-  async putMany(blocks: Map<string, Uint8Array>): Promise<void> {
+  async putMany(blocks: BlockMap): Promise<void> {
     blocks.forEach((val, key) => {
       this.blocks.set(key, val)
     })
   }
 
-  async commitStaged(commit: CID, _prev: CID | null): Promise<void> {
-    await this.putMany(this.staged)
-    this.clearStaged()
-    this.head = commit
+  async applyCommit(commit: CommitData): Promise<void> {
+    this.blocks.addMap(commit.blocks)
+    this.head = commit.root
   }
 
   async getCommitPath(
@@ -62,21 +62,21 @@ export class MemoryBlockstore extends RepoStorage {
 
   async sizeInBytes(): Promise<number> {
     let total = 0
-    for (const val of this.blocks.values()) {
-      total += val.byteLength
-    }
+    this.blocks.forEach((bytes) => {
+      total += bytes.byteLength
+    })
     return total
   }
 
-  async destroySaved(): Promise<void> {
+  async destroy(): Promise<void> {
     this.blocks.clear()
   }
 
   // Mainly for dev purposes
   async getContents(): Promise<Record<string, unknown>> {
     const contents: Record<string, unknown> = {}
-    for (const key of this.blocks.keys()) {
-      contents[key] = await this.getUnchecked(CID.parse(key))
+    for (const entry of this.blocks.entries()) {
+      contents[entry.cid.toString()] = await this.getUnchecked(entry.cid)
     }
     return contents
   }

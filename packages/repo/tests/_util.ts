@@ -1,21 +1,20 @@
 import { CID } from 'multiformats'
-import { TID } from '@atproto/common'
+import { cidForData, TID, valueToIpldBlock } from '@atproto/common'
 import * as auth from '@atproto/auth'
 import { Repo } from '../src/repo'
-import { RepoStorage, MemoryBlockstore } from '../src/storage'
+import { RepoStorage } from '../src/storage'
 import { DataDiff, MST } from '../src/mst'
 import fs from 'fs'
-import { RecordWriteOp } from '../src'
+import { RecordWriteOp, WriteOpAction } from '../src'
 
 type IdMapping = Record<string, CID>
 
-const fakeStorage = new MemoryBlockstore()
-
-export const randomCid = async (
-  storage: RepoStorage = fakeStorage,
-): Promise<CID> => {
-  const str = randomStr(50)
-  return storage.stage({ test: str })
+export const randomCid = async (storage?: RepoStorage): Promise<CID> => {
+  const block = await valueToIpldBlock({ test: randomStr(50) })
+  if (storage) {
+    await storage.putBlock(block.cid, block.bytes)
+  }
+  return block.cid
 }
 
 export const generateBulkTids = (count: number): TID[] => {
@@ -28,7 +27,7 @@ export const generateBulkTids = (count: number): TID[] => {
 
 export const generateBulkTidMapping = async (
   count: number,
-  blockstore: RepoStorage = fakeStorage,
+  blockstore?: RepoStorage,
 ): Promise<IdMapping> => {
   const ids = generateBulkTids(count)
   const obj: IdMapping = {}
@@ -94,7 +93,7 @@ export const fillRepo = async (
       const rkey = TID.nextStr()
       collData[rkey] = object
       writes.push({
-        action: 'create',
+        action: WriteOpAction.Create,
         collection: collName,
         rkey,
         value: object,
@@ -102,7 +101,7 @@ export const fillRepo = async (
     }
     repoData[collName] = collData
   }
-  const updated = await repo.stageUpdate(writes).createCommit(authStore)
+  const updated = await repo.applyCommit(writes, authStore)
   return {
     repo: updated,
     data: repoData,
@@ -131,7 +130,7 @@ export const editRepo = async (
       const rkey = TID.nextStr()
       collData[rkey] = object
       writes.push({
-        action: 'create',
+        action: WriteOpAction.Create,
         collection: collName,
         rkey,
         value: object,
@@ -143,7 +142,7 @@ export const editRepo = async (
       const object = generateObject()
       const rkey = toUpdate[i][0]
       writes.push({
-        action: 'update',
+        action: WriteOpAction.Update,
         collection: collName,
         rkey,
         value: object,
@@ -155,7 +154,7 @@ export const editRepo = async (
     for (let i = 0; i < toDelete.length; i++) {
       const rkey = toDelete[i][0]
       writes.push({
-        action: 'delete',
+        action: WriteOpAction.Delete,
         collection: collName,
         rkey,
       })
@@ -163,7 +162,7 @@ export const editRepo = async (
     }
     repoData[collName] = collData
   }
-  const updated = await repo.stageUpdate(writes).createCommit(authStore)
+  const updated = await repo.applyCommit(writes, authStore)
   return {
     repo: updated,
     data: repoData,
@@ -192,7 +191,7 @@ export const checkRepoDiff = async (
     const parts = key.split('/')
     const collection = parts[0]
     const obj = (data[collection] || {})[parts[1]]
-    return obj === undefined ? undefined : fakeStorage.stage(obj)
+    return obj === undefined ? undefined : cidForData(obj)
   }
 
   for (const add of diff.addList()) {
@@ -218,6 +217,12 @@ export const checkRepoDiff = async (
     expect(beforeCid).toEqual(del.cid)
     expect(afterCid).toBeUndefined()
   }
+}
+
+export const saveMst = async (mst: MST): Promise<CID> => {
+  const diff = await mst.blockDiff()
+  await mst.storage.putMany(diff.blocks)
+  return diff.root
 }
 
 // Logging

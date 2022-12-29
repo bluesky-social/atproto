@@ -90,8 +90,8 @@ describe('Merkle Search Tree', () => {
   })
 
   it('saves and loads from blockstore', async () => {
-    const cid = await mst.stage()
-    const loaded = await MST.load(blockstore, cid)
+    const root = await util.saveMst(mst)
+    const loaded = await MST.load(blockstore, root)
     const origNodes = await mst.allNodes()
     const loadedNodes = await loaded.allNodes()
     expect(origNodes.length).toBe(loadedNodes.length)
@@ -175,7 +175,7 @@ describe('Merkle Search Tree', () => {
     const layer = await mst.getLayer()
     expect(layer).toBe(1)
     mst = await mst.delete(layer1)
-    const root = await mst.stage()
+    const root = await util.saveMst(mst)
     const loaded = MST.load(blockstore, root)
     const loadedLayer = await loaded.getLayer()
     expect(loadedLayer).toBe(0)
@@ -224,7 +224,7 @@ describe('Merkle Search Tree', () => {
     const layer = await mst.getLayer()
     expect(layer).toBe(2)
 
-    const root = await mst.stage()
+    const root = await util.saveMst(mst)
     mst = MST.load(blockstore, root, { fanout: 32 })
 
     const allTids = [...layer0, ...layer1, layer2]
@@ -256,7 +256,7 @@ describe('Merkle Search Tree', () => {
     }
     mst = await mst.add(layer2, cid)
 
-    const root = await mst.stage()
+    const root = await util.saveMst(mst)
     mst = MST.load(blockstore, root, { fanout: 32 })
 
     const layer = await mst.getLayer()

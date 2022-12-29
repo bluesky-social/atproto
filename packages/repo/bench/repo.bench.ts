@@ -1,6 +1,6 @@
 import * as auth from '@atproto/auth'
 import { TID } from '@atproto/common'
-import { MemoryBlockstore, Repo } from '../src'
+import { MemoryBlockstore, Repo, WriteOpAction } from '../src'
 import * as util from '../tests/_util'
 
 describe('Repo Benchmarks', () => {
@@ -23,9 +23,10 @@ describe('Repo Benchmarks', () => {
       if (i % 500 === 0) {
         console.log(i)
       }
-      await repo
-        .stageUpdate({
-          action: 'create',
+
+      await repo.applyCommit(
+        {
+          action: WriteOpAction.Create,
           collection: 'app.bsky.post',
           rkey: TID.nextStr(),
           value: {
@@ -38,8 +39,9 @@ describe('Repo Benchmarks', () => {
             },
             createdAt: new Date().toISOString(),
           },
-        })
-        .createCommit(authStore)
+        },
+        authStore,
+      )
     }
 
     console.log('SIZE: ', await blockstore.sizeInBytes())

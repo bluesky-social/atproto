@@ -4,6 +4,7 @@ import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
 import { TID } from '@atproto/common'
+import { WriteOpAction } from '../src'
 
 describe('Repo', () => {
   const verifier = new auth.Verifier()
@@ -30,37 +31,40 @@ describe('Repo', () => {
   it('does basic operations', async () => {
     const rkey = TID.nextStr()
     const record = util.generateObject()
-    repo = await repo
-      .stageUpdate({
-        action: 'create',
+    repo = await repo.applyCommit(
+      {
+        action: WriteOpAction.Create,
         collection: collName,
         rkey: rkey,
         value: record,
-      })
-      .createCommit(authStore)
+      },
+      authStore,
+    )
 
     let got = await repo.getRecord(collName, rkey)
     expect(got).toEqual(record)
 
     const updatedRecord = util.generateObject()
-    repo = await repo
-      .stageUpdate({
-        action: 'update',
+    repo = await repo.applyCommit(
+      {
+        action: WriteOpAction.Update,
         collection: collName,
         rkey: rkey,
         value: updatedRecord,
-      })
-      .createCommit(authStore)
+      },
+      authStore,
+    )
     got = await repo.getRecord(collName, rkey)
     expect(got).toEqual(updatedRecord)
 
-    repo = await repo
-      .stageUpdate({
-        action: 'delete',
+    repo = await repo.applyCommit(
+      {
+        action: WriteOpAction.Delete,
         collection: collName,
         rkey: rkey,
-      })
-      .createCommit(authStore)
+      },
+      authStore,
+    )
     got = await repo.getRecord(collName, rkey)
     expect(got).toBeNull()
   })

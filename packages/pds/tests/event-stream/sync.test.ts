@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { getWriteOpLog, RecordWriteOp } from '@atproto/repo'
+import { getWriteOpLog, RecordWriteOp, WriteOpAction } from '@atproto/repo'
 import SqlRepoStorage from '../../src/sql-repo-storage'
 import basicSeed from '../seeds/basic'
 import { SeedClient } from '../seeds/client'
@@ -92,21 +92,21 @@ describe('sync', () => {
     return Promise.all(
       ops.map((op) => {
         const { action } = op
-        if (action === 'create') {
+        if (action === WriteOpAction.Create) {
           return prepareCreate({
             did,
             collection: op.collection,
             rkey: op.rkey,
             record: op.value,
           })
-        } else if (action === 'update') {
+        } else if (action === WriteOpAction.Update) {
           return prepareUpdate({
             did,
             collection: op.collection,
             rkey: op.rkey,
             record: op.value,
           })
-        } else if (action === 'delete') {
+        } else if (action === WriteOpAction.Delete) {
           return prepareDelete({
             did,
             collection: op.collection,
