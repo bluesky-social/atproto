@@ -1,20 +1,30 @@
 import { CID } from 'multiformats/cid'
 import * as Block from 'multiformats/block'
 import * as rawCodec from 'multiformats/codecs/raw'
-import { sha256 as blockHasher } from 'multiformats/hashes/sha2'
+import { sha256 } from 'multiformats/hashes/sha2'
 import * as mf from 'multiformats'
-import * as blockCodec from '@ipld/dag-cbor'
+import * as cborCodec from '@ipld/dag-cbor'
 
 export const valueToIpldBlock = async (data: unknown) => {
   return Block.encode({
     value: data,
-    codec: blockCodec,
-    hasher: blockHasher,
+    codec: cborCodec,
+    hasher: sha256,
   })
 }
 
+export const verifyCidForCborBytes = async (cid: CID, bytes: Uint8Array) => {
+  const digest = await sha256.digest(bytes)
+  const expected = CID.createV1(cborCodec.code, digest)
+  if (!cid.equals(expected)) {
+    throw new Error(
+      `Not a valid CID for bytes. Expected: ${expected.toString()} Got: ${cid.toString()}`,
+    )
+  }
+}
+
 export const sha256RawToCid = (hash: Uint8Array): CID => {
-  const digest = mf.digest.create(blockHasher.code, hash)
+  const digest = mf.digest.create(sha256.code, hash)
   return CID.createV1(rawCodec.code, digest)
 }
 
@@ -24,11 +34,11 @@ export const cidForData = async (data: unknown): Promise<CID> => {
 }
 
 export const valueToIpldBytes = (value: unknown): Uint8Array => {
-  return blockCodec.encode(value)
+  return cborCodec.encode(value)
 }
 
 export const ipldBytesToValue = (bytes: Uint8Array) => {
-  return blockCodec.decode(bytes)
+  return cborCodec.decode(bytes)
 }
 
 export const ipldBytesToRecord = (bytes: Uint8Array): object => {

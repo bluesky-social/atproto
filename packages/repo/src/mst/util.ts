@@ -1,6 +1,6 @@
 import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
-import { RepoStorage } from '../storage'
+import { ReadableRepoStorage } from '../storage'
 import { sha256 } from '@atproto/crypto'
 import { MST, Leaf, NodeEntry, NodeData, MstOpts, Fanout } from './mst'
 import { cidForData } from '@atproto/common'
@@ -39,7 +39,7 @@ export const layerForEntries = async (
 }
 
 export const deserializeNodeData = async (
-  storage: RepoStorage,
+  storage: ReadableRepoStorage,
   data: NodeData,
   opts?: Partial<MstOpts>,
 ): Promise<NodeEntry[]> => {

@@ -37,6 +37,7 @@ const strToBool = z.string().transform((str) => str === 'true' || str === 't')
 export const def = {
   string: z.string(),
   record: z.record(z.string(), z.unknown()),
+  unknown: z.unknown(),
   cid,
   strToCid,
   bytes,

@@ -1,40 +1,32 @@
 import { CID } from 'multiformats/cid'
-import RepoStorage from './repo-storage'
-import { CommitData, def } from '../types'
+import { CommitBlockData, CommitData, def } from '../types'
 import BlockMap from '../block-map'
 import { MST } from '../mst'
+import { RepoStorage } from './types'
+import * as util from './util'
+import { check } from '@atproto/common'
 
-export class MemoryBlockstore extends RepoStorage {
+export class MemoryBlockstore implements RepoStorage {
   blocks: BlockMap
   head: CID | null = null
 
-  constructor() {
-    super()
-    this.blocks = new BlockMap()
+  constructor(blocks?: BlockMap) {
+    this.blocks = blocks || new BlockMap()
   }
 
   async getHead(): Promise<CID | null> {
     return this.head
   }
 
-  async getSavedBytes(cid: CID): Promise<Uint8Array | null> {
+  async getBytes(cid: CID): Promise<Uint8Array | null> {
     return this.blocks.get(cid) || null
   }
 
-  async getMany(cids: CID[]): Promise<BlockMap> {
-    const blocks = new BlockMap()
-    await Promise.all(
-      cids.map(async (cid) => {
-        const bytes = await this.getBytes(cid)
-        if (bytes) {
-          blocks.set(cid, bytes)
-        }
-      }),
-    )
-    return blocks
+  async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
+    return util.readObject(this, cid, schema)
   }
 
-  async getManySavedBytes(cids: CID[]): Promise<BlockMap> {
+  async getBlocks(cids: CID[]): Promise<BlockMap> {
     return cids.reduce((acc, cur) => {
       const got = this.blocks.get(cur)
       if (got) {
@@ -44,8 +36,18 @@ export class MemoryBlockstore extends RepoStorage {
     }, new BlockMap())
   }
 
-  async hasSavedBytes(cid: CID): Promise<boolean> {
+  async has(cid: CID): Promise<boolean> {
     return this.blocks.has(cid)
+  }
+
+  async checkMissing(cids: CID[]): Promise<CID[]> {
+    const missing: CID[] = []
+    cids.forEach((cid) => {
+      if (!this.blocks.has(cid)) {
+        missing.push(cid)
+      }
+    })
+    return missing
   }
 
   async putBlock(cid: CID, block: Uint8Array): Promise<void> {
@@ -56,6 +58,16 @@ export class MemoryBlockstore extends RepoStorage {
     blocks.forEach((val, key) => {
       this.blocks.set(key, val)
     })
+  }
+
+  async indexCommits(commits: CommitData[]): Promise<void> {
+    commits.forEach((commit) => {
+      this.blocks.addMap(commit.blocks)
+    })
+  }
+
+  async updateHead(cid: CID): Promise<void> {
+    this.head = cid
   }
 
   async applyCommit(commit: CommitData): Promise<void> {
@@ -96,15 +108,33 @@ export class MemoryBlockstore extends RepoStorage {
       const newCids = prevData
         ? (await prevData.diff(data)).newCidList()
         : (await data.allCids()).toList()
-      const blocks = await this.getMany([commitCid, commit.root, ...newCids])
+      const blocks = await this.getBlocks([commitCid, commit.root, ...newCids])
       if (!root.prev) {
-        const metaBytes = await this.guaranteeBytes(root.meta)
+        const metaBytes = await this.getBytes(root.meta)
+        if (!metaBytes) {
+          throw new Error(
+            `Could not find metadata for intial commit: ${root.meta}`,
+          )
+        }
         blocks.set(root.meta, metaBytes)
       }
       commitData[commitCid.toString()] = blocks
       prevData = data
     }
     return commitData
+  }
+
+  async getCommits(
+    latest: CID,
+    earliest: CID | null,
+  ): Promise<CommitBlockData[] | null> {
+    const commitPath = await this.getCommitPath(latest, earliest)
+    if (!commitPath) return null
+    const blocksByCommit = await this.getBlocksForCommits(commitPath)
+    return commitPath.map((commit) => ({
+      root: commit,
+      blocks: blocksByCommit[commit.toString()] || new BlockMap(),
+    }))
   }
 
   async sizeInBytes(): Promise<number> {
@@ -123,7 +153,7 @@ export class MemoryBlockstore extends RepoStorage {
   async getContents(): Promise<Record<string, unknown>> {
     const contents: Record<string, unknown> = {}
     for (const entry of this.blocks.entries()) {
-      contents[entry.cid.toString()] = await this.getUnchecked(entry.cid)
+      contents[entry.cid.toString()] = await this.get(entry.cid, def.unknown)
     }
     return contents
   }

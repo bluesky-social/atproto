@@ -1,7 +1,7 @@
 import z from 'zod'
 import { CID } from 'multiformats'
 
-import { RepoStorage } from '../storage'
+import { ReadableBlockstore } from '../storage'
 import { def, cidForData, check, ipldBytesToValue } from '@atproto/common'
 import { DataDiff } from './diff'
 import { DataStore } from '../types'
@@ -64,7 +64,7 @@ export type MstOpts = {
 }
 
 export class MST implements DataStore {
-  storage: RepoStorage
+  storage: ReadableBlockstore
   fanout: Fanout
   entries: NodeEntry[] | null
   layer: number | null
@@ -72,7 +72,7 @@ export class MST implements DataStore {
   outdatedPointer = false
 
   constructor(
-    storage: RepoStorage,
+    storage: ReadableBlockstore,
     fanout: Fanout,
     pointer: CID,
     entries: NodeEntry[] | null,
@@ -86,7 +86,7 @@ export class MST implements DataStore {
   }
 
   static async create(
-    storage: RepoStorage,
+    storage: ReadableBlockstore,
     entries: NodeEntry[] = [],
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
@@ -96,7 +96,7 @@ export class MST implements DataStore {
   }
 
   static async fromData(
-    storage: RepoStorage,
+    storage: ReadableBlockstore,
     data: NodeData,
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
@@ -106,7 +106,11 @@ export class MST implements DataStore {
     return new MST(storage, fanout, pointer, entries, layer)
   }
 
-  static load(storage: RepoStorage, cid: CID, opts?: Partial<MstOpts>): MST {
+  static load(
+    storage: ReadableBlockstore,
+    cid: CID,
+    opts?: Partial<MstOpts>,
+  ): MST {
     const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     return new MST(storage, fanout, cid, null, layer)
   }
@@ -666,7 +670,11 @@ export class MST implements DataStore {
     }
   }
 
-  async list(count: number, after?: string, before?: string): Promise<Leaf[]> {
+  async list(
+    count = Number.MAX_SAFE_INTEGER,
+    after?: string,
+    before?: string,
+  ): Promise<Leaf[]> {
     const vals: Leaf[] = []
     for await (const leaf of this.walkLeavesFrom(after || '')) {
       if (leaf.key === after) continue
@@ -778,7 +786,7 @@ export class MST implements DataStore {
     }
     while (toFetch.length > 0) {
       const nextLayer: CID[] = []
-      const fetched = await this.storage.getMany(toFetch)
+      const fetched = await this.storage.getBlocks(toFetch)
       for (const cid of toFetch) {
         const found = fetched.get(cid)
         if (!found) {
@@ -799,7 +807,7 @@ export class MST implements DataStore {
       }
       toFetch = nextLayer
     }
-    const leafData = await this.storage.getMany(leaves)
+    const leafData = await this.storage.getBlocks(leaves)
     for (const leaf of leafData.entries()) {
       await car.put(leaf)
     }

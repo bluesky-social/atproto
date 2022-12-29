@@ -1,11 +1,40 @@
 import { CID } from 'multiformats/cid'
 import { DidResolver } from '@atproto/did-resolver'
-import { RepoStorage } from './storage'
+import { ReadableBlockstore } from './storage'
 import Repo from './repo'
 import { DataDiff } from './mst'
 
+// type RecordsMap = { [key: string]: CID }
+
+// export const verifyCheckout = async (
+//   storage: ReadableBlockstore,
+//   root: CID,
+//   didResolver: DidResolver,
+// ): Promise<RecordsMap> => {
+//   const repo = await Repo.load(storage, root)
+//   const validSig = await didResolver.verifySignature(
+//     repo.did,
+//     repo.commit.root.bytes,
+//     repo.commit.sig,
+//   )
+//   if (!validSig) {
+//     throw new RepoVerificationError(
+//       `Invalid signature on commit: ${repo.cid.toString()}`,
+//     )
+//   }
+//   const entries = await repo.data.list()
+//   const entryCids = entries.map((entry) => entry.value)
+//   const missing = await storage.checkMissing(entryCids)
+//   const map: RecordsMap = {}
+//   for (const entyr of entries) { }
+//   return map
+//   return entries.
+
+//   return entries.
+// }
+
 export const verifyUpdates = async (
-  storage: RepoStorage,
+  storage: ReadableBlockstore,
   latest: CID,
   earliest: CID | null,
   didResolver: DidResolver,

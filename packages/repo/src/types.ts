@@ -84,7 +84,7 @@ export interface DataStore {
   update(key: string, value: CID): Promise<DataStore>
   delete(key: string): Promise<DataStore>
   get(key: string): Promise<CID | null>
-  list(count: number, after?: string, before?: string): Promise<DataValue[]>
+  list(count?: number, after?: string, before?: string): Promise<DataValue[]>
   listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
   diff(other: DataStore): Promise<DataDiff>
   blockDiff(): Promise<{ root: CID; blocks: BlockMap }>

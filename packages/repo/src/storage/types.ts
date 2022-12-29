@@ -1,5 +1,39 @@
 import stream from 'stream'
 import { CID } from 'multiformats/cid'
+import BlockMap from '../block-map'
+import { CommitBlockData, CommitData } from '../types'
+import { check } from '@atproto/common'
+
+export interface WritableBlockstore {
+  putBlock(cid: CID, block: Uint8Array): Promise<void>
+  putMany(blocks: BlockMap): Promise<void>
+}
+
+export interface ReadableBlockstore {
+  getBytes(cid: CID): Promise<Uint8Array | null>
+  get<T>(cid: CID, schema: check.Def<T>): Promise<T>
+  getBlocks(cids: CID[]): Promise<BlockMap>
+  has(cid: CID): Promise<boolean>
+  checkMissing(cids: CID[]): Promise<CID[]>
+}
+
+export interface CommitableStorage {
+  indexCommits(commit: CommitData[]): Promise<void>
+  updateHead(cid: CID): Promise<void>
+  applyCommit(commit: CommitData): Promise<void>
+  getHead(forUpdate?: boolean): Promise<CID | null>
+  getCommitPath(latest: CID, earliest: CID | null): Promise<CID[] | null>
+  getBlocksForCommits(commits: CID[]): Promise<{ [commit: string]: BlockMap }>
+  getCommits(
+    latest: CID,
+    earliest: CID | null,
+  ): Promise<CommitBlockData[] | null>
+}
+
+export interface RepoStorage
+  extends CommitableStorage,
+    WritableBlockstore,
+    ReadableBlockstore {}
 
 export interface BlobStore {
   putTemp(bytes: Uint8Array | stream.Readable): Promise<string>

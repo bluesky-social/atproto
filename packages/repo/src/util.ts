@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { CarReader } from '@ipld/car/reader'
-import { def } from '@atproto/common'
+import { Block as CarBlock } from '@ipld/car/api'
+import { def, verifyCidForCborBytes } from '@atproto/common'
 import Repo from './repo'
 import { DataDiff, MST } from './mst'
 import { RepoStorage } from './storage'
@@ -14,6 +15,15 @@ import {
 } from './types'
 import BlockMap from './block-map'
 
+export async function* verifyIncomingCarBlocks(
+  car: AsyncIterable<CarBlock>,
+): AsyncIterable<CarBlock> {
+  for await (const block of car) {
+    await verifyCidForCborBytes(block.cid, block.bytes)
+    yield block
+  }
+}
+
 export const readCar = async (
   bytes: Uint8Array,
 ): Promise<{ root: CID; blocks: BlockMap }> => {
@@ -24,7 +34,7 @@ export const readCar = async (
   }
   const root = roots[0]
   const blocks = new BlockMap()
-  for await (const block of car.blocks()) {
+  for await (const block of verifyIncomingCarBlocks(car.blocks())) {
     await blocks.set(block.cid, block.bytes)
   }
   return {

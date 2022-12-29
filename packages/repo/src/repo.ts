@@ -18,6 +18,7 @@ import * as crypto from '@atproto/crypto'
 import { MST } from './mst'
 import log from './logger'
 import BlockMap from './block-map'
+import { verifyObj } from './storage/util'
 
 type Params = {
   storage: RepoStorage
@@ -134,7 +135,7 @@ export class Repo {
     const dataKey = collection + '/' + rkey
     const cid = await this.data.get(dataKey)
     if (!cid) return null
-    return this.storage.getUnchecked(cid)
+    return this.storage.get(cid, def.unknown)
   }
 
   async createCommit(
@@ -238,11 +239,12 @@ export class Repo {
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    const commit = await this.storage.get(this.cid, def.commit)
-    const root = await this.storage.get(commit.root, def.repoRoot)
-    await this.storage.addToCar(car, this.cid)
-    await this.storage.addToCar(car, commit.root)
-    await this.storage.addToCar(car, root.meta)
+    const commit = await verifyObj(this.storage, this.cid, def.commit)
+    await car.put({ cid: this.cid, bytes: commit.bytes })
+    const root = await verifyObj(this.storage, commit.obj.root, def.repoRoot)
+    await car.put({ cid: commit.obj.root, bytes: root.bytes })
+    const meta = await verifyObj(this.storage, root.obj.meta, def.repoMeta)
+    await car.put({ cid: root.obj.meta, bytes: meta.bytes })
     await this.data.writeToCarStream(car)
   }
 
