@@ -59,7 +59,7 @@ export const composeFeed = async (
             }
           : undefined,
         reply:
-          replyRoot && replyParent
+          replyRoot && replyParent // @TODO consider supporting #postNotFound here
             ? {
                 root: replyRoot,
                 parent: replyParent,

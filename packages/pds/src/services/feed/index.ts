@@ -122,7 +122,7 @@ export class FeedService {
       .where('post.uri', 'in', postUris)
       .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
       .innerJoin('did_handle', 'did_handle.did', 'post.creator')
-      .where(actorNotSoftDeletedClause())
+      .where(actorNotSoftDeletedClause()) // Ensures post reply parent/roots get omitted from views when taken down
       .select([
         'post.uri as uri',
         'post.cid as cid',
