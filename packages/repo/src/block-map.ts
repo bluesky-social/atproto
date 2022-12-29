@@ -19,6 +19,16 @@ export class BlockMap {
     return this.map.get(cid.toString())
   }
 
+  getMany(cids: CID[]): BlockMap {
+    return cids.reduce((acc, cur) => {
+      const got = this.get(cur)
+      if (got) {
+        acc.set(cur, got)
+      }
+      return acc
+    }, new BlockMap())
+  }
+
   has(cid: CID): boolean {
     return this.map.has(cid.toString())
   }

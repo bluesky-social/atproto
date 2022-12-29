@@ -1,8 +1,9 @@
 import { CID } from 'multiformats/cid'
 import { DidResolver } from '@atproto/did-resolver'
-import { ReadableBlockstore } from './storage'
-import Repo from './repo'
+import { RepoStorage } from './storage'
 import { DataDiff } from './mst'
+import SyncStorage from './storage/sync-storage'
+import ReadableRepo from './readable-repo'
 
 // type RecordsMap = { [key: string]: CID }
 
@@ -33,21 +34,28 @@ import { DataDiff } from './mst'
 //   return entries.
 // }
 
+type RepoUpdate = {
+  root: CID
+  prev: CID
+  diff: DataDiff
+}
+
 export const verifyUpdates = async (
-  storage: ReadableBlockstore,
-  latest: CID,
-  earliest: CID | null,
+  repo: ReadableRepo,
+  updateStorage: RepoStorage,
+  updateRoot: CID,
   didResolver: DidResolver,
-): Promise<DataDiff> => {
-  const commitPath = await storage.getCommitPath(latest, earliest)
+): Promise<RepoUpdate[]> => {
+  const commitPath = await updateStorage.getCommitPath(updateRoot, repo.cid)
   if (commitPath === null) {
     throw new RepoVerificationError('Could not find shared history')
   }
-  const fullDiff = new DataDiff()
-  if (commitPath.length === 0) return fullDiff
-  let prevRepo = await Repo.load(storage, commitPath[0])
+  const updates: RepoUpdate[] = []
+  if (commitPath.length === 0) return updates
+  const syncStorage = new SyncStorage(updateStorage, repo.storage)
+  let prevRepo = repo
   for (const commit of commitPath.slice(1)) {
-    const nextRepo = await Repo.load(storage, commit)
+    const nextRepo = await ReadableRepo.load(syncStorage, commit)
     const diff = await prevRepo.data.diff(nextRepo.data)
 
     if (!nextRepo.root.meta.equals(prevRepo.root.meta)) {
@@ -66,10 +74,14 @@ export const verifyUpdates = async (
       )
     }
 
-    fullDiff.addDiff(diff)
+    updates.push({
+      root: nextRepo.cid,
+      prev: prevRepo.cid,
+      diff,
+    })
     prevRepo = nextRepo
   }
-  return fullDiff
+  return updates
 }
 
 export class RepoVerificationError extends Error {}

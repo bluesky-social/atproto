@@ -32,6 +32,28 @@ export enum WriteOpAction {
   Delete = 'delete',
 }
 
+export type CidCreateOp = {
+  action: WriteOpAction.Create
+  collection: string
+  rkey: string
+  value: CID
+}
+
+export type CidUpdateOp = {
+  action: WriteOpAction.Update
+  collection: string
+  rkey: string
+  value: CID
+}
+
+export type CidDeleteOp = {
+  action: WriteOpAction.Delete
+  collection: string
+  rkey: string
+}
+
+export type CidWriteOp = CidCreateOp | CidUpdateOp | CidDeleteOp
+
 export type RecordCreateOp = {
   action: WriteOpAction.Create
   collection: string
@@ -68,6 +90,10 @@ export type CommitBlockData = {
 
 export type CommitData = CommitBlockData & {
   prev: CID | null
+}
+
+export type RepoUpdate = CommitData & {
+  ops: RecordWriteOp[]
 }
 
 export interface CarStreamable {

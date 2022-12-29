@@ -12,13 +12,13 @@ import {
   CommitData,
   WriteOpAction,
 } from './types'
-import { streamToArray } from '@atproto/common'
-import { RepoStorage } from './storage'
+import { RepoStorage, verifyObj } from './storage'
 import * as crypto from '@atproto/crypto'
 import { MST } from './mst'
 import log from './logger'
 import BlockMap from './block-map'
-import { verifyObj } from './storage/util'
+import { ReadableRepo } from './readable-repo'
+import { streamToArray } from '@atproto/common'
 
 type Params = {
   storage: RepoStorage
@@ -29,21 +29,11 @@ type Params = {
   cid: CID
 }
 
-export class Repo {
+export class Repo extends ReadableRepo {
   storage: RepoStorage
-  data: DataStore
-  commit: Commit
-  root: RepoRoot
-  meta: RepoMeta
-  cid: CID
 
   constructor(params: Params) {
-    this.storage = params.storage
-    this.data = params.data
-    this.commit = params.commit
-    this.root = params.root
-    this.meta = params.meta
-    this.cid = params.cid
+    super(params)
   }
 
   static async formatInitCommit(
@@ -125,17 +115,6 @@ export class Repo {
       meta,
       cid: commitCid,
     })
-  }
-
-  get did(): string {
-    return this.meta.did
-  }
-
-  async getRecord(collection: string, rkey: string): Promise<unknown | null> {
-    const dataKey = collection + '/' + rkey
-    const cid = await this.data.get(dataKey)
-    if (!cid) return null
-    return this.storage.get(cid, def.unknown)
   }
 
   async createCommit(
@@ -225,7 +204,7 @@ export class Repo {
     return this.getDiffCar(null)
   }
 
-  private async openCar(
+  protected async openCar(
     fn: (car: BlockWriter) => Promise<void>,
   ): Promise<Uint8Array> {
     const { writer, out } = CarWriter.create([this.cid])

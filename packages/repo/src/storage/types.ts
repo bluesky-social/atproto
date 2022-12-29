@@ -18,8 +18,8 @@ export interface ReadableBlockstore {
 }
 
 export interface CommitableStorage {
-  indexCommits(commit: CommitData[]): Promise<void>
   updateHead(cid: CID): Promise<void>
+  indexCommits(commit: CommitData[]): Promise<void>
   applyCommit(commit: CommitData): Promise<void>
   getHead(forUpdate?: boolean): Promise<CID | null>
   getCommitPath(latest: CID, earliest: CID | null): Promise<CID[] | null>

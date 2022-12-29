@@ -1,3 +1,4 @@
 export * from './memory-blockstore'
-export * from './repo-storage'
+export * from './sync-storage'
+export * from './util'
 export * from './types'
