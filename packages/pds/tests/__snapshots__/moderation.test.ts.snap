@@ -1,5 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`moderation actioning resolves reports on repos and records. 1`] = `
+Object {
+  "action": "com.atproto.admin.moderationAction#takedown",
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "createdBy": "X",
+  "id": 1,
+  "reason": "Y",
+  "resolvedReports": Array [
+    Object {
+      "id": 6,
+    },
+    Object {
+      "id": 5,
+    },
+  ],
+  "subject": Object {
+    "$type": "com.atproto.admin.moderationAction#subjectRepo",
+    "did": "user(0)",
+  },
+}
+`;
+
 exports[`moderation reporting creates reports of a record. 1`] = `
 Array [
   Object {

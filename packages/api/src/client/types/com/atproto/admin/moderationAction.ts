@@ -9,6 +9,7 @@ export interface View {
   createdBy: string
   createdAt: string
   reversal?: Reversal
+  resolvedReports: ResolvedReport[]
   [k: string]: unknown
 }
 
@@ -21,6 +22,11 @@ export interface Reversal {
 
 export interface SubjectRepo {
   did: string
+  [k: string]: unknown
+}
+
+export interface ResolvedReport {
+  id: number
   [k: string]: unknown
 }
 

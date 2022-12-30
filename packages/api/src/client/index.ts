@@ -13,6 +13,7 @@ import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
 import * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
+import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
@@ -80,6 +81,7 @@ export * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 export * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 export * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
 export * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
+export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
@@ -302,6 +304,17 @@ export class AdminNS {
 
   constructor(service: ServiceClient) {
     this._service = service
+  }
+
+  resolveModerationReports(
+    data?: ComAtprotoAdminResolveModerationReports.InputSchema,
+    opts?: ComAtprotoAdminResolveModerationReports.CallOptions,
+  ): Promise<ComAtprotoAdminResolveModerationReports.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.resolveModerationReports', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminResolveModerationReports.toKnownErr(e)
+      })
   }
 
   reverseModerationAction(

@@ -13,7 +13,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   await builder
     .addColumn('action', 'varchar', (col) => col.notNull())
     .addColumn('subjectType', 'varchar', (col) => col.notNull())
-    .addColumn('subjectDid', 'varchar')
+    .addColumn('subjectDid', 'varchar', (col) => col.notNull())
     .addColumn('reason', 'text', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('createdBy', 'varchar', (col) => col.notNull())
@@ -54,9 +54,27 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('reason', 'text')
     .addColumn('reportedByDid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addColumn('resolvedByAction', 'integer', (col) =>
-      col.references('moderation_action.id'),
+    .execute()
+  // Moderation report resolutions
+  await db.schema
+    .createTable('moderation_report_resolution')
+    .addColumn('reportId', 'integer', (col) =>
+      col.notNull().references('moderation_report.id'),
     )
+    .addColumn('actionId', 'integer', (col) =>
+      col.notNull().references('moderation_action.id'),
+    )
+    .addColumn('createdBy', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint('moderation_report_resolution_pkey', [
+      'reportId',
+      'actionId',
+    ])
+    .execute()
+  await db.schema
+    .createIndex('moderation_report_resolution_action_id_idx')
+    .on('moderation_report_resolution')
+    .column('actionId')
     .execute()
 }
 
@@ -64,6 +82,7 @@ export async function down(
   db: Kysely<unknown>,
   dialect: Dialect,
 ): Promise<void> {
+  await db.schema.dropTable('moderation_report_resolution').execute()
   await db.schema.dropTable('moderation_report').execute()
   if (dialect !== 'sqlite') {
     await db.schema

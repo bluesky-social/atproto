@@ -14,6 +14,7 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
@@ -182,6 +183,16 @@ export class AdminNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  resolveModerationReports<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminResolveModerationReports.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.resolveModerationReports' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   reverseModerationAction<AV extends AuthVerifier>(

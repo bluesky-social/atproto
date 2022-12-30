@@ -195,6 +195,7 @@ export const schemaDict = {
           'reason',
           'createdBy',
           'createdAt',
+          'resolvedReports',
         ],
         properties: {
           id: {
@@ -220,6 +221,13 @@ export const schemaDict = {
           reversal: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.moderationAction#reversal',
+          },
+          resolvedReports: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.moderationAction#resolvedReport',
+            },
           },
         },
       },
@@ -247,9 +255,56 @@ export const schemaDict = {
           },
         },
       },
+      resolvedReport: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+        },
+      },
       takedown: {
         type: 'token',
         description: 'Moderation action type: Takedown.',
+      },
+    },
+  },
+  ComAtprotoAdminResolveModerationReports: {
+    lexicon: 1,
+    id: 'com.atproto.admin.resolveModerationReports',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Resolve moderation reports by an action.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actionId', 'reportIds', 'createdBy'],
+            properties: {
+              actionId: {
+                type: 'integer',
+              },
+              reportIds: {
+                type: 'array',
+                items: {
+                  type: 'integer',
+                },
+              },
+              createdBy: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#view',
+          },
+        },
       },
     },
   },
@@ -3271,6 +3326,8 @@ export const ids = {
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
   ComAtprotoAdminModerationAction: 'com.atproto.admin.moderationAction',
+  ComAtprotoAdminResolveModerationReports:
+    'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
     'com.atproto.admin.reverseModerationAction',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',

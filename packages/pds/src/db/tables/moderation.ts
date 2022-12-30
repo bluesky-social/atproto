@@ -3,12 +3,13 @@ import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/moderationAction
 
 export const actionTableName = 'moderation_action'
 export const reportTableName = 'moderation_report'
+export const reportResolutionTableName = 'moderation_report_resolution'
 
 export interface ModerationAction {
   id: Generated<number>
   action: typeof TAKEDOWN
   subjectType: 'com.atproto.admin.moderationAction#subjectRepo'
-  subjectDid: string | null
+  subjectDid: string
   reason: string
   createdAt: string
   createdBy: string
@@ -29,10 +30,17 @@ export interface ModerationReport {
   reason: string | null
   reportedByDid: string
   createdAt: string
-  resolvedByAction: number | null
+}
+
+export interface ModerationReportResolution {
+  reportId: number
+  actionId: number
+  createdAt: string
+  createdBy: string
 }
 
 export type PartialDB = {
   [actionTableName]: ModerationAction
   [reportTableName]: ModerationReport
+  [reportResolutionTableName]: ModerationReportResolution
 }

@@ -17,14 +17,18 @@ export class AdminService {
     return (db: Database) => new AdminService(db)
   }
 
-  async getModAction(
-    id: number,
-  ): Promise<Selectable<ModerationAction> | undefined> {
+  async getModAction(id: number): Promise<ModerationActionRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_action')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
+  }
+
+  async getModActionOrThrow(id: number): Promise<ModerationActionRow> {
+    const action = await this.getModAction(id)
+    if (!action) throw new InvalidRequestError('Action does not exist')
+    return action
   }
 
   async logModAction(
@@ -33,7 +37,7 @@ export class AdminService {
       subject: SubjectRepo
       createdAt?: Date
     },
-  ): Promise<Selectable<ModerationAction>> {
+  ): Promise<ModerationActionRow> {
     const { action, createdBy, reason, subject, createdAt = new Date() } = info
 
     return await this.db.db
@@ -52,7 +56,7 @@ export class AdminService {
 
   async logReverseModAction(
     info: ReverseModAction & { createdAt: Date },
-  ): Promise<Selectable<ModerationAction>> {
+  ): Promise<ModerationActionRow> {
     const { id, createdBy, reason, createdAt = new Date() } = info
 
     const result = await this.db.db
@@ -90,14 +94,63 @@ export class AdminService {
       .execute()
   }
 
-  formatModActionView(
-    modAction: Selectable<ModerationAction>,
-  ): ModerationActionView {
+  async resolveModReports(info: {
+    reportIds: number[]
+    actionId: number
+    createdBy: string
+    createdAt?: Date
+  }): Promise<void> {
+    const { reportIds, actionId, createdBy, createdAt = new Date() } = info
+    const action = await this.getModActionOrThrow(actionId)
+
+    if (!reportIds.length) return
+    const reports = await this.db.db
+      .selectFrom('moderation_report')
+      .where('id', 'in', reportIds)
+      .select(['id', 'subjectDid'])
+      .execute()
+
+    reportIds.forEach((reportId) => {
+      const report = reports.find((r) => r.id === reportId)
+      if (!report) throw new InvalidRequestError('Report does not exist')
+      if (action.subjectDid !== report.subjectDid) {
+        // @TODO if the report and action are both for a record, ensure they are for the same record.
+        // Otherwise, if one is for a repo and the other a record, just ensure the repo/did matches.
+        throw new InvalidRequestError(
+          `Report ${report.id} cannot be resolved by action`,
+        )
+      }
+    })
+
+    await this.db.db
+      .insertInto('moderation_report_resolution')
+      .values(
+        reportIds.map((reportId) => ({
+          reportId,
+          actionId,
+          createdAt: createdAt.toISOString(),
+          createdBy,
+        })),
+      )
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async formatModActionView(
+    modAction: ModerationActionRow,
+  ): Promise<ModerationActionView> {
     if (
       modAction.subjectType !== 'com.atproto.admin.moderationAction#subjectRepo'
     ) {
       throw new Error('Only supports format moderation actions on actors')
     }
+    const resolutions = await this.db.db
+      .selectFrom('moderation_report_resolution')
+      .select('reportId as id')
+      .where('actionId', '=', modAction.id)
+      .orderBy('createdAt', 'desc')
+      .orderBy('id', 'desc')
+      .execute()
     return {
       id: modAction.id,
       action: modAction.action,
@@ -118,6 +171,9 @@ export class AdminService {
               reason: modAction.reversedReason,
             }
           : undefined,
+      resolvedReports: resolutions,
     }
   }
 }
+
+export type ModerationActionRow = Selectable<ModerationAction>

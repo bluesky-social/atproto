@@ -60,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: adminService.formatModActionView(moderationAction),
+        body: await adminService.formatModActionView(moderationAction),
       }
     },
   })
@@ -102,7 +102,27 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: adminService.formatModActionView(moderationAction),
+        body: await adminService.formatModActionView(moderationAction),
+      }
+    },
+  })
+
+  server.com.atproto.admin.resolveModerationReports({
+    auth: ctx.adminVerifier,
+    handler: async ({ input }) => {
+      const { db, services } = ctx
+      const adminService = services.admin(db)
+      const { actionId, reportIds, createdBy } = input.body
+
+      const moderationAction = await db.transaction(async (dbTxn) => {
+        const adminTxn = services.admin(dbTxn)
+        await adminTxn.resolveModReports({ reportIds, actionId, createdBy })
+        return await adminTxn.getModActionOrThrow(actionId)
+      })
+
+      return {
+        encoding: 'application/json',
+        body: await adminService.formatModActionView(moderationAction),
       }
     },
   })
