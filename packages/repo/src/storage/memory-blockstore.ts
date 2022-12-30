@@ -96,7 +96,7 @@ export class MemoryBlockstore implements RepoStorage {
         throw new MissingCommitBlocksError(commitCid, missing)
       }
       if (!root.prev) {
-        const meta = await util.verifyObj(this, root.meta, def.repoMeta)
+        const meta = await util.readAndVerify(this, root.meta, def.repoMeta)
         blocks.set(root.meta, meta.bytes)
       }
       commitData[commitCid.toString()] = blocks

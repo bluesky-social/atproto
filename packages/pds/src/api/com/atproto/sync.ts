@@ -1,6 +1,5 @@
 import { Server } from '../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { def as common } from '@atproto/common'
 import { Repo } from '@atproto/repo'
 import SqlRepoStorage from '../../../sql-repo-storage'
 import AppContext from '../../../context'
@@ -28,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
       throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
     }
     const repo = await Repo.load(storage, root)
-    const fromCid = from ? common.strToCid.parse(from) : null
+    const fromCid = from ? CID.parse(from) : null
     const diff = await repo.getDiffCar(fromCid)
     return {
       encoding: 'application/cbor',

@@ -1,13 +1,8 @@
 import z from 'zod'
 import { CID } from 'multiformats'
 
-import { ReadableBlockstore, readObj } from '../storage'
-import {
-  schema as common,
-  cidForData,
-  check,
-  ipldBytesToValue,
-} from '@atproto/common'
+import { getAndVerify, ReadableBlockstore, readObj } from '../storage'
+import { schema as common, cidForData } from '@atproto/common'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
@@ -692,14 +687,9 @@ export class MST implements DataStore {
         throw new MissingBlocksError('mst node', fetched.missing)
       }
       for (const cid of toFetch) {
-        const found = fetched.blocks.get(cid)
-        if (!found) {
-          throw new Error(`Could not find block with CID: ${cid.toString()}`)
-        }
-        await car.put({ cid, bytes: found })
-        const value = ipldBytesToValue(found)
-        const nodeData = check.assure(nodeDataDef, value)
-        const entries = await util.deserializeNodeData(this.storage, nodeData)
+        const found = await getAndVerify(fetched.blocks, cid, nodeDataDef)
+        await car.put({ cid, bytes: found.bytes })
+        const entries = await util.deserializeNodeData(this.storage, found.obj)
 
         for (const entry of entries) {
           if (entry.isLeaf()) {

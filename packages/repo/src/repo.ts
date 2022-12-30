@@ -12,7 +12,7 @@ import {
   CommitData,
   WriteOpAction,
 } from './types'
-import { readObj, RepoStorage, verifyObj } from './storage'
+import { readObj, RepoStorage, readAndVerify } from './storage'
 import * as crypto from '@atproto/crypto'
 import { MST } from './mst'
 import log from './logger'
@@ -205,11 +205,15 @@ export class Repo extends ReadableRepo {
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    const commit = await verifyObj(this.storage, this.cid, def.commit)
+    const commit = await readAndVerify(this.storage, this.cid, def.commit)
     await car.put({ cid: this.cid, bytes: commit.bytes })
-    const root = await verifyObj(this.storage, commit.obj.root, def.repoRoot)
+    const root = await readAndVerify(
+      this.storage,
+      commit.obj.root,
+      def.repoRoot,
+    )
     await car.put({ cid: commit.obj.root, bytes: root.bytes })
-    const meta = await verifyObj(this.storage, root.obj.meta, def.repoMeta)
+    const meta = await readAndVerify(this.storage, root.obj.meta, def.repoMeta)
     await car.put({ cid: root.obj.meta, bytes: meta.bytes })
     await this.data.writeToCarStream(car)
   }

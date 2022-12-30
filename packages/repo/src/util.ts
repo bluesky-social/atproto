@@ -1,16 +1,11 @@
 import { CID } from 'multiformats/cid'
 import { CarReader } from '@ipld/car/reader'
 import { Block as CarBlock } from '@ipld/car/api'
-import {
-  check,
-  def,
-  ipldBytesToValue,
-  verifyCidForCborBytes,
-} from '@atproto/common'
+import { def, verifyCidForCborBytes } from '@atproto/common'
 import Repo from './repo'
 import { MST } from './mst'
 import DataDiff from './data-diff'
-import { RepoStorage } from './storage'
+import { getAndVerify, RepoStorage } from './storage'
 import {
   DataStore,
   RecordCreateOp,
@@ -84,22 +79,22 @@ export const diffToWriteOps = (
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseRecordKey(add.key)
-      const value = await getAndParse(blocks, add.cid, def.record)
+      const value = await getAndVerify(blocks, add.cid, def.record)
       return {
         action: WriteOpAction.Create,
         collection,
         rkey,
-        value,
+        value: value.obj,
       } as RecordCreateOp
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseRecordKey(upd.key)
-      const value = await getAndParse(blocks, upd.cid, def.record)
+      const value = await getAndVerify(blocks, upd.cid, def.record)
       return {
         action: WriteOpAction.Update,
         collection,
         rkey,
-        value,
+        value: value.obj,
       } as RecordUpdateOp
     }),
     ...diff.deleteList().map((del) => {
@@ -118,22 +113,6 @@ export const collapseDiffs = (diffs: DataDiff[]): DataDiff => {
     acc.addDiff(cur)
     return acc
   }, new DataDiff())
-}
-
-export const getAndParse = async <T>(
-  blocks: BlockMap,
-  cid: CID,
-  schema: check.Def<T>,
-): Promise<T> => {
-  const bytes = blocks.get(cid)
-  if (!bytes) {
-    throw new Error(`Not found: ${cid.toString()}`)
-  }
-  const obj = await ipldBytesToValue(bytes)
-  if (!check.is(obj, schema)) {
-    throw new Error(`Did not find expected object at ${cid.toString()}`)
-  }
-  return obj
 }
 
 export const parseRecordKey = (key: string) => {
