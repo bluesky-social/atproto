@@ -1,14 +1,22 @@
-import { Server } from '../../../lexicon'
+import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
 import * as repo from '../../../repo'
+import { Server } from '../../../lexicon'
 import {
   InvalidRecordError,
   PreparedCreate,
   PreparedWrite,
 } from '../../../repo'
 import AppContext from '../../../context'
+import {
+  ModerationReportRow,
+  RecordNotFound,
+  RepoNotFound,
+} from '../../../services/repo'
+import { ModerationReport } from '../../../db/tables/moderation'
+import { InputSchema as ReportInput } from '../../../lexicon/types/com/atproto/repo/report'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describe(async ({ params }) => {
@@ -241,4 +249,81 @@ export default function (server: Server, ctx: AppContext) {
       })
     },
   })
+
+  server.com.atproto.repo.report({
+    auth: ctx.accessVerifierCheckTakedown,
+    handler: async ({ input, auth }) => {
+      const { db, services } = ctx
+      const { reasonType, reason, subject } = input.body
+      const requester = auth.credentials.did
+
+      const repoService = services.repo(db)
+
+      let report: ModerationReportRow
+      try {
+        report = await repoService.report({
+          reasonType: getReasonType(reasonType),
+          reason,
+          subject: getSubject(subject),
+          reportedByDid: requester,
+        })
+      } catch (err) {
+        if (err instanceof RepoNotFound) {
+          throw new InvalidRequestError('Repo not found')
+        }
+        if (err instanceof RecordNotFound) {
+          throw new InvalidRequestError('Record not found')
+        }
+        throw err
+      }
+
+      return {
+        encoding: 'application/json',
+        body: ctx.services.repo(db).formatReportView(report),
+      }
+    },
+  })
+}
+
+function getReasonType(reasonType: ReportInput['reasonType']) {
+  if (
+    reasonType === 'com.atproto.repo.report#spam' ||
+    reasonType === 'com.atproto.repo.report#other'
+  ) {
+    return reasonType as ModerationReport['reasonType']
+  }
+  throw new InvalidRequestError('Invalid reason type')
+}
+
+function getSubject(subject: ReportInput['subject']) {
+  if (
+    subject.$type === 'com.atproto.repo.report#subjectRepo' &&
+    typeof subject.did === 'string'
+  ) {
+    return { did: subject.did }
+  }
+  if (
+    subject.$type === 'com.atproto.repo.report#subjectRecord' &&
+    typeof subject.did === 'string' &&
+    typeof subject.collection === 'string' &&
+    typeof subject.rkey === 'string' &&
+    (subject.cid === undefined || typeof subject.cid === 'string')
+  ) {
+    return {
+      uri: AtUri.make(subject.did, subject.collection, subject.rkey),
+      cid: subject.cid ? parseCID(subject.cid) : undefined,
+    }
+  }
+  throw new InvalidRequestError('Invalid subject')
+}
+
+function parseCID(cid: string) {
+  try {
+    return CID.parse(cid)
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      throw new InvalidRequestError('Invalid cid')
+    }
+    throw err
+  }
 }

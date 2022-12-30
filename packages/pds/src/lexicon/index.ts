@@ -25,6 +25,7 @@ import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
+import * as ComAtprotoRepoReport from './types/com/atproto/repo/report'
 import * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
@@ -56,6 +57,10 @@ import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
+}
+export const COM_ATPROTO_REPO = {
+  ReportSpam: 'com.atproto.repo.report#spam',
+  ReportOther: 'com.atproto.repo.report#other',
 }
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
@@ -283,6 +288,13 @@ export class RepoNS {
     cfg: ConfigOf<AV, ComAtprotoRepoPutRecord.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.repo.putRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  report<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoReport.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.report' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

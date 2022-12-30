@@ -799,6 +799,137 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoReport: {
+    lexicon: 1,
+    id: 'com.atproto.repo.report',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Report a repo or a record.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reasonType', 'subject'],
+            properties: {
+              reasonType: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.report#reasonType',
+              },
+              reason: {
+                type: 'string',
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.repo.report#subjectRepo',
+                  'lex:com.atproto.repo.report#subjectRecord',
+                ],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'id',
+              'reasonType',
+              'subject',
+              'reportedByDid',
+              'createdAt',
+            ],
+            properties: {
+              id: {
+                type: 'integer',
+              },
+              reasonType: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.report#reasonType',
+              },
+              reason: {
+                type: 'string',
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.repo.report#subjectRepo',
+                  'lex:com.atproto.repo.report#subjectRecordRef',
+                ],
+              },
+              reportedByDid: {
+                type: 'string',
+              },
+              createdAt: {
+                type: 'datetime',
+              },
+            },
+          },
+        },
+      },
+      reasonType: {
+        type: 'string',
+        knownValues: [
+          'com.atproto.repo.report#spam',
+          'com.atproto.repo.report#other',
+        ],
+      },
+      subjectRepo: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+        },
+      },
+      subjectRecord: {
+        type: 'object',
+        required: ['did', 'collection', 'rkey'],
+        properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+          collection: {
+            type: 'string',
+            description: 'The NSID of the collection.',
+          },
+          rkey: {
+            type: 'string',
+            description: 'The key of the record.',
+          },
+          cid: {
+            type: 'string',
+            description:
+              'The CID of the version of the record. If not specified, defaults to the most recent version.',
+          },
+        },
+      },
+      subjectRecordRef: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+      spam: {
+        type: 'token',
+        description: 'Moderation report reason: Spam.',
+      },
+      other: {
+        type: 'token',
+        description: 'Moderation report reason: Other.',
+      },
+    },
+  },
   ComAtprotoRepoStrongRef: {
     lexicon: 1,
     id: 'com.atproto.repo.strongRef',
@@ -3152,6 +3283,7 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
+  ComAtprotoRepoReport: 'com.atproto.repo.report',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoServerGetAccountsConfig: 'com.atproto.server.getAccountsConfig',
   ComAtprotoSessionCreate: 'com.atproto.session.create',

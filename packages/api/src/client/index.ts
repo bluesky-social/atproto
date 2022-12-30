@@ -24,6 +24,7 @@ import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
+import * as ComAtprotoRepoReport from './types/com/atproto/repo/report'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
@@ -90,6 +91,7 @@ export * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
+export * as ComAtprotoRepoReport from './types/com/atproto/repo/report'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
@@ -140,6 +142,10 @@ export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
+}
+export const COM_ATPROTO_REPO = {
+  ReportSpam: 'com.atproto.repo.report#spam',
+  ReportOther: 'com.atproto.repo.report#other',
 }
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
@@ -440,6 +446,17 @@ export class RepoNS {
       .call('com.atproto.repo.putRecord', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoRepoPutRecord.toKnownErr(e)
+      })
+  }
+
+  report(
+    data?: ComAtprotoRepoReport.InputSchema,
+    opts?: ComAtprotoRepoReport.CallOptions,
+  ): Promise<ComAtprotoRepoReport.Response> {
+    return this._service.xrpc
+      .call('com.atproto.repo.report', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoReport.toKnownErr(e)
       })
   }
 }

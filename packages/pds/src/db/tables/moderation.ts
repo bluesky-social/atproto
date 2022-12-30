@@ -1,7 +1,8 @@
 import { Generated } from 'kysely'
 import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/moderationAction'
 
-export const moderationActionTableName = 'moderation_action'
+export const actionTableName = 'moderation_action'
+export const reportTableName = 'moderation_report'
 
 export interface ModerationAction {
   id: Generated<number>
@@ -16,6 +17,22 @@ export interface ModerationAction {
   reversedReason: string | null
 }
 
+export interface ModerationReport {
+  id: Generated<number>
+  subjectType:
+    | 'com.atproto.repo.report#subjectRepo'
+    | 'com.atproto.repo.report#subjectRecord'
+  subjectDid: string
+  subjectUri: string | null
+  subjectCid: string | null
+  reasonType: 'com.atproto.repo.report#spam' | 'com.atproto.repo.report#other'
+  reason: string | null
+  reportedByDid: string
+  createdAt: string
+  resolvedByAction: number | null
+}
+
 export type PartialDB = {
-  [moderationActionTableName]: ModerationAction
+  [actionTableName]: ModerationAction
+  [reportTableName]: ModerationReport
 }

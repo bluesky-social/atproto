@@ -2,6 +2,7 @@ import { Kysely } from 'kysely'
 import { Dialect } from '..'
 
 export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
+  // Moderation action
   let builder = db.schema.createTable('moderation_action')
   builder =
     dialect === 'pg'
@@ -36,12 +37,34 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
       )
       .execute()
   }
+  // Moderation report
+  builder = db.schema.createTable('moderation_report')
+  builder =
+    dialect === 'pg'
+      ? builder.addColumn('id', 'serial', (col) => col.primaryKey())
+      : builder.addColumn('id', 'integer', (col) =>
+          col.autoIncrement().primaryKey(),
+        )
+  await builder
+    .addColumn('subjectType', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectUri', 'varchar')
+    .addColumn('subjectCid', 'varchar')
+    .addColumn('reasonType', 'varchar', (col) => col.notNull())
+    .addColumn('reason', 'text')
+    .addColumn('reportedByDid', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('resolvedByAction', 'integer', (col) =>
+      col.references('moderation_action.id'),
+    )
+    .execute()
 }
 
 export async function down(
   db: Kysely<unknown>,
   dialect: Dialect,
 ): Promise<void> {
+  await db.schema.dropTable('moderation_report').execute()
   if (dialect !== 'sqlite') {
     await db.schema
       .alterTable('did_handle')
