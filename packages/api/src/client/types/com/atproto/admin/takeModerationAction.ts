@@ -10,6 +10,7 @@ export interface InputSchema {
   action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
   subject:
     | ComAtprotoAdminModerationAction.SubjectRepo
+    | ComAtprotoAdminModerationAction.SubjectRecord
     | { $type: string; [k: string]: unknown }
   reason: string
   createdBy: string

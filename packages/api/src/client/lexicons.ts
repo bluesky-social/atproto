@@ -207,7 +207,10 @@ export const schemaDict = {
           },
           subject: {
             type: 'union',
-            refs: ['lex:com.atproto.admin.moderationAction#subjectRepo'],
+            refs: [
+              'lex:com.atproto.admin.moderationAction#subjectRepo',
+              'lex:com.atproto.admin.moderationAction#subjectRecordRef',
+            ],
           },
           reason: {
             type: 'string',
@@ -251,6 +254,41 @@ export const schemaDict = {
         required: ['did'],
         properties: {
           did: {
+            type: 'string',
+          },
+        },
+      },
+      subjectRecord: {
+        type: 'object',
+        required: ['did', 'collection', 'rkey'],
+        properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+          collection: {
+            type: 'string',
+            description: 'The NSID of the collection.',
+          },
+          rkey: {
+            type: 'string',
+            description: 'The key of the record.',
+          },
+          cid: {
+            type: 'string',
+            description:
+              'The CID of the version of the record. If not specified, defaults to the most recent version.',
+          },
+        },
+      },
+      subjectRecordRef: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
             type: 'string',
           },
         },
@@ -362,7 +400,10 @@ export const schemaDict = {
               },
               subject: {
                 type: 'union',
-                refs: ['lex:com.atproto.admin.moderationAction#subjectRepo'],
+                refs: [
+                  'lex:com.atproto.admin.moderationAction#subjectRepo',
+                  'lex:com.atproto.admin.moderationAction#subjectRecord',
+                ],
               },
               reason: {
                 type: 'string',

@@ -4,7 +4,10 @@
 export interface View {
   id: number
   action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
-  subject: SubjectRepo | { $type: string; [k: string]: unknown }
+  subject:
+    | SubjectRepo
+    | SubjectRecordRef
+    | { $type: string; [k: string]: unknown }
   reason: string
   createdBy: string
   createdAt: string
@@ -22,6 +25,24 @@ export interface Reversal {
 
 export interface SubjectRepo {
   did: string
+  [k: string]: unknown
+}
+
+export interface SubjectRecord {
+  /** The DID of the repo. */
+  did: string
+  /** The NSID of the collection. */
+  collection: string
+  /** The key of the record. */
+  rkey: string
+  /** The CID of the version of the record. If not specified, defaults to the most recent version. */
+  cid?: string
+  [k: string]: unknown
+}
+
+export interface SubjectRecordRef {
+  uri: string
+  cid: string
   [k: string]: unknown
 }
 

@@ -8,7 +8,7 @@
       "properties": {
         "id": {"type": "integer"},
         "action": {"type": "string", "knownValues": ["com.atproto.admin.moderationAction#takedown"]},
-        "subject": {"type": "union", "refs": ["#subjectRepo"]},
+        "subject": {"type": "union", "refs": ["#subjectRepo", "#subjectRecordRef"]},
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"},
@@ -30,6 +30,24 @@
       "required": ["did"],
       "properties": {
         "did": {"type": "string"}
+      }
+    },
+    "subjectRecord": {
+      "type": "object",
+      "required": ["did", "collection", "rkey"],
+      "properties": {
+        "did": {"type": "string", "description": "The DID of the repo."},
+        "collection": {"type": "string", "description": "The NSID of the collection."},
+        "rkey": {"type": "string", "description": "The key of the record."},
+        "cid": {"type": "string", "description": "The CID of the version of the record. If not specified, defaults to the most recent version."}
+      }
+    },
+    "subjectRecordRef": {
+      "type": "object",
+      "required": ["uri", "cid"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"}
       }
     },
     "resolvedReport": {
