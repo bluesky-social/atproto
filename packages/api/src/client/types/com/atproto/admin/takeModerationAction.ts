@@ -2,22 +2,21 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import * as ComAtprotoAdminModerationAction from './moderationAction'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  handle: string
-  password: string
+  action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
+  subject:
+    | ComAtprotoAdminModerationAction.SubjectRepo
+    | { $type: string; [k: string]: unknown }
+  reason: string
+  createdBy: string
   [k: string]: unknown
 }
 
-export interface OutputSchema {
-  accessJwt: string
-  refreshJwt: string
-  handle: string
-  did: string
-  [k: string]: unknown
-}
+export type OutputSchema = ComAtprotoAdminModerationAction.View
 
 export interface CallOptions {
   headers?: Headers
@@ -31,15 +30,8 @@ export interface Response {
   data: OutputSchema
 }
 
-export class AccountTakedownError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
-  }
-}
-
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'AccountTakedown') return new AccountTakedownError(e)
   }
   return e
 }

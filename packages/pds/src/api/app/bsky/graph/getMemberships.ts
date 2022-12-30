@@ -3,6 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getActorInfo, getDeclarationSimple } from '../util'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
+import { actorNotSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getMemberships({
@@ -23,6 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('assertion')
         .where('assertion.subjectDid', '=', subject.did)
         .innerJoin('did_handle as creator', 'creator.did', 'assertion.creator')
+        .where(actorNotSoftDeletedClause(ref('creator')))
         .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
         .where('assertion.confirmUri', 'is not', null)
         .leftJoin('profile', 'profile.creator', 'creator.did')

@@ -3,22 +3,21 @@
  */
 import express from 'express'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as ComAtprotoAdminModerationAction from './moderationAction'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  handle: string
-  password: string
+  action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
+  subject:
+    | ComAtprotoAdminModerationAction.SubjectRepo
+    | { $type: string; [k: string]: unknown }
+  reason: string
+  createdBy: string
   [k: string]: unknown
 }
 
-export interface OutputSchema {
-  accessJwt: string
-  refreshJwt: string
-  handle: string
-  did: string
-  [k: string]: unknown
-}
+export type OutputSchema = ComAtprotoAdminModerationAction.View
 
 export interface HandlerInput {
   encoding: 'application/json'
@@ -33,7 +32,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'AccountTakedown'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

@@ -12,6 +12,9 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
+import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
@@ -78,6 +81,9 @@ export * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 export * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 export * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 export * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+export * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
+export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 export * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 export * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
@@ -138,6 +144,9 @@ export * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 export * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
+export const COM_ATPROTO_ADMIN = {
+  ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
+}
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
   AssertMember: 'app.bsky.graph.assertMember',
@@ -193,6 +202,7 @@ export class ComNS {
 export class AtprotoNS {
   _service: ServiceClient
   account: AccountNS
+  admin: AdminNS
   blob: BlobNS
   handle: HandleNS
   repo: RepoNS
@@ -203,6 +213,7 @@ export class AtprotoNS {
   constructor(service: ServiceClient) {
     this._service = service
     this.account = new AccountNS(service)
+    this.admin = new AdminNS(service)
     this.blob = new BlobNS(service)
     this.handle = new HandleNS(service)
     this.repo = new RepoNS(service)
@@ -282,6 +293,36 @@ export class AccountNS {
       .call('com.atproto.account.resetPassword', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAccountResetPassword.toKnownErr(e)
+      })
+  }
+}
+
+export class AdminNS {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  reverseModerationAction(
+    data?: ComAtprotoAdminReverseModerationAction.InputSchema,
+    opts?: ComAtprotoAdminReverseModerationAction.CallOptions,
+  ): Promise<ComAtprotoAdminReverseModerationAction.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.reverseModerationAction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminReverseModerationAction.toKnownErr(e)
+      })
+  }
+
+  takeModerationAction(
+    data?: ComAtprotoAdminTakeModerationAction.InputSchema,
+    opts?: ComAtprotoAdminTakeModerationAction.CallOptions,
+  ): Promise<ComAtprotoAdminTakeModerationAction.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.takeModerationAction', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminTakeModerationAction.toKnownErr(e)
       })
   }
 }

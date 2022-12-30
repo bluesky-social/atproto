@@ -10,6 +10,7 @@ import { PreparedCreate, PreparedWrite } from '../../repo/types'
 import { RecordService } from '../record'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
+import { actorNotSoftDeletedClause } from '../../db/util'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -79,6 +80,7 @@ export class RepoService {
     const found = await this.db.db
       .selectFrom('did_handle')
       .leftJoin('scene', 'scene.handle', 'did_handle.handle')
+      .where(actorNotSoftDeletedClause()) // Ensures scene not taken down
       .where('did_handle.did', '=', repoDid)
       .where('scene.owner', '=', userDid)
       .select('scene.owner')

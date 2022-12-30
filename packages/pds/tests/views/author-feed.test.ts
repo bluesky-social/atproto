@@ -1,5 +1,12 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import {
+  runTestServer,
+  forSnapshot,
+  CloseFn,
+  paginateAll,
+  adminAuth,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -153,5 +160,37 @@ describe('pds author feed views', () => {
 
     expect(full.data.feed.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('blocked by actor takedown.', async () => {
+    const { data: preBlock } = await client.app.bsky.feed.getAuthorFeed(
+      { author: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+
+    expect(preBlock.feed.length).toBeGreaterThan(0)
+
+    await client.com.atproto.admin.takeModerationAction(
+      {
+        action: TAKEDOWN,
+        subject: {
+          $type: 'com.atproto.admin.moderationAction#subjectRepo',
+          did: alice,
+        },
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+
+    const { data: postBlock } = await client.app.bsky.feed.getAuthorFeed(
+      { author: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+
+    expect(postBlock.feed.length).toEqual(0)
   })
 })

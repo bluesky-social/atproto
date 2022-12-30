@@ -65,26 +65,6 @@ describe('server', () => {
     expect(data).toEqual({ version: '0.0.0' })
   })
 
-  it('healthcheck fails when database is unavailable.', async () => {
-    await db.db.destroy()
-    let error: AxiosError
-    try {
-      await axios.get(`${server.url}/xrpc/_health`)
-      throw new Error('Healthcheck should have failed')
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        error = err
-      } else {
-        throw err
-      }
-    }
-    expect(error.response?.status).toEqual(503)
-    expect(error.response?.data).toEqual({
-      version: '0.0.0',
-      error: 'Service Unavailable',
-    })
-  })
-
   it('limits size of json input.', async () => {
     let error: AxiosError
     try {
@@ -107,6 +87,26 @@ describe('server', () => {
     expect(error.response?.data).toEqual({
       error: 'PayloadTooLargeError',
       message: 'request entity too large',
+    })
+  })
+
+  it('healthcheck fails when database is unavailable.', async () => {
+    await db.db.destroy()
+    let error: AxiosError
+    try {
+      await axios.get(`${server.url}/xrpc/_health`)
+      throw new Error('Healthcheck should have failed')
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        error = err
+      } else {
+        throw err
+      }
+    }
+    expect(error.response?.status).toEqual(503)
+    expect(error.response?.data).toEqual({
+      version: '0.0.0',
+      error: 'Service Unavailable',
     })
   })
 })

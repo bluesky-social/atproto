@@ -4,6 +4,7 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclaration } from '../util'
 import AppContext from '../../../../context'
+import { actorNotSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.list({
@@ -26,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
+        .where(actorNotSoftDeletedClause(ref('author')))
         .leftJoin(
           'profile as author_profile',
           'author_profile.creator',

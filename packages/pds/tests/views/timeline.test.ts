@@ -1,4 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import { Main as FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/feedViewPost'
 import {
   runTestServer,
@@ -6,6 +7,7 @@ import {
   CloseFn,
   getOriginator,
   paginateAll,
+  adminAuth,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -161,5 +163,45 @@ describe('timeline views', () => {
 
     expect(full.data.feed.length).toEqual(7)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('blocks posts, reposts, replies by actor takedown', async () => {
+    await client.com.atproto.admin.takeModerationAction(
+      {
+        action: TAKEDOWN,
+        subject: {
+          $type: 'com.atproto.admin.moderationAction#subjectRepo',
+          did: bob,
+        },
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    await client.com.atproto.admin.takeModerationAction(
+      {
+        action: TAKEDOWN,
+        subject: {
+          $type: 'com.atproto.admin.moderationAction#subjectRepo',
+          did: dan,
+        },
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+
+    const aliceTL = await client.app.bsky.feed.getTimeline(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
   })
 })

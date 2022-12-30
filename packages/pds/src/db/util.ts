@@ -16,6 +16,14 @@ export const actorWhereClause = (actor: string) => {
   }
 }
 
+export const actorNotSoftDeletedClause = (alias: DbRef = sql`"did_handle"`) => {
+  return sql`${alias}."takedownId" is null`
+}
+
+export const actorSoftDeleted = (actor: { takedownId: number | null }) => {
+  return actor.takedownId !== null
+}
+
 export const countAll = sql<number>`count(*)`
 
 export const dummyDialect = {

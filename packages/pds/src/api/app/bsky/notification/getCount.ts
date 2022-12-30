@@ -1,5 +1,5 @@
 import { Server } from '../../../../lexicon'
-import { countAll } from '../../../../db/util'
+import { actorNotSoftDeletedClause, countAll } from '../../../../db/util'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
@@ -14,6 +14,8 @@ export default function (server: Server, ctx: AppContext) {
         .select(countAll.as('count'))
         .innerJoin('did_handle', 'did_handle.did', 'notif.userDid')
         .innerJoin('user', 'user.handle', 'did_handle.handle')
+        .innerJoin('did_handle as author', 'author.did', 'notif.author')
+        .where(actorNotSoftDeletedClause(ref('author')))
         .where('did_handle.did', '=', requester)
         .whereNotExists(
           ctx.db.db // Omit mentions and replies by muted actors

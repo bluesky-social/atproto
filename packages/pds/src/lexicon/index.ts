@@ -14,6 +14,8 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
@@ -55,6 +57,9 @@ import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getC
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 
+export const COM_ATPROTO_ADMIN = {
+  ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
+}
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
   AssertMember: 'app.bsky.graph.assertMember',
@@ -93,6 +98,7 @@ export class ComNS {
 export class AtprotoNS {
   _server: Server
   account: AccountNS
+  admin: AdminNS
   blob: BlobNS
   handle: HandleNS
   repo: RepoNS
@@ -103,6 +109,7 @@ export class AtprotoNS {
   constructor(server: Server) {
     this._server = server
     this.account = new AccountNS(server)
+    this.admin = new AdminNS(server)
     this.blob = new BlobNS(server)
     this.handle = new HandleNS(server)
     this.repo = new RepoNS(server)
@@ -164,6 +171,34 @@ export class AccountNS {
     cfg: ConfigOf<AV, ComAtprotoAccountResetPassword.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.account.resetPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AdminNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  reverseModerationAction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminReverseModerationAction.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.reverseModerationAction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  takeModerationAction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminTakeModerationAction.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.takeModerationAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
