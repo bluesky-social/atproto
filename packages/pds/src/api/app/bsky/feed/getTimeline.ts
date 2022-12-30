@@ -25,20 +25,45 @@ export default function (server: Server, ctx: AppContext) {
         .select('follow.subjectDid')
         .where('follow.creator', '=', requester)
 
+      const mutedQb = db
+        .selectFrom('mute')
+        .select('did')
+        .where('mutedByDid', '=', requester)
+
       const postsQb = feedService
         .selectPostQb()
-        .where('creator', '=', requester)
-        .orWhere('creator', 'in', followingIdsSubquery)
+        .where((qb) =>
+          qb
+            .where('creator', '=', requester)
+            .orWhere('creator', 'in', followingIdsSubquery),
+        )
+        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide posts of muted actors
 
       const repostsQb = feedService
         .selectRepostQb()
-        .where('repost.creator', '=', requester)
-        .orWhere('repost.creator', 'in', followingIdsSubquery)
+        .where((qb) =>
+          qb
+            .where('repost.creator', '=', requester)
+            .orWhere('repost.creator', 'in', followingIdsSubquery),
+        )
+        .whereNotExists(
+          mutedQb
+            .whereRef('did', '=', ref('post.creator')) // Hide reposts of or by muted actors
+            .orWhereRef('did', '=', ref('repost.creator')),
+        )
 
       const trendsQb = feedService
         .selectTrendQb()
-        .where('trend.creator', '=', requester)
-        .orWhere('trend.creator', 'in', followingIdsSubquery)
+        .where((qb) =>
+          qb
+            .where('trend.creator', '=', requester)
+            .orWhere('trend.creator', 'in', followingIdsSubquery),
+        )
+        .whereNotExists(
+          mutedQb
+            .whereRef('did', '=', ref('post.creator')) // Hide trends of or by muted actors
+            .orWhereRef('did', '=', ref('trend.creator')),
+        )
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db

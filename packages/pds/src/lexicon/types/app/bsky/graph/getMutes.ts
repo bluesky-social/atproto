@@ -6,25 +6,15 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
-  actor: string
+  limit?: number
+  before?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  did: string
-  declaration: AppBskySystemDeclRef.Main
-  handle: string
-  creator: string
-  displayName?: string
-  description?: string
-  avatar?: string
-  banner?: string
-  followersCount: number
-  followsCount: number
-  membersCount: number
-  postsCount: number
-  myState?: MyState
+  cursor?: string
+  mutes: Mute[]
   [k: string]: unknown
 }
 
@@ -49,9 +39,11 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
 
-export interface MyState {
-  follow?: string
-  member?: string
-  muted?: boolean
+export interface Mute {
+  did: string
+  declaration: AppBskySystemDeclRef.Main
+  handle: string
+  displayName?: string
+  createdAt: string
   [k: string]: unknown
 }

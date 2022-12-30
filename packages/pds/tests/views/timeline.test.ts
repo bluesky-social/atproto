@@ -106,6 +106,33 @@ describe('timeline views', () => {
     expect(defaultTL.data.feed).toEqual(reverseChronologicalTL.data.feed)
   })
 
+  it('omits posts and reposts of muted authors.', async () => {
+    await client.app.bsky.graph.mute(
+      { user: bob },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await client.app.bsky.graph.mute(
+      { user: carol },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceTL = await client.app.bsky.feed.getTimeline(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
+
+    await client.app.bsky.graph.unmute(
+      { user: bob },
+      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+    )
+    await client.app.bsky.graph.unmute(
+      { user: carol },
+      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+    )
+  })
+
   it('paginates reverse-chronological feed', async () => {
     const results = (results) => results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {

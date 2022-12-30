@@ -61,6 +61,9 @@ import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
 import * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
+import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphMute from './types/app/bsky/graph/mute'
+import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -124,6 +127,9 @@ export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 export * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
 export * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
+export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+export * as AppBskyGraphMute from './types/app/bsky/graph/mute'
+export * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 export * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 export * as AppBskyNotificationList from './types/app/bsky/notification/list'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -1081,6 +1087,39 @@ export class GraphNS {
       .call('app.bsky.graph.getMemberships', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetMemberships.toKnownErr(e)
+      })
+  }
+
+  getMutes(
+    params?: AppBskyGraphGetMutes.QueryParams,
+    opts?: AppBskyGraphGetMutes.CallOptions,
+  ): Promise<AppBskyGraphGetMutes.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getMutes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetMutes.toKnownErr(e)
+      })
+  }
+
+  mute(
+    data?: AppBskyGraphMute.InputSchema,
+    opts?: AppBskyGraphMute.CallOptions,
+  ): Promise<AppBskyGraphMute.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.mute', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphMute.toKnownErr(e)
+      })
+  }
+
+  unmute(
+    data?: AppBskyGraphUnmute.InputSchema,
+    opts?: AppBskyGraphUnmute.CallOptions,
+  ): Promise<AppBskyGraphUnmute.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.unmute', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphUnmute.toKnownErr(e)
       })
   }
 }

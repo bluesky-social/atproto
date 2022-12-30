@@ -14,6 +14,9 @@ import getFollows from './graph/getFollows'
 import getMembers from './graph/getMembers'
 import getMemberships from './graph/getMemberships'
 import getAssertions from './graph/getAssertions'
+import mute from './graph/mute'
+import unmute from './graph/unmute'
+import getMutes from './graph/getMutes'
 import getUsersSearch from './actor/search'
 import getUsersTypeahead from './actor/searchTypeahead'
 import getNotifications from './notification/list'
@@ -36,6 +39,9 @@ export default function (server: Server, ctx: AppContext) {
   getMembers(server, ctx)
   getMemberships(server, ctx)
   getAssertions(server, ctx)
+  mute(server, ctx)
+  unmute(server, ctx)
+  getMutes(server, ctx)
   getUsersSearch(server, ctx)
   getUsersTypeahead(server, ctx)
   getNotifications(server, ctx)

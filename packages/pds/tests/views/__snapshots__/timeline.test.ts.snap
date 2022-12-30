@@ -13,6 +13,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "downvoteCount": 1,
@@ -37,6 +40,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
@@ -50,6 +56,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(2)",
       "downvoteCount": 0,
@@ -84,6 +93,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
@@ -99,6 +111,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(3)",
       "downvoteCount": 0,
@@ -135,6 +150,9 @@ Array [
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(4)",
         "downvoteCount": 0,
@@ -192,6 +210,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -218,6 +239,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(6)",
       "downvoteCount": 0,
@@ -254,6 +278,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -279,6 +306,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -307,6 +337,9 @@ Array [
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(4)",
       "downvoteCount": 0,
@@ -365,6 +398,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -390,6 +426,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -418,6 +457,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(7)",
       "downvoteCount": 1,
@@ -445,6 +487,9 @@ Array [
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(8)",
       "downvoteCount": 0,
@@ -472,6 +517,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "downvoteCount": 1,
@@ -497,6 +545,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(2)",
       "downvoteCount": 0,
@@ -532,6 +583,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(9)",
       "downvoteCount": 0,
@@ -557,6 +611,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(10)",
       "downvoteCount": 0,
@@ -620,6 +677,9 @@ Array [
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(12)",
       "downvoteCount": 0,
@@ -647,6 +707,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(13)",
       "downvoteCount": 0,
@@ -677,6 +740,9 @@ Array [
         },
         "did": "user(0)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "downvoteCount": 0,
@@ -711,6 +777,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
@@ -726,6 +795,9 @@ Array [
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(2)",
       "downvoteCount": 0,
@@ -762,6 +834,9 @@ Array [
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(4)",
         "downvoteCount": 0,
@@ -819,6 +894,9 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 1,
@@ -847,6 +925,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(6)",
       "downvoteCount": 0,
@@ -883,6 +964,9 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 1,
@@ -910,6 +994,9 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 1,
@@ -940,6 +1027,9 @@ Array [
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(4)",
       "downvoteCount": 0,
@@ -998,6 +1088,9 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 1,
@@ -1025,6 +1118,9 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 1,
@@ -1055,6 +1151,9 @@ Array [
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(7)",
       "downvoteCount": 1,
@@ -1084,6 +1183,9 @@ Array [
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(8)",
       "downvoteCount": 0,
@@ -1111,6 +1213,9 @@ Array [
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(3)",
       "downvoteCount": 1,
@@ -1138,6 +1243,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(9)",
       "downvoteCount": 0,
@@ -1201,6 +1309,9 @@ Array [
         "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(11)",
       "downvoteCount": 0,
@@ -1228,6 +1339,9 @@ Array [
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(12)",
       "downvoteCount": 0,
@@ -1258,6 +1372,9 @@ Array [
         },
         "did": "user(0)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "downvoteCount": 0,
@@ -1294,6 +1411,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
@@ -1309,6 +1429,9 @@ Array [
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(2)",
       "downvoteCount": 0,
@@ -1345,6 +1468,9 @@ Array [
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(4)",
         "downvoteCount": 0,
@@ -1402,6 +1528,9 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 1,
@@ -1430,6 +1559,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(6)",
       "downvoteCount": 0,
@@ -1466,6 +1598,9 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 1,
@@ -1493,6 +1628,9 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "downvoteCount": 1,
@@ -1523,6 +1661,9 @@ Array [
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(7)",
       "downvoteCount": 1,
@@ -1552,6 +1693,9 @@ Array [
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(3)",
       "downvoteCount": 1,
@@ -1579,6 +1723,9 @@ Array [
         },
         "did": "user(2)",
         "handle": "carol.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(8)",
       "downvoteCount": 0,
@@ -1640,6 +1787,9 @@ Array [
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(10)",
       "downvoteCount": 0,
@@ -1672,6 +1822,9 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "downvoteCount": 1,
@@ -1699,6 +1852,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
@@ -1714,6 +1870,9 @@ Array [
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(2)",
       "downvoteCount": 0,
@@ -1772,6 +1931,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -1800,6 +1962,9 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "downvoteCount": 1,
@@ -1831,6 +1996,9 @@ Array [
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(4)",
       "downvoteCount": 0,
@@ -1856,6 +2024,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(5)",
       "downvoteCount": 0,
@@ -1891,6 +2062,9 @@ Array [
         },
         "did": "user(1)",
         "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(6)",
       "downvoteCount": 0,
@@ -1918,6 +2092,9 @@ Array [
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(7)",
       "downvoteCount": 0,
@@ -1931,6 +2108,342 @@ Array [
       "repostCount": 0,
       "upvoteCount": 0,
       "uri": "record(7)",
+      "viewer": Object {},
+    },
+  },
+]
+`;
+
+exports[`timeline views omits posts and reposts of muted authors. 1`] = `
+Array [
+  Object {
+    "post": Object {
+      "author": Object {
+        "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "cid": "cids(0)",
+      "downvoteCount": 1,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "again",
+      },
+      "replyCount": 2,
+      "repostCount": 1,
+      "upvoteCount": 2,
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+    "reason": Object {
+      "$type": "app.bsky.feed.feedViewPost#reasonRepost",
+      "by": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(1)",
+        "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  },
+  Object {
+    "post": Object {
+      "author": Object {
+        "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "cid": "cids(2)",
+      "downvoteCount": 0,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "reply": Object {
+          "parent": Object {
+            "cid": "cids(3)",
+            "uri": "record(2)",
+          },
+          "root": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
+        },
+        "text": "thanks bob",
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "upvoteCount": 0,
+      "uri": "record(1)",
+      "viewer": Object {},
+    },
+    "reply": Object {
+      "parent": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(2)",
+          "displayName": "bobby",
+          "handle": "bob.test",
+          "viewer": Object {
+            "muted": true,
+          },
+        },
+        "cid": "cids(3)",
+        "downvoteCount": 0,
+        "embed": Object {
+          "$type": "app.bsky.embed.images#presented",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "fullsize": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/IPAYhVzUxU3OXfF-R2hr1eYlq5BAbioC9U2pHmZpwi0/rs:fit:500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            },
+          ],
+        },
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "embed": Object {
+            "$type": "app.bsky.embed.images",
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "cid": "cids(4)",
+                  "mimeType": "image/jpeg",
+                },
+              },
+            ],
+          },
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+            "root": Object {
+              "cid": "cids(0)",
+              "uri": "record(0)",
+            },
+          },
+          "text": "hear that",
+        },
+        "replyCount": 1,
+        "repostCount": 0,
+        "upvoteCount": 0,
+        "uri": "record(2)",
+        "viewer": Object {},
+      },
+      "root": Object {
+        "author": Object {
+          "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "declaration": Object {
+            "actorType": "app.bsky.system.actorUser",
+            "cid": "cids(1)",
+          },
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "viewer": Object {
+            "muted": false,
+          },
+        },
+        "cid": "cids(0)",
+        "downvoteCount": 1,
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "text": "again",
+        },
+        "replyCount": 2,
+        "repostCount": 1,
+        "upvoteCount": 2,
+        "uri": "record(0)",
+        "viewer": Object {},
+      },
+    },
+  },
+  Object {
+    "post": Object {
+      "author": Object {
+        "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "cid": "cids(5)",
+      "downvoteCount": 1,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "yoohoo",
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "upvoteCount": 1,
+      "uri": "record(3)",
+      "viewer": Object {},
+    },
+  },
+  Object {
+    "post": Object {
+      "author": Object {
+        "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "cid": "cids(0)",
+      "downvoteCount": 1,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "again",
+      },
+      "replyCount": 2,
+      "repostCount": 1,
+      "upvoteCount": 2,
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+  },
+  Object {
+    "post": Object {
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(1)",
+        "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "cid": "cids(6)",
+      "downvoteCount": 0,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "entities": Array [
+          Object {
+            "index": Object {
+              "end": 18,
+              "start": 0,
+            },
+            "type": "mention",
+            "value": "user(0)",
+          },
+        ],
+        "text": "@alice.bluesky.xyz is the best",
+      },
+      "replyCount": 0,
+      "repostCount": 1,
+      "upvoteCount": 0,
+      "uri": "record(4)",
+      "viewer": Object {},
+    },
+  },
+  Object {
+    "post": Object {
+      "author": Object {
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(1)",
+        "handle": "dan.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "cid": "cids(7)",
+      "downvoteCount": 0,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "dan here!",
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "upvoteCount": 0,
+      "uri": "record(5)",
+      "viewer": Object {},
+    },
+  },
+  Object {
+    "post": Object {
+      "author": Object {
+        "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "cid": "cids(8)",
+      "downvoteCount": 0,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "text": "hey there",
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "upvoteCount": 0,
+      "uri": "record(6)",
       "viewer": Object {},
     },
   },

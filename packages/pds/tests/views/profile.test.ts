@@ -199,4 +199,41 @@ describe('pds profile views', () => {
 
     expect(byHandle.data).toEqual(byDid.data)
   })
+
+  it('includes muted status.', async () => {
+    const { data: initial } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(initial.myState?.muted).toEqual(false)
+
+    await client.app.bsky.graph.mute(
+      { user: alice },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+    const { data: muted } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(muted.myState?.muted).toEqual(true)
+
+    const { data: fromBobUnrelated } = await client.app.bsky.actor.getProfile(
+      { actor: dan },
+      { headers: sc.getHeaders(bob) },
+    )
+    const { data: toAliceUnrelated } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(dan) },
+    )
+
+    expect(fromBobUnrelated.myState?.muted).toEqual(false)
+    expect(toAliceUnrelated.myState?.muted).toEqual(false)
+
+    await client.app.bsky.graph.unmute(
+      { user: alice },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+  })
 })

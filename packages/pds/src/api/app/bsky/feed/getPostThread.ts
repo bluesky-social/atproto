@@ -1,3 +1,4 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -7,7 +8,6 @@ import {
   FeedService,
   PostInfoMap,
 } from '../../../../services/feed'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export type PostThread = {
   post: FeedRow
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       const relevant = getRelevantIds(threadData)
       const [actors, posts, embeds] = await Promise.all([
-        feedService.getActorViews(Array.from(relevant.dids)),
+        feedService.getActorViews(Array.from(relevant.dids), requester),
         feedService.getPostViews(Array.from(relevant.uris), requester),
         feedService.embedsForPosts(Array.from(relevant.uris)),
       ])

@@ -13,7 +13,9 @@ Object {
   "followsCount": 1,
   "handle": "dan.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 2,
 }
 `;
@@ -35,6 +37,7 @@ Object {
   "membersCount": 0,
   "myState": Object {
     "follow": "record(0)",
+    "muted": false,
   },
   "postsCount": 4,
 }
@@ -52,7 +55,9 @@ Object {
   "followsCount": 1,
   "handle": "dan.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 2,
 }
 `;
@@ -72,7 +77,9 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 4,
 }
 `;
@@ -94,6 +101,7 @@ Object {
   "membersCount": 4,
   "myState": Object {
     "member": "record(0)",
+    "muted": false,
   },
   "postsCount": 0,
 }
@@ -115,7 +123,9 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 4,
 }
 `;
@@ -135,7 +145,9 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 4,
 }
 `;
@@ -157,6 +169,7 @@ Object {
   "membersCount": 4,
   "myState": Object {
     "member": "record(0)",
+    "muted": false,
   },
   "postsCount": 0,
 }
@@ -177,7 +190,9 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 4,
 }
 `;

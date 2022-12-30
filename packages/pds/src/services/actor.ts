@@ -143,6 +143,28 @@ export class ActorService {
       .execute()
     return res.map((row) => row.scene)
   }
+
+  async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {
+    const { did, mutedByDid, createdAt = new Date() } = info
+    await this.db.db
+      .insertInto('mute')
+      .values({
+        did,
+        mutedByDid,
+        createdAt: createdAt.toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async unmute(info: { did: string; mutedByDid: string }) {
+    const { did, mutedByDid } = info
+    await this.db.db
+      .deleteFrom('mute')
+      .where('did', '=', did)
+      .where('mutedByDid', '=', mutedByDid)
+      .execute()
+  }
 }
 
 export class UserAlreadyExistsError extends Error {}

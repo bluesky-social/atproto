@@ -16,6 +16,14 @@ export default function (server: Server, ctx: AppContext) {
       let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
         .where('notif.userDid', '=', requester)
+        .whereNotExists(
+          ctx.db.db // Omit mentions and replies by muted actors
+            .selectFrom('mute')
+            .selectAll()
+            .where(ref('notif.reason'), 'in', ['mention', 'reply'])
+            .whereRef('did', '=', ref('notif.author'))
+            .where('mutedByDid', '=', requester),
+        )
         .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
         .leftJoin(

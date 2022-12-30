@@ -68,6 +68,62 @@ describe('pds notification views', () => {
     expect(forSnapshot(notifs)).toMatchSnapshot()
   })
 
+  it('fetches notification count omitting mentions and replies by a muted user', async () => {
+    await client.app.bsky.graph.mute(
+      { user: sc.dids.carol }, // Replier
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await client.app.bsky.graph.mute(
+      { user: sc.dids.dan }, // Mentioner
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const notifCount = await client.app.bsky.notification.getCount(
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(notifCount.data.count).toBe(13)
+
+    await client.app.bsky.graph.unmute(
+      { user: sc.dids.carol },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await client.app.bsky.graph.unmute(
+      { user: sc.dids.dan },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+  })
+
+  it('fetches notifications omitting mentions and replies by a muted user', async () => {
+    await client.app.bsky.graph.mute(
+      { user: sc.dids.carol }, // Replier
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await client.app.bsky.graph.mute(
+      { user: sc.dids.dan }, // Mentioner
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const notifRes = await client.app.bsky.notification.list(
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
+
+    const notifs = sort(notifRes.data.notifications)
+    expect(notifs.length).toBe(13)
+    expect(forSnapshot(notifs)).toMatchSnapshot()
+
+    await client.app.bsky.graph.unmute(
+      { user: sc.dids.carol },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await client.app.bsky.graph.unmute(
+      { user: sc.dids.dan },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+  })
+
   it('paginates', async () => {
     const results = (results) =>
       sort(results.flatMap((res) => res.notifications))

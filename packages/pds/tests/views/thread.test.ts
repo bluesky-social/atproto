@@ -74,6 +74,24 @@ describe('pds thread views', () => {
     )
   })
 
+  it('includes the muted status of post authors.', async () => {
+    await client.app.bsky.graph.mute(
+      { user: alice },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+    const thread = await client.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+
+    await client.app.bsky.graph.unmute(
+      { user: alice },
+      { encoding: 'application/json', headers: sc.getHeaders(bob) },
+    )
+  })
+
   it('handles deleted posts correctly', async () => {
     const alice = sc.dids.alice
     const bob = sc.dids.bob
