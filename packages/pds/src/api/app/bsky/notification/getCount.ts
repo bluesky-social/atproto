@@ -17,6 +17,14 @@ export default function (server: Server, ctx: AppContext) {
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
         .where(actorNotSoftDeletedClause(ref('author')))
         .where('did_handle.did', '=', requester)
+        .whereNotExists(
+          ctx.db.db // Omit mentions and replies by muted actors
+            .selectFrom('mute')
+            .selectAll()
+            .where(ref('notif.reason'), 'in', ['mention', 'reply'])
+            .whereRef('did', '=', ref('notif.author'))
+            .where('mutedByDid', '=', requester),
+        )
         .whereRef('notif.indexedAt', '>', 'user.lastSeenNotifs')
         .executeTakeFirst()
 

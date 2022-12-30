@@ -46,5 +46,6 @@ export function toKnownErr(e: any) {
 export interface MyState {
   follow?: string
   member?: string
+  muted?: boolean
   [k: string]: unknown
 }

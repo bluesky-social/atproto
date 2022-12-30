@@ -50,7 +50,7 @@ describe('event stream concurrency', () => {
 
     const start = Date.now()
     await sql`select 1`.execute(db.db) // Should not be blocked by work on the queue
-    expect(Date.now() - start).toBeLessThan(20)
+    expect(Date.now() - start).toBeLessThan(100)
 
     // Ensure all messages are processed
     await messageQueue.processingQueue?.onIdle()

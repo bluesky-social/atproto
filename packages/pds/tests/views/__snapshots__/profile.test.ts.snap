@@ -13,14 +13,16 @@ Object {
   "followsCount": 1,
   "handle": "dan.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 2,
 }
 `;
 
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -35,6 +37,7 @@ Object {
   "membersCount": 0,
   "myState": Object {
     "follow": "record(0)",
+    "muted": false,
   },
   "postsCount": 4,
 }
@@ -52,14 +55,16 @@ Object {
   "followsCount": 1,
   "handle": "dan.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 2,
 }
 `;
 
 exports[`pds profile views fetches own profile 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -72,14 +77,16 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 4,
 }
 `;
 
 exports[`pds profile views fetches scene's profile 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(1)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorScene",
@@ -94,6 +101,7 @@ Object {
   "membersCount": 4,
   "myState": Object {
     "member": "record(0)",
+    "muted": false,
   },
   "postsCount": 0,
 }
@@ -101,8 +109,8 @@ Object {
 
 exports[`pds profile views handles avatars & banners 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-  "banner": "https://pds.public.url/image/jw_F3B9cwBD9_010TEVWwMGKuPDnan38NCToWXQnX6U/rs:fill:750:250:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "banner": "https://pds.public.url/image/7Slq88VYUyM7FpJ6fa7UDU-vmK5T4XuLSmecLayB0w0/rs:fill:1500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -115,14 +123,16 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 4,
 }
 `;
 
 exports[`pds profile views handles partial updates 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -135,14 +145,16 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 4,
 }
 `;
 
 exports[`pds profile views handles scene profile updates 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(1)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorScene",
@@ -157,6 +169,7 @@ Object {
   "membersCount": 4,
   "myState": Object {
     "member": "record(0)",
+    "muted": false,
   },
   "postsCount": 0,
 }
@@ -164,7 +177,7 @@ Object {
 
 exports[`pds profile views updates profile 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -177,7 +190,9 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "membersCount": 0,
-  "myState": Object {},
+  "myState": Object {
+    "muted": false,
+  },
   "postsCount": 4,
 }
 `;

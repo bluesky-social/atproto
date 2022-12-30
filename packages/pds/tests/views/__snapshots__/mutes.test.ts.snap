@@ -1,0 +1,76 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`mute views fetches mutes for the logged-in user. 1`] = `
+Array [
+  Object {
+    "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "displayName": "Dr. Lowell DuBuque",
+    "handle": "elta48.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(1)",
+    "displayName": "Sally Funk",
+    "handle": "magnus53.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(2)",
+    "handle": "nicolas-krajcik10.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(3)",
+    "displayName": "Patrick Sawayn",
+    "handle": "jeffrey-sawayn87.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(4)",
+    "displayName": "Kim Streich",
+    "handle": "adrienne49.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(5)",
+    "displayName": "Carlton Abernathy IV",
+    "handle": "aliya-hodkiewicz.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+  },
+]
+`;
