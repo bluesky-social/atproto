@@ -27,7 +27,7 @@ export class AdminService {
 
   async getModActionOrThrow(id: number): Promise<ModerationActionRow> {
     const action = await this.getModAction(id)
-    if (!action) throw new InvalidRequestError('Action does not exist')
+    if (!action) throw new InvalidRequestError('Action not found')
     return action
   }
 
@@ -71,7 +71,7 @@ export class AdminService {
       .executeTakeFirst()
 
     if (!result) {
-      throw new InvalidRequestError('Moderation action does not exist')
+      throw new InvalidRequestError('Moderation action not found')
     }
 
     return result
@@ -112,7 +112,7 @@ export class AdminService {
 
     reportIds.forEach((reportId) => {
       const report = reports.find((r) => r.id === reportId)
-      if (!report) throw new InvalidRequestError('Report does not exist')
+      if (!report) throw new InvalidRequestError('Report not found')
       if (action.subjectDid !== report.subjectDid) {
         // @TODO if the report and action are both for a record, ensure they are for the same record.
         // Otherwise, if one is for a repo and the other a record, just ensure the repo/did matches.

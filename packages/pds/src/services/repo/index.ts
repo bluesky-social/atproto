@@ -189,7 +189,7 @@ export class RepoService {
     let subjectInfo: ReportSubjectInfo
     if ('did' in subject) {
       const repo = await this.getRepoRoot(subject.did)
-      if (!repo) throw new RepoNotFound()
+      if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
         subjectType: 'com.atproto.repo.report#subjectRepo',
         subjectDid: subject.did,
@@ -205,7 +205,7 @@ export class RepoService {
         builder = builder.where('record.cid', '=', subject.cid.toString())
       }
       const record = await builder.executeTakeFirst()
-      if (!record) throw new RecordNotFound()
+      if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
         subjectType: 'com.atproto.repo.report#subjectRecord',
         subjectDid: subject.uri.host,
@@ -252,10 +252,6 @@ export class RepoService {
 }
 
 export type ModerationReportRow = Selectable<ModerationReport>
-
-export class RecordNotFound extends Error {}
-
-export class RepoNotFound extends Error {}
 
 type ReportSubjectInfo =
   | {

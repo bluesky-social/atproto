@@ -10,11 +10,6 @@ import {
   PreparedWrite,
 } from '../../../repo'
 import AppContext from '../../../context'
-import {
-  ModerationReportRow,
-  RecordNotFound,
-  RepoNotFound,
-} from '../../../services/repo'
 import { ModerationReport } from '../../../db/tables/moderation'
 import { InputSchema as ReportInput } from '../../../lexicon/types/com/atproto/repo/report'
 
@@ -259,27 +254,16 @@ export default function (server: Server, ctx: AppContext) {
 
       const repoService = services.repo(db)
 
-      let report: ModerationReportRow
-      try {
-        report = await repoService.report({
-          reasonType: getReasonType(reasonType),
-          reason,
-          subject: getSubject(subject),
-          reportedByDid: requester,
-        })
-      } catch (err) {
-        if (err instanceof RepoNotFound) {
-          throw new InvalidRequestError('Repo not found')
-        }
-        if (err instanceof RecordNotFound) {
-          throw new InvalidRequestError('Record not found')
-        }
-        throw err
-      }
+      const report = await repoService.report({
+        reasonType: getReasonType(reasonType),
+        reason,
+        subject: getSubject(subject),
+        reportedByDid: requester,
+      })
 
       return {
         encoding: 'application/json',
-        body: ctx.services.repo(db).formatReportView(report),
+        body: repoService.formatReportView(report),
       }
     },
   })
