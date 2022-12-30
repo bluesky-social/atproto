@@ -19,14 +19,18 @@ export class BlockMap {
     return this.map.get(cid.toString())
   }
 
-  getMany(cids: CID[]): BlockMap {
-    return cids.reduce((acc, cur) => {
-      const got = this.get(cur)
+  getMany(cids: CID[]): { blocks: BlockMap; missing: CID[] } {
+    const missing: CID[] = []
+    const blocks = new BlockMap()
+    for (const cid of cids) {
+      const got = this.map.get(cid.toString())
       if (got) {
-        acc.set(cur, got)
+        blocks.set(cid, got)
+      } else {
+        missing.push(cid)
       }
-      return acc
-    }, new BlockMap())
+    }
+    return { blocks, missing }
   }
 
   has(cid: CID): boolean {

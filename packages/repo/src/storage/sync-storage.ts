@@ -28,11 +28,6 @@ export class SyncStorage implements ReadableBlockstore {
   async has(cid: CID): Promise<boolean> {
     return (await this.staged.has(cid)) || (await this.saved.has(cid))
   }
-
-  async checkMissing(cids: CID[]): Promise<CID[]> {
-    const missingTemp = await this.staged.checkMissing(cids)
-    return this.saved.checkMissing(missingTemp)
-  }
 }
 
 export default SyncStorage

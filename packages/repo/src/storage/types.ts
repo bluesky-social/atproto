@@ -10,13 +10,12 @@ export interface WritableBlockstore {
 
 export interface ReadableBlockstore {
   getBytes(cid: CID): Promise<Uint8Array | null>
-  getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }>
   has(cid: CID): Promise<boolean>
-  checkMissing(cids: CID[]): Promise<CID[]>
+  getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }>
 }
 
 export interface CommitableStorage {
-  updateHead(cid: CID): Promise<void>
+  updateHead(cid: CID, prev: CID | null): Promise<void>
   indexCommits(commit: CommitData[]): Promise<void>
   applyCommit(commit: CommitData): Promise<void>
   getHead(forUpdate?: boolean): Promise<CID | null>

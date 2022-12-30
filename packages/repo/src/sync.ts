@@ -25,7 +25,7 @@ export const loadCheckout = async (
   }
   await Promise.all([
     storage.putMany(checkoutBlocks.blocks),
-    storage.updateHead(root),
+    storage.updateHead(root, null),
   ])
 
   return {
@@ -49,7 +49,7 @@ export const loadFullRepo = async (
 
   const [ops] = await Promise.all([
     persistUpdates(storage, updateStorage, updates),
-    storage.updateHead(root),
+    storage.updateHead(root, null),
   ])
 
   return {
@@ -74,7 +74,7 @@ export const loadDiff = async (
 
   const [ops] = await Promise.all([
     persistUpdates(repo.storage, updateStorage, updates),
-    repo.storage.updateHead(root),
+    repo.storage.updateHead(root, repo.cid),
   ])
 
   return {
@@ -99,11 +99,17 @@ export const persistUpdates = async (
   if (diffBlocks.missing.length > 0) {
     throw new MissingSyncBlocksError(diffBlocks.missing)
   }
-  const commits: CommitData[] = updates.map((update) => ({
-    root: update.root,
-    prev: update.prev,
-    blocks: diffBlocks.blocks.getMany(update.newCids.toList()),
-  }))
+  const commits: CommitData[] = updates.map((update) => {
+    const forCommit = diffBlocks.blocks.getMany(update.newCids.toList())
+    if (forCommit.missing.length > 0) {
+      throw new MissingSyncBlocksError(forCommit.missing)
+    }
+    return {
+      root: update.root,
+      prev: update.prev,
+      blocks: forCommit.blocks,
+    }
+  })
 
   await storage.indexCommits(commits)
 

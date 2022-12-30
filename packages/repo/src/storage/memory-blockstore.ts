@@ -23,32 +23,12 @@ export class MemoryBlockstore implements RepoStorage {
     return this.blocks.get(cid) || null
   }
 
-  async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
-    const missing: CID[] = []
-    const blocks = new BlockMap()
-    for (const cid of cids) {
-      const got = this.blocks.get(cid)
-      if (got) {
-        blocks.set(cid, got)
-      } else {
-        missing.push(cid)
-      }
-    }
-    return { blocks, missing }
-  }
-
   async has(cid: CID): Promise<boolean> {
     return this.blocks.has(cid)
   }
 
-  async checkMissing(cids: CID[]): Promise<CID[]> {
-    const missing: CID[] = []
-    cids.forEach((cid) => {
-      if (!this.blocks.has(cid)) {
-        missing.push(cid)
-      }
-    })
-    return missing
+  async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
+    return this.blocks.getMany(cids)
   }
 
   async putBlock(cid: CID, block: Uint8Array): Promise<void> {
@@ -67,7 +47,7 @@ export class MemoryBlockstore implements RepoStorage {
     })
   }
 
-  async updateHead(cid: CID): Promise<void> {
+  async updateHead(cid: CID, _prev: CID | null): Promise<void> {
     this.head = cid
   }
 
