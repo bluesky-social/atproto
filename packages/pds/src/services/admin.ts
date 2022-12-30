@@ -1,20 +1,20 @@
 import { Selectable } from 'kysely'
+import { CID } from 'multiformats/cid'
+import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../db'
 import { ModerationAction } from '../db/tables/moderation'
 import {
   TAKEDOWN,
   View as ModerationActionView,
-  SubjectRepo,
 } from '../lexicon/types/com/atproto/admin/moderationAction'
-import { InputSchema as TakeModAction } from '../lexicon/types/com/atproto/admin/takeModerationAction'
-import { InputSchema as ReverseModAction } from '../lexicon/types/com/atproto/admin/reverseModerationAction'
+import { Services } from '.'
 
 export class AdminService {
-  constructor(public db: Database) {}
+  constructor(public services: Services, public db: Database) {}
 
-  static creator() {
-    return (db: Database) => new AdminService(db)
+  static creator(services: Services) {
+    return (db: Database) => new AdminService(services, db)
   }
 
   async getModAction(id: number): Promise<ModerationActionRow | undefined> {
@@ -31,32 +31,58 @@ export class AdminService {
     return action
   }
 
-  async logModAction(
-    info: TakeModAction & {
-      action: typeof TAKEDOWN
-      subject: SubjectRepo
-      createdAt?: Date
-    },
-  ): Promise<ModerationActionRow> {
+  async logModAction(info: {
+    action: typeof TAKEDOWN
+    subject: { did: string } | { uri: AtUri; cid?: CID }
+    reason: string
+    createdBy: string
+    createdAt?: Date
+  }): Promise<ModerationActionRow> {
     const { action, createdBy, reason, subject, createdAt = new Date() } = info
+
+    // Resolve subject info
+    let subjectInfo: ActionSubjectInfo
+    if ('did' in subject) {
+      const repo = await this.services.repo(this.db).getRepoRoot(subject.did)
+      if (!repo) throw new InvalidRequestError('Repo not found')
+      subjectInfo = {
+        subjectType: 'com.atproto.admin.moderationAction#subjectRepo',
+        subjectDid: subject.did,
+        subjectUri: null,
+        subjectCid: null,
+      }
+    } else {
+      const record = await this.services
+        .record(this.db)
+        .getRecord(subject.uri, subject.cid?.toString() ?? null)
+      if (!record) throw new InvalidRequestError('Record not found')
+      subjectInfo = {
+        subjectType: 'com.atproto.admin.moderationAction#subjectRecord',
+        subjectDid: subject.uri.host,
+        subjectUri: subject.uri.toString(),
+        subjectCid: record.cid,
+      }
+    }
 
     return await this.db.db
       .insertInto('moderation_action')
       .values({
         action,
-        subjectType: 'com.atproto.admin.moderationAction#subjectRepo',
-        subjectDid: subject.did,
+        reason,
         createdAt: createdAt.toISOString(),
         createdBy,
-        reason,
+        ...subjectInfo,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
   }
 
-  async logReverseModAction(
-    info: ReverseModAction & { createdAt: Date },
-  ): Promise<ModerationActionRow> {
+  async logReverseModAction(info: {
+    id: number
+    reason: string
+    createdBy: string
+    createdAt?: Date
+  }): Promise<ModerationActionRow> {
     const { id, createdBy, reason, createdAt = new Date() } = info
 
     const result = await this.db.db
@@ -77,7 +103,7 @@ export class AdminService {
     return result
   }
 
-  async takedownActorByDid(info: { takedownId: number; did: string }) {
+  async takedownRepo(info: { takedownId: number; did: string }) {
     await this.db.db
       .updateTable('did_handle')
       .set({ takedownId: info.takedownId })
@@ -86,11 +112,28 @@ export class AdminService {
       .executeTakeFirst()
   }
 
-  async reverseTakedownActorByDid(info: { did: string }) {
+  async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
       .updateTable('did_handle')
       .set({ takedownId: null })
       .where('did', '=', info.did)
+      .execute()
+  }
+
+  async takedownRecord(info: { takedownId: number; uri: AtUri }) {
+    await this.db.db
+      .updateTable('record')
+      .set({ takedownId: info.takedownId })
+      .where('uri', '=', info.uri.toString())
+      .where('takedownId', 'is', null)
+      .executeTakeFirst()
+  }
+
+  async reverseTakedownRecord(info: { uri: AtUri }) {
+    await this.db.db
+      .updateTable('record')
+      .set({ takedownId: null })
+      .where('did', '=', info.uri.toString())
       .execute()
   }
 
@@ -139,11 +182,6 @@ export class AdminService {
   async formatModActionView(
     modAction: ModerationActionRow,
   ): Promise<ModerationActionView> {
-    if (
-      modAction.subjectType !== 'com.atproto.admin.moderationAction#subjectRepo'
-    ) {
-      throw new Error('Only supports format moderation actions on actors')
-    }
     const resolutions = await this.db.db
       .selectFrom('moderation_report_resolution')
       .select('reportId as id')
@@ -154,10 +192,18 @@ export class AdminService {
     return {
       id: modAction.id,
       action: modAction.action,
-      subject: {
-        $type: modAction.subjectType,
-        did: modAction.subjectDid,
-      },
+      subject:
+        modAction.subjectType ===
+        'com.atproto.admin.moderationAction#subjectRepo'
+          ? {
+              $type: 'com.atproto.admin.moderationAction#subjectRepo',
+              did: modAction.subjectDid,
+            }
+          : {
+              $type: 'com.atproto.admin.moderationAction#subjectRecordRef',
+              uri: modAction.subjectUri,
+              cid: modAction.subjectCid,
+            },
       reason: modAction.reason,
       createdAt: modAction.createdAt,
       createdBy: modAction.createdBy,
@@ -177,3 +223,17 @@ export class AdminService {
 }
 
 export type ModerationActionRow = Selectable<ModerationAction>
+
+type ActionSubjectInfo =
+  | {
+      subjectType: 'com.atproto.admin.moderationAction#subjectRepo'
+      subjectDid: string
+      subjectUri: null
+      subjectCid: null
+    }
+  | {
+      subjectType: 'com.atproto.admin.moderationAction#subjectRecord'
+      subjectDid: string
+      subjectUri: string
+      subjectCid: string
+    }

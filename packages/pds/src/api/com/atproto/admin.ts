@@ -1,10 +1,11 @@
+import { CID } from 'multiformats/cid'
+import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../lexicon'
 import AppContext from '../../../context'
-import {
-  TAKEDOWN,
-  SubjectRepo,
-} from '../../../lexicon/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '../../../lexicon/types/com/atproto/admin/moderationAction'
+import { ModerationAction } from '../../../db/tables/moderation'
+import { InputSchema as ActionInput } from '../../../lexicon/types/com/atproto/admin/takeModerationAction'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
@@ -12,46 +13,41 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input }) => {
       const { db, services } = ctx
       const adminService = services.admin(db)
-      const {
-        action: _action,
-        subject: _subject,
-        reason,
-        createdBy,
-      } = input.body
-
-      if (_action !== TAKEDOWN) {
-        throw new InvalidRequestError('Unsupported action')
-      }
-      if (_subject.$type !== 'com.atproto.admin.moderationAction#subjectRepo') {
-        throw new InvalidRequestError('Unsupported subject type')
-      }
-
-      const action = _action as typeof TAKEDOWN
-      const subject = _subject as SubjectRepo
-
-      const repoRoot = await services.repo(db).getRepoRoot(subject.did)
-      if (!repoRoot) {
-        throw new Error('Repo does not exist')
-      }
+      const { action, subject, reason, createdBy } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
         const adminTxn = services.admin(dbTxn)
-        const now = new Date()
 
         const result = await adminTxn.logModAction({
-          action,
-          subject,
+          action: getAction(action),
+          subject: getSubject(subject),
           createdBy,
           reason,
-          createdAt: now,
         })
 
-        if (result.action === TAKEDOWN) {
-          await authTxn.revokeRefreshTokensByDid(subject.did)
-          await adminTxn.takedownActorByDid({
+        if (
+          result.action === TAKEDOWN &&
+          result.subjectType ===
+            'com.atproto.admin.moderationAction#subjectRepo' &&
+          result.subjectDid
+        ) {
+          await authTxn.revokeRefreshTokensByDid(result.subjectDid)
+          await adminTxn.takedownRepo({
             takedownId: result.id,
-            did: subject.did,
+            did: result.subjectDid,
+          })
+        }
+
+        if (
+          result.action === TAKEDOWN &&
+          result.subjectType ===
+            'com.atproto.admin.moderationAction#subjectRecord' &&
+          result.subjectUri
+        ) {
+          await adminTxn.takedownRecord({
+            takedownId: result.id,
+            uri: new AtUri(result.subjectUri),
           })
         }
 
@@ -93,8 +89,26 @@ export default function (server: Server, ctx: AppContext) {
           reason,
         })
 
-        if (result.action === TAKEDOWN && result.subjectDid !== null) {
-          await adminTxn.reverseTakedownActorByDid({ did: result.subjectDid })
+        if (
+          result.action === TAKEDOWN &&
+          result.subjectType ===
+            'com.atproto.admin.moderationAction#subjectRepo' &&
+          result.subjectDid
+        ) {
+          await adminTxn.reverseTakedownRepo({
+            did: result.subjectDid,
+          })
+        }
+
+        if (
+          result.action === TAKEDOWN &&
+          result.subjectType ===
+            'com.atproto.admin.moderationAction#subjectRecord' &&
+          result.subjectUri
+        ) {
+          await adminTxn.reverseTakedownRecord({
+            uri: new AtUri(result.subjectUri),
+          })
         }
 
         return result
@@ -126,4 +140,44 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+function getAction(action: ActionInput['action']) {
+  if (action === TAKEDOWN) {
+    return action as ModerationAction['action']
+  }
+  throw new InvalidRequestError('Invalid action')
+}
+
+function getSubject(subject: ActionInput['subject']) {
+  if (
+    subject.$type === 'com.atproto.admin.moderationAction#subjectRepo' &&
+    typeof subject.did === 'string'
+  ) {
+    return { did: subject.did }
+  }
+  if (
+    subject.$type === 'com.atproto.admin.moderationAction#subjectRecord' &&
+    typeof subject.did === 'string' &&
+    typeof subject.collection === 'string' &&
+    typeof subject.rkey === 'string' &&
+    (subject.cid === undefined || typeof subject.cid === 'string')
+  ) {
+    return {
+      uri: AtUri.make(subject.did, subject.collection, subject.rkey),
+      cid: subject.cid ? parseCID(subject.cid) : undefined,
+    }
+  }
+  throw new InvalidRequestError('Invalid subject')
+}
+
+function parseCID(cid: string) {
+  try {
+    return CID.parse(cid)
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      throw new InvalidRequestError('Invalid cid')
+    }
+    throw err
+  }
 }
