@@ -6,14 +6,19 @@ import { ImageUriBuilder } from '../../image/uri'
 import { Presented as PresentedImage } from '../../lexicon/types/app/bsky/embed/images'
 import { View as PostView } from '../../lexicon/types/app/bsky/feed/post'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
+import { Services } from '..'
 
 export * from './types'
 
 export class FeedService {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public services: Services,
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+  ) {}
 
-  static creator(imgUriBuilder: ImageUriBuilder) {
-    return (db: Database) => new FeedService(db, imgUriBuilder)
+  static creator(services: Services, imgUriBuilder: ImageUriBuilder) {
+    return (db: Database) => new FeedService(services, db, imgUriBuilder)
   }
 
   selectPostQb() {

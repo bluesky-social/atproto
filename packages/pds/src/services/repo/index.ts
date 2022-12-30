@@ -9,17 +9,18 @@ import { dbLogger as log } from '../../logger'
 import { MessageQueue } from '../../event-stream/types'
 import SqlBlockstore from '../../sql-blockstore'
 import { PreparedCreate, PreparedWrite } from '../../repo/types'
-import { RecordService } from '../record'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { actorNotSoftDeletedClause } from '../../db/util'
 import { ModerationReport } from '../../db/tables/moderation'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/repo/report'
+import { Services } from '..'
 
 export class RepoService {
   blobs: RepoBlobs
 
   constructor(
+    public services: Services,
     public db: Database,
     public messageQueue: MessageQueue,
     public blobstore: BlobStore,
@@ -27,8 +28,13 @@ export class RepoService {
     this.blobs = new RepoBlobs(db, blobstore)
   }
 
-  static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
-    return (db: Database) => new RepoService(db, messageQueue, blobstore)
+  static creator(
+    services: Services,
+    messageQueue: MessageQueue,
+    blobstore: BlobStore,
+  ) {
+    return (db: Database) =>
+      new RepoService(services, db, messageQueue, blobstore)
   }
 
   async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {
@@ -158,7 +164,7 @@ export class RepoService {
 
   async indexWrites(writes: PreparedWrite[], now: string) {
     this.db.assertTransaction()
-    const recordTxn = new RecordService(this.db, this.messageQueue)
+    const recordTxn = this.services.record(this.db)
     await Promise.all(
       writes.map(async (write) => {
         if (write.action === 'create') {
@@ -197,14 +203,9 @@ export class RepoService {
         subjectCid: null,
       }
     } else {
-      let builder = this.db.db
-        .selectFrom('record')
-        .select('cid')
-        .where('record.uri', '=', subject.uri.toString())
-      if (subject.cid) {
-        builder = builder.where('record.cid', '=', subject.cid.toString())
-      }
-      const record = await builder.executeTakeFirst()
+      const record = await this.services
+        .record(this.db)
+        .getRecord(subject.uri, subject.cid?.toString() ?? null)
       if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
         subjectType: 'com.atproto.repo.report#subjectRecord',
@@ -243,7 +244,7 @@ export class RepoService {
               did: report.subjectDid,
             }
           : {
-              $type: 'com.atproto.repo.report#subjectRecord',
+              $type: 'com.atproto.repo.report#subjectRecordRef',
               uri: report.subjectUri,
               cid: report.subjectCid,
             },

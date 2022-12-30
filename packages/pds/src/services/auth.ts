@@ -1,11 +1,12 @@
 import Database from '../db'
 import { RefreshToken } from '../auth'
+import { Services } from '.'
 
 export class AuthService {
-  constructor(public db: Database) {}
+  constructor(public services: Services, public db: Database) {}
 
-  static creator() {
-    return (db: Database) => new AuthService(db)
+  static creator(services: Services) {
+    return (db: Database) => new AuthService(services, db)
   }
 
   async grantRefreshToken(payload: RefreshToken) {

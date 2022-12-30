@@ -7,12 +7,13 @@ import { DidHandle } from '../db/tables/did-handle'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
 import { APP_BSKY_GRAPH } from '../lexicon'
 import { actorNotSoftDeletedClause } from '../db/util'
+import { Services } from '.'
 
 export class ActorService {
-  constructor(public db: Database) {}
+  constructor(public services: Services, public db: Database) {}
 
-  static creator() {
-    return (db: Database) => new ActorService(db)
+  static creator(services: Services) {
+    return (db: Database) => new ActorService(services, db)
   }
 
   async getUser(

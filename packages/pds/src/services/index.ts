@@ -15,14 +15,27 @@ export function createServices(resources: {
   imgUriBuilder: ImageUriBuilder
 }): Services {
   const { messageQueue, blobstore, imgUriBuilder } = resources
-  return {
-    actor: ActorService.creator(),
-    auth: AuthService.creator(),
-    feed: FeedService.creator(imgUriBuilder),
-    record: RecordService.creator(messageQueue),
-    repo: RepoService.creator(messageQueue, blobstore),
-    admin: AdminService.creator(),
+  const services = {
+    get actor() {
+      return ActorService.creator(services)
+    },
+    get auth() {
+      return AuthService.creator(services)
+    },
+    get feed() {
+      return FeedService.creator(services, imgUriBuilder)
+    },
+    get record() {
+      return RecordService.creator(services, messageQueue)
+    },
+    get repo() {
+      return RepoService.creator(services, messageQueue, blobstore)
+    },
+    get admin() {
+      return AdminService.creator(services)
+    },
   }
+  return services
 }
 
 export type Services = {

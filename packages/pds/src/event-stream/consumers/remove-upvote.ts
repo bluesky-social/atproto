@@ -1,13 +1,17 @@
 import { sql } from 'kysely'
+import AppContext from '../../context'
 import Database from '../../db'
-import { ActorService } from '../../services/actor'
 import { RemoveUpvote } from '../messages'
 import { Consumer } from '../types'
 
 export default class extends Consumer<RemoveUpvote> {
+  constructor(public ctx: AppContext) {
+    super()
+  }
+
   async dispatch(ctx: { db: Database; message: RemoveUpvote }) {
     const { db, message } = ctx
-    const actorTxn = new ActorService(db)
+    const actorTxn = this.ctx.services.actor(db)
     const userScenes = await actorTxn.getScenesForUser(message.user)
     if (userScenes.length === 0) return
     await db.db
