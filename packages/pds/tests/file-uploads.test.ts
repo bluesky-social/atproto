@@ -124,8 +124,8 @@ describe('file uploads', () => {
     const info = await image.getInfo(res.data)
     expect(info).toEqual(
       expect.objectContaining({
-        height: 250,
-        width: 250,
+        height: 500,
+        width: 500,
       }),
     )
   })

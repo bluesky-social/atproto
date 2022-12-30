@@ -15,5 +15,11 @@ export interface WithInfo {
   handle: string
   displayName?: string
   avatar?: string
+  viewer?: ViewerState
+  [k: string]: unknown
+}
+
+export interface ViewerState {
+  muted?: boolean
   [k: string]: unknown
 }

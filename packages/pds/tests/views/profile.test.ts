@@ -202,13 +202,33 @@ describe('pds profile views', () => {
   })
 
   it('blocked by actor takedown', async () => {
-    await client.com.atproto.admin.takeModerationAction(
-      {
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.moderationAction#subjectRepo',
-          did: alice,
+    const { data: action } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.admin.moderationAction#subjectRepo',
+            did: alice,
+          },
+          createdBy: 'X',
+          reason: 'Y',
         },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    const promise = client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    await expect(promise).rejects.toThrow('Account has been taken down')
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: action.id,
         createdBy: 'X',
         reason: 'Y',
       },
@@ -217,10 +237,42 @@ describe('pds profile views', () => {
         headers: { authorization: adminAuth() },
       },
     )
-    const promise = client.app.bsky.actor.getProfile(
+  })
+
+  it('includes muted status.', async () => {
+    const { data: initial } = await client.app.bsky.actor.getProfile(
       { actor: alice },
       { headers: sc.getHeaders(bob) },
     )
-    await expect(promise).rejects.toThrow('Account has been taken down')
+
+    expect(initial.myState?.muted).toEqual(false)
+
+    await client.app.bsky.graph.mute(
+      { user: alice },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+    const { data: muted } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(muted.myState?.muted).toEqual(true)
+
+    const { data: fromBobUnrelated } = await client.app.bsky.actor.getProfile(
+      { actor: dan },
+      { headers: sc.getHeaders(bob) },
+    )
+    const { data: toAliceUnrelated } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(dan) },
+    )
+
+    expect(fromBobUnrelated.myState?.muted).toEqual(false)
+    expect(toAliceUnrelated.myState?.muted).toEqual(false)
+
+    await client.app.bsky.graph.unmute(
+      { user: alice },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
   })
 })

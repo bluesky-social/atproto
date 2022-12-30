@@ -52,5 +52,6 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
 export interface MyState {
   follow?: string
   member?: string
+  muted?: boolean
   [k: string]: unknown
 }

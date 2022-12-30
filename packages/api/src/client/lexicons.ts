@@ -1204,6 +1204,9 @@ export const schemaDict = {
           member: {
             type: 'string',
           },
+          muted: {
+            type: 'boolean',
+          },
         },
       },
     },
@@ -1315,15 +1318,15 @@ export const schemaDict = {
             avatar: {
               type: 'image',
               accept: ['image/png', 'image/jpeg'],
-              maxWidth: 500,
-              maxHeight: 500,
+              maxWidth: 1000,
+              maxHeight: 1000,
               maxSize: 300000,
             },
             banner: {
               type: 'image',
               accept: ['image/png', 'image/jpeg'],
-              maxWidth: 1500,
-              maxHeight: 500,
+              maxWidth: 3000,
+              maxHeight: 1000,
               maxSize: 500000,
             },
           },
@@ -1368,6 +1371,18 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#viewerState',
+          },
+        },
+      },
+      viewerState: {
+        type: 'object',
+        properties: {
+          muted: {
+            type: 'boolean',
           },
         },
       },
@@ -1620,9 +1635,9 @@ export const schemaDict = {
           thumb: {
             type: 'image',
             accept: ['image/*'],
-            maxWidth: 250,
-            maxHeight: 250,
-            maxSize: 100000,
+            maxWidth: 1000,
+            maxHeight: 1000,
+            maxSize: 300000,
           },
         },
       },
@@ -1682,8 +1697,8 @@ export const schemaDict = {
           image: {
             type: 'image',
             accept: ['image/*'],
-            maxWidth: 500,
-            maxHeight: 500,
+            maxWidth: 1000,
+            maxHeight: 1000,
             maxSize: 300000,
           },
           alt: {
@@ -2280,6 +2295,9 @@ export const schemaDict = {
           },
           downvote: {
             type: 'string',
+          },
+          muted: {
+            type: 'boolean',
           },
         },
       },
@@ -2923,6 +2941,116 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetMutes: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getMutes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Who does the viewer mute?',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['mutes'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              mutes: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getMutes#mute',
+                },
+              },
+            },
+          },
+        },
+      },
+      mute: {
+        type: 'object',
+        required: ['did', 'declaration', 'handle', 'createdAt'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphMute: {
+    lexicon: 1,
+    id: 'app.bsky.graph.mute',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Mute an actor by did or handle.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['user'],
+            properties: {
+              user: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphUnmute: {
+    lexicon: 1,
+    id: 'app.bsky.graph.unmute',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Unmute an actor by did or handle.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['user'],
+            properties: {
+              user: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationGetCount: {
     lexicon: 1,
     id: 'app.bsky.notification.getCount',
@@ -3192,6 +3320,9 @@ export const ids = {
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetMembers: 'app.bsky.graph.getMembers',
   AppBskyGraphGetMemberships: 'app.bsky.graph.getMemberships',
+  AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
+  AppBskyGraphMute: 'app.bsky.graph.mute',
+  AppBskyGraphUnmute: 'app.bsky.graph.unmute',
   AppBskyNotificationGetCount: 'app.bsky.notification.getCount',
   AppBskyNotificationList: 'app.bsky.notification.list',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',

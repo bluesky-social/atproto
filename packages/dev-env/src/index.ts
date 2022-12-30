@@ -4,6 +4,7 @@ import crytpo from 'crypto'
 import PDSServer, {
   Database as PDSDatabase,
   MemoryBlobStore,
+  ServerConfig as PDSServerConfig,
 } from '@atproto/pds'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
@@ -80,7 +81,7 @@ export class DevEnvServer {
           db,
           blobstore,
           keypair,
-          cfg: {
+          config: new PDSServerConfig({
             debugMode: true,
             version: '0.0.0',
             scheme: 'http',
@@ -101,7 +102,7 @@ export class DevEnvServer {
               'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
             privacyPolicyUrl: 'https://example.com/privacy',
             termsOfServiceUrl: 'https://example.com/tos',
-          },
+          }),
         })
         await startServer(pds)
         this.inst = pds

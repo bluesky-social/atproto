@@ -63,14 +63,14 @@ describe('image processing server', () => {
       expect.objectContaining({
         height: 500,
         width: 500,
-        size: 14605,
+        size: 67221,
       }),
     )
     expect(res.headers).toEqual(
       expect.objectContaining({
         'content-type': 'image/jpeg',
         'cache-control': 'public, max-age=31536000',
-        'content-length': '14605',
+        'content-length': '67221',
       }),
     )
   })

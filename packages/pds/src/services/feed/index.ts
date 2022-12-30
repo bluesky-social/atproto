@@ -76,12 +76,20 @@ export class FeedService {
       ])
   }
 
-  async getActorViews(dids: string[]): Promise<ActorViewMap> {
+  async getActorViews(
+    dids: string[],
+    requester: string,
+  ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const actors = await this.db.db
       .selectFrom('did_handle as actor')
       .where('actor.did', 'in', dids)
       .leftJoin('profile', 'profile.creator', 'actor.did')
+      .leftJoin('mute', (join) =>
+        join
+          .onRef('mute.did', '=', 'actor.did')
+          .on('mute.mutedByDid', '=', requester),
+      )
       .select([
         'actor.did as did',
         'actor.declarationCid as declarationCid',
@@ -89,6 +97,7 @@ export class FeedService {
         'actor.handle as handle',
         'profile.displayName as displayName',
         'profile.avatarCid as avatarCid',
+        'mute.did as muted',
       ])
       .execute()
     return actors.reduce((acc, cur) => {
@@ -105,6 +114,7 @@ export class FeedService {
           avatar: cur.avatarCid
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
+          viewer: { muted: !!cur.muted },
         },
       }
     }, {} as ActorViewMap)
