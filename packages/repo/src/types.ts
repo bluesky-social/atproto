@@ -4,6 +4,9 @@ import { def as common } from '@atproto/common'
 import { CID } from 'multiformats'
 import BlockMap from './block-map'
 
+// Repo nodes
+// ---------------
+
 const repoMeta = z.object({
   did: z.string(),
   version: z.number(),
@@ -25,33 +28,21 @@ const commit = z.object({
 })
 export type Commit = z.infer<typeof commit>
 
+export const def = {
+  ...common,
+  repoMeta,
+  repoRoot,
+  commit,
+}
+
+// Repo Operations
+// ---------------
+
 export enum WriteOpAction {
   Create = 'create',
   Update = 'update',
   Delete = 'delete',
 }
-
-export type CidCreateOp = {
-  action: WriteOpAction.Create
-  collection: string
-  rkey: string
-  value: CID
-}
-
-export type CidUpdateOp = {
-  action: WriteOpAction.Update
-  collection: string
-  rkey: string
-  value: CID
-}
-
-export type CidDeleteOp = {
-  action: WriteOpAction.Delete
-  collection: string
-  rkey: string
-}
-
-export type CidWriteOp = CidCreateOp | CidUpdateOp | CidDeleteOp
 
 export type RecordCreateOp = {
   action: WriteOpAction.Create
@@ -75,12 +66,8 @@ export type RecordDeleteOp = {
 
 export type RecordWriteOp = RecordCreateOp | RecordUpdateOp | RecordDeleteOp
 
-export const def = {
-  ...common,
-  repoMeta,
-  repoRoot,
-  commit,
-}
+// Updates/Commits
+// ---------------
 
 export type CommitBlockData = {
   root: CID
@@ -95,9 +82,10 @@ export type RepoUpdate = CommitData & {
   ops: RecordWriteOp[]
 }
 
-export interface CarStreamable {
-  writeToCarStream(car: BlockWriter): Promise<void>
-}
+export type RepoContents = Record<string, Record<string, CID>>
+
+// DataStores
+// ---------------
 
 export type DataValue = {
   key: string

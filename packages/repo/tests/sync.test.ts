@@ -78,7 +78,7 @@ describe('Sync', () => {
       data: unstoredData.root,
     }
     const rootCid = await blocks.add(root)
-    // we generated a bad sig by signing the data cid instead of root cid
+    // we generate a bad sig by signing the data cid instead of root cid
     const commit = {
       root: rootCid,
       sig: await aliceKey.sign(unstoredData.root.bytes),

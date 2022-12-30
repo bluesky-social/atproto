@@ -6,42 +6,51 @@ import SyncStorage from './storage/sync-storage'
 import ReadableRepo from './readable-repo'
 import Repo from './repo'
 import CidSet from './cid-set'
+import { parseRecordKey } from './util'
+import { RepoContents } from './types'
 
-type VerifiedUpdate = {
+export type VerifiedCheckout = {
+  contents: RepoContents
+  newCids: CidSet
+}
+
+export const verifyCheckout = async (
+  storage: ReadableBlockstore,
+  root: CID,
+  didResolver: DidResolver,
+): Promise<VerifiedCheckout> => {
+  const repo = await ReadableRepo.load(storage, root)
+  const validSig = await didResolver.verifySignature(
+    repo.did,
+    repo.commit.root.bytes,
+    repo.commit.sig,
+  )
+  if (!validSig) {
+    throw new RepoVerificationError(
+      `Invalid signature on commit: ${repo.cid.toString()}`,
+    )
+  }
+  const diff = await DataDiff.of(repo.data, null)
+  const contents = diff.addList().reduce((acc, cur) => {
+    const { collection, rkey } = parseRecordKey(cur.key)
+    if (!acc[collection]) {
+      acc[collection] = {}
+    }
+    acc[collection][rkey] = cur.cid
+    return acc
+  }, {} as RepoContents)
+  return {
+    contents,
+    newCids: diff.newCids,
+  }
+}
+
+export type VerifiedUpdate = {
   root: CID
   prev: CID | null
   diff: DataDiff
   newCids: CidSet
 }
-
-// type RecordsMap = { [key: string]: CID }
-
-// export const verifyCheckout = async (
-//   storage: ReadableBlockstore,
-//   root: CID,
-//   didResolver: DidResolver,
-// ): Promise<RecordsMap> => {
-//   const repo = await Repo.load(storage, root)
-//   const validSig = await didResolver.verifySignature(
-//     repo.did,
-//     repo.commit.root.bytes,
-//     repo.commit.sig,
-//   )
-//   if (!validSig) {
-//     throw new RepoVerificationError(
-//       `Invalid signature on commit: ${repo.cid.toString()}`,
-//     )
-//   }
-//   const entries = await repo.data.list()
-//   const entryCids = entries.map((entry) => entry.value)
-//   const missing = await storage.checkMissing(entryCids)
-//   const map: RecordsMap = {}
-//   for (const entyr of entries) { }
-//   return map
-//   return entries.
-
-//   return entries.
-// }
 
 export const verifyFullHistory = async (
   storage: RepoStorage,

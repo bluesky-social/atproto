@@ -4,9 +4,30 @@ import Repo from './repo'
 import * as verify from './verify'
 import { DidResolver } from '@atproto/did-resolver'
 import * as util from './util'
-import { CommitData, RecordWriteOp } from './types'
+import { CommitData, RecordWriteOp, RepoContents } from './types'
 import { CID } from 'multiformats/cid'
 import CidSet from './cid-set'
+
+export const loadCheckout = async (
+  storage: RepoStorage,
+  repoCar: Uint8Array,
+  didResolver: DidResolver,
+): Promise<{ root: CID; contents: RepoContents }> => {
+  const { root, blocks } = await util.readCar(repoCar)
+  const updateStorage = new MemoryBlockstore(blocks)
+  const checkout = await verify.verifyCheckout(updateStorage, root, didResolver)
+
+  const checkoutBlocks = await updateStorage.getBlocks(
+    checkout.newCids.toList(),
+  )
+
+  await Promise.all([storage.putMany(checkoutBlocks), storage.updateHead(root)])
+
+  return {
+    root,
+    contents: checkout.contents,
+  }
+}
 
 export const loadFullRepo = async (
   storage: RepoStorage,
@@ -21,22 +42,10 @@ export const loadFullRepo = async (
     didResolver,
   )
 
-  const newCids = new CidSet()
-  const fullDiff = new DataDiff()
-  for (const update of updates) {
-    newCids.addSet(update.newCids)
-    fullDiff.addDiff(update.diff)
-  }
-
-  const diffBlocks = await updateStorage.getBlocks(newCids.toList())
-  const commits: CommitData[] = updates.map((update) => ({
-    root: update.root,
-    prev: update.prev,
-    blocks: diffBlocks.getMany(update.newCids.toList()),
-  }))
-
-  await Promise.all([storage.indexCommits(commits), storage.updateHead(root)])
-  const ops = await util.diffToWriteOps(fullDiff, diffBlocks)
+  const [ops] = await Promise.all([
+    persistUpdates(storage, updateStorage, updates),
+    storage.updateHead(root),
+  ])
 
   return {
     root,
@@ -58,6 +67,22 @@ export const loadDiff = async (
     didResolver,
   )
 
+  const [ops] = await Promise.all([
+    persistUpdates(repo.storage, updateStorage, updates),
+    repo.storage.updateHead(root),
+  ])
+
+  return {
+    root,
+    ops,
+  }
+}
+
+export const persistUpdates = async (
+  storage: RepoStorage,
+  updateStorage: RepoStorage,
+  updates: verify.VerifiedUpdate[],
+): Promise<RecordWriteOp[]> => {
   const newCids = new CidSet()
   const fullDiff = new DataDiff()
   for (const update of updates) {
@@ -72,15 +97,7 @@ export const loadDiff = async (
     blocks: diffBlocks.getMany(update.newCids.toList()),
   }))
 
-  await Promise.all([
-    repo.storage.indexCommits(commits),
-    repo.storage.updateHead(root),
-  ])
+  await storage.indexCommits(commits)
 
-  const ops = await util.diffToWriteOps(fullDiff, diffBlocks)
-
-  return {
-    root,
-    ops,
-  }
+  return util.diffToWriteOps(fullDiff, diffBlocks)
 }
