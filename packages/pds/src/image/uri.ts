@@ -43,8 +43,9 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'cover',
-        height: 250,
-        width: 250,
+        height: 500,
+        width: 500,
+        quality: 100,
         min: true,
       })
     } else if (id === 'banner') {
@@ -52,8 +53,9 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'cover',
-        height: 250,
-        width: 750,
+        height: 500,
+        width: 1500,
+        quality: 100,
         min: true,
       })
     } else if (id === 'feed_fullsize') {
@@ -61,8 +63,9 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'inside',
-        height: 500,
-        width: 500,
+        height: 1000,
+        width: 1000,
+        quality: 100,
         min: true,
       })
     } else if (id === 'feed_thumbnail') {
@@ -70,8 +73,9 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'inside',
-        height: 250,
-        width: 250,
+        height: 500,
+        width: 500,
+        quality: 100,
         min: true,
       })
     } else {
