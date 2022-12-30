@@ -1,7 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { check } from '@atproto/common'
 import BlockMap from '../block-map'
-import * as util from './util'
 import { ReadableBlockstore } from './types'
 
 export class SyncStorage implements ReadableBlockstore {
@@ -16,16 +14,15 @@ export class SyncStorage implements ReadableBlockstore {
     return this.saved.getBytes(cid)
   }
 
-  async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
-    return util.readObject(this, cid, schema)
-  }
-
-  async getBlocks(cids: CID[]): Promise<BlockMap> {
-    const got = await this.staged.getBlocks(cids)
-    const stillNeeded = cids.filter((cid) => !got.has(cid))
-    const more = await this.saved.getBlocks(stillNeeded)
-    got.addMap(more)
-    return got
+  async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
+    const fromStaged = await this.staged.getBlocks(cids)
+    const fromSaved = await this.saved.getBlocks(fromStaged.missing)
+    const blocks = fromStaged.blocks
+    blocks.add(fromSaved.blocks)
+    return {
+      blocks,
+      missing: fromSaved.missing,
+    }
   }
 
   async has(cid: CID): Promise<boolean> {

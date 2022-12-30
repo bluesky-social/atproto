@@ -2,7 +2,6 @@ import stream from 'stream'
 import { CID } from 'multiformats/cid'
 import BlockMap from '../block-map'
 import { CommitBlockData, CommitData } from '../types'
-import { check } from '@atproto/common'
 
 export interface WritableBlockstore {
   putBlock(cid: CID, block: Uint8Array): Promise<void>
@@ -11,8 +10,7 @@ export interface WritableBlockstore {
 
 export interface ReadableBlockstore {
   getBytes(cid: CID): Promise<Uint8Array | null>
-  get<T>(cid: CID, schema: check.Def<T>): Promise<T>
-  getBlocks(cids: CID[]): Promise<BlockMap>
+  getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }>
   has(cid: CID): Promise<boolean>
   checkMissing(cids: CID[]): Promise<CID[]>
 }

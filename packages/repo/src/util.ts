@@ -20,6 +20,7 @@ import {
   WriteOpAction,
 } from './types'
 import BlockMap from './block-map'
+import { MissingBlocksError } from './storage/error'
 
 export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,
@@ -67,8 +68,13 @@ export const getWriteOpLog = async (
   }
   const fullDiff = collapseDiffs(diffs)
   const diffBlocks = await storage.getBlocks(fullDiff.newCidList())
+  if (diffBlocks.missing.length > 0) {
+    throw new MissingBlocksError('write op log', diffBlocks.missing)
+  }
   // Map MST diffs to write ops
-  return Promise.all(diffs.map((diff) => diffToWriteOps(diff, diffBlocks)))
+  return Promise.all(
+    diffs.map((diff) => diffToWriteOps(diff, diffBlocks.blocks)),
+  )
 }
 
 export const diffToWriteOps = (

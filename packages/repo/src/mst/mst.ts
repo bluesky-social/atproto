@@ -1,13 +1,19 @@
 import z from 'zod'
 import { CID } from 'multiformats'
 
-import { ReadableBlockstore } from '../storage'
-import { def, cidForData, check, ipldBytesToValue } from '@atproto/common'
+import { ReadableBlockstore, readObj } from '../storage'
+import {
+  schema as common,
+  cidForData,
+  check,
+  ipldBytesToValue,
+} from '@atproto/common'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
 import BlockMap from '../block-map'
 import CidSet from '../cid-set'
+import { MissingBlocksError } from '../storage/error'
 
 /**
  * This is an implementation of a Merkle Search Tree (MST)
@@ -39,18 +45,23 @@ import CidSet from '../cid-set'
  * Then the first will be described as `prefix: 0, key: 'bsky/posts/abcdefg'`,
  * and the second will be described as `prefix: 16, key: 'hi'.`
  */
-const subTreePointer = z.nullable(def.cid)
+const subTreePointer = z.nullable(common.cid)
 const treeEntry = z.object({
   p: z.number(), // prefix count of utf-8 chars that this key shares with the prev key
   k: z.string(), // the rest of the key outside the shared prefix
-  v: def.cid, // value
+  v: common.cid, // value
   t: subTreePointer, // next subtree (to the right of leaf)
 })
-export const nodeDataDef = z.object({
+const nodeData = z.object({
   l: subTreePointer, // left-most subtree
   e: z.array(treeEntry), //entries
 })
-export type NodeData = z.infer<typeof nodeDataDef>
+export type NodeData = z.infer<typeof nodeData>
+
+export const nodeDataDef = {
+  name: 'mst node',
+  schema: nodeData,
+}
 
 export type NodeEntry = MST | Leaf
 
@@ -136,7 +147,7 @@ export class MST implements DataStore {
   async getEntries(): Promise<NodeEntry[]> {
     if (this.entries) return [...this.entries]
     if (this.pointer) {
-      const data = await this.storage.get(this.pointer, nodeDataDef)
+      const data = await readObj(this.storage, this.pointer, nodeDataDef)
       const firstLeaf = data.e[0]
       const layer =
         firstLeaf !== undefined
@@ -677,8 +688,11 @@ export class MST implements DataStore {
     while (toFetch.length > 0) {
       const nextLayer: CID[] = []
       const fetched = await this.storage.getBlocks(toFetch)
+      if (fetched.missing.length > 0) {
+        throw new MissingBlocksError('mst node', fetched.missing)
+      }
       for (const cid of toFetch) {
-        const found = fetched.get(cid)
+        const found = fetched.blocks.get(cid)
         if (!found) {
           throw new Error(`Could not find block with CID: ${cid.toString()}`)
         }
@@ -698,7 +712,11 @@ export class MST implements DataStore {
       toFetch = nextLayer
     }
     const leafData = await this.storage.getBlocks(leaves)
-    for (const leaf of leafData.entries()) {
+    if (leafData.missing.length > 0) {
+      throw new MissingBlocksError('mst leaf', leafData.missing)
+    }
+
+    for (const leaf of leafData.blocks.entries()) {
       await car.put(leaf)
     }
   }

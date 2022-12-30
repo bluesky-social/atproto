@@ -20,8 +20,13 @@ export const loadCheckout = async (
   const checkoutBlocks = await updateStorage.getBlocks(
     checkout.newCids.toList(),
   )
-
-  await Promise.all([storage.putMany(checkoutBlocks), storage.updateHead(root)])
+  if (checkoutBlocks.missing.length > 0) {
+    throw new MissingSyncBlocksError(checkoutBlocks.missing)
+  }
+  await Promise.all([
+    storage.putMany(checkoutBlocks.blocks),
+    storage.updateHead(root),
+  ])
 
   return {
     root,
@@ -91,13 +96,23 @@ export const persistUpdates = async (
   }
 
   const diffBlocks = await updateStorage.getBlocks(newCids.toList())
+  if (diffBlocks.missing.length > 0) {
+    throw new MissingSyncBlocksError(diffBlocks.missing)
+  }
   const commits: CommitData[] = updates.map((update) => ({
     root: update.root,
     prev: update.prev,
-    blocks: diffBlocks.getMany(update.newCids.toList()),
+    blocks: diffBlocks.blocks.getMany(update.newCids.toList()),
   }))
 
   await storage.indexCommits(commits)
 
-  return util.diffToWriteOps(fullDiff, diffBlocks)
+  return util.diffToWriteOps(fullDiff, diffBlocks.blocks)
+}
+
+class MissingSyncBlocksError extends Error {
+  constructor(cids: CID[]) {
+    const cidStr = cids.map((c) => c.toString())
+    super(`missing needed blocks for sync: ${cidStr}`)
+  }
 }

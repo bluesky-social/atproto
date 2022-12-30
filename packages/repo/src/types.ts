@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { BlockWriter } from '@ipld/car/writer'
-import { def as common } from '@atproto/common'
+import { schema as common, def as commonDef } from '@atproto/common'
 import { CID } from 'multiformats'
 import BlockMap from './block-map'
 
@@ -28,11 +28,27 @@ const commit = z.object({
 })
 export type Commit = z.infer<typeof commit>
 
-export const def = {
+export const schema = {
   ...common,
   repoMeta,
   repoRoot,
   commit,
+}
+
+export const def = {
+  ...commonDef,
+  repoMeta: {
+    name: 'repo meta',
+    schema: schema.repoMeta,
+  },
+  repoRoot: {
+    name: 'repo root',
+    schema: schema.repoRoot,
+  },
+  commit: {
+    name: 'commit',
+    schema: schema.commit,
+  },
 }
 
 // Repo Operations

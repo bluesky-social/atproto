@@ -1,4 +1,4 @@
-import { CommitBlockData, CommitData, RepoStorage } from '@atproto/repo'
+import { CommitData, RepoStorage } from '@atproto/repo'
 import BlockMap from '@atproto/repo/src/block-map'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
@@ -6,15 +6,13 @@ import Database from './db'
 import { IpldBlock } from './db/tables/ipld-block'
 import { IpldBlockCreator } from './db/tables/ipld-block-creator'
 
-export class SqlRepoStorage extends RepoStorage {
+export class SqlRepoStorage implements RepoStorage {
   cache: BlockMap = new BlockMap()
   constructor(
     public db: Database,
     public did: string,
     public timestamp?: string,
-  ) {
-    super()
-  }
+  ) {}
 
   async getHead(forUpdate?: boolean): Promise<CID | null> {
     // if for update, we lock the row & cache the last commit
@@ -55,7 +53,7 @@ export class SqlRepoStorage extends RepoStorage {
     }
   }
 
-  async getSavedBytes(cid: CID): Promise<Uint8Array | null> {
+  async getBytes(cid: CID): Promise<Uint8Array | null> {
     const cached = this.cache.get(cid)
     if (cached) return cached
     const found = await this.db.db

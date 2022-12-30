@@ -12,7 +12,7 @@ import {
   CommitData,
   WriteOpAction,
 } from './types'
-import { RepoStorage, verifyObj } from './storage'
+import { readObj, RepoStorage, verifyObj } from './storage'
 import * as crypto from '@atproto/crypto'
 import { MST } from './mst'
 import log from './logger'
@@ -102,9 +102,9 @@ export class Repo extends ReadableRepo {
     if (!commitCid) {
       throw new Error('No cid provided and none in storage')
     }
-    const commit = await storage.get(commitCid, def.commit)
-    const root = await storage.get(commit.root, def.repoRoot)
-    const meta = await storage.get(root.meta, def.repoMeta)
+    const commit = await readObj(storage, commitCid, def.commit)
+    const root = await readObj(storage, commit.root, def.repoRoot)
+    const meta = await readObj(storage, root.meta, def.repoMeta)
     const data = await MST.load(storage, root.data)
     log.info({ did: meta.did }, 'loaded repo for')
     return new Repo({
@@ -170,19 +170,6 @@ export class Repo extends ReadableRepo {
     const commit = await this.createCommit(toWrite, keypair)
     await this.storage.applyCommit(commit)
     return Repo.load(this.storage, commit.root)
-  }
-
-  async revert(count: number): Promise<Repo> {
-    let revertTo = this.cid
-    for (let i = 0; i < count; i++) {
-      const commit = await this.storage.get(revertTo, def.commit)
-      const root = await this.storage.get(commit.root, def.repoRoot)
-      if (root.prev === null) {
-        throw new Error(`Could not revert ${count} commits`)
-      }
-      revertTo = root.prev
-    }
-    return Repo.load(this.storage, revertTo)
   }
 
   // CAR FILES

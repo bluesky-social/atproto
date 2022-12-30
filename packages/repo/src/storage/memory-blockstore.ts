@@ -3,9 +3,9 @@ import { CommitBlockData, CommitData, def } from '../types'
 import BlockMap from '../block-map'
 import { MST } from '../mst'
 import { RepoStorage } from './types'
-import * as util from './util'
-import { check } from '@atproto/common'
 import DataDiff from '../data-diff'
+import * as util from './util'
+import { MissingCommitBlocksError } from './error'
 
 export class MemoryBlockstore implements RepoStorage {
   blocks: BlockMap
@@ -23,18 +23,18 @@ export class MemoryBlockstore implements RepoStorage {
     return this.blocks.get(cid) || null
   }
 
-  async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
-    return util.readObject(this, cid, schema)
-  }
-
-  async getBlocks(cids: CID[]): Promise<BlockMap> {
-    return cids.reduce((acc, cur) => {
-      const got = this.blocks.get(cur)
+  async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
+    const missing: CID[] = []
+    const blocks = new BlockMap()
+    for (const cid of cids) {
+      const got = this.blocks.get(cid)
       if (got) {
-        acc.set(cur, got)
+        blocks.set(cid, got)
+      } else {
+        missing.push(cid)
       }
-      return acc
-    }, new BlockMap())
+    }
+    return { blocks, missing }
   }
 
   async has(cid: CID): Promise<boolean> {
@@ -84,11 +84,11 @@ export class MemoryBlockstore implements RepoStorage {
     const path: CID[] = []
     while (curr !== null) {
       path.push(curr)
-      const commit = await this.get(curr, def.commit)
+      const commit = await util.readObj(this, curr, def.commit)
       if (earliest && curr.equals(earliest)) {
         return path.reverse()
       }
-      const root = await this.get(commit.root, def.repoRoot)
+      const root = await util.readObj(this, commit.root, def.repoRoot)
       if (!earliest && root.prev === null) {
         return path.reverse()
       }
@@ -103,23 +103,21 @@ export class MemoryBlockstore implements RepoStorage {
     const commitData: { [commit: string]: BlockMap } = {}
     let prevData: MST | null = null
     for (const commitCid of commits) {
-      const commit = await this.get(commitCid, def.commit)
-      const root = await this.get(commit.root, def.repoRoot)
+      const commit = await util.readObj(this, commitCid, def.commit)
+      const root = await util.readObj(this, commit.root, def.repoRoot)
       const data = await MST.load(this, root.data)
       const diff = await DataDiff.of(data, prevData)
-      const blocks = await this.getBlocks([
+      const { blocks, missing } = await this.getBlocks([
         commitCid,
         commit.root,
         ...diff.newCidList(),
       ])
+      if (missing.length > 0) {
+        throw new MissingCommitBlocksError(commitCid, missing)
+      }
       if (!root.prev) {
-        const metaBytes = await this.getBytes(root.meta)
-        if (!metaBytes) {
-          throw new Error(
-            `Could not find metadata for intial commit: ${root.meta}`,
-          )
-        }
-        blocks.set(root.meta, metaBytes)
+        const meta = await util.verifyObj(this, root.meta, def.repoMeta)
+        blocks.set(root.meta, meta.bytes)
       }
       commitData[commitCid.toString()] = blocks
       prevData = data
@@ -156,7 +154,11 @@ export class MemoryBlockstore implements RepoStorage {
   async getContents(): Promise<Record<string, unknown>> {
     const contents: Record<string, unknown> = {}
     for (const entry of this.blocks.entries()) {
-      contents[entry.cid.toString()] = await this.get(entry.cid, def.unknown)
+      contents[entry.cid.toString()] = await util.readObj(
+        this,
+        entry.cid,
+        def.unknown,
+      )
     }
     return contents
   }
