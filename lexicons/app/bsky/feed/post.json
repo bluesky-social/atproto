@@ -77,8 +77,7 @@
       "properties": {
         "repost": {"type": "string"},
         "upvote": {"type": "string"},
-        "downvote": {"type": "string"},
-        "muted": {"type": "boolean"}
+        "downvote": {"type": "string"}
       }
     }
   }

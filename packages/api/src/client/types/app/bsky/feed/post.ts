@@ -61,6 +61,5 @@ export interface ViewerState {
   repost?: string
   upvote?: string
   downvote?: string
-  muted?: boolean
   [k: string]: unknown
 }
