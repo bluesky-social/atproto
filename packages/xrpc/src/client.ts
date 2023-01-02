@@ -1,4 +1,4 @@
-import { Lexicons } from '@atproto/lexicon'
+import { Lexicons, ValidationError } from '@atproto/lexicon'
 import {
   getMethodSchemaHTTPMethod,
   constructMethodCallUri,
@@ -18,6 +18,7 @@ import {
   ErrorResponseBody,
   XRPCResponse,
   XRPCError,
+  XRPCInvalidResponseError,
 } from './types'
 
 export class Client {
@@ -109,6 +110,15 @@ export class ServiceClient {
 
     const resCode = httpResponseCodeToEnum(res.status)
     if (resCode === ResponseType.Success) {
+      try {
+        this.baseClient.lex.assertValidXrpcOutput(methodNsid, res.body)
+      } catch (e: any) {
+        if (e instanceof ValidationError) {
+          throw new XRPCInvalidResponseError(methodNsid, e, res.body)
+        } else {
+          throw e
+        }
+      }
       return new XRPCResponse(res.body, res.headers)
     } else {
       if (res.body && isErrorResponseBody(res.body)) {

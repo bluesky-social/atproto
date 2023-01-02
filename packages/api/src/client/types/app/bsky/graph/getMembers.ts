@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { ValidationResult } from '@atproto/lexicon'
+import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorRef from '../actor/ref'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
@@ -44,4 +47,16 @@ export interface Member {
   createdAt?: string
   indexedAt: string
   [k: string]: unknown
+}
+
+export function isMember(v: unknown): v is Member {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.getMembers#member'
+  )
+}
+
+export function validateMember(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.getMembers#member', v)
 }

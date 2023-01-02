@@ -30,6 +30,55 @@ describe('Lexicons collection', () => {
   })
 })
 
+describe('General validation', () => {
+  const lex = new Lexicons(LexiconDocs)
+  it('Validates records correctly', () => {
+    {
+      const res = lex.validate('com.example.kitchenSink', {
+        $type: 'com.example.kitchenSink',
+        object: {
+          object: { boolean: true },
+          array: ['one', 'two'],
+          boolean: true,
+          number: 123.45,
+          integer: 123,
+          string: 'string',
+        },
+        array: ['one', 'two'],
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+        datetime: new Date().toISOString(),
+      })
+      expect(res.success).toBe(true)
+    }
+    {
+      const res = lex.validate('com.example.kitchenSink', {})
+      expect(res.success).toBe(false)
+      expect(res.error?.message).toBe('Record must have the property "object"')
+    }
+  })
+  it('Validates objects correctly', () => {
+    {
+      const res = lex.validate('com.example.kitchenSink#object', {
+        object: { boolean: true },
+        array: ['one', 'two'],
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+      })
+      expect(res.success).toBe(true)
+    }
+    {
+      const res = lex.validate('com.example.kitchenSink#object', {})
+      expect(res.success).toBe(false)
+      expect(res.error?.message).toBe('Object must have the property "object"')
+    }
+  })
+})
+
 describe('Record validation', () => {
   const lex = new Lexicons(LexiconDocs)
 
