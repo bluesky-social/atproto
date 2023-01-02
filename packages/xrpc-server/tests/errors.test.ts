@@ -1,7 +1,11 @@
 import * as http from 'http'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
-import xrpc, { Client, XRPCError } from '@atproto/xrpc'
+import xrpc, {
+  Client,
+  XRPCError,
+  XRPCInvalidResponseError,
+} from '@atproto/xrpc'
 
 const LEXICONS = [
   {
@@ -35,6 +39,25 @@ const LEXICONS = [
     defs: {
       main: {
         type: 'procedure',
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'io.example.invalidResponse',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['expectedValue'],
+            properties: {
+              expectedValue: { type: 'string' },
+            },
+          },
+        },
       },
     },
   },
@@ -72,7 +95,7 @@ const MISMATCHED_LEXICONS = [
 
 describe('Errors', () => {
   let s: http.Server
-  const server = xrpcServer.createServer(LEXICONS)
+  const server = xrpcServer.createServer(LEXICONS, { validateResponse: false }) // disable validateResponse to test client validation
   server.method('io.example.error', (ctx: { params: xrpcServer.Params }) => {
     if (ctx.params.which === 'foo') {
       throw new xrpcServer.InvalidRequestError('It was this one!', 'Foo')
@@ -84,6 +107,10 @@ describe('Errors', () => {
   })
   server.method('io.example.query', () => {
     return undefined
+  })
+  // @ts-ignore We're intentionally giving the wrong response! -prf
+  server.method('io.example.invalidResponse', () => {
+    return { encoding: 'json', body: { something: 'else' } }
   })
   server.method('io.example.procedure', () => {
     return undefined
@@ -133,6 +160,23 @@ describe('Errors', () => {
       expect((e as XRPCError).success).toBeFalsy()
       expect((e as XRPCError).error).toBe('InvalidRequest')
       expect((e as XRPCError).message).toBe('Invalid Request')
+    }
+    try {
+      await client.call('io.example.invalidResponse')
+      throw new Error('Didnt throw')
+    } catch (e: any) {
+      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e instanceof XRPCInvalidResponseError).toBeTruthy()
+      expect(e.success).toBeFalsy()
+      expect(e.error).toBe('Invalid Response')
+      expect(e.message).toBe(
+        'The server gave an invalid response and may be out of date.',
+      )
+      const err = e as XRPCInvalidResponseError
+      expect(err.validationError.message).toBe(
+        'Output must have the property "expectedValue"',
+      )
+      expect(err.responseBody).toStrictEqual({ something: 'else' })
     }
   })
 
