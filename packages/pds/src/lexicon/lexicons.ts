@@ -2140,9 +2140,6 @@ export const schemaDict = {
           downvote: {
             type: 'string',
           },
-          muted: {
-            type: 'boolean',
-          },
         },
       },
     },
