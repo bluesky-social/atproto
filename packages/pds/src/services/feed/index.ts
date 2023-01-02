@@ -1,7 +1,11 @@
 import { sql } from 'kysely'
 import * as common from '@atproto/common'
 import Database from '../../db'
-import { actorNotSoftDeletedClause, countAll } from '../../db/util'
+import {
+  countAll,
+  actorNotSoftDeletedClause,
+  recordNotSoftDeletedClause,
+} from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
 import { Presented as PresentedImage } from '../../lexicon/types/app/bsky/embed/images'
 import { View as PostView } from '../../lexicon/types/app/bsky/feed/post'
@@ -26,16 +30,18 @@ export class FeedService {
     return this.db.db
       .selectFrom('post')
       .innerJoin('did_handle as author', 'author.did', 'post.creator')
+      .innerJoin('record', 'record.uri', 'post.uri')
       .where(actorNotSoftDeletedClause(ref('author')))
+      .where(recordNotSoftDeletedClause())
       .select([
         sql<FeedItemType>`${'post'}`.as('type'),
-        'uri as postUri',
-        'cid as postCid',
-        'creator as originatorDid',
-        'creator as authorDid',
-        'replyParent as replyParent',
-        'replyRoot as replyRoot',
-        'indexedAt as cursor',
+        'post.uri as postUri',
+        'post.cid as postCid',
+        'post.creator as originatorDid',
+        'post.creator as authorDid',
+        'post.replyParent as replyParent',
+        'post.replyRoot as replyRoot',
+        'post.indexedAt as cursor',
       ])
   }
 
@@ -46,8 +52,10 @@ export class FeedService {
       .innerJoin('post', 'post.uri', 'repost.subject')
       .innerJoin('did_handle as author', 'author.did', 'post.creator')
       .innerJoin('did_handle as originator', 'originator.did', 'repost.creator')
+      .innerJoin('record as post_record', 'post_record.uri', 'post.uri')
       .where(actorNotSoftDeletedClause(ref('author')))
       .where(actorNotSoftDeletedClause(ref('originator')))
+      .where(recordNotSoftDeletedClause(ref('post_record')))
       .select([
         sql<FeedItemType>`${'repost'}`.as('type'),
         'post.uri as postUri',
@@ -67,8 +75,10 @@ export class FeedService {
       .innerJoin('post', 'post.uri', 'trend.subject')
       .innerJoin('did_handle as author', 'author.did', 'post.creator')
       .innerJoin('did_handle as originator', 'originator.did', 'trend.creator')
+      .innerJoin('record as post_record', 'post_record.uri', 'post.uri')
       .where(actorNotSoftDeletedClause(ref('author')))
       .where(actorNotSoftDeletedClause(ref('originator')))
+      .where(recordNotSoftDeletedClause(ref('post_record')))
       .select([
         sql<FeedItemType>`${'trend'}`.as('type'),
         'post.uri as postUri',
@@ -137,7 +147,9 @@ export class FeedService {
       .where('post.uri', 'in', postUris)
       .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
       .innerJoin('did_handle', 'did_handle.did', 'post.creator')
+      .innerJoin('record', 'record.uri', 'post.uri')
       .where(actorNotSoftDeletedClause()) // Ensures post reply parent/roots get omitted from views when taken down
+      .where(recordNotSoftDeletedClause())
       .select([
         'post.uri as uri',
         'post.cid as cid',
