@@ -11,7 +11,11 @@ import {
 } from '../../../repo'
 import AppContext from '../../../context'
 import { ModerationReport } from '../../../db/tables/moderation'
-import { InputSchema as ReportInput } from '../../../lexicon/types/com/atproto/repo/report'
+import {
+  OTHER,
+  SPAM,
+  InputSchema as ReportInput,
+} from '../../../lexicon/types/com/atproto/repo/report'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describe(async ({ params }) => {
@@ -270,10 +274,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function getReasonType(reasonType: ReportInput['reasonType']) {
-  if (
-    reasonType === 'com.atproto.repo.report#spam' ||
-    reasonType === 'com.atproto.repo.report#other'
-  ) {
+  if (reasonType === SPAM || reasonType === OTHER) {
     return reasonType as ModerationReport['reasonType']
   }
   throw new InvalidRequestError('Invalid reason type')

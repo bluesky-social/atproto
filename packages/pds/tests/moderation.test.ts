@@ -8,7 +8,11 @@ import {
 } from './_util'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
-import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/moderationAction'
+import {
+  ACKNOWLEDGE,
+  FLAG,
+  TAKEDOWN,
+} from '../src/lexicon/types/com/atproto/admin/moderationAction'
 
 describe('moderation', () => {
   let server: TestServerInfo
@@ -257,6 +261,154 @@ describe('moderation', () => {
       await client.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+
+    it('does not resolve report for mismatching record.', async () => {
+      const postUri1 = sc.posts[sc.dids.alice][0].ref.uri
+      const postUri2 = sc.posts[sc.dids.bob][0].ref.uri
+      const { data: report } = await client.com.atproto.repo.report(
+        {
+          reasonType: 'com.atproto.repo.report#spam',
+          subject: {
+            $type: 'com.atproto.repo.report#subjectRecord',
+            did: postUri1.host,
+            collection: postUri1.collection,
+            rkey: postUri1.rkey,
+          },
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+      const { data: action } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            subject: {
+              $type: 'com.atproto.admin.moderationAction#subjectRecord',
+              did: postUri2.host,
+              collection: postUri2.collection,
+              rkey: postUri2.rkey,
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+
+      const promise = client.com.atproto.admin.resolveModerationReports(
+        {
+          actionId: action.id,
+          reportIds: [report.id],
+          createdBy: 'X',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+      await expect(promise).rejects.toThrow(
+        'Report 8 cannot be resolved by action',
+      )
+
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: action.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+
+    it('supports flagging and acknowledging.', async () => {
+      const postRef1 = sc.posts[sc.dids.alice][0].ref
+      const postRef2 = sc.posts[sc.dids.bob][0].ref
+      const { data: action1 } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.admin.moderationAction#subjectRecord',
+              did: postRef1.uri.host,
+              collection: postRef1.uri.collection,
+              rkey: postRef1.uri.rkey,
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      expect(action1).toEqual(
+        expect.objectContaining({
+          action: FLAG,
+          subject: {
+            $type: 'com.atproto.admin.moderationAction#subjectRecordRef',
+            uri: postRef1.uriStr,
+            cid: postRef1.cidStr,
+          },
+        }),
+      )
+      const { data: action2 } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: ACKNOWLEDGE,
+            subject: {
+              $type: 'com.atproto.admin.moderationAction#subjectRecord',
+              did: postRef2.uri.host,
+              collection: postRef2.uri.collection,
+              rkey: postRef2.uri.rkey,
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      expect(action2).toEqual(
+        expect.objectContaining({
+          action: ACKNOWLEDGE,
+          subject: {
+            $type: 'com.atproto.admin.moderationAction#subjectRecordRef',
+            uri: postRef2.uriStr,
+            cid: postRef2.cidStr,
+          },
+        }),
+      )
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: action1.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: action2.id,
           createdBy: 'X',
           reason: 'Y',
         },

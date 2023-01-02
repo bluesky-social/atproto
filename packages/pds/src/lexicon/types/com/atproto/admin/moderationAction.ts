@@ -51,5 +51,9 @@ export interface ResolvedReport {
   [k: string]: unknown
 }
 
-/** Moderation action type: Takedown. */
+/** Moderation action type: Takedown. Indicates that content should not be served by the PDS. */
 export const TAKEDOWN = 'com.atproto.admin.moderationAction#takedown'
+/** Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served. */
+export const FLAG = 'com.atproto.admin.moderationAction#flag'
+/** Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules. */
+export const ACKNOWLEDGE = 'com.atproto.admin.moderationAction#acknowledge'

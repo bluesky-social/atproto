@@ -304,7 +304,18 @@ export const schemaDict = {
       },
       takedown: {
         type: 'token',
-        description: 'Moderation action type: Takedown.',
+        description:
+          'Moderation action type: Takedown. Indicates that content should not be served by the PDS.',
+      },
+      flag: {
+        type: 'token',
+        description:
+          'Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served.',
+      },
+      acknowledge: {
+        type: 'token',
+        description:
+          'Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules.',
       },
     },
   },
@@ -396,7 +407,11 @@ export const schemaDict = {
             properties: {
               action: {
                 type: 'string',
-                knownValues: ['com.atproto.admin.moderationAction#takedown'],
+                knownValues: [
+                  'com.atproto.admin.moderationAction#takedown',
+                  'com.atproto.admin.moderationAction#flag',
+                  'com.atproto.admin.moderationAction#acknowledge',
+                ],
               },
               subject: {
                 type: 'union',

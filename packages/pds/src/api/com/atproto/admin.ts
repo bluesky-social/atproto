@@ -3,7 +3,11 @@ import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../lexicon'
 import AppContext from '../../../context'
-import { TAKEDOWN } from '../../../lexicon/types/com/atproto/admin/moderationAction'
+import {
+  ACKNOWLEDGE,
+  FLAG,
+  TAKEDOWN,
+} from '../../../lexicon/types/com/atproto/admin/moderationAction'
 import { ModerationAction } from '../../../db/tables/moderation'
 import { InputSchema as ActionInput } from '../../../lexicon/types/com/atproto/admin/takeModerationAction'
 
@@ -143,7 +147,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function getAction(action: ActionInput['action']) {
-  if (action === TAKEDOWN) {
+  if (action === TAKEDOWN || action === FLAG || action === ACKNOWLEDGE) {
     return action as ModerationAction['action']
   }
   throw new InvalidRequestError('Invalid action')
