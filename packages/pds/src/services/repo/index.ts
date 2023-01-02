@@ -205,7 +205,7 @@ export class RepoService {
     } else {
       const record = await this.services
         .record(this.db)
-        .getRecord(subject.uri, subject.cid?.toString() ?? null)
+        .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
       if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
         subjectType: 'com.atproto.repo.report#subjectRecord',

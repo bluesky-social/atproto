@@ -54,7 +54,7 @@ export class AdminService {
     } else {
       const record = await this.services
         .record(this.db)
-        .getRecord(subject.uri, subject.cid?.toString() ?? null)
+        .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
       if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
         subjectType: 'com.atproto.admin.moderationAction#subjectRecord',
@@ -133,7 +133,7 @@ export class AdminService {
     await this.db.db
       .updateTable('record')
       .set({ takedownId: null })
-      .where('did', '=', info.uri.toString())
+      .where('uri', '=', info.uri.toString())
       .execute()
   }
 

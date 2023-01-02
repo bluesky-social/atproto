@@ -14,6 +14,7 @@ import * as Assertion from './plugins/assertion'
 import * as Confirmation from './plugins/confirmation'
 import * as Profile from './plugins/profile'
 import { MessageQueue } from '../../event-stream/types'
+import { recordNotSoftDeletedClause } from '../../db/util'
 import { Services } from '..'
 
 export class RecordService {
@@ -115,6 +116,7 @@ export class RecordService {
       .selectFrom('record')
       .select('collection')
       .where('did', '=', did)
+      .groupBy('collection')
       .execute()
 
     return collections.map((row) => row.collection)
@@ -127,12 +129,14 @@ export class RecordService {
     reverse: boolean,
     before?: string,
     after?: string,
+    includeSoftDeleted = false,
   ): Promise<{ uri: string; cid: string; value: object }[]> {
     let builder = this.db.db
       .selectFrom('record')
       .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .where('record.did', '=', did)
       .where('record.collection', '=', collection)
+      .if(!includeSoftDeleted, (qb) => qb.where(recordNotSoftDeletedClause()))
       .orderBy('record.rkey', reverse ? 'asc' : 'desc')
       .limit(limit)
       .selectAll()
@@ -156,12 +160,14 @@ export class RecordService {
   async getRecord(
     uri: AtUri,
     cid: string | null,
+    includeSoftDeleted = false,
   ): Promise<{ uri: string; cid: string; value: object } | null> {
     let builder = this.db.db
       .selectFrom('record')
       .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .selectAll()
       .where('record.uri', '=', uri.toString())
+      .if(!includeSoftDeleted, (qb) => qb.where(recordNotSoftDeletedClause()))
     if (cid) {
       builder = builder.where('record.cid', '=', cid)
     }
@@ -172,6 +178,23 @@ export class RecordService {
       cid: record.cid,
       value: common.ipldBytesToRecord(record.content),
     }
+  }
+
+  async hasRecord(
+    uri: AtUri,
+    cid: string | null,
+    includeSoftDeleted = false,
+  ): Promise<boolean> {
+    let builder = this.db.db
+      .selectFrom('record')
+      .select('uri')
+      .where('record.uri', '=', uri.toString())
+      .if(!includeSoftDeleted, (qb) => qb.where(recordNotSoftDeletedClause()))
+    if (cid) {
+      builder = builder.where('record.cid', '=', cid)
+    }
+    const record = await builder.executeTakeFirst()
+    return !!record
   }
 
   findTableForCollection(collection: string) {

@@ -1,4 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { AtUri } from '@atproto/uri'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import {
   runTestServer,
@@ -170,13 +171,34 @@ describe('pds author feed views', () => {
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    await client.com.atproto.admin.takeModerationAction(
-      {
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.moderationAction#subjectRepo',
-          did: alice,
+    const { data: action } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.admin.moderationAction#subjectRepo',
+            did: alice,
+          },
+          createdBy: 'X',
+          reason: 'Y',
         },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const { data: postBlock } = await client.app.bsky.feed.getAuthorFeed(
+      { author: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+
+    expect(postBlock.feed.length).toEqual(0)
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: action.id,
         createdBy: 'X',
         reason: 'Y',
       },
@@ -185,12 +207,58 @@ describe('pds author feed views', () => {
         headers: { authorization: adminAuth() },
       },
     )
+  })
+
+  it('blocked by record takedown.', async () => {
+    const { data: preBlock } = await client.app.bsky.feed.getAuthorFeed(
+      { author: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+
+    expect(preBlock.feed.length).toBeGreaterThan(0)
+
+    const postUri = new AtUri(preBlock.feed[0].post.uri)
+
+    const { data: action } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.admin.moderationAction#subjectRecord',
+            did: postUri.host,
+            collection: postUri.collection,
+            rkey: postUri.rkey,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
 
     const { data: postBlock } = await client.app.bsky.feed.getAuthorFeed(
       { author: alice },
       { headers: sc.getHeaders(carol) },
     )
 
-    expect(postBlock.feed.length).toEqual(0)
+    expect(postBlock.feed.length).toEqual(preBlock.feed.length - 1)
+    expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(
+      postUri.toString(),
+    )
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: action.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
   })
 })
