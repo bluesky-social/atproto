@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorRef from '../actor/ref'
 
@@ -55,10 +56,26 @@ export interface Assertion {
   [k: string]: unknown
 }
 
+export function isAssertion(v: unknown): v is Assertion {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.getAssertions#assertion'
+  )
+}
+
 export interface Confirmation {
   uri: string
   cid: string
   indexedAt: string
   createdAt: string
   [k: string]: unknown
+}
+
+export function isConfirmation(v: unknown): v is Confirmation {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.getAssertions#confirmation'
+  )
 }

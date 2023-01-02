@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { isObj, hasProp } from '../../../../util'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -40,4 +41,12 @@ export interface Mute {
   displayName?: string
   createdAt: string
   [k: string]: unknown
+}
+
+export function isMute(v: unknown): v is Mute {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.getMutes#mute'
+  )
 }

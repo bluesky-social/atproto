@@ -3,6 +3,7 @@
  */
 import express from 'express'
 import stream from 'stream'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {

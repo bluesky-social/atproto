@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { isObj, hasProp } from '../../../../util'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
@@ -47,4 +48,12 @@ export interface Record {
   cid: string
   value: {}
   [k: string]: unknown
+}
+
+export function isRecord(v: unknown): v is Record {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.listRecords#record'
+  )
 }

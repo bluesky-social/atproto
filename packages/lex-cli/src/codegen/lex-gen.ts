@@ -11,7 +11,7 @@ import {
   LexXrpcQuery,
   LexToken,
 } from '@atproto/lexicon'
-import { toTitleCase, toScreamingSnakeCase } from './util'
+import { toCamelCase, toTitleCase, toScreamingSnakeCase } from './util'
 
 interface Commentable<T> {
   addJsDoc: ({ description }: { description: string }) => T
@@ -62,6 +62,7 @@ export function genUserType(
       break
     case 'object':
       genObject(file, imports, lexUri, def)
+      genObjTypeGuard(file, lexUri)
       break
 
     case 'blob':
@@ -353,6 +354,28 @@ export function genXrpcOutput(
       genObject(file, imports, lexUri, def.output.schema, `OutputSchema`)
     }
   }
+}
+
+export function genObjTypeGuard(
+  file: SourceFile,
+  lexUri: string,
+  ifaceName?: string,
+) {
+  const hash = getHash(lexUri)
+  file
+    .addFunction({
+      name: toCamelCase(`is-${ifaceName || hash}`),
+      parameters: [{ name: `v`, type: `unknown` }],
+      returnType: `v is ${ifaceName || toTitleCase(hash)}`,
+      isExported: true,
+    })
+    .setBodyText(
+      hash === 'main'
+        ? `return isObj(v) && hasProp(v, '$type') && (v.$type === "${lexUri}" || v.$type === "${stripHash(
+            lexUri,
+          )}")`
+        : `return isObj(v) && hasProp(v, '$type') && v.$type === "${lexUri}"`,
+    )
 }
 
 export function stripScheme(uri: string): string {

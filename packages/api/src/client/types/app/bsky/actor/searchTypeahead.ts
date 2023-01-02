@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { isObj, hasProp } from '../../../../util'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -39,4 +40,12 @@ export interface User {
   displayName?: string
   avatar?: string
   [k: string]: unknown
+}
+
+export function isUser(v: unknown): v is User {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.searchTypeahead#user'
+  )
 }

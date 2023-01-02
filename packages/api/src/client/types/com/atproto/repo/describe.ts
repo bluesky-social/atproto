@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { isObj, hasProp } from '../../../../util'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */

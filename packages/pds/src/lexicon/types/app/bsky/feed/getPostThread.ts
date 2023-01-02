@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedPost from './post'
 
@@ -56,8 +57,24 @@ export interface ThreadViewPost {
   [k: string]: unknown
 }
 
+export function isThreadViewPost(v: unknown): v is ThreadViewPost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.getPostThread#threadViewPost'
+  )
+}
+
 export interface NotFoundPost {
   uri: string
   notFound: true
   [k: string]: unknown
+}
+
+export function isNotFoundPost(v: unknown): v is NotFoundPost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.getPostThread#notFoundPost'
+  )
 }

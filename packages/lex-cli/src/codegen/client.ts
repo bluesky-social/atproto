@@ -12,7 +12,7 @@ import {
   LexRecord,
 } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
-import { gen, lexiconsTs } from './common'
+import { gen, utilTs, lexiconsTs } from './common'
 import { GeneratedAPI } from '../types'
 import {
   genImports,
@@ -21,6 +21,7 @@ import {
   genXrpcParams,
   genXrpcInput,
   genXrpcOutput,
+  genObjTypeGuard,
 } from './lex-gen'
 import {
   lexiconsToDefTree,
@@ -54,6 +55,7 @@ export async function genClientApi(
   for (const lexiconDoc of lexiconDocs) {
     api.files.push(await lexiconTs(project, lexicons, lexiconDoc))
   }
+  api.files.push(await utilTs(project))
   api.files.push(await lexiconsTs(project, lexiconDocs))
   api.files.push(await indexTs(project, lexiconDocs, nsidTree, nsidTokens))
   return api
@@ -488,6 +490,16 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         xrpcImport.addNamedImports([{ name: 'Headers' }, { name: 'XRPCError' }])
       }
 
+      //= import {isObj, hasProp} from '../../util.ts'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: `${lexiconDoc.id
+            .split('.')
+            .map((_str) => '..')
+            .join('/')}/util`,
+        })
+        .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
+
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]
         const lexUri = `${lexiconDoc.id}#${defId}`
@@ -605,4 +617,6 @@ function genClientRecord(
 
   //= export interface Record {...}
   genObject(file, imports, lexUri, def.record, 'Record')
+  //= export function isRecord(v: unknown): v is Record {...}
+  genObjTypeGuard(file, lexUri, 'Record')
 }

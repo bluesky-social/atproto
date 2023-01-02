@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { isObj, hasProp } from '../../../../util'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -48,4 +49,12 @@ export interface MyState {
   member?: string
   muted?: boolean
   [k: string]: unknown
+}
+
+export function isMyState(v: unknown): v is MyState {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.getProfile#myState'
+  )
 }

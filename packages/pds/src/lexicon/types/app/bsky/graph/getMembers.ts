@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorRef from '../actor/ref'
 import * as AppBskySystemDeclRef from '../system/declRef'
@@ -50,4 +51,12 @@ export interface Member {
   createdAt?: string
   indexedAt: string
   [k: string]: unknown
+}
+
+export function isMember(v: unknown): v is Member {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.getMembers#member'
+  )
 }

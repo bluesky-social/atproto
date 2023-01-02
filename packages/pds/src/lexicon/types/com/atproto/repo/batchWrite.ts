@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
@@ -42,6 +43,14 @@ export interface Create {
   [k: string]: unknown
 }
 
+export function isCreate(v: unknown): v is Create {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.batchWrite#create'
+  )
+}
+
 export interface Update {
   action: 'update'
   collection: string
@@ -50,9 +59,25 @@ export interface Update {
   [k: string]: unknown
 }
 
+export function isUpdate(v: unknown): v is Update {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.batchWrite#update'
+  )
+}
+
 export interface Delete {
   action: 'delete'
   collection: string
   rkey: string
   [k: string]: unknown
+}
+
+export function isDelete(v: unknown): v is Delete {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.batchWrite#delete'
+  )
 }

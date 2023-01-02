@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { isObj, hasProp } from '../../../../util'
 import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
@@ -44,4 +45,10 @@ export interface Vote {
   createdAt: string
   actor: AppBskyActorRef.WithInfo
   [k: string]: unknown
+}
+
+export function isVote(v: unknown): v is Vote {
+  return (
+    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.getVotes#vote'
+  )
 }

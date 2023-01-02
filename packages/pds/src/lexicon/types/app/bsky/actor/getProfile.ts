@@ -2,6 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
@@ -54,4 +55,12 @@ export interface MyState {
   member?: string
   muted?: boolean
   [k: string]: unknown
+}
+
+export function isMyState(v: unknown): v is MyState {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.getProfile#myState'
+  )
 }
