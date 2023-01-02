@@ -1,9 +1,5 @@
 import { Server } from '../../../../lexicon'
-import {
-  countAll,
-  actorNotSoftDeletedClause,
-  recordNotSoftDeletedClause,
-} from '../../../../db/util'
+import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
@@ -18,11 +14,15 @@ export default function (server: Server, ctx: AppContext) {
         .select(countAll.as('count'))
         .innerJoin('did_handle', 'did_handle.did', 'notif.userDid')
         .innerJoin('user', 'user.handle', 'did_handle.handle')
-        .innerJoin('did_handle as author', 'author.did', 'notif.author')
+        .innerJoin(
+          'repo_root as author_repo',
+          'author_repo.did',
+          'notif.author',
+        )
         .innerJoin('record', 'record.uri', 'notif.recordUri')
-        .where(actorNotSoftDeletedClause(ref('author')))
-        .where(recordNotSoftDeletedClause())
-        .where('did_handle.did', '=', requester)
+        .where(notSoftDeletedClause(ref('author_repo')))
+        .where(notSoftDeletedClause(ref('record')))
+        .where('notif.userDid', '=', requester)
         .whereNotExists(
           ctx.db.db // Omit mentions and replies by muted actors
             .selectFrom('mute')

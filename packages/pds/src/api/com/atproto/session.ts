@@ -1,7 +1,7 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScopes } from '../../../auth'
 import AppContext from '../../../context'
-import { actorSoftDeleted } from '../../../db/util'
+import { softDeleted } from '../../../db/util'
 import { Server } from '../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         `Could not find user info for account: ${handle}`,
       )
     }
-    if (actorSoftDeleted(user)) {
+    if (softDeleted(user)) {
       throw new AuthRequiredError(
         'Account has been taken down',
         'AccountTakedown',
@@ -70,7 +70,7 @@ export default function (server: Server, ctx: AppContext) {
           `Could not find user info for account: ${did}`,
         )
       }
-      if (actorSoftDeleted(user)) {
+      if (softDeleted(user)) {
         throw new AuthRequiredError(
           'Account has been taken down',
           'AccountTakedown',

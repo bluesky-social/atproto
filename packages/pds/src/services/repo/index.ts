@@ -11,7 +11,7 @@ import SqlBlockstore from '../../sql-blockstore'
 import { PreparedCreate, PreparedWrite } from '../../repo/types'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
-import { actorNotSoftDeletedClause } from '../../db/util'
+import { notSoftDeletedClause } from '../../db/util'
 import { ModerationReport } from '../../db/tables/moderation'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/repo/report'
 import { Services } from '..'
@@ -87,10 +87,12 @@ export class RepoService {
   ): Promise<boolean> {
     if (!userDid) return false
     if (repoDid === userDid) return true
+    const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('scene', 'scene.handle', 'did_handle.handle')
-      .where(actorNotSoftDeletedClause()) // Ensures scene not taken down
+      .where(notSoftDeletedClause(ref('repo_root'))) // Ensures scene not taken down
       .where('did_handle.did', '=', repoDid)
       .where('scene.owner', '=', userDid)
       .select('scene.owner')

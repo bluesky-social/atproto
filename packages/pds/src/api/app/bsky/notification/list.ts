@@ -4,10 +4,7 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclaration } from '../util'
 import AppContext from '../../../../context'
-import {
-  actorNotSoftDeletedClause,
-  recordNotSoftDeletedClause,
-} from '../../../../db/util'
+import { notSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.list({
@@ -19,6 +16,21 @@ export default function (server: Server, ctx: AppContext) {
 
       let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
+        .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
+        .innerJoin('did_handle as author', 'author.did', 'notif.author')
+        .leftJoin(
+          'profile as author_profile',
+          'author_profile.creator',
+          'author.did',
+        )
+        .innerJoin(
+          'repo_root as author_repo',
+          'author_repo.did',
+          'notif.author',
+        )
+        .innerJoin('record', 'record.uri', 'notif.recordUri')
+        .where(notSoftDeletedClause(ref('author_repo')))
+        .where(notSoftDeletedClause(ref('record')))
         .where('notif.userDid', '=', requester)
         .whereNotExists(
           ctx.db.db // Omit mentions and replies by muted actors
@@ -27,16 +39,6 @@ export default function (server: Server, ctx: AppContext) {
             .where(ref('notif.reason'), 'in', ['mention', 'reply'])
             .whereRef('did', '=', ref('notif.author'))
             .where('mutedByDid', '=', requester),
-        )
-        .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
-        .innerJoin('record', 'record.uri', 'notif.recordUri')
-        .innerJoin('did_handle as author', 'author.did', 'notif.author')
-        .where(actorNotSoftDeletedClause(ref('author')))
-        .where(recordNotSoftDeletedClause())
-        .leftJoin(
-          'profile as author_profile',
-          'author_profile.creator',
-          'author.did',
         )
         .select([
           'notif.recordUri as uri',
@@ -64,12 +66,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const [user, notifs] = await Promise.all([
-        ctx.db.db
-          .selectFrom('user')
-          .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
-          .selectAll()
-          .where('did', '=', requester)
-          .executeTakeFirst(),
+        ctx.services.actor(ctx.db).getUser(requester),
         notifBuilder.execute(),
       ])
 

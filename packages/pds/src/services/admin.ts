@@ -102,7 +102,7 @@ export class AdminService {
 
   async takedownRepo(info: { takedownId: number; did: string }) {
     await this.db.db
-      .updateTable('did_handle')
+      .updateTable('repo_root')
       .set({ takedownId: info.takedownId })
       .where('did', '=', info.did)
       .where('takedownId', 'is', null)
@@ -111,7 +111,7 @@ export class AdminService {
 
   async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
-      .updateTable('did_handle')
+      .updateTable('repo_root')
       .set({ takedownId: null })
       .where('did', '=', info.did)
       .execute()
