@@ -124,7 +124,7 @@ export class Lexicons {
   /**
    * Validate a record or object.
    */
-  validate(lexUri, value: unknown): ValidationResult {
+  validate(lexUri: string, value: unknown): ValidationResult {
     lexUri = toLexUri(lexUri)
     const def = this.getDefOrThrow(lexUri, ['record', 'object'])
     if (!isObj(value)) {

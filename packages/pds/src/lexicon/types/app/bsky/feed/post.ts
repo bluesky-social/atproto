@@ -1,6 +1,8 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
@@ -27,6 +29,10 @@ export function isRecord(v: unknown): v is Record {
   )
 }
 
+export function validateRecord(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.post#main', v)
+}
+
 export interface ReplyRef {
   root: ComAtprotoRepoStrongRef.Main
   parent: ComAtprotoRepoStrongRef.Main
@@ -37,6 +43,10 @@ export function isReplyRef(v: unknown): v is ReplyRef {
   return (
     isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.post#replyRef'
   )
+}
+
+export function validateReplyRef(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.post#replyRef', v)
 }
 
 export interface Entity {
@@ -53,6 +63,10 @@ export function isEntity(v: unknown): v is Entity {
   )
 }
 
+export function validateEntity(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.post#entity', v)
+}
+
 /** A text segment. Start is inclusive, end is exclusive. */
 export interface TextSlice {
   start: number
@@ -66,6 +80,10 @@ export function isTextSlice(v: unknown): v is TextSlice {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.feed.post#textSlice'
   )
+}
+
+export function validateTextSlice(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.post#textSlice', v)
 }
 
 export interface View {
@@ -92,6 +110,10 @@ export function isView(v: unknown): v is View {
   )
 }
 
+export function validateView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.post#view', v)
+}
+
 export interface ViewerState {
   repost?: string
   upvote?: string
@@ -106,4 +128,8 @@ export function isViewerState(v: unknown): v is ViewerState {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.feed.post#viewerState'
   )
+}
+
+export function validateViewerState(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.post#viewerState', v)
 }

@@ -2,6 +2,8 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
@@ -51,6 +53,10 @@ export function isCreate(v: unknown): v is Create {
   )
 }
 
+export function validateCreate(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.batchWrite#create', v)
+}
+
 export interface Update {
   action: 'update'
   collection: string
@@ -67,6 +73,10 @@ export function isUpdate(v: unknown): v is Update {
   )
 }
 
+export function validateUpdate(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.batchWrite#update', v)
+}
+
 export interface Delete {
   action: 'delete'
   collection: string
@@ -80,4 +90,8 @@ export function isDelete(v: unknown): v is Delete {
     hasProp(v, '$type') &&
     v.$type === 'com.atproto.repo.batchWrite#delete'
   )
+}
+
+export function validateDelete(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.batchWrite#delete', v)
 }

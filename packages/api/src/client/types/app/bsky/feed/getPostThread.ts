@@ -2,7 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskyFeedPost from './post'
 
 export interface QueryParams {
@@ -65,6 +67,10 @@ export function isThreadViewPost(v: unknown): v is ThreadViewPost {
   )
 }
 
+export function validateThreadViewPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.getPostThread#threadViewPost', v)
+}
+
 export interface NotFoundPost {
   uri: string
   notFound: true
@@ -77,4 +83,8 @@ export function isNotFoundPost(v: unknown): v is NotFoundPost {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.feed.getPostThread#notFoundPost'
   )
+}
+
+export function validateNotFoundPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.getPostThread#notFoundPost', v)
 }

@@ -1,6 +1,8 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 
 export interface Record {
@@ -18,4 +20,8 @@ export function isRecord(v: unknown): v is Record {
     (v.$type === 'app.bsky.system.declaration#main' ||
       v.$type === 'app.bsky.system.declaration')
   )
+}
+
+export function validateRecord(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.system.declaration#main', v)
 }

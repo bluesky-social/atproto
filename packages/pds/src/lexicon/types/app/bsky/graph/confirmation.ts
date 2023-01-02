@@ -1,6 +1,8 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import * as AppBskyActorRef from '../actor/ref'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
@@ -19,4 +21,8 @@ export function isRecord(v: unknown): v is Record {
     (v.$type === 'app.bsky.graph.confirmation#main' ||
       v.$type === 'app.bsky.graph.confirmation')
   )
+}
+
+export function validateRecord(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.confirmation#main', v)
 }

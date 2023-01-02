@@ -62,7 +62,7 @@ export function genUserType(
       break
     case 'object':
       genObject(file, imports, lexUri, def)
-      genObjTypeGuard(file, lexUri)
+      genObjHelpers(file, lexUri)
       break
 
     case 'blob':
@@ -356,12 +356,14 @@ export function genXrpcOutput(
   }
 }
 
-export function genObjTypeGuard(
+export function genObjHelpers(
   file: SourceFile,
   lexUri: string,
   ifaceName?: string,
 ) {
   const hash = getHash(lexUri)
+
+  //= export function is{X}(v: unknown): v is X {...}
   file
     .addFunction({
       name: toCamelCase(`is-${ifaceName || hash}`),
@@ -376,6 +378,16 @@ export function genObjTypeGuard(
           )}")`
         : `return isObj(v) && hasProp(v, '$type') && v.$type === "${lexUri}"`,
     )
+
+  //= export function validate{X}(v: unknown): ValidationResult {...}
+  file
+    .addFunction({
+      name: toCamelCase(`validate-${ifaceName || hash}`),
+      parameters: [{ name: `v`, type: `unknown` }],
+      returnType: `ValidationResult`,
+      isExported: true,
+    })
+    .setBodyText(`return lexicons.validate("${lexUri}", v)`)
 }
 
 export function stripScheme(uri: string): string {

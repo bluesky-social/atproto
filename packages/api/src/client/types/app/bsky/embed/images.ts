@@ -1,7 +1,9 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 
 export interface Main {
   images: Image[]
@@ -17,6 +19,10 @@ export function isMain(v: unknown): v is Main {
   )
 }
 
+export function validateMain(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.images#main', v)
+}
+
 export interface Image {
   image: { cid: string; mimeType: string; [k: string]: unknown }
   alt: string
@@ -27,6 +33,10 @@ export function isImage(v: unknown): v is Image {
   return (
     isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.embed.images#image'
   )
+}
+
+export function validateImage(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.images#image', v)
 }
 
 export interface Presented {
@@ -42,6 +52,10 @@ export function isPresented(v: unknown): v is Presented {
   )
 }
 
+export function validatePresented(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.images#presented', v)
+}
+
 export interface PresentedImage {
   thumb: string
   fullsize: string
@@ -55,4 +69,8 @@ export function isPresentedImage(v: unknown): v is PresentedImage {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.embed.images#presentedImage'
   )
+}
+
+export function validatePresentedImage(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.images#presentedImage', v)
 }

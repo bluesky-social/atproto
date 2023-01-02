@@ -21,7 +21,7 @@ import {
   genXrpcParams,
   genXrpcInput,
   genXrpcOutput,
-  genObjTypeGuard,
+  genObjHelpers,
 } from './lex-gen'
 import {
   lexiconsToDefTree,
@@ -295,7 +295,21 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           })
         }
       }
-
+      //= import {ValidationResult} from '@atproto/lexicon'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: '@atproto/lexicon',
+        })
+        .addNamedImports([{ name: 'ValidationResult' }])
+      //= import {lexicons} from '../../lexicons.ts'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: `${lexiconDoc.id
+            .split('.')
+            .map((_str) => '..')
+            .join('/')}/lexicons`,
+        })
+        .addNamedImports([{ name: 'lexicons' }])
       //= import {isObj, hasProp} from '../../util.ts'
       file
         .addImportDeclaration({
@@ -458,5 +472,5 @@ function genServerRecord(
   //= export interface Record {...}
   genObject(file, imports, lexUri, def.record, 'Record')
   //= export function isRecord(v: unknown): v is Record {...}
-  genObjTypeGuard(file, lexUri, 'Record')
+  genObjHelpers(file, lexUri, 'Record')
 }

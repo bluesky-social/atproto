@@ -2,6 +2,8 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorRef from '../actor/ref'
@@ -59,4 +61,8 @@ export function isMember(v: unknown): v is Member {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.graph.getMembers#member'
   )
+}
+
+export function validateMember(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.getMembers#member', v)
 }

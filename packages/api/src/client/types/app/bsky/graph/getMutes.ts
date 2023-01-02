@@ -2,7 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -49,4 +51,8 @@ export function isMute(v: unknown): v is Mute {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.graph.getMutes#mute'
   )
+}
+
+export function validateMute(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.getMutes#mute', v)
 }

@@ -2,6 +2,8 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorRef from '../actor/ref'
@@ -64,6 +66,10 @@ export function isAssertion(v: unknown): v is Assertion {
   )
 }
 
+export function validateAssertion(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.getAssertions#assertion', v)
+}
+
 export interface Confirmation {
   uri: string
   cid: string
@@ -78,4 +84,8 @@ export function isConfirmation(v: unknown): v is Confirmation {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.graph.getAssertions#confirmation'
   )
+}
+
+export function validateConfirmation(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.getAssertions#confirmation', v)
 }

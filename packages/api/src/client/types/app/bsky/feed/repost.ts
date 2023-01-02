@@ -1,7 +1,9 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface Record {
@@ -17,4 +19,8 @@ export function isRecord(v: unknown): v is Record {
     (v.$type === 'app.bsky.feed.repost#main' ||
       v.$type === 'app.bsky.feed.repost')
   )
+}
+
+export function validateRecord(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.repost#main', v)
 }

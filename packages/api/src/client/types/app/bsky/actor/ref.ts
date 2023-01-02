@@ -1,7 +1,9 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface Main {
@@ -16,6 +18,10 @@ export function isMain(v: unknown): v is Main {
     hasProp(v, '$type') &&
     (v.$type === 'app.bsky.actor.ref#main' || v.$type === 'app.bsky.actor.ref')
   )
+}
+
+export function validateMain(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.ref#main', v)
 }
 
 export interface WithInfo {
@@ -34,6 +40,10 @@ export function isWithInfo(v: unknown): v is WithInfo {
   )
 }
 
+export function validateWithInfo(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.ref#withInfo', v)
+}
+
 export interface ViewerState {
   muted?: boolean
   [k: string]: unknown
@@ -45,4 +55,8 @@ export function isViewerState(v: unknown): v is ViewerState {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.actor.ref#viewerState'
   )
+}
+
+export function validateViewerState(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.ref#viewerState', v)
 }

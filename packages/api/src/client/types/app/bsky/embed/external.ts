@@ -1,7 +1,9 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 
 export interface Main {
   external: External
@@ -15,6 +17,10 @@ export function isMain(v: unknown): v is Main {
     (v.$type === 'app.bsky.embed.external#main' ||
       v.$type === 'app.bsky.embed.external')
   )
+}
+
+export function validateMain(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.external#main', v)
 }
 
 export interface External {
@@ -33,6 +39,10 @@ export function isExternal(v: unknown): v is External {
   )
 }
 
+export function validateExternal(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.external#external', v)
+}
+
 export interface Presented {
   external: PresentedExternal
   [k: string]: unknown
@@ -44,6 +54,10 @@ export function isPresented(v: unknown): v is Presented {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.embed.external#presented'
   )
+}
+
+export function validatePresented(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.external#presented', v)
 }
 
 export interface PresentedExternal {
@@ -60,4 +74,8 @@ export function isPresentedExternal(v: unknown): v is PresentedExternal {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.embed.external#presentedExternal'
   )
+}
+
+export function validatePresentedExternal(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.external#presentedExternal', v)
 }

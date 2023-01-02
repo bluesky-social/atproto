@@ -2,6 +2,8 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorRef from '../actor/ref'
@@ -60,4 +62,8 @@ export function isFollower(v: unknown): v is Follower {
     hasProp(v, '$type') &&
     v.$type === 'app.bsky.graph.getFollowers#follower'
   )
+}
+
+export function validateFollower(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.getFollowers#follower', v)
 }

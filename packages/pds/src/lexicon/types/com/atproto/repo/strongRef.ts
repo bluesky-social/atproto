@@ -1,6 +1,8 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 
 export interface Main {
@@ -16,4 +18,8 @@ export function isMain(v: unknown): v is Main {
     (v.$type === 'com.atproto.repo.strongRef#main' ||
       v.$type === 'com.atproto.repo.strongRef')
   )
+}
+
+export function validateMain(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.strongRef#main', v)
 }

@@ -2,6 +2,8 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
@@ -49,4 +51,8 @@ export function isLinks(v: unknown): v is Links {
     hasProp(v, '$type') &&
     v.$type === 'com.atproto.server.getAccountsConfig#links'
   )
+}
+
+export function validateLinks(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.server.getAccountsConfig#links', v)
 }
