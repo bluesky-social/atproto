@@ -1,8 +1,18 @@
 import { CID } from 'multiformats/cid'
-import { RepoRoot, Commit, def, DataStore, RepoMeta } from './types'
+import {
+  RepoRoot,
+  Commit,
+  def,
+  DataStore,
+  RepoMeta,
+  RepoContents,
+} from './types'
 import { ReadableBlockstore } from './storage'
 import { MST } from './mst'
 import log from './logger'
+import * as util from './util'
+import * as parse from './parse'
+import { MissingBlocksError } from './error'
 
 type Params = {
   storage: ReadableBlockstore
@@ -55,6 +65,25 @@ export class ReadableRepo {
     const cid = await this.data.get(dataKey)
     if (!cid) return null
     return this.storage.readObj(cid, def.unknown)
+  }
+
+  async getContents(): Promise<RepoContents> {
+    const entries = await this.data.list()
+    const cids = entries.map((e) => e.value)
+    const { blocks, missing } = await this.storage.getBlocks(cids)
+    if (missing.length > 0) {
+      throw new MissingBlocksError('getContents record', missing)
+    }
+    const contents: RepoContents = {}
+    for (const entry of entries) {
+      const { collection, rkey } = util.parseRecordKey(entry.key)
+      if (!contents[collection]) {
+        contents[collection] = {}
+      }
+      const parsed = await parse.getAndParse(blocks, entry.value, def.record)
+      contents[collection][rkey] = parsed.obj
+    }
+    return contents
   }
 }
 

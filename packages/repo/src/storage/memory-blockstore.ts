@@ -36,9 +36,7 @@ export class MemoryBlockstore extends RepoStorage {
   }
 
   async putMany(blocks: BlockMap): Promise<void> {
-    blocks.forEach((val, key) => {
-      this.blocks.set(key, val)
-    })
+    this.blocks.addMap(blocks)
   }
 
   async indexCommits(commits: CommitData[]): Promise<void> {
@@ -65,11 +63,10 @@ export class MemoryBlockstore extends RepoStorage {
     while (curr !== null) {
       path.push(curr)
       const commit = await this.readObj(curr, def.commit)
-      if (earliest && curr.equals(earliest)) {
-        return path.reverse()
-      }
       const root = await this.readObj(commit.root, def.repoRoot)
       if (!earliest && root.prev === null) {
+        return path.reverse()
+      } else if (earliest && root.prev.equals(earliest)) {
         return path.reverse()
       }
       curr = root.prev

@@ -44,7 +44,8 @@ describe('Sync', () => {
     const car = await repo.getFullRepo()
     const loaded = await sync.loadFullRepo(syncBlockstore, car, didResolver)
     bobRepo = await Repo.load(syncBlockstore, loaded.root)
-    await util.verifyRepo(bobRepo, repoData)
+    const contents = await bobRepo.getContents()
+    expect(contents).toEqual(repoData)
     await util.verifyRepoDiff(loaded.ops, {}, repoData)
   })
 
@@ -61,7 +62,8 @@ describe('Sync', () => {
     const diffCar = await repo.getDiff(bobRepo.cid)
     const loaded = await sync.loadDiff(bobRepo, diffCar, didResolver)
     bobRepo = await Repo.load(syncBlockstore, loaded.root)
-    await util.verifyRepo(bobRepo, repoData)
+    const contents = await bobRepo.getContents()
+    expect(contents).toEqual(repoData)
     await util.verifyRepoDiff(loaded.ops, beforeData, repoData)
   })
 
@@ -101,7 +103,8 @@ describe('Sync', () => {
       didResolver,
     )
     const checkoutRepo = await Repo.load(checkoutBlockstore, checkout.root)
-    await util.verifyRepo(checkoutRepo, repoData)
+    const contents = await checkoutRepo.getContents()
+    expect(contents).toEqual(repoData)
     expect(checkout.contents).toEqual(repoData)
   })
 

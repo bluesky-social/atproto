@@ -27,6 +27,8 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
@@ -90,6 +92,8 @@ export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 export * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 export * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 export * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
@@ -479,6 +483,28 @@ export class SyncNS {
 
   constructor(service: ServiceClient) {
     this._service = service
+  }
+
+  getCheckout(
+    params?: ComAtprotoSyncGetCheckout.QueryParams,
+    opts?: ComAtprotoSyncGetCheckout.CallOptions,
+  ): Promise<ComAtprotoSyncGetCheckout.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getCheckout', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetCheckout.toKnownErr(e)
+      })
+  }
+
+  getCommitPath(
+    params?: ComAtprotoSyncGetCommitPath.QueryParams,
+    opts?: ComAtprotoSyncGetCommitPath.CallOptions,
+  ): Promise<ComAtprotoSyncGetCommitPath.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getCommitPath', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetCommitPath.toKnownErr(e)
+      })
   }
 
   getRepo(

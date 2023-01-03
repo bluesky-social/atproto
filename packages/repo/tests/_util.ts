@@ -178,19 +178,6 @@ export const editRepo = async (
   }
 }
 
-export const verifyRepo = async (
-  repo: Repo,
-  data: RepoContents,
-): Promise<void> => {
-  for (const collName of Object.keys(data)) {
-    const collData = data[collName]
-    for (const rkey of Object.keys(collData)) {
-      const record = await repo.getRecord(collName, rkey)
-      expect(record).toEqual(collData[rkey])
-    }
-  }
-}
-
 export const verifyRepoDiff = async (
   ops: RecordWriteOp[],
   before: RepoContents,

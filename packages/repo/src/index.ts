@@ -1,6 +1,7 @@
 export * from './repo'
 export * from './mst'
 export * from './storage'
+export * from './sync'
 export * from './types'
 export * from './verify'
 export * from './util'

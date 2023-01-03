@@ -14,6 +14,7 @@ import {
 } from './types'
 import { RepoStorage } from './storage'
 import { MST } from './mst'
+import DataDiff from './data-diff'
 import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
@@ -141,6 +142,20 @@ export class Repo extends ReadableRepo {
 
     const unstoredData = await data.getUnstoredBlocks()
     newBlocks.addMap(unstoredData.blocks)
+
+    // ensure we're not missing any blocks that were removed and then readded in this commit
+    const diff = await DataDiff.of(data, this.data)
+    const found = newBlocks.getMany(diff.newCidList())
+    if (found.missing.length > 0) {
+      const fromStorage = await this.storage.getBlocks(found.missing)
+      if (fromStorage.missing.length > 0) {
+        // this shouldn't ever happen
+        throw new Error(
+          'Could not find block for commit in Datastore or storage',
+        )
+      }
+      newBlocks.addMap(fromStorage.blocks)
+    }
 
     const root: RepoRoot = {
       meta: this.root.meta,

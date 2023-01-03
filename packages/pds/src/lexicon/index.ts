@@ -29,6 +29,7 @@ import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
@@ -318,6 +319,13 @@ export class SyncNS {
     cfg: ConfigOf<AV, ComAtprotoSyncGetCheckout.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.sync.getCheckout' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getCommitPath<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetCommitPath.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getCommitPath' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

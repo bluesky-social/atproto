@@ -856,6 +856,49 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncGetCommitPath: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getCommitPath',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the path of repo commits',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            latest: {
+              type: 'string',
+              description: 'The most recent commit',
+            },
+            earliest: {
+              type: 'string',
+              description: 'The earliest commit to start from',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['commits'],
+            properties: {
+              commits: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncGetRepo: {
     lexicon: 1,
     id: 'com.atproto.sync.getRepo',
@@ -3027,6 +3070,7 @@ export const ids = {
   ComAtprotoSessionGet: 'com.atproto.session.get',
   ComAtprotoSessionRefresh: 'com.atproto.session.refresh',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
+  ComAtprotoSyncGetCommitPath: 'com.atproto.sync.getCommitPath',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncGetRoot: 'com.atproto.sync.getRoot',
   ComAtprotoSyncUpdateRepo: 'com.atproto.sync.updateRepo',

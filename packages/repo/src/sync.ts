@@ -7,6 +7,7 @@ import * as util from './util'
 import { CommitData, RecordWriteOp, RepoContents } from './types'
 import { CID } from 'multiformats/cid'
 import CidSet from './cid-set'
+import { MissingBlocksError } from './error'
 
 export const loadCheckout = async (
   storage: RepoStorage,
@@ -21,7 +22,7 @@ export const loadCheckout = async (
     checkout.newCids.toList(),
   )
   if (checkoutBlocks.missing.length > 0) {
-    throw new MissingSyncBlocksError(checkoutBlocks.missing)
+    throw new MissingBlocksError('sync', checkoutBlocks.missing)
   }
   await Promise.all([
     storage.putMany(checkoutBlocks.blocks),
@@ -97,12 +98,12 @@ export const persistUpdates = async (
 
   const diffBlocks = await updateStorage.getBlocks(newCids.toList())
   if (diffBlocks.missing.length > 0) {
-    throw new MissingSyncBlocksError(diffBlocks.missing)
+    throw new MissingBlocksError('sync', diffBlocks.missing)
   }
   const commits: CommitData[] = updates.map((update) => {
     const forCommit = diffBlocks.blocks.getMany(update.newCids.toList())
     if (forCommit.missing.length > 0) {
-      throw new MissingSyncBlocksError(forCommit.missing)
+      throw new MissingBlocksError('sync', forCommit.missing)
     }
     return {
       root: update.root,
@@ -114,11 +115,4 @@ export const persistUpdates = async (
   await storage.indexCommits(commits)
 
   return util.diffToWriteOps(fullDiff, diffBlocks.blocks)
-}
-
-class MissingSyncBlocksError extends Error {
-  constructor(cids: CID[]) {
-    const cidStr = cids.map((c) => c.toString())
-    super(`missing needed blocks for sync: ${cidStr}`)
-  }
 }
