@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
-import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/writer'
+import * as crypto from '@atproto/crypto'
 import {
   RepoRoot,
   Commit,
@@ -13,12 +13,11 @@ import {
   WriteOpAction,
 } from './types'
 import { readObj, RepoStorage, readAndVerify } from './storage'
-import * as crypto from '@atproto/crypto'
 import { MST } from './mst'
 import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
-import { streamToArray } from '@atproto/common'
+import * as util from './util'
 
 type Params = {
   storage: RepoStorage
@@ -175,33 +174,20 @@ export class Repo extends ReadableRepo {
   // CAR FILES
   // -----------
 
-  async getCarNoHistory(): Promise<Uint8Array> {
-    return this.openCar((car: BlockWriter) => {
+  async getCheckout(): Promise<Uint8Array> {
+    return util.writeCar(this.cid, (car: BlockWriter) => {
       return this.writeCheckoutToCarStream(car)
     })
   }
 
-  async getDiffCar(to: CID | null): Promise<Uint8Array> {
-    return this.openCar((car: BlockWriter) => {
+  async getDiff(to: CID | null): Promise<Uint8Array> {
+    return util.writeCar(this.cid, (car: BlockWriter) => {
       return this.writeCommitsToCarStream(car, this.cid, to)
     })
   }
 
-  async getFullHistory(): Promise<Uint8Array> {
-    return this.getDiffCar(null)
-  }
-
-  protected async openCar(
-    fn: (car: BlockWriter) => Promise<void>,
-  ): Promise<Uint8Array> {
-    const { writer, out } = CarWriter.create([this.cid])
-    const bytes = streamToArray(out)
-    try {
-      await fn(writer)
-    } finally {
-      writer.close()
-    }
-    return bytes
+  async getFullRepo(): Promise<Uint8Array> {
+    return this.getDiff(null)
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {

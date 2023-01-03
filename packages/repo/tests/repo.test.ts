@@ -71,7 +71,7 @@ describe('Repo', () => {
     const filled = await util.fillRepo(repo, keypair, 100)
     repo = filled.repo
     repoData = filled.data
-    await util.checkRepo(repo, repoData)
+    await util.verifyRepo(repo, repoData)
   })
 
   it('edits and deletes content', async () => {
@@ -81,7 +81,7 @@ describe('Repo', () => {
       deletes: 20,
     })
     repo = edited.repo
-    await util.checkRepo(repo, repoData)
+    await util.verifyRepo(repo, repoData)
   })
 
   it('adds a valid signature to commit', async () => {
@@ -101,7 +101,7 @@ describe('Repo', () => {
   it('loads from blockstore', async () => {
     const reloadedRepo = await Repo.load(storage, repo.cid)
 
-    await util.checkRepo(reloadedRepo, repoData)
+    await util.verifyRepo(reloadedRepo, repoData)
     expect(repo.meta.did).toEqual(keypair.did())
     expect(repo.meta.version).toBe(1)
     expect(repo.meta.datastore).toBe('mst')

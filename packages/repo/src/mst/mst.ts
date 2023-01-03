@@ -671,37 +671,38 @@ export class MST implements DataStore {
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
     const entries = await this.getEntries()
-    const leaves: CID[] = []
-    let toFetch: CID[] = []
+    const leaves = new CidSet()
+    let toFetch = new CidSet()
+    toFetch.add(await this.getPointer())
     for (const entry of entries) {
       if (entry.isLeaf()) {
-        leaves.push(entry.value)
+        leaves.add(entry.value)
       } else {
-        toFetch.push(await entry.getPointer())
+        toFetch.add(await entry.getPointer())
       }
     }
-    while (toFetch.length > 0) {
-      const nextLayer: CID[] = []
-      const fetched = await this.storage.getBlocks(toFetch)
+    while (toFetch.size() > 0) {
+      const nextLayer = new CidSet()
+      const fetched = await this.storage.getBlocks(toFetch.toList())
       if (fetched.missing.length > 0) {
         throw new MissingBlocksError('mst node', fetched.missing)
       }
-      for (const cid of toFetch) {
+      for (const cid of toFetch.toList()) {
         const found = await getAndVerify(fetched.blocks, cid, nodeDataDef)
         await car.put({ cid, bytes: found.bytes })
         const entries = await util.deserializeNodeData(this.storage, found.obj)
 
         for (const entry of entries) {
           if (entry.isLeaf()) {
-            leaves.push(entry.value)
+            leaves.add(entry.value)
           } else {
-            nextLayer.push(await entry.getPointer())
+            nextLayer.add(await entry.getPointer())
           }
         }
       }
       toFetch = nextLayer
     }
-    const leafData = await this.storage.getBlocks(leaves)
+    const leafData = await this.storage.getBlocks(leaves.toList())
     if (leafData.missing.length > 0) {
       throw new MissingBlocksError('mst leaf', leafData.missing)
     }

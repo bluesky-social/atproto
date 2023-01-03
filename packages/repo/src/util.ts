@@ -1,7 +1,8 @@
 import { CID } from 'multiformats/cid'
 import { CarReader } from '@ipld/car/reader'
+import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import { Block as CarBlock } from '@ipld/car/api'
-import { def, verifyCidForCborBytes } from '@atproto/common'
+import { def, streamToArray, verifyCidForCborBytes } from '@atproto/common'
 import Repo from './repo'
 import { MST } from './mst'
 import DataDiff from './data-diff'
@@ -24,6 +25,20 @@ export async function* verifyIncomingCarBlocks(
     await verifyCidForCborBytes(block.cid, block.bytes)
     yield block
   }
+}
+
+export const writeCar = async (
+  root: CID,
+  fn: (car: BlockWriter) => Promise<void>,
+): Promise<Uint8Array> => {
+  const { writer, out } = CarWriter.create(root)
+  const bytes = streamToArray(out)
+  try {
+    await fn(writer)
+  } finally {
+    writer.close()
+  }
+  return bytes
 }
 
 export const readCar = async (

@@ -31,6 +31,12 @@ export const verifyCheckout = async (
     )
   }
   const diff = await DataDiff.of(repo.data, null)
+  const newCids = new CidSet([
+    repo.cid,
+    repo.commit.root,
+    repo.root.meta,
+  ]).addSet(diff.newCids)
+
   const contents = diff.addList().reduce((acc, cur) => {
     const { collection, rkey } = parseRecordKey(cur.key)
     if (!acc[collection]) {
@@ -39,9 +45,10 @@ export const verifyCheckout = async (
     acc[collection][rkey] = cur.cid
     return acc
   }, {} as RepoContents)
+
   return {
     contents,
-    newCids: diff.newCids,
+    newCids,
   }
 }
 

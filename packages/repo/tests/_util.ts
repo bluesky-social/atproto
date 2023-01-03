@@ -1,11 +1,11 @@
 import fs from 'fs'
 import { CID } from 'multiformats'
-import { TID, valueToIpldBlock } from '@atproto/common'
+import { def, TID, valueToIpldBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { Repo } from '../src/repo'
-import { RepoStorage } from '../src/storage'
+import { readObj, RepoStorage } from '../src/storage'
 import { MST } from '../src/mst'
-import { RecordWriteOp, WriteOpAction } from '../src'
+import { RecordWriteOp, RepoContents, WriteOpAction } from '../src'
 
 type IdMapping = Record<string, CID>
 
@@ -120,7 +120,6 @@ export const editRepo = async (
 ): Promise<{ repo: Repo; data: RepoData }> => {
   const { adds = 0, updates = 0, deletes = 0 } = params
   const repoData: RepoData = {}
-  const writes: RecordWriteOp[] = []
   for (const collName of testCollections) {
     const collData = prevData[collName]
     const shuffled = shuffle(Object.entries(collData))
@@ -129,47 +128,55 @@ export const editRepo = async (
       const object = generateObject()
       const rkey = TID.nextStr()
       collData[rkey] = object
-      writes.push({
-        action: WriteOpAction.Create,
-        collection: collName,
-        rkey,
-        value: object,
-      })
+      repo = await repo.applyCommit(
+        {
+          action: WriteOpAction.Create,
+          collection: collName,
+          rkey,
+          value: object,
+        },
+        keypair,
+      )
     }
 
     const toUpdate = shuffled.slice(0, updates)
     for (let i = 0; i < toUpdate.length; i++) {
       const object = generateObject()
       const rkey = toUpdate[i][0]
-      writes.push({
-        action: WriteOpAction.Update,
-        collection: collName,
-        rkey,
-        value: object,
-      })
+      repo = await repo.applyCommit(
+        {
+          action: WriteOpAction.Update,
+          collection: collName,
+          rkey,
+          value: object,
+        },
+        keypair,
+      )
       collData[rkey] = object
     }
 
     const toDelete = shuffled.slice(updates, deletes)
     for (let i = 0; i < toDelete.length; i++) {
       const rkey = toDelete[i][0]
-      writes.push({
-        action: WriteOpAction.Delete,
-        collection: collName,
-        rkey,
-      })
+      repo = await repo.applyCommit(
+        {
+          action: WriteOpAction.Delete,
+          collection: collName,
+          rkey,
+        },
+        keypair,
+      )
       delete collData[rkey]
     }
     repoData[collName] = collData
   }
-  const updated = await repo.applyCommit(writes, keypair)
   return {
-    repo: updated,
+    repo,
     data: repoData,
   }
 }
 
-export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
+export const verifyRepo = async (repo: Repo, data: RepoData): Promise<void> => {
   for (const collName of Object.keys(data)) {
     const collData = data[collName]
     for (const rkey of Object.keys(collData)) {
@@ -179,7 +186,7 @@ export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
   }
 }
 
-export const checkRepoDiff = async (
+export const verifyRepoDiff = async (
   ops: RecordWriteOp[],
   before: RepoData,
   after: RepoData,
@@ -200,6 +207,26 @@ export const checkRepoDiff = async (
       expect(getVal(op, after)).toBeUndefined()
     } else {
       throw new Error('unexpected op type')
+    }
+  }
+}
+
+export const verifyRepoCheckout = async (
+  checkout: RepoContents,
+  storage: RepoStorage,
+  data: RepoData,
+): Promise<void> => {
+  expect(Object.keys(checkout).length).toEqual(Object.keys(data).length)
+  for (const coll of Object.keys(checkout)) {
+    const checkoutColl = checkout[coll]
+    const dataColl = data[coll]
+    expect(Object.keys(checkoutColl).length).toEqual(
+      Object.keys(dataColl).length,
+    )
+    for (const rkey of Object.keys(checkoutColl)) {
+      const cid = checkoutColl[rkey]
+      const obj = await readObj(storage, cid, def.unknown)
+      expect(obj).toEqual(dataColl[rkey])
     }
   }
 }

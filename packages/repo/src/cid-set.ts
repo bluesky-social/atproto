@@ -42,8 +42,7 @@ export class CidSet {
   }
 
   toList(): CID[] {
-    const arr = [...this.set]
-    return arr.map((c) => CID.parse(c))
+    return [...this.set].map((c) => CID.parse(c))
   }
 }
 
