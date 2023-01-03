@@ -113,18 +113,6 @@ export class MemoryBlockstore extends RepoStorage {
   async destroy(): Promise<void> {
     this.blocks.clear()
   }
-
-  // Mainly for dev purposes
-  async getContents(): Promise<Record<string, unknown>> {
-    const contents: Record<string, unknown> = {}
-    for (const entry of this.blocks.entries()) {
-      contents[entry.cid.toString()] = await this.readObj(
-        entry.cid,
-        def.unknown,
-      )
-    }
-    return contents
-  }
 }
 
 export default MemoryBlockstore
