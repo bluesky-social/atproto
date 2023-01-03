@@ -16,7 +16,7 @@ Object {
     },
   ],
   "subject": Object {
-    "$type": "com.atproto.admin.moderationAction#subjectRepo",
+    "$type": "com.atproto.repo.repoRef",
     "did": "user(0)",
   },
 }
@@ -30,7 +30,7 @@ Array [
     "reasonType": "com.atproto.report.reason#spam",
     "reportedByDid": "user(0)",
     "subject": Object {
-      "$type": "com.atproto.report.subject#record",
+      "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
       "uri": "record(0)",
     },
@@ -42,7 +42,7 @@ Array [
     "reasonType": "com.atproto.report.reason#other",
     "reportedByDid": "user(1)",
     "subject": Object {
-      "$type": "com.atproto.report.subject#record",
+      "$type": "com.atproto.repo.strongRef",
       "cid": "cids(1)",
       "uri": "record(1)",
     },
@@ -58,7 +58,7 @@ Array [
     "reasonType": "com.atproto.report.reason#spam",
     "reportedByDid": "user(0)",
     "subject": Object {
-      "$type": "com.atproto.report.subject#repo",
+      "$type": "com.atproto.repo.repoRef",
       "did": "user(1)",
     },
   },
@@ -69,7 +69,7 @@ Array [
     "reasonType": "com.atproto.report.reason#other",
     "reportedByDid": "user(2)",
     "subject": Object {
-      "$type": "com.atproto.report.subject#repo",
+      "$type": "com.atproto.repo.repoRef",
       "did": "user(1)",
     },
   },

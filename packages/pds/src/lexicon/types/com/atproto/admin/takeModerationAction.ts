@@ -3,6 +3,8 @@
  */
 import express from 'express'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
+import * as ComAtprotoRepoRecordRef from '../repo/recordRef'
 import * as ComAtprotoAdminModerationAction from './moderationAction'
 
 export interface QueryParams {}
@@ -10,8 +12,8 @@ export interface QueryParams {}
 export interface InputSchema {
   action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
   subject:
-    | ComAtprotoAdminModerationAction.SubjectRepo
-    | ComAtprotoAdminModerationAction.SubjectRecord
+    | ComAtprotoRepoRepoRef.Main
+    | ComAtprotoRepoRecordRef.Main
     | { $type: string; [k: string]: unknown }
   reason: string
   createdBy: string

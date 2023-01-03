@@ -140,7 +140,7 @@ describe('pds follow views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.admin.moderationAction#subjectRepo',
+            $type: 'com.atproto.repo.repoRef',
             did: sc.dids.dan,
           },
           createdBy: 'X',
@@ -270,7 +270,7 @@ describe('pds follow views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.admin.moderationAction#subjectRepo',
+            $type: 'com.atproto.repo.repoRef',
             did: sc.dids.dan,
           },
           createdBy: 'X',

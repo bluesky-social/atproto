@@ -16,8 +16,8 @@
             "subject": {
               "type": "union",
               "refs": [
-                "com.atproto.report.subject#repo",
-                "com.atproto.report.subject#record"
+                "com.atproto.repo.repoRef",
+                "com.atproto.repo.recordRef"
               ]
             }
           }
@@ -35,8 +35,8 @@
             "subject": {
               "type": "union",
               "refs": [
-                "com.atproto.report.subject#repo",
-                "com.atproto.report.subject#recordRef"
+                "com.atproto.repo.repoRef",
+                "com.atproto.repo.strongRef"
               ]
             },
             "reportedByDid": {"type": "string"},

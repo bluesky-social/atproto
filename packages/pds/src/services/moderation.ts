@@ -54,12 +54,12 @@ export class ModerationService {
     const { action, createdBy, reason, subject, createdAt = new Date() } = info
 
     // Resolve subject info
-    let subjectInfo: ActionSubjectInfo
+    let subjectInfo: SubjectInfo
     if ('did' in subject) {
       const repo = await this.services.repo(this.db).getRepoRoot(subject.did)
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
-        subjectType: 'com.atproto.admin.moderationAction#subjectRepo',
+        subjectType: 'com.atproto.repo.repoRef',
         subjectDid: subject.did,
         subjectUri: null,
         subjectCid: null,
@@ -70,7 +70,7 @@ export class ModerationService {
         .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
       if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
-        subjectType: 'com.atproto.admin.moderationAction#subjectRecord',
+        subjectType: 'com.atproto.repo.recordRef',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
         subjectCid: record.cid,
@@ -206,14 +206,13 @@ export class ModerationService {
       id: modAction.id,
       action: modAction.action,
       subject:
-        modAction.subjectType ===
-        'com.atproto.admin.moderationAction#subjectRepo'
+        modAction.subjectType === 'com.atproto.repo.repoRef'
           ? {
-              $type: 'com.atproto.admin.moderationAction#subjectRepo',
+              $type: 'com.atproto.repo.repoRef',
               did: modAction.subjectDid,
             }
           : {
-              $type: 'com.atproto.admin.moderationAction#subjectRecordRef',
+              $type: 'com.atproto.repo.strongRef',
               uri: modAction.subjectUri,
               cid: modAction.subjectCid,
             },
@@ -250,12 +249,12 @@ export class ModerationService {
     } = info
 
     // Resolve subject info
-    let subjectInfo: ReportSubjectInfo
+    let subjectInfo: SubjectInfo
     if ('did' in subject) {
       const repo = await this.services.repo(this.db).getRepoRoot(subject.did)
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
-        subjectType: 'com.atproto.report.subject#repo',
+        subjectType: 'com.atproto.repo.repoRef',
         subjectDid: subject.did,
         subjectUri: null,
         subjectCid: null,
@@ -266,7 +265,7 @@ export class ModerationService {
         .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
       if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
-        subjectType: 'com.atproto.report.subject#record',
+        subjectType: 'com.atproto.repo.recordRef',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
         subjectCid: record.cid,
@@ -296,13 +295,13 @@ export class ModerationService {
       reason: report.reason ?? undefined,
       reportedByDid: report.reportedByDid,
       subject:
-        report.subjectType === 'com.atproto.report.subject#repo'
+        report.subjectType === 'com.atproto.repo.repoRef'
           ? {
-              $type: 'com.atproto.report.subject#repo',
+              $type: 'com.atproto.repo.repoRef',
               did: report.subjectDid,
             }
           : {
-              $type: 'com.atproto.report.subject#record',
+              $type: 'com.atproto.repo.strongRef',
               uri: report.subjectUri,
               cid: report.subjectCid,
             },
@@ -314,29 +313,15 @@ export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
 
-type ActionSubjectInfo =
+type SubjectInfo =
   | {
-      subjectType: 'com.atproto.admin.moderationAction#subjectRepo'
+      subjectType: 'com.atproto.repo.repoRef'
       subjectDid: string
       subjectUri: null
       subjectCid: null
     }
   | {
-      subjectType: 'com.atproto.admin.moderationAction#subjectRecord'
-      subjectDid: string
-      subjectUri: string
-      subjectCid: string
-    }
-
-type ReportSubjectInfo =
-  | {
-      subjectType: 'com.atproto.report.subject#repo'
-      subjectDid: string
-      subjectUri: null
-      subjectCid: null
-    }
-  | {
-      subjectType: 'com.atproto.report.subject#record'
+      subjectType: 'com.atproto.repo.recordRef'
       subjectDid: string
       subjectUri: string
       subjectCid: string

@@ -207,7 +207,7 @@ describe('pds profile views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.admin.moderationAction#subjectRepo',
+            $type: 'com.atproto.repo.repoRef',
             did: alice,
           },
           createdBy: 'X',

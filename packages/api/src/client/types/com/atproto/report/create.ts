@@ -3,7 +3,9 @@
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
 import * as ComAtprotoReportReasonType from './reasonType'
-import * as ComAtprotoReportSubject from './subject'
+import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
+import * as ComAtprotoRepoRecordRef from '../repo/recordRef'
+import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
 export interface QueryParams {}
 
@@ -11,8 +13,8 @@ export interface InputSchema {
   reasonType: ComAtprotoReportReasonType.Main
   reason?: string
   subject:
-    | ComAtprotoReportSubject.Repo
-    | ComAtprotoReportSubject.Record
+    | ComAtprotoRepoRepoRef.Main
+    | ComAtprotoRepoRecordRef.Main
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
@@ -22,8 +24,8 @@ export interface OutputSchema {
   reasonType: ComAtprotoReportReasonType.Main
   reason?: string
   subject:
-    | ComAtprotoReportSubject.Repo
-    | ComAtprotoReportSubject.RecordRef
+    | ComAtprotoRepoRepoRef.Main
+    | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   reportedByDid: string
   createdAt: string

@@ -43,20 +43,18 @@ function getReasonType(reasonType: ReportInput['reasonType']) {
 
 function getSubject(subject: ReportInput['subject']) {
   if (
-    subject.$type === 'com.atproto.report.subject#repo' &&
+    subject.$type === 'com.atproto.repo.repoRef' &&
     typeof subject.did === 'string'
   ) {
     return { did: subject.did }
   }
   if (
-    subject.$type === 'com.atproto.report.subject#record' &&
-    typeof subject.did === 'string' &&
-    typeof subject.collection === 'string' &&
-    typeof subject.rkey === 'string' &&
+    subject.$type === 'com.atproto.repo.recordRef' &&
+    typeof subject.uri === 'string' &&
     (subject.cid === undefined || typeof subject.cid === 'string')
   ) {
     return {
-      uri: AtUri.make(subject.did, subject.collection, subject.rkey),
+      uri: new AtUri(subject.uri),
       cid: subject.cid ? parseCID(subject.cid) : undefined,
     }
   }

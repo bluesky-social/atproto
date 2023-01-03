@@ -9,6 +9,7 @@ import {
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/moderationAction'
+import { AtUri } from '@atproto/uri'
 
 describe('moderation', () => {
   let server: TestServerInfo
@@ -36,7 +37,7 @@ describe('moderation', () => {
         {
           reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.report.subject#repo',
+            $type: 'com.atproto.repo.repoRef',
             did: sc.dids.bob,
           },
         },
@@ -47,7 +48,7 @@ describe('moderation', () => {
           reasonType: 'com.atproto.report.reason#other',
           reason: 'impersonation',
           subject: {
-            $type: 'com.atproto.report.subject#repo',
+            $type: 'com.atproto.repo.repoRef',
             did: sc.dids.bob,
           },
         },
@@ -61,7 +62,7 @@ describe('moderation', () => {
         {
           reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.report.subject#repo',
+            $type: 'com.atproto.repo.repoRef',
             did: 'did:plc:unknown',
           },
         },
@@ -77,10 +78,8 @@ describe('moderation', () => {
         {
           reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.report.subject#record',
-            did: postA.uri.host,
-            collection: postA.uri.collection,
-            rkey: postA.uri.rkey,
+            $type: 'com.atproto.repo.recordRef',
+            uri: postA.uri.toString(),
           },
         },
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
@@ -90,10 +89,8 @@ describe('moderation', () => {
           reasonType: 'com.atproto.report.reason#other',
           reason: 'defamation',
           subject: {
-            $type: 'com.atproto.report.subject#record',
-            did: postB.uri.host,
-            collection: postB.uri.collection,
-            rkey: postB.uri.rkey,
+            $type: 'com.atproto.repo.recordRef',
+            uri: postB.uri.toString(),
             cid: postB.cidStr,
           },
         },
@@ -105,15 +102,15 @@ describe('moderation', () => {
     it("fails reporting a record that doesn't exist.", async () => {
       const postA = sc.posts[sc.dids.bob][0].ref
       const postB = sc.posts[sc.dids.bob][1].ref
+      const postUriBad = new AtUri(postA.uriStr)
+      postUriBad.rkey = 'badrkey'
 
       const promiseA = client.com.atproto.report.create(
         {
           reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.report.subject#record',
-            did: postA.uri.host,
-            collection: postA.uri.collection,
-            rkey: 'badrkey',
+            $type: 'com.atproto.repo.recordRef',
+            uri: postUriBad.toString(),
           },
         },
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
@@ -125,10 +122,8 @@ describe('moderation', () => {
           reasonType: 'com.atproto.report.reason#other',
           reason: 'defamation',
           subject: {
-            $type: 'com.atproto.report.subject#record',
-            did: postB.uri.host,
-            collection: postB.uri.collection,
-            rkey: postB.uri.rkey,
+            $type: 'com.atproto.repo.recordRef',
+            uri: postB.uri.toString(),
             cid: postA.cidStr, // bad cid
           },
         },
@@ -144,7 +139,7 @@ describe('moderation', () => {
         {
           reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.report.subject#repo',
+            $type: 'com.atproto.repo.repoRef',
             did: sc.dids.bob,
           },
         },
@@ -156,10 +151,8 @@ describe('moderation', () => {
           reasonType: 'com.atproto.report.reason#other',
           reason: 'defamation',
           subject: {
-            $type: 'com.atproto.report.subject#record',
-            did: post.uri.host,
-            collection: post.uri.collection,
-            rkey: post.uri.rkey,
+            $type: 'com.atproto.repo.recordRef',
+            uri: post.uri.toString(),
           },
         },
         { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
@@ -169,7 +162,7 @@ describe('moderation', () => {
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.admin.moderationAction#subjectRepo',
+              $type: 'com.atproto.repo.repoRef',
               did: sc.dids.bob,
             },
             createdBy: 'X',
@@ -214,7 +207,7 @@ describe('moderation', () => {
         {
           reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.report.subject#repo',
+            $type: 'com.atproto.repo.repoRef',
             did: sc.dids.bob,
           },
         },
@@ -225,7 +218,7 @@ describe('moderation', () => {
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.admin.moderationAction#subjectRepo',
+              $type: 'com.atproto.repo.repoRef',
               did: sc.dids.carol,
             },
             createdBy: 'X',

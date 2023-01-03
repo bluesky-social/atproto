@@ -15,8 +15,8 @@
             "subject": {
               "type": "union",
               "refs": [
-                "com.atproto.admin.moderationAction#subjectRepo",
-                "com.atproto.admin.moderationAction#subjectRecord"
+                "com.atproto.repo.repoRef",
+                "com.atproto.repo.recordRef"
               ]
             },
             "reason": {"type": "string"},

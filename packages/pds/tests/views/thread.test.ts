@@ -151,7 +151,7 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.admin.moderationAction#subjectRepo',
+            $type: 'com.atproto.repo.repoRef',
             did: alice,
           },
           createdBy: 'X',
@@ -193,7 +193,7 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.admin.moderationAction#subjectRepo',
+            $type: 'com.atproto.repo.repoRef',
             did: carol,
           },
           createdBy: 'X',
@@ -233,7 +233,7 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.admin.moderationAction#subjectRepo',
+            $type: 'com.atproto.repo.repoRef',
             did: bob,
           },
           createdBy: 'X',
@@ -274,10 +274,8 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.admin.moderationAction#subjectRecord',
-            did: postUri.host,
-            collection: postUri.collection,
-            rkey: postUri.rkey,
+            $type: 'com.atproto.repo.recordRef',
+            uri: postUri.toString(),
           },
           createdBy: 'X',
           reason: 'Y',
@@ -325,10 +323,8 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.admin.moderationAction#subjectRecord',
-            did: postUri.host,
-            collection: postUri.collection,
-            rkey: postUri.rkey,
+            $type: 'com.atproto.repo.recordRef',
+            uri: postUri.toString(),
           },
           createdBy: 'X',
           reason: 'Y',
@@ -379,10 +375,8 @@ describe('pds thread views', () => {
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.admin.moderationAction#subjectRecord',
-              did: postUri.host,
-              collection: postUri.collection,
-              rkey: postUri.rkey,
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
             },
             createdBy: 'X',
             reason: 'Y',

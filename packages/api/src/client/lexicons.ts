@@ -208,8 +208,8 @@ export const schemaDict = {
           subject: {
             type: 'union',
             refs: [
-              'lex:com.atproto.admin.moderationAction#subjectRepo',
-              'lex:com.atproto.admin.moderationAction#subjectRecordRef',
+              'lex:com.atproto.repo.repoRef',
+              'lex:com.atproto.repo.strongRef',
             ],
           },
           reason: {
@@ -245,50 +245,6 @@ export const schemaDict = {
             type: 'string',
           },
           createdAt: {
-            type: 'string',
-          },
-        },
-      },
-      subjectRepo: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-        },
-      },
-      subjectRecord: {
-        type: 'object',
-        required: ['did', 'collection', 'rkey'],
-        properties: {
-          did: {
-            type: 'string',
-            description: 'The DID of the repo.',
-          },
-          collection: {
-            type: 'string',
-            description: 'The NSID of the collection.',
-          },
-          rkey: {
-            type: 'string',
-            description: 'The key of the record.',
-          },
-          cid: {
-            type: 'string',
-            description:
-              'The CID of the version of the record. If not specified, defaults to the most recent version.',
-          },
-        },
-      },
-      subjectRecordRef: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
             type: 'string',
           },
         },
@@ -401,8 +357,8 @@ export const schemaDict = {
               subject: {
                 type: 'union',
                 refs: [
-                  'lex:com.atproto.admin.moderationAction#subjectRepo',
-                  'lex:com.atproto.admin.moderationAction#subjectRecord',
+                  'lex:com.atproto.repo.repoRef',
+                  'lex:com.atproto.repo.recordRef',
                 ],
               },
               reason: {
@@ -895,6 +851,41 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoRecordRef: {
+    lexicon: 1,
+    id: 'com.atproto.repo.recordRef',
+    description: 'A URI with optional content-hash fingerprint.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoRepoRef: {
+    lexicon: 1,
+    id: 'com.atproto.repo.repoRef',
+    description: 'A did identifying a repository.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoRepoStrongRef: {
     lexicon: 1,
     id: 'com.atproto.repo.strongRef',
@@ -937,8 +928,8 @@ export const schemaDict = {
               subject: {
                 type: 'union',
                 refs: [
-                  'lex:com.atproto.report.subject#repo',
-                  'lex:com.atproto.report.subject#record',
+                  'lex:com.atproto.repo.repoRef',
+                  'lex:com.atproto.repo.recordRef',
                 ],
               },
             },
@@ -969,8 +960,8 @@ export const schemaDict = {
               subject: {
                 type: 'union',
                 refs: [
-                  'lex:com.atproto.report.subject#repo',
-                  'lex:com.atproto.report.subject#recordRef',
+                  'lex:com.atproto.repo.repoRef',
+                  'lex:com.atproto.repo.strongRef',
                 ],
               },
               reportedByDid: {
@@ -3521,6 +3512,8 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
+  ComAtprotoRepoRecordRef: 'com.atproto.repo.recordRef',
+  ComAtprotoRepoRepoRef: 'com.atproto.repo.repoRef',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoReportCreate: 'com.atproto.report.create',
   ComAtprotoReportReasonType: 'com.atproto.report.reasonType',
