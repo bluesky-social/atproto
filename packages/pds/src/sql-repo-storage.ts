@@ -1,4 +1,4 @@
-import { CommitBlockData, CommitData, RepoStorage } from '@atproto/repo'
+import { CommitData, RepoStorage } from '@atproto/repo'
 import BlockMap from '@atproto/repo/src/block-map'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
@@ -8,13 +8,16 @@ import { IpldBlockCreator } from './db/tables/ipld-block-creator'
 import { RepoCommitBlock } from './db/tables/repo-commit-block'
 import { RepoCommitHistory } from './db/tables/repo-commit-history'
 
-export class SqlRepoStorage implements RepoStorage {
+export class SqlRepoStorage extends RepoStorage {
   cache: BlockMap = new BlockMap()
+
   constructor(
     public db: Database,
     public did: string,
     public timestamp?: string,
-  ) {}
+  ) {
+    super()
+  }
 
   async getHead(forUpdate?: boolean): Promise<CID | null> {
     // if for update, we lock the row & cache the last commit
@@ -193,14 +196,6 @@ export class SqlRepoStorage implements RepoStorage {
     await Promise.all([insertBlocks, insertCommit, insertCommitHistory])
   }
 
-  async applyCommit(commit: CommitData): Promise<void> {
-    this.db.assertTransaction()
-    await Promise.all([
-      this.indexCommits([commit]),
-      this.updateHead(commit.root, commit.prev),
-    ])
-  }
-
   async updateHead(cid: CID, prev: CID | null): Promise<void> {
     if (prev === null) {
       await this.db.db
@@ -281,19 +276,6 @@ export class SqlRepoStorage implements RepoStorage {
       this.cache.set(cid, cur.content)
       return acc
     }, {})
-  }
-
-  async getCommits(
-    latest: CID,
-    earliest: CID | null,
-  ): Promise<CommitBlockData[] | null> {
-    const commitPath = await this.getCommitPath(latest, earliest)
-    if (!commitPath) return null
-    const blocksByCommit = await this.getBlocksForCommits(commitPath)
-    return commitPath.map((commit) => ({
-      root: commit,
-      blocks: blocksByCommit[commit.toString()] || new BlockMap(),
-    }))
   }
 
   async destroy(): Promise<void> {

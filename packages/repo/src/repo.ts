@@ -12,7 +12,7 @@ import {
   CommitData,
   WriteOpAction,
 } from './types'
-import { readObj, RepoStorage, readAndVerify } from './storage'
+import { RepoStorage } from './storage'
 import { MST } from './mst'
 import log from './logger'
 import BlockMap from './block-map'
@@ -101,9 +101,9 @@ export class Repo extends ReadableRepo {
     if (!commitCid) {
       throw new Error('No cid provided and none in storage')
     }
-    const commit = await readObj(storage, commitCid, def.commit)
-    const root = await readObj(storage, commit.root, def.repoRoot)
-    const meta = await readObj(storage, root.meta, def.repoMeta)
+    const commit = await storage.readObj(commitCid, def.commit)
+    const root = await storage.readObj(commit.root, def.repoRoot)
+    const meta = await storage.readObj(root.meta, def.repoMeta)
     const data = await MST.load(storage, root.data)
     log.info({ did: meta.did }, 'loaded repo for')
     return new Repo({
@@ -191,15 +191,14 @@ export class Repo extends ReadableRepo {
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    const commit = await readAndVerify(this.storage, this.cid, def.commit)
+    const commit = await this.storage.readObjAndBytes(this.cid, def.commit)
     await car.put({ cid: this.cid, bytes: commit.bytes })
-    const root = await readAndVerify(
-      this.storage,
+    const root = await this.storage.readObjAndBytes(
       commit.obj.root,
       def.repoRoot,
     )
     await car.put({ cid: commit.obj.root, bytes: root.bytes })
-    const meta = await readAndVerify(this.storage, root.obj.meta, def.repoMeta)
+    const meta = await this.storage.readObjAndBytes(root.obj.meta, def.repoMeta)
     await car.put({ cid: root.obj.meta, bytes: meta.bytes })
     await this.data.writeToCarStream(car)
   }

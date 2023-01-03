@@ -1,14 +1,15 @@
 import z from 'zod'
 import { CID } from 'multiformats'
 
-import { getAndVerify, ReadableBlockstore, readObj } from '../storage'
+import { ReadableBlockstore } from '../storage'
 import { schema as common, cidForData } from '@atproto/common'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
 import BlockMap from '../block-map'
 import CidSet from '../cid-set'
-import { MissingBlocksError } from '../storage/error'
+import { MissingBlocksError } from '../error'
+import * as parse from '../parse'
 
 /**
  * This is an implementation of a Merkle Search Tree (MST)
@@ -142,7 +143,7 @@ export class MST implements DataStore {
   async getEntries(): Promise<NodeEntry[]> {
     if (this.entries) return [...this.entries]
     if (this.pointer) {
-      const data = await readObj(this.storage, this.pointer, nodeDataDef)
+      const data = await this.storage.readObj(this.pointer, nodeDataDef)
       const firstLeaf = data.e[0]
       const layer =
         firstLeaf !== undefined
@@ -688,7 +689,7 @@ export class MST implements DataStore {
         throw new MissingBlocksError('mst node', fetched.missing)
       }
       for (const cid of toFetch.toList()) {
-        const found = await getAndVerify(fetched.blocks, cid, nodeDataDef)
+        const found = await parse.getAndParse(fetched.blocks, cid, nodeDataDef)
         await car.put({ cid, bytes: found.bytes })
         const entries = await util.deserializeNodeData(this.storage, found.obj)
 

@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { RepoRoot, Commit, def, DataStore, RepoMeta } from './types'
-import { ReadableBlockstore, readObj } from './storage'
+import { ReadableBlockstore } from './storage'
 import { MST } from './mst'
 import log from './logger'
 
@@ -31,9 +31,9 @@ export class ReadableRepo {
   }
 
   static async load(storage: ReadableBlockstore, commitCid: CID) {
-    const commit = await readObj(storage, commitCid, def.commit)
-    const root = await readObj(storage, commit.root, def.repoRoot)
-    const meta = await readObj(storage, root.meta, def.repoMeta)
+    const commit = await storage.readObj(commitCid, def.commit)
+    const root = await storage.readObj(commit.root, def.repoRoot)
+    const meta = await storage.readObj(root.meta, def.repoMeta)
     const data = await MST.load(storage, root.data)
     log.info({ did: meta.did }, 'loaded repo for')
     return new ReadableRepo({
@@ -54,7 +54,7 @@ export class ReadableRepo {
     const dataKey = collection + '/' + rkey
     const cid = await this.data.get(dataKey)
     if (!cid) return null
-    return readObj(this.storage, cid, def.unknown)
+    return this.storage.readObj(cid, def.unknown)
   }
 }
 

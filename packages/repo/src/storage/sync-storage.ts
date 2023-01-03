@@ -1,12 +1,14 @@
 import { CID } from 'multiformats/cid'
 import BlockMap from '../block-map'
-import { ReadableBlockstore } from './types'
+import ReadableBlockstore from './readable-blockstore'
 
-export class SyncStorage implements ReadableBlockstore {
+export class SyncStorage extends ReadableBlockstore {
   constructor(
     public staged: ReadableBlockstore,
     public saved: ReadableBlockstore,
-  ) {}
+  ) {
+    super()
+  }
 
   async getBytes(cid: CID): Promise<Uint8Array | null> {
     const got = await this.staged.getBytes(cid)

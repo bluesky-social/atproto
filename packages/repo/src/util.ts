@@ -6,7 +6,7 @@ import { def, streamToArray, verifyCidForCborBytes } from '@atproto/common'
 import Repo from './repo'
 import { MST } from './mst'
 import DataDiff from './data-diff'
-import { getAndVerify, RepoStorage } from './storage'
+import { RepoStorage } from './storage'
 import {
   DataStore,
   RecordCreateOp,
@@ -16,7 +16,8 @@ import {
   WriteOpAction,
 } from './types'
 import BlockMap from './block-map'
-import { MissingBlocksError } from './storage/error'
+import { MissingBlocksError } from './error'
+import * as parse from './parse'
 
 export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,
@@ -94,7 +95,7 @@ export const diffToWriteOps = (
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseRecordKey(add.key)
-      const value = await getAndVerify(blocks, add.cid, def.record)
+      const value = await parse.getAndParse(blocks, add.cid, def.record)
       return {
         action: WriteOpAction.Create,
         collection,
@@ -104,7 +105,7 @@ export const diffToWriteOps = (
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseRecordKey(upd.key)
-      const value = await getAndVerify(blocks, upd.cid, def.record)
+      const value = await parse.getAndParse(blocks, upd.cid, def.record)
       return {
         action: WriteOpAction.Update,
         collection,

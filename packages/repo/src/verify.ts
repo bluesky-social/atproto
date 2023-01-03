@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { DidResolver } from '@atproto/did-resolver'
-import { ReadableBlockstore, readObj, RepoStorage } from './storage'
+import { ReadableBlockstore, RepoStorage } from './storage'
 import DataDiff from './data-diff'
 import SyncStorage from './storage/sync-storage'
 import ReadableRepo from './readable-repo'
@@ -44,7 +44,7 @@ export const verifyCheckout = async (
     if (!contents[collection]) {
       contents[collection] = {}
     }
-    contents[collection][rkey] = await readObj(storage, add.cid, def.record)
+    contents[collection][rkey] = await storage.readObj(add.cid, def.record)
   }
 
   return {
