@@ -13,6 +13,7 @@ import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
 import * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
+import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
@@ -25,6 +26,9 @@ import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
+import * as ComAtprotoReportCreate from './types/com/atproto/report/create'
+import * as ComAtprotoReportReasonType from './types/com/atproto/report/reasonType'
+import * as ComAtprotoReportSubject from './types/com/atproto/report/subject'
 import * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
@@ -82,6 +86,7 @@ export * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 export * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 export * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
 export * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
+export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
@@ -94,6 +99,9 @@ export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
+export * as ComAtprotoReportCreate from './types/com/atproto/report/create'
+export * as ComAtprotoReportReasonType from './types/com/atproto/report/reasonType'
+export * as ComAtprotoReportSubject from './types/com/atproto/report/subject'
 export * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 export * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
@@ -146,6 +154,10 @@ export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
+}
+export const COM_ATPROTO_REPORT = {
+  ReasonTypeSpam: 'com.atproto.report.reasonType#spam',
+  ReasonTypeOther: 'com.atproto.report.reasonType#other',
 }
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
@@ -206,6 +218,7 @@ export class AtprotoNS {
   blob: BlobNS
   handle: HandleNS
   repo: RepoNS
+  report: ReportNS
   server: ServerNS
   session: SessionNS
   sync: SyncNS
@@ -217,6 +230,7 @@ export class AtprotoNS {
     this.blob = new BlobNS(service)
     this.handle = new HandleNS(service)
     this.repo = new RepoNS(service)
+    this.report = new ReportNS(service)
     this.server = new ServerNS(service)
     this.session = new SessionNS(service)
     this.sync = new SyncNS(service)
@@ -302,6 +316,17 @@ export class AdminNS {
 
   constructor(service: ServiceClient) {
     this._service = service
+  }
+
+  resolveModerationReports(
+    data?: ComAtprotoAdminResolveModerationReports.InputSchema,
+    opts?: ComAtprotoAdminResolveModerationReports.CallOptions,
+  ): Promise<ComAtprotoAdminResolveModerationReports.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.resolveModerationReports', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminResolveModerationReports.toKnownErr(e)
+      })
   }
 
   reverseModerationAction(
@@ -446,6 +471,25 @@ export class RepoNS {
       .call('com.atproto.repo.putRecord', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoRepoPutRecord.toKnownErr(e)
+      })
+  }
+}
+
+export class ReportNS {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  create(
+    data?: ComAtprotoReportCreate.InputSchema,
+    opts?: ComAtprotoReportCreate.CallOptions,
+  ): Promise<ComAtprotoReportCreate.Response> {
+    return this._service.xrpc
+      .call('com.atproto.report.create', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoReportCreate.toKnownErr(e)
       })
   }
 }

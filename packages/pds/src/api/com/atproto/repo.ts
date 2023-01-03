@@ -1,8 +1,8 @@
-import { Server } from '../../../lexicon'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
 import * as didResolver from '@atproto/did-resolver'
 import * as repo from '../../../repo'
+import { Server } from '../../../lexicon'
 import {
   InvalidRecordError,
   PreparedCreate,
