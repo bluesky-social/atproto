@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
-      const adminService = services.admin(db)
+      const moderationService = services.moderation(db)
       const {
         action: _action,
         subject: _subject,
@@ -36,10 +36,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
-        const adminTxn = services.admin(dbTxn)
+        const moderationTxn = services.moderation(dbTxn)
         const now = new Date()
 
-        const result = await adminTxn.logModAction({
+        const result = await moderationTxn.logAction({
           action,
           subject,
           createdBy,
@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (result.action === TAKEDOWN) {
           await authTxn.revokeRefreshTokensByDid(subject.did)
-          await adminTxn.takedownActorByDid({
+          await moderationTxn.takedownActorByDid({
             takedownId: result.id,
             did: subject.did,
           })
@@ -60,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await adminService.formatModActionView(moderationAction),
+        body: await moderationService.formatActionView(moderationAction),
       }
     },
   })
@@ -69,14 +69,14 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
-      const adminService = services.admin(db)
+      const moderationService = services.moderation(db)
       const { id, createdBy, reason } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const adminTxn = services.admin(dbTxn)
+        const moderationTxn = services.moderation(dbTxn)
         const now = new Date()
 
-        const existing = await adminTxn.getModAction(id)
+        const existing = await moderationTxn.getAction(id)
         if (!existing) {
           throw new InvalidRequestError('Moderation action does not exist')
         }
@@ -86,7 +86,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await adminTxn.logReverseModAction({
+        const result = await moderationTxn.logReverseAction({
           id,
           createdAt: now,
           createdBy,
@@ -94,7 +94,9 @@ export default function (server: Server, ctx: AppContext) {
         })
 
         if (result.action === TAKEDOWN && result.subjectDid !== null) {
-          await adminTxn.reverseTakedownActorByDid({ did: result.subjectDid })
+          await moderationTxn.reverseTakedownActorByDid({
+            did: result.subjectDid,
+          })
         }
 
         return result
@@ -102,7 +104,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await adminService.formatModActionView(moderationAction),
+        body: await moderationService.formatActionView(moderationAction),
       }
     },
   })
@@ -111,18 +113,18 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
-      const adminService = services.admin(db)
+      const moderationService = services.moderation(db)
       const { actionId, reportIds, createdBy } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const adminTxn = services.admin(dbTxn)
-        await adminTxn.resolveModReports({ reportIds, actionId, createdBy })
-        return await adminTxn.getModActionOrThrow(actionId)
+        const moderationTxn = services.moderation(dbTxn)
+        await moderationTxn.resolveReports({ reportIds, actionId, createdBy })
+        return await moderationTxn.getActionOrThrow(actionId)
       })
 
       return {
         encoding: 'application/json',
-        body: await adminService.formatModActionView(moderationAction),
+        body: await moderationService.formatActionView(moderationAction),
       }
     },
   })
