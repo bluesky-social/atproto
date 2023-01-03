@@ -30,7 +30,7 @@ Array [
     "reasonType": "com.atproto.report.reason#spam",
     "reportedByDid": "user(0)",
     "subject": Object {
-      "$type": "com.atproto.report.view#recordRef",
+      "$type": "com.atproto.report.subject#record",
       "cid": "cids(0)",
       "uri": "record(0)",
     },
@@ -42,7 +42,7 @@ Array [
     "reasonType": "com.atproto.report.reason#other",
     "reportedByDid": "user(1)",
     "subject": Object {
-      "$type": "com.atproto.report.view#recordRef",
+      "$type": "com.atproto.report.subject#record",
       "cid": "cids(1)",
       "uri": "record(1)",
     },

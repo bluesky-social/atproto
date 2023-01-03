@@ -264,7 +264,7 @@ export class ModerationService {
               did: report.subjectDid,
             }
           : {
-              $type: 'com.atproto.report.view#recordRef',
+              $type: 'com.atproto.report.subject#record',
               uri: report.subjectUri,
               cid: report.subjectCid,
             },
