@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import { CarReader } from '@ipld/car/reader'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import { Block as CarBlock } from '@ipld/car/api'
-import { def, streamToArray, verifyCidForCborBytes } from '@atproto/common'
+import { def, streamToArray, verifyCidForBytes } from '@atproto/common'
 import Repo from './repo'
 import { MST } from './mst'
 import DataDiff from './data-diff'
@@ -23,7 +23,7 @@ export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,
 ): AsyncIterable<CarBlock> {
   for await (const block of car) {
-    await verifyCidForCborBytes(block.cid, block.bytes)
+    await verifyCidForBytes(block.cid, block.bytes)
     yield block
   }
 }

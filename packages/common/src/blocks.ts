@@ -13,9 +13,9 @@ export const valueToIpldBlock = async (data: unknown) => {
   })
 }
 
-export const verifyCidForCborBytes = async (cid: CID, bytes: Uint8Array) => {
+export const verifyCidForBytes = async (cid: CID, bytes: Uint8Array) => {
   const digest = await sha256.digest(bytes)
-  const expected = CID.createV1(cborCodec.code, digest)
+  const expected = CID.createV1(cid.code, digest)
   if (!cid.equals(expected)) {
     throw new Error(
       `Not a valid CID for bytes. Expected: ${expected.toString()} Got: ${cid.toString()}`,
