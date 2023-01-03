@@ -1,5 +1,5 @@
 import { range, valueToIpldBlock } from '@atproto/common'
-import { readObj, def } from '@atproto/repo'
+import { def } from '@atproto/repo'
 import BlockMap from '@atproto/repo/src/block-map'
 import { Database } from '../src'
 import SqlRepoStorage from '../src/sql-repo-storage'
@@ -32,7 +32,7 @@ describe('sql repo storage', () => {
     })
 
     const storage = new SqlRepoStorage(db, did)
-    const value = await readObj(storage, cid, def.unknown)
+    const value = await storage.readObj(cid, def.unknown)
 
     expect(value).toEqual({ my: 'block' })
   })
