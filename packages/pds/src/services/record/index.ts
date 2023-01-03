@@ -15,7 +15,6 @@ import * as Confirmation from './plugins/confirmation'
 import * as Profile from './plugins/profile'
 import { MessageQueue } from '../../event-stream/types'
 import { recordNotSoftDeletedClause } from '../../db/util'
-import { Services } from '..'
 
 export class RecordService {
   records: {
@@ -30,11 +29,7 @@ export class RecordService {
     confirmation: Confirmation.PluginType
   }
 
-  constructor(
-    public services: Services,
-    public db: Database,
-    public messageQueue: MessageQueue,
-  ) {
+  constructor(public db: Database, public messageQueue: MessageQueue) {
     this.records = {
       declaration: Declaration.makePlugin(this.db.db),
       post: Post.makePlugin(this.db.db),
@@ -48,8 +43,8 @@ export class RecordService {
     }
   }
 
-  static creator(services: Services, messageQueue: MessageQueue) {
-    return (db: Database) => new RecordService(services, db, messageQueue)
+  static creator(messageQueue: MessageQueue) {
+    return (db: Database) => new RecordService(db, messageQueue)
   }
 
   assertValidRecord(collection: string, obj: unknown): void {

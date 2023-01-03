@@ -1,0 +1,31 @@
+{
+    "lexicon": 1,
+    "id": "com.atproto.report.subject",
+    "defs": {
+      "repo": {
+        "type": "object",
+        "required": ["did"],
+        "properties": {
+          "did": {"type": "string", "description": "The DID of the repo."}
+        }
+      },
+      "record": {
+        "type": "object",
+        "required": ["did", "collection", "rkey"],
+        "properties": {
+          "did": {"type": "string", "description": "The DID of the repo."},
+          "collection": {"type": "string", "description": "The NSID of the collection."},
+          "rkey": {"type": "string", "description": "The key of the record."},
+          "cid": {"type": "string", "description": "The CID of the version of the record. If not specified, defaults to the most recent version."}
+        }
+      },
+      "recordRef": {
+        "type": "object",
+        "required": ["uri", "cid"],
+        "properties": {
+          "uri": {"type": "string"},
+          "cid": {"type": "string"}
+        }
+      }
+    }
+  }

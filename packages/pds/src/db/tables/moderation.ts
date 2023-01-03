@@ -25,12 +25,14 @@ export interface ModerationAction {
 export interface ModerationReport {
   id: Generated<number>
   subjectType:
-    | 'com.atproto.repo.report#subjectRepo'
-    | 'com.atproto.repo.report#subjectRecord'
+    | 'com.atproto.report.subject#repo'
+    | 'com.atproto.report.subject#record'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
-  reasonType: 'com.atproto.repo.report#spam' | 'com.atproto.repo.report#other'
+  reasonType:
+    | 'com.atproto.report.reason#spam'
+    | 'com.atproto.report.reason#other'
   reason: string | null
   reportedByDid: string
   createdAt: string

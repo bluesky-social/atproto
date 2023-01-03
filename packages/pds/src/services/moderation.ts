@@ -1,23 +1,36 @@
 import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
+import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../db'
-import { ModerationAction } from '../db/tables/moderation'
+import { MessageQueue } from '../event-stream/types'
+import { ModerationAction, ModerationReport } from '../db/tables/moderation'
 import {
   TAKEDOWN,
   View as ModerationActionView,
 } from '../lexicon/types/com/atproto/admin/moderationAction'
-import { Services } from '.'
+import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/report/create'
+import { RepoService } from './repo'
+import { RecordService } from './record'
 
-export class AdminService {
-  constructor(public services: Services, public db: Database) {}
+export class ModerationService {
+  constructor(
+    public db: Database,
+    public messageQueue: MessageQueue,
+    public blobstore: BlobStore,
+  ) {}
 
-  static creator(services: Services) {
-    return (db: Database) => new AdminService(services, db)
+  static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
+    return (db: Database) => new ModerationService(db, messageQueue, blobstore)
   }
 
-  async getModAction(id: number): Promise<ModerationActionRow | undefined> {
+  services = {
+    repo: RepoService.creator(this.messageQueue, this.blobstore),
+    record: RecordService.creator(this.messageQueue),
+  }
+
+  async getAction(id: number): Promise<ModerationActionRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_action')
       .selectAll()
@@ -25,13 +38,13 @@ export class AdminService {
       .executeTakeFirst()
   }
 
-  async getModActionOrThrow(id: number): Promise<ModerationActionRow> {
-    const action = await this.getModAction(id)
+  async getActionOrThrow(id: number): Promise<ModerationActionRow> {
+    const action = await this.getAction(id)
     if (!action) throw new InvalidRequestError('Action not found')
     return action
   }
 
-  async logModAction(info: {
+  async logAction(info: {
     action: typeof TAKEDOWN
     subject: { did: string } | { uri: AtUri; cid?: CID }
     reason: string
@@ -77,7 +90,7 @@ export class AdminService {
       .executeTakeFirstOrThrow()
   }
 
-  async logReverseModAction(info: {
+  async logReverseAction(info: {
     id: number
     reason: string
     createdBy: string
@@ -137,14 +150,14 @@ export class AdminService {
       .execute()
   }
 
-  async resolveModReports(info: {
+  async resolveReports(info: {
     reportIds: number[]
     actionId: number
     createdBy: string
     createdAt?: Date
   }): Promise<void> {
     const { reportIds, actionId, createdBy, createdAt = new Date() } = info
-    const action = await this.getModActionOrThrow(actionId)
+    const action = await this.getActionOrThrow(actionId)
 
     if (!reportIds.length) return
     const reports = await this.db.db
@@ -179,7 +192,7 @@ export class AdminService {
       .execute()
   }
 
-  async formatModActionView(
+  async formatActionView(
     modAction: ModerationActionRow,
   ): Promise<ModerationActionView> {
     const resolutions = await this.db.db
@@ -220,9 +233,86 @@ export class AdminService {
       resolvedReports: resolutions,
     }
   }
+
+  async report(info: {
+    reasonType: ModerationReportRow['reasonType']
+    reason?: string
+    subject: { did: string } | { uri: AtUri; cid?: CID }
+    reportedByDid: string
+    createdAt?: Date
+  }): Promise<ModerationReportRow> {
+    const {
+      reasonType,
+      reason,
+      reportedByDid,
+      createdAt = new Date(),
+      subject,
+    } = info
+
+    // Resolve subject info
+    let subjectInfo: ReportSubjectInfo
+    if ('did' in subject) {
+      const repo = await this.services.repo(this.db).getRepoRoot(subject.did)
+      if (!repo) throw new InvalidRequestError('Repo not found')
+      subjectInfo = {
+        subjectType: 'com.atproto.report.subject#repo',
+        subjectDid: subject.did,
+        subjectUri: null,
+        subjectCid: null,
+      }
+    } else {
+      const record = await this.services
+        .record(this.db)
+        .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
+      if (!record) throw new InvalidRequestError('Record not found')
+      subjectInfo = {
+        subjectType: 'com.atproto.report.subject#record',
+        subjectDid: subject.uri.host,
+        subjectUri: subject.uri.toString(),
+        subjectCid: record.cid,
+      }
+    }
+
+    const report = await this.db.db
+      .insertInto('moderation_report')
+      .values({
+        reasonType,
+        reason: reason || null,
+        createdAt: createdAt.toISOString(),
+        reportedByDid,
+        ...subjectInfo,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()
+
+    return report
+  }
+
+  formatReportView(report: ModerationReportRow): ReportOutput {
+    return {
+      id: report.id,
+      createdAt: report.createdAt,
+      reasonType: report.reasonType,
+      reason: report.reason ?? undefined,
+      reportedByDid: report.reportedByDid,
+      subject:
+        report.subjectType === 'com.atproto.report.subject#repo'
+          ? {
+              $type: 'com.atproto.report.subject#repo',
+              did: report.subjectDid,
+            }
+          : {
+              $type: 'com.atproto.report.subject#record',
+              uri: report.subjectUri,
+              cid: report.subjectCid,
+            },
+    }
+  }
 }
 
 export type ModerationActionRow = Selectable<ModerationAction>
+
+export type ModerationReportRow = Selectable<ModerationReport>
 
 type ActionSubjectInfo =
   | {
@@ -233,6 +323,20 @@ type ActionSubjectInfo =
     }
   | {
       subjectType: 'com.atproto.admin.moderationAction#subjectRecord'
+      subjectDid: string
+      subjectUri: string
+      subjectCid: string
+    }
+
+type ReportSubjectInfo =
+  | {
+      subjectType: 'com.atproto.report.subject#repo'
+      subjectDid: string
+      subjectUri: null
+      subjectCid: null
+    }
+  | {
+      subjectType: 'com.atproto.report.subject#record'
       subjectDid: string
       subjectUri: string
       subjectCid: string
