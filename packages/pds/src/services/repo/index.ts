@@ -14,7 +14,7 @@ import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { actorNotSoftDeletedClause } from '../../db/util'
 import { ModerationReport } from '../../db/tables/moderation'
-import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/repo/report'
+import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/report/create'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -191,7 +191,7 @@ export class RepoService {
       const repo = await this.getRepoRoot(subject.did)
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
-        subjectType: 'com.atproto.repo.report#subjectRepo',
+        subjectType: 'com.atproto.report.subject#repo',
         subjectDid: subject.did,
         subjectUri: null,
         subjectCid: null,
@@ -207,7 +207,7 @@ export class RepoService {
       const record = await builder.executeTakeFirst()
       if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
-        subjectType: 'com.atproto.repo.report#subjectRecord',
+        subjectType: 'com.atproto.report.subject#record',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
         subjectCid: record.cid,
@@ -237,13 +237,13 @@ export class RepoService {
       reason: report.reason ?? undefined,
       reportedByDid: report.reportedByDid,
       subject:
-        report.subjectType === 'com.atproto.repo.report#subjectRepo'
+        report.subjectType === 'com.atproto.report.subject#repo'
           ? {
-              $type: 'com.atproto.repo.report#subjectRepo',
+              $type: 'com.atproto.report.subject#repo',
               did: report.subjectDid,
             }
           : {
-              $type: 'com.atproto.repo.report#subjectRecord',
+              $type: 'com.atproto.report.view#recordRef',
               uri: report.subjectUri,
               cid: report.subjectCid,
             },
@@ -255,13 +255,13 @@ export type ModerationReportRow = Selectable<ModerationReport>
 
 type ReportSubjectInfo =
   | {
-      subjectType: 'com.atproto.repo.report#subjectRepo'
+      subjectType: 'com.atproto.report.subject#repo'
       subjectDid: string
       subjectUri: null
       subjectCid: null
     }
   | {
-      subjectType: 'com.atproto.repo.report#subjectRecord'
+      subjectType: 'com.atproto.report.subject#record'
       subjectDid: string
       subjectUri: string
       subjectCid: string

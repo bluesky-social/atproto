@@ -27,10 +27,10 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 3,
-    "reasonType": "com.atproto.repo.report#spam",
+    "reasonType": "com.atproto.report.reason#spam",
     "reportedByDid": "user(0)",
     "subject": Object {
-      "$type": "com.atproto.repo.report#subjectRecord",
+      "$type": "com.atproto.report.view#recordRef",
       "cid": "cids(0)",
       "uri": "record(0)",
     },
@@ -39,10 +39,10 @@ Array [
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 4,
     "reason": "defamation",
-    "reasonType": "com.atproto.repo.report#other",
+    "reasonType": "com.atproto.report.reason#other",
     "reportedByDid": "user(1)",
     "subject": Object {
-      "$type": "com.atproto.repo.report#subjectRecord",
+      "$type": "com.atproto.report.view#recordRef",
       "cid": "cids(1)",
       "uri": "record(1)",
     },
@@ -55,10 +55,10 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 1,
-    "reasonType": "com.atproto.repo.report#spam",
+    "reasonType": "com.atproto.report.reason#spam",
     "reportedByDid": "user(0)",
     "subject": Object {
-      "$type": "com.atproto.repo.report#subjectRepo",
+      "$type": "com.atproto.report.subject#repo",
       "did": "user(1)",
     },
   },
@@ -66,10 +66,10 @@ Array [
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 2,
     "reason": "impersonation",
-    "reasonType": "com.atproto.repo.report#other",
+    "reasonType": "com.atproto.report.reason#other",
     "reportedByDid": "user(2)",
     "subject": Object {
-      "$type": "com.atproto.repo.report#subjectRepo",
+      "$type": "com.atproto.report.subject#repo",
       "did": "user(1)",
     },
   },

@@ -11,7 +11,7 @@ import {
 } from '../../../repo'
 import AppContext from '../../../context'
 import { ModerationReport } from '../../../db/tables/moderation'
-import { InputSchema as ReportInput } from '../../../lexicon/types/com/atproto/repo/report'
+import { InputSchema as ReportInput } from '../../../lexicon/types/com/atproto/report/create'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describe(async ({ params }) => {
@@ -245,7 +245,7 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
-  server.com.atproto.repo.report({
+  server.com.atproto.report.create({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
       const { db, services } = ctx
@@ -271,8 +271,8 @@ export default function (server: Server, ctx: AppContext) {
 
 function getReasonType(reasonType: ReportInput['reasonType']) {
   if (
-    reasonType === 'com.atproto.repo.report#spam' ||
-    reasonType === 'com.atproto.repo.report#other'
+    reasonType === 'com.atproto.report.reason#spam' ||
+    reasonType === 'com.atproto.report.reason#other'
   ) {
     return reasonType as ModerationReport['reasonType']
   }
@@ -281,13 +281,13 @@ function getReasonType(reasonType: ReportInput['reasonType']) {
 
 function getSubject(subject: ReportInput['subject']) {
   if (
-    subject.$type === 'com.atproto.repo.report#subjectRepo' &&
+    subject.$type === 'com.atproto.report.subject#repo' &&
     typeof subject.did === 'string'
   ) {
     return { did: subject.did }
   }
   if (
-    subject.$type === 'com.atproto.repo.report#subjectRecord' &&
+    subject.$type === 'com.atproto.report.subject#record' &&
     typeof subject.did === 'string' &&
     typeof subject.collection === 'string' &&
     typeof subject.rkey === 'string' &&

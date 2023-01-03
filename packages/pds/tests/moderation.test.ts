@@ -32,22 +32,22 @@ describe('moderation', () => {
 
   describe('reporting', () => {
     it('creates reports of a repo.', async () => {
-      const { data: reportA } = await client.com.atproto.repo.report(
+      const { data: reportA } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#spam',
+          reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRepo',
+            $type: 'com.atproto.report.subject#repo',
             did: sc.dids.bob,
           },
         },
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
       )
-      const { data: reportB } = await client.com.atproto.repo.report(
+      const { data: reportB } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#other',
+          reasonType: 'com.atproto.report.reason#other',
           reason: 'impersonation',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRepo',
+            $type: 'com.atproto.report.subject#repo',
             did: sc.dids.bob,
           },
         },
@@ -57,11 +57,11 @@ describe('moderation', () => {
     })
 
     it("fails reporting a repo that doesn't exist.", async () => {
-      const promise = client.com.atproto.repo.report(
+      const promise = client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#spam',
+          reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRepo',
+            $type: 'com.atproto.report.subject#repo',
             did: 'did:plc:unknown',
           },
         },
@@ -73,11 +73,11 @@ describe('moderation', () => {
     it('creates reports of a record.', async () => {
       const postA = sc.posts[sc.dids.bob][0].ref
       const postB = sc.posts[sc.dids.bob][1].ref
-      const { data: reportA } = await client.com.atproto.repo.report(
+      const { data: reportA } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#spam',
+          reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRecord',
+            $type: 'com.atproto.report.subject#record',
             did: postA.uri.host,
             collection: postA.uri.collection,
             rkey: postA.uri.rkey,
@@ -85,12 +85,12 @@ describe('moderation', () => {
         },
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
       )
-      const { data: reportB } = await client.com.atproto.repo.report(
+      const { data: reportB } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#other',
+          reasonType: 'com.atproto.report.reason#other',
           reason: 'defamation',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRecord',
+            $type: 'com.atproto.report.subject#record',
             did: postB.uri.host,
             collection: postB.uri.collection,
             rkey: postB.uri.rkey,
@@ -106,11 +106,11 @@ describe('moderation', () => {
       const postA = sc.posts[sc.dids.bob][0].ref
       const postB = sc.posts[sc.dids.bob][1].ref
 
-      const promiseA = client.com.atproto.repo.report(
+      const promiseA = client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#spam',
+          reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRecord',
+            $type: 'com.atproto.report.subject#record',
             did: postA.uri.host,
             collection: postA.uri.collection,
             rkey: 'badrkey',
@@ -120,12 +120,12 @@ describe('moderation', () => {
       )
       await expect(promiseA).rejects.toThrow('Record not found')
 
-      const promiseB = client.com.atproto.repo.report(
+      const promiseB = client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#other',
+          reasonType: 'com.atproto.report.reason#other',
           reason: 'defamation',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRecord',
+            $type: 'com.atproto.report.subject#record',
             did: postB.uri.host,
             collection: postB.uri.collection,
             rkey: postB.uri.rkey,
@@ -140,23 +140,23 @@ describe('moderation', () => {
 
   describe('actioning', () => {
     it('resolves reports on repos and records.', async () => {
-      const { data: reportA } = await client.com.atproto.repo.report(
+      const { data: reportA } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#spam',
+          reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRepo',
+            $type: 'com.atproto.report.subject#repo',
             did: sc.dids.bob,
           },
         },
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
       )
       const post = sc.posts[sc.dids.bob][1].ref
-      const { data: reportB } = await client.com.atproto.repo.report(
+      const { data: reportB } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#other',
+          reasonType: 'com.atproto.report.reason#other',
           reason: 'defamation',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRecord',
+            $type: 'com.atproto.report.subject#record',
             did: post.uri.host,
             collection: post.uri.collection,
             rkey: post.uri.rkey,
@@ -210,11 +210,11 @@ describe('moderation', () => {
     })
 
     it('does not resolve report for mismatching repo.', async () => {
-      const { data: report } = await client.com.atproto.repo.report(
+      const { data: report } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.repo.report#spam',
+          reasonType: 'com.atproto.report.reason#spam',
           subject: {
-            $type: 'com.atproto.repo.report#subjectRepo',
+            $type: 'com.atproto.report.subject#repo',
             did: sc.dids.bob,
           },
         },
