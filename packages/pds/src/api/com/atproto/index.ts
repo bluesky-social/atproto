@@ -7,6 +7,7 @@ import handles from './handles'
 import invites from './invites'
 import passwordReset from './password-reset'
 import repo from './repo'
+import report from './report'
 import session from './session'
 import sync from './sync'
 
@@ -18,6 +19,7 @@ export default function (server: Server, ctx: AppContext) {
   invites(server, ctx)
   passwordReset(server, ctx)
   repo(server, ctx)
+  report(server, ctx)
   session(server, ctx)
   sync(server, ctx)
 }

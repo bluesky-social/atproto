@@ -14,9 +14,9 @@ export default function (server: Server, ctx: AppContext) {
       const { reasonType, reason, subject } = input.body
       const requester = auth.credentials.did
 
-      const repoService = services.repo(db)
+      const moderationService = services.moderation(db)
 
-      const report = await repoService.report({
+      const report = await moderationService.report({
         reasonType: getReasonType(reasonType),
         reason,
         subject: getSubject(subject),
@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: repoService.formatReportView(report),
+        body: moderationService.formatReportView(report),
       }
     },
   })
