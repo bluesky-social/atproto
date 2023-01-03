@@ -6,6 +6,9 @@ import { CommitBlockData, CommitData } from '../types'
 export interface WritableBlockstore {
   putBlock(cid: CID, block: Uint8Array): Promise<void>
   putMany(blocks: BlockMap): Promise<void>
+  updateHead(cid: CID, prev: CID | null): Promise<void>
+  indexCommits(commit: CommitData[]): Promise<void>
+  applyCommit(commit: CommitData): Promise<void>
 }
 
 export interface ReadableBlockstore {

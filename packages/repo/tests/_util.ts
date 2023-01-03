@@ -1,11 +1,16 @@
 import fs from 'fs'
 import { CID } from 'multiformats'
-import { def, TID, valueToIpldBlock } from '@atproto/common'
+import { TID, valueToIpldBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { Repo } from '../src/repo'
-import { readObj, RepoStorage } from '../src/storage'
+import { RepoStorage } from '../src/storage'
 import { MST } from '../src/mst'
-import { RecordWriteOp, RepoContents, WriteOpAction } from '../src'
+import {
+  CollectionContents,
+  RecordWriteOp,
+  RepoContents,
+  WriteOpAction,
+} from '../src'
 
 type IdMapping = Record<string, CID>
 
@@ -76,18 +81,15 @@ export const generateObject = (): Record<string, string> => {
 
 export const testCollections = ['com.example.posts', 'com.example.likes']
 
-export type CollectionData = Record<string, unknown>
-export type RepoData = Record<string, CollectionData>
-
 export const fillRepo = async (
   repo: Repo,
   keypair: crypto.Keypair,
   itemsPerCollection: number,
-): Promise<{ repo: Repo; data: RepoData }> => {
-  const repoData: RepoData = {}
+): Promise<{ repo: Repo; data: RepoContents }> => {
+  const repoData: RepoContents = {}
   const writes: RecordWriteOp[] = []
   for (const collName of testCollections) {
-    const collData: CollectionData = {}
+    const collData: CollectionContents = {}
     for (let i = 0; i < itemsPerCollection; i++) {
       const object = generateObject()
       const rkey = TID.nextStr()
@@ -110,16 +112,16 @@ export const fillRepo = async (
 
 export const editRepo = async (
   repo: Repo,
-  prevData: RepoData,
+  prevData: RepoContents,
   keypair: crypto.Keypair,
   params: {
     adds?: number
     updates?: number
     deletes?: number
   },
-): Promise<{ repo: Repo; data: RepoData }> => {
+): Promise<{ repo: Repo; data: RepoContents }> => {
   const { adds = 0, updates = 0, deletes = 0 } = params
-  const repoData: RepoData = {}
+  const repoData: RepoContents = {}
   for (const collName of testCollections) {
     const collData = prevData[collName]
     const shuffled = shuffle(Object.entries(collData))
@@ -176,7 +178,10 @@ export const editRepo = async (
   }
 }
 
-export const verifyRepo = async (repo: Repo, data: RepoData): Promise<void> => {
+export const verifyRepo = async (
+  repo: Repo,
+  data: RepoContents,
+): Promise<void> => {
   for (const collName of Object.keys(data)) {
     const collData = data[collName]
     for (const rkey of Object.keys(collData)) {
@@ -188,10 +193,10 @@ export const verifyRepo = async (repo: Repo, data: RepoData): Promise<void> => {
 
 export const verifyRepoDiff = async (
   ops: RecordWriteOp[],
-  before: RepoData,
-  after: RepoData,
+  before: RepoContents,
+  after: RepoContents,
 ): Promise<void> => {
-  const getVal = (op: RecordWriteOp, data: RepoData) => {
+  const getVal = (op: RecordWriteOp, data: RepoContents) => {
     return (data[op.collection] || {})[op.rkey]
   }
 
@@ -207,26 +212,6 @@ export const verifyRepoDiff = async (
       expect(getVal(op, after)).toBeUndefined()
     } else {
       throw new Error('unexpected op type')
-    }
-  }
-}
-
-export const verifyRepoCheckout = async (
-  checkout: RepoContents,
-  storage: RepoStorage,
-  data: RepoData,
-): Promise<void> => {
-  expect(Object.keys(checkout).length).toEqual(Object.keys(data).length)
-  for (const coll of Object.keys(checkout)) {
-    const checkoutColl = checkout[coll]
-    const dataColl = data[coll]
-    expect(Object.keys(checkoutColl).length).toEqual(
-      Object.keys(dataColl).length,
-    )
-    for (const rkey of Object.keys(checkoutColl)) {
-      const cid = checkoutColl[rkey]
-      const obj = await readObj(storage, cid, def.unknown)
-      expect(obj).toEqual(dataColl[rkey])
     }
   }
 }

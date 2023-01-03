@@ -1,7 +1,7 @@
 import * as crypto from '@atproto/crypto'
 import { TID } from '@atproto/common'
 import { DidResolver } from '@atproto/did-resolver'
-import { Repo, RepoRoot } from '../src'
+import { Repo, RepoContents, RepoRoot } from '../src'
 import BlockMap from '../src/block-map'
 import { MemoryBlockstore } from '../src/storage'
 import * as sync from '../src/sync'
@@ -14,7 +14,7 @@ describe('Sync', () => {
   let checkoutBlockstore: MemoryBlockstore
   let repo: Repo
   let keypair: crypto.Keypair
-  let repoData: util.RepoData
+  let repoData: RepoContents
   const didResolver = new DidResolver()
 
   beforeAll(async () => {
@@ -102,11 +102,7 @@ describe('Sync', () => {
     )
     const checkoutRepo = await Repo.load(checkoutBlockstore, checkout.root)
     await util.verifyRepo(checkoutRepo, repoData)
-    await util.verifyRepoCheckout(
-      checkout.contents,
-      checkoutBlockstore,
-      repoData,
-    )
+    expect(checkout.contents).toEqual(repoData)
   })
 
   it('does not sync unneeded blocks during checkout', async () => {

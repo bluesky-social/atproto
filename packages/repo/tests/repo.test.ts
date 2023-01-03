@@ -3,7 +3,7 @@ import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
 import { TID } from '@atproto/common'
-import { WriteOpAction } from '../src'
+import { RepoContents, WriteOpAction } from '../src'
 import { Secp256k1Keypair } from '@atproto/crypto'
 
 describe('Repo', () => {
@@ -12,7 +12,7 @@ describe('Repo', () => {
   let storage: MemoryBlockstore
   let keypair: crypto.Keypair
   let repo: Repo
-  let repoData: util.RepoData
+  let repoData: RepoContents
 
   it('creates repo', async () => {
     storage = new MemoryBlockstore()

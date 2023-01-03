@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
     }
     const repo = await Repo.load(storage, root)
     const fromCid = from ? CID.parse(from) : null
-    const diff = await repo.getDiffCar(fromCid)
+    const diff = await repo.getDiff(fromCid)
     return {
       encoding: 'application/cbor',
       body: Buffer.from(diff),
@@ -40,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
     const storage = new SqlRepoStorage(ctx.db, did)
     const commit = params.commit ? CID.parse(params.commit) : undefined
     const repo = await Repo.load(storage, commit)
-    const checkout = await repo.getCarNoHistory()
+    const checkout = await repo.getCheckout()
     return {
       encoding: 'application/cbor',
       body: Buffer.from(checkout),

@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { DidResolver } from '@atproto/did-resolver'
-import { ReadableBlockstore, RepoStorage } from './storage'
+import { ReadableBlockstore, readObj, RepoStorage } from './storage'
 import DataDiff from './data-diff'
 import SyncStorage from './storage/sync-storage'
 import ReadableRepo from './readable-repo'
@@ -8,6 +8,7 @@ import Repo from './repo'
 import CidSet from './cid-set'
 import { parseRecordKey } from './util'
 import { RepoContents } from './types'
+import { def } from '@atproto/common'
 
 export type VerifiedCheckout = {
   contents: RepoContents
@@ -37,14 +38,14 @@ export const verifyCheckout = async (
     repo.root.meta,
   ]).addSet(diff.newCids)
 
-  const contents = diff.addList().reduce((acc, cur) => {
-    const { collection, rkey } = parseRecordKey(cur.key)
-    if (!acc[collection]) {
-      acc[collection] = {}
+  const contents: RepoContents = {}
+  for (const add of diff.addList()) {
+    const { collection, rkey } = parseRecordKey(add.key)
+    if (!contents[collection]) {
+      contents[collection] = {}
     }
-    acc[collection][rkey] = cur.cid
-    return acc
-  }, {} as RepoContents)
+    contents[collection][rkey] = await readObj(storage, add.cid, def.record)
+  }
 
   return {
     contents,

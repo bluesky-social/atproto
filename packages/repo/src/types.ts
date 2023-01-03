@@ -98,7 +98,8 @@ export type RepoUpdate = CommitData & {
   ops: RecordWriteOp[]
 }
 
-export type RepoContents = Record<string, Record<string, CID>>
+export type CollectionContents = Record<string, Record<string, unknown>>
+export type RepoContents = Record<string, CollectionContents>
 
 // DataStores
 // ---------------
