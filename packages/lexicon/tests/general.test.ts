@@ -513,22 +513,26 @@ describe('Record validation', () => {
   })
 
   it('Applies datetime formatting constraint', () => {
+    for (const datetime of [
+      '2022-12-12T00:50:36.809Z',
+      '2022-12-12T00:50:36Z',
+      '2022-12-12T00:50:36.8Z',
+      '2022-12-12T00:50:36.80Z',
+      '2022-12-12T00:50:36+00:00',
+      '2022-12-12T00:50:36.8+00:00',
+      '2022-12-11T19:50:36-05:00',
+      '2022-12-11T19:50:36.8-05:00',
+      '2022-12-11T19:50:36.80-05:00',
+      '2022-12-11T19:50:36.809-05:00',
+    ]) {
+      lex.assertValidRecord('com.example.datetime', {
+        $type: 'com.example.datetime',
+        datetime,
+      })
+    }
     expect(() =>
-      lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
+      lex.assertValidRecord('com.example.datetime', {
+        $type: 'com.example.datetime',
         datetime: 'bad date',
       }),
     ).toThrow('Record/datetime must be an iso8601 formatted datetime')

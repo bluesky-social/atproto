@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lexicon",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "main": "src/index.ts",
   "scripts": {
     "test": "jest",
@@ -11,11 +11,16 @@
     "verify": "run-p prettier lint",
     "verify:fix": "yarn prettier:fix && yarn lint:fix",
     "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json"
+    "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
+    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
+    "prepublish": "npm run update-main-to-dist",
+    "postpublish": "npm run update-main-to-src"
   },
   "license": "MIT",
   "dependencies": {
     "@atproto/nsid": "*",
+    "iso-datestring-validator": "^2.2.2",
     "zod": "^3.14.2"
   }
 }
