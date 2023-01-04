@@ -86,7 +86,7 @@ export type RecordWriteOp = RecordCreateOp | RecordUpdateOp | RecordDeleteOp
 // ---------------
 
 export type CommitBlockData = {
-  root: CID
+  commit: CID
   blocks: BlockMap
 }
 

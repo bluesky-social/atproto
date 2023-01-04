@@ -74,7 +74,7 @@ export class Repo extends ReadableRepo {
     const commitCid = await newBlocks.add(commit)
 
     return {
-      root: commitCid,
+      commit: commitCid,
       prev: null,
       blocks: newBlocks,
     }
@@ -94,7 +94,7 @@ export class Repo extends ReadableRepo {
     )
     await storage.applyCommit(commit)
     log.info({ did }, `created repo`)
-    return Repo.load(storage, commit.root)
+    return Repo.load(storage, commit.commit)
   }
 
   static async load(storage: RepoStorage, cid?: CID) {
@@ -171,7 +171,7 @@ export class Repo extends ReadableRepo {
     const commitCid = await newBlocks.add(commit)
 
     return {
-      root: commitCid,
+      commit: commitCid,
       prev: this.cid,
       blocks: newBlocks,
     }
@@ -183,7 +183,7 @@ export class Repo extends ReadableRepo {
   ): Promise<Repo> {
     const commit = await this.createCommit(toWrite, keypair)
     await this.storage.applyCommit(commit)
-    return Repo.load(this.storage, commit.root)
+    return Repo.load(this.storage, commit.commit)
   }
 
   // CAR FILES

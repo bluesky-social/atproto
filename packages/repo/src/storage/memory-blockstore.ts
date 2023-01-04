@@ -51,7 +51,7 @@ export class MemoryBlockstore extends RepoStorage {
 
   async applyCommit(commit: CommitData): Promise<void> {
     this.blocks.addMap(commit.blocks)
-    this.head = commit.root
+    this.head = commit.commit
   }
 
   async getCommitPath(

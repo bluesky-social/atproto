@@ -106,7 +106,7 @@ export const persistUpdates = async (
       throw new MissingBlocksError('sync', forCommit.missing)
     }
     return {
-      root: update.root,
+      commit: update.commit,
       prev: update.prev,
       blocks: forCommit.blocks,
     }

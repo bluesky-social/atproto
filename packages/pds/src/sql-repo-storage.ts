@@ -172,13 +172,13 @@ export class SqlRepoStorage extends RepoStorage {
     for (const commit of commits) {
       for (const block of commit.blocks.entries()) {
         commitBlocks.push({
-          commit: commit.root.toString(),
+          commit: commit.commit.toString(),
           block: block.cid.toString(),
         })
         allBlocks.set(block.cid, block.bytes)
       }
       commitHistory.push({
-        commit: commit.root.toString(),
+        commit: commit.commit.toString(),
         prev: commit.prev ? commit.prev.toString() : null,
       })
     }

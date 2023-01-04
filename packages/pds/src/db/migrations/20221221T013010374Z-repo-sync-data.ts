@@ -50,13 +50,13 @@ export async function up(db: DatabaseSchema): Promise<void> {
       const prev = commitData[i - 1]
       commit.blocks.forEach((_bytes, cid) => {
         commitBlock.push({
-          commit: commit.root.toString(),
+          commit: commit.commit.toString(),
           block: cid.toString(),
         })
       })
       commitHistory.push({
-        commit: commit.root.toString(),
-        prev: prev ? prev.root.toString() : null,
+        commit: commit.commit.toString(),
+        prev: prev ? prev.commit.toString() : null,
       })
     }
     const promises: Promise<unknown>[] = []

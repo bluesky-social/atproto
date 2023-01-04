@@ -78,12 +78,12 @@ describe('sql repo storage', () => {
     await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       await storage.applyCommit({
-        root: commits[0].cid,
+        commit: commits[0].cid,
         prev: null,
         blocks: blocks0,
       })
       await storage.applyCommit({
-        root: commits[1].cid,
+        commit: commits[1].cid,
         prev: commits[0].cid,
         blocks: blocks1,
       })
@@ -107,9 +107,9 @@ describe('sql repo storage', () => {
       throw new Error('could not get commit data')
     }
     expect(commitData.length).toBe(2)
-    expect(commitData[0].root.equals(commits[0].cid)).toBeTruthy()
+    expect(commitData[0].commit.equals(commits[0].cid)).toBeTruthy()
     expect(commitData[0].blocks.equals(blocks0)).toBeTruthy()
-    expect(commitData[1].root.equals(commits[1].cid)).toBeTruthy()
+    expect(commitData[1].commit.equals(commits[1].cid)).toBeTruthy()
     expect(commitData[1].blocks.equals(blocks1)).toBeTruthy()
   })
 })

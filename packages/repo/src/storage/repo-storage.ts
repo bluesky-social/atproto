@@ -21,7 +21,7 @@ export abstract class RepoStorage extends ReadableBlockstore {
   async applyCommit(commit: CommitData): Promise<void> {
     await Promise.all([
       this.indexCommits([commit]),
-      this.updateHead(commit.root, commit.prev),
+      this.updateHead(commit.commit, commit.prev),
     ])
   }
 
@@ -33,7 +33,7 @@ export abstract class RepoStorage extends ReadableBlockstore {
     if (!commitPath) return null
     const blocksByCommit = await this.getBlocksForCommits(commitPath)
     return commitPath.map((commit) => ({
-      root: commit,
+      commit,
       blocks: blocksByCommit[commit.toString()] || new BlockMap(),
     }))
   }

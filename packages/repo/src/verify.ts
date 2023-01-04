@@ -55,7 +55,7 @@ export const verifyCheckout = async (
 }
 
 export type VerifiedUpdate = {
-  root: CID
+  commit: CID
   prev: CID | null
   diff: DataDiff
   newCids: CidSet
@@ -80,7 +80,7 @@ export const verifyFullHistory = async (
     baseRepo.root.meta,
   ]).addSet(baseDiff.newCids)
   const init: VerifiedUpdate = {
-    root: baseRepo.cid,
+    commit: baseRepo.cid,
     prev: null,
     diff: baseDiff,
     newCids: baseRepoCids,
@@ -143,7 +143,7 @@ export const verifyCommitPath = async (
     )
 
     updates.push({
-      root: nextRepo.cid,
+      commit: nextRepo.cid,
       prev: prevRepo.cid,
       diff,
       newCids,
