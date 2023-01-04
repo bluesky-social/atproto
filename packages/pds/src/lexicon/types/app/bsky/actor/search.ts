@@ -9,7 +9,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
-  term: string
+  term?: string
   limit?: number
   before?: string
 }
