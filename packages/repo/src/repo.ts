@@ -46,7 +46,7 @@ export class Repo extends ReadableRepo {
 
     let data = await MST.create(storage)
     for (const write of initialRecords) {
-      const cid = await newBlocks.add(write.value)
+      const cid = await newBlocks.add(write.record)
       const dataKey = write.collection + '/' + write.rkey
       data = await data.add(dataKey, cid)
     }
@@ -127,11 +127,11 @@ export class Repo extends ReadableRepo {
     let data = this.data
     for (const write of writes) {
       if (write.action === WriteOpAction.Create) {
-        const cid = await newBlocks.add(write.value)
+        const cid = await newBlocks.add(write.record)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.add(dataKey, cid)
       } else if (write.action === WriteOpAction.Update) {
-        const cid = await newBlocks.add(write.value)
+        const cid = await newBlocks.add(write.record)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.update(dataKey, cid)
       } else if (write.action === WriteOpAction.Delete) {

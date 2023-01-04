@@ -64,14 +64,14 @@ export type RecordCreateOp = {
   action: WriteOpAction.Create
   collection: string
   rkey: string
-  value: Record<string, unknown>
+  record: Record<string, unknown>
 }
 
 export type RecordUpdateOp = {
   action: WriteOpAction.Update
   collection: string
   rkey: string
-  value: Record<string, unknown>
+  record: Record<string, unknown>
 }
 
 export type RecordDeleteOp = {
@@ -81,6 +81,26 @@ export type RecordDeleteOp = {
 }
 
 export type RecordWriteOp = RecordCreateOp | RecordUpdateOp | RecordDeleteOp
+
+export type RecordCreateDescript = RecordCreateOp & {
+  cid: CID
+}
+
+export type RecordUpdateDescript = RecordUpdateOp & {
+  prev: CID
+  cid: CID
+}
+
+export type RecordDeleteDescript = RecordDeleteOp & {
+  cid: CID
+}
+
+export type RecordWriteDescript =
+  | RecordCreateDescript
+  | RecordUpdateDescript
+  | RecordDeleteDescript
+
+export type WriteLog = RecordWriteDescript[][]
 
 // Updates/Commits
 // ---------------

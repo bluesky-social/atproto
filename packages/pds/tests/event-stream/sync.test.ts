@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { getWriteOpLog, RecordWriteOp, WriteOpAction } from '@atproto/repo'
+import { getWriteLog, RecordWriteOp, WriteOpAction } from '@atproto/repo'
 import SqlRepoStorage from '../../src/sql-repo-storage'
 import basicSeed from '../seeds/basic'
 import { SeedClient } from '../seeds/client'
@@ -82,7 +82,7 @@ describe('sync', () => {
     const storage = new SqlRepoStorage(db, did)
     const root = await storage.getHead()
     if (!root) throw new Error('Missing repo root')
-    return await getWriteOpLog(storage, root, null)
+    return await getWriteLog(storage, root, null)
   }
 
   function prepareWrites(
@@ -97,14 +97,14 @@ describe('sync', () => {
             did,
             collection: op.collection,
             rkey: op.rkey,
-            record: op.value,
+            record: op.record,
           })
         } else if (action === WriteOpAction.Update) {
           return prepareUpdate({
             did,
             collection: op.collection,
             rkey: op.rkey,
-            record: op.value,
+            record: op.record,
           })
         } else if (action === WriteOpAction.Delete) {
           return prepareDelete({

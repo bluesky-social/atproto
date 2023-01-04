@@ -177,14 +177,14 @@ export const createWriteToOp = (write: PreparedCreate): RecordCreateOp => ({
   action: WriteOpAction.Create,
   collection: write.uri.collection,
   rkey: write.uri.rkey,
-  value: write.record,
+  record: write.record,
 })
 
 export const updateWriteToOp = (write: PreparedUpdate): RecordUpdateOp => ({
   action: WriteOpAction.Update,
   collection: write.uri.collection,
   rkey: write.uri.rkey,
-  value: write.record,
+  record: write.record,
 })
 
 export const deleteWriteToOp = (write: PreparedDelete): RecordDeleteOp => ({

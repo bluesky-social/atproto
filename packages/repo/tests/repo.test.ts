@@ -33,8 +33,8 @@ describe('Repo', () => {
       {
         action: WriteOpAction.Create,
         collection: collName,
-        rkey: rkey,
-        value: record,
+        rkey,
+        record,
       },
       keypair,
     )
@@ -47,8 +47,8 @@ describe('Repo', () => {
       {
         action: WriteOpAction.Update,
         collection: collName,
-        rkey: rkey,
-        value: updatedRecord,
+        rkey,
+        record: updatedRecord,
       },
       keypair,
     )
