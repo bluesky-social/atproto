@@ -6,7 +6,7 @@ import { User } from '../db/tables/user'
 import { DidHandle } from '../db/tables/did-handle'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
 import { APP_BSKY_GRAPH } from '../lexicon'
-import { actorNotSoftDeletedClause } from '../db/util'
+import { notSoftDeletedClause } from '../db/util'
 
 export class ActorService {
   constructor(public db: Database) {}
@@ -18,14 +18,20 @@ export class ActorService {
   async getUser(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<(User & DidHandle) | null> {
+  ): Promise<(User & DidHandle & { takedownId: number | null }) | null> {
+    const { ref } = this.db.db.dynamic
     let query = this.db.db
       .selectFrom('user')
       .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
-      .if(!includeSoftDeleted, (qb) => qb.where(actorNotSoftDeletedClause()))
-      .selectAll()
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('repo_root'))),
+      )
+      .selectAll('user')
+      .selectAll('did_handle')
+      .select('repo_root.takedownId')
     if (handleOrDid.startsWith('did:')) {
-      query = query.where('did', '=', handleOrDid)
+      query = query.where('did_handle.did', '=', handleOrDid)
     } else {
       query = query.where('did_handle.handle', '=', handleOrDid.toLowerCase())
     }
@@ -37,10 +43,14 @@ export class ActorService {
     email: string,
     includeSoftDeleted = false,
   ): Promise<(User & DidHandle) | null> {
+    const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('user')
       .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
-      .if(!includeSoftDeleted, (qb) => qb.where(actorNotSoftDeletedClause()))
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('repo_root'))),
+      )
       .selectAll()
       .where('email', '=', email.toLowerCase())
       .executeTakeFirst()
@@ -52,11 +62,15 @@ export class ActorService {
     includeSoftDeleted = false,
   ): Promise<string | null> {
     if (handleOrDid.startsWith('did:')) return handleOrDid
+    const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
-      .if(!includeSoftDeleted, (qb) => qb.where(actorNotSoftDeletedClause()))
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('repo_root'))),
+      )
       .where('handle', '=', handleOrDid)
-      .select('did')
+      .select('did_handle.did')
       .executeTakeFirst()
     return found ? found.did : null
   }

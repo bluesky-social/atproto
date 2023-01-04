@@ -14,7 +14,7 @@ import * as Assertion from './plugins/assertion'
 import * as Confirmation from './plugins/confirmation'
 import * as Profile from './plugins/profile'
 import { MessageQueue } from '../../event-stream/types'
-import { recordNotSoftDeletedClause } from '../../db/util'
+import { notSoftDeletedClause } from '../../db/util'
 
 export class RecordService {
   records: {
@@ -126,12 +126,15 @@ export class RecordService {
     after?: string,
     includeSoftDeleted = false,
   ): Promise<{ uri: string; cid: string; value: object }[]> {
+    const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
       .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .where('record.did', '=', did)
       .where('record.collection', '=', collection)
-      .if(!includeSoftDeleted, (qb) => qb.where(recordNotSoftDeletedClause()))
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('record'))),
+      )
       .orderBy('record.rkey', reverse ? 'asc' : 'desc')
       .limit(limit)
       .selectAll()
@@ -157,12 +160,15 @@ export class RecordService {
     cid: string | null,
     includeSoftDeleted = false,
   ): Promise<{ uri: string; cid: string; value: object } | null> {
+    const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
       .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .selectAll()
       .where('record.uri', '=', uri.toString())
-      .if(!includeSoftDeleted, (qb) => qb.where(recordNotSoftDeletedClause()))
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('record'))),
+      )
     if (cid) {
       builder = builder.where('record.cid', '=', cid)
     }
@@ -180,11 +186,14 @@ export class RecordService {
     cid: string | null,
     includeSoftDeleted = false,
   ): Promise<boolean> {
+    const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
       .select('uri')
       .where('record.uri', '=', uri.toString())
-      .if(!includeSoftDeleted, (qb) => qb.where(recordNotSoftDeletedClause()))
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('record'))),
+      )
     if (cid) {
       builder = builder.where('record.cid', '=', cid)
     }

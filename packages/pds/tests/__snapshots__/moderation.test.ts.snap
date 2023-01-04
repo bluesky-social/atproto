@@ -27,7 +27,7 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 3,
-    "reasonType": "com.atproto.report.reason#spam",
+    "reasonType": "com.atproto.report.reasonType#spam",
     "reportedByDid": "user(0)",
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -39,7 +39,7 @@ Array [
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 4,
     "reason": "defamation",
-    "reasonType": "com.atproto.report.reason#other",
+    "reasonType": "com.atproto.report.reasonType#other",
     "reportedByDid": "user(1)",
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -55,7 +55,7 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 1,
-    "reasonType": "com.atproto.report.reason#spam",
+    "reasonType": "com.atproto.report.reasonType#spam",
     "reportedByDid": "user(0)",
     "subject": Object {
       "$type": "com.atproto.repo.repoRef",
@@ -66,7 +66,7 @@ Array [
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 2,
     "reason": "impersonation",
-    "reasonType": "com.atproto.report.reason#other",
+    "reasonType": "com.atproto.report.reasonType#other",
     "reportedByDid": "user(2)",
     "subject": Object {
       "$type": "com.atproto.repo.repoRef",

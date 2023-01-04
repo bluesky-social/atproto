@@ -158,6 +158,8 @@ export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
+  ModerationActionFlag: 'com.atproto.admin.moderationAction#flag',
+  ModerationActionAcknowledge: 'com.atproto.admin.moderationAction#acknowledge',
 }
 export const COM_ATPROTO_REPORT = {
   ReasonTypeSpam: 'com.atproto.report.reasonType#spam',

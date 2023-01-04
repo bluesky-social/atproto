@@ -1,4 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { AtUri } from '@atproto/uri'
 import {
   adminAuth,
   CloseFn,
@@ -8,8 +9,12 @@ import {
 } from './_util'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
-import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/moderationAction'
-import { AtUri } from '@atproto/uri'
+import {
+  ACKNOWLEDGE,
+  FLAG,
+  TAKEDOWN,
+} from '../src/lexicon/types/com/atproto/admin/moderationAction'
+import { OTHER, SPAM } from '../src/lexicon/types/com/atproto/report/reasonType'
 
 describe('moderation', () => {
   let server: TestServerInfo
@@ -35,7 +40,7 @@ describe('moderation', () => {
     it('creates reports of a repo.', async () => {
       const { data: reportA } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#spam',
+          reasonType: SPAM,
           subject: {
             $type: 'com.atproto.repo.repoRef',
             did: sc.dids.bob,
@@ -45,7 +50,7 @@ describe('moderation', () => {
       )
       const { data: reportB } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#other',
+          reasonType: OTHER,
           reason: 'impersonation',
           subject: {
             $type: 'com.atproto.repo.repoRef',
@@ -60,7 +65,7 @@ describe('moderation', () => {
     it("fails reporting a repo that doesn't exist.", async () => {
       const promise = client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#spam',
+          reasonType: SPAM,
           subject: {
             $type: 'com.atproto.repo.repoRef',
             did: 'did:plc:unknown',
@@ -76,7 +81,7 @@ describe('moderation', () => {
       const postB = sc.posts[sc.dids.bob][1].ref
       const { data: reportA } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#spam',
+          reasonType: SPAM,
           subject: {
             $type: 'com.atproto.repo.recordRef',
             uri: postA.uri.toString(),
@@ -86,7 +91,7 @@ describe('moderation', () => {
       )
       const { data: reportB } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#other',
+          reasonType: OTHER,
           reason: 'defamation',
           subject: {
             $type: 'com.atproto.repo.recordRef',
@@ -107,7 +112,7 @@ describe('moderation', () => {
 
       const promiseA = client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#spam',
+          reasonType: SPAM,
           subject: {
             $type: 'com.atproto.repo.recordRef',
             uri: postUriBad.toString(),
@@ -119,7 +124,7 @@ describe('moderation', () => {
 
       const promiseB = client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#other',
+          reasonType: OTHER,
           reason: 'defamation',
           subject: {
             $type: 'com.atproto.repo.recordRef',
@@ -137,7 +142,7 @@ describe('moderation', () => {
     it('resolves reports on repos and records.', async () => {
       const { data: reportA } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#spam',
+          reasonType: SPAM,
           subject: {
             $type: 'com.atproto.repo.repoRef',
             did: sc.dids.bob,
@@ -148,7 +153,7 @@ describe('moderation', () => {
       const post = sc.posts[sc.dids.bob][1].ref
       const { data: reportB } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#other',
+          reasonType: OTHER,
           reason: 'defamation',
           subject: {
             $type: 'com.atproto.repo.recordRef',
@@ -205,7 +210,7 @@ describe('moderation', () => {
     it('does not resolve report for mismatching repo.', async () => {
       const { data: report } = await client.com.atproto.report.create(
         {
-          reasonType: 'com.atproto.report.reason#spam',
+          reasonType: SPAM,
           subject: {
             $type: 'com.atproto.repo.repoRef',
             did: sc.dids.bob,
@@ -250,6 +255,146 @@ describe('moderation', () => {
       await client.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+
+    it('does not resolve report for mismatching record.', async () => {
+      const postUri1 = sc.posts[sc.dids.alice][0].ref.uri
+      const postUri2 = sc.posts[sc.dids.bob][0].ref.uri
+      const { data: report } = await client.com.atproto.report.create(
+        {
+          reasonType: SPAM,
+          subject: {
+            $type: 'com.atproto.repo.recordRef',
+            uri: postUri1.toString(),
+          },
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+      const { data: action } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri2.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+
+      const promise = client.com.atproto.admin.resolveModerationReports(
+        {
+          actionId: action.id,
+          reportIds: [report.id],
+          createdBy: 'X',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+      await expect(promise).rejects.toThrow(
+        'Report 8 cannot be resolved by action',
+      )
+
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: action.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+
+    it('supports flagging and acknowledging.', async () => {
+      const postRef1 = sc.posts[sc.dids.alice][0].ref
+      const postRef2 = sc.posts[sc.dids.bob][0].ref
+      const { data: action1 } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postRef1.uri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      expect(action1).toEqual(
+        expect.objectContaining({
+          action: FLAG,
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: postRef1.uriStr,
+            cid: postRef1.cidStr,
+          },
+        }),
+      )
+      const { data: action2 } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: ACKNOWLEDGE,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postRef2.uri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      expect(action2).toEqual(
+        expect.objectContaining({
+          action: ACKNOWLEDGE,
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: postRef2.uriStr,
+            cid: postRef2.cidStr,
+          },
+        }),
+      )
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: action1.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: action2.id,
           createdBy: 'X',
           reason: 'Y',
         },

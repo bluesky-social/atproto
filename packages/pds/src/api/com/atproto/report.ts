@@ -5,6 +5,10 @@ import { Server } from '../../../lexicon'
 import AppContext from '../../../context'
 import { ModerationReport } from '../../../db/tables/moderation'
 import { InputSchema as ReportInput } from '../../../lexicon/types/com/atproto/report/create'
+import {
+  OTHER,
+  SPAM,
+} from '../../../lexicon/types/com/atproto/report/reasonType'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.report.create({
@@ -32,10 +36,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function getReasonType(reasonType: ReportInput['reasonType']) {
-  if (
-    reasonType === 'com.atproto.report.reason#spam' ||
-    reasonType === 'com.atproto.report.reason#other'
-  ) {
+  if (reasonType === SPAM || reasonType === OTHER) {
     return reasonType as ModerationReport['reasonType']
   }
   throw new InvalidRequestError('Invalid reason type')

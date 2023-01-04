@@ -1,5 +1,5 @@
 import AppContext from '../../../../context'
-import { actorNotSoftDeletedClause } from '../../../../db/util'
+import { notSoftDeletedClause } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { getDeclarationSimple } from '../util'
 
@@ -18,8 +18,9 @@ export default function (server: Server, ctx: AppContext) {
       const suggestionsReq = db
         .selectFrom('user')
         .innerJoin('did_handle', 'user.handle', 'did_handle.handle')
+        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
-        .where(actorNotSoftDeletedClause())
+        .where(notSoftDeletedClause(ref('repo_root')))
         .select([
           'did_handle.did as did',
           'did_handle.handle as handle',

@@ -1,5 +1,10 @@
 import { Generated } from 'kysely'
-import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/moderationAction'
+import {
+  ACKNOWLEDGE,
+  FLAG,
+  TAKEDOWN,
+} from '../../lexicon/types/com/atproto/admin/moderationAction'
+import { OTHER, SPAM } from '../../lexicon/types/com/atproto/report/reasonType'
 
 export const actionTableName = 'moderation_action'
 export const reportTableName = 'moderation_report'
@@ -7,7 +12,7 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 
 export interface ModerationAction {
   id: Generated<number>
-  action: typeof TAKEDOWN
+  action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE
   subjectType: 'com.atproto.repo.repoRef' | 'com.atproto.repo.recordRef'
   subjectDid: string
   subjectUri: string | null
@@ -26,9 +31,7 @@ export interface ModerationReport {
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
-  reasonType:
-    | 'com.atproto.report.reason#spam'
-    | 'com.atproto.report.reason#other'
+  reasonType: typeof SPAM | typeof OTHER
   reason: string | null
   reportedByDid: string
   createdAt: string

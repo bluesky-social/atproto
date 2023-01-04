@@ -16,16 +16,13 @@ export const actorWhereClause = (actor: string) => {
   }
 }
 
-export const actorNotSoftDeletedClause = (alias: DbRef = sql`"did_handle"`) => {
+// Applies to repo_root or record table
+export const notSoftDeletedClause = (alias: DbRef) => {
   return sql`${alias}."takedownId" is null`
 }
 
-export const recordNotSoftDeletedClause = (alias: DbRef = sql`"record"`) => {
-  return sql`${alias}."takedownId" is null`
-}
-
-export const actorSoftDeleted = (actor: { takedownId: number | null }) => {
-  return actor.takedownId !== null
+export const softDeleted = (repoOrRecord: { takedownId: number | null }) => {
+  return repoOrRecord.takedownId !== null
 }
 
 export const countAll = sql<number>`count(*)`

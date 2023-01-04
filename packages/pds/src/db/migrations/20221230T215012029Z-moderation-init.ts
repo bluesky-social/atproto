@@ -24,9 +24,8 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('reversedReason', 'text')
     .execute()
   // Repo takedowns
-  // @TODO consider switching to repo_root
   await db.schema
-    .alterTable('did_handle')
+    .alterTable('repo_root')
     .addColumn('takedownId', 'integer')
     .execute()
   // Record takedowns
@@ -37,9 +36,9 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   if (dialect !== 'sqlite') {
     // Would have to recreate table in sqlite to add these constraints
     await db.schema
-      .alterTable('did_handle')
+      .alterTable('repo_root')
       .addForeignKeyConstraint(
-        'did_handle_takedown_id_fkey',
+        'repo_root_takedown_id_fkey',
         ['takedownId'],
         'moderation_action',
         ['id'],
@@ -104,15 +103,15 @@ export async function down(
   await db.schema.dropTable('moderation_report').execute()
   if (dialect !== 'sqlite') {
     await db.schema
-      .alterTable('did_handle')
-      .dropConstraint('did_handle_takedown_id_fkey')
+      .alterTable('repo_root')
+      .dropConstraint('repo_root_takedown_id_fkey')
       .execute()
     await db.schema
       .alterTable('record')
       .dropConstraint('record_takedown_id_fkey')
       .execute()
   }
-  await db.schema.alterTable('did_handle').dropColumn('takedownId').execute()
+  await db.schema.alterTable('repo_root').dropColumn('takedownId').execute()
   await db.schema.alterTable('record').dropColumn('takedownId').execute()
   await db.schema.dropTable('moderation_action').execute()
 }

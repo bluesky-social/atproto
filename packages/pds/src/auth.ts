@@ -6,7 +6,7 @@ import { DidResolver } from '@atproto/did-resolver'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
 import AppContext from './context'
-import { actorSoftDeleted } from './db/util'
+import { softDeleted } from './db/util'
 
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
@@ -173,7 +173,7 @@ export const accessVerifierCheckTakedown =
   async (ctx: { req: express.Request; res: express.Response }) => {
     const did = auth.getUserDidOrThrow(ctx.req, AuthScopes.Access)
     const actor = await services.actor(db).getUser(did, true)
-    if (!actor || actorSoftDeleted(actor)) {
+    if (!actor || softDeleted(actor)) {
       throw new AuthRequiredError(
         'Account has been taken down',
         'AccountTakedown',

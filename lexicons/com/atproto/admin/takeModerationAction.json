@@ -11,7 +11,14 @@
           "type": "object",
           "required": ["action", "subject", "reason", "createdBy"],
           "properties": {
-            "action": {"type": "string", "knownValues": ["com.atproto.admin.moderationAction#takedown"]},
+            "action": {
+              "type": "string",
+              "knownValues": [
+                "com.atproto.admin.moderationAction#takedown",
+                "com.atproto.admin.moderationAction#flag",
+                "com.atproto.admin.moderationAction#acknowledge"
+              ]
+            },
             "subject": {
               "type": "union",
               "refs": [

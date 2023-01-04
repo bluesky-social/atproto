@@ -6,10 +6,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../db'
 import { MessageQueue } from '../event-stream/types'
 import { ModerationAction, ModerationReport } from '../db/tables/moderation'
-import {
-  TAKEDOWN,
-  View as ModerationActionView,
-} from '../lexicon/types/com/atproto/admin/moderationAction'
+import { View as ModerationActionView } from '../lexicon/types/com/atproto/admin/moderationAction'
 import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/report/create'
 import { RepoService } from './repo'
 import { RecordService } from './record'
@@ -45,7 +42,7 @@ export class ModerationService {
   }
 
   async logAction(info: {
-    action: typeof TAKEDOWN
+    action: ModerationActionRow['action']
     subject: { did: string } | { uri: AtUri; cid?: CID }
     reason: string
     createdBy: string
@@ -118,7 +115,7 @@ export class ModerationService {
 
   async takedownRepo(info: { takedownId: number; did: string }) {
     await this.db.db
-      .updateTable('did_handle')
+      .updateTable('repo_root')
       .set({ takedownId: info.takedownId })
       .where('did', '=', info.did)
       .where('takedownId', 'is', null)
@@ -127,7 +124,7 @@ export class ModerationService {
 
   async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
-      .updateTable('did_handle')
+      .updateTable('repo_root')
       .set({ takedownId: null })
       .where('did', '=', info.did)
       .execute()
@@ -163,15 +160,24 @@ export class ModerationService {
     const reports = await this.db.db
       .selectFrom('moderation_report')
       .where('id', 'in', reportIds)
-      .select(['id', 'subjectDid'])
+      .select(['id', 'subjectType', 'subjectDid', 'subjectUri'])
       .execute()
 
     reportIds.forEach((reportId) => {
       const report = reports.find((r) => r.id === reportId)
       if (!report) throw new InvalidRequestError('Report not found')
       if (action.subjectDid !== report.subjectDid) {
-        // @TODO if the report and action are both for a record, ensure they are for the same record.
-        // Otherwise, if one is for a repo and the other a record, just ensure the repo/did matches.
+        // Report and action always must target repo or record from the same did
+        throw new InvalidRequestError(
+          `Report ${report.id} cannot be resolved by action`,
+        )
+      }
+      if (
+        action.subjectType === 'com.atproto.repo.recordRef' &&
+        report.subjectType === 'com.atproto.repo.recordRef' &&
+        report.subjectUri !== action.subjectUri
+      ) {
+        // If report and action are both for a record, they must be for the same record
         throw new InvalidRequestError(
           `Report ${report.id} cannot be resolved by action`,
         )

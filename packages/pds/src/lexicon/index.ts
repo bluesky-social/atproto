@@ -61,6 +61,8 @@ import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
+  ModerationActionFlag: 'com.atproto.admin.moderationAction#flag',
+  ModerationActionAcknowledge: 'com.atproto.admin.moderationAction#acknowledge',
 }
 export const COM_ATPROTO_REPORT = {
   ReasonTypeSpam: 'com.atproto.report.reasonType#spam',

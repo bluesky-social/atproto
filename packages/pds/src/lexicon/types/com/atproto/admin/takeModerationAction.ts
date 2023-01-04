@@ -10,7 +10,11 @@ import * as ComAtprotoAdminModerationAction from './moderationAction'
 export interface QueryParams {}
 
 export interface InputSchema {
-  action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
+  action:
+    | 'com.atproto.admin.moderationAction#takedown'
+    | 'com.atproto.admin.moderationAction#flag'
+    | 'com.atproto.admin.moderationAction#acknowledge'
+    | (string & {})
   subject:
     | ComAtprotoRepoRepoRef.Main
     | ComAtprotoRepoRecordRef.Main
