@@ -30,8 +30,8 @@ import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
+import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -329,17 +329,17 @@ export class SyncNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getHead<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetHead.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getHead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getRepo<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, ComAtprotoSyncGetRepo.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.sync.getRepo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getRoot<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoSyncGetRoot.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'com.atproto.sync.getRoot' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

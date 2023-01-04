@@ -111,7 +111,7 @@ describe('repo sync', () => {
   })
 
   it('syncs current root', async () => {
-    const root = await client.com.atproto.sync.getRoot({ did })
+    const root = await client.com.atproto.sync.getHead({ did })
     expect(root.data.root).toEqual(currRoot?.toString())
   })
 

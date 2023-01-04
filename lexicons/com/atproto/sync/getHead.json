@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.sync.getRoot",
+  "id": "com.atproto.sync.getHead",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets the current root CID of a repo.",
+      "description": "Gets the current HEAD CID of a repo.",
       "parameters": {
         "type": "params",
         "required": ["did"],

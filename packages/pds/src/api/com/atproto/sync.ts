@@ -6,7 +6,7 @@ import AppContext from '../../../context'
 import { CID } from 'multiformats/cid'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getRoot(async ({ params }) => {
+  server.com.atproto.sync.getHead(async ({ params }) => {
     const { did } = params
     const storage = new SqlRepoStorage(ctx.db, did)
     const root = await storage.getHead()
