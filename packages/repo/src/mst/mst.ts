@@ -212,28 +212,16 @@ export class MST implements DataStore {
   // If the topmost tree only has one entry and it's a subtree, we can eliminate the topmost tree
   // However, lower trees with only one entry must be preserved
   async getUnstoredBlocks(): Promise<{ root: CID; blocks: BlockMap }> {
-    return this.getUnstoredBlocksRecurse(true)
-  }
-
-  async getUnstoredBlocksRecurse(
-    trimTop = false,
-  ): Promise<{ root: CID; blocks: BlockMap }> {
     const blocks = new BlockMap()
     const pointer = await this.getPointer()
     const alreadyHas = await this.storage.has(pointer)
     if (alreadyHas) return { root: pointer, blocks }
     const entries = await this.getEntries()
-    if (entries.length === 1 && trimTop) {
-      const node = entries[0]
-      if (node.isTree()) {
-        return node.getUnstoredBlocksRecurse(true)
-      }
-    }
     const data = util.serializeNodeData(entries)
     await blocks.add(data)
     for (const entry of entries) {
       if (entry.isTree()) {
-        const subtree = await entry.getUnstoredBlocksRecurse(false)
+        const subtree = await entry.getUnstoredBlocks()
         blocks.addMap(subtree.blocks)
       }
     }
@@ -344,6 +332,11 @@ export class MST implements DataStore {
 
   // Deletes the value at the given key
   async delete(key: string): Promise<MST> {
+    const altered = await this.deleteRecurse(key)
+    return altered.trimTop()
+  }
+
+  async deleteRecurse(key: string): Promise<MST> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
     // if found, remove it on this level
@@ -364,7 +357,7 @@ export class MST implements DataStore {
     // else recurse down to find it
     const prev = await this.atIndex(index - 1)
     if (prev?.isTree()) {
-      const subtree = await prev.delete(key)
+      const subtree = await prev.deleteRecurse(key)
       const subTreeEntries = await subtree.getEntries()
       if (subTreeEntries.length === 0) {
         return this.removeEntry(index - 1)
@@ -448,6 +441,16 @@ export class MST implements DataStore {
     if (right) update.push(right)
     update.push(...(await this.slice(index + 1)))
     return this.newTree(update)
+  }
+
+  // if the topmost node in the tree only points to another tree, trim the top and return the subtree
+  async trimTop(): Promise<MST> {
+    const entries = await this.getEntries()
+    if (entries.length === 1 && entries[0].isTree()) {
+      return entries[0].trimTop()
+    } else {
+      return this
+    }
   }
 
   // Subtree & Splits
