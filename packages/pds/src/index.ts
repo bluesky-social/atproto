@@ -59,7 +59,6 @@ export class PDS {
     })
 
     const messageQueue = new SqlMessageQueue('pds', db)
-    streamConsumers.listen(messageQueue, blobstore, auth, keypair)
 
     const mailTransport =
       config.emailSmtpUrl !== undefined
@@ -104,6 +103,8 @@ export class PDS {
       mailer,
       imgUriBuilder,
     })
+
+    streamConsumers.listen(ctx)
 
     const apiServer = API(ctx, {
       payload: {

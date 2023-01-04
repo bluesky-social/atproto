@@ -8,7 +8,13 @@
       "properties": {
         "id": {"type": "integer"},
         "action": {"type": "string", "knownValues": ["com.atproto.admin.moderationAction#takedown"]},
-        "subject": {"type": "union", "refs": ["#subjectRepo"]},
+        "subject": {
+          "type": "union",
+          "refs": [
+            "com.atproto.repo.repoRef",
+            "com.atproto.repo.strongRef"
+          ]
+        },
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"},
@@ -23,13 +29,6 @@
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"}
-      }
-    },
-    "subjectRepo": {
-      "type": "object",
-      "required": ["did"],
-      "properties": {
-        "did": {"type": "string"}
       }
     },
     "resolvedReport": {

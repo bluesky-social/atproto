@@ -207,7 +207,10 @@ export const schemaDict = {
           },
           subject: {
             type: 'union',
-            refs: ['lex:com.atproto.admin.moderationAction#subjectRepo'],
+            refs: [
+              'lex:com.atproto.repo.repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
           },
           reason: {
             type: 'string',
@@ -242,15 +245,6 @@ export const schemaDict = {
             type: 'string',
           },
           createdAt: {
-            type: 'string',
-          },
-        },
-      },
-      subjectRepo: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
             type: 'string',
           },
         },
@@ -362,7 +356,10 @@ export const schemaDict = {
               },
               subject: {
                 type: 'union',
-                refs: ['lex:com.atproto.admin.moderationAction#subjectRepo'],
+                refs: [
+                  'lex:com.atproto.repo.repoRef',
+                  'lex:com.atproto.repo.recordRef',
+                ],
               },
               reason: {
                 type: 'string',
@@ -854,6 +851,41 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoRecordRef: {
+    lexicon: 1,
+    id: 'com.atproto.repo.recordRef',
+    description: 'A URI with optional content-hash fingerprint.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoRepoRef: {
+    lexicon: 1,
+    id: 'com.atproto.repo.repoRef',
+    description: 'A did identifying a repository.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoRepoStrongRef: {
     lexicon: 1,
     id: 'com.atproto.repo.strongRef',
@@ -896,8 +928,8 @@ export const schemaDict = {
               subject: {
                 type: 'union',
                 refs: [
-                  'lex:com.atproto.report.subject#repo',
-                  'lex:com.atproto.report.subject#record',
+                  'lex:com.atproto.repo.repoRef',
+                  'lex:com.atproto.repo.recordRef',
                 ],
               },
             },
@@ -928,8 +960,8 @@ export const schemaDict = {
               subject: {
                 type: 'union',
                 refs: [
-                  'lex:com.atproto.report.subject#repo',
-                  'lex:com.atproto.report.subject#recordRef',
+                  'lex:com.atproto.repo.repoRef',
+                  'lex:com.atproto.repo.strongRef',
                 ],
               },
               reportedByDid: {
@@ -3480,6 +3512,8 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
+  ComAtprotoRepoRecordRef: 'com.atproto.repo.recordRef',
+  ComAtprotoRepoRepoRef: 'com.atproto.repo.repoRef',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoReportCreate: 'com.atproto.report.create',
   ComAtprotoReportReasonType: 'com.atproto.report.reasonType',

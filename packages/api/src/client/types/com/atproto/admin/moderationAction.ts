@@ -1,10 +1,16 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
+import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+
 export interface View {
   id: number
   action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
-  subject: SubjectRepo | { $type: string; [k: string]: unknown }
+  subject:
+    | ComAtprotoRepoRepoRef.Main
+    | ComAtprotoRepoStrongRef.Main
+    | { $type: string; [k: string]: unknown }
   reason: string
   createdBy: string
   createdAt: string
@@ -17,11 +23,6 @@ export interface Reversal {
   reason: string
   createdBy: string
   createdAt: string
-  [k: string]: unknown
-}
-
-export interface SubjectRepo {
-  did: string
   [k: string]: unknown
 }
 

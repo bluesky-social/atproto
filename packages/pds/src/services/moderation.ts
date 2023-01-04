@@ -9,12 +9,10 @@ import { ModerationAction, ModerationReport } from '../db/tables/moderation'
 import {
   TAKEDOWN,
   View as ModerationActionView,
-  SubjectRepo,
 } from '../lexicon/types/com/atproto/admin/moderationAction'
-import { InputSchema as TakeModAction } from '../lexicon/types/com/atproto/admin/takeModerationAction'
-import { InputSchema as ReverseModAction } from '../lexicon/types/com/atproto/admin/reverseModerationAction'
 import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/report/create'
 import { RepoService } from './repo'
+import { RecordService } from './record'
 
 export class ModerationService {
   constructor(
@@ -27,10 +25,9 @@ export class ModerationService {
     return (db: Database) => new ModerationService(db, messageQueue, blobstore)
   }
 
-  get services() {
-    return {
-      repo: RepoService.creator(this.messageQueue, this.blobstore),
-    }
+  services = {
+    repo: RepoService.creator(this.messageQueue, this.blobstore),
+    record: RecordService.creator(this.messageQueue),
   }
 
   async getAction(id: number): Promise<ModerationActionRow | undefined> {
@@ -47,32 +44,58 @@ export class ModerationService {
     return action
   }
 
-  async logAction(
-    info: TakeModAction & {
-      action: typeof TAKEDOWN
-      subject: SubjectRepo
-      createdAt?: Date
-    },
-  ): Promise<ModerationActionRow> {
+  async logAction(info: {
+    action: typeof TAKEDOWN
+    subject: { did: string } | { uri: AtUri; cid?: CID }
+    reason: string
+    createdBy: string
+    createdAt?: Date
+  }): Promise<ModerationActionRow> {
     const { action, createdBy, reason, subject, createdAt = new Date() } = info
+
+    // Resolve subject info
+    let subjectInfo: SubjectInfo
+    if ('did' in subject) {
+      const repo = await this.services.repo(this.db).getRepoRoot(subject.did)
+      if (!repo) throw new InvalidRequestError('Repo not found')
+      subjectInfo = {
+        subjectType: 'com.atproto.repo.repoRef',
+        subjectDid: subject.did,
+        subjectUri: null,
+        subjectCid: null,
+      }
+    } else {
+      const record = await this.services
+        .record(this.db)
+        .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
+      if (!record) throw new InvalidRequestError('Record not found')
+      subjectInfo = {
+        subjectType: 'com.atproto.repo.recordRef',
+        subjectDid: subject.uri.host,
+        subjectUri: subject.uri.toString(),
+        subjectCid: record.cid,
+      }
+    }
 
     return await this.db.db
       .insertInto('moderation_action')
       .values({
         action,
-        subjectType: 'com.atproto.admin.moderationAction#subjectRepo',
-        subjectDid: subject.did,
+        reason,
         createdAt: createdAt.toISOString(),
         createdBy,
-        reason,
+        ...subjectInfo,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
   }
 
-  async logReverseAction(
-    info: ReverseModAction & { createdAt: Date },
-  ): Promise<ModerationActionRow> {
+  async logReverseAction(info: {
+    id: number
+    reason: string
+    createdBy: string
+    createdAt?: Date
+  }): Promise<ModerationActionRow> {
     const { id, createdBy, reason, createdAt = new Date() } = info
 
     const result = await this.db.db
@@ -93,7 +116,7 @@ export class ModerationService {
     return result
   }
 
-  async takedownActorByDid(info: { takedownId: number; did: string }) {
+  async takedownRepo(info: { takedownId: number; did: string }) {
     await this.db.db
       .updateTable('did_handle')
       .set({ takedownId: info.takedownId })
@@ -102,11 +125,28 @@ export class ModerationService {
       .executeTakeFirst()
   }
 
-  async reverseTakedownActorByDid(info: { did: string }) {
+  async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
       .updateTable('did_handle')
       .set({ takedownId: null })
       .where('did', '=', info.did)
+      .execute()
+  }
+
+  async takedownRecord(info: { takedownId: number; uri: AtUri }) {
+    await this.db.db
+      .updateTable('record')
+      .set({ takedownId: info.takedownId })
+      .where('uri', '=', info.uri.toString())
+      .where('takedownId', 'is', null)
+      .executeTakeFirst()
+  }
+
+  async reverseTakedownRecord(info: { uri: AtUri }) {
+    await this.db.db
+      .updateTable('record')
+      .set({ takedownId: null })
+      .where('uri', '=', info.uri.toString())
       .execute()
   }
 
@@ -155,11 +195,6 @@ export class ModerationService {
   async formatActionView(
     modAction: ModerationActionRow,
   ): Promise<ModerationActionView> {
-    if (
-      modAction.subjectType !== 'com.atproto.admin.moderationAction#subjectRepo'
-    ) {
-      throw new Error('Only supports format moderation actions on actors')
-    }
     const resolutions = await this.db.db
       .selectFrom('moderation_report_resolution')
       .select('reportId as id')
@@ -170,10 +205,17 @@ export class ModerationService {
     return {
       id: modAction.id,
       action: modAction.action,
-      subject: {
-        $type: modAction.subjectType,
-        did: modAction.subjectDid,
-      },
+      subject:
+        modAction.subjectType === 'com.atproto.repo.repoRef'
+          ? {
+              $type: 'com.atproto.repo.repoRef',
+              did: modAction.subjectDid,
+            }
+          : {
+              $type: 'com.atproto.repo.strongRef',
+              uri: modAction.subjectUri,
+              cid: modAction.subjectCid,
+            },
       reason: modAction.reason,
       createdAt: modAction.createdAt,
       createdBy: modAction.createdBy,
@@ -207,28 +249,23 @@ export class ModerationService {
     } = info
 
     // Resolve subject info
-    let subjectInfo: ReportSubjectInfo
+    let subjectInfo: SubjectInfo
     if ('did' in subject) {
       const repo = await this.services.repo(this.db).getRepoRoot(subject.did)
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
-        subjectType: 'com.atproto.report.subject#repo',
+        subjectType: 'com.atproto.repo.repoRef',
         subjectDid: subject.did,
         subjectUri: null,
         subjectCid: null,
       }
     } else {
-      let builder = this.db.db
-        .selectFrom('record')
-        .select('cid')
-        .where('record.uri', '=', subject.uri.toString())
-      if (subject.cid) {
-        builder = builder.where('record.cid', '=', subject.cid.toString())
-      }
-      const record = await builder.executeTakeFirst()
+      const record = await this.services
+        .record(this.db)
+        .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
       if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
-        subjectType: 'com.atproto.report.subject#record',
+        subjectType: 'com.atproto.repo.recordRef',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
         subjectCid: record.cid,
@@ -258,13 +295,13 @@ export class ModerationService {
       reason: report.reason ?? undefined,
       reportedByDid: report.reportedByDid,
       subject:
-        report.subjectType === 'com.atproto.report.subject#repo'
+        report.subjectType === 'com.atproto.repo.repoRef'
           ? {
-              $type: 'com.atproto.report.subject#repo',
+              $type: 'com.atproto.repo.repoRef',
               did: report.subjectDid,
             }
           : {
-              $type: 'com.atproto.report.subject#record',
+              $type: 'com.atproto.repo.strongRef',
               uri: report.subjectUri,
               cid: report.subjectCid,
             },
@@ -276,15 +313,15 @@ export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
 
-type ReportSubjectInfo =
+type SubjectInfo =
   | {
-      subjectType: 'com.atproto.report.subject#repo'
+      subjectType: 'com.atproto.repo.repoRef'
       subjectDid: string
       subjectUri: null
       subjectCid: null
     }
   | {
-      subjectType: 'com.atproto.report.subject#record'
+      subjectType: 'com.atproto.repo.recordRef'
       subjectDid: string
       subjectUri: string
       subjectCid: string

@@ -12,7 +12,13 @@
           "required": ["action", "subject", "reason", "createdBy"],
           "properties": {
             "action": {"type": "string", "knownValues": ["com.atproto.admin.moderationAction#takedown"]},
-            "subject": {"type": "union", "refs": ["com.atproto.admin.moderationAction#subjectRepo"]},
+            "subject": {
+              "type": "union",
+              "refs": [
+                "com.atproto.repo.repoRef",
+                "com.atproto.repo.recordRef"
+              ]
+            },
             "reason": {"type": "string"},
             "createdBy": {"type": "string"}
           }

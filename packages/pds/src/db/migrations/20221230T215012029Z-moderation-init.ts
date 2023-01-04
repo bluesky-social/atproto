@@ -14,6 +14,8 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('action', 'varchar', (col) => col.notNull())
     .addColumn('subjectType', 'varchar', (col) => col.notNull())
     .addColumn('subjectDid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectUri', 'varchar')
+    .addColumn('subjectCid', 'varchar')
     .addColumn('reason', 'text', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('createdBy', 'varchar', (col) => col.notNull())
@@ -21,16 +23,32 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('reversedBy', 'varchar')
     .addColumn('reversedReason', 'text')
     .execute()
+  // Repo takedowns
+  // @TODO consider switching to repo_root
   await db.schema
     .alterTable('did_handle')
     .addColumn('takedownId', 'integer')
     .execute()
+  // Record takedowns
+  await db.schema
+    .alterTable('record')
+    .addColumn('takedownId', 'integer')
+    .execute()
   if (dialect !== 'sqlite') {
-    // Would have to recreate table in sqlite to add this constraint
+    // Would have to recreate table in sqlite to add these constraints
     await db.schema
       .alterTable('did_handle')
       .addForeignKeyConstraint(
         'did_handle_takedown_id_fkey',
+        ['takedownId'],
+        'moderation_action',
+        ['id'],
+      )
+      .execute()
+    await db.schema
+      .alterTable('record')
+      .addForeignKeyConstraint(
+        'record_takedown_id_fkey',
         ['takedownId'],
         'moderation_action',
         ['id'],
@@ -89,7 +107,12 @@ export async function down(
       .alterTable('did_handle')
       .dropConstraint('did_handle_takedown_id_fkey')
       .execute()
+    await db.schema
+      .alterTable('record')
+      .dropConstraint('record_takedown_id_fkey')
+      .execute()
   }
   await db.schema.alterTable('did_handle').dropColumn('takedownId').execute()
+  await db.schema.alterTable('record').dropColumn('takedownId').execute()
   await db.schema.dropTable('moderation_action').execute()
 }

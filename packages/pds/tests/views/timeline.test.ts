@@ -125,6 +125,7 @@ describe('timeline views', () => {
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
 
+    // Cleanup
     await client.app.bsky.graph.unmute(
       { user: bob },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
@@ -166,35 +167,24 @@ describe('timeline views', () => {
   })
 
   it('blocks posts, reposts, replies by actor takedown', async () => {
-    await client.com.atproto.admin.takeModerationAction(
-      {
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.moderationAction#subjectRepo',
-          did: bob,
-        },
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-    await client.com.atproto.admin.takeModerationAction(
-      {
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.moderationAction#subjectRepo',
-          did: dan,
-        },
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
+    const actionResults = await Promise.all(
+      [bob, dan].map((did) =>
+        client.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did,
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
     )
 
     const aliceTL = await client.app.bsky.feed.getTimeline(
@@ -203,5 +193,70 @@ describe('timeline views', () => {
     )
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
+
+    // Cleanup
+    await Promise.all(
+      actionResults.map((result) =>
+        client.com.atproto.admin.reverseModerationAction(
+          {
+            id: result.data.id,
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
+  })
+
+  it('blocks posts, reposts, replies by record takedown.', async () => {
+    const postUri1 = sc.posts[dan][1].ref.uri // Repost
+    const postUri2 = sc.replies[bob][0].ref.uri // Post and reply parent
+    const actionResults = await Promise.all(
+      [postUri1, postUri2].map((postUri) =>
+        client.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
+
+    const aliceTL = await client.app.bsky.feed.getTimeline(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
+
+    // Cleanup
+    await Promise.all(
+      actionResults.map((result) =>
+        client.com.atproto.admin.reverseModerationAction(
+          {
+            id: result.data.id,
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
   })
 })

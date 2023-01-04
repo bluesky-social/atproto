@@ -7,10 +7,10 @@ import { dbLogger as log } from '../../logger'
 import { MessageQueue } from '../../event-stream/types'
 import SqlBlockstore from '../../sql-blockstore'
 import { PreparedCreate, PreparedWrite } from '../../repo/types'
-import { RecordService } from '../record'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { actorNotSoftDeletedClause } from '../../db/util'
+import { RecordService } from '../record'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -25,6 +25,10 @@ export class RepoService {
 
   static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
     return (db: Database) => new RepoService(db, messageQueue, blobstore)
+  }
+
+  services = {
+    record: RecordService.creator(this.messageQueue),
   }
 
   async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {
@@ -154,7 +158,7 @@ export class RepoService {
 
   async indexWrites(writes: PreparedWrite[], now: string) {
     this.db.assertTransaction()
-    const recordTxn = new RecordService(this.db, this.messageQueue)
+    const recordTxn = this.services.record(this.db)
     await Promise.all(
       writes.map(async (write) => {
         if (write.action === 'create') {

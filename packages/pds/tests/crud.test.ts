@@ -3,9 +3,10 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
-import { CloseFn, paginateAll, runTestServer } from './_util'
+import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
 import { BlobNotFoundError } from '@atproto/repo'
 import AppContext from '../src/context'
+import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/moderationAction'
 
 const alice = {
   email: 'alice@test.com',
@@ -442,6 +443,67 @@ describe('crud operations', () => {
       }),
     ).rejects.toThrow(
       'Invalid app.bsky.feed.post record: Record must have the property "text"',
+    )
+  })
+
+  // Moderation
+  // --------------
+
+  it("doesn't serve taken-down record", async () => {
+    const created = await aliceClient.app.bsky.feed.post.create(
+      { did: alice.did },
+      {
+        $type: 'app.bsky.feed.post',
+        text: 'Hello, world!',
+        createdAt: new Date().toISOString(),
+      },
+    )
+    const postUri = new AtUri(created.uri)
+    const post = await client.app.bsky.feed.post.get({
+      user: alice.did,
+      rkey: postUri.rkey,
+    })
+    const posts = await client.app.bsky.feed.post.list({ user: alice.did })
+    expect(posts.records.map((r) => r.uri)).toContain(post.uri)
+
+    const { data: action } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.recordRef',
+            uri: postUri.toString(),
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const postTakedownPromise = client.app.bsky.feed.post.get({
+      user: alice.did,
+      rkey: postUri.rkey,
+    })
+    await expect(postTakedownPromise).rejects.toThrow('Could not locate record')
+    const postsTakedown = await client.app.bsky.feed.post.list({
+      user: alice.did,
+    })
+    expect(postsTakedown.records.map((r) => r.uri)).not.toContain(post.uri)
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: action.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
     )
   })
 })

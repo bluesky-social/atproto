@@ -20,6 +20,10 @@ export const actorNotSoftDeletedClause = (alias: DbRef = sql`"did_handle"`) => {
   return sql`${alias}."takedownId" is null`
 }
 
+export const recordNotSoftDeletedClause = (alias: DbRef = sql`"record"`) => {
+  return sql`${alias}."takedownId" is null`
+}
+
 export const actorSoftDeleted = (actor: { takedownId: number | null }) => {
   return actor.takedownId !== null
 }
