@@ -1,11 +1,11 @@
+import { CID } from 'multiformats/cid'
+import { DidResolver } from '@atproto/did-resolver'
 import { MemoryBlockstore, RepoStorage } from './storage'
 import DataDiff from './data-diff'
 import Repo from './repo'
 import * as verify from './verify'
-import { DidResolver } from '@atproto/did-resolver'
 import * as util from './util'
 import { CommitData, RecordWriteOp, RepoContents } from './types'
-import { CID } from 'multiformats/cid'
 import CidSet from './cid-set'
 import { MissingBlocksError } from './error'
 

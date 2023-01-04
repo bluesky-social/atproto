@@ -1,9 +1,9 @@
-import { Server } from '../../../lexicon'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { CID } from 'multiformats/cid'
 import { Repo } from '@atproto/repo'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { Server } from '../../../lexicon'
 import SqlRepoStorage from '../../../sql-repo-storage'
 import AppContext from '../../../context'
-import { CID } from 'multiformats/cid'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getHead(async ({ params }) => {
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
     const commits = commitPath.map((c) => c.toString())
     return {
       encoding: 'application/json',
-      body: { commits: commits },
+      body: { commits },
     }
   })
 

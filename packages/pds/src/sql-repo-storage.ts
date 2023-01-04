@@ -1,5 +1,4 @@
-import { CommitData, RepoStorage } from '@atproto/repo'
-import BlockMap from '@atproto/repo/src/block-map'
+import { CommitData, RepoStorage, BlockMap, CidSet } from '@atproto/repo'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import Database from './db'
@@ -85,23 +84,33 @@ export class SqlRepoStorage extends RepoStorage {
   async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
     const cached = this.cache.getMany(cids)
     if (cached.missing.length < 1) return cached
+    const missing = new CidSet(cached.missing)
     const missingStr = cached.missing.map((c) => c.toString())
-    const res = await this.db.db
-      .selectFrom('ipld_block')
-      .innerJoin(
-        'ipld_block_creator as creator',
-        'creator.cid',
-        'ipld_block.cid',
-      )
-      .where('creator.did', '=', this.did)
-      .where('ipld_block.cid', 'in', missingStr)
-      .select(['ipld_block.cid as cid', 'ipld_block.content as content'])
-      .execute()
-    for (const row of res) {
-      const cid = CID.parse(row.cid)
-      this.cache.set(cid, row.content)
-    }
-    return this.cache.getMany(cids)
+    const blocks = new BlockMap()
+    await Promise.all(
+      chunkArray(missingStr, 500).map(async (batch) => {
+        const res = await this.db.db
+          .selectFrom('ipld_block')
+          .innerJoin(
+            'ipld_block_creator as creator',
+            'creator.cid',
+            'ipld_block.cid',
+          )
+          .where('creator.did', '=', this.did)
+          .where('ipld_block.cid', 'in', batch)
+          .select(['ipld_block.cid as cid', 'ipld_block.content as content'])
+          .execute()
+
+        for (const row of res) {
+          const cid = CID.parse(row.cid)
+          blocks.set(cid, row.content)
+          missing.delete(cid)
+        }
+      }),
+    )
+    this.cache.addMap(blocks)
+    blocks.add(cached.blocks)
+    return { blocks, missing: missing.toList() }
   }
 
   async putBlock(cid: CID, block: Uint8Array): Promise<void> {
@@ -144,24 +153,25 @@ export class SqlRepoStorage extends RepoStorage {
         did: this.did,
       })
     })
-    const promises: Promise<unknown>[] = []
-    chunkArray(blocks, 500).forEach((batch) => {
-      const promise = this.db.db
-        .insertInto('ipld_block')
-        .values(batch)
-        .onConflict((oc) => oc.doNothing())
-        .execute()
-      promises.push(promise)
-    })
-    chunkArray(creators, 500).forEach((batch) => {
-      const promise = this.db.db
-        .insertInto('ipld_block_creator')
-        .values(batch)
-        .onConflict((oc) => oc.doNothing())
-        .execute()
-      promises.push(promise)
-    })
-    await Promise.all(promises)
+    const putBlocks = Promise.all(
+      chunkArray(blocks, 500).map((batch) =>
+        this.db.db
+          .insertInto('ipld_block')
+          .values(batch)
+          .onConflict((oc) => oc.doNothing())
+          .execute(),
+      ),
+    )
+    const putCreators = Promise.all(
+      chunkArray(creators, 500).map((batch) =>
+        this.db.db
+          .insertInto('ipld_block_creator')
+          .values(batch)
+          .onConflict((oc) => oc.doNothing())
+          .execute(),
+      ),
+    )
+    await Promise.all([putBlocks, putCreators])
   }
 
   async indexCommits(commits: CommitData[]): Promise<void> {
@@ -182,18 +192,29 @@ export class SqlRepoStorage extends RepoStorage {
         prev: commit.prev ? commit.prev.toString() : null,
       })
     }
-    const insertBlocks = this.putMany(allBlocks)
-    const insertCommit = this.db.db
-      .insertInto('repo_commit_block')
-      .values(commitBlocks)
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-    const insertCommitHistory = this.db.db
-      .insertInto('repo_commit_history')
-      .values(commitHistory)
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-    await Promise.all([insertBlocks, insertCommit, insertCommitHistory])
+    const insertCommitBlocks = Promise.all(
+      chunkArray(commitBlocks, 500).map((batch) =>
+        this.db.db
+          .insertInto('repo_commit_block')
+          .values(batch)
+          .onConflict((oc) => oc.doNothing())
+          .execute(),
+      ),
+    )
+    const insertCommitHistory = Promise.all(
+      chunkArray(commitHistory, 500).map((batch) =>
+        this.db.db
+          .insertInto('repo_commit_history')
+          .values(batch)
+          .onConflict((oc) => oc.doNothing())
+          .execute(),
+      ),
+    )
+    await Promise.all([
+      this.putMany(allBlocks),
+      insertCommitBlocks,
+      insertCommitHistory,
+    ])
   }
 
   async updateHead(cid: CID, prev: CID | null): Promise<void> {
@@ -268,9 +289,7 @@ export class SqlRepoStorage extends RepoStorage {
       .where('commit', 'in', commitStrs)
       .execute()
     return res.reduce((acc, cur) => {
-      if (!acc[cur.commit]) {
-        acc[cur.commit] = new BlockMap()
-      }
+      acc[cur.commit] ??= new BlockMap()
       const cid = CID.parse(cur.cid)
       acc[cur.commit].set(cid, cur.content)
       this.cache.set(cid, cur.content)

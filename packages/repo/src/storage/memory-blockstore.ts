@@ -12,7 +12,10 @@ export class MemoryBlockstore extends RepoStorage {
 
   constructor(blocks?: BlockMap) {
     super()
-    this.blocks = blocks || new BlockMap()
+    this.blocks = new BlockMap()
+    if (blocks) {
+      this.blocks.addMap(blocks)
+    }
   }
 
   async getHead(): Promise<CID | null> {

@@ -77,9 +77,7 @@ export class ReadableRepo {
     const contents: RepoContents = {}
     for (const entry of entries) {
       const { collection, rkey } = util.parseRecordKey(entry.key)
-      if (!contents[collection]) {
-        contents[collection] = {}
-      }
+      contents[collection] ??= {}
       const parsed = await parse.getAndParse(blocks, entry.value, def.record)
       contents[collection][rkey] = parsed.obj
     }
