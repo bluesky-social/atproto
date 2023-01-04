@@ -117,10 +117,8 @@ describe('pds notification views', () => {
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.admin.moderationAction#subjectRecord',
-              did: postUri.host,
-              collection: postUri.collection,
-              rkey: postUri.rkey,
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
             },
             createdBy: 'X',
             reason: 'Y',

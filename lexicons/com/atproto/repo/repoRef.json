@@ -1,0 +1,14 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.repoRef",
+  "description": "A did identifying a repository.",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {"type": "string"}
+      }
+    }
+  }
+}

@@ -26,7 +26,7 @@ import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
-import * as ComAtprotoRepoReport from './types/com/atproto/repo/report'
+import * as ComAtprotoReportCreate from './types/com/atproto/report/create'
 import * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
@@ -64,9 +64,9 @@ export const COM_ATPROTO_ADMIN = {
   ModerationActionFlag: 'com.atproto.admin.moderationAction#flag',
   ModerationActionAcknowledge: 'com.atproto.admin.moderationAction#acknowledge',
 }
-export const COM_ATPROTO_REPO = {
-  ReportSpam: 'com.atproto.repo.report#spam',
-  ReportOther: 'com.atproto.repo.report#other',
+export const COM_ATPROTO_REPORT = {
+  ReasonTypeSpam: 'com.atproto.report.reasonType#spam',
+  ReasonTypeOther: 'com.atproto.report.reasonType#other',
 }
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
@@ -110,6 +110,7 @@ export class AtprotoNS {
   blob: BlobNS
   handle: HandleNS
   repo: RepoNS
+  report: ReportNS
   server: ServerNS
   session: SessionNS
   sync: SyncNS
@@ -121,6 +122,7 @@ export class AtprotoNS {
     this.blob = new BlobNS(server)
     this.handle = new HandleNS(server)
     this.repo = new RepoNS(server)
+    this.report = new ReportNS(server)
     this.server = new ServerNS(server)
     this.session = new SessionNS(server)
     this.sync = new SyncNS(server)
@@ -306,11 +308,19 @@ export class RepoNS {
     const nsid = 'com.atproto.repo.putRecord' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
+}
 
-  report<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoRepoReport.Handler<ExtractAuth<AV>>>,
+export class ReportNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  create<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoReportCreate.Handler<ExtractAuth<AV>>>,
   ) {
-    const nsid = 'com.atproto.repo.report' // @ts-ignore
+    const nsid = 'com.atproto.report.create' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

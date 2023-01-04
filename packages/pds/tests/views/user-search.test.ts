@@ -190,7 +190,7 @@ describe('pds user search views', () => {
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'com.atproto.admin.moderationAction#subjectRepo',
+          $type: 'com.atproto.repo.repoRef',
           did: sc.dids['cara-wiegand69.test'],
         },
         createdBy: 'X',

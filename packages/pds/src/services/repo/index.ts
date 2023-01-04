@@ -1,8 +1,6 @@
-import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
 import * as auth from '@atproto/auth'
 import { BlobStore, Repo } from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { dbLogger as log } from '../../logger'
@@ -12,15 +10,12 @@ import { PreparedCreate, PreparedWrite } from '../../repo/types'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { notSoftDeletedClause } from '../../db/util'
-import { ModerationReport } from '../../db/tables/moderation'
-import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/repo/report'
-import { Services } from '..'
+import { RecordService } from '../record'
 
 export class RepoService {
   blobs: RepoBlobs
 
   constructor(
-    public services: Services,
     public db: Database,
     public messageQueue: MessageQueue,
     public blobstore: BlobStore,
@@ -28,13 +23,12 @@ export class RepoService {
     this.blobs = new RepoBlobs(db, blobstore)
   }
 
-  static creator(
-    services: Services,
-    messageQueue: MessageQueue,
-    blobstore: BlobStore,
-  ) {
-    return (db: Database) =>
-      new RepoService(services, db, messageQueue, blobstore)
+  static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
+    return (db: Database) => new RepoService(db, messageQueue, blobstore)
+  }
+
+  services = {
+    record: RecordService.creator(this.messageQueue),
   }
 
   async getRepoRoot(did: string, forUpdate?: boolean): Promise<CID | null> {
@@ -177,95 +171,4 @@ export class RepoService {
       }),
     )
   }
-
-  async report(info: {
-    reasonType: ModerationReportRow['reasonType']
-    reason?: string
-    subject: { did: string } | { uri: AtUri; cid?: CID }
-    reportedByDid: string
-    createdAt?: Date
-  }): Promise<ModerationReportRow> {
-    const {
-      reasonType,
-      reason,
-      reportedByDid,
-      createdAt = new Date(),
-      subject,
-    } = info
-
-    // Resolve subject info
-    let subjectInfo: ReportSubjectInfo
-    if ('did' in subject) {
-      const repo = await this.getRepoRoot(subject.did)
-      if (!repo) throw new InvalidRequestError('Repo not found')
-      subjectInfo = {
-        subjectType: 'com.atproto.repo.report#subjectRepo',
-        subjectDid: subject.did,
-        subjectUri: null,
-        subjectCid: null,
-      }
-    } else {
-      const record = await this.services
-        .record(this.db)
-        .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
-      if (!record) throw new InvalidRequestError('Record not found')
-      subjectInfo = {
-        subjectType: 'com.atproto.repo.report#subjectRecord',
-        subjectDid: subject.uri.host,
-        subjectUri: subject.uri.toString(),
-        subjectCid: record.cid,
-      }
-    }
-
-    const report = await this.db.db
-      .insertInto('moderation_report')
-      .values({
-        reasonType,
-        reason: reason || null,
-        createdAt: createdAt.toISOString(),
-        reportedByDid,
-        ...subjectInfo,
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow()
-
-    return report
-  }
-
-  formatReportView(report: ModerationReportRow): ReportOutput {
-    return {
-      id: report.id,
-      createdAt: report.createdAt,
-      reasonType: report.reasonType,
-      reason: report.reason ?? undefined,
-      reportedByDid: report.reportedByDid,
-      subject:
-        report.subjectType === 'com.atproto.repo.report#subjectRepo'
-          ? {
-              $type: 'com.atproto.repo.report#subjectRepo',
-              did: report.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.report#subjectRecordRef',
-              uri: report.subjectUri,
-              cid: report.subjectCid,
-            },
-    }
-  }
 }
-
-export type ModerationReportRow = Selectable<ModerationReport>
-
-type ReportSubjectInfo =
-  | {
-      subjectType: 'com.atproto.repo.report#subjectRepo'
-      subjectDid: string
-      subjectUri: null
-      subjectCid: null
-    }
-  | {
-      subjectType: 'com.atproto.repo.report#subjectRecord'
-      subjectDid: string
-      subjectUri: string
-      subjectCid: string
-    }

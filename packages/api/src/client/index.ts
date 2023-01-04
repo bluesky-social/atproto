@@ -25,8 +25,12 @@ import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
-import * as ComAtprotoRepoReport from './types/com/atproto/repo/report'
+import * as ComAtprotoRepoRecordRef from './types/com/atproto/repo/recordRef'
+import * as ComAtprotoRepoRepoRef from './types/com/atproto/repo/repoRef'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
+import * as ComAtprotoReportCreate from './types/com/atproto/report/create'
+import * as ComAtprotoReportReasonType from './types/com/atproto/report/reasonType'
+import * as ComAtprotoReportSubject from './types/com/atproto/report/subject'
 import * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
@@ -96,8 +100,12 @@ export * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
-export * as ComAtprotoRepoReport from './types/com/atproto/repo/report'
+export * as ComAtprotoRepoRecordRef from './types/com/atproto/repo/recordRef'
+export * as ComAtprotoRepoRepoRef from './types/com/atproto/repo/repoRef'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
+export * as ComAtprotoReportCreate from './types/com/atproto/report/create'
+export * as ComAtprotoReportReasonType from './types/com/atproto/report/reasonType'
+export * as ComAtprotoReportSubject from './types/com/atproto/report/subject'
 export * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 export * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
@@ -153,9 +161,9 @@ export const COM_ATPROTO_ADMIN = {
   ModerationActionFlag: 'com.atproto.admin.moderationAction#flag',
   ModerationActionAcknowledge: 'com.atproto.admin.moderationAction#acknowledge',
 }
-export const COM_ATPROTO_REPO = {
-  ReportSpam: 'com.atproto.repo.report#spam',
-  ReportOther: 'com.atproto.repo.report#other',
+export const COM_ATPROTO_REPORT = {
+  ReasonTypeSpam: 'com.atproto.report.reasonType#spam',
+  ReasonTypeOther: 'com.atproto.report.reasonType#other',
 }
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
@@ -216,6 +224,7 @@ export class AtprotoNS {
   blob: BlobNS
   handle: HandleNS
   repo: RepoNS
+  report: ReportNS
   server: ServerNS
   session: SessionNS
   sync: SyncNS
@@ -227,6 +236,7 @@ export class AtprotoNS {
     this.blob = new BlobNS(service)
     this.handle = new HandleNS(service)
     this.repo = new RepoNS(service)
+    this.report = new ReportNS(service)
     this.server = new ServerNS(service)
     this.session = new SessionNS(service)
     this.sync = new SyncNS(service)
@@ -469,15 +479,23 @@ export class RepoNS {
         throw ComAtprotoRepoPutRecord.toKnownErr(e)
       })
   }
+}
 
-  report(
-    data?: ComAtprotoRepoReport.InputSchema,
-    opts?: ComAtprotoRepoReport.CallOptions,
-  ): Promise<ComAtprotoRepoReport.Response> {
+export class ReportNS {
+  _service: ServiceClient
+
+  constructor(service: ServiceClient) {
+    this._service = service
+  }
+
+  create(
+    data?: ComAtprotoReportCreate.InputSchema,
+    opts?: ComAtprotoReportCreate.CallOptions,
+  ): Promise<ComAtprotoReportCreate.Response> {
     return this._service.xrpc
-      .call('com.atproto.repo.report', opts?.qp, data, opts)
+      .call('com.atproto.report.create', opts?.qp, data, opts)
       .catch((e) => {
-        throw ComAtprotoRepoReport.toKnownErr(e)
+        throw ComAtprotoReportCreate.toKnownErr(e)
       })
   }
 }

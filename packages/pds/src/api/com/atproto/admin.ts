@@ -16,14 +16,14 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
-      const adminService = services.admin(db)
+      const moderationService = services.moderation(db)
       const { action, subject, reason, createdBy } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
-        const adminTxn = services.admin(dbTxn)
+        const moderationTxn = services.moderation(dbTxn)
 
-        const result = await adminTxn.logModAction({
+        const result = await moderationTxn.logAction({
           action: getAction(action),
           subject: getSubject(subject),
           createdBy,
@@ -32,12 +32,11 @@ export default function (server: Server, ctx: AppContext) {
 
         if (
           result.action === TAKEDOWN &&
-          result.subjectType ===
-            'com.atproto.admin.moderationAction#subjectRepo' &&
+          result.subjectType === 'com.atproto.repo.repoRef' &&
           result.subjectDid
         ) {
           await authTxn.revokeRefreshTokensByDid(result.subjectDid)
-          await adminTxn.takedownRepo({
+          await moderationTxn.takedownRepo({
             takedownId: result.id,
             did: result.subjectDid,
           })
@@ -45,11 +44,10 @@ export default function (server: Server, ctx: AppContext) {
 
         if (
           result.action === TAKEDOWN &&
-          result.subjectType ===
-            'com.atproto.admin.moderationAction#subjectRecord' &&
+          result.subjectType === 'com.atproto.repo.recordRef' &&
           result.subjectUri
         ) {
-          await adminTxn.takedownRecord({
+          await moderationTxn.takedownRecord({
             takedownId: result.id,
             uri: new AtUri(result.subjectUri),
           })
@@ -60,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await adminService.formatModActionView(moderationAction),
+        body: await moderationService.formatActionView(moderationAction),
       }
     },
   })
@@ -69,14 +67,14 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
-      const adminService = services.admin(db)
+      const moderationService = services.moderation(db)
       const { id, createdBy, reason } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const adminTxn = services.admin(dbTxn)
+        const moderationTxn = services.moderation(dbTxn)
         const now = new Date()
 
-        const existing = await adminTxn.getModAction(id)
+        const existing = await moderationTxn.getAction(id)
         if (!existing) {
           throw new InvalidRequestError('Moderation action does not exist')
         }
@@ -86,7 +84,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await adminTxn.logReverseModAction({
+        const result = await moderationTxn.logReverseAction({
           id,
           createdAt: now,
           createdBy,
@@ -95,22 +93,20 @@ export default function (server: Server, ctx: AppContext) {
 
         if (
           result.action === TAKEDOWN &&
-          result.subjectType ===
-            'com.atproto.admin.moderationAction#subjectRepo' &&
+          result.subjectType === 'com.atproto.repo.repoRef' &&
           result.subjectDid
         ) {
-          await adminTxn.reverseTakedownRepo({
+          await moderationTxn.reverseTakedownRepo({
             did: result.subjectDid,
           })
         }
 
         if (
           result.action === TAKEDOWN &&
-          result.subjectType ===
-            'com.atproto.admin.moderationAction#subjectRecord' &&
+          result.subjectType === 'com.atproto.repo.recordRef' &&
           result.subjectUri
         ) {
-          await adminTxn.reverseTakedownRecord({
+          await moderationTxn.reverseTakedownRecord({
             uri: new AtUri(result.subjectUri),
           })
         }
@@ -120,7 +116,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await adminService.formatModActionView(moderationAction),
+        body: await moderationService.formatActionView(moderationAction),
       }
     },
   })
@@ -129,18 +125,18 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
-      const adminService = services.admin(db)
+      const moderationService = services.moderation(db)
       const { actionId, reportIds, createdBy } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const adminTxn = services.admin(dbTxn)
-        await adminTxn.resolveModReports({ reportIds, actionId, createdBy })
-        return await adminTxn.getModActionOrThrow(actionId)
+        const moderationTxn = services.moderation(dbTxn)
+        await moderationTxn.resolveReports({ reportIds, actionId, createdBy })
+        return await moderationTxn.getActionOrThrow(actionId)
       })
 
       return {
         encoding: 'application/json',
-        body: await adminService.formatModActionView(moderationAction),
+        body: await moderationService.formatActionView(moderationAction),
       }
     },
   })
@@ -155,20 +151,18 @@ function getAction(action: ActionInput['action']) {
 
 function getSubject(subject: ActionInput['subject']) {
   if (
-    subject.$type === 'com.atproto.admin.moderationAction#subjectRepo' &&
+    subject.$type === 'com.atproto.repo.repoRef' &&
     typeof subject.did === 'string'
   ) {
     return { did: subject.did }
   }
   if (
-    subject.$type === 'com.atproto.admin.moderationAction#subjectRecord' &&
-    typeof subject.did === 'string' &&
-    typeof subject.collection === 'string' &&
-    typeof subject.rkey === 'string' &&
+    subject.$type === 'com.atproto.repo.recordRef' &&
+    typeof subject.uri === 'string' &&
     (subject.cid === undefined || typeof subject.cid === 'string')
   ) {
     return {
-      uri: AtUri.make(subject.did, subject.collection, subject.rkey),
+      uri: new AtUri(subject.uri),
       cid: subject.cid ? parseCID(subject.cid) : undefined,
     }
   }

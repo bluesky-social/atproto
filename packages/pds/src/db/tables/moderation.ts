@@ -4,7 +4,7 @@ import {
   FLAG,
   TAKEDOWN,
 } from '../../lexicon/types/com/atproto/admin/moderationAction'
-import { OTHER, SPAM } from '../../lexicon/types/com/atproto/repo/report'
+import { OTHER, SPAM } from '../../lexicon/types/com/atproto/report/reasonType'
 
 export const actionTableName = 'moderation_action'
 export const reportTableName = 'moderation_report'
@@ -13,9 +13,7 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 export interface ModerationAction {
   id: Generated<number>
   action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE
-  subjectType:
-    | 'com.atproto.admin.moderationAction#subjectRepo'
-    | 'com.atproto.admin.moderationAction#subjectRecord'
+  subjectType: 'com.atproto.repo.repoRef' | 'com.atproto.repo.recordRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
@@ -29,9 +27,7 @@ export interface ModerationAction {
 
 export interface ModerationReport {
   id: Generated<number>
-  subjectType:
-    | 'com.atproto.repo.report#subjectRepo'
-    | 'com.atproto.repo.report#subjectRecord'
+  subjectType: 'com.atproto.repo.repoRef' | 'com.atproto.repo.recordRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
