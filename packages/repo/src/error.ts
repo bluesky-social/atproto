@@ -2,7 +2,7 @@ import { Def } from '@atproto/common/src/check'
 import { CID } from 'multiformats/cid'
 
 export class MissingBlockError extends Error {
-  constructor(public cid: CID, public def?: Def<unknown>) {
+  constructor(public cid: CID, def?: Def<unknown>) {
     let msg = `block not found: ${cid.toString()}`
     if (def) {
       msg += `, expected type: ${def.name}`

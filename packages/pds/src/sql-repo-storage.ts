@@ -100,7 +100,6 @@ export class SqlRepoStorage extends RepoStorage {
           .where('ipld_block.cid', 'in', batch)
           .select(['ipld_block.cid as cid', 'ipld_block.content as content'])
           .execute()
-
         for (const row of res) {
           const cid = CID.parse(row.cid)
           blocks.set(cid, row.content)
@@ -109,7 +108,7 @@ export class SqlRepoStorage extends RepoStorage {
       }),
     )
     this.cache.addMap(blocks)
-    blocks.add(cached.blocks)
+    blocks.addMap(cached.blocks)
     return { blocks, missing: missing.toList() }
   }
 
