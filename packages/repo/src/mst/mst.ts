@@ -209,8 +209,6 @@ export class MST implements DataStore {
   // -------------------
 
   // Return the necessary blocks to persist the MST to repo storage
-  // If the topmost tree only has one entry and it's a subtree, we can eliminate the topmost tree
-  // However, lower trees with only one entry must be preserved
   async getUnstoredBlocks(): Promise<{ root: CID; blocks: BlockMap }> {
     const blocks = new BlockMap()
     const pointer = await this.getPointer()
