@@ -57,19 +57,22 @@ export class DidResolver {
     return atpDid.ensureAtpDocument(didDocument)
   }
 
+  async resolveSigningKey(did: string): Promise<string> {
+    if (did.startsWith('did:key:')) {
+      return did
+    } else {
+      const data = await this.resolveAtpData(did)
+      return data.signingKey
+    }
+  }
+
   async verifySignature(
     did: string,
     data: Uint8Array,
     sig: Uint8Array,
   ): Promise<boolean> {
-    let didKey: string
-    if (did.startsWith('did:key:')) {
-      didKey = did
-    } else {
-      const data = await this.resolveAtpData(did)
-      didKey = data.signingKey
-    }
-    return crypto.verifySignature(didKey, data, sig)
+    const signingKey = await this.resolveSigningKey(did)
+    return crypto.verifySignature(signingKey, data, sig)
   }
 }
 

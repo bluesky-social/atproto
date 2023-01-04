@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { DidResolver } from '@atproto/did-resolver'
+import * as crypto from '@atproto/crypto'
 import { ReadableBlockstore, RepoStorage } from './storage'
 import DataDiff from './data-diff'
 import SyncStorage from './storage/sync-storage'
@@ -113,6 +114,7 @@ export const verifyCommitPath = async (
   commitPath: CID[],
   didResolver: DidResolver,
 ): Promise<VerifiedUpdate[]> => {
+  const signingKey = await didResolver.resolveSigningKey(baseRepo.did)
   const updates: VerifiedUpdate[] = []
   if (commitPath.length === 0) return updates
   let prevRepo = baseRepo
@@ -125,8 +127,8 @@ export const verifyCommitPath = async (
     }
 
     // verify signature matches repo root + auth token
-    const validSig = await didResolver.verifySignature(
-      nextRepo.did,
+    const validSig = await crypto.verifySignature(
+      signingKey,
       nextRepo.commit.root.bytes,
       nextRepo.commit.sig,
     )
