@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
-  term: string
+  term?: string
   limit?: number
 }
 

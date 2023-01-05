@@ -135,6 +135,18 @@ describe('Record validation', () => {
         datetime: new Date().toISOString(),
       }),
     ).toThrow('Record must have the property "object"')
+    expect(() =>
+      lex.assertValidRecord('com.example.kitchenSink', {
+        $type: 'com.example.kitchenSink',
+        object: undefined,
+        array: ['one', 'two'],
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+        datetime: new Date().toISOString(),
+      }),
+    ).toThrow('Record must have the property "object"')
   })
 
   it('Fails incorrect types', () => {
@@ -567,6 +579,13 @@ describe('XRPC parameter validation', () => {
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
         number: 123.45,
+      }),
+    ).toThrow('Params must have the property "integer"')
+    expect(() =>
+      lex.assertValidXrpcParams('com.example.query', {
+        boolean: true,
+        number: 123.45,
+        integer: undefined,
       }),
     ).toThrow('Params must have the property "integer"')
   })
