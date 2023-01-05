@@ -9,10 +9,11 @@ import DataDiff from './data-diff'
 import { RepoStorage } from './storage'
 import {
   DataStore,
-  RecordCreateOp,
-  RecordDeleteOp,
-  RecordUpdateOp,
-  RecordWriteOp,
+  RecordCreateDescript,
+  RecordDeleteDescript,
+  RecordUpdateDescript,
+  RecordWriteDescript,
+  WriteLog,
   WriteOpAction,
 } from './types'
 import BlockMap from './block-map'
@@ -61,11 +62,11 @@ export const readCar = async (
   }
 }
 
-export const getWriteOpLog = async (
+export const getWriteLog = async (
   storage: RepoStorage,
   latest: CID,
   earliest: CID | null,
-): Promise<RecordWriteOp[][]> => {
+): Promise<WriteLog> => {
   const commits = await storage.getCommitPath(latest, earliest)
   if (!commits) throw new Error('Could not find shared history')
   const heads = await Promise.all(commits.map((c) => Repo.load(storage, c)))
@@ -84,14 +85,14 @@ export const getWriteOpLog = async (
   }
   // Map MST diffs to write ops
   return Promise.all(
-    diffs.map((diff) => diffToWriteOps(diff, diffBlocks.blocks)),
+    diffs.map((diff) => diffToWriteDescripts(diff, diffBlocks.blocks)),
   )
 }
 
-export const diffToWriteOps = (
+export const diffToWriteDescripts = (
   diff: DataDiff,
   blocks: BlockMap,
-): Promise<RecordWriteOp[]> => {
+): Promise<RecordWriteDescript[]> => {
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseRecordKey(add.key)
@@ -100,8 +101,9 @@ export const diffToWriteOps = (
         action: WriteOpAction.Create,
         collection,
         rkey,
-        value: value.obj,
-      } as RecordCreateOp
+        cid: add.cid,
+        record: value.obj,
+      } as RecordCreateDescript
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseRecordKey(upd.key)
@@ -110,8 +112,10 @@ export const diffToWriteOps = (
         action: WriteOpAction.Update,
         collection,
         rkey,
-        value: value.obj,
-      } as RecordUpdateOp
+        cid: upd.cid,
+        prev: upd.prev,
+        record: value.obj,
+      } as RecordUpdateDescript
     }),
     ...diff.deleteList().map((del) => {
       const { collection, rkey } = parseRecordKey(del.key)
@@ -119,9 +123,54 @@ export const diffToWriteOps = (
         action: WriteOpAction.Delete,
         collection,
         rkey,
-      } as RecordDeleteOp
+        cid: del.cid,
+      } as RecordDeleteDescript
     }),
   ])
+}
+
+export const collapseWriteLog = (log: WriteLog): RecordWriteDescript[] => {
+  const creates: Record<string, RecordCreateDescript> = {}
+  const updates: Record<string, RecordUpdateDescript> = {}
+  const deletes: Record<string, RecordDeleteDescript> = {}
+  for (const commit of log) {
+    for (const op of commit) {
+      const key = op.collection + '/' + op.rkey
+      if (op.action === WriteOpAction.Create) {
+        const del = deletes[key]
+        if (del) {
+          if (del.cid !== op.cid) {
+            updates[key] = {
+              ...op,
+              action: WriteOpAction.Update,
+              prev: del.cid,
+            }
+          }
+          delete deletes[key]
+        } else {
+          creates[key] = op
+        }
+      } else if (op.action === WriteOpAction.Update) {
+        updates[key] = op
+        delete creates[key]
+        delete deletes[key]
+      } else if (op.action === WriteOpAction.Delete) {
+        if (creates[key]) {
+          delete creates[key]
+        } else {
+          delete updates[key]
+          deletes[key] = op
+        }
+      } else {
+        throw new Error(`unknown action: ${op}`)
+      }
+    }
+  }
+  return [
+    ...Object.values(creates),
+    ...Object.values(updates),
+    ...Object.values(deletes),
+  ]
 }
 
 export const collapseDiffs = (diffs: DataDiff[]): DataDiff => {

@@ -6,9 +6,11 @@ import { Repo } from '../src/repo'
 import { RepoStorage } from '../src/storage'
 import { MST } from '../src/mst'
 import {
+  collapseWriteLog,
   CollectionContents,
   RecordWriteOp,
   RepoContents,
+  WriteLog,
   WriteOpAction,
 } from '../src'
 
@@ -98,7 +100,7 @@ export const fillRepo = async (
         action: WriteOpAction.Create,
         collection: collName,
         rkey,
-        value: object,
+        record: object,
       })
     }
     repoData[collName] = collData
@@ -135,7 +137,7 @@ export const editRepo = async (
           action: WriteOpAction.Create,
           collection: collName,
           rkey,
-          value: object,
+          record: object,
         },
         keypair,
       )
@@ -150,7 +152,7 @@ export const editRepo = async (
           action: WriteOpAction.Update,
           collection: collName,
           rkey,
-          value: object,
+          record: object,
         },
         keypair,
       )
@@ -179,21 +181,22 @@ export const editRepo = async (
 }
 
 export const verifyRepoDiff = async (
-  ops: RecordWriteOp[],
+  writeLog: WriteLog,
   before: RepoContents,
   after: RepoContents,
 ): Promise<void> => {
   const getVal = (op: RecordWriteOp, data: RepoContents) => {
     return (data[op.collection] || {})[op.rkey]
   }
+  const ops = await collapseWriteLog(writeLog)
 
   for (const op of ops) {
     if (op.action === WriteOpAction.Create) {
       expect(getVal(op, before)).toBeUndefined()
-      expect(getVal(op, after)).toEqual(op.value)
+      expect(getVal(op, after)).toEqual(op.record)
     } else if (op.action === WriteOpAction.Update) {
       expect(getVal(op, before)).toBeDefined()
-      expect(getVal(op, after)).toEqual(op.value)
+      expect(getVal(op, after)).toEqual(op.record)
     } else if (op.action === WriteOpAction.Delete) {
       expect(getVal(op, before)).toBeDefined()
       expect(getVal(op, after)).toBeUndefined()

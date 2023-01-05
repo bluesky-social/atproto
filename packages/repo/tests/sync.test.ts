@@ -46,7 +46,7 @@ describe('Sync', () => {
     bobRepo = await Repo.load(syncBlockstore, loaded.root)
     const contents = await bobRepo.getContents()
     expect(contents).toEqual(repoData)
-    await util.verifyRepoDiff(loaded.ops, {}, repoData)
+    await util.verifyRepoDiff(loaded.writeLog, {}, repoData)
   })
 
   it('syncs a repo that is behind', async () => {
@@ -64,7 +64,7 @@ describe('Sync', () => {
     bobRepo = await Repo.load(syncBlockstore, loaded.root)
     const contents = await bobRepo.getContents()
     expect(contents).toEqual(repoData)
-    await util.verifyRepoDiff(loaded.ops, beforeData, repoData)
+    await util.verifyRepoDiff(loaded.writeLog, beforeData, repoData)
   })
 
   it('throws on a bad signature', async () => {

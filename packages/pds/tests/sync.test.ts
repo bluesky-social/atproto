@@ -2,7 +2,7 @@ import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
 import * as repo from '@atproto/repo'
-import { MemoryBlockstore } from '@atproto/repo'
+import { collapseWriteLog, MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { CloseFn, runTestServer } from './_util'
@@ -62,7 +62,9 @@ describe('repo sync', () => {
       new Uint8Array(car.data),
       didResolver,
     )
-    expect(synced.ops.length).toBe(ADD_COUNT + 1) // +1 because of declaration
+    expect(synced.writeLog.length).toBe(ADD_COUNT + 1) // +1 because of declaration
+    const ops = await collapseWriteLog(synced.writeLog)
+    expect(ops.length).toBe(ADD_COUNT + 1)
     const loaded = await repo.Repo.load(storage, synced.root)
     const contents = await loaded.getContents()
     expect(contents).toEqual(repoData)
@@ -102,7 +104,9 @@ describe('repo sync', () => {
       new Uint8Array(car.data),
       didResolver,
     )
-    expect(synced.ops.length).toBe(ADD_COUNT) // -2 because of dels of new records, +2 because of dels of old records
+    expect(synced.writeLog.length).toBe(ADD_COUNT + DEL_COUNT)
+    const ops = await collapseWriteLog(synced.writeLog)
+    expect(ops.length).toBe(ADD_COUNT) // -2 because of dels of new records, +2 because of dels of old records
     const loaded = await repo.Repo.load(storage, synced.root)
     const contents = await loaded.getContents()
     expect(contents).toEqual(repoData)
