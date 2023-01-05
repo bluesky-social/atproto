@@ -2,9 +2,6 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorRef from '../actor/ref'
 import * as AppBskySystemDeclRef from '../system/declRef'
@@ -53,16 +50,4 @@ export interface Membership {
   createdAt?: string
   indexedAt: string
   [k: string]: unknown
-}
-
-export function isMembership(v: unknown): v is Membership {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.getMemberships#membership'
-  )
-}
-
-export function validateMembership(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.getMemberships#membership', v)
 }

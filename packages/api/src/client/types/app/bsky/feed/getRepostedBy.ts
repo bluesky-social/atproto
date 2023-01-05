@@ -2,9 +2,6 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -49,16 +46,4 @@ export interface RepostedBy {
   createdAt?: string
   indexedAt: string
   [k: string]: unknown
-}
-
-export function isRepostedBy(v: unknown): v is RepostedBy {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.getRepostedBy#repostedBy'
-  )
-}
-
-export function validateRepostedBy(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.getRepostedBy#repostedBy', v)
 }
