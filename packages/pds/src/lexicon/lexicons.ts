@@ -636,6 +636,52 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminSearchRepos: {
+    lexicon: 1,
+    id: 'com.atproto.admin.searchRepos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Find repositories based on a search term.',
+        parameters: {
+          type: 'params',
+          properties: {
+            term: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.repo#view',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminTakeModerationAction: {
     lexicon: 1,
     id: 'com.atproto.admin.takeModerationAction',
@@ -3808,6 +3854,7 @@ export const ids = {
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
     'com.atproto.admin.reverseModerationAction',
+  ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoBlobUpload: 'com.atproto.blob.upload',
   ComAtprotoHandleResolve: 'com.atproto.handle.resolve',

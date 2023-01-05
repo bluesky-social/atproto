@@ -1,15 +1,20 @@
 import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import Database from '../../../../db'
-import { notSoftDeletedClause, DbRef } from '../../../../db/util'
-import { GenericKeyset, paginate } from '../../../../db/pagination'
+import Database from '../../db'
+import { notSoftDeletedClause, DbRef } from '../../db/util'
+import { GenericKeyset, paginate } from '../../db/pagination'
 
 export const getUserSearchQueryPg = (
   db: Database,
-  opts: { term: string; limit: number; before?: string },
+  opts: {
+    term: string
+    limit: number
+    before?: string
+    includeSoftDeleted?: boolean
+  },
 ) => {
   const { ref } = db.db.dynamic
-  const { term, limit, before } = opts
+  const { term, limit, before, includeSoftDeleted } = opts
 
   // Performing matching by word using "strict word similarity" operator.
   // The more characters the user gives us, the more we can ratchet down
@@ -21,7 +26,9 @@ export const getUserSearchQueryPg = (
   let accountsQb = db.db
     .selectFrom('did_handle')
     .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-    .where(notSoftDeletedClause(ref('repo_root')))
+    .if(!includeSoftDeleted, (qb) =>
+      qb.where(notSoftDeletedClause(ref('repo_root'))),
+    )
     .where(distanceAccount, '<', threshold)
     .select(['did_handle.did as did', distanceAccount.as('distance')])
   accountsQb = paginate(accountsQb, {
@@ -37,7 +44,9 @@ export const getUserSearchQueryPg = (
     .selectFrom('profile')
     .innerJoin('did_handle', 'did_handle.did', 'profile.creator')
     .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-    .where(notSoftDeletedClause(ref('repo_root')))
+    .if(!includeSoftDeleted, (qb) =>
+      qb.where(notSoftDeletedClause(ref('repo_root'))),
+    )
     .where(distanceProfile, '<', threshold)
     .select(['did_handle.did as did', distanceProfile.as('distance')])
   profilesQb = paginate(profilesQb, {
@@ -78,10 +87,15 @@ export const getUserSearchQueryPg = (
 
 export const getUserSearchQuerySqlite = (
   db: Database,
-  opts: { term: string; limit: number; before?: string },
+  opts: {
+    term: string
+    limit: number
+    before?: string
+    includeSoftDeleted?: boolean
+  },
 ) => {
   const { ref } = db.db.dynamic
-  const { term, limit, before } = opts
+  const { term, limit, before, includeSoftDeleted } = opts
 
   // Take the first three words in the search term. We're going to build a dynamic query
   // based on the number of words, so to keep things predictable just ignore words 4 and
@@ -109,8 +123,10 @@ export const getUserSearchQuerySqlite = (
 
   return db.db
     .selectFrom('did_handle')
-    .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-    .where(notSoftDeletedClause(ref('repo_root')))
+    .innerJoin('repo_root as _repo_root', '_repo_root.did', 'did_handle.did')
+    .if(!includeSoftDeleted, (qb) =>
+      qb.where(notSoftDeletedClause(ref('_repo_root'))),
+    )
     .where((q) => {
       safeWords.forEach((word) => {
         // Match word prefixes against contents of handle and displayName

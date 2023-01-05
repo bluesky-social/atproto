@@ -18,6 +18,7 @@ import * as ComAtprotoAdminRecord from './types/com/atproto/admin/record'
 import * as ComAtprotoAdminRepo from './types/com/atproto/admin/repo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
@@ -96,6 +97,7 @@ export * as ComAtprotoAdminRecord from './types/com/atproto/admin/record'
 export * as ComAtprotoAdminRepo from './types/com/atproto/admin/repo'
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 export * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
@@ -349,6 +351,17 @@ export class AdminNS {
       .call('com.atproto.admin.reverseModerationAction', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminReverseModerationAction.toKnownErr(e)
+      })
+  }
+
+  searchRepos(
+    params?: ComAtprotoAdminSearchRepos.QueryParams,
+    opts?: ComAtprotoAdminSearchRepos.CallOptions,
+  ): Promise<ComAtprotoAdminSearchRepos.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.searchRepos', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminSearchRepos.toKnownErr(e)
       })
   }
 
