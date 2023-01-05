@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import { BlockWriter } from '@ipld/car/writer'
 import * as crypto from '@atproto/crypto'
 import {
   RepoRoot,
@@ -18,7 +17,6 @@ import DataDiff from './data-diff'
 import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
-import * as util from './util'
 
 type Params = {
   storage: RepoStorage
@@ -184,55 +182,6 @@ export class Repo extends ReadableRepo {
     const commit = await this.createCommit(toWrite, keypair)
     await this.storage.applyCommit(commit)
     return Repo.load(this.storage, commit.commit)
-  }
-
-  // CAR FILES
-  // -----------
-
-  async getCheckout(): Promise<Uint8Array> {
-    return util.writeCar(this.cid, (car: BlockWriter) => {
-      return this.writeCheckoutToCarStream(car)
-    })
-  }
-
-  async getDiff(to: CID | null): Promise<Uint8Array> {
-    return util.writeCar(this.cid, (car: BlockWriter) => {
-      return this.writeCommitsToCarStream(car, this.cid, to)
-    })
-  }
-
-  async getFullRepo(): Promise<Uint8Array> {
-    return this.getDiff(null)
-  }
-
-  async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    const commit = await this.storage.readObjAndBytes(this.cid, def.commit)
-    await car.put({ cid: this.cid, bytes: commit.bytes })
-    const root = await this.storage.readObjAndBytes(
-      commit.obj.root,
-      def.repoRoot,
-    )
-    await car.put({ cid: commit.obj.root, bytes: root.bytes })
-    const meta = await this.storage.readObjAndBytes(root.obj.meta, def.repoMeta)
-    await car.put({ cid: root.obj.meta, bytes: meta.bytes })
-    await this.data.writeToCarStream(car)
-  }
-
-  async writeCommitsToCarStream(
-    car: BlockWriter,
-    latest: CID,
-    earliest: CID | null,
-  ): Promise<void> {
-    const commits = await this.storage.getCommits(latest, earliest)
-    if (commits === null) {
-      throw new Error('Could not find shared history')
-    }
-    if (commits.length === 0) return
-    for (const commit of commits) {
-      for (const entry of commit.blocks.entries()) {
-        await car.put(entry)
-      }
-    }
   }
 }
 

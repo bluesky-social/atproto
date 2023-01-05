@@ -7,7 +7,7 @@ import SyncStorage from './storage/sync-storage'
 import ReadableRepo from './readable-repo'
 import Repo from './repo'
 import CidSet from './cid-set'
-import { parseRecordKey } from './util'
+import * as util from './util'
 import { RepoContents } from './types'
 import { def } from '@atproto/common'
 
@@ -41,7 +41,7 @@ export const verifyCheckout = async (
 
   const contents: RepoContents = {}
   for (const add of diff.addList()) {
-    const { collection, rkey } = parseRecordKey(add.key)
+    const { collection, rkey } = util.parseDataKey(add.key)
     if (!contents[collection]) {
       contents[collection] = {}
     }

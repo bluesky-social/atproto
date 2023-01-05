@@ -1,12 +1,12 @@
 import { CID } from 'multiformats/cid'
 import { DidResolver } from '@atproto/did-resolver'
-import { MemoryBlockstore, RepoStorage } from './storage'
-import Repo from './repo'
-import * as verify from './verify'
-import * as util from './util'
-import { CommitData, RepoContents, WriteLog } from './types'
-import CidSet from './cid-set'
-import { MissingBlocksError } from './error'
+import { MemoryBlockstore, RepoStorage } from '../storage'
+import Repo from '../repo'
+import * as verify from '../verify'
+import * as util from '../util'
+import { CommitData, RepoContents, WriteLog } from '../types'
+import CidSet from '../cid-set'
+import { MissingBlocksError } from '../error'
 
 export const loadCheckout = async (
   storage: RepoStorage,

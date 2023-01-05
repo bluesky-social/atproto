@@ -9,28 +9,28 @@ import * as sync from '../src/sync'
 import * as util from './_util'
 
 describe('Sync', () => {
-  let blockstore: MemoryBlockstore
-  let syncBlockstore: MemoryBlockstore
-  let checkoutBlockstore: MemoryBlockstore
+  let storage: MemoryBlockstore
+  let syncStorage: MemoryBlockstore
+  let checkoutStorage: MemoryBlockstore
   let repo: Repo
   let keypair: crypto.Keypair
   let repoData: RepoContents
   const didResolver = new DidResolver()
 
   beforeAll(async () => {
-    blockstore = new MemoryBlockstore()
+    storage = new MemoryBlockstore()
     keypair = await crypto.Secp256k1Keypair.create()
-    repo = await Repo.create(blockstore, keypair.did(), keypair)
-    syncBlockstore = new MemoryBlockstore()
-    checkoutBlockstore = new MemoryBlockstore()
+    repo = await Repo.create(storage, keypair.did(), keypair)
+    syncStorage = new MemoryBlockstore()
+    checkoutStorage = new MemoryBlockstore()
   })
 
   let bobRepo: Repo
 
   it('syncs an empty repo', async () => {
-    const car = await repo.getFullRepo()
-    const loaded = await sync.loadFullRepo(syncBlockstore, car, didResolver)
-    bobRepo = await Repo.load(syncBlockstore, loaded.root)
+    const car = await sync.getFullRepo(storage, repo.cid)
+    const loaded = await sync.loadFullRepo(syncStorage, car, didResolver)
+    bobRepo = await Repo.load(syncStorage, loaded.root)
     const data = await bobRepo.data.list(10)
     expect(data.length).toBe(0)
   })
@@ -39,11 +39,10 @@ describe('Sync', () => {
     const filled = await util.fillRepo(repo, keypair, 100)
     repo = filled.repo
     repoData = filled.data
-    await repo.getFullRepo()
 
-    const car = await repo.getFullRepo()
-    const loaded = await sync.loadFullRepo(syncBlockstore, car, didResolver)
-    bobRepo = await Repo.load(syncBlockstore, loaded.root)
+    const car = await sync.getFullRepo(storage, repo.cid)
+    const loaded = await sync.loadFullRepo(syncStorage, car, didResolver)
+    bobRepo = await Repo.load(syncStorage, loaded.root)
     const contents = await bobRepo.getContents()
     expect(contents).toEqual(repoData)
     await util.verifyRepoDiff(loaded.writeLog, {}, repoData)
@@ -59,9 +58,9 @@ describe('Sync', () => {
     })
     repo = edited.repo
     repoData = edited.data
-    const diffCar = await repo.getDiff(bobRepo.cid)
+    const diffCar = await sync.getDiff(storage, repo.cid, bobRepo.cid)
     const loaded = await sync.loadDiff(bobRepo, diffCar, didResolver)
-    bobRepo = await Repo.load(syncBlockstore, loaded.root)
+    bobRepo = await Repo.load(syncStorage, loaded.root)
     const contents = await bobRepo.getContents()
     expect(contents).toEqual(repoData)
     await util.verifyRepoDiff(loaded.writeLog, beforeData, repoData)
@@ -89,31 +88,31 @@ describe('Sync', () => {
       sig: await keypair.sign(unstoredData.root.bytes),
     }
     const commitCid = await blocks.add(commit)
-    await blockstore.putMany(blocks)
-    const badrepo = await Repo.load(blockstore, commitCid)
-    const diffCar = await badrepo.getDiff(bobRepo.cid)
+    await storage.putMany(blocks)
+    const badRepo = await Repo.load(storage, commitCid)
+    const diffCar = await sync.getDiff(storage, badRepo.cid, bobRepo.cid)
     await expect(sync.loadDiff(bobRepo, diffCar, didResolver)).rejects.toThrow()
   })
 
   it('sync a non-historical repo checkout', async () => {
-    const checkoutBytes = await repo.getCheckout()
+    const checkoutCar = await sync.getCheckout(storage, repo.cid)
     const checkout = await sync.loadCheckout(
-      checkoutBlockstore,
-      checkoutBytes,
+      checkoutStorage,
+      checkoutCar,
       didResolver,
     )
-    const checkoutRepo = await Repo.load(checkoutBlockstore, checkout.root)
+    const checkoutRepo = await Repo.load(checkoutStorage, checkout.root)
     const contents = await checkoutRepo.getContents()
     expect(contents).toEqual(repoData)
     expect(checkout.contents).toEqual(repoData)
   })
 
   it('does not sync unneeded blocks during checkout', async () => {
-    const commitPath = await blockstore.getCommitPath(repo.cid, null)
+    const commitPath = await storage.getCommitPath(repo.cid, null)
     if (!commitPath) {
       throw new Error('Could not get commitPath')
     }
-    const hasGenesisCommit = await checkoutBlockstore.has(commitPath[0])
+    const hasGenesisCommit = await checkoutStorage.has(commitPath[0])
     expect(hasGenesisCommit).toBeFalsy()
   })
 })

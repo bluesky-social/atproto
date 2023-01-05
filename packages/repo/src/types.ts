@@ -3,6 +3,7 @@ import { BlockWriter } from '@ipld/car/writer'
 import { schema as common, def as commonDef } from '@atproto/common'
 import { CID } from 'multiformats'
 import BlockMap from './block-map'
+import CidSet from './cid-set'
 
 // Repo nodes
 // ---------------
@@ -138,4 +139,5 @@ export interface DataStore {
   listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
   getUnstoredBlocks(): Promise<{ root: CID; blocks: BlockMap }>
   writeToCarStream(car: BlockWriter): Promise<void>
+  cidsForPath(key: string): Promise<CidSet>
 }
