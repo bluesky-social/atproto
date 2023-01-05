@@ -235,7 +235,7 @@ export class ModerationService {
               reason: modAction.reversedReason,
             }
           : undefined,
-      resolvedReports: resolutions,
+      resolvedReportIds: resolutions.map((r) => r.id),
     }
   }
 

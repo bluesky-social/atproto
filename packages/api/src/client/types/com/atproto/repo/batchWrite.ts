@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { ValidationResult } from '@atproto/lexicon'
+import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 
 export interface QueryParams {}
 
@@ -39,6 +42,18 @@ export interface Create {
   [k: string]: unknown
 }
 
+export function isCreate(v: unknown): v is Create {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.batchWrite#create'
+  )
+}
+
+export function validateCreate(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.batchWrite#create', v)
+}
+
 export interface Update {
   action: 'update'
   collection: string
@@ -47,9 +62,33 @@ export interface Update {
   [k: string]: unknown
 }
 
+export function isUpdate(v: unknown): v is Update {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.batchWrite#update'
+  )
+}
+
+export function validateUpdate(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.batchWrite#update', v)
+}
+
 export interface Delete {
   action: 'delete'
   collection: string
   rkey: string
   [k: string]: unknown
+}
+
+export function isDelete(v: unknown): v is Delete {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.batchWrite#delete'
+  )
+}
+
+export function validateDelete(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.batchWrite#delete', v)
 }

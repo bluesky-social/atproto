@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
@@ -45,4 +48,16 @@ export interface User {
   displayName?: string
   avatar?: string
   [k: string]: unknown
+}
+
+export function isUser(v: unknown): v is User {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.searchTypeahead#user'
+  )
+}
+
+export function validateUser(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.searchTypeahead#user', v)
 }
