@@ -11,7 +11,6 @@ export default function (server: Server, ctx: AppContext) {
       const { subject, direction } = input.body
 
       const requester = auth.credentials.did
-      const authStore = await ctx.getAuthstore(requester)
       const now = new Date().toISOString()
 
       const voteUri = await ctx.db.transaction(async (dbTxn) => {
@@ -63,7 +62,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         await Promise.all([
-          await repoTxn.writeToRepo(requester, authStore, writes, now),
+          await repoTxn.writeToRepo(requester, writes, now),
           await repoTxn.indexWrites(writes, now),
         ])
 

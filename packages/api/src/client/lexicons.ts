@@ -828,6 +828,109 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncGetCheckout: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getCheckout',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the repo state.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            commit: {
+              type: 'string',
+              description:
+                'The commit to get the checkout from. Defaults to current HEAD.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/cbor',
+        },
+      },
+    },
+  },
+  ComAtprotoSyncGetCommitPath: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getCommitPath',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the path of repo commits',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            latest: {
+              type: 'string',
+              description: 'The most recent commit',
+            },
+            earliest: {
+              type: 'string',
+              description: 'The earliest commit to start from',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['commits'],
+            properties: {
+              commits: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSyncGetHead: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getHead',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the current HEAD CID of a repo.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncGetRepo: {
     lexicon: 1,
     id: 'com.atproto.sync.getRepo',
@@ -851,38 +954,6 @@ export const schemaDict = {
         },
         output: {
           encoding: 'application/cbor',
-        },
-      },
-    },
-  },
-  ComAtprotoSyncGetRoot: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getRoot',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Gets the current root CID of a repo.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['root'],
-            properties: {
-              root: {
-                type: 'string',
-              },
-            },
-          },
         },
       },
     },
@@ -2998,8 +3069,10 @@ export const ids = {
   ComAtprotoSessionDelete: 'com.atproto.session.delete',
   ComAtprotoSessionGet: 'com.atproto.session.get',
   ComAtprotoSessionRefresh: 'com.atproto.session.refresh',
+  ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
+  ComAtprotoSyncGetCommitPath: 'com.atproto.sync.getCommitPath',
+  ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
-  ComAtprotoSyncGetRoot: 'com.atproto.sync.getRoot',
   ComAtprotoSyncUpdateRepo: 'com.atproto.sync.updateRepo',
   AppBskyActorCreateScene: 'app.bsky.actor.createScene',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',

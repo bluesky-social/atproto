@@ -91,8 +91,6 @@ export default function (server: Server, ctx: AppContext) {
             `Could not locate user declaration for ${requester}`,
           )
         }
-        const userAuth = ctx.getAuthstore(requester)
-        const sceneAuth = ctx.getAuthstore(did)
 
         const sceneWrites = await Promise.all([
           repo.prepareCreate({
@@ -161,8 +159,8 @@ export default function (server: Server, ctx: AppContext) {
         ])
 
         await Promise.all([
-          repoTxn.createRepo(did, sceneAuth, sceneWrites, now),
-          repoTxn.writeToRepo(requester, userAuth, userWrites, now),
+          repoTxn.createRepo(did, sceneWrites, now),
+          repoTxn.writeToRepo(requester, userWrites, now),
           repoTxn.indexWrites([...sceneWrites, ...userWrites], now),
         ])
 

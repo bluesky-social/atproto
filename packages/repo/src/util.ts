@@ -1,9 +1,11 @@
 import { CID } from 'multiformats/cid'
 import { CarReader } from '@ipld/car/reader'
-import * as auth from '@atproto/auth'
-import { def } from '@atproto/common'
+import { BlockWriter, CarWriter } from '@ipld/car/writer'
+import { Block as CarBlock } from '@ipld/car/api'
+import { def, streamToArray, verifyCidForBytes } from '@atproto/common'
 import Repo from './repo'
-import { DataDiff, MST } from './mst'
+import { MST } from './mst'
+import DataDiff from './data-diff'
 import { RepoStorage } from './storage'
 import {
   DataStore,
@@ -14,17 +16,30 @@ import {
   WriteOpAction,
 } from './types'
 import BlockMap from './block-map'
+import { MissingBlocksError } from './error'
+import * as parse from './parse'
 
-export const ucanForOperation = async (
-  prevData: DataStore,
-  newData: DataStore,
-  rootDid: string,
-  authStore: auth.AuthStore,
-): Promise<string> => {
-  const diff = await prevData.diff(newData)
-  const neededCaps = diff.neededCapabilities(rootDid)
-  const ucanForOp = await authStore.createUcanForCaps(rootDid, neededCaps, 30)
-  return auth.encodeUcan(ucanForOp)
+export async function* verifyIncomingCarBlocks(
+  car: AsyncIterable<CarBlock>,
+): AsyncIterable<CarBlock> {
+  for await (const block of car) {
+    await verifyCidForBytes(block.cid, block.bytes)
+    yield block
+  }
+}
+
+export const writeCar = async (
+  root: CID,
+  fn: (car: BlockWriter) => Promise<void>,
+): Promise<Uint8Array> => {
+  const { writer, out } = CarWriter.create(root)
+  const bytes = streamToArray(out)
+  try {
+    await fn(writer)
+  } finally {
+    writer.close()
+  }
+  return bytes
 }
 
 export const readCar = async (
@@ -37,7 +52,7 @@ export const readCar = async (
   }
   const root = roots[0]
   const blocks = new BlockMap()
-  for await (const block of car.blocks()) {
+  for await (const block of verifyIncomingCarBlocks(car.blocks())) {
     await blocks.set(block.cid, block.bytes)
   }
   return {
@@ -59,36 +74,43 @@ export const getWriteOpLog = async (
   const msts = heads.map((h) => h.data)
   const diffs: DataDiff[] = []
   for (const mst of msts) {
-    diffs.push(await prev.diff(mst))
+    diffs.push(await DataDiff.of(mst, prev))
     prev = mst
   }
+  const fullDiff = collapseDiffs(diffs)
+  const diffBlocks = await storage.getBlocks(fullDiff.newCidList())
+  if (diffBlocks.missing.length > 0) {
+    throw new MissingBlocksError('write op log', diffBlocks.missing)
+  }
   // Map MST diffs to write ops
-  return Promise.all(diffs.map((diff) => diffToWriteOps(storage, diff)))
+  return Promise.all(
+    diffs.map((diff) => diffToWriteOps(diff, diffBlocks.blocks)),
+  )
 }
 
 export const diffToWriteOps = (
-  storage: RepoStorage,
   diff: DataDiff,
+  blocks: BlockMap,
 ): Promise<RecordWriteOp[]> => {
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseRecordKey(add.key)
-      const value = await storage.get(add.cid, def.record)
+      const value = await parse.getAndParse(blocks, add.cid, def.record)
       return {
         action: WriteOpAction.Create,
         collection,
         rkey,
-        value,
+        value: value.obj,
       } as RecordCreateOp
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseRecordKey(upd.key)
-      const value = await storage.get(upd.cid, def.record)
+      const value = await parse.getAndParse(blocks, upd.cid, def.record)
       return {
         action: WriteOpAction.Update,
         collection,
         rkey,
-        value,
+        value: value.obj,
       } as RecordUpdateOp
     }),
     ...diff.deleteList().map((del) => {
@@ -100,6 +122,13 @@ export const diffToWriteOps = (
       } as RecordDeleteOp
     }),
   ])
+}
+
+export const collapseDiffs = (diffs: DataDiff[]): DataDiff => {
+  return diffs.reduce((acc, cur) => {
+    acc.addDiff(cur)
+    return acc
+  }, new DataDiff())
 }
 
 export const parseRecordKey = (key: string) => {

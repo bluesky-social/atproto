@@ -1,91 +1,41 @@
 import { CID } from 'multiformats/cid'
-import { BlockWriter } from '@ipld/car/writer'
-
-import * as common from '@atproto/common'
-import { check } from '@atproto/common'
-import { DataDiff } from '../mst'
-import { CommitBlockData, CommitData } from '../types'
 import BlockMap from '../block-map'
-import * as util from '../util'
+import { CommitBlockData, CommitData } from '../types'
+import ReadableBlockstore from './readable-blockstore'
 
-export abstract class RepoStorage {
-  temp: BlockMap = new BlockMap()
-
+export abstract class RepoStorage extends ReadableBlockstore {
   abstract getHead(forUpdate?: boolean): Promise<CID | null>
-  abstract getSavedBytes(cid: CID): Promise<Uint8Array | null>
-  abstract hasSavedBytes(cid: CID): Promise<boolean>
-  abstract putBlock(cid: CID, block: Uint8Array): Promise<void>
-  abstract putMany(blocks: BlockMap): Promise<void>
-  abstract applyCommit(commit: CommitData): Promise<void>
   abstract getCommitPath(
     latest: CID,
     earliest: CID | null,
   ): Promise<CID[] | null>
-  abstract getCommits(
+  abstract getBlocksForCommits(
+    commits: CID[],
+  ): Promise<{ [commit: string]: BlockMap }>
+
+  abstract putBlock(cid: CID, block: Uint8Array): Promise<void>
+  abstract putMany(blocks: BlockMap): Promise<void>
+  abstract updateHead(cid: CID, prev: CID | null): Promise<void>
+  abstract indexCommits(commit: CommitData[]): Promise<void>
+
+  async applyCommit(commit: CommitData): Promise<void> {
+    await Promise.all([
+      this.indexCommits([commit]),
+      this.updateHead(commit.commit, commit.prev),
+    ])
+  }
+
+  async getCommits(
     latest: CID,
     earliest: CID | null,
-  ): Promise<CommitBlockData[] | null>
-  abstract destroy(): Promise<void>
-
-  async get<T>(cid: CID, schema: check.Def<T>): Promise<T> {
-    const value = await this.getUnchecked(cid)
-    try {
-      return check.assure(schema, value)
-    } catch (err) {
-      throw new Error(
-        `Did not find expected object at ${cid.toString()}: ${err}`,
-      )
-    }
-  }
-
-  async getUnchecked(cid: CID): Promise<unknown> {
-    const bytes = await this.getBytes(cid)
-    if (!bytes) {
-      throw new Error(`Not found: ${cid.toString()}`)
-    }
-    return common.ipldBytesToValue(bytes)
-  }
-
-  async getBytes(cid: CID): Promise<Uint8Array | null> {
-    return this.temp.get(cid) || (await this.getSavedBytes(cid))
-  }
-
-  async guaranteeBytes(cid: CID): Promise<Uint8Array> {
-    const bytes = await this.getBytes(cid)
-    if (!bytes) {
-      throw new Error(`Not found: ${cid.toString()}`)
-    }
-    return bytes
-  }
-
-  async has(cid: CID): Promise<boolean> {
-    return this.temp.has(cid) || (await this.hasSavedBytes(cid))
-  }
-
-  async isMissing(cid: CID): Promise<boolean> {
-    const has = await this.has(cid)
-    return !has
-  }
-
-  async addToCar(car: BlockWriter, cid: CID) {
-    car.put({ cid, bytes: await this.guaranteeBytes(cid) })
-  }
-
-  async loadDiff(
-    carBytes: Uint8Array,
-    verify: (root: CID) => Promise<DataDiff>,
-  ): Promise<{ root: CID; diff: DataDiff }> {
-    const { root, blocks } = await util.readCar(carBytes)
-    this.temp.addMap(blocks)
-    try {
-      const diff = await verify(root)
-      await this.putMany(this.temp)
-      this.temp.clear()
-      return { root, diff }
-    } catch (err) {
-      this.temp.clear()
-      throw err
-    }
+  ): Promise<CommitBlockData[] | null> {
+    const commitPath = await this.getCommitPath(latest, earliest)
+    if (!commitPath) return null
+    const blocksByCommit = await this.getBlocksForCommits(commitPath)
+    return commitPath.map((commit) => ({
+      commit,
+      blocks: blocksByCommit[commit.toString()] || new BlockMap(),
+    }))
   }
 }
 

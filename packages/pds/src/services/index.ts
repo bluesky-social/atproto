@@ -1,3 +1,4 @@
+import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
 import { MessageQueue } from '../event-stream/types'
@@ -9,17 +10,18 @@ import { RecordService } from './record'
 import { RepoService } from './repo'
 
 export function createServices(resources: {
+  keypair: crypto.Keypair
   messageQueue: MessageQueue
   blobstore: BlobStore
   imgUriBuilder: ImageUriBuilder
 }): Services {
-  const { messageQueue, blobstore, imgUriBuilder } = resources
+  const { keypair, messageQueue, blobstore, imgUriBuilder } = resources
   return {
     actor: ActorService.creator(),
     auth: AuthService.creator(),
     feed: FeedService.creator(imgUriBuilder),
     record: RecordService.creator(messageQueue),
-    repo: RepoService.creator(messageQueue, blobstore),
+    repo: RepoService.creator(keypair, messageQueue, blobstore),
   }
 }
 

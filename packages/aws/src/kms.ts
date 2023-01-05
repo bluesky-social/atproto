@@ -10,7 +10,7 @@ export type KmsConfig = { keyId: string } & Omit<
   'apiVersion'
 >
 
-export class KmsKeypair implements crypto.DidableKey {
+export class KmsKeypair implements crypto.Keypair {
   jwtAlg = crypto.SECP256K1_JWT_ALG
 
   constructor(

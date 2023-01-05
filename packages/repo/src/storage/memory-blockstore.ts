@@ -1,28 +1,37 @@
 import { CID } from 'multiformats/cid'
-import RepoStorage from './repo-storage'
-import { CommitBlockData, CommitData, def } from '../types'
+import { CommitData, def } from '../types'
 import BlockMap from '../block-map'
 import { MST } from '../mst'
+import DataDiff from '../data-diff'
+import { MissingCommitBlocksError } from '../error'
+import RepoStorage from './repo-storage'
 
 export class MemoryBlockstore extends RepoStorage {
   blocks: BlockMap
   head: CID | null = null
 
-  constructor() {
+  constructor(blocks?: BlockMap) {
     super()
     this.blocks = new BlockMap()
+    if (blocks) {
+      this.blocks.addMap(blocks)
+    }
   }
 
   async getHead(): Promise<CID | null> {
     return this.head
   }
 
-  async getSavedBytes(cid: CID): Promise<Uint8Array | null> {
+  async getBytes(cid: CID): Promise<Uint8Array | null> {
     return this.blocks.get(cid) || null
   }
 
-  async hasSavedBytes(cid: CID): Promise<boolean> {
+  async has(cid: CID): Promise<boolean> {
     return this.blocks.has(cid)
+  }
+
+  async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
+    return this.blocks.getMany(cids)
   }
 
   async putBlock(cid: CID, block: Uint8Array): Promise<void> {
@@ -30,14 +39,22 @@ export class MemoryBlockstore extends RepoStorage {
   }
 
   async putMany(blocks: BlockMap): Promise<void> {
-    blocks.forEach((val, key) => {
-      this.blocks.set(key, val)
+    this.blocks.addMap(blocks)
+  }
+
+  async indexCommits(commits: CommitData[]): Promise<void> {
+    commits.forEach((commit) => {
+      this.blocks.addMap(commit.blocks)
     })
+  }
+
+  async updateHead(cid: CID, _prev: CID | null): Promise<void> {
+    this.head = cid
   }
 
   async applyCommit(commit: CommitData): Promise<void> {
     this.blocks.addMap(commit.blocks)
-    this.head = commit.root
+    this.head = commit.commit
   }
 
   async getCommitPath(
@@ -48,12 +65,11 @@ export class MemoryBlockstore extends RepoStorage {
     const path: CID[] = []
     while (curr !== null) {
       path.push(curr)
-      const commit = await this.get(curr, def.commit)
-      if (earliest && curr.equals(earliest)) {
-        return path.reverse()
-      }
-      const root = await this.get(commit.root, def.repoRoot)
+      const commit = await this.readObj(curr, def.commit)
+      const root = await this.readObj(commit.root, def.repoRoot)
       if (!earliest && root.prev === null) {
+        return path.reverse()
+      } else if (earliest && root.prev.equals(earliest)) {
         return path.reverse()
       }
       curr = root.prev
@@ -61,43 +77,29 @@ export class MemoryBlockstore extends RepoStorage {
     return null
   }
 
-  async getMany(cids: CID[]): Promise<BlockMap> {
-    const blocks = new BlockMap()
-    await Promise.all(
-      cids.map(async (cid) => {
-        const bytes = await this.getBytes(cid)
-        if (bytes) {
-          blocks.set(cid, bytes)
-        }
-      }),
-    )
-    return blocks
-  }
-
-  async getCommits(
-    latest: CID,
-    earliest: CID | null,
-  ): Promise<CommitBlockData[] | null> {
-    const commitPath = await this.getCommitPath(latest, earliest)
-    if (commitPath === null) return null
-    const commitData: CommitBlockData[] = []
+  async getBlocksForCommits(
+    commits: CID[],
+  ): Promise<{ [commit: string]: BlockMap }> {
+    const commitData: { [commit: string]: BlockMap } = {}
     let prevData: MST | null = null
-    for (const commitCid of commitPath) {
-      const commit = await this.get(commitCid, def.commit)
-      const root = await this.get(commit.root, def.repoRoot)
+    for (const commitCid of commits) {
+      const commit = await this.readObj(commitCid, def.commit)
+      const root = await this.readObj(commit.root, def.repoRoot)
       const data = await MST.load(this, root.data)
-      const newCids = prevData
-        ? (await prevData.diff(data)).newCidList()
-        : (await data.allCids()).toList()
-      const blocks = await this.getMany([commitCid, commit.root, ...newCids])
-      if (!root.prev) {
-        const metaBytes = await this.guaranteeBytes(root.meta)
-        blocks.set(root.meta, metaBytes)
+      const diff = await DataDiff.of(data, prevData)
+      const { blocks, missing } = await this.getBlocks([
+        commitCid,
+        commit.root,
+        ...diff.newCidList(),
+      ])
+      if (missing.length > 0) {
+        throw new MissingCommitBlocksError(commitCid, missing)
       }
-      commitData.push({
-        root: commitCid,
-        blocks,
-      })
+      if (!root.prev) {
+        const meta = await this.readObjAndBytes(root.meta, def.repoMeta)
+        blocks.set(root.meta, meta.bytes)
+      }
+      commitData[commitCid.toString()] = blocks
       prevData = data
     }
     return commitData
@@ -113,15 +115,6 @@ export class MemoryBlockstore extends RepoStorage {
 
   async destroy(): Promise<void> {
     this.blocks.clear()
-  }
-
-  // Mainly for dev purposes
-  async getContents(): Promise<Record<string, unknown>> {
-    const contents: Record<string, unknown> = {}
-    for (const entry of this.blocks.entries()) {
-      contents[entry.cid.toString()] = await this.getUnchecked(entry.cid)
-    }
-    return contents
   }
 }
 

@@ -24,7 +24,6 @@ export default function (server: Server, ctx: AppContext) {
       if (!authorized) {
         throw new AuthRequiredError()
       }
-      const authStore = await ctx.getAuthstore(did)
       const uri = new AtUri(`${did}/${profileNsid}/self`)
 
       const { profileCid, updated } = await ctx.db.transaction(
@@ -80,7 +79,7 @@ export default function (server: Server, ctx: AppContext) {
                 record: updated,
               })
 
-          const commit = await repoTxn.writeToRepo(did, authStore, [write], now)
+          const commit = await repoTxn.writeToRepo(did, [write], now)
           await repoTxn.blobs.processWriteBlobs(did, commit, [write])
 
           let profileCid: CID

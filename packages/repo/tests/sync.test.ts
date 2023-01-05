@@ -1,6 +1,7 @@
-import * as auth from '@atproto/auth'
+import * as crypto from '@atproto/crypto'
 import { TID } from '@atproto/common'
-import { Repo, RepoRoot, verifyUpdates, ucanForOperation } from '../src'
+import { DidResolver } from '@atproto/did-resolver'
+import { Repo, RepoContents, RepoRoot } from '../src'
 import BlockMap from '../src/block-map'
 import { MemoryBlockstore } from '../src/storage'
 import * as sync from '../src/sync'
@@ -8,129 +9,111 @@ import * as sync from '../src/sync'
 import * as util from './_util'
 
 describe('Sync', () => {
-  const verifier = new auth.Verifier()
-
-  let aliceBlockstore: MemoryBlockstore, bobBlockstore: MemoryBlockstore
-  let aliceRepo: Repo
-  let aliceAuth: auth.AuthStore
-  let repoData: util.RepoData
+  let blockstore: MemoryBlockstore
+  let syncBlockstore: MemoryBlockstore
+  let checkoutBlockstore: MemoryBlockstore
+  let repo: Repo
+  let keypair: crypto.Keypair
+  let repoData: RepoContents
+  const didResolver = new DidResolver()
 
   beforeAll(async () => {
-    aliceBlockstore = new MemoryBlockstore()
-    aliceAuth = await verifier.createTempAuthStore()
-    await aliceAuth.claimFull()
-    aliceRepo = await Repo.create(
-      aliceBlockstore,
-      await aliceAuth.did(),
-      aliceAuth,
-    )
-    bobBlockstore = new MemoryBlockstore()
-  })
-
-  it('syncs an empty repo', async () => {
-    const car = await aliceRepo.getFullHistory()
-    const repoBob = await sync.loadRepoFromCar(car, bobBlockstore, verifier)
-    const data = await repoBob.data.list(10)
-    expect(data.length).toBe(0)
+    blockstore = new MemoryBlockstore()
+    keypair = await crypto.Secp256k1Keypair.create()
+    repo = await Repo.create(blockstore, keypair.did(), keypair)
+    syncBlockstore = new MemoryBlockstore()
+    checkoutBlockstore = new MemoryBlockstore()
   })
 
   let bobRepo: Repo
 
-  it('syncs a repo that is starting from scratch', async () => {
-    const filled = await util.fillRepo(aliceRepo, aliceAuth, 100)
-    aliceRepo = filled.repo
-    repoData = filled.data
-    await aliceRepo.getFullHistory()
+  it('syncs an empty repo', async () => {
+    const car = await repo.getFullRepo()
+    const loaded = await sync.loadFullRepo(syncBlockstore, car, didResolver)
+    bobRepo = await Repo.load(syncBlockstore, loaded.root)
+    const data = await bobRepo.data.list(10)
+    expect(data.length).toBe(0)
+  })
 
-    const car = await aliceRepo.getFullHistory()
-    bobRepo = await sync.loadRepoFromCar(car, bobBlockstore, verifier)
-    const diff = await verifyUpdates(bobBlockstore, null, bobRepo.cid, verifier)
-    await util.checkRepo(bobRepo, repoData)
-    await util.checkRepoDiff(diff, {}, repoData)
+  it('syncs a repo that is starting from scratch', async () => {
+    const filled = await util.fillRepo(repo, keypair, 100)
+    repo = filled.repo
+    repoData = filled.data
+    await repo.getFullRepo()
+
+    const car = await repo.getFullRepo()
+    const loaded = await sync.loadFullRepo(syncBlockstore, car, didResolver)
+    bobRepo = await Repo.load(syncBlockstore, loaded.root)
+    const contents = await bobRepo.getContents()
+    expect(contents).toEqual(repoData)
+    await util.verifyRepoDiff(loaded.ops, {}, repoData)
   })
 
   it('syncs a repo that is behind', async () => {
     // add more to alice's repo & have bob catch up
     const beforeData = JSON.parse(JSON.stringify(repoData))
-    const edited = await util.editRepo(aliceRepo, repoData, aliceAuth, {
+    const edited = await util.editRepo(repo, repoData, keypair, {
       adds: 20,
       updates: 20,
       deletes: 20,
     })
-    aliceRepo = edited.repo
+    repo = edited.repo
     repoData = edited.data
-    const diffCar = await aliceRepo.getDiffCar(bobRepo.cid)
-    const loaded = await sync.loadDiff(bobRepo, diffCar, verifier)
-    await util.checkRepo(loaded.repo, repoData)
-    await util.checkRepoDiff(loaded.diff, beforeData, repoData)
-  })
-
-  it('throws an error on invalid UCANs', async () => {
-    const obj = util.generateObject()
-    const blocks = new BlockMap()
-    const cid = await blocks.add(obj)
-    const updatedData = await aliceRepo.data.add(
-      `com.example.test/${TID.next()}`,
-      cid,
-    )
-    // we create an unrelated token for bob & try to permission alice's repo commit with it
-    const bobAuth = await verifier.createTempAuthStore()
-    const badUcan = await bobAuth.claimFull()
-    const auth_token = await blocks.add(auth.encodeUcan(badUcan))
-    const dataDiff = await updatedData.blockDiff()
-    blocks.addMap(dataDiff.blocks)
-    const root: RepoRoot = {
-      meta: aliceRepo.root.meta,
-      prev: aliceRepo.cid,
-      auth_token,
-      data: dataDiff.root,
-    }
-    const rootCid = await blocks.add(root)
-    const commit = {
-      root: rootCid,
-      sig: await aliceAuth.sign(rootCid.bytes),
-    }
-    const commitCid = await blocks.add(commit)
-    await aliceBlockstore.putMany(blocks)
-    const badAliceRepo = await Repo.load(aliceBlockstore, commitCid)
-    const diffCar = await badAliceRepo.getDiffCar(bobRepo.cid)
-    await expect(sync.loadDiff(bobRepo, diffCar, verifier)).rejects.toThrow()
-    // await aliceBlockstore.clearStaged()
+    const diffCar = await repo.getDiff(bobRepo.cid)
+    const loaded = await sync.loadDiff(bobRepo, diffCar, didResolver)
+    bobRepo = await Repo.load(syncBlockstore, loaded.root)
+    const contents = await bobRepo.getContents()
+    expect(contents).toEqual(repoData)
+    await util.verifyRepoDiff(loaded.ops, beforeData, repoData)
   })
 
   it('throws on a bad signature', async () => {
     const obj = util.generateObject()
     const blocks = new BlockMap()
     const cid = await blocks.add(obj)
-    const updatedData = await aliceRepo.data.add(
+    const updatedData = await repo.data.add(
       `com.example.test/${TID.next()}`,
       cid,
     )
-    const authToken = await ucanForOperation(
-      aliceRepo.data,
-      updatedData,
-      aliceRepo.did,
-      aliceAuth,
-    )
-    const authCid = await blocks.add(authToken)
-    const dataDiff = await updatedData.blockDiff()
-    blocks.addMap(dataDiff.blocks)
+    const unstoredData = await updatedData.getUnstoredBlocks()
+    blocks.addMap(unstoredData.blocks)
     const root: RepoRoot = {
-      meta: aliceRepo.root.meta,
-      prev: aliceRepo.cid,
-      auth_token: authCid,
-      data: dataDiff.root,
+      meta: repo.root.meta,
+      prev: repo.cid,
+      data: unstoredData.root,
     }
     const rootCid = await blocks.add(root)
-    // we generated a bad sig by signing the data cid instead of root cid
+    // we generate a bad sig by signing the data cid instead of root cid
     const commit = {
       root: rootCid,
-      sig: await aliceAuth.sign(dataDiff.root.bytes),
+      sig: await keypair.sign(unstoredData.root.bytes),
     }
     const commitCid = await blocks.add(commit)
-    await aliceBlockstore.putMany(blocks)
-    const badAliceRepo = await Repo.load(aliceBlockstore, commitCid)
-    const diffCar = await badAliceRepo.getDiffCar(bobRepo.cid)
-    await expect(sync.loadDiff(bobRepo, diffCar, verifier)).rejects.toThrow()
+    await blockstore.putMany(blocks)
+    const badrepo = await Repo.load(blockstore, commitCid)
+    const diffCar = await badrepo.getDiff(bobRepo.cid)
+    await expect(sync.loadDiff(bobRepo, diffCar, didResolver)).rejects.toThrow()
+  })
+
+  it('sync a non-historical repo checkout', async () => {
+    const checkoutBytes = await repo.getCheckout()
+    const checkout = await sync.loadCheckout(
+      checkoutBlockstore,
+      checkoutBytes,
+      didResolver,
+    )
+    const checkoutRepo = await Repo.load(checkoutBlockstore, checkout.root)
+    const contents = await checkoutRepo.getContents()
+    expect(contents).toEqual(repoData)
+    expect(checkout.contents).toEqual(repoData)
+  })
+
+  it('does not sync unneeded blocks during checkout', async () => {
+    const commitPath = await blockstore.getCommitPath(repo.cid, null)
+    if (!commitPath) {
+      throw new Error('Could not get commitPath')
+    }
+    const hasGenesisCommit = await checkoutBlockstore.has(commitPath[0])
+    expect(hasGenesisCommit).toBeFalsy()
   })
 })

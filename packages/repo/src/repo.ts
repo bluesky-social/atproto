@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
-import { CarWriter } from '@ipld/car'
 import { BlockWriter } from '@ipld/car/writer'
+import * as crypto from '@atproto/crypto'
 import {
   RepoRoot,
   Commit,
@@ -12,12 +12,13 @@ import {
   CommitData,
   WriteOpAction,
 } from './types'
-import { streamToArray } from '@atproto/common'
 import { RepoStorage } from './storage'
-import * as auth from '@atproto/auth'
 import { MST } from './mst'
+import DataDiff from './data-diff'
 import log from './logger'
 import BlockMap from './block-map'
+import { ReadableRepo } from './readable-repo'
+import * as util from './util'
 
 type Params = {
   storage: RepoStorage
@@ -28,32 +29,19 @@ type Params = {
   cid: CID
 }
 
-export class Repo {
+export class Repo extends ReadableRepo {
   storage: RepoStorage
-  data: DataStore
-  commit: Commit
-  root: RepoRoot
-  meta: RepoMeta
-  cid: CID
 
   constructor(params: Params) {
-    this.storage = params.storage
-    this.data = params.data
-    this.commit = params.commit
-    this.root = params.root
-    this.meta = params.meta
-    this.cid = params.cid
+    super(params)
   }
 
   static async formatInitCommit(
     storage: RepoStorage,
     did: string,
-    authStore: auth.AuthStore,
+    keypair: crypto.Keypair,
     initialRecords: RecordCreateOp[] = [],
   ): Promise<CommitData> {
-    if (!(await authStore.canSignForDid(did))) {
-      throw new Error(`provided authStore cannot sign for did: ${did}`)
-    }
     const newBlocks = new BlockMap()
 
     let data = await MST.create(storage)
@@ -62,8 +50,8 @@ export class Repo {
       const dataKey = write.collection + '/' + write.rkey
       data = await data.add(dataKey, cid)
     }
-    const dataDiff = await data.blockDiff()
-    newBlocks.addMap(dataDiff.blocks)
+    const unstoredData = await data.getUnstoredBlocks()
+    newBlocks.addMap(unstoredData.blocks)
 
     const meta: RepoMeta = {
       did,
@@ -75,19 +63,18 @@ export class Repo {
     const root: RepoRoot = {
       meta: metaCid,
       prev: null,
-      auth_token: null,
-      data: dataDiff.root,
+      data: unstoredData.root,
     }
     const rootCid = await newBlocks.add(root)
 
     const commit: Commit = {
       root: rootCid,
-      sig: await authStore.sign(rootCid.bytes),
+      sig: await keypair.sign(rootCid.bytes),
     }
     const commitCid = await newBlocks.add(commit)
 
     return {
-      root: commitCid,
+      commit: commitCid,
       prev: null,
       blocks: newBlocks,
     }
@@ -96,18 +83,18 @@ export class Repo {
   static async create(
     storage: RepoStorage,
     did: string,
-    authStore: auth.AuthStore,
+    keypair: crypto.Keypair,
     initialRecords: RecordCreateOp[] = [],
   ): Promise<Repo> {
     const commit = await Repo.formatInitCommit(
       storage,
       did,
-      authStore,
+      keypair,
       initialRecords,
     )
     await storage.applyCommit(commit)
     log.info({ did }, `created repo`)
-    return Repo.load(storage, commit.root)
+    return Repo.load(storage, commit.commit)
   }
 
   static async load(storage: RepoStorage, cid?: CID) {
@@ -115,9 +102,9 @@ export class Repo {
     if (!commitCid) {
       throw new Error('No cid provided and none in storage')
     }
-    const commit = await storage.get(commitCid, def.commit)
-    const root = await storage.get(commit.root, def.repoRoot)
-    const meta = await storage.get(root.meta, def.repoMeta)
+    const commit = await storage.readObj(commitCid, def.commit)
+    const root = await storage.readObj(commit.root, def.repoRoot)
+    const meta = await storage.readObj(root.meta, def.repoMeta)
     const data = await MST.load(storage, root.data)
     log.info({ did: meta.did }, 'loaded repo for')
     return new Repo({
@@ -130,24 +117,10 @@ export class Repo {
     })
   }
 
-  get did(): string {
-    return this.meta.did
-  }
-
-  async getRecord(collection: string, rkey: string): Promise<unknown | null> {
-    const dataKey = collection + '/' + rkey
-    const cid = await this.data.get(dataKey)
-    if (!cid) return null
-    return this.storage.getUnchecked(cid)
-  }
-
   async createCommit(
     toWrite: RecordWriteOp | RecordWriteOp[],
-    authStore: auth.AuthStore,
+    keypair: crypto.Keypair,
   ): Promise<CommitData> {
-    if (!(await authStore.canSignForDid(this.did))) {
-      throw new Error(`provided authStore cannot sign for did: ${this.did}`)
-    }
     const writes = Array.isArray(toWrite) ? toWrite : [toWrite]
     const newBlocks = new BlockMap()
 
@@ -167,25 +140,38 @@ export class Repo {
       }
     }
 
-    const dataDiff = await data.blockDiff()
-    newBlocks.addMap(dataDiff.blocks)
+    const unstoredData = await data.getUnstoredBlocks()
+    newBlocks.addMap(unstoredData.blocks)
+
+    // ensure we're not missing any blocks that were removed and then readded in this commit
+    const diff = await DataDiff.of(data, this.data)
+    const found = newBlocks.getMany(diff.newCidList())
+    if (found.missing.length > 0) {
+      const fromStorage = await this.storage.getBlocks(found.missing)
+      if (fromStorage.missing.length > 0) {
+        // this shouldn't ever happen
+        throw new Error(
+          'Could not find block for commit in Datastore or storage',
+        )
+      }
+      newBlocks.addMap(fromStorage.blocks)
+    }
 
     const root: RepoRoot = {
       meta: this.root.meta,
       prev: this.cid,
-      auth_token: null,
-      data: dataDiff.root,
+      data: unstoredData.root,
     }
     const rootCid = await newBlocks.add(root)
 
     const commit: Commit = {
       root: rootCid,
-      sig: await authStore.sign(rootCid.bytes),
+      sig: await keypair.sign(rootCid.bytes),
     }
     const commitCid = await newBlocks.add(commit)
 
     return {
-      root: commitCid,
+      commit: commitCid,
       prev: this.cid,
       blocks: newBlocks,
     }
@@ -193,67 +179,42 @@ export class Repo {
 
   async applyCommit(
     toWrite: RecordWriteOp | RecordWriteOp[],
-    authStore: auth.AuthStore,
+    keypair: crypto.Keypair,
   ): Promise<Repo> {
-    const commit = await this.createCommit(toWrite, authStore)
+    const commit = await this.createCommit(toWrite, keypair)
     await this.storage.applyCommit(commit)
-    return Repo.load(this.storage, commit.root)
-  }
-
-  async revert(count: number): Promise<Repo> {
-    let revertTo = this.cid
-    for (let i = 0; i < count; i++) {
-      const commit = await this.storage.get(revertTo, def.commit)
-      const root = await this.storage.get(commit.root, def.repoRoot)
-      if (root.prev === null) {
-        throw new Error(`Could not revert ${count} commits`)
-      }
-      revertTo = root.prev
-    }
-    return Repo.load(this.storage, revertTo)
+    return Repo.load(this.storage, commit.commit)
   }
 
   // CAR FILES
   // -----------
 
-  async getCarNoHistory(): Promise<Uint8Array> {
-    return this.openCar((car: BlockWriter) => {
+  async getCheckout(): Promise<Uint8Array> {
+    return util.writeCar(this.cid, (car: BlockWriter) => {
       return this.writeCheckoutToCarStream(car)
     })
   }
 
-  async getDiffCar(to: CID | null): Promise<Uint8Array> {
-    return this.openCar((car: BlockWriter) => {
+  async getDiff(to: CID | null): Promise<Uint8Array> {
+    return util.writeCar(this.cid, (car: BlockWriter) => {
       return this.writeCommitsToCarStream(car, this.cid, to)
     })
   }
 
-  async getFullHistory(): Promise<Uint8Array> {
-    return this.getDiffCar(null)
-  }
-
-  private async openCar(
-    fn: (car: BlockWriter) => Promise<void>,
-  ): Promise<Uint8Array> {
-    const { writer, out } = CarWriter.create([this.cid])
-    const bytes = streamToArray(out)
-    try {
-      await fn(writer)
-    } finally {
-      writer.close()
-    }
-    return bytes
+  async getFullRepo(): Promise<Uint8Array> {
+    return this.getDiff(null)
   }
 
   async writeCheckoutToCarStream(car: BlockWriter): Promise<void> {
-    const commit = await this.storage.get(this.cid, def.commit)
-    const root = await this.storage.get(commit.root, def.repoRoot)
-    await this.storage.addToCar(car, this.cid)
-    await this.storage.addToCar(car, commit.root)
-    await this.storage.addToCar(car, root.meta)
-    if (root.auth_token) {
-      await this.storage.addToCar(car, root.auth_token)
-    }
+    const commit = await this.storage.readObjAndBytes(this.cid, def.commit)
+    await car.put({ cid: this.cid, bytes: commit.bytes })
+    const root = await this.storage.readObjAndBytes(
+      commit.obj.root,
+      def.repoRoot,
+    )
+    await car.put({ cid: commit.obj.root, bytes: root.bytes })
+    const meta = await this.storage.readObjAndBytes(root.obj.meta, def.repoMeta)
+    await car.put({ cid: root.obj.meta, bytes: meta.bytes })
     await this.data.writeToCarStream(car)
   }
 

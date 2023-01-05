@@ -1,15 +1,15 @@
 import z from 'zod'
 import { CID } from 'multiformats'
 
-import { RepoStorage } from '../storage'
-import { def, cidForData } from '@atproto/common'
-import { DataDiff } from './diff'
+import { ReadableBlockstore } from '../storage'
+import { schema as common, cidForData } from '@atproto/common'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
-import MstWalker from './walker'
 import BlockMap from '../block-map'
 import CidSet from '../cid-set'
+import { MissingBlocksError } from '../error'
+import * as parse from '../parse'
 
 /**
  * This is an implementation of a Merkle Search Tree (MST)
@@ -41,18 +41,23 @@ import CidSet from '../cid-set'
  * Then the first will be described as `prefix: 0, key: 'bsky/posts/abcdefg'`,
  * and the second will be described as `prefix: 16, key: 'hi'.`
  */
-const subTreePointer = z.nullable(def.cid)
+const subTreePointer = z.nullable(common.cid)
 const treeEntry = z.object({
   p: z.number(), // prefix count of utf-8 chars that this key shares with the prev key
   k: z.string(), // the rest of the key outside the shared prefix
-  v: def.cid, // value
+  v: common.cid, // value
   t: subTreePointer, // next subtree (to the right of leaf)
 })
-export const nodeDataDef = z.object({
+const nodeData = z.object({
   l: subTreePointer, // left-most subtree
   e: z.array(treeEntry), //entries
 })
-export type NodeData = z.infer<typeof nodeDataDef>
+export type NodeData = z.infer<typeof nodeData>
+
+export const nodeDataDef = {
+  name: 'mst node',
+  schema: nodeData,
+}
 
 export type NodeEntry = MST | Leaf
 
@@ -64,7 +69,7 @@ export type MstOpts = {
 }
 
 export class MST implements DataStore {
-  storage: RepoStorage
+  storage: ReadableBlockstore
   fanout: Fanout
   entries: NodeEntry[] | null
   layer: number | null
@@ -72,7 +77,7 @@ export class MST implements DataStore {
   outdatedPointer = false
 
   constructor(
-    storage: RepoStorage,
+    storage: ReadableBlockstore,
     fanout: Fanout,
     pointer: CID,
     entries: NodeEntry[] | null,
@@ -86,7 +91,7 @@ export class MST implements DataStore {
   }
 
   static async create(
-    storage: RepoStorage,
+    storage: ReadableBlockstore,
     entries: NodeEntry[] = [],
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
@@ -96,7 +101,7 @@ export class MST implements DataStore {
   }
 
   static async fromData(
-    storage: RepoStorage,
+    storage: ReadableBlockstore,
     data: NodeData,
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
@@ -106,7 +111,11 @@ export class MST implements DataStore {
     return new MST(storage, fanout, pointer, entries, layer)
   }
 
-  static load(storage: RepoStorage, cid: CID, opts?: Partial<MstOpts>): MST {
+  static load(
+    storage: ReadableBlockstore,
+    cid: CID,
+    opts?: Partial<MstOpts>,
+  ): MST {
     const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     return new MST(storage, fanout, cid, null, layer)
   }
@@ -134,7 +143,7 @@ export class MST implements DataStore {
   async getEntries(): Promise<NodeEntry[]> {
     if (this.entries) return [...this.entries]
     if (this.pointer) {
-      const data = await this.storage.get(this.pointer, nodeDataDef)
+      const data = await this.storage.readObj(this.pointer, nodeDataDef)
       const firstLeaf = data.e[0]
       const layer =
         firstLeaf !== undefined
@@ -200,31 +209,17 @@ export class MST implements DataStore {
   // -------------------
 
   // Return the necessary blocks to persist the MST to repo storage
-  // If the topmost tree only has one entry and it's a subtree, we can eliminate the topmost tree
-  // However, lower trees with only one entry must be preserved
-  async blockDiff(): Promise<{ root: CID; blocks: BlockMap }> {
-    return this.blockDiffRecurse(true)
-  }
-
-  async blockDiffRecurse(
-    trimTop = false,
-  ): Promise<{ root: CID; blocks: BlockMap }> {
+  async getUnstoredBlocks(): Promise<{ root: CID; blocks: BlockMap }> {
     const blocks = new BlockMap()
     const pointer = await this.getPointer()
     const alreadyHas = await this.storage.has(pointer)
     if (alreadyHas) return { root: pointer, blocks }
     const entries = await this.getEntries()
-    if (entries.length === 1 && trimTop) {
-      const node = entries[0]
-      if (node.isTree()) {
-        return node.blockDiffRecurse(true)
-      }
-    }
     const data = util.serializeNodeData(entries)
     await blocks.add(data)
     for (const entry of entries) {
       if (entry.isTree()) {
-        const subtree = await entry.blockDiffRecurse(false)
+        const subtree = await entry.getUnstoredBlocks()
         blocks.addMap(subtree.blocks)
       }
     }
@@ -335,6 +330,11 @@ export class MST implements DataStore {
 
   // Deletes the value at the given key
   async delete(key: string): Promise<MST> {
+    const altered = await this.deleteRecurse(key)
+    return altered.trimTop()
+  }
+
+  async deleteRecurse(key: string): Promise<MST> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
     // if found, remove it on this level
@@ -355,7 +355,7 @@ export class MST implements DataStore {
     // else recurse down to find it
     const prev = await this.atIndex(index - 1)
     if (prev?.isTree()) {
-      const subtree = await prev.delete(key)
+      const subtree = await prev.deleteRecurse(key)
       const subTreeEntries = await subtree.getEntries()
       if (subTreeEntries.length === 0) {
         return this.removeEntry(index - 1)
@@ -365,114 +365,6 @@ export class MST implements DataStore {
     } else {
       throw new Error(`Could not find a record with key: ${key}`)
     }
-  }
-
-  // Walk two MSTs to find the semantic changes
-  async diff(other: MST): Promise<DataDiff> {
-    await this.getPointer()
-    await other.getPointer()
-    const diff = new DataDiff()
-
-    const leftWalker = new MstWalker(this)
-    const rightWalker = new MstWalker(other)
-    while (!leftWalker.status.done || !rightWalker.status.done) {
-      // if one walker is finished, continue walking the other & logging all nodes
-      if (leftWalker.status.done && !rightWalker.status.done) {
-        const node = rightWalker.status.curr
-        if (node.isLeaf()) {
-          diff.recordAdd(node.key, node.value)
-        } else {
-          diff.recordNewCid(node.pointer)
-        }
-        await rightWalker.advance()
-        continue
-      } else if (!leftWalker.status.done && rightWalker.status.done) {
-        const node = leftWalker.status.curr
-        if (node.isLeaf()) {
-          diff.recordDelete(node.key, node.value)
-        }
-        await leftWalker.advance()
-        continue
-      }
-      if (leftWalker.status.done || rightWalker.status.done) break
-      const left = leftWalker.status.curr
-      const right = rightWalker.status.curr
-      if (left === null || right === null) break
-
-      // if both pointers are leaves, record an update & advance both or record the lowest key and advance that pointer
-      if (left.isLeaf() && right.isLeaf()) {
-        if (left.key === right.key) {
-          if (!left.value.equals(right.value)) {
-            diff.recordUpdate(left.key, left.value, right.value)
-          }
-          await leftWalker.advance()
-          await rightWalker.advance()
-        } else if (left.key < right.key) {
-          diff.recordDelete(left.key, left.value)
-          await leftWalker.advance()
-        } else {
-          diff.recordAdd(right.key, right.value)
-          await rightWalker.advance()
-        }
-        continue
-      }
-
-      // next, ensure that we're on the same layer
-      // if one walker is at a higher layer than the other, we need to do one of two things
-      // if the higher walker is pointed at a tree, step into that tree to try to catch up with the lower
-      // if the higher walker is pointed at a leaf, then advance the lower walker to try to catch up the higher
-      if (leftWalker.layer() > rightWalker.layer()) {
-        if (left.isLeaf()) {
-          if (right.isLeaf()) {
-            diff.recordAdd(right.key, right.value)
-          } else {
-            diff.recordNewCid(right.pointer)
-          }
-          await rightWalker.advance()
-        } else {
-          await leftWalker.stepInto()
-        }
-        continue
-      } else if (leftWalker.layer() < rightWalker.layer()) {
-        if (right.isLeaf()) {
-          if (left.isLeaf()) {
-            diff.recordDelete(left.key, left.value)
-          }
-          await leftWalker.advance()
-        } else {
-          diff.recordNewCid(right.pointer)
-          await rightWalker.stepInto()
-        }
-        continue
-      }
-
-      // if we're on the same level, and both pointers are trees, do a comparison
-      // if they're the same, step over. if they're different, step in to find the subdiff
-      if (left.isTree() && right.isTree()) {
-        if (left.pointer.equals(right.pointer)) {
-          await leftWalker.stepOver()
-          await rightWalker.stepOver()
-        } else {
-          diff.recordNewCid(right.pointer)
-          await leftWalker.stepInto()
-          await rightWalker.stepInto()
-        }
-        continue
-      }
-
-      // finally, if one pointer is a tree and the other is a leaf, simply step into the tree
-      if (left.isLeaf() && right.isTree()) {
-        await diff.recordNewCid(right.pointer)
-        await rightWalker.stepInto()
-        continue
-      } else if (left.isTree() && right.isLeaf()) {
-        await leftWalker.stepInto()
-        continue
-      }
-
-      throw new Error('Unidentifiable case in diff walk')
-    }
-    return diff
   }
 
   // Simple Operations
@@ -547,6 +439,16 @@ export class MST implements DataStore {
     if (right) update.push(right)
     update.push(...(await this.slice(index + 1)))
     return this.newTree(update)
+  }
+
+  // if the topmost node in the tree only points to another tree, trim the top and return the subtree
+  async trimTop(): Promise<MST> {
+    const entries = await this.getEntries()
+    if (entries.length === 1 && entries[0].isTree()) {
+      return entries[0].trimTop()
+    } else {
+      return this
+    }
   }
 
   // Subtree & Splits
@@ -666,7 +568,11 @@ export class MST implements DataStore {
     }
   }
 
-  async list(count: number, after?: string, before?: string): Promise<Leaf[]> {
+  async list(
+    count = Number.MAX_SAFE_INTEGER,
+    after?: string,
+    before?: string,
+  ): Promise<Leaf[]> {
     const vals: Leaf[] = []
     for await (const leaf of this.walkLeavesFrom(after || '')) {
       if (leaf.key === after) continue
@@ -766,13 +672,45 @@ export class MST implements DataStore {
   // Sync Protocol
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
-    for await (const entry of this.walk()) {
-      if (entry.isTree()) {
-        const pointer = await entry.getPointer()
-        await this.storage.addToCar(car, pointer)
+    const entries = await this.getEntries()
+    const leaves = new CidSet()
+    let toFetch = new CidSet()
+    toFetch.add(await this.getPointer())
+    for (const entry of entries) {
+      if (entry.isLeaf()) {
+        leaves.add(entry.value)
       } else {
-        await this.storage.addToCar(car, entry.value)
+        toFetch.add(await entry.getPointer())
       }
+    }
+    while (toFetch.size() > 0) {
+      const nextLayer = new CidSet()
+      const fetched = await this.storage.getBlocks(toFetch.toList())
+      if (fetched.missing.length > 0) {
+        throw new MissingBlocksError('mst node', fetched.missing)
+      }
+      for (const cid of toFetch.toList()) {
+        const found = await parse.getAndParse(fetched.blocks, cid, nodeDataDef)
+        await car.put({ cid, bytes: found.bytes })
+        const entries = await util.deserializeNodeData(this.storage, found.obj)
+
+        for (const entry of entries) {
+          if (entry.isLeaf()) {
+            leaves.add(entry.value)
+          } else {
+            nextLayer.add(await entry.getPointer())
+          }
+        }
+      }
+      toFetch = nextLayer
+    }
+    const leafData = await this.storage.getBlocks(leaves.toList())
+    if (leafData.missing.length > 0) {
+      throw new MissingBlocksError('mst leaf', leafData.missing)
+    }
+
+    for (const leaf of leafData.blocks.entries()) {
+      await car.put(leaf)
     }
   }
 

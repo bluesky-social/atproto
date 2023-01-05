@@ -9,7 +9,6 @@
 ## Libraries
 
 - [API](./api): A library for communicating with ATP servers.
-- [Auth](./auth): ATP's core permissioning library (based on UCANs).
 - [Common](./common): A library containing code which is shared between ATP packages.
 - [Crypto](./crypto): ATP's common cryptographic operations.
 - [DID Resolver](./did-resolver): A library for resolving ATP's Decentralized ID methods.

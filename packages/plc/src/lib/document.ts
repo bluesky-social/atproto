@@ -152,7 +152,7 @@ export const assureValidSig = async (
   const dataBytes = new Uint8Array(cbor.encode(opData))
   let isValid = true
   for (const did of allowedDids) {
-    isValid = await crypto.verifyDidSig(did, dataBytes, sigBytes)
+    isValid = await crypto.verifySignature(did, dataBytes, sigBytes)
     if (isValid) return
   }
   throw new ServerError(400, `Invalid signature on op: ${JSON.stringify(op)}`)

@@ -148,8 +148,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // Setup repo root
-      const authStore = ctx.getAuthstore(did)
-      await repoTxn.createRepo(did, authStore, [write], now)
+      await repoTxn.createRepo(did, [write], now)
       await repoTxn.indexWrites([write], now)
 
       const declarationCid = await cidForData(declaration)
