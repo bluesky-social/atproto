@@ -73,6 +73,22 @@ export default function (server: Server, ctx: AppContext) {
     }
   })
 
+  server.com.atproto.sync.getRecord(async ({ params }) => {
+    const { did, collection, rkey } = params
+    const storage = new SqlRepoStorage(ctx.db, did)
+    const commit = params.commit
+      ? CID.parse(params.commit)
+      : await storage.getHead()
+    if (!commit) {
+      throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+    }
+    const proof = await repo.getRecords(storage, commit, [{ collection, rkey }])
+    return {
+      encoding: 'application/cbor',
+      body: Buffer.from(proof),
+    }
+  })
+
   server.com.atproto.sync.updateRepo(async () => {
     throw new InvalidRequestError('Not implemented')
   })

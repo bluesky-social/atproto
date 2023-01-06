@@ -1,4 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { TID } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
 import * as repo from '@atproto/repo'
@@ -147,6 +148,59 @@ describe('repo sync', () => {
     expect(loaded.contents).toEqual(repoData)
     const loadedRepo = await repo.Repo.load(checkoutStorage, loaded.root)
     expect(await loadedRepo.getContents()).toEqual(repoData)
+  })
+
+  it('sync a record proof', async () => {
+    const collection = Object.keys(repoData)[0]
+    const rkey = Object.keys(repoData[collection])[0]
+    const car = await client.com.atproto.sync.getRecord({
+      did,
+      collection,
+      rkey,
+    })
+    const records = await repo.verifyRecords(
+      did,
+      new Uint8Array(car.data),
+      didResolver,
+    )
+    const claim = {
+      collection,
+      rkey,
+      record: repoData[collection][rkey],
+    }
+    expect(records.length).toBe(1)
+    expect(records[0].record).toEqual(claim.record)
+    const result = await repo.verifyProofs(
+      did,
+      new Uint8Array(car.data),
+      [claim],
+      didResolver,
+    )
+    expect(result.verified.length).toBe(1)
+    expect(result.unverified.length).toBe(0)
+  })
+
+  it('sync a proof of non-existene', async () => {
+    const collection = Object.keys(repoData)[0]
+    const rkey = TID.nextStr() // rkey that doesn't exist
+    const car = await client.com.atproto.sync.getRecord({
+      did,
+      collection,
+      rkey,
+    })
+    const claim = {
+      collection,
+      rkey,
+      record: null,
+    }
+    const result = await repo.verifyProofs(
+      did,
+      new Uint8Array(car.data),
+      [claim],
+      didResolver,
+    )
+    expect(result.verified.length).toBe(1)
+    expect(result.unverified.length).toBe(0)
   })
 })
 

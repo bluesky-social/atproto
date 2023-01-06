@@ -231,7 +231,7 @@ export const verifyRecords = async (
       records.push({
         collection,
         rkey,
-        record,
+        record: record.obj,
       })
     }
   }
