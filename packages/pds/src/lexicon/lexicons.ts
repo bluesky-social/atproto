@@ -195,7 +195,7 @@ export const schemaDict = {
           'reason',
           'createdBy',
           'createdAt',
-          'resolvedReports',
+          'resolvedReportIds',
         ],
         properties: {
           id: {
@@ -225,11 +225,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.moderationAction#reversal',
           },
-          resolvedReports: {
+          resolvedReportIds: {
             type: 'array',
             items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.moderationAction#resolvedReport',
+              type: 'integer',
             },
           },
         },
@@ -249,15 +248,6 @@ export const schemaDict = {
           },
         },
       },
-      resolvedReport: {
-        type: 'object',
-        required: ['id'],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-        },
-      },
       takedown: {
         type: 'token',
         description:
@@ -272,6 +262,304 @@ export const schemaDict = {
         type: 'token',
         description:
           'Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules.',
+      },
+    },
+  },
+  ComAtprotoAdminModerationReport: {
+    lexicon: 1,
+    id: 'com.atproto.admin.moderationReport',
+    defs: {
+      view: {
+        type: 'object',
+        required: [
+          'id',
+          'reasonType',
+          'subject',
+          'reportedByDid',
+          'createdAt',
+          'resolvedByActionIds',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          reasonType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.report.reasonType',
+          },
+          reason: {
+            type: 'string',
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.repo.repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          reportedByDid: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+          resolvedByActionIds: {
+            type: 'array',
+            items: {
+              type: 'integer',
+            },
+          },
+        },
+      },
+      viewDetail: {
+        type: 'object',
+        required: [
+          'id',
+          'reasonType',
+          'subject',
+          'reportedByDid',
+          'createdAt',
+          'resolvedByActions',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          reasonType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.report.reasonType',
+          },
+          reason: {
+            type: 'string',
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.repo#view',
+              'lex:com.atproto.admin.record#view',
+            ],
+          },
+          reportedByDid: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+          resolvedByActions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.moderationAction#view',
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminRecord: {
+    lexicon: 1,
+    id: 'com.atproto.admin.record',
+    defs: {
+      view: {
+        type: 'object',
+        required: ['uri', 'cid', 'value', 'indexedAt', 'moderation', 'repo'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          value: {
+            type: 'unknown',
+          },
+          indexedAt: {
+            type: 'string',
+          },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.record#moderation',
+          },
+          repo: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.repo#view',
+          },
+        },
+      },
+      viewDetail: {
+        type: 'object',
+        required: ['uri', 'cid', 'value', 'indexedAt', 'moderation', 'repo'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          value: {
+            type: 'unknown',
+          },
+          indexedAt: {
+            type: 'string',
+          },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.record#moderationDetail',
+          },
+          repo: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.repo#view',
+          },
+        },
+      },
+      moderation: {
+        type: 'object',
+        required: [],
+        properties: {
+          takedownId: {
+            type: 'integer',
+          },
+        },
+      },
+      moderationDetail: {
+        type: 'object',
+        required: [],
+        properties: {
+          actions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.moderationAction#view',
+            },
+          },
+          reports: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.moderationReport#view',
+            },
+          },
+          takedownId: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminRepo: {
+    lexicon: 1,
+    id: 'com.atproto.admin.repo',
+    defs: {
+      view: {
+        type: 'object',
+        required: [
+          'did',
+          'handle',
+          'relatedRecords',
+          'indexedAt',
+          'moderation',
+        ],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+          },
+          account: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.repo#account',
+          },
+          relatedRecords: {
+            type: 'array',
+            items: {
+              type: 'unknown',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+          },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.repo#moderation',
+          },
+        },
+      },
+      viewDetail: {
+        type: 'object',
+        required: [
+          'did',
+          'handle',
+          'relatedRecords',
+          'indexedAt',
+          'moderation',
+        ],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+          },
+          account: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.repo#account',
+          },
+          relatedRecords: {
+            type: 'array',
+            items: {
+              type: 'unknown',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+          },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.repo#moderationDetail',
+          },
+        },
+      },
+      account: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: {
+            type: 'string',
+          },
+        },
+      },
+      moderation: {
+        type: 'object',
+        required: [],
+        properties: {
+          takedownId: {
+            type: 'integer',
+          },
+        },
+      },
+      moderationDetail: {
+        type: 'object',
+        required: [],
+        properties: {
+          actions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.moderationAction#view',
+            },
+          },
+          reports: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.moderationReport#view',
+            },
+          },
+          takedownId: {
+            type: 'integer',
+          },
+        },
       },
     },
   },
@@ -343,6 +631,52 @@ export const schemaDict = {
           schema: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.moderationAction#view',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminSearchRepos: {
+    lexicon: 1,
+    id: 'com.atproto.admin.searchRepos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Find repositories based on a search term.',
+        parameters: {
+          type: 'params',
+          properties: {
+            term: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.repo#view',
+                },
+              },
+            },
           },
         },
       },
@@ -3508,10 +3842,14 @@ export const ids = {
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
   ComAtprotoAdminModerationAction: 'com.atproto.admin.moderationAction',
+  ComAtprotoAdminModerationReport: 'com.atproto.admin.moderationReport',
+  ComAtprotoAdminRecord: 'com.atproto.admin.record',
+  ComAtprotoAdminRepo: 'com.atproto.admin.repo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
     'com.atproto.admin.reverseModerationAction',
+  ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoBlobUpload: 'com.atproto.blob.upload',
   ComAtprotoHandleResolve: 'com.atproto.handle.resolve',

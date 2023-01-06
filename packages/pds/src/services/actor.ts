@@ -1,12 +1,16 @@
+import { sql } from 'kysely'
 import * as common from '@atproto/common'
 import { dbLogger as log } from '../logger'
 import Database from '../db'
 import * as scrypt from '../db/scrypt'
 import { User } from '../db/tables/user'
 import { DidHandle } from '../db/tables/did-handle'
+import { RepoRoot } from '../db/tables/repo-root'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
 import { APP_BSKY_GRAPH } from '../lexicon'
 import { notSoftDeletedClause } from '../db/util'
+import { getUserSearchQueryPg, getUserSearchQuerySqlite } from './util/search'
+import { paginate, TimeCidKeyset } from '../db/pagination'
 
 export class ActorService {
   constructor(public db: Database) {}
@@ -192,6 +196,63 @@ export class ActorService {
       .where('mutedByDid', '=', mutedByDid)
       .execute()
   }
+
+  async search(opts: {
+    term: string
+    limit: number
+    before?: string
+    includeSoftDeleted?: boolean
+  }): Promise<(RepoRoot & DidHandle & { distance: number })[]> {
+    const builder =
+      this.db.dialect === 'pg'
+        ? getUserSearchQueryPg(this.db, opts)
+            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+            .selectAll('did_handle')
+            .selectAll('repo_root')
+            .select('results.distance as distance')
+        : getUserSearchQuerySqlite(this.db, opts)
+            .leftJoin('profile', 'profile.creator', 'did_handle.did') // @TODO leaky, for getUserSearchQuerySqlite()
+            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+            .selectAll('did_handle')
+            .selectAll('repo_root')
+            .select(sql<number>`0`.as('distance'))
+    return await builder.execute()
+  }
+
+  async list(opts: {
+    limit: number
+    before?: string
+    includeSoftDeleted?: boolean
+  }): Promise<(RepoRoot & DidHandle)[]> {
+    const { limit, before, includeSoftDeleted } = opts
+    const { ref } = this.db.db.dynamic
+
+    const builder = this.db.db
+      .selectFrom('repo_root')
+      .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('repo_root'))),
+      )
+      .selectAll('did_handle')
+      .selectAll('repo_root')
+
+    const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
+
+    return await paginate(builder, {
+      limit,
+      before,
+      keyset,
+    }).execute()
+  }
 }
 
 export class UserAlreadyExistsError extends Error {}
+
+export class ListKeyset extends TimeCidKeyset<{
+  indexedAt: string
+  handle: string // handles are treated identically to cids in TimeCidKeyset
+}> {
+  labelResult(result: { indexedAt: string; handle: string }) {
+    return { primary: result.indexedAt, secondary: result.handle }
+  }
+}

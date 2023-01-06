@@ -9,7 +9,7 @@ import {
   getUserSearchQueryPg,
   getUserSearchQuerySqlite,
   SearchKeyset,
-} from '../util/search'
+} from '../../../../services/util/search'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.search({

@@ -5,23 +5,24 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as ComAtprotoAdminModerationAction from './moderationAction'
+import * as ComAtprotoAdminRepo from './repo'
 
-export interface QueryParams {}
+export interface QueryParams {
+  term?: string
+  limit?: number
+  before?: string
+}
 
-export interface InputSchema {
-  actionId: number
-  reportIds: number[]
-  createdBy: string
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  cursor?: string
+  repos: ComAtprotoAdminRepo.View[]
   [k: string]: unknown
 }
 
-export type OutputSchema = ComAtprotoAdminModerationAction.View
-
 export interface CallOptions {
   headers?: Headers
-  qp?: QueryParams
-  encoding: 'application/json'
 }
 
 export interface Response {

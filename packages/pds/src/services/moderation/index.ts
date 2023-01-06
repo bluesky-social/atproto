@@ -3,13 +3,14 @@ import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import Database from '../db'
-import { MessageQueue } from '../event-stream/types'
-import { ModerationAction, ModerationReport } from '../db/tables/moderation'
-import { View as ModerationActionView } from '../lexicon/types/com/atproto/admin/moderationAction'
-import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/report/create'
-import { RepoService } from './repo'
-import { RecordService } from './record'
+import Database from '../../db'
+import { MessageQueue } from '../../event-stream/types'
+import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { View as ModerationActionView } from '../../lexicon/types/com/atproto/admin/moderationAction'
+import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/report/create'
+import { RepoService } from '../repo'
+import { RecordService } from '../record'
+import { ModerationViews } from './views'
 
 export class ModerationService {
   constructor(
@@ -21,6 +22,8 @@ export class ModerationService {
   static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
     return (db: Database) => new ModerationService(db, messageQueue, blobstore)
   }
+
+  views = new ModerationViews(this.db)
 
   services = {
     repo: RepoService.creator(this.messageQueue, this.blobstore),
@@ -235,7 +238,7 @@ export class ModerationService {
               reason: modAction.reversedReason,
             }
           : undefined,
-      resolvedReports: resolutions,
+      resolvedReportIds: resolutions.map((r) => r.id),
     }
   }
 

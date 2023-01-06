@@ -4,7 +4,7 @@
   "defs": {
     "view": {
       "type": "object",
-      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReports"],
+      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReportIds"],
       "properties": {
         "id": {"type": "integer"},
         "action": {"type": "string", "knownValues": ["com.atproto.admin.moderationAction#takedown"]},
@@ -19,7 +19,7 @@
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"},
         "reversal": {"type": "ref", "ref": "#reversal"},
-        "resolvedReports": {"type": "array", "items": {"type" :"ref", "ref": "#resolvedReport"}}
+        "resolvedReportIds": {"type": "array", "items": {"type": "integer"}}
       }
     },
     "reversal": {
@@ -29,13 +29,6 @@
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"}
-      }
-    },
-    "resolvedReport": {
-      "type": "object",
-      "required": ["id"],
-      "properties": {
-        "id": {"type": "integer"}
       }
     },
     "takedown": {
