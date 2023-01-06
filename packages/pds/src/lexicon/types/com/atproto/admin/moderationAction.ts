@@ -3,10 +3,17 @@
  */
 import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+import * as ComAtprotoAdminRepo from './repo'
+import * as ComAtprotoAdminRecord from './record'
+import * as ComAtprotoAdminModerationReport from './moderationReport'
 
 export interface View {
   id: number
-  action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
+  action:
+    | 'com.atproto.admin.moderationAction#takedown'
+    | 'com.atproto.admin.moderationAction#flag'
+    | 'com.atproto.admin.moderationAction#acknowledge'
+    | (string & {})
   subject:
     | ComAtprotoRepoRepoRef.Main
     | ComAtprotoRepoStrongRef.Main
@@ -16,6 +23,25 @@ export interface View {
   createdAt: string
   reversal?: Reversal
   resolvedReportIds: number[]
+  [k: string]: unknown
+}
+
+export interface ViewDetail {
+  id: number
+  action:
+    | 'com.atproto.admin.moderationAction#takedown'
+    | 'com.atproto.admin.moderationAction#flag'
+    | 'com.atproto.admin.moderationAction#acknowledge'
+    | (string & {})
+  subject:
+    | ComAtprotoAdminRepo.View
+    | ComAtprotoAdminRecord.View
+    | { $type: string; [k: string]: unknown }
+  reason: string
+  createdBy: string
+  createdAt: string
+  reversal?: Reversal
+  resolvedReports: ComAtprotoAdminModerationReport.View[]
   [k: string]: unknown
 }
 

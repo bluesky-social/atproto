@@ -21,7 +21,7 @@ export class ModerationService {
     return (db: Database) => new ModerationService(db, messageQueue, blobstore)
   }
 
-  views = new ModerationViews(this.db)
+  views = new ModerationViews(this.db, this.messageQueue)
 
   services = {
     repo: RepoService.creator(this.messageQueue, this.blobstore),
