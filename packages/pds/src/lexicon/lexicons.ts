@@ -478,7 +478,7 @@ export const schemaDict = {
       },
       moderationDetail: {
         type: 'object',
-        required: [],
+        required: ['actions', 'reports'],
         properties: {
           actions: {
             type: 'array',
@@ -595,7 +595,7 @@ export const schemaDict = {
       },
       moderationDetail: {
         type: 'object',
-        required: [],
+        required: ['actions', 'reports'],
         properties: {
           actions: {
             type: 'array',
