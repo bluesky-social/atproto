@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     const handle = params.handle
 
     let did = ''
-    if (!handle || handle === ctx.cfg.hostname) {
+    if (!handle || handle === ctx.cfg.publicHostname) {
       // self
       did = ctx.cfg.serverDid
     } else {

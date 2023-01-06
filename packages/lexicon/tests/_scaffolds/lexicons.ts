@@ -376,4 +376,21 @@ export default [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'com.example.datetime',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            datetime: {
+              type: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
 ]

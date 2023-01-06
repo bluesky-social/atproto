@@ -20,7 +20,7 @@ export function params(
   // required
   if (Array.isArray(def.required)) {
     for (const key of def.required) {
-      if (!(key in (value as Record<string, unknown>))) {
+      if (typeof (value as Record<string, unknown>)[key] === 'undefined') {
         return {
           success: false,
           error: new ValidationError(`${path} must have the property "${key}"`),

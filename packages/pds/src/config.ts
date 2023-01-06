@@ -210,7 +210,7 @@ export class ServerConfig {
   }
 
   get serverDid() {
-    return this.cfg.recoveryKey
+    return this.cfg.serverDid
   }
 
   get recoveryKey() {
