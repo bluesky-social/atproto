@@ -2,7 +2,7 @@
 
 exports[`pds thread views blocks ancestors by actor takedown 1`] = `
 Object {
-  "$type": "app.bksy.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.getPostThread#threadViewPost",
   "parent": Object {
     "$type": "app.bsky.feed.getPostThread#notFoundPost",
     "notFound": true,
@@ -54,7 +54,7 @@ Object {
 
 exports[`pds thread views blocks ancestors by record takedown 1`] = `
 Object {
-  "$type": "app.bksy.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.getPostThread#threadViewPost",
   "parent": Object {
     "$type": "app.bsky.feed.getPostThread#notFoundPost",
     "notFound": true,
@@ -106,7 +106,7 @@ Object {
 
 exports[`pds thread views blocks replies by actor takedown 1`] = `
 Object {
-  "$type": "app.bksy.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.getPostThread#threadViewPost",
   "post": Object {
     "author": Object {
       "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -139,7 +139,7 @@ Object {
   },
   "replies": Array [
     Object {
-      "$type": "app.bksy.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.getPostThread#threadViewPost",
       "post": Object {
         "author": Object {
           "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -202,7 +202,7 @@ Object {
       },
       "replies": Array [
         Object {
-          "$type": "app.bksy.feed.getPostThread#threadViewPost",
+          "$type": "app.bsky.feed.getPostThread#threadViewPost",
           "post": Object {
             "author": Object {
               "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -253,7 +253,7 @@ Object {
 
 exports[`pds thread views blocks replies by record takedown 1`] = `
 Object {
-  "$type": "app.bksy.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.getPostThread#threadViewPost",
   "post": Object {
     "author": Object {
       "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -286,7 +286,7 @@ Object {
   },
   "replies": Array [
     Object {
-      "$type": "app.bksy.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.getPostThread#threadViewPost",
       "post": Object {
         "author": Object {
           "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
