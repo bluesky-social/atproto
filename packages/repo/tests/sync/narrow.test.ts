@@ -1,7 +1,7 @@
 import { TID } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
-import { RecordWriteOp, Repo, RepoContents, WriteOpAction } from '../../src'
+import { RecordClaim, Repo, RepoContents } from '../../src'
 import { MemoryBlockstore } from '../../src/storage'
 import * as verify from '../../src/verify'
 import * as sync from '../../src/sync'
@@ -24,86 +24,117 @@ describe('Narrow Sync', () => {
     repoData = filled.data
   })
 
-  const getProofs = async (ops: RecordWriteOp[]) => {
-    const paths = util.pathsForOps(ops)
-    return sync.getRecords(storage, repo.cid, paths)
+  const getProofs = async (claims: RecordClaim[]) => {
+    return sync.getRecords(storage, repo.cid, claims)
   }
 
-  const doVerify = (proofs: Uint8Array, ops: RecordWriteOp[]) => {
-    return verify.verifyRecords(repo.did, proofs, ops, didResolver)
+  const doVerify = (proofs: Uint8Array, claims: RecordClaim[]) => {
+    return verify.verifyProofs(repo.did, proofs, claims, didResolver)
   }
 
   it('verifies valid records', async () => {
-    const ops = util.contentsToCreateOps(repoData)
-    const proofs = await getProofs(ops)
-    const results = await doVerify(proofs, ops)
-    expect(results.verified).toEqual(ops)
+    const claims = util.contentsToClaims(repoData)
+    const proofs = await getProofs(claims)
+    const results = await doVerify(proofs, claims)
+    expect(results.verified).toEqual(claims)
     expect(results.unverified.length).toBe(0)
   })
 
   it('verifies record nonexistence', async () => {
-    const ops: RecordWriteOp[] = [
+    const claims: RecordClaim[] = [
       {
-        action: WriteOpAction.Delete,
         collection: util.testCollections[0],
         rkey: TID.nextStr(), // does not exist
+        record: null,
       },
     ]
-    const proofs = await getProofs(ops)
-    const results = await doVerify(proofs, ops)
-    expect(results.verified).toEqual(ops)
+    const proofs = await getProofs(claims)
+    const results = await doVerify(proofs, claims)
+    expect(results.verified).toEqual(claims)
     expect(results.unverified.length).toBe(0)
   })
 
   it('does not verify a record that doesnt exist', async () => {
-    const realOps = util.contentsToCreateOps(repoData)
-    const ops: RecordWriteOp[] = [
+    const realClaims = util.contentsToClaims(repoData)
+    const claims: RecordClaim[] = [
       {
-        ...realOps[0],
+        ...realClaims[0],
         rkey: TID.nextStr(),
       },
     ]
-    const proofs = await getProofs(ops)
-    const results = await doVerify(proofs, ops)
+    const proofs = await getProofs(claims)
+    const results = await doVerify(proofs, claims)
     expect(results.verified.length).toBe(0)
-    expect(results.unverified).toEqual(ops)
+    expect(results.unverified).toEqual(claims)
   })
 
   it('does not verify an invalid record at a real path', async () => {
-    const realOps = util.contentsToCreateOps(repoData)
-    const ops: RecordWriteOp[] = [
+    const realClaims = util.contentsToClaims(repoData)
+    const claims: RecordClaim[] = [
       {
-        ...realOps[0],
+        ...realClaims[0],
         record: util.generateObject(),
       },
     ]
-    const proofs = await getProofs(ops)
-    const results = await doVerify(proofs, ops)
+    const proofs = await getProofs(claims)
+    const results = await doVerify(proofs, claims)
     expect(results.verified.length).toBe(0)
-    expect(results.unverified).toEqual(ops)
+    expect(results.unverified).toEqual(claims)
   })
 
   it('does not verify a delete where the record does exist', async () => {
-    const realOps = util.contentsToCreateOps(repoData)
-    const ops: RecordWriteOp[] = [
+    const realClaims = util.contentsToClaims(repoData)
+    const claims: RecordClaim[] = [
       {
-        action: WriteOpAction.Delete,
-        collection: realOps[0].collection,
-        rkey: realOps[0].rkey,
+        collection: realClaims[0].collection,
+        rkey: realClaims[0].rkey,
+        record: null,
       },
     ]
-    const proofs = await getProofs(ops)
-    const results = await doVerify(proofs, ops)
+    const proofs = await getProofs(claims)
+    const results = await doVerify(proofs, claims)
     expect(results.verified.length).toBe(0)
-    expect(results.unverified).toEqual(ops)
+    expect(results.unverified).toEqual(claims)
   })
 
-  it('throws on a bad signature', async () => {
+  it('can determine record proofs from car file', async () => {
+    const possible = util.contentsToClaims(repoData)
+    const claims = [
+      //random sampling of records
+      possible[0],
+      possible[4],
+      possible[5],
+      possible[8],
+    ]
+    const proofs = await getProofs(claims)
+    const records = await verify.verifyRecords(repo.did, proofs, didResolver)
+    for (const record of records) {
+      const foundClaim = claims.find(
+        (claim) =>
+          claim.collection === record.collection && claim.rkey === record.rkey,
+      )
+      if (!foundClaim) {
+        throw new Error('Could not find record for claim')
+      }
+      expect(foundClaim.record).toEqual(
+        repoData[record.collection][record.rkey],
+      )
+    }
+  })
+
+  it('verifyRecords throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
-    const ops = util.contentsToCreateOps(repoData)
-    const paths = util.pathsForOps(ops)
-    const proofs = await sync.getRecords(storage, badRepo.cid, paths)
-    const fn = verify.verifyRecords(repo.did, proofs, ops, didResolver)
+    const claims = util.contentsToClaims(repoData)
+    const proofs = await sync.getRecords(storage, badRepo.cid, claims)
+    const fn = verify.verifyRecords(repo.did, proofs, didResolver)
+    await expect(fn).rejects.toThrow(verify.RepoVerificationError)
+  })
+
+  it('verifyProofs throws on a bad signature', async () => {
+    const badRepo = await util.addBadCommit(repo, keypair)
+    const claims = util.contentsToClaims(repoData)
+    const proofs = await sync.getRecords(storage, badRepo.cid, claims)
+    const fn = verify.verifyProofs(repo.did, proofs, claims, didResolver)
     await expect(fn).rejects.toThrow(verify.RepoVerificationError)
   })
 })

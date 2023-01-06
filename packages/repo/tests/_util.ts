@@ -9,13 +9,13 @@ import {
   BlockMap,
   collapseWriteLog,
   CollectionContents,
-  RecordCreateOp,
   RecordWriteOp,
   RepoContents,
   RecordPath,
   RepoRoot,
   WriteLog,
   WriteOpAction,
+  RecordClaim,
 } from '../src'
 import { Keypair } from '@atproto/crypto'
 
@@ -211,21 +211,18 @@ export const verifyRepoDiff = async (
   }
 }
 
-export const contentsToCreateOps = (
-  contents: RepoContents,
-): RecordCreateOp[] => {
-  const ops: RecordCreateOp[] = []
+export const contentsToClaims = (contents: RepoContents): RecordClaim[] => {
+  const claims: RecordClaim[] = []
   for (const coll of Object.keys(contents)) {
     for (const rkey of Object.keys(contents[coll])) {
-      ops.push({
-        action: WriteOpAction.Create,
+      claims.push({
         collection: coll,
         rkey: rkey,
         record: contents[coll][rkey],
       })
     }
   }
-  return ops
+  return claims
 }
 
 export const pathsForOps = (ops: RecordWriteOp[]): RecordPath[] =>

@@ -8,7 +8,7 @@ import ReadableRepo from './readable-repo'
 import Repo from './repo'
 import CidSet from './cid-set'
 import * as util from './util'
-import { RecordWriteOp, RepoContents, WriteOpAction } from './types'
+import { RecordClaim, RepoContents } from './types'
 import { def } from './types'
 import { MST } from './mst'
 import { cidForCbor } from '@atproto/common'
@@ -155,12 +155,12 @@ export const verifyCommitPath = async (
   return updates
 }
 
-export const verifyRecords = async (
+export const verifyProofs = async (
   did: string,
   proofs: Uint8Array,
-  ops: RecordWriteOp[],
+  claims: RecordClaim[],
   didResolver: DidResolver,
-): Promise<{ verified: RecordWriteOp[]; unverified: RecordWriteOp[] }> => {
+): Promise<{ verified: RecordClaim[]; unverified: RecordClaim[] }> => {
   const car = await util.readCar(proofs)
   const blockstore = new MemoryBlockstore(car.blocks)
   const commit = await blockstore.readObj(car.root, def.commit)
@@ -176,27 +176,66 @@ export const verifyRecords = async (
   }
   const root = await blockstore.readObj(commit.root, def.repoRoot)
   const mst = MST.load(blockstore, root.data)
-  const verified: RecordWriteOp[] = []
-  const unverified: RecordWriteOp[] = []
-  for (const op of ops) {
-    const found = await mst.get(util.formatDataKey(op.collection, op.rkey))
+  const verified: RecordClaim[] = []
+  const unverified: RecordClaim[] = []
+  for (const claim of claims) {
+    const found = await mst.get(
+      util.formatDataKey(claim.collection, claim.rkey),
+    )
     const record = found ? await blockstore.readObj(found, def.record) : null
-    if (op.action === WriteOpAction.Delete) {
+    if (claim.record === null) {
       if (record === null) {
-        verified.push(op)
+        verified.push(claim)
       } else {
-        unverified.push(op)
+        unverified.push(claim)
       }
     } else {
-      const expected = await cidForCbor(op.record)
+      const expected = await cidForCbor(claim.record)
       if (expected.equals(found)) {
-        verified.push(op)
+        verified.push(claim)
       } else {
-        unverified.push(op)
+        unverified.push(claim)
       }
     }
   }
   return { verified, unverified }
+}
+
+export const verifyRecords = async (
+  did: string,
+  proofs: Uint8Array,
+  didResolver: DidResolver,
+): Promise<RecordClaim[]> => {
+  const car = await util.readCar(proofs)
+  const blockstore = new MemoryBlockstore(car.blocks)
+  const commit = await blockstore.readObj(car.root, def.commit)
+  const validSig = await didResolver.verifySignature(
+    did,
+    commit.root.bytes,
+    commit.sig,
+  )
+  if (!validSig) {
+    throw new RepoVerificationError(
+      `Invalid signature on commit: ${car.root.toString()}`,
+    )
+  }
+  const root = await blockstore.readObj(commit.root, def.repoRoot)
+  const mst = MST.load(blockstore, root.data)
+
+  const records: RecordClaim[] = []
+  const leaves = await mst.reachableLeaves()
+  for (const leaf of leaves) {
+    const { collection, rkey } = util.parseDataKey(leaf.key)
+    const record = await blockstore.attemptRead(leaf.value, def.record)
+    if (record) {
+      records.push({
+        collection,
+        rkey,
+        record,
+      })
+    }
+  }
+  return records
 }
 
 export class RepoVerificationError extends Error {}

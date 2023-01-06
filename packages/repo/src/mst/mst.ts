@@ -8,7 +8,7 @@ import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
 import BlockMap from '../block-map'
 import CidSet from '../cid-set'
-import { MissingBlocksError } from '../error'
+import { MissingBlockError, MissingBlocksError } from '../error'
 import * as parse from '../parse'
 
 /**
@@ -667,6 +667,40 @@ export class MST implements DataStore {
   async leafCount(): Promise<number> {
     const leaves = await this.leaves()
     return leaves.length
+  }
+
+  // Reachable tree traversal
+  // -------------------
+
+  // Walk reachable branches of tree & emit nodes, consumer can bail at any point by returning false
+  async *walkReachable(): AsyncIterable<NodeEntry> {
+    yield this
+    const entries = await this.getEntries()
+    for (const entry of entries) {
+      if (entry.isTree()) {
+        try {
+          for await (const e of entry.walk()) {
+            yield e
+          }
+        } catch (err) {
+          if (err instanceof MissingBlockError) {
+            continue
+          } else {
+            throw err
+          }
+        }
+      } else {
+        yield entry
+      }
+    }
+  }
+
+  async reachableLeaves(): Promise<Leaf[]> {
+    const leaves: Leaf[] = []
+    for await (const entry of this.walkReachable()) {
+      if (entry.isLeaf()) leaves.push(entry)
+    }
+    return leaves
   }
 
   // Sync Protocol

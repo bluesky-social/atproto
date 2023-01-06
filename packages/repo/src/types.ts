@@ -3,7 +3,6 @@ import { BlockWriter } from '@ipld/car/writer'
 import { schema as common, def as commonDef } from '@atproto/common'
 import { CID } from 'multiformats'
 import BlockMap from './block-map'
-import CidSet from './cid-set'
 
 // Repo nodes
 // ---------------
@@ -119,16 +118,23 @@ export type RepoUpdate = CommitData & {
   ops: RecordWriteOp[]
 }
 
-export type CollectionContents = Record<string, Record<string, unknown>>
+export type RepoRecord = Record<string, unknown>
+export type CollectionContents = Record<string, RepoRecord>
 export type RepoContents = Record<string, CollectionContents>
-
-// DataStores
-// ---------------
 
 export type RecordPath = {
   collection: string
   rkey: string
 }
+
+export type RecordClaim = {
+  collection: string
+  rkey: string
+  record: RepoRecord | null
+}
+
+// DataStores
+// ---------------
 
 export type DataValue = {
   key: string
