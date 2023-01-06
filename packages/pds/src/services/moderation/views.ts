@@ -17,7 +17,10 @@ import {
   View as ActionView,
   ViewDetail as ActionViewDetail,
 } from '../../lexicon/types/com/atproto/admin/moderationAction'
-import { View as ReportView } from '../../lexicon/types/com/atproto/admin/moderationReport'
+import {
+  View as ReportView,
+  ViewDetail as ReportViewDetail,
+} from '../../lexicon/types/com/atproto/admin/moderationReport'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/report/create'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { ActorService } from '../actor'
@@ -268,34 +271,10 @@ export class ModerationViews {
           .selectAll()
           .execute()
       : []
-    const resolvedReports = await this.report(reportResults)
-
-    let subject: ActionViewDetail['subject']
-    if (result.subjectType === 'com.atproto.repo.repoRef') {
-      const repoResult = await this.services
-        .actor(this.db)
-        .getUser(result.subjectDid, true)
-      if (!repoResult) {
-        throw new Error(`Action subject is missing: ${result.id}`)
-      }
-      subject = await this.repo(repoResult)
-      subject.$type = 'com.atproto.admin.repo#view'
-    } else if (
-      result.subjectType === 'com.atproto.repo.recordRef' &&
-      result.subjectUri !== null
-    ) {
-      const recordResult = await this.services
-        .record(this.db)
-        .getRecord(new AtUri(result.subjectUri), null, true)
-      if (!recordResult) {
-        throw new Error(`Action subject is missing: ${result.id}`)
-      }
-      subject = await this.record(recordResult)
-      subject.$type = 'com.atproto.admin.record#view'
-    } else {
-      throw new Error(`Bad subject data for moderation action: ${result.id}`)
-    }
-
+    const [subject, resolvedReports] = await Promise.all([
+      this.subject(result),
+      this.report(reportResults),
+    ])
     return {
       id: action.id,
       action: action.action,
@@ -376,6 +355,66 @@ export class ModerationViews {
             },
     }
   }
+
+  async reportDetail(result: ReportResult): Promise<ReportViewDetail> {
+    const report = await this.report(result)
+    const actionResults = report.resolvedByActionIds.length
+      ? await this.db.db
+          .selectFrom('moderation_action')
+          .where('id', 'in', report.resolvedByActionIds)
+          .orderBy('id', 'desc')
+          .selectAll()
+          .execute()
+      : []
+    const [subject, resolvedByActions] = await Promise.all([
+      this.subject(result),
+      this.action(actionResults),
+    ])
+    return {
+      id: report.id,
+      createdAt: report.createdAt,
+      reasonType: report.reasonType,
+      reason: report.reason ?? undefined,
+      reportedByDid: report.reportedByDid,
+      subject,
+      resolvedByActions,
+    }
+  }
+
+  // Partial view for subjects
+
+  async subject(result: SubjectResult): Promise<SubjectView> {
+    let subject: SubjectView
+    if (result.subjectType === 'com.atproto.repo.repoRef') {
+      const repoResult = await this.services
+        .actor(this.db)
+        .getUser(result.subjectDid, true)
+      if (!repoResult) {
+        throw new Error(
+          `Subject is missing: (${result.id}) ${result.subjectDid}`,
+        )
+      }
+      subject = await this.repo(repoResult)
+      subject.$type = 'com.atproto.admin.repo#view'
+    } else if (
+      result.subjectType === 'com.atproto.repo.recordRef' &&
+      result.subjectUri !== null
+    ) {
+      const recordResult = await this.services
+        .record(this.db)
+        .getRecord(new AtUri(result.subjectUri), null, true)
+      if (!recordResult) {
+        throw new Error(
+          `Subject is missing: (${result.id}) ${result.subjectUri}`,
+        )
+      }
+      subject = await this.record(recordResult)
+      subject.$type = 'com.atproto.admin.record#view'
+    } else {
+      throw new Error(`Bad subject data: (${result.id}) ${result.subjectType}`)
+    }
+    return subject
+  }
 }
 
 type RepoResult = DidHandle & RepoRoot
@@ -391,6 +430,13 @@ type RecordResult = {
   indexedAt: string
   takedownId: number | null
 }
+
+type SubjectResult = Pick<
+  ActionResult & ReportResult,
+  'id' | 'subjectType' | 'subjectDid' | 'subjectUri' | 'subjectCid'
+>
+
+type SubjectView = ActionViewDetail['subject'] & ReportViewDetail['subject']
 
 type ArrayEl<A> = A extends readonly (infer T)[] ? T : never
 

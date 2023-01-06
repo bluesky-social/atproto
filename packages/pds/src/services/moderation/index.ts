@@ -42,6 +42,20 @@ export class ModerationService {
     return action
   }
 
+  async getReport(id: number): Promise<ModerationReportRow | undefined> {
+    return await this.db.db
+      .selectFrom('moderation_report')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst()
+  }
+
+  async getReportOrThrow(id: number): Promise<ModerationReportRow> {
+    const report = await this.getReport(id)
+    if (!report) throw new InvalidRequestError('Report not found')
+    return report
+  }
+
   async logAction(info: {
     action: ModerationActionRow['action']
     subject: { did: string } | { uri: AtUri; cid?: CID }
@@ -258,7 +272,7 @@ export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
 
-type SubjectInfo =
+export type SubjectInfo =
   | {
       subjectType: 'com.atproto.repo.repoRef'
       subjectDid: string

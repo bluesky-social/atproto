@@ -7,6 +7,7 @@ import searchRepos from './searchRepos'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
 import getModerationAction from './getModerationAction'
+import getModerationReport from './getModerationReport'
 
 export default function (server: Server, ctx: AppContext) {
   resolveModerationReports(server, ctx)
@@ -16,4 +17,5 @@ export default function (server: Server, ctx: AppContext) {
   getRecord(server, ctx)
   getRepo(server, ctx)
   getModerationAction(server, ctx)
+  getModerationReport(server, ctx)
 }
