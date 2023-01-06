@@ -159,7 +159,13 @@ export class RecordService {
     uri: AtUri,
     cid: string | null,
     includeSoftDeleted = false,
-  ): Promise<{ uri: string; cid: string; value: object } | null> {
+  ): Promise<{
+    uri: string
+    cid: string
+    value: object
+    indexedAt: string
+    takedownId: number | null
+  } | null> {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
@@ -178,6 +184,8 @@ export class RecordService {
       uri: record.uri,
       cid: record.cid,
       value: common.ipldBytesToRecord(record.content),
+      indexedAt: record.indexedAt,
+      takedownId: record.takedownId,
     }
   }
 

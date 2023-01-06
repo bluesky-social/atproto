@@ -12,15 +12,16 @@ import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../../_util'
 import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
+import { AtUri } from '@atproto/uri'
 
-describe('pds admin get repo view', () => {
+describe('pds admin get record view', () => {
   let client: AtpServiceClient
   let close: CloseFn
   let sc: SeedClient
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'views_admin_get_repo',
+      dbPostgresSchema: 'views_admin_get_record',
     })
     close = server.close
     client = AtpApi.service(server.url)
@@ -36,16 +37,16 @@ describe('pds admin get repo view', () => {
     const acknowledge = await takeModerationAction({
       action: ACKNOWLEDGE,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
-        did: sc.dids.alice,
+        $type: 'com.atproto.repo.recordRef',
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
       },
     })
     await createReport({
       reportedByDid: sc.dids.bob,
       reasonType: SPAM,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
-        did: sc.dids.alice,
+        $type: 'com.atproto.repo.recordRef',
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
       },
     })
     await createReport({
@@ -53,34 +54,62 @@ describe('pds admin get repo view', () => {
       reasonType: OTHER,
       reason: 'defamation',
       subject: {
-        $type: 'com.atproto.repo.repoRef',
-        did: sc.dids.alice,
+        $type: 'com.atproto.repo.recordRef',
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
       },
     })
     await reverseModerationAction({ id: acknowledge.id })
     await takeModerationAction({
       action: TAKEDOWN,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
-        did: sc.dids.alice,
+        $type: 'com.atproto.repo.recordRef',
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
       },
     })
   })
 
-  it('gets a repo by did, even when taken down.', async () => {
-    const result = await client.com.atproto.admin.getRepo(
-      { did: sc.dids.alice },
+  it('gets a record by uri, even when taken down.', async () => {
+    const result = await client.com.atproto.admin.getRecord(
+      { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
       { headers: { authorization: adminAuth() } },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
 
-  it('fails when repo does not exist.', async () => {
-    const promise = client.com.atproto.admin.getRepo(
-      { did: 'did:plc:doesnotexist' },
+  it('gets a record by uri and cid.', async () => {
+    const result = await client.com.atproto.admin.getRecord(
+      {
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
+      },
       { headers: { authorization: adminAuth() } },
     )
-    await expect(promise).rejects.toThrow('Repo not found')
+    expect(forSnapshot(result.data)).toMatchSnapshot()
+  })
+
+  it('fails when record does not exist.', async () => {
+    const promise = client.com.atproto.admin.getRecord(
+      {
+        uri: AtUri.make(
+          sc.dids.alice,
+          'app.bsky.feed.post',
+          'badrkey',
+        ).toString(),
+      },
+      { headers: { authorization: adminAuth() } },
+    )
+    await expect(promise).rejects.toThrow('Record not found')
+  })
+
+  it('fails when record cid does not exist.', async () => {
+    const promise = client.com.atproto.admin.getRecord(
+      {
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][1].ref.cidStr, // Mismatching cid
+      },
+      { headers: { authorization: adminAuth() } },
+    )
+    await expect(promise).rejects.toThrow('Record not found')
   })
 
   async function takeModerationAction(opts: {

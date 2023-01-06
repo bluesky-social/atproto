@@ -1,5 +1,6 @@
 import { Selectable } from 'kysely'
 import { ipldBytesToRecord } from '@atproto/common'
+import { AtUri } from '@atproto/uri'
 import Database from '../../db'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
@@ -7,13 +8,19 @@ import {
   View as RepoView,
   ViewDetail as RepoViewDetail,
 } from '../../lexicon/types/com/atproto/admin/repo'
+import { ViewDetail as RecordViewDetail } from '../../lexicon/types/com/atproto/admin/record'
 import { View as ActionView } from '../../lexicon/types/com/atproto/admin/moderationAction'
 import { View as ReportView } from '../../lexicon/types/com/atproto/admin/moderationReport'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/report/create'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { ActorService } from '../actor'
 
 export class ModerationViews {
   constructor(private db: Database) {}
+
+  services = {
+    actor: ActorService.creator(),
+  }
 
   repo(result: RepoResult): Promise<RepoView>
   repo(result: RepoResult[]): Promise<RepoView[]>
@@ -105,6 +112,47 @@ export class ModerationViews {
       ...repo,
       moderation: {
         ...repo.moderation,
+        reports,
+        actions,
+      },
+    }
+  }
+
+  async recordDetail(result: RecordResult): Promise<RecordViewDetail> {
+    const uri = new AtUri(result.uri)
+    const [repoResult, reportResults, actionResults] = await Promise.all([
+      this.services.actor(this.db).getUser(uri.host, true),
+      this.db.db
+        .selectFrom('moderation_report')
+        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectUri', '=', result.uri)
+        .orderBy('createdAt', 'desc')
+        .orderBy('id', 'desc')
+        .selectAll()
+        .execute(),
+      this.db.db
+        .selectFrom('moderation_action')
+        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectUri', '=', result.uri)
+        .orderBy('createdAt', 'desc')
+        .orderBy('id', 'desc')
+        .selectAll()
+        .execute(),
+    ])
+    if (!repoResult) throw new Error(`Record repo is missing: ${result.uri}`)
+    const [repo, reports, actions] = await Promise.all([
+      this.repo(repoResult),
+      this.report(reportResults),
+      this.action(actionResults),
+    ])
+    return {
+      uri: result.uri,
+      cid: result.cid,
+      value: result.value,
+      indexedAt: result.indexedAt,
+      repo,
+      moderation: {
+        takedownId: result.takedownId ?? undefined,
         reports,
         actions,
       },
@@ -246,5 +294,13 @@ type RepoResult = DidHandle & RepoRoot
 type ActionResult = Selectable<ModerationAction>
 
 type ReportResult = Selectable<ModerationReport>
+
+type RecordResult = {
+  uri: string
+  cid: string
+  value: object
+  indexedAt: string
+  takedownId: number | null
+}
 
 type ArrayEl<A> = A extends readonly (infer T)[] ? T : never
