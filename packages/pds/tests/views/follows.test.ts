@@ -1,10 +1,12 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import {
   runTestServer,
   forSnapshot,
   CloseFn,
   constantDate,
   paginateAll,
+  adminAuth,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
@@ -132,6 +134,44 @@ describe('pds follow views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('blocks followers by actor takedown', async () => {
+    const { data: modAction } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.repoRef',
+            did: sc.dids.dan,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const aliceFollowers = await client.app.bsky.graph.getFollowers(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
+
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: modAction.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
+
   it('fetches follows', async () => {
     const aliceFollowers = await client.app.bsky.graph.getFollows(
       { user: sc.dids.alice },
@@ -222,5 +262,43 @@ describe('pds follow views', () => {
 
     expect(full.data.follows.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('blocks follows by actor takedown', async () => {
+    const { data: modAction } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.repoRef',
+            did: sc.dids.dan,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const aliceFollows = await client.app.bsky.graph.getFollows(
+      { user: sc.dids.alice },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceFollows.data)).toMatchSnapshot()
+
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: modAction.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
   })
 })

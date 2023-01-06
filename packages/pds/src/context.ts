@@ -44,6 +44,10 @@ export class AppContext {
     return auth.accessVerifier(this.auth)
   }
 
+  get accessVerifierCheckTakedown() {
+    return auth.accessVerifierCheckTakedown(this.auth, this)
+  }
+
   get refreshVerifier() {
     return auth.refreshVerifier(this.auth)
   }

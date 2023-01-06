@@ -5,6 +5,8 @@ import * as uint8arrays from 'uint8arrays'
 import { DidResolver } from '@atproto/did-resolver'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
+import AppContext from './context'
+import { softDeleted } from './db/util'
 
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
@@ -159,7 +161,27 @@ export const accessVerifier =
   async (ctx: { req: express.Request; res: express.Response }) => {
     return {
       credentials: {
-        did: await auth.getUserDidOrThrow(ctx.req, AuthScopes.Access),
+        did: auth.getUserDidOrThrow(ctx.req, AuthScopes.Access),
+        scope: AuthScopes.Access,
+      },
+      artifacts: auth.getToken(ctx.req),
+    }
+  }
+
+export const accessVerifierCheckTakedown =
+  (auth: ServerAuth, { db, services }: AppContext) =>
+  async (ctx: { req: express.Request; res: express.Response }) => {
+    const did = auth.getUserDidOrThrow(ctx.req, AuthScopes.Access)
+    const actor = await services.actor(db).getUser(did, true)
+    if (!actor || softDeleted(actor)) {
+      throw new AuthRequiredError(
+        'Account has been taken down',
+        'AccountTakedown',
+      )
+    }
+    return {
+      credentials: {
+        did,
         scope: AuthScopes.Access,
       },
       artifacts: auth.getToken(ctx.req),
@@ -171,7 +193,7 @@ export const refreshVerifier =
   async (ctx: { req: express.Request; res: express.Response }) => {
     return {
       credentials: {
-        did: await auth.getUserDidOrThrow(ctx.req, AuthScopes.Refresh),
+        did: auth.getUserDidOrThrow(ctx.req, AuthScopes.Refresh),
         scope: AuthScopes.Refresh,
       },
       artifacts: auth.getToken(ctx.req),

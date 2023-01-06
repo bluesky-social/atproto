@@ -1,4 +1,5 @@
 import { AtUri } from '@atproto/uri'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as lexicons from '../../../../lexicon/lexicons'
 import { Server } from '../../../../lexicon'
 import * as repo from '../../../../repo'
@@ -6,13 +7,18 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.setVote({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const { subject, direction } = input.body
 
       const requester = auth.credentials.did
       const authStore = await ctx.getAuthstore(requester)
       const now = new Date().toISOString()
+
+      const exists = await ctx.services
+        .record(ctx.db)
+        .hasRecord(new AtUri(subject.uri), subject.cid)
+      if (!exists) throw new InvalidRequestError('Subject not found')
 
       const voteUri = await ctx.db.transaction(async (dbTxn) => {
         const repoTxn = ctx.services.repo(dbTxn)

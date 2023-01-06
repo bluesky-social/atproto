@@ -2,7 +2,9 @@ import AtpApi, {
   ServiceClient as AtpServiceClient,
   AppBskyFeedGetPostThread,
 } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn } from '../_util'
+import { AtUri } from '@atproto/uri'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -14,6 +16,7 @@ describe('pds thread views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
+  let carol: string
 
   beforeAll(async () => {
     const server = await runTestServer({
@@ -25,6 +28,7 @@ describe('pds thread views', () => {
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
+    carol = sc.dids.carol
   })
 
   beforeAll(async () => {
@@ -139,5 +143,275 @@ describe('pds thread views', () => {
       { headers: sc.getHeaders(bob) },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
+  })
+
+  it('blocks post by actor takedown', async () => {
+    const { data: modAction } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.repoRef',
+            did: alice,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    // Same as shallow post thread test, minus alice
+    const promise = client.app.bsky.feed.getPostThread(
+      { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    await expect(promise).rejects.toThrow(
+      AppBskyFeedGetPostThread.NotFoundError,
+    )
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: modAction.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
+
+  it('blocks replies by actor takedown', async () => {
+    const { data: modAction } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.repoRef',
+            did: carol,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    // Same as deep post thread test, minus carol
+    const thread = await client.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: modAction.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
+
+  it('blocks ancestors by actor takedown', async () => {
+    const { data: modAction } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.repoRef',
+            did: bob,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    // Same as ancestor post thread test, minus bob
+    const thread = await client.app.bsky.feed.getPostThread(
+      { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: modAction.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
+
+  it('blocks post by record takedown', async () => {
+    const postUri = sc.posts[alice][1].ref.uri
+    const { data: modAction } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.recordRef',
+            uri: postUri.toString(),
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const promise = client.app.bsky.feed.getPostThread(
+      { depth: 1, uri: postUri.toString() },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    await expect(promise).rejects.toThrow(
+      AppBskyFeedGetPostThread.NotFoundError,
+    )
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: modAction.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
+
+  it('blocks ancestors by record takedown', async () => {
+    const threadPreTakedown = await client.app.bsky.feed.getPostThread(
+      { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+    const postUri = new AtUri(
+      threadPreTakedown.data.thread.parent?.['post'].uri,
+    )
+
+    const { data: modAction } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.recordRef',
+            uri: postUri.toString(),
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    // Same as ancestor post thread test, minus parent post
+    const thread = await client.app.bsky.feed.getPostThread(
+      { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: modAction.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
+
+  it('blocks replies by record takedown', async () => {
+    const threadPreTakedown = await client.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+    const postUri1 = new AtUri(
+      threadPreTakedown.data.thread.replies?.[0].post.uri,
+    )
+    const postUri2 = new AtUri(
+      threadPreTakedown.data.thread.replies?.[1].replies[0].post.uri,
+    )
+
+    const actionResults = await Promise.all(
+      [postUri1, postUri2].map((postUri) =>
+        client.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
+
+    // Same as deep post thread test, minus some replies
+    const thread = await client.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+
+    // Cleanup
+    await Promise.all(
+      actionResults.map((result) =>
+        client.com.atproto.admin.reverseModerationAction(
+          {
+            id: result.data.id,
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
   })
 })

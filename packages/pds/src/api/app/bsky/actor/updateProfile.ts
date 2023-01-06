@@ -12,7 +12,7 @@ const profileNsid = lexicons.ids.AppBskyActorProfile
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.updateProfile({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
 
@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
 
           let updated
           const uri = AtUri.make(did, profileNsid, 'self')
-          const current = (await recordTxn.getRecord(uri, null))?.value
+          const current = (await recordTxn.getRecord(uri, null, true))?.value
           if (current) {
             if (!recordTxn.records.profile.matchesSchema(current)) {
               // @TODO need a way to get a profile out of a broken state

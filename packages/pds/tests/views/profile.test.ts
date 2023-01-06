@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn } from '../_util'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -107,11 +108,11 @@ describe('pds profile views', () => {
     const avatarRes = await client.com.atproto.blob.upload(avatarImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
-    } as any)
+    })
     const bannerRes = await client.com.atproto.blob.upload(bannerImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
-    } as any)
+    })
 
     await client.app.bsky.actor.updateProfile(
       {
@@ -198,6 +199,44 @@ describe('pds profile views', () => {
     )
 
     expect(byHandle.data).toEqual(byDid.data)
+  })
+
+  it('blocked by actor takedown', async () => {
+    const { data: action } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.repoRef',
+            did: alice,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    const promise = client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    await expect(promise).rejects.toThrow('Account has been taken down')
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: action.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
   })
 
   it('includes muted status.', async () => {

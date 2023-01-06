@@ -182,6 +182,219 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminModerationAction: {
+    lexicon: 1,
+    id: 'com.atproto.admin.moderationAction',
+    defs: {
+      view: {
+        type: 'object',
+        required: [
+          'id',
+          'action',
+          'subject',
+          'reason',
+          'createdBy',
+          'createdAt',
+          'resolvedReports',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          action: {
+            type: 'string',
+            knownValues: ['com.atproto.admin.moderationAction#takedown'],
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.repo.repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          reason: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+          },
+          reversal: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#reversal',
+          },
+          resolvedReports: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.moderationAction#resolvedReport',
+            },
+          },
+        },
+      },
+      reversal: {
+        type: 'object',
+        required: ['reason', 'createdBy', 'createdAt'],
+        properties: {
+          reason: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+          },
+        },
+      },
+      resolvedReport: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+        },
+      },
+      takedown: {
+        type: 'token',
+        description:
+          'Moderation action type: Takedown. Indicates that content should not be served by the PDS.',
+      },
+      flag: {
+        type: 'token',
+        description:
+          'Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served.',
+      },
+      acknowledge: {
+        type: 'token',
+        description:
+          'Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules.',
+      },
+    },
+  },
+  ComAtprotoAdminResolveModerationReports: {
+    lexicon: 1,
+    id: 'com.atproto.admin.resolveModerationReports',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Resolve moderation reports by an action.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actionId', 'reportIds', 'createdBy'],
+            properties: {
+              actionId: {
+                type: 'integer',
+              },
+              reportIds: {
+                type: 'array',
+                items: {
+                  type: 'integer',
+                },
+              },
+              createdBy: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#view',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminReverseModerationAction: {
+    lexicon: 1,
+    id: 'com.atproto.admin.reverseModerationAction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Reverse a moderation action.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['id', 'reason', 'createdBy'],
+            properties: {
+              id: {
+                type: 'integer',
+              },
+              reason: {
+                type: 'string',
+              },
+              createdBy: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#view',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminTakeModerationAction: {
+    lexicon: 1,
+    id: 'com.atproto.admin.takeModerationAction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Take a moderation action on a repo.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['action', 'subject', 'reason', 'createdBy'],
+            properties: {
+              action: {
+                type: 'string',
+                knownValues: [
+                  'com.atproto.admin.moderationAction#takedown',
+                  'com.atproto.admin.moderationAction#flag',
+                  'com.atproto.admin.moderationAction#acknowledge',
+                ],
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.repo.repoRef',
+                  'lex:com.atproto.repo.recordRef',
+                ],
+              },
+              reason: {
+                type: 'string',
+              },
+              createdBy: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#view',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoBlobUpload: {
     lexicon: 1,
     id: 'com.atproto.blob.upload',
@@ -653,12 +866,190 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoRecordRef: {
+    lexicon: 1,
+    id: 'com.atproto.repo.recordRef',
+    description: 'A URI with optional content-hash fingerprint.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoRepoRef: {
+    lexicon: 1,
+    id: 'com.atproto.repo.repoRef',
+    description: 'A did identifying a repository.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoRepoStrongRef: {
     lexicon: 1,
     id: 'com.atproto.repo.strongRef',
     description: 'A URI with a content-hash fingerprint.',
     defs: {
       main: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoReportCreate: {
+    lexicon: 1,
+    id: 'com.atproto.report.create',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Report a repo or a record.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reasonType', 'subject'],
+            properties: {
+              reasonType: {
+                type: 'ref',
+                ref: 'lex:com.atproto.report.reasonType',
+              },
+              reason: {
+                type: 'string',
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.repo.repoRef',
+                  'lex:com.atproto.repo.recordRef',
+                ],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'id',
+              'reasonType',
+              'subject',
+              'reportedByDid',
+              'createdAt',
+            ],
+            properties: {
+              id: {
+                type: 'integer',
+              },
+              reasonType: {
+                type: 'ref',
+                ref: 'lex:com.atproto.report.reasonType',
+              },
+              reason: {
+                type: 'string',
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.repo.repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                ],
+              },
+              reportedByDid: {
+                type: 'string',
+              },
+              createdAt: {
+                type: 'datetime',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoReportReasonType: {
+    lexicon: 1,
+    id: 'com.atproto.report.reasonType',
+    defs: {
+      main: {
+        type: 'string',
+        knownValues: [
+          'com.atproto.report.reason#spam',
+          'com.atproto.report.reason#other',
+        ],
+      },
+      spam: {
+        type: 'token',
+        description: 'Moderation report reason: Spam.',
+      },
+      other: {
+        type: 'token',
+        description: 'Moderation report reason: Other.',
+      },
+    },
+  },
+  ComAtprotoReportSubject: {
+    lexicon: 1,
+    id: 'com.atproto.report.subject',
+    defs: {
+      repo: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+        },
+      },
+      record: {
+        type: 'object',
+        required: ['did', 'collection', 'rkey'],
+        properties: {
+          did: {
+            type: 'string',
+            description: 'The DID of the repo.',
+          },
+          collection: {
+            type: 'string',
+            description: 'The NSID of the collection.',
+          },
+          rkey: {
+            type: 'string',
+            description: 'The key of the record.',
+          },
+          cid: {
+            type: 'string',
+            description:
+              'The CID of the version of the record. If not specified, defaults to the most recent version.',
+          },
+        },
+      },
+      recordRef: {
         type: 'object',
         required: ['uri', 'cid'],
         properties: {
@@ -759,6 +1150,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+        ],
       },
     },
   },
@@ -825,6 +1221,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+        ],
       },
     },
   },
@@ -3106,6 +3507,12 @@ export const ids = {
   ComAtprotoAccountRequestPasswordReset:
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
+  ComAtprotoAdminModerationAction: 'com.atproto.admin.moderationAction',
+  ComAtprotoAdminResolveModerationReports:
+    'com.atproto.admin.resolveModerationReports',
+  ComAtprotoAdminReverseModerationAction:
+    'com.atproto.admin.reverseModerationAction',
+  ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoBlobUpload: 'com.atproto.blob.upload',
   ComAtprotoHandleResolve: 'com.atproto.handle.resolve',
   ComAtprotoRepoBatchWrite: 'com.atproto.repo.batchWrite',
@@ -3115,7 +3522,12 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
+  ComAtprotoRepoRecordRef: 'com.atproto.repo.recordRef',
+  ComAtprotoRepoRepoRef: 'com.atproto.repo.repoRef',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
+  ComAtprotoReportCreate: 'com.atproto.report.create',
+  ComAtprotoReportReasonType: 'com.atproto.report.reasonType',
+  ComAtprotoReportSubject: 'com.atproto.report.subject',
   ComAtprotoServerGetAccountsConfig: 'com.atproto.server.getAccountsConfig',
   ComAtprotoSessionCreate: 'com.atproto.session.create',
   ComAtprotoSessionDelete: 'com.atproto.session.delete',

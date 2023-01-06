@@ -1,5 +1,12 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import {
+  runTestServer,
+  forSnapshot,
+  CloseFn,
+  paginateAll,
+  adminAuth,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { Database } from '../../src'
@@ -16,7 +23,7 @@ describe('pds notification views', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'views_noitifications',
+      dbPostgresSchema: 'views_notifications',
     })
     close = server.close
     db = server.ctx.db
@@ -51,9 +58,7 @@ describe('pds notification views', () => {
   it('fetches notifications without a last-seen', async () => {
     const notifRes = await client.app.bsky.notification.list(
       {},
-      {
-        headers: sc.getHeaders(alice),
-      },
+      { headers: sc.getHeaders(alice) },
     )
 
     const notifs = sort(notifRes.data.notifications)
@@ -66,33 +71,6 @@ describe('pds notification views', () => {
     // it's odd to see carol's follow after bob's. In the seed they occur in
     // the opposite ordering.
     expect(forSnapshot(notifs)).toMatchSnapshot()
-  })
-
-  it('fetches notification count omitting mentions and replies by a muted user', async () => {
-    await client.app.bsky.graph.mute(
-      { user: sc.dids.carol }, // Replier
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-    await client.app.bsky.graph.mute(
-      { user: sc.dids.dan }, // Mentioner
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-
-    const notifCount = await client.app.bsky.notification.getCount(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(notifCount.data.count).toBe(13)
-
-    await client.app.bsky.graph.unmute(
-      { user: sc.dids.carol },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-    await client.app.bsky.graph.unmute(
-      { user: sc.dids.dan },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
   })
 
   it('fetches notifications omitting mentions and replies by a muted user', async () => {
@@ -109,11 +87,17 @@ describe('pds notification views', () => {
       {},
       { headers: sc.getHeaders(alice) },
     )
+    const notifCount = await client.app.bsky.notification.getCount(
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
 
     const notifs = sort(notifRes.data.notifications)
     expect(notifs.length).toBe(13)
     expect(forSnapshot(notifs)).toMatchSnapshot()
+    expect(notifCount.data.count).toBe(13)
 
+    // Cleanup
     await client.app.bsky.graph.unmute(
       { user: sc.dids.carol },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
@@ -121,6 +105,61 @@ describe('pds notification views', () => {
     await client.app.bsky.graph.unmute(
       { user: sc.dids.dan },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+  })
+
+  it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
+    const postUri1 = sc.replies[sc.dids.carol][0].ref.uri // Reply
+    const postUri2 = sc.posts[sc.dids.dan][1].ref.uri // Mention
+    const actionResults = await Promise.all(
+      [postUri1, postUri2].map((postUri) =>
+        client.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
+
+    const notifRes = await client.app.bsky.notification.list(
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
+    const notifCount = await client.app.bsky.notification.getCount(
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
+
+    const notifs = sort(notifRes.data.notifications)
+    expect(notifs.length).toBe(13)
+    expect(forSnapshot(notifs)).toMatchSnapshot()
+    expect(notifCount.data.count).toBe(13)
+
+    // Cleanup
+    await Promise.all(
+      actionResults.map((result) =>
+        client.com.atproto.admin.reverseModerationAction(
+          {
+            id: result.data.id,
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
     )
   })
 

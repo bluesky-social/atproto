@@ -1,0 +1,29 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.reverseModerationAction",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Reverse a moderation action.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "reason", "createdBy"],
+          "properties": {
+            "id": {"type": "integer"},
+            "reason": {"type": "string"},
+            "createdBy": {"type": "string"}
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.admin.moderationAction#view"
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,108 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`pds follow views blocks followers by actor takedown 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "alice.test",
+  },
+}
+`;
+
+exports[`pds follow views blocks follows by actor takedown 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "displayName": "",
+      "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "displayName": "",
+      "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "displayName": "",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "alice.test",
+  },
+}
+`;
+
 exports[`pds follow views fetches followers 1`] = `
 Object {
   "cursor": "0000000000000::bafycid",

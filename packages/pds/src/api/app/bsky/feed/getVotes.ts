@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclarationSimple } from '../util'
 import AppContext from '../../../../context'
+import { notSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getVotes({
@@ -13,17 +14,23 @@ export default function (server: Server, ctx: AppContext) {
       let builder = ctx.db.db
         .selectFrom('vote')
         .where('vote.subject', '=', uri)
-        .innerJoin('did_handle', 'vote.creator', 'did_handle.did')
-        .leftJoin('profile', 'profile.creator', 'did_handle.did')
+        .innerJoin('did_handle as creator', 'creator.did', 'vote.creator')
+        .leftJoin('profile', 'profile.creator', 'vote.creator')
+        .innerJoin(
+          'repo_root as creator_repo',
+          'creator_repo.did',
+          'vote.creator',
+        )
+        .where(notSoftDeletedClause(ref('creator_repo')))
         .select([
           'vote.cid as cid',
           'vote.direction as direction',
           'vote.createdAt as createdAt',
           'vote.indexedAt as indexedAt',
-          'did_handle.did as did',
-          'did_handle.declarationCid as declarationCid',
-          'did_handle.actorType as actorType',
-          'did_handle.handle as handle',
+          'creator.did as did',
+          'creator.declarationCid as declarationCid',
+          'creator.actorType as actorType',
+          'creator.handle as handle',
           'profile.displayName as displayName',
           'profile.avatarCid as avatarCid',
         ])
