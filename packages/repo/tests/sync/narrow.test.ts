@@ -4,6 +4,7 @@ import { DidResolver } from '@atproto/did-resolver'
 import { RecordWriteOp, Repo, RepoContents, WriteOpAction } from '../../src'
 import { MemoryBlockstore } from '../../src/storage'
 import * as verify from '../../src/verify'
+import * as sync from '../../src/sync'
 
 import * as util from '../_util'
 
@@ -23,13 +24,19 @@ describe('Narrow Sync', () => {
     repoData = filled.data
   })
 
-  const doVerify = (ops: RecordWriteOp[]) => {
-    return verify.verifyRecords(repo.did, repo.cid, storage, ops, didResolver)
+  const getProofs = async (ops: RecordWriteOp[]) => {
+    const paths = util.pathsForOps(ops)
+    return sync.getRecords(storage, repo.cid, paths)
+  }
+
+  const doVerify = (proofs: Uint8Array, ops: RecordWriteOp[]) => {
+    return verify.verifyRecords(repo.did, proofs, ops, didResolver)
   }
 
   it('verifies valid records', async () => {
     const ops = util.contentsToCreateOps(repoData)
-    const results = await doVerify(ops)
+    const proofs = await getProofs(ops)
+    const results = await doVerify(proofs, ops)
     expect(results.verified).toEqual(ops)
     expect(results.unverified.length).toBe(0)
   })
@@ -42,7 +49,8 @@ describe('Narrow Sync', () => {
         rkey: TID.nextStr(), // does not exist
       },
     ]
-    const results = await doVerify(ops)
+    const proofs = await getProofs(ops)
+    const results = await doVerify(proofs, ops)
     expect(results.verified).toEqual(ops)
     expect(results.unverified.length).toBe(0)
   })
@@ -55,7 +63,8 @@ describe('Narrow Sync', () => {
         rkey: TID.nextStr(),
       },
     ]
-    const results = await doVerify(ops)
+    const proofs = await getProofs(ops)
+    const results = await doVerify(proofs, ops)
     expect(results.verified.length).toBe(0)
     expect(results.unverified).toEqual(ops)
   })
@@ -68,7 +77,8 @@ describe('Narrow Sync', () => {
         record: util.generateObject(),
       },
     ]
-    const results = await doVerify(ops)
+    const proofs = await getProofs(ops)
+    const results = await doVerify(proofs, ops)
     expect(results.verified.length).toBe(0)
     expect(results.unverified).toEqual(ops)
   })
@@ -82,7 +92,8 @@ describe('Narrow Sync', () => {
         rkey: realOps[0].rkey,
       },
     ]
-    const results = await doVerify(ops)
+    const proofs = await getProofs(ops)
+    const results = await doVerify(proofs, ops)
     expect(results.verified.length).toBe(0)
     expect(results.unverified).toEqual(ops)
   })
@@ -90,13 +101,9 @@ describe('Narrow Sync', () => {
   it('throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const ops = util.contentsToCreateOps(repoData)
-    const fn = verify.verifyRecords(
-      repo.did,
-      badRepo.cid,
-      storage,
-      ops,
-      didResolver,
-    )
+    const paths = util.pathsForOps(ops)
+    const proofs = await sync.getRecords(storage, badRepo.cid, paths)
+    const fn = verify.verifyRecords(repo.did, proofs, ops, didResolver)
     await expect(fn).rejects.toThrow(verify.RepoVerificationError)
   })
 })

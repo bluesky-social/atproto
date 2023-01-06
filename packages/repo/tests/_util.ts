@@ -12,6 +12,7 @@ import {
   RecordCreateOp,
   RecordWriteOp,
   RepoContents,
+  RecordPath,
   RepoRoot,
   WriteLog,
   WriteOpAction,
@@ -226,6 +227,9 @@ export const contentsToCreateOps = (
   }
   return ops
 }
+
+export const pathsForOps = (ops: RecordWriteOp[]): RecordPath[] =>
+  ops.map((op) => ({ collection: op.collection, rkey: op.rkey }))
 
 export const saveMst = async (storage: RepoStorage, mst: MST): Promise<CID> => {
   const diff = await mst.getUnstoredBlocks()

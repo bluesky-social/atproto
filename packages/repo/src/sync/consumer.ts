@@ -89,9 +89,6 @@ export const loadDiff = async (
   }
 }
 
-// Narrow slices
-// -------------
-
 // Helpers
 // -------------
 

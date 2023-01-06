@@ -79,7 +79,7 @@ export const getRecords = async (
       ),
     )
     const allCids = cidsForPaths.reduce((acc, cur) => {
-      return acc.addSet(cur)
+      return acc.addSet(new CidSet(cur))
     }, new CidSet())
     const found = await storage.getBlocks(allCids.toList())
     if (found.missing.length > 0) {

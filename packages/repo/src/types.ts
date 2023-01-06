@@ -144,5 +144,5 @@ export interface DataStore {
   listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
   getUnstoredBlocks(): Promise<{ root: CID; blocks: BlockMap }>
   writeToCarStream(car: BlockWriter): Promise<void>
-  cidsForPath(key: string): Promise<CidSet>
+  cidsForPath(key: string): Promise<CID[]>
 }

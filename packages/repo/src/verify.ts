@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { DidResolver } from '@atproto/did-resolver'
 import * as crypto from '@atproto/crypto'
-import { ReadableBlockstore, RepoStorage } from './storage'
+import { MemoryBlockstore, ReadableBlockstore, RepoStorage } from './storage'
 import DataDiff from './data-diff'
 import SyncStorage from './storage/sync-storage'
 import ReadableRepo from './readable-repo'
@@ -157,12 +157,13 @@ export const verifyCommitPath = async (
 
 export const verifyRecords = async (
   did: string,
-  head: CID,
-  blockstore: ReadableBlockstore,
+  proofs: Uint8Array,
   ops: RecordWriteOp[],
   didResolver: DidResolver,
 ): Promise<{ verified: RecordWriteOp[]; unverified: RecordWriteOp[] }> => {
-  const commit = await blockstore.readObj(head, def.commit)
+  const car = await util.readCar(proofs)
+  const blockstore = new MemoryBlockstore(car.blocks)
+  const commit = await blockstore.readObj(car.root, def.commit)
   const validSig = await didResolver.verifySignature(
     did,
     commit.root.bytes,
@@ -170,7 +171,7 @@ export const verifyRecords = async (
   )
   if (!validSig) {
     throw new RepoVerificationError(
-      `Invalid signature on commit: ${head.toString()}`,
+      `Invalid signature on commit: ${car.root.toString()}`,
     )
   }
   const root = await blockstore.readObj(commit.root, def.repoRoot)

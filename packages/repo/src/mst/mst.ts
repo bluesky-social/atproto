@@ -714,18 +714,18 @@ export class MST implements DataStore {
     }
   }
 
-  async cidsForPath(key: string): Promise<CidSet> {
+  async cidsForPath(key: string): Promise<CID[]> {
+    const cids: CID[] = [await this.getPointer()]
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
     if (found && found.isLeaf() && found.key === key) {
-      return new CidSet([found.value])
+      return [...cids, found.value]
     }
     const prev = await this.atIndex(index - 1)
     if (prev && prev.isTree()) {
-      const subTreeCids = await prev.cidsForPath(key)
-      return subTreeCids.add(await prev.getPointer())
+      return [...cids, ...(await prev.cidsForPath(key))]
     }
-    throw new Error(`Could not find key: ${key}`)
+    return cids
   }
 
   // Matching Leaf interface
