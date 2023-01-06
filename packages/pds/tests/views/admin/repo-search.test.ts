@@ -11,7 +11,7 @@ import { SeedClient } from '../../seeds/client'
 import usersBulkSeed from '../../seeds/users-bulk'
 import { Database } from '../../../src'
 
-describe('pds user search views', () => {
+describe('pds admin repo search view', () => {
   let client: AtpServiceClient
   let db: Database
   let close: CloseFn

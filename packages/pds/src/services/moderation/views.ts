@@ -3,7 +3,10 @@ import { ipldBytesToRecord } from '@atproto/common'
 import Database from '../../db'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { View as RepoView } from '../../lexicon/types/com/atproto/admin/repo'
+import {
+  View as RepoView,
+  ViewDetail as RepoViewDetail,
+} from '../../lexicon/types/com/atproto/admin/repo'
 import { View as ActionView } from '../../lexicon/types/com/atproto/admin/moderationAction'
 import { View as ReportView } from '../../lexicon/types/com/atproto/admin/moderationReport'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/report/create'
@@ -72,6 +75,40 @@ export class ModerationViews {
     })
 
     return Array.isArray(result) ? views : views[0]
+  }
+
+  async repoDetail(result: RepoResult): Promise<RepoViewDetail> {
+    const repo = await this.repo(result)
+    const [reportResults, actionResults] = await Promise.all([
+      this.db.db
+        .selectFrom('moderation_report')
+        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where('subjectDid', '=', repo.did)
+        .orderBy('createdAt', 'desc')
+        .orderBy('id', 'desc')
+        .selectAll()
+        .execute(),
+      this.db.db
+        .selectFrom('moderation_action')
+        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where('subjectDid', '=', repo.did)
+        .orderBy('createdAt', 'desc')
+        .orderBy('id', 'desc')
+        .selectAll()
+        .execute(),
+    ])
+    const [reports, actions] = await Promise.all([
+      this.report(reportResults),
+      this.action(actionResults),
+    ])
+    return {
+      ...repo,
+      moderation: {
+        ...repo.moderation,
+        reports,
+        actions,
+      },
+    }
   }
 
   action(result: ActionResult): Promise<ActionView>

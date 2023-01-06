@@ -42,7 +42,7 @@
     },
     "moderationDetail": {
       "type": "object",
-      "required": [],
+      "required": ["actions", "reports"],
       "properties": {
         "actions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationAction#view"}},
         "reports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationReport#view"}},

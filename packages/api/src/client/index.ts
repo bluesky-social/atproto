@@ -12,6 +12,8 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
+import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
 import * as ComAtprotoAdminModerationReport from './types/com/atproto/admin/moderationReport'
 import * as ComAtprotoAdminRecord from './types/com/atproto/admin/record'
@@ -91,6 +93,8 @@ export * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 export * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 export * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 export * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
+export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
 export * as ComAtprotoAdminModerationReport from './types/com/atproto/admin/moderationReport'
 export * as ComAtprotoAdminRecord from './types/com/atproto/admin/record'
@@ -330,6 +334,28 @@ export class AdminNS {
 
   constructor(service: ServiceClient) {
     this._service = service
+  }
+
+  getRecord(
+    params?: ComAtprotoAdminGetRecord.QueryParams,
+    opts?: ComAtprotoAdminGetRecord.CallOptions,
+  ): Promise<ComAtprotoAdminGetRecord.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getRecord', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetRecord.toKnownErr(e)
+      })
+  }
+
+  getRepo(
+    params?: ComAtprotoAdminGetRepo.QueryParams,
+    opts?: ComAtprotoAdminGetRepo.CallOptions,
+  ): Promise<ComAtprotoAdminGetRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getRepo', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetRepo.toKnownErr(e)
+      })
   }
 
   resolveModerationReports(
