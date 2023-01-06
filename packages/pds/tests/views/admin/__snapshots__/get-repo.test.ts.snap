@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds admin get repo view gets a repo by did. 1`] = `
+exports[`pds admin get repo view gets a repo by did, even when taken down. 1`] = `
 Object {
   "account": Object {
     "email": "alice@test.com",
