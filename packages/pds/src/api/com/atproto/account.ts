@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
-import { cidForData } from '@atproto/common'
+import { cidForCbor } from '@atproto/common'
 import { Server, APP_BSKY_SYSTEM } from '../../../lexicon'
 import { countAll } from '../../../db/util'
 import * as lex from '../../../lexicon/lexicons'
@@ -151,7 +151,7 @@ export default function (server: Server, ctx: AppContext) {
       await repoTxn.createRepo(did, [write], now)
       await repoTxn.indexWrites([write], now)
 
-      const declarationCid = await cidForData(declaration)
+      const declarationCid = await cidForCbor(declaration)
       const access = ctx.auth.createAccessToken(did)
       const refresh = ctx.auth.createRefreshToken(did)
       await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload)

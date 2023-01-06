@@ -1,4 +1,4 @@
-import { def } from '../types'
+import { def, RecordPath } from '../types'
 import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
 import CidSet from '../cid-set'
@@ -68,10 +68,7 @@ export const writeCommitsToCarStream = async (
 export const getRecords = async (
   storage: RepoStorage,
   commit: CID,
-  paths: {
-    collection: string
-    rkey: string
-  }[],
+  paths: RecordPath[],
 ): Promise<Uint8Array> => {
   return util.writeCar(commit, async (car: BlockWriter) => {
     const root = await writeCommitAndRootToCar(storage, car, commit)

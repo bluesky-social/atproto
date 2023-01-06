@@ -11,6 +11,7 @@ import {
   DataStore,
   RecordCreateDescript,
   RecordDeleteDescript,
+  RecordPath,
   RecordUpdateDescript,
   RecordWriteDescript,
   WriteLog,
@@ -180,12 +181,12 @@ export const collapseDiffs = (diffs: DataDiff[]): DataDiff => {
   }, new DataDiff())
 }
 
-export const parseDataKey = (key: string) => {
+export const parseDataKey = (key: string): RecordPath => {
   const parts = key.split('/')
   if (parts.length !== 2) throw new Error(`Invalid record key: ${key}`)
   return { collection: parts[0], rkey: parts[1] }
 }
 
-export const formatDataKey = (collection: string, rkey: string) => {
+export const formatDataKey = (collection: string, rkey: string): string => {
   return collection + '/' + rkey
 }

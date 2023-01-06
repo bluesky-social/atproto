@@ -104,7 +104,7 @@ export class RecordProcessor<T, S> {
       if (!found) {
         return this.params.eventsForDelete(deleted, null)
       }
-      const record = common.ipldBytesToRecord(found.content)
+      const record = common.cborDecode(found.content)
       if (!this.matchesSchema(record)) {
         return this.params.eventsForDelete(deleted, null)
       }

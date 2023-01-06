@@ -1,4 +1,4 @@
-import { check, ipldBytesToValue } from '@atproto/common'
+import { check, cborDecode } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import BlockMap from './block-map'
 import { MissingBlockError, UnexpectedObjectError } from './error'
@@ -20,7 +20,7 @@ export const parseObj = async <T>(
   cid: CID,
   def: check.Def<T>,
 ): Promise<{ obj: T; bytes: Uint8Array }> => {
-  const obj = await ipldBytesToValue(bytes)
+  const obj = await cborDecode(bytes)
   const res = def.schema.safeParse(obj)
   if (res.success) {
     return { obj: res.data, bytes }

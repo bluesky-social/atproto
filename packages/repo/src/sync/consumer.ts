@@ -8,6 +8,9 @@ import { CommitData, RepoContents, WriteLog } from '../types'
 import CidSet from '../cid-set'
 import { MissingBlocksError } from '../error'
 
+// Checkouts
+// -------------
+
 export const loadCheckout = async (
   storage: RepoStorage,
   repoCar: Uint8Array,
@@ -33,6 +36,9 @@ export const loadCheckout = async (
     contents: checkout.contents,
   }
 }
+
+// Diffs
+// -------------
 
 export const loadFullRepo = async (
   storage: RepoStorage,
@@ -82,6 +88,12 @@ export const loadDiff = async (
     writeLog,
   }
 }
+
+// Narrow slices
+// -------------
+
+// Helpers
+// -------------
 
 export const persistUpdates = async (
   storage: RepoStorage,

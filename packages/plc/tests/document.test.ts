@@ -1,4 +1,4 @@
-import { check, cidForData } from '@atproto/common'
+import { check, cidForCbor } from '@atproto/common'
 import { EcdsaKeypair, parseDidKey, Secp256k1Keypair } from '@atproto/crypto'
 import * as uint8arrays from 'uint8arrays'
 import * as document from '../src/lib/document'
@@ -47,7 +47,7 @@ describe('plc DID document', () => {
 
   it('allows for updating handle', async () => {
     handle = 'ali.example2.com'
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.updateHandle(
       handle,
       prev.toString(),
@@ -65,7 +65,7 @@ describe('plc DID document', () => {
 
   it('allows for updating atpPds', async () => {
     atpPds = 'https://example2.com'
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.updateAtpPds(
       atpPds,
       prev.toString(),
@@ -83,7 +83,7 @@ describe('plc DID document', () => {
 
   it('allows for rotating signingKey', async () => {
     const newSigningKey = await EcdsaKeypair.create()
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.rotateSigningKey(
       newSigningKey.did(),
       prev.toString(),
@@ -102,7 +102,7 @@ describe('plc DID document', () => {
   })
 
   it('no longer allows operations from old signing key', async () => {
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.updateHandle(
       'bob',
       prev.toString(),
@@ -113,7 +113,7 @@ describe('plc DID document', () => {
 
   it('allows for rotating recoveryKey', async () => {
     const newRecoveryKey = await Secp256k1Keypair.create()
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.rotateRecoveryKey(
       newRecoveryKey.did(),
       prev.toString(),
@@ -132,7 +132,7 @@ describe('plc DID document', () => {
   })
 
   it('no longer allows operations from old recovery key', async () => {
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.updateHandle(
       'bob',
       prev.toString(),
@@ -143,7 +143,7 @@ describe('plc DID document', () => {
 
   it('it allows recovery key to rotate signing key', async () => {
     const newKey = await EcdsaKeypair.create()
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.rotateSigningKey(
       newKey.did(),
       prev.toString(),
@@ -157,7 +157,7 @@ describe('plc DID document', () => {
 
   it('it allows recovery key to rotate recovery key', async () => {
     const newKey = await Secp256k1Keypair.create()
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.rotateRecoveryKey(
       newKey.did(),
       prev.toString(),
@@ -171,7 +171,7 @@ describe('plc DID document', () => {
 
   it('it allows recovery key to update handle', async () => {
     handle = 'ally.example3.com'
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.updateHandle(
       handle,
       prev.toString(),
@@ -184,7 +184,7 @@ describe('plc DID document', () => {
 
   it('it allows recovery key to update atpPds', async () => {
     atpPds = 'https://example3.com'
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op = await operations.updateAtpPds(
       atpPds,
       prev.toString(),
@@ -196,7 +196,7 @@ describe('plc DID document', () => {
   })
 
   it('requires operations to be in order', async () => {
-    const prev = await cidForData(ops[ops.length - 2])
+    const prev = await cidForCbor(ops[ops.length - 2])
     const op = await operations.updateAtpPds(
       'foobar.com',
       prev.toString(),
@@ -266,14 +266,14 @@ describe('plc DID document', () => {
 
   it('formats a valid DID document regardless of leading https://', async () => {
     handle = 'https://alice.example.com'
-    const prev = await cidForData(ops[ops.length - 1])
+    const prev = await cidForCbor(ops[ops.length - 1])
     const op1 = await operations.updateHandle(
       handle,
       prev.toString(),
       signingKey,
     )
     atpPds = 'example.com'
-    const prev2 = await cidForData(op1)
+    const prev2 = await cidForCbor(op1)
     const op2 = await operations.updateAtpPds(
       atpPds,
       prev2.toString(),

@@ -4,8 +4,9 @@ import * as rawCodec from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as mf from 'multiformats'
 import * as cborCodec from '@ipld/dag-cbor'
+import { check, schema } from '.'
 
-export const valueToIpldBlock = async (data: unknown) => {
+export const dataToCborBlock = async (data: unknown) => {
   return Block.encode({
     value: data,
     codec: cborCodec,
@@ -28,22 +29,19 @@ export const sha256RawToCid = (hash: Uint8Array): CID => {
   return CID.createV1(rawCodec.code, digest)
 }
 
-export const cidForData = async (data: unknown): Promise<CID> => {
-  const block = await valueToIpldBlock(data)
+export const cidForCbor = async (data: unknown): Promise<CID> => {
+  const block = await dataToCborBlock(data)
   return block.cid
 }
 
-export const valueToIpldBytes = (value: unknown): Uint8Array => {
-  return cborCodec.encode(value)
-}
+export const cborEncode = cborCodec.encode
+export const cborDecode = cborCodec.decode
 
-export const ipldBytesToValue = (bytes: Uint8Array) => {
-  return cborCodec.decode(bytes)
-}
-
-export const ipldBytesToRecord = (bytes: Uint8Array): object => {
-  const val = ipldBytesToValue(bytes)
-  if (typeof val !== 'object' || val === null) {
+export const cborBytesToRecord = (
+  bytes: Uint8Array,
+): Record<string, unknown> => {
+  const val = cborDecode(bytes)
+  if (!check.is(val, schema.record)) {
     throw new Error(`Expected object, got: ${val}`)
   }
   return val

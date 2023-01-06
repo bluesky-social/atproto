@@ -2,7 +2,7 @@ import z from 'zod'
 import { CID } from 'multiformats'
 
 import { ReadableBlockstore } from '../storage'
-import { schema as common, cidForData } from '@atproto/common'
+import { schema as common, cidForCbor } from '@atproto/common'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
@@ -107,7 +107,7 @@ export class MST implements DataStore {
   ): Promise<MST> {
     const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     const entries = await util.deserializeNodeData(storage, data, opts)
-    const pointer = await cidForData(data)
+    const pointer = await cidForCbor(data)
     return new MST(storage, fanout, pointer, entries, layer)
   }
 

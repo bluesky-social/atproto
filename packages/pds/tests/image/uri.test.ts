@@ -1,4 +1,4 @@
-import { cidForData } from '@atproto/common'
+import { cidForCbor } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { ImageUriBuilder, BadPathError } from '../../src/image/uri'
 
@@ -12,7 +12,7 @@ describe('image uri builder', () => {
     const key =
       'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8'
     uriBuilder = new ImageUriBuilder(endpoint, salt, key)
-    cid = await cidForData('test cid')
+    cid = await cidForCbor('test cid')
   })
 
   it('signs and verifies uri options.', () => {

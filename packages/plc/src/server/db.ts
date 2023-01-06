@@ -2,7 +2,7 @@ import { Kysely, Migrator, PostgresDialect, SqliteDialect } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { CID } from 'multiformats/cid'
-import { cidForData } from '@atproto/common'
+import { cidForCbor } from '@atproto/common'
 import * as document from '../lib/document'
 import * as t from '../lib/types'
 import { ServerError } from './error'
@@ -92,7 +92,7 @@ export class Database {
       ops,
       proposed,
     )
-    const cid = await cidForData(proposed)
+    const cid = await cidForCbor(proposed)
 
     await this.db
       .transaction()

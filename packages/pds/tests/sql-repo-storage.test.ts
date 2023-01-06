@@ -1,4 +1,4 @@
-import { range, valueToIpldBlock } from '@atproto/common'
+import { range, dataToCborBlock } from '@atproto/common'
 import { def } from '@atproto/repo'
 import BlockMap from '@atproto/repo/src/block-map'
 import { Database } from '../src'
@@ -26,7 +26,7 @@ describe('sql repo storage', () => {
 
     const cid = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
-      const block = await valueToIpldBlock({ my: 'block' })
+      const block = await dataToCborBlock({ my: 'block' })
       await storage.putBlock(block.cid, block.bytes)
       return block.cid
     })
@@ -42,14 +42,14 @@ describe('sql repo storage', () => {
 
     const cidA = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
-      const block = await valueToIpldBlock({ my: 'block' })
+      const block = await dataToCborBlock({ my: 'block' })
       await storage.putBlock(block.cid, block.bytes)
       return block.cid
     })
 
     const cidB = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
-      const block = await valueToIpldBlock({ my: 'block' })
+      const block = await dataToCborBlock({ my: 'block' })
       await storage.putBlock(block.cid, block.bytes)
       return block.cid
     })
@@ -60,10 +60,10 @@ describe('sql repo storage', () => {
   it('applies commits', async () => {
     const did = 'did:key:zQ3shtxV1FrJfhqE1dvxYRcCknWNjHc3c5X1y3ZSoPDi2aur3'
     const blocks = await Promise.all(
-      range(10).map((num) => valueToIpldBlock({ my: `block-${num}` })),
+      range(10).map((num) => dataToCborBlock({ my: `block-${num}` })),
     )
     const commits = await Promise.all(
-      range(2).map((num) => valueToIpldBlock({ my: `commit-${num}` })),
+      range(2).map((num) => dataToCborBlock({ my: `commit-${num}` })),
     )
     const blocks0 = new BlockMap()
     blocks0.set(commits[0].cid, commits[0].bytes)

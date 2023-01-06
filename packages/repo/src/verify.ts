@@ -8,8 +8,10 @@ import ReadableRepo from './readable-repo'
 import Repo from './repo'
 import CidSet from './cid-set'
 import * as util from './util'
-import { RepoContents } from './types'
-import { def } from '@atproto/common'
+import { RecordWriteOp, RepoContents, WriteOpAction } from './types'
+import { def } from './types'
+import { MST } from './mst'
+import { cidForCbor } from '@atproto/common'
 
 export type VerifiedCheckout = {
   contents: RepoContents
@@ -18,10 +20,10 @@ export type VerifiedCheckout = {
 
 export const verifyCheckout = async (
   storage: ReadableBlockstore,
-  root: CID,
+  head: CID,
   didResolver: DidResolver,
 ): Promise<VerifiedCheckout> => {
-  const repo = await ReadableRepo.load(storage, root)
+  const repo = await ReadableRepo.load(storage, head)
   const validSig = await didResolver.verifySignature(
     repo.did,
     repo.commit.root.bytes,
@@ -63,10 +65,10 @@ export type VerifiedUpdate = {
 
 export const verifyFullHistory = async (
   storage: RepoStorage,
-  root: CID,
+  head: CID,
   didResolver: DidResolver,
 ): Promise<VerifiedUpdate[]> => {
-  const commitPath = await storage.getCommitPath(root, null)
+  const commitPath = await storage.getCommitPath(head, null)
   if (commitPath === null) {
     throw new RepoVerificationError('Could not find shared history')
   } else if (commitPath.length < 1) {
@@ -151,6 +153,49 @@ export const verifyCommitPath = async (
     prevRepo = nextRepo
   }
   return updates
+}
+
+export const verifyRecords = async (
+  did: string,
+  head: CID,
+  blockstore: ReadableBlockstore,
+  ops: RecordWriteOp[],
+  didResolver: DidResolver,
+): Promise<{ verified: RecordWriteOp[]; unverified: RecordWriteOp[] }> => {
+  const commit = await blockstore.readObj(head, def.commit)
+  const validSig = await didResolver.verifySignature(
+    did,
+    commit.root.bytes,
+    commit.sig,
+  )
+  if (!validSig) {
+    throw new RepoVerificationError(
+      `Invalid signature on commit: ${head.toString()}`,
+    )
+  }
+  const root = await blockstore.readObj(commit.root, def.repoRoot)
+  const mst = MST.load(blockstore, root.data)
+  const verified: RecordWriteOp[] = []
+  const unverified: RecordWriteOp[] = []
+  for (const op of ops) {
+    const found = await mst.get(util.formatDataKey(op.collection, op.rkey))
+    const record = found ? await blockstore.readObj(found, def.record) : null
+    if (op.action === WriteOpAction.Delete) {
+      if (record === null) {
+        verified.push(op)
+      } else {
+        unverified.push(op)
+      }
+    } else {
+      const expected = await cidForCbor(op.record)
+      if (expected.equals(found)) {
+        verified.push(op)
+      } else {
+        unverified.push(op)
+      }
+    }
+  }
+  return { verified, unverified }
 }
 
 export class RepoVerificationError extends Error {}

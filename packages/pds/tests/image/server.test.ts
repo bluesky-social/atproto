@@ -7,7 +7,7 @@ import axios, { AxiosInstance } from 'axios'
 import { getInfo } from '../../src/image/sharp'
 import { BlobDiskCache, ImageProcessingServer } from '../../src/image/server'
 import { DiskBlobStore } from '../../src'
-import { cidForData } from '@atproto/common'
+import { cidForCbor } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 
 describe('image processing server', () => {
@@ -25,7 +25,7 @@ describe('image processing server', () => {
       path.join(os.tmpdir(), 'img-processing-tests'),
     )
     // this CID isn't accurate for the data, but it works for the sake of the test
-    fileCid = await cidForData('key-landscape-small')
+    fileCid = await cidForCbor('key-landscape-small')
     await storage.putPermanent(
       fileCid,
       fs.createReadStream('tests/image/fixtures/key-landscape-small.jpg'),
@@ -110,7 +110,7 @@ describe('image processing server', () => {
   })
 
   it('errors on missing file.', async () => {
-    const missingCid = await cidForData('missing-file')
+    const missingCid = await cidForCbor('missing-file')
     const res = await client.get(
       server.uriBuilder.getSignedPath({
         cid: missingCid,
