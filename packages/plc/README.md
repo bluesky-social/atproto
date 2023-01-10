@@ -4,18 +4,18 @@ DID Placeholder is a cryptographic, strongly-consistent, and recoverable [DID](h
 
 ## Motivation
 
-We introduced DID Placeholder because we weren't totally satisfied with any of the existing DID methods. 
+We introduced DID Placeholder because we weren't totally satisfied with any of the existing DID methods.
 We wanted a strongly consistent, highly available, recoverable, and cryptographically secure method with cheap and fast propagation of updates.
 
 We cheekily titled the method "Placeholder", because we _don't_ want it to stick around. We're actively hoping to replace it with something less centralized. 
-We expect a method to emerge that fits the bill within the next few years, likely a permissioned DID consortium. 
+We expect a method to emerge that fits the bill within the next few years, likely a permissioned DID consortium.
 
 ## How it works
 This is not a fully-expressive DID format.
 Though it adheres to the DID spec, it is domain-specific and only allows for representing specific data types in a specific manner.
 There is the possibility that it could be extended to be more general in the future.
 
-Each DID document is made up of just four pieces of data (for now): 
+Each DID document is made up of just four pieces of data (for now):
 - `signingKey`
 - `recoveryKey`
 - `handle`
@@ -43,9 +43,9 @@ It is then base32 encoded and truncated to 24 chars.
 To illustrate: 
 `did:plc:${base32Encode(sha256(createOp)).slice(0,24)}`
 
-Operations are verified, ordered and made availble by the PLC server. 
+Operations are verified, ordered and made available by the PLC server.
 
-The PLC server is contrained in it's capabilities.
+The PLC server is constrained in it's capabilities.
 The operation logs are fully self-certifying, with the exception of their ordering.
 
 Therefore, the PLC server's attacks are limited to:
