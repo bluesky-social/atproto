@@ -21,6 +21,7 @@
   "dependencies": {
     "@atproto/nsid": "*",
     "iso-datestring-validator": "^2.2.2",
-    "zod": "^3.14.2"
+    "zod": "^3.14.2",
+    "zod-to-json-schema": "^3.20.2"
   }
 }

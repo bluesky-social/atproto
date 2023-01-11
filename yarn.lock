@@ -10965,6 +10965,11 @@ yocto-queue@^0.1.0:
   resolved "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
+zod-to-json-schema@^3.20.2:
+  version "3.20.2"
+  resolved "https://registry.yarnpkg.com/zod-to-json-schema/-/zod-to-json-schema-3.20.2.tgz#576f53749fd90bbb42c99a9b8c81be234bb53cbb"
+  integrity sha512-qka3UAXmVXD8z5SHkRU89UyHp8JHJW7zc8RQCpt7QloJOn6uijwkjUm8o+M/cF1IysmKc5gxac/QeDikaQMdzQ==
+
 zod@^3.14.2:
   version "3.19.1"
   resolved "https://registry.npmjs.org/zod/-/zod-3.19.1.tgz"
