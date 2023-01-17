@@ -15,7 +15,9 @@ import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
+import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
+import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
@@ -207,6 +209,16 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getModerationActions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetModerationActions.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getModerationActions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getModerationReport<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -214,6 +226,16 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getModerationReport' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getModerationReports<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetModerationReports.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getModerationReports' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
