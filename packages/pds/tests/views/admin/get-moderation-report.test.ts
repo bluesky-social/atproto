@@ -7,8 +7,6 @@ import {
   OTHER,
   SPAM,
 } from '../../../src/lexicon/types/com/atproto/report/reasonType'
-import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
-import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/report/create'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../../_util'
 import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
@@ -33,7 +31,7 @@ describe('pds admin get moderation action view', () => {
   })
 
   beforeAll(async () => {
-    const reportRepo = await createReport({
+    const reportRepo = await sc.createReport({
       reportedByDid: sc.dids.bob,
       reasonType: SPAM,
       subject: {
@@ -41,7 +39,7 @@ describe('pds admin get moderation action view', () => {
         did: sc.dids.alice,
       },
     })
-    const reportRecord = await createReport({
+    const reportRecord = await sc.createReport({
       reportedByDid: sc.dids.carol,
       reasonType: OTHER,
       reason: 'defamation',
@@ -50,29 +48,29 @@ describe('pds admin get moderation action view', () => {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
       },
     })
-    const flagRepo = await takeModerationAction({
+    const flagRepo = await sc.takeModerationAction({
       action: FLAG,
       subject: {
         $type: 'com.atproto.repo.repoRef',
         did: sc.dids.alice,
       },
     })
-    const takedownRecord = await takeModerationAction({
+    const takedownRecord = await sc.takeModerationAction({
       action: TAKEDOWN,
       subject: {
         $type: 'com.atproto.repo.recordRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
       },
     })
-    await resolveReports({
+    await sc.resolveReports({
       actionId: flagRepo.id,
       reportIds: [reportRepo.id, reportRecord.id],
     })
-    await resolveReports({
+    await sc.resolveReports({
       actionId: takedownRecord.id,
       reportIds: [reportRecord.id],
     })
-    await reverseModerationAction({ id: flagRepo.id })
+    await sc.reverseModerationAction({ id: flagRepo.id })
   })
 
   it('gets moderation report for a repo.', async () => {
@@ -98,70 +96,4 @@ describe('pds admin get moderation action view', () => {
     )
     await expect(promise).rejects.toThrow('Report not found')
   })
-
-  async function takeModerationAction(opts: {
-    action: TakeActionInput['action']
-    subject: TakeActionInput['subject']
-    reason?: string
-    createdBy?: string
-  }) {
-    const { action, subject, reason = 'X', createdBy = 'Y' } = opts
-    const result = await client.com.atproto.admin.takeModerationAction(
-      { action, subject, createdBy, reason },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-    return result.data
-  }
-
-  async function reverseModerationAction(opts: {
-    id: number
-    reason?: string
-    createdBy?: string
-  }) {
-    const { id, reason = 'X', createdBy = 'Y' } = opts
-    const result = await client.com.atproto.admin.reverseModerationAction(
-      { id, reason, createdBy },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-    return result.data
-  }
-
-  async function resolveReports(opts: {
-    actionId: number
-    reportIds: number[]
-    createdBy?: string
-  }) {
-    const { actionId, reportIds, createdBy = 'Y' } = opts
-    const result = await client.com.atproto.admin.resolveModerationReports(
-      { actionId, createdBy, reportIds },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-    return result.data
-  }
-
-  async function createReport(opts: {
-    reasonType: CreateReportInput['reasonType']
-    subject: CreateReportInput['subject']
-    reason?: string
-    reportedByDid: string
-  }) {
-    const { reasonType, subject, reason, reportedByDid } = opts
-    const result = await client.com.atproto.report.create(
-      { reasonType, subject, reason },
-      {
-        encoding: 'application/json',
-        headers: sc.getHeaders(reportedByDid),
-      },
-    )
-    return result.data
-  }
 })

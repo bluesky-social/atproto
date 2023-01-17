@@ -35,21 +35,13 @@ describe('pds admin repo search view', () => {
   })
 
   beforeAll(async () => {
-    await client.com.atproto.admin.takeModerationAction(
-      {
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.repo.repoRef',
-          did: sc.dids['cara-wiegand69.test'],
-        },
-        createdBy: 'X',
-        reason: 'Y',
+    await sc.takeModerationAction({
+      action: TAKEDOWN,
+      subject: {
+        $type: 'com.atproto.repo.repoRef',
+        did: sc.dids['cara-wiegand69.test'],
       },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
+    })
   })
 
   it('gives relevant results', async () => {

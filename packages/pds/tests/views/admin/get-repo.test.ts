@@ -7,8 +7,6 @@ import {
   OTHER,
   SPAM,
 } from '../../../src/lexicon/types/com/atproto/report/reasonType'
-import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
-import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/report/create'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../../_util'
 import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
@@ -33,14 +31,14 @@ describe('pds admin get repo view', () => {
   })
 
   beforeAll(async () => {
-    const acknowledge = await takeModerationAction({
+    const acknowledge = await sc.takeModerationAction({
       action: ACKNOWLEDGE,
       subject: {
         $type: 'com.atproto.repo.repoRef',
         did: sc.dids.alice,
       },
     })
-    await createReport({
+    await sc.createReport({
       reportedByDid: sc.dids.bob,
       reasonType: SPAM,
       subject: {
@@ -48,7 +46,7 @@ describe('pds admin get repo view', () => {
         did: sc.dids.alice,
       },
     })
-    await createReport({
+    await sc.createReport({
       reportedByDid: sc.dids.carol,
       reasonType: OTHER,
       reason: 'defamation',
@@ -57,8 +55,8 @@ describe('pds admin get repo view', () => {
         did: sc.dids.alice,
       },
     })
-    await reverseModerationAction({ id: acknowledge.id })
-    await takeModerationAction({
+    await sc.reverseModerationAction({ id: acknowledge.id })
+    await sc.takeModerationAction({
       action: TAKEDOWN,
       subject: {
         $type: 'com.atproto.repo.repoRef',
@@ -82,54 +80,4 @@ describe('pds admin get repo view', () => {
     )
     await expect(promise).rejects.toThrow('Repo not found')
   })
-
-  async function takeModerationAction(opts: {
-    action: TakeActionInput['action']
-    subject: TakeActionInput['subject']
-    reason?: string
-    createdBy?: string
-  }) {
-    const { action, subject, reason = 'X', createdBy = 'Y' } = opts
-    const result = await client.com.atproto.admin.takeModerationAction(
-      { action, subject, createdBy, reason },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-    return result.data
-  }
-
-  async function reverseModerationAction(opts: {
-    id: number
-    reason?: string
-    createdBy?: string
-  }) {
-    const { id, reason = 'X', createdBy = 'Y' } = opts
-    const result = await client.com.atproto.admin.reverseModerationAction(
-      { id, reason, createdBy },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-    return result.data
-  }
-
-  async function createReport(opts: {
-    reasonType: CreateReportInput['reasonType']
-    subject: CreateReportInput['subject']
-    reason?: string
-    reportedByDid: string
-  }) {
-    const { reasonType, subject, reason, reportedByDid } = opts
-    const result = await client.com.atproto.report.create(
-      { reasonType, subject, reason },
-      {
-        encoding: 'application/json',
-        headers: sc.getHeaders(reportedByDid),
-      },
-    )
-    return result.data
-  }
 })
