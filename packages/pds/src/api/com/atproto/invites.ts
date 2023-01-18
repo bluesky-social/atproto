@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, req }) => {
       const { useCount } = input.body
 
-      // generate a 5 char b32 invite code - preceeded by the hostname
+      // generate a 5 char b32 invite code - preceded by the hostname
       // ex: bsky.app-abc12
       const code =
         ctx.cfg.publicHostname +
