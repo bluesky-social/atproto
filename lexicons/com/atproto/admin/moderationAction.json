@@ -4,10 +4,17 @@
   "defs": {
     "view": {
       "type": "object",
-      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReports"],
+      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReportIds"],
       "properties": {
         "id": {"type": "integer"},
-        "action": {"type": "string", "knownValues": ["com.atproto.admin.moderationAction#takedown"]},
+        "action": {
+          "type": "string",
+          "knownValues": [
+            "com.atproto.admin.moderationAction#takedown",
+            "com.atproto.admin.moderationAction#flag",
+            "com.atproto.admin.moderationAction#acknowledge"
+          ]
+        },
         "subject": {
           "type": "union",
           "refs": [
@@ -19,7 +26,34 @@
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"},
         "reversal": {"type": "ref", "ref": "#reversal"},
-        "resolvedReports": {"type": "array", "items": {"type" :"ref", "ref": "#resolvedReport"}}
+        "resolvedReportIds": {"type": "array", "items": {"type": "integer"}}
+      }
+    },
+    "viewDetail": {
+      "type": "object",
+      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReports"],
+      "properties": {
+        "id": {"type": "integer"},
+        "action": {
+          "type": "string",
+          "knownValues": [
+            "com.atproto.admin.moderationAction#takedown",
+            "com.atproto.admin.moderationAction#flag",
+            "com.atproto.admin.moderationAction#acknowledge"
+          ]
+        },
+        "subject": {
+          "type": "union",
+          "refs": [
+            "com.atproto.admin.repo#view",
+            "com.atproto.admin.record#view"
+          ]
+        },
+        "reason": {"type": "string"},
+        "createdBy": {"type": "string"},
+        "createdAt": {"type": "string"},
+        "reversal": {"type": "ref", "ref": "#reversal"},
+        "resolvedReports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationReport#view"}}
       }
     },
     "reversal": {
@@ -29,13 +63,6 @@
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"}
-      }
-    },
-    "resolvedReport": {
-      "type": "object",
-      "required": ["id"],
-      "properties": {
-        "id": {"type": "integer"}
       }
     },
     "takedown": {

@@ -12,9 +12,19 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
+import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
+import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
+import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
+import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
+import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
+import * as ComAtprotoAdminModerationReport from './types/com/atproto/admin/moderationReport'
+import * as ComAtprotoAdminRecord from './types/com/atproto/admin/record'
+import * as ComAtprotoAdminRepo from './types/com/atproto/admin/repo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
@@ -87,9 +97,19 @@ export * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 export * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 export * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 export * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
+export * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
+export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
+export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
+export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
+export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminModerationAction from './types/com/atproto/admin/moderationAction'
+export * as ComAtprotoAdminModerationReport from './types/com/atproto/admin/moderationReport'
+export * as ComAtprotoAdminRecord from './types/com/atproto/admin/record'
+export * as ComAtprotoAdminRepo from './types/com/atproto/admin/repo'
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 export * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
@@ -324,6 +344,72 @@ export class AdminNS {
     this._service = service
   }
 
+  getModerationAction(
+    params?: ComAtprotoAdminGetModerationAction.QueryParams,
+    opts?: ComAtprotoAdminGetModerationAction.CallOptions,
+  ): Promise<ComAtprotoAdminGetModerationAction.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getModerationAction', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetModerationAction.toKnownErr(e)
+      })
+  }
+
+  getModerationActions(
+    params?: ComAtprotoAdminGetModerationActions.QueryParams,
+    opts?: ComAtprotoAdminGetModerationActions.CallOptions,
+  ): Promise<ComAtprotoAdminGetModerationActions.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getModerationActions', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetModerationActions.toKnownErr(e)
+      })
+  }
+
+  getModerationReport(
+    params?: ComAtprotoAdminGetModerationReport.QueryParams,
+    opts?: ComAtprotoAdminGetModerationReport.CallOptions,
+  ): Promise<ComAtprotoAdminGetModerationReport.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getModerationReport', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetModerationReport.toKnownErr(e)
+      })
+  }
+
+  getModerationReports(
+    params?: ComAtprotoAdminGetModerationReports.QueryParams,
+    opts?: ComAtprotoAdminGetModerationReports.CallOptions,
+  ): Promise<ComAtprotoAdminGetModerationReports.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getModerationReports', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetModerationReports.toKnownErr(e)
+      })
+  }
+
+  getRecord(
+    params?: ComAtprotoAdminGetRecord.QueryParams,
+    opts?: ComAtprotoAdminGetRecord.CallOptions,
+  ): Promise<ComAtprotoAdminGetRecord.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getRecord', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetRecord.toKnownErr(e)
+      })
+  }
+
+  getRepo(
+    params?: ComAtprotoAdminGetRepo.QueryParams,
+    opts?: ComAtprotoAdminGetRepo.CallOptions,
+  ): Promise<ComAtprotoAdminGetRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getRepo', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetRepo.toKnownErr(e)
+      })
+  }
+
   resolveModerationReports(
     data?: ComAtprotoAdminResolveModerationReports.InputSchema,
     opts?: ComAtprotoAdminResolveModerationReports.CallOptions,
@@ -343,6 +429,17 @@ export class AdminNS {
       .call('com.atproto.admin.reverseModerationAction', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminReverseModerationAction.toKnownErr(e)
+      })
+  }
+
+  searchRepos(
+    params?: ComAtprotoAdminSearchRepos.QueryParams,
+    opts?: ComAtprotoAdminSearchRepos.CallOptions,
+  ): Promise<ComAtprotoAdminSearchRepos.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.searchRepos', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminSearchRepos.toKnownErr(e)
       })
   }
 

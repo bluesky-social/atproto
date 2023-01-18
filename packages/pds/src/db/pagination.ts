@@ -103,12 +103,12 @@ export const paginate = <
     direction?: 'asc' | 'desc'
     keyset: K
   },
-) => {
+): QB => {
   const { limit, before, keyset, direction = 'desc' } = opts
   const keysetSql = keyset.getSql(keyset.unpack(before), direction)
   return qb
     .if(!!limit, (q) => q.limit(limit as number))
     .orderBy(keyset.primary, direction)
     .orderBy(keyset.secondary, direction)
-    .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb))
+    .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
 }

@@ -1,0 +1,138 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds admin get moderation action view gets moderation action for a record. 1`] = `
+Object {
+  "action": "com.atproto.admin.moderationAction#takedown",
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "createdBy": "Y",
+  "id": 2,
+  "reason": "X",
+  "resolvedReports": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "id": 2,
+      "reason": "defamation",
+      "reasonType": "com.atproto.report.reasonType#other",
+      "reportedByDid": "user(1)",
+      "resolvedByActionIds": Array [
+        2,
+        1,
+      ],
+      "subject": Object {
+        "$type": "com.atproto.repo.strongRef",
+        "cid": "cids(0)",
+        "uri": "record(0)",
+      },
+    },
+  ],
+  "subject": Object {
+    "$type": "com.atproto.admin.record#view",
+    "cid": "cids(0)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "moderation": Object {
+      "takedownId": 2,
+    },
+    "repo": Object {
+      "account": Object {
+        "email": "alice@test.com",
+      },
+      "did": "user(0)",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "moderation": Object {},
+      "relatedRecords": Array [
+        Object {
+          "$type": "app.bsky.system.declaration",
+          "actorType": "app.bsky.system.actorUser",
+        },
+        Object {
+          "$type": "app.bsky.actor.profile",
+          "avatar": Object {
+            "cid": "cids(1)",
+            "mimeType": "image/jpeg",
+          },
+          "description": "its me!",
+          "displayName": "ali",
+        },
+      ],
+    },
+    "uri": "record(0)",
+    "value": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "text": "hey there",
+    },
+  },
+}
+`;
+
+exports[`pds admin get moderation action view gets moderation action for a repo. 1`] = `
+Object {
+  "action": "com.atproto.admin.moderationAction#flag",
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "createdBy": "Y",
+  "id": 1,
+  "reason": "X",
+  "resolvedReports": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "id": 2,
+      "reason": "defamation",
+      "reasonType": "com.atproto.report.reasonType#other",
+      "reportedByDid": "user(1)",
+      "resolvedByActionIds": Array [
+        2,
+        1,
+      ],
+      "subject": Object {
+        "$type": "com.atproto.repo.strongRef",
+        "cid": "cids(1)",
+        "uri": "record(0)",
+      },
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "id": 1,
+      "reasonType": "com.atproto.report.reasonType#spam",
+      "reportedByDid": "user(2)",
+      "resolvedByActionIds": Array [
+        1,
+      ],
+      "subject": Object {
+        "$type": "com.atproto.repo.repoRef",
+        "did": "user(0)",
+      },
+    },
+  ],
+  "reversal": Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "Y",
+    "reason": "X",
+  },
+  "subject": Object {
+    "$type": "com.atproto.admin.repo#view",
+    "account": Object {
+      "email": "alice@test.com",
+    },
+    "did": "user(0)",
+    "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "moderation": Object {},
+    "relatedRecords": Array [
+      Object {
+        "$type": "app.bsky.system.declaration",
+        "actorType": "app.bsky.system.actorUser",
+      },
+      Object {
+        "$type": "app.bsky.actor.profile",
+        "avatar": Object {
+          "cid": "cids(0)",
+          "mimeType": "image/jpeg",
+        },
+        "description": "its me!",
+        "displayName": "ali",
+      },
+    ],
+  },
+}
+`;

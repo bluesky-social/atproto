@@ -14,8 +14,15 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
+import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
+import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
+import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
+import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
+import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
@@ -192,6 +199,60 @@ export class AdminNS {
     this._server = server
   }
 
+  getModerationAction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetModerationAction.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getModerationAction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getModerationActions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetModerationActions.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getModerationActions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getModerationReport<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetModerationReport.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getModerationReport' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getModerationReports<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetModerationReports.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getModerationReports' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRecord<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAdminGetRecord.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.admin.getRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAdminGetRepo.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.admin.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   resolveModerationReports<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -209,6 +270,13 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.reverseModerationAction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchRepos<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAdminSearchRepos.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.admin.searchRepos' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -1,6 +1,10 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
+import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
+
 export type Main =
   | 'com.atproto.report.reason#spam'
   | 'com.atproto.report.reason#other'

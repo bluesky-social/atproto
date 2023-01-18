@@ -1,0 +1,46 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.record",
+  "defs": {
+    "view": {
+      "type": "object",
+      "required": ["uri", "cid", "value", "indexedAt", "moderation", "repo"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"},
+        "value": {"type": "unknown"},
+        "indexedAt": {"type": "string"},
+        "moderation": {"type": "ref", "ref": "#moderation"},
+        "repo": {"type": "ref", "ref": "com.atproto.admin.repo#view"}
+      }
+    },
+    "viewDetail": {
+      "type": "object",
+      "required": ["uri", "cid", "value", "indexedAt", "moderation", "repo"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"},
+        "value": {"type": "unknown"},
+        "indexedAt": {"type": "string"},
+        "moderation": {"type": "ref", "ref": "#moderationDetail"},
+        "repo": {"type": "ref", "ref": "com.atproto.admin.repo#view"}
+      }
+    },
+    "moderation": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "takedownId": {"type": "integer"}
+      }
+    },
+    "moderationDetail": {
+      "type": "object",
+      "required": ["actions", "reports"],
+      "properties": {
+        "actions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationAction#view"}},
+        "reports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationReport#view"}},
+        "takedownId": {"type": "integer"}
+      }
+    }
+  }
+}

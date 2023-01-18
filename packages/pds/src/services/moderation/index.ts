@@ -3,13 +3,12 @@ import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import Database from '../db'
-import { MessageQueue } from '../event-stream/types'
-import { ModerationAction, ModerationReport } from '../db/tables/moderation'
-import { View as ModerationActionView } from '../lexicon/types/com/atproto/admin/moderationAction'
-import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/report/create'
-import { RepoService } from './repo'
-import { RecordService } from './record'
+import Database from '../../db'
+import { MessageQueue } from '../../event-stream/types'
+import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { RepoService } from '../repo'
+import { RecordService } from '../record'
+import { ModerationViews } from './views'
 
 export class ModerationService {
   constructor(
@@ -21,6 +20,8 @@ export class ModerationService {
   static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
     return (db: Database) => new ModerationService(db, messageQueue, blobstore)
   }
+
+  views = new ModerationViews(this.db, this.messageQueue)
 
   services = {
     repo: RepoService.creator(this.messageQueue, this.blobstore),
@@ -39,6 +40,91 @@ export class ModerationService {
     const action = await this.getAction(id)
     if (!action) throw new InvalidRequestError('Action not found')
     return action
+  }
+
+  async getActions(opts: {
+    subject?: string
+    limit: number
+    before?: string
+  }): Promise<ModerationActionRow[]> {
+    const { subject, limit, before } = opts
+    let builder = this.db.db.selectFrom('moderation_action')
+    if (subject) {
+      builder = builder.where((qb) => {
+        return qb
+          .where('subjectDid', '=', subject)
+          .orWhere('subjectUri', '=', subject)
+      })
+    }
+    if (before) {
+      const beforeNumeric = parseInt(before, 10)
+      if (isNaN(beforeNumeric)) {
+        throw new InvalidRequestError('Malformed cursor')
+      }
+      builder = builder.where('id', '<', beforeNumeric)
+    }
+    return await builder
+      .selectAll()
+      .orderBy('id', 'desc')
+      .limit(limit)
+      .execute()
+  }
+
+  async getReport(id: number): Promise<ModerationReportRow | undefined> {
+    return await this.db.db
+      .selectFrom('moderation_report')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst()
+  }
+
+  async getReports(opts: {
+    subject?: string
+    resolved?: boolean
+    limit: number
+    before?: string
+  }): Promise<ModerationReportRow[]> {
+    const { subject, resolved, limit, before } = opts
+    const { ref } = this.db.db.dynamic
+    let builder = this.db.db.selectFrom('moderation_report')
+    if (subject) {
+      builder = builder.where((qb) => {
+        return qb
+          .where('subjectDid', '=', subject)
+          .orWhere('subjectUri', '=', subject)
+      })
+    }
+    if (resolved !== undefined) {
+      const resolutionsQuery = this.db.db
+        .selectFrom('moderation_report_resolution')
+        .selectAll()
+        .whereRef(
+          'moderation_report_resolution.reportId',
+          '=',
+          ref('moderation_report.id'),
+        )
+      builder = resolved
+        ? builder.whereExists(resolutionsQuery)
+        : builder.whereNotExists(resolutionsQuery)
+    }
+    if (before) {
+      const beforeNumeric = parseInt(before, 10)
+      if (isNaN(beforeNumeric)) {
+        throw new InvalidRequestError('Malformed cursor')
+      }
+      builder = builder.where('id', '<', beforeNumeric)
+    }
+    return await builder
+      .selectAll()
+      .orderBy('id', 'desc')
+      .limit(limit)
+      .execute()
+  }
+
+  async getReportOrThrow(id: number): Promise<ModerationReportRow> {
+    const report = await this.getReport(id)
+    if (!report) throw new InvalidRequestError('Report not found')
+    return report
   }
 
   async logAction(info: {
@@ -198,47 +284,6 @@ export class ModerationService {
       .execute()
   }
 
-  async formatActionView(
-    modAction: ModerationActionRow,
-  ): Promise<ModerationActionView> {
-    const resolutions = await this.db.db
-      .selectFrom('moderation_report_resolution')
-      .select('reportId as id')
-      .where('actionId', '=', modAction.id)
-      .orderBy('createdAt', 'desc')
-      .orderBy('id', 'desc')
-      .execute()
-    return {
-      id: modAction.id,
-      action: modAction.action,
-      subject:
-        modAction.subjectType === 'com.atproto.repo.repoRef'
-          ? {
-              $type: 'com.atproto.repo.repoRef',
-              did: modAction.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: modAction.subjectUri,
-              cid: modAction.subjectCid,
-            },
-      reason: modAction.reason,
-      createdAt: modAction.createdAt,
-      createdBy: modAction.createdBy,
-      reversal:
-        modAction.reversedAt !== null &&
-        modAction.reversedBy !== null &&
-        modAction.reversedReason !== null
-          ? {
-              createdAt: modAction.reversedAt,
-              createdBy: modAction.reversedBy,
-              reason: modAction.reversedReason,
-            }
-          : undefined,
-      resolvedReports: resolutions,
-    }
-  }
-
   async report(info: {
     reasonType: ModerationReportRow['reasonType']
     reason?: string
@@ -292,34 +337,13 @@ export class ModerationService {
 
     return report
   }
-
-  formatReportView(report: ModerationReportRow): ReportOutput {
-    return {
-      id: report.id,
-      createdAt: report.createdAt,
-      reasonType: report.reasonType,
-      reason: report.reason ?? undefined,
-      reportedByDid: report.reportedByDid,
-      subject:
-        report.subjectType === 'com.atproto.repo.repoRef'
-          ? {
-              $type: 'com.atproto.repo.repoRef',
-              did: report.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: report.subjectUri,
-              cid: report.subjectCid,
-            },
-    }
-  }
 }
 
 export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
 
-type SubjectInfo =
+export type SubjectInfo =
   | {
       subjectType: 'com.atproto.repo.repoRef'
       subjectDid: string
