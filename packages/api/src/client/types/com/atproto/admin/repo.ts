@@ -84,8 +84,8 @@ export function validateModeration(v: unknown): ValidationResult {
 }
 
 export interface ModerationDetail {
-  actions?: ComAtprotoAdminModerationAction.View[]
-  reports?: ComAtprotoAdminModerationReport.View[]
+  actions: ComAtprotoAdminModerationAction.View[]
+  reports: ComAtprotoAdminModerationReport.View[]
   takedownId?: number
   [k: string]: unknown
 }

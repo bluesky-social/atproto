@@ -182,6 +182,61 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetRecord: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getRecord',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View details about a record.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+            },
+            cid: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.record#viewDetail',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetRepo: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getRepo',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View details about a repository.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.repo#viewDetail',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminModerationAction: {
     lexicon: 1,
     id: 'com.atproto.admin.moderationAction',
@@ -423,7 +478,7 @@ export const schemaDict = {
       },
       moderationDetail: {
         type: 'object',
-        required: [],
+        required: ['actions', 'reports'],
         properties: {
           actions: {
             type: 'array',
@@ -540,7 +595,7 @@ export const schemaDict = {
       },
       moderationDetail: {
         type: 'object',
-        required: [],
+        required: ['actions', 'reports'],
         properties: {
           actions: {
             type: 'array',
@@ -3841,6 +3896,8 @@ export const ids = {
   ComAtprotoAccountRequestPasswordReset:
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
+  ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
+  ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminModerationAction: 'com.atproto.admin.moderationAction',
   ComAtprotoAdminModerationReport: 'com.atproto.admin.moderationReport',
   ComAtprotoAdminRecord: 'com.atproto.admin.record',

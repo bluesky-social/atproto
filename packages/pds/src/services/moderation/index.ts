@@ -6,8 +6,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
-import { View as ModerationActionView } from '../../lexicon/types/com/atproto/admin/moderationAction'
-import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/report/create'
 import { RepoService } from '../repo'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
@@ -201,47 +199,6 @@ export class ModerationService {
       .execute()
   }
 
-  async formatActionView(
-    modAction: ModerationActionRow,
-  ): Promise<ModerationActionView> {
-    const resolutions = await this.db.db
-      .selectFrom('moderation_report_resolution')
-      .select('reportId as id')
-      .where('actionId', '=', modAction.id)
-      .orderBy('createdAt', 'desc')
-      .orderBy('id', 'desc')
-      .execute()
-    return {
-      id: modAction.id,
-      action: modAction.action,
-      subject:
-        modAction.subjectType === 'com.atproto.repo.repoRef'
-          ? {
-              $type: 'com.atproto.repo.repoRef',
-              did: modAction.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: modAction.subjectUri,
-              cid: modAction.subjectCid,
-            },
-      reason: modAction.reason,
-      createdAt: modAction.createdAt,
-      createdBy: modAction.createdBy,
-      reversal:
-        modAction.reversedAt !== null &&
-        modAction.reversedBy !== null &&
-        modAction.reversedReason !== null
-          ? {
-              createdAt: modAction.reversedAt,
-              createdBy: modAction.reversedBy,
-              reason: modAction.reversedReason,
-            }
-          : undefined,
-      resolvedReportIds: resolutions.map((r) => r.id),
-    }
-  }
-
   async report(info: {
     reasonType: ModerationReportRow['reasonType']
     reason?: string
@@ -294,27 +251,6 @@ export class ModerationService {
       .executeTakeFirstOrThrow()
 
     return report
-  }
-
-  formatReportView(report: ModerationReportRow): ReportOutput {
-    return {
-      id: report.id,
-      createdAt: report.createdAt,
-      reasonType: report.reasonType,
-      reason: report.reason ?? undefined,
-      reportedByDid: report.reportedByDid,
-      subject:
-        report.subjectType === 'com.atproto.repo.repoRef'
-          ? {
-              $type: 'com.atproto.repo.repoRef',
-              did: report.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: report.subjectUri,
-              cid: report.subjectCid,
-            },
-    }
   }
 }
 

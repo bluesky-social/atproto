@@ -22,7 +22,7 @@ export class ActorService {
   async getUser(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<(User & DidHandle & { takedownId: number | null }) | null> {
+  ): Promise<(User & DidHandle & RepoRoot) | null> {
     const { ref } = this.db.db.dynamic
     let query = this.db.db
       .selectFrom('user')
@@ -33,7 +33,7 @@ export class ActorService {
       )
       .selectAll('user')
       .selectAll('did_handle')
-      .select('repo_root.takedownId')
+      .selectAll('repo_root')
     if (handleOrDid.startsWith('did:')) {
       query = query.where('did_handle.did', '=', handleOrDid)
     } else {
