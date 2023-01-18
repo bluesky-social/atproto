@@ -1,7 +1,10 @@
 import fs from 'fs/promises'
 import { APP_BSKY_GRAPH, ServiceClient } from '@atproto/api'
+import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
+import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/report/create'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
+import { adminAuth } from '../_util'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -381,6 +384,72 @@ export class SeedClient {
 
   actorRef(did: string): ActorRef {
     return this.accounts[did].ref
+  }
+
+  async takeModerationAction(opts: {
+    action: TakeActionInput['action']
+    subject: TakeActionInput['subject']
+    reason?: string
+    createdBy?: string
+  }) {
+    const { action, subject, reason = 'X', createdBy = 'Y' } = opts
+    const result = await this.client.com.atproto.admin.takeModerationAction(
+      { action, subject, createdBy, reason },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    return result.data
+  }
+
+  async reverseModerationAction(opts: {
+    id: number
+    reason?: string
+    createdBy?: string
+  }) {
+    const { id, reason = 'X', createdBy = 'Y' } = opts
+    const result = await this.client.com.atproto.admin.reverseModerationAction(
+      { id, reason, createdBy },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    return result.data
+  }
+
+  async resolveReports(opts: {
+    actionId: number
+    reportIds: number[]
+    createdBy?: string
+  }) {
+    const { actionId, reportIds, createdBy = 'Y' } = opts
+    const result = await this.client.com.atproto.admin.resolveModerationReports(
+      { actionId, createdBy, reportIds },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    return result.data
+  }
+
+  async createReport(opts: {
+    reasonType: CreateReportInput['reasonType']
+    subject: CreateReportInput['subject']
+    reason?: string
+    reportedByDid: string
+  }) {
+    const { reasonType, subject, reason, reportedByDid } = opts
+    const result = await this.client.com.atproto.report.create(
+      { reasonType, subject, reason },
+      {
+        encoding: 'application/json',
+        headers: this.getHeaders(reportedByDid),
+      },
+    )
+    return result.data
   }
 
   getHeaders(did: string) {

@@ -208,6 +208,52 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetModerationActions: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getModerationActions',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List moderation actions related to a subject.',
+        parameters: {
+          type: 'params',
+          properties: {
+            subject: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actions'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              actions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.moderationAction#view',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetModerationReport: {
     lexicon: 1,
     id: 'com.atproto.admin.getModerationReport',
@@ -229,6 +275,55 @@ export const schemaDict = {
           schema: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.moderationReport#viewDetail',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetModerationReports: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getModerationReports',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List moderation reports related to a subject.',
+        parameters: {
+          type: 'params',
+          properties: {
+            subject: {
+              type: 'string',
+            },
+            resolved: {
+              type: 'boolean',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reports'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              reports: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.moderationReport#view',
+                },
+              },
+            },
           },
         },
       },
@@ -4005,7 +4100,9 @@ export const ids = {
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
+  ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
   ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
+  ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminModerationAction: 'com.atproto.admin.moderationAction',

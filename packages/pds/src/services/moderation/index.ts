@@ -42,12 +42,83 @@ export class ModerationService {
     return action
   }
 
+  async getActions(opts: {
+    subject?: string
+    limit: number
+    before?: string
+  }): Promise<ModerationActionRow[]> {
+    const { subject, limit, before } = opts
+    let builder = this.db.db.selectFrom('moderation_action')
+    if (subject) {
+      builder = builder.where((qb) => {
+        return qb
+          .where('subjectDid', '=', subject)
+          .orWhere('subjectUri', '=', subject)
+      })
+    }
+    if (before) {
+      const beforeNumeric = parseInt(before, 10)
+      if (isNaN(beforeNumeric)) {
+        throw new InvalidRequestError('Malformed cursor')
+      }
+      builder = builder.where('id', '<', beforeNumeric)
+    }
+    return await builder
+      .selectAll()
+      .orderBy('id', 'desc')
+      .limit(limit)
+      .execute()
+  }
+
   async getReport(id: number): Promise<ModerationReportRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_report')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
+  }
+
+  async getReports(opts: {
+    subject?: string
+    resolved?: boolean
+    limit: number
+    before?: string
+  }): Promise<ModerationReportRow[]> {
+    const { subject, resolved, limit, before } = opts
+    const { ref } = this.db.db.dynamic
+    let builder = this.db.db.selectFrom('moderation_report')
+    if (subject) {
+      builder = builder.where((qb) => {
+        return qb
+          .where('subjectDid', '=', subject)
+          .orWhere('subjectUri', '=', subject)
+      })
+    }
+    if (resolved !== undefined) {
+      const resolutionsQuery = this.db.db
+        .selectFrom('moderation_report_resolution')
+        .selectAll()
+        .whereRef(
+          'moderation_report_resolution.reportId',
+          '=',
+          ref('moderation_report.id'),
+        )
+      builder = resolved
+        ? builder.whereExists(resolutionsQuery)
+        : builder.whereNotExists(resolutionsQuery)
+    }
+    if (before) {
+      const beforeNumeric = parseInt(before, 10)
+      if (isNaN(beforeNumeric)) {
+        throw new InvalidRequestError('Malformed cursor')
+      }
+      builder = builder.where('id', '<', beforeNumeric)
+    }
+    return await builder
+      .selectAll()
+      .orderBy('id', 'desc')
+      .limit(limit)
+      .execute()
   }
 
   async getReportOrThrow(id: number): Promise<ModerationReportRow> {
