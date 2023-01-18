@@ -53,11 +53,9 @@ export function validate(
 export function array(
   lexicons: Lexicons,
   path: string,
-  def: LexUserType,
+  def: LexArray,
   value: unknown,
 ): ValidationResult {
-  def = def as LexArray
-
   // type
   if (!Array.isArray(value)) {
     return {

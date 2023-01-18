@@ -2,6 +2,7 @@ import { Lexicons } from '../lexicons'
 import { LexXrpcParameters, ValidationResult, ValidationError } from '../types'
 
 import * as PrimitiveValidators from './primitives'
+import { array } from './complex'
 
 export function params(
   lexicons: Lexicons,
@@ -9,8 +10,6 @@ export function params(
   def: LexXrpcParameters,
   value: unknown,
 ): ValidationResult {
-  def = def as LexXrpcParameters
-
   // type
   if (!value || typeof value !== 'object') {
     // in this case, we just fall back to an object
@@ -35,12 +34,11 @@ export function params(
       continue // skip- if required, will have already failed
     }
     const paramDef = def.properties[key]
-    const res = PrimitiveValidators.validate(
-      lexicons,
-      key,
-      paramDef,
-      (value as Record<string, unknown>)[key],
-    )
+    const val = (value as Record<string, unknown>)[key]
+    const res =
+      paramDef.type === 'array'
+        ? array(lexicons, key, paramDef, val)
+        : PrimitiveValidators.validate(lexicons, key, paramDef, val)
     if (!res.success) {
       return res
     }
