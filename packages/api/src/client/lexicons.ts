@@ -182,6 +182,58 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetModerationAction: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getModerationAction',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View details about a moderation action.',
+        parameters: {
+          type: 'params',
+          required: ['id'],
+          properties: {
+            id: {
+              type: 'number',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#viewDetail',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetModerationReport: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getModerationReport',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View details about a moderation report.',
+        parameters: {
+          type: 'params',
+          required: ['id'],
+          properties: {
+            id: {
+              type: 'number',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationReport#viewDetail',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetRecord: {
     lexicon: 1,
     id: 'com.atproto.admin.getRecord',
@@ -258,7 +310,11 @@ export const schemaDict = {
           },
           action: {
             type: 'string',
-            knownValues: ['com.atproto.admin.moderationAction#takedown'],
+            knownValues: [
+              'com.atproto.admin.moderationAction#takedown',
+              'com.atproto.admin.moderationAction#flag',
+              'com.atproto.admin.moderationAction#acknowledge',
+            ],
           },
           subject: {
             type: 'union',
@@ -284,6 +340,58 @@ export const schemaDict = {
             type: 'array',
             items: {
               type: 'integer',
+            },
+          },
+        },
+      },
+      viewDetail: {
+        type: 'object',
+        required: [
+          'id',
+          'action',
+          'subject',
+          'reason',
+          'createdBy',
+          'createdAt',
+          'resolvedReports',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          action: {
+            type: 'string',
+            knownValues: [
+              'com.atproto.admin.moderationAction#takedown',
+              'com.atproto.admin.moderationAction#flag',
+              'com.atproto.admin.moderationAction#acknowledge',
+            ],
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.repo#view',
+              'lex:com.atproto.admin.record#view',
+            ],
+          },
+          reason: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+          },
+          reversal: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#reversal',
+          },
+          resolvedReports: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.moderationReport#view',
             },
           },
         },
@@ -3896,6 +4004,8 @@ export const ids = {
   ComAtprotoAccountRequestPasswordReset:
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
+  ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
+  ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminModerationAction: 'com.atproto.admin.moderationAction',

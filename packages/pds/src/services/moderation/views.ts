@@ -2,24 +2,36 @@ import { Selectable } from 'kysely'
 import { ipldBytesToRecord } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
+import { MessageQueue } from '../../event-stream/types'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import {
   View as RepoView,
   ViewDetail as RepoViewDetail,
 } from '../../lexicon/types/com/atproto/admin/repo'
-import { ViewDetail as RecordViewDetail } from '../../lexicon/types/com/atproto/admin/record'
-import { View as ActionView } from '../../lexicon/types/com/atproto/admin/moderationAction'
-import { View as ReportView } from '../../lexicon/types/com/atproto/admin/moderationReport'
+import {
+  View as RecordView,
+  ViewDetail as RecordViewDetail,
+} from '../../lexicon/types/com/atproto/admin/record'
+import {
+  View as ActionView,
+  ViewDetail as ActionViewDetail,
+} from '../../lexicon/types/com/atproto/admin/moderationAction'
+import {
+  View as ReportView,
+  ViewDetail as ReportViewDetail,
+} from '../../lexicon/types/com/atproto/admin/moderationReport'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/report/create'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { ActorService } from '../actor'
+import { RecordService } from '../record'
 
 export class ModerationViews {
-  constructor(private db: Database) {}
+  constructor(private db: Database, private messageQueue: MessageQueue) {}
 
   services = {
     actor: ActorService.creator(),
+    record: RecordService.creator(this.messageQueue),
   }
 
   repo(result: RepoResult): Promise<RepoView>
@@ -91,7 +103,6 @@ export class ModerationViews {
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.repo.repoRef')
         .where('subjectDid', '=', repo.did)
-        .orderBy('createdAt', 'desc')
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
@@ -99,7 +110,6 @@ export class ModerationViews {
         .selectFrom('moderation_action')
         .where('subjectType', '=', 'com.atproto.repo.repoRef')
         .where('subjectDid', '=', repo.did)
-        .orderBy('createdAt', 'desc')
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
@@ -118,15 +128,56 @@ export class ModerationViews {
     }
   }
 
+  record(result: RecordResult): Promise<RecordView>
+  record(result: RecordResult[]): Promise<RecordView[]>
+  async record(
+    result: RecordResult | RecordResult[],
+  ): Promise<RecordView | RecordView[]> {
+    const results = Array.isArray(result) ? result : [result]
+    if (results.length === 0) return []
+
+    const repoResults = await this.db.db
+      .selectFrom('repo_root')
+      .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
+      .where(
+        'repo_root.did',
+        'in',
+        results.map((r) => didFromUri(r.uri)),
+      )
+      .selectAll('repo_root')
+      .selectAll('did_handle')
+      .execute()
+    const repos = await this.repo(repoResults)
+    const reposByDid = repos.reduce(
+      (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
+      {} as Record<string, ArrayEl<typeof repos>>,
+    )
+
+    const views = results.map((res) => {
+      const repo = reposByDid[didFromUri(res.uri)]
+      if (!repo) throw new Error(`Record repo is missing: ${res.uri}`)
+      return {
+        uri: res.uri,
+        cid: res.cid,
+        value: res.value,
+        indexedAt: res.indexedAt,
+        repo,
+        moderation: {
+          takedownId: res.takedownId ?? undefined,
+        },
+      }
+    })
+
+    return Array.isArray(result) ? views : views[0]
+  }
+
   async recordDetail(result: RecordResult): Promise<RecordViewDetail> {
-    const uri = new AtUri(result.uri)
-    const [repoResult, reportResults, actionResults] = await Promise.all([
-      this.services.actor(this.db).getUser(uri.host, true),
+    const [record, reportResults, actionResults] = await Promise.all([
+      this.record(result),
       this.db.db
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.repo.recordRef')
         .where('subjectUri', '=', result.uri)
-        .orderBy('createdAt', 'desc')
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
@@ -134,25 +185,18 @@ export class ModerationViews {
         .selectFrom('moderation_action')
         .where('subjectType', '=', 'com.atproto.repo.recordRef')
         .where('subjectUri', '=', result.uri)
-        .orderBy('createdAt', 'desc')
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
     ])
-    if (!repoResult) throw new Error(`Record repo is missing: ${result.uri}`)
-    const [repo, reports, actions] = await Promise.all([
-      this.repo(repoResult),
+    const [reports, actions] = await Promise.all([
       this.report(reportResults),
       this.action(actionResults),
     ])
     return {
-      uri: result.uri,
-      cid: result.cid,
-      value: result.value,
-      indexedAt: result.indexedAt,
-      repo,
+      ...record,
       moderation: {
-        takedownId: result.takedownId ?? undefined,
+        ...record.moderation,
         reports,
         actions,
       },
@@ -175,7 +219,6 @@ export class ModerationViews {
         'in',
         results.map((r) => r.id),
       )
-      .orderBy('createdAt', 'desc')
       .orderBy('id', 'desc')
       .execute()
 
@@ -218,6 +261,32 @@ export class ModerationViews {
     return Array.isArray(result) ? views : views[0]
   }
 
+  async actionDetail(result: ActionResult): Promise<ActionViewDetail> {
+    const action = await this.action(result)
+    const reportResults = action.resolvedReportIds.length
+      ? await this.db.db
+          .selectFrom('moderation_report')
+          .where('id', 'in', action.resolvedReportIds)
+          .orderBy('id', 'desc')
+          .selectAll()
+          .execute()
+      : []
+    const [subject, resolvedReports] = await Promise.all([
+      this.subject(result),
+      this.report(reportResults),
+    ])
+    return {
+      id: action.id,
+      action: action.action,
+      subject,
+      reason: action.reason,
+      createdAt: action.createdAt,
+      createdBy: action.createdBy,
+      reversal: action.reversal,
+      resolvedReports,
+    }
+  }
+
   report(result: ReportResult): Promise<ReportView>
   report(result: ReportResult[]): Promise<ReportView[]>
   async report(
@@ -234,7 +303,6 @@ export class ModerationViews {
         'in',
         results.map((r) => r.id),
       )
-      .orderBy('createdAt', 'desc')
       .orderBy('id', 'desc')
       .execute()
 
@@ -287,6 +355,66 @@ export class ModerationViews {
             },
     }
   }
+
+  async reportDetail(result: ReportResult): Promise<ReportViewDetail> {
+    const report = await this.report(result)
+    const actionResults = report.resolvedByActionIds.length
+      ? await this.db.db
+          .selectFrom('moderation_action')
+          .where('id', 'in', report.resolvedByActionIds)
+          .orderBy('id', 'desc')
+          .selectAll()
+          .execute()
+      : []
+    const [subject, resolvedByActions] = await Promise.all([
+      this.subject(result),
+      this.action(actionResults),
+    ])
+    return {
+      id: report.id,
+      createdAt: report.createdAt,
+      reasonType: report.reasonType,
+      reason: report.reason ?? undefined,
+      reportedByDid: report.reportedByDid,
+      subject,
+      resolvedByActions,
+    }
+  }
+
+  // Partial view for subjects
+
+  async subject(result: SubjectResult): Promise<SubjectView> {
+    let subject: SubjectView
+    if (result.subjectType === 'com.atproto.repo.repoRef') {
+      const repoResult = await this.services
+        .actor(this.db)
+        .getUser(result.subjectDid, true)
+      if (!repoResult) {
+        throw new Error(
+          `Subject is missing: (${result.id}) ${result.subjectDid}`,
+        )
+      }
+      subject = await this.repo(repoResult)
+      subject.$type = 'com.atproto.admin.repo#view'
+    } else if (
+      result.subjectType === 'com.atproto.repo.recordRef' &&
+      result.subjectUri !== null
+    ) {
+      const recordResult = await this.services
+        .record(this.db)
+        .getRecord(new AtUri(result.subjectUri), null, true)
+      if (!recordResult) {
+        throw new Error(
+          `Subject is missing: (${result.id}) ${result.subjectUri}`,
+        )
+      }
+      subject = await this.record(recordResult)
+      subject.$type = 'com.atproto.admin.record#view'
+    } else {
+      throw new Error(`Bad subject data: (${result.id}) ${result.subjectType}`)
+    }
+    return subject
+  }
 }
 
 type RepoResult = DidHandle & RepoRoot
@@ -303,4 +431,15 @@ type RecordResult = {
   takedownId: number | null
 }
 
+type SubjectResult = Pick<
+  ActionResult & ReportResult,
+  'id' | 'subjectType' | 'subjectDid' | 'subjectUri' | 'subjectCid'
+>
+
+type SubjectView = ActionViewDetail['subject'] & ReportViewDetail['subject']
+
 type ArrayEl<A> = A extends readonly (infer T)[] ? T : never
+
+function didFromUri(uri: string) {
+  return new AtUri(uri).host
+}

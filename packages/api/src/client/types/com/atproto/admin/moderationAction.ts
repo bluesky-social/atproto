@@ -6,10 +6,17 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+import * as ComAtprotoAdminRepo from './repo'
+import * as ComAtprotoAdminRecord from './record'
+import * as ComAtprotoAdminModerationReport from './moderationReport'
 
 export interface View {
   id: number
-  action: 'com.atproto.admin.moderationAction#takedown' | (string & {})
+  action:
+    | 'com.atproto.admin.moderationAction#takedown'
+    | 'com.atproto.admin.moderationAction#flag'
+    | 'com.atproto.admin.moderationAction#acknowledge'
+    | (string & {})
   subject:
     | ComAtprotoRepoRepoRef.Main
     | ComAtprotoRepoStrongRef.Main
@@ -32,6 +39,37 @@ export function isView(v: unknown): v is View {
 
 export function validateView(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.moderationAction#view', v)
+}
+
+export interface ViewDetail {
+  id: number
+  action:
+    | 'com.atproto.admin.moderationAction#takedown'
+    | 'com.atproto.admin.moderationAction#flag'
+    | 'com.atproto.admin.moderationAction#acknowledge'
+    | (string & {})
+  subject:
+    | ComAtprotoAdminRepo.View
+    | ComAtprotoAdminRecord.View
+    | { $type: string; [k: string]: unknown }
+  reason: string
+  createdBy: string
+  createdAt: string
+  reversal?: Reversal
+  resolvedReports: ComAtprotoAdminModerationReport.View[]
+  [k: string]: unknown
+}
+
+export function isViewDetail(v: unknown): v is ViewDetail {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.moderationAction#viewDetail'
+  )
+}
+
+export function validateViewDetail(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.moderationAction#viewDetail', v)
 }
 
 export interface Reversal {

@@ -21,7 +21,7 @@ export class ModerationService {
     return (db: Database) => new ModerationService(db, messageQueue, blobstore)
   }
 
-  views = new ModerationViews(this.db)
+  views = new ModerationViews(this.db, this.messageQueue)
 
   services = {
     repo: RepoService.creator(this.messageQueue, this.blobstore),
@@ -40,6 +40,20 @@ export class ModerationService {
     const action = await this.getAction(id)
     if (!action) throw new InvalidRequestError('Action not found')
     return action
+  }
+
+  async getReport(id: number): Promise<ModerationReportRow | undefined> {
+    return await this.db.db
+      .selectFrom('moderation_report')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst()
+  }
+
+  async getReportOrThrow(id: number): Promise<ModerationReportRow> {
+    const report = await this.getReport(id)
+    if (!report) throw new InvalidRequestError('Report not found')
+    return report
   }
 
   async logAction(info: {
@@ -258,7 +272,7 @@ export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
 
-type SubjectInfo =
+export type SubjectInfo =
   | {
       subjectType: 'com.atproto.repo.repoRef'
       subjectDid: string
