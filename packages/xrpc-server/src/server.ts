@@ -135,8 +135,11 @@ export class Server {
   ): RequestHandler {
     const validateReqInput = (req: express.Request) =>
       validateInput(nsid, def, req, this.options, this.lex)
-    const validateResOutput = (output?: HandlerSuccess) =>
-      validateOutput(nsid, def, output, this.lex)
+    const validateResOutput =
+      this.options.validateResponse === false
+        ? (output?: HandlerSuccess) => output
+        : (output?: HandlerSuccess) =>
+            validateOutput(nsid, def, output, this.lex)
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
     return async function (req, res, next) {

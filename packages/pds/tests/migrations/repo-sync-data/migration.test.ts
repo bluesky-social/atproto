@@ -21,7 +21,7 @@ describe('repo sync data migration', () => {
       'tests/migrations/repo-sync-data/test.sqlite',
     )
     db = Database.sqlite('tests/migrations/repo-sync-data/test.sqlite')
-    await db.migrator.migrateTo('_20221221T013010374Z')
+    await db.migrator.migrateTo('_20230118T223059239Z')
     const readData = await fs.readFile(
       'tests/migrations/repo-sync-data/expected-data.json',
     )

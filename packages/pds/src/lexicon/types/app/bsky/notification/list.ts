@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorRef from '../actor/ref'
 
@@ -58,4 +61,16 @@ export interface Notification {
   isRead: boolean
   indexedAt: string
   [k: string]: unknown
+}
+
+export function isNotification(v: unknown): v is Notification {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.notification.list#notification'
+  )
+}
+
+export function validateNotification(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.notification.list#notification', v)
 }

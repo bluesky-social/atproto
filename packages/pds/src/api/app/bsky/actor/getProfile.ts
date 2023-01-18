@@ -1,6 +1,6 @@
 import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { countAll, actorWhereClause } from '../../../../db/util'
+import { countAll, actorWhereClause, softDeleted } from '../../../../db/util'
 import { getDeclarationSimple } from '../util'
 import AppContext from '../../../../context'
 
@@ -12,15 +12,16 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
 
       const db = ctx.db.db
-
       const { ref } = db.dynamic
 
       const queryRes = await db
         .selectFrom('did_handle')
         .where(actorWhereClause(actor))
+        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .leftJoin('scene', 'scene.handle', 'did_handle.handle')
         .select([
+          'repo_root.takedownId',
           'did_handle.did as did',
           'did_handle.handle as handle',
           'did_handle.actorType as actorType',
@@ -67,11 +68,23 @@ export default function (server: Server, ctx: AppContext) {
             .where('subjectDid', '=', requester)
             .select('confirmUri')
             .as('requesterMember'),
+          db
+            .selectFrom('mute')
+            .whereRef('did', '=', ref('did_handle.did'))
+            .where('mutedByDid', '=', requester)
+            .select('did')
+            .as('requesterMuted'),
         ])
         .executeTakeFirst()
 
       if (!queryRes) {
         throw new InvalidRequestError(`Profile not found`)
+      }
+      if (softDeleted(queryRes)) {
+        throw new InvalidRequestError(
+          'Account has been taken down',
+          'AccountTakedown',
+        )
       }
 
       const avatar = queryRes.avatarCid
@@ -100,6 +113,7 @@ export default function (server: Server, ctx: AppContext) {
           myState: {
             follow: queryRes.requesterFollow || undefined,
             member: queryRes.requesterMember || undefined,
+            muted: !!queryRes.requesterMuted,
           },
         },
       }

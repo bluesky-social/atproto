@@ -138,7 +138,7 @@ export const assureValidCreationOp = async (did: string, op: t.CreateOp) => {
   if (!expectedDid.startsWith(did)) {
     throw new ServerError(
       400,
-      `Hash of genesis operation does not match DID identifier: ${expect}`,
+      `Hash of genesis operation does not match DID identifier: ${expectedDid}`,
     )
   }
 }

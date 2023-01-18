@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ValidationError } from '@atproto/lexicon'
 
 export type QueryParams = Record<string, any>
 export type Headers = Record<string, string>
@@ -94,5 +95,19 @@ export class XRPCError extends Error {
     if (!this.error) {
       this.error = ResponseTypeNames[status]
     }
+  }
+}
+
+export class XRPCInvalidResponseError extends XRPCError {
+  constructor(
+    public lexiconNsid: string,
+    public validationError: ValidationError,
+    public responseBody: unknown,
+  ) {
+    super(
+      ResponseType.InvalidResponse,
+      ResponseTypeStrings[ResponseType.InvalidResponse],
+      `The server gave an invalid response and may be out of date.`,
+    )
   }
 }

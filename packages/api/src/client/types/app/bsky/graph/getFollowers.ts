@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { ValidationResult } from '@atproto/lexicon'
+import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorRef from '../actor/ref'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
@@ -45,4 +48,16 @@ export interface Follower {
   createdAt?: string
   indexedAt: string
   [k: string]: unknown
+}
+
+export function isFollower(v: unknown): v is Follower {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.getFollowers#follower'
+  )
+}
+
+export function validateFollower(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.getFollowers#follower', v)
 }

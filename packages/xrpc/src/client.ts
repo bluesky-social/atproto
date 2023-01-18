@@ -1,4 +1,4 @@
-import { Lexicons } from '@atproto/lexicon'
+import { Lexicons, ValidationError } from '@atproto/lexicon'
 import {
   getMethodSchemaHTTPMethod,
   constructMethodCallUri,
@@ -18,6 +18,7 @@ import {
   ErrorResponseBody,
   XRPCResponse,
   XRPCError,
+  XRPCInvalidResponseError,
 } from './types'
 
 export class Client {
@@ -109,6 +110,15 @@ export class ServiceClient {
 
     const resCode = httpResponseCodeToEnum(res.status)
     if (resCode === ResponseType.Success) {
+      try {
+        this.baseClient.lex.assertValidXrpcOutput(methodNsid, res.body)
+      } catch (e: any) {
+        if (e instanceof ValidationError) {
+          throw new XRPCInvalidResponseError(methodNsid, e, res.body)
+        } else {
+          throw e
+        }
+      }
       return new XRPCResponse(res.body, res.headers)
     } else {
       if (res.body && isErrorResponseBody(res.body)) {
@@ -127,11 +137,15 @@ async function defaultFetchHandler(
   httpReqBody: unknown,
 ): Promise<FetchHandlerResponse> {
   try {
-    const res = await fetch(httpUri, {
+    // The duplex field is now required for streaming bodies, but not yet reflected
+    // anywhere in docs or types. See whatwg/fetch#1438, nodejs/node#46221.
+    const reqInit: RequestInit & { duplex: string } = {
       method: httpMethod,
       headers: httpHeaders,
       body: encodeMethodCallBody(httpHeaders, httpReqBody),
-    })
+      duplex: 'half',
+    }
+    const res = await fetch(httpUri, reqInit)
     const resBody = await res.arrayBuffer()
     return {
       status: res.status,

@@ -1,9 +1,10 @@
 import { SeedClient } from './client'
 
-export default async (sc: SeedClient) => {
+export default async (sc: SeedClient, max = Infinity) => {
   // @TODO when these are run in parallel, seem to get an intermittent
   // "TypeError: fetch failed" while running the tests.
-  for (const { handle, displayName } of users) {
+  for (let i = 0; i < Math.min(max, users.length); ++i) {
+    const { handle, displayName } = users[i]
     await sc.createAccount(handle, {
       handle: handle,
       password: 'password',

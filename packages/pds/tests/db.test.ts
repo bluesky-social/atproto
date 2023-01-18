@@ -49,6 +49,7 @@ describe('db', () => {
         did: 'x',
         root: 'x',
         indexedAt: 'bad-date',
+        takedownId: null,
       })
     })
 

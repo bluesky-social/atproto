@@ -1,18 +1,12 @@
-import * as crypto from '@atproto/crypto'
-import { BlobStore } from '@atproto/repo'
 import Database from '../../db'
 import * as repo from '../../repo'
 import * as lexicons from '../../lexicon/lexicons'
-import { RepoService } from '../../services/repo'
-import { Consumer, MessageQueue } from '../types'
+import { Consumer } from '../types'
 import { SceneVotesOnPostTableUpdates } from '../messages'
+import AppContext from '../../context'
 
 export default class extends Consumer<SceneVotesOnPostTableUpdates> {
-  constructor(
-    private keypair: crypto.Keypair,
-    private messageQueue: MessageQueue,
-    private blobstore: BlobStore,
-  ) {
+  constructor(public ctx: AppContext) {
     super()
   }
 
@@ -64,12 +58,7 @@ export default class extends Consumer<SceneVotesOnPostTableUpdates> {
           .where('subject', '=', scene.subject)
           .execute()
 
-        const repoTxn = new RepoService(
-          db,
-          this.keypair,
-          this.messageQueue,
-          this.blobstore,
-        )
+        const repoTxn = this.ctx.services.repo(db)
 
         await Promise.all([
           repoTxn.writeToRepo(scene.did, [write], now),

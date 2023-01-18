@@ -31,6 +31,7 @@ export type ActorView = {
   handle: string
   displayName?: string
   avatar?: string
+  viewer?: { muted: boolean }
 }
 export type ActorViewMap = { [did: string]: ActorView }
 

@@ -1,4 +1,5 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import { Main as FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/feedViewPost'
 import {
   runTestServer,
@@ -6,6 +7,7 @@ import {
   CloseFn,
   getOriginator,
   paginateAll,
+  adminAuth,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -106,6 +108,34 @@ describe('timeline views', () => {
     expect(defaultTL.data.feed).toEqual(reverseChronologicalTL.data.feed)
   })
 
+  it('omits posts and reposts of muted authors.', async () => {
+    await client.app.bsky.graph.mute(
+      { user: bob },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await client.app.bsky.graph.mute(
+      { user: carol },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceTL = await client.app.bsky.feed.getTimeline(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
+
+    // Cleanup
+    await client.app.bsky.graph.unmute(
+      { user: bob },
+      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+    )
+    await client.app.bsky.graph.unmute(
+      { user: carol },
+      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+    )
+  })
+
   it('paginates reverse-chronological feed', async () => {
     const results = (results) => results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
@@ -134,5 +164,99 @@ describe('timeline views', () => {
 
     expect(full.data.feed.length).toEqual(7)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('blocks posts, reposts, replies by actor takedown', async () => {
+    const actionResults = await Promise.all(
+      [bob, dan].map((did) =>
+        client.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did,
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
+
+    const aliceTL = await client.app.bsky.feed.getTimeline(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
+
+    // Cleanup
+    await Promise.all(
+      actionResults.map((result) =>
+        client.com.atproto.admin.reverseModerationAction(
+          {
+            id: result.data.id,
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
+  })
+
+  it('blocks posts, reposts, replies by record takedown.', async () => {
+    const postUri1 = sc.posts[dan][1].ref.uri // Repost
+    const postUri2 = sc.replies[bob][0].ref.uri // Post and reply parent
+    const actionResults = await Promise.all(
+      [postUri1, postUri2].map((postUri) =>
+        client.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
+
+    const aliceTL = await client.app.bsky.feed.getTimeline(
+      { algorithm: FeedAlgorithm.ReverseChronological },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
+
+    // Cleanup
+    await Promise.all(
+      actionResults.map((result) =>
+        client.com.atproto.admin.reverseModerationAction(
+          {
+            id: result.data.id,
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
   })
 })

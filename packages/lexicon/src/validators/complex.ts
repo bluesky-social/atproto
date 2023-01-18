@@ -123,7 +123,7 @@ export function object(
   // required
   if (Array.isArray(def.required)) {
     for (const key of def.required) {
-      if (!(key in value)) {
+      if (typeof value[key] === 'undefined') {
         return {
           success: false,
           error: new ValidationError(`${path} must have the property "${key}"`),

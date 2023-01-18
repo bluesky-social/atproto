@@ -9,7 +9,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.createScene({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input, req }) => {
       const { recoveryKey } = input.body
       const requester = auth.credentials.did

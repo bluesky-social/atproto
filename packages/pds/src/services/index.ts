@@ -8,6 +8,7 @@ import { AuthService } from './auth'
 import { FeedService } from './feed'
 import { RecordService } from './record'
 import { RepoService } from './repo'
+import { ModerationService } from './moderation'
 
 export function createServices(resources: {
   keypair: crypto.Keypair
@@ -22,6 +23,7 @@ export function createServices(resources: {
     feed: FeedService.creator(imgUriBuilder),
     record: RecordService.creator(messageQueue),
     repo: RepoService.creator(keypair, messageQueue, blobstore),
+    moderation: ModerationService.creator(messageQueue, blobstore),
   }
 }
 
@@ -31,6 +33,7 @@ export type Services = {
   feed: FromDb<FeedService>
   record: FromDb<RecordService>
   repo: FromDb<RepoService>
+  moderation: FromDb<ModerationService>
 }
 
 type FromDb<T> = (db: Database) => T

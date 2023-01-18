@@ -278,7 +278,7 @@ export function isValidLexiconDoc(v: unknown): v is LexiconDoc {
 }
 
 export function isObj(obj: unknown): obj is Record<string, unknown> {
-  return !!obj && typeof obj === 'object'
+  return obj !== null && typeof obj === 'object'
 }
 
 export function hasProp<K extends PropertyKey>(

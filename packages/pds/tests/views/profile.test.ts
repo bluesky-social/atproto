@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn } from '../_util'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -107,11 +108,11 @@ describe('pds profile views', () => {
     const avatarRes = await client.com.atproto.blob.upload(avatarImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
-    } as any)
+    })
     const bannerRes = await client.com.atproto.blob.upload(bannerImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
-    } as any)
+    })
 
     await client.app.bsky.actor.updateProfile(
       {
@@ -198,5 +199,80 @@ describe('pds profile views', () => {
     )
 
     expect(byHandle.data).toEqual(byDid.data)
+  })
+
+  it('blocked by actor takedown', async () => {
+    const { data: action } =
+      await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.repoRef',
+            did: alice,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    const promise = client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    await expect(promise).rejects.toThrow('Account has been taken down')
+
+    // Cleanup
+    await client.com.atproto.admin.reverseModerationAction(
+      {
+        id: action.id,
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
+
+  it('includes muted status.', async () => {
+    const { data: initial } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(initial.myState?.muted).toEqual(false)
+
+    await client.app.bsky.graph.mute(
+      { user: alice },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+    const { data: muted } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(muted.myState?.muted).toEqual(true)
+
+    const { data: fromBobUnrelated } = await client.app.bsky.actor.getProfile(
+      { actor: dan },
+      { headers: sc.getHeaders(bob) },
+    )
+    const { data: toAliceUnrelated } = await client.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(dan) },
+    )
+
+    expect(fromBobUnrelated.myState?.muted).toEqual(false)
+    expect(toAliceUnrelated.myState?.muted).toEqual(false)
+
+    await client.app.bsky.graph.unmute(
+      { user: alice },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
   })
 })

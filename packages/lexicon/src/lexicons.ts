@@ -9,6 +9,7 @@ import {
   LexiconDocMalformedError,
   LexiconDefNotFoundError,
   InvalidLexiconError,
+  ValidationResult,
   ValidationError,
   isObj,
   hasProp,
@@ -20,6 +21,7 @@ import {
   assertValidXrpcOutput,
 } from './validation'
 import { toLexUri } from './util'
+import * as ComplexValidators from './validators/complex'
 
 /**
  * A collection of compiled lexicons.
@@ -117,6 +119,25 @@ export class Lexicons {
       )
     }
     return def
+  }
+
+  /**
+   * Validate a record or object.
+   */
+  validate(lexUri: string, value: unknown): ValidationResult {
+    lexUri = toLexUri(lexUri)
+    const def = this.getDefOrThrow(lexUri, ['record', 'object'])
+    if (!isObj(value)) {
+      throw new ValidationError(`Value must be an object`)
+    }
+    if (def.type === 'record') {
+      return ComplexValidators.object(this, 'Record', def.record, value)
+    } else if (def.type === 'object') {
+      return ComplexValidators.object(this, 'Object', def, value)
+    } else {
+      // shouldnt happen
+      throw new InvalidLexiconError('Definition must be a record or object')
+    }
   }
 
   /**

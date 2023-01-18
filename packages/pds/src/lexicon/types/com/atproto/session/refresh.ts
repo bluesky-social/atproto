@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
@@ -26,6 +29,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'AccountTakedown'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

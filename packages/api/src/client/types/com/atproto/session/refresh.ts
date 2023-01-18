@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { ValidationResult } from '@atproto/lexicon'
+import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 
 export interface QueryParams {}
 
@@ -26,8 +29,15 @@ export interface Response {
   data: OutputSchema
 }
 
+export class AccountTakedownError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'AccountTakedown') return new AccountTakedownError(e)
   }
   return e
 }
