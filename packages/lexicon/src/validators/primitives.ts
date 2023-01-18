@@ -1,3 +1,4 @@
+import { isValidISODateString } from 'iso-datestring-validator'
 import { Lexicons } from '../lexicons'
 import {
   LexUserType,
@@ -268,8 +269,7 @@ export function datetime(
   // valid iso-8601
   {
     try {
-      const date = new Date(Date.parse(value as string))
-      if (value !== date.toISOString()) {
+      if (typeof value !== 'string' || !isValidISODateString(value)) {
         throw new ValidationError(
           `${path} must be an iso8601 formatted datetime`,
         )

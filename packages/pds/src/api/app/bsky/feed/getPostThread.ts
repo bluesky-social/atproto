@@ -91,7 +91,7 @@ const composeThread = (
   }
 
   return {
-    $type: 'app.bksy.feed.getPostThread#threadViewPost',
+    $type: 'app.bsky.feed.getPostThread#threadViewPost',
     post,
     parent,
     replies,

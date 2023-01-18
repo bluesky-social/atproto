@@ -2139,7 +2139,6 @@ export const schemaDict = {
         description: 'Find users matching search criteria.',
         parameters: {
           type: 'params',
-          required: ['term'],
           properties: {
             term: {
               type: 'string',
@@ -2215,7 +2214,6 @@ export const schemaDict = {
         description: 'Find user suggestions for a search term.',
         parameters: {
           type: 'params',
-          required: ['term'],
           properties: {
             term: {
               type: 'string',
@@ -3037,9 +3035,6 @@ export const schemaDict = {
           },
           downvote: {
             type: 'string',
-          },
-          muted: {
-            type: 'boolean',
           },
         },
       },

@@ -11,7 +11,7 @@ import {
   LexXrpcQuery,
   LexToken,
 } from '@atproto/lexicon'
-import { toTitleCase, toScreamingSnakeCase } from './util'
+import { toCamelCase, toTitleCase, toScreamingSnakeCase } from './util'
 
 interface Commentable<T> {
   addJsDoc: ({ description }: { description: string }) => T
@@ -62,6 +62,7 @@ export function genUserType(
       break
     case 'object':
       genObject(file, imports, lexUri, def)
+      genObjHelpers(file, lexUri)
       break
 
     case 'blob':
@@ -353,6 +354,40 @@ export function genXrpcOutput(
       genObject(file, imports, lexUri, def.output.schema, `OutputSchema`)
     }
   }
+}
+
+export function genObjHelpers(
+  file: SourceFile,
+  lexUri: string,
+  ifaceName?: string,
+) {
+  const hash = getHash(lexUri)
+
+  //= export function is{X}(v: unknown): v is X {...}
+  file
+    .addFunction({
+      name: toCamelCase(`is-${ifaceName || hash}`),
+      parameters: [{ name: `v`, type: `unknown` }],
+      returnType: `v is ${ifaceName || toTitleCase(hash)}`,
+      isExported: true,
+    })
+    .setBodyText(
+      hash === 'main'
+        ? `return isObj(v) && hasProp(v, '$type') && (v.$type === "${lexUri}" || v.$type === "${stripHash(
+            lexUri,
+          )}")`
+        : `return isObj(v) && hasProp(v, '$type') && v.$type === "${lexUri}"`,
+    )
+
+  //= export function validate{X}(v: unknown): ValidationResult {...}
+  file
+    .addFunction({
+      name: toCamelCase(`validate-${ifaceName || hash}`),
+      parameters: [{ name: `v`, type: `unknown` }],
+      returnType: `ValidationResult`,
+      isExported: true,
+    })
+    .setBodyText(`return lexicons.validate("${lexUri}", v)`)
 }
 
 export function stripScheme(uri: string): string {

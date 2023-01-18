@@ -30,6 +30,55 @@ describe('Lexicons collection', () => {
   })
 })
 
+describe('General validation', () => {
+  const lex = new Lexicons(LexiconDocs)
+  it('Validates records correctly', () => {
+    {
+      const res = lex.validate('com.example.kitchenSink', {
+        $type: 'com.example.kitchenSink',
+        object: {
+          object: { boolean: true },
+          array: ['one', 'two'],
+          boolean: true,
+          number: 123.45,
+          integer: 123,
+          string: 'string',
+        },
+        array: ['one', 'two'],
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+        datetime: new Date().toISOString(),
+      })
+      expect(res.success).toBe(true)
+    }
+    {
+      const res = lex.validate('com.example.kitchenSink', {})
+      expect(res.success).toBe(false)
+      expect(res.error?.message).toBe('Record must have the property "object"')
+    }
+  })
+  it('Validates objects correctly', () => {
+    {
+      const res = lex.validate('com.example.kitchenSink#object', {
+        object: { boolean: true },
+        array: ['one', 'two'],
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+      })
+      expect(res.success).toBe(true)
+    }
+    {
+      const res = lex.validate('com.example.kitchenSink#object', {})
+      expect(res.success).toBe(false)
+      expect(res.error?.message).toBe('Object must have the property "object"')
+    }
+  })
+})
+
 describe('Record validation', () => {
   const lex = new Lexicons(LexiconDocs)
 
@@ -78,6 +127,18 @@ describe('Record validation', () => {
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
         $type: 'com.example.kitchenSink',
+        array: ['one', 'two'],
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+        datetime: new Date().toISOString(),
+      }),
+    ).toThrow('Record must have the property "object"')
+    expect(() =>
+      lex.assertValidRecord('com.example.kitchenSink', {
+        $type: 'com.example.kitchenSink',
+        object: undefined,
         array: ['one', 'two'],
         boolean: true,
         number: 123.45,
@@ -464,22 +525,26 @@ describe('Record validation', () => {
   })
 
   it('Applies datetime formatting constraint', () => {
+    for (const datetime of [
+      '2022-12-12T00:50:36.809Z',
+      '2022-12-12T00:50:36Z',
+      '2022-12-12T00:50:36.8Z',
+      '2022-12-12T00:50:36.80Z',
+      '2022-12-12T00:50:36+00:00',
+      '2022-12-12T00:50:36.8+00:00',
+      '2022-12-11T19:50:36-05:00',
+      '2022-12-11T19:50:36.8-05:00',
+      '2022-12-11T19:50:36.80-05:00',
+      '2022-12-11T19:50:36.809-05:00',
+    ]) {
+      lex.assertValidRecord('com.example.datetime', {
+        $type: 'com.example.datetime',
+        datetime,
+      })
+    }
     expect(() =>
-      lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
+      lex.assertValidRecord('com.example.datetime', {
+        $type: 'com.example.datetime',
         datetime: 'bad date',
       }),
     ).toThrow('Record/datetime must be an iso8601 formatted datetime')
@@ -514,6 +579,13 @@ describe('XRPC parameter validation', () => {
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
         number: 123.45,
+      }),
+    ).toThrow('Params must have the property "integer"')
+    expect(() =>
+      lex.assertValidXrpcParams('com.example.query', {
+        boolean: true,
+        number: 123.45,
+        integer: undefined,
       }),
     ).toThrow('Params must have the property "integer"')
   })
