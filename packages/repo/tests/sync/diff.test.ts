@@ -46,7 +46,7 @@ describe('Diff Sync', () => {
 
   it('syncs a repo that is behind', async () => {
     // add more to providers's repo & have consumer catch up
-    const beforeData = JSON.parse(JSON.stringify(repoData))
+    const beforeData = structuredClone(repoData)
     const edited = await util.editRepo(repo, repoData, keypair, {
       adds: 20,
       updates: 20,
@@ -65,8 +65,8 @@ describe('Diff Sync', () => {
   it('throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const diffCar = await sync.getDiff(storage, badRepo.cid, syncRepo.cid)
-    await expect(
-      sync.loadDiff(syncRepo, diffCar, didResolver),
-    ).rejects.toThrow()
+    await expect(sync.loadDiff(syncRepo, diffCar, didResolver)).rejects.toThrow(
+      'Invalid signature on commit',
+    )
   })
 })

@@ -1,6 +1,6 @@
 import * as crypto from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
-import { Repo, RepoContents } from '../../src'
+import { Repo, RepoContents, RepoVerificationError } from '../../src'
 import { MemoryBlockstore } from '../../src/storage'
 import * as sync from '../../src/sync'
 
@@ -51,6 +51,6 @@ describe('Checkout Sync', () => {
     const checkoutCar = await sync.getCheckout(storage, badRepo.cid)
     await expect(
       sync.loadCheckout(syncStorage, checkoutCar, didResolver),
-    ).rejects.toThrow()
+    ).rejects.toThrow(RepoVerificationError)
   })
 })

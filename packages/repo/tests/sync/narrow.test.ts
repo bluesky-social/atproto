@@ -36,6 +36,7 @@ describe('Narrow Sync', () => {
     const claims = util.contentsToClaims(repoData)
     const proofs = await getProofs(claims)
     const results = await doVerify(proofs, claims)
+    expect(results.verified.length).toBeGreaterThan(0)
     expect(results.verified).toEqual(claims)
     expect(results.unverified.length).toBe(0)
   })
@@ -50,6 +51,7 @@ describe('Narrow Sync', () => {
     ]
     const proofs = await getProofs(claims)
     const results = await doVerify(proofs, claims)
+    expect(results.verified.length).toBeGreaterThan(0)
     expect(results.verified).toEqual(claims)
     expect(results.unverified.length).toBe(0)
   })
@@ -65,6 +67,7 @@ describe('Narrow Sync', () => {
     const proofs = await getProofs(claims)
     const results = await doVerify(proofs, claims)
     expect(results.verified.length).toBe(0)
+    expect(results.unverified.length).toBeGreaterThan(0)
     expect(results.unverified).toEqual(claims)
   })
 
@@ -79,6 +82,7 @@ describe('Narrow Sync', () => {
     const proofs = await getProofs(claims)
     const results = await doVerify(proofs, claims)
     expect(results.verified.length).toBe(0)
+    expect(results.unverified.length).toBeGreaterThan(0)
     expect(results.unverified).toEqual(claims)
   })
 
@@ -94,6 +98,7 @@ describe('Narrow Sync', () => {
     const proofs = await getProofs(claims)
     const results = await doVerify(proofs, claims)
     expect(results.verified.length).toBe(0)
+    expect(results.unverified.length).toBeGreaterThan(0)
     expect(results.unverified).toEqual(claims)
   })
 

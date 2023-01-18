@@ -180,7 +180,7 @@ describe('repo sync', () => {
     expect(result.unverified.length).toBe(0)
   })
 
-  it('sync a proof of non-existene', async () => {
+  it('sync a proof of non-existence', async () => {
     const collection = Object.keys(repoData)[0]
     const rkey = TID.nextStr() // rkey that doesn't exist
     const car = await client.com.atproto.sync.getRecord({
