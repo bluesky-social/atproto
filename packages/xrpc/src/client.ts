@@ -137,11 +137,15 @@ async function defaultFetchHandler(
   httpReqBody: unknown,
 ): Promise<FetchHandlerResponse> {
   try {
-    const res = await fetch(httpUri, {
+    // The duplex field is now required for streaming bodies, but not yet reflected
+    // anywhere in docs or types. See whatwg/fetch#1438, nodejs/node#46221.
+    const reqInit: RequestInit & { duplex: string } = {
       method: httpMethod,
       headers: httpHeaders,
       body: encodeMethodCallBody(httpHeaders, httpReqBody),
-    })
+      duplex: 'half',
+    }
+    const res = await fetch(httpUri, reqInit)
     const resBody = await res.arrayBuffer()
     return {
       status: res.status,
