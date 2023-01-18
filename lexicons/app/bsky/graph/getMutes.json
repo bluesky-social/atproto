@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.getMutes",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Who does the viewer mute?",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "before": {"type": "string"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["mutes"],
+          "properties": {
+            "cursor": {"type": "string"},
+            "mutes": {
+              "type": "array",
+              "items": {"type": "ref", "ref": "#mute"}
+            }
+          }
+        }
+      }
+    },
+    "mute": {
+      "type": "object",
+      "required": ["did", "declaration", "handle", "createdAt"],
+      "properties": {
+        "did": {"type": "string"},
+        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "createdAt": {"type": "datetime"}
+      }
+    }
+  }
+}

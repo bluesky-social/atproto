@@ -28,7 +28,10 @@
             "did": {"type": "string"}
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "AccountTakedown"}
+      ]
     }
   }
 }

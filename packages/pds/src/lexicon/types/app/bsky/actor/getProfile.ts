@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
@@ -52,5 +55,18 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
 export interface MyState {
   follow?: string
   member?: string
+  muted?: boolean
   [k: string]: unknown
+}
+
+export function isMyState(v: unknown): v is MyState {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.getProfile#myState'
+  )
+}
+
+export function validateMyState(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.getProfile#myState', v)
 }

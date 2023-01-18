@@ -1,15 +1,18 @@
 import { AtUri } from '@atproto/uri'
-import { Database } from '../../src'
+import * as crypto from '@atproto/crypto'
+import { Database, MemoryBlobStore } from '../../src'
 import { cidForData, TID } from '@atproto/common'
 import * as lex from '../../src/lexicon/lexicons'
 import { APP_BSKY_GRAPH } from '../../src/lexicon'
 import SqlMessageQueue from '../../src/event-stream/message-queue'
-import { RecordService } from '../../src/services/record'
 import { MessageQueue } from '../../src/event-stream/types'
+import { createServices, Services } from '../../src/services'
+import { ImageUriBuilder } from '../../src/image/uri'
 
 describe('duplicate record', () => {
   let db: Database
   let messageQueue: MessageQueue
+  let services: Services
 
   beforeAll(async () => {
     if (process.env.DB_POSTGRES_URL) {
@@ -21,6 +24,12 @@ describe('duplicate record', () => {
       db = Database.memory()
     }
     messageQueue = new SqlMessageQueue('pds', db)
+    services = createServices({
+      keypair: await crypto.EcdsaKeypair.create(),
+      messageQueue,
+      blobstore: new MemoryBlobStore(),
+      imgUriBuilder: new ImageUriBuilder('http://x', '00', '00'),
+    })
     await db.migrator.migrateTo('_20221021T162202001Z')
   })
 
@@ -35,7 +44,7 @@ describe('duplicate record', () => {
     const collection = record.$type
     const cid = await cidForData(record)
     await db.transaction(async (tx) => {
-      const recordTx = new RecordService(tx, messageQueue)
+      const recordTx = services.record(tx)
       for (let i = 0; i < times; i++) {
         const uri = AtUri.make(did, collection, TID.nextStr())
         await recordTx.indexRecord(uri, cid, record)

@@ -1,6 +1,7 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScopes } from '../../../auth'
 import AppContext from '../../../context'
+import { softDeleted } from '../../../db/util'
 import { Server } from '../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
@@ -31,10 +32,16 @@ export default function (server: Server, ctx: AppContext) {
       throw new AuthRequiredError('Invalid handle or password')
     }
 
-    const user = await ctx.services.actor(ctx.db).getUser(handle)
+    const user = await ctx.services.actor(ctx.db).getUser(handle, true)
     if (!user) {
       throw new InvalidRequestError(
         `Could not find user info for account: ${handle}`,
+      )
+    }
+    if (softDeleted(user)) {
+      throw new AuthRequiredError(
+        'Account has been taken down',
+        'AccountTakedown',
       )
     }
 
@@ -57,10 +64,16 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.refreshVerifier,
     handler: async ({ req, auth }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.actor(ctx.db).getUser(did)
+      const user = await ctx.services.actor(ctx.db).getUser(did, true)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,
+        )
+      }
+      if (softDeleted(user)) {
+        throw new AuthRequiredError(
+          'Account has been taken down',
+          'AccountTakedown',
         )
       }
 

@@ -14,6 +14,9 @@ import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
+import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
+import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
@@ -23,6 +26,7 @@ import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
+import * as ComAtprotoReportCreate from './types/com/atproto/report/create'
 import * as ComAtprotoServerGetAccountsConfig from './types/com/atproto/server/getAccountsConfig'
 import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
@@ -50,10 +54,22 @@ import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
 import * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
+import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphMute from './types/app/bsky/graph/mute'
+import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 
+export const COM_ATPROTO_ADMIN = {
+  ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
+  ModerationActionFlag: 'com.atproto.admin.moderationAction#flag',
+  ModerationActionAcknowledge: 'com.atproto.admin.moderationAction#acknowledge',
+}
+export const COM_ATPROTO_REPORT = {
+  ReasonTypeSpam: 'com.atproto.report.reasonType#spam',
+  ReasonTypeOther: 'com.atproto.report.reasonType#other',
+}
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
   AssertMember: 'app.bsky.graph.assertMember',
@@ -92,9 +108,11 @@ export class ComNS {
 export class AtprotoNS {
   _server: Server
   account: AccountNS
+  admin: AdminNS
   blob: BlobNS
   handle: HandleNS
   repo: RepoNS
+  report: ReportNS
   server: ServerNS
   session: SessionNS
   sync: SyncNS
@@ -102,9 +120,11 @@ export class AtprotoNS {
   constructor(server: Server) {
     this._server = server
     this.account = new AccountNS(server)
+    this.admin = new AdminNS(server)
     this.blob = new BlobNS(server)
     this.handle = new HandleNS(server)
     this.repo = new RepoNS(server)
+    this.report = new ReportNS(server)
     this.server = new ServerNS(server)
     this.session = new SessionNS(server)
     this.sync = new SyncNS(server)
@@ -163,6 +183,44 @@ export class AccountNS {
     cfg: ConfigOf<AV, ComAtprotoAccountResetPassword.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.account.resetPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AdminNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  resolveModerationReports<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminResolveModerationReports.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.resolveModerationReports' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  reverseModerationAction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminReverseModerationAction.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.reverseModerationAction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  takeModerationAction<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminTakeModerationAction.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.takeModerationAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -250,6 +308,21 @@ export class RepoNS {
     cfg: ConfigOf<AV, ComAtprotoRepoPutRecord.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.repo.putRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ReportNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  create<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoReportCreate.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.report.create' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -528,6 +601,27 @@ export class GraphNS {
     cfg: ConfigOf<AV, AppBskyGraphGetMemberships.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.graph.getMemberships' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMutes<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetMutes.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getMutes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  mute<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphMute.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.mute' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmute<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphUnmute.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.unmute' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

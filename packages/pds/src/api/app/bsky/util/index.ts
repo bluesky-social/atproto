@@ -16,10 +16,13 @@ export const getActorInfo = async (
   imgUriBuilder: ImageUriBuilder,
   actor: string,
 ): Promise<ActorInfo> => {
+  const { ref } = db.dynamic
   const actorInfo = await db
     .selectFrom('did_handle')
-    .where(util.actorWhereClause(actor))
+    .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
+    .where(util.actorWhereClause(actor))
+    .where(util.notSoftDeletedClause(ref('repo_root')))
     .select([
       'did_handle.did as did',
       'did_handle.declarationCid as declarationCid',

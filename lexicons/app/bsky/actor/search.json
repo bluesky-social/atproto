@@ -7,7 +7,6 @@
       "description": "Find users matching search criteria.",
       "parameters": {
         "type": "params",
-        "required": ["term"],
         "properties": {
           "term": {"type": "string"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},

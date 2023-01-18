@@ -3,7 +3,7 @@ import AppContext from '../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.blob.upload({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input }) => {
       const cid = await ctx.services
         .repo(ctx.db)

@@ -11,6 +11,22 @@ const PRETTIER_OPTS = {
   trailingComma: 'all' as const,
 }
 
+export const utilTs = (project) =>
+  gen(project, '/util.ts', async (file) => {
+    file.replaceWithText(`
+  export function isObj(v: unknown): v is Record<string, unknown> {
+    return typeof v === 'object' && v !== null
+  }
+  
+  export function hasProp<K extends PropertyKey>(
+    data: object,
+    prop: K,
+  ): data is Record<K, unknown> {
+    return prop in data
+  }
+  `)
+  })
+
 export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
   gen(project, '/lexicons.ts', async (file) => {
     const nsidToEnum = (nsid: string): string => {

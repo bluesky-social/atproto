@@ -6,9 +6,10 @@ import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
 import SqlRepoStorage from '../../sql-repo-storage'
 import { PreparedCreate, PreparedWrite } from '../../repo/types'
-import { RecordService } from '../record'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
+import { notSoftDeletedClause } from '../../db/util'
+import { RecordService } from '../record'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -31,15 +32,22 @@ export class RepoService {
       new RepoService(db, keypair, messageQueue, blobstore)
   }
 
+  services = {
+    record: RecordService.creator(this.messageQueue),
+  }
+
   async isUserControlledRepo(
     repoDid: string,
     userDid: string | null,
   ): Promise<boolean> {
     if (!userDid) return false
     if (repoDid === userDid) return true
+    const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('scene', 'scene.handle', 'did_handle.handle')
+      .where(notSoftDeletedClause(ref('repo_root'))) // Ensures scene not taken down
       .where('did_handle.did', '=', repoDid)
       .where('scene.owner', '=', userDid)
       .select('scene.owner')
@@ -86,7 +94,7 @@ export class RepoService {
 
   async indexWrites(writes: PreparedWrite[], now: string) {
     this.db.assertTransaction()
-    const recordTxn = new RecordService(this.db, this.messageQueue)
+    const recordTxn = this.services.record(this.db)
     await Promise.all(
       writes.map(async (write) => {
         if (write.action === WriteOpAction.Create) {

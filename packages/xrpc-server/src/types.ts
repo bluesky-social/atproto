@@ -4,6 +4,7 @@ import zod from 'zod'
 import { ResponseType, ResponseTypeStrings } from '@atproto/xrpc'
 
 export type Options = {
+  validateResponse?: boolean
   payload?: {
     jsonLimit?: number
     blobLimit?: number

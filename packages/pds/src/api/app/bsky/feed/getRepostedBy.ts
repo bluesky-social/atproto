@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { getDeclarationSimple } from '../util'
 import AppContext from '../../../../context'
+import { notSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getRepostedBy({
@@ -13,13 +14,19 @@ export default function (server: Server, ctx: AppContext) {
       let builder = ctx.db.db
         .selectFrom('repost')
         .where('repost.subject', '=', uri)
-        .innerJoin('did_handle', 'did_handle.did', 'repost.creator')
-        .leftJoin('profile', 'profile.creator', 'did_handle.did')
+        .innerJoin('did_handle as creator', 'creator.did', 'repost.creator')
+        .leftJoin('profile', 'profile.creator', 'repost.creator')
+        .innerJoin(
+          'repo_root as creator_repo',
+          'creator_repo.did',
+          'repost.creator',
+        )
+        .where(notSoftDeletedClause(ref('creator_repo')))
         .select([
-          'did_handle.did as did',
-          'did_handle.declarationCid as declarationCid',
-          'did_handle.actorType as actorType',
-          'did_handle.handle as handle',
+          'creator.did as did',
+          'creator.declarationCid as declarationCid',
+          'creator.actorType as actorType',
+          'creator.handle as handle',
           'profile.displayName as displayName',
           'profile.avatarCid as avatarCid',
           'repost.cid as cid',

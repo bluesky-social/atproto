@@ -1,5 +1,12 @@
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import {
+  runTestServer,
+  forSnapshot,
+  CloseFn,
+  paginateAll,
+  adminAuth,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 import { Database } from '../../src'
@@ -38,7 +45,7 @@ describe('pds user search views', () => {
     const shouldContain = [
       'cara-wiegand69.test',
       'eudora-dietrich4.test', // Carol Littel
-      'shane-torphy52.test', //Sadie Carter
+      'shane-torphy52.test', // Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
       'carolina-mcdermott77.test',
@@ -176,6 +183,32 @@ describe('pds user search views', () => {
     )
 
     expect(result.data.users).toEqual([])
+  })
+
+  it('search blocks by actor takedown', async () => {
+    await client.com.atproto.admin.takeModerationAction(
+      {
+        action: TAKEDOWN,
+        subject: {
+          $type: 'com.atproto.repo.repoRef',
+          did: sc.dids['cara-wiegand69.test'],
+        },
+        createdBy: 'X',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    const result = await client.app.bsky.actor.searchTypeahead(
+      { term: 'car' },
+      { headers },
+    )
+    const handles = result.data.users.map((u) => u.handle)
+    expect(handles).toContain('carlos6.test')
+    expect(handles).toContain('carolina-mcdermott77.test')
+    expect(handles).not.toContain('cara-wiegand69.test')
   })
 })
 

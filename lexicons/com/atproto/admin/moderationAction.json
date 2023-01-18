@@ -1,0 +1,54 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.moderationAction",
+  "defs": {
+    "view": {
+      "type": "object",
+      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReports"],
+      "properties": {
+        "id": {"type": "integer"},
+        "action": {"type": "string", "knownValues": ["com.atproto.admin.moderationAction#takedown"]},
+        "subject": {
+          "type": "union",
+          "refs": [
+            "com.atproto.repo.repoRef",
+            "com.atproto.repo.strongRef"
+          ]
+        },
+        "reason": {"type": "string"},
+        "createdBy": {"type": "string"},
+        "createdAt": {"type": "string"},
+        "reversal": {"type": "ref", "ref": "#reversal"},
+        "resolvedReports": {"type": "array", "items": {"type" :"ref", "ref": "#resolvedReport"}}
+      }
+    },
+    "reversal": {
+      "type": "object",
+      "required": ["reason", "createdBy", "createdAt"],
+      "properties": {
+        "reason": {"type": "string"},
+        "createdBy": {"type": "string"},
+        "createdAt": {"type": "string"}
+      }
+    },
+    "resolvedReport": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "integer"}
+      }
+    },
+    "takedown": {
+      "type": "token",
+      "description": "Moderation action type: Takedown. Indicates that content should not be served by the PDS."
+    },
+    "flag": {
+      "type": "token",
+      "description": "Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served."
+    },
+    "acknowledge": {
+      "type": "token",
+      "description": "Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules."
+    }
+  }
+}
