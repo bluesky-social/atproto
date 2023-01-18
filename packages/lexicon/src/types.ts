@@ -145,6 +145,13 @@ export const lexArray = z.object({
 })
 export type LexArray = z.infer<typeof lexArray>
 
+export const lexPrimitiveArray = lexArray.merge(
+  z.object({
+    items: lexPrimitive,
+  }),
+)
+export type LexPrimitiveArray = z.infer<typeof lexPrimitiveArray>
+
 export const lexToken = z.object({
   type: z.literal('token'),
   description: z.string().optional(),
@@ -168,7 +175,7 @@ export const lexXrpcParameters = z.object({
   type: z.literal('params'),
   description: z.string().optional(),
   required: z.string().array().optional(),
-  properties: z.record(lexPrimitive),
+  properties: z.record(z.union([lexPrimitive, lexPrimitiveArray])),
 })
 export type LexXrpcParameters = z.infer<typeof lexXrpcParameters>
 

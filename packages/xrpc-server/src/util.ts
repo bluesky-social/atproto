@@ -22,11 +22,19 @@ export function decodeQueryParams(
 ): Params {
   const decoded: Params = {}
   for (const k in params) {
-    if (def.parameters?.properties?.[k]) {
-      decoded[k] = decodeQueryParam(
-        def.parameters?.properties[k]?.type,
-        params[k],
-      )
+    const val = params[k]
+    const property = def.parameters?.properties?.[k]
+    if (property) {
+      if (property.type === 'array') {
+        const vals: typeof val[] = []
+        decoded[k] = val
+          ? vals
+              .concat(val) // Cast to array
+              .flatMap((v) => decodeQueryParam(property.items.type, v) ?? [])
+          : undefined
+      } else {
+        decoded[k] = decodeQueryParam(property.type, val)
+      }
     }
   }
   return decoded

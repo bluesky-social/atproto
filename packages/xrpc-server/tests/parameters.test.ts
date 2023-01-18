@@ -12,12 +12,13 @@ const LEXICONS = [
         type: 'query',
         parameters: {
           type: 'params',
-          required: ['str', 'int', 'num', 'bool'],
+          required: ['str', 'int', 'num', 'bool', 'arr'],
           properties: {
             str: { type: 'string', minLength: 2, maxLength: 10 },
             int: { type: 'integer', minimum: 2, maximum: 10 },
             num: { type: 'number', minimum: 2, maximum: 10 },
             bool: { type: 'boolean' },
+            arr: { type: 'array', items: { type: 'integer' }, maxLength: 2 },
           },
         },
         output: {
@@ -53,24 +54,28 @@ describe('Parameters', () => {
       int: 5,
       num: 5.5,
       bool: true,
+      arr: [1, 2],
     })
     expect(res1.success).toBeTruthy()
     expect(res1.data.str).toBe('valid')
     expect(res1.data.int).toBe(5)
     expect(res1.data.num).toBe(5.5)
     expect(res1.data.bool).toBe(true)
+    expect(res1.data.arr).toEqual([1, 2])
 
     const res2 = await client.call('io.example.paramTest', {
       str: 10,
       int: '5',
       num: '5.5',
       bool: 'foo',
+      arr: '3',
     })
     expect(res2.success).toBeTruthy()
     expect(res2.data.str).toBe('10')
     expect(res2.data.int).toBe(5)
     expect(res2.data.num).toBe(5.5)
     expect(res2.data.bool).toBe(true)
+    expect(res2.data.arr).toEqual([3])
 
     await expect(
       client.call('io.example.paramTest', {
@@ -78,6 +83,7 @@ describe('Parameters', () => {
         int: 5,
         num: 5.5,
         bool: true,
+        arr: [1],
       }),
     ).rejects.toThrow('str must not be shorter than 2 characters')
     await expect(
@@ -86,6 +92,7 @@ describe('Parameters', () => {
         int: 5,
         num: 5.5,
         bool: true,
+        arr: [1],
       }),
     ).rejects.toThrow('str must not be longer than 10 characters')
     await expect(
@@ -93,6 +100,7 @@ describe('Parameters', () => {
         int: 5,
         num: 5.5,
         bool: true,
+        arr: [1],
       }),
     ).rejects.toThrow(`Params must have the property "str"`)
 
@@ -102,6 +110,7 @@ describe('Parameters', () => {
         int: -1,
         num: 5.5,
         bool: true,
+        arr: [1],
       }),
     ).rejects.toThrow('int can not be less than 2')
     await expect(
@@ -110,6 +119,7 @@ describe('Parameters', () => {
         int: 11,
         num: 5.5,
         bool: true,
+        arr: [1],
       }),
     ).rejects.toThrow('int can not be greater than 10')
     await expect(
@@ -117,6 +127,7 @@ describe('Parameters', () => {
         str: 'valid',
         num: 5.5,
         bool: true,
+        arr: [1],
       }),
     ).rejects.toThrow(`Params must have the property "int"`)
 
@@ -126,6 +137,7 @@ describe('Parameters', () => {
         int: 5,
         num: -5.5,
         bool: true,
+        arr: [1],
       }),
     ).rejects.toThrow('num can not be less than 2')
     await expect(
@@ -134,6 +146,7 @@ describe('Parameters', () => {
         int: 5,
         num: 50.5,
         bool: true,
+        arr: [1],
       }),
     ).rejects.toThrow('num can not be greater than 10')
     await expect(
@@ -141,6 +154,7 @@ describe('Parameters', () => {
         str: 'valid',
         int: 5,
         bool: true,
+        arr: [1],
       }),
     ).rejects.toThrow(`Params must have the property "num"`)
 
@@ -149,7 +163,27 @@ describe('Parameters', () => {
         str: 'valid',
         int: 5,
         num: 5.5,
+        arr: [1],
       }),
     ).rejects.toThrow(`Params must have the property "bool"`)
+
+    await expect(
+      client.call('io.example.paramTest', {
+        str: 'valid',
+        int: 5,
+        num: 5.5,
+        bool: true,
+        arr: [],
+      }),
+    ).rejects.toThrow('Error: Params must have the property "arr"')
+    await expect(
+      client.call('io.example.paramTest', {
+        str: 'valid',
+        int: 5,
+        num: 5.5,
+        bool: true,
+        arr: [1, 2, 3],
+      }),
+    ).rejects.toThrow('Error: arr must not have more than 2 elements')
   })
 })
