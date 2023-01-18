@@ -1,23 +1,28 @@
 import fs from 'fs'
 import { CID } from 'multiformats'
-import { TID, valueToIpldBlock } from '@atproto/common'
+import { TID, dataToCborBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { Repo } from '../src/repo'
 import { RepoStorage } from '../src/storage'
 import { MST } from '../src/mst'
 import {
+  BlockMap,
   collapseWriteLog,
   CollectionContents,
   RecordWriteOp,
   RepoContents,
+  RecordPath,
+  RepoRoot,
   WriteLog,
   WriteOpAction,
+  RecordClaim,
 } from '../src'
+import { Keypair } from '@atproto/crypto'
 
 type IdMapping = Record<string, CID>
 
 export const randomCid = async (storage?: RepoStorage): Promise<CID> => {
-  const block = await valueToIpldBlock({ test: randomStr(50) })
+  const block = await dataToCborBlock({ test: randomStr(50) })
   if (storage) {
     await storage.putBlock(block.cid, block.bytes)
   }
@@ -206,10 +211,59 @@ export const verifyRepoDiff = async (
   }
 }
 
+export const contentsToClaims = (contents: RepoContents): RecordClaim[] => {
+  const claims: RecordClaim[] = []
+  for (const coll of Object.keys(contents)) {
+    for (const rkey of Object.keys(contents[coll])) {
+      claims.push({
+        collection: coll,
+        rkey: rkey,
+        record: contents[coll][rkey],
+      })
+    }
+  }
+  return claims
+}
+
+export const pathsForOps = (ops: RecordWriteOp[]): RecordPath[] =>
+  ops.map((op) => ({ collection: op.collection, rkey: op.rkey }))
+
 export const saveMst = async (storage: RepoStorage, mst: MST): Promise<CID> => {
   const diff = await mst.getUnstoredBlocks()
   await storage.putMany(diff.blocks)
   return diff.root
+}
+
+// Creating repo
+// -------------------
+export const addBadCommit = async (
+  repo: Repo,
+  keypair: Keypair,
+): Promise<Repo> => {
+  const obj = generateObject()
+  const blocks = new BlockMap()
+  const cid = await blocks.add(obj)
+  const updatedData = await repo.data.add(`com.example.test/${TID.next()}`, cid)
+  const unstoredData = await updatedData.getUnstoredBlocks()
+  blocks.addMap(unstoredData.blocks)
+  const root: RepoRoot = {
+    meta: repo.root.meta,
+    prev: repo.cid,
+    data: unstoredData.root,
+  }
+  const rootCid = await blocks.add(root)
+  // we generate a bad sig by signing the data cid instead of root cid
+  const commit = {
+    root: rootCid,
+    sig: await keypair.sign(unstoredData.root.bytes),
+  }
+  const commitCid = await blocks.add(commit)
+  await repo.storage.applyCommit({
+    commit: commitCid,
+    prev: repo.cid,
+    blocks: blocks,
+  })
+  return await Repo.load(repo.storage, commitCid)
 }
 
 // Logging

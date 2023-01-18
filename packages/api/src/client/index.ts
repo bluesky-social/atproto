@@ -39,6 +39,7 @@ import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
+import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
@@ -116,6 +117,7 @@ export * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
+export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 export * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
@@ -612,6 +614,17 @@ export class SyncNS {
       .call('com.atproto.sync.getHead', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetHead.toKnownErr(e)
+      })
+  }
+
+  getRecord(
+    params?: ComAtprotoSyncGetRecord.QueryParams,
+    opts?: ComAtprotoSyncGetRecord.CallOptions,
+  ): Promise<ComAtprotoSyncGetRecord.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getRecord', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetRecord.toKnownErr(e)
       })
   }
 

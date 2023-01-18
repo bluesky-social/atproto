@@ -1,12 +1,15 @@
 import { CID } from 'multiformats/cid'
 import { DidResolver } from '@atproto/did-resolver'
-import { MemoryBlockstore, RepoStorage } from './storage'
-import Repo from './repo'
-import * as verify from './verify'
-import * as util from './util'
-import { CommitData, RepoContents, WriteLog } from './types'
-import CidSet from './cid-set'
-import { MissingBlocksError } from './error'
+import { MemoryBlockstore, RepoStorage } from '../storage'
+import Repo from '../repo'
+import * as verify from '../verify'
+import * as util from '../util'
+import { CommitData, RepoContents, WriteLog } from '../types'
+import CidSet from '../cid-set'
+import { MissingBlocksError } from '../error'
+
+// Checkouts
+// -------------
 
 export const loadCheckout = async (
   storage: RepoStorage,
@@ -33,6 +36,9 @@ export const loadCheckout = async (
     contents: checkout.contents,
   }
 }
+
+// Diffs
+// -------------
 
 export const loadFullRepo = async (
   storage: RepoStorage,
@@ -82,6 +88,9 @@ export const loadDiff = async (
     writeLog,
   }
 }
+
+// Helpers
+// -------------
 
 export const persistUpdates = async (
   storage: RepoStorage,

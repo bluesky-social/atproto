@@ -11,6 +11,7 @@ import {
   DataStore,
   RecordCreateDescript,
   RecordDeleteDescript,
+  RecordPath,
   RecordUpdateDescript,
   RecordWriteDescript,
   WriteLog,
@@ -95,7 +96,7 @@ export const diffToWriteDescripts = (
 ): Promise<RecordWriteDescript[]> => {
   return Promise.all([
     ...diff.addList().map(async (add) => {
-      const { collection, rkey } = parseRecordKey(add.key)
+      const { collection, rkey } = parseDataKey(add.key)
       const value = await parse.getAndParse(blocks, add.cid, def.record)
       return {
         action: WriteOpAction.Create,
@@ -106,7 +107,7 @@ export const diffToWriteDescripts = (
       } as RecordCreateDescript
     }),
     ...diff.updateList().map(async (upd) => {
-      const { collection, rkey } = parseRecordKey(upd.key)
+      const { collection, rkey } = parseDataKey(upd.key)
       const value = await parse.getAndParse(blocks, upd.cid, def.record)
       return {
         action: WriteOpAction.Update,
@@ -118,7 +119,7 @@ export const diffToWriteDescripts = (
       } as RecordUpdateDescript
     }),
     ...diff.deleteList().map((del) => {
-      const { collection, rkey } = parseRecordKey(del.key)
+      const { collection, rkey } = parseDataKey(del.key)
       return {
         action: WriteOpAction.Delete,
         collection,
@@ -180,8 +181,12 @@ export const collapseDiffs = (diffs: DataDiff[]): DataDiff => {
   }, new DataDiff())
 }
 
-export const parseRecordKey = (key: string) => {
+export const parseDataKey = (key: string): RecordPath => {
   const parts = key.split('/')
   if (parts.length !== 2) throw new Error(`Invalid record key: ${key}`)
   return { collection: parts[0], rkey: parts[1] }
+}
+
+export const formatDataKey = (collection: string, rkey: string): string => {
+  return collection + '/' + rkey
 }

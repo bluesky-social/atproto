@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { cidForData, TID } from '@atproto/common'
+import { cidForCbor, TID } from '@atproto/common'
 import {
   PreparedCreate,
   PreparedUpdate,
@@ -134,7 +134,7 @@ export const prepareCreate = async (opts: {
   return {
     action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForData(record),
+    cid: await cidForCbor(record),
     record,
     blobs: blobsForWrite(record),
   }
@@ -155,7 +155,7 @@ export const prepareUpdate = async (opts: {
   return {
     action: WriteOpAction.Update,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForData(record),
+    cid: await cidForCbor(record),
     record,
     blobs: blobsForWrite(record),
   }

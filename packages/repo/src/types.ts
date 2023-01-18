@@ -118,8 +118,20 @@ export type RepoUpdate = CommitData & {
   ops: RecordWriteOp[]
 }
 
-export type CollectionContents = Record<string, Record<string, unknown>>
+export type RepoRecord = Record<string, unknown>
+export type CollectionContents = Record<string, RepoRecord>
 export type RepoContents = Record<string, CollectionContents>
+
+export type RecordPath = {
+  collection: string
+  rkey: string
+}
+
+export type RecordClaim = {
+  collection: string
+  rkey: string
+  record: RepoRecord | null
+}
 
 // DataStores
 // ---------------
@@ -138,4 +150,5 @@ export interface DataStore {
   listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
   getUnstoredBlocks(): Promise<{ root: CID; blocks: BlockMap }>
   writeToCarStream(car: BlockWriter): Promise<void>
+  cidsForPath(key: string): Promise<CID[]>
 }

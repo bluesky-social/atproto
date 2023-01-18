@@ -91,7 +91,7 @@ export default function (server: Server, ctx: AppContext) {
         },
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
-        record: common.ipldBytesToRecord(notif.recordBytes),
+        record: common.cborBytesToRecord(notif.recordBytes),
         isRead: notif.indexedAt <= user.lastSeenNotifs,
         indexedAt: notif.indexedAt,
       }))

@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { Repo } from '@atproto/repo'
+import * as repo from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../lexicon'
 import SqlRepoStorage from '../../../sql-repo-storage'
@@ -45,13 +45,12 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo(async ({ params }) => {
     const { did, from = null } = params
     const storage = new SqlRepoStorage(ctx.db, did)
-    const root = await storage.getHead()
-    if (root === null) {
+    const head = await storage.getHead()
+    if (head === null) {
       throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
     }
-    const repo = await Repo.load(storage, root)
     const fromCid = from ? CID.parse(from) : null
-    const diff = await repo.getDiff(fromCid)
+    const diff = await repo.getDiff(storage, head, fromCid)
     return {
       encoding: 'application/cbor',
       body: Buffer.from(diff),
@@ -61,12 +60,32 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getCheckout(async ({ params }) => {
     const { did } = params
     const storage = new SqlRepoStorage(ctx.db, did)
-    const commit = params.commit ? CID.parse(params.commit) : undefined
-    const repo = await Repo.load(storage, commit)
-    const checkout = await repo.getCheckout()
+    const commit = params.commit
+      ? CID.parse(params.commit)
+      : await storage.getHead()
+    if (!commit) {
+      throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+    }
+    const checkout = await repo.getCheckout(storage, commit)
     return {
       encoding: 'application/cbor',
       body: Buffer.from(checkout),
+    }
+  })
+
+  server.com.atproto.sync.getRecord(async ({ params }) => {
+    const { did, collection, rkey } = params
+    const storage = new SqlRepoStorage(ctx.db, did)
+    const commit = params.commit
+      ? CID.parse(params.commit)
+      : await storage.getHead()
+    if (!commit) {
+      throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+    }
+    const proof = await repo.getRecords(storage, commit, [{ collection, rkey }])
+    return {
+      encoding: 'application/cbor',
+      body: Buffer.from(proof),
     }
   })
 

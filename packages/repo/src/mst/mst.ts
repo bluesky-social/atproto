@@ -2,13 +2,13 @@ import z from 'zod'
 import { CID } from 'multiformats'
 
 import { ReadableBlockstore } from '../storage'
-import { schema as common, cidForData } from '@atproto/common'
+import { schema as common, cidForCbor } from '@atproto/common'
 import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
 import BlockMap from '../block-map'
 import CidSet from '../cid-set'
-import { MissingBlocksError } from '../error'
+import { MissingBlockError, MissingBlocksError } from '../error'
 import * as parse from '../parse'
 
 /**
@@ -107,7 +107,7 @@ export class MST implements DataStore {
   ): Promise<MST> {
     const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     const entries = await util.deserializeNodeData(storage, data, opts)
-    const pointer = await cidForData(data)
+    const pointer = await cidForCbor(data)
     return new MST(storage, fanout, pointer, entries, layer)
   }
 
@@ -669,6 +669,40 @@ export class MST implements DataStore {
     return leaves.length
   }
 
+  // Reachable tree traversal
+  // -------------------
+
+  // Walk reachable branches of tree & emit nodes, consumer can bail at any point by returning false
+  async *walkReachable(): AsyncIterable<NodeEntry> {
+    yield this
+    const entries = await this.getEntries()
+    for (const entry of entries) {
+      if (entry.isTree()) {
+        try {
+          for await (const e of entry.walk()) {
+            yield e
+          }
+        } catch (err) {
+          if (err instanceof MissingBlockError) {
+            continue
+          } else {
+            throw err
+          }
+        }
+      } else {
+        yield entry
+      }
+    }
+  }
+
+  async reachableLeaves(): Promise<Leaf[]> {
+    const leaves: Leaf[] = []
+    for await (const entry of this.walkReachable()) {
+      if (entry.isLeaf()) leaves.push(entry)
+    }
+    return leaves
+  }
+
   // Sync Protocol
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
@@ -712,6 +746,20 @@ export class MST implements DataStore {
     for (const leaf of leafData.blocks.entries()) {
       await car.put(leaf)
     }
+  }
+
+  async cidsForPath(key: string): Promise<CID[]> {
+    const cids: CID[] = [await this.getPointer()]
+    const index = await this.findGtOrEqualLeafIndex(key)
+    const found = await this.atIndex(index)
+    if (found && found.isLeaf() && found.key === key) {
+      return [...cids, found.value]
+    }
+    const prev = await this.atIndex(index - 1)
+    if (prev && prev.isTree()) {
+      return [...cids, ...(await prev.cidsForPath(key))]
+    }
+    return cids
   }
 
   // Matching Leaf interface

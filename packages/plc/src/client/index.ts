@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
 import { Keypair } from '@atproto/crypto'
-import { check, cidForData } from '@atproto/common'
+import { check, cidForCbor } from '@atproto/common'
 import * as operations from '../lib/operations'
 import * as t from '../lib/types'
 
@@ -47,7 +47,7 @@ export class PlcClient {
     if (log.length === 0) {
       throw new Error(`Could not make update: DID does not exist: ${did}`)
     }
-    return cidForData(log[log.length - 1])
+    return cidForCbor(log[log.length - 1])
   }
 
   async rotateSigningKey(
