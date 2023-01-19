@@ -52,13 +52,15 @@ describe('repo sync data migration', () => {
   })
 
   it('migrates down', async () => {
-    await db.migrator.migrateDown()
+    const migration = await db.migrator.migrateDown()
+    expect(migration.error).toBeUndefined()
     await expect(getHistory()).rejects.toThrow()
     await expect(getBlocks()).rejects.toThrow()
   })
 
   it('migrates up', async () => {
-    await db.migrator.migrateUp()
+    const migration = await db.migrator.migrateUp()
+    expect(migration.error).toBeUndefined()
     const migratedHistory = await getHistory()
     const migratedBlocks = await getBlocks()
     expect(migratedHistory).toEqual(history)
