@@ -7,13 +7,9 @@ Object {
   "createdBy": "X",
   "id": 1,
   "reason": "Y",
-  "resolvedReports": Array [
-    Object {
-      "id": 6,
-    },
-    Object {
-      "id": 5,
-    },
+  "resolvedReportIds": Array [
+    6,
+    5,
   ],
   "subject": Object {
     "$type": "com.atproto.repo.repoRef",

@@ -33,7 +33,17 @@ export function constructMethodCallUri(
         throw new Error(`Invalid query parameter: ${key}`)
       }
       if (value !== undefined) {
-        uri.searchParams.set(key, encodeQueryParam(paramSchema.type, value))
+        if (paramSchema.type === 'array') {
+          const vals: typeof value[] = []
+          vals.concat(value).forEach((val) => {
+            uri.searchParams.append(
+              key,
+              encodeQueryParam(paramSchema.items.type, val),
+            )
+          })
+        } else {
+          uri.searchParams.set(key, encodeQueryParam(paramSchema.type, value))
+        }
       }
     }
   }
@@ -42,7 +52,14 @@ export function constructMethodCallUri(
 }
 
 export function encodeQueryParam(
-  type: 'string' | 'number' | 'integer' | 'boolean' | 'datetime' | 'unknown',
+  type:
+    | 'string'
+    | 'number'
+    | 'integer'
+    | 'boolean'
+    | 'datetime'
+    | 'array'
+    | 'unknown',
   value: any,
 ): string {
   if (type === 'string' || type === 'unknown') {

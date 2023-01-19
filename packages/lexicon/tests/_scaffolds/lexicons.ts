@@ -65,6 +65,7 @@ export default [
             number: { type: 'number' },
             integer: { type: 'integer' },
             string: { type: 'string' },
+            array: { type: 'array', items: { type: 'string' } },
           },
         },
         output: {
@@ -89,6 +90,7 @@ export default [
             number: { type: 'number' },
             integer: { type: 'integer' },
             string: { type: 'string' },
+            array: { type: 'array', items: { type: 'string' } },
           },
         },
         input: {

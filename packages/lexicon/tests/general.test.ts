@@ -367,6 +367,21 @@ describe('Record validation', () => {
     ).toThrow('Record/array must not have more than 4 elements')
   })
 
+  it('Applies array item constraints', () => {
+    expect(() =>
+      lex.assertValidRecord('com.example.arrayLength', {
+        $type: 'com.example.arrayLength',
+        array: [1, '2', 3],
+      }),
+    ).toThrow('Record/array/1 must be a number')
+    expect(() =>
+      lex.assertValidRecord('com.example.arrayLength', {
+        $type: 'com.example.arrayLength',
+        array: [1, undefined, 3],
+      }),
+    ).toThrow('Record/array/1 must be a number')
+  })
+
   it('Applies boolean const constraint', () => {
     lex.assertValidRecord('com.example.boolConst', {
       $type: 'com.example.boolConst',
@@ -560,12 +575,14 @@ describe('XRPC parameter validation', () => {
       number: 123.45,
       integer: 123,
       string: 'string',
+      array: ['x', 'y'],
     })
     lex.assertValidXrpcParams('com.example.procedure', {
       boolean: true,
       number: 123.45,
       integer: 123,
       string: 'string',
+      array: ['x', 'y'],
     })
   })
 
@@ -607,6 +624,15 @@ describe('XRPC parameter validation', () => {
         string: 'string',
       }),
     ).toThrow('number must be a number')
+    expect(() =>
+      lex.assertValidXrpcParams('com.example.query', {
+        boolean: true,
+        number: 123.45,
+        integer: 123,
+        string: 'string',
+        array: 'x',
+      }),
+    ).toThrow('array must be an array')
   })
 })
 

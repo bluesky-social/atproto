@@ -208,6 +208,7 @@ const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
 
 export const paginateAll = async <T extends { cursor?: string }>(
   fn: (cursor?: string) => Promise<T>,
+  limit = Infinity,
 ): Promise<T[]> => {
   const results: T[] = []
   let cursor
@@ -215,6 +216,6 @@ export const paginateAll = async <T extends { cursor?: string }>(
     const res = await fn(cursor)
     results.push(res)
     cursor = res.cursor
-  } while (cursor)
+  } while (cursor && results.length < limit)
   return results
 }

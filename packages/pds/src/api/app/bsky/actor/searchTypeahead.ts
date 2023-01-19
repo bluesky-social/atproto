@@ -7,7 +7,7 @@ import {
   cleanTerm,
   getUserSearchQueryPg,
   getUserSearchQuerySqlite,
-} from '../util/search'
+} from '../../../../services/util/search'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchTypeahead({

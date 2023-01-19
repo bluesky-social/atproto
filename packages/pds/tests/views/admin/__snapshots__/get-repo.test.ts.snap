@@ -1,0 +1,86 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds admin get repo view gets a repo by did, even when taken down. 1`] = `
+Object {
+  "account": Object {
+    "email": "alice@test.com",
+  },
+  "did": "user(0)",
+  "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "moderation": Object {
+    "actions": Array [
+      Object {
+        "action": "com.atproto.admin.moderationAction#takedown",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdBy": "Y",
+        "id": 2,
+        "reason": "X",
+        "resolvedReportIds": Array [],
+        "subject": Object {
+          "$type": "com.atproto.repo.repoRef",
+          "did": "user(0)",
+        },
+      },
+      Object {
+        "action": "com.atproto.admin.moderationAction#acknowledge",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdBy": "Y",
+        "id": 1,
+        "reason": "X",
+        "resolvedReportIds": Array [],
+        "reversal": Object {
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdBy": "Y",
+          "reason": "X",
+        },
+        "subject": Object {
+          "$type": "com.atproto.repo.repoRef",
+          "did": "user(0)",
+        },
+      },
+    ],
+    "reports": Array [
+      Object {
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "id": 2,
+        "reason": "defamation",
+        "reasonType": "com.atproto.report.reasonType#other",
+        "reportedByDid": "user(1)",
+        "resolvedByActionIds": Array [],
+        "subject": Object {
+          "$type": "com.atproto.repo.repoRef",
+          "did": "user(0)",
+        },
+      },
+      Object {
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "id": 1,
+        "reasonType": "com.atproto.report.reasonType#spam",
+        "reportedByDid": "user(2)",
+        "resolvedByActionIds": Array [],
+        "subject": Object {
+          "$type": "com.atproto.repo.repoRef",
+          "did": "user(0)",
+        },
+      },
+    ],
+    "takedownId": 2,
+  },
+  "relatedRecords": Array [
+    Object {
+      "$type": "app.bsky.system.declaration",
+      "actorType": "app.bsky.system.actorUser",
+    },
+    Object {
+      "$type": "app.bsky.actor.profile",
+      "avatar": Object {
+        "cid": "cids(0)",
+        "mimeType": "image/jpeg",
+      },
+      "description": "its me!",
+      "displayName": "ali",
+    },
+  ],
+}
+`;
