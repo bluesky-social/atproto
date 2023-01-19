@@ -19,42 +19,38 @@ export class SqlRepoStorage extends RepoStorage {
   }
 
   async getHead(forUpdate?: boolean): Promise<CID | null> {
-    // if for update, we lock the row & cache the last commit
+    // if for update, we lock the row
+    let builder = this.db.db
+      .selectFrom('repo_root')
+      .selectAll()
+      .where('did', '=', this.did)
+    if (forUpdate && this.db.dialect !== 'sqlite') {
+      // SELECT FOR UPDATE is not supported by sqlite, but sqlite txs are SERIALIZABLE so we don't actually need it
+      builder = builder.forUpdate()
+    }
+    const found = await builder.executeTakeFirst()
+    if (!found) return null
+
+    // if for update, we cache the blocks from last commit
+    // this must be split out into a separate query because of how pg handles SELECT FOR UPDATE with outer joins
     if (forUpdate) {
-      this.db.assertTransaction()
-      let builder = this.db.db
-        .selectFrom('repo_root')
-        .leftJoin(
-          'repo_commit_block',
-          'repo_commit_block.commit',
-          'repo_commit_block.block',
-        )
+      const res = await this.db.db
+        .selectFrom('repo_commit_block')
         .leftJoin('ipld_block', 'ipld_block.cid', 'repo_commit_block.block')
+        .where('repo_commit_block.commit', '=', found.root)
         .select([
-          'repo_root.root as root',
           'ipld_block.cid as blockCid',
           'ipld_block.content as blockBytes',
         ])
-        .where('did', '=', this.did)
-      if (this.db.dialect !== 'sqlite') {
-        // SELECT FOR UPDATE is not supported by sqlite, but sqlite txs are SERIALIZABLE so we don't actually need it
-        builder = builder.forUpdate()
-      }
-      const res = await builder.execute()
+        .execute()
       res.forEach((row) => {
         if (row.blockCid && row.blockBytes) {
           this.cache.set(CID.parse(row.blockCid), row.blockBytes)
         }
       })
-      return res.length > 0 ? CID.parse(res[0].root) : null
-    } else {
-      const found = await this.db.db
-        .selectFrom('repo_root')
-        .selectAll()
-        .where('did', '=', this.did)
-        .executeTakeFirst()
-      return found ? CID.parse(found.root) : null
     }
+
+    return CID.parse(found.root)
   }
 
   async getBytes(cid: CID): Promise<Uint8Array | null> {
