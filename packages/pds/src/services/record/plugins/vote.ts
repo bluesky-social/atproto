@@ -64,10 +64,9 @@ const createNotif = (obj: IndexedVote): Message => {
   })
 }
 
-const eventsForInsert = (obj: IndexedVote): Message[] => {
+const eventsForInsert = (_obj: IndexedVote): Message[] => {
   // No events for downvotes
-  if (obj.direction === 'down') return []
-  return [createNotif(obj), messages.addUpvote(obj.creator, obj.subject)]
+  return []
 }
 
 const deleteFn = async (
@@ -92,12 +91,6 @@ const eventsForDelete = (
     if (replacedBy) {
       events.push(createNotif(replacedBy))
     }
-  }
-  if (deleted.direction === 'up' && replacedBy?.direction !== 'up') {
-    events.push(messages.removeUpvote(deleted.creator, deleted.subject))
-  }
-  if (replacedBy?.direction === 'up' && deleted.direction !== 'up') {
-    events.push(messages.addUpvote(replacedBy.creator, replacedBy.subject))
   }
   return events
 }

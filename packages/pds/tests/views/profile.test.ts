@@ -14,7 +14,6 @@ describe('pds profile views', () => {
   let alice: string
   let bob: string
   let dan: string
-  let scene: string
 
   beforeAll(async () => {
     const server = await runTestServer({
@@ -27,7 +26,6 @@ describe('pds profile views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
-    scene = sc.scenes['scene.test'].did
   })
 
   afterAll(async () => {
@@ -59,15 +57,6 @@ describe('pds profile views', () => {
     )
 
     expect(forSnapshot(danForBob.data)).toMatchSnapshot()
-  })
-
-  it("fetches scene's profile", async () => {
-    const sceneForAlice = await client.app.bsky.actor.getProfile(
-      { actor: scene },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(sceneForAlice.data)).toMatchSnapshot()
   })
 
   it('updates profile', async () => {
@@ -142,20 +131,6 @@ describe('pds profile views', () => {
     )
 
     expect(forSnapshot(danForDan.data)).toMatchSnapshot()
-  })
-
-  it('handles scene profile updates', async () => {
-    await client.app.bsky.actor.updateProfile(
-      { did: scene, displayName: 'besties', description: 'feeling scene' },
-      { headers: sc.getHeaders(bob), encoding: 'application/json' },
-    )
-
-    const sceneForAlice = await client.app.bsky.actor.getProfile(
-      { actor: scene },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(sceneForAlice.data)).toMatchSnapshot()
   })
 
   it('handles racing updates', async () => {

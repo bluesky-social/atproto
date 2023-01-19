@@ -1903,58 +1903,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyActorCreateScene: {
-    lexicon: 1,
-    id: 'app.bsky.actor.createScene',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Create a scene.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle'],
-            properties: {
-              handle: {
-                type: 'string',
-              },
-              recoveryKey: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle', 'did', 'declaration'],
-            properties: {
-              handle: {
-                type: 'string',
-              },
-              did: {
-                type: 'string',
-              },
-              declaration: {
-                type: 'ref',
-                ref: 'lex:app.bsky.system.declRef',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidHandle',
-          },
-          {
-            name: 'HandleNotAvailable',
-          },
-        ],
-      },
-    },
-  },
   AppBskyActorGetProfile: {
     lexicon: 1,
     id: 'app.bsky.actor.getProfile',
@@ -2590,10 +2538,7 @@ export const schemaDict = {
           },
           reason: {
             type: 'union',
-            refs: [
-              'lex:app.bsky.feed.feedViewPost#reasonTrend',
-              'lex:app.bsky.feed.feedViewPost#reasonRepost',
-            ],
+            refs: ['lex:app.bsky.feed.feedViewPost#reasonRepost'],
           },
         },
       },
@@ -2608,19 +2553,6 @@ export const schemaDict = {
           parent: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.post#view',
-          },
-        },
-      },
-      reasonTrend: {
-        type: 'object',
-        required: ['by', 'indexedAt'],
-        properties: {
-          by: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          indexedAt: {
-            type: 'datetime',
           },
         },
       },
@@ -3193,29 +3125,6 @@ export const schemaDict = {
               downvote: {
                 type: 'string',
               },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyFeedTrend: {
-    lexicon: 1,
-    id: 'app.bsky.feed.trend',
-    defs: {
-      main: {
-        type: 'record',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: ['subject', 'createdAt'],
-          properties: {
-            subject: {
-              type: 'ref',
-              ref: 'lex:com.atproto.repo.strongRef',
-            },
-            createdAt: {
-              type: 'datetime',
             },
           },
         },
@@ -3969,11 +3878,10 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'.",
+              "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
             knownValues: [
               'vote',
               'repost',
-              'trend',
               'follow',
               'invite',
               'mention',
@@ -4018,17 +3926,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskySystemActorScene: {
-    lexicon: 1,
-    id: 'app.bsky.system.actorScene',
-    defs: {
-      main: {
-        type: 'token',
-        description:
-          "Actor type: Scene. Defined for app.bsky.system.declaration's actorType.",
-      },
-    },
-  },
   AppBskySystemActorUser: {
     lexicon: 1,
     id: 'app.bsky.system.actorUser',
@@ -4054,10 +3951,7 @@ export const schemaDict = {
           },
           actorType: {
             type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
+            knownValues: ['app.bsky.system.actorUser'],
           },
         },
       },
@@ -4078,10 +3972,7 @@ export const schemaDict = {
           properties: {
             actorType: {
               type: 'string',
-              knownValues: [
-                'app.bsky.system.actorUser',
-                'app.bsky.system.actorScene',
-              ],
+              knownValues: ['app.bsky.system.actorUser'],
             },
           },
         },
@@ -4138,7 +4029,6 @@ export const ids = {
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncGetRoot: 'com.atproto.sync.getRoot',
   ComAtprotoSyncUpdateRepo: 'com.atproto.sync.updateRepo',
-  AppBskyActorCreateScene: 'app.bsky.actor.createScene',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
   AppBskyActorProfile: 'app.bsky.actor.profile',
@@ -4157,7 +4047,6 @@ export const ids = {
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSetVote: 'app.bsky.feed.setVote',
-  AppBskyFeedTrend: 'app.bsky.feed.trend',
   AppBskyFeedVote: 'app.bsky.feed.vote',
   AppBskyGraphAssertCreator: 'app.bsky.graph.assertCreator',
   AppBskyGraphAssertMember: 'app.bsky.graph.assertMember',
@@ -4175,7 +4064,6 @@ export const ids = {
   AppBskyNotificationGetCount: 'app.bsky.notification.getCount',
   AppBskyNotificationList: 'app.bsky.notification.list',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
-  AppBskySystemActorScene: 'app.bsky.system.actorScene',
   AppBskySystemActorUser: 'app.bsky.system.actorUser',
   AppBskySystemDeclRef: 'app.bsky.system.declRef',
   AppBskySystemDeclaration: 'app.bsky.system.declaration',

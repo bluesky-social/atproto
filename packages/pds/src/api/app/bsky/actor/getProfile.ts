@@ -19,14 +19,12 @@ export default function (server: Server, ctx: AppContext) {
         .where(actorWhereClause(actor))
         .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
-        .leftJoin('scene', 'scene.handle', 'did_handle.handle')
         .select([
           'repo_root.takedownId',
           'did_handle.did as did',
           'did_handle.handle as handle',
           'did_handle.actorType as actorType',
           'did_handle.declarationCid as declarationCid',
-          'scene.owner as owner',
           'profile.uri as profileUri',
           'profile.displayName as displayName',
           'profile.description as description',
@@ -101,7 +99,7 @@ export default function (server: Server, ctx: AppContext) {
           did: queryRes.did,
           declaration: getDeclarationSimple(queryRes),
           handle: queryRes.handle,
-          creator: queryRes.owner || queryRes.did,
+          creator: queryRes.did,
           displayName: queryRes.displayName || undefined,
           description: queryRes.description || undefined,
           avatar: avatar,

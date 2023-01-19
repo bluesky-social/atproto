@@ -1,7 +1,6 @@
 import { Kysely } from 'kysely'
 import * as user from './tables/user'
 import * as didHandle from './tables/did-handle'
-import * as scene from './tables/scene'
 import * as repoRoot from './tables/repo-root'
 import * as refreshToken from './tables/refresh-token'
 import * as record from './tables/record'
@@ -18,20 +17,16 @@ import * as postEmbedImage from './tables/post-embed-image'
 import * as postEmbedExternal from './tables/post-embed-external'
 import * as vote from './tables/vote'
 import * as repost from './tables/repost'
-import * as trend from './tables/trend'
 import * as follow from './tables/follow'
 import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
 import * as messageQueue from './tables/message-queue'
 import * as messageQueueCursor from './tables/message-queue-cursor'
-import * as sceneMemberCount from './tables/scene-member-count'
-import * as sceneVotesOnPost from './tables/scene-votes-on-post'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
 
 export type DatabaseSchemaType = user.PartialDB &
   didHandle.PartialDB &
-  scene.PartialDB &
   refreshToken.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
@@ -48,14 +43,11 @@ export type DatabaseSchemaType = user.PartialDB &
   postEmbedExternal.PartialDB &
   vote.PartialDB &
   repost.PartialDB &
-  trend.PartialDB &
   follow.PartialDB &
   blob.PartialDB &
   repoBlob.PartialDB &
   messageQueue.PartialDB &
   messageQueueCursor.PartialDB &
-  sceneMemberCount.PartialDB &
-  sceneVotesOnPost.PartialDB &
   moderation.PartialDB &
   mute.PartialDB
 

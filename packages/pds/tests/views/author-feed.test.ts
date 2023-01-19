@@ -96,17 +96,6 @@ describe('pds author feed views', () => {
     expect(forSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
   })
 
-  it('fetches scene feeds with trends.', async () => {
-    const sceneForCarol = await client.app.bsky.feed.getAuthorFeed(
-      { author: sc.scenes['scene.test'].handle },
-      {
-        headers: sc.getHeaders(carol),
-      },
-    )
-
-    expect(forSnapshot(sceneForCarol.data.feed)).toMatchSnapshot()
-  })
-
   it('omits reposts from muted users.', async () => {
     await client.app.bsky.graph.mute(
       { user: alice }, // Has a repost by dan: will be omitted from dan's feed

@@ -5,7 +5,6 @@ import getAuthorFeed from './feed/getAuthorFeed'
 import getVotes from './feed/getVotes'
 import setVote from './feed/setVote'
 import getPostThread from './feed/getPostThread'
-import createScene from './actor/createScene'
 import getProfile from './actor/getProfile'
 import updateProfile from './actor/updateProfile'
 import getRepostedBy from './feed/getRepostedBy'
@@ -25,7 +24,6 @@ import getSuggestions from './actor/getSuggestions'
 import postNotificationsSeen from './notification/updateSeen'
 
 export default function (server: Server, ctx: AppContext) {
-  createScene(server, ctx)
   getTimeline(server, ctx)
   getAuthorFeed(server, ctx)
   getVotes(server, ctx)

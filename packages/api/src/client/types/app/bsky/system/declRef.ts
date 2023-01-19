@@ -8,10 +8,7 @@ import { lexicons } from '../../../../lexicons'
 /** A reference to a app.bsky.system.declaration record. */
 export interface Main {
   cid: string
-  actorType:
-    | 'app.bsky.system.actorUser'
-    | 'app.bsky.system.actorScene'
-    | (string & {})
+  actorType: 'app.bsky.system.actorUser' | (string & {})
   [k: string]: unknown
 }
 

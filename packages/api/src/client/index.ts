@@ -49,7 +49,6 @@ import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
-import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
@@ -68,7 +67,6 @@ import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
-import * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
 import * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 import * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
 import * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
@@ -86,7 +84,6 @@ import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
-import * as AppBskySystemActorScene from './types/app/bsky/system/actorScene'
 import * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 import * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 import * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
@@ -134,7 +131,6 @@ export * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
-export * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
@@ -153,7 +149,6 @@ export * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
-export * as AppBskyFeedTrend from './types/app/bsky/feed/trend'
 export * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 export * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
 export * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
@@ -171,7 +166,6 @@ export * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 export * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 export * as AppBskyNotificationList from './types/app/bsky/notification/list'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
-export * as AppBskySystemActorScene from './types/app/bsky/system/actorScene'
 export * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 export * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
@@ -190,7 +184,6 @@ export const APP_BSKY_GRAPH = {
   AssertMember: 'app.bsky.graph.assertMember',
 }
 export const APP_BSKY_SYSTEM = {
-  ActorScene: 'app.bsky.system.actorScene',
   ActorUser: 'app.bsky.system.actorUser',
 }
 
@@ -748,17 +741,6 @@ export class ActorNS {
     this.profile = new ProfileRecord(service)
   }
 
-  createScene(
-    data?: AppBskyActorCreateScene.InputSchema,
-    opts?: AppBskyActorCreateScene.CallOptions,
-  ): Promise<AppBskyActorCreateScene.Response> {
-    return this._service.xrpc
-      .call('app.bsky.actor.createScene', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyActorCreateScene.toKnownErr(e)
-      })
-  }
-
   getProfile(
     params?: AppBskyActorGetProfile.QueryParams,
     opts?: AppBskyActorGetProfile.CallOptions,
@@ -888,14 +870,12 @@ export class FeedNS {
   _service: ServiceClient
   post: PostRecord
   repost: RepostRecord
-  trend: TrendRecord
   vote: VoteRecord
 
   constructor(service: ServiceClient) {
     this._service = service
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
-    this.trend = new TrendRecord(service)
     this.vote = new VoteRecord(service)
   }
 
@@ -1083,67 +1063,6 @@ export class RepostRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.repost', ...params },
-      { headers },
-    )
-  }
-}
-
-export class TrendRecord {
-  _service: ServiceClient
-
-  constructor(service: ServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyFeedTrend.Record }[]
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.trend',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyFeedTrend.Record }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.trend',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyFeedTrend.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.feed.trend'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.feed.trend', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.trend', ...params },
       { headers },
     )
   }

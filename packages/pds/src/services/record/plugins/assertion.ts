@@ -84,9 +84,6 @@ const eventsForDelete = (
 ): Message[] => {
   const events: Message[] = []
   events.push(messages.deleteNotifications(deleted.uri))
-  if (deleted?.confirmUri) {
-    events.push(messages.removeMember(deleted.creator, deleted.subjectDid))
-  }
   if (replacedBy) {
     eventsForInsert(replacedBy).forEach((evt) => events.push(evt))
   }
