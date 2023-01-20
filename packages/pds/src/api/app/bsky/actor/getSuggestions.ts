@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      let suggestionsReq = db
+      const suggestionsQb = db
         .selectFrom('user')
         .innerJoin('did_handle', 'user.handle', 'did_handle.handle')
         .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
@@ -44,13 +44,15 @@ export default function (server: Server, ctx: AppContext) {
             .selectFrom('post')
             .whereRef('creator', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
-            .as('orderCount'),
+            .as('postCount'),
         ])
 
-      const keyset = new CountDidKeyset(
-        ref('orderCount'),
-        ref('did_handle.did'),
-      )
+      // PG doesn't let you do WHEREs on aliases, so we wrap it in a subquery
+      let suggestionsReq = db
+        .selectFrom(suggestionsQb.as('suggestions'))
+        .selectAll()
+
+      const keyset = new PostCountDidKeyset(ref('postCount'), ref('did'))
       suggestionsReq = paginate(suggestionsReq, {
         limit,
         before: cursor,
@@ -86,17 +88,17 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-type CountDidResult = { orderCount: number; did: string }
-type CountDidLabeledResult = { primary: number; secondary: string }
+type PostCountDidResult = { postCount: number; did: string }
+type PostCountDidLabeledResult = { primary: number; secondary: string }
 
-export class CountDidKeyset extends GenericKeyset<
-  CountDidResult,
-  CountDidLabeledResult
+export class PostCountDidKeyset extends GenericKeyset<
+  PostCountDidResult,
+  PostCountDidLabeledResult
 > {
-  labelResult(result: CountDidResult): CountDidLabeledResult {
-    return { primary: result.orderCount, secondary: result.did }
+  labelResult(result: PostCountDidResult): PostCountDidLabeledResult {
+    return { primary: result.postCount, secondary: result.did }
   }
-  labeledResultToCursor(labeled: CountDidLabeledResult) {
+  labeledResultToCursor(labeled: PostCountDidLabeledResult) {
     return {
       primary: labeled.primary.toString(),
       secondary: labeled.secondary,
