@@ -25,8 +25,8 @@ describe('repo sync data migration', () => {
     await close()
   })
 
-  const getHistory = () => {
-    return db.db
+  const getHistory = async () => {
+    return await db.db
       .selectFrom('repo_commit_history')
       .selectAll()
       .orderBy('commit')
@@ -34,8 +34,8 @@ describe('repo sync data migration', () => {
       .execute()
   }
 
-  const getBlocks = () => {
-    return db.db
+  const getBlocks = async () => {
+    return await db.db
       .selectFrom('repo_commit_block')
       .selectAll()
       .orderBy('commit')
@@ -52,14 +52,14 @@ describe('repo sync data migration', () => {
   })
 
   it('migrates down', async () => {
-    const migration = await db.migrator.migrateDown()
+    const migration = await db.migrator.migrateTo('_20221230T215012029Z')
     expect(migration.error).toBeUndefined()
     await expect(getHistory()).rejects.toThrow()
     await expect(getBlocks()).rejects.toThrow()
   })
 
   it('migrates up', async () => {
-    const migration = await db.migrator.migrateUp()
+    const migration = await db.migrator.migrateTo('_20230118T223059239Z')
     expect(migration.error).toBeUndefined()
     const migratedHistory = await getHistory()
     const migratedBlocks = await getBlocks()
