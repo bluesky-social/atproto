@@ -1,3 +1,4 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
 import { countAll, notSoftDeletedClause } from '../../../../db/util'
@@ -102,8 +103,12 @@ export class CountDidKeyset extends GenericKeyset<
     }
   }
   cursorToLabeledResult(cursor: Cursor) {
+    const parsed = parseInt(cursor.primary)
+    if (isNaN(parsed)) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
     return {
-      primary: parseInt(cursor.primary),
+      primary: parsed,
       secondary: cursor.secondary,
     }
   }
