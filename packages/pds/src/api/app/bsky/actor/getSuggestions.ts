@@ -1,5 +1,6 @@
 import AppContext from '../../../../context'
-import { notSoftDeletedClause } from '../../../../db/util'
+import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
+import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { getDeclarationSimple } from '../util'
 
@@ -15,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      const suggestionsReq = db
+      let suggestionsReq = db
         .selectFrom('user')
         .innerJoin('did_handle', 'user.handle', 'did_handle.handle')
         .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
@@ -38,12 +39,23 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterFollow'),
+          db
+            .selectFrom('post')
+            .whereRef('creator', '=', ref('did_handle.did'))
+            .select(countAll.as('count'))
+            .as('orderCount'),
         ])
-        .orderBy(ref('user.createdAt'), 'asc')
-        .if(limit !== undefined, (q) => q.limit(limit as number))
-        .if(cursor !== undefined, (q) =>
-          q.where(ref('user.createdAt'), '>', cursor),
-        )
+
+      const keyset = new CountDidKeyset(
+        ref('orderCount'),
+        ref('did_handle.did'),
+      )
+      suggestionsReq = paginate(suggestionsReq, {
+        limit,
+        before: cursor,
+        keyset,
+        direction: 'desc',
+      })
 
       const suggestionsRes = await suggestionsReq.execute()
 
@@ -62,14 +74,37 @@ export default function (server: Server, ctx: AppContext) {
         },
       }))
 
-      const lastResult = suggestionsRes.at(-1)
       return {
         encoding: 'application/json',
         body: {
           actors,
-          cursor: lastResult?.createdAt,
+          cursor: keyset.packFromResult(suggestionsRes),
         },
       }
     },
   })
+}
+
+type CountDidResult = { orderCount: number; did: string }
+type CountDidLabeledResult = { primary: number; secondary: string }
+
+export class CountDidKeyset extends GenericKeyset<
+  CountDidResult,
+  CountDidLabeledResult
+> {
+  labelResult(result: CountDidResult): CountDidLabeledResult {
+    return { primary: result.orderCount, secondary: result.did }
+  }
+  labeledResultToCursor(labeled: CountDidLabeledResult) {
+    return {
+      primary: labeled.primary.toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: Cursor) {
+    return {
+      primary: parseInt(cursor.primary),
+      secondary: cursor.secondary,
+    }
+  }
 }
