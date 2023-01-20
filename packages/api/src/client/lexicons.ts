@@ -1929,7 +1929,6 @@ export const schemaDict = {
               'creator',
               'followersCount',
               'followsCount',
-              'membersCount',
               'postsCount',
             ],
             properties: {
@@ -1966,9 +1965,6 @@ export const schemaDict = {
               followsCount: {
                 type: 'integer',
               },
-              membersCount: {
-                type: 'integer',
-              },
               postsCount: {
                 type: 'integer',
               },
@@ -1984,9 +1980,6 @@ export const schemaDict = {
         type: 'object',
         properties: {
           follow: {
-            type: 'string',
-          },
-          member: {
             type: 'string',
           },
           muted: {
@@ -3528,160 +3521,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphGetMembers: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getMembers',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Who is a member of the group?',
-        parameters: {
-          type: 'params',
-          required: ['actor'],
-          properties: {
-            actor: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            before: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject', 'members'],
-            properties: {
-              subject: {
-                type: 'ref',
-                ref: 'lex:app.bsky.actor.ref#withInfo',
-              },
-              cursor: {
-                type: 'string',
-              },
-              members: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.graph.getMembers#member',
-                },
-              },
-            },
-          },
-        },
-      },
-      member: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle', 'indexedAt'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-          createdAt: {
-            type: 'datetime',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-        },
-      },
-    },
-  },
-  AppBskyGraphGetMemberships: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getMemberships',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Which groups is the actor a member of?',
-        parameters: {
-          type: 'params',
-          required: ['actor'],
-          properties: {
-            actor: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            before: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject', 'memberships'],
-            properties: {
-              subject: {
-                type: 'ref',
-                ref: 'lex:app.bsky.actor.ref#withInfo',
-              },
-              cursor: {
-                type: 'string',
-              },
-              memberships: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.graph.getMemberships#membership',
-                },
-              },
-            },
-          },
-        },
-      },
-      membership: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle', 'indexedAt'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-          createdAt: {
-            type: 'datetime',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-        },
-      },
-    },
-  },
   AppBskyGraphGetMutes: {
     lexicon: 1,
     id: 'app.bsky.graph.getMutes',
@@ -4056,8 +3895,6 @@ export const ids = {
   AppBskyGraphGetAssertions: 'app.bsky.graph.getAssertions',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
-  AppBskyGraphGetMembers: 'app.bsky.graph.getMembers',
-  AppBskyGraphGetMemberships: 'app.bsky.graph.getMemberships',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphMute: 'app.bsky.graph.mute',
   AppBskyGraphUnmute: 'app.bsky.graph.unmute',

@@ -1,4 +1,4 @@
-import { APP_BSKY_GRAPH, Server } from '../../../../lexicon'
+import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll, actorWhereClause, softDeleted } from '../../../../db/util'
 import { getDeclarationSimple } from '../util'
@@ -41,13 +41,6 @@ export default function (server: Server, ctx: AppContext) {
             .select(countAll.as('count'))
             .as('followersCount'),
           db
-            .selectFrom('assertion')
-            .whereRef('assertion.creator', '=', ref('did_handle.did'))
-            .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
-            .where('assertion.confirmUri', 'is not', null)
-            .select(countAll.as('count'))
-            .as('membersCount'),
-          db
             .selectFrom('post')
             .whereRef('creator', '=', ref('did_handle.did'))
             .select(countAll.as('count'))
@@ -58,14 +51,6 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterFollow'),
-          db
-            .selectFrom('assertion')
-            .whereRef('creator', '=', ref('did_handle.did'))
-            .where('assertion', '=', APP_BSKY_GRAPH.AssertMember)
-            .where('confirmUri', 'is not', null)
-            .where('subjectDid', '=', requester)
-            .select('confirmUri')
-            .as('requesterMember'),
           db
             .selectFrom('mute')
             .whereRef('did', '=', ref('did_handle.did'))
@@ -106,11 +91,9 @@ export default function (server: Server, ctx: AppContext) {
           banner: banner,
           followsCount: queryRes.followsCount,
           followersCount: queryRes.followersCount,
-          membersCount: queryRes.membersCount,
           postsCount: queryRes.postsCount,
           myState: {
             follow: queryRes.requesterFollow || undefined,
-            member: queryRes.requesterMember || undefined,
             muted: !!queryRes.requesterMuted,
           },
         },

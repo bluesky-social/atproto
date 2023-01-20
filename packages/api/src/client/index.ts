@@ -76,8 +76,6 @@ import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 import * as AppBskyGraphGetAssertions from './types/app/bsky/graph/getAssertions'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
-import * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphMute from './types/app/bsky/graph/mute'
 import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
@@ -158,8 +156,6 @@ export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 export * as AppBskyGraphGetAssertions from './types/app/bsky/graph/getAssertions'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-export * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
-export * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 export * as AppBskyGraphMute from './types/app/bsky/graph/mute'
 export * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
@@ -1172,28 +1168,6 @@ export class GraphNS {
       .call('app.bsky.graph.getFollows', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetFollows.toKnownErr(e)
-      })
-  }
-
-  getMembers(
-    params?: AppBskyGraphGetMembers.QueryParams,
-    opts?: AppBskyGraphGetMembers.CallOptions,
-  ): Promise<AppBskyGraphGetMembers.Response> {
-    return this._service.xrpc
-      .call('app.bsky.graph.getMembers', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyGraphGetMembers.toKnownErr(e)
-      })
-  }
-
-  getMemberships(
-    params?: AppBskyGraphGetMemberships.QueryParams,
-    opts?: AppBskyGraphGetMemberships.CallOptions,
-  ): Promise<AppBskyGraphGetMemberships.Response> {
-    return this._service.xrpc
-      .call('app.bsky.graph.getMemberships', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyGraphGetMemberships.toKnownErr(e)
       })
   }
 

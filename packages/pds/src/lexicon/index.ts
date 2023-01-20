@@ -56,8 +56,6 @@ import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 import * as AppBskyGraphGetAssertions from './types/app/bsky/graph/getAssertions'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
-import * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphMute from './types/app/bsky/graph/mute'
 import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
@@ -630,20 +628,6 @@ export class GraphNS {
     cfg: ConfigOf<AV, AppBskyGraphGetFollows.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.graph.getFollows' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getMembers<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyGraphGetMembers.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.graph.getMembers' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getMemberships<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyGraphGetMemberships.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.graph.getMemberships' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
