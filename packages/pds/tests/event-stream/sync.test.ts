@@ -139,7 +139,6 @@ describe('sync', () => {
     'scene_votes_on_post',
     /* Not these:
      * 'ipld_block',
-     * 'ipld_block_creator',
      * 'blob',
      * 'repo_blob',
      * 'user',

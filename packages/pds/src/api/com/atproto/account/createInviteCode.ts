@@ -1,7 +1,7 @@
 import * as crypto from '@atproto/crypto'
 import * as uint8arrays from 'uint8arrays'
-import { Server } from '../../../lexicon'
-import AppContext from '../../../context'
+import { Server } from '../../../../lexicon'
+import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.account.createInviteCode({

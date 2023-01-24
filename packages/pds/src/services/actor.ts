@@ -244,6 +244,22 @@ export class ActorService {
       keyset,
     }).execute()
   }
+
+  async deleteUser(did: string): Promise<void> {
+    this.db.assertTransaction()
+    await Promise.all([
+      this.db.db
+        .deleteFrom('user')
+        .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
+        .where('did_handle.did', '=', 'did')
+        .execute(),
+      this.db.db.deleteFrom('refresh_token').where('did', '=', did).execute(),
+    ])
+    await this.db.db
+      .deleteFrom('did_handle')
+      .where('did_handle.did', '=', did)
+      .execute()
+  }
 }
 
 export class UserAlreadyExistsError extends Error {}

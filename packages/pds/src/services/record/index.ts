@@ -129,7 +129,11 @@ export class RecordService {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
-      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'record.cid')
+          .on('ipld_block.creator', '=', did),
+      )
       .where('record.did', '=', did)
       .where('record.collection', '=', collection)
       .if(!includeSoftDeleted, (qb) =>
@@ -169,9 +173,13 @@ export class RecordService {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
-      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
-      .selectAll()
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'record.cid')
+          .on('ipld_block.creator', '=', uri.host),
+      )
       .where('record.uri', '=', uri.toString())
+      .selectAll()
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )

@@ -8,7 +8,6 @@ import * as record from './tables/record'
 import * as repoCommitBlock from './tables/repo-commit-block'
 import * as repoCommitHistory from './tables/repo-commit-history'
 import * as ipldBlock from './tables/ipld-block'
-import * as ipldBlockCreator from './tables/ipld-block-creator'
 import * as inviteCode from './tables/invite-code'
 import * as duplicateRecords from './tables/duplicate-record'
 import * as notification from './tables/user-notification'
@@ -24,6 +23,7 @@ import * as trend from './tables/trend'
 import * as follow from './tables/follow'
 import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
+import * as deleteAccountToken from './tables/delete-account-token'
 import * as messageQueue from './tables/message-queue'
 import * as messageQueueCursor from './tables/message-queue-cursor'
 import * as sceneMemberCount from './tables/scene-member-count'
@@ -37,10 +37,9 @@ export type DatabaseSchemaType = user.PartialDB &
   refreshToken.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
+  ipldBlock.PartialDB &
   repoCommitBlock.PartialDB &
   repoCommitHistory.PartialDB &
-  ipldBlock.PartialDB &
-  ipldBlockCreator.PartialDB &
   inviteCode.PartialDB &
   duplicateRecords.PartialDB &
   notification.PartialDB &
@@ -56,6 +55,7 @@ export type DatabaseSchemaType = user.PartialDB &
   follow.PartialDB &
   blob.PartialDB &
   repoBlob.PartialDB &
+  deleteAccountToken.PartialDB &
   messageQueue.PartialDB &
   messageQueueCursor.PartialDB &
   sceneMemberCount.PartialDB &
