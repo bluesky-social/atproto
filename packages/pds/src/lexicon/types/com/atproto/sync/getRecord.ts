@@ -3,6 +3,9 @@
  */
 import express from 'express'
 import stream from 'stream'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
@@ -18,7 +21,7 @@ export type InputSchema = undefined
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
-  encoding: 'application/cbor'
+  encoding: 'application/vnd.ipld.car'
   body: Uint8Array | stream.Readable
 }
 

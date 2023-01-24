@@ -51,7 +51,6 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
@@ -139,7 +138,6 @@ export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 export * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
@@ -733,17 +731,6 @@ export class SyncNS {
       .call('com.atproto.sync.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetRepo.toKnownErr(e)
-      })
-  }
-
-  updateRepo(
-    data?: ComAtprotoSyncUpdateRepo.InputSchema,
-    opts?: ComAtprotoSyncUpdateRepo.CallOptions,
-  ): Promise<ComAtprotoSyncUpdateRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.updateRepo', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncUpdateRepo.toKnownErr(e)
       })
   }
 }
