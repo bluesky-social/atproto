@@ -10,7 +10,6 @@ import updateProfile from './actor/updateProfile'
 import getRepostedBy from './feed/getRepostedBy'
 import getFollowers from './graph/getFollowers'
 import getFollows from './graph/getFollows'
-import getAssertions from './graph/getAssertions'
 import mute from './graph/mute'
 import unmute from './graph/unmute'
 import getMutes from './graph/getMutes'
@@ -32,7 +31,6 @@ export default function (server: Server, ctx: AppContext) {
   getRepostedBy(server, ctx)
   getFollowers(server, ctx)
   getFollows(server, ctx)
-  getAssertions(server, ctx)
   mute(server, ctx)
   unmute(server, ctx)
   getMutes(server, ctx)

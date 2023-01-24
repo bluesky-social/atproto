@@ -3250,120 +3250,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphGetAssertions: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getAssertions',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'General-purpose query for assertions.',
-        parameters: {
-          type: 'params',
-          properties: {
-            author: {
-              type: 'string',
-            },
-            subject: {
-              type: 'string',
-            },
-            assertion: {
-              type: 'string',
-            },
-            confirmed: {
-              type: 'boolean',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            before: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['assertions'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              assertions: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.graph.getAssertions#assertion',
-                },
-              },
-            },
-          },
-        },
-      },
-      assertion: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'assertion',
-          'author',
-          'subject',
-          'indexedAt',
-          'createdAt',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          assertion: {
-            type: 'string',
-          },
-          confirmation: {
-            type: 'ref',
-            ref: 'lex:app.bsky.graph.getAssertions#confirmation',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          subject: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-          createdAt: {
-            type: 'datetime',
-          },
-        },
-      },
-      confirmation: {
-        type: 'object',
-        required: ['uri', 'cid', 'indexedAt', 'createdAt'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-          createdAt: {
-            type: 'datetime',
-          },
-        },
-      },
-    },
-  },
   AppBskyGraphGetFollowers: {
     lexicon: 1,
     id: 'app.bsky.graph.getFollowers',
@@ -3892,7 +3778,6 @@ export const ids = {
   AppBskyGraphAssertion: 'app.bsky.graph.assertion',
   AppBskyGraphConfirmation: 'app.bsky.graph.confirmation',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
-  AppBskyGraphGetAssertions: 'app.bsky.graph.getAssertions',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',

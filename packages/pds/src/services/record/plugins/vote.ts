@@ -64,9 +64,10 @@ const createNotif = (obj: IndexedVote): Message => {
   })
 }
 
-const eventsForInsert = (_obj: IndexedVote): Message[] => {
+const eventsForInsert = (obj: IndexedVote): Message[] => {
   // No events for downvotes
-  return []
+  if (obj.direction === 'down') return []
+  return [createNotif(obj)]
 }
 
 const deleteFn = async (

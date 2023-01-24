@@ -53,7 +53,6 @@ import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
-import * as AppBskyGraphGetAssertions from './types/app/bsky/graph/getAssertions'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
@@ -608,13 +607,6 @@ export class GraphNS {
 
   constructor(server: Server) {
     this._server = server
-  }
-
-  getAssertions<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyGraphGetAssertions.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.graph.getAssertions' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
   }
 
   getFollowers<AV extends AuthVerifier>(
