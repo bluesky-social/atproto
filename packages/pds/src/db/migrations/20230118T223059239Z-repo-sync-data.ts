@@ -18,9 +18,8 @@ export async function up(db: DatabaseSchema): Promise<void> {
     .execute()
   await db.schema
     .createTable(commitHistoryTable)
-    .addColumn('commit', 'varchar', (col) => col.notNull())
+    .addColumn('commit', 'varchar', (col) => col.primaryKey())
     .addColumn('prev', 'varchar')
-    .addPrimaryKeyConstraint(`${commitHistoryTable}_pkey`, ['commit', 'prev'])
     .execute()
 
   const migrateUser = async (did: string, root: CID) => {
