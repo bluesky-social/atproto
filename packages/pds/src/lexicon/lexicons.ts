@@ -1844,7 +1844,7 @@ export const schemaDict = {
           },
         },
         output: {
-          encoding: 'application/cbor',
+          encoding: 'application/vnd.ipld.car',
         },
       },
     },
@@ -1953,7 +1953,7 @@ export const schemaDict = {
           },
         },
         output: {
-          encoding: 'application/cbor',
+          encoding: 'application/vnd.ipld.car',
         },
       },
     },
@@ -1980,30 +1980,7 @@ export const schemaDict = {
           },
         },
         output: {
-          encoding: 'application/cbor',
-        },
-      },
-    },
-  },
-  ComAtprotoSyncUpdateRepo: {
-    lexicon: 1,
-    id: 'com.atproto.sync.updateRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Writes commits to a repo.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        input: {
-          encoding: 'application/cbor',
+          encoding: 'application/vnd.ipld.car',
         },
       },
     },
@@ -4245,7 +4222,6 @@ export const ids = {
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
-  ComAtprotoSyncUpdateRepo: 'com.atproto.sync.updateRepo',
   AppBskyActorCreateScene: 'app.bsky.actor.createScene',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',

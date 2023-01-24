@@ -19,7 +19,7 @@ export type InputSchema = undefined
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
-  encoding: 'application/cbor'
+  encoding: 'application/vnd.ipld.car'
   body: Uint8Array | stream.Readable
 }
 

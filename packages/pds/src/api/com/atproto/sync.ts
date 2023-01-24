@@ -52,7 +52,7 @@ export default function (server: Server, ctx: AppContext) {
     const fromCid = from ? CID.parse(from) : null
     const diff = await repo.getDiff(storage, head, fromCid)
     return {
-      encoding: 'application/cbor',
+      encoding: 'application/vnd.ipld.car',
       body: Buffer.from(diff),
     }
   })
@@ -68,7 +68,7 @@ export default function (server: Server, ctx: AppContext) {
     }
     const checkout = await repo.getCheckout(storage, commit)
     return {
-      encoding: 'application/cbor',
+      encoding: 'application/vnd.ipld.car',
       body: Buffer.from(checkout),
     }
   })
@@ -84,12 +84,8 @@ export default function (server: Server, ctx: AppContext) {
     }
     const proof = await repo.getRecords(storage, commit, [{ collection, rkey }])
     return {
-      encoding: 'application/cbor',
+      encoding: 'application/vnd.ipld.car',
       body: Buffer.from(proof),
     }
-  })
-
-  server.com.atproto.sync.updateRepo(async () => {
-    throw new InvalidRequestError('Not implemented')
   })
 }
