@@ -2,8 +2,11 @@ import { SelectQueryBuilder, sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { DbRef } from './util'
 
-type Cursor = { primary: string; secondary: string }
-type LabeledResult = { primary: string | number; secondary: string | number }
+export type Cursor = { primary: string; secondary: string }
+export type LabeledResult = {
+  primary: string | number
+  secondary: string | number
+}
 
 /**
  * The GenericKeyset is an abstract class that sets-up the interface and partial implementation

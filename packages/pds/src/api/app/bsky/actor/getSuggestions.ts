@@ -1,5 +1,7 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
-import { notSoftDeletedClause } from '../../../../db/util'
+import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
+import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { getDeclarationSimple } from '../util'
 
@@ -15,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      const suggestionsReq = db
+      const suggestionsQb = db
         .selectFrom('user')
         .innerJoin('did_handle', 'user.handle', 'did_handle.handle')
         .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
@@ -38,12 +40,25 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterFollow'),
+          db
+            .selectFrom('post')
+            .whereRef('creator', '=', ref('did_handle.did'))
+            .select(countAll.as('count'))
+            .as('postCount'),
         ])
-        .orderBy(ref('user.createdAt'), 'asc')
-        .if(limit !== undefined, (q) => q.limit(limit as number))
-        .if(cursor !== undefined, (q) =>
-          q.where(ref('user.createdAt'), '>', cursor),
-        )
+
+      // PG doesn't let you do WHEREs on aliases, so we wrap it in a subquery
+      let suggestionsReq = db
+        .selectFrom(suggestionsQb.as('suggestions'))
+        .selectAll()
+
+      const keyset = new PostCountDidKeyset(ref('postCount'), ref('did'))
+      suggestionsReq = paginate(suggestionsReq, {
+        limit,
+        before: cursor,
+        keyset,
+        direction: 'desc',
+      })
 
       const suggestionsRes = await suggestionsReq.execute()
 
@@ -62,14 +77,41 @@ export default function (server: Server, ctx: AppContext) {
         },
       }))
 
-      const lastResult = suggestionsRes.at(-1)
       return {
         encoding: 'application/json',
         body: {
           actors,
-          cursor: lastResult?.createdAt,
+          cursor: keyset.packFromResult(suggestionsRes),
         },
       }
     },
   })
+}
+
+type PostCountDidResult = { postCount: number; did: string }
+type PostCountDidLabeledResult = { primary: number; secondary: string }
+
+export class PostCountDidKeyset extends GenericKeyset<
+  PostCountDidResult,
+  PostCountDidLabeledResult
+> {
+  labelResult(result: PostCountDidResult): PostCountDidLabeledResult {
+    return { primary: result.postCount, secondary: result.did }
+  }
+  labeledResultToCursor(labeled: PostCountDidLabeledResult) {
+    return {
+      primary: labeled.primary.toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: Cursor) {
+    const parsed = parseInt(cursor.primary)
+    if (isNaN(parsed)) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: parsed,
+      secondary: cursor.secondary,
+    }
+  }
 }
