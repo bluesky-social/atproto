@@ -38,11 +38,12 @@ export default function (server: Server, ctx: AppContext) {
       return createExpiredTokenError()
     }
 
+    const did = tokenInfo.did
     await ctx.db.transaction(async (dbTxn) => {
-      await removeDeleteToken(dbTxn, tokenInfo.did)
-      // await ctx.services
-      //   .actor(dbTxn)
-      //   .updateUserPassword(tokenInfo.handle, password)
+      await removeDeleteToken(dbTxn, did)
+      await ctx.services.record(dbTxn).deleteForUser(did)
+      await ctx.services.repo(dbTxn).deleteRepo(did)
+      await ctx.services.actor(dbTxn).deleteUser(did)
     })
   })
 }
