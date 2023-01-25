@@ -14,12 +14,22 @@ export async function up(db: DatabaseSchema): Promise<void> {
     .createTable(commitBlockTable)
     .addColumn('commit', 'varchar', (col) => col.notNull())
     .addColumn('block', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint(`${commitBlockTable}_pkey`, ['commit', 'block'])
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint(`${commitBlockTable}_pkey`, [
+      'commit',
+      'block',
+      'creator',
+    ])
     .execute()
   await db.schema
     .createTable(commitHistoryTable)
-    .addColumn('commit', 'varchar', (col) => col.primaryKey())
+    .addColumn('commit', 'varchar', (col) => col.notNull())
     .addColumn('prev', 'varchar')
+    .addColumn('creator', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint(`${commitHistoryTable}_pkey`, [
+      'commit',
+      'creator',
+    ])
     .execute()
 
   const migrateUser = async (did: string, root: CID) => {
@@ -51,11 +61,13 @@ export async function up(db: DatabaseSchema): Promise<void> {
         commitBlock.push({
           commit: commit.commit.toString(),
           block: cid.toString(),
+          creator: did,
         })
       })
       commitHistory.push({
         commit: commit.commit.toString(),
         prev: prev ? prev.commit.toString() : null,
+        creator: did,
       })
     }
     const promises: Promise<unknown>[] = []
