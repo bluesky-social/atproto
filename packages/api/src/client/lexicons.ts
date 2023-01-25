@@ -2316,9 +2316,6 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {
-              did: {
-                type: 'string',
-              },
               displayName: {
                 type: 'string',
                 maxLength: 64,

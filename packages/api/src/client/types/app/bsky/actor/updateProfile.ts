@@ -9,7 +9,6 @@ import { lexicons } from '../../../../lexicons'
 export interface QueryParams {}
 
 export interface InputSchema {
-  did?: string
   displayName?: string
   description?: string
   avatar?: { cid: string; mimeType: string; [k: string]: unknown }
