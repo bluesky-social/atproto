@@ -226,4 +226,46 @@ export class RecordService {
     }
     return found
   }
+
+  async deleteForUser(did: string) {
+    await Promise.all([
+      this.db.db
+        .deleteFrom('post_entity')
+        .innerJoin('post', 'post.uri', 'post_entity.postUri')
+        .where('post.creator', '=', did)
+        .execute(),
+      this.db.db
+        .deleteFrom('post_embed_image')
+        .innerJoin('post', 'post.uri', 'post_embed_image.postUri')
+        .where('post.creator', '=', did)
+        .execute(),
+      this.db.db
+        .deleteFrom('post_embed_external')
+        .innerJoin('post', 'post.uri', 'post_embed_external.postUri')
+        .where('post.creator', '=', did)
+        .execute(),
+    ])
+    await Promise.all([
+      this.db.db.deleteFrom('assertion').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('follow').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('post').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('profile').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('vote').where('creator', '=', did).execute(),
+      this.db.db
+        .updateTable('assertion')
+        .set({
+          confirmUri: null,
+          confirmCid: null,
+          confirmCreated: null,
+          confirmIndexed: null,
+        })
+        .where('subjectDid', '=', did)
+        .execute(),
+      this.db.db
+        .deleteFrom('user_notification')
+        .where('author', '=', did)
+        .execute(),
+    ])
+  }
 }
