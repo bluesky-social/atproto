@@ -228,6 +228,7 @@ export class RecordService {
   }
 
   async deleteForUser(did: string) {
+    this.db.assertTransaction()
     await Promise.all([
       this.db.db
         .deleteFrom('post_entity')
@@ -244,8 +245,14 @@ export class RecordService {
         .innerJoin('post', 'post.uri', 'post_embed_external.postUri')
         .where('post.creator', '=', did)
         .execute(),
+      this.db.db
+        .deleteFrom('duplicate_record')
+        .innerJoin('record', 'record.uri', 'duplicate_record.duplicateOf')
+        .where('record.did', '=', did)
+        .execute(),
     ])
     await Promise.all([
+      this.db.db.deleteFrom('record').where('did', '=', did).execute(),
       this.db.db.deleteFrom('assertion').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('follow').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('post').where('creator', '=', did).execute(),

@@ -100,6 +100,13 @@ export class S3BlobStore implements BlobStore {
     const res = await this.getObject(cid)
     return res as stream.Readable
   }
+
+  async delete(cid: CID): Promise<void> {
+    await this.client.deleteObject({
+      Bucket: this.bucket,
+      Key: this.getStoredPath(cid),
+    })
+  }
 }
 
 export default S3BlobStore
