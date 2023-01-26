@@ -3609,6 +3609,9 @@ export const schemaDict = {
             type: 'string',
             maxLength: 64,
           },
+          avatar: {
+            type: 'string',
+          },
           createdAt: {
             type: 'datetime',
           },
