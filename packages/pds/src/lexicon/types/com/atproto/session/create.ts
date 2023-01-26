@@ -10,7 +10,10 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** Handle of the authenticating user (deprecated). */
   handle: string
+  /** Handle or other identifier supported by the server for the authenticating user. */
+  identifier?: string
   password: string
   [k: string]: unknown
 }

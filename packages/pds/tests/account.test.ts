@@ -363,7 +363,7 @@ describe('account', () => {
     // Logs in with new password and not previous password
     await expect(
       client.com.atproto.session.create({ handle, password }),
-    ).rejects.toThrow('Invalid handle or password')
+    ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
       client.com.atproto.session.create({ handle, password: passwordAlt }),
@@ -392,7 +392,7 @@ describe('account', () => {
     // Logs in with new password and not previous password
     await expect(
       client.com.atproto.session.create({ handle, password: passwordAlt }),
-    ).rejects.toThrow('Invalid handle or password')
+    ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
       client.com.atproto.session.create({ handle, password }),
@@ -427,7 +427,7 @@ describe('account', () => {
     // Still logs in with previous password
     await expect(
       client.com.atproto.session.create({ handle, password: passwordAlt }),
-    ).rejects.toThrow('Invalid handle or password')
+    ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
       client.com.atproto.session.create({ handle, password }),

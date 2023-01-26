@@ -96,12 +96,23 @@ describe('auth', () => {
     )
   })
 
-  it('fails on session creation with a bad password', async () => {
+  it('allows session creation using email address.', async () => {
+    const session = await createSession({
+      handle: '', // Deprecated in favor of identifier but remains required
+      identifier: 'bob@TEST.com',
+      password: 'password',
+    })
+    expect(session.handle).toEqual('bob.test')
+  })
+
+  it('fails on session creation with a bad password.', async () => {
     const sessionPromise = createSession({
       handle: 'bob.test',
       password: 'wrong-pass',
     })
-    await expect(sessionPromise).rejects.toThrow('Invalid handle or password')
+    await expect(sessionPromise).rejects.toThrow(
+      'Invalid identifier or password',
+    )
   })
 
   it('provides valid access and refresh token on session refresh.', async () => {

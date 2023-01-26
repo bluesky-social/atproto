@@ -1714,6 +1714,12 @@ export const schemaDict = {
             properties: {
               handle: {
                 type: 'string',
+                description: 'Handle of the authenticating user (deprecated).',
+              },
+              identifier: {
+                type: 'string',
+                description:
+                  'Handle or other identifier supported by the server for the authenticating user.',
               },
               password: {
                 type: 'string',
