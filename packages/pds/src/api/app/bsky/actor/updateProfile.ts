@@ -1,5 +1,5 @@
 import { Server } from '../../../../lexicon'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as lexicons from '../../../../lexicon/lexicons'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
@@ -14,15 +14,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.updateProfile({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
-      const requester = auth.credentials.did
-
-      const did = input.body.did || requester
-      const authorized = await ctx.services
-        .repo(ctx.db)
-        .isUserControlledRepo(did, requester)
-      if (!authorized) {
-        throw new AuthRequiredError()
-      }
+      const did = auth.credentials.did
       const authStore = await ctx.getAuthstore(did)
       const uri = new AtUri(`${did}/${profileNsid}/self`)
 

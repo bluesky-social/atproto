@@ -40,16 +40,9 @@ export default function (server: Server, ctx: AppContext) {
         )
         .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide reposts of muted content
 
-      const trendsQb = feedService
-        .selectTrendQb()
-        .whereExists(
-          userQb.whereRef('did_handle.did', '=', ref('trend.creator')),
-        )
-        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide trends of muted content
-
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db
-        .selectFrom(postsQb.union(repostsQb).union(trendsQb).as('feed_items'))
+        .selectFrom(postsQb.union(repostsQb).as('feed_items'))
         .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,

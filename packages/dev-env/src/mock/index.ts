@@ -1,4 +1,5 @@
 import { AtUri } from '@atproto/uri'
+import { ServiceClient } from '@atproto/api'
 import {
   SPAM,
   OTHER,
@@ -6,7 +7,6 @@ import {
 import { DevEnv } from '../index'
 import { ServerType } from '../types'
 import { genServerCfg } from '../util'
-import { ServiceClient, APP_BSKY_GRAPH } from '@atproto/api'
 import { postTexts, replyTexts } from './data'
 
 // NOTE
@@ -138,65 +138,6 @@ export async function generateMockSetup(env: DevEnv) {
   await follow(bob, carla)
   await follow(carla, alice)
   await follow(carla, bob)
-
-  // everybody's in the "besties" scene
-  const bestiesScene = await alice.api.app.bsky.actor.createScene({
-    handle: 'besties.test',
-  })
-  {
-    const invite = await alice.api.app.bsky.graph.assertion.create(
-      { did: bestiesScene.data.did },
-      {
-        assertion: APP_BSKY_GRAPH.AssertMember,
-        subject: {
-          did: bob.did,
-          declarationCid: bob.declarationCid,
-        },
-        createdAt: new Date().toISOString(),
-      },
-    )
-    await bob.api.app.bsky.graph.confirmation.create(
-      { did: bob.did },
-      {
-        originator: {
-          did: bestiesScene.data.did,
-          declarationCid: bestiesScene.data.declaration.cid,
-        },
-        assertion: {
-          uri: invite.uri,
-          cid: invite.cid,
-        },
-        createdAt: new Date().toISOString(),
-      },
-    )
-  }
-  {
-    const invite = await alice.api.app.bsky.graph.assertion.create(
-      { did: bestiesScene.data.did },
-      {
-        assertion: APP_BSKY_GRAPH.AssertMember,
-        subject: {
-          did: carla.did,
-          declarationCid: carla.declarationCid,
-        },
-        createdAt: new Date().toISOString(),
-      },
-    )
-    await carla.api.app.bsky.graph.confirmation.create(
-      { did: carla.did },
-      {
-        originator: {
-          did: bestiesScene.data.did,
-          declarationCid: bestiesScene.data.declaration.cid,
-        },
-        assertion: {
-          uri: invite.uri,
-          cid: invite.cid,
-        },
-        createdAt: new Date().toISOString(),
-      },
-    )
-  }
 
   // a set of posts and reposts
   const posts: { uri: string; cid: string }[] = []

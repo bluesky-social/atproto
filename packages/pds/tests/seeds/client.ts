@@ -92,13 +92,6 @@ export class SeedClient {
   }
   replies: Record<string, { text: string; ref: RecordRef }[]>
   reposts: Record<string, RecordRef[]>
-  trends: Record<string, RecordRef[]>
-  scenes: Record<
-    string,
-    { did: string; handle: string; creator: string; ref: ActorRef }
-  >
-  sceneInvites: Record<string, Record<string, RecordRef>>
-  sceneAccepts: Record<string, Record<string, RecordRef>>
   dids: Record<string, string>
 
   constructor(public client: ServiceClient) {
@@ -109,10 +102,6 @@ export class SeedClient {
     this.votes = { up: {}, down: {} }
     this.replies = {}
     this.reposts = {}
-    this.trends = {}
-    this.scenes = {}
-    this.sceneInvites = {}
-    this.sceneAccepts = {}
     this.dids = {}
   }
 
@@ -303,83 +292,6 @@ export class SeedClient {
     const repost = new RecordRef(res.uri, res.cid)
     this.reposts[by].push(repost)
     return repost
-  }
-
-  async trend(by: string, scene: string, subject: RecordRef) {
-    const res = await this.client.app.bsky.feed.trend.create(
-      { did: scene },
-      { subject: subject.raw, createdAt: new Date().toISOString() },
-      this.getHeaders(by),
-    )
-    this.trends[by] ??= []
-    const trend = new RecordRef(res.uri, res.cid)
-    this.trends[by].push(trend)
-    return trend
-  }
-
-  async createScene(creator: string, handle: string) {
-    const res = await this.client.app.bsky.actor.createScene(
-      {
-        handle,
-      },
-      {
-        headers: this.getHeaders(creator),
-        encoding: 'application/json',
-      },
-    )
-    const scene = {
-      did: res.data.did,
-      handle: res.data.handle,
-      creator,
-      ref: new ActorRef(res.data.did, res.data.declaration.cid),
-    }
-    this.dids[handle] = res.data.did
-    this.scenes[res.data.handle] = scene
-    return scene
-  }
-
-  async inviteToScene(handle: string, user: ActorRef) {
-    const scene = this.scenes[handle]
-    if (!scene) {
-      throw new Error(`Scene does not exist: ${handle}`)
-    }
-    const res = await this.client.app.bsky.graph.assertion.create(
-      { did: scene.did },
-      {
-        assertion: APP_BSKY_GRAPH.AssertMember,
-        subject: user.raw,
-        createdAt: new Date().toISOString(),
-      },
-      this.getHeaders(scene.creator),
-    )
-    const invite = new RecordRef(res.uri, res.cid)
-    this.sceneInvites[handle] ??= {}
-    this.sceneInvites[handle][user.did] = invite
-    return invite
-  }
-
-  async acceptSceneInvite(
-    user: string,
-    sceneHandle: string,
-    invite: RecordRef,
-  ) {
-    const scene = this.scenes[sceneHandle]
-    if (!scene) {
-      throw new Error(`Scene does not exist: ${sceneHandle}`)
-    }
-    const res = await this.client.app.bsky.graph.confirmation.create(
-      { did: user },
-      {
-        originator: scene.ref.raw,
-        assertion: invite.raw,
-        createdAt: new Date().toISOString(),
-      },
-      this.getHeaders(user),
-    )
-    const accept = new RecordRef(res.uri, res.cid)
-    this.sceneAccepts[sceneHandle] ??= {}
-    this.sceneAccepts[sceneHandle][user] = accept
-    return accept
   }
 
   actorRef(did: string): ActorRef {

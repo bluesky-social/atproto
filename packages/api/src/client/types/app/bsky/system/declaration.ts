@@ -6,10 +6,7 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export interface Record {
-  actorType:
-    | 'app.bsky.system.actorUser'
-    | 'app.bsky.system.actorScene'
-    | (string & {})
+  actorType: 'app.bsky.system.actorUser' | (string & {})
   [k: string]: unknown
 }
 

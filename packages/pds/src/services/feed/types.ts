@@ -35,7 +35,7 @@ export type ActorView = {
 }
 export type ActorViewMap = { [did: string]: ActorView }
 
-export type FeedItemType = 'post' | 'repost' | 'trend'
+export type FeedItemType = 'post' | 'repost'
 
 export type FeedRow = {
   type: FeedItemType

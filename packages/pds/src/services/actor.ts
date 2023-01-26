@@ -166,17 +166,6 @@ export class ActorService {
     return scrypt.verify(password, found.password)
   }
 
-  async getScenesForUser(userDid: string): Promise<string[]> {
-    const res = await this.db.db
-      .selectFrom('assertion')
-      .where('assertion.subjectDid', '=', userDid)
-      .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
-      .where('assertion.confirmUri', 'is not', null)
-      .select('assertion.creator as scene')
-      .execute()
-    return res.map((row) => row.scene)
-  }
-
   async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {
     const { did, mutedByDid, createdAt = new Date() } = info
     await this.db.db

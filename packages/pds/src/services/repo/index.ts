@@ -75,25 +75,6 @@ export class RepoService {
     }
   }
 
-  async isUserControlledRepo(
-    repoDid: string,
-    userDid: string | null,
-  ): Promise<boolean> {
-    if (!userDid) return false
-    if (repoDid === userDid) return true
-    const { ref } = this.db.db.dynamic
-    const found = await this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-      .leftJoin('scene', 'scene.handle', 'did_handle.handle')
-      .where(notSoftDeletedClause(ref('repo_root'))) // Ensures scene not taken down
-      .where('did_handle.did', '=', repoDid)
-      .where('scene.owner', '=', userDid)
-      .select('scene.owner')
-      .executeTakeFirst()
-    return !!found
-  }
-
   async createRepo(
     did: string,
     authStore: auth.AuthStore,
