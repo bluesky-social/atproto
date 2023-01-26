@@ -11,7 +11,7 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
     .addColumn('size', 'integer', (col) => col.notNull())
     .addColumn('content', binaryDatatype, (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('ipld_block_pkey', ['cid', 'creator'])
+    .addPrimaryKeyConstraint('ipld_block_with_creator_pkey', ['cid', 'creator'])
     .execute()
 
   await db
