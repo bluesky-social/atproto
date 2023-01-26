@@ -1710,12 +1710,8 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['handle', 'password'],
+            required: ['password'],
             properties: {
-              handle: {
-                type: 'string',
-                description: 'Handle of the authenticating user (deprecated).',
-              },
               identifier: {
                 type: 'string',
                 description:

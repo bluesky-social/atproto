@@ -24,7 +24,11 @@ export default function (server: Server, ctx: AppContext) {
 
   server.com.atproto.session.create(async ({ input }) => {
     const { password, ...body } = input.body
-    const identifier = (body.identifier || body.handle).toLowerCase()
+    const identifier = (
+      body.identifier ||
+      (typeof body.handle === 'string' && body.handle) || // @TODO deprecated, see #493
+      ''
+    ).toLowerCase()
     const authService = ctx.services.auth(ctx.db)
     const actorService = ctx.services.actor(ctx.db)
 
