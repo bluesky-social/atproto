@@ -11,11 +11,12 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
     .addColumn('size', 'integer', (col) => col.notNull())
     .addColumn('content', binaryDatatype, (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('ipld_block_with_creator_pkey', ['cid', 'creator'])
+    .addPrimaryKeyConstraint('ipld_block_with_creator_pkey', ['creator', 'cid'])
     .execute()
 
   await db
     .insertInto('ipld_block_temp')
+    .columns(['cid', 'creator', 'size', 'content', 'indexedAt'])
     .expression((exp) =>
       exp
         .selectFrom('ipld_block')
@@ -25,11 +26,11 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
           'ipld_block.cid',
         )
         .select([
-          'ipld_block.cid as cid',
-          'ipld_block_creator.did as creator',
-          'ipld_block.size as size',
-          'ipld_block.content as content',
-          'ipld_block.indexedAt as indexedAt',
+          'ipld_block.cid',
+          'ipld_block_creator.did',
+          'ipld_block.size',
+          'ipld_block.content',
+          'ipld_block.indexedAt',
         ]),
     )
     .execute()

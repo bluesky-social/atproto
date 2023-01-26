@@ -247,16 +247,16 @@ export class ActorService {
 
   async deleteUser(did: string): Promise<void> {
     this.db.assertTransaction()
+    await this.db.db
+      .deleteFrom('user')
+      .where('user.handle', '=', (qb) =>
+        qb
+          .selectFrom('did_handle')
+          .where('did', '=', did)
+          .select('did_handle.handle as handle'),
+      )
+      .execute()
     await Promise.all([
-      this.db.db
-        .deleteFrom('user')
-        .where('user.handle', '=', (qb) =>
-          qb
-            .selectFrom('did_handle')
-            .where('did', '=', did)
-            .select('did_handle.handle as handle'),
-        )
-        .execute(),
       this.db.db.deleteFrom('refresh_token').where('did', '=', did).execute(),
       this.db.db
         .deleteFrom('did_handle')

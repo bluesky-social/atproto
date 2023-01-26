@@ -13,7 +13,7 @@ describe('user partitioned cids migration', () => {
     if (process.env.DB_POSTGRES_URL) {
       db = Database.postgres({
         url: process.env.DB_POSTGRES_URL,
-        schema: 'migration_duplicate_records',
+        schema: 'user_partitioned_cids',
       })
     } else {
       db = Database.memory()
