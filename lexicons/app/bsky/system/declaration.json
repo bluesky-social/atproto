@@ -12,7 +12,7 @@
         "properties": {
           "actorType": {
             "type": "string", 
-            "knownValues": ["app.bsky.system.actorUser", "app.bsky.system.actorScene"]
+            "knownValues": ["app.bsky.system.actorUser"]
           }
         }
       }

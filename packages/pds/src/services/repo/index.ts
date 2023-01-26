@@ -8,7 +8,6 @@ import SqlRepoStorage from '../../sql-repo-storage'
 import { PreparedCreate, PreparedWrite } from '../../repo/types'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
-import { notSoftDeletedClause } from '../../db/util'
 import { RecordService } from '../record'
 
 export class RepoService {
@@ -34,25 +33,6 @@ export class RepoService {
 
   services = {
     record: RecordService.creator(this.messageQueue),
-  }
-
-  async isUserControlledRepo(
-    repoDid: string,
-    userDid: string | null,
-  ): Promise<boolean> {
-    if (!userDid) return false
-    if (repoDid === userDid) return true
-    const { ref } = this.db.db.dynamic
-    const found = await this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-      .leftJoin('scene', 'scene.handle', 'did_handle.handle')
-      .where(notSoftDeletedClause(ref('repo_root'))) // Ensures scene not taken down
-      .where('did_handle.did', '=', repoDid)
-      .where('scene.owner', '=', userDid)
-      .select('scene.owner')
-      .executeTakeFirst()
-    return !!found
   }
 
   async createRepo(did: string, writes: PreparedCreate[], now: string) {

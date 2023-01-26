@@ -25,7 +25,6 @@ export interface OutputSchema {
   banner?: string
   followersCount: number
   followsCount: number
-  membersCount: number
   postsCount: number
   myState?: MyState
   [k: string]: unknown
@@ -54,7 +53,6 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
 
 export interface MyState {
   follow?: string
-  member?: string
   muted?: boolean
   [k: string]: unknown
 }

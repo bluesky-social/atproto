@@ -37,9 +37,7 @@ export const composeFeed = async (
     const originator = actors[row.originatorDid]
     if (post && originator) {
       let reasonType: string | undefined
-      if (row.type === 'trend') {
-        reasonType = 'app.bsky.feed.feedViewPost#reasonTrend'
-      } else if (row.type === 'repost') {
+      if (row.type === 'repost') {
         reasonType = 'app.bsky.feed.feedViewPost#reasonRepost'
       }
       const replyParent = row.replyParent

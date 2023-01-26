@@ -44,6 +44,7 @@ export interface Follow {
   declaration: AppBskySystemDeclRef.Main
   handle: string
   displayName?: string
+  avatar?: string
   createdAt?: string
   indexedAt: string
   [k: string]: unknown

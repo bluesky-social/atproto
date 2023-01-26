@@ -52,22 +52,9 @@ export default function (server: Server, ctx: AppContext) {
             .orWhereRef('did', '=', ref('repost.creator')),
         )
 
-      const trendsQb = feedService
-        .selectTrendQb()
-        .where((qb) =>
-          qb
-            .where('trend.creator', '=', requester)
-            .orWhere('trend.creator', 'in', followingIdsSubquery),
-        )
-        .whereNotExists(
-          mutedQb
-            .whereRef('did', '=', ref('post.creator')) // Hide trends of or by muted actors
-            .orWhereRef('did', '=', ref('trend.creator')),
-        )
-
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db
-        .selectFrom(postsQb.union(repostsQb).union(trendsQb).as('feed_items'))
+        .selectFrom(postsQb.union(repostsQb).as('feed_items'))
         .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,

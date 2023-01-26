@@ -104,10 +104,7 @@ export default function (server: Server, ctx: AppContext) {
       const tx = input.body
       const { did, validate } = tx
       const requester = auth.credentials.did
-      const authorized = await ctx.services
-        .repo(ctx.db)
-        .isUserControlledRepo(did, requester)
-      if (!authorized) {
+      if (did !== requester) {
         throw new AuthRequiredError()
       }
       if (validate === false) {
@@ -170,10 +167,7 @@ export default function (server: Server, ctx: AppContext) {
       const validate =
         typeof input.body.validate === 'boolean' ? input.body.validate : true
       const requester = auth.credentials.did
-      const authorized = await ctx.services
-        .repo(ctx.db)
-        .isUserControlledRepo(did, requester)
-      if (!authorized) {
+      if (did !== requester) {
         throw new AuthRequiredError()
       }
       if (validate === false) {
@@ -223,10 +217,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { did, collection, rkey } = input.body
       const requester = auth.credentials.did
-      const authorized = await ctx.services
-        .repo(ctx.db)
-        .isUserControlledRepo(did, requester)
-      if (!authorized) {
+      if (did !== requester) {
         throw new AuthRequiredError()
       }
 

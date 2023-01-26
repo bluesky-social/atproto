@@ -133,10 +133,6 @@ describe('sync', () => {
     'post_embed_external',
     'repost',
     'vote',
-    'scene',
-    'trend',
-    'scene_member_count',
-    'scene_votes_on_post',
     /* Not these:
      * 'ipld_block',
      * 'ipld_block_creator',

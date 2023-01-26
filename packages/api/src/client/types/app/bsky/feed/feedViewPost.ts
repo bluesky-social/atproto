@@ -10,7 +10,7 @@ import * as AppBskyActorRef from '../actor/ref'
 export interface Main {
   post: AppBskyFeedPost.View
   reply?: ReplyRef
-  reason?: ReasonTrend | ReasonRepost | { $type: string; [k: string]: unknown }
+  reason?: ReasonRepost | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
@@ -43,24 +43,6 @@ export function isReplyRef(v: unknown): v is ReplyRef {
 
 export function validateReplyRef(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.feedViewPost#replyRef', v)
-}
-
-export interface ReasonTrend {
-  by: AppBskyActorRef.WithInfo
-  indexedAt: string
-  [k: string]: unknown
-}
-
-export function isReasonTrend(v: unknown): v is ReasonTrend {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.feedViewPost#reasonTrend'
-  )
-}
-
-export function validateReasonTrend(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.feedViewPost#reasonTrend', v)
 }
 
 export interface ReasonRepost {

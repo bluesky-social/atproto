@@ -8,7 +8,6 @@ import * as Declaration from './plugins/declaration'
 import * as Post from './plugins/post'
 import * as Vote from './plugins/vote'
 import * as Repost from './plugins/repost'
-import * as Trend from './plugins/trend'
 import * as Follow from './plugins/follow'
 import * as Assertion from './plugins/assertion'
 import * as Confirmation from './plugins/confirmation'
@@ -22,7 +21,6 @@ export class RecordService {
     post: Post.PluginType
     vote: Vote.PluginType
     repost: Repost.PluginType
-    trend: Trend.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
     assertion: Assertion.PluginType
@@ -35,7 +33,6 @@ export class RecordService {
       post: Post.makePlugin(this.db.db),
       vote: Vote.makePlugin(this.db.db),
       repost: Repost.makePlugin(this.db.db),
-      trend: Trend.makePlugin(this.db.db),
       follow: Follow.makePlugin(this.db.db),
       assertion: Assertion.makePlugin(this.db.db),
       confirmation: Confirmation.makePlugin(this.db.db),
@@ -97,7 +94,7 @@ export class RecordService {
       .where('uri', '=', uri.toString())
       .execute()
 
-    const [events, _] = await Promise.all([
+    const [events] = await Promise.all([
       table.deleteRecord(uri, cascading),
       deleteQuery,
     ])

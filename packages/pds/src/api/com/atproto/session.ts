@@ -23,21 +23,32 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.session.create(async ({ input }) => {
-    const { password } = input.body
-    const handle = input.body.handle.toLowerCase()
-    const validPass = await ctx.services
-      .actor(ctx.db)
-      .verifyUserPassword(handle, password)
-    if (!validPass) {
-      throw new AuthRequiredError('Invalid handle or password')
+    const { password, ...body } = input.body
+    const identifier = (
+      body.identifier ||
+      (typeof body.handle === 'string' && body.handle) || // @TODO deprecated, see #493
+      ''
+    ).toLowerCase()
+    const authService = ctx.services.auth(ctx.db)
+    const actorService = ctx.services.actor(ctx.db)
+
+    const user = identifier.includes('@')
+      ? await actorService.getUserByEmail(identifier, true)
+      : await actorService.getUser(identifier, true)
+
+    if (!user) {
+      throw new AuthRequiredError('Invalid identifier or password')
     }
 
-    const user = await ctx.services.actor(ctx.db).getUser(handle, true)
-    if (!user) {
-      throw new InvalidRequestError(
-        `Could not find user info for account: ${handle}`,
-      )
+    const validPass = await actorService.verifyUserPassword(
+      user.handle,
+      password,
+    )
+
+    if (!validPass) {
+      throw new AuthRequiredError('Invalid identifier or password')
     }
+
     if (softDeleted(user)) {
       throw new AuthRequiredError(
         'Account has been taken down',
@@ -47,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
 
     const access = ctx.auth.createAccessToken(user.did)
     const refresh = ctx.auth.createRefreshToken(user.did)
-    await ctx.services.auth(ctx.db).grantRefreshToken(refresh.payload)
+    await authService.grantRefreshToken(refresh.payload)
 
     return {
       encoding: 'application/json',

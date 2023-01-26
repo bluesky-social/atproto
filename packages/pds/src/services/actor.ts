@@ -46,7 +46,7 @@ export class ActorService {
   async getUserByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<(User & DidHandle) | null> {
+  ): Promise<(User & DidHandle & RepoRoot) | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('user')
@@ -55,8 +55,10 @@ export class ActorService {
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
-      .selectAll()
       .where('email', '=', email.toLowerCase())
+      .selectAll('user')
+      .selectAll('did_handle')
+      .selectAll('repo_root')
       .executeTakeFirst()
     return found || null
   }
@@ -162,17 +164,6 @@ export class ActorService {
       .executeTakeFirst()
     if (!found) return false
     return scrypt.verify(password, found.password)
-  }
-
-  async getScenesForUser(userDid: string): Promise<string[]> {
-    const res = await this.db.db
-      .selectFrom('assertion')
-      .where('assertion.subjectDid', '=', userDid)
-      .where('assertion.assertion', '=', APP_BSKY_GRAPH.AssertMember)
-      .where('assertion.confirmUri', 'is not', null)
-      .select('assertion.creator as scene')
-      .execute()
-    return res.map((row) => row.scene)
   }
 
   async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {

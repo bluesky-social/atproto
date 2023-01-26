@@ -77,7 +77,7 @@ describe('auth', () => {
       password: 'password',
     })
     const session = await createSession({
-      handle: 'bob.test',
+      identifier: 'bob.test',
       password: 'password',
     })
     // Valid access token
@@ -96,12 +96,30 @@ describe('auth', () => {
     )
   })
 
-  it('fails on session creation with a bad password', async () => {
+  it('allows session creation using email address.', async () => {
+    const session = await createSession({
+      identifier: 'bob@TEST.com',
+      password: 'password',
+    })
+    expect(session.handle).toEqual('bob.test')
+  })
+
+  it('allows session creation using handle input (deprecated).', async () => {
+    const session = await createSession({
+      handle: 'bob.test', // Deprecated in favor of identifier, see #493
+      password: 'password',
+    })
+    expect(session.handle).toEqual('bob.test')
+  })
+
+  it('fails on session creation with a bad password.', async () => {
     const sessionPromise = createSession({
-      handle: 'bob.test',
+      identifier: 'bob.test',
       password: 'wrong-pass',
     })
-    await expect(sessionPromise).rejects.toThrow('Invalid handle or password')
+    await expect(sessionPromise).rejects.toThrow(
+      'Invalid identifier or password',
+    )
   })
 
   it('provides valid access and refresh token on session refresh.', async () => {
@@ -196,7 +214,7 @@ describe('auth', () => {
       },
     )
     await expect(
-      createSession({ handle: 'iris.test', password: 'password' }),
+      createSession({ identifier: 'iris.test', password: 'password' }),
     ).rejects.toThrow(CreateSession.AccountTakedownError)
   })
 
