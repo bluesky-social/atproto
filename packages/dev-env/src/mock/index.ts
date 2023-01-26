@@ -1,7 +1,11 @@
+import { AtUri } from '@atproto/uri'
+import {
+  SPAM,
+  OTHER,
+} from '@atproto/api/src/client/types/com/atproto/report/reasonType'
 import { DevEnv } from '../index'
 import { ServerType } from '../types'
 import { genServerCfg } from '../util'
-import { AtUri } from '@atproto/uri'
 import { ServiceClient, APP_BSKY_GRAPH } from '@atproto/api'
 import { postTexts, replyTexts } from './data'
 
@@ -104,6 +108,17 @@ export async function generateMockSetup(env: DevEnv) {
     )
   }
 
+  // Report one user
+  const reporter = picka(users)
+  await reporter.api.com.atproto.report.create({
+    reasonType: picka([SPAM, OTHER]),
+    reason: picka(["Didn't look right to me", undefined, undefined]),
+    subject: {
+      $type: 'com.atproto.repo.repoRef',
+      did: picka(users).did,
+    },
+  })
+
   // everybody follows everybody
   const follow = async (author: User, subject: User) => {
     await author.api.app.bsky.graph.follow.create(
@@ -187,15 +202,14 @@ export async function generateMockSetup(env: DevEnv) {
   const posts: { uri: string; cid: string }[] = []
   for (let i = 0; i < postTexts.length; i++) {
     const author = picka(users)
-    posts.push(
-      await author.api.app.bsky.feed.post.create(
-        { did: author.did },
-        {
-          text: postTexts[i],
-          createdAt: date.next().value,
-        },
-      ),
+    const post = await author.api.app.bsky.feed.post.create(
+      { did: author.did },
+      {
+        text: postTexts[i],
+        createdAt: date.next().value,
+      },
     )
+    posts.push(post)
     if (rand(10) === 0) {
       const reposter = picka(users)
       await reposter.api.app.bsky.feed.repost.create(
@@ -205,6 +219,17 @@ export async function generateMockSetup(env: DevEnv) {
           createdAt: date.next().value,
         },
       )
+    }
+    if (rand(6) === 0) {
+      const reporter = picka(users)
+      await reporter.api.com.atproto.report.create({
+        reasonType: picka([SPAM, OTHER]),
+        reason: picka(["Didn't look right to me", undefined, undefined]),
+        subject: {
+          $type: 'com.atproto.repo.recordRef',
+          uri: post.uri,
+        },
+      })
     }
   }
 
