@@ -2,14 +2,13 @@ import { chunkArray } from '@atproto/common'
 import { MemoryBlockstore } from '@atproto/repo'
 import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
-import DatabaseSchema from '../database-schema'
 import { RepoCommitBlock } from '../tables/repo-commit-block'
 import { RepoCommitHistory } from '../tables/repo-commit-history'
 
 const commitBlockTable = 'repo_commit_block'
 const commitHistoryTable = 'repo_commit_history'
 
-export async function up(db: DatabaseSchema): Promise<void> {
+export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(commitBlockTable)
     .addColumn('commit', 'varchar', (col) => col.notNull())
