@@ -1710,10 +1710,12 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['handle', 'password'],
+            required: ['password'],
             properties: {
-              handle: {
+              identifier: {
                 type: 'string',
+                description:
+                  'Handle or other identifier supported by the server for the authenticating user.',
               },
               password: {
                 type: 'string',
