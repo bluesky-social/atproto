@@ -229,26 +229,34 @@ export class RecordService {
 
   async deleteForUser(did: string) {
     this.db.assertTransaction()
+
+    const postByUser = (qb) =>
+      qb
+        .selectFrom('post')
+        .where('post.creator', '=', did)
+        .select('post.uri as uri')
+
     await Promise.all([
       this.db.db
         .deleteFrom('post_entity')
-        .innerJoin('post', 'post.uri', 'post_entity.postUri')
-        .where('post.creator', '=', did)
+        .where('post_entity.postUri', 'in', postByUser)
         .execute(),
       this.db.db
         .deleteFrom('post_embed_image')
-        .innerJoin('post', 'post.uri', 'post_embed_image.postUri')
-        .where('post.creator', '=', did)
+        .where('post_embed_image.postUri', 'in', postByUser)
         .execute(),
       this.db.db
         .deleteFrom('post_embed_external')
-        .innerJoin('post', 'post.uri', 'post_embed_external.postUri')
-        .where('post.creator', '=', did)
+        .where('post_embed_external.postUri', 'in', postByUser)
         .execute(),
       this.db.db
         .deleteFrom('duplicate_record')
-        .innerJoin('record', 'record.uri', 'duplicate_record.duplicateOf')
-        .where('record.did', '=', did)
+        .where('duplicate_record.duplicateOf', 'in', (qb) =>
+          qb
+            .selectFrom('record')
+            .where('record.did', '=', did)
+            .select('record.uri as uri'),
+        )
         .execute(),
     ])
     await Promise.all([

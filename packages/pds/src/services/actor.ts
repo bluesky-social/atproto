@@ -250,15 +250,19 @@ export class ActorService {
     await Promise.all([
       this.db.db
         .deleteFrom('user')
-        .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
-        .where('did_handle.did', '=', 'did')
+        .where('user.handle', '=', (qb) =>
+          qb
+            .selectFrom('did_handle')
+            .where('did', '=', did)
+            .select('did_handle.handle as handle'),
+        )
         .execute(),
       this.db.db.deleteFrom('refresh_token').where('did', '=', did).execute(),
+      this.db.db
+        .deleteFrom('did_handle')
+        .where('did_handle.did', '=', did)
+        .execute(),
     ])
-    await this.db.db
-      .deleteFrom('did_handle')
-      .where('did_handle.did', '=', did)
-      .execute()
   }
 }
 

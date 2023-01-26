@@ -118,12 +118,15 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['token', 'password'],
+            required: ['handle', 'password', 'token'],
             properties: {
-              token: {
+              handle: {
                 type: 'string',
               },
               password: {
+                type: 'string',
+              },
+              token: {
                 type: 'string',
               },
             },

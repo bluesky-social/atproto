@@ -122,7 +122,7 @@ export class RepoBlobs {
       .execute()
     const duplicateCids = duplicates.map((d) => d.cid)
     const toDelete = deletedCids.filter((cid) => !duplicateCids.includes(cid))
-    await this.db.db.deleteFrom('blob').where('cid', 'in', toDelete)
+    await this.db.db.deleteFrom('blob').where('cid', 'in', toDelete).execute()
     await Promise.all(
       toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
     )

@@ -9,8 +9,9 @@ import { lexicons } from '../../../../lexicons'
 export interface QueryParams {}
 
 export interface InputSchema {
-  token: string
+  handle: string
   password: string
+  token: string
   [k: string]: unknown
 }
 

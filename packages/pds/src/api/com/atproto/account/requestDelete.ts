@@ -10,6 +10,10 @@ export default function (server: Server, ctx: AppContext) {
       const did = auth.credentials.did
       const token = getSixDigitToken()
       const requestedAt = new Date().toISOString()
+      const user = await ctx.services.actor(ctx.db).getUser(did)
+      if (!user) {
+        throw new InvalidRequestError('user not found')
+      }
       await ctx.db.db
         .insertInto('delete_account_token')
         .values({ did, token, requestedAt })
@@ -17,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
           oc.column('did').doUpdateSet({ token, requestedAt }),
         )
         .execute()
-      throw new InvalidRequestError('Not implemented')
+      await ctx.mailer.sendAccountDelete({ token }, { to: user.email })
     },
   })
 }
