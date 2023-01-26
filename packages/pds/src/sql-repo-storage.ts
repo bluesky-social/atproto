@@ -38,6 +38,7 @@ export class SqlRepoStorage extends RepoStorage {
         .selectFrom('repo_commit_block')
         .leftJoin('ipld_block', 'ipld_block.cid', 'repo_commit_block.block')
         .where('repo_commit_block.commit', '=', found.root)
+        .where('repo_commit_block.creator', '=', this.did)
         .select([
           'ipld_block.cid as blockCid',
           'ipld_block.content as blockBytes',
@@ -179,12 +180,14 @@ export class SqlRepoStorage extends RepoStorage {
         commitBlocks.push({
           commit: commit.commit.toString(),
           block: block.cid.toString(),
+          creator: this.did,
         })
         allBlocks.set(block.cid, block.bytes)
       }
       commitHistory.push({
         commit: commit.commit.toString(),
         prev: commit.prev ? commit.prev.toString() : null,
+        creator: this.did,
       })
     }
     const insertCommitBlocks = Promise.all(
@@ -252,11 +255,16 @@ export class SqlRepoStorage extends RepoStorage {
           .selectFrom('repo_commit_history as commit')
           .select(['commit.commit as commit', 'commit.prev as prev'])
           .where('commit', '=', latest.toString())
+          .where('creator', '=', this.did)
           .unionAll(
             cte
               .selectFrom('repo_commit_history as commit')
               .select(['commit.commit as commit', 'commit.prev as prev'])
-              .innerJoin('ancestor', 'ancestor.prev', 'commit.commit')
+              .innerJoin('ancestor', (join) =>
+                join
+                  .onRef('ancestor.prev', '=', 'commit.commit')
+                  .on('commit.creator', '=', this.did),
+              )
               .if(earliest !== null, (qb) =>
                 // @ts-ignore
                 qb.where('commit.commit', '!=', earliest?.toString() as string),
@@ -275,13 +283,14 @@ export class SqlRepoStorage extends RepoStorage {
     const commitStrs = commits.map((commit) => commit.toString())
     const res = await this.db.db
       .selectFrom('repo_commit_block')
+      .where('repo_commit_block.creator', '=', this.did)
+      .where('repo_commit_block.commit', 'in', commitStrs)
       .innerJoin('ipld_block', 'ipld_block.cid', 'repo_commit_block.block')
       .select([
         'repo_commit_block.commit',
         'ipld_block.cid',
         'ipld_block.content',
       ])
-      .where('commit', 'in', commitStrs)
       .execute()
     return res.reduce((acc, cur) => {
       acc[cur.commit] ??= new BlockMap()
