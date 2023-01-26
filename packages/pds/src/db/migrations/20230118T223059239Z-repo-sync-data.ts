@@ -15,9 +15,9 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('block', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint(`${commitBlockTable}_pkey`, [
+      'creator',
       'commit',
       'block',
-      'creator',
     ])
     .execute()
   await db.schema
@@ -26,8 +26,8 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('prev', 'varchar')
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint(`${commitHistoryTable}_pkey`, [
-      'commit',
       'creator',
+      'commit',
     ])
     .execute()
 
