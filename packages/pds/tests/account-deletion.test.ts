@@ -8,6 +8,21 @@ import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
+import { RepoRoot } from '../src/db/tables/repo-root'
+import { User } from '../src/db/tables/user'
+import { IpldBlock } from '../src/db/tables/ipld-block'
+import { Post } from '../src/db/tables/post'
+import { Vote } from '../src/db/tables/vote'
+import { Repost } from '../src/db/tables/repost'
+import { Follow } from '../src/db/tables/follow'
+import { RepoBlob } from '../src/db/tables/repo-blob'
+import { Blob } from '../src/db/tables/blob'
+import { PostEntity } from '../src/db/tables/post-entity'
+import { PostEmbedImage } from '../src/db/tables/post-embed-image'
+import { PostEmbedExternal } from '../src/db/tables/post-embed-external'
+import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
+import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
+import { Record } from '../src/db/tables/record'
 
 describe('account deletion', () => {
   let client: AtpServiceClient
@@ -16,6 +31,8 @@ describe('account deletion', () => {
 
   let mailer: ServerMailer
   let db: Database
+  let initialDbContents: DbContents
+  let updatedDbContents: DbContents
   let blobstore: BlobStore
   const mailCatcher = new EventEmitter()
   let _origSendMail
@@ -43,6 +60,8 @@ describe('account deletion', () => {
       mailCatcher.emit('mail', opts)
       return result
     }
+
+    initialDbContents = await getDbContents(db)
   })
 
   afterAll(async () => {
@@ -113,68 +132,57 @@ describe('account deletion', () => {
   })
 
   it('no longer store the user account or repo', async () => {
-    const [roots, users, blocks] = await Promise.all([
-      db.db
-        .selectFrom('repo_root')
-        .where('did', '=', carol.did)
-        .selectAll()
-        .execute(),
-      db.db
-        .selectFrom('user')
-        .where('handle', '=', carol.handle)
-        .selectAll()
-        .execute(),
-      db.db
-        .selectFrom('ipld_block')
-        .where('creator', '=', carol.did)
-        .selectAll()
-        .execute(),
-    ])
-
-    expect(roots.length).toBe(0)
-    expect(users.length).toBe(0)
-    expect(blocks.length).toBe(0)
+    updatedDbContents = await getDbContents(db)
+    expect(updatedDbContents.roots).toEqual(
+      initialDbContents.roots.filter((row) => row.did !== carol.did),
+    )
+    expect(updatedDbContents.users).toEqual(
+      initialDbContents.users.filter((row) => row.handle !== carol.handle),
+    )
+    expect(updatedDbContents.blocks).toEqual(
+      initialDbContents.blocks.filter((row) => row.creator !== carol.did),
+    )
+    expect(updatedDbContents.commitBlocks).toEqual(
+      initialDbContents.commitBlocks.filter((row) => row.creator !== carol.did),
+    )
+    expect(updatedDbContents.commitHistories).toEqual(
+      initialDbContents.commitHistories.filter(
+        (row) => row.creator !== carol.did,
+      ),
+    )
   })
 
   it('no longer stores indexed records from the user', async () => {
-    const [posts, votes, reposts, follows] = await Promise.all([
-      db.db
-        .selectFrom('post')
-        .where('creator', '=', carol.did)
-        .selectAll()
-        .execute(),
-      db.db
-        .selectFrom('vote')
-        .where('creator', '=', carol.did)
-        .selectAll()
-        .execute(),
-      db.db
-        .selectFrom('repost')
-        .where('creator', '=', carol.did)
-        .selectAll()
-        .execute(),
-      db.db
-        .selectFrom('follow')
-        .where('creator', '=', carol.did)
-        .selectAll()
-        .execute(),
-
-      db.db
-        .selectFrom('user')
-        .where('handle', '=', carol.handle)
-        .selectAll()
-        .execute(),
-      db.db
-        .selectFrom('ipld_block')
-        .where('creator', '=', carol.did)
-        .selectAll()
-        .execute(),
-    ])
-
-    expect(posts.length).toBe(0)
-    expect(votes.length).toBe(0)
-    expect(reposts.length).toBe(0)
-    expect(follows.length).toBe(0)
+    expect(updatedDbContents.records).toEqual(
+      initialDbContents.records.filter((row) => row.did !== carol.did),
+    )
+    expect(updatedDbContents.posts).toEqual(
+      initialDbContents.posts.filter((row) => row.creator !== carol.did),
+    )
+    expect(updatedDbContents.votes).toEqual(
+      initialDbContents.votes.filter((row) => row.creator !== carol.did),
+    )
+    expect(updatedDbContents.reposts).toEqual(
+      initialDbContents.reposts.filter((row) => row.creator !== carol.did),
+    )
+    expect(updatedDbContents.follows).toEqual(
+      initialDbContents.follows.filter((row) => row.creator !== carol.did),
+    )
+    expect(updatedDbContents.postEntities).toEqual(
+      initialDbContents.postEntities.filter(
+        (row) => !row.postUri.includes(carol.did),
+      ),
+    )
+    expect(updatedDbContents.postImages).toEqual(
+      initialDbContents.postImages.filter(
+        (row) => !row.postUri.includes(carol.did),
+      ),
+    )
+    expect(updatedDbContents.postExternals).toEqual(
+      initialDbContents.postExternals.filter(
+        (row) => !row.postUri.includes(carol.did),
+      ),
+    )
   })
 
   it('deletes relevant blobs', async () => {
@@ -188,22 +196,12 @@ describe('account deletion', () => {
     const attempt = blobstore.getBytes(second)
     await expect(attempt).rejects.toThrow(BlobNotFoundError)
 
-    const [repoBlobs, blobs] = await Promise.all([
-      db.db
-        .selectFrom('repo_blob')
-        .where('did', '=', carol.did)
-        .selectAll()
-        .execute(),
-      db.db
-        .selectFrom('blob')
-        .where('cid', 'in', [first.toString(), second.toString()])
-        .selectAll()
-        .execute(),
-    ])
-
-    expect(repoBlobs.length).toBe(0)
-    expect(blobs.length).toBe(1)
-    expect(blobs[0].cid).toEqual(first.toString())
+    expect(updatedDbContents.repoBlobs).toEqual(
+      initialDbContents.repoBlobs.filter((row) => row.did !== carol.did),
+    )
+    expect(updatedDbContents.blobs).toEqual(
+      initialDbContents.blobs.filter((row) => row.cid !== second.toString()),
+    )
   })
 
   it('no longer displays the users posts in feeds', async () => {
@@ -226,3 +224,103 @@ describe('account deletion', () => {
     expect(found.length).toBe(0)
   })
 })
+
+type DbContents = {
+  roots: RepoRoot[]
+  users: User[]
+  blocks: IpldBlock[]
+  commitHistories: RepoCommitHistory[]
+  commitBlocks: RepoCommitBlock[]
+  records: Record[]
+  posts: Post[]
+  postEntities: PostEntity[]
+  postImages: PostEmbedImage[]
+  postExternals: PostEmbedExternal[]
+  votes: Vote[]
+  reposts: Repost[]
+  follows: Follow[]
+  repoBlobs: RepoBlob[]
+  blobs: Blob[]
+}
+
+const getDbContents = async (db: Database): Promise<DbContents> => {
+  const [
+    roots,
+    users,
+    blocks,
+    commitHistories,
+    commitBlocks,
+    records,
+    posts,
+    postEntities,
+    postImages,
+    postExternals,
+    votes,
+    reposts,
+    follows,
+    repoBlobs,
+    blobs,
+  ] = await Promise.all([
+    db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
+    db.db.selectFrom('user').orderBy('handle').selectAll().execute(),
+    db.db
+      .selectFrom('ipld_block')
+      .orderBy('creator')
+      .orderBy('cid')
+      .selectAll()
+      .execute(),
+    db.db
+      .selectFrom('repo_commit_history')
+      .orderBy('creator')
+      .orderBy('commit')
+      .selectAll()
+      .execute(),
+    db.db
+      .selectFrom('repo_commit_block')
+      .orderBy('creator')
+      .orderBy('block')
+      .selectAll()
+      .execute(),
+    db.db.selectFrom('record').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('post').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('post_entity').orderBy('postUri').selectAll().execute(),
+    db.db
+      .selectFrom('post_embed_image')
+      .orderBy('postUri')
+      .selectAll()
+      .execute(),
+    db.db
+      .selectFrom('post_embed_external')
+      .orderBy('postUri')
+      .selectAll()
+      .execute(),
+    db.db.selectFrom('vote').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('repost').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('follow').orderBy('uri').selectAll().execute(),
+    db.db
+      .selectFrom('repo_blob')
+      .orderBy('did')
+      .orderBy('cid')
+      .selectAll()
+      .execute(),
+    db.db.selectFrom('blob').orderBy('cid').selectAll().execute(),
+  ])
+
+  return {
+    roots,
+    users,
+    blocks,
+    commitHistories,
+    commitBlocks,
+    records,
+    posts,
+    postEntities,
+    postImages,
+    postExternals,
+    votes,
+    reposts,
+    follows,
+    repoBlobs,
+    blobs,
+  }
+}
