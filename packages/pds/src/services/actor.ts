@@ -46,7 +46,7 @@ export class ActorService {
   async getUserByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<(User & DidHandle) | null> {
+  ): Promise<(User & DidHandle & RepoRoot) | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('user')
@@ -55,8 +55,10 @@ export class ActorService {
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
-      .selectAll()
       .where('email', '=', email.toLowerCase())
+      .selectAll('user')
+      .selectAll('did_handle')
+      .selectAll('repo_root')
       .executeTakeFirst()
     return found || null
   }

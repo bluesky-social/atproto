@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "main": "src/index.ts",
   "bin": "dist/bin.ts",
   "scripts": {
@@ -18,7 +18,11 @@
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
     "verify:fix": "yarn prettier:fix && yarn lint:fix",
-    "migration:create": "ts-node ./bin/migration-create.ts"
+    "migration:create": "ts-node ./bin/migration-create.ts",
+    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
+    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
+    "prepublish": "npm run update-main-to-dist",
+    "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
     "@atproto/auth": "*",

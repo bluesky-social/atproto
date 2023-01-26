@@ -20,7 +20,10 @@ export default function (server: Server, ctx: AppContext) {
           passwordResetGrantedAt: grantedAt,
         })
         .execute()
-      await ctx.mailer.sendResetPassword({ token }, { to: user.email })
+      await ctx.mailer.sendResetPassword(
+        { handle: user.handle, token },
+        { to: user.email },
+      )
     }
   })
 
