@@ -1,5 +1,5 @@
 import { chunkArray } from '@atproto/common'
-import { MemoryBlockstore } from '@atproto/repo'
+import { BlockMap, MemoryBlockstore } from '@atproto/repo'
 import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { RepoCommitBlock } from '../tables/repo-commit-block'
@@ -42,10 +42,13 @@ export async function up(db: Kysely<any>): Promise<void> {
       .where('creator.did', '=', did)
       .select(['ipld_block.cid as cid', 'ipld_block.content as content'])
       .execute()
-    const storage = new MemoryBlockstore()
+
+    const blocks = new BlockMap()
     userBlocks.forEach((row) => {
-      storage.putBlock(CID.parse(row.cid), row.content)
+      blocks.set(CID.parse(row.cid), row.content)
     })
+
+    const storage = new MigrationStorage(blocks, db)
 
     const commitData = await storage.getCommits(root, null)
     if (!commitData) return
@@ -88,6 +91,21 @@ export async function up(db: Kysely<any>): Promise<void> {
           .execute(),
       )
     })
+
+    const ipldBlockCreators = storage.blocks.entries().map((entry) => ({
+      cid: entry.cid.toString(),
+      did: did,
+    }))
+    chunkArray(ipldBlockCreators, 500).forEach((batch) => {
+      promises.push(
+        db
+          .insertInto('ipld_block_creator')
+          .values(batch)
+          .onConflict((oc) => oc.doNothing())
+          .execute(),
+      )
+    })
+
     return Promise.all(promises)
   }
 
@@ -101,4 +119,46 @@ export async function up(db: Kysely<any>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable(commitHistoryTable).execute()
   await db.schema.dropTable(commitBlockTable).execute()
+}
+
+class MigrationStorage extends MemoryBlockstore {
+  constructor(public blocks: BlockMap, public db: Kysely<any>) {
+    super()
+  }
+
+  async getBytes(cid: CID): Promise<Uint8Array | null> {
+    const got = this.blocks.get(cid)
+    if (got) return got
+    const fromDb = await this.db
+      .selectFrom('ipld_block')
+      .where('cid', '=', cid.toString())
+      .selectAll()
+      .executeTakeFirst()
+    if (!fromDb) return null
+    this.blocks.set(cid, fromDb.content)
+    return fromDb.content
+  }
+
+  async has(cid: CID): Promise<boolean> {
+    const got = await this.getBytes(cid)
+    return !!got
+  }
+
+  async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
+    const got = this.blocks.getMany(cids)
+    if (got.missing.length === 0) return got
+    const fromDb = await this.db
+      .selectFrom('ipld_block')
+      .where(
+        'cid',
+        'in',
+        got.missing.map((c) => c.toString()),
+      )
+      .selectAll()
+      .execute()
+    fromDb.forEach((row) => {
+      this.blocks.set(CID.parse(row.cid), row.content)
+    })
+    return this.blocks.getMany(cids)
+  }
 }
