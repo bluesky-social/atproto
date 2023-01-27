@@ -26,7 +26,7 @@
     "babel-eslint": "^10.1.0",
     "babel-jest": "^28.1.2",
     "dotenv": "^16.0.3",
-    "esbuild": "^0.14.48",
+    "esbuild": "0.14.50",
     "esbuild-node-externals": "^1.5.0",
     "esbuild-plugin-copy": "^1.6.0",
     "eslint": "^8.24.0",
