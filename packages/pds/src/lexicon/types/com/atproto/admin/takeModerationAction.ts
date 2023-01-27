@@ -22,6 +22,7 @@ export interface InputSchema {
     | ComAtprotoRepoRepoRef.Main
     | ComAtprotoRepoRecordRef.Main
     | { $type: string; [k: string]: unknown }
+  subjectBlobCids?: string[]
   reason: string
   createdBy: string
   [k: string]: unknown

@@ -182,6 +182,64 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminBlob: {
+    lexicon: 1,
+    id: 'com.atproto.admin.blob',
+    defs: {
+      view: {
+        type: 'object',
+        required: ['cid', 'mimeType', 'size', 'createdAt'],
+        properties: {
+          cid: {
+            type: 'string',
+          },
+          mimeType: {
+            type: 'string',
+          },
+          size: {
+            type: 'integer',
+          },
+          createdAt: {
+            type: 'datetime',
+          },
+          details: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.blob#imageDetails',
+              'lex:com.atproto.admin.blob#videoDetails',
+            ],
+          },
+        },
+      },
+      imageDetails: {
+        type: 'object',
+        required: ['width', 'height'],
+        properties: {
+          width: {
+            type: 'integer',
+          },
+          height: {
+            type: 'integer',
+          },
+        },
+      },
+      videoDetails: {
+        type: 'object',
+        required: ['width', 'height', 'length'],
+        properties: {
+          width: {
+            type: 'integer',
+          },
+          height: {
+            type: 'integer',
+          },
+          length: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetModerationAction: {
     lexicon: 1,
     id: 'com.atproto.admin.getModerationAction',
@@ -418,6 +476,12 @@ export const schemaDict = {
               'lex:com.atproto.repo.strongRef',
             ],
           },
+          subjectBlobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
           reason: {
             type: 'string',
           },
@@ -468,6 +532,13 @@ export const schemaDict = {
               'lex:com.atproto.admin.repo#view',
               'lex:com.atproto.admin.record#view',
             ],
+          },
+          subjectBlobs: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.blob#view',
+            },
           },
           reason: {
             type: 'string',
@@ -620,7 +691,15 @@ export const schemaDict = {
     defs: {
       view: {
         type: 'object',
-        required: ['uri', 'cid', 'value', 'indexedAt', 'moderation', 'repo'],
+        required: [
+          'uri',
+          'cid',
+          'value',
+          'blobCids',
+          'indexedAt',
+          'moderation',
+          'repo',
+        ],
         properties: {
           uri: {
             type: 'string',
@@ -630,6 +709,12 @@ export const schemaDict = {
           },
           value: {
             type: 'unknown',
+          },
+          blobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
           },
           indexedAt: {
             type: 'string',
@@ -646,7 +731,15 @@ export const schemaDict = {
       },
       viewDetail: {
         type: 'object',
-        required: ['uri', 'cid', 'value', 'indexedAt', 'moderation', 'repo'],
+        required: [
+          'uri',
+          'cid',
+          'value',
+          'blobs',
+          'indexedAt',
+          'moderation',
+          'repo',
+        ],
         properties: {
           uri: {
             type: 'string',
@@ -656,6 +749,13 @@ export const schemaDict = {
           },
           value: {
             type: 'unknown',
+          },
+          blobs: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.blob#view',
+            },
           },
           indexedAt: {
             type: 'string',
@@ -967,6 +1067,12 @@ export const schemaDict = {
                   'lex:com.atproto.repo.repoRef',
                   'lex:com.atproto.repo.recordRef',
                 ],
+              },
+              subjectBlobCids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
               },
               reason: {
                 type: 'string',
@@ -3799,6 +3905,7 @@ export const ids = {
   ComAtprotoAccountRequestPasswordReset:
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
+  ComAtprotoAdminBlob: 'com.atproto.admin.blob',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
   ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',

@@ -8,6 +8,7 @@ import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 import * as ComAtprotoAdminRepo from './repo'
 import * as ComAtprotoAdminRecord from './record'
+import * as ComAtprotoAdminBlob from './blob'
 import * as ComAtprotoAdminModerationReport from './moderationReport'
 
 export interface View {
@@ -21,6 +22,7 @@ export interface View {
     | ComAtprotoRepoRepoRef.Main
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
+  subjectBlobCids?: string[]
   reason: string
   createdBy: string
   createdAt: string
@@ -52,6 +54,7 @@ export interface ViewDetail {
     | ComAtprotoAdminRepo.View
     | ComAtprotoAdminRecord.View
     | { $type: string; [k: string]: unknown }
+  subjectBlobs?: ComAtprotoAdminBlob.View[]
   reason: string
   createdBy: string
   createdAt: string

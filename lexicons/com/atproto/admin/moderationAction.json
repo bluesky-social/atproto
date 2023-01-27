@@ -22,6 +22,7 @@
             "com.atproto.repo.strongRef"
           ]
         },
+        "subjectBlobCids": {"type": "array", "items": {"type": "string"}},
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"},
@@ -49,6 +50,7 @@
             "com.atproto.admin.record#view"
           ]
         },
+        "subjectBlobs": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.blob#view"}},
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"},
