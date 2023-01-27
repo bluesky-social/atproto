@@ -1,106 +1,129 @@
-import * as auth from '@atproto/auth'
-import { CID } from 'multiformats'
-import CidSet from '../cid-set'
-import { parseRecordKey } from '../util'
+import { DataDiff } from '../data-diff'
+import MST from './mst'
+import MstWalker from './walker'
 
-export class DataDiff {
-  adds: Record<string, DataAdd> = {}
-  updates: Record<string, DataUpdate> = {}
-  deletes: Record<string, DataDelete> = {}
+export const nullDiff = async (tree: MST): Promise<DataDiff> => {
+  const diff = new DataDiff()
+  for await (const entry of tree.walk()) {
+    if (entry.isLeaf()) {
+      diff.recordAdd(entry.key, entry.value)
+    } else {
+      diff.recordNewCid(entry.pointer)
+    }
+  }
+  return diff
+}
 
-  newCids: CidSet = new CidSet()
-
-  recordAdd(key: string, cid: CID): void {
-    this.adds[key] = { key, cid }
-    this.newCids.add(cid)
+export const mstDiff = async (
+  curr: MST,
+  prev: MST | null,
+): Promise<DataDiff> => {
+  await curr.getPointer()
+  if (prev === null) {
+    return nullDiff(curr)
   }
 
-  recordUpdate(key: string, prev: CID, cid: CID): void {
-    this.updates[key] = { key, prev, cid }
-    this.newCids.add(cid)
-  }
+  await prev.getPointer()
+  const diff = new DataDiff()
 
-  recordDelete(key: string, cid: CID): void {
-    this.deletes[key] = { key, cid }
-  }
+  const leftWalker = new MstWalker(prev)
+  const rightWalker = new MstWalker(curr)
+  while (!leftWalker.status.done || !rightWalker.status.done) {
+    // if one walker is finished, continue walking the other & logging all nodes
+    if (leftWalker.status.done && !rightWalker.status.done) {
+      const node = rightWalker.status.curr
+      if (node.isLeaf()) {
+        diff.recordAdd(node.key, node.value)
+      } else {
+        diff.recordNewCid(node.pointer)
+      }
+      await rightWalker.advance()
+      continue
+    } else if (!leftWalker.status.done && rightWalker.status.done) {
+      const node = leftWalker.status.curr
+      if (node.isLeaf()) {
+        diff.recordDelete(node.key, node.value)
+      }
+      await leftWalker.advance()
+      continue
+    }
+    if (leftWalker.status.done || rightWalker.status.done) break
+    const left = leftWalker.status.curr
+    const right = rightWalker.status.curr
+    if (left === null || right === null) break
 
-  recordNewCid(cid: CID): void {
-    this.newCids.add(cid)
-  }
-
-  addDiff(diff: DataDiff) {
-    for (const add of diff.addList()) {
-      if (this.deletes[add.key]) {
-        const del = this.deletes[add.key]
-        if (del.cid !== add.cid) {
-          this.recordUpdate(add.key, del.cid, add.cid)
+    // if both pointers are leaves, record an update & advance both or record the lowest key and advance that pointer
+    if (left.isLeaf() && right.isLeaf()) {
+      if (left.key === right.key) {
+        if (!left.value.equals(right.value)) {
+          diff.recordUpdate(left.key, left.value, right.value)
         }
-        delete this.deletes[add.key]
+        await leftWalker.advance()
+        await rightWalker.advance()
+      } else if (left.key < right.key) {
+        diff.recordDelete(left.key, left.value)
+        await leftWalker.advance()
       } else {
-        this.recordAdd(add.key, add.cid)
+        diff.recordAdd(right.key, right.value)
+        await rightWalker.advance()
       }
+      continue
     }
-    for (const update of diff.updateList()) {
-      this.recordUpdate(update.key, update.prev, update.cid)
-      delete this.adds[update.key]
-      delete this.deletes[update.key]
-    }
-    for (const del of diff.deleteList()) {
-      if (this.adds[del.key]) {
-        delete this.adds[del.key]
+
+    // next, ensure that we're on the same layer
+    // if one walker is at a higher layer than the other, we need to do one of two things
+    // if the higher walker is pointed at a tree, step into that tree to try to catch up with the lower
+    // if the higher walker is pointed at a leaf, then advance the lower walker to try to catch up the higher
+    if (leftWalker.layer() > rightWalker.layer()) {
+      if (left.isLeaf()) {
+        if (right.isLeaf()) {
+          diff.recordAdd(right.key, right.value)
+        } else {
+          diff.recordNewCid(right.pointer)
+        }
+        await rightWalker.advance()
       } else {
-        delete this.updates[del.key]
-        this.recordDelete(del.key, del.cid)
+        await leftWalker.stepInto()
       }
+      continue
+    } else if (leftWalker.layer() < rightWalker.layer()) {
+      if (right.isLeaf()) {
+        if (left.isLeaf()) {
+          diff.recordDelete(left.key, left.value)
+        }
+        await leftWalker.advance()
+      } else {
+        diff.recordNewCid(right.pointer)
+        await rightWalker.stepInto()
+      }
+      continue
     }
-    this.newCids.addSet(diff.newCids)
+
+    // if we're on the same level, and both pointers are trees, do a comparison
+    // if they're the same, step over. if they're different, step in to find the subdiff
+    if (left.isTree() && right.isTree()) {
+      if (left.pointer.equals(right.pointer)) {
+        await leftWalker.stepOver()
+        await rightWalker.stepOver()
+      } else {
+        diff.recordNewCid(right.pointer)
+        await leftWalker.stepInto()
+        await rightWalker.stepInto()
+      }
+      continue
+    }
+
+    // finally, if one pointer is a tree and the other is a leaf, simply step into the tree
+    if (left.isLeaf() && right.isTree()) {
+      await diff.recordNewCid(right.pointer)
+      await rightWalker.stepInto()
+      continue
+    } else if (left.isTree() && right.isLeaf()) {
+      await leftWalker.stepInto()
+      continue
+    }
+
+    throw new Error('Unidentifiable case in diff walk')
   }
-
-  addList(): DataAdd[] {
-    return Object.values(this.adds)
-  }
-
-  updateList(): DataUpdate[] {
-    return Object.values(this.updates)
-  }
-
-  deleteList(): DataDelete[] {
-    return Object.values(this.deletes)
-  }
-
-  newCidList(): CID[] {
-    return this.newCids.toList()
-  }
-
-  updatedKeys(): string[] {
-    const keys = [
-      ...Object.keys(this.adds),
-      ...Object.keys(this.updates),
-      ...Object.keys(this.deletes),
-    ]
-    return [...new Set(keys)]
-  }
-
-  neededCapabilities(rootDid: string): auth.ucans.Capability[] {
-    return this.updatedKeys().map((key) => {
-      const { collection, rkey } = parseRecordKey(key)
-      return auth.writeCap(rootDid, collection, rkey)
-    })
-  }
-}
-
-export type DataAdd = {
-  key: string
-  cid: CID
-}
-
-export type DataUpdate = {
-  key: string
-  prev: CID
-  cid: CID
-}
-
-export type DataDelete = {
-  key: string
-  cid: CID
+  return diff
 }

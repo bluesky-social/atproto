@@ -12,7 +12,6 @@ Object {
   "followersCount": 1,
   "followsCount": 1,
   "handle": "dan.test",
-  "membersCount": 0,
   "myState": Object {
     "muted": false,
   },
@@ -34,7 +33,6 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
-  "membersCount": 0,
   "myState": Object {
     "follow": "record(0)",
     "muted": false,
@@ -54,7 +52,6 @@ Object {
   "followersCount": 1,
   "followsCount": 1,
   "handle": "dan.test",
-  "membersCount": 0,
   "myState": Object {
     "muted": false,
   },
@@ -76,34 +73,10 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
-  "membersCount": 0,
   "myState": Object {
     "muted": false,
   },
   "postsCount": 4,
-}
-`;
-
-exports[`pds profile views fetches scene's profile 1`] = `
-Object {
-  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-  "creator": "user(1)",
-  "declaration": Object {
-    "actorType": "app.bsky.system.actorScene",
-    "cid": "cids(0)",
-  },
-  "description": "best friends eva",
-  "did": "user(0)",
-  "displayName": "besties",
-  "followersCount": 0,
-  "followsCount": 0,
-  "handle": "scene.test",
-  "membersCount": 4,
-  "myState": Object {
-    "member": "record(0)",
-    "muted": false,
-  },
-  "postsCount": 0,
 }
 `;
 
@@ -122,7 +95,6 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
-  "membersCount": 0,
   "myState": Object {
     "muted": false,
   },
@@ -144,34 +116,10 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
-  "membersCount": 0,
   "myState": Object {
     "muted": false,
   },
   "postsCount": 4,
-}
-`;
-
-exports[`pds profile views handles scene profile updates 1`] = `
-Object {
-  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-  "creator": "user(1)",
-  "declaration": Object {
-    "actorType": "app.bsky.system.actorScene",
-    "cid": "cids(0)",
-  },
-  "description": "feeling scene",
-  "did": "user(0)",
-  "displayName": "besties",
-  "followersCount": 0,
-  "followsCount": 0,
-  "handle": "scene.test",
-  "membersCount": 4,
-  "myState": Object {
-    "member": "record(0)",
-    "muted": false,
-  },
-  "postsCount": 0,
 }
 `;
 
@@ -189,7 +137,6 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
-  "membersCount": 0,
   "myState": Object {
     "muted": false,
   },

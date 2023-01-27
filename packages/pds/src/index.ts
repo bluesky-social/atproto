@@ -8,7 +8,7 @@ import express from 'express'
 import cors from 'cors'
 import http from 'http'
 import events from 'events'
-import { DidableKey } from '@atproto/auth'
+import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { DidResolver } from '@atproto/did-resolver'
 import API, { health } from './api'
@@ -47,7 +47,7 @@ export class PDS {
   static create(opts: {
     db: Database
     blobstore: BlobStore
-    keypair: DidableKey
+    keypair: crypto.Keypair
     config: ServerConfig
   }): PDS {
     const { db, blobstore, keypair, config } = opts
@@ -90,7 +90,12 @@ export class PDS {
       config.imgUriKey,
     )
 
-    const services = createServices({ messageQueue, blobstore, imgUriBuilder })
+    const services = createServices({
+      keypair,
+      messageQueue,
+      blobstore,
+      imgUriBuilder,
+    })
 
     const ctx = new AppContext({
       db,

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
-import { DidableKey } from '@atproto/crypto'
-import { check, cidForData } from '@atproto/common'
+import { Keypair } from '@atproto/crypto'
+import { check, cidForCbor } from '@atproto/common'
 import * as operations from '../lib/operations'
 import * as t from '../lib/types'
 
@@ -28,7 +28,7 @@ export class PlcClient {
   }
 
   async createDid(
-    signingKey: DidableKey,
+    signingKey: Keypair,
     recoveryKey: string,
     handle: string,
     service: string,
@@ -47,13 +47,13 @@ export class PlcClient {
     if (log.length === 0) {
       throw new Error(`Could not make update: DID does not exist: ${did}`)
     }
-    return cidForData(log[log.length - 1])
+    return cidForCbor(log[log.length - 1])
   }
 
   async rotateSigningKey(
     did: string,
     newKey: string,
-    signingKey: DidableKey,
+    signingKey: Keypair,
     prev?: CID,
   ) {
     prev = prev ? prev : await this.getPrev(did)
@@ -68,7 +68,7 @@ export class PlcClient {
   async rotateRecoveryKey(
     did: string,
     newKey: string,
-    signingKey: DidableKey,
+    signingKey: Keypair,
     prev?: CID,
   ) {
     prev = prev ? prev : await this.getPrev(did)
@@ -80,7 +80,7 @@ export class PlcClient {
     await axios.post(this.postOpUrl(did), op)
   }
 
-  async updateHandle(did: string, handle: string, signingKey: DidableKey) {
+  async updateHandle(did: string, handle: string, signingKey: Keypair) {
     const prev = await this.getPrev(did)
     const op = await operations.updateHandle(
       handle,
@@ -90,7 +90,7 @@ export class PlcClient {
     await axios.post(this.postOpUrl(did), op)
   }
 
-  async updateAtpPds(did: string, service: string, signingKey: DidableKey) {
+  async updateAtpPds(did: string, service: string, signingKey: Keypair) {
     const prev = await this.getPrev(did)
     const op = await operations.updateAtpPds(
       service,

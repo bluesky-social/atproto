@@ -161,7 +161,6 @@ describe('pds vote views', () => {
       }
 
       post = await getPost()
-
       expect(
         (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
           .downvoteCount,

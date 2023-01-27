@@ -24,7 +24,6 @@ export interface OutputSchema {
   banner?: string
   followersCount: number
   followsCount: number
-  membersCount: number
   postsCount: number
   myState?: MyState
   [k: string]: unknown
@@ -48,7 +47,6 @@ export function toKnownErr(e: any) {
 
 export interface MyState {
   follow?: string
-  member?: string
   muted?: boolean
   [k: string]: unknown
 }

@@ -1,14 +1,15 @@
-import * as ucan from '@ucans/core'
 import * as secp from '@noble/secp256k1'
 import * as uint8arrays from 'uint8arrays'
+import { SupportedEncodings } from 'uint8arrays/util/bases'
 import * as did from '../did'
 import { SECP256K1_JWT_ALG } from '../const'
+import { Keypair } from '../types'
 
 export type Secp256k1KeypairOptions = {
   exportable: boolean
 }
 
-export class Secp256k1Keypair implements ucan.DidableKey {
+export class Secp256k1Keypair implements Keypair {
   jwtAlg = SECP256K1_JWT_ALG
   private publicKey: Uint8Array
 
@@ -40,7 +41,7 @@ export class Secp256k1Keypair implements ucan.DidableKey {
     return this.publicKey
   }
 
-  publicKeyStr(encoding: ucan.Encodings = 'base64pad'): string {
+  publicKeyStr(encoding: SupportedEncodings = 'base64pad'): string {
     return uint8arrays.toString(this.publicKey, encoding)
   }
 

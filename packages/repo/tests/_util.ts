@@ -1,20 +1,32 @@
-import { CID } from 'multiformats'
-import { TID } from '@atproto/common'
-import * as auth from '@atproto/auth'
-import IpldStore from '../src/blockstore/ipld-store'
-import { Repo } from '../src/repo'
-import { MemoryBlockstore } from '../src/blockstore'
-import { DataDiff, MST } from '../src/mst'
 import fs from 'fs'
-import { RecordWriteOp } from '../src'
+import { CID } from 'multiformats'
+import { TID, dataToCborBlock } from '@atproto/common'
+import * as crypto from '@atproto/crypto'
+import { Repo } from '../src/repo'
+import { RepoStorage } from '../src/storage'
+import { MST } from '../src/mst'
+import {
+  BlockMap,
+  collapseWriteLog,
+  CollectionContents,
+  RecordWriteOp,
+  RepoContents,
+  RecordPath,
+  RepoRoot,
+  WriteLog,
+  WriteOpAction,
+  RecordClaim,
+} from '../src'
+import { Keypair } from '@atproto/crypto'
 
 type IdMapping = Record<string, CID>
 
-const fakeStore = new MemoryBlockstore()
-
-export const randomCid = async (store: IpldStore = fakeStore): Promise<CID> => {
-  const str = randomStr(50)
-  return store.stage({ test: str })
+export const randomCid = async (storage?: RepoStorage): Promise<CID> => {
+  const block = await dataToCborBlock({ test: randomStr(50) })
+  if (storage) {
+    await storage.putBlock(block.cid, block.bytes)
+  }
+  return block.cid
 }
 
 export const generateBulkTids = (count: number): TID[] => {
@@ -27,7 +39,7 @@ export const generateBulkTids = (count: number): TID[] => {
 
 export const generateBulkTidMapping = async (
   count: number,
-  blockstore: IpldStore = fakeStore,
+  blockstore?: RepoStorage,
 ): Promise<IdMapping> => {
   const ids = generateBulkTids(count)
   const obj: IdMapping = {}
@@ -76,32 +88,29 @@ export const generateObject = (): Record<string, string> => {
 
 export const testCollections = ['com.example.posts', 'com.example.likes']
 
-export type CollectionData = Record<string, unknown>
-export type RepoData = Record<string, CollectionData>
-
 export const fillRepo = async (
   repo: Repo,
-  authStore: auth.AuthStore,
+  keypair: crypto.Keypair,
   itemsPerCollection: number,
-): Promise<{ repo: Repo; data: RepoData }> => {
-  const repoData: RepoData = {}
+): Promise<{ repo: Repo; data: RepoContents }> => {
+  const repoData: RepoContents = {}
   const writes: RecordWriteOp[] = []
   for (const collName of testCollections) {
-    const collData: CollectionData = {}
+    const collData: CollectionContents = {}
     for (let i = 0; i < itemsPerCollection; i++) {
       const object = generateObject()
       const rkey = TID.nextStr()
       collData[rkey] = object
       writes.push({
-        action: 'create',
+        action: WriteOpAction.Create,
         collection: collName,
         rkey,
-        value: object,
+        record: object,
       })
     }
     repoData[collName] = collData
   }
-  const updated = await repo.stageUpdate(writes).createCommit(authStore)
+  const updated = await repo.applyCommit(writes, keypair)
   return {
     repo: updated,
     data: repoData,
@@ -110,17 +119,16 @@ export const fillRepo = async (
 
 export const editRepo = async (
   repo: Repo,
-  prevData: RepoData,
-  authStore: auth.AuthStore,
+  prevData: RepoContents,
+  keypair: crypto.Keypair,
   params: {
     adds?: number
     updates?: number
     deletes?: number
   },
-): Promise<{ repo: Repo; data: RepoData }> => {
+): Promise<{ repo: Repo; data: RepoContents }> => {
   const { adds = 0, updates = 0, deletes = 0 } = params
-  const repoData: RepoData = {}
-  const writes: RecordWriteOp[] = []
+  const repoData: RepoContents = {}
   for (const collName of testCollections) {
     const collData = prevData[collName]
     const shuffled = shuffle(Object.entries(collData))
@@ -129,94 +137,133 @@ export const editRepo = async (
       const object = generateObject()
       const rkey = TID.nextStr()
       collData[rkey] = object
-      writes.push({
-        action: 'create',
-        collection: collName,
-        rkey,
-        value: object,
-      })
+      repo = await repo.applyCommit(
+        {
+          action: WriteOpAction.Create,
+          collection: collName,
+          rkey,
+          record: object,
+        },
+        keypair,
+      )
     }
 
     const toUpdate = shuffled.slice(0, updates)
     for (let i = 0; i < toUpdate.length; i++) {
       const object = generateObject()
       const rkey = toUpdate[i][0]
-      writes.push({
-        action: 'update',
-        collection: collName,
-        rkey,
-        value: object,
-      })
+      repo = await repo.applyCommit(
+        {
+          action: WriteOpAction.Update,
+          collection: collName,
+          rkey,
+          record: object,
+        },
+        keypair,
+      )
       collData[rkey] = object
     }
 
     const toDelete = shuffled.slice(updates, deletes)
     for (let i = 0; i < toDelete.length; i++) {
       const rkey = toDelete[i][0]
-      writes.push({
-        action: 'delete',
-        collection: collName,
-        rkey,
-      })
+      repo = await repo.applyCommit(
+        {
+          action: WriteOpAction.Delete,
+          collection: collName,
+          rkey,
+        },
+        keypair,
+      )
       delete collData[rkey]
     }
     repoData[collName] = collData
   }
-  const updated = await repo.stageUpdate(writes).createCommit(authStore)
   return {
-    repo: updated,
+    repo,
     data: repoData,
   }
 }
 
-export const checkRepo = async (repo: Repo, data: RepoData): Promise<void> => {
-  for (const collName of Object.keys(data)) {
-    const collData = data[collName]
-    for (const rkey of Object.keys(collData)) {
-      const record = await repo.getRecord(collName, rkey)
-      expect(record).toEqual(collData[rkey])
+export const verifyRepoDiff = async (
+  writeLog: WriteLog,
+  before: RepoContents,
+  after: RepoContents,
+): Promise<void> => {
+  const getVal = (op: RecordWriteOp, data: RepoContents) => {
+    return (data[op.collection] || {})[op.rkey]
+  }
+  const ops = await collapseWriteLog(writeLog)
+
+  for (const op of ops) {
+    if (op.action === WriteOpAction.Create) {
+      expect(getVal(op, before)).toBeUndefined()
+      expect(getVal(op, after)).toEqual(op.record)
+    } else if (op.action === WriteOpAction.Update) {
+      expect(getVal(op, before)).toBeDefined()
+      expect(getVal(op, after)).toEqual(op.record)
+    } else if (op.action === WriteOpAction.Delete) {
+      expect(getVal(op, before)).toBeDefined()
+      expect(getVal(op, after)).toBeUndefined()
+    } else {
+      throw new Error('unexpected op type')
     }
   }
 }
 
-export const checkRepoDiff = async (
-  diff: DataDiff,
-  before: RepoData,
-  after: RepoData,
-): Promise<void> => {
-  const getObjectCid = async (
-    key: string,
-    data: RepoData,
-  ): Promise<CID | undefined> => {
-    const parts = key.split('/')
-    const collection = parts[0]
-    const obj = (data[collection] || {})[parts[1]]
-    return obj === undefined ? undefined : fakeStore.stage(obj)
+export const contentsToClaims = (contents: RepoContents): RecordClaim[] => {
+  const claims: RecordClaim[] = []
+  for (const coll of Object.keys(contents)) {
+    for (const rkey of Object.keys(contents[coll])) {
+      claims.push({
+        collection: coll,
+        rkey: rkey,
+        record: contents[coll][rkey],
+      })
+    }
   }
+  return claims
+}
 
-  for (const add of diff.addList()) {
-    const beforeCid = await getObjectCid(add.key, before)
-    const afterCid = await getObjectCid(add.key, after)
+export const pathsForOps = (ops: RecordWriteOp[]): RecordPath[] =>
+  ops.map((op) => ({ collection: op.collection, rkey: op.rkey }))
 
-    expect(beforeCid).toBeUndefined()
-    expect(afterCid).toEqual(add.cid)
+export const saveMst = async (storage: RepoStorage, mst: MST): Promise<CID> => {
+  const diff = await mst.getUnstoredBlocks()
+  await storage.putMany(diff.blocks)
+  return diff.root
+}
+
+// Creating repo
+// -------------------
+export const addBadCommit = async (
+  repo: Repo,
+  keypair: Keypair,
+): Promise<Repo> => {
+  const obj = generateObject()
+  const blocks = new BlockMap()
+  const cid = await blocks.add(obj)
+  const updatedData = await repo.data.add(`com.example.test/${TID.next()}`, cid)
+  const unstoredData = await updatedData.getUnstoredBlocks()
+  blocks.addMap(unstoredData.blocks)
+  const root: RepoRoot = {
+    meta: repo.root.meta,
+    prev: repo.cid,
+    data: unstoredData.root,
   }
-
-  for (const update of diff.updateList()) {
-    const beforeCid = await getObjectCid(update.key, before)
-    const afterCid = await getObjectCid(update.key, after)
-
-    expect(beforeCid).toEqual(update.prev)
-    expect(afterCid).toEqual(update.cid)
+  const rootCid = await blocks.add(root)
+  // we generate a bad sig by signing the data cid instead of root cid
+  const commit = {
+    root: rootCid,
+    sig: await keypair.sign(unstoredData.root.bytes),
   }
-
-  for (const del of diff.deleteList()) {
-    const beforeCid = await getObjectCid(del.key, before)
-    const afterCid = await getObjectCid(del.key, after)
-
-    expect(beforeCid).toEqual(del.cid)
-    expect(afterCid).toBeUndefined()
-  }
+  const commitCid = await blocks.add(commit)
+  await repo.storage.applyCommit({
+    commit: commitCid,
+    prev: repo.cid,
+    blocks: blocks,
+  })
+  return await Repo.load(repo.storage, commitCid)
 }
 
 // Logging

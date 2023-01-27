@@ -1,9 +1,9 @@
 import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
-import IpldStore from '../blockstore/ipld-store'
+import { ReadableBlockstore } from '../storage'
 import { sha256 } from '@atproto/crypto'
 import { MST, Leaf, NodeEntry, NodeData, MstOpts, Fanout } from './mst'
-import { cidForData } from '@atproto/common'
+import { cidForCbor } from '@atproto/common'
 
 type SupportedBases = 'base2' | 'base8' | 'base16' | 'base32' | 'base64'
 
@@ -39,7 +39,7 @@ export const layerForEntries = async (
 }
 
 export const deserializeNodeData = async (
-  blockstore: IpldStore,
+  storage: ReadableBlockstore,
   data: NodeData,
   opts?: Partial<MstOpts>,
 ): Promise<NodeEntry[]> => {
@@ -47,7 +47,7 @@ export const deserializeNodeData = async (
   const entries: NodeEntry[] = []
   if (data.l !== null) {
     entries.push(
-      await MST.load(blockstore, data.l, {
+      await MST.load(storage, data.l, {
         layer: layer ? layer - 1 : undefined,
         fanout,
       }),
@@ -60,7 +60,7 @@ export const deserializeNodeData = async (
     lastKey = key
     if (entry.t !== null) {
       entries.push(
-        await MST.load(blockstore, entry.t, {
+        await MST.load(storage, entry.t, {
           layer: layer ? layer - 1 : undefined,
           fanout,
         }),
@@ -118,5 +118,5 @@ export const countPrefixLen = (a: string, b: string): number => {
 
 export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
   const data = serializeNodeData(entries)
-  return cidForData(data)
+  return cidForCbor(data)
 }

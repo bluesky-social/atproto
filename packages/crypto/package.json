@@ -19,8 +19,8 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
+    "@atproto/crypto": "*",
     "@noble/secp256k1": "^1.7.0",
-    "@ucans/core": "0.11.0",
     "big-integer": "^1.6.51",
     "multiformats": "^9.6.4",
     "one-webcrypto": "^1.0.3",

@@ -1823,9 +1823,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncGetRepo: {
+  ComAtprotoSyncGetCheckout: {
     lexicon: 1,
-    id: 'com.atproto.sync.getRepo',
+    id: 'com.atproto.sync.getCheckout',
     defs: {
       main: {
         type: 'query',
@@ -1838,25 +1838,69 @@ export const schemaDict = {
               type: 'string',
               description: 'The DID of the repo.',
             },
-            from: {
+            commit: {
               type: 'string',
-              description: 'A past commit CID.',
+              description:
+                'The commit to get the checkout from. Defaults to current HEAD.',
             },
           },
         },
         output: {
-          encoding: 'application/cbor',
+          encoding: 'application/vnd.ipld.car',
         },
       },
     },
   },
-  ComAtprotoSyncGetRoot: {
+  ComAtprotoSyncGetCommitPath: {
     lexicon: 1,
-    id: 'com.atproto.sync.getRoot',
+    id: 'com.atproto.sync.getCommitPath',
     defs: {
       main: {
         type: 'query',
-        description: 'Gets the current root CID of a repo.',
+        description: 'Gets the path of repo commits',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            latest: {
+              type: 'string',
+              description: 'The most recent commit',
+            },
+            earliest: {
+              type: 'string',
+              description: 'The earliest commit to start from',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['commits'],
+            properties: {
+              commits: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSyncGetHead: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getHead',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the current HEAD CID of a repo.',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -1882,13 +1926,47 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncUpdateRepo: {
+  ComAtprotoSyncGetRecord: {
     lexicon: 1,
-    id: 'com.atproto.sync.updateRepo',
+    id: 'com.atproto.sync.getRecord',
     defs: {
       main: {
-        type: 'procedure',
-        description: 'Writes commits to a repo.',
+        type: 'query',
+        description:
+          'Gets blocks needed for existence or non-existence of record.',
+        parameters: {
+          type: 'params',
+          required: ['did', 'collection', 'rkey'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            collection: {
+              type: 'string',
+            },
+            rkey: {
+              type: 'string',
+            },
+            commit: {
+              type: 'string',
+              description: 'An optional past commit CID.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
+  ComAtprotoSyncGetRepo: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getRepo',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the repo state.',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -1897,63 +1975,15 @@ export const schemaDict = {
               type: 'string',
               description: 'The DID of the repo.',
             },
-          },
-        },
-        input: {
-          encoding: 'application/cbor',
-        },
-      },
-    },
-  },
-  AppBskyActorCreateScene: {
-    lexicon: 1,
-    id: 'app.bsky.actor.createScene',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Create a scene.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle'],
-            properties: {
-              handle: {
-                type: 'string',
-              },
-              recoveryKey: {
-                type: 'string',
-              },
+            from: {
+              type: 'string',
+              description: 'A past commit CID.',
             },
           },
         },
         output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle', 'did', 'declaration'],
-            properties: {
-              handle: {
-                type: 'string',
-              },
-              did: {
-                type: 'string',
-              },
-              declaration: {
-                type: 'ref',
-                ref: 'lex:app.bsky.system.declRef',
-              },
-            },
-          },
+          encoding: 'application/vnd.ipld.car',
         },
-        errors: [
-          {
-            name: 'InvalidHandle',
-          },
-          {
-            name: 'HandleNotAvailable',
-          },
-        ],
       },
     },
   },
@@ -1983,7 +2013,6 @@ export const schemaDict = {
               'creator',
               'followersCount',
               'followsCount',
-              'membersCount',
               'postsCount',
             ],
             properties: {
@@ -2020,9 +2049,6 @@ export const schemaDict = {
               followsCount: {
                 type: 'integer',
               },
-              membersCount: {
-                type: 'integer',
-              },
               postsCount: {
                 type: 'integer',
               },
@@ -2038,9 +2064,6 @@ export const schemaDict = {
         type: 'object',
         properties: {
           follow: {
-            type: 'string',
-          },
-          member: {
             type: 'string',
           },
           muted: {
@@ -2377,9 +2400,6 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {
-              did: {
-                type: 'string',
-              },
               displayName: {
                 type: 'string',
                 maxLength: 64,
@@ -2592,10 +2612,7 @@ export const schemaDict = {
           },
           reason: {
             type: 'union',
-            refs: [
-              'lex:app.bsky.feed.feedViewPost#reasonTrend',
-              'lex:app.bsky.feed.feedViewPost#reasonRepost',
-            ],
+            refs: ['lex:app.bsky.feed.feedViewPost#reasonRepost'],
           },
         },
       },
@@ -2610,19 +2627,6 @@ export const schemaDict = {
           parent: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.post#view',
-          },
-        },
-      },
-      reasonTrend: {
-        type: 'object',
-        required: ['by', 'indexedAt'],
-        properties: {
-          by: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          indexedAt: {
-            type: 'datetime',
           },
         },
       },
@@ -3201,29 +3205,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedTrend: {
-    lexicon: 1,
-    id: 'app.bsky.feed.trend',
-    defs: {
-      main: {
-        type: 'record',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: ['subject', 'createdAt'],
-          properties: {
-            subject: {
-              type: 'ref',
-              ref: 'lex:com.atproto.repo.strongRef',
-            },
-            createdAt: {
-              type: 'datetime',
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedVote: {
     lexicon: 1,
     id: 'app.bsky.feed.vote',
@@ -3345,120 +3326,6 @@ export const schemaDict = {
             createdAt: {
               type: 'datetime',
             },
-          },
-        },
-      },
-    },
-  },
-  AppBskyGraphGetAssertions: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getAssertions',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'General-purpose query for assertions.',
-        parameters: {
-          type: 'params',
-          properties: {
-            author: {
-              type: 'string',
-            },
-            subject: {
-              type: 'string',
-            },
-            assertion: {
-              type: 'string',
-            },
-            confirmed: {
-              type: 'boolean',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            before: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['assertions'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              assertions: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.graph.getAssertions#assertion',
-                },
-              },
-            },
-          },
-        },
-      },
-      assertion: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'assertion',
-          'author',
-          'subject',
-          'indexedAt',
-          'createdAt',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          assertion: {
-            type: 'string',
-          },
-          confirmation: {
-            type: 'ref',
-            ref: 'lex:app.bsky.graph.getAssertions#confirmation',
-          },
-          author: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          subject: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-          createdAt: {
-            type: 'datetime',
-          },
-        },
-      },
-      confirmation: {
-        type: 'object',
-        required: ['uri', 'cid', 'indexedAt', 'createdAt'],
-        properties: {
-          uri: {
-            type: 'string',
-          },
-          cid: {
-            type: 'string',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-          createdAt: {
-            type: 'datetime',
           },
         },
       },
@@ -3611,159 +3478,8 @@ export const schemaDict = {
             type: 'string',
             maxLength: 64,
           },
-          createdAt: {
-            type: 'datetime',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-        },
-      },
-    },
-  },
-  AppBskyGraphGetMembers: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getMembers',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Who is a member of the group?',
-        parameters: {
-          type: 'params',
-          required: ['actor'],
-          properties: {
-            actor: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            before: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject', 'members'],
-            properties: {
-              subject: {
-                type: 'ref',
-                ref: 'lex:app.bsky.actor.ref#withInfo',
-              },
-              cursor: {
-                type: 'string',
-              },
-              members: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.graph.getMembers#member',
-                },
-              },
-            },
-          },
-        },
-      },
-      member: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle', 'indexedAt'],
-        properties: {
-          did: {
+          avatar: {
             type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
-          },
-          createdAt: {
-            type: 'datetime',
-          },
-          indexedAt: {
-            type: 'datetime',
-          },
-        },
-      },
-    },
-  },
-  AppBskyGraphGetMemberships: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getMemberships',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Which groups is the actor a member of?',
-        parameters: {
-          type: 'params',
-          required: ['actor'],
-          properties: {
-            actor: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            before: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject', 'memberships'],
-            properties: {
-              subject: {
-                type: 'ref',
-                ref: 'lex:app.bsky.actor.ref#withInfo',
-              },
-              cursor: {
-                type: 'string',
-              },
-              memberships: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.graph.getMemberships#membership',
-                },
-              },
-            },
-          },
-        },
-      },
-      membership: {
-        type: 'object',
-        required: ['did', 'declaration', 'handle', 'indexedAt'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
-          },
-          handle: {
-            type: 'string',
-          },
-          displayName: {
-            type: 'string',
-            maxLength: 64,
           },
           createdAt: {
             type: 'datetime',
@@ -3971,11 +3687,10 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'.",
+              "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
             knownValues: [
               'vote',
               'repost',
-              'trend',
               'follow',
               'invite',
               'mention',
@@ -4020,17 +3735,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskySystemActorScene: {
-    lexicon: 1,
-    id: 'app.bsky.system.actorScene',
-    defs: {
-      main: {
-        type: 'token',
-        description:
-          "Actor type: Scene. Defined for app.bsky.system.declaration's actorType.",
-      },
-    },
-  },
   AppBskySystemActorUser: {
     lexicon: 1,
     id: 'app.bsky.system.actorUser',
@@ -4056,10 +3760,7 @@ export const schemaDict = {
           },
           actorType: {
             type: 'string',
-            knownValues: [
-              'app.bsky.system.actorUser',
-              'app.bsky.system.actorScene',
-            ],
+            knownValues: ['app.bsky.system.actorUser'],
           },
         },
       },
@@ -4080,10 +3781,7 @@ export const schemaDict = {
           properties: {
             actorType: {
               type: 'string',
-              knownValues: [
-                'app.bsky.system.actorUser',
-                'app.bsky.system.actorScene',
-              ],
+              knownValues: ['app.bsky.system.actorUser'],
             },
           },
         },
@@ -4137,10 +3835,11 @@ export const ids = {
   ComAtprotoSessionDelete: 'com.atproto.session.delete',
   ComAtprotoSessionGet: 'com.atproto.session.get',
   ComAtprotoSessionRefresh: 'com.atproto.session.refresh',
+  ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
+  ComAtprotoSyncGetCommitPath: 'com.atproto.sync.getCommitPath',
+  ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
+  ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
-  ComAtprotoSyncGetRoot: 'com.atproto.sync.getRoot',
-  ComAtprotoSyncUpdateRepo: 'com.atproto.sync.updateRepo',
-  AppBskyActorCreateScene: 'app.bsky.actor.createScene',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
   AppBskyActorProfile: 'app.bsky.actor.profile',
@@ -4159,25 +3858,20 @@ export const ids = {
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSetVote: 'app.bsky.feed.setVote',
-  AppBskyFeedTrend: 'app.bsky.feed.trend',
   AppBskyFeedVote: 'app.bsky.feed.vote',
   AppBskyGraphAssertCreator: 'app.bsky.graph.assertCreator',
   AppBskyGraphAssertMember: 'app.bsky.graph.assertMember',
   AppBskyGraphAssertion: 'app.bsky.graph.assertion',
   AppBskyGraphConfirmation: 'app.bsky.graph.confirmation',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
-  AppBskyGraphGetAssertions: 'app.bsky.graph.getAssertions',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
-  AppBskyGraphGetMembers: 'app.bsky.graph.getMembers',
-  AppBskyGraphGetMemberships: 'app.bsky.graph.getMemberships',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphMute: 'app.bsky.graph.mute',
   AppBskyGraphUnmute: 'app.bsky.graph.unmute',
   AppBskyNotificationGetCount: 'app.bsky.notification.getCount',
   AppBskyNotificationList: 'app.bsky.notification.list',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
-  AppBskySystemActorScene: 'app.bsky.system.actorScene',
   AppBskySystemActorUser: 'app.bsky.system.actorUser',
   AppBskySystemDeclRef: 'app.bsky.system.declRef',
   AppBskySystemDeclaration: 'app.bsky.system.declaration',

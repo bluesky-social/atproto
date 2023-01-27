@@ -163,7 +163,7 @@ describe('pds admin get moderation actions view', () => {
       { headers: { authorization: adminAuth() } },
     )
 
-    expect(full.data.actions.length).toEqual(8)
+    expect(full.data.actions.length).toEqual(6)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

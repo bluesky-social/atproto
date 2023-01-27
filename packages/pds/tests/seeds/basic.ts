@@ -1,6 +1,5 @@
 import { MessageQueue } from '../../src/event-stream/types'
 import { SeedClient } from './client'
-import scenesSeed from './scenes'
 import usersSeed from './users'
 
 export default async (sc: SeedClient, mq?: MessageQueue) => {
@@ -10,8 +9,6 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   const bob = sc.dids.bob
   const carol = sc.dids.carol
   const dan = sc.dids.dan
-
-  await scenesSeed(sc)
 
   await sc.follow(alice, sc.actorRef(bob))
   await sc.follow(alice, sc.actorRef(carol))

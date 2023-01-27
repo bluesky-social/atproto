@@ -6,9 +6,9 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
-import { RepoService } from '../repo'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
+import SqlRepoStorage from '../../sql-repo-storage'
 
 export class ModerationService {
   constructor(
@@ -24,7 +24,6 @@ export class ModerationService {
   views = new ModerationViews(this.db, this.messageQueue)
 
   services = {
-    repo: RepoService.creator(this.messageQueue, this.blobstore),
     record: RecordService.creator(this.messageQueue),
   }
 
@@ -139,7 +138,7 @@ export class ModerationService {
     // Resolve subject info
     let subjectInfo: SubjectInfo
     if ('did' in subject) {
-      const repo = await this.services.repo(this.db).getRepoRoot(subject.did)
+      const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
         subjectType: 'com.atproto.repo.repoRef',
@@ -302,7 +301,7 @@ export class ModerationService {
     // Resolve subject info
     let subjectInfo: SubjectInfo
     if ('did' in subject) {
-      const repo = await this.services.repo(this.db).getRepoRoot(subject.did)
+      const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
         subjectType: 'com.atproto.repo.repoRef',

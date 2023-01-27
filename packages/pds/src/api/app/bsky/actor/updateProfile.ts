@@ -1,5 +1,5 @@
 import { Server } from '../../../../lexicon'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as lexicons from '../../../../lexicon/lexicons'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
@@ -7,6 +7,7 @@ import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import * as common from '@atproto/common'
 import * as repo from '../../../../repo'
 import AppContext from '../../../../context'
+import { WriteOpAction } from '@atproto/repo'
 
 const profileNsid = lexicons.ids.AppBskyActorProfile
 
@@ -14,16 +15,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.updateProfile({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
-      const requester = auth.credentials.did
-
-      const did = input.body.did || requester
-      const authorized = await ctx.services
-        .repo(ctx.db)
-        .isUserControlledRepo(did, requester)
-      if (!authorized) {
-        throw new AuthRequiredError()
-      }
-      const authStore = await ctx.getAuthstore(did)
+      const did = auth.credentials.did
       const uri = new AtUri(`${did}/${profileNsid}/self`)
 
       const { profileCid, updated } = await ctx.db.transaction(
@@ -79,11 +71,11 @@ export default function (server: Server, ctx: AppContext) {
                 record: updated,
               })
 
-          const commit = await repoTxn.writeToRepo(did, authStore, [write], now)
+          const commit = await repoTxn.writeToRepo(did, [write], now)
           await repoTxn.blobs.processWriteBlobs(did, commit, [write])
 
           let profileCid: CID
-          if (write.action === 'update') {
+          if (write.action === WriteOpAction.Update) {
             profileCid = write.cid
             // Update profile record
             await dbTxn.db
@@ -105,7 +97,7 @@ export default function (server: Server, ctx: AppContext) {
               })
               .where('uri', '=', uri.toString())
               .execute()
-          } else if (write.action === 'create') {
+          } else if (write.action === WriteOpAction.Create) {
             profileCid = write.cid
             await recordTxn.indexRecord(uri, profileCid, updated, now)
           } else {

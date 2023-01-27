@@ -2,7 +2,7 @@ import { AtUri } from '@atproto/uri'
 import { CloseFn, runTestServer } from './_util'
 import { Database } from '../src'
 import * as lex from '../src/lexicon/lexicons'
-import { cidForData, TID, valueToIpldBytes } from '@atproto/common'
+import { cidForCbor, TID, cborEncode } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { APP_BSKY_GRAPH } from '../src/lexicon'
 import { Services } from '../src/services'
@@ -37,8 +37,8 @@ describe('duplicate record', () => {
   }
 
   const putBlock = async (db: Database, data: object): Promise<CID> => {
-    const cid = await cidForData(data)
-    const bytes = await valueToIpldBytes(data)
+    const cid = await cidForCbor(data)
+    const bytes = await cborEncode(data)
     await db.db
       .insertInto('ipld_block')
       .values({
@@ -89,46 +89,6 @@ describe('duplicate record', () => {
     })
 
     count = await countRecords(db, 'repost')
-    expect(count).toBe(0)
-  })
-
-  it('dedupes trends', async () => {
-    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
-    const subjectCid = await putBlock(db, { test: 'blah' })
-    const coll = lex.ids.AppBskyFeedTrend
-    const uris: AtUri[] = []
-    await db.transaction(async (tx) => {
-      for (let i = 0; i < 5; i++) {
-        const trend = {
-          $type: coll,
-          subject: {
-            uri: subject.toString(),
-            cid: subjectCid.toString(),
-          },
-          createdAt: new Date().toISOString(),
-        }
-        const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, trend)
-        await services.record(tx).indexRecord(uri, cid, trend)
-        uris.push(uri)
-      }
-    })
-
-    let count = await countRecords(db, 'trend')
-    expect(count).toBe(1)
-
-    await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(uris[0], false)
-    })
-
-    count = await countRecords(db, 'trend')
-    expect(count).toBe(1)
-
-    await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(uris[1], true)
-    })
-
-    count = await countRecords(db, 'trend')
     expect(count).toBe(0)
   })
 

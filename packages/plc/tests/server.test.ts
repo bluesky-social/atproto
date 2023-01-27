@@ -2,7 +2,7 @@ import { EcdsaKeypair } from '@atproto/crypto'
 import PlcClient from '../src/client'
 import * as document from '../src/lib/document'
 import { CloseFn, runTestServer } from './_util'
-import { cidForData } from '@atproto/common'
+import { cidForCbor } from '@atproto/common'
 import { AxiosError } from 'axios'
 import { Database } from '../src'
 
@@ -104,7 +104,7 @@ describe('PLC server', () => {
     const newKey = await EcdsaKeypair.create()
     const ops = await client.getOperationLog(did)
     const forkPoint = ops[ops.length - 3]
-    const forkCid = await cidForData(forkPoint)
+    const forkCid = await cidForCbor(forkPoint)
     await client.rotateSigningKey(did, newKey.did(), recoveryKey, forkCid)
     signingKey = newKey
 

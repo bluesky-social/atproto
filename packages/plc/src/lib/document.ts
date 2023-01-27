@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import * as cbor from '@ipld/dag-cbor'
-import { check, cidForData } from '@atproto/common'
+import { check, cidForCbor } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import * as t from './types'
 import { ServerError } from '../server/error'
@@ -98,7 +98,7 @@ export const validateOperationLog = async (
     handle: first.handle,
     atpPds: first.service,
   }
-  let prev = await cidForData(first)
+  let prev = await cidForCbor(first)
 
   for (const op of rest) {
     if (!op.prev || !CID.parse(op.prev).equals(prev)) {
@@ -119,7 +119,7 @@ export const validateOperationLog = async (
     } else {
       throw new ServerError(400, `Unknown operation: ${JSON.stringify(op)}`)
     }
-    prev = await cidForData(op)
+    prev = await cidForCbor(op)
   }
 
   return doc
@@ -152,7 +152,7 @@ export const assureValidSig = async (
   const dataBytes = new Uint8Array(cbor.encode(opData))
   let isValid = true
   for (const did of allowedDids) {
-    isValid = await crypto.verifyDidSig(did, dataBytes, sigBytes)
+    isValid = await crypto.verifySignature(did, dataBytes, sigBytes)
     if (isValid) return
   }
   throw new ServerError(400, `Invalid signature on op: ${JSON.stringify(op)}`)

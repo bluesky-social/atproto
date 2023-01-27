@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sync.getRecord",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Gets blocks needed for existence or non-existence of record.",
+      "parameters": {
+        "type": "params",
+        "required": ["did", "collection", "rkey"],
+        "properties": {
+          "did": {"type": "string", "description": "The DID of the repo."},
+          "collection": {"type": "string" },
+          "rkey": {"type": "string" },
+          "commit": {"type": "string", "description": "An optional past commit CID."}
+        }
+      },
+      "output": {
+        "encoding": "application/vnd.ipld.car"
+      }
+    }
+  }
+}
