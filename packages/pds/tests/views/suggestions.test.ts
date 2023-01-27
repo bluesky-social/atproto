@@ -25,56 +25,14 @@ describe('pds user search views', () => {
   it('actor suggestion gives users', async () => {
     const result = await client.app.bsky.actor.getSuggestions(
       { limit: 3 },
-      { headers: sc.getHeaders(sc.dids.alice) },
+      { headers: sc.getHeaders(sc.dids.carol) },
     )
 
     const handles = result.data.actors.map((u) => u.handle)
     const displayNames = result.data.actors.map((u) => u.displayName)
 
     const shouldContain: { handle: string; displayName: string | null }[] = [
-      { handle: 'alice.test', displayName: 'ali' },
       { handle: 'bob.test', displayName: 'bobby' },
-    ]
-
-    const third = sc.dids.carol > sc.dids.dan ? sc.dids.carol : sc.dids.dan
-    shouldContain.push({
-      handle: sc.accounts[third].handle,
-      displayName: sc.profiles[third]?.displayName || null,
-    })
-
-    shouldContain.forEach((actor) => {
-      expect(handles).toContain(actor.handle)
-      if (actor.displayName) {
-        expect(displayNames).toContain(actor.displayName)
-      }
-    })
-  })
-
-  it('includes follow state', async () => {
-    const result = await client.app.bsky.actor.getSuggestions(
-      { limit: 2 },
-      { headers: sc.getHeaders(sc.dids.carol) },
-    )
-    // carol follows alice (first) but not bob (second)
-    expect(result.data.actors[0].myState?.follow).toBeDefined()
-    expect(result.data.actors[1].myState?.follow).toBeUndefined()
-  })
-
-  it('paginates', async () => {
-    const result1 = await client.app.bsky.actor.getSuggestions(
-      { limit: 2 },
-      { headers: sc.getHeaders(sc.dids.alice) },
-    )
-    const result2 = await client.app.bsky.actor.getSuggestions(
-      { limit: 2, cursor: result1.data.cursor },
-      { headers: sc.getHeaders(sc.dids.alice) },
-    )
-
-    const handles = result2.data.actors.map((u) => u.handle)
-    const displayNames = result2.data.actors.map((u) => u.displayName)
-
-    const shouldContain = [
-      { handle: 'carol.test', displayName: null },
       { handle: 'dan.test', displayName: null },
     ]
 
@@ -84,5 +42,34 @@ describe('pds user search views', () => {
         expect(displayNames).toContain(actor.displayName)
       }
     })
+  })
+
+  it('does not suggest followed users', async () => {
+    const result = await client.app.bsky.actor.getSuggestions(
+      { limit: 3 },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+
+    // alice follows everyone
+    expect(result.data.actors.length).toBe(0)
+  })
+
+  it('paginates', async () => {
+    const result1 = await client.app.bsky.actor.getSuggestions(
+      { limit: 1 },
+      { headers: sc.getHeaders(sc.dids.carol) },
+    )
+    const result2 = await client.app.bsky.actor.getSuggestions(
+      { limit: 1, cursor: result1.data.cursor },
+      { headers: sc.getHeaders(sc.dids.carol) },
+    )
+
+    expect(result1.data.actors.length).toBe(1)
+    expect(result1.data.actors[0].handle).toEqual('bob.test')
+    expect(result1.data.actors[0].displayName).toEqual('bobby')
+
+    expect(result2.data.actors.length).toBe(1)
+    expect(result2.data.actors[0].handle).toEqual('dan.test')
+    expect(result2.data.actors[0].displayName).toBeUndefined()
   })
 })
