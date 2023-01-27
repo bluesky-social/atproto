@@ -39,6 +39,9 @@ export async function resize(
     processor = processor.jpeg({ quality: quality ?? 100 })
   } else if (format === 'png') {
     processor = processor.png({ quality: quality ?? 100 })
+  } else {
+    const exhaustiveCheck: never = format
+    throw new Error(`Unhandled case: ${exhaustiveCheck}`)
   }
 
   forwardStreamErrors(stream, processor)
