@@ -9,9 +9,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["handle", "password",  "token"],
+          "required": ["did", "password",  "token"],
           "properties": {
-            "handle": { "type": "string" },
+            "did": { "type": "string" },
             "password": { "type": "string" },
             "token": { "type": "string" }
           }

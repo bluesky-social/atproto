@@ -7,7 +7,6 @@ import { User } from '../db/tables/user'
 import { DidHandle } from '../db/tables/did-handle'
 import { RepoRoot } from '../db/tables/repo-root'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
-import { APP_BSKY_GRAPH } from '../lexicon'
 import { notSoftDeletedClause } from '../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from './util/search'
 import { paginate, TimeCidKeyset } from '../db/pagination'
@@ -161,6 +160,17 @@ export class ActorService {
       .selectFrom('user')
       .selectAll()
       .where('handle', '=', handle)
+      .executeTakeFirst()
+    if (!found) return false
+    return scrypt.verify(password, found.password)
+  }
+
+  async verifyUserDidPassword(did: string, password: string): Promise<boolean> {
+    const found = await this.db.db
+      .selectFrom('did_handle')
+      .where('did_handle.did', '=', did)
+      .innerJoin('user', 'user.handle', 'did_handle.handle')
+      .selectAll()
       .executeTakeFirst()
     if (!found) return false
     return scrypt.verify(password, found.password)

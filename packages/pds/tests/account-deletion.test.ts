@@ -100,7 +100,7 @@ describe('account deletion', () => {
   it('fails account deletion with a bad token', async () => {
     const attempt = client.com.atproto.account.delete({
       token: '123456',
-      handle: carol.handle,
+      did: carol.did,
       password: carol.password,
     })
     await expect(attempt).rejects.toThrow('Token is invalid')
@@ -109,16 +109,16 @@ describe('account deletion', () => {
   it('fails account deletion with a bad password', async () => {
     const attempt = client.com.atproto.account.delete({
       token,
-      handle: carol.handle,
+      did: carol.did,
       password: 'bad-pass',
     })
-    await expect(attempt).rejects.toThrow('Invalid handle or password')
+    await expect(attempt).rejects.toThrow('Invalid did or password')
   })
 
   it('deletes account with a valid token & password', async () => {
     await client.com.atproto.account.delete({
       token,
-      handle: carol.handle,
+      did: carol.did,
       password: carol.password,
     })
   })

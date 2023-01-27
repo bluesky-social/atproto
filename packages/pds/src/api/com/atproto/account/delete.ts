@@ -5,19 +5,18 @@ import Database from '../../../../db'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.account.delete(async ({ input }) => {
-    const { password, token } = input.body
-    const handle = input.body.handle.toLowerCase()
+    const { did, password, token } = input.body
     const validPass = await ctx.services
       .actor(ctx.db)
-      .verifyUserPassword(handle, password)
+      .verifyUserDidPassword(did, password)
     if (!validPass) {
-      throw new AuthRequiredError('Invalid handle or password')
+      throw new AuthRequiredError('Invalid did or password')
     }
 
     const tokenInfo = await ctx.db.db
       .selectFrom('did_handle')
       .innerJoin('delete_account_token as token', 'token.did', 'did_handle.did')
-      .where('did_handle.handle', '=', handle)
+      .where('did_handle.did', '=', did)
       .where('token.token', '=', token)
       .select([
         'token.token as token',
@@ -38,7 +37,6 @@ export default function (server: Server, ctx: AppContext) {
       return createExpiredTokenError()
     }
 
-    const did = tokenInfo.did
     await ctx.db.transaction(async (dbTxn) => {
       await removeDeleteToken(dbTxn, did)
       await ctx.services.record(dbTxn).deleteForUser(did)

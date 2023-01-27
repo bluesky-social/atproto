@@ -10,7 +10,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  handle: string
+  did: string
   password: string
   token: string
   [k: string]: unknown

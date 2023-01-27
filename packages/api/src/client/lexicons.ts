@@ -118,9 +118,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['handle', 'password', 'token'],
+            required: ['did', 'password', 'token'],
             properties: {
-              handle: {
+              did: {
                 type: 'string',
               },
               password: {
