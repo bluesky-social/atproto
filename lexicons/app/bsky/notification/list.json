@@ -35,8 +35,8 @@
         "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "reason": {
           "type": "string",
-          "description": "Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'.",
-          "knownValues": ["vote", "repost", "trend", "follow", "invite", "mention", "reply"]
+          "description": "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
+          "knownValues": ["vote", "repost", "follow", "invite", "mention", "reply"]
         },
         "reasonSubject": {"type": "string"},
         "record": {"type": "unknown"},

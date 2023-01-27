@@ -1,13 +1,13 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
+import { cidForCbor } from '@atproto/common'
 import { Server, APP_BSKY_SYSTEM } from '../../../../lexicon'
 import { countAll } from '../../../../db/util'
 import * as lex from '../../../../lexicon/lexicons'
 import * as repo from '../../../../repo'
 import { UserAlreadyExistsError } from '../../../../services/actor'
 import AppContext from '../../../../context'
-import { cidForCbor } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.account.create(async ({ input, req }) => {

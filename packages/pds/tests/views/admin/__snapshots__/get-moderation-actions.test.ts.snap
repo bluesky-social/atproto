@@ -80,30 +80,6 @@ Array [
 exports[`pds admin get moderation actions view gets all moderation actions. 1`] = `
 Array [
   Object {
-    "action": "com.atproto.admin.moderationAction#flag",
-    "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
-    "id": 8,
-    "reason": "X",
-    "resolvedReportIds": Array [],
-    "subject": Object {
-      "$type": "com.atproto.repo.repoRef",
-      "did": "user(0)",
-    },
-  },
-  Object {
-    "action": "com.atproto.admin.moderationAction#takedown",
-    "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
-    "id": 7,
-    "reason": "X",
-    "resolvedReportIds": Array [],
-    "subject": Object {
-      "$type": "com.atproto.repo.repoRef",
-      "did": "user(1)",
-    },
-  },
-  Object {
     "action": "com.atproto.admin.moderationAction#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "Y",
@@ -112,7 +88,7 @@ Array [
     "resolvedReportIds": Array [],
     "subject": Object {
       "$type": "com.atproto.repo.repoRef",
-      "did": "user(2)",
+      "did": "user(0)",
     },
   },
   Object {
@@ -126,7 +102,7 @@ Array [
     ],
     "subject": Object {
       "$type": "com.atproto.repo.repoRef",
-      "did": "user(3)",
+      "did": "user(1)",
     },
   },
   Object {

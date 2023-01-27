@@ -128,7 +128,7 @@ describe('account deletion', () => {
       handle: carol.handle,
       password: carol.password,
     })
-    await expect(attempt).rejects.toThrow('Invalid handle or password')
+    await expect(attempt).rejects.toThrow('Invalid identifier or password')
   })
 
   it('no longer store the user account or repo', async () => {

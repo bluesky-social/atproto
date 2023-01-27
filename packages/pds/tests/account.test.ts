@@ -319,7 +319,10 @@ describe('account', () => {
   })
 
   it('logs in', async () => {
-    const res = await client.com.atproto.session.create({ handle, password })
+    const res = await client.com.atproto.session.create({
+      identifier: handle,
+      password,
+    })
     jwt = res.data.accessJwt
     expect(typeof jwt).toBe('string')
     expect(res.data.handle).toBe('alice.test')
@@ -348,6 +351,7 @@ describe('account', () => {
 
     expect(mail.to).toEqual(email)
     expect(mail.html).toContain('Reset your password')
+    expect(mail.html).toContain('alice.test')
 
     const token = getTokenFromMail(mail)
 
@@ -362,11 +366,14 @@ describe('account', () => {
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.session.create({ handle, password }),
-    ).rejects.toThrow('Invalid handle or password')
+      client.com.atproto.session.create({ identifier: handle, password }),
+    ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      client.com.atproto.session.create({ handle, password: passwordAlt }),
+      client.com.atproto.session.create({
+        identifier: handle,
+        password: passwordAlt,
+      }),
     ).resolves.toBeDefined()
   })
 
@@ -391,11 +398,14 @@ describe('account', () => {
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.session.create({ handle, password: passwordAlt }),
-    ).rejects.toThrow('Invalid handle or password')
+      client.com.atproto.session.create({
+        identifier: handle,
+        password: passwordAlt,
+      }),
+    ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      client.com.atproto.session.create({ handle, password }),
+      client.com.atproto.session.create({ identifier: handle, password }),
     ).resolves.toBeDefined()
   })
 
@@ -426,11 +436,14 @@ describe('account', () => {
 
     // Still logs in with previous password
     await expect(
-      client.com.atproto.session.create({ handle, password: passwordAlt }),
-    ).rejects.toThrow('Invalid handle or password')
+      client.com.atproto.session.create({
+        identifier: handle,
+        password: passwordAlt,
+      }),
+    ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      client.com.atproto.session.create({ handle, password }),
+      client.com.atproto.session.create({ identifier: handle, password }),
     ).resolves.toBeDefined()
   })
 

@@ -45,7 +45,6 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as AppBskyActorCreateScene from './types/app/bsky/actor/createScene'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
@@ -57,11 +56,8 @@ import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
-import * as AppBskyGraphGetAssertions from './types/app/bsky/graph/getAssertions'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-import * as AppBskyGraphGetMembers from './types/app/bsky/graph/getMembers'
-import * as AppBskyGraphGetMemberships from './types/app/bsky/graph/getMemberships'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphMute from './types/app/bsky/graph/mute'
 import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
@@ -83,7 +79,6 @@ export const APP_BSKY_GRAPH = {
   AssertMember: 'app.bsky.graph.assertMember',
 }
 export const APP_BSKY_SYSTEM = {
-  ActorScene: 'app.bsky.system.actorScene',
   ActorUser: 'app.bsky.system.actorUser',
 }
 
@@ -537,13 +532,6 @@ export class ActorNS {
     this._server = server
   }
 
-  createScene<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyActorCreateScene.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.actor.createScene' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getProfile<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyActorGetProfile.Handler<ExtractAuth<AV>>>,
   ) {
@@ -645,13 +633,6 @@ export class GraphNS {
     this._server = server
   }
 
-  getAssertions<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyGraphGetAssertions.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.graph.getAssertions' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getFollowers<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyGraphGetFollowers.Handler<ExtractAuth<AV>>>,
   ) {
@@ -663,20 +644,6 @@ export class GraphNS {
     cfg: ConfigOf<AV, AppBskyGraphGetFollows.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.graph.getFollows' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getMembers<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyGraphGetMembers.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.graph.getMembers' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getMemberships<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyGraphGetMemberships.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.graph.getMemberships' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

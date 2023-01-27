@@ -54,16 +54,9 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (obj: IndexedAssertion): Message[] => {
-  const notif = messages.createNotification({
-    userDid: obj.subjectDid,
-    author: obj.creator,
-    recordUri: obj.uri,
-    recordCid: obj.cid,
-    reason: 'assertion',
-    reasonSubject: obj.creator,
-  })
-  return [notif]
+const eventsForInsert = (_obj: IndexedAssertion): Message[] => {
+  // disabled for now
+  return []
 }
 
 const deleteFn = async (
@@ -80,17 +73,9 @@ const deleteFn = async (
 
 const eventsForDelete = (
   deleted: IndexedAssertion,
-  replacedBy: IndexedAssertion | null,
+  _replacedBy: IndexedAssertion | null,
 ): Message[] => {
-  const events: Message[] = []
-  events.push(messages.deleteNotifications(deleted.uri))
-  if (deleted?.confirmUri) {
-    events.push(messages.removeMember(deleted.creator, deleted.subjectDid))
-  }
-  if (replacedBy) {
-    eventsForInsert(replacedBy).forEach((evt) => events.push(evt))
-  }
-  return events
+  return [messages.deleteNotifications(deleted.uri)]
 }
 
 export type PluginType = RecordProcessor<Assertion.Record, IndexedAssertion>

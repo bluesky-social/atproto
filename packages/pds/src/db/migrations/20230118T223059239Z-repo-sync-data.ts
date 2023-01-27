@@ -8,16 +8,16 @@ import { RepoCommitHistory } from '../tables/repo-commit-history'
 const commitBlockTable = 'repo_commit_block'
 const commitHistoryTable = 'repo_commit_history'
 
-export async function up(db: any): Promise<void> {
+export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable(commitBlockTable)
     .addColumn('commit', 'varchar', (col) => col.notNull())
     .addColumn('block', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint(`${commitBlockTable}_pkey`, [
+      'creator',
       'commit',
       'block',
-      'creator',
     ])
     .execute()
   await db.schema
@@ -26,8 +26,8 @@ export async function up(db: any): Promise<void> {
     .addColumn('prev', 'varchar')
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint(`${commitHistoryTable}_pkey`, [
-      'commit',
       'creator',
+      'commit',
     ])
     .execute()
 

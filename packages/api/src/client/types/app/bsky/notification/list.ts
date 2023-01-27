@@ -40,11 +40,10 @@ export interface Notification {
   uri: string
   cid: string
   author: AppBskyActorRef.WithInfo
-  /** Expected values are 'vote', 'repost', 'trend', 'follow', 'invite', 'mention' and 'reply'. */
+  /** Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'. */
   reason:
     | 'vote'
     | 'repost'
-    | 'trend'
     | 'follow'
     | 'invite'
     | 'mention'

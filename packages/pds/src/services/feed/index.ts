@@ -63,33 +63,6 @@ export class FeedService {
       ])
   }
 
-  selectTrendQb() {
-    const { ref } = this.db.db.dynamic
-    return this.db.db
-      .selectFrom('trend')
-      .innerJoin('post', 'post.uri', 'trend.subject')
-      .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
-      .innerJoin(
-        'repo_root as originator_repo',
-        'originator_repo.did',
-        'trend.creator',
-      )
-      .innerJoin('record as post_record', 'post_record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('author_repo')))
-      .where(notSoftDeletedClause(ref('originator_repo')))
-      .where(notSoftDeletedClause(ref('post_record')))
-      .select([
-        sql<FeedItemType>`${'trend'}`.as('type'),
-        'post.uri as postUri',
-        'post.cid as postCid',
-        'trend.creator as originatorDid',
-        'post.creator as authorDid',
-        'post.replyParent as replyParent',
-        'post.replyRoot as replyRoot',
-        'trend.indexedAt as cursor',
-      ])
-  }
-
   async getActorViews(
     dids: string[],
     requester: string,
