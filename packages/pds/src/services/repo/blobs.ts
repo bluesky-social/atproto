@@ -2,7 +2,7 @@ import stream from 'stream'
 import { CID } from 'multiformats/cid'
 import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
-import { BlobStore } from '@atproto/repo'
+import { BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { sha256Stream } from '@atproto/crypto'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
@@ -53,7 +53,10 @@ export class RepoBlobs {
   async processWriteBlobs(did: string, commit: CID, writes: PreparedWrite[]) {
     const blobPromises: Promise<void>[] = []
     for (const write of writes) {
-      if (write.action === 'create' || write.action === 'update') {
+      if (
+        write.action === WriteOpAction.Create ||
+        write.action === WriteOpAction.Update
+      ) {
         for (const blob of write.blobs) {
           blobPromises.push(this.verifyBlobAndMakePermanent(blob))
           blobPromises.push(this.associateBlob(blob, write.uri, commit, did))

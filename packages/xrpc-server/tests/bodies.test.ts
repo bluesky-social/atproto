@@ -2,7 +2,7 @@ import * as http from 'http'
 import { Readable } from 'stream'
 import { gzipSync } from 'zlib'
 import xrpc from '@atproto/xrpc'
-import { bytesToStream, cidForData } from '@atproto/common'
+import { bytesToStream, cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
@@ -113,7 +113,7 @@ describe('Bodies', () => {
       for await (const data of ctx.input.body) {
         buffers.push(data)
       }
-      const cid = await cidForData(Buffer.concat(buffers))
+      const cid = await cidForCbor(Buffer.concat(buffers))
       return {
         encoding: 'json',
         body: { cid: cid.toString() },
@@ -169,7 +169,7 @@ describe('Bodies', () => {
 
   it('supports blobs and compression', async () => {
     const bytes = randomBytes(1024)
-    const expectedCid = await cidForData(bytes)
+    const expectedCid = await cidForCbor(bytes)
 
     const { data: uncompressed } = await client.call(
       'io.example.blobTest',

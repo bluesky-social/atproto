@@ -9,6 +9,7 @@ import {
   PreparedWrite,
 } from '../../../repo'
 import AppContext from '../../../context'
+import { WriteOpAction } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describe(async ({ params }) => {
@@ -112,8 +113,9 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const authStore = ctx.getAuthstore(did)
-      const hasUpdate = tx.writes.some((write) => write.action === 'update')
+      const hasUpdate = tx.writes.some(
+        (write) => write.action === WriteOpAction.Update,
+      )
       if (hasUpdate) {
         throw new InvalidRequestError(`Updates are not yet supported.`)
       }
@@ -122,7 +124,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         writes = await Promise.all(
           tx.writes.map((write) => {
-            if (write.action === 'create') {
+            if (write.action === WriteOpAction.Create) {
               return repo.prepareCreate({
                 did,
                 collection: write.collection,
@@ -130,7 +132,7 @@ export default function (server: Server, ctx: AppContext) {
                 rkey: write.rkey,
                 validate,
               })
-            } else if (write.action === 'delete') {
+            } else if (write.action === WriteOpAction.Delete) {
               return repo.prepareDelete({
                 did,
                 collection: write.collection,
@@ -153,7 +155,7 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
         const repoTxn = ctx.services.repo(dbTxn)
-        await repoTxn.processWrites(did, authStore, writes, now)
+        await repoTxn.processWrites(did, writes, now)
       })
     },
   })
@@ -168,7 +170,6 @@ export default function (server: Server, ctx: AppContext) {
       if (did !== requester) {
         throw new AuthRequiredError()
       }
-      const authStore = ctx.getAuthstore(did)
       if (validate === false) {
         throw new InvalidRequestError(
           'Unvalidated writes are not yet supported.',
@@ -197,7 +198,7 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.db.transaction(async (dbTxn) => {
         const repoTxn = ctx.services.repo(dbTxn)
-        await repoTxn.processWrites(did, authStore, [write], now)
+        await repoTxn.processWrites(did, [write], now)
       })
 
       return {
@@ -220,15 +221,10 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError()
       }
 
-      const authStore = ctx.getAuthstore(did)
       const now = new Date().toISOString()
-
       const write = await repo.prepareDelete({ did, collection, rkey })
-
       await ctx.db.transaction(async (dbTxn) => {
-        await ctx.services
-          .repo(dbTxn)
-          .processWrites(did, authStore, [write], now)
+        await ctx.services.repo(dbTxn).processWrites(did, [write], now)
       })
     },
   })

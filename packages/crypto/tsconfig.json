@@ -5,5 +5,8 @@
     "outDir": "./dist", // Your outDir,
     "emitDeclarationOnly": true
   },
-  "include": ["./src","__tests__/**/**.ts"]
+  "include": ["./src","__tests__/**/**.ts"],
+  "references": [
+    { "path": "../crypto/tsconfig.build.json" }
+  ]
 }

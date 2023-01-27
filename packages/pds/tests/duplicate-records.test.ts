@@ -2,7 +2,7 @@ import { AtUri } from '@atproto/uri'
 import { CloseFn, runTestServer } from './_util'
 import { Database } from '../src'
 import * as lex from '../src/lexicon/lexicons'
-import { cidForData, TID, valueToIpldBytes } from '@atproto/common'
+import { cidForCbor, TID, cborEncode } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { APP_BSKY_GRAPH } from '../src/lexicon'
 import { Services } from '../src/services'
@@ -37,8 +37,8 @@ describe('duplicate record', () => {
   }
 
   const putBlock = async (db: Database, data: object): Promise<CID> => {
-    const cid = await cidForData(data)
-    const bytes = await valueToIpldBytes(data)
+    const cid = await cidForCbor(data)
+    const bytes = await cborEncode(data)
     await db.db
       .insertInto('ipld_block')
       .values({

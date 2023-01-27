@@ -1,5 +1,5 @@
-import { DidableKey } from '@atproto/auth'
 import * as plc from '@atproto/plc'
+import * as crypto from '@atproto/crypto'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
@@ -14,7 +14,7 @@ export class AppContext {
     private opts: {
       db: Database
       blobstore: BlobStore
-      keypair: DidableKey
+      keypair: crypto.Keypair
       auth: auth.ServerAuth
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
@@ -32,7 +32,7 @@ export class AppContext {
     return this.opts.blobstore
   }
 
-  get keypair(): DidableKey {
+  get keypair(): crypto.Keypair {
     return this.opts.keypair
   }
 
@@ -78,10 +78,6 @@ export class AppContext {
 
   get plcClient(): plc.PlcClient {
     return new plc.PlcClient(this.cfg.didPlcUrl)
-  }
-
-  getAuthstore(did: string) {
-    return this.auth.verifier.loadAuthStore(this.keypair, [], did)
   }
 }
 

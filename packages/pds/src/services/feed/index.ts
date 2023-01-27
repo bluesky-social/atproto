@@ -252,7 +252,7 @@ export class FeedService {
       uri: post.uri,
       cid: post.cid,
       author: author,
-      record: common.ipldBytesToRecord(post.recordBytes),
+      record: common.cborDecode(post.recordBytes),
       embed: embeds[uri],
       replyCount: post.replyCount,
       repostCount: post.repostCount,

@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { ipldBytesToRecord } from '@atproto/common'
+import { cborBytesToRecord } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -78,10 +78,10 @@ export class ModerationViews {
       const { email, declarationBytes, profileBytes } = infoByDid[r.did] ?? {}
       const relatedRecords: object[] = []
       if (declarationBytes) {
-        relatedRecords.push(ipldBytesToRecord(declarationBytes))
+        relatedRecords.push(cborBytesToRecord(declarationBytes))
       }
       if (profileBytes) {
-        relatedRecords.push(ipldBytesToRecord(profileBytes))
+        relatedRecords.push(cborBytesToRecord(profileBytes))
       }
       return {
         did: r.did,

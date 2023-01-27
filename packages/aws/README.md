@@ -1,3 +1,3 @@
 # AWS KMS
 
-A DidableKeypair-compatible wrapper for AWS KMS.
+A Keypair-compatible wrapper for AWS KMS.

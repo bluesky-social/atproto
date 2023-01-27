@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { cidForData, TID } from '@atproto/common'
+import { cidForCbor, TID } from '@atproto/common'
 import {
   PreparedCreate,
   PreparedUpdate,
@@ -14,10 +14,11 @@ import {
 import * as lex from '../lexicon/lexicons'
 import { LexiconDefNotFoundError } from '@atproto/lexicon'
 import {
-  DeleteOp,
+  RecordDeleteOp,
   RecordCreateOp,
   RecordUpdateOp,
   RecordWriteOp,
+  WriteOpAction,
 } from '@atproto/repo'
 
 // @TODO do this dynamically off of schemas
@@ -131,9 +132,9 @@ export const prepareCreate = async (opts: {
   }
   const rkey = opts.rkey || determineRkey(collection)
   return {
-    action: 'create',
+    action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForData(record),
+    cid: await cidForCbor(record),
     record,
     blobs: blobsForWrite(record),
   }
@@ -152,9 +153,9 @@ export const prepareUpdate = async (opts: {
     assertValidRecord(record)
   }
   return {
-    action: 'update',
+    action: WriteOpAction.Update,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForData(record),
+    cid: await cidForCbor(record),
     record,
     blobs: blobsForWrite(record),
   }
@@ -167,38 +168,38 @@ export const prepareDelete = (opts: {
 }): PreparedDelete => {
   const { did, collection, rkey } = opts
   return {
-    action: 'delete',
+    action: WriteOpAction.Delete,
     uri: AtUri.make(did, collection, rkey),
   }
 }
 
 export const createWriteToOp = (write: PreparedCreate): RecordCreateOp => ({
-  action: 'create',
+  action: WriteOpAction.Create,
   collection: write.uri.collection,
   rkey: write.uri.rkey,
-  value: write.record,
+  record: write.record,
 })
 
 export const updateWriteToOp = (write: PreparedUpdate): RecordUpdateOp => ({
-  action: 'update',
+  action: WriteOpAction.Update,
   collection: write.uri.collection,
   rkey: write.uri.rkey,
-  value: write.record,
+  record: write.record,
 })
 
-export const deleteWriteToOp = (write: PreparedDelete): DeleteOp => ({
-  action: 'delete',
+export const deleteWriteToOp = (write: PreparedDelete): RecordDeleteOp => ({
+  action: WriteOpAction.Delete,
   collection: write.uri.collection,
   rkey: write.uri.rkey,
 })
 
 export const writeToOp = (write: PreparedWrite): RecordWriteOp => {
   switch (write.action) {
-    case 'create':
+    case WriteOpAction.Create:
       return createWriteToOp(write)
-    case 'update':
+    case WriteOpAction.Update:
       return updateWriteToOp(write)
-    case 'delete':
+    case WriteOpAction.Delete:
       return deleteWriteToOp(write)
     default:
       throw new Error(`Unrecognized action: ${write}`)

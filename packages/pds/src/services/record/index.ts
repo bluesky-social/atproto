@@ -147,7 +147,7 @@ export class RecordService {
       return {
         uri: row.uri,
         cid: row.cid,
-        value: common.ipldBytesToRecord(row.content),
+        value: common.cborDecode(row.content),
       }
     })
   }
@@ -180,7 +180,7 @@ export class RecordService {
     return {
       uri: record.uri,
       cid: record.cid,
-      value: common.ipldBytesToRecord(record.content),
+      value: common.cborDecode(record.content),
       indexedAt: record.indexedAt,
       takedownId: record.takedownId,
     }

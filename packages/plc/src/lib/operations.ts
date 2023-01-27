@@ -1,6 +1,6 @@
 import * as cbor from '@ipld/dag-cbor'
 import * as uint8arrays from 'uint8arrays'
-import { DidableKey, sha256 } from '@atproto/crypto'
+import { Keypair, sha256 } from '@atproto/crypto'
 import * as t from './types'
 
 export const didForCreateOp = async (op: t.CreateOp, truncate = 24) => {
@@ -12,7 +12,7 @@ export const didForCreateOp = async (op: t.CreateOp, truncate = 24) => {
 
 export const signOperation = async (
   op: t.UnsignedOperation,
-  signingKey: DidableKey,
+  signingKey: Keypair,
 ): Promise<t.Operation> => {
   const data = new Uint8Array(cbor.encode(op))
   const sig = await signingKey.sign(data)
@@ -23,7 +23,7 @@ export const signOperation = async (
 }
 
 export const create = async (
-  signingKey: DidableKey,
+  signingKey: Keypair,
   recoveryKey: string,
   handle: string,
   service: string,
@@ -43,7 +43,7 @@ export const create = async (
 export const rotateSigningKey = async (
   newKey: string,
   prev: string,
-  signingKey: DidableKey,
+  signingKey: Keypair,
 ): Promise<t.Operation> => {
   const op: t.UnsignedRotateSigningKeyOp = {
     type: 'rotate_signing_key',
@@ -56,7 +56,7 @@ export const rotateSigningKey = async (
 export const rotateRecoveryKey = async (
   newKey: string,
   prev: string,
-  signingKey: DidableKey,
+  signingKey: Keypair,
 ): Promise<t.Operation> => {
   const op: t.UnsignedRotateRecoveryKeyOp = {
     type: 'rotate_recovery_key',
@@ -69,7 +69,7 @@ export const rotateRecoveryKey = async (
 export const updateHandle = async (
   handle: string,
   prev: string,
-  signingKey: DidableKey,
+  signingKey: Keypair,
 ): Promise<t.Operation> => {
   const op: t.UnsignedUpdateHandleOp = {
     type: 'update_handle',
@@ -82,7 +82,7 @@ export const updateHandle = async (
 export const updateAtpPds = async (
   service: string,
   prev: string,
-  signingKey: DidableKey,
+  signingKey: Keypair,
 ): Promise<t.Operation> => {
   const op: t.UnsignedUpdateAtpPdsOp = {
     type: 'update_atp_pds',

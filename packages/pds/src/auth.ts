@@ -1,4 +1,3 @@
-import * as auth from '@atproto/auth'
 import * as crypto from '@atproto/crypto'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as uint8arrays from 'uint8arrays'
@@ -35,13 +34,11 @@ export class ServerAuth {
   private _secret: string
   private _adminPass: string
   didResolver: DidResolver
-  verifier: auth.Verifier
 
   constructor(opts: ServerAuthOpts) {
     this._secret = opts.jwtSecret
     this._adminPass = opts.adminPass
     this.didResolver = opts.didResolver
-    this.verifier = new auth.Verifier({ didResolver: opts.didResolver })
   }
 
   createAccessToken(did: string, expiresIn?: string | number) {

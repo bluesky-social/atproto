@@ -46,9 +46,11 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
+import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
+import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
-import * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
@@ -125,9 +127,11 @@ export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 export * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 export * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 export * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
+export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
+export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-export * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
-export * as ComAtprotoSyncUpdateRepo from './types/com/atproto/sync/updateRepo'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
@@ -662,6 +666,50 @@ export class SyncNS {
     this._service = service
   }
 
+  getCheckout(
+    params?: ComAtprotoSyncGetCheckout.QueryParams,
+    opts?: ComAtprotoSyncGetCheckout.CallOptions,
+  ): Promise<ComAtprotoSyncGetCheckout.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getCheckout', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetCheckout.toKnownErr(e)
+      })
+  }
+
+  getCommitPath(
+    params?: ComAtprotoSyncGetCommitPath.QueryParams,
+    opts?: ComAtprotoSyncGetCommitPath.CallOptions,
+  ): Promise<ComAtprotoSyncGetCommitPath.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getCommitPath', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetCommitPath.toKnownErr(e)
+      })
+  }
+
+  getHead(
+    params?: ComAtprotoSyncGetHead.QueryParams,
+    opts?: ComAtprotoSyncGetHead.CallOptions,
+  ): Promise<ComAtprotoSyncGetHead.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getHead', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetHead.toKnownErr(e)
+      })
+  }
+
+  getRecord(
+    params?: ComAtprotoSyncGetRecord.QueryParams,
+    opts?: ComAtprotoSyncGetRecord.CallOptions,
+  ): Promise<ComAtprotoSyncGetRecord.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getRecord', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetRecord.toKnownErr(e)
+      })
+  }
+
   getRepo(
     params?: ComAtprotoSyncGetRepo.QueryParams,
     opts?: ComAtprotoSyncGetRepo.CallOptions,
@@ -670,28 +718,6 @@ export class SyncNS {
       .call('com.atproto.sync.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetRepo.toKnownErr(e)
-      })
-  }
-
-  getRoot(
-    params?: ComAtprotoSyncGetRoot.QueryParams,
-    opts?: ComAtprotoSyncGetRoot.CallOptions,
-  ): Promise<ComAtprotoSyncGetRoot.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.getRoot', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetRoot.toKnownErr(e)
-      })
-  }
-
-  updateRepo(
-    data?: ComAtprotoSyncUpdateRepo.InputSchema,
-    opts?: ComAtprotoSyncUpdateRepo.CallOptions,
-  ): Promise<ComAtprotoSyncUpdateRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.updateRepo', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncUpdateRepo.toKnownErr(e)
       })
   }
 }

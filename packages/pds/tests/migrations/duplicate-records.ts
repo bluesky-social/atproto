@@ -1,6 +1,7 @@
 import { AtUri } from '@atproto/uri'
+import * as crypto from '@atproto/crypto'
+import { cidForCbor, TID } from '@atproto/common'
 import { Database, MemoryBlobStore } from '../../src'
-import { cidForData, TID } from '@atproto/common'
 import * as lex from '../../src/lexicon/lexicons'
 import { APP_BSKY_GRAPH } from '../../src/lexicon'
 import SqlMessageQueue from '../../src/event-stream/message-queue'
@@ -24,6 +25,7 @@ describe('duplicate record', () => {
     }
     messageQueue = new SqlMessageQueue('pds', db)
     services = createServices({
+      keypair: await crypto.EcdsaKeypair.create(),
       messageQueue,
       blobstore: new MemoryBlobStore(),
       imgUriBuilder: new ImageUriBuilder('http://x', '00', '00'),
@@ -40,7 +42,7 @@ describe('duplicate record', () => {
 
   const indexRecord = async (record: any, times: number): Promise<void> => {
     const collection = record.$type
-    const cid = await cidForData(record)
+    const cid = await cidForCbor(record)
     await db.transaction(async (tx) => {
       const recordTx = services.record(tx)
       for (let i = 0; i < times; i++) {
@@ -52,7 +54,7 @@ describe('duplicate record', () => {
 
   it('has duplicate records', async () => {
     const subjectUri = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
-    const subjectCid = await cidForData({ test: 'blah' })
+    const subjectCid = await cidForCbor({ test: 'blah' })
     const subjectDid = 'did:example:bob'
     const repost = {
       $type: lex.ids.AppBskyFeedRepost,

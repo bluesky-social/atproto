@@ -1,13 +1,22 @@
-export interface Def<T> {
+import { ZodError } from 'zod'
+
+export interface Checkable<T> {
   parse: (obj: unknown) => T
-  safeParse: (obj: unknown) => { success: boolean }
+  safeParse: (
+    obj: unknown,
+  ) => { success: true; data: T } | { success: false; error: ZodError }
 }
 
-export const is = <T>(obj: unknown, def: Def<T>): obj is T => {
+export interface Def<T> {
+  name: string
+  schema: Checkable<T>
+}
+
+export const is = <T>(obj: unknown, def: Checkable<T>): obj is T => {
   return def.safeParse(obj).success
 }
 
-export const assure = <T>(def: Def<T>, obj: unknown): T => {
+export const assure = <T>(def: Checkable<T>, obj: unknown): T => {
   return def.parse(obj)
 }
 

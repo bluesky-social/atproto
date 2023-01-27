@@ -67,9 +67,28 @@ export const asyncFilter = async <T>(
 export const isErrnoException = (
   err: unknown,
 ): err is NodeJS.ErrnoException => {
-  return !!err && 'code' in err
+  return !!err && err['code']
 }
 
 export const errHasMsg = (err: unknown, msg: string): boolean => {
   return !!err && typeof err === 'object' && err['message'] === msg
+}
+
+export const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
+  return arr.reduce((acc, cur, i) => {
+    const chunkI = Math.floor(i / chunkSize)
+    if (!acc[chunkI]) {
+      acc[chunkI] = []
+    }
+    acc[chunkI].push(cur)
+    return acc
+  }, [] as T[][])
+}
+
+export const range = (num: number): number[] => {
+  const nums: number[] = []
+  for (let i = 0; i < num; i++) {
+    nums.push(i)
+  }
+  return nums
 }

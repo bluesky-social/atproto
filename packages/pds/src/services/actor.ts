@@ -129,7 +129,7 @@ export class ActorService {
   ) {
     this.db.assertTransaction()
     log.debug({ handle, did }, 'registering did-handle')
-    const declarationCid = await common.cidForData(declaration)
+    const declarationCid = await common.cidForCbor(declaration)
     const updated = await this.db.db
       .updateTable('did_handle')
       .set({

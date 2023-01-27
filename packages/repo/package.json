@@ -22,8 +22,9 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
-    "@atproto/auth": "*",
     "@atproto/common": "*",
+    "@atproto/crypto": "*",
+    "@atproto/did-resolver": "*",
     "@atproto/nsid": "*",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
