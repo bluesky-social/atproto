@@ -2,9 +2,11 @@ import { Database } from '../../src'
 import { randomStr } from '@atproto/crypto'
 import { dataToCborBlock, TID } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
+import { Kysely } from 'kysely'
 
 describe('indexedAt on record migration', () => {
   let db: Database
+  let rawDb: Kysely<any>
 
   beforeAll(async () => {
     if (process.env.DB_POSTGRES_URL) {
@@ -17,6 +19,7 @@ describe('indexedAt on record migration', () => {
     }
 
     await db.migrateToOrThrow('_20221230T215012029Z')
+    rawDb = db.db
   })
 
   afterAll(async () => {
@@ -57,8 +60,8 @@ describe('indexedAt on record migration', () => {
       times[block.cid.toString()] = date
     }
 
-    await db.db.insertInto('ipld_block').values(blocks).execute()
-    await db.db.insertInto('record').values(records).execute()
+    await rawDb.insertInto('ipld_block').values(blocks).execute()
+    await rawDb.insertInto('record').values(records).execute()
   })
 
   it('migrates up', async () => {
@@ -66,7 +69,7 @@ describe('indexedAt on record migration', () => {
   })
 
   it('associated the date to the correct record', async () => {
-    const res = await db.db.selectFrom('record').selectAll().execute()
+    const res = await rawDb.selectFrom('record').selectAll().execute()
     res.forEach((row) => {
       expect(row.indexedAt).toEqual(times[row.cid])
     })
