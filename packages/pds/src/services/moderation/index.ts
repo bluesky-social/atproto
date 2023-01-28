@@ -287,6 +287,11 @@ export class ModerationService {
       .set({ takedownId: null })
       .where('uri', '=', info.uri.toString())
       .execute()
+    await this.db.db
+      .updateTable('repo_blob')
+      .set({ takedownId: null })
+      .where('recordUri', '=', info.uri.toString())
+      .execute()
   }
 
   async resolveReports(info: {
