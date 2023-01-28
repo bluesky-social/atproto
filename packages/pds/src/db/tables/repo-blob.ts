@@ -3,6 +3,7 @@ export interface RepoBlob {
   recordUri: string
   commit: string
   did: string
+  takedownId: number | null
 }
 
 export const tableName = 'repo_blob'

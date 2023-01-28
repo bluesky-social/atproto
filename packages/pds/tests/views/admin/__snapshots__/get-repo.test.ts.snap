@@ -21,6 +21,7 @@ Object {
           "$type": "com.atproto.repo.repoRef",
           "did": "user(0)",
         },
+        "subjectBlobCids": Array [],
       },
       Object {
         "action": "com.atproto.admin.moderationAction#acknowledge",
@@ -38,6 +39,7 @@ Object {
           "$type": "com.atproto.repo.repoRef",
           "did": "user(0)",
         },
+        "subjectBlobCids": Array [],
       },
     ],
     "reports": Array [

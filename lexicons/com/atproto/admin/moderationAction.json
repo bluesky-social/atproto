@@ -4,7 +4,7 @@
   "defs": {
     "view": {
       "type": "object",
-      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReportIds"],
+      "required": ["id", "action", "subject", "subjectBlobCids", "reason", "createdBy", "createdAt", "resolvedReportIds"],
       "properties": {
         "id": {"type": "integer"},
         "action": {
@@ -32,7 +32,7 @@
     },
     "viewDetail": {
       "type": "object",
-      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReports"],
+      "required": ["id", "action", "subject", "subjectBlobs", "reason", "createdBy", "createdAt", "resolvedReports"],
       "properties": {
         "id": {"type": "integer"},
         "action": {

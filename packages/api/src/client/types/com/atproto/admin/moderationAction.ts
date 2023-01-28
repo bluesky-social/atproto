@@ -22,7 +22,7 @@ export interface View {
     | ComAtprotoRepoRepoRef.Main
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
-  subjectBlobCids?: string[]
+  subjectBlobCids: string[]
   reason: string
   createdBy: string
   createdAt: string
@@ -54,7 +54,7 @@ export interface ViewDetail {
     | ComAtprotoAdminRepo.View
     | ComAtprotoAdminRecord.View
     | { $type: string; [k: string]: unknown }
-  subjectBlobs?: ComAtprotoAdminBlob.View[]
+  subjectBlobs: ComAtprotoAdminBlob.View[]
   reason: string
   createdBy: string
   createdAt: string

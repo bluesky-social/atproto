@@ -27,6 +27,7 @@ Object {
   ],
   "subject": Object {
     "$type": "com.atproto.admin.record#view",
+    "blobCids": Array [],
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
@@ -63,6 +64,7 @@ Object {
       "text": "hey there",
     },
   },
+  "subjectBlobs": Array [],
 }
 `;
 
@@ -134,5 +136,6 @@ Object {
       },
     ],
   },
+  "subjectBlobs": Array [],
 }
 `;

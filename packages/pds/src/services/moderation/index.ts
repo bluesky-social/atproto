@@ -129,11 +129,19 @@ export class ModerationService {
   async logAction(info: {
     action: ModerationActionRow['action']
     subject: { did: string } | { uri: AtUri; cid?: CID }
+    subjectBlobCids?: CID[]
     reason: string
     createdBy: string
     createdAt?: Date
   }): Promise<ModerationActionRow> {
-    const { action, createdBy, reason, subject, createdAt = new Date() } = info
+    const {
+      action,
+      createdBy,
+      reason,
+      subject,
+      subjectBlobCids,
+      createdAt = new Date(),
+    } = info
 
     // Resolve subject info
     let subjectInfo: SubjectInfo
@@ -146,6 +154,9 @@ export class ModerationService {
         subjectUri: null,
         subjectCid: null,
       }
+      if (subjectBlobCids?.length) {
+        throw new InvalidRequestError('Blobs do not apply to repo subjects')
+      }
     } else {
       const record = await this.services
         .record(this.db)
@@ -157,9 +168,24 @@ export class ModerationService {
         subjectUri: subject.uri.toString(),
         subjectCid: record.cid,
       }
+      if (subjectBlobCids?.length) {
+        const cidsFromSubject = await this.db.db
+          .selectFrom('repo_blob')
+          .where('recordUri', '=', subject.uri.toString())
+          .where(
+            'cid',
+            'in',
+            subjectBlobCids.map((c) => c.toString()),
+          )
+          .select('cid')
+          .execute()
+        if (cidsFromSubject.length !== subjectBlobCids.length) {
+          throw new InvalidRequestError('Blobs do not match record subject')
+        }
+      }
     }
 
-    return await this.db.db
+    const actionResult = await this.db.db
       .insertInto('moderation_action')
       .values({
         action,
@@ -170,6 +196,20 @@ export class ModerationService {
       })
       .returningAll()
       .executeTakeFirstOrThrow()
+
+    if (subjectBlobCids?.length) {
+      await this.db.db
+        .insertInto('moderation_action_subject_blob')
+        .values(
+          subjectBlobCids.map((cid) => ({
+            actionId: actionResult.id,
+            cid: cid.toString(),
+          })),
+        )
+        .execute()
+    }
+
+    return actionResult
   }
 
   async logReverseAction(info: {
@@ -215,13 +255,30 @@ export class ModerationService {
       .execute()
   }
 
-  async takedownRecord(info: { takedownId: number; uri: AtUri }) {
+  async takedownRecord(info: {
+    takedownId: number
+    uri: AtUri
+    blobCids?: CID[]
+  }) {
     await this.db.db
       .updateTable('record')
       .set({ takedownId: info.takedownId })
       .where('uri', '=', info.uri.toString())
       .where('takedownId', 'is', null)
       .executeTakeFirst()
+    if (info.blobCids?.length) {
+      await this.db.db
+        .updateTable('repo_blob')
+        .set({ takedownId: info.takedownId })
+        .where('recordUri', '=', info.uri.toString())
+        .where(
+          'cid',
+          'in',
+          info.blobCids.map((c) => c.toString()),
+        )
+        .where('takedownId', 'is', null)
+        .executeTakeFirst()
+    }
   }
 
   async reverseTakedownRecord(info: { uri: AtUri }) {
