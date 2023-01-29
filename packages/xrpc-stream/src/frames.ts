@@ -105,12 +105,12 @@ export class InfoFrame extends Frame {
 
 export class ErrorFrame extends Frame {
   header: ErrorFrameHeader
-  constructor(opts: { code?: string; message?: string }) {
+  constructor(opts?: { code?: string; message?: string }) {
     super()
     this.header = {
       op: FrameType.Error,
-      err: opts.code,
-      msg: opts.message,
+      err: opts?.code,
+      msg: opts?.message,
     }
   }
   get code() {

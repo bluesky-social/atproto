@@ -19,8 +19,12 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@atproto/common": "*",
     "cbor-x": "^1.5.1",
+    "ws": "^8.12.0",
     "zod": "^3.20.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/ws": "^8.5.4"
+  }
 }
