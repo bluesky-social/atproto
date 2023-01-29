@@ -1,3 +1,5 @@
+import cborx from 'cbor-x'
+import * as uint8arrays from 'uint8arrays'
 import { ErrorFrame, Frame, FrameType, InfoFrame, MessageFrame } from '../src'
 
 describe('Frames', () => {
@@ -103,5 +105,65 @@ describe('Frames', () => {
     expect(parsedFrame.code).toEqual(errorFrame.code)
     expect(parsedFrame.message).toEqual(errorFrame.message)
     expect(parsedFrame.body).toEqual(errorFrame.body)
+  })
+
+  it('parsing fails when frame is not CBOR.', async () => {
+    const bytes = Buffer.from('some utf8 bytes')
+    const emptyBytes = Buffer.from('')
+    expect(() => Frame.fromBytes(bytes)).toThrow('Unexpected end of CBOR data')
+    expect(() => Frame.fromBytes(emptyBytes)).toThrow(
+      'Unexpected end of CBOR data',
+    )
+  })
+
+  it('parsing fails when frame header is malformed.', async () => {
+    const bytes = uint8arrays.concat([
+      cborx.encode({ op: -2 }), // Unknown op
+      cborx.encode({ a: 'b', c: [1, 2, 3] }),
+    ])
+
+    expect(() => Frame.fromBytes(bytes)).toThrow('Invalid frame header:')
+  })
+
+  it('parsing fails when frame is missing body.', async () => {
+    const messageFrame = new MessageFrame({
+      messageId: '22',
+      type: 'com.object',
+      body: { a: 'b', c: [1, 2, 3] },
+    })
+
+    const headerBytes = cborx.encode(messageFrame.header)
+
+    expect(() => Frame.fromBytes(headerBytes)).toThrow('Missing frame body')
+  })
+
+  it('parsing fails when frame has too many data items.', async () => {
+    const messageFrame = new MessageFrame({
+      messageId: '22',
+      type: 'com.object',
+      body: { a: 'b', c: [1, 2, 3] },
+    })
+
+    const bytes = uint8arrays.concat([
+      messageFrame.toBytes(),
+      cborx.encode({ d: 'e', f: [4, 5, 6] }),
+    ])
+
+    expect(() => Frame.fromBytes(bytes)).toThrow(
+      'Too many CBOR data items in frame',
+    )
+  })
+
+  it('parsing fails when error frame has non-empty body.', async () => {
+    const errorFrame = new ErrorFrame({ code: 'BadOops' })
+
+    const bytes = uint8arrays.concat([
+      cborx.encode(errorFrame.header),
+      cborx.encode({ a: 'b', c: [1, 2, 3] }),
+    ])
+
+    expect(() => Frame.fromBytes(bytes)).toThrow(
+      'Error frame must have an empty body',
+    )
   })
 })
