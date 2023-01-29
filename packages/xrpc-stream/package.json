@@ -21,6 +21,7 @@
   "dependencies": {
     "@atproto/common": "*",
     "cbor-x": "^1.5.1",
+    "uint8arrays": "^4.0.3",
     "ws": "^8.12.0",
     "zod": "^3.20.2"
   },
