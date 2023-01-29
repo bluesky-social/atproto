@@ -1,7 +1,7 @@
 {
   "name": "@atproto/xrpc-stream",
   "version": "0.0.1",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/",
@@ -18,6 +18,9 @@
     "postpublish": "npm run update-main-to-src"
   },
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "cbor-x": "^1.5.1",
+    "zod": "^3.20.2"
+  },
   "devDependencies": {}
 }
