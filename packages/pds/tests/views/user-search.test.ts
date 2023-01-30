@@ -222,7 +222,7 @@ const declaration = {
 }
 
 const avatar =
-  'https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg'
+  'https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg'
 
 const snapTypeaheadPg = [
   {

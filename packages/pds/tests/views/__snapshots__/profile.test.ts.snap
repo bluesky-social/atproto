@@ -21,7 +21,7 @@ Object {
 
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -61,7 +61,7 @@ Object {
 
 exports[`pds profile views fetches own profile 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -82,8 +82,8 @@ Object {
 
 exports[`pds profile views handles avatars & banners 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-  "banner": "https://pds.public.url/image/7Slq88VYUyM7FpJ6fa7UDU-vmK5T4XuLSmecLayB0w0/rs:fill:1500:500:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+  "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "banner": "https://pds.public.url/image/ejOTK5gy9tlarOXM6MhrPOs0C18LFpfd9qQ9lBrcIBE/rs:fill:3000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -104,7 +104,7 @@ Object {
 
 exports[`pds profile views handles partial updates 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
@@ -125,7 +125,7 @@ Object {
 
 exports[`pds profile views updates profile 1`] = `
 Object {
-  "avatar": "https://pds.public.url/image/nFNFXt5_l4kN8k1Ar8Gb8tfEj8Z0woTMDD3UoX5nNqo/rs:fill:500:500:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "app.bsky.system.actorUser",
