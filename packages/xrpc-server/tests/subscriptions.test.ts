@@ -1,8 +1,8 @@
 import * as http from 'http'
 import { WebSocket, createWebSocketStream } from 'ws'
+import { createFrameStream, Frame } from '@atproto/xrpc-stream'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
-import { Frame } from '@atproto/xrpc-stream'
 
 const LEXICONS = [
   {
@@ -37,7 +37,6 @@ describe('Subscriptions', () => {
   server.streamMethod('io.example.stream1', async function* ({ params }) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
-      await new Promise(setImmediate) // @TODO frames combined in test without this wait
       yield { count: i }
     }
   })
@@ -54,8 +53,8 @@ describe('Subscriptions', () => {
     )
 
     const frames: Frame[] = []
-    for await (const bytes of createWebSocketStream(ws)) {
-      frames.push(Frame.fromBytes(bytes))
+    for await (const frame of createFrameStream(ws)) {
+      frames.push(frame)
     }
 
     const items = frames.map((frame) => frame.body)
