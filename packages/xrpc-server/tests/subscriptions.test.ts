@@ -68,4 +68,14 @@ describe('Subscriptions', () => {
       { count: 0 },
     ])
   })
+
+  it('does not websocket upgrade at bad endpoint', async () => {
+    const ws = new WebSocket('ws://localhost:8895/xrpc/does.not.exist')
+    const drainStream = async () => {
+      for await (const bytes of createWebSocketStream(ws)) {
+        bytes // drain
+      }
+    }
+    expect(drainStream).rejects.toThrow('ECONNREFUSED')
+  })
 })
