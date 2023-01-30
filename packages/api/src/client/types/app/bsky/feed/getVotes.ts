@@ -2,9 +2,6 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
@@ -47,14 +44,4 @@ export interface Vote {
   createdAt: string
   actor: AppBskyActorRef.WithInfo
   [k: string]: unknown
-}
-
-export function isVote(v: unknown): v is Vote {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.getVotes#vote'
-  )
-}
-
-export function validateVote(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.getVotes#vote', v)
 }

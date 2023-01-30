@@ -2983,6 +2983,28 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedHide: {
+    lexicon: 1,
+    id: 'app.bsky.feed.hide',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Hide a post from future timelines.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['pid'],
+            properties: {
+              pid: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedPost: {
     lexicon: 1,
     id: 'app.bsky.feed.post',
@@ -3855,6 +3877,7 @@ export const ids = {
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedGetVotes: 'app.bsky.feed.getVotes',
+  AppBskyFeedHide: 'app.bsky.feed.hide',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSetVote: 'app.bsky.feed.setVote',

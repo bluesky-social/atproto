@@ -2,9 +2,6 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
-import { lexicons } from '../../../../lexicons'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
@@ -50,16 +47,4 @@ export interface Record {
   cid: string
   value: {}
   [k: string]: unknown
-}
-
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.repo.listRecords#record'
-  )
-}
-
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.repo.listRecords#record', v)
 }

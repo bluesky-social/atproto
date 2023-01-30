@@ -13,44 +13,63 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
       const requester = auth.credentials.did
-
-      if (algorithm && algorithm !== FeedAlgorithm.ReverseChronological) {
-        throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
-      }
-
+            
       const feedService = ctx.services.feed(ctx.db)
-
-      const followingIdsSubquery = db
-        .selectFrom('follow')
-        .select('follow.subjectDid')
-        .where('follow.creator', '=', requester)
-
+      
+      // which users are muted?
       const mutedQb = db
         .selectFrom('mute')
         .select('did')
         .where('mutedByDid', '=', requester)
-
-      const postsQb = feedService
-        .selectPostQb()
-        .where((qb) =>
-          qb
-            .where('creator', '=', requester)
-            .orWhere('creator', 'in', followingIdsSubquery),
-        )
-        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide posts of muted actors
-
-      const repostsQb = feedService
-        .selectRepostQb()
-        .where((qb) =>
-          qb
-            .where('repost.creator', '=', requester)
-            .orWhere('repost.creator', 'in', followingIdsSubquery),
-        )
-        .whereNotExists(
-          mutedQb
-            .whereRef('did', '=', ref('post.creator')) // Hide reposts of or by muted actors
-            .orWhereRef('did', '=', ref('repost.creator')),
-        )
+      
+      let postQb;
+      switch(algorithm) {
+        case FeedAlgorithm.ReverseChronological: {
+          const followingIdsSubquery = db
+            .selectFrom('follow')
+            .select('follow.subjectDid')
+            .where('follow.creator', '=', requester)
+          
+          postsQb = feedService
+            .selectPostQb()
+            .where((qb) =>
+              qb
+                .where('creator', '=', requester)
+                .orWhere('creator', 'in', followingIdsSubquery),
+            )
+            .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide posts of muted actors
+            
+          repostsQb = feedService
+            .selectRepostQb()
+            .where((qb) =>
+              qb
+                .where('repost.creator', '=', requester)
+                .orWhere('repost.creator', 'in', followingIdsSubquery),
+            )
+            .whereNotExists(
+              mutedQb
+                .whereRef('did', '=', ref('post.creator')) // Hide reposts of or by muted actors
+                .orWhereRef('did', '=', ref('repost.creator')),
+            )
+        }
+        
+        case FeedAlgorithm.AllPosts: {
+          postsQb = feedService
+            .selectPostQb()
+            .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide posts of muted actors
+            
+          repostsQb = feedService
+            .selectRepostQb()
+            .whereNotExists(
+              mutedQb
+                .whereRef('did', '=', ref('post.creator')) // Hide reposts of or by muted actors
+                .orWhereRef('did', '=', ref('repost.creator')),
+            )
+        }
+        default: {
+          throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
+        }
+      }
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db

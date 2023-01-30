@@ -2,23 +2,23 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import * as ComAtprotoAdminModerationAction from './moderationAction'
 
-export interface QueryParams {
-  id: number
+export interface QueryParams {}
+
+export interface InputSchema {
+  pid: string
+  [k: string]: unknown
 }
-
-export type InputSchema = undefined
-export type OutputSchema = ComAtprotoAdminModerationAction.ViewDetail
 
 export interface CallOptions {
   headers?: Headers
+  qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {
   success: boolean
   headers: Headers
-  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

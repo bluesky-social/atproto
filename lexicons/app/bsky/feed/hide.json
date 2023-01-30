@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.hide",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Hide a post from future timelines.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["pid"],
+          "properties": {
+            "pid": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

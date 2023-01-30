@@ -66,6 +66,7 @@ import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
+import * as AppBskyFeedHide from './types/app/bsky/feed/hide'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
@@ -147,6 +148,7 @@ export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
+export * as AppBskyFeedHide from './types/app/bsky/feed/hide'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
@@ -951,6 +953,17 @@ export class FeedNS {
       .call('app.bsky.feed.getVotes', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetVotes.toKnownErr(e)
+      })
+  }
+
+  hide(
+    data?: AppBskyFeedHide.InputSchema,
+    opts?: AppBskyFeedHide.CallOptions,
+  ): Promise<AppBskyFeedHide.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.hide', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyFeedHide.toKnownErr(e)
       })
   }
 
