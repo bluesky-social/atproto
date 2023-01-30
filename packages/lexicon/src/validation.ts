@@ -1,5 +1,10 @@
 import { Lexicons } from './lexicons'
-import { LexRecord, LexXrpcProcedure, LexXrpcQuery } from './types'
+import {
+  LexRecord,
+  LexXrpcProcedure,
+  LexXrpcQuery,
+  LexXrpcSubscription,
+} from './types'
 import { assertValidOneOf } from './util'
 
 import * as ComplexValidators from './validators/complex'
@@ -16,7 +21,7 @@ export function assertValidRecord(
 
 export function assertValidXrpcParams(
   lexicons: Lexicons,
-  def: LexXrpcProcedure | LexXrpcQuery,
+  def: LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
   value: unknown,
 ) {
   if (def.parameters) {

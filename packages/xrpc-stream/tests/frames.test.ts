@@ -1,4 +1,4 @@
-import cborx from 'cbor-x'
+import * as cborx from 'cbor-x'
 import * as uint8arrays from 'uint8arrays'
 import { ErrorFrame, Frame, FrameType, InfoFrame, MessageFrame } from '../src'
 

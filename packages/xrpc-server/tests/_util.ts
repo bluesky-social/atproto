@@ -9,6 +9,7 @@ export async function createServer(
   const app = express()
   app.use(server.router)
   const httpServer = app.listen(port)
+  server.enableStreaming(httpServer)
   await new Promise((r) => httpServer.on('listening', r))
   return httpServer
 }

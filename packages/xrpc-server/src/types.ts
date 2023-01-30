@@ -1,3 +1,4 @@
+import { IncomingMessage } from 'http'
 import express from 'express'
 import { isHttpError } from 'http-errors'
 import zod from 'zod'
@@ -52,6 +53,12 @@ export type XRPCHandler = (ctx: {
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput | undefined
 
+export type XRPCStreamHandler = (ctx: {
+  auth: HandlerAuth | undefined
+  params: Params
+  req: IncomingMessage
+}) => AsyncIterable<unknown>
+
 export type AuthOutput = HandlerAuth | HandlerError
 
 export type AuthVerifier = (ctx: {
@@ -59,9 +66,18 @@ export type AuthVerifier = (ctx: {
   res: express.Response
 }) => Promise<AuthOutput> | AuthOutput
 
+export type StreamAuthVerifier = (ctx: {
+  req: IncomingMessage
+}) => Promise<AuthOutput> | AuthOutput
+
 export type XRPCHandlerConfig = {
   auth?: AuthVerifier
   handler: XRPCHandler
+}
+
+export type XRPCStreamHandlerConfig = {
+  auth?: StreamAuthVerifier
+  handler: XRPCStreamHandler
 }
 
 export class XRPCError extends Error {

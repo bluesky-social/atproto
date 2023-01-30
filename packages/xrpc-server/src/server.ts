@@ -1,10 +1,22 @@
+import http from 'http'
 import { Readable } from 'stream'
 import express, {
   ErrorRequestHandler,
   NextFunction,
   RequestHandler,
 } from 'express'
-import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
+import {
+  Lexicons,
+  LexXrpcProcedure,
+  LexXrpcQuery,
+  LexXrpcSubscription,
+} from '@atproto/lexicon'
+import {
+  ErrorFrame,
+  Frame,
+  MessageFrame,
+  XrpcStreamServer,
+} from '@atproto/xrpc-stream'
 import {
   XRPCHandler,
   XRPCError,
@@ -18,8 +30,15 @@ import {
   AuthVerifier,
   isHandlerError,
   Options,
+  XRPCStreamHandlerConfig,
+  XRPCStreamHandler,
 } from './types'
-import { decodeQueryParams, validateInput, validateOutput } from './util'
+import {
+  decodeQueryParams,
+  getQueryParams,
+  validateInput,
+  validateOutput,
+} from './util'
 import log from './logger'
 
 export function createServer(lexicons?: unknown[], options?: Options) {
@@ -29,6 +48,7 @@ export function createServer(lexicons?: unknown[], options?: Options) {
 export class Server {
   router = express.Router()
   routes = express.Router()
+  subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
   options: Options
   middleware: Record<'json' | 'text', RequestHandler>
@@ -47,6 +67,18 @@ export class Server {
     }
   }
 
+  // @TODO redesign this api, streaming should not have to be enabled
+  enableStreaming(server: http.Server) {
+    server.on('upgrade', async (req, socket, head) => {
+      const url = new URL(req.url || '', 'http://x')
+      const sub = this.subscriptions.get(url.pathname.replace('/xrpc/', ''))
+      if (!sub) return socket.destroy()
+      sub.wss.handleUpgrade(req, socket, head, (ws) =>
+        sub.wss.emit('connection', ws, req),
+      )
+    })
+  }
+
   // handlers
   // =
 
@@ -58,10 +90,32 @@ export class Server {
     const config =
       typeof configOrFn === 'function' ? { handler: configOrFn } : configOrFn
     const def = this.lex.getDef(nsid)
-    if (!def || (def.type !== 'query' && def.type !== 'procedure')) {
+    if (def?.type === 'query' || def?.type === 'procedure') {
+      this.addRoute(nsid, def, config)
+    } else {
       throw new Error(`Lex def for ${nsid} is not a query or a procedure`)
     }
-    this.addRoute(nsid, def, config)
+  }
+
+  streamMethod(
+    nsid: string,
+    configOrFn: XRPCStreamHandlerConfig | XRPCStreamHandler,
+  ) {
+    this.addStreamMethod(nsid, configOrFn)
+  }
+
+  addStreamMethod(
+    nsid: string,
+    configOrFn: XRPCStreamHandlerConfig | XRPCStreamHandler,
+  ) {
+    const config =
+      typeof configOrFn === 'function' ? { handler: configOrFn } : configOrFn
+    const def = this.lex.getDef(nsid)
+    if (def?.type === 'subscription') {
+      this.addSubscription(nsid, def, config)
+    } else {
+      throw new Error(`Lex def for ${nsid} is not a subscription`)
+    }
   }
 
   // schemas
@@ -199,6 +253,56 @@ export class Server {
         next(err)
       }
     }
+  }
+
+  protected async addSubscription(
+    nsid: string,
+    def: LexXrpcSubscription,
+    config: XRPCStreamHandlerConfig,
+  ) {
+    const assertValidXrpcParams = (params: unknown) =>
+      this.lex.assertValidXrpcParams(nsid, params)
+    this.subscriptions.set(
+      nsid,
+      new XrpcStreamServer({
+        noServer: true,
+        handler: async function* (req) {
+          try {
+            const url = new URL(req.url || '', 'http://x')
+            // authenticate request
+            const auth = await config.auth?.({ req })
+            if (isHandlerError(auth)) {
+              throw XRPCError.fromError(auth)
+            }
+            // validate request
+            const params = decodeQueryParams(
+              def,
+              getQueryParams(url.searchParams),
+            )
+            try {
+              assertValidXrpcParams(params)
+            } catch (e) {
+              throw new InvalidRequestError(String(e))
+            }
+            // stream
+            const items = config.handler({ req, params, auth })
+            for await (const item of items) {
+              if (item instanceof Frame) {
+                yield item
+              } else {
+                yield new MessageFrame({ body: item })
+              }
+            }
+          } catch (err) {
+            const xrpcError = XRPCError.fromError(err)
+            yield new ErrorFrame({
+              code: xrpcError.customErrorName,
+              message: xrpcError.message,
+            })
+          }
+        },
+      }),
+    )
   }
 }
 

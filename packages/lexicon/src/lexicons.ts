@@ -13,6 +13,7 @@ import {
   ValidationError,
   isObj,
   hasProp,
+  LexXrpcSubscription,
 } from './types'
 import {
   assertValidRecord,
@@ -166,8 +167,16 @@ export class Lexicons {
    */
   assertValidXrpcParams(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
-    const def = this.getDefOrThrow(lexUri, ['query', 'procedure'])
-    assertValidXrpcParams(this, def as LexXrpcProcedure | LexXrpcQuery, value)
+    const def = this.getDefOrThrow(lexUri, [
+      'query',
+      'procedure',
+      'subscription',
+    ])
+    assertValidXrpcParams(
+      this,
+      def as LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
+      value,
+    )
   }
 
   /**
