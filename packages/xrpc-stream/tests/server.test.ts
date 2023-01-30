@@ -1,13 +1,14 @@
 import * as http from 'http'
 import { once } from 'events'
 import { AddressInfo } from 'net'
-import { createWebSocketStream, WebSocket } from 'ws'
+import { WebSocket } from 'ws'
 import {
   ErrorFrame,
   Frame,
   InfoFrame,
   MessageFrame,
   XrpcStreamServer,
+  createFrameStream,
 } from '../src'
 
 describe('Server', () => {
@@ -34,8 +35,8 @@ describe('Server', () => {
 
     const ws = new WebSocket(`ws://localhost:${port}`)
     const frames: Frame[] = []
-    for await (const bytes of createWebSocketStream(ws)) {
-      frames.push(Frame.fromBytes(bytes))
+    for await (const frame of createFrameStream(ws)) {
+      frames.push(frame)
     }
 
     expect(frames).toEqual([
@@ -72,8 +73,8 @@ describe('Server', () => {
 
     const ws = new WebSocket(`ws://localhost:${port}`)
     const frames: Frame[] = []
-    for await (const bytes of createWebSocketStream(ws)) {
-      frames.push(Frame.fromBytes(bytes))
+    for await (const frame of createFrameStream(ws)) {
+      frames.push(frame)
     }
 
     await wait(5) // Ensure handler hasn't kept running
