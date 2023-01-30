@@ -236,4 +236,8 @@ describe('session', () => {
     expect(sessions[1]).toEqual(undefined)
     expect(client.sessionManager.active()).toEqual(false)
   })
+
+  it('reuses the client object across calls', () => {
+    expect(client).toEqual(sessionClient.service(server.url))
+  })
 })

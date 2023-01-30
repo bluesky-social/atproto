@@ -20,10 +20,26 @@ const DELETE_SESSION = 'com.atproto.session.delete'
 const CREATE_ACCOUNT = 'com.atproto.account.create'
 
 export class SessionClient extends Client {
+  private cache: Map<string, SessionServiceClient> = new Map()
+
   service(serviceUri: string | URL): SessionServiceClient {
+    const cacheKey = toCacheKey(serviceUri)
+    const inst = this.cache.get(cacheKey)
+    if (inst) {
+      return inst
+    }
     const xrpcService = new SessionXrpcServiceClient(this.xrpc, serviceUri)
-    return new SessionServiceClient(this, xrpcService)
+    const service = new SessionServiceClient(this, xrpcService)
+    this.cache.set(cacheKey, service)
+    return service
   }
+}
+
+function toCacheKey(uri: string | URL) {
+  if (typeof uri === 'string') {
+    uri = new URL(uri)
+  }
+  return uri.hostname
 }
 
 const defaultInst = new SessionClient()
