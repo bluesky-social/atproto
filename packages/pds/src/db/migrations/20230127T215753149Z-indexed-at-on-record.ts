@@ -9,14 +9,17 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   const ref = db.dynamic.ref
 
+  const indexedAtForRecordQb = db
+    .selectFrom('ipld_block')
+    .whereRef('ipld_block.cid', '=', ref('record.cid'))
+    .select('indexedAt')
+
   await db
     .updateTable('record')
     .set({
-      indexedAt: db
-        .selectFrom('ipld_block')
-        .whereRef('ipld_block.cid', '=', ref('record.cid'))
-        .select('indexedAt'),
+      indexedAt: indexedAtForRecordQb,
     })
+    .whereExists(indexedAtForRecordQb)
     .execute()
 
   await db.schema.alterTable('ipld_block').dropColumn('indexedAt').execute()
