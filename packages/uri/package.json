@@ -17,6 +17,5 @@
     "prepublish": "npm run update-main-to-dist",
     "postpublish": "npm run update-main-to-src"
   },
-  "license": "MIT",
-  "dependencies": {}
+  "license": "MIT"
 }

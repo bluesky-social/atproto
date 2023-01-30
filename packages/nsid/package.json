@@ -13,6 +13,5 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json"
   },
-  "license": "MIT",
-  "dependencies": {}
+  "license": "MIT"
 }
