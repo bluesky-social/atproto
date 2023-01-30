@@ -211,6 +211,15 @@ export const lexXrpcProcedure = z.object({
 })
 export type LexXrpcProcedure = z.infer<typeof lexXrpcProcedure>
 
+export const lexXrpcSubscription = z.object({
+  type: z.literal('subscription'),
+  description: z.string().optional(),
+  parameters: lexXrpcParameters.optional(),
+  output: lexXrpcBody.optional(),
+  errors: lexXrpcError.array().optional(),
+})
+export type LexXrpcSubscription = z.infer<typeof lexXrpcSubscription>
+
 // database
 // =
 
@@ -230,6 +239,7 @@ export const lexUserType = z.union([
 
   lexXrpcQuery,
   lexXrpcProcedure,
+  lexXrpcSubscription,
 
   lexBlob,
   lexImage,
