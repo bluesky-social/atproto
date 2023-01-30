@@ -23,9 +23,9 @@
         "thumb": {
           "type": "image",
           "accept": ["image/*"],
-          "maxWidth": 1000,
-          "maxHeight": 1000,
-          "maxSize": 300000
+          "maxWidth": 2000,
+          "maxHeight": 2000,
+          "maxSize": 1000000
         }
       }
     },
