@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import { APP_BSKY_GRAPH, ServiceClient } from '@atproto/api'
+import { ServiceClient } from '@atproto/api'
 import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
 import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/report/create'
 import { AtUri } from '@atproto/uri'
@@ -11,7 +11,7 @@ import { adminAuth } from '../_util'
 
 let AVATAR_IMG: Uint8Array | undefined
 
-type ImageRef = {
+export type ImageRef = {
   image: { cid: string; mimeType: string }
   alt: string
 }
@@ -85,7 +85,7 @@ export class SeedClient {
     }
   >
   follows: Record<string, Record<string, RecordRef>>
-  posts: Record<string, { text: string; ref: RecordRef }[]>
+  posts: Record<string, { text: string; ref: RecordRef; blobs: ImageRef[] }[]>
   votes: {
     up: Record<string, Record<string, AtUri>>
     down: Record<string, Record<string, AtUri>>
@@ -206,6 +206,7 @@ export class SeedClient {
     const post = {
       text,
       ref: new RecordRef(res.uri, res.cid),
+      blobs: images ?? [],
     }
     this.posts[by].push(post)
     return post
