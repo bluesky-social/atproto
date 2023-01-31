@@ -10,6 +10,7 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexRecord,
+  LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import { gen, utilTs, lexiconsTs } from './common'
@@ -285,7 +286,11 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
 
   // methods
   for (const userType of ns.userTypes) {
-    if (userType.def.type !== 'query' && userType.def.type !== 'procedure') {
+    if (
+      userType.def.type !== 'query' &&
+      userType.def.type !== 'subscription' &&
+      userType.def.type !== 'procedure'
+    ) {
       continue
     }
     const moduleName = toTitleCase(userType.nsid)
@@ -294,7 +299,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
       name,
       returnType: `Promise<${moduleName}.Response>`,
     })
-    if (userType.def.type === 'query') {
+    if (userType.def.type === 'query' || userType.def.type === 'subscription') {
       method.addParameter({
         name: 'params?',
         type: `${moduleName}.QueryParams`,
@@ -482,7 +487,11 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
       const imports: Set<string> = new Set()
 
       const main = lexiconDoc.defs.main
-      if (main?.type === 'query' || main?.type === 'procedure') {
+      if (
+        main?.type === 'query' ||
+        main?.type === 'subscription' ||
+        main?.type === 'procedure'
+      ) {
         //= import {Headers, XRPCError} from '@atproto/xrpc'
         const xrpcImport = file.addImportDeclaration({
           moduleSpecifier: '@atproto/xrpc',
@@ -518,7 +527,11 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         const def = lexiconDoc.defs[defId]
         const lexUri = `${lexiconDoc.id}#${defId}`
         if (defId === 'main') {
-          if (def.type === 'query' || def.type === 'procedure') {
+          if (
+            def.type === 'query' ||
+            def.type === 'subscription' ||
+            def.type === 'procedure'
+          ) {
             genXrpcParams(file, lexicons, lexUri)
             genXrpcInput(file, imports, lexicons, lexUri)
             genXrpcOutput(file, imports, lexicons, lexUri)
@@ -541,9 +554,11 @@ function genClientXrpcCommon(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure']) as
-    | LexXrpcQuery
-    | LexXrpcProcedure
+  const def = lexicons.getDefOrThrow(lexUri, [
+    'query',
+    'subscription',
+    'procedure',
+  ]) as LexXrpcQuery | LexXrpcSubscription | LexXrpcProcedure
 
   //= export interface CallOptions {...}
   const opts = file.addInterface({

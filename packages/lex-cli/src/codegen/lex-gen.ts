@@ -244,6 +244,7 @@ export function genXrpcParams(
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
+    'subscription',
     'procedure',
   ]) as LexXrpcQuery
 
@@ -278,6 +279,7 @@ export function genXrpcInput(
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
+    'subscription',
     'procedure',
   ]) as LexXrpcProcedure
 
@@ -328,6 +330,7 @@ export function genXrpcOutput(
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
+    'subscription',
     'procedure',
   ]) as LexXrpcQuery
 
