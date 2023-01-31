@@ -1987,6 +1987,35 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncSubscribeRepos: {
+    lexicon: 1,
+    id: 'com.atproto.sync.subscribeRepos',
+    defs: {
+      main: {
+        type: 'subscription',
+        description: 'Subscribe to repo updates',
+        parameters: {
+          type: 'params',
+          required: ['dids', 'lastSeen'],
+          properties: {
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+            lastSeen: {
+              type: 'number',
+              description: 'The sequence number of the last seen repo update.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
   AppBskyActorGetProfile: {
     lexicon: 1,
     id: 'app.bsky.actor.getProfile',
@@ -3840,6 +3869,7 @@ export const ids = {
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
   AppBskyActorProfile: 'app.bsky.actor.profile',

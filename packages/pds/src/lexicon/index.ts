@@ -44,6 +44,7 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
@@ -484,6 +485,13 @@ export class SyncNS {
   ) {
     const nsid = 'com.atproto.sync.getRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+
+  subscribeRepos<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncSubscribeRepos.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.subscribeRepos' // @ts-ignore
+    return this._server.xrpc.streamMethod(nsid, cfg)
   }
 }
 

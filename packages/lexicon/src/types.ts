@@ -276,6 +276,7 @@ export const lexiconDoc = z
         defId !== 'main' &&
         (def.type === 'record' ||
           def.type === 'procedure' ||
+          def.type === 'subscription' ||
           def.type === 'query')
       ) {
         ctx.addIssue({
