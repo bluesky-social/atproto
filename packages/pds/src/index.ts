@@ -26,6 +26,10 @@ import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
+import {
+  ImageInvalidator,
+  ImageProcessingServerInvalidator,
+} from './image/invalidator'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -47,10 +51,12 @@ export class PDS {
   static create(opts: {
     db: Database
     blobstore: BlobStore
+    imgInvalidator?: ImageInvalidator
     keypair: crypto.Keypair
     config: ServerConfig
   }): PDS {
     const { db, blobstore, keypair, config } = opts
+    let maybeImgInvalidator = opts.imgInvalidator
     const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
@@ -80,8 +86,18 @@ export class PDS {
         blobstore,
         imgProcessingCache,
       )
+      maybeImgInvalidator ??= new ImageProcessingServerInvalidator(
+        imgProcessingCache,
+      )
       app.use('/image', imgProcessingServer.app)
       imgUriEndpoint = `${config.publicUrl}/image`
+    }
+
+    let imgInvalidator: ImageInvalidator
+    if (maybeImgInvalidator) {
+      imgInvalidator = maybeImgInvalidator
+    } else {
+      throw new Error('Missing PDS image invalidator')
     }
 
     const imgUriBuilder = new ImageUriBuilder(
@@ -95,6 +111,7 @@ export class PDS {
       messageQueue,
       blobstore,
       imgUriBuilder,
+      imgInvalidator,
     })
 
     const ctx = new AppContext({

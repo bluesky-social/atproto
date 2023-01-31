@@ -67,10 +67,19 @@ export class RepoBlobs {
   }
 
   async verifyBlobAndMakePermanent(blob: BlobRef): Promise<void> {
+    const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', blob.cid.toString())
+      .whereNotExists(
+        // Check if blob has been taken down
+        this.db.db
+          .selectFrom('repo_blob')
+          .selectAll()
+          .where('takedownId', 'is not', null)
+          .whereRef('cid', '=', ref('blob.cid')),
+      )
       .executeTakeFirst()
     if (!found) {
       throw new InvalidRequestError(

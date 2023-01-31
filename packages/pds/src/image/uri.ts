@@ -3,6 +3,7 @@ import * as uint8arrays from 'uint8arrays'
 import { CID } from 'multiformats/cid'
 import { Options } from './util'
 
+// @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.commonSignedUris
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 export class ImageUriBuilder {
@@ -36,6 +37,13 @@ export class ImageUriBuilder {
     const path = this.getSignedPath(opts)
     return this.endpoint + path
   }
+
+  static commonSignedUris: CommonSignedUris[] = [
+    'avatar',
+    'banner',
+    'feed_thumbnail',
+    'feed_fullsize',
+  ]
 
   getCommonSignedUri(id: CommonSignedUris, cid: string | CID): string {
     if (id === 'avatar') {

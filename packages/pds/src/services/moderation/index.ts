@@ -9,16 +9,32 @@ import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
+import { ImageInvalidator } from '../../image/invalidator'
+import { ImageUriBuilder } from '../../image/uri'
 
 export class ModerationService {
   constructor(
     public db: Database,
     public messageQueue: MessageQueue,
     public blobstore: BlobStore,
+    public imgUriBuilder: ImageUriBuilder,
+    public imgInvalidator: ImageInvalidator,
   ) {}
 
-  static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
-    return (db: Database) => new ModerationService(db, messageQueue, blobstore)
+  static creator(
+    messageQueue: MessageQueue,
+    blobstore: BlobStore,
+    imgUriBuilder: ImageUriBuilder,
+    imgInvalidator: ImageInvalidator,
+  ) {
+    return (db: Database) =>
+      new ModerationService(
+        db,
+        messageQueue,
+        blobstore,
+        imgUriBuilder,
+        imgInvalidator,
+      )
   }
 
   views = new ModerationViews(this.db, this.messageQueue)
@@ -197,13 +213,14 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    if (subjectBlobCids?.length) {
+    if (subjectBlobCids?.length && !('did' in subject)) {
       await this.db.db
         .insertInto('moderation_action_subject_blob')
         .values(
           subjectBlobCids.map((cid) => ({
             actionId: actionResult.id,
             cid: cid.toString(),
+            recordUri: subject.uri.toString(),
           })),
         )
         .execute()
@@ -278,6 +295,16 @@ export class ModerationService {
         )
         .where('takedownId', 'is', null)
         .executeTakeFirst()
+      await Promise.all(
+        info.blobCids.map(async (cid) => {
+          await this.blobstore.quarantine(cid)
+          const paths = ImageUriBuilder.commonSignedUris.map((id) => {
+            const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
+            return uri.replace(this.imgUriBuilder.endpoint, '')
+          })
+          await this.imgInvalidator.invalidate(cid.toString(), paths)
+        }),
+      )
     }
   }
 
@@ -287,11 +314,19 @@ export class ModerationService {
       .set({ takedownId: null })
       .where('uri', '=', info.uri.toString())
       .execute()
-    await this.db.db
+    const blobs = await this.db.db
       .updateTable('repo_blob')
       .set({ takedownId: null })
+      .where('takedownId', 'is not', null)
       .where('recordUri', '=', info.uri.toString())
+      .returning('cid')
       .execute()
+    await Promise.all(
+      blobs.map(async (blob) => {
+        const cid = CID.parse(blob.cid)
+        await this.blobstore.unquarantine(cid)
+      }),
+    )
   }
 
   async resolveReports(info: {

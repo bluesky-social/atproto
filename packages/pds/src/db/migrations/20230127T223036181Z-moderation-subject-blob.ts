@@ -8,12 +8,18 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('actionId', 'varchar', (col) =>
       col.notNull().references('moderation_action.id'),
     )
-    .addColumn('cid', 'varchar', (col) =>
-      col.notNull().references('repo_blob.cid'),
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('recordUri', 'varchar', (col) => col.notNull())
+    .addForeignKeyConstraint(
+      'moderation_action_subject_blob_repo_blob_fkey',
+      ['cid', 'recordUri'],
+      'repo_blob',
+      ['cid', 'recordUri'],
     )
     .addPrimaryKeyConstraint('moderation_action_subject_blob_pkey', [
       'actionId',
       'cid',
+      'recordUri',
     ])
     .execute()
   // Blob takedowns
