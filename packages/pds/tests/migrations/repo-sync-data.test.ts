@@ -52,7 +52,7 @@ describe('repo sync data migration', () => {
   })
 
   it('migrates down', async () => {
-    const migration = await db.migrator.migrateTo('_20221230T215012029Z')
+    const migration = await db.migrator.migrateTo('_20230127T215753149Z')
     expect(migration.error).toBeUndefined()
     // normal syntax for async exceptions as not catching the error for some reason
     let err1
@@ -72,7 +72,7 @@ describe('repo sync data migration', () => {
   })
 
   it('migrates up', async () => {
-    const migration = await db.migrator.migrateTo('_20230118T223059239Z')
+    const migration = await db.migrator.migrateTo('_20230127T224743452Z')
     expect(migration.error).toBeUndefined()
     const migratedHistory = await getHistory()
     const migratedBlocks = await getBlocks()

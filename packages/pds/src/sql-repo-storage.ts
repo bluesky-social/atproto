@@ -117,7 +117,6 @@ export class SqlRepoStorage extends RepoStorage {
         cid: cid.toString(),
         size: block.length,
         content: block,
-        indexedAt: this.timestamp || new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
@@ -142,7 +141,6 @@ export class SqlRepoStorage extends RepoStorage {
         cid: cid.toString(),
         size: bytes.length,
         content: bytes,
-        indexedAt: this.timestamp || new Date().toISOString(),
       })
       creators.push({
         cid: cid.toString(),

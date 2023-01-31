@@ -4,6 +4,7 @@ export interface Record {
   did: string
   collection: string
   rkey: string
+  indexedAt: string
   takedownId: number | null
 }
 

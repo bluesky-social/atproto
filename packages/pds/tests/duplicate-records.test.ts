@@ -45,7 +45,6 @@ describe('duplicate record', () => {
         cid: cid.toString(),
         size: bytes.length,
         content: bytes,
-        indexedAt: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
