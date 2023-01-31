@@ -11,12 +11,7 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import {
-  ErrorFrame,
-  Frame,
-  MessageFrame,
-  XrpcStreamServer,
-} from '@atproto/xrpc-stream'
+import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
   XRPCHandler,
   XRPCError,

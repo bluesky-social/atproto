@@ -1,6 +1,6 @@
 import * as http from 'http'
 import { WebSocket, createWebSocketStream } from 'ws'
-import { createFrameStream, Frame } from '@atproto/xrpc-stream'
+import { createFrameStream, Frame } from '../src'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 

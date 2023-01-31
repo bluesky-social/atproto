@@ -1,7 +1,7 @@
 {
   "name": "@atproto/xrpc-server",
   "version": "0.0.1",
-  "main": "dist/index.js",
+  "main": "src/index.ts",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/",
@@ -21,10 +21,12 @@
   "dependencies": {
     "@atproto/common": "*",
     "@atproto/lexicon": "*",
-    "@atproto/xrpc-stream": "*",
+    "cbor-x": "^1.5.1",
     "express": "^4.17.2",
     "http-errors": "^2.0.0",
     "mime-types": "^2.1.35",
+    "uint8arrays": "3.0.0",
+    "ws": "^8.12.0",
     "zod": "^3.14.2"
   },
   "devDependencies": {
@@ -32,6 +34,6 @@
     "@atproto/xrpc": "*",
     "@types/express": "^4.17.13",
     "@types/http-errors": "^2.0.1",
-    "ws": "^8.12.0"
+    "@types/ws": "^8.5.4"
   }
 }
