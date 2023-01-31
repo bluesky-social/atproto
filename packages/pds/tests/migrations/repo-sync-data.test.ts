@@ -19,7 +19,7 @@ describe('repo sync data migration', () => {
     if (process.env.DB_POSTGRES_URL) {
       db = Database.postgres({
         url: process.env.DB_POSTGRES_URL,
-        schema: 'migration_duplicate_records',
+        schema: 'migration_repo_sync_data',
       })
     } else {
       db = Database.memory()
