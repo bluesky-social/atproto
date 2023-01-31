@@ -8,6 +8,7 @@ import * as repoCommitBlock from './tables/repo-commit-block'
 import * as repoCommitHistory from './tables/repo-commit-history'
 import * as ipldBlock from './tables/ipld-block'
 import * as ipldBlockCreator from './tables/ipld-block-creator'
+import * as repoOp from './tables/repo-op'
 import * as inviteCode from './tables/invite-code'
 import * as duplicateRecords from './tables/duplicate-record'
 import * as notification from './tables/user-notification'
@@ -26,6 +27,7 @@ import * as messageQueue from './tables/message-queue'
 import * as messageQueueCursor from './tables/message-queue-cursor'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
+import * as sequencedEvents from './tables/sequenced-event'
 
 export type DatabaseSchemaType = user.PartialDB &
   didHandle.PartialDB &
@@ -36,6 +38,7 @@ export type DatabaseSchemaType = user.PartialDB &
   repoCommitHistory.PartialDB &
   ipldBlock.PartialDB &
   ipldBlockCreator.PartialDB &
+  repoOp.PartialDB &
   inviteCode.PartialDB &
   duplicateRecords.PartialDB &
   notification.PartialDB &
@@ -53,7 +56,8 @@ export type DatabaseSchemaType = user.PartialDB &
   messageQueue.PartialDB &
   messageQueueCursor.PartialDB &
   moderation.PartialDB &
-  mute.PartialDB
+  mute.PartialDB &
+  sequencedEvents.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

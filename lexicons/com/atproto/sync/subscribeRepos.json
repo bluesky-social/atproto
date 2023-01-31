@@ -1,18 +1,14 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.sync.subscribeRepos",
+  "id": "com.atproto.sync.subscribeAllRepos",
   "defs": {
     "main": {
       "type": "subscription",
       "description": "Subscribe to repo updates",
       "parameters": {
         "type": "params",
-        "required": ["dids", "lastSeen"],
+        "required": ["lastSeen"],
         "properties": {
-          "dids": { 
-            "type": "array", 
-            "items": {"type": "string"}
-          },
           "lastSeen": {"type": "number", "description": "The sequence number of the last seen repo update."}
         }
       },
