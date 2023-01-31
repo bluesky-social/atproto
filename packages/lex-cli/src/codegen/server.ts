@@ -10,7 +10,6 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexRecord,
-  LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import { gen, lexiconsTs, utilTs } from './common'
@@ -262,12 +261,14 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
       name: 'cfg',
       type: `ConfigOf<AV, ${moduleName}.Handler<ExtractAuth<AV>>>`,
     })
+    const methodType =
+      userType.def.type === 'subscription' ? 'streamMethod' : 'method'
     method.setBodyText(
       [
         // Placing schema on separate line, since the following one was being formatted
         // into multiple lines and causing the ts-ignore to ignore the wrong line.
         `const nsid = '${userType.nsid}' // @ts-ignore`,
-        `return this._server.xrpc.method(nsid, cfg)`,
+        `return this._server.xrpc.${methodType}(nsid, cfg)`,
       ].join('\n'),
     )
   }
@@ -281,11 +282,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
       const imports: Set<string> = new Set()
 
       const main = lexiconDoc.defs.main
-      if (
-        main?.type === 'query' ||
-        main?.type === 'subscription' ||
-        main?.type === 'procedure'
-      ) {
+      if (main?.type === 'query' || main?.type === 'procedure') {
         //= import express from 'express'
         file.addImportDeclaration({
           moduleSpecifier: 'express',
@@ -334,15 +331,14 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         const def = lexiconDoc.defs[defId]
         const lexUri = `${lexiconDoc.id}#${defId}`
         if (defId === 'main') {
-          if (
-            def.type === 'query' ||
-            def.type === 'subscription' ||
-            def.type === 'procedure'
-          ) {
+          if (def.type === 'query' || def.type === 'procedure') {
             genXrpcParams(file, lexicons, lexUri)
             genXrpcInput(file, imports, lexicons, lexUri)
             genXrpcOutput(file, imports, lexicons, lexUri)
-            genServerXrpcCommon(file, lexicons, lexUri)
+            genServerXrpcMethod(file, lexicons, lexUri)
+          } else if (def.type === 'subscription') {
+            genXrpcParams(file, lexicons, lexUri)
+            genServerXrpcStreaming(file)
           } else if (def.type === 'record') {
             genServerRecord(file, imports, lexicons, lexUri)
           } else {
@@ -356,16 +352,14 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
     },
   )
 
-function genServerXrpcCommon(
+function genServerXrpcMethod(
   file: SourceFile,
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, [
-    'query',
-    'subscription',
-    'procedure',
-  ]) as LexXrpcQuery | LexXrpcSubscription | LexXrpcProcedure
+  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure']) as
+    | LexXrpcQuery
+    | LexXrpcProcedure
   file.addImportDeclaration({
     moduleSpecifier: '@atproto/xrpc-server',
     namedImports: [{ name: 'HandlerAuth' }],
@@ -474,6 +468,31 @@ function genServerXrpcCommon(
         req: express.Request
         res: express.Response
       }) => Promise<HandlerOutput> | HandlerOutput`,
+  })
+}
+
+function genServerXrpcStreaming(file: SourceFile) {
+  file.addImportDeclaration({
+    moduleSpecifier: '@atproto/xrpc-server',
+    namedImports: [{ name: 'HandlerAuth' }],
+  })
+
+  file.addImportDeclaration({
+    moduleSpecifier: 'http',
+    namedImports: [{ name: 'IncomingMessage' }],
+  })
+
+  file.addTypeAlias({
+    name: 'Handler',
+    isExported: true,
+    typeParameters: [
+      { name: 'HA', constraint: 'HandlerAuth', default: 'never' },
+    ],
+    type: `(ctx: {
+        auth: HA
+        params: QueryParams
+        req: IncomingMessage
+      }) => AsyncIterable<unknown>`,
   })
 }
 
