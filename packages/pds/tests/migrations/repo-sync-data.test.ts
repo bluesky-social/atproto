@@ -90,7 +90,7 @@ describe('repo sync data migration', () => {
   })
 
   it('migrates up', async () => {
-    const migration = await db.migrator.migrateTo('_20230127T224743452Z')
+    const migration = await db.migrator.migrateTo('_20230201T200606704Z')
     expect(migration.error).toBeUndefined()
   })
 
