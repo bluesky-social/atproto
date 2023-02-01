@@ -4,9 +4,8 @@ import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { RepoCommitBlock } from '../tables/repo-commit-block'
 import { RepoCommitHistory } from '../tables/repo-commit-history'
-import { Dialect } from '..'
 
-export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
+export async function up(db: Kysely<any>): Promise<void> {
   const migrateUser = async (did: string, head: CID, start: CID | null) => {
     const userBlocks = await db
       .selectFrom('ipld_block')
@@ -96,29 +95,6 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
     await migrateUser(row.did, head, null)
     currHeads[row.did] = head
   }
-
-  // check if any new commits were pushed since we did the migration
-  // run all at once since these will be smaller
-  let newHeadsQb = db.selectFrom('repo_root').selectAll()
-  if (dialect !== 'sqlite') {
-    newHeadsQb = newHeadsQb.forUpdate()
-  }
-  const newHeads = await newHeadsQb.execute()
-  const promises: Promise<void>[] = []
-  let count = 0
-  for (const row of newHeads) {
-    const newHead = CID.parse(row.root)
-    const prevHead = currHeads[row.did]
-    if (!newHead || !prevHead) {
-      continue
-    }
-    if (!newHead.equals(prevHead)) {
-      count++
-      promises.push(migrateUser(row.did, newHead, prevHead))
-    }
-  }
-  console.log(`catching up ${count} repos`)
-  await Promise.all(promises)
 }
 
 export async function down(_db: Kysely<unknown>): Promise<void> {}
