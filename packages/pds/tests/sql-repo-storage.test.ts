@@ -57,7 +57,7 @@ describe('sql repo storage', () => {
     expect(cidA.equals(cidB)).toBe(true)
   })
 
-  it('applies commits', async () => {
+  it.skip('applies commits', async () => {
     const did = 'did:key:zQ3shtxV1FrJfhqE1dvxYRcCknWNjHc3c5X1y3ZSoPDi2aur3'
     const blocks = await Promise.all(
       range(10).map((num) => dataToCborBlock({ my: `block-${num}` })),

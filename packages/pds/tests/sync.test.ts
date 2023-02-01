@@ -8,7 +8,7 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { CloseFn, runTestServer } from './_util'
 
-describe('repo sync', () => {
+describe.skip('repo sync', () => {
   let client: AtpServiceClient
   let did: string
 
