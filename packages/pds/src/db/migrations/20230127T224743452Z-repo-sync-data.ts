@@ -31,7 +31,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     ])
     .execute()
 
-  const migrateUser = async (did: string, root: CID) => {
+  const migrateUser = async (did: string, head: CID, start: CID | null) => {
     const userBlocks = await db
       .selectFrom('ipld_block')
       .innerJoin(
@@ -50,7 +50,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     const storage = new MigrationStorage(blocks, db)
 
-    const commitData = await storage.getCommits(root, null)
+    const commitData = await storage.getCommits(head, start)
     if (!commitData) return
 
     const commitBlock: RepoCommitBlock[] = []
@@ -112,11 +112,29 @@ export async function up(db: Kysely<any>): Promise<void> {
     ])
   }
 
-  const userRoots = await db.selectFrom('repo_root').selectAll().execute()
-
-  for (const row of userRoots) {
-    await migrateUser(row.did, CID.parse(row.root))
+  const repoHeads = await db.selectFrom('repo_root').selectAll().execute()
+  const currHeads: Record<string, CID> = {}
+  for (const row of repoHeads) {
+    const head = CID.parse(row.root)
+    await migrateUser(row.did, head, null)
+    currHeads[row.did] = head
   }
+
+  // check if any new commits were pushed since we did the migration
+  // run all at once since these will be smaller
+  const newHeads = await db.selectFrom('repo_root').selectAll().execute()
+  const promises: Promise<void>[] = []
+  for (const row of newHeads) {
+    const newHead = CID.parse(row.root)
+    const prevHead = currHeads[row.did]
+    if (!newHead || !prevHead) {
+      continue
+    }
+    if (!newHead.equals(prevHead)) {
+      promises.push(migrateUser(row.did, newHead, prevHead))
+    }
+  }
+  await Promise.all(promises)
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
