@@ -12,7 +12,7 @@ describe('repo sync data migration', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'migration_repo_sync_data_pt2',
+      dbPostgresSchema: 'migration_repo_sync_data_pt_two',
     })
     db = server.ctx.db
     rawDb = db.db
