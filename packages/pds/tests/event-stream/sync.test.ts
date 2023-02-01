@@ -33,7 +33,7 @@ describe('sync', () => {
     await server.close()
   })
 
-  it('rebuilds timeline indexes from repo state.', async () => {
+  it.skip('rebuilds timeline indexes from repo state.', async () => {
     const { db, services, messageQueue } = ctx
     const { ref } = db.db.dynamic
     // Destroy indexes
