@@ -247,58 +247,56 @@ export class SqlRepoStorage extends RepoStorage {
     latest: CID,
     earliest: CID | null,
   ): Promise<CID[] | null> {
-    throw new Error('commit operations temporarily disabled')
-    // const res = await this.db.db
-    //   .withRecursive('ancestor(commit, prev)', (cte) =>
-    //     cte
-    //       .selectFrom('repo_commit_history as commit')
-    //       .select(['commit.commit as commit', 'commit.prev as prev'])
-    //       .where('commit', '=', latest.toString())
-    //       .where('creator', '=', this.did)
-    //       .unionAll(
-    //         cte
-    //           .selectFrom('repo_commit_history as commit')
-    //           .select(['commit.commit as commit', 'commit.prev as prev'])
-    //           .innerJoin('ancestor', (join) =>
-    //             join
-    //               .onRef('ancestor.prev', '=', 'commit.commit')
-    //               .on('commit.creator', '=', this.did),
-    //           )
-    //           .if(earliest !== null, (qb) =>
-    //             // @ts-ignore
-    //             qb.where('commit.commit', '!=', earliest?.toString() as string),
-    //           ),
-    //       ),
-    //   )
-    //   .selectFrom('ancestor')
-    //   .select('commit')
-    //   .execute()
-    // return res.map((row) => CID.parse(row.commit)).reverse()
+    const res = await this.db.db
+      .withRecursive('ancestor(commit, prev)', (cte) =>
+        cte
+          .selectFrom('repo_commit_history as commit')
+          .select(['commit.commit as commit', 'commit.prev as prev'])
+          .where('commit', '=', latest.toString())
+          .where('creator', '=', this.did)
+          .unionAll(
+            cte
+              .selectFrom('repo_commit_history as commit')
+              .select(['commit.commit as commit', 'commit.prev as prev'])
+              .innerJoin('ancestor', (join) =>
+                join
+                  .onRef('ancestor.prev', '=', 'commit.commit')
+                  .on('commit.creator', '=', this.did),
+              )
+              .if(earliest !== null, (qb) =>
+                // @ts-ignore
+                qb.where('commit.commit', '!=', earliest?.toString() as string),
+              ),
+          ),
+      )
+      .selectFrom('ancestor')
+      .select('commit')
+      .execute()
+    return res.map((row) => CID.parse(row.commit)).reverse()
   }
   async getBlocksForCommits(
     commits: CID[],
   ): Promise<{ [commit: string]: BlockMap }> {
-    throw new Error('commit operations temporarily disabled')
-    // if (commits.length === 0) return {}
-    // const commitStrs = commits.map((commit) => commit.toString())
-    // const res = await this.db.db
-    //   .selectFrom('repo_commit_block')
-    //   .where('repo_commit_block.creator', '=', this.did)
-    //   .where('repo_commit_block.commit', 'in', commitStrs)
-    //   .innerJoin('ipld_block', 'ipld_block.cid', 'repo_commit_block.block')
-    //   .select([
-    //     'repo_commit_block.commit',
-    //     'ipld_block.cid',
-    //     'ipld_block.content',
-    //   ])
-    //   .execute()
-    // return res.reduce((acc, cur) => {
-    //   acc[cur.commit] ??= new BlockMap()
-    //   const cid = CID.parse(cur.cid)
-    //   acc[cur.commit].set(cid, cur.content)
-    //   this.cache.set(cid, cur.content)
-    //   return acc
-    // }, {})
+    if (commits.length === 0) return {}
+    const commitStrs = commits.map((commit) => commit.toString())
+    const res = await this.db.db
+      .selectFrom('repo_commit_block')
+      .where('repo_commit_block.creator', '=', this.did)
+      .where('repo_commit_block.commit', 'in', commitStrs)
+      .innerJoin('ipld_block', 'ipld_block.cid', 'repo_commit_block.block')
+      .select([
+        'repo_commit_block.commit',
+        'ipld_block.cid',
+        'ipld_block.content',
+      ])
+      .execute()
+    return res.reduce((acc, cur) => {
+      acc[cur.commit] ??= new BlockMap()
+      const cid = CID.parse(cur.cid)
+      acc[cur.commit].set(cid, cur.content)
+      this.cache.set(cid, cur.content)
+      return acc
+    }, {})
   }
 
   async destroy(): Promise<void> {
