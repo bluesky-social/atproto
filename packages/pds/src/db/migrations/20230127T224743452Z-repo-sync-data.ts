@@ -72,48 +72,51 @@ export async function up(db: Kysely<any>): Promise<void> {
         creator: did,
       })
     }
-    const promises: Promise<unknown>[] = []
-    chunkArray(commitBlock, 500).forEach((batch) => {
-      promises.push(
-        db
-          .insertInto('repo_commit_block')
-          .values(batch)
-          .onConflict((oc) => oc.doNothing())
-          .execute(),
-      )
-    })
-    chunkArray(commitHistory, 500).forEach((batch) => {
-      promises.push(
-        db
-          .insertInto('repo_commit_history')
-          .values(batch)
-          .onConflict((oc) => oc.doNothing())
-          .execute(),
-      )
-    })
-
     const ipldBlockCreators = storage.blocks.entries().map((entry) => ({
       cid: entry.cid.toString(),
       did: did,
     }))
-    chunkArray(ipldBlockCreators, 500).forEach((batch) => {
-      promises.push(
-        db
+
+    const createRepoCommitBlocks = async () => {
+      for (const batch of chunkArray(commitBlock, 500)) {
+        await db
+          .insertInto('repo_commit_block')
+          .values(batch)
+          .onConflict((oc) => oc.doNothing())
+          .execute()
+      }
+    }
+    const createRepoCommitHistory = async () => {
+      for (const batch of chunkArray(commitHistory, 500)) {
+        await db
+          .insertInto('repo_commit_history')
+          .values(batch)
+          .onConflict((oc) => oc.doNothing())
+          .execute()
+      }
+    }
+    const createIpldBlockCreators = async () => {
+      for (const batch of chunkArray(ipldBlockCreators, 500)) {
+        await db
           .insertInto('ipld_block_creator')
           .values(batch)
           .onConflict((oc) => oc.doNothing())
-          .execute(),
-      )
-    })
+          .execute()
+      }
+    }
 
-    return Promise.all(promises)
+    await Promise.all([
+      createRepoCommitBlocks(),
+      createRepoCommitHistory(),
+      createIpldBlockCreators(),
+    ])
   }
 
   const userRoots = await db.selectFrom('repo_root').selectAll().execute()
 
-  await Promise.all(
-    userRoots.map((row) => migrateUser(row.did, CID.parse(row.root))),
-  )
+  for (const row of userRoots) {
+    await migrateUser(row.did, CID.parse(row.root))
+  }
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
