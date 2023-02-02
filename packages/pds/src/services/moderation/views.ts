@@ -46,15 +46,15 @@ export class ModerationViews {
       .selectFrom('did_handle')
       .leftJoin('user', 'user.handle', 'did_handle.handle')
       .leftJoin('profile', 'profile.creator', 'did_handle.did')
-      .leftJoin(
-        'ipld_block as profile_block',
-        'profile_block.cid',
-        'profile.cid',
+      .leftJoin('ipld_block as profile_block', (join) =>
+        join
+          .onRef('profile_block.cid', '=', 'profile.cid')
+          .onRef('profile_block.creator', '=', 'did_handle.did'),
       )
-      .leftJoin(
-        'ipld_block as declaration_block',
-        'declaration_block.cid',
-        'did_handle.declarationCid',
+      .leftJoin('ipld_block as declaration_block', (join) =>
+        join
+          .onRef('declaration_block.cid', '=', 'did_handle.declarationCid')
+          .onRef('declaration_block.creator', '=', 'did_handle.did'),
       )
       .where(
         'did_handle.did',

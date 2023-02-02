@@ -36,16 +36,20 @@ describe('duplicate record', () => {
     return got.length
   }
 
-  const putBlock = async (db: Database, data: object): Promise<CID> => {
+  const putBlock = async (
+    db: Database,
+    creator: string,
+    data: object,
+  ): Promise<CID> => {
     const cid = await cidForCbor(data)
     const bytes = await cborEncode(data)
     await db.db
       .insertInto('ipld_block')
       .values({
         cid: cid.toString(),
+        creator,
         size: bytes.length,
         content: bytes,
-        indexedAt: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
@@ -54,7 +58,7 @@ describe('duplicate record', () => {
 
   it('dedupes reposts', async () => {
     const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
-    const subjectCid = await putBlock(db, { test: 'blah' })
+    const subjectCid = await putBlock(db, did, { test: 'blah' })
     const coll = lex.ids.AppBskyFeedRepost
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
@@ -68,7 +72,7 @@ describe('duplicate record', () => {
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, repost)
+        const cid = await putBlock(tx, did, repost)
         await services.record(tx).indexRecord(uri, cid, repost)
         uris.push(uri)
       }
@@ -94,7 +98,7 @@ describe('duplicate record', () => {
 
   it('dedupes votes', async () => {
     const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
-    const subjectCid = await putBlock(db, { test: 'blah' })
+    const subjectCid = await putBlock(db, did, { test: 'blah' })
     const coll = lex.ids.AppBskyFeedVote
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
@@ -110,7 +114,7 @@ describe('duplicate record', () => {
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, vote)
+        const cid = await putBlock(tx, did, vote)
         await services.record(tx).indexRecord(uri, cid, vote)
         uris.push(uri)
       }
@@ -142,7 +146,7 @@ describe('duplicate record', () => {
   })
 
   it('dedupes follows', async () => {
-    const subjectCid = await putBlock(db, { test: 'blah' })
+    const subjectCid = await putBlock(db, did, { test: 'blah' })
     const coll = lex.ids.AppBskyGraphFollow
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
@@ -156,7 +160,7 @@ describe('duplicate record', () => {
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, follow)
+        const cid = await putBlock(tx, did, follow)
         await services.record(tx).indexRecord(uri, cid, follow)
         uris.push(uri)
       }
@@ -181,7 +185,7 @@ describe('duplicate record', () => {
   })
 
   it('dedupes assertions & confirmations', async () => {
-    const subjectCid = await putBlock(db, { test: 'blah' })
+    const subjectCid = await putBlock(db, did, { test: 'blah' })
     const assertUris: AtUri[] = []
     const assertCids: CID[] = []
     // make assertions
@@ -198,7 +202,7 @@ describe('duplicate record', () => {
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, assertion)
+        const cid = await putBlock(tx, did, assertion)
         await services.record(tx).indexRecord(uri, cid, assertion)
         assertUris.push(uri)
         assertCids.push(cid)
@@ -223,7 +227,7 @@ describe('duplicate record', () => {
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, follow)
+        const cid = await putBlock(tx, did, follow)
         await services.record(tx).indexRecord(uri, cid, follow)
         confirmUris.push(uri)
         confirmCids.push(cid)

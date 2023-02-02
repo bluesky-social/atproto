@@ -68,6 +68,10 @@ export class MemoryBlobStore implements BlobStore {
     const bytes = await this.getBytes(cid)
     return bytesToStream(bytes)
   }
+
+  async delete(cid: CID): Promise<void> {
+    this.blocks.delete(cid.toString())
+  }
 }
 
 export default MemoryBlobStore

@@ -94,7 +94,11 @@ export class RecordProcessor<T, S> {
     } else {
       const found = await this.db
         .selectFrom('duplicate_record')
-        .innerJoin('ipld_block', 'ipld_block.cid', 'duplicate_record.cid')
+        .innerJoin('ipld_block', (join) =>
+          join
+            .onRef('ipld_block.cid', '=', 'duplicate_record.cid')
+            .on('ipld_block.creator', '=', uri.host),
+        )
         .where('duplicateOf', '=', uri.toString())
         .orderBy('duplicate_record.indexedAt', 'asc')
         .limit(1)

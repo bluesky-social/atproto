@@ -12,6 +12,7 @@ import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 import * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
 import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
+import * as ComAtprotoAccountRequestDelete from './types/com/atproto/account/requestDelete'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
@@ -168,6 +169,13 @@ export class AccountNS {
     cfg: ConfigOf<AV, ComAtprotoAccountGet.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.account.get' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  requestDelete<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAccountRequestDelete.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.account.requestDelete' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

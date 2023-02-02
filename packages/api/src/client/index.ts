@@ -10,6 +10,7 @@ import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 import * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
 import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 import * as ComAtprotoAccountGet from './types/com/atproto/account/get'
+import * as ComAtprotoAccountRequestDelete from './types/com/atproto/account/requestDelete'
 import * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 import * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
@@ -91,6 +92,7 @@ export * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 export * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
 export * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
 export * as ComAtprotoAccountGet from './types/com/atproto/account/get'
+export * as ComAtprotoAccountRequestDelete from './types/com/atproto/account/requestDelete'
 export * as ComAtprotoAccountRequestPasswordReset from './types/com/atproto/account/requestPasswordReset'
 export * as ComAtprotoAccountResetPassword from './types/com/atproto/account/resetPassword'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
@@ -302,6 +304,17 @@ export class AccountNS {
       .call('com.atproto.account.get', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAccountGet.toKnownErr(e)
+      })
+  }
+
+  requestDelete(
+    data?: ComAtprotoAccountRequestDelete.InputSchema,
+    opts?: ComAtprotoAccountRequestDelete.CallOptions,
+  ): Promise<ComAtprotoAccountRequestDelete.Response> {
+    return this._service.xrpc
+      .call('com.atproto.account.requestDelete', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAccountRequestDelete.toKnownErr(e)
       })
   }
 

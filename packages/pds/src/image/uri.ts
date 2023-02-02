@@ -69,7 +69,7 @@ export class ImageUriBuilder {
       return this.getSignedUri({
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
-        fit: 'cover',
+        fit: 'inside',
         height: 1000,
         width: 1000,
         min: true,

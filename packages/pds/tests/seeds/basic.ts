@@ -26,7 +26,7 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   )
   const img2 = await sc.uploadFile(
     carol,
-    'tests/image/fixtures/key-portrait-small.jpg',
+    'tests/image/fixtures/key-alt.jpg',
     'image/jpeg',
   )
   await sc.post(carol, posts.carol[0], undefined, [img1, img2])

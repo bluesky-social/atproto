@@ -8,11 +8,17 @@ import { lexicons } from '../../../../lexicons'
 
 export interface QueryParams {}
 
-export type InputSchema = undefined
+export interface InputSchema {
+  did: string
+  password: string
+  token: string
+  [k: string]: unknown
+}
 
 export interface CallOptions {
   headers?: Headers
   qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {
@@ -20,8 +26,22 @@ export interface Response {
   headers: Headers
 }
 
+export class ExpiredTokenError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class InvalidTokenError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'ExpiredToken') return new ExpiredTokenError(e)
+    if (e.error === 'InvalidToken') return new InvalidTokenError(e)
   }
   return e
 }

@@ -106,6 +106,27 @@ export class RepoBlobs {
       .onConflict((oc) => oc.doNothing())
       .execute()
   }
+
+  async deleteForUser(did: string): Promise<void> {
+    this.db.assertTransaction()
+    const deleted = await this.db.db
+      .deleteFrom('repo_blob')
+      .where('did', '=', did)
+      .returningAll()
+      .execute()
+    const deletedCids = deleted.map((d) => d.cid)
+    const duplicates = await this.db.db
+      .selectFrom('repo_blob')
+      .where('cid', 'in', deletedCids)
+      .selectAll()
+      .execute()
+    const duplicateCids = duplicates.map((d) => d.cid)
+    const toDelete = deletedCids.filter((cid) => !duplicateCids.includes(cid))
+    await this.db.db.deleteFrom('blob').where('cid', 'in', toDelete).execute()
+    await Promise.all(
+      toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+    )
+  }
 }
 
 export class CidNotFound extends Error {
