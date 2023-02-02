@@ -6,12 +6,13 @@ import {
   PoolClient as PgPoolClient,
   types as pgTypes,
 } from 'pg'
+import EventEmitter from 'events'
+import TypedEmitter from 'typed-emitter'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
-import EventEmitter from 'events'
-import TypedEmitter from 'typed-emitter'
+import { dbLogger as log } from '../logger'
 
 export class Database {
   channels: Channels = {
@@ -45,12 +46,6 @@ export class Database {
     // Select count(*) and other pg bigints as js integer
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
 
-    const db = new Kysely<DatabaseSchemaType>({
-      dialect: new PostgresDialect({ pool }),
-    })
-
-    const database = new Database(db, { dialect: 'pg', pool, schema })
-
     // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
     if (schema !== undefined) {
       if (!/^[a-z_]+$/i.test(schema)) {
@@ -64,20 +59,36 @@ export class Database {
       })
     }
 
-    database.notifyClient = await pool.connect()
-    database.notifyClient.query(`LISTEN repo_seq`)
-    database.notifyClient.on('notification', (msg) => {
-      const channel = database.channels[msg.channel]
-      if (channel) {
-        channel.emit('message', msg.payload)
-      }
+    const db = new Kysely<DatabaseSchemaType>({
+      dialect: new PostgresDialect({ pool }),
     })
+
+    const database = new Database(db, { dialect: 'pg', pool, schema })
+    await database.startListeningToChannels()
 
     return database
   }
 
   static memory(): Database {
     return Database.sqlite(':memory:')
+  }
+
+  private async startListeningToChannels() {
+    if (this.facets.dialect !== 'pg') return
+    this.notifyClient = await this.facets.pool.connect()
+    this.notifyClient.query(`LISTEN repo_seq`)
+    this.notifyClient.on('notification', (msg) => {
+      const channel = this.channels[msg.channel]
+      if (channel) {
+        channel.emit('message', msg.payload)
+      }
+    })
+    this.notifyClient.on('error', (err) => {
+      log.error({ err }, 'postgres listener errored, reconnecting')
+      this.notifyClient?.removeAllListeners()
+      this.notifyClient?.release()
+      this.startListeningToChannels()
+    })
   }
 
   notify(channel: keyof Channels, msg?: string) {
