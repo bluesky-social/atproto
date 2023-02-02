@@ -115,7 +115,7 @@ export class RepoBlobs {
       .returningAll()
       .execute()
     const deletedCids = deleted.map((d) => d.cid)
-    let duplicateCids: string[]
+    let duplicateCids: string[] = []
     if (deletedCids.length > 0) {
       const res = await this.db.db
         .selectFrom('repo_blob')
