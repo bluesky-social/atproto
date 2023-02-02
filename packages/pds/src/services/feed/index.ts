@@ -126,8 +126,8 @@ export class FeedService {
         'post.uri as uri',
         'post.cid as cid',
         'post.creator as creator',
+        'post.indexedAt as indexedAt',
         'ipld_block.content as recordBytes',
-        'ipld_block.indexedAt as indexedAt',
         db
           .selectFrom('vote')
           .whereRef('subject', '=', ref('post.uri'))
