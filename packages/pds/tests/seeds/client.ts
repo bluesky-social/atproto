@@ -129,7 +129,7 @@ export class SeedClient {
       password: params.password,
       ref: new ActorRef(account.did, profile.declaration.cid),
     }
-    return this.accounts[shortName]
+    return this.accounts[account.did]
   }
 
   async createProfile(
