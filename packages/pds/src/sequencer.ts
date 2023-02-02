@@ -1,14 +1,16 @@
+import EventEmitter from 'events'
+import TypedEmitter from 'typed-emitter'
 import { writeCar } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
 import Database from './db'
 
-export class Sequencer {
+export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
   queued = false
 
-  listeners: ListenerCB[] = []
-
-  constructor(public db: Database, public lastSeen?: number) {}
+  constructor(public db: Database, public lastSeen?: number) {
+    super()
+  }
 
   static async start(db: Database) {
     const found = await db.db
@@ -24,7 +26,7 @@ export class Sequencer {
   }
 
   listenToDb() {
-    this.db.listenFor('repo_append', () => {
+    this.db.channels.repo_seq.on('message', () => {
       if (this.polling) {
         this.queued = true
       } else {
@@ -38,7 +40,7 @@ export class Sequencer {
     firstExclusive?: number,
     lastInclusive?: number,
     limit?: number,
-  ): Promise<RepoAppendEvent[]> {
+  ): Promise<MaybeRepoEvent[]> {
     let qb = this.db.db
       .selectFrom('sequenced_event')
       .innerJoin('repo_commit_block', (join) =>
@@ -77,11 +79,11 @@ export class Sequencer {
     const seqs = Object.keys(bySeq)
       .map((seq) => parseInt(seq))
       .sort()
-    const evts: RepoAppendEvent[] = []
+    const evts: MaybeRepoEvent[] = []
     for (const seq of seqs) {
       const rows = bySeq[seq]
       if (!rows || rows.length === 0) {
-        continue
+        evts.push(null)
       }
       const commit = CID.parse(rows[0].commit)
       const carSlice = await writeCar(commit, async (car) => {
@@ -104,12 +106,10 @@ export class Sequencer {
   async pollDb() {
     const evts = await this.requestSeqRange(this.lastSeen)
     for (const evt of evts) {
-      for (const listener of this.listeners) {
-        listener(evt)
+      if (evt !== null) {
+        this.emit('event', evt)
       }
-      this.lastSeen = evt.seq
     }
-
     // check if we should continue polling
     if (this.queued === false) {
       this.polling === false
@@ -118,15 +118,7 @@ export class Sequencer {
       this.pollDb()
     }
   }
-
-  receiveEvents(cb: ListenerCB, receiverLastSeen?: number) {}
-
-  listenAll(cb: ListenerCB) {
-    this.listeners.push(cb)
-  }
 }
-
-type ListenerCB = (evt: RepoAppendEvent) => Promise<void>
 
 type SeqRow = {
   seq: number
@@ -136,7 +128,7 @@ type SeqRow = {
   content: Uint8Array
 }
 
-type RepoAppendEvent = {
+export type RepoEvent = {
   seq: number
   repo: string
   repoAppend: {
@@ -144,5 +136,13 @@ type RepoAppendEvent = {
     carSlice: Uint8Array
   }
 }
+
+type MaybeRepoEvent = RepoEvent | null
+
+type SequencerEvents = {
+  event: (evt: RepoEvent) => void
+}
+
+type SequencerEmitter = TypedEmitter<SequencerEvents>
 
 export default Sequencer
