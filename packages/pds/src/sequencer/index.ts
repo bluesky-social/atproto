@@ -41,8 +41,19 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     lastInclusive?: number,
     limit?: number,
   ): Promise<MaybeRepoEvent[]> {
+    let seqQb = this.db.db.selectFrom('repo_seq').selectAll()
+    if (firstExclusive !== undefined) {
+      seqQb = seqQb.where('seq', '>', firstExclusive)
+    }
+    if (lastInclusive !== undefined) {
+      seqQb = seqQb.where('seq', '<=', lastInclusive)
+    }
+    if (limit !== undefined) {
+      seqQb = seqQb.limit(limit)
+    }
+
     let qb = this.db.db
-      .selectFrom('repo_seq')
+      .selectFrom(seqQb.as('repo_seq'))
       .innerJoin('repo_commit_block', (join) =>
         join
           .onRef('repo_commit_block.creator', '=', 'repo_seq.did')
@@ -61,16 +72,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         'ipld_block.content as content',
       ])
 
-    if (firstExclusive !== undefined) {
-      qb = qb.where('seq', '>', firstExclusive)
-    }
-    if (lastInclusive !== undefined) {
-      qb = qb.where('seq', '<=', lastInclusive)
-    }
-    if (limit !== undefined) {
-      qb = qb.limit(limit)
-    }
-
     const res: SeqRow[] = await qb.execute()
     const bySeq = res.reduce((acc, cur) => {
       acc[cur.seq] ??= []
@@ -79,7 +80,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     }, {} as Record<number, SeqRow[]>)
     const seqs = Object.keys(bySeq)
       .map((seq) => parseInt(seq))
-      .sort()
+      .sort((a, b) => a - b)
+    console.log('SEQS: ', seqs)
     const evts: MaybeRepoEvent[] = []
     for (const seq of seqs) {
       const rows = bySeq[seq]
