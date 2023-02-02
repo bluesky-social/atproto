@@ -8,7 +8,6 @@ import * as repoCommitBlock from './tables/repo-commit-block'
 import * as repoCommitHistory from './tables/repo-commit-history'
 import * as ipldBlock from './tables/ipld-block'
 import * as ipldBlockCreator from './tables/ipld-block-creator'
-import * as repoOp from './tables/repo-op'
 import * as inviteCode from './tables/invite-code'
 import * as duplicateRecords from './tables/duplicate-record'
 import * as notification from './tables/user-notification'
@@ -38,7 +37,6 @@ export type DatabaseSchemaType = user.PartialDB &
   repoCommitHistory.PartialDB &
   ipldBlock.PartialDB &
   ipldBlockCreator.PartialDB &
-  repoOp.PartialDB &
   inviteCode.PartialDB &
   duplicateRecords.PartialDB &
   notification.PartialDB &

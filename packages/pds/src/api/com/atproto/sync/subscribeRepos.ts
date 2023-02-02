@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
 
 class Outbox {
   buffer: SequencedEvent[] = []
-  isBackfilling = true
+  acceptingBufferedEvents = true
 
   constructor(public db: Database, public lastSeen: number) {}
 
@@ -34,7 +34,7 @@ class Outbox {
       .selectAll()
       .limit(count)
 
-    const getBlocks = this.db.db
+    const blocks = await this.db.db
       .selectFrom('repo_commit_block')
       .innerJoin(getEvtsQB.as('event'), (join) =>
         join
@@ -52,27 +52,7 @@ class Outbox {
       ])
       .execute()
 
-    const getOps = this.db.db
-      .selectFrom('repo_op')
-      .innerJoin(getEvtsQB.as('event'), (join) =>
-        join
-          .onRef('event.did', '=', 'repo_op.did')
-          .onRef('event.commit', '=', 'repo_op.commit'),
-      )
-      .select([
-        'event.seq as seq',
-        'event.did as did',
-        'event.commit as commit',
-        'repo_op.action as action',
-        'repo_op.collection as collection',
-        'repo_op.rkey as rkey',
-      ])
-      .execute()
-
-    const [blocks, ops] = await Promise.all([getBlocks, getOps])
-
     const blocksBySeq = blocks.reduce(keyBySeq, {})
-    const opsBySeq = ops.reduce(keyBySeq, {})
 
     const evts: any[] = []
 
@@ -81,7 +61,6 @@ class Outbox {
       if (blocks.length < 1) {
         throw new Error(`Found no blocks for seq: ${seq}`)
       }
-      const ops = opsBySeq[seq]
       const carSlice = await repo.writeCar(
         CID.parse(blocks[0].commit),
         async (car) => {
@@ -94,7 +73,6 @@ class Outbox {
         seq,
         repo: blocks[0].did,
         repoAppend: {
-          repoOps: ops,
           carSlice,
         },
       })
