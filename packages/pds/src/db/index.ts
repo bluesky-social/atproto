@@ -1,23 +1,26 @@
 import assert from 'assert'
 import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
-import { Pool as PgPool, types as pgTypes } from 'pg'
+import {
+  Pool as PgPool,
+  PoolClient as PgPoolClient,
+  types as pgTypes,
+} from 'pg'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 
 export class Database {
+  listeners: Record<string, ListenerCB[]> = {}
   migrator: Migrator
-  constructor(
-    public db: DatabaseSchema,
-    public dialect: Dialect,
-    public schema?: string,
-  ) {
+  notifyClient: PgPoolClient | null = null
+
+  constructor(public db: DatabaseSchema, public facets: DialectFacets) {
     this.migrator = new Migrator({
       db,
-      migrationTableSchema: schema,
-      provider: new CtxMigrationProvider(migrations, dialect),
+      migrationTableSchema: facets.dialect === 'pg' ? facets.schema : undefined,
+      provider: new CtxMigrationProvider(migrations, facets.dialect),
     })
   }
 
@@ -27,7 +30,7 @@ export class Database {
         database: new SqliteDB(location),
       }),
     })
-    return new Database(db, 'sqlite')
+    return new Database(db, { dialect: 'sqlite' })
   }
 
   static postgres(opts: PgOptions): Database {
@@ -55,18 +58,59 @@ export class Database {
       dialect: new PostgresDialect({ pool }),
     })
 
-    return new Database(db, 'pg', schema)
+    return new Database(db, { dialect: 'pg', pool, schema })
   }
 
   static memory(): Database {
     return Database.sqlite(':memory:')
   }
 
+  notify(channel: string, msg?: string) {
+    if (this.facets.dialect === 'pg') {
+      this.facets.pool.query(`NOTIFY ${channel}, '${msg}'`)
+    } else {
+      const cbs = this.listeners[channel]
+      if (cbs && cbs.length > 0) {
+        for (const cb of cbs) {
+          cb(msg)
+        }
+      }
+    }
+  }
+
+  async listenFor(channel: string, cb: ListenerCB) {
+    if (this.facets.dialect === 'pg') {
+      if (!this.notifyClient) {
+        this.notifyClient = await this.facets.pool.connect()
+        this.notifyClient.query(`LISTEN ${channel}`)
+        this.notifyClient.on('notification', (msg) => {
+          const cbs = this.listeners[msg.channel]
+          if (cbs && cbs.length > 0) {
+            for (const cb of cbs) {
+              cb(msg.payload)
+            }
+          }
+        })
+      }
+      this.notifyClient.query(`LISTEN ${channel}`)
+    }
+    this.listeners[channel] ??= []
+    this.listeners[channel].push(cb)
+  }
+
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     return await this.db.transaction().execute((txn) => {
-      const dbTxn = new Database(txn, this.dialect, this.schema)
+      const dbTxn = new Database(txn, this.facets)
       return fn(dbTxn)
     })
+  }
+
+  get schema(): string | undefined {
+    return this.facets.dialect === 'pg' ? this.facets.schema : undefined
+  }
+
+  get dialect(): Dialect {
+    return this.facets.dialect
   }
 
   get isTransaction() {
@@ -78,6 +122,8 @@ export class Database {
   }
 
   async close(): Promise<void> {
+    this.notifyClient?.removeAllListeners()
+    this.notifyClient?.release()
     await this.db.destroy()
   }
 
@@ -114,9 +160,24 @@ export default Database
 
 export type Dialect = 'pg' | 'sqlite'
 
+export type DialectFacets = PgFacets | SqliteFacets
+
+export type PgFacets = {
+  dialect: 'pg'
+  pool: PgPool
+  notifyClient?: PgPoolClient
+  schema?: string
+}
+
+export type SqliteFacets = {
+  dialect: 'sqlite'
+}
+
 // Can use with typeof to get types for partial queries
 export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })
 
 type PgOptions =
   | { url: string; schema?: string }
   | { pool: PgPool; schema?: string }
+
+type ListenerCB = (msg: string | undefined) => void
