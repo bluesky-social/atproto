@@ -49,8 +49,12 @@ export class RepoService {
       this.writeToRepo(did, writes, now),
       this.indexWrites(writes, now),
     ])
-    // make blobs permanent & associate w commit + recordUri in DB
-    await this.blobs.processWriteBlobs(did, commit, writes)
+    await Promise.all([
+      // make blobs permanent & associate w commit + recordUri in DB
+      this.blobs.processWriteBlobs(did, commit, writes),
+      // sequence write & notify subscribers
+      this.sequenceWrite(did, commit),
+    ])
   }
 
   async writeToRepo(
@@ -84,5 +88,13 @@ export class RepoService {
         }
       }),
     )
+  }
+
+  async sequenceWrite(did: string, commit: CID) {
+    await this.db.db
+      .insertInto('sequenced_event')
+      .values({ did, commit: commit.toString() })
+      .execute()
+    this.db.notify('repo_append')
   }
 }
