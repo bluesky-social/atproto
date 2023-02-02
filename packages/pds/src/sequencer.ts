@@ -19,6 +19,7 @@ export class Sequencer {
       .executeTakeFirst()
     const lastSeen = found ? found.seq : undefined
     const seq = new Sequencer(db, lastSeen)
+    seq.listenToDb()
     return seq
   }
 
@@ -27,12 +28,17 @@ export class Sequencer {
       if (this.polling) {
         this.queued = true
       } else {
+        this.polling = true
         this.pollDb()
       }
     })
   }
 
-  async pollDb() {
+  async requestSeqRange(
+    firstExclusive?: number,
+    lastInclusive?: number,
+    limit?: number,
+  ): Promise<RepoAppendEvent[]> {
     let qb = this.db.db
       .selectFrom('sequenced_event')
       .innerJoin('repo_commit_block', (join) =>
@@ -52,18 +58,27 @@ export class Sequencer {
         'ipld_block.content as content',
       ])
 
-    if (this.lastSeen !== undefined) {
-      qb = qb.where('seq', '>', this.lastSeen)
+    if (firstExclusive !== undefined) {
+      qb = qb.where('seq', '>', firstExclusive)
     }
+    if (lastInclusive !== undefined) {
+      qb = qb.where('seq', '<=', lastInclusive)
+    }
+    if (limit !== undefined) {
+      qb = qb.limit(limit)
+    }
+
     const res: SeqRow[] = await qb.execute()
     const bySeq = res.reduce((acc, cur) => {
       acc[cur.seq] ??= []
       acc[cur.seq].push(cur)
       return acc
     }, {} as Record<number, SeqRow[]>)
-    const seqs = Object.keys(bySeq).sort()
-    for (const seqStr of seqs) {
-      const seq = parseInt(seqStr)
+    const seqs = Object.keys(bySeq)
+      .map((seq) => parseInt(seq))
+      .sort()
+    const evts: RepoAppendEvent[] = []
+    for (const seq of seqs) {
       const rows = bySeq[seq]
       if (!rows || rows.length === 0) {
         continue
@@ -74,17 +89,25 @@ export class Sequencer {
           await car.put({ cid: CID.parse(row.cid), bytes: row.content })
         }
       })
-      const evt: RepoAppendEvent = {
+      evts.push({
         seq,
         repo: rows[0].did,
         repoAppend: {
           commit: commit.toString(),
           carSlice,
         },
-      }
+      })
+    }
+    return evts
+  }
+
+  async pollDb() {
+    const evts = await this.requestSeqRange(this.lastSeen)
+    for (const evt of evts) {
       for (const listener of this.listeners) {
         listener(evt)
       }
+      this.lastSeen = evt.seq
     }
 
     // check if we should continue polling
@@ -96,12 +119,14 @@ export class Sequencer {
     }
   }
 
+  receiveEvents(cb: ListenerCB, receiverLastSeen?: number) {}
+
   listenAll(cb: ListenerCB) {
     this.listeners.push(cb)
   }
 }
 
-type ListenerCB = (evt: RepoAppendEvent) => void
+type ListenerCB = (evt: RepoAppendEvent) => Promise<void>
 
 type SeqRow = {
   seq: number
