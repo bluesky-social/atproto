@@ -2178,18 +2178,6 @@ export const schemaDict = {
           indexedAt: {
             type: 'datetime',
           },
-          myState: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.getSuggestions#myState',
-          },
-        },
-      },
-      myState: {
-        type: 'object',
-        properties: {
-          follow: {
-            type: 'string',
-          },
         },
       },
     },
