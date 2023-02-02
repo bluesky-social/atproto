@@ -124,6 +124,9 @@ export class Database {
   async close(): Promise<void> {
     this.notifyClient?.removeAllListeners()
     this.notifyClient?.release()
+    if (this.facets.dialect === 'pg') {
+      await this.facets.pool.end()
+    }
     await this.db.destroy()
   }
 
@@ -165,7 +168,6 @@ export type DialectFacets = PgFacets | SqliteFacets
 export type PgFacets = {
   dialect: 'pg'
   pool: PgPool
-  notifyClient?: PgPoolClient
   schema?: string
 }
 

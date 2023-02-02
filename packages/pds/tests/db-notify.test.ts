@@ -39,7 +39,7 @@ describe('db', () => {
     }
     dbTwo.notify('otherchannel', 'blah')
 
-    await wait(500)
+    await wait(200)
     expect(received.sort()).toEqual(toSend.sort())
   })
 
@@ -60,7 +60,7 @@ describe('db', () => {
     }
     dbTwo.notify('otherchannel', 'blah')
 
-    await wait(500)
+    await wait(200)
     expect(receivedOne.sort()).toEqual(toSend.sort())
     expect(receivedTwo.sort()).toEqual(toSend.sort())
   })
