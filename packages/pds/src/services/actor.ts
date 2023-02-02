@@ -7,7 +7,6 @@ import { User } from '../db/tables/user'
 import { DidHandle } from '../db/tables/did-handle'
 import { RepoRoot } from '../db/tables/repo-root'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
-import { APP_BSKY_GRAPH } from '../lexicon'
 import { notSoftDeletedClause } from '../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from './util/search'
 import { paginate, TimeCidKeyset } from '../db/pagination'
@@ -166,6 +165,17 @@ export class ActorService {
     return scrypt.verify(password, found.password)
   }
 
+  async verifyUserDidPassword(did: string, password: string): Promise<boolean> {
+    const found = await this.db.db
+      .selectFrom('did_handle')
+      .where('did_handle.did', '=', did)
+      .innerJoin('user', 'user.handle', 'did_handle.handle')
+      .selectAll()
+      .executeTakeFirst()
+    if (!found) return false
+    return scrypt.verify(password, found.password)
+  }
+
   async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {
     const { did, mutedByDid, createdAt = new Date() } = info
     await this.db.db
@@ -234,6 +244,26 @@ export class ActorService {
       before,
       keyset,
     }).execute()
+  }
+
+  async deleteUser(did: string): Promise<void> {
+    this.db.assertTransaction()
+    await this.db.db
+      .deleteFrom('user')
+      .where('user.handle', '=', (qb) =>
+        qb
+          .selectFrom('did_handle')
+          .where('did', '=', did)
+          .select('did_handle.handle as handle'),
+      )
+      .execute()
+    await Promise.all([
+      this.db.db.deleteFrom('refresh_token').where('did', '=', did).execute(),
+      this.db.db
+        .deleteFrom('did_handle')
+        .where('did_handle.did', '=', did)
+        .execute(),
+    ])
   }
 }
 

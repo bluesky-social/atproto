@@ -1,5 +1,6 @@
 export interface IpldBlock {
   cid: string
+  creator: string
   size: number
   content: Uint8Array
 }

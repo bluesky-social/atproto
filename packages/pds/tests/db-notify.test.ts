@@ -31,10 +31,10 @@ describe('db', () => {
 
   it('notifies', async () => {
     const sendCount = 5
-    const defferables = createDeferrables(sendCount)
+    const deferrables = createDeferrables(sendCount)
     let receivedCount = 0
     dbOne.channels.repo_seq.addListener('message', () => {
-      defferables[receivedCount]?.resolve()
+      deferrables[receivedCount]?.resolve()
       receivedCount++
     })
 
@@ -42,21 +42,21 @@ describe('db', () => {
       dbTwo.notify('repo_seq')
     }
 
-    await allComplete(defferables)
+    await allComplete(deferrables)
     expect(receivedCount).toBe(sendCount)
   })
 
   it('can notifies multiple listeners', async () => {
     const sendCount = 5
-    const defferables = createDeferrables(sendCount * 2)
+    const deferrables = createDeferrables(sendCount * 2)
     let receivedOne = 0
     let receivedTwo = 0
     dbOne.channels.repo_seq.addListener('message', () => {
-      defferables[receivedOne]?.resolve()
+      deferrables[receivedOne]?.resolve()
       receivedOne++
     })
     dbOne.channels.repo_seq.addListener('message', () => {
-      defferables[receivedTwo + sendCount]?.resolve()
+      deferrables[receivedTwo + sendCount]?.resolve()
       receivedTwo++
     })
 
@@ -64,7 +64,7 @@ describe('db', () => {
       dbTwo.notify('repo_seq')
     }
 
-    await allComplete(defferables)
+    await allComplete(deferrables)
     expect(receivedOne).toBe(sendCount)
     expect(receivedTwo).toBe(sendCount)
   })

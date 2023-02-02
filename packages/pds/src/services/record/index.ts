@@ -127,7 +127,11 @@ export class RecordService {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
-      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'record.cid')
+          .on('ipld_block.creator', '=', did),
+      )
       .where('record.did', '=', did)
       .where('record.collection', '=', collection)
       .if(!includeSoftDeleted, (qb) =>
@@ -167,9 +171,13 @@ export class RecordService {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
-      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
-      .selectAll()
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'record.cid')
+          .on('ipld_block.creator', '=', uri.host),
+      )
       .where('record.uri', '=', uri.toString())
+      .selectAll()
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
@@ -215,5 +223,62 @@ export class RecordService {
       throw new Error('Could not find table for collection')
     }
     return found
+  }
+
+  async deleteForUser(did: string) {
+    this.db.assertTransaction()
+
+    const postByUser = (qb) =>
+      qb
+        .selectFrom('post')
+        .where('post.creator', '=', did)
+        .select('post.uri as uri')
+
+    await Promise.all([
+      this.db.db
+        .deleteFrom('post_entity')
+        .where('post_entity.postUri', 'in', postByUser)
+        .execute(),
+      this.db.db
+        .deleteFrom('post_embed_image')
+        .where('post_embed_image.postUri', 'in', postByUser)
+        .execute(),
+      this.db.db
+        .deleteFrom('post_embed_external')
+        .where('post_embed_external.postUri', 'in', postByUser)
+        .execute(),
+      this.db.db
+        .deleteFrom('duplicate_record')
+        .where('duplicate_record.duplicateOf', 'in', (qb) =>
+          qb
+            .selectFrom('record')
+            .where('record.did', '=', did)
+            .select('record.uri as uri'),
+        )
+        .execute(),
+    ])
+    await Promise.all([
+      this.db.db.deleteFrom('record').where('did', '=', did).execute(),
+      this.db.db.deleteFrom('assertion').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('follow').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('post').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('profile').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('vote').where('creator', '=', did).execute(),
+      this.db.db
+        .updateTable('assertion')
+        .set({
+          confirmUri: null,
+          confirmCid: null,
+          confirmCreated: null,
+          confirmIndexed: null,
+        })
+        .where('subjectDid', '=', did)
+        .execute(),
+      this.db.db
+        .deleteFrom('user_notification')
+        .where('author', '=', did)
+        .execute(),
+    ])
   }
 }

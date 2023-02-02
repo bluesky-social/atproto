@@ -117,7 +117,11 @@ export class FeedService {
     const posts = await db
       .selectFrom('post')
       .where('post.uri', 'in', postUris)
-      .innerJoin('ipld_block', 'ipld_block.cid', 'post.cid')
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'post.cid')
+          .onRef('ipld_block.creator', '=', 'post.creator'),
+      )
       .innerJoin('repo_root', 'repo_root.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
       .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down

@@ -5,33 +5,8 @@ import { CID } from 'multiformats/cid'
 import { RepoCommitBlock } from '../tables/repo-commit-block'
 import { RepoCommitHistory } from '../tables/repo-commit-history'
 
-const commitBlockTable = 'repo_commit_block'
-const commitHistoryTable = 'repo_commit_history'
-
 export async function up(db: Kysely<any>): Promise<void> {
-  await db.schema
-    .createTable(commitBlockTable)
-    .addColumn('commit', 'varchar', (col) => col.notNull())
-    .addColumn('block', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint(`${commitBlockTable}_pkey`, [
-      'creator',
-      'commit',
-      'block',
-    ])
-    .execute()
-  await db.schema
-    .createTable(commitHistoryTable)
-    .addColumn('commit', 'varchar', (col) => col.notNull())
-    .addColumn('prev', 'varchar')
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint(`${commitHistoryTable}_pkey`, [
-      'creator',
-      'commit',
-    ])
-    .execute()
-
-  const migrateUser = async (did: string, root: CID) => {
+  const migrateUser = async (did: string, head: CID, start: CID | null) => {
     const userBlocks = await db
       .selectFrom('ipld_block')
       .innerJoin(
@@ -50,7 +25,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     const storage = new MigrationStorage(blocks, db)
 
-    const commitData = await storage.getCommits(root, null)
+    const commitData = await storage.getCommits(head, start)
     if (!commitData) return
 
     const commitBlock: RepoCommitBlock[] = []
@@ -72,54 +47,56 @@ export async function up(db: Kysely<any>): Promise<void> {
         creator: did,
       })
     }
-    const promises: Promise<unknown>[] = []
-    chunkArray(commitBlock, 500).forEach((batch) => {
-      promises.push(
-        db
-          .insertInto('repo_commit_block')
-          .values(batch)
-          .onConflict((oc) => oc.doNothing())
-          .execute(),
-      )
-    })
-    chunkArray(commitHistory, 500).forEach((batch) => {
-      promises.push(
-        db
-          .insertInto('repo_commit_history')
-          .values(batch)
-          .onConflict((oc) => oc.doNothing())
-          .execute(),
-      )
-    })
-
     const ipldBlockCreators = storage.blocks.entries().map((entry) => ({
       cid: entry.cid.toString(),
       did: did,
     }))
-    chunkArray(ipldBlockCreators, 500).forEach((batch) => {
-      promises.push(
-        db
+
+    const createRepoCommitBlocks = async () => {
+      for (const batch of chunkArray(commitBlock, 500)) {
+        await db
+          .insertInto('repo_commit_block')
+          .values(batch)
+          .onConflict((oc) => oc.doNothing())
+          .execute()
+      }
+    }
+    const createRepoCommitHistory = async () => {
+      for (const batch of chunkArray(commitHistory, 500)) {
+        await db
+          .insertInto('repo_commit_history')
+          .values(batch)
+          .onConflict((oc) => oc.doNothing())
+          .execute()
+      }
+    }
+    const createIpldBlockCreators = async () => {
+      for (const batch of chunkArray(ipldBlockCreators, 500)) {
+        await db
           .insertInto('ipld_block_creator')
           .values(batch)
           .onConflict((oc) => oc.doNothing())
-          .execute(),
-      )
-    })
+          .execute()
+      }
+    }
 
-    return Promise.all(promises)
+    await Promise.all([
+      createRepoCommitBlocks(),
+      createRepoCommitHistory(),
+      createIpldBlockCreators(),
+    ])
   }
 
-  const userRoots = await db.selectFrom('repo_root').selectAll().execute()
-
-  await Promise.all(
-    userRoots.map((row) => migrateUser(row.did, CID.parse(row.root))),
-  )
+  const repoHeads = await db.selectFrom('repo_root').selectAll().execute()
+  const currHeads: Record<string, CID> = {}
+  for (const row of repoHeads) {
+    const head = CID.parse(row.root)
+    await migrateUser(row.did, head, null)
+    currHeads[row.did] = head
+  }
 }
 
-export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable(commitHistoryTable).execute()
-  await db.schema.dropTable(commitBlockTable).execute()
-}
+export async function down(_db: Kysely<unknown>): Promise<void> {}
 
 class MigrationStorage extends MemoryBlockstore {
   constructor(public blocks: BlockMap, public db: Kysely<any>) {

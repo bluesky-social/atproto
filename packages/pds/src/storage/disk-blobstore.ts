@@ -100,6 +100,10 @@ export class DiskBlobStore implements BlobStore {
       throw err
     }
   }
+
+  async delete(cid: CID): Promise<void> {
+    await fs.rm(this.getStoredPath(cid))
+  }
 }
 
 const fileExists = (location: string): Promise<boolean> => {

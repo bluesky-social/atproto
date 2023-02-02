@@ -7,6 +7,7 @@ export interface BlobStore {
   putPermanent(cid: CID, bytes: Uint8Array | stream.Readable): Promise<void>
   getBytes(cid: CID): Promise<Uint8Array>
   getStream(cid: CID): Promise<stream.Readable>
+  delete(cid: CID): Promise<void>
 }
 
 export class BlobNotFoundError extends Error {}
