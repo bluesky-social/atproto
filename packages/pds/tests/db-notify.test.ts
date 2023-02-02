@@ -7,11 +7,11 @@ describe('db', () => {
 
   beforeAll(async () => {
     if (process.env.DB_POSTGRES_URL) {
-      dbOne = Database.postgres({
+      dbOne = await Database.postgres({
         url: process.env.DB_POSTGRES_URL,
         schema: 'db_notify',
       })
-      dbTwo = Database.postgres({
+      dbTwo = await Database.postgres({
         url: process.env.DB_POSTGRES_URL,
         schema: 'db_notify',
       })
@@ -30,15 +30,15 @@ describe('db', () => {
   it('notifies', async () => {
     const toSend = ['one', 'two', 'three', 'four', 'five']
     const received: string[] = []
-    await dbOne.listenFor('test', (msg) => {
+    dbOne.channels.repo_seq.addListener('message', (msg) => {
       received.push(msg || '')
     })
 
-    dbTwo.notify('otherchannel', 'blah')
+    dbTwo.notify('otherchannel' as any, 'blah')
     for (const msg of toSend) {
-      dbTwo.notify('test', msg)
+      dbTwo.notify('repo_seq', msg)
     }
-    dbTwo.notify('otherchannel', 'blah')
+    dbTwo.notify('otherchannel' as any, 'blah')
 
     await wait(200)
     expect(received.sort()).toEqual(toSend.sort())
@@ -48,18 +48,18 @@ describe('db', () => {
     const toSend = ['one', 'two', 'three', 'four', 'five']
     const receivedOne: string[] = []
     const receivedTwo: string[] = []
-    await dbOne.listenFor('test', (msg) => {
+    dbOne.channels.repo_seq.addListener('message', (msg) => {
       receivedOne.push(msg || '')
     })
-    await dbOne.listenFor('test', (msg) => {
+    dbOne.channels.repo_seq.addListener('message', (msg) => {
       receivedTwo.push(msg || '')
     })
 
-    dbTwo.notify('otherchannel', 'blah')
+    dbTwo.notify('otherchannel' as any, 'blah')
     for (const msg of toSend) {
-      dbTwo.notify('test', msg)
+      dbTwo.notify('repo_seq', msg)
     }
-    dbTwo.notify('otherchannel', 'blah')
+    dbTwo.notify('otherchannel' as any, 'blah')
 
     await wait(200)
     expect(receivedOne.sort()).toEqual(toSend.sort())

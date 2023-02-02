@@ -1,7 +1,7 @@
 {
   "name": "@atproto/pds",
   "version": "0.0.2",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "bin": "dist/bin.ts",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
@@ -54,6 +54,7 @@
     "pino": "^8.6.1",
     "pino-http": "^8.2.1",
     "sharp": "^0.31.2",
+    "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {

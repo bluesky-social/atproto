@@ -10,9 +10,13 @@ import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
+import EventEmitter from 'events'
+import TypedEmitter from 'typed-emitter'
 
 export class Database {
-  listeners: Record<string, ListenerCB[]> = {}
+  channels: Channels = {
+    repo_seq: new EventEmitter() as ChannelEmitter,
+  }
   migrator: Migrator
   notifyClient: PgPoolClient | null = null
 
@@ -33,13 +37,19 @@ export class Database {
     return new Database(db, { dialect: 'sqlite' })
   }
 
-  static postgres(opts: PgOptions): Database {
+  static async postgres(opts: PgOptions): Promise<Database> {
     const { schema } = opts
     const pool =
       'pool' in opts ? opts.pool : new PgPool({ connectionString: opts.url })
 
     // Select count(*) and other pg bigints as js integer
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
+
+    const db = new Kysely<DatabaseSchemaType>({
+      dialect: new PostgresDialect({ pool }),
+    })
+
+    const database = new Database(db, { dialect: 'pg', pool, schema })
 
     // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
     if (schema !== undefined) {
@@ -48,54 +58,37 @@ export class Database {
           `Postgres schema must only contain [A-Za-z_]: ${schema}`,
         )
       }
-      pool.on('connect', (client) =>
+      pool.on('connect', (client) => {
         // Shared objects such as extensions will go in the public schema
-        client.query(`SET search_path TO "${schema}",public`),
-      )
+        client.query(`SET search_path TO "${schema}",public`)
+      })
     }
 
-    const db = new Kysely<DatabaseSchemaType>({
-      dialect: new PostgresDialect({ pool }),
+    database.notifyClient = await pool.connect()
+    database.notifyClient.query(`LISTEN repo_seq`)
+    database.notifyClient.on('notification', (msg) => {
+      const channel = database.channels[msg.channel]
+      if (channel) {
+        channel.emit('message', msg.payload)
+      }
     })
 
-    return new Database(db, { dialect: 'pg', pool, schema })
+    return database
   }
 
   static memory(): Database {
     return Database.sqlite(':memory:')
   }
 
-  notify(channel: string, msg?: string) {
+  notify(channel: keyof Channels, msg?: string) {
     if (this.facets.dialect === 'pg') {
       this.facets.pool.query(`NOTIFY ${channel}, '${msg}'`)
     } else {
-      const cbs = this.listeners[channel]
-      if (cbs && cbs.length > 0) {
-        for (const cb of cbs) {
-          cb(msg)
-        }
+      const emitter = this.channels[channel]
+      if (emitter) {
+        emitter.emit('message', msg)
       }
     }
-  }
-
-  async listenFor(channel: string, cb: ListenerCB) {
-    if (this.facets.dialect === 'pg') {
-      if (!this.notifyClient) {
-        this.notifyClient = await this.facets.pool.connect()
-        this.notifyClient.query(`LISTEN ${channel}`)
-        this.notifyClient.on('notification', (msg) => {
-          const cbs = this.listeners[msg.channel]
-          if (cbs && cbs.length > 0) {
-            for (const cb of cbs) {
-              cb(msg.payload)
-            }
-          }
-        })
-      }
-      this.notifyClient.query(`LISTEN ${channel}`)
-    }
-    this.listeners[channel] ??= []
-    this.listeners[channel].push(cb)
   }
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
@@ -182,4 +175,12 @@ type PgOptions =
   | { url: string; schema?: string }
   | { pool: PgPool; schema?: string }
 
-type ListenerCB = (msg: string | undefined) => void
+type ChannelEvents = {
+  message: (msg?: string) => void
+}
+
+type ChannelEmitter = TypedEmitter<ChannelEvents>
+
+type Channels = {
+  repo_seq: ChannelEmitter
+}
