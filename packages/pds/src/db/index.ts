@@ -19,7 +19,7 @@ export class Database {
     repo_seq: new EventEmitter() as ChannelEmitter,
   }
   migrator: Migrator
-  notifyClient: PgPoolClient | null = null
+  private channelClient: PgPoolClient | null = null
 
   constructor(public db: DatabaseSchema, public facets: DialectFacets) {
     this.migrator = new Migrator({
@@ -75,18 +75,18 @@ export class Database {
 
   private async startListeningToChannels() {
     if (this.facets.dialect !== 'pg') return
-    this.notifyClient = await this.facets.pool.connect()
-    this.notifyClient.query(`LISTEN repo_seq`)
-    this.notifyClient.on('notification', (msg) => {
+    this.channelClient = await this.facets.pool.connect()
+    this.channelClient.query(`LISTEN repo_seq`)
+    this.channelClient.on('notification', (msg) => {
       const channel = this.channels[msg.channel]
       if (channel) {
         channel.emit('message', msg.payload)
       }
     })
-    this.notifyClient.on('error', (err) => {
+    this.channelClient.on('error', (err) => {
       log.error({ err }, 'postgres listener errored, reconnecting')
-      this.notifyClient?.removeAllListeners()
-      this.notifyClient?.release()
+      this.channelClient?.removeAllListeners()
+      this.channelClient?.release()
       this.startListeningToChannels()
     })
   }
@@ -126,8 +126,8 @@ export class Database {
   }
 
   async close(): Promise<void> {
-    this.notifyClient?.removeAllListeners()
-    this.notifyClient?.release()
+    this.channelClient?.removeAllListeners()
+    this.channelClient?.release()
     if (this.facets.dialect === 'pg') {
       await this.facets.pool.end()
     }
