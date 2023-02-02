@@ -1,4 +1,4 @@
-import { wait } from '@atproto/common'
+import { allComplete, createDeferrables } from '@atproto/common'
 import { Database } from '../src'
 
 describe('db', () => {
@@ -31,8 +31,10 @@ describe('db', () => {
 
   it('notifies', async () => {
     const sendCount = 5
+    const defferables = createDeferrables(sendCount)
     let receivedCount = 0
     dbOne.channels.repo_seq.addListener('message', () => {
+      defferables[receivedCount]?.resolve()
       receivedCount++
     })
 
@@ -40,18 +42,21 @@ describe('db', () => {
       dbTwo.notify('repo_seq')
     }
 
-    await wait(200)
+    await allComplete(defferables)
     expect(receivedCount).toBe(sendCount)
   })
 
   it('can notifies multiple listeners', async () => {
     const sendCount = 5
+    const defferables = createDeferrables(sendCount * 2)
     let receivedOne = 0
     let receivedTwo = 0
     dbOne.channels.repo_seq.addListener('message', () => {
+      defferables[receivedOne]?.resolve()
       receivedOne++
     })
     dbOne.channels.repo_seq.addListener('message', () => {
+      defferables[receivedTwo + sendCount]?.resolve()
       receivedTwo++
     })
 
@@ -59,7 +64,7 @@ describe('db', () => {
       dbTwo.notify('repo_seq')
     }
 
-    await wait(200)
+    await allComplete(defferables)
     expect(receivedOne).toBe(sendCount)
     expect(receivedTwo).toBe(sendCount)
   })

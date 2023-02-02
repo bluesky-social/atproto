@@ -21,11 +21,11 @@ export class Database {
   migrator: Migrator
   private channelClient: PgPoolClient | null = null
 
-  constructor(public db: DatabaseSchema, public facets: DialectFacets) {
+  constructor(public db: DatabaseSchema, public cfg: DialectConfig) {
     this.migrator = new Migrator({
       db,
-      migrationTableSchema: facets.dialect === 'pg' ? facets.schema : undefined,
-      provider: new CtxMigrationProvider(migrations, facets.dialect),
+      migrationTableSchema: cfg.dialect === 'pg' ? cfg.schema : undefined,
+      provider: new CtxMigrationProvider(migrations, cfg.dialect),
     })
   }
 
@@ -71,8 +71,8 @@ export class Database {
   }
 
   async startListeningToChannels() {
-    if (this.facets.dialect !== 'pg') return
-    this.channelClient = await this.facets.pool.connect()
+    if (this.cfg.dialect !== 'pg') return
+    this.channelClient = await this.cfg.pool.connect()
     await this.channelClient.query(`LISTEN repo_seq`)
     this.channelClient.on('notification', (msg) => {
       const channel = this.channels[msg.channel]
@@ -91,8 +91,8 @@ export class Database {
     if (channel !== 'repo_seq') {
       throw new Error(`attempted sending on unavailable channel: ${channel}`)
     }
-    if (this.facets.dialect === 'pg') {
-      this.facets.pool.query(`NOTIFY ${channel}`)
+    if (this.cfg.dialect === 'pg') {
+      this.cfg.pool.query(`NOTIFY ${channel}`)
     } else {
       const emitter = this.channels[channel]
       if (emitter) {
@@ -103,17 +103,17 @@ export class Database {
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     return await this.db.transaction().execute((txn) => {
-      const dbTxn = new Database(txn, this.facets)
+      const dbTxn = new Database(txn, this.cfg)
       return fn(dbTxn)
     })
   }
 
   get schema(): string | undefined {
-    return this.facets.dialect === 'pg' ? this.facets.schema : undefined
+    return this.cfg.dialect === 'pg' ? this.cfg.schema : undefined
   }
 
   get dialect(): Dialect {
-    return this.facets.dialect
+    return this.cfg.dialect
   }
 
   get isTransaction() {
@@ -127,8 +127,8 @@ export class Database {
   async close(): Promise<void> {
     this.channelClient?.removeAllListeners()
     this.channelClient?.release()
-    if (this.facets.dialect === 'pg') {
-      await this.facets.pool.end()
+    if (this.cfg.dialect === 'pg') {
+      await this.cfg.pool.end()
     }
     await this.db.destroy()
   }
@@ -166,15 +166,15 @@ export default Database
 
 export type Dialect = 'pg' | 'sqlite'
 
-export type DialectFacets = PgFacets | SqliteFacets
+export type DialectConfig = PgConfig | SqliteConfig
 
-export type PgFacets = {
+export type PgConfig = {
   dialect: 'pg'
   pool: PgPool
   schema?: string
 }
 
-export type SqliteFacets = {
+export type SqliteConfig = {
   dialect: 'sqlite'
 }
 
