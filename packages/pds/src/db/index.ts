@@ -1,23 +1,31 @@
 import assert from 'assert'
 import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
-import { Pool as PgPool, types as pgTypes } from 'pg'
+import {
+  Pool as PgPool,
+  PoolClient as PgPoolClient,
+  types as pgTypes,
+} from 'pg'
+import EventEmitter from 'events'
+import TypedEmitter from 'typed-emitter'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
+import { dbLogger as log } from '../logger'
 
 export class Database {
+  channels: Channels = {
+    repo_seq: new EventEmitter() as ChannelEmitter,
+  }
   migrator: Migrator
-  constructor(
-    public db: DatabaseSchema,
-    public dialect: Dialect,
-    public schema?: string,
-  ) {
+  private channelClient: PgPoolClient | null = null
+
+  constructor(public db: DatabaseSchema, public cfg: DialectConfig) {
     this.migrator = new Migrator({
       db,
-      migrationTableSchema: schema,
-      provider: new CtxMigrationProvider(migrations, dialect),
+      migrationTableSchema: cfg.dialect === 'pg' ? cfg.schema : undefined,
+      provider: new CtxMigrationProvider(migrations, cfg.dialect),
     })
   }
 
@@ -27,7 +35,7 @@ export class Database {
         database: new SqliteDB(location),
       }),
     })
-    return new Database(db, 'sqlite')
+    return new Database(db, { dialect: 'sqlite' })
   }
 
   static postgres(opts: PgOptions): Database {
@@ -45,28 +53,67 @@ export class Database {
           `Postgres schema must only contain [A-Za-z_]: ${schema}`,
         )
       }
-      pool.on('connect', (client) =>
+      pool.on('connect', (client) => {
         // Shared objects such as extensions will go in the public schema
-        client.query(`SET search_path TO "${schema}",public`),
-      )
+        client.query(`SET search_path TO "${schema}",public`)
+      })
     }
 
     const db = new Kysely<DatabaseSchemaType>({
       dialect: new PostgresDialect({ pool }),
     })
 
-    return new Database(db, 'pg', schema)
+    return new Database(db, { dialect: 'pg', pool, schema })
   }
 
   static memory(): Database {
     return Database.sqlite(':memory:')
   }
 
+  async startListeningToChannels() {
+    if (this.cfg.dialect !== 'pg') return
+    this.channelClient = await this.cfg.pool.connect()
+    await this.channelClient.query(`LISTEN repo_seq`)
+    this.channelClient.on('notification', (msg) => {
+      const channel = this.channels[msg.channel]
+      if (channel) {
+        channel.emit('message')
+      }
+    })
+    this.channelClient.on('error', (err) => {
+      log.error({ err }, 'postgres listener errored, reconnecting')
+      this.channelClient?.removeAllListeners()
+      this.startListeningToChannels()
+    })
+  }
+
+  notify(channel: keyof Channels) {
+    if (channel !== 'repo_seq') {
+      throw new Error(`attempted sending on unavailable channel: ${channel}`)
+    }
+    if (this.cfg.dialect === 'pg') {
+      this.cfg.pool.query(`NOTIFY ${channel}`)
+    } else {
+      const emitter = this.channels[channel]
+      if (emitter) {
+        emitter.emit('message')
+      }
+    }
+  }
+
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     return await this.db.transaction().execute((txn) => {
-      const dbTxn = new Database(txn, this.dialect, this.schema)
+      const dbTxn = new Database(txn, this.cfg)
       return fn(dbTxn)
     })
+  }
+
+  get schema(): string | undefined {
+    return this.cfg.dialect === 'pg' ? this.cfg.schema : undefined
+  }
+
+  get dialect(): Dialect {
+    return this.cfg.dialect
   }
 
   get isTransaction() {
@@ -78,6 +125,11 @@ export class Database {
   }
 
   async close(): Promise<void> {
+    this.channelClient?.removeAllListeners()
+    this.channelClient?.release()
+    if (this.cfg.dialect === 'pg') {
+      await this.cfg.pool.end()
+    }
     await this.db.destroy()
   }
 
@@ -114,9 +166,31 @@ export default Database
 
 export type Dialect = 'pg' | 'sqlite'
 
+export type DialectConfig = PgConfig | SqliteConfig
+
+export type PgConfig = {
+  dialect: 'pg'
+  pool: PgPool
+  schema?: string
+}
+
+export type SqliteConfig = {
+  dialect: 'sqlite'
+}
+
 // Can use with typeof to get types for partial queries
 export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })
 
 type PgOptions =
   | { url: string; schema?: string }
   | { pool: PgPool; schema?: string }
+
+type ChannelEvents = {
+  message: () => void
+}
+
+type ChannelEmitter = TypedEmitter<ChannelEvents>
+
+type Channels = {
+  repo_seq: ChannelEmitter
+}
