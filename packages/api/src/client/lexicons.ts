@@ -2023,23 +2023,17 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncSubscribeRepos: {
+  ComAtprotoSyncSubscribeAllRepos: {
     lexicon: 1,
-    id: 'com.atproto.sync.subscribeRepos',
+    id: 'com.atproto.sync.subscribeAllRepos',
     defs: {
       main: {
         type: 'subscription',
         description: 'Subscribe to repo updates',
         parameters: {
           type: 'params',
-          required: ['dids', 'lastSeen'],
+          required: ['lastSeen'],
           properties: {
-            dids: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-            },
             lastSeen: {
               type: 'number',
               description: 'The sequence number of the last seen repo update.',
@@ -3906,7 +3900,7 @@ export const ids = {
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
-  ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
   AppBskyActorProfile: 'app.bsky.actor.profile',

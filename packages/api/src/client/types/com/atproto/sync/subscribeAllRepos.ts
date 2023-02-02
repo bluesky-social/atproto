@@ -7,12 +7,9 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export interface QueryParams {
-  dids: string[]
   /** The sequence number of the last seen repo update. */
   lastSeen: number
 }
-
-export type InputSchema = undefined
 
 export interface CallOptions {
   headers?: Headers

@@ -293,13 +293,15 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     ) {
       continue
     }
+    const isGetReq =
+      userType.def.type === 'query' || userType.def.type === 'subscription'
     const moduleName = toTitleCase(userType.nsid)
     const name = toCamelCase(NSID.parse(userType.nsid).name || '')
     const method = cls.addMethod({
       name,
       returnType: `Promise<${moduleName}.Response>`,
     })
-    if (userType.def.type === 'query' || userType.def.type === 'subscription') {
+    if (isGetReq) {
       method.addParameter({
         name: 'params?',
         type: `${moduleName}.QueryParams`,
@@ -317,7 +319,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     method.setBodyText(
       [
         `return this._service.xrpc`,
-        userType.def.type === 'query'
+        isGetReq
           ? `.call('${userType.nsid}', params, undefined, opts)`
           : `.call('${userType.nsid}', opts?.qp, data, opts)`,
         `  .catch((e) => {`,
@@ -527,14 +529,13 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         const def = lexiconDoc.defs[defId]
         const lexUri = `${lexiconDoc.id}#${defId}`
         if (defId === 'main') {
-          if (
-            def.type === 'query' ||
-            def.type === 'subscription' ||
-            def.type === 'procedure'
-          ) {
+          if (def.type === 'query' || def.type === 'procedure') {
             genXrpcParams(file, lexicons, lexUri)
             genXrpcInput(file, imports, lexicons, lexUri)
             genXrpcOutput(file, imports, lexicons, lexUri)
+            genClientXrpcCommon(file, lexicons, lexUri)
+          } else if (def.type === 'subscription') {
+            genXrpcParams(file, lexicons, lexUri)
             genClientXrpcCommon(file, lexicons, lexUri)
           } else if (def.type === 'record') {
             genClientRecord(file, imports, lexicons, lexUri)

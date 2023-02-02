@@ -52,7 +52,7 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
@@ -135,7 +135,7 @@ export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
@@ -736,14 +736,14 @@ export class SyncNS {
       })
   }
 
-  subscribeRepos(
-    params?: ComAtprotoSyncSubscribeRepos.QueryParams,
-    opts?: ComAtprotoSyncSubscribeRepos.CallOptions,
-  ): Promise<ComAtprotoSyncSubscribeRepos.Response> {
+  subscribeAllRepos(
+    params?: ComAtprotoSyncSubscribeAllRepos.QueryParams,
+    opts?: ComAtprotoSyncSubscribeAllRepos.CallOptions,
+  ): Promise<ComAtprotoSyncSubscribeAllRepos.Response> {
     return this._service.xrpc
-      .call('com.atproto.sync.subscribeRepos', opts?.qp, data, opts)
+      .call('com.atproto.sync.subscribeAllRepos', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoSyncSubscribeRepos.toKnownErr(e)
+        throw ComAtprotoSyncSubscribeAllRepos.toKnownErr(e)
       })
   }
 }
