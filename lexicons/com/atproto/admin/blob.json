@@ -13,7 +13,8 @@
         "details": {
           "type": "union",
           "refs": ["#imageDetails", "#videoDetails"]
-        }
+        },
+        "moderation": {"type": "ref", "ref": "#moderation"}
       }
     },
     "imageDetails": {
@@ -31,6 +32,13 @@
         "width": {"type": "integer"},
         "height": {"type": "integer"},
         "length": {"type": "integer"}
+      }
+    },
+    "moderation": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "currentAction": {"type": "ref", "ref": "com.atproto.admin.moderationAction#viewCurrent"}
       }
     }
   }

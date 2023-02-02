@@ -41,8 +41,15 @@ export interface Response {
   data: OutputSchema
 }
 
+export class SubjectHasActionError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'SubjectHasAction') return new SubjectHasActionError(e)
   }
   return e
 }

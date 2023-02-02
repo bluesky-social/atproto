@@ -209,6 +209,10 @@ export const schemaDict = {
               'lex:com.atproto.admin.blob#videoDetails',
             ],
           },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.blob#moderation',
+          },
         },
       },
       imageDetails: {
@@ -235,6 +239,16 @@ export const schemaDict = {
           },
           length: {
             type: 'integer',
+          },
+        },
+      },
+      moderation: {
+        type: 'object',
+        required: [],
+        properties: {
+          currentAction: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#viewCurrent',
           },
         },
       },
@@ -463,12 +477,8 @@ export const schemaDict = {
             type: 'integer',
           },
           action: {
-            type: 'string',
-            knownValues: [
-              'com.atproto.admin.moderationAction#takedown',
-              'com.atproto.admin.moderationAction#flag',
-              'com.atproto.admin.moderationAction#acknowledge',
-            ],
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#actionType',
           },
           subject: {
             type: 'union',
@@ -521,12 +531,8 @@ export const schemaDict = {
             type: 'integer',
           },
           action: {
-            type: 'string',
-            knownValues: [
-              'com.atproto.admin.moderationAction#takedown',
-              'com.atproto.admin.moderationAction#flag',
-              'com.atproto.admin.moderationAction#acknowledge',
-            ],
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#actionType',
           },
           subject: {
             type: 'union',
@@ -564,6 +570,19 @@ export const schemaDict = {
           },
         },
       },
+      viewCurrent: {
+        type: 'object',
+        required: ['id', 'action'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          action: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#actionType',
+          },
+        },
+      },
       reversal: {
         type: 'object',
         required: ['reason', 'createdBy', 'createdAt'],
@@ -578,6 +597,14 @@ export const schemaDict = {
             type: 'string',
           },
         },
+      },
+      actionType: {
+        type: 'string',
+        knownValues: [
+          'com.atproto.admin.moderationAction#takedown',
+          'com.atproto.admin.moderationAction#flag',
+          'com.atproto.admin.moderationAction#acknowledge',
+        ],
       },
       takedown: {
         type: 'token',
@@ -776,8 +803,9 @@ export const schemaDict = {
         type: 'object',
         required: [],
         properties: {
-          takedownId: {
-            type: 'integer',
+          currentAction: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#viewCurrent',
           },
         },
       },
@@ -785,6 +813,10 @@ export const schemaDict = {
         type: 'object',
         required: ['actions', 'reports'],
         properties: {
+          currentAction: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#viewCurrent',
+          },
           actions: {
             type: 'array',
             items: {
@@ -798,9 +830,6 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.admin.moderationReport#view',
             },
-          },
-          takedownId: {
-            type: 'integer',
           },
         },
       },
@@ -893,8 +922,9 @@ export const schemaDict = {
         type: 'object',
         required: [],
         properties: {
-          takedownId: {
-            type: 'integer',
+          currentAction: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#viewCurrent',
           },
         },
       },
@@ -902,6 +932,10 @@ export const schemaDict = {
         type: 'object',
         required: ['actions', 'reports'],
         properties: {
+          currentAction: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.moderationAction#viewCurrent',
+          },
           actions: {
             type: 'array',
             items: {
@@ -915,9 +949,6 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.admin.moderationReport#view',
             },
-          },
-          takedownId: {
-            type: 'integer',
           },
         },
       },
@@ -1092,6 +1123,11 @@ export const schemaDict = {
             ref: 'lex:com.atproto.admin.moderationAction#view',
           },
         },
+        errors: [
+          {
+            name: 'SubjectHasAction',
+          },
+        ],
       },
     },
   },

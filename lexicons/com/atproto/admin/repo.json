@@ -37,16 +37,16 @@
       "type": "object",
       "required": [],
       "properties": {
-        "takedownId": {"type": "integer"}
+        "currentAction": {"type": "ref", "ref": "com.atproto.admin.moderationAction#viewCurrent"}
       }
     },
     "moderationDetail": {
       "type": "object",
       "required": ["actions", "reports"],
       "properties": {
+        "currentAction": {"type": "ref", "ref": "com.atproto.admin.moderationAction#viewCurrent"},
         "actions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationAction#view"}},
-        "reports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationReport#view"}},
-        "takedownId": {"type": "integer"}
+        "reports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationReport#view"}}
       }
     }
   }

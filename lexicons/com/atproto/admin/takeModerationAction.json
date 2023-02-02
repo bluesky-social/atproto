@@ -38,7 +38,8 @@
           "type": "ref",
           "ref": "com.atproto.admin.moderationAction#view"
         }
-      }
+      },
+      "errors": [{ "name": "SubjectHasAction" }]
     }
   }
 }

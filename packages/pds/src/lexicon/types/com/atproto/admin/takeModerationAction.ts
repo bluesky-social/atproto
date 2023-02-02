@@ -43,6 +43,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'SubjectHasAction'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

@@ -4,6 +4,7 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import * as ComAtprotoAdminModerationAction from './moderationAction'
 
 export interface View {
   cid: string
@@ -14,6 +15,7 @@ export interface View {
     | ImageDetails
     | VideoDetails
     | { $type: string; [k: string]: unknown }
+  moderation?: Moderation
   [k: string]: unknown
 }
 
@@ -62,4 +64,21 @@ export function isVideoDetails(v: unknown): v is VideoDetails {
 
 export function validateVideoDetails(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.blob#videoDetails', v)
+}
+
+export interface Moderation {
+  currentAction?: ComAtprotoAdminModerationAction.ViewCurrent
+  [k: string]: unknown
+}
+
+export function isModeration(v: unknown): v is Moderation {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.blob#moderation'
+  )
+}
+
+export function validateModeration(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.blob#moderation', v)
 }

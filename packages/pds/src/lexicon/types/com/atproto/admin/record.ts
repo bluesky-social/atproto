@@ -56,7 +56,7 @@ export function validateViewDetail(v: unknown): ValidationResult {
 }
 
 export interface Moderation {
-  takedownId?: number
+  currentAction?: ComAtprotoAdminModerationAction.ViewCurrent
   [k: string]: unknown
 }
 
@@ -73,9 +73,9 @@ export function validateModeration(v: unknown): ValidationResult {
 }
 
 export interface ModerationDetail {
+  currentAction?: ComAtprotoAdminModerationAction.ViewCurrent
   actions: ComAtprotoAdminModerationAction.View[]
   reports: ComAtprotoAdminModerationReport.View[]
-  takedownId?: number
   [k: string]: unknown
 }
 

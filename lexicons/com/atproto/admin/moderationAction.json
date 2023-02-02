@@ -7,14 +7,7 @@
       "required": ["id", "action", "subject", "subjectBlobCids", "reason", "createdBy", "createdAt", "resolvedReportIds"],
       "properties": {
         "id": {"type": "integer"},
-        "action": {
-          "type": "string",
-          "knownValues": [
-            "com.atproto.admin.moderationAction#takedown",
-            "com.atproto.admin.moderationAction#flag",
-            "com.atproto.admin.moderationAction#acknowledge"
-          ]
-        },
+        "action": {"type": "ref", "ref": "#actionType"},
         "subject": {
           "type": "union",
           "refs": [
@@ -35,14 +28,7 @@
       "required": ["id", "action", "subject", "subjectBlobs", "reason", "createdBy", "createdAt", "resolvedReports"],
       "properties": {
         "id": {"type": "integer"},
-        "action": {
-          "type": "string",
-          "knownValues": [
-            "com.atproto.admin.moderationAction#takedown",
-            "com.atproto.admin.moderationAction#flag",
-            "com.atproto.admin.moderationAction#acknowledge"
-          ]
-        },
+        "action": {"type": "ref", "ref": "#actionType"},
         "subject": {
           "type": "union",
           "refs": [
@@ -58,6 +44,14 @@
         "resolvedReports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationReport#view"}}
       }
     },
+    "viewCurrent": {
+      "type": "object",
+      "required": ["id", "action"],
+      "properties": {
+        "id": {"type": "integer"},
+        "action": {"type": "ref", "ref": "#actionType"}
+      }
+    },
     "reversal": {
       "type": "object",
       "required": ["reason", "createdBy", "createdAt"],
@@ -66,6 +60,14 @@
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"}
       }
+    },
+    "actionType": {
+      "type": "string",
+      "knownValues": [
+        "com.atproto.admin.moderationAction#takedown",
+        "com.atproto.admin.moderationAction#flag",
+        "com.atproto.admin.moderationAction#acknowledge"
+      ]
     },
     "takedown": {
       "type": "token",
