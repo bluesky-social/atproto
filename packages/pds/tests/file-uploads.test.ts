@@ -124,8 +124,8 @@ describe('file uploads', () => {
     const info = await image.getInfo(res.data)
     expect(info).toEqual(
       expect.objectContaining({
-        height: 500,
-        width: 500,
+        height: 1000,
+        width: 1000,
       }),
     )
   })
@@ -134,7 +134,7 @@ describe('file uploads', () => {
   let largeFile: Uint8Array
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
-    largeFile = await fs.readFile('tests/image/fixtures/key-portrait-large.jpg')
+    largeFile = await fs.readFile('tests/image/fixtures/hd-key.jpg')
     const res = await aliceClient.com.atproto.blob.upload(largeFile, {
       encoding: 'image/jpeg',
     } as any)
