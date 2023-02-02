@@ -5,11 +5,15 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   // Track relevant subject blobs on action
   await db.schema
     .createTable('moderation_action_subject_blob')
-    .addColumn('actionId', 'varchar', (col) =>
-      col.notNull().references('moderation_action.id'),
-    )
+    .addColumn('actionId', 'integer', (col) => col.notNull())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('recordUri', 'varchar', (col) => col.notNull())
+    .addForeignKeyConstraint(
+      'moderation_action_subject_blob_action_id_fkey',
+      ['actionId'],
+      'moderation_action',
+      ['id'],
+    )
     .addForeignKeyConstraint(
       'moderation_action_subject_blob_repo_blob_fkey',
       ['cid', 'recordUri'],
