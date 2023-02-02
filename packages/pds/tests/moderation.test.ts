@@ -406,6 +406,249 @@ describe('moderation', () => {
         },
       )
     })
+
+    it('only allows record to have one current action.', async () => {
+      const postUri = sc.posts[sc.dids.alice][0].ref.uri
+      const { data: acknowledge } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: ACKNOWLEDGE,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      const flagPromise = client.com.atproto.admin.takeModerationAction(
+        {
+          action: FLAG,
+          subject: {
+            $type: 'com.atproto.repo.recordRef',
+            uri: postUri.toString(),
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      await expect(flagPromise).rejects.toThrow(
+        'Subject already has an active action:',
+      )
+
+      // Reverse current then retry
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: acknowledge.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      const { data: flag } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: flag.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+
+    it('only allows repo to have one current action.', async () => {
+      const { data: acknowledge } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: ACKNOWLEDGE,
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did: sc.dids.alice,
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      const flagPromise = client.com.atproto.admin.takeModerationAction(
+        {
+          action: FLAG,
+          subject: {
+            $type: 'com.atproto.repo.repoRef',
+            did: sc.dids.alice,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      await expect(flagPromise).rejects.toThrow(
+        'Subject already has an active action:',
+      )
+
+      // Reverse current then retry
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: acknowledge.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      const { data: flag } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did: sc.dids.alice,
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: flag.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+
+    it('only allows blob to have one current action.', async () => {
+      const img = sc.posts[sc.dids.carol][0].blobs[0]
+      const postA = await sc.post(sc.dids.alice, 'image A', undefined, [img])
+      const postB = await sc.post(sc.dids.alice, 'image B', undefined, [img])
+      const { data: acknowledge } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: ACKNOWLEDGE,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postA.ref.uriStr,
+            },
+            subjectBlobCids: [img.image.cid],
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      const flagPromise = client.com.atproto.admin.takeModerationAction(
+        {
+          action: FLAG,
+          subject: {
+            $type: 'com.atproto.repo.recordRef',
+            uri: postB.ref.uriStr,
+          },
+          subjectBlobCids: [img.image.cid],
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      await expect(flagPromise).rejects.toThrow(
+        'Blob already has an active action:',
+      )
+      // Reverse current then retry
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: acknowledge.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      const { data: flag } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postB.ref.uriStr,
+            },
+            subjectBlobCids: [img.image.cid],
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: flag.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
   })
 
   describe('blob takedown', () => {
