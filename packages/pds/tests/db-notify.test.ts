@@ -16,6 +16,7 @@ describe('db', () => {
         schema: 'db_notify',
       })
     } else {
+      // in the sqlite case, we just use two references to the same db
       dbOne = Database.memory()
       dbTwo = dbOne
     }
