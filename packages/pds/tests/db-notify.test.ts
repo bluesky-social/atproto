@@ -1,4 +1,4 @@
-import { wait } from '@atproto/common'
+import { allComplete, createDeferrables } from '@atproto/common'
 import { Database } from '../src'
 
 describe('db', () => {
@@ -15,6 +15,8 @@ describe('db', () => {
         url: process.env.DB_POSTGRES_URL,
         schema: 'db_notify',
       })
+      await dbOne.startListeningToChannels()
+      await dbTwo.startListeningToChannels()
     } else {
       // in the sqlite case, we just use two references to the same db
       dbOne = Database.memory()
@@ -28,41 +30,42 @@ describe('db', () => {
   })
 
   it('notifies', async () => {
-    const toSend = ['one', 'two', 'three', 'four', 'five']
-    const received: string[] = []
-    await dbOne.listenFor('test', (msg) => {
-      received.push(msg || '')
+    const sendCount = 5
+    const defferables = createDeferrables(sendCount)
+    let receivedCount = 0
+    dbOne.channels.repo_seq.addListener('message', () => {
+      defferables[receivedCount]?.resolve()
+      receivedCount++
     })
 
-    dbTwo.notify('otherchannel', 'blah')
-    for (const msg of toSend) {
-      dbTwo.notify('test', msg)
+    for (let i = 0; i < sendCount; i++) {
+      dbTwo.notify('repo_seq')
     }
-    dbTwo.notify('otherchannel', 'blah')
 
-    await wait(200)
-    expect(received.sort()).toEqual(toSend.sort())
+    await allComplete(defferables)
+    expect(receivedCount).toBe(sendCount)
   })
 
   it('can notifies multiple listeners', async () => {
-    const toSend = ['one', 'two', 'three', 'four', 'five']
-    const receivedOne: string[] = []
-    const receivedTwo: string[] = []
-    await dbOne.listenFor('test', (msg) => {
-      receivedOne.push(msg || '')
+    const sendCount = 5
+    const defferables = createDeferrables(sendCount * 2)
+    let receivedOne = 0
+    let receivedTwo = 0
+    dbOne.channels.repo_seq.addListener('message', () => {
+      defferables[receivedOne]?.resolve()
+      receivedOne++
     })
-    await dbOne.listenFor('test', (msg) => {
-      receivedTwo.push(msg || '')
+    dbOne.channels.repo_seq.addListener('message', () => {
+      defferables[receivedTwo + sendCount]?.resolve()
+      receivedTwo++
     })
 
-    dbTwo.notify('otherchannel', 'blah')
-    for (const msg of toSend) {
-      dbTwo.notify('test', msg)
+    for (let i = 0; i < sendCount; i++) {
+      dbTwo.notify('repo_seq')
     }
-    dbTwo.notify('otherchannel', 'blah')
 
-    await wait(200)
-    expect(receivedOne.sort()).toEqual(toSend.sort())
-    expect(receivedTwo.sort()).toEqual(toSend.sort())
+    await allComplete(defferables)
+    expect(receivedOne).toBe(sendCount)
+    expect(receivedTwo).toBe(sendCount)
   })
 })

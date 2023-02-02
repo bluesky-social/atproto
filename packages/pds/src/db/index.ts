@@ -6,21 +6,26 @@ import {
   PoolClient as PgPoolClient,
   types as pgTypes,
 } from 'pg'
+import EventEmitter from 'events'
+import TypedEmitter from 'typed-emitter'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
+import { dbLogger as log } from '../logger'
 
 export class Database {
-  listeners: Record<string, ListenerCB[]> = {}
+  channels: Channels = {
+    repo_seq: new EventEmitter() as ChannelEmitter,
+  }
   migrator: Migrator
-  notifyClient: PgPoolClient | null = null
+  private channelClient: PgPoolClient | null = null
 
-  constructor(public db: DatabaseSchema, public facets: DialectFacets) {
+  constructor(public db: DatabaseSchema, public cfg: DialectConfig) {
     this.migrator = new Migrator({
       db,
-      migrationTableSchema: facets.dialect === 'pg' ? facets.schema : undefined,
-      provider: new CtxMigrationProvider(migrations, facets.dialect),
+      migrationTableSchema: cfg.dialect === 'pg' ? cfg.schema : undefined,
+      provider: new CtxMigrationProvider(migrations, cfg.dialect),
     })
   }
 
@@ -48,10 +53,10 @@ export class Database {
           `Postgres schema must only contain [A-Za-z_]: ${schema}`,
         )
       }
-      pool.on('connect', (client) =>
+      pool.on('connect', (client) => {
         // Shared objects such as extensions will go in the public schema
-        client.query(`SET search_path TO "${schema}",public`),
-      )
+        client.query(`SET search_path TO "${schema}",public`)
+      })
     }
 
     const db = new Kysely<DatabaseSchemaType>({
@@ -65,52 +70,50 @@ export class Database {
     return Database.sqlite(':memory:')
   }
 
-  notify(channel: string, msg?: string) {
-    if (this.facets.dialect === 'pg') {
-      this.facets.pool.query(`NOTIFY ${channel}, '${msg}'`)
-    } else {
-      const cbs = this.listeners[channel]
-      if (cbs && cbs.length > 0) {
-        for (const cb of cbs) {
-          cb(msg)
-        }
+  async startListeningToChannels() {
+    if (this.cfg.dialect !== 'pg') return
+    this.channelClient = await this.cfg.pool.connect()
+    await this.channelClient.query(`LISTEN repo_seq`)
+    this.channelClient.on('notification', (msg) => {
+      const channel = this.channels[msg.channel]
+      if (channel) {
+        channel.emit('message')
       }
-    }
+    })
+    this.channelClient.on('error', (err) => {
+      log.error({ err }, 'postgres listener errored, reconnecting')
+      this.channelClient?.removeAllListeners()
+      this.startListeningToChannels()
+    })
   }
 
-  async listenFor(channel: string, cb: ListenerCB) {
-    if (this.facets.dialect === 'pg') {
-      if (!this.notifyClient) {
-        this.notifyClient = await this.facets.pool.connect()
-        this.notifyClient.query(`LISTEN ${channel}`)
-        this.notifyClient.on('notification', (msg) => {
-          const cbs = this.listeners[msg.channel]
-          if (cbs && cbs.length > 0) {
-            for (const cb of cbs) {
-              cb(msg.payload)
-            }
-          }
-        })
-      }
-      this.notifyClient.query(`LISTEN ${channel}`)
+  notify(channel: keyof Channels) {
+    if (channel !== 'repo_seq') {
+      throw new Error(`attempted sending on unavailable channel: ${channel}`)
     }
-    this.listeners[channel] ??= []
-    this.listeners[channel].push(cb)
+    if (this.cfg.dialect === 'pg') {
+      this.cfg.pool.query(`NOTIFY ${channel}`)
+    } else {
+      const emitter = this.channels[channel]
+      if (emitter) {
+        emitter.emit('message')
+      }
+    }
   }
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     return await this.db.transaction().execute((txn) => {
-      const dbTxn = new Database(txn, this.facets)
+      const dbTxn = new Database(txn, this.cfg)
       return fn(dbTxn)
     })
   }
 
   get schema(): string | undefined {
-    return this.facets.dialect === 'pg' ? this.facets.schema : undefined
+    return this.cfg.dialect === 'pg' ? this.cfg.schema : undefined
   }
 
   get dialect(): Dialect {
-    return this.facets.dialect
+    return this.cfg.dialect
   }
 
   get isTransaction() {
@@ -122,10 +125,10 @@ export class Database {
   }
 
   async close(): Promise<void> {
-    this.notifyClient?.removeAllListeners()
-    this.notifyClient?.release()
-    if (this.facets.dialect === 'pg') {
-      await this.facets.pool.end()
+    this.channelClient?.removeAllListeners()
+    this.channelClient?.release()
+    if (this.cfg.dialect === 'pg') {
+      await this.cfg.pool.end()
     }
     await this.db.destroy()
   }
@@ -163,15 +166,15 @@ export default Database
 
 export type Dialect = 'pg' | 'sqlite'
 
-export type DialectFacets = PgFacets | SqliteFacets
+export type DialectConfig = PgConfig | SqliteConfig
 
-export type PgFacets = {
+export type PgConfig = {
   dialect: 'pg'
   pool: PgPool
   schema?: string
 }
 
-export type SqliteFacets = {
+export type SqliteConfig = {
   dialect: 'sqlite'
 }
 
@@ -182,4 +185,12 @@ type PgOptions =
   | { url: string; schema?: string }
   | { pool: PgPool; schema?: string }
 
-type ListenerCB = (msg: string | undefined) => void
+type ChannelEvents = {
+  message: () => void
+}
+
+type ChannelEmitter = TypedEmitter<ChannelEvents>
+
+type Channels = {
+  repo_seq: ChannelEmitter
+}
