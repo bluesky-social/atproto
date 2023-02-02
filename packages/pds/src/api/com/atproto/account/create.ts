@@ -2,34 +2,14 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
 import { cidForCbor } from '@atproto/common'
-import { Server, APP_BSKY_SYSTEM } from '../../../lexicon'
-import { countAll } from '../../../db/util'
-import * as lex from '../../../lexicon/lexicons'
-import * as repo from '../../../repo'
-import { UserAlreadyExistsError } from '../../../services/actor'
-import AppContext from '../../../context'
+import { Server, APP_BSKY_SYSTEM } from '../../../../lexicon'
+import { countAll } from '../../../../db/util'
+import * as lex from '../../../../lexicon/lexicons'
+import * as repo from '../../../../repo'
+import { UserAlreadyExistsError } from '../../../../services/actor'
+import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.getAccountsConfig(() => {
-    const availableUserDomains = ctx.cfg.availableUserDomains
-    const inviteCodeRequired = ctx.cfg.inviteRequired
-    const privacyPolicy = ctx.cfg.privacyPolicyUrl
-    const termsOfService = ctx.cfg.termsOfServiceUrl
-
-    return {
-      encoding: 'application/json',
-      body: {
-        availableUserDomains,
-        inviteCodeRequired,
-        links: { privacyPolicy, termsOfService },
-      },
-    }
-  })
-
-  server.com.atproto.account.get(() => {
-    throw new InvalidRequestError('Not implemented')
-  })
-
   server.com.atproto.account.create(async ({ input, req }) => {
     const { email, password, inviteCode, recoveryKey } = input.body
 
@@ -174,10 +154,5 @@ export default function (server: Server, ctx: AppContext) {
         declarationCid: result.declarationCid.toString(),
       },
     }
-  })
-
-  server.com.atproto.account.delete(() => {
-    // TODO
-    throw new InvalidRequestError('Not implemented')
   })
 }

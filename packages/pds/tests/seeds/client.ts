@@ -85,7 +85,7 @@ export class SeedClient {
     }
   >
   follows: Record<string, Record<string, RecordRef>>
-  posts: Record<string, { text: string; ref: RecordRef }[]>
+  posts: Record<string, { text: string; ref: RecordRef; images: ImageRef[] }[]>
   votes: {
     up: Record<string, Record<string, AtUri>>
     down: Record<string, Record<string, AtUri>>
@@ -206,6 +206,7 @@ export class SeedClient {
     const post = {
       text,
       ref: new RecordRef(res.uri, res.cid),
+      images: images || [],
     }
     this.posts[by].push(post)
     return post

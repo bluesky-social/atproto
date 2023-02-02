@@ -113,7 +113,33 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Delete an account.',
+        description: 'Delete a user account with a token and password.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'password', 'token'],
+            properties: {
+              did: {
+                type: 'string',
+              },
+              password: {
+                type: 'string',
+              },
+              token: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ExpiredToken',
+          },
+          {
+            name: 'InvalidToken',
+          },
+        ],
       },
     },
   },
@@ -124,6 +150,16 @@ export const schemaDict = {
       main: {
         type: 'query',
         description: 'Get information about an account.',
+      },
+    },
+  },
+  ComAtprotoAccountRequestDelete: {
+    lexicon: 1,
+    id: 'com.atproto.account.requestDelete',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Initiate a user account deletion via email.',
       },
     },
   },
@@ -3796,6 +3832,7 @@ export const ids = {
   ComAtprotoAccountCreateInviteCode: 'com.atproto.account.createInviteCode',
   ComAtprotoAccountDelete: 'com.atproto.account.delete',
   ComAtprotoAccountGet: 'com.atproto.account.get',
+  ComAtprotoAccountRequestDelete: 'com.atproto.account.requestDelete',
   ComAtprotoAccountRequestPasswordReset:
     'com.atproto.account.requestPasswordReset',
   ComAtprotoAccountResetPassword: 'com.atproto.account.resetPassword',
