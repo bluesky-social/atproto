@@ -7,14 +7,16 @@ describe('db', () => {
 
   beforeAll(async () => {
     if (process.env.DB_POSTGRES_URL) {
-      dbOne = await Database.postgres({
+      dbOne = Database.postgres({
         url: process.env.DB_POSTGRES_URL,
         schema: 'db_notify',
       })
-      dbTwo = await Database.postgres({
+      dbTwo = Database.postgres({
         url: process.env.DB_POSTGRES_URL,
         schema: 'db_notify',
       })
+      await dbOne.startListeningToChannels()
+      await dbTwo.startListeningToChannels()
     } else {
       // in the sqlite case, we just use two references to the same db
       dbOne = Database.memory()
@@ -28,41 +30,37 @@ describe('db', () => {
   })
 
   it('notifies', async () => {
-    const toSend = ['one', 'two', 'three', 'four', 'five']
-    const received: string[] = []
-    dbOne.channels.repo_seq.addListener('message', (msg) => {
-      received.push(msg || '')
+    const sendCount = 5
+    let receivedCount = 0
+    dbOne.channels.repo_seq.addListener('message', () => {
+      receivedCount++
     })
 
-    dbTwo.notify('otherchannel' as any, 'blah')
-    for (const msg of toSend) {
-      dbTwo.notify('repo_seq', msg)
+    for (let i = 0; i < sendCount; i++) {
+      dbTwo.notify('repo_seq')
     }
-    dbTwo.notify('otherchannel' as any, 'blah')
 
     await wait(200)
-    expect(received.sort()).toEqual(toSend.sort())
+    expect(receivedCount).toBe(sendCount)
   })
 
   it('can notifies multiple listeners', async () => {
-    const toSend = ['one', 'two', 'three', 'four', 'five']
-    const receivedOne: string[] = []
-    const receivedTwo: string[] = []
-    dbOne.channels.repo_seq.addListener('message', (msg) => {
-      receivedOne.push(msg || '')
+    const sendCount = 5
+    let receivedOne = 0
+    let receivedTwo = 0
+    dbOne.channels.repo_seq.addListener('message', () => {
+      receivedOne++
     })
-    dbOne.channels.repo_seq.addListener('message', (msg) => {
-      receivedTwo.push(msg || '')
+    dbOne.channels.repo_seq.addListener('message', () => {
+      receivedTwo++
     })
 
-    dbTwo.notify('otherchannel' as any, 'blah')
-    for (const msg of toSend) {
-      dbTwo.notify('repo_seq', msg)
+    for (let i = 0; i < sendCount; i++) {
+      dbTwo.notify('repo_seq')
     }
-    dbTwo.notify('otherchannel' as any, 'blah')
 
     await wait(200)
-    expect(receivedOne.sort()).toEqual(toSend.sort())
-    expect(receivedTwo.sort()).toEqual(toSend.sort())
+    expect(receivedOne).toBe(sendCount)
+    expect(receivedTwo).toBe(sendCount)
   })
 })

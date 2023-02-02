@@ -38,7 +38,7 @@ export class Database {
     return new Database(db, { dialect: 'sqlite' })
   }
 
-  static async postgres(opts: PgOptions): Promise<Database> {
+  static postgres(opts: PgOptions): Database {
     const { schema } = opts
     const pool =
       'pool' in opts ? opts.pool : new PgPool({ connectionString: opts.url })
@@ -63,41 +63,40 @@ export class Database {
       dialect: new PostgresDialect({ pool }),
     })
 
-    const database = new Database(db, { dialect: 'pg', pool, schema })
-    await database.startListeningToChannels()
-
-    return database
+    return new Database(db, { dialect: 'pg', pool, schema })
   }
 
   static memory(): Database {
     return Database.sqlite(':memory:')
   }
 
-  private async startListeningToChannels() {
+  async startListeningToChannels() {
     if (this.facets.dialect !== 'pg') return
     this.channelClient = await this.facets.pool.connect()
-    this.channelClient.query(`LISTEN repo_seq`)
+    await this.channelClient.query(`LISTEN repo_seq`)
     this.channelClient.on('notification', (msg) => {
       const channel = this.channels[msg.channel]
       if (channel) {
-        channel.emit('message', msg.payload)
+        channel.emit('message')
       }
     })
     this.channelClient.on('error', (err) => {
       log.error({ err }, 'postgres listener errored, reconnecting')
       this.channelClient?.removeAllListeners()
-      this.channelClient?.release()
       this.startListeningToChannels()
     })
   }
 
-  notify(channel: keyof Channels, msg?: string) {
+  notify(channel: keyof Channels) {
+    if (channel !== 'repo_seq') {
+      throw new Error(`attempted sending on unavailable channel: ${channel}`)
+    }
     if (this.facets.dialect === 'pg') {
-      this.facets.pool.query(`NOTIFY ${channel}, '${msg}'`)
+      this.facets.pool.query(`NOTIFY ${channel}`)
     } else {
       const emitter = this.channels[channel]
       if (emitter) {
-        emitter.emit('message', msg)
+        emitter.emit('message')
       }
     }
   }
@@ -187,7 +186,7 @@ type PgOptions =
   | { pool: PgPool; schema?: string }
 
 type ChannelEvents = {
-  message: (msg?: string) => void
+  message: () => void
 }
 
 type ChannelEmitter = TypedEmitter<ChannelEvents>
