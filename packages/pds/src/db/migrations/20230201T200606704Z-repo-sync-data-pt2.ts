@@ -90,7 +90,6 @@ export async function up(db: Kysely<any>): Promise<void> {
   const repoHeads = await db.selectFrom('repo_root').selectAll().execute()
   const currHeads: Record<string, CID> = {}
   for (const row of repoHeads) {
-    console.log(`migrating: ${row.did}`)
     const head = CID.parse(row.root)
     await migrateUser(row.did, head, null)
     currHeads[row.did] = head

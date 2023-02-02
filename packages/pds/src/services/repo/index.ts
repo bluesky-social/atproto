@@ -85,4 +85,22 @@ export class RepoService {
       }),
     )
   }
+
+  async deleteRepo(did: string) {
+    this.db.assertTransaction()
+    // delete all blocks from this did & no other did
+    await Promise.all([
+      this.db.db.deleteFrom('ipld_block').where('creator', '=', did).execute(),
+      this.db.db
+        .deleteFrom('repo_commit_block')
+        .where('creator', '=', did)
+        .execute(),
+      this.db.db
+        .deleteFrom('repo_commit_history')
+        .where('creator', '=', did)
+        .execute(),
+      this.db.db.deleteFrom('repo_root').where('did', '=', did).execute(),
+      this.blobs.deleteForUser(did),
+    ])
+  }
 }

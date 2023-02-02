@@ -112,6 +112,13 @@ export class S3BlobStore implements BlobStore {
     return res as stream.Readable
   }
 
+  async delete(cid: CID): Promise<void> {
+    await this.client.deleteObject({
+      Bucket: this.bucket,
+      Key: this.getStoredPath(cid),
+    })
+  }
+
   private async move(keys: { from: string; to: string }) {
     await this.client.copyObject({
       Bucket: this.bucket,

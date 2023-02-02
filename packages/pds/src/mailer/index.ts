@@ -23,6 +23,7 @@ export class ServerMailer {
     this.handlebars = Handlebars.create()
     this.templates = {
       resetPassword: this.compile('reset-password'),
+      deleteAccount: this.compile('delete-account'),
     }
   }
 
@@ -39,6 +40,13 @@ export class ServerMailer {
   ) {
     return this.sendTemplate('resetPassword', params, {
       subject: 'Password Reset Requested',
+      ...mailOpts,
+    })
+  }
+
+  async sendAccountDelete(params: { token: string }, mailOpts: Mail.Options) {
+    return this.sendTemplate('deleteAccount', params, {
+      subject: 'Account Deletion Requested',
       ...mailOpts,
     })
   }

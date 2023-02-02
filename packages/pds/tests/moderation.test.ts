@@ -567,7 +567,7 @@ describe('moderation', () => {
     })
 
     it('only allows blob to have one current action.', async () => {
-      const img = sc.posts[sc.dids.carol][0].blobs[0]
+      const img = sc.posts[sc.dids.carol][0].images[0]
       const postA = await sc.post(sc.dids.alice, 'image A', undefined, [img])
       const postB = await sc.post(sc.dids.alice, 'image B', undefined, [img])
       const { data: acknowledge } =
@@ -652,13 +652,13 @@ describe('moderation', () => {
   })
 
   describe('blob takedown', () => {
-    let post: { ref: RecordRef; blobs: ImageRef[] }
+    let post: { ref: RecordRef; images: ImageRef[] }
     let blob: ImageRef
     let imageUri: string
     let actionId: number
     beforeAll(async () => {
       post = sc.posts[sc.dids.carol][0]
-      blob = post.blobs[1]
+      blob = post.images[1]
       imageUri = server.ctx.imgUriBuilder
         .getCommonSignedUri('feed_thumbnail', blob.image.cid)
         .replace(server.ctx.cfg.publicUrl, server.url)
@@ -695,7 +695,7 @@ describe('moderation', () => {
     it('prevents blob from being referenced again.', async () => {
       const uploaded = await sc.uploadFile(
         sc.dids.alice,
-        'tests/image/fixtures/key-portrait-small.jpg',
+        'tests/image/fixtures/key-alt.jpg',
         'image/jpeg',
       )
       expect(uploaded.image.cid).toEqual(blob.image.cid)
@@ -724,7 +724,7 @@ describe('moderation', () => {
 
       // Can post and reference blob
       const post = await sc.post(sc.dids.alice, 'pic', [], [blob])
-      expect(post.blobs[0].image.cid).toEqual(blob.image.cid)
+      expect(post.images[0].image.cid).toEqual(blob.image.cid)
 
       // Can fetch through image server
       const fetchImage = await fetch(imageUri)

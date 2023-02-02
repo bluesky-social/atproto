@@ -16,7 +16,11 @@ export default function (server: Server, ctx: AppContext) {
 
       let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
-        .innerJoin('ipld_block', 'ipld_block.cid', 'notif.recordCid')
+        .innerJoin('ipld_block', (join) =>
+          join
+            .onRef('ipld_block.cid', '=', 'notif.recordCid')
+            .onRef('ipld_block.creator', '=', 'notif.author'),
+        )
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
         .leftJoin(
           'profile as author_profile',

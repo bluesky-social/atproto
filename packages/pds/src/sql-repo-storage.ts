@@ -3,7 +3,6 @@ import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import Database from './db'
 import { IpldBlock } from './db/tables/ipld-block'
-import { IpldBlockCreator } from './db/tables/ipld-block-creator'
 import { RepoCommitBlock } from './db/tables/repo-commit-block'
 import { RepoCommitHistory } from './db/tables/repo-commit-history'
 
@@ -36,9 +35,13 @@ export class SqlRepoStorage extends RepoStorage {
     if (forUpdate) {
       const res = await this.db.db
         .selectFrom('repo_commit_block')
-        .leftJoin('ipld_block', 'ipld_block.cid', 'repo_commit_block.block')
         .where('repo_commit_block.commit', '=', found.root)
         .where('repo_commit_block.creator', '=', this.did)
+        .leftJoin('ipld_block', (join) =>
+          join
+            .onRef('ipld_block.cid', '=', 'repo_commit_block.commit')
+            .on('ipld_block.creator', '=', this.did),
+        )
         .select([
           'ipld_block.cid as blockCid',
           'ipld_block.content as blockBytes',
@@ -59,12 +62,7 @@ export class SqlRepoStorage extends RepoStorage {
     if (cached) return cached
     const found = await this.db.db
       .selectFrom('ipld_block')
-      .innerJoin(
-        'ipld_block_creator as creator',
-        'creator.cid',
-        'ipld_block.cid',
-      )
-      .where('creator.did', '=', this.did)
+      .where('ipld_block.creator', '=', this.did)
       .where('ipld_block.cid', '=', cid.toString())
       .select('content')
       .executeTakeFirst()
@@ -88,12 +86,7 @@ export class SqlRepoStorage extends RepoStorage {
       chunkArray(missingStr, 500).map(async (batch) => {
         const res = await this.db.db
           .selectFrom('ipld_block')
-          .innerJoin(
-            'ipld_block_creator as creator',
-            'creator.cid',
-            'ipld_block.cid',
-          )
-          .where('creator.did', '=', this.did)
+          .where('ipld_block.creator', '=', this.did)
           .where('ipld_block.cid', 'in', batch)
           .select(['ipld_block.cid as cid', 'ipld_block.content as content'])
           .execute()
@@ -111,43 +104,31 @@ export class SqlRepoStorage extends RepoStorage {
 
   async putBlock(cid: CID, block: Uint8Array): Promise<void> {
     this.db.assertTransaction()
-    const insertBlock = this.db.db
+    await this.db.db
       .insertInto('ipld_block')
       .values({
         cid: cid.toString(),
+        creator: this.did,
         size: block.length,
         content: block,
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
-    const insertCreator = this.db.db
-      .insertInto('ipld_block_creator')
-      .values({
-        cid: cid.toString(),
-        did: this.did,
-      })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-    await Promise.all([insertBlock, insertCreator])
     this.cache.set(cid, block)
   }
 
   async putMany(toPut: BlockMap): Promise<void> {
     this.db.assertTransaction()
     const blocks: IpldBlock[] = []
-    const creators: IpldBlockCreator[] = []
     toPut.forEach((bytes, cid) => {
       blocks.push({
         cid: cid.toString(),
+        creator: this.did,
         size: bytes.length,
         content: bytes,
       })
-      creators.push({
-        cid: cid.toString(),
-        did: this.did,
-      })
     })
-    const putBlocks = Promise.all(
+    await Promise.all(
       chunkArray(blocks, 500).map((batch) =>
         this.db.db
           .insertInto('ipld_block')
@@ -156,16 +137,6 @@ export class SqlRepoStorage extends RepoStorage {
           .execute(),
       ),
     )
-    const putCreators = Promise.all(
-      chunkArray(creators, 500).map((batch) =>
-        this.db.db
-          .insertInto('ipld_block_creator')
-          .values(batch)
-          .onConflict((oc) => oc.doNothing())
-          .execute(),
-      ),
-    )
-    await Promise.all([putBlocks, putCreators])
   }
 
   async indexCommits(commits: CommitData[]): Promise<void> {
@@ -283,7 +254,11 @@ export class SqlRepoStorage extends RepoStorage {
       .selectFrom('repo_commit_block')
       .where('repo_commit_block.creator', '=', this.did)
       .where('repo_commit_block.commit', 'in', commitStrs)
-      .innerJoin('ipld_block', 'ipld_block.cid', 'repo_commit_block.block')
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'repo_commit_block.block')
+          .on('ipld_block.creator', '=', this.did),
+      )
       .select([
         'repo_commit_block.commit',
         'ipld_block.cid',
