@@ -42,6 +42,10 @@ Object {
         "subjectBlobCids": Array [],
       },
     ],
+    "currentAction": Object {
+      "action": "com.atproto.admin.moderationAction#takedown",
+      "id": 2,
+    },
     "reports": Array [
       Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -69,7 +73,6 @@ Object {
         },
       },
     ],
-    "takedownId": 2,
   },
   "repo": Object {
     "account": Object {
@@ -146,6 +149,10 @@ Object {
         "subjectBlobCids": Array [],
       },
     ],
+    "currentAction": Object {
+      "action": "com.atproto.admin.moderationAction#takedown",
+      "id": 2,
+    },
     "reports": Array [
       Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -173,7 +180,6 @@ Object {
         },
       },
     ],
-    "takedownId": 2,
   },
   "repo": Object {
     "account": Object {

@@ -43,40 +43,58 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const info = await this.db.db
-      .selectFrom('did_handle')
-      .leftJoin('user', 'user.handle', 'did_handle.handle')
-      .leftJoin('profile', 'profile.creator', 'did_handle.did')
-      .leftJoin(
-        'ipld_block as profile_block',
-        'profile_block.cid',
-        'profile.cid',
-      )
-      .leftJoin(
-        'ipld_block as declaration_block',
-        'declaration_block.cid',
-        'did_handle.declarationCid',
-      )
-      .where(
-        'did_handle.did',
-        'in',
-        results.map((r) => r.did),
-      )
-      .select([
-        'did_handle.did as did',
-        'user.email as email',
-        'profile_block.content as profileBytes',
-        'declaration_block.content as declarationBytes',
-      ])
-      .execute()
+    const [info, actionResults] = await Promise.all([
+      this.db.db
+        .selectFrom('did_handle')
+        .leftJoin('user', 'user.handle', 'did_handle.handle')
+        .leftJoin('profile', 'profile.creator', 'did_handle.did')
+        .leftJoin(
+          'ipld_block as profile_block',
+          'profile_block.cid',
+          'profile.cid',
+        )
+        .leftJoin(
+          'ipld_block as declaration_block',
+          'declaration_block.cid',
+          'did_handle.declarationCid',
+        )
+        .where(
+          'did_handle.did',
+          'in',
+          results.map((r) => r.did),
+        )
+        .select([
+          'did_handle.did as did',
+          'user.email as email',
+          'profile_block.content as profileBytes',
+          'declaration_block.content as declarationBytes',
+        ])
+        .execute(),
+      this.db.db
+        .selectFrom('moderation_action')
+        .where('reversedAt', 'is', null)
+        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where(
+          'subjectDid',
+          'in',
+          results.map((r) => r.did),
+        )
+        .select(['id', 'action', 'subjectDid'])
+        .execute(),
+    ])
 
     const infoByDid = info.reduce(
       (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
       {} as Record<string, ArrayEl<typeof info>>,
     )
+    const actionByDid = actionResults.reduce(
+      (acc, cur) => Object.assign(acc, { [cur.subjectDid ?? '']: cur }),
+      {} as Record<string, ArrayEl<typeof actionResults>>,
+    )
 
     const views = results.map((r) => {
       const { email, declarationBytes, profileBytes } = infoByDid[r.did] ?? {}
+      const action = actionByDid[r.did]
       const relatedRecords: object[] = []
       if (declarationBytes) {
         relatedRecords.push(cborBytesToRecord(declarationBytes))
@@ -90,7 +108,11 @@ export class ModerationViews {
         account: email ? { email } : undefined,
         relatedRecords,
         indexedAt: r.indexedAt,
-        moderation: { takedownId: r.takedownId ?? undefined },
+        moderation: {
+          currentAction: action
+            ? { id: action.id, action: action.action }
+            : undefined,
+        },
       }
     })
 
@@ -137,7 +159,7 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const [repoResults, blobResults] = await Promise.all([
+    const [repoResults, blobResults, actionResults] = await Promise.all([
       this.db.db
         .selectFrom('repo_root')
         .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
@@ -158,6 +180,17 @@ export class ModerationViews {
         )
         .select(['cid', 'recordUri'])
         .execute(),
+      this.db.db
+        .selectFrom('moderation_action')
+        .where('reversedAt', 'is', null)
+        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where(
+          'subjectUri',
+          'in',
+          results.map((r) => r.uri),
+        )
+        .select(['id', 'action', 'subjectUri'])
+        .execute(),
     ])
     const repos = await this.repo(repoResults)
 
@@ -170,9 +203,14 @@ export class ModerationViews {
       acc[cur.recordUri].push(cur.cid)
       return acc
     }, {} as Record<string, string[]>)
+    const actionByUri = actionResults.reduce(
+      (acc, cur) => Object.assign(acc, { [cur.subjectUri ?? '']: cur }),
+      {} as Record<string, ArrayEl<typeof actionResults>>,
+    )
 
     const views = results.map((res) => {
       const repo = reposByDid[didFromUri(res.uri)]
+      const action = actionByUri[res.uri]
       if (!repo) throw new Error(`Record repo is missing: ${res.uri}`)
       return {
         uri: res.uri,
@@ -182,7 +220,9 @@ export class ModerationViews {
         indexedAt: res.indexedAt,
         repo,
         moderation: {
-          takedownId: res.takedownId ?? undefined,
+          currentAction: action
+            ? { id: action.id, action: action.action }
+            : undefined,
         },
       }
     })
@@ -460,12 +500,29 @@ export class ModerationViews {
 
   async blob(cids: string[]): Promise<BlobView[]> {
     if (!cids.length) return []
-    const blobResults = await this.db.db
-      .selectFrom('blob')
-      .where('cid', 'in', cids)
-      .selectAll()
-      .execute()
+    const [blobResults, actionResults] = await Promise.all([
+      this.db.db
+        .selectFrom('blob')
+        .where('cid', 'in', cids)
+        .selectAll()
+        .execute(),
+      this.db.db
+        .selectFrom('moderation_action')
+        .where('reversedAt', 'is', null)
+        .innerJoin(
+          'moderation_action_subject_blob as subject_blob',
+          'subject_blob.actionId',
+          'moderation_action.id',
+        )
+        .select(['id', 'action', 'cid'])
+        .execute(),
+    ])
+    const actionByCid = actionResults.reduce(
+      (acc, cur) => Object.assign(acc, { [cur.cid]: cur }),
+      {} as Record<string, ArrayEl<typeof actionResults>>,
+    )
     return blobResults.map((result) => {
+      const action = actionByCid[result.cid]
       return {
         cid: result.cid,
         mimeType: result.mimeType,
@@ -482,6 +539,11 @@ export class ModerationViews {
                 width: result.width,
               }
             : undefined,
+        moderation: {
+          currentAction: action
+            ? { id: action.id, action: action.action }
+            : undefined,
+        },
       }
     })
   }

@@ -142,6 +142,37 @@ export class ModerationService {
     return report
   }
 
+  async getCurrentActions(
+    subject: { did: string } | { uri: AtUri } | { cids: CID[] },
+  ) {
+    const { ref } = this.db.db.dynamic
+    let builder = this.db.db
+      .selectFrom('moderation_action')
+      .selectAll()
+      .where('reversedAt', 'is', null)
+    if ('did' in subject) {
+      builder = builder
+        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where('subjectDid', '=', subject.did)
+    } else if ('uri' in subject) {
+      builder = builder
+        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectUri', '=', subject.uri.toString())
+    } else {
+      const blobsForAction = this.db.db
+        .selectFrom('moderation_action_subject_blob')
+        .selectAll()
+        .whereRef('actionId', '=', ref('moderation_action.id'))
+        .where(
+          'cid',
+          'in',
+          subject.cids.map((cid) => cid.toString()),
+        )
+      builder = builder.whereExists(blobsForAction)
+    }
+    return await builder.execute()
+  }
+
   async logAction(info: {
     action: ModerationActionRow['action']
     subject: { did: string } | { uri: AtUri; cid?: CID }
@@ -150,6 +181,7 @@ export class ModerationService {
     createdBy: string
     createdAt?: Date
   }): Promise<ModerationActionRow> {
+    this.db.assertTransaction()
     const {
       action,
       createdBy,
@@ -201,6 +233,14 @@ export class ModerationService {
       }
     }
 
+    const subjectActions = await this.getCurrentActions(subject)
+    if (subjectActions.length) {
+      throw new InvalidRequestError(
+        `Subject already has an active action: #${subjectActions[0].id}`,
+        'SubjectHasAction',
+      )
+    }
+
     const actionResult = await this.db.db
       .insertInto('moderation_action')
       .values({
@@ -214,6 +254,16 @@ export class ModerationService {
       .executeTakeFirstOrThrow()
 
     if (subjectBlobCids?.length && !('did' in subject)) {
+      const blobActions = await this.getCurrentActions({
+        cids: subjectBlobCids,
+      })
+      if (blobActions.length) {
+        throw new InvalidRequestError(
+          `Blob already has an active action: #${blobActions[0].id}`,
+          'SubjectHasAction',
+        )
+      }
+
       await this.db.db
         .insertInto('moderation_action_subject_blob')
         .values(
@@ -277,6 +327,7 @@ export class ModerationService {
     uri: AtUri
     blobCids?: CID[]
   }) {
+    this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
       .set({ takedownId: info.takedownId })
@@ -309,6 +360,7 @@ export class ModerationService {
   }
 
   async reverseTakedownRecord(info: { uri: AtUri }) {
+    this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
       .set({ takedownId: null })
