@@ -50,7 +50,6 @@ describe('duplicate record', () => {
         creator,
         size: bytes.length,
         content: bytes,
-        indexedAt: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
       .execute()

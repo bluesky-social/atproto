@@ -68,6 +68,7 @@ export class RecordService {
       did: uri.host,
       collection: uri.collection,
       rkey: uri.rkey,
+      indexedAt: timestamp || new Date().toISOString(),
     }
     if (!record.did.startsWith('did:')) {
       throw new Error('Expected indexed URI to contain DID')

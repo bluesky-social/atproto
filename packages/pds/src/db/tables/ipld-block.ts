@@ -3,7 +3,6 @@ export interface IpldBlock {
   creator: string
   size: number
   content: Uint8Array
-  indexedAt: string
 }
 
 export const tableName = 'ipld_block'

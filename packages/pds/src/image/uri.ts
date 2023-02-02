@@ -43,9 +43,8 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'cover',
-        height: 500,
-        width: 500,
-        quality: 100,
+        height: 1000,
+        width: 1000,
         min: true,
       })
     } else if (id === 'banner') {
@@ -53,9 +52,8 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'cover',
-        height: 500,
-        width: 1500,
-        quality: 100,
+        height: 1000,
+        width: 3000,
         min: true,
       })
     } else if (id === 'feed_fullsize') {
@@ -63,9 +61,8 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'inside',
-        height: 1000,
-        width: 1000,
-        quality: 100,
+        height: 2000,
+        width: 2000,
         min: true,
       })
     } else if (id === 'feed_thumbnail') {
@@ -73,9 +70,8 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'inside',
-        height: 500,
-        width: 500,
-        quality: 100,
+        height: 1000,
+        width: 1000,
         min: true,
       })
     } else {
@@ -119,9 +115,10 @@ export class ImageUriBuilder {
       opts.min && typeof opts.min === 'object' ? `mw:${opts.min.width}` : null
     const minHeight =
       opts.min && typeof opts.min === 'object' ? `mh:${opts.min.height}` : null
+    const quality = opts.quality ? `q:${opts.quality}` : null
     return (
       `/` +
-      [resize, minWidth, minHeight].filter(Boolean).join('/') +
+      [resize, minWidth, minHeight, quality].filter(Boolean).join('/') +
       `/plain/${opts.cid.toString()}@${opts.format}`
     )
   }
@@ -140,9 +137,11 @@ export class ImageUriBuilder {
       throw new BadPathError('Invalid path: bad cid/format part')
     }
     const resizePart = parts.find((part) => part.startsWith('rs:'))
+    const qualityPart = parts.find((part) => part.startsWith('q:'))
     const minWidthPart = parts.find((part) => part.startsWith('mw:'))
     const minHeightPart = parts.find((part) => part.startsWith('mh:'))
     const [, fit, width, height, enlarge] = resizePart?.split(':') ?? []
+    const [, quality] = qualityPart?.split(':') ?? []
     const [, minWidth] = minWidthPart?.split(':') ?? []
     const [, minHeight] = minHeightPart?.split(':') ?? []
     if (fit !== 'fill' && fit !== 'fit') {
@@ -153,6 +152,9 @@ export class ImageUriBuilder {
     }
     if (enlarge !== '0' && enlarge !== '1') {
       throw new BadPathError('Invalid path: bad resize enlarge param')
+    }
+    if (quality && isNaN(toInt(quality))) {
+      throw new BadPathError('Invalid path: bad quality param')
     }
     if (
       (!minWidth && minHeight) ||
@@ -169,6 +171,7 @@ export class ImageUriBuilder {
       height: toInt(height),
       width: toInt(width),
       fit: fit === 'fill' ? 'cover' : 'inside',
+      quality: quality ? toInt(quality) : undefined,
       min:
         minWidth && minHeight
           ? { width: toInt(minWidth), height: toInt(minHeight) }

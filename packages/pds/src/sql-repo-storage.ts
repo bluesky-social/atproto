@@ -111,7 +111,6 @@ export class SqlRepoStorage extends RepoStorage {
         creator: this.did,
         size: block.length,
         content: block,
-        indexedAt: this.timestamp || new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
@@ -127,7 +126,6 @@ export class SqlRepoStorage extends RepoStorage {
         creator: this.did,
         size: bytes.length,
         content: bytes,
-        indexedAt: this.timestamp || new Date().toISOString(),
       })
     })
     await Promise.all(

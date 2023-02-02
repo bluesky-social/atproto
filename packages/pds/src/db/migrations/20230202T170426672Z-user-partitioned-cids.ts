@@ -10,13 +10,12 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('size', 'integer', (col) => col.notNull())
     .addColumn('content', binaryDatatype, (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('ipld_block_with_creator_pkey', ['creator', 'cid'])
     .execute()
 
   await db
     .insertInto('ipld_block_temp')
-    .columns(['cid', 'creator', 'size', 'content', 'indexedAt'])
+    .columns(['cid', 'creator', 'size', 'content'])
     .expression((exp) =>
       exp
         .selectFrom('ipld_block')
@@ -30,7 +29,6 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
           'ipld_block_creator.did',
           'ipld_block.size',
           'ipld_block.content',
-          'ipld_block.indexedAt',
         ]),
     )
     .execute()
@@ -63,7 +61,6 @@ export async function down(db: Kysely<any>, dialect: Dialect): Promise<void> {
     .addColumn('cid', 'varchar', (col) => col.primaryKey())
     .addColumn('size', 'integer', (col) => col.notNull())
     .addColumn('content', binaryDatatype, (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
 
   await db
@@ -75,10 +72,10 @@ export async function down(db: Kysely<any>, dialect: Dialect): Promise<void> {
           'ipld_block.cid as cid',
           'ipld_block.size as size',
           'ipld_block.content as content',
-          'ipld_block.indexedAt as indexedAt',
         ])
         .distinct(),
     )
+    .execute()
 
   await db.schema.dropTable('ipld_block').execute()
   await db.schema.alterTable('ipld_block_temp').renameTo('ipld_block').execute()

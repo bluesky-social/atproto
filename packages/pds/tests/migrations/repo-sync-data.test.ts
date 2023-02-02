@@ -12,16 +12,19 @@ describe('repo sync data migration', () => {
   let keypair: Keypair
   let repo: Repo
 
+  const aliceDid = 'did:example:alice'
+  const bobDid = 'did:example:bob'
+
   beforeAll(async () => {
     if (process.env.DB_POSTGRES_URL) {
       db = Database.postgres({
         url: process.env.DB_POSTGRES_URL,
-        schema: 'migration_duplicate_records',
+        schema: 'migration_repo_sync_data',
       })
     } else {
       db = Database.memory()
     }
-    await db.migrateToOrThrow('_20221230T215012029Z')
+    await db.migrateToOrThrow('_20230127T215753149Z')
     rawDb = db.db
     memoryStore = new MemoryBlockstore()
     keypair = await EcdsaKeypair.create()
@@ -51,12 +54,18 @@ describe('repo sync data migration', () => {
         cid: entry.cid.toString(),
         size: entry.bytes.length,
         content: entry.bytes,
-        indexedAt: new Date().toISOString(),
       })
       creators.push({
         cid: entry.cid.toString(),
-        did: keypair.did(),
+        did: aliceDid,
       })
+      const registerTwice = Math.random() > 0.1
+      if (registerTwice) {
+        creators.push({
+          cid: entry.cid.toString(),
+          did: bobDid,
+        })
+      }
     }
     const rawDb: Kysely<any> = db.db
     await Promise.all([
@@ -64,49 +73,81 @@ describe('repo sync data migration', () => {
       rawDb.insertInto('ipld_block_creator').values(creators).execute(),
       rawDb
         .insertInto('repo_root')
-        .values({
-          did: keypair.did(),
-          root: repo.cid.toString(),
-          indexedAt: new Date().toISOString(),
-        })
+        .values([
+          {
+            did: aliceDid,
+            root: repo.cid.toString(),
+            indexedAt: new Date().toISOString(),
+          },
+          {
+            did: bobDid,
+            root: repo.cid.toString(),
+            indexedAt: new Date().toISOString(),
+          },
+        ])
         .execute(),
     ])
   })
 
   it('migrates up', async () => {
-    const migration = await db.migrator.migrateTo('_20230118T223059239Z')
+    const migration = await db.migrator.migrateTo('_20230201T200606704Z')
     expect(migration.error).toBeUndefined()
   })
 
-  it('correctly constructs repo history', async () => {
-    const history = await rawDb
-      .selectFrom('repo_commit_history')
+  it('fills in missing block creators', async () => {
+    const aliceBlocks = await rawDb
+      .selectFrom('ipld_block_creator')
       .selectAll()
+      .where('did', '=', aliceDid)
       .execute()
-    const blocks = await rawDb
-      .selectFrom('repo_commit_block')
+    const bobBlocks = await rawDb
+      .selectFrom('ipld_block_creator')
       .selectAll()
+      .where('did', '=', bobDid)
       .execute()
-    const commits = await memoryStore.getCommits(repo.cid, null)
-    if (!commits) {
-      throw new Error('Could not get commit log from memoryStore')
-    }
-    for (let i = 0; i < commits.length; i++) {
-      const commit = commits[i]
-      const prev = commits[i - 1]?.commit?.toString() || null
-      const filteredHistory = history.filter(
-        (row) => row.commit === commit.commit.toString(),
-      )
-      expect(filteredHistory.length).toBe(1)
-      expect(filteredHistory[0].prev).toEqual(prev)
 
-      const filteredBlocks = blocks.filter(
-        (row) => row.commit === commit.commit.toString(),
-      )
-      expect(filteredBlocks.length).toEqual(commit.blocks.size)
-      filteredBlocks.forEach((block) => {
-        expect(commit.blocks.has(CID.parse(block.block))).toBeTruthy()
-      })
+    const aliceCids = aliceBlocks.map((row) => row.cid).sort()
+    const bobCids = bobBlocks.map((row) => row.cid).sort()
+
+    expect(aliceCids).toEqual(bobCids)
+  })
+
+  it('correctly constructs repo history', async () => {
+    const checkRepoContents = async (did: string) => {
+      const history = await rawDb
+        .selectFrom('repo_commit_history')
+        .where('creator', '=', did)
+        .selectAll()
+        .execute()
+      const blocks = await rawDb
+        .selectFrom('repo_commit_block')
+        .where('creator', '=', did)
+        .selectAll()
+        .execute()
+      const commits = await memoryStore.getCommits(repo.cid, null)
+      if (!commits) {
+        throw new Error('Could not get commit log from memoryStore')
+      }
+      for (let i = 0; i < commits.length; i++) {
+        const commit = commits[i]
+        const prev = commits[i - 1]?.commit?.toString() || null
+        const filteredHistory = history.filter(
+          (row) => row.commit === commit.commit.toString(),
+        )
+        expect(filteredHistory.length).toBe(1)
+        expect(filteredHistory[0].prev).toEqual(prev)
+
+        const filteredBlocks = blocks.filter(
+          (row) => row.commit === commit.commit.toString(),
+        )
+        expect(filteredBlocks.length).toEqual(commit.blocks.size)
+        filteredBlocks.forEach((block) => {
+          expect(commit.blocks.has(CID.parse(block.block))).toBeTruthy()
+        })
+      }
     }
+
+    await checkRepoContents(aliceDid)
+    await checkRepoContents(bobDid)
   })
 })

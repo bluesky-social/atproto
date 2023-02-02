@@ -18,7 +18,7 @@ describe('user partitioned cids migration', () => {
     } else {
       db = Database.memory()
     }
-    await db.migrateToOrThrow('_20230118T223059239Z')
+    await db.migrateToOrThrow('_20230201T200606704Z')
 
     rawDb = db.db
   })
@@ -43,7 +43,6 @@ describe('user partitioned cids migration', () => {
       cid: b.cid.toString(),
       size: b.bytes.length,
       content: b.bytes,
-      indexedAt: new Date().toISOString(),
     }))
     await rawDb.insertInto('ipld_block').values(blocksToInsert).execute()
 
@@ -67,7 +66,7 @@ describe('user partitioned cids migration', () => {
   })
 
   it('migrates up', async () => {
-    const migration = await db.migrator.migrateTo('_20230124T230923517Z')
+    const migration = await db.migrator.migrateTo('_20230202T170426672Z')
     expect(migration.error).toBeUndefined()
   })
 
