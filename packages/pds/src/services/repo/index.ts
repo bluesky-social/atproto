@@ -92,7 +92,7 @@ export class RepoService {
 
   async sequenceWrite(did: string, commit: CID) {
     await this.db.db
-      .insertInto('sequenced_event')
+      .insertInto('repo_seq')
       .values({ did, commit: commit.toString() })
       .execute()
     this.db.notify('repo_seq')

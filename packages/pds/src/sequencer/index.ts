@@ -2,7 +2,7 @@ import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
 import { writeCar } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
-import Database from './db'
+import Database from '../db'
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
@@ -14,7 +14,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   static async start(db: Database) {
     const found = await db.db
-      .selectFrom('sequenced_event')
+      .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'desc')
       .limit(1)
@@ -42,20 +42,21 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     limit?: number,
   ): Promise<MaybeRepoEvent[]> {
     let qb = this.db.db
-      .selectFrom('sequenced_event')
+      .selectFrom('repo_seq')
       .innerJoin('repo_commit_block', (join) =>
         join
-          .onRef('repo_commit_block.creator', '=', 'sequenced_event.did')
+          .onRef('repo_commit_block.creator', '=', 'repo_seq.did')
           .onRef('repo_commit_block.commit', '=', 'repo_commit_block.commit'),
       )
       .innerJoin('ipld_block', (join) =>
-        // @TODO add creator check
-        join.onRef('ipld_block.cid', '=', 'repo_commit_block.block'),
+        join
+          .onRef('ipld_block.cid', '=', 'repo_commit_block.block')
+          .onRef('ipld_block.creator', '=', 'repo_commit_block.creator'),
       )
       .select([
-        'sequenced_event.seq as seq',
-        'sequenced_event.did as did',
-        'sequenced_event.commit as commit',
+        'repo_seq.seq as seq',
+        'repo_seq.did as did',
+        'repo_seq.commit as commit',
         'ipld_block.cid as cid',
         'ipld_block.content as content',
       ])
