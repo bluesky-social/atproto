@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import { gzipSync } from 'zlib'
 import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
-import { CloseFn, runTestServer } from './_util'
+import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { CID } from 'multiformats/cid'
 import { Database, ServerConfig } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
@@ -24,6 +24,7 @@ const bob = {
 }
 
 describe('file uploads', () => {
+  let server: TestServerInfo
   let client: AtpServiceClient
   let aliceClient: AtpServiceClient
   let bobClient: AtpServiceClient
@@ -34,7 +35,7 @@ describe('file uploads', () => {
   let close: CloseFn
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    server = await runTestServer({
       dbPostgresSchema: 'file_uploads',
     })
     blobstore = server.ctx.blobstore as DiskBlobStore
@@ -70,6 +71,30 @@ describe('file uploads', () => {
 
   let smallCid: CID
   let smallFile: Uint8Array
+
+  it('handles client abort', async () => {
+    const abortController = new AbortController()
+    const _putTemp = server.ctx.blobstore.putTemp
+    server.ctx.blobstore.putTemp = function (...args) {
+      // Abort just as processing blob in packages/pds/src/services/repo/blobs.ts
+      process.nextTick(() => abortController.abort())
+      return _putTemp.call(this, ...args)
+    }
+    const response = fetch(`${server.url}/xrpc/com.atproto.blob.upload`, {
+      method: 'post',
+      body: Buffer.alloc(5000000), // Enough bytes to get some chunking going on
+      signal: abortController.signal,
+      headers: {
+        'content-type': 'image/jpeg',
+        authorization: aliceClient.xrpc.headers.authorization,
+      },
+    })
+    await expect(response).rejects.toThrow('operation was aborted')
+    // Cleanup
+    server.ctx.blobstore.putTemp = _putTemp
+    // This test would fail from an uncaught exception: this grace period gives time for that to surface
+    await new Promise((res) => setTimeout(res, 10))
+  })
 
   it('uploads files', async () => {
     smallFile = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')

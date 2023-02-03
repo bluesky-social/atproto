@@ -115,17 +115,22 @@ export class RepoBlobs {
       .returningAll()
       .execute()
     const deletedCids = deleted.map((d) => d.cid)
-    const duplicates = await this.db.db
-      .selectFrom('repo_blob')
-      .where('cid', 'in', deletedCids)
-      .selectAll()
-      .execute()
-    const duplicateCids = duplicates.map((d) => d.cid)
+    let duplicateCids: string[] = []
+    if (deletedCids.length > 0) {
+      const res = await this.db.db
+        .selectFrom('repo_blob')
+        .where('cid', 'in', deletedCids)
+        .selectAll()
+        .execute()
+      duplicateCids = res.map((d) => d.cid)
+    }
     const toDelete = deletedCids.filter((cid) => !duplicateCids.includes(cid))
-    await this.db.db.deleteFrom('blob').where('cid', 'in', toDelete).execute()
-    await Promise.all(
-      toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-    )
+    if (toDelete.length > 0) {
+      await this.db.db.deleteFrom('blob').where('cid', 'in', toDelete).execute()
+      await Promise.all(
+        toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+      )
+    }
   }
 }
 

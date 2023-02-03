@@ -40,14 +40,7 @@
         },
         "description": {"type": "string"},
         "avatar": {"type": "string"},
-        "indexedAt": {"type": "datetime"},
-        "myState": {"type": "ref", "ref": "#myState"}
-      }
-    },
-    "myState": {
-      "type": "object",
-      "properties": {
-        "follow": {"type": "string"}
+        "indexedAt": {"type": "datetime"}
       }
     }
   }

@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import { APP_BSKY_GRAPH, ServiceClient } from '@atproto/api'
+import { ServiceClient } from '@atproto/api'
 import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
 import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/report/create'
 import { AtUri } from '@atproto/uri'
@@ -129,7 +129,7 @@ export class SeedClient {
       password: params.password,
       ref: new ActorRef(account.did, profile.declaration.cid),
     }
-    return this.accounts[shortName]
+    return this.accounts[account.did]
   }
 
   async createProfile(
