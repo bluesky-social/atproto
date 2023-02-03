@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
-import { BlobStore, Repo, WriteOpAction } from '@atproto/repo'
+import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -62,15 +62,33 @@ export class RepoService {
     now: string,
     indexWrites: (commit: CID) => Promise<void>,
   ) {
-    // make structural write to repo
-    const commit = await this.applyCommit(did, writes, now)
-    // @TODO get commitCid first so we can do all db actions in tandem
+    this.db.assertTransaction()
+    const storage = new SqlRepoStorage(this.db, did, now)
+    const commitData = await this.formatCommit(storage, did, writes)
     await Promise.all([
+      // persist the commit to repo storage
+      await storage.applyCommit(commitData),
       // & send to indexing
-      indexWrites(commit),
+      indexWrites(commitData.commit),
       // do any other processing needed after write
-      this.afterWriteProcessing(did, commit, writes),
+      this.afterWriteProcessing(did, commitData.commit, writes),
     ])
+  }
+
+  async formatCommit(
+    storage: SqlRepoStorage,
+    did: string,
+    writes: PreparedWrite[],
+  ): Promise<CommitData> {
+    const currRoot = await storage.getHead(true)
+    if (!currRoot) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
+    const writeOps = writes.map(writeToOp)
+    const repo = await Repo.load(storage, currRoot)
+    return repo.formatCommit(writeOps, this.keypair)
   }
 
   async applyCommit(
@@ -80,16 +98,9 @@ export class RepoService {
   ): Promise<CID> {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const currRoot = await storage.getHead(true)
-    if (!currRoot) {
-      throw new InvalidRequestError(
-        `${did} is not a registered repo on this server`,
-      )
-    }
-    const writeOps = writes.map(writeToOp)
-    const repo = await Repo.load(storage, currRoot)
-    const updated = await repo.applyWrites(writeOps, this.keypair)
-    return updated.cid
+    const commit = await this.formatCommit(storage, did, writes)
+    await storage.applyCommit(commit)
+    return commit.commit
   }
 
   async indexCreatesAndDeletes(writes: PreparedWrite[], now: string) {
