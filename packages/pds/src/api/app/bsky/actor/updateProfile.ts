@@ -71,42 +71,38 @@ export default function (server: Server, ctx: AppContext) {
                 record: updated,
               })
 
-          const commit = await repoTxn.writeToRepo(did, [write], now)
-          await repoTxn.blobs.processWriteBlobs(did, commit, [write])
+          const profileCid = write.cid
+          await repoTxn.processWrites(did, [write], now, async () => {
+            if (write.action === WriteOpAction.Update) {
+              // Update profile record
+              await dbTxn.db
+                .updateTable('record')
+                .set({ cid: profileCid.toString() })
+                .where('uri', '=', uri.toString())
+                .execute()
 
-          let profileCid: CID
-          if (write.action === WriteOpAction.Update) {
-            profileCid = write.cid
-            // Update profile record
-            await dbTxn.db
-              .updateTable('record')
-              .set({ cid: profileCid.toString() })
-              .where('uri', '=', uri.toString())
-              .execute()
-
-            // Update profile app index
-            await dbTxn.db
-              .updateTable('profile')
-              .set({
-                cid: profileCid.toString(),
-                displayName: updated.displayName,
-                description: updated.description,
-                avatarCid: updated.avatar?.cid,
-                bannerCid: updated.banner?.cid,
-                indexedAt: now,
-              })
-              .where('uri', '=', uri.toString())
-              .execute()
-          } else if (write.action === WriteOpAction.Create) {
-            profileCid = write.cid
-            await recordTxn.indexRecord(uri, profileCid, updated, now)
-          } else {
-            const exhaustiveCheck: never = write
-            throw new Error(
-              `Unsupported action on update profile: ${exhaustiveCheck}`,
-            )
-          }
-
+              // Update profile app index
+              await dbTxn.db
+                .updateTable('profile')
+                .set({
+                  cid: profileCid.toString(),
+                  displayName: updated.displayName,
+                  description: updated.description,
+                  avatarCid: updated.avatar?.cid,
+                  bannerCid: updated.banner?.cid,
+                  indexedAt: now,
+                })
+                .where('uri', '=', uri.toString())
+                .execute()
+            } else if (write.action === WriteOpAction.Create) {
+              await recordTxn.indexRecord(uri, profileCid, updated, now)
+            } else {
+              const exhaustiveCheck: never = write
+              throw new Error(
+                `Unsupported action on update profile: ${exhaustiveCheck}`,
+              )
+            }
+          })
           return { profileCid, updated }
         },
       )
