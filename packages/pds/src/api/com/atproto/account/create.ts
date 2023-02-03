@@ -129,7 +129,6 @@ export default function (server: Server, ctx: AppContext) {
 
       // Setup repo root
       await repoTxn.createRepo(did, [write], now)
-      await repoTxn.indexWrites([write], now)
 
       const declarationCid = await cidForCbor(declaration)
       const access = ctx.auth.createAccessToken(did)

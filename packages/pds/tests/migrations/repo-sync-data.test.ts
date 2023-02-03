@@ -37,7 +37,7 @@ describe('repo sync data migration', () => {
 
   it('fills the db with some repo data', async () => {
     for (let i = 0; i < 100; i++) {
-      repo = await repo.applyCommit(
+      repo = await repo.applyWrites(
         {
           action: WriteOpAction.Create,
           collection: randomStr(8, 'base32'),

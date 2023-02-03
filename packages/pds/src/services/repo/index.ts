@@ -39,21 +39,41 @@ export class RepoService {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const writeOps = writes.map(createWriteToOp)
-    await Repo.create(storage, did, this.keypair, writeOps)
-  }
-
-  async processWrites(did: string, writes: PreparedWrite[], now: string) {
-    // make structural write to repo & send to indexing
-    // @TODO get commitCid first so we can do all db actions in tandem
-    const [commit] = await Promise.all([
-      this.writeToRepo(did, writes, now),
-      this.indexWrites(writes, now),
+    const repo = await Repo.create(storage, did, this.keypair, writeOps)
+    await Promise.all([
+      this.indexCreatesAndDeletes(writes, now),
+      this.afterWriteProcessing(did, repo.cid, writes),
     ])
-    // make blobs permanent & associate w commit + recordUri in DB
-    await this.blobs.processWriteBlobs(did, commit, writes)
   }
 
-  async writeToRepo(
+  async processCreatesAndDeletes(
+    did: string,
+    writes: PreparedWrite[],
+    now: string,
+  ) {
+    await this.processWrites(did, writes, now, () =>
+      this.indexCreatesAndDeletes(writes, now),
+    )
+  }
+
+  async processWrites(
+    did: string,
+    writes: PreparedWrite[],
+    now: string,
+    indexWrites: (commit: CID) => Promise<void>,
+  ) {
+    // make structural write to repo
+    const commit = await this.applyCommit(did, writes, now)
+    // @TODO get commitCid first so we can do all db actions in tandem
+    await Promise.all([
+      // & send to indexing
+      indexWrites(commit),
+      // do any other processing needed after write
+      this.afterWriteProcessing(did, commit, writes),
+    ])
+  }
+
+  async applyCommit(
     did: string,
     writes: PreparedWrite[],
     now: string,
@@ -68,11 +88,11 @@ export class RepoService {
     }
     const writeOps = writes.map(writeToOp)
     const repo = await Repo.load(storage, currRoot)
-    const updated = await repo.applyCommit(writeOps, this.keypair)
+    const updated = await repo.applyWrites(writeOps, this.keypair)
     return updated.cid
   }
 
-  async indexWrites(writes: PreparedWrite[], now: string) {
+  async indexCreatesAndDeletes(writes: PreparedWrite[], now: string) {
     this.db.assertTransaction()
     const recordTxn = this.services.record(this.db)
     await Promise.all(
@@ -84,6 +104,14 @@ export class RepoService {
         }
       }),
     )
+  }
+
+  async afterWriteProcessing(
+    did: string,
+    commit: CID,
+    writes: PreparedWrite[],
+  ) {
+    await this.blobs.processWriteBlobs(did, commit, writes)
   }
 
   async deleteRepo(did: string) {
