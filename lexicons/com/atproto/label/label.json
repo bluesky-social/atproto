@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.label.label",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Metadata tag on an atproto resource (eg, repo or record)",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["src", "uri", "val", "ts"],
+        "properties": {
+          "src": {"type": "string", "maxLength": 1024},
+          "uri": {"type": "string", "maxLength": 1024},
+          "cid": {"type": "string", "maxLength": 256},
+          "val": {"type": "string", "maxLength": 128},
+          "ts": {"type": "datetime"},
+          "labelUri": {"type": "string", "maxLength": 1024}
+        }
+      }
+    }
+  }
+}
