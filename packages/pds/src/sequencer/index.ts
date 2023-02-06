@@ -10,23 +10,20 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   constructor(public db: Database, public lastSeen?: number) {
     super()
+    this.start()
   }
 
-  static async start(db: Database) {
-    const found = await db.db
+  async start() {
+    const found = await this.db.db
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'desc')
       .limit(1)
       .executeTakeFirst()
-    const lastSeen = found ? found.seq : undefined
-    const seq = new Sequencer(db, lastSeen)
-    seq.listenToDb()
-    return seq
-  }
-
-  listenToDb() {
-    this.db.channels.repo_seq.on('message', () => {
+    if (found) {
+      this.lastSeen = found.seq
+    }
+    this.db.channels.repo_seq.addListener('message', () => {
       if (this.polling) {
         this.queued = true
       } else {
@@ -52,7 +49,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       seqQb = seqQb.limit(limit)
     }
 
-    let qb = this.db.db
+    const res: SeqRow[] = await this.db.db
       .selectFrom(seqQb.as('repo_seq'))
       .innerJoin('repo_commit_block', (join) =>
         join
@@ -71,8 +68,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         'ipld_block.cid as cid',
         'ipld_block.content as content',
       ])
+      .execute()
 
-    const res: SeqRow[] = await qb.execute()
     const bySeq = res.reduce((acc, cur) => {
       acc[cur.seq] ??= []
       acc[cur.seq].push(cur)
@@ -81,7 +78,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     const seqs = Object.keys(bySeq)
       .map((seq) => parseInt(seq))
       .sort((a, b) => a - b)
-    console.log('SEQS: ', seqs)
     const evts: MaybeRepoEvent[] = []
     for (const seq of seqs) {
       const rows = bySeq[seq]
@@ -115,7 +111,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     }
     // check if we should continue polling
     if (this.queued === false) {
-      this.polling === false
+      this.polling = false
     } else {
       this.queued = false
       this.pollDb()
@@ -146,6 +142,6 @@ type SequencerEvents = {
   event: (evt: RepoEvent) => void
 }
 
-type SequencerEmitter = TypedEmitter<SequencerEvents>
+export type SequencerEmitter = TypedEmitter<SequencerEvents>
 
 export default Sequencer

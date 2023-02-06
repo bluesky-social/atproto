@@ -68,4 +68,23 @@ describe('db', () => {
     expect(receivedOne).toBe(sendCount)
     expect(receivedTwo).toBe(sendCount)
   })
+
+  it('works within txs', async () => {
+    const sendCount = 5
+    const deferrables = createDeferrables(sendCount)
+    let receivedCount = 0
+    dbOne.channels.repo_seq.addListener('message', () => {
+      deferrables[receivedCount]?.resolve()
+      receivedCount++
+    })
+
+    await dbTwo.transaction(async (dbTx) => {
+      for (let i = 0; i < sendCount; i++) {
+        dbTx.notify('repo_seq')
+      }
+    })
+
+    await allComplete(deferrables)
+    expect(receivedCount).toBe(sendCount)
+  })
 })

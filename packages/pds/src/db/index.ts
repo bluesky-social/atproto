@@ -15,18 +15,23 @@ import { CtxMigrationProvider } from './migrations/provider'
 import { dbLogger as log } from '../logger'
 
 export class Database {
-  channels: Channels = {
-    repo_seq: new EventEmitter() as ChannelEmitter,
-  }
+  channels: Channels
   migrator: Migrator
   private channelClient: PgPoolClient | null = null
 
-  constructor(public db: DatabaseSchema, public cfg: DialectConfig) {
+  constructor(
+    public db: DatabaseSchema,
+    public cfg: DialectConfig,
+    channels?: Channels,
+  ) {
     this.migrator = new Migrator({
       db,
       migrationTableSchema: cfg.dialect === 'pg' ? cfg.schema : undefined,
       provider: new CtxMigrationProvider(migrations, cfg.dialect),
     })
+    this.channels = channels || {
+      repo_seq: new EventEmitter() as ChannelEmitter,
+    }
   }
 
   static sqlite(location: string): Database {
@@ -103,7 +108,7 @@ export class Database {
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     return await this.db.transaction().execute((txn) => {
-      const dbTxn = new Database(txn, this.cfg)
+      const dbTxn = new Database(txn, this.cfg, this.channels)
       return fn(dbTxn)
     })
   }

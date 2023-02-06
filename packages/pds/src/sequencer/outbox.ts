@@ -1,5 +1,6 @@
-import Sequencer, { RepoEvent } from '.'
+import Sequencer, { RepoEvent, SequencerEmitter } from '.'
 import { once } from 'events'
+import { EventEmitter } from 'stream'
 
 export class Outbox {
   buffer: RepoEvent[] = []
@@ -22,20 +23,11 @@ export class Outbox {
       yield evt
       this.lastSeen = evt.seq
     }
-    // start streaming events
-    let event
-    while ((event = await once(this.sequencer, 'event'))) {
-      if (this.caughtUp) {
-        yield event
-        this.lastSeen = event.seq
-      } else {
-        this.buffer.push(event)
-      }
-    }
+
     // make a last request
-    for await (const evt of this.cutover()) {
+    for await (const evt of this.streamWithCutover()) {
       yield evt
-      this.lastSeen = event.seq
+      this.lastSeen = evt.seq
     }
   }
 
@@ -58,23 +50,40 @@ export class Outbox {
     }
   }
 
-  // makes a last request to db while buffering incoming events, dedupes them & streams them in order
-  async *cutover(): AsyncIterable<RepoEvent> {
-    const evts = await this.sequencer.requestSeqRange(this.lastSeen)
+  // streams updates from sequencer, but buffers them as it makes a last request
+  // then dedupes them & streams them in order
+  async *streamWithCutover(): AsyncIterable<RepoEvent> {
+    const internalEmitter = new EventEmitter() as SequencerEmitter
+
+    this.sequencer.on('event', (evt) => {
+      if (this.caughtUp) {
+        internalEmitter.emit('event', evt)
+      } else {
+        this.buffer.push(event)
+      }
+    })
+
+    const cutoverEvts = await this.sequencer.requestSeqRange(this.lastSeen)
     const alreadySent: number[] = []
-    for (const evt of evts) {
+    for (const evt of cutoverEvts) {
       if (evt !== null) {
-        yield evt
+        internalEmitter.emit('event', evt)
         alreadySent.push(evt.seq)
       }
     }
     for (const evt of this.buffer) {
       if (!alreadySent.includes(evt.seq)) {
-        yield evt
+        internalEmitter.emit('event', evt)
       }
     }
     this.caughtUp = true
     this.buffer = []
+
+    // start streaming events
+    let event
+    while ((event = await once(internalEmitter, 'event'))) {
+      yield event
+    }
   }
 }
 

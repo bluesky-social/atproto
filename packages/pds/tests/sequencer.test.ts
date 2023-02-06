@@ -24,32 +24,45 @@ describe('sequencer', () => {
     sequencer = server.ctx.sequencer
     const client = AtpApi.service(server.url)
     sc = new SeedClient(client)
+    await userSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    await userSeed(sc)
   })
 
   afterAll(async () => {
     await close()
   })
 
+  const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))
   const createPosts = async (count: number): Promise<void> => {
-    const randomPost = (by: string) => sc.post(by, randomStr(8, 'base32'))
     for (let i = 0; i < count; i++) {
       await Promise.all([randomPost(alice), randomPost(bob)])
     }
   }
 
-  it('sends to outbox', async () => {
-    const count = 100
-    // await createPosts(count)
-    const outbox = new Outbox(sequencer)
+  const getAllEvents = async (ob: Outbox, expected: number) => {
     const evts: RepoEvent[] = []
-    for await (const evt of outbox.events()) {
+    for await (const evt of ob.events()) {
       evts.push(evt)
-      console.log(evts.length)
-      if (evts.length >= count) break
+      if (evts.length >= expected) break
     }
-    expect(evts.length).toBe(count)
+    return evts
+  }
+
+  it('sends to outbox', async () => {
+    const count = 10
+    await createPosts(count)
+    const outbox = new Outbox(sequencer)
+    const evts = await getAllEvents(outbox, 26)
+    expect(evts.length).toBe(26)
+  })
+
+  it('handles cut over', async () => {
+    const outbox = new Outbox(sequencer)
+    const [evts] = await Promise.all([
+      getAllEvents(outbox, 46),
+      createPosts(10),
+    ])
+    expect(evts.length).toBe(46)
   })
 })
