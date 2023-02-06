@@ -12,22 +12,32 @@ import { isErrnoException } from '@atproto/common'
 export class DiskBlobStore implements BlobStore {
   location: string
   tmpLocation: string
+  quarantineLocation: string
 
-  constructor(location: string, tmpLocation: string) {
+  constructor(
+    location: string,
+    tmpLocation: string,
+    quarantineLocation: string,
+  ) {
     this.location = location
     this.tmpLocation = tmpLocation
+    this.quarantineLocation = quarantineLocation
   }
 
   static async create(
     location: string,
     tmpLocation?: string,
+    quarantineLocation?: string,
   ): Promise<DiskBlobStore> {
     const tmp = tmpLocation || path.join(os.tmpdir(), 'atproto/blobs')
+    const quarantine =
+      quarantineLocation || path.join(os.tmpdir(), 'atproto/blobs/quarantine')
     await Promise.all([
       fs.mkdir(location, { recursive: true }),
       fs.mkdir(tmp, { recursive: true }),
+      fs.mkdir(quarantine, { recursive: true }),
     ])
-    return new DiskBlobStore(location, tmp)
+    return new DiskBlobStore(location, tmp, quarantine)
   }
 
   private genKey() {
@@ -40,6 +50,10 @@ export class DiskBlobStore implements BlobStore {
 
   getStoredPath(cid: CID): string {
     return path.join(this.location, cid.toString())
+  }
+
+  getQuarantinePath(cid: CID): string {
+    return path.join(this.quarantineLocation, cid.toString())
   }
 
   async hasTemp(key: string): Promise<boolean> {
@@ -76,6 +90,14 @@ export class DiskBlobStore implements BlobStore {
     bytes: Uint8Array | stream.Readable,
   ): Promise<void> {
     await fs.writeFile(this.getStoredPath(cid), bytes)
+  }
+
+  async quarantine(cid: CID): Promise<void> {
+    await fs.rename(this.getStoredPath(cid), this.getQuarantinePath(cid))
+  }
+
+  async unquarantine(cid: CID): Promise<void> {
+    await fs.rename(this.getQuarantinePath(cid), this.getStoredPath(cid))
   }
 
   async getBytes(cid: CID): Promise<Uint8Array> {

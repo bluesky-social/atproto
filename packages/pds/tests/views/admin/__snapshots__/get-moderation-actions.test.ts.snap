@@ -21,6 +21,7 @@ Array [
       "cid": "cids(0)",
       "uri": "record(0)",
     },
+    "subjectBlobCids": Array [],
   },
 ]
 `;
@@ -40,6 +41,7 @@ Array [
       "$type": "com.atproto.repo.repoRef",
       "did": "user(0)",
     },
+    "subjectBlobCids": Array [],
   },
   Object {
     "action": "com.atproto.admin.moderationAction#acknowledge",
@@ -53,6 +55,7 @@ Array [
       "cid": "cids(0)",
       "uri": "record(0)",
     },
+    "subjectBlobCids": Array [],
   },
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
@@ -73,6 +76,7 @@ Array [
       "cid": "cids(1)",
       "uri": "record(1)",
     },
+    "subjectBlobCids": Array [],
   },
 ]
 `;
@@ -90,6 +94,7 @@ Array [
       "$type": "com.atproto.repo.repoRef",
       "did": "user(0)",
     },
+    "subjectBlobCids": Array [],
   },
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
@@ -104,6 +109,7 @@ Array [
       "$type": "com.atproto.repo.repoRef",
       "did": "user(1)",
     },
+    "subjectBlobCids": Array [],
   },
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
@@ -117,6 +123,7 @@ Array [
       "cid": "cids(0)",
       "uri": "record(0)",
     },
+    "subjectBlobCids": Array [],
   },
   Object {
     "action": "com.atproto.admin.moderationAction#takedown",
@@ -130,6 +137,7 @@ Array [
       "cid": "cids(1)",
       "uri": "record(1)",
     },
+    "subjectBlobCids": Array [],
   },
   Object {
     "action": "com.atproto.admin.moderationAction#acknowledge",
@@ -143,6 +151,7 @@ Array [
       "cid": "cids(2)",
       "uri": "record(2)",
     },
+    "subjectBlobCids": Array [],
   },
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
@@ -163,6 +172,7 @@ Array [
       "cid": "cids(3)",
       "uri": "record(3)",
     },
+    "subjectBlobCids": Array [],
   },
 ]
 `;

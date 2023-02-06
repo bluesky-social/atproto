@@ -332,7 +332,10 @@ Array [
     "handle": "cara-wiegand69.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
-      "takedownId": 1,
+      "currentAction": Object {
+        "action": "com.atproto.admin.moderationAction#takedown",
+        "id": 1,
+      },
     },
     "relatedRecords": Array [
       Object {

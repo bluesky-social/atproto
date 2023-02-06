@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
-      const { action, subject, reason, createdBy } = input.body
+      const { action, subject, reason, createdBy, subjectBlobCids } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
@@ -26,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         const result = await moderationTxn.logAction({
           action: getAction(action),
           subject: getSubject(subject),
+          subjectBlobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
           createdBy,
           reason,
         })
@@ -50,6 +51,7 @@ export default function (server: Server, ctx: AppContext) {
           await moderationTxn.takedownRecord({
             takedownId: result.id,
             uri: new AtUri(result.subjectUri),
+            blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
           })
         }
 

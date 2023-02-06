@@ -7,7 +7,7 @@ import {
   runTestServer,
   TestServerInfo,
 } from './_util'
-import { SeedClient } from './seeds/client'
+import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import {
   ACKNOWLEDGE,
@@ -15,6 +15,8 @@ import {
   TAKEDOWN,
 } from '../src/lexicon/types/com/atproto/admin/moderationAction'
 import { OTHER, SPAM } from '../src/lexicon/types/com/atproto/report/reasonType'
+import { CID } from 'multiformats/cid'
+import { BlobNotFoundError } from '@atproto/repo'
 
 describe('moderation', () => {
   let server: TestServerInfo
@@ -403,6 +405,332 @@ describe('moderation', () => {
           headers: { authorization: adminAuth() },
         },
       )
+    })
+
+    it('only allows record to have one current action.', async () => {
+      const postUri = sc.posts[sc.dids.alice][0].ref.uri
+      const { data: acknowledge } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: ACKNOWLEDGE,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      const flagPromise = client.com.atproto.admin.takeModerationAction(
+        {
+          action: FLAG,
+          subject: {
+            $type: 'com.atproto.repo.recordRef',
+            uri: postUri.toString(),
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      await expect(flagPromise).rejects.toThrow(
+        'Subject already has an active action:',
+      )
+
+      // Reverse current then retry
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: acknowledge.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      const { data: flag } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri.toString(),
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: flag.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+
+    it('only allows repo to have one current action.', async () => {
+      const { data: acknowledge } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: ACKNOWLEDGE,
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did: sc.dids.alice,
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      const flagPromise = client.com.atproto.admin.takeModerationAction(
+        {
+          action: FLAG,
+          subject: {
+            $type: 'com.atproto.repo.repoRef',
+            did: sc.dids.alice,
+          },
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      await expect(flagPromise).rejects.toThrow(
+        'Subject already has an active action:',
+      )
+
+      // Reverse current then retry
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: acknowledge.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      const { data: flag } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did: sc.dids.alice,
+            },
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: flag.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+
+    it('only allows blob to have one current action.', async () => {
+      const img = sc.posts[sc.dids.carol][0].images[0]
+      const postA = await sc.post(sc.dids.alice, 'image A', undefined, [img])
+      const postB = await sc.post(sc.dids.alice, 'image B', undefined, [img])
+      const { data: acknowledge } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: ACKNOWLEDGE,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postA.ref.uriStr,
+            },
+            subjectBlobCids: [img.image.cid],
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      const flagPromise = client.com.atproto.admin.takeModerationAction(
+        {
+          action: FLAG,
+          subject: {
+            $type: 'com.atproto.repo.recordRef',
+            uri: postB.ref.uriStr,
+          },
+          subjectBlobCids: [img.image.cid],
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      await expect(flagPromise).rejects.toThrow(
+        'Blob already has an active action:',
+      )
+      // Reverse current then retry
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: acknowledge.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      const { data: flag } =
+        await client.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postB.ref.uriStr,
+            },
+            subjectBlobCids: [img.image.cid],
+            createdBy: 'X',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+
+      // Cleanup
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: flag.id,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+  })
+
+  describe('blob takedown', () => {
+    let post: { ref: RecordRef; images: ImageRef[] }
+    let blob: ImageRef
+    let imageUri: string
+    let actionId: number
+    beforeAll(async () => {
+      post = sc.posts[sc.dids.carol][0]
+      blob = post.images[1]
+      imageUri = server.ctx.imgUriBuilder
+        .getCommonSignedUri('feed_thumbnail', blob.image.cid)
+        .replace(server.ctx.cfg.publicUrl, server.url)
+      // Warm image server cache
+      await fetch(imageUri)
+      const cached = await fetch(imageUri)
+      expect(cached.headers.get('x-cache')).toEqual('hit')
+      const takeAction = await client.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.recordRef',
+            uri: post.ref.uriStr,
+          },
+          subjectBlobCids: [blob.image.cid],
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      actionId = takeAction.data.id
+    })
+
+    it('removes blob from the store', async () => {
+      const tryGetBytes = server.ctx.blobstore.getBytes(
+        CID.parse(blob.image.cid),
+      )
+      await expect(tryGetBytes).rejects.toThrow(BlobNotFoundError)
+    })
+
+    it('prevents blob from being referenced again.', async () => {
+      const uploaded = await sc.uploadFile(
+        sc.dids.alice,
+        'tests/image/fixtures/key-alt.jpg',
+        'image/jpeg',
+      )
+      expect(uploaded.image.cid).toEqual(blob.image.cid)
+      const referenceBlob = sc.post(sc.dids.alice, 'pic', [], [blob])
+      await expect(referenceBlob).rejects.toThrow('Could not find blob:')
+    })
+
+    it('prevents image blob from being served, even when cached.', async () => {
+      const fetchImage = await fetch(imageUri)
+      expect(fetchImage.status).toEqual(404)
+      expect(await fetchImage.json()).toEqual({ message: 'Image not found' })
+    })
+
+    it('restores blob when action is reversed.', async () => {
+      await client.com.atproto.admin.reverseModerationAction(
+        {
+          id: actionId,
+          createdBy: 'X',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+      // Can post and reference blob
+      const post = await sc.post(sc.dids.alice, 'pic', [], [blob])
+      expect(post.images[0].image.cid).toEqual(blob.image.cid)
+
+      // Can fetch through image server
+      const fetchImage = await fetch(imageUri)
+      expect(fetchImage.status).toEqual(200)
+      const size = Number(fetchImage.headers.get('content-length'))
+      expect(size).toBeGreaterThan(9000)
     })
   })
 })
