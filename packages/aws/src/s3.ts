@@ -38,6 +38,10 @@ export class S3BlobStore implements BlobStore {
     return `blocks/${cid.toString()}`
   }
 
+  private getQuarantinedPath(cid: CID): string {
+    return `quarantine/${cid.toString()}`
+  }
+
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
     const key = this.genKey()
     await new Upload({
@@ -52,16 +56,9 @@ export class S3BlobStore implements BlobStore {
   }
 
   async makePermanent(key: string, cid: CID): Promise<void> {
-    const tmpPath = this.getTmpPath(key)
-    await this.client.copyObject({
-      Bucket: this.bucket,
-      CopySource: `${this.bucket}/${tmpPath}`,
-      Key: this.getStoredPath(cid),
-    })
-
-    await this.client.deleteObject({
-      Bucket: this.bucket,
-      Key: tmpPath,
+    await this.move({
+      from: this.getTmpPath(key),
+      to: this.getStoredPath(cid),
     })
   }
 
@@ -77,6 +74,20 @@ export class S3BlobStore implements BlobStore {
         Key: this.getStoredPath(cid),
       },
     }).done()
+  }
+
+  async quarantine(cid: CID): Promise<void> {
+    await this.move({
+      from: this.getStoredPath(cid),
+      to: this.getQuarantinedPath(cid),
+    })
+  }
+
+  async unquarantine(cid: CID): Promise<void> {
+    await this.move({
+      from: this.getQuarantinedPath(cid),
+      to: this.getStoredPath(cid),
+    })
   }
 
   private async getObject(cid: CID) {
@@ -105,6 +116,18 @@ export class S3BlobStore implements BlobStore {
     await this.client.deleteObject({
       Bucket: this.bucket,
       Key: this.getStoredPath(cid),
+    })
+  }
+
+  private async move(keys: { from: string; to: string }) {
+    await this.client.copyObject({
+      Bucket: this.bucket,
+      CopySource: `${this.bucket}/${keys.from}`,
+      Key: keys.to,
+    })
+    await this.client.deleteObject({
+      Bucket: this.bucket,
+      Key: keys.from,
     })
   }
 }

@@ -44,7 +44,6 @@ export interface Actor {
   description?: string
   avatar?: string
   indexedAt?: string
-  myState?: MyState
   [k: string]: unknown
 }
 
@@ -58,21 +57,4 @@ export function isActor(v: unknown): v is Actor {
 
 export function validateActor(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.getSuggestions#actor', v)
-}
-
-export interface MyState {
-  follow?: string
-  [k: string]: unknown
-}
-
-export function isMyState(v: unknown): v is MyState {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.getSuggestions#myState'
-  )
-}
-
-export function validateMyState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.getSuggestions#myState', v)
 }

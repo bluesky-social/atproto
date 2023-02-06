@@ -115,7 +115,7 @@ export class Repo extends ReadableRepo {
     })
   }
 
-  async createCommit(
+  async formatCommit(
     toWrite: RecordWriteOp | RecordWriteOp[],
     keypair: crypto.Keypair,
   ): Promise<CommitData> {
@@ -175,13 +175,17 @@ export class Repo extends ReadableRepo {
     }
   }
 
-  async applyCommit(
+  async applyCommit(commitData: CommitData): Promise<Repo> {
+    await this.storage.applyCommit(commitData)
+    return Repo.load(this.storage, commitData.commit)
+  }
+
+  async applyWrites(
     toWrite: RecordWriteOp | RecordWriteOp[],
     keypair: crypto.Keypair,
   ): Promise<Repo> {
-    const commit = await this.createCommit(toWrite, keypair)
-    await this.storage.applyCommit(commit)
-    return Repo.load(this.storage, commit.commit)
+    const commit = await this.formatCommit(toWrite, keypair)
+    return this.applyCommit(commit)
   }
 }
 

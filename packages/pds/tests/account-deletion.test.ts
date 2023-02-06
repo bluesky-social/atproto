@@ -223,6 +223,30 @@ describe('account deletion', () => {
     )
     expect(found.length).toBe(0)
   })
+
+  it('can delete an empty user', async () => {
+    const eve = await sc.createAccount('eve', {
+      handle: 'eve.test',
+      email: 'eve@test.com',
+      password: 'eve-test',
+    })
+
+    const mail = await getMailFrom(
+      client.com.atproto.account.requestDelete(undefined, {
+        headers: sc.getHeaders(eve.did),
+      }),
+    )
+
+    const token = getTokenFromMail(mail)
+    if (!token) {
+      return expect(token).toBeDefined()
+    }
+    await client.com.atproto.account.delete({
+      token,
+      did: eve.did,
+      password: eve.password,
+    })
+  })
 })
 
 type DbContents = {

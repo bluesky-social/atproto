@@ -15,6 +15,7 @@ Object {
     "$type": "com.atproto.repo.repoRef",
     "did": "user(0)",
   },
+  "subjectBlobCids": Array [],
 }
 `;
 

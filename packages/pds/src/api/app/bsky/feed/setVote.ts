@@ -67,10 +67,7 @@ export default function (server: Server, ctx: AppContext) {
           writes.push(create)
         }
 
-        await Promise.all([
-          await repoTxn.writeToRepo(requester, writes, now),
-          await repoTxn.indexWrites(writes, now),
-        ])
+        await repoTxn.processCreatesAndDeletes(requester, writes, now)
 
         return create?.uri.toString()
       })

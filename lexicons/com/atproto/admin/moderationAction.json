@@ -4,17 +4,10 @@
   "defs": {
     "view": {
       "type": "object",
-      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReportIds"],
+      "required": ["id", "action", "subject", "subjectBlobCids", "reason", "createdBy", "createdAt", "resolvedReportIds"],
       "properties": {
         "id": {"type": "integer"},
-        "action": {
-          "type": "string",
-          "knownValues": [
-            "com.atproto.admin.moderationAction#takedown",
-            "com.atproto.admin.moderationAction#flag",
-            "com.atproto.admin.moderationAction#acknowledge"
-          ]
-        },
+        "action": {"type": "ref", "ref": "#actionType"},
         "subject": {
           "type": "union",
           "refs": [
@@ -22,6 +15,7 @@
             "com.atproto.repo.strongRef"
           ]
         },
+        "subjectBlobCids": {"type": "array", "items": {"type": "string"}},
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"},
@@ -31,17 +25,10 @@
     },
     "viewDetail": {
       "type": "object",
-      "required": ["id", "action", "subject", "reason", "createdBy", "createdAt", "resolvedReports"],
+      "required": ["id", "action", "subject", "subjectBlobs", "reason", "createdBy", "createdAt", "resolvedReports"],
       "properties": {
         "id": {"type": "integer"},
-        "action": {
-          "type": "string",
-          "knownValues": [
-            "com.atproto.admin.moderationAction#takedown",
-            "com.atproto.admin.moderationAction#flag",
-            "com.atproto.admin.moderationAction#acknowledge"
-          ]
-        },
+        "action": {"type": "ref", "ref": "#actionType"},
         "subject": {
           "type": "union",
           "refs": [
@@ -49,11 +36,20 @@
             "com.atproto.admin.record#view"
           ]
         },
+        "subjectBlobs": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.blob#view"}},
         "reason": {"type": "string"},
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"},
         "reversal": {"type": "ref", "ref": "#reversal"},
         "resolvedReports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationReport#view"}}
+      }
+    },
+    "viewCurrent": {
+      "type": "object",
+      "required": ["id", "action"],
+      "properties": {
+        "id": {"type": "integer"},
+        "action": {"type": "ref", "ref": "#actionType"}
       }
     },
     "reversal": {
@@ -64,6 +60,14 @@
         "createdBy": {"type": "string"},
         "createdAt": {"type": "string"}
       }
+    },
+    "actionType": {
+      "type": "string",
+      "knownValues": [
+        "com.atproto.admin.moderationAction#takedown",
+        "com.atproto.admin.moderationAction#flag",
+        "com.atproto.admin.moderationAction#acknowledge"
+      ]
     },
     "takedown": {
       "type": "token",

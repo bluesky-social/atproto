@@ -127,9 +127,10 @@ export class Database {
   async close(): Promise<void> {
     this.channelClient?.removeAllListeners()
     this.channelClient?.release()
-    if (this.cfg.dialect === 'pg') {
-      await this.cfg.pool.end()
-    }
+    // @TODO investigate
+    // if (this.cfg.dialect === 'pg') {
+    //   await this.cfg.pool.end()
+    // }
     await this.db.destroy()
   }
 

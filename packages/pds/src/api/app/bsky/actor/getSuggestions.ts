@@ -23,6 +23,14 @@ export default function (server: Server, ctx: AppContext) {
         .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .where(notSoftDeletedClause(ref('repo_root')))
+        .where('did_handle.did', '!=', requester)
+        .whereNotExists((qb) =>
+          qb
+            .selectFrom('follow')
+            .selectAll()
+            .where('creator', '=', requester)
+            .whereRef('subjectDid', '=', ref('did_handle.did')),
+        )
         .select([
           'did_handle.did as did',
           'did_handle.handle as handle',
@@ -34,12 +42,6 @@ export default function (server: Server, ctx: AppContext) {
           'profile.avatarCid as avatarCid',
           'profile.indexedAt as indexedAt',
           'user.createdAt as createdAt',
-          db
-            .selectFrom('follow')
-            .where('creator', '=', requester)
-            .whereRef('subjectDid', '=', ref('did_handle.did'))
-            .select('uri')
-            .as('requesterFollow'),
           db
             .selectFrom('post')
             .whereRef('creator', '=', ref('did_handle.did'))
@@ -72,9 +74,6 @@ export default function (server: Server, ctx: AppContext) {
           ? ctx.imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
           : undefined,
         indexedAt: result.indexedAt ?? undefined,
-        myState: {
-          follow: result.requesterFollow || undefined,
-        },
       }))
 
       return {

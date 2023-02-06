@@ -42,7 +42,7 @@ describe('image processing server', () => {
 
   afterAll(async () => {
     if (httpServer) httpServer.close()
-    if (server) await server.cache.clear()
+    if (server) await server.cache.clearAll()
   })
 
   it('processes image from storage.', async () => {
