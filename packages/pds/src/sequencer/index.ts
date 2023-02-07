@@ -33,25 +33,25 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async requestSeqRange(opts: {
-    startSeq?: number
-    startTime?: string
-    endSeq?: number
-    endTime?: string
+    earliestSeq?: number
+    earliestTime?: string
+    latestSeq?: number
+    latestTime?: string
     limit?: number
   }): Promise<MaybeRepoEvent[]> {
-    const { startSeq, startTime, endSeq, endTime, limit } = opts
+    const { earliestSeq, earliestTime, latestSeq, latestTime, limit } = opts
     let seqQb = this.db.db.selectFrom('repo_seq').selectAll()
-    if (startSeq !== undefined) {
-      seqQb = seqQb.where('seq', '>', startSeq)
+    if (earliestSeq !== undefined) {
+      seqQb = seqQb.where('seq', '>', earliestSeq)
     }
-    if (startTime !== undefined) {
-      seqQb = seqQb.where('sequencedAt', '>=', startTime)
+    if (earliestTime !== undefined) {
+      seqQb = seqQb.where('sequencedAt', '>=', earliestTime)
     }
-    if (endSeq !== undefined) {
-      seqQb = seqQb.where('seq', '<=', endSeq)
+    if (latestSeq !== undefined) {
+      seqQb = seqQb.where('seq', '<=', latestSeq)
     }
-    if (endTime !== undefined) {
-      seqQb = seqQb.where('sequencedAt', '<=', endTime)
+    if (latestTime !== undefined) {
+      seqQb = seqQb.where('sequencedAt', '<=', latestTime)
     }
     if (limit !== undefined) {
       seqQb = seqQb.limit(limit)
@@ -73,6 +73,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         'repo_seq.seq as seq',
         'repo_seq.did as did',
         'repo_seq.commit as commit',
+        'repo_seq.eventType as eventType',
+        'repo_seq.sequencedAt as sequencedAt',
         'ipld_block.cid as cid',
         'ipld_block.content as content',
       ])
@@ -101,17 +103,17 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       evts.push({
         seq,
         repo: rows[0].did,
-        repoAppend: {
-          commit: commit.toString(),
-          carSlice,
-        },
+        sequencedAt: rows[0].sequencedAt,
+        eventType: rows[0].eventType,
+        commit: commit.toString(),
+        carSlice,
       })
     }
     return evts
   }
 
   async pollDb() {
-    const evts = await this.requestSeqRange({ startSeq: this.lastSeen })
+    const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
     for (const evt of evts) {
       if (evt !== null) {
         this.lastSeen = evt.seq
@@ -132,6 +134,8 @@ type SeqRow = {
   seq: number
   did: string
   commit: string
+  eventType: string
+  sequencedAt: string
   cid: string
   content: Uint8Array
 }
@@ -139,10 +143,10 @@ type SeqRow = {
 export type RepoEvent = {
   seq: number
   repo: string
-  repoAppend: {
-    commit: string
-    carSlice: Uint8Array
-  }
+  sequencedAt: string
+  commit: string
+  carSlice: Uint8Array
+  eventType: string
 }
 
 type MaybeRepoEvent = RepoEvent | null

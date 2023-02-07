@@ -28,7 +28,7 @@ export class AsyncBuffer<T> {
   private promise: Promise<void>
   private resolve: () => void
 
-  constructor() {
+  constructor(public maxSize?: number) {
     this.resetPromise()
   }
 
@@ -51,6 +51,9 @@ export class AsyncBuffer<T> {
   }
 
   async nextEvent(): Promise<T> {
+    if (this.maxSize && this.size > this.maxSize) {
+      throw new AsyncBufferFullError(this.maxSize)
+    }
     const [first, ...rest] = this.buffer
     if (first) {
       this.buffer = rest
@@ -59,5 +62,11 @@ export class AsyncBuffer<T> {
       await this.promise
       return this.nextEvent()
     }
+  }
+}
+
+export class AsyncBufferFullError extends Error {
+  constructor(maxSize: number) {
+    super(`ReachedMaxBufferSize: ${maxSize}`)
   }
 }

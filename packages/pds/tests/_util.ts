@@ -72,6 +72,7 @@ export const runTestServer = async (
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
     blobstoreLocation: `${blobstoreLoc}/blobs`,
     blobstoreTmp: `${blobstoreLoc}/tmp`,
+    maxSubscriptionBuffer: 200,
     ...params,
   })
 

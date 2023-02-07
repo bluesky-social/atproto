@@ -37,6 +37,8 @@ export interface ServerConfigValues {
   appUrlPasswordReset: string
   emailSmtpUrl?: string
   emailNoReplyAddress: string
+
+  maxSubscriptionBuffer: number
 }
 
 export class ServerConfig {
@@ -112,6 +114,9 @@ export class ServerConfig {
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
 
+    const maxBuffer = parseInt(process.env.MAX_SUBSCRIPTION_BUFFER || '')
+    const maxSubscriptionBuffer = isNaN(maxBuffer) ? 500 : maxBuffer
+
     return new ServerConfig({
       debugMode,
       version,
@@ -140,6 +145,7 @@ export class ServerConfig {
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
+      maxSubscriptionBuffer,
       ...overrides,
     })
   }
@@ -280,5 +286,9 @@ export class ServerConfig {
 
   get emailNoReplyAddress() {
     return this.cfg.emailNoReplyAddress
+  }
+
+  get maxSubscriptionBuffer() {
+    return this.cfg.maxSubscriptionBuffer
   }
 }

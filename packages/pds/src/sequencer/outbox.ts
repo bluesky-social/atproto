@@ -1,8 +1,10 @@
 import Sequencer, { RepoEvent, SequencerEmitter } from '.'
 import { EventEmitter } from 'stream'
-import { AsyncBuffer } from '@atproto/common'
+import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
 
-const MAX_BUFFER_SIZE = 1000
+export type OutboxOpts = {
+  maxBufferSize: number
+}
 
 export class Outbox {
   internalEmitter = new EventEmitter() as SequencerEmitter
@@ -11,9 +13,12 @@ export class Outbox {
   caughtUp = false
   lastSeen?: number
 
-  outBuffer = new AsyncBuffer<RepoEvent>()
+  outBuffer: AsyncBuffer<RepoEvent>
 
-  constructor(public sequencer: Sequencer) {}
+  constructor(public sequencer: Sequencer, opts: Partial<OutboxOpts> = {}) {
+    const { maxBufferSize = 500 } = opts
+    this.outBuffer = new AsyncBuffer<RepoEvent>(maxBufferSize)
+  }
 
   // event stream occurs in 3 phases
   // 1. historical events: events that have been added to the DB since the last time a connection was open.
@@ -35,9 +40,6 @@ export class Outbox {
     // then dedupes them & streams out them in order
     this.sequencer.on('event', (evt) => {
       if (this.caughtUp) {
-        if (this.outBuffer.size >= MAX_BUFFER_SIZE) {
-          throw new Error('Stream too slow')
-        }
         this.outBuffer.push(evt)
       } else {
         this.cutoverBuffer.push(evt)
@@ -45,7 +47,7 @@ export class Outbox {
     })
 
     const cutoverEvts = await this.sequencer.requestSeqRange({
-      startSeq: this.lastSeen,
+      earliestSeq: this.lastSeen,
     })
     const alreadySent: number[] = []
     for (const evt of cutoverEvts) {
@@ -64,8 +66,16 @@ export class Outbox {
     this.caughtUp = true
     this.cutoverBuffer = []
     while (true) {
-      const evt = await this.outBuffer.nextEvent()
-      yield evt
+      try {
+        const evt = await this.outBuffer.nextEvent()
+        yield evt
+      } catch (err) {
+        if (err instanceof AsyncBufferFullError) {
+          throw new StreamConsumerTooSlowError(err)
+        } else {
+          throw err
+        }
+      }
     }
   }
 
@@ -73,8 +83,8 @@ export class Outbox {
   async *getHistorical(startTime?: string) {
     while (true) {
       const evts = await this.sequencer.requestSeqRange({
-        startTime: startTime,
-        startSeq: this.lastSeen,
+        earliestTime: startTime,
+        earliestSeq: this.lastSeen,
         limit: 50,
       })
       for (const evt of evts) {
@@ -86,6 +96,12 @@ export class Outbox {
         break
       }
     }
+  }
+}
+
+export class StreamConsumerTooSlowError extends Error {
+  constructor(bufferErr: AsyncBufferFullError) {
+    super(`Stream consumer too slow: ${bufferErr.message}`)
   }
 }
 
