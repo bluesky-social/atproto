@@ -6,8 +6,10 @@ import { CloseFn, runTestServer } from './_util'
 import Outbox, { StreamConsumerTooSlowError } from '../src/sequencer/outbox'
 import { randomStr } from '@atproto/crypto'
 import { wait } from '@atproto/common'
+import { Database } from '../src'
 
 describe('sequencer', () => {
+  let db: Database
   let sequencer: Sequencer
   let close: CloseFn
   let sc: SeedClient
@@ -23,6 +25,7 @@ describe('sequencer', () => {
       dbPostgresSchema: 'db',
     })
     close = server.close
+    db = server.ctx.db
     sequencer = server.ctx.sequencer
     const client = AtpApi.service(server.url)
     sc = new SeedClient(client)
@@ -63,6 +66,23 @@ describe('sequencer', () => {
     return evts
   }
 
+  const loadFromDb = (lastSeen: string) => {
+    return db.db
+      .selectFrom('repo_seq')
+      .selectAll()
+      .where('repo_seq.sequencedAt', '>=', lastSeen)
+      .orderBy('repo_seq.seq', 'asc')
+      .execute()
+  }
+
+  const evtToDbRow = (e: RepoEvent) => ({
+    seq: e.seq,
+    did: e.repo,
+    commit: e.commit,
+    eventType: e.eventType,
+    sequencedAt: e.time,
+  })
+
   it('sends to outbox', async () => {
     const count = 20
     totalEvts += count
@@ -70,6 +90,10 @@ describe('sequencer', () => {
     const outbox = new Outbox(sequencer)
     const evts = await readEvents(outbox.events(timeBeforeWrites), totalEvts)
     expect(evts.length).toBe(totalEvts)
+
+    const fromDb = await loadFromDb(timeBeforeWrites)
+    expect(evts.map(evtToDbRow)).toEqual(fromDb)
+
     lastSeen = evts[evts.length - 1].time
   })
 
@@ -82,19 +106,27 @@ describe('sequencer', () => {
       createPosts(count),
     ])
     expect(evts.length).toBe(totalEvts)
+
+    const fromDb = await loadFromDb(timeBeforeWrites)
+    expect(evts.map(evtToDbRow)).toEqual(fromDb)
+
     lastSeen = evts[evts.length - 1].time
   })
 
-  it('only gets events after lastSeen', async () => {
+  it('only gets events after (inclusive) lastSeen', async () => {
     const count = 20
     totalEvts += count
     const outbox = new Outbox(sequencer)
     const gen = outbox.events(lastSeen)
     const [evts] = await Promise.all([
-      readEvents(gen, count),
+      readEvents(gen, count + 1), // +1 because we send the lastSeen date as well
       createPosts(count),
     ])
-    expect(evts.length).toBe(count)
+    expect(evts.length).toBe(count + 1)
+
+    const fromDb = await loadFromDb(lastSeen)
+    expect(evts.map(evtToDbRow)).toEqual(fromDb)
+
     lastSeen = evts[evts.length - 1].time
   })
 
@@ -109,9 +141,13 @@ describe('sequencer', () => {
       readEvents(evtGenerator, 5),
       createPosts(count),
     ])
-    const secondPart = await readEvents(evtGenerator, 15)
+    const secondPart = await readEvents(evtGenerator, 16)
     const evts = [...firstPart, ...secondPart]
-    expect(evts.length).toBe(count)
+    expect(evts.length).toBe(count + 1)
+
+    const fromDb = await loadFromDb(lastSeen)
+    expect(evts.map(evtToDbRow)).toEqual(fromDb)
+
     lastSeen = evts[evts.length - 1].time
   })
 
@@ -123,7 +159,7 @@ describe('sequencer', () => {
     // read enough to start streaming then wait to stream rest until buffer is overloaded
     const overloadBuffer = async () => {
       await Promise.all([readEvents(evtGenerator, 5), createPosts(count)])
-      await wait(200)
+      await wait(500)
       await readEvents(evtGenerator, 15)
     }
     await expect(overloadBuffer).rejects.toThrow(StreamConsumerTooSlowError)
