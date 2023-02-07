@@ -15,6 +15,8 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   builder = builder
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('commit', 'varchar', (col) => col.notNull())
+    .addColumn('eventType', 'varchar', (col) => col.notNull())
+    .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
   await builder.execute()
 
   // @TODO migrate past repo commits

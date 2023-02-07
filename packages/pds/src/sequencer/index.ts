@@ -33,17 +33,25 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async requestSeqRange(opts: {
-    firstExclusive?: number
-    lastInclusive?: number
+    startSeq?: number
+    startTime?: string
+    endSeq?: number
+    endTime?: string
     limit?: number
   }): Promise<MaybeRepoEvent[]> {
-    const { firstExclusive, lastInclusive, limit } = opts
+    const { startSeq, startTime, endSeq, endTime, limit } = opts
     let seqQb = this.db.db.selectFrom('repo_seq').selectAll()
-    if (firstExclusive !== undefined) {
-      seqQb = seqQb.where('seq', '>', firstExclusive)
+    if (startSeq !== undefined) {
+      seqQb = seqQb.where('seq', '>', startSeq)
     }
-    if (lastInclusive !== undefined) {
-      seqQb = seqQb.where('seq', '<=', lastInclusive)
+    if (startTime !== undefined) {
+      seqQb = seqQb.where('sequencedAt', '>=', startTime)
+    }
+    if (endSeq !== undefined) {
+      seqQb = seqQb.where('seq', '<=', endSeq)
+    }
+    if (endTime !== undefined) {
+      seqQb = seqQb.where('sequencedAt', '<=', endTime)
     }
     if (limit !== undefined) {
       seqQb = seqQb.limit(limit)
@@ -103,7 +111,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async pollDb() {
-    const evts = await this.requestSeqRange({ firstExclusive: this.lastSeen })
+    const evts = await this.requestSeqRange({ startSeq: this.lastSeen })
     for (const evt of evts) {
       if (evt !== null) {
         this.lastSeen = evt.seq

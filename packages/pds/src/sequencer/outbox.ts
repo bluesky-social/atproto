@@ -24,11 +24,9 @@ export class Outbox {
   // database to ensure we're caught up. We then dedupe the query & the buffer & stream the events in order
   // 3. streaming: we're all caught up on historic state, so the sequencer outputs events and we
   // immediately yield them
-  async *events(from?: number): AsyncGenerator<RepoEvent> {
-    this.lastSeen = from
-
+  async *events(startTime?: string): AsyncGenerator<RepoEvent> {
     // catch up as much as we can
-    for await (const evt of this.getHistorical()) {
+    for await (const evt of this.getHistorical(startTime)) {
       yield evt
       this.lastSeen = evt.seq
     }
@@ -47,7 +45,7 @@ export class Outbox {
     })
 
     const cutoverEvts = await this.sequencer.requestSeqRange({
-      firstExclusive: this.lastSeen,
+      startSeq: this.lastSeen,
     })
     const alreadySent: number[] = []
     for (const evt of cutoverEvts) {
@@ -72,10 +70,11 @@ export class Outbox {
   }
 
   // yields only historical events
-  async *getHistorical() {
+  async *getHistorical(startTime?: string) {
     while (true) {
       const evts = await this.sequencer.requestSeqRange({
-        firstExclusive: this.lastSeen,
+        startTime: startTime,
+        startSeq: this.lastSeen,
         limit: 50,
       })
       for (const evt of evts) {
