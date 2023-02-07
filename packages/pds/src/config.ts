@@ -1,3 +1,5 @@
+import { DAY } from '@atproto/common'
+
 export interface ServerConfigValues {
   debugMode?: boolean
   version: string
@@ -39,6 +41,7 @@ export interface ServerConfigValues {
   emailNoReplyAddress: string
 
   maxSubscriptionBuffer: number
+  repoBackfillLimitMs: number
 }
 
 export class ServerConfig {
@@ -117,6 +120,9 @@ export class ServerConfig {
     const maxBuffer = parseInt(process.env.MAX_SUBSCRIPTION_BUFFER || '')
     const maxSubscriptionBuffer = isNaN(maxBuffer) ? 500 : maxBuffer
 
+    const backfillLimit = parseInt(process.env.REPO_BACKFILL_LIMIT_MS || '')
+    const repoBackfillLimitMs = isNaN(backfillLimit) ? DAY : backfillLimit
+
     return new ServerConfig({
       debugMode,
       version,
@@ -146,6 +152,7 @@ export class ServerConfig {
       emailSmtpUrl,
       emailNoReplyAddress,
       maxSubscriptionBuffer,
+      repoBackfillLimitMs,
       ...overrides,
     })
   }
@@ -290,5 +297,9 @@ export class ServerConfig {
 
   get maxSubscriptionBuffer() {
     return this.cfg.maxSubscriptionBuffer
+  }
+
+  get repoBackfillLimitMs() {
+    return this.cfg.repoBackfillLimitMs
   }
 }
