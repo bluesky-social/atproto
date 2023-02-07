@@ -6,6 +6,7 @@ import {
   Server as XrpcServer,
   Options as XrpcOptions,
   AuthVerifier,
+  StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
 import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
@@ -712,7 +713,7 @@ type ConfigOf<Auth, Handler> =
       auth?: Auth
       handler: Handler
     }
-type ExtractAuth<AV extends AuthVerifier> = Extract<
+type ExtractAuth<AV extends AuthVerifier | StreamAuthVerifier> = Extract<
   Awaited<ReturnType<AV>>,
   { credentials: unknown }
 >

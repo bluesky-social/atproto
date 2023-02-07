@@ -20,7 +20,9 @@ export const infoFrameBody = z.object({
   message: z.string().optional(), // Info message
 })
 export type InfoFrameHeader = z.infer<typeof infoFrameHeader>
-export type InfoFrameBody = z.infer<typeof infoFrameBody>
+export type InfoFrameBody<T extends string = string> = { info: T } & z.infer<
+  typeof infoFrameBody
+>
 
 export const errorFrameHeader = z.object({
   op: z.literal(FrameType.Error),
@@ -30,7 +32,9 @@ export const errorFrameBody = z.object({
   message: z.string().optional(), // Error message
 })
 export type ErrorFrameHeader = z.infer<typeof errorFrameHeader>
-export type ErrorFrameBody = z.infer<typeof errorFrameBody>
+export type ErrorFrameBody<T extends string = string> = { error: T } & z.infer<
+  typeof errorFrameBody
+>
 
 export const frameHeader = z.union([
   dataFrameHeader,

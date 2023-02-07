@@ -87,10 +87,10 @@ export class DataFrame extends Frame {
   }
 }
 
-export class InfoFrame extends Frame {
+export class InfoFrame<T extends string = string> extends Frame {
   header: InfoFrameHeader
-  body: InfoFrameBody
-  constructor(opts: { body: InfoFrameBody }) {
+  body: InfoFrameBody<T>
+  constructor(opts: { body: InfoFrameBody<T> }) {
     super()
     this.header = { op: FrameType.Info }
     this.body = opts.body
@@ -103,10 +103,10 @@ export class InfoFrame extends Frame {
   }
 }
 
-export class ErrorFrame extends Frame {
+export class ErrorFrame<T extends string = string> extends Frame {
   header: ErrorFrameHeader
-  body: ErrorFrameBody
-  constructor(opts: { body: ErrorFrameBody }) {
+  body: ErrorFrameBody<T>
+  constructor(opts: { body: ErrorFrameBody<T> }) {
     super()
     this.header = { op: FrameType.Error }
     this.body = opts.body
