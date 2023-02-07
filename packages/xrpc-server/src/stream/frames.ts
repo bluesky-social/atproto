@@ -48,26 +48,21 @@ export abstract class Frame {
     }
     const frameOp = parsedHeader.data.op
     if (frameOp === FrameType.Message) {
-      return new MessageFrame({
+      return new MessageFrame(body, {
         type: parsedHeader.data.t,
-        body,
       })
     } else if (frameOp === FrameType.Info) {
       const parsedBody = infoFrameBody.safeParse(body)
       if (!parsedBody.success) {
         throw new Error(`Invalid info frame body: ${parsedBody.error.message}`)
       }
-      return new InfoFrame({
-        body: parsedBody.data,
-      })
+      return new InfoFrame(parsedBody.data)
     } else if (frameOp === FrameType.Error) {
       const parsedBody = errorFrameBody.safeParse(body)
       if (!parsedBody.success) {
         throw new Error(`Invalid error frame body: ${parsedBody.error.message}`)
       }
-      return new ErrorFrame({
-        body: parsedBody.data,
-      })
+      return new ErrorFrame(parsedBody.data)
     } else {
       const exhaustiveCheck: never = frameOp
       throw new Error(`Unknown frame op: ${exhaustiveCheck}`)
@@ -75,12 +70,13 @@ export abstract class Frame {
   }
 }
 
-export class MessageFrame extends Frame {
+export class MessageFrame<T = Record<string, unknown>> extends Frame {
   header: MessageFrameHeader
-  constructor(opts: { type?: number; body: unknown }) {
+  body: T
+  constructor(body: T, opts?: { type?: number }) {
     super()
-    this.header = { op: FrameType.Message, t: opts.type }
-    this.body = opts.body
+    this.header = { op: FrameType.Message, t: opts?.type }
+    this.body = body
   }
   get type() {
     return this.header.t
@@ -90,10 +86,10 @@ export class MessageFrame extends Frame {
 export class InfoFrame<T extends string = string> extends Frame {
   header: InfoFrameHeader
   body: InfoFrameBody<T>
-  constructor(opts: { body: InfoFrameBody<T> }) {
+  constructor(body: InfoFrameBody<T>) {
     super()
     this.header = { op: FrameType.Info }
-    this.body = opts.body
+    this.body = body
   }
   get code() {
     return this.body.info
@@ -106,10 +102,10 @@ export class InfoFrame<T extends string = string> extends Frame {
 export class ErrorFrame<T extends string = string> extends Frame {
   header: ErrorFrameHeader
   body: ErrorFrameBody<T>
-  constructor(opts: { body: ErrorFrameBody<T> }) {
+  constructor(body: ErrorFrameBody<T>) {
     super()
     this.header = { op: FrameType.Error }
-    this.body = opts.body
+    this.body = body
   }
   get code() {
     return this.body.error

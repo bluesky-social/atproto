@@ -64,9 +64,8 @@ export function decodeQueryParam(
   }
 }
 
-export function getQueryParams(
-  searchParams: URLSearchParams,
-): Record<string, string | string[]> {
+export function getQueryParams(url = ''): Record<string, string | string[]> {
+  const { searchParams } = new URL(url ?? '', 'http://x')
   const result: Record<string, string | string[]> = {}
   for (const key of searchParams.keys()) {
     result[key] = searchParams.getAll(key)

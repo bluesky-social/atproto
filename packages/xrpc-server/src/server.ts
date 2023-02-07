@@ -254,17 +254,13 @@ export class Server {
         noServer: true,
         handler: async function* (req) {
           try {
-            const url = new URL(req.url || '', 'http://x')
             // authenticate request
             const auth = await config.auth?.({ req })
             if (isHandlerError(auth)) {
               throw XRPCError.fromError(auth)
             }
             // validate request
-            const params = decodeQueryParams(
-              def,
-              getQueryParams(url.searchParams),
-            )
+            const params = decodeQueryParams(def, getQueryParams(req.url))
             try {
               assertValidXrpcParams(params)
             } catch (e) {
@@ -284,21 +280,19 @@ export class Server {
                   const code = def.message.codes[typeUri]
                   const clone = { ...item }
                   delete clone['$type']
-                  yield new MessageFrame({ type: code, body: clone })
+                  yield new MessageFrame(clone, { type: code })
                 } else {
-                  yield new MessageFrame({ body: item })
+                  yield new MessageFrame(item)
                 }
               } else {
-                yield new MessageFrame({ body: item })
+                yield new MessageFrame(item)
               }
             }
           } catch (err) {
             const xrpcErrPayload = XRPCError.fromError(err).payload
             yield new ErrorFrame({
-              body: {
-                error: xrpcErrPayload.error ?? 'Unknown',
-                message: xrpcErrPayload.message,
-              },
+              error: xrpcErrPayload.error ?? 'Unknown',
+              message: xrpcErrPayload.message,
             })
           }
         },

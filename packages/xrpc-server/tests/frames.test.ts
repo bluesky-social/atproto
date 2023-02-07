@@ -4,10 +4,7 @@ import { MessageFrame, ErrorFrame, Frame, FrameType, InfoFrame } from '../src'
 
 describe('Frames', () => {
   it('creates and parses message frame.', async () => {
-    const messageFrame = new MessageFrame({
-      type: 2,
-      body: { a: 'b', c: [1, 2, 3] },
-    })
+    const messageFrame = new MessageFrame({ a: 'b', c: [1, 2, 3] }, { type: 2 })
 
     expect(messageFrame.header).toEqual({
       op: FrameType.Message,
@@ -36,7 +33,8 @@ describe('Frames', () => {
 
   it('creates and parses info frame.', async () => {
     const infoFrame = new InfoFrame({
-      body: { info: 'SomeOccurrence', message: 'X occurred' },
+      info: 'SomeOccurrence',
+      message: 'X occurred',
     })
 
     expect(infoFrame.header).toEqual({ op: FrameType.Info })
@@ -70,7 +68,8 @@ describe('Frames', () => {
 
   it('creates and parses error frame.', async () => {
     const errorFrame = new ErrorFrame({
-      body: { error: 'BigOops', message: 'Something went awry' },
+      error: 'BigOops',
+      message: 'Something went awry',
     })
 
     expect(errorFrame.header).toEqual({ op: FrameType.Error })
@@ -121,10 +120,7 @@ describe('Frames', () => {
   })
 
   it('parsing fails when frame is missing body.', async () => {
-    const messageFrame = new MessageFrame({
-      type: 2,
-      body: { a: 'b', c: [1, 2, 3] },
-    })
+    const messageFrame = new MessageFrame({ a: 'b', c: [1, 2, 3] }, { type: 2 })
 
     const headerBytes = cborx.encode(messageFrame.header)
 
@@ -132,10 +128,7 @@ describe('Frames', () => {
   })
 
   it('parsing fails when frame has too many data items.', async () => {
-    const messageFrame = new MessageFrame({
-      type: 2,
-      body: { a: 'b', c: [1, 2, 3] },
-    })
+    const messageFrame = new MessageFrame({ a: 'b', c: [1, 2, 3] }, { type: 2 })
 
     const bytes = uint8arrays.concat([
       messageFrame.toBytes(),
@@ -148,7 +141,7 @@ describe('Frames', () => {
   })
 
   it('parsing fails when info frame has invalid body.', async () => {
-    const infoFrame = new InfoFrame({ body: { info: 'SomeOccurrence' } })
+    const infoFrame = new InfoFrame({ info: 'SomeOccurrence' })
 
     const bytes = uint8arrays.concat([
       cborx.encode(infoFrame.header),
@@ -159,7 +152,7 @@ describe('Frames', () => {
   })
 
   it('parsing fails when error frame has invalid body.', async () => {
-    const errorFrame = new ErrorFrame({ body: { error: 'BadOops' } })
+    const errorFrame = new ErrorFrame({ error: 'BadOops' })
 
     const bytes = uint8arrays.concat([
       cborx.encode(errorFrame.header),

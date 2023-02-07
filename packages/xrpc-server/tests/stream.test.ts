@@ -19,12 +19,12 @@ describe('Stream', () => {
       server: httpServer,
       handler: async function* () {
         await wait(1)
-        yield new MessageFrame({ body: 1 })
+        yield new MessageFrame(1)
         await wait(1)
-        yield new MessageFrame({ body: 2 })
+        yield new MessageFrame(2)
         await wait(1)
-        yield new InfoFrame({ body: { info: 'SomeDiagnostic' } }), await wait(1)
-        yield new MessageFrame({ body: 3 })
+        yield new InfoFrame({ info: 'SomeDiagnostic' }), await wait(1)
+        yield new MessageFrame(3)
         return
       },
     })
@@ -39,10 +39,10 @@ describe('Stream', () => {
     }
 
     expect(frames).toEqual([
-      new MessageFrame({ body: 1 }),
-      new MessageFrame({ body: 2 }),
-      new InfoFrame({ body: { info: 'SomeDiagnostic' } }),
-      new MessageFrame({ body: 3 }),
+      new MessageFrame(1),
+      new MessageFrame(2),
+      new InfoFrame({ info: 'SomeDiagnostic' }),
+      new MessageFrame(3),
     ])
 
     httpServer.close()
@@ -55,14 +55,14 @@ describe('Stream', () => {
       server: httpServer,
       handler: async function* () {
         await wait(1)
-        yield new MessageFrame({ body: 1 })
+        yield new MessageFrame(1)
         await wait(1)
-        yield new MessageFrame({ body: 2 })
+        yield new MessageFrame(2)
         await wait(1)
-        yield new ErrorFrame({ body: { error: 'BadOops' } })
+        yield new ErrorFrame({ error: 'BadOops' })
         proceededAfterError = true
         await wait(1)
-        yield new MessageFrame({ body: 3 })
+        yield new MessageFrame(3)
         return
       },
     })
@@ -80,9 +80,9 @@ describe('Stream', () => {
     expect(proceededAfterError).toEqual(false)
 
     expect(frames).toEqual([
-      new MessageFrame({ body: 1 }),
-      new MessageFrame({ body: 2 }),
-      new ErrorFrame({ body: { error: 'BadOops' } }),
+      new MessageFrame(1),
+      new MessageFrame(2),
+      new ErrorFrame({ error: 'BadOops' }),
     ])
 
     httpServer.close()

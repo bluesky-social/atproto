@@ -128,12 +128,12 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new MessageFrame({ body: { count: 5 } }),
-      new MessageFrame({ body: { count: 4 } }),
-      new MessageFrame({ body: { count: 3 } }),
-      new MessageFrame({ body: { count: 2 } }),
-      new MessageFrame({ body: { count: 1 } }),
-      new MessageFrame({ body: { count: 0 } }),
+      new MessageFrame({ count: 5 }),
+      new MessageFrame({ count: 4 }),
+      new MessageFrame({ count: 3 }),
+      new MessageFrame({ count: 2 }),
+      new MessageFrame({ count: 1 }),
+      new MessageFrame({ count: 0 }),
     ])
   })
 
@@ -148,13 +148,13 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new MessageFrame({ type: 1, body: { count: 5 } }),
-      new MessageFrame({ type: 0, body: { count: 4 } }),
-      new MessageFrame({ type: 1, body: { count: 3 } }),
-      new MessageFrame({ type: 0, body: { count: 2 } }),
-      new MessageFrame({ type: 1, body: { count: 1 } }),
-      new MessageFrame({ type: 0, body: { count: 0 } }),
-      new MessageFrame({ body: { $type: 'io.example.stream2#done' } }),
+      new MessageFrame({ count: 5 }, { type: 1 }),
+      new MessageFrame({ count: 4 }, { type: 0 }),
+      new MessageFrame({ count: 3 }, { type: 1 }),
+      new MessageFrame({ count: 2 }, { type: 0 }),
+      new MessageFrame({ count: 1 }, { type: 1 }),
+      new MessageFrame({ count: 0 }, { type: 0 }),
+      new MessageFrame({ $type: 'io.example.stream2#done' }),
     ])
   })
 
@@ -173,13 +173,11 @@ describe('Subscriptions', () => {
 
     expect(frames).toEqual([
       new MessageFrame({
-        body: {
-          credentials: {
-            username: 'admin',
-          },
-          artifacts: {
-            original: 'YWRtaW46cGFzc3dvcmQ=',
-          },
+        credentials: {
+          username: 'admin',
+        },
+        artifacts: {
+          original: 'YWRtaW46cGFzc3dvcmQ=',
         },
       }),
     ])
@@ -195,10 +193,8 @@ describe('Subscriptions', () => {
 
     expect(frames).toEqual([
       new ErrorFrame({
-        body: {
-          error: 'InvalidRequest',
-          message: 'Error: Params must have the property "countdown"',
-        },
+        error: 'InvalidRequest',
+        message: 'Error: Params must have the property "countdown"',
       }),
     ])
   })
@@ -218,10 +214,8 @@ describe('Subscriptions', () => {
 
     expect(frames).toEqual([
       new ErrorFrame({
-        body: {
-          error: 'AuthenticationRequired',
-          message: 'Authentication Required',
-        },
+        error: 'AuthenticationRequired',
+        message: 'Authentication Required',
       }),
     ])
   })
