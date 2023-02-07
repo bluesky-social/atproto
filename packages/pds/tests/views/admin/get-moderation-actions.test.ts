@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import {
   ACKNOWLEDGE,
   FLAG,
@@ -19,7 +19,7 @@ import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
 
 describe('pds admin get moderation actions view', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -28,8 +28,8 @@ describe('pds admin get moderation actions view', () => {
       dbPostgresSchema: 'views_admin_get_moderation_actions',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
   })
 
@@ -120,7 +120,7 @@ describe('pds admin get moderation actions view', () => {
   })
 
   it('gets all moderation actions.', async () => {
-    const result = await client.com.atproto.admin.getModerationActions(
+    const result = await agent.api.com.atproto.admin.getModerationActions(
       {},
       { headers: { authorization: adminAuth() } },
     )
@@ -128,7 +128,7 @@ describe('pds admin get moderation actions view', () => {
   })
 
   it('gets all moderation actions for a repo.', async () => {
-    const result = await client.com.atproto.admin.getModerationActions(
+    const result = await agent.api.com.atproto.admin.getModerationActions(
       { subject: Object.values(sc.dids)[0] },
       { headers: { authorization: adminAuth() } },
     )
@@ -136,7 +136,7 @@ describe('pds admin get moderation actions view', () => {
   })
 
   it('gets all moderation actions for a record.', async () => {
-    const result = await client.com.atproto.admin.getModerationActions(
+    const result = await agent.api.com.atproto.admin.getModerationActions(
       { subject: Object.values(sc.posts)[0][0].ref.uriStr },
       { headers: { authorization: adminAuth() } },
     )
@@ -146,7 +146,7 @@ describe('pds admin get moderation actions view', () => {
   it('paginates.', async () => {
     const results = (results) => results.flatMap((res) => res.actions)
     const paginator = async (cursor?: string) => {
-      const res = await client.com.atproto.admin.getModerationActions(
+      const res = await agent.api.com.atproto.admin.getModerationActions(
         { before: cursor, limit: 3 },
         { headers: { authorization: adminAuth() } },
       )
@@ -158,7 +158,7 @@ describe('pds admin get moderation actions view', () => {
       expect(res.actions.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await client.com.atproto.admin.getModerationActions(
+    const full = await agent.api.com.atproto.admin.getModerationActions(
       {},
       { headers: { authorization: adminAuth() } },
     )

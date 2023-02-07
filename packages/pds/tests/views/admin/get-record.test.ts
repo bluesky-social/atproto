@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import {
   ACKNOWLEDGE,
@@ -13,7 +13,7 @@ import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
 
 describe('pds admin get record view', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -22,8 +22,8 @@ describe('pds admin get record view', () => {
       dbPostgresSchema: 'views_admin_get_record',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
   })
 
@@ -67,7 +67,7 @@ describe('pds admin get record view', () => {
   })
 
   it('gets a record by uri, even when taken down.', async () => {
-    const result = await client.com.atproto.admin.getRecord(
+    const result = await agent.api.com.atproto.admin.getRecord(
       { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
       { headers: { authorization: adminAuth() } },
     )
@@ -75,7 +75,7 @@ describe('pds admin get record view', () => {
   })
 
   it('gets a record by uri and cid.', async () => {
-    const result = await client.com.atproto.admin.getRecord(
+    const result = await agent.api.com.atproto.admin.getRecord(
       {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
@@ -86,7 +86,7 @@ describe('pds admin get record view', () => {
   })
 
   it('fails when record does not exist.', async () => {
-    const promise = client.com.atproto.admin.getRecord(
+    const promise = agent.api.com.atproto.admin.getRecord(
       {
         uri: AtUri.make(
           sc.dids.alice,
@@ -100,7 +100,7 @@ describe('pds admin get record view', () => {
   })
 
   it('fails when record cid does not exist.', async () => {
-    const promise = client.com.atproto.admin.getRecord(
+    const promise = agent.api.com.atproto.admin.getRecord(
       {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][1].ref.cidStr, // Mismatching cid

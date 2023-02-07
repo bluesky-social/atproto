@@ -8,7 +8,7 @@ import PDSServer, {
 } from '@atproto/pds'
 import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
-import AtpApi, { ServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 
 interface Startable {
@@ -128,8 +128,8 @@ export class DevEnvServer {
     }
   }
 
-  getClient(): ServiceClient {
-    return AtpApi.service(`http://localhost:${this.port}`)
+  getClient(): AtpAgent {
+    return new AtpAgent({ service: `http://localhost:${this.port}` })
   }
 }
 

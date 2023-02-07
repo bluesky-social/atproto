@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import {
   ACKNOWLEDGE,
   FLAG,
@@ -19,7 +19,7 @@ import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
 
 describe('pds admin get moderation reports view', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -28,8 +28,8 @@ describe('pds admin get moderation reports view', () => {
       dbPostgresSchema: 'views_admin_get_moderation_reports',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
   })
 
@@ -119,7 +119,7 @@ describe('pds admin get moderation reports view', () => {
   })
 
   it('gets all moderation reports.', async () => {
-    const result = await client.com.atproto.admin.getModerationReports(
+    const result = await agent.api.com.atproto.admin.getModerationReports(
       {},
       { headers: { authorization: adminAuth() } },
     )
@@ -127,7 +127,7 @@ describe('pds admin get moderation reports view', () => {
   })
 
   it('gets all moderation reports for a repo.', async () => {
-    const result = await client.com.atproto.admin.getModerationReports(
+    const result = await agent.api.com.atproto.admin.getModerationReports(
       { subject: Object.values(sc.dids)[0] },
       { headers: { authorization: adminAuth() } },
     )
@@ -135,7 +135,7 @@ describe('pds admin get moderation reports view', () => {
   })
 
   it('gets all moderation reports for a record.', async () => {
-    const result = await client.com.atproto.admin.getModerationReports(
+    const result = await agent.api.com.atproto.admin.getModerationReports(
       { subject: Object.values(sc.posts)[0][0].ref.uriStr },
       { headers: { authorization: adminAuth() } },
     )
@@ -143,12 +143,12 @@ describe('pds admin get moderation reports view', () => {
   })
 
   it('gets all resolved/unresolved moderation reports.', async () => {
-    const resolved = await client.com.atproto.admin.getModerationReports(
+    const resolved = await agent.api.com.atproto.admin.getModerationReports(
       { resolved: true },
       { headers: { authorization: adminAuth() } },
     )
     expect(forSnapshot(resolved.data.reports)).toMatchSnapshot()
-    const unresolved = await client.com.atproto.admin.getModerationReports(
+    const unresolved = await agent.api.com.atproto.admin.getModerationReports(
       { resolved: false },
       { headers: { authorization: adminAuth() } },
     )
@@ -158,7 +158,7 @@ describe('pds admin get moderation reports view', () => {
   it('paginates.', async () => {
     const results = (results) => results.flatMap((res) => res.reports)
     const paginator = async (cursor?: string) => {
-      const res = await client.com.atproto.admin.getModerationReports(
+      const res = await agent.api.com.atproto.admin.getModerationReports(
         { before: cursor, limit: 3 },
         { headers: { authorization: adminAuth() } },
       )
@@ -170,7 +170,7 @@ describe('pds admin get moderation reports view', () => {
       expect(res.reports.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await client.com.atproto.admin.getModerationReports(
+    const full = await agent.api.com.atproto.admin.getModerationReports(
       {},
       { headers: { authorization: adminAuth() } },
     )

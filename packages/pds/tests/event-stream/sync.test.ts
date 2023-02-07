@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { getWriteLog, RecordWriteOp, WriteOpAction } from '@atproto/repo'
 import SqlRepoStorage from '../../src/sql-repo-storage'
 import basicSeed from '../seeds/basic'
@@ -16,7 +16,7 @@ import { AppContext } from '../../src'
 describe('sync', () => {
   let server: TestServerInfo
   let ctx: AppContext
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
@@ -24,8 +24,8 @@ describe('sync', () => {
       dbPostgresSchema: 'event_stream_sync',
     })
     ctx = server.ctx
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await basicSeed(sc, ctx.messageQueue)
   })
 
@@ -41,7 +41,7 @@ describe('sync', () => {
       indexedTables.map((t) => sql`delete from ${ref(t)}`.execute(db.db)),
     )
     // Confirm timeline empty
-    const emptiedTL = await client.app.bsky.feed.getTimeline(
+    const emptiedTL = await agent.api.app.bsky.feed.getTimeline(
       {},
       { headers: sc.getHeaders(sc.dids.alice) },
     )
@@ -70,7 +70,7 @@ describe('sync', () => {
     }
     await messageQueue.processAll()
     // Check indexed timeline
-    const aliceTL = await client.app.bsky.feed.getTimeline(
+    const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       {},
       { headers: sc.getHeaders(sc.dids.alice) },
     )

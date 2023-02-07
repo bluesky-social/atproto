@@ -1,10 +1,10 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { runTestServer, CloseFn } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds user search views', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -13,8 +13,8 @@ describe('pds user search views', () => {
       dbPostgresSchema: 'views_suggestions',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
   })
 
@@ -23,7 +23,7 @@ describe('pds user search views', () => {
   })
 
   it('actor suggestion gives users', async () => {
-    const result = await client.app.bsky.actor.getSuggestions(
+    const result = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 3 },
       { headers: sc.getHeaders(sc.dids.carol) },
     )
@@ -45,7 +45,7 @@ describe('pds user search views', () => {
   })
 
   it('does not suggest followed users', async () => {
-    const result = await client.app.bsky.actor.getSuggestions(
+    const result = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 3 },
       { headers: sc.getHeaders(sc.dids.alice) },
     )
@@ -55,11 +55,11 @@ describe('pds user search views', () => {
   })
 
   it('paginates', async () => {
-    const result1 = await client.app.bsky.actor.getSuggestions(
+    const result1 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 1 },
       { headers: sc.getHeaders(sc.dids.carol) },
     )
-    const result2 = await client.app.bsky.actor.getSuggestions(
+    const result2 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 1, cursor: result1.data.cursor },
       { headers: sc.getHeaders(sc.dids.carol) },
     )

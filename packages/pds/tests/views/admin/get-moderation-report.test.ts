@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import {
   FLAG,
   TAKEDOWN,
@@ -12,7 +12,7 @@ import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
 
 describe('pds admin get moderation action view', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -21,8 +21,8 @@ describe('pds admin get moderation action view', () => {
       dbPostgresSchema: 'views_admin_get_moderation_report',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
   })
 
@@ -74,7 +74,7 @@ describe('pds admin get moderation action view', () => {
   })
 
   it('gets moderation report for a repo.', async () => {
-    const result = await client.com.atproto.admin.getModerationReport(
+    const result = await agent.api.com.atproto.admin.getModerationReport(
       { id: 1 },
       { headers: { authorization: adminAuth() } },
     )
@@ -82,7 +82,7 @@ describe('pds admin get moderation action view', () => {
   })
 
   it('gets moderation report for a record.', async () => {
-    const result = await client.com.atproto.admin.getModerationReport(
+    const result = await agent.api.com.atproto.admin.getModerationReport(
       { id: 2 },
       { headers: { authorization: adminAuth() } },
     )
@@ -90,7 +90,7 @@ describe('pds admin get moderation action view', () => {
   })
 
   it('fails when moderation report does not exist.', async () => {
-    const promise = client.com.atproto.admin.getModerationReport(
+    const promise = agent.api.com.atproto.admin.getModerationReport(
       { id: 100 },
       { headers: { authorization: adminAuth() } },
     )
