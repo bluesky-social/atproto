@@ -286,13 +286,8 @@ export const lexiconDoc = z
         defId !== 'main' &&
         (def.type === 'record' ||
           def.type === 'procedure' ||
-<<<<<<< HEAD
-          def.type === 'subscription' ||
-          def.type === 'query')
-=======
           def.type === 'query' ||
           def.type === 'subscription')
->>>>>>> xrpc-streams
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
