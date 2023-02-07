@@ -1,6 +1,6 @@
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
-import { writeCar } from '@atproto/repo'
+import { BlockMap, writeCar } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
 import Database from '../db'
 
@@ -38,7 +38,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     latestSeq?: number
     latestTime?: string
     limit?: number
-  }): Promise<MaybeRepoEvent[]> {
+  }): Promise<RepoEvent[]> {
     const { earliestSeq, earliestTime, latestSeq, latestTime, limit } = opts
     let seqQb = this.db.db.selectFrom('repo_seq').selectAll()
     if (earliestSeq !== undefined) {
@@ -57,12 +57,29 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       seqQb = seqQb.limit(limit)
     }
 
-    const res: SeqRow[] = await this.db.db
+    const events = await this.db.db
+      .selectFrom(seqQb.as('repo_seq'))
+      .leftJoin('repo_commit_history', (join) =>
+        join
+          .onRef('repo_commit_history.creator', '=', 'repo_seq.did')
+          .onRef('repo_commit_history.commit', '=', 'repo_seq.commit'),
+      )
+      .select([
+        'repo_seq.seq as seq',
+        'repo_seq.did as did',
+        'repo_seq.commit as commit',
+        'repo_seq.eventType as eventType',
+        'repo_seq.sequencedAt as sequencedAt',
+        'repo_commit_history.prev as prev',
+      ])
+      .execute()
+
+    const blocks = await this.db.db
       .selectFrom(seqQb.as('repo_seq'))
       .innerJoin('repo_commit_block', (join) =>
         join
           .onRef('repo_commit_block.creator', '=', 'repo_seq.did')
-          .onRef('repo_commit_block.commit', '=', 'repo_commit_block.commit'),
+          .onRef('repo_commit_block.commit', '=', 'repo_seq.commit'),
       )
       .innerJoin('ipld_block', (join) =>
         join
@@ -71,54 +88,45 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       )
       .select([
         'repo_seq.seq as seq',
-        'repo_seq.did as did',
-        'repo_seq.commit as commit',
-        'repo_seq.eventType as eventType',
-        'repo_seq.sequencedAt as sequencedAt',
         'ipld_block.cid as cid',
         'ipld_block.content as content',
       ])
       .execute()
 
-    const bySeq = res.reduce((acc, cur) => {
-      acc[cur.seq] ??= []
-      acc[cur.seq].push(cur)
+    const blocksBySeq = blocks.reduce((acc, cur) => {
+      acc[cur.seq] ??= new BlockMap()
+      acc[cur.seq].set(CID.parse(cur.cid), cur.content)
       return acc
-    }, {} as Record<number, SeqRow[]>)
-    const seqs = Object.keys(bySeq)
-      .map((seq) => parseInt(seq))
-      .sort((a, b) => a - b)
-    const evts: MaybeRepoEvent[] = []
-    for (const seq of seqs) {
-      const rows = bySeq[seq]
-      if (!rows || rows.length === 0) {
-        evts.push(null)
-      }
-      const commit = CID.parse(rows[0].commit)
-      const carSlice = await writeCar(commit, async (car) => {
-        for (const row of rows) {
-          await car.put({ cid: CID.parse(row.cid), bytes: row.content })
+    }, {} as Record<number, BlockMap>)
+
+    return Promise.all(
+      events.map(async (evt) => {
+        const commit = CID.parse(evt.commit)
+        const carSlice = await writeCar(commit, async (car) => {
+          const blocks = blocksBySeq[evt.seq]
+          if (blocks) {
+            for (const block of blocks.entries()) {
+              await car.put(block)
+            }
+          }
+        })
+        return {
+          seq: evt.seq,
+          time: evt.sequencedAt,
+          repo: evt.did,
+          commit: evt.commit,
+          eventType: evt.eventType,
+          blocks: carSlice,
         }
-      })
-      evts.push({
-        seq,
-        repo: rows[0].did,
-        sequencedAt: rows[0].sequencedAt,
-        eventType: rows[0].eventType,
-        commit: commit.toString(),
-        carSlice,
-      })
-    }
-    return evts
+      }),
+    )
   }
 
   async pollDb() {
     const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
     for (const evt of evts) {
-      if (evt !== null) {
-        this.lastSeen = evt.seq
-        this.emit('event', evt)
-      }
+      this.lastSeen = evt.seq
+      this.emit('event', evt)
     }
     // check if we should continue polling
     if (this.queued === false) {
@@ -130,26 +138,14 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 }
 
-type SeqRow = {
-  seq: number
-  did: string
-  commit: string
-  eventType: string
-  sequencedAt: string
-  cid: string
-  content: Uint8Array
-}
-
 export type RepoEvent = {
   seq: number
+  time: string
   repo: string
-  sequencedAt: string
   commit: string
-  carSlice: Uint8Array
   eventType: string
+  blocks: Uint8Array
 }
-
-type MaybeRepoEvent = RepoEvent | null
 
 type SequencerEvents = {
   event: (evt: RepoEvent) => void

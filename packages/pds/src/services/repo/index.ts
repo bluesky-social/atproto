@@ -42,7 +42,7 @@ export class RepoService {
     const repo = await Repo.create(storage, did, this.keypair, writeOps)
     await Promise.all([
       this.indexCreatesAndDeletes(writes, now),
-      this.afterWriteProcessing(did, repo.cid, writes, 'repo_create', now),
+      this.afterWriteProcessing(did, repo.cid, writes, now),
     ])
   }
 
@@ -71,13 +71,7 @@ export class RepoService {
       // & send to indexing
       indexWrites(commitData.commit),
       // do any other processing needed after write
-      this.afterWriteProcessing(
-        did,
-        commitData.commit,
-        writes,
-        'repo_append',
-        now,
-      ),
+      this.afterWriteProcessing(did, commitData.commit, writes, now),
     ])
   }
 
@@ -127,27 +121,21 @@ export class RepoService {
     did: string,
     commit: CID,
     writes: PreparedWrite[],
-    eventType: string,
     now: string,
   ) {
     await Promise.all([
       this.blobs.processWriteBlobs(did, commit, writes),
-      this.sequenceWrite(did, commit, eventType, now),
+      this.sequenceWrite(did, commit, now),
     ])
   }
 
-  async sequenceWrite(
-    did: string,
-    commit: CID,
-    eventType: string,
-    now: string,
-  ) {
+  async sequenceWrite(did: string, commit: CID, now: string) {
     await this.db.db
       .insertInto('repo_seq')
       .values({
         did,
         commit: commit.toString(),
-        eventType,
+        eventType: 'repo_append',
         sequencedAt: now,
       })
       .execute()

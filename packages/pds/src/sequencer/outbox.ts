@@ -29,11 +29,15 @@ export class Outbox {
   // database to ensure we're caught up. We then dedupe the query & the buffer & stream the events in order
   // 3. streaming: we're all caught up on historic state, so the sequencer outputs events and we
   // immediately yield them
-  async *events(startTime?: string): AsyncGenerator<RepoEvent> {
+  async *events(backfillFrom?: string): AsyncGenerator<RepoEvent> {
     // catch up as much as we can
-    for await (const evt of this.getHistorical(startTime)) {
-      yield evt
-      this.lastSeen = evt.seq
+    if (backfillFrom) {
+      for await (const evt of this.getHistorical(backfillFrom)) {
+        yield evt
+        this.lastSeen = evt.seq
+      }
+    } else {
+      this.caughtUp = true
     }
 
     // streams updates from sequencer, but buffers them as it makes a last request
@@ -46,25 +50,29 @@ export class Outbox {
       }
     })
 
-    const cutoverEvts = await this.sequencer.requestSeqRange({
-      earliestSeq: this.lastSeen,
-    })
-    const alreadySent: number[] = []
-    for (const evt of cutoverEvts) {
-      if (evt !== null) {
+    // only need to perform cutover if we've been backfilling
+    if (backfillFrom) {
+      const cutoverEvts = await this.sequencer.requestSeqRange({
+        earliestSeq: this.lastSeen,
+      })
+      const alreadySent: number[] = []
+      for (const evt of cutoverEvts) {
         yield evt
         this.lastSeen = evt.seq
         alreadySent.push(evt.seq)
       }
-    }
-    for (const evt of this.cutoverBuffer) {
-      if (!alreadySent.includes(evt.seq)) {
-        yield evt
-        this.lastSeen = evt.seq
+      for (const evt of this.cutoverBuffer) {
+        if (!alreadySent.includes(evt.seq)) {
+          yield evt
+          this.lastSeen = evt.seq
+        }
       }
+      this.caughtUp = true
+      this.cutoverBuffer = []
+    } else {
+      this.caughtUp = true
     }
-    this.caughtUp = true
-    this.cutoverBuffer = []
+
     while (true) {
       try {
         const evt = await this.outBuffer.nextEvent()
@@ -88,9 +96,7 @@ export class Outbox {
         limit: 50,
       })
       for (const evt of evts) {
-        if (evt !== null) {
-          yield evt
-        }
+        yield evt
       }
       if (evts.length < 50) {
         break
