@@ -219,8 +219,11 @@ export class AtpAgent {
       return this._refreshSessionPromise
     }
     this._refreshSessionPromise = this._refreshSessionInner()
-    await this._refreshSessionPromise
-    this._refreshSessionPromise = undefined
+    try {
+      await this._refreshSessionPromise
+    } finally {
+      this._refreshSessionPromise = undefined
+    }
   }
 
   /**
