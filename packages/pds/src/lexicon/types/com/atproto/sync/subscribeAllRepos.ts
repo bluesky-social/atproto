@@ -1,10 +1,29 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util'
+import { HandlerAuth, InfoFrame, ErrorFrame } from '@atproto/xrpc-server'
+import { IncomingMessage } from 'http'
+
+export interface QueryParams {
+  /** The last known event to backfill from. Does not */
+  backfillFrom: number
+}
+
+export type OutputSchema =
+  | RepoAppend
+  | RepoRebase
+  | { $type: string; [k: string]: unknown }
+export type HandlerError = ErrorFrame<never>
+export type HandlerInfo = InfoFrame<never>
+export type HandlerOutput = HandlerInfo | HandlerError | OutputSchema
+export type Handler<HA extends HandlerAuth = never> = (ctx: {
+  auth: HA
+  params: QueryParams
+  req: IncomingMessage
+}) => AsyncIterable<HandlerOutput>
 
 export interface RepoAppend {
   time: string

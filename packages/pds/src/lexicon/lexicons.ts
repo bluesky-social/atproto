@@ -2167,31 +2167,77 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncSubscribeRepos: {
+  ComAtprotoSyncSubscribeAllRepos: {
     lexicon: 1,
-    id: 'com.atproto.sync.subscribeRepos',
+    id: 'com.atproto.sync.subscribeAllRepos',
     defs: {
       main: {
         type: 'subscription',
         description: 'Subscribe to repo updates',
         parameters: {
           type: 'params',
-          required: ['dids', 'lastSeen'],
+          required: ['backfillFrom'],
           properties: {
-            dids: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-            },
-            lastSeen: {
+            backfillFrom: {
               type: 'number',
-              description: 'The sequence number of the last seen repo update.',
+              description: 'The last known event to backfill from. Does not',
             },
           },
         },
-        output: {
-          encoding: 'application/vnd.ipld.car',
+        message: {
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.sync.subscribeAllRepos#repoAppend',
+              'lex:com.atproto.sync.subscribeAllRepos#repoRebase',
+            ],
+          },
+          codes: {
+            'lex:com.atproto.sync.subscribeAllRepos#repoAppend': 0,
+            'lex:com.atproto.sync.subscribeAllRepos#repoRebase': 1,
+          },
+        },
+      },
+      repoAppend: {
+        type: 'object',
+        required: ['time', 'repo', 'commit', 'blocks', 'blobs'],
+        properties: {
+          time: {
+            type: 'datetime',
+          },
+          repo: {
+            type: 'string',
+          },
+          commit: {
+            type: 'string',
+          },
+          prev: {
+            type: 'string',
+          },
+          blocks: {
+            type: 'unknown',
+          },
+          blobs: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      repoRebase: {
+        type: 'object',
+        required: ['time', 'repo', 'commit'],
+        properties: {
+          time: {
+            type: 'datetime',
+          },
+          repo: {
+            type: 'string',
+          },
+          commit: {
+            type: 'string',
+          },
         },
       },
     },
@@ -4039,7 +4085,7 @@ export const ids = {
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
-  ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
   AppBskyActorProfile: 'app.bsky.actor.profile',
