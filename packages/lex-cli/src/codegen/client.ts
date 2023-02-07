@@ -591,7 +591,7 @@ function genClientXrpcCommon(
   res.addProperty({ name: 'success', type: 'boolean' })
   res.addProperty({ name: 'headers', type: 'Headers' })
   if (def.output?.schema) {
-    if (def.output.encoding.includes(',')) {
+    if (def.output.encoding?.includes(',')) {
       res.addProperty({ name: 'data', type: 'OutputSchema | Uint8Array' })
     } else {
       res.addProperty({ name: 'data', type: 'OutputSchema' })
