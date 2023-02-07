@@ -2179,7 +2179,7 @@ export const schemaDict = {
           required: ['backfillFrom'],
           properties: {
             backfillFrom: {
-              type: 'number',
+              type: 'string',
               description: 'The last known event to backfill from. Does not',
             },
           },

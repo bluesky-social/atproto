@@ -38,7 +38,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     latestSeq?: number
     latestTime?: string
     limit?: number
-  }): Promise<RepoEvent[]> {
+  }): Promise<RepoAppendEvent[]> {
     const { earliestSeq, earliestTime, latestSeq, latestTime, limit } = opts
     let seqQb = this.db.db.selectFrom('repo_seq').selectAll()
     if (earliestSeq !== undefined) {
@@ -57,7 +57,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       seqQb = seqQb.limit(limit)
     }
 
-    const events = await this.db.db
+    const getEvents = this.db.db
       .selectFrom(seqQb.as('repo_seq'))
       .leftJoin('repo_commit_history', (join) =>
         join
@@ -68,13 +68,12 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         'repo_seq.seq as seq',
         'repo_seq.did as did',
         'repo_seq.commit as commit',
-        'repo_seq.eventType as eventType',
         'repo_seq.sequencedAt as sequencedAt',
         'repo_commit_history.prev as prev',
       ])
       .execute()
 
-    const blocks = await this.db.db
+    const getBlocks = this.db.db
       .selectFrom(seqQb.as('repo_seq'))
       .innerJoin('repo_commit_block', (join) =>
         join
@@ -93,11 +92,33 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       ])
       .execute()
 
+    const getBlobs = this.db.db
+      .selectFrom(seqQb.as('repo_seq'))
+      .innerJoin('repo_blob', (join) =>
+        join
+          .onRef('repo_blob.did', '=', 'repo_blob.did')
+          .onRef('repo_blob.commit', '=', 'repo_seq.commit'),
+      )
+      .select(['repo_seq.seq as seq', 'repo_blob.cid as cid'])
+      .execute()
+
+    const [events, blocks, blobs] = await Promise.all([
+      getEvents,
+      getBlocks,
+      getBlobs,
+    ])
+
     const blocksBySeq = blocks.reduce((acc, cur) => {
       acc[cur.seq] ??= new BlockMap()
       acc[cur.seq].set(CID.parse(cur.cid), cur.content)
       return acc
     }, {} as Record<number, BlockMap>)
+
+    const blobsBySeq = blobs.reduce((acc, cur) => {
+      acc[cur.seq] ??= []
+      acc[cur.seq].push(cur.cid)
+      return acc
+    }, {} as Record<number, string[]>)
 
     return Promise.all(
       events.map(async (evt) => {
@@ -110,14 +131,16 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
             }
           }
         })
+        const blobs = blobsBySeq[evt.seq] || []
         return {
           seq: evt.seq,
           time: evt.sequencedAt,
           repo: evt.did,
           commit: evt.commit,
-          eventType: evt.eventType,
+          prev: evt.prev || undefined,
           blocks: carSlice,
-        }
+          blobs,
+        } as RepoAppendEvent
       }),
     )
   }
@@ -138,17 +161,18 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 }
 
-export type RepoEvent = {
+export type RepoAppendEvent = {
   seq: number
   time: string
   repo: string
   commit: string
-  eventType: string
+  prev?: string
   blocks: Uint8Array
+  blobs: string[]
 }
 
 type SequencerEvents = {
-  event: (evt: RepoEvent) => void
+  event: (evt: RepoAppendEvent) => void
 }
 
 export type SequencerEmitter = TypedEmitter<SequencerEvents>

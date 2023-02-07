@@ -1,4 +1,4 @@
-import Sequencer, { RepoEvent, SequencerEmitter } from '.'
+import Sequencer, { RepoAppendEvent, SequencerEmitter } from '.'
 import { EventEmitter } from 'stream'
 import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
 
@@ -9,15 +9,15 @@ export type OutboxOpts = {
 export class Outbox {
   internalEmitter = new EventEmitter() as SequencerEmitter
 
-  cutoverBuffer: RepoEvent[] = []
+  cutoverBuffer: RepoAppendEvent[] = []
   caughtUp = false
   lastSeen?: number
 
-  outBuffer: AsyncBuffer<RepoEvent>
+  outBuffer: AsyncBuffer<RepoAppendEvent>
 
   constructor(public sequencer: Sequencer, opts: Partial<OutboxOpts> = {}) {
     const { maxBufferSize = 500 } = opts
-    this.outBuffer = new AsyncBuffer<RepoEvent>(maxBufferSize)
+    this.outBuffer = new AsyncBuffer<RepoAppendEvent>(maxBufferSize)
   }
 
   // event stream occurs in 3 phases
@@ -29,7 +29,7 @@ export class Outbox {
   // database to ensure we're caught up. We then dedupe the query & the buffer & stream the events in order
   // 3. streaming: we're all caught up on historic state, so the sequencer outputs events and we
   // immediately yield them
-  async *events(backfillFrom?: string): AsyncGenerator<RepoEvent> {
+  async *events(backfillFrom?: string): AsyncGenerator<RepoAppendEvent> {
     // catch up as much as we can
     if (backfillFrom) {
       for await (const evt of this.getHistorical(backfillFrom)) {

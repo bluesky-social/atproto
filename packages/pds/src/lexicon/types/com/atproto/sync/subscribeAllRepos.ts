@@ -9,7 +9,7 @@ import { IncomingMessage } from 'http'
 
 export interface QueryParams {
   /** The last known event to backfill from. Does not */
-  backfillFrom: number
+  backfillFrom: string
 }
 
 export type OutputSchema =

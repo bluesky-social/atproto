@@ -5,7 +5,7 @@ import getCommitPath from './getCommitPath'
 import getHead from './getHead'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
-import subscribeRepos from './subscribeRepos'
+import subscribe from './subscribeAllRepos'
 
 export default function (server: Server, ctx: AppContext) {
   getCheckout(server, ctx)
@@ -13,5 +13,5 @@ export default function (server: Server, ctx: AppContext) {
   getHead(server, ctx)
   getRecord(server, ctx)
   getRepo(server, ctx)
-  subscribeRepos(server, ctx)
+  subscribe(server, ctx)
 }

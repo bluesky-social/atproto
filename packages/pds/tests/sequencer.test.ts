@@ -1,5 +1,5 @@
 import AtpApi from '@atproto/api'
-import Sequencer, { RepoEvent } from '../src/sequencer'
+import Sequencer, { RepoAppendEvent } from '../src/sequencer'
 import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
 import { CloseFn, runTestServer } from './_util'
@@ -54,10 +54,10 @@ describe('sequencer', () => {
   }
 
   const readEvents = async (
-    gen: AsyncGenerator<RepoEvent>,
+    gen: AsyncGenerator<RepoAppendEvent>,
     expected: number,
   ) => {
-    const evts: RepoEvent[] = []
+    const evts: RepoAppendEvent[] = []
     while (evts.length < expected) {
       const evt = await gen.next()
       if (evt.done) break
@@ -75,11 +75,11 @@ describe('sequencer', () => {
       .execute()
   }
 
-  const evtToDbRow = (e: RepoEvent) => ({
+  const evtToDbRow = (e: RepoAppendEvent) => ({
     seq: e.seq,
     did: e.repo,
     commit: e.commit,
-    eventType: e.eventType,
+    eventType: 'repo_append',
     sequencedAt: e.time,
   })
 
