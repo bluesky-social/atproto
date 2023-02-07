@@ -2,7 +2,11 @@ import { IncomingMessage } from 'http'
 import express from 'express'
 import { isHttpError } from 'http-errors'
 import zod from 'zod'
-import { ResponseType, ResponseTypeStrings } from '@atproto/xrpc'
+import {
+  ResponseType,
+  ResponseTypeStrings,
+  ResponseTypeNames,
+} from '@atproto/xrpc'
 
 export type Options = {
   validateResponse?: boolean
@@ -91,12 +95,16 @@ export class XRPCError extends Error {
 
   get payload() {
     return {
-      error: this.customErrorName,
+      error: this.customErrorName ?? this.typeName,
       message:
         this.type === ResponseType.InternalServerError
           ? this.typeStr // Do not respond with error details for 500s
           : this.errorMessage || this.typeStr,
     }
+  }
+
+  get typeName(): string | undefined {
+    return ResponseTypeNames[this.type]
   }
 
   get typeStr(): string | undefined {

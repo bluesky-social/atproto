@@ -1,6 +1,6 @@
 import * as http from 'http'
 import { WebSocket, createWebSocketStream } from 'ws'
-import { createFrameStream, Frame } from '../src'
+import { byFrame, Frame } from '../src'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 
@@ -53,7 +53,7 @@ describe('Subscriptions', () => {
     )
 
     const frames: Frame[] = []
-    for await (const frame of createFrameStream(ws)) {
+    for await (const frame of byFrame(ws)) {
       frames.push(frame)
     }
 

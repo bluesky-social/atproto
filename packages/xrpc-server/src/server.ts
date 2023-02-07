@@ -11,7 +11,7 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
+import { ErrorFrame, Frame, DataFrame, XrpcStreamServer } from './stream'
 import {
   XRPCHandler,
   XRPCError,
@@ -285,14 +285,16 @@ export class Server {
               if (item instanceof Frame) {
                 yield item
               } else {
-                yield new MessageFrame({ body: item })
+                yield new DataFrame({ body: item }) // @TODO set type code
               }
             }
           } catch (err) {
-            const xrpcError = XRPCError.fromError(err)
+            const xrpcErrPayload = XRPCError.fromError(err).payload
             yield new ErrorFrame({
-              code: xrpcError.customErrorName,
-              message: xrpcError.message,
+              body: {
+                error: xrpcErrPayload.error ?? 'Unknown',
+                message: xrpcErrPayload.message,
+              },
             })
           }
         },

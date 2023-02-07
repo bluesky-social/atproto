@@ -19,14 +19,14 @@ export class XrpcStreamServer {
                 res(undefined)
               })
             })
-            throw new DisconnectError()
+            throw new DisconnectError(CloseCode.Policy, frame.body.error)
           } else {
             socket.send(frame.toBytes(), { binary: true })
           }
         }
       } catch (err) {
         if (err instanceof DisconnectError) {
-          return socket.close(err.code ?? CloseCode.Policy)
+          return socket.close(err.wsCode, err.xrpcCode)
         } else {
           logger.error(err, 'websocket server error')
           return socket.terminate()
@@ -44,7 +44,10 @@ export type Handler = (
 ) => AsyncIterable<Frame>
 
 export class DisconnectError extends Error {
-  constructor(public code?: CloseCode) {
+  constructor(
+    public wsCode: CloseCode = CloseCode.Policy,
+    public xrpcCode?: string,
+  ) {
     super()
   }
 }

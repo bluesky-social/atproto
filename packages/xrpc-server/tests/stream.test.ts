@@ -6,9 +6,9 @@ import {
   ErrorFrame,
   Frame,
   InfoFrame,
-  MessageFrame,
+  DataFrame,
   XrpcStreamServer,
-  createFrameStream,
+  byFrame,
 } from '../src'
 
 describe('Stream', () => {
@@ -19,13 +19,12 @@ describe('Stream', () => {
       server: httpServer,
       handler: async function* () {
         await wait(1)
-        yield new MessageFrame({ body: 1 })
+        yield new DataFrame({ body: 1 })
         await wait(1)
-        yield new MessageFrame({ body: 2 })
+        yield new DataFrame({ body: 2 })
         await wait(1)
-        yield new InfoFrame({ body: 'diagnostic info' })
-        await wait(1)
-        yield new MessageFrame({ body: 3 })
+        yield new InfoFrame({ body: { info: 'SomeDiagnostic' } }), await wait(1)
+        yield new DataFrame({ body: 3 })
         return
       },
     })
@@ -35,15 +34,15 @@ describe('Stream', () => {
 
     const ws = new WebSocket(`ws://localhost:${port}`)
     const frames: Frame[] = []
-    for await (const frame of createFrameStream(ws)) {
+    for await (const frame of byFrame(ws)) {
       frames.push(frame)
     }
 
     expect(frames).toEqual([
-      new MessageFrame({ body: 1 }),
-      new MessageFrame({ body: 2 }),
-      new InfoFrame({ body: 'diagnostic info' }),
-      new MessageFrame({ body: 3 }),
+      new DataFrame({ body: 1 }),
+      new DataFrame({ body: 2 }),
+      new InfoFrame({ body: { info: 'SomeDiagnostic' } }),
+      new DataFrame({ body: 3 }),
     ])
 
     httpServer.close()
@@ -56,14 +55,14 @@ describe('Stream', () => {
       server: httpServer,
       handler: async function* () {
         await wait(1)
-        yield new MessageFrame({ body: 1 })
+        yield new DataFrame({ body: 1 })
         await wait(1)
-        yield new MessageFrame({ body: 2 })
+        yield new DataFrame({ body: 2 })
         await wait(1)
-        yield new ErrorFrame({ code: 'BadOops' })
+        yield new ErrorFrame({ body: { error: 'BadOops' } })
         proceededAfterError = true
         await wait(1)
-        yield new MessageFrame({ body: 3 })
+        yield new DataFrame({ body: 3 })
         return
       },
     })
@@ -73,7 +72,7 @@ describe('Stream', () => {
 
     const ws = new WebSocket(`ws://localhost:${port}`)
     const frames: Frame[] = []
-    for await (const frame of createFrameStream(ws)) {
+    for await (const frame of byFrame(ws)) {
       frames.push(frame)
     }
 
@@ -81,9 +80,9 @@ describe('Stream', () => {
     expect(proceededAfterError).toEqual(false)
 
     expect(frames).toEqual([
-      new MessageFrame({ body: 1 }),
-      new MessageFrame({ body: 2 }),
-      new ErrorFrame({ code: 'BadOops' }),
+      new DataFrame({ body: 1 }),
+      new DataFrame({ body: 2 }),
+      new ErrorFrame({ body: { error: 'BadOops' } }),
     ])
 
     httpServer.close()

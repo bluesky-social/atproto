@@ -5,8 +5,12 @@ import {
   FrameHeader,
   FrameType,
   InfoFrameHeader,
-  MessageFrameHeader,
+  DataFrameHeader,
   ErrorFrameHeader,
+  infoFrameBody,
+  InfoFrameBody,
+  ErrorFrameBody,
+  errorFrameBody,
 } from './types'
 
 export abstract class Frame {
@@ -43,24 +47,26 @@ export abstract class Frame {
       throw new Error('Missing frame body')
     }
     const frameOp = parsedHeader.data.op
-    if (frameOp === FrameType.Message) {
-      return new MessageFrame({
-        messageId: parsedHeader.data.id,
+    if (frameOp === FrameType.Data) {
+      return new DataFrame({
         type: parsedHeader.data.t,
         body,
       })
     } else if (frameOp === FrameType.Info) {
+      const parsedBody = infoFrameBody.safeParse(body)
+      if (!parsedBody.success) {
+        throw new Error(`Invalid info frame body: ${parsedBody.error.message}`)
+      }
       return new InfoFrame({
-        type: parsedHeader.data.t,
-        body,
+        body: parsedBody.data,
       })
     } else if (frameOp === FrameType.Error) {
-      if (body !== undefined) {
-        throw new Error('Error frame must have an empty body')
+      const parsedBody = errorFrameBody.safeParse(body)
+      if (!parsedBody.success) {
+        throw new Error(`Invalid error frame body: ${parsedBody.error.message}`)
       }
       return new ErrorFrame({
-        code: parsedHeader.data.err,
-        message: parsedHeader.data.msg,
+        body: parsedBody.data,
       })
     } else {
       const exhaustiveCheck: never = frameOp
@@ -69,19 +75,12 @@ export abstract class Frame {
   }
 }
 
-export class MessageFrame extends Frame {
-  header: MessageFrameHeader
-  constructor(opts: { messageId?: string; type?: string; body: unknown }) {
+export class DataFrame extends Frame {
+  header: DataFrameHeader
+  constructor(opts: { type?: number; body: unknown }) {
     super()
+    this.header = { op: FrameType.Data, t: opts.type }
     this.body = opts.body
-    this.header = {
-      op: FrameType.Message,
-      id: opts.messageId,
-      t: opts.type,
-    }
-  }
-  get messageId() {
-    return this.header.id
   }
   get type() {
     return this.header.t
@@ -90,34 +89,33 @@ export class MessageFrame extends Frame {
 
 export class InfoFrame extends Frame {
   header: InfoFrameHeader
-  constructor(opts: { type?: string; body: unknown }) {
+  body: InfoFrameBody
+  constructor(opts: { body: InfoFrameBody }) {
     super()
+    this.header = { op: FrameType.Info }
     this.body = opts.body
-    this.header = {
-      op: FrameType.Info,
-      t: opts.type,
-    }
   }
-  get type() {
-    return this.header.t
+  get code() {
+    return this.body.info
+  }
+  get message() {
+    return this.body.message
   }
 }
 
 export class ErrorFrame extends Frame {
   header: ErrorFrameHeader
-  constructor(opts?: { code?: string; message?: string }) {
+  body: ErrorFrameBody
+  constructor(opts: { body: ErrorFrameBody }) {
     super()
-    this.header = {
-      op: FrameType.Error,
-      err: opts?.code,
-      msg: opts?.message,
-    }
+    this.header = { op: FrameType.Error }
+    this.body = opts.body
   }
   get code() {
-    return this.header.err
+    return this.body.error
   }
   get message() {
-    return this.header.msg
+    return this.body.message
   }
 }
 
