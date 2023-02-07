@@ -737,17 +737,6 @@ export class SyncNS {
         throw ComAtprotoSyncGetRepo.toKnownErr(e)
       })
   }
-
-  subscribeAllRepos(
-    params?: ComAtprotoSyncSubscribeAllRepos.QueryParams,
-    opts?: ComAtprotoSyncSubscribeAllRepos.CallOptions,
-  ): Promise<ComAtprotoSyncSubscribeAllRepos.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.subscribeAllRepos', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncSubscribeAllRepos.toKnownErr(e)
-      })
-  }
 }
 
 export class AppNS {

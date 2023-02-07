@@ -10,7 +10,6 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexRecord,
-  LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import { gen, utilTs, lexiconsTs } from './common'
@@ -286,15 +285,10 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
 
   // methods
   for (const userType of ns.userTypes) {
-    if (
-      userType.def.type !== 'query' &&
-      userType.def.type !== 'subscription' &&
-      userType.def.type !== 'procedure'
-    ) {
+    if (userType.def.type !== 'query' && userType.def.type !== 'procedure') {
       continue
     }
-    const isGetReq =
-      userType.def.type === 'query' || userType.def.type === 'subscription'
+    const isGetReq = userType.def.type === 'query'
     const moduleName = toTitleCase(userType.nsid)
     const name = toCamelCase(NSID.parse(userType.nsid).name || '')
     const method = cls.addMethod({
