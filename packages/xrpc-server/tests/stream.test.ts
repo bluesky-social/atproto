@@ -23,7 +23,8 @@ describe('Stream', () => {
         await wait(1)
         yield new MessageFrame(2)
         await wait(1)
-        yield new InfoFrame({ info: 'SomeDiagnostic' }), await wait(1)
+        yield new InfoFrame({ info: 'SomeDiagnostic' })
+        await wait(1)
         yield new MessageFrame(3)
         return
       },

@@ -15,10 +15,15 @@ describe('Frames', () => {
     expect(messageFrame.body).toEqual({ a: 'b', c: [1, 2, 3] })
 
     const bytes = messageFrame.toBytes()
-    expect([...bytes]).toEqual([
-      /*header*/ 185, 0, 2, 98, 111, 112, 1, 97, 116, 2, /*body*/ 185, 0, 2, 97,
-      97, 97, 98, 97, 99, 131, 1, 2, 3,
-    ])
+    expect(
+      uint8arrays.equals(
+        bytes,
+        new Uint8Array([
+          /*header*/ 185, 0, 2, 98, 111, 112, 1, 97, 116, 2, /*body*/ 185, 0, 2,
+          97, 97, 97, 98, 97, 99, 131, 1, 2, 3,
+        ]),
+      ),
+    ).toEqual(true)
 
     const parsedFrame = Frame.fromBytes(bytes)
     if (!(parsedFrame instanceof MessageFrame)) {
@@ -47,12 +52,17 @@ describe('Frames', () => {
     })
 
     const bytes = infoFrame.toBytes()
-    expect([...bytes]).toEqual([
-      /*header*/ 185, 0, 1, 98, 111, 112, 2, /*body*/ 185, 0, 2, 100, 105, 110,
-      102, 111, 110, 83, 111, 109, 101, 79, 99, 99, 117, 114, 114, 101, 110, 99,
-      101, 103, 109, 101, 115, 115, 97, 103, 101, 106, 88, 32, 111, 99, 99, 117,
-      114, 114, 101, 100,
-    ])
+    expect(
+      uint8arrays.equals(
+        bytes,
+        new Uint8Array([
+          /*header*/ 185, 0, 1, 98, 111, 112, 2, /*body*/ 185, 0, 2, 100, 105,
+          110, 102, 111, 110, 83, 111, 109, 101, 79, 99, 99, 117, 114, 114, 101,
+          110, 99, 101, 103, 109, 101, 115, 115, 97, 103, 101, 106, 88, 32, 111,
+          99, 99, 117, 114, 114, 101, 100,
+        ]),
+      ),
+    ).toEqual(true)
 
     const parsedFrame = Frame.fromBytes(bytes)
     if (!(parsedFrame instanceof InfoFrame)) {
@@ -82,12 +92,17 @@ describe('Frames', () => {
     })
 
     const bytes = errorFrame.toBytes()
-    expect([...bytes]).toEqual([
-      /*header*/ 185, 0, 1, 98, 111, 112, 32, /*body*/ 185, 0, 2, 101, 101, 114,
-      114, 111, 114, 103, 66, 105, 103, 79, 111, 112, 115, 103, 109, 101, 115,
-      115, 97, 103, 101, 115, 83, 111, 109, 101, 116, 104, 105, 110, 103, 32,
-      119, 101, 110, 116, 32, 97, 119, 114, 121,
-    ])
+    expect(
+      uint8arrays.equals(
+        bytes,
+        new Uint8Array([
+          /*header*/ 185, 0, 1, 98, 111, 112, 32, /*body*/ 185, 0, 2, 101, 101,
+          114, 114, 111, 114, 103, 66, 105, 103, 79, 111, 112, 115, 103, 109,
+          101, 115, 115, 97, 103, 101, 115, 83, 111, 109, 101, 116, 104, 105,
+          110, 103, 32, 119, 101, 110, 116, 32, 97, 119, 114, 121,
+        ]),
+      ),
+    ).toEqual(true)
 
     const parsedFrame = Frame.fromBytes(bytes)
     if (!(parsedFrame instanceof ErrorFrame)) {
