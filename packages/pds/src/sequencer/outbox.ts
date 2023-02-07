@@ -1,12 +1,16 @@
 import Sequencer, { RepoEvent, SequencerEmitter } from '.'
-import { once } from 'events'
 import { EventEmitter } from 'stream'
 
 export class Outbox {
-  buffer: RepoEvent[] = []
-  caughtUp = false
+  internalEmitter = new EventEmitter() as SequencerEmitter
 
-  constructor(public sequencer: Sequencer, public lastSeen?: number) {}
+  cutoverBuffer: RepoEvent[] = []
+  caughtUp = false
+  lastSeen?: number
+
+  outBuffer = new OutBuffer()
+
+  constructor(public sequencer: Sequencer) {}
 
   // event stream occurs in 3 phases
   // 1. historical events: events that have been added to the DB since the last time a connection was open.
@@ -17,28 +21,57 @@ export class Outbox {
   // database to ensure we're caught up. We then dedupe the query & the buffer & stream the events in order
   // 3. streaming: we're all caught up on historic state, so the sequencer outputs events and we
   // immediately yield them
-  async *events(): AsyncIterable<RepoEvent> {
+  async *events(from?: number): AsyncGenerator<RepoEvent> {
+    this.lastSeen = from
+
     // catch up as much as we can
     for await (const evt of this.getHistorical()) {
       yield evt
       this.lastSeen = evt.seq
     }
 
-    // make a last request
-    for await (const evt of this.streamWithCutover()) {
+    // streams updates from sequencer, but buffers them as it makes a last request
+    // then dedupes them & streams out them in order
+    this.sequencer.on('event', (evt) => {
+      if (this.caughtUp) {
+        this.outBuffer.push(evt)
+      } else {
+        this.cutoverBuffer.push(evt)
+      }
+    })
+
+    const cutoverEvts = await this.sequencer.requestSeqRange({
+      firstExclusive: this.lastSeen,
+    })
+    const alreadySent: number[] = []
+    for (const evt of cutoverEvts) {
+      if (evt !== null) {
+        yield evt
+        this.lastSeen = evt.seq
+        alreadySent.push(evt.seq)
+      }
+    }
+    for (const evt of this.cutoverBuffer) {
+      if (!alreadySent.includes(evt.seq)) {
+        yield evt
+        this.lastSeen = evt.seq
+      }
+    }
+    this.caughtUp = true
+    this.cutoverBuffer = []
+    while (true) {
+      const evt = await this.outBuffer.nextEvent()
       yield evt
-      this.lastSeen = evt.seq
     }
   }
 
   // yields only historical events
   async *getHistorical() {
     while (true) {
-      const evts = await this.sequencer.requestSeqRange(
-        this.lastSeen,
-        this.sequencer.lastSeen,
-        50,
-      )
+      const evts = await this.sequencer.requestSeqRange({
+        firstExclusive: this.lastSeen,
+        limit: 50,
+      })
       for (const evt of evts) {
         if (evt !== null) {
           yield evt
@@ -49,40 +82,39 @@ export class Outbox {
       }
     }
   }
+}
 
-  // streams updates from sequencer, but buffers them as it makes a last request
-  // then dedupes them & streams them in order
-  async *streamWithCutover(): AsyncIterable<RepoEvent> {
-    const internalEmitter = new EventEmitter() as SequencerEmitter
+class OutBuffer {
+  private events: RepoEvent[] = []
+  private promise: Promise<void>
+  private resolve: () => void
 
-    this.sequencer.on('event', (evt) => {
-      if (this.caughtUp) {
-        internalEmitter.emit('event', evt)
-      } else {
-        this.buffer.push(event)
-      }
-    })
+  constructor() {
+    this.resetPromise()
+  }
 
-    const cutoverEvts = await this.sequencer.requestSeqRange(this.lastSeen)
-    const alreadySent: number[] = []
-    for (const evt of cutoverEvts) {
-      if (evt !== null) {
-        internalEmitter.emit('event', evt)
-        alreadySent.push(evt.seq)
-      }
-    }
-    for (const evt of this.buffer) {
-      if (!alreadySent.includes(evt.seq)) {
-        internalEmitter.emit('event', evt)
-      }
-    }
-    this.caughtUp = true
-    this.buffer = []
+  get curr(): RepoEvent[] {
+    return this.events
+  }
 
-    // start streaming events
-    let event
-    while ((event = await once(internalEmitter, 'event'))) {
-      yield event
+  resetPromise() {
+    this.promise = new Promise<void>((r) => (this.resolve = r))
+  }
+
+  push(evt: RepoEvent) {
+    this.events.push(evt)
+    this.resolve()
+    this.resetPromise()
+  }
+
+  async nextEvent(): Promise<RepoEvent> {
+    const [first, ...rest] = this.events
+    if (first) {
+      this.events = rest
+      return first
+    } else {
+      await this.promise
+      return this.nextEvent()
     }
   }
 }
