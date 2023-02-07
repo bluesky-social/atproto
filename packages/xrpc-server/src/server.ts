@@ -41,7 +41,7 @@ export function createServer(lexicons?: unknown[], options?: Options) {
 }
 
 export class Server {
-  router = express.Router()
+  router = express()
   routes = express.Router()
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
@@ -55,23 +55,20 @@ export class Server {
     this.router.use(this.routes)
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
     this.router.use(errorMiddleware)
+    this.router.once('mount', (app: express.Application) => {
+      const _listen = app.listen
+      app.listen = (...args) => {
+        // @ts-ignore the args spread
+        const httpServer = _listen.call(app, ...args)
+        this.enableStreaming(httpServer)
+        return httpServer
+      }
+    })
     this.options = opts ?? {}
     this.middleware = {
       json: express.json({ limit: opts?.payload?.jsonLimit }),
       text: express.text({ limit: opts?.payload?.textLimit }),
     }
-  }
-
-  // @TODO redesign this api, streaming should not have to be enabled
-  enableStreaming(server: http.Server) {
-    server.on('upgrade', async (req, socket, head) => {
-      const url = new URL(req.url || '', 'http://x')
-      const sub = this.subscriptions.get(url.pathname.replace('/xrpc/', ''))
-      if (!sub) return socket.destroy()
-      sub.wss.handleUpgrade(req, socket, head, (ws) =>
-        sub.wss.emit('connection', ws, req),
-      )
-    })
   }
 
   // handlers
@@ -314,6 +311,19 @@ export class Server {
         },
       }),
     )
+  }
+
+  private enableStreaming(server: http.Server) {
+    server.on('upgrade', async (req, socket, head) => {
+      const url = new URL(req.url || '', 'http://x')
+      const sub = url.pathname.startsWith('/xrpc/')
+        ? this.subscriptions.get(url.pathname.replace('/xrpc/', ''))
+        : undefined
+      if (!sub) return socket.destroy()
+      sub.wss.handleUpgrade(req, socket, head, (ws) =>
+        sub.wss.emit('connection', ws, req),
+      )
+    })
   }
 }
 
