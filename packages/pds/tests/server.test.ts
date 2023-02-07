@@ -54,6 +54,7 @@ describe('server', () => {
       const axiosError = err as AxiosError
       expect(axiosError.response?.status).toEqual(500)
       expect(axiosError.response?.data).toEqual({
+        error: 'InternalServerError',
         message: 'Internal Server Error',
       })
     }

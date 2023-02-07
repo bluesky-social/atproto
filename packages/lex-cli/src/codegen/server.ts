@@ -10,6 +10,7 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexRecord,
+  LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import { gen, lexiconsTs, utilTs } from './common'
@@ -60,23 +61,24 @@ const indexTs = (
 ) =>
   gen(project, '/index.ts', async (file) => {
     //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
-    const xrpcImport = file.addImportDeclaration({
+    file.addImportDeclaration({
       moduleSpecifier: '@atproto/xrpc-server',
-    })
-    xrpcImport.addNamedImport({
-      name: 'createServer',
-      alias: 'createXrpcServer',
-    })
-    xrpcImport.addNamedImport({
-      name: 'Server',
-      alias: 'XrpcServer',
-    })
-    xrpcImport.addNamedImport({
-      name: 'Options',
-      alias: 'XrpcOptions',
-    })
-    xrpcImport.addNamedImport({
-      name: 'AuthVerifier',
+      namedImports: [
+        {
+          name: 'createServer',
+          alias: 'createXrpcServer',
+        },
+        {
+          name: 'Server',
+          alias: 'XrpcServer',
+        },
+        {
+          name: 'Options',
+          alias: 'XrpcOptions',
+        },
+        { name: 'AuthVerifier' },
+        { name: 'StreamAuthVerifier' },
+      ],
     })
     //= import {schemas} from './lexicons'
     file
@@ -193,7 +195,9 @@ const indexTs = (
 
     file.addTypeAlias({
       name: 'ExtractAuth',
-      typeParameters: [{ name: 'AV', constraint: 'AuthVerifier' }],
+      typeParameters: [
+        { name: 'AV', constraint: 'AuthVerifier | StreamAuthVerifier' },
+      ],
       type: `Extract<
         Awaited<ReturnType<AV>>,
         { credentials: unknown }
@@ -253,16 +257,21 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     }
     const moduleName = toTitleCase(userType.nsid)
     const name = toCamelCase(NSID.parse(userType.nsid).name || '')
+    const isSubscription = userType.def.type === 'subscription'
     const method = cls.addMethod({
       name,
-      typeParameters: [{ name: 'AV', constraint: 'AuthVerifier' }],
+      typeParameters: [
+        {
+          name: 'AV',
+          constraint: isSubscription ? 'StreamAuthVerifier' : 'AuthVerifier',
+        },
+      ],
     })
     method.addParameter({
       name: 'cfg',
       type: `ConfigOf<AV, ${moduleName}.Handler<ExtractAuth<AV>>>`,
     })
-    const methodType =
-      userType.def.type === 'subscription' ? 'streamMethod' : 'method'
+    const methodType = isSubscription ? 'streamMethod' : 'method'
     method.setBodyText(
       [
         // Placing schema on separate line, since the following one was being formatted
@@ -338,7 +347,8 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             genServerXrpcMethod(file, lexicons, lexUri)
           } else if (def.type === 'subscription') {
             genXrpcParams(file, lexicons, lexUri)
-            genServerXrpcStreaming(file)
+            genXrpcOutput(file, imports, lexicons, lexUri)
+            genServerXrpcStreaming(file, lexicons, lexUri)
           } else if (def.type === 'record') {
             genServerRecord(file, imports, lexicons, lexUri)
           } else {
@@ -471,15 +481,50 @@ function genServerXrpcMethod(
   })
 }
 
-function genServerXrpcStreaming(file: SourceFile) {
+function genServerXrpcStreaming(
+  file: SourceFile,
+  lexicons: Lexicons,
+  lexUri: string,
+) {
+  const def = lexicons.getDefOrThrow(lexUri, [
+    'subscription',
+  ]) as LexXrpcSubscription
+
   file.addImportDeclaration({
     moduleSpecifier: '@atproto/xrpc-server',
-    namedImports: [{ name: 'HandlerAuth' }],
+    namedImports: [
+      { name: 'HandlerAuth' },
+      { name: 'InfoFrame' },
+      { name: 'ErrorFrame' },
+    ],
   })
 
   file.addImportDeclaration({
     moduleSpecifier: 'http',
     namedImports: [{ name: 'IncomingMessage' }],
+  })
+
+  // export type HandlerError = ...
+  file.addTypeAlias({
+    name: 'HandlerError',
+    isExported: true,
+    type: `ErrorFrame<${arrayToUnion(def.errors?.map((e) => e.name))}>`,
+  })
+
+  // export type HandlerInfo = ...
+  file.addTypeAlias({
+    name: 'HandlerInfo',
+    isExported: true,
+    type: `InfoFrame<${arrayToUnion(def.infos?.map((e) => e.name))}>`,
+  })
+
+  // export type HandlerOutput = ...
+  file.addTypeAlias({
+    isExported: true,
+    name: 'HandlerOutput',
+    type: `HandlerInfo | HandlerError | ${
+      def.message?.schema ? 'OutputSchema' : 'void'
+    }`,
   })
 
   file.addTypeAlias({
@@ -492,7 +537,7 @@ function genServerXrpcStreaming(file: SourceFile) {
         auth: HA
         params: QueryParams
         req: IncomingMessage
-      }) => AsyncIterable<unknown>`,
+      }) => AsyncIterable<HandlerOutput>`,
   })
 }
 
@@ -508,4 +553,11 @@ function genServerRecord(
   genObject(file, imports, lexUri, def.record, 'Record')
   //= export function isRecord(v: unknown): v is Record {...}
   genObjHelpers(file, lexUri, 'Record')
+}
+
+function arrayToUnion(arr?: string[]) {
+  if (!arr?.length) {
+    return 'never'
+  }
+  return arr.map((item) => `'${item}'`).join(' | ')
 }

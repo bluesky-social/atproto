@@ -26,6 +26,7 @@
                 "com.atproto.repo.recordRef"
               ]
             },
+            "subjectBlobCids": {"type": "array", "items": {"type": "string"}},
             "reason": {"type": "string"},
             "createdBy": {"type": "string"}
           }
@@ -37,7 +38,8 @@
           "type": "ref",
           "ref": "com.atproto.admin.moderationAction#view"
         }
-      }
+      },
+      "errors": [{ "name": "SubjectHasAction" }]
     }
   }
 }

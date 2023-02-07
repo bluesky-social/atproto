@@ -9,16 +9,32 @@ import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
+import { ImageInvalidator } from '../../image/invalidator'
+import { ImageUriBuilder } from '../../image/uri'
 
 export class ModerationService {
   constructor(
     public db: Database,
     public messageQueue: MessageQueue,
     public blobstore: BlobStore,
+    public imgUriBuilder: ImageUriBuilder,
+    public imgInvalidator: ImageInvalidator,
   ) {}
 
-  static creator(messageQueue: MessageQueue, blobstore: BlobStore) {
-    return (db: Database) => new ModerationService(db, messageQueue, blobstore)
+  static creator(
+    messageQueue: MessageQueue,
+    blobstore: BlobStore,
+    imgUriBuilder: ImageUriBuilder,
+    imgInvalidator: ImageInvalidator,
+  ) {
+    return (db: Database) =>
+      new ModerationService(
+        db,
+        messageQueue,
+        blobstore,
+        imgUriBuilder,
+        imgInvalidator,
+      )
   }
 
   views = new ModerationViews(this.db, this.messageQueue)
@@ -126,14 +142,54 @@ export class ModerationService {
     return report
   }
 
+  async getCurrentActions(
+    subject: { did: string } | { uri: AtUri } | { cids: CID[] },
+  ) {
+    const { ref } = this.db.db.dynamic
+    let builder = this.db.db
+      .selectFrom('moderation_action')
+      .selectAll()
+      .where('reversedAt', 'is', null)
+    if ('did' in subject) {
+      builder = builder
+        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where('subjectDid', '=', subject.did)
+    } else if ('uri' in subject) {
+      builder = builder
+        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectUri', '=', subject.uri.toString())
+    } else {
+      const blobsForAction = this.db.db
+        .selectFrom('moderation_action_subject_blob')
+        .selectAll()
+        .whereRef('actionId', '=', ref('moderation_action.id'))
+        .where(
+          'cid',
+          'in',
+          subject.cids.map((cid) => cid.toString()),
+        )
+      builder = builder.whereExists(blobsForAction)
+    }
+    return await builder.execute()
+  }
+
   async logAction(info: {
     action: ModerationActionRow['action']
     subject: { did: string } | { uri: AtUri; cid?: CID }
+    subjectBlobCids?: CID[]
     reason: string
     createdBy: string
     createdAt?: Date
   }): Promise<ModerationActionRow> {
-    const { action, createdBy, reason, subject, createdAt = new Date() } = info
+    this.db.assertTransaction()
+    const {
+      action,
+      createdBy,
+      reason,
+      subject,
+      subjectBlobCids,
+      createdAt = new Date(),
+    } = info
 
     // Resolve subject info
     let subjectInfo: SubjectInfo
@@ -146,6 +202,9 @@ export class ModerationService {
         subjectUri: null,
         subjectCid: null,
       }
+      if (subjectBlobCids?.length) {
+        throw new InvalidRequestError('Blobs do not apply to repo subjects')
+      }
     } else {
       const record = await this.services
         .record(this.db)
@@ -157,9 +216,32 @@ export class ModerationService {
         subjectUri: subject.uri.toString(),
         subjectCid: record.cid,
       }
+      if (subjectBlobCids?.length) {
+        const cidsFromSubject = await this.db.db
+          .selectFrom('repo_blob')
+          .where('recordUri', '=', subject.uri.toString())
+          .where(
+            'cid',
+            'in',
+            subjectBlobCids.map((c) => c.toString()),
+          )
+          .select('cid')
+          .execute()
+        if (cidsFromSubject.length !== subjectBlobCids.length) {
+          throw new InvalidRequestError('Blobs do not match record subject')
+        }
+      }
     }
 
-    return await this.db.db
+    const subjectActions = await this.getCurrentActions(subject)
+    if (subjectActions.length) {
+      throw new InvalidRequestError(
+        `Subject already has an active action: #${subjectActions[0].id}`,
+        'SubjectHasAction',
+      )
+    }
+
+    const actionResult = await this.db.db
       .insertInto('moderation_action')
       .values({
         action,
@@ -170,6 +252,31 @@ export class ModerationService {
       })
       .returningAll()
       .executeTakeFirstOrThrow()
+
+    if (subjectBlobCids?.length && !('did' in subject)) {
+      const blobActions = await this.getCurrentActions({
+        cids: subjectBlobCids,
+      })
+      if (blobActions.length) {
+        throw new InvalidRequestError(
+          `Blob already has an active action: #${blobActions[0].id}`,
+          'SubjectHasAction',
+        )
+      }
+
+      await this.db.db
+        .insertInto('moderation_action_subject_blob')
+        .values(
+          subjectBlobCids.map((cid) => ({
+            actionId: actionResult.id,
+            cid: cid.toString(),
+            recordUri: subject.uri.toString(),
+          })),
+        )
+        .execute()
+    }
+
+    return actionResult
   }
 
   async logReverseAction(info: {
@@ -215,21 +322,63 @@ export class ModerationService {
       .execute()
   }
 
-  async takedownRecord(info: { takedownId: number; uri: AtUri }) {
+  async takedownRecord(info: {
+    takedownId: number
+    uri: AtUri
+    blobCids?: CID[]
+  }) {
+    this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
       .set({ takedownId: info.takedownId })
       .where('uri', '=', info.uri.toString())
       .where('takedownId', 'is', null)
       .executeTakeFirst()
+    if (info.blobCids?.length) {
+      await this.db.db
+        .updateTable('repo_blob')
+        .set({ takedownId: info.takedownId })
+        .where('recordUri', '=', info.uri.toString())
+        .where(
+          'cid',
+          'in',
+          info.blobCids.map((c) => c.toString()),
+        )
+        .where('takedownId', 'is', null)
+        .executeTakeFirst()
+      await Promise.all(
+        info.blobCids.map(async (cid) => {
+          await this.blobstore.quarantine(cid)
+          const paths = ImageUriBuilder.commonSignedUris.map((id) => {
+            const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
+            return uri.replace(this.imgUriBuilder.endpoint, '')
+          })
+          await this.imgInvalidator.invalidate(cid.toString(), paths)
+        }),
+      )
+    }
   }
 
   async reverseTakedownRecord(info: { uri: AtUri }) {
+    this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
       .set({ takedownId: null })
       .where('uri', '=', info.uri.toString())
       .execute()
+    const blobs = await this.db.db
+      .updateTable('repo_blob')
+      .set({ takedownId: null })
+      .where('takedownId', 'is not', null)
+      .where('recordUri', '=', info.uri.toString())
+      .returning('cid')
+      .execute()
+    await Promise.all(
+      blobs.map(async (blob) => {
+        const cid = CID.parse(blob.cid)
+        await this.blobstore.unquarantine(cid)
+      }),
+    )
   }
 
   async resolveReports(info: {

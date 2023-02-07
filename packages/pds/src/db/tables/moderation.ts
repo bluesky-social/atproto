@@ -7,6 +7,7 @@ import {
 import { OTHER, SPAM } from '../../lexicon/types/com/atproto/report/reasonType'
 
 export const actionTableName = 'moderation_action'
+export const actionSubjectBlobTableName = 'moderation_action_subject_blob'
 export const reportTableName = 'moderation_report'
 export const reportResolutionTableName = 'moderation_report_resolution'
 
@@ -23,6 +24,12 @@ export interface ModerationAction {
   reversedAt: string | null
   reversedBy: string | null
   reversedReason: string | null
+}
+
+export interface ModerationActionSubjectBlob {
+  actionId: number
+  cid: string
+  recordUri: string
 }
 
 export interface ModerationReport {
@@ -46,6 +53,7 @@ export interface ModerationReportResolution {
 
 export type PartialDB = {
   [actionTableName]: ModerationAction
+  [actionSubjectBlobTableName]: ModerationActionSubjectBlob
   [reportTableName]: ModerationReport
   [reportResolutionTableName]: ModerationReportResolution
 }

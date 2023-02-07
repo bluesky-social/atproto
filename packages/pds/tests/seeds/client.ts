@@ -11,7 +11,7 @@ import { adminAuth } from '../_util'
 
 let AVATAR_IMG: Uint8Array | undefined
 
-type ImageRef = {
+export type ImageRef = {
   image: { cid: string; mimeType: string }
   alt: string
 }

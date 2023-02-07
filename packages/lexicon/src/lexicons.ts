@@ -67,7 +67,7 @@ export class Lexicons {
     // WARNING
     // mutates the object
     // -prf
-    resolveRefUris(validatedDoc, uri)
+    resolveRefUris(validatedDoc, uri, true)
 
     this.docs.set(uri, validatedDoc)
     for (const [defUri, def] of iterDefs(validatedDoc)) {
@@ -196,6 +196,14 @@ export class Lexicons {
     const def = this.getDefOrThrow(lexUri, ['query', 'procedure'])
     assertValidXrpcOutput(this, def as LexXrpcProcedure | LexXrpcQuery, value)
   }
+
+  /**
+   * Resolve a lex uri given a ref
+   */
+  resolveLexUri(lexUri: string, ref: string) {
+    lexUri = toLexUri(lexUri)
+    return toLexUri(ref, lexUri)
+  }
 }
 
 function* iterDefs(doc: LexiconDoc): Generator<[string, LexUserType]> {
@@ -210,7 +218,7 @@ function* iterDefs(doc: LexiconDoc): Generator<[string, LexUserType]> {
 // WARNING
 // this method mutates objects
 // -prf
-function resolveRefUris(obj: any, baseUri: string): any {
+function resolveRefUris(obj: any, baseUri: string, root?: boolean): any {
   for (const k in obj) {
     if (obj.type === 'ref') {
       obj.ref = toLexUri(obj.ref, baseUri)
@@ -227,6 +235,17 @@ function resolveRefUris(obj: any, baseUri: string): any {
       })
     } else if (obj[k] && typeof obj[k] === 'object') {
       obj[k] = resolveRefUris(obj[k], baseUri)
+    }
+  }
+  if (root && obj?.defs?.main?.type === 'subscription') {
+    const sub = obj.defs.main as LexXrpcSubscription
+    if (sub.message?.codes) {
+      sub.message.codes = Object.entries(sub.message.codes).reduce(
+        (acc, [key, code]) => {
+          return Object.assign(acc, { [toLexUri(key, baseUri)]: code })
+        },
+        {} as Record<string, number>,
+      )
     }
   }
   return obj

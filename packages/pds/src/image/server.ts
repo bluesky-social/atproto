@@ -5,16 +5,16 @@ import path from 'path'
 import { Readable } from 'stream'
 import express, { ErrorRequestHandler, NextFunction } from 'express'
 import createError, { isHttpError } from 'http-errors'
-import { BadPathError, ImageUriBuilder } from './uri'
-import log from './logger'
-import { resize } from './sharp'
-import { formatsToMimes, Options } from './util'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import {
   cloneStream,
   forwardStreamErrors,
   isErrnoException,
 } from '@atproto/common'
+import { BadPathError, ImageUriBuilder } from './uri'
+import log from './logger'
+import { resize } from './sharp'
+import { formatsToMimes, Options } from './util'
 
 export class ImageProcessingServer {
   app = express()
@@ -113,7 +113,8 @@ function getMime(format: Options['format']) {
 export interface BlobCache {
   get(fileId: string): Promise<Readable & { size: number }>
   put(fileId: string, stream: Readable): Promise<void>
-  clear(): Promise<void>
+  clear(fileId: string): Promise<void>
+  clearAll(): Promise<void>
 }
 
 export class BlobDiskCache implements BlobCache {
@@ -158,7 +159,12 @@ export class BlobDiskCache implements BlobCache {
     }
   }
 
-  async clear() {
+  async clear(fileId: string) {
+    const filename = path.join(this.tempDir, fileId)
+    await fs.rm(filename, { force: true })
+  }
+
+  async clearAll() {
     await fs.rm(this.tempDir, { recursive: true, force: true })
   }
 }

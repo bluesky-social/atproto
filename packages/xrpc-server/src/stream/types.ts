@@ -6,26 +6,35 @@ export enum FrameType {
   Error = -1,
 }
 
-const messageFrameHeader = z.object({
+export const messageFrameHeader = z.object({
   op: z.literal(FrameType.Message), // Frame op
-  id: z.string().optional(), // Mesage id for resumption
-  t: z.string().optional(), // Message body type discriminator
+  t: z.number().int().optional(), // Message body type discriminator
 })
 export type MessageFrameHeader = z.infer<typeof messageFrameHeader>
 
-const infoFrameHeader = z.object({
+export const infoFrameHeader = z.object({
   op: z.literal(FrameType.Info),
-  t: z.string().optional(), // Info body type discriminator
+})
+export const infoFrameBody = z.object({
+  info: z.string(), // Info code
+  message: z.string().optional(), // Info message
 })
 export type InfoFrameHeader = z.infer<typeof infoFrameHeader>
+export type InfoFrameBody<T extends string = string> = { info: T } & z.infer<
+  typeof infoFrameBody
+>
 
-// No body, must disconnect
-const errorFrameHeader = z.object({
+export const errorFrameHeader = z.object({
   op: z.literal(FrameType.Error),
-  err: z.string().optional(), // Error code
-  msg: z.string().optional(), // Error message
+})
+export const errorFrameBody = z.object({
+  error: z.string(), // Error code
+  message: z.string().optional(), // Error message
 })
 export type ErrorFrameHeader = z.infer<typeof errorFrameHeader>
+export type ErrorFrameBody<T extends string = string> = { error: T } & z.infer<
+  typeof errorFrameBody
+>
 
 export const frameHeader = z.union([
   messageFrameHeader,

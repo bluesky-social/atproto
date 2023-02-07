@@ -1,4 +1,3 @@
-import http from 'http'
 import { Readable } from 'stream'
 import express, {
   ErrorRequestHandler,
@@ -41,7 +40,7 @@ export function createServer(lexicons?: unknown[], options?: Options) {
 }
 
 export class Server {
-  router = express.Router()
+  router = express()
   routes = express.Router()
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
@@ -55,23 +54,14 @@ export class Server {
     this.router.use(this.routes)
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
     this.router.use(errorMiddleware)
+    this.router.once('mount', (app: express.Application) => {
+      this.enableStreamingOnListen(app)
+    })
     this.options = opts ?? {}
     this.middleware = {
       json: express.json({ limit: opts?.payload?.jsonLimit }),
       text: express.text({ limit: opts?.payload?.textLimit }),
     }
-  }
-
-  // @TODO redesign this api, streaming should not have to be enabled
-  enableStreaming(server: http.Server) {
-    server.on('upgrade', async (req, socket, head) => {
-      const url = new URL(req.url || '', 'http://x')
-      const sub = this.subscriptions.get(url.pathname.replace('/xrpc/', ''))
-      if (!sub) return socket.destroy()
-      sub.wss.handleUpgrade(req, socket, head, (ws) =>
-        sub.wss.emit('connection', ws, req),
-      )
-    })
   }
 
   // handlers
@@ -257,23 +247,20 @@ export class Server {
   ) {
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
+    const resolveLexUri = (ref: string) => this.lex.resolveLexUri(nsid, ref)
     this.subscriptions.set(
       nsid,
       new XrpcStreamServer({
         noServer: true,
         handler: async function* (req) {
           try {
-            const url = new URL(req.url || '', 'http://x')
             // authenticate request
             const auth = await config.auth?.({ req })
             if (isHandlerError(auth)) {
               throw XRPCError.fromError(auth)
             }
             // validate request
-            const params = decodeQueryParams(
-              def,
-              getQueryParams(url.searchParams),
-            )
+            const params = decodeQueryParams(def, getQueryParams(req.url))
             try {
               assertValidXrpcParams(params)
             } catch (e) {
@@ -284,20 +271,52 @@ export class Server {
             for await (const item of items) {
               if (item instanceof Frame) {
                 yield item
+              } else if (
+                typeof item?.['$type'] === 'string' &&
+                def.message?.codes
+              ) {
+                const typeUri = resolveLexUri(item['$type'])
+                if (def.message.codes[typeUri] !== undefined) {
+                  const code = def.message.codes[typeUri]
+                  const clone = { ...item }
+                  delete clone['$type']
+                  yield new MessageFrame(clone, { type: code })
+                } else {
+                  yield new MessageFrame(item)
+                }
               } else {
-                yield new MessageFrame({ body: item })
+                yield new MessageFrame(item)
               }
             }
           } catch (err) {
-            const xrpcError = XRPCError.fromError(err)
+            const xrpcErrPayload = XRPCError.fromError(err).payload
             yield new ErrorFrame({
-              code: xrpcError.customErrorName,
-              message: xrpcError.message,
+              error: xrpcErrPayload.error ?? 'Unknown',
+              message: xrpcErrPayload.message,
             })
           }
         },
       }),
     )
+  }
+
+  private enableStreamingOnListen(app: express.Application) {
+    const _listen = app.listen
+    app.listen = (...args) => {
+      // @ts-ignore the args spread
+      const httpServer = _listen.call(app, ...args)
+      httpServer.on('upgrade', (req, socket, head) => {
+        const url = new URL(req.url || '', 'http://x')
+        const sub = url.pathname.startsWith('/xrpc/')
+          ? this.subscriptions.get(url.pathname.replace('/xrpc/', ''))
+          : undefined
+        if (!sub) return socket.destroy()
+        sub.wss.handleUpgrade(req, socket, head, (ws) =>
+          sub.wss.emit('connection', ws, req),
+        )
+      })
+      return httpServer
+    }
   }
 }
 

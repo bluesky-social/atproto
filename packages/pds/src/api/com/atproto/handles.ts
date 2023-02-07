@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!supportedHandle) {
         throw new InvalidRequestError('Not a supported handle domain')
       }
-      const user = await ctx.services.actor(ctx.db).getUser(handle)
+      const user = await ctx.services.actor(ctx.db).getUser(handle, true)
       if (!user) {
         throw new InvalidRequestError('Unable to resolve handle')
       }

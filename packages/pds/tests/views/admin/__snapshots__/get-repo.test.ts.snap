@@ -21,6 +21,7 @@ Object {
           "$type": "com.atproto.repo.repoRef",
           "did": "user(0)",
         },
+        "subjectBlobCids": Array [],
       },
       Object {
         "action": "com.atproto.admin.moderationAction#acknowledge",
@@ -38,8 +39,13 @@ Object {
           "$type": "com.atproto.repo.repoRef",
           "did": "user(0)",
         },
+        "subjectBlobCids": Array [],
       },
     ],
+    "currentAction": Object {
+      "action": "com.atproto.admin.moderationAction#takedown",
+      "id": 2,
+    },
     "reports": Array [
       Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -65,7 +71,6 @@ Object {
         },
       },
     ],
-    "takedownId": 2,
   },
   "relatedRecords": Array [
     Object {

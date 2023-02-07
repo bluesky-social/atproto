@@ -22,6 +22,7 @@ export interface InputSchema {
     | ComAtprotoRepoRepoRef.Main
     | ComAtprotoRepoRecordRef.Main
     | { $type: string; [k: string]: unknown }
+  subjectBlobCids?: string[]
   reason: string
   createdBy: string
   [k: string]: unknown
@@ -42,6 +43,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'SubjectHasAction'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

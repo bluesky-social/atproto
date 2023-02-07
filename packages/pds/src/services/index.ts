@@ -3,6 +3,7 @@ import { BlobStore } from '@atproto/repo'
 import Database from '../db'
 import { MessageQueue } from '../event-stream/types'
 import { ImageUriBuilder } from '../image/uri'
+import { ImageInvalidator } from '../image/invalidator'
 import { ActorService } from './actor'
 import { AuthService } from './auth'
 import { FeedService } from './feed'
@@ -15,15 +16,22 @@ export function createServices(resources: {
   messageQueue: MessageQueue
   blobstore: BlobStore
   imgUriBuilder: ImageUriBuilder
+  imgInvalidator: ImageInvalidator
 }): Services {
-  const { keypair, messageQueue, blobstore, imgUriBuilder } = resources
+  const { keypair, messageQueue, blobstore, imgUriBuilder, imgInvalidator } =
+    resources
   return {
     actor: ActorService.creator(),
     auth: AuthService.creator(),
     feed: FeedService.creator(imgUriBuilder),
     record: RecordService.creator(messageQueue),
     repo: RepoService.creator(keypair, messageQueue, blobstore),
-    moderation: ModerationService.creator(messageQueue, blobstore),
+    moderation: ModerationService.creator(
+      messageQueue,
+      blobstore,
+      imgUriBuilder,
+      imgInvalidator,
+    ),
   }
 }
 

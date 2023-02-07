@@ -535,8 +535,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             genXrpcOutput(file, imports, lexicons, lexUri)
             genClientXrpcCommon(file, lexicons, lexUri)
           } else if (def.type === 'subscription') {
-            genXrpcParams(file, lexicons, lexUri)
-            genClientXrpcCommon(file, lexicons, lexUri)
+            continue
           } else if (def.type === 'record') {
             genClientRecord(file, imports, lexicons, lexUri)
           } else {
@@ -555,11 +554,9 @@ function genClientXrpcCommon(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, [
-    'query',
-    'subscription',
-    'procedure',
-  ]) as LexXrpcQuery | LexXrpcSubscription | LexXrpcProcedure
+  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure']) as
+    | LexXrpcQuery
+    | LexXrpcProcedure
 
   //= export interface CallOptions {...}
   const opts = file.addInterface({
@@ -592,7 +589,7 @@ function genClientXrpcCommon(
   res.addProperty({ name: 'success', type: 'boolean' })
   res.addProperty({ name: 'headers', type: 'Headers' })
   if (def.output?.schema) {
-    if (def.output.encoding.includes(',')) {
+    if (def.output.encoding?.includes(',')) {
       res.addProperty({ name: 'data', type: 'OutputSchema | Uint8Array' })
     } else {
       res.addProperty({ name: 'data', type: 'OutputSchema' })
